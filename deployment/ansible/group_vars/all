@@ -1,0 +1,11 @@
+---
+aws_region: "us-east-1"
+aws_profile: "open-tree-id"
+
+aws_cli_version: "1.11.8"
+
+terraform_version: "0.7.7"
+
+docker_version: "1.11.*"
+
+docker_compose_version: "1.8.0"

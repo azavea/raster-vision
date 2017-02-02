@@ -1,0 +1,4 @@
+---
+dependencies:
+  - { role: azavea.pip }
+  - { role: azavea.docker }

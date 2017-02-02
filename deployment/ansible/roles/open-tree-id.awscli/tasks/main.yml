@@ -1,0 +1,3 @@
+---
+- name: Install AWS Command Line Interface
+  pip: name=awscli version="{{ aws_cli_version }}"

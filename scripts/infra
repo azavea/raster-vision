@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${OTID_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0")
+Setup infrastructure resources required to support GPU development.
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--help" ]
+    then
+        usage
+    else
+        pushd "$(dirname "$0")/../deployment/terraform"
+
+        case "${1}" in
+            destroy)
+                terraform "$@"
+                ;;
+            taint)
+                terraform "$@"
+                ;;
+            plan)
+                terraform plan \
+                          -out="gpu-worker.tfplan"
+                ;;
+            apply)
+                terraform apply "gpu-worker.tfplan"
+                ;;
+            *)
+                echo "ERROR: I don't have support for that Terraform subcommand!"
+                exit 1
+                ;;
+        esac
+
+        popd
+    fi
+fi

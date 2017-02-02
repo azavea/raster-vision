@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${OTID_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0") [--cpu|--gpu]
+Build docker images for model training.
+If the type is not specified, it will build both cpu and gpu docker images.
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--help" ]
+    then
+        usage
+        exit
+    fi
+
+    docker build -t otid-model-training-base -f src/model_training/Dockerfile-base src/model_training
+
+    if [ $# -eq 0 -o "${1:-}" = "--cpu" ]
+    then
+        docker build -t otid-model-training-cpu -f src/model_training/Dockerfile-cpu src/model_training
+    fi
+    if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
+    then
+        docker build -t otid-model-training-gpu -f src/model_training/Dockerfile-gpu src/model_training
+    fi
+fi

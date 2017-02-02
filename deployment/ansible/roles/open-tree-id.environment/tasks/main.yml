@@ -1,0 +1,10 @@
+---
+- name: Set AWS_DEFAULT_REGION globally
+  lineinfile: dest=/etc/environment
+              regexp=^AWS_DEFAULT_REGION
+              line="AWS_DEFAULT_REGION={{ aws_region }}"
+
+- name: Set AWS_PROFILE globally
+  lineinfile: dest=/etc/environment
+              regexp=^AWS_PROFILE
+              line="AWS_PROFILE={{ aws_profile }}"

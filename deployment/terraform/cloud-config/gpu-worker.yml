@@ -1,0 +1,24 @@
+#cloud-config
+
+packages:
+  - docker
+
+write_files:
+  - path: "/etc/sysconfig/docker"
+    content: |
+      # The max number of open files for the daemon itself, and all
+      # running containers.  The default value of 1048576 mirrors the value
+      # used by the systemd service unit.
+      DAEMON_MAXFILES=1048576
+
+      # Additional startup options for the Docker daemon, for example:
+      # OPTIONS="--ip-forward=true --iptables=true"
+      # By default we limit the number of open files per container
+      OPTIONS="--default-ulimit nofile=1024:4096 -H 0.0.0.0:2476"
+
+runcmd:
+  - [ usermod, -aG, docker, ec2-user ]
+  - [ service, docker, start ]
+  - [ wget, -P, "/tmp", "https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.0-rc.3/nvidia-docker_1.0.0.rc.3_amd64.tar.xz" ]
+  - [ tar, --strip-components=1, -C, "/usr/bin", -xvf, "/tmp/nvidia-docker_1.0.0.rc.3_amd64.tar.xz" ]
+  - [ screen, -d, -m, nvidia-docker-plugin, -l, "0.0.0.0:3476" ]

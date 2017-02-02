@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${OTID_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0")
+Build docker containers using docker-compose.
+It will also build CPU images for model training.
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--help" ]
+    then
+        usage
+        exit
+    fi
+
+    # Download trained model files from S3
+    #aws s3 cp s3://otid-models/inception_v3.h5 src/model_training/data/models/inception_v3.h5
+
+    ./scripts/update_model_training --cpu
+fi

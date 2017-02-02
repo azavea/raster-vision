@@ -1,0 +1,63 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${OTID_DEBUG}" ]]; then
+    set -x
+fi
+
+PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0") (--local|--remote)
+Run otid-model-training docker image either locally or on an AWS GPU-enabled EC2 instance.
+All arguments except the first are passed to 'docker run'.
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--local" ]
+    then
+        MODEL_TRAINING="$PROJECT_ROOT/src/model_training"
+
+        docker run --rm -it \
+            -v "$MODEL_TRAINING":/opt/model_training \
+            -p 0.0.0.0:5000:5000 \
+            otid-model-training-cpu "${@:2}"
+    elif [ "${1:-}" = "--remote" ]
+    then
+        # Spin up the AWS instance if it isn't already
+        "$PROJECT_ROOT/scripts/infra" plan
+        "$PROJECT_ROOT/scripts/infra" apply
+
+        # Wait for it to be ready, then get the hostname
+        echo "Waiting for the EC2 instance to finish initializing"
+        aws ec2 wait instance-status-ok --filter \
+                    'Name=instance-state-code,Values=0,16' \
+
+        EC2_HOSTNAME="$(aws ec2 describe-instances \
+            --filter "Name=instance-state-code,Values=16" \
+            --query 'Reservations[].Instances[].PublicDnsName' --output text)"
+        echo "HOSTNAME: $EC2_HOSTNAME"
+
+        # Build the docker image
+        NV_DOCKER_HOST="tcp://$EC2_HOSTNAME:2476"
+        DOCKER_HOST=$NV_DOCKER_HOST ./scripts/update_model_training --gpu
+
+        # Run the docker image
+        DOCKER_HOST=$NV_DOCKER_HOST nvidia-docker run --rm -it \
+         -v /home/ec2-user/output:/opt/model_training/output \
+         otid-model-training-gpu "${@:2}"
+
+        # Copy outputs back down to the local machine
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
+            "ec2-user@$EC2_HOSTNAME:output/" "$PROJECT_ROOT/src/model_training/output"
+
+        # Help devs not leave expensive infrastructure running
+        echo "Remember to run './scripts/infra destroy' when done!"
+    else
+        usage
+    fi
+fi

@@ -1,0 +1,16 @@
+---
+- hosts: all
+  become: True
+
+  pre_tasks:
+    - name: Update APT cache
+      apt: update_cache=yes
+
+  roles:
+    - { role: "azavea.ntp" }
+    - { role: "azavea.terraform" }
+    - { role: "azavea.docker" }
+    - { role: "open-tree-id.environment" }
+    - { role: "open-tree-id.awscli" }
+    - { role: "open-tree-id.nvidia-docker" }
+    - { role: "open-tree-id.compose-docker" }
