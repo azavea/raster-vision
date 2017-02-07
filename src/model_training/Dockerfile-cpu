@@ -20,4 +20,8 @@ COPY . /opt/model_training
 USER root
 RUN chown -R keras:root /opt/model_training/output
 
+# TODO move this to base
+RUN conda install matplotlib
+RUN conda install pillow
+
 CMD ["python", "mnist_cnn.py"]
