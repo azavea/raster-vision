@@ -17,23 +17,26 @@ from process_data import (make_input_output_generators,
                           model_path)
 
 batch_size = 32
-samples_per_epoch = 256
-nb_epoch = 10
-nb_val_samples = 256
+samples_per_epoch = 64
+nb_epoch = 1
+nb_val_samples = 64
 
 train_generator, validation_generator = make_input_output_generators(batch_size)
 sample_input, sample_output = next(train_generator)
 nb_rows, nb_cols, nb_channels = input_shape = sample_input.shape[1:]
 
-model = Sequential()
-nb_filters = nb_labels
-kernel_size = (10, 10)
-model.add(Convolution2D(nb_filters, kernel_size[0], kernel_size[1],
-                        border_mode='same', input_shape=input_shape))
-model.add(Reshape([nb_rows * nb_cols, nb_filters]))
-model.add(Activation('softmax'))
-model.add(Reshape([nb_rows, nb_cols, nb_filters]))
+def create_model():
+    model = Sequential()
+    kernel_size = (10, 10)
+    model.add(Convolution2D(nb_labels, kernel_size[0], kernel_size[1],
+                            border_mode='same', input_shape=input_shape))
+    model.add(Reshape([nb_rows * nb_cols, nb_labels]))
+    model.add(Activation('softmax'))
+    model.add(Reshape([nb_rows, nb_cols, nb_labels]))
 
+    return model
+
+model = create_model()
 print(model.summary())
 
 model.compile(
@@ -48,4 +51,4 @@ model.fit_generator(
     validation_data=validation_generator,
     nb_val_samples=nb_val_samples)
 
-model.save(join(model_path, 'model.h5'))
+model.save(join(model_path, 'cl.h5'))

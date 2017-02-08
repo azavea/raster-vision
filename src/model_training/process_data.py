@@ -15,7 +15,7 @@ INPUT = 'input'
 OUTPUT = 'output'
 TRAIN = 'train'
 VALIDATION = 'validation'
-CLASS = 'class'
+BOGUS_CLASS = 'bogus_class'
 
 train_ratio = 0.75
 tile_size = 200
@@ -47,12 +47,14 @@ label_names = [
 ]
 nb_labels = len(label_keys)
 
-data_path = 'data/ISPRS_semantic_labeling_Vaihingen'
-input_path = join(data_path, 'top')
-output_path = join(data_path, 'gts_for_participants')
-proc_path = 'output/processed_vaihingen'
-model_path = 'output/models'
-eval_path = 'output/eval'
+data_path = '/opt/data/'
+raw_data_path = join(data_path, 'raw_data/ISPRS_semantic_labeling_Vaihingen')
+raw_input_path = join(raw_data_path, 'top')
+raw_output_path = join(raw_data_path, 'gts_for_participants')
+proc_data_path = join(data_path, 'processed_data/vaihingen')
+results_path = join(data_path, 'results')
+model_path = join(results_path, 'models')
+eval_path = join(results_path, 'eval')
 
 def _makedirs(path):
     try:
@@ -113,7 +115,8 @@ def tile_image(im, size, stride):
     return tiles
 
 def process_data():
-    file_names = [file_name for file_name in listdir(output_path)
+    print('Processing data...')
+    file_names = [file_name for file_name in listdir(raw_output_path)
         if file_name.endswith('.tif')]
     nb_files = len(file_names)
 
@@ -122,24 +125,24 @@ def process_data():
     validation_file_names = file_names[nb_train_files:]
 
     def _process_data(file_names, partition_name):
-        proc_input_path = join(proc_path, partition_name, INPUT, CLASS)
-        proc_output_path = join(proc_path, partition_name, OUTPUT, CLASS)
+        # Keras expects a directory for each class, but there are none,
+        # so put all images in a single bogus class directory.
+        proc_input_path = join(proc_data_path, partition_name, INPUT, BOGUS_CLASS)
+        proc_output_path = join(proc_data_path, partition_name, OUTPUT, BOGUS_CLASS)
 
         _makedirs(proc_input_path)
         _makedirs(proc_output_path)
 
         proc_file_index = 0
         for file_name in file_names:
-            output_im = load_image(join(output_path, file_name))
-            input_im = load_image(join(input_path, file_name))
+            output_im = load_image(join(raw_output_path, file_name))
+            input_im = load_image(join(raw_input_path, file_name))
 
             input_tiles = tile_image(input_im, tile_size, tile_stride)
             output_tiles = tile_image(output_im, tile_size, tile_stride)
 
             for input_tile, output_tile in zip(input_tiles, output_tiles):
                 proc_file_name = '{}.png'.format(proc_file_index)
-                # Keras expects a directory for each class, but there are none,
-                # so put all images in a single class directory.
                 save_image(join(proc_input_path, proc_file_name), input_tile)
                 save_image(join(proc_output_path, proc_file_name), output_tile)
                 proc_file_index += 1
@@ -168,7 +171,7 @@ def make_data_generator(path, batch_size=32,
 
 def get_samples_for_fit():
     # TODO memoize
-    path = join(proc_path, TRAIN, INPUT)
+    path = join(proc_data_path, TRAIN, INPUT)
     return next(make_data_generator(path, shuffle=True))
 
 def make_input_output_generator(base_path, batch_size):
@@ -194,9 +197,9 @@ def make_input_output_generator(base_path, batch_size):
 
 def make_input_output_generators(batch_size):
     train_gen = \
-        make_input_output_generator(join(proc_path, TRAIN), batch_size)
+        make_input_output_generator(join(proc_data_path, TRAIN), batch_size)
     validation_gen = \
-        make_input_output_generator(join(proc_path, VALIDATION), batch_size)
+        make_input_output_generator(join(proc_data_path, VALIDATION), batch_size)
     return train_gen, validation_gen
 
 if __name__ == '__main__':

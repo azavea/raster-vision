@@ -16,16 +16,16 @@ from process_data import (model_path, eval_path,
     one_hot_to_rgb_batch, one_hot_to_label_batch, rgb_to_label_batch,
     save_image, label_names,
     make_input_output_generators, make_data_generator,
-    proc_path, VALIDATION, INPUT, OUTPUT)
+    proc_data_path, VALIDATION, INPUT, OUTPUT)
 
 def visualize_predictions(model, batch_size):
     _, validation_generator = make_input_output_generators(batch_size)
     inputs, _ = next(validation_generator)
 
     # Get unscaled images for display
-    raw_inputs = next(make_data_generator(join(proc_path, VALIDATION, INPUT),
+    raw_inputs = next(make_data_generator(join(proc_data_path, VALIDATION, INPUT),
         batch_size=batch_size, shuffle=True, augment=True))
-    raw_outputs = next(make_data_generator(join(proc_path, VALIDATION, OUTPUT),
+    raw_outputs = next(make_data_generator(join(proc_data_path, VALIDATION, OUTPUT),
         batch_size=batch_size, shuffle=True, augment=True))
 
     predictions = one_hot_to_rgb_batch(model.predict(inputs, batch_size))
@@ -45,10 +45,10 @@ def get_samples(data_gen, batch_size, nb_samples):
     return np.concatenate(samples, axis=0)[0:nb_samples, :, :, :]
 
 def compute_metrics(model, batch_size, val_samples):
-    input_gen = make_data_generator(join(proc_path, VALIDATION, INPUT),
+    input_gen = make_data_generator(join(proc_data_path, VALIDATION, INPUT),
         shuffle=True, batch_size=batch_size, scale=True)
 
-    output_gen = make_data_generator(join(proc_path, VALIDATION, OUTPUT),
+    output_gen = make_data_generator(join(proc_data_path, VALIDATION, OUTPUT),
         shuffle=True, batch_size=batch_size)
 
     inputs = get_samples(input_gen, batch_size, val_samples)
@@ -85,7 +85,8 @@ def compute_metrics(model, batch_size, val_samples):
     return scores
 
 if __name__ == '__main__':
-    model = load_model(join(model_path, 'model.h5'))
+    model_file_name = 'cl.h5'
+    model = load_model(join(model_path, model_file_name))
     batch_size = 32
     val_samples = 300
 

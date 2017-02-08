@@ -16,6 +16,8 @@ All arguments except the first are passed to 'docker run'.
 "
 }
 
+DATA_DIR="/opt/data"
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     if [ "${1:-}" = "--local" ]
@@ -24,6 +26,7 @@ then
 
         docker run --rm -it \
             -v "$MODEL_TRAINING":/opt/model_training \
+            -v "$DATA_DIR":/opt/data \
             -p 0.0.0.0:5000:5000 \
             otid-model-training-cpu "${@:2}"
     elif [ "${1:-}" = "--remote" ]
@@ -44,16 +47,24 @@ then
 
         # Build the docker image
         NV_DOCKER_HOST="tcp://$EC2_HOSTNAME:2476"
-        DOCKER_HOST=$NV_DOCKER_HOST ./scripts/update_model_training --gpu
+        DOCKER_HOST=$NV_DOCKER_HOST ./scripts/update --gpu
+
+        EC2_HOME="/home/ec2-user"
+
+        # Copy data to EC2 host
+        ssh "ec2-user@$EC2_HOSTNAME" \
+            'aws s3 cp s3://otid-data/processed_vaihingen.zip \
+            processed_data/processed_vaihingen.zip && \
+            cd processed_data && unzip -o processed_vaihingen.zip'
 
         # Run the docker image
         DOCKER_HOST=$NV_DOCKER_HOST nvidia-docker run --rm -it \
-         -v /home/ec2-user/output:/opt/model_training/output \
+         -v $EC2_HOME:$DATA_DIR \
          otid-model-training-gpu "${@:2}"
 
-        # Copy outputs back down to the local machine
+        # Copy learned models back down to the local machine
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
-            "ec2-user@$EC2_HOSTNAME:output/" "$PROJECT_ROOT/src/model_training/output"
+            "ec2-user@$EC2_HOSTNAME:$EC2_HOME/results/models/*" "$DATA_DIR/results/models/"
 
         # Help devs not leave expensive infrastructure running
         echo "Remember to run './scripts/infra destroy' when done!"
