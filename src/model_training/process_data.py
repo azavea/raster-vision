@@ -7,7 +7,6 @@ from os.path import join
 from os import listdir, makedirs
 
 import numpy as np
-from scipy.misc import imsave
 from PIL import Image
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -18,8 +17,8 @@ VALIDATION = 'validation'
 BOGUS_CLASS = 'bogus_class'
 
 train_ratio = 0.75
-tile_size = 200
-tile_stride = 100
+tile_size = 256
+tile_stride = int(tile_size / 2)
 target_size = (tile_size, tile_size)
 seed = 1
 
@@ -48,13 +47,13 @@ label_names = [
 nb_labels = len(label_keys)
 
 data_path = '/opt/data/'
-raw_data_path = join(data_path, 'raw_data/ISPRS_semantic_labeling_Vaihingen')
+datasets_path = join(data_path, 'datasets')
+raw_data_path = join(datasets_path, 'ISPRS_semantic_labeling_Vaihingen')
 raw_input_path = join(raw_data_path, 'top')
 raw_output_path = join(raw_data_path, 'gts_for_participants')
-proc_data_path = join(data_path, 'processed_data/vaihingen')
+proc_data_path = join(datasets_path, 'processed_vaihingen')
 results_path = join(data_path, 'results')
-model_path = join(results_path, 'models')
-eval_path = join(results_path, 'eval')
+
 
 def _makedirs(path):
     try:
@@ -62,15 +61,15 @@ def _makedirs(path):
     except:
         pass
 
-_makedirs(model_path)
-_makedirs(eval_path)
 
 def load_image(file_path):
     im = Image.open(file_path)
     return np.array(im)
 
+
 def save_image(file_path, im):
     Image.fromarray(np.squeeze(im).astype(np.uint8)).save(file_path)
+
 
 def rgb_to_label_batch(rgb_batch):
     label_batch = np.zeros(rgb_batch.shape[:-1])
@@ -82,14 +81,17 @@ def rgb_to_label_batch(rgb_batch):
 
     return label_batch
 
+
 def label_to_one_hot_batch(label_batch):
     one_hot_batch = np.zeros(np.concatenate([label_batch.shape, [nb_labels]]))
     for label in range(nb_labels):
         one_hot_batch[:, :, :, label][label_batch == label] = 1.
     return one_hot_batch
 
+
 def rgb_to_one_hot_batch(rgb_batch):
     return label_to_one_hot_batch(rgb_to_label_batch(rgb_batch))
+
 
 def label_to_rgb_batch(label_batch):
     rgb_batch = np.zeros(np.concatenate([label_batch.shape, [3]]))
@@ -99,11 +101,14 @@ def label_to_rgb_batch(label_batch):
 
     return rgb_batch
 
+
 def one_hot_to_label_batch(one_hot_batch):
     return np.argmax(one_hot_batch, axis=3)
 
+
 def one_hot_to_rgb_batch(one_hot_batch):
     return label_to_rgb_batch(one_hot_to_label_batch(one_hot_batch))
+
 
 def tile_image(im, size, stride):
     rows, cols = im.shape[0:2]
@@ -114,10 +119,11 @@ def tile_image(im, size, stride):
                 tiles.append(im[row:row+size, col:col+size, :])
     return tiles
 
+
 def process_data():
     print('Processing data...')
     file_names = [file_name for file_name in listdir(raw_output_path)
-        if file_name.endswith('.tif')]
+                  if file_name.endswith('.tif')]
     nb_files = len(file_names)
 
     nb_train_files = int(nb_files * train_ratio)
@@ -127,8 +133,10 @@ def process_data():
     def _process_data(file_names, partition_name):
         # Keras expects a directory for each class, but there are none,
         # so put all images in a single bogus class directory.
-        proc_input_path = join(proc_data_path, partition_name, INPUT, BOGUS_CLASS)
-        proc_output_path = join(proc_data_path, partition_name, OUTPUT, BOGUS_CLASS)
+        proc_input_path = join(proc_data_path, partition_name,
+                               INPUT, BOGUS_CLASS)
+        proc_output_path = join(proc_data_path, partition_name,
+                                OUTPUT, BOGUS_CLASS)
 
         _makedirs(proc_input_path)
         _makedirs(proc_output_path)
@@ -150,12 +158,14 @@ def process_data():
     _process_data(train_file_names, TRAIN)
     _process_data(validation_file_names, VALIDATION)
 
-def make_data_generator(path, batch_size=32,
-    shuffle=False, augment=False, scale=False):
+
+def make_data_generator(path, batch_size=32, shuffle=False, augment=False,
+                        scale=False):
     gen_params = {}
     if augment:
         gen_params['horizontal_flip'] = True
         gen_params['vertical_flip'] = True
+
     if scale:
         gen_params['featurewise_center'] = True
         gen_params['featurewise_std_normalization'] = True
@@ -163,29 +173,32 @@ def make_data_generator(path, batch_size=32,
 
     gen = ImageDataGenerator(**gen_params)
     if scale:
-        gen.fit(samples, seed=seed)
+        gen.fit(samples)
 
-    return gen.flow_from_directory(path,
-        class_mode=None, target_size=target_size,
+    return gen.flow_from_directory(
+        path, class_mode=None, target_size=target_size,
         batch_size=batch_size, shuffle=shuffle, seed=seed)
+
 
 def get_samples_for_fit():
     # TODO memoize
     path = join(proc_data_path, TRAIN, INPUT)
     return next(make_data_generator(path, shuffle=True))
 
+
 def make_input_output_generator(base_path, batch_size):
     input_path = join(base_path, INPUT)
 
     input_gen = make_data_generator(input_path, batch_size=batch_size,
-        shuffle=True, augment=True, scale=True)
+                                    shuffle=True, augment=True, scale=True)
 
     # Don't scale the outputs (because they are labels) and convert to
     # one-hot encoding.
     output_path = join(base_path, OUTPUT)
-    _output_gen = make_data_generator(input_path, batch_size=batch_size,
-        shuffle=True, augment=True)
+    _output_gen = make_data_generator(output_path, batch_size=batch_size,
+                                      shuffle=True, augment=True)
 
+    # TODO convert to map over iterator
     def make_output_gen():
         while True:
             rgb_batch = next(_output_gen)
@@ -195,12 +208,17 @@ def make_input_output_generator(base_path, batch_size):
 
     return zip(input_gen, output_gen)
 
+
 def make_input_output_generators(batch_size):
     train_gen = \
-        make_input_output_generator(join(proc_data_path, TRAIN), batch_size)
+        make_input_output_generator(
+            join(proc_data_path, TRAIN), batch_size)
     validation_gen = \
-        make_input_output_generator(join(proc_data_path, VALIDATION), batch_size)
+        make_input_output_generator(
+            join(proc_data_path, VALIDATION), batch_size)
+
     return train_gen, validation_gen
+
 
 if __name__ == '__main__':
     process_data()

@@ -1,0 +1,17 @@
+{
+    "batch_size": 32,
+    "git_commit": null,
+    "input_shape": [
+        256,
+        256,
+        3
+    ],
+    "model_type": "fcn_vgg",
+    "nb_epoch": 2,
+    "nb_labels": 6,
+    "nb_prediction_images": 8,
+    "nb_val_samples": 256,
+    "patience": 3,
+    "run_name": "fcn_vgg/cb873c12-efdb-11e6-ac7f-0242ac110002",
+    "samples_per_epoch": 256
+}

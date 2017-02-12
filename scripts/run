@@ -11,8 +11,8 @@ PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
 function usage() {
     echo -n \
          "Usage: $(basename "$0") (--local|--remote)
-Run otid-model-training docker image either locally or on an AWS GPU-enabled EC2 instance.
-All arguments except the first are passed to 'docker run'.
+Run otid-model-training docker image either locally or on an AWS GPU-enabled
+EC2 instance. All arguments except the first are passed to 'docker run'.
 "
 }
 
@@ -43,6 +43,7 @@ then
         EC2_HOSTNAME="$(aws ec2 describe-instances \
             --filter "Name=instance-state-code,Values=16" \
             --query 'Reservations[].Instances[].PublicDnsName' --output text)"
+
         echo "HOSTNAME: $EC2_HOSTNAME"
 
         # Build the docker image
@@ -54,17 +55,13 @@ then
         # Copy data to EC2 host
         ssh "ec2-user@$EC2_HOSTNAME" \
             'aws s3 cp s3://otid-data/processed_vaihingen.zip \
-            processed_data/processed_vaihingen.zip && \
-            cd processed_data && unzip -o processed_vaihingen.zip'
+            datasets/processed_vaihingen.zip && \
+            cd datasets && unzip -o processed_vaihingen.zip'
 
         # Run the docker image
         DOCKER_HOST=$NV_DOCKER_HOST nvidia-docker run --rm -it \
          -v $EC2_HOME:$DATA_DIR \
          otid-model-training-gpu "${@:2}"
-
-        # Copy learned models back down to the local machine
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
-            "ec2-user@$EC2_HOSTNAME:$EC2_HOME/results/models/*" "$DATA_DIR/results/models/"
 
         # Help devs not leave expensive infrastructure running
         echo "Remember to run './scripts/infra destroy' when done!"

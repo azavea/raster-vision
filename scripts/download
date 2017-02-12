@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${OTID_DEBUG}" ]]; then
+    set -x
+fi
+
+EC2_HOSTNAME="$(aws ec2 describe-instances \
+    --filter "Name=instance-state-code,Values=16" \
+    --query 'Reservations[].Instances[].PublicDnsName' --output text)"
+
+echo "HOSTNAME: $EC2_HOSTNAME"
+
+DATA_DIR="/opt/data"
+EC2_HOME="/home/ec2-user"
+# Copy learned models back down to the local machine
+rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
+    "ec2-user@$EC2_HOSTNAME:$EC2_HOME/results" "$DATA_DIR"

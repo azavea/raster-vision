@@ -19,6 +19,7 @@ COPY ./model_training /opt/model_training
 # outputs into /opt/data
 RUN mkdir /opt/data
 USER root
+RUN mkdir /opt/data
 RUN chown -R keras:root /opt/data
 
 CMD ["bash"]
