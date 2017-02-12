@@ -1,6 +1,6 @@
-# keras-image-segmentation
+# keras-semantic-segmentation
 
-Learning to segment images using Keras
+Experiments in using deep learning with Keras/Tensorflow to perform semantic segmentation.
 
 ## Table of Contents
 
@@ -38,31 +38,22 @@ $ vagrant ssh
 | `setup`  | Bring up the virtual machine and install dependent software on it |
 | `infra`  | Execute Terraform subcommands            |
 | `update` | Install dependent software inside virtual machine |
+| `run` | Run container locally or remotely |
 | `clean`  | Remove build outputs inside virtual machine |
+| `lint`   | Run flake8 on source code |
+| `download` | Download result files from EC2 instance |
 
-### Running Models In Development
+## Running locally on CPUs
 
-From within the VM, use `update` to build the model runner container,
-then run it with a model script and an attached output volume.
-
+To run an experiment locally, invoke
 ```shell
-$ mkdir -p output
-$ sudo su
 # ./scripts/update
-...container build output...
-# docker run --rm \
-    -v /vagrant/output:/opt/model_training/output \
-    otid-model-training
+vagrant@otid:/vagrant$ ./scripts/run --local
+root@230fb62d8ecd:/opt/model_training# python options.json setup train eval
 ```
+⚠️️ See [model_training/README.md](src/model_training/README.md) for more information on preparing data and running experiments.
 
-To run a model other than the default
-
-```shell
-# docker run --rm \
-    -v /vagrant/output:/opt/model_training/output \
-    otid-model-training python experiment.py
-```
-## Amazon EC2 GPU Instances
+## Running remotely on AWS EC2 GPUs
 
 Support for Amazon EC2 GPU instances is provided through a combination of the AWS CLI and Terraform. The AWS CLI is used to produce a local AWS profile with valid credentials, and Terraform is used to bring up the appropriate EC2 instances using spot pricing.
 
@@ -134,19 +125,15 @@ Thu Oct 20 21:28:46 2016
 +-----------------------------------------------------------------------------+
 ```
 
-
 ### Running Models On A GPU Instance
 
-You can use the `run` script to bring up a GPU-enabled AWS instance, copy code and data to it, and build and run the docker image. This requires adding the `open-tree-id.pem` key to your `ssh-agent`.
-
+You can use the `run` script to bring up a GPU-enabled AWS instance, download data to it from S3, and build and run the docker image. This requires adding the `open-tree-id.pem` key to your `ssh-agent`.
 ```shell
 ./scripts/run --remote
+python options.json setup train eval
 ```
-
 The script leaves the EC2 instance running, so you can tweak changes locally and call `run` again to rerun the docker image with your latest changes.
-
-When done, you can shut down the EC2 instance with:
-
+Results can be downloaded from the EC2 instance onto the local host using the `download` script. When done, you should shut down the EC2 instance with:
 ```shell
 ./scripts/infra destroy
 ```
