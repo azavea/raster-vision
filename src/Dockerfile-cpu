@@ -8,8 +8,9 @@ ARG tensorflow_version=0.10.0-cp35-cp35m
 ARG architecture=cpu
 
 RUN pip install https://storage.googleapis.com/tensorflow/linux/${architecture}/tensorflow-${tensorflow_version}-linux_x86_64.whl && \
-    pip install git+git://github.com/fchollet/keras.git@38719480 &&\
-    pip install git+git://github.com/jakebian/quiver.git
+    pip install git+git://github.com/fchollet/keras.git@38719480 && \
+    pip install git+git://github.com/jakebian/quiver.git && \
+    pip install flake8
 
 WORKDIR /opt/model_training
 
@@ -17,7 +18,6 @@ COPY ./model_training /opt/model_training
 
 # Ensure that the keras user will have permission to write model
 # outputs into /opt/data
-RUN mkdir /opt/data
 USER root
 RUN mkdir /opt/data
 RUN chown -R keras:root /opt/data

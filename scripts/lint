@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${OTID_DEBUG}" ]]; then
+    set -x
+fi
+
+PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+MODEL_TRAINING="$PROJECT_ROOT/src/model_training"
+
+docker run --rm -it \
+    -v "$MODEL_TRAINING":/opt/model_training \
+    otid-model-training-cpu flake8 .
