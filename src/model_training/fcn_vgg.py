@@ -1,7 +1,7 @@
 """
 Train a Fully Convolutional Network (FCN) to do semantic labeling. This takes
-the convolutional layers of a pretrained VGG model, adds 2 1x1 convolutional
-layers and then blows up the 16x16 feature map to 256x256 using bilinear
+the convolutional layers of a pretrained VGG model, adds a 1x1 convolutional
+layer and blows up the 16x16 feature map to 256x256 using bilinear
 interpolation. This doesn't have an skip connections so is similar to FCN-32 in
 https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf
 """
@@ -25,8 +25,8 @@ def make_fcn_vgg(input_shape, nb_labels):
         layer.trainable = False
 
     x = base_model.layers[-2].output
-    x = Convolution2D(128, 1, 1, activation='relu')(x)
-    x = Convolution2D(nb_labels, 1, 1)(x)
+    # x = Convolution2D(512, 1, 1, border_mode='same', activation='relu')(x)
+    x = Convolution2D(nb_labels, 1, 1, border_mode='same')(x)
 
     def resize_bilinear(images):
         # Workaround for

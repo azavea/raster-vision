@@ -4,7 +4,8 @@ Functions for training a model given a RunOptions object.
 import numpy as np
 from os.path import join
 
-from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
+from keras.callbacks import (ModelCheckpoint, CSVLogger,
+                             ReduceLROnPlateau)
 
 from process_data import make_input_output_generators, results_path
 
@@ -21,6 +22,12 @@ def make_model(options):
     elif model_type == 'fcn_vgg':
         from fcn_vgg import make_fcn_vgg
         model = make_fcn_vgg(options.input_shape, options.nb_labels)
+    elif model_type == 'fcn':
+        from fcn import make_fcn
+        model = make_fcn(options.input_shape, options.nb_labels)
+    elif model_type == 'fcn_vgg_skip':
+        from fcn_vgg_skip import make_fcn_vgg_skip
+        model = make_fcn_vgg_skip(options.input_shape, options.nb_labels)
 
     return model
 
@@ -29,20 +36,21 @@ def train_model(model, options):
     print(model.summary())
 
     train_generator, validation_generator = \
-        make_input_output_generators(options.batch_size)
+        make_input_output_generators(options.batch_size, options.include_depth)
 
     model.compile(
         loss='categorical_crossentropy',
-        optimizer='adam',
+        optimizer='nadam',
         metrics=['accuracy'])
 
     run_path = join(results_path, options.run_name)
 
     checkpoint = ModelCheckpoint(filepath=join(run_path, 'model.h5'),
                                  verbose=1, save_best_only=True)
-    early_stopping = EarlyStopping(patience=options.patience, verbose=1)
     logger = CSVLogger(join(run_path, 'log.txt'))
-    callbacks = [checkpoint, early_stopping, logger]
+    reduce_lr = ReduceLROnPlateau(
+        verbose=1, epsilon=0.001, patience=options.patience)
+    callbacks = [checkpoint, logger, reduce_lr]
 
     model.fit_generator(
         train_generator,
