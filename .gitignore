@@ -99,12 +99,4 @@ deployment/ansible/*.retry
 *.tfstate
 *.tfstate.backup
 
-# Output from model training
-src/model_training/output
-src/model_training/tmp
-
-# Trained models downloaded from S3
-src/model_training/data/models/*.h5
-
-# Processed image from predictions endpoint, saved for debugging purposes
-src/model_training/data/processed_image.png
+src/model_training/options.json
