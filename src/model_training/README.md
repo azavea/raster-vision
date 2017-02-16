@@ -31,7 +31,7 @@ include `setup` (create unique `run_name` and setup directory structure), `train
 invoked as follows.
 ```shell
 python run.py <options_file_name> <list of tasks>
-# eg. python options.json setup train eval
-# eg. python options.json eval
+# eg. python run.py options.json setup train eval
+# eg. python run.py options.json eval
 ```
 This will generate a directory structure in `/opt/data/results/<run_name>/` which contains the options file, the learned model, and various metrics and visualization files.

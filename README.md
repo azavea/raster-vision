@@ -49,7 +49,7 @@ To run an experiment locally, invoke
 ```shell
 # ./scripts/update
 vagrant@otid:/vagrant$ ./scripts/run --local
-root@230fb62d8ecd:/opt/model_training# python options.json setup train eval
+root@230fb62d8ecd:/opt/model_training# python run.py options.json setup train eval
 ```
 ⚠️️ See [model_training/README.md](src/model_training/README.md) for more information on preparing data and running experiments.
 
@@ -130,7 +130,7 @@ Thu Oct 20 21:28:46 2016
 You can use the `run` script to bring up a GPU-enabled AWS instance, download data to it from S3, and build and run the docker image. This requires adding the `open-tree-id.pem` key to your `ssh-agent`.
 ```shell
 ./scripts/run --remote
-python options.json setup train eval
+python run.py options.json setup train eval
 ```
 The script leaves the EC2 instance running, so you can tweak changes locally and call `run` again to rerun the docker image with your latest changes.
 Results can be downloaded from the EC2 instance onto the local host using the `download` script. When done, you should shut down the EC2 instance with:
