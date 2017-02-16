@@ -20,7 +20,8 @@ class RunOptions():
     def __init__(self, git_commit=None, model_type=None, input_shape=None,
                  nb_labels=None, run_name=None, batch_size=None,
                  samples_per_epoch=None, nb_epoch=None, nb_val_samples=None,
-                 nb_prediction_images=None, patience=None):
+                 nb_prediction_images=None, patience=None, cooldown=None,
+                 include_depth=False):
         # Run `git rev-parse head` to get this.
         self.git_commit = git_commit
         self.model_type = model_type
@@ -33,6 +34,11 @@ class RunOptions():
         self.nb_val_samples = nb_val_samples
         self.nb_prediction_images = nb_prediction_images
         self.patience = patience
+        self.cooldown = cooldown
+
+        self.include_depth = include_depth
+        if self.input_shape[2] == 4:
+            self.include_depth = True
 
 
 def load_options(file_path):

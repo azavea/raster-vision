@@ -21,23 +21,23 @@ from process_data import (results_path,
                           make_data_generator,
                           proc_data_path,
                           VALIDATION,
-                          INPUT,
+                          RGB_INPUT,
                           OUTPUT)
 
 np.random.seed(1337)
 
 
-def plot_predictions(model, run_path, nb_prediction_images):
+def plot_predictions(model, run_path, nb_prediction_images, include_depth):
     _, validation_generator = make_input_output_generators(
-        nb_prediction_images)
+        nb_prediction_images, include_depth)
 
-    # Get unscaled images for display
     inputs, _ = next(validation_generator)
-    raw_inputs = next(
+    # Get unscaled RGB images for display
+    display_inputs = next(
         make_data_generator(
-            join(proc_data_path, VALIDATION, INPUT),
+            join(proc_data_path, VALIDATION, RGB_INPUT),
             batch_size=nb_prediction_images, shuffle=True, augment=True))
-    raw_outputs = next(
+    display_outputs = next(
         make_data_generator(
             join(proc_data_path, VALIDATION, OUTPUT),
             batch_size=nb_prediction_images, shuffle=True, augment=True))
@@ -60,9 +60,9 @@ def plot_predictions(model, run_path, nb_prediction_images):
             a.set_title(title, fontsize=6)
 
     for i in range(nb_prediction_images):
-        plot_image(subplot_index, raw_inputs[i, :, :, :], 'Input')
+        plot_image(subplot_index, display_inputs[i, :, :, :], 'Input')
         subplot_index += 1
-        plot_image(subplot_index, raw_outputs[i, :, :, :], 'Ground Truth')
+        plot_image(subplot_index, display_outputs[i, :, :, :], 'Ground Truth')
         subplot_index += 1
         plot_image(subplot_index, predictions[i, :, :, :], 'Prediction')
         subplot_index += 1
@@ -78,20 +78,19 @@ def get_samples(data_gen, batch_size, nb_samples):
     return np.concatenate(samples, axis=0)[0:nb_samples, :, :, :]
 
 
-def compute_scores(model, run_path, batch_size, val_samples):
-    input_gen = make_data_generator(
-        join(proc_data_path, VALIDATION, INPUT),
-        shuffle=True, batch_size=batch_size, scale=True)
+def compute_scores(model, run_path, batch_size, nb_val_samples, include_depth):
+    _, validation_generator = make_input_output_generators(
+        batch_size, include_depth)
 
-    output_gen = make_data_generator(
-        join(proc_data_path, VALIDATION, OUTPUT),
-        shuffle=True, batch_size=batch_size)
+    input_gen = map(lambda x: x[0], validation_generator)
+    output_gen = map(lambda x: x[1], validation_generator)
 
-    inputs = get_samples(input_gen, batch_size, val_samples)
+    inputs = get_samples(input_gen, batch_size, nb_val_samples)
     predictions = one_hot_to_label_batch(model.predict(inputs))
     outputs = rgb_to_label_batch(get_samples(
-        output_gen, batch_size, val_samples))
+        output_gen, batch_size, nb_val_samples))
 
+    # Treat each pixel as a separate data point so we can use metric functions.
     predictions = np.ravel(predictions)
     outputs = np.ravel(outputs)
 
@@ -117,7 +116,6 @@ def compute_scores(model, run_path, batch_size, val_samples):
         'confusion_mat': confusion_mat.tolist(),
         'accuracy': accuracy.tolist()
     }
-
     scores_json = json.dumps(scores, sort_keys=True, indent=4)
     print(scores_json)
     with open(join(run_path, 'scores.txt'), 'w') as scores_file:
@@ -153,10 +151,12 @@ def eval_run(options):
     model = load_model(join(run_path, 'model.h5'))
 
     print('Plotting predictions...')
-    plot_predictions(model, run_path, options.nb_prediction_images)
+    plot_predictions(model, run_path, options.nb_prediction_images,
+                     options.include_depth)
 
     print('Computing scores...')
-    compute_scores(model, run_path, options.batch_size, options.nb_val_samples)
+    compute_scores(model, run_path, options.batch_size, options.nb_val_samples,
+                   options.include_depth)
 
     print('Plotting graphs...')
     plot_graphs(model, run_path)

@@ -5,12 +5,15 @@ to put it into a Keras-friendly format.
 """
 from os.path import join
 from os import listdir, makedirs
+import random
+import re
 
 import numpy as np
 from PIL import Image
 from keras.preprocessing.image import ImageDataGenerator
 
-INPUT = 'input'
+RGB_INPUT = 'rgb_input'
+DEPTH_INPUT = 'depth_input'
 OUTPUT = 'output'
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -49,7 +52,8 @@ nb_labels = len(label_keys)
 data_path = '/opt/data/'
 datasets_path = join(data_path, 'datasets')
 raw_data_path = join(datasets_path, 'ISPRS_semantic_labeling_Vaihingen')
-raw_input_path = join(raw_data_path, 'top')
+raw_rgb_input_path = join(raw_data_path, 'top')
+raw_depth_input_path = join(raw_data_path, 'dsm')
 raw_output_path = join(raw_data_path, 'gts_for_participants')
 proc_data_path = join(datasets_path, 'processed_vaihingen')
 results_path = join(data_path, 'results')
@@ -124,43 +128,65 @@ def process_data():
     print('Processing data...')
     file_names = [file_name for file_name in listdir(raw_output_path)
                   if file_name.endswith('.tif')]
+    random.shuffle(file_names)
     nb_files = len(file_names)
 
     nb_train_files = int(nb_files * train_ratio)
     train_file_names = file_names[0:nb_train_files]
     validation_file_names = file_names[nb_train_files:]
 
+    file_name_re = re.compile('.*area(\d+).tif')
+
     def _process_data(file_names, partition_name):
         # Keras expects a directory for each class, but there are none,
         # so put all images in a single bogus class directory.
-        proc_input_path = join(proc_data_path, partition_name,
-                               INPUT, BOGUS_CLASS)
+        proc_rgb_input_path = join(proc_data_path, partition_name,
+                                   RGB_INPUT, BOGUS_CLASS)
+        proc_depth_input_path = join(proc_data_path, partition_name,
+                                     DEPTH_INPUT, BOGUS_CLASS)
         proc_output_path = join(proc_data_path, partition_name,
                                 OUTPUT, BOGUS_CLASS)
 
-        _makedirs(proc_input_path)
+        _makedirs(proc_rgb_input_path)
+        _makedirs(proc_depth_input_path)
         _makedirs(proc_output_path)
 
         proc_file_index = 0
         for file_name in file_names:
             output_im = load_image(join(raw_output_path, file_name))
-            input_im = load_image(join(raw_input_path, file_name))
+            rgb_input_im = load_image(join(raw_rgb_input_path, file_name))
+            index = file_name_re.search(file_name).group(1)
+            depth_file_name = 'dsm_09cm_matching_area{}.tif'.format(index)
+            depth_input_im = load_image(
+                join(raw_depth_input_path, depth_file_name))[:, :, np.newaxis]
 
-            input_tiles = tile_image(input_im, tile_size, tile_stride)
+            rgb_input_tiles = tile_image(rgb_input_im, tile_size, tile_stride)
+            depth_input_tiles = tile_image(depth_input_im, tile_size,
+                                           tile_stride)
             output_tiles = tile_image(output_im, tile_size, tile_stride)
 
-            for input_tile, output_tile in zip(input_tiles, output_tiles):
+            for rgb_input_tile, depth_input_tile, output_tile in \
+                    zip(rgb_input_tiles, depth_input_tiles, output_tiles):
                 proc_file_name = '{}.png'.format(proc_file_index)
-                save_image(join(proc_input_path, proc_file_name), input_tile)
-                save_image(join(proc_output_path, proc_file_name), output_tile)
+                save_image(join(proc_rgb_input_path, proc_file_name),
+                           rgb_input_tile)
+                save_image(join(proc_depth_input_path, proc_file_name),
+                           depth_input_tile)
+                save_image(join(proc_output_path, proc_file_name),
+                           output_tile)
                 proc_file_index += 1
 
     _process_data(train_file_names, TRAIN)
     _process_data(validation_file_names, VALIDATION)
 
 
+def rand_rotate_batch(x):
+    np.rot90(x, np.random.randint(1, 5))
+    return x
+
+
 def make_data_generator(path, batch_size=32, shuffle=False, augment=False,
-                        scale=False):
+                        scale=False, one_hot=False):
     gen_params = {}
     if augment:
         gen_params['horizontal_flip'] = True
@@ -169,53 +195,67 @@ def make_data_generator(path, batch_size=32, shuffle=False, augment=False,
     if scale:
         gen_params['featurewise_center'] = True
         gen_params['featurewise_std_normalization'] = True
-        samples = get_samples_for_fit()
+        samples = get_samples_for_fit(path)
 
     gen = ImageDataGenerator(**gen_params)
     if scale:
         gen.fit(samples)
 
-    return gen.flow_from_directory(
+    gen = gen.flow_from_directory(
         path, class_mode=None, target_size=target_size,
         batch_size=batch_size, shuffle=shuffle, seed=seed)
 
+    if augment:
+        gen = map(rand_rotate_batch, gen)
 
-def get_samples_for_fit():
-    # TODO memoize
-    path = join(proc_data_path, TRAIN, INPUT)
+    if one_hot:
+        gen = map(rgb_to_one_hot_batch, gen)
+
+    return gen
+
+
+def get_samples_for_fit(path):
     return next(make_data_generator(path, shuffle=True))
 
 
-def make_input_output_generator(base_path, batch_size):
-    input_path = join(base_path, INPUT)
+def combine_rgb_depth(rgb_depth):
+    rgb, depth = rgb_depth
+    depth = depth[:, :, :, 0][:, :, :, np.newaxis]
+    return np.concatenate([rgb, depth], axis=3)
 
-    input_gen = make_data_generator(input_path, batch_size=batch_size,
-                                    shuffle=True, augment=True, scale=True)
+
+def make_input_output_generator(base_path, batch_size, include_depth=False):
+    rgb_input_path = join(base_path, RGB_INPUT)
+    depth_input_path = join(base_path, DEPTH_INPUT)
+
+    rgb_input_gen = make_data_generator(
+        rgb_input_path, batch_size=batch_size, shuffle=True, augment=True,
+        scale=True)
+
+    depth_input_gen = make_data_generator(
+        depth_input_path, batch_size=batch_size, shuffle=True, augment=True,
+        scale=True)
+
+    input_gen = rgb_input_gen
+    if include_depth:
+        input_gen = map(combine_rgb_depth, zip(rgb_input_gen, depth_input_gen))
 
     # Don't scale the outputs (because they are labels) and convert to
     # one-hot encoding.
     output_path = join(base_path, OUTPUT)
-    _output_gen = make_data_generator(output_path, batch_size=batch_size,
-                                      shuffle=True, augment=True)
-
-    # TODO convert to map over iterator
-    def make_output_gen():
-        while True:
-            rgb_batch = next(_output_gen)
-            yield rgb_to_one_hot_batch(rgb_batch)
-
-    output_gen = make_output_gen()
+    output_gen = make_data_generator(output_path, batch_size=batch_size,
+                                     shuffle=True, augment=True, one_hot=True)
 
     return zip(input_gen, output_gen)
 
 
-def make_input_output_generators(batch_size):
+def make_input_output_generators(batch_size, include_depth=False):
     train_gen = \
         make_input_output_generator(
-            join(proc_data_path, TRAIN), batch_size)
+            join(proc_data_path, TRAIN), batch_size, include_depth)
     validation_gen = \
         make_input_output_generator(
-            join(proc_data_path, VALIDATION), batch_size)
+            join(proc_data_path, VALIDATION), batch_size, include_depth)
 
     return train_gen, validation_gen
 
