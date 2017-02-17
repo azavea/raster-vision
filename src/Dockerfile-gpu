@@ -1,5 +1,5 @@
 # Based on https://github.com/fchollet/keras/blob/2b51317be82d4420169d2cc79dc4443028417911/docker/Dockerfile
-FROM otid-model-training-base
+FROM keras-semantic-segmentation-base
 
 USER keras
 

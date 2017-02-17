@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${OTID_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0")
+Publish docker GPU container to ECR.
+"
+}
+
+PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--help" ]
+    then
+        usage
+    else
+        $PROJECT_ROOT/scripts/update --gpu
+        `aws ecr get-login --region us-east-1`
+        docker tag keras-semantic-segmentation-gpu:latest 002496907356.dkr.ecr.us-east-1.amazonaws.com/keras-semantic-segmentation-gpu:latest
+        docker push 002496907356.dkr.ecr.us-east-1.amazonaws.com/keras-semantic-segmentation-gpu:latest
+    fi
+fi

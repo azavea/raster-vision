@@ -22,14 +22,14 @@ then
         exit
     fi
 
-    docker build -t otid-model-training-base -f src/Dockerfile-base src
+    docker build -t keras-semantic-segmentation-base -f src/Dockerfile-base src
 
     if [ $# -eq 0 -o "${1:-}" = "--cpu" ]
     then
-        docker build -t otid-model-training-cpu -f src/Dockerfile-cpu src
+        docker build -t keras-semantic-segmentation-cpu -f src/Dockerfile-cpu src
     fi
     if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
     then
-        docker build -t otid-model-training-gpu -f src/Dockerfile-gpu src
+        docker build -t keras-semantic-segmentation-gpu -f src/Dockerfile-gpu src
     fi
 fi
