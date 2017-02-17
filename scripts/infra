@@ -13,6 +13,8 @@ Setup infrastructure resources required to support GPU development.
 "
 }
 
+PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     if [ "${1:-}" = "--help" ]
@@ -29,11 +31,29 @@ then
                 terraform "$@"
                 ;;
             plan)
-                terraform plan \
-                          -out="gpu-worker.tfplan"
+                terraform "$@" -out="gpu-worker.tfplan"
                 ;;
             apply)
                 terraform apply "gpu-worker.tfplan"
+                ;;
+            start)
+                NB_INSTANCES=${2:-1}
+                echo "NB_INSTANCES: $NB_INSTANCES"
+                "$PROJECT_ROOT/scripts/infra" plan -var fleet_target_capacity="$NB_INSTANCES"
+                "$PROJECT_ROOT/scripts/infra" apply
+
+                # Wait for it to be ready, then get the hostname
+                echo "Waiting for the EC2 instance to finish initializing"
+                aws ec2 wait instance-status-ok --filter \
+                            'Name=instance-state-code,Values=0,16'
+
+                EC2_HOSTNAMES="$(aws ec2 describe-instances \
+                    --filter "Name=instance-state-code,Values=16" \
+                    --filter "Name=instance-type,Values=p2.xlarge" \
+                    --query 'Reservations[].Instances[].PublicDnsName' --output text)"
+
+                echo "HOSTNAMES: $EC2_HOSTNAMES"
+                echo "Remember to run './scripts/infra destroy' when done!"
                 ;;
             *)
                 echo "ERROR: I don't have support for that Terraform subcommand!"

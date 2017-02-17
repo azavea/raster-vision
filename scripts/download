@@ -6,14 +6,26 @@ if [[ -n "${OTID_DEBUG}" ]]; then
     set -x
 fi
 
-EC2_HOSTNAME="$(aws ec2 describe-instances \
-    --filter "Name=instance-state-code,Values=16" \
-    --query 'Reservations[].Instances[].PublicDnsName' --output text)"
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0") <public dns of instance>
+Download results from EC2 instance.
+"
+}
 
-echo "HOSTNAME: $EC2_HOSTNAME"
+PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
 
-DATA_DIR="/opt/data"
-EC2_HOME="/home/ec2-user"
-# Copy learned models back down to the local machine
-rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
-    "ec2-user@$EC2_HOSTNAME:$EC2_HOME/results" "$DATA_DIR"
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--help" ]
+    then
+        usage
+    else
+        EC2_HOSTNAME=$1
+        echo "HOSTNAME: $EC2_HOSTNAME"
+
+        # Copy learned models back down to the local machine
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
+            "ubuntu@$EC2_HOSTNAME:/home/ubuntu/data/results" /opt/data
+    fi
+fi

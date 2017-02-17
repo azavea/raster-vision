@@ -1,9 +1,6 @@
 #
 # Spot Fleet Resources
 #
-data "template_file" "gpu_worker" {
-  template = "${file("cloud-config/gpu-worker.yml")}"
-}
 
 resource "aws_spot_fleet_request" "gpu_worker" {
   iam_fleet_role                      = "${var.fleet_iam_role_arn}"
@@ -13,6 +10,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
   excess_capacity_termination_policy  = "Default"
   target_capacity                     = "${var.fleet_target_capacity}"
 
+
   launch_specification {
     iam_instance_profile        = "${var.fleet_instance_profile}"
     instance_type               = "p2.xlarge"
@@ -20,7 +18,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     key_name                    = "${var.aws_key_name}"
     subnet_id                   = "subnet-7aeb2121"
     vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${data.template_file.gpu_worker.rendered}"
+    user_data                   = "${file("config-ec2")}"
 
     root_block_device {
       volume_size = "16"
@@ -35,7 +33,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     key_name                    = "${var.aws_key_name}"
     subnet_id                   = "subnet-76d6134a"
     vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${data.template_file.gpu_worker.rendered}"
+    user_data                   = "${file("config-ec2")}"
 
     root_block_device {
       volume_size = "16"
@@ -50,7 +48,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     key_name                    = "${var.aws_key_name}"
     subnet_id                   = "subnet-42b83e0b"
     vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${data.template_file.gpu_worker.rendered}"
+    user_data                   = "${file("config-ec2")}"
 
     root_block_device {
       volume_size = "16"
@@ -65,67 +63,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     key_name                    = "${var.aws_key_name}"
     subnet_id                   = "subnet-5f538472"
     vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${data.template_file.gpu_worker.rendered}"
-
-    root_block_device {
-      volume_size = "16"
-      volume_type = "gp2"
-    }
-  }
-
-  launch_specification {
-    iam_instance_profile        = "${var.fleet_instance_profile}"
-    instance_type               = "g2.2xlarge"
-    ami                         = "${var.fleet_ami}"
-    key_name                    = "${var.aws_key_name}"
-    subnet_id                   = "subnet-7aeb2121"
-    vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${data.template_file.gpu_worker.rendered}"
-
-    root_block_device {
-      volume_size = "16"
-      volume_type = "gp2"
-    }
-  }
-
-  launch_specification {
-    iam_instance_profile        = "${var.fleet_instance_profile}"
-    instance_type               = "g2.2xlarge"
-    ami                         = "${var.fleet_ami}"
-    key_name                    = "${var.aws_key_name}"
-    subnet_id                   = "subnet-76d6134a"
-    vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${data.template_file.gpu_worker.rendered}"
-
-    root_block_device {
-      volume_size = "16"
-      volume_type = "gp2"
-    }
-  }
-
-  launch_specification {
-    iam_instance_profile        = "${var.fleet_instance_profile}"
-    instance_type               = "g2.2xlarge"
-    ami                         = "${var.fleet_ami}"
-    key_name                    = "${var.aws_key_name}"
-    subnet_id                   = "subnet-42b83e0b"
-    vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${data.template_file.gpu_worker.rendered}"
-
-    root_block_device {
-      volume_size = "16"
-      volume_type = "gp2"
-    }
-  }
-
-  launch_specification {
-    iam_instance_profile        = "${var.fleet_instance_profile}"
-    instance_type               = "g2.2xlarge"
-    ami                         = "${var.fleet_ami}"
-    key_name                    = "${var.aws_key_name}"
-    subnet_id                   = "subnet-5f538472"
-    vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${data.template_file.gpu_worker.rendered}"
+    user_data                   = "${file("config-ec2")}"
 
     root_block_device {
       volume_size = "16"

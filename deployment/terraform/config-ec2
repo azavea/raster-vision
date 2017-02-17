@@ -1,0 +1,19 @@
+#!/bin/bash
+
+cd /home/ubuntu
+
+# Install command line tools
+apt-get install -y awscli git unzip
+
+# Copy data
+aws s3 cp s3://otid-data/processed_vaihingen.zip data/datasets/processed_vaihingen.zip
+pushd data/datasets
+unzip -q -o processed_vaihingen.zip
+popd
+
+# Download source repo
+sudo -H -u ubuntu bash -c "yes | git clone https://github.com/azavea/keras-semantic-segmentation.git"
+
+# Get docker container
+`aws ecr get-login --region us-east-1`
+docker pull 002496907356.dkr.ecr.us-east-1.amazonaws.com/keras-semantic-segmentation-gpu
