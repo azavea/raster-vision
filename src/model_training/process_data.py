@@ -11,6 +11,10 @@ import re
 import numpy as np
 from PIL import Image
 from keras.preprocessing.image import ImageDataGenerator
+import matplotlib as mpl
+# For headless environments
+mpl.use('Agg') # NOQA
+import matplotlib.pyplot as plt
 
 RGB_INPUT = 'rgb_input'
 DEPTH_INPUT = 'depth_input'
@@ -160,6 +164,8 @@ def process_data():
             depth_input_im = load_image(
                 join(raw_depth_input_path, depth_file_name))[:, :, np.newaxis]
 
+            depth_input_im /= 2.
+
             rgb_input_tiles = tile_image(rgb_input_im, tile_size, tile_stride)
             depth_input_tiles = tile_image(depth_input_im, tile_size,
                                            tile_stride)
@@ -205,8 +211,8 @@ def make_data_generator(path, batch_size=32, shuffle=False, augment=False,
         path, class_mode=None, target_size=target_size,
         batch_size=batch_size, shuffle=shuffle, seed=seed)
 
-    if augment:
-        gen = map(rand_rotate_batch, gen)
+#    if augment:
+#        gen = map(rand_rotate_batch, gen)
 
     if one_hot:
         gen = map(rgb_to_one_hot_batch, gen)
@@ -260,5 +266,53 @@ def make_input_output_generators(batch_size, include_depth=False):
     return train_gen, validation_gen
 
 
+def plot_batch(inputs, outputs, path):
+    fig = plt.figure()
+    nb_input_channels = inputs.shape[3]
+    nb_output_channels = outputs.shape[3]
+    batch_size = inputs.shape[0]
+    nb_subplot_cols = nb_input_channels + nb_output_channels
+    gs = mpl.gridspec.GridSpec(batch_size, nb_subplot_cols)
+    gs.update(wspace=0.1, hspace=0.1, left=0.1, right=0.4, bottom=0.1, top=0.9)
+
+    def plot_image(subplot_index, im):
+        a = fig.add_subplot(gs[subplot_index])
+        a.axes.get_xaxis().set_visible(False)
+        a.axes.get_yaxis().set_visible(False)
+        a.imshow(im, cmap='gray', vmin=0, vmax=255)
+
+    subplot_index = 0
+    for batch_ind in range(batch_size):
+        for channel_ind in range(nb_input_channels):
+            im = (inputs[batch_ind, :, :, channel_ind] + 1) * 64
+            if channel_ind == 3:
+                im = inputs[batch_ind, :, :, channel_ind]
+            plot_image(subplot_index, im)
+            subplot_index += 1
+        for channel_ind in range(nb_output_channels):
+            im = outputs[batch_ind, :, :, channel_ind] * 64
+            plot_image(subplot_index, im)
+            subplot_index += 1
+
+    predictions_path = join(path, 'batch.pdf')
+    plt.savefig(predictions_path, bbox_inches='tight', format='pdf', dpi=600)
+
+
+def plot_generators():
+    batch_size = 16
+    include_depth = True
+    train_gen, validation_gen = \
+        make_input_output_generators(batch_size, include_depth)
+
+    inputs, outputs = next(train_gen)
+    path = join(proc_data_path, TRAIN)
+    plot_batch(inputs, outputs, path)
+
+    inputs, outputs = next(validation_gen)
+    path = join(proc_data_path, VALIDATION)
+    plot_batch(inputs, outputs, path)
+
+
 if __name__ == '__main__':
     process_data()
+    #plot_generators()
