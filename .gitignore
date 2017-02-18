@@ -98,5 +98,3 @@ deployment/ansible/*.retry
 *.tfvars
 *.tfstate
 *.tfstate.backup
-
-src/model_training/options.json
