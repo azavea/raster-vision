@@ -79,16 +79,22 @@ def get_samples(data_gen, batch_size, nb_samples):
 
 
 def compute_scores(model, run_path, batch_size, nb_val_samples, include_depth):
+    # This returns almost the same exact accuracy score as computed below
+    # so that's good.
+    #_, validation_generator = make_input_output_generators(
+    #    batch_size, include_depth)
+    #score = model.evaluate_generator(validation_generator, nb_val_samples)
+    #print(score)
+
+    # This is a hack until I figure out why predict_generator isn't working.
+    batch_size = nb_val_samples
     _, validation_generator = make_input_output_generators(
         batch_size, include_depth)
 
-    input_gen = map(lambda x: x[0], validation_generator)
-    output_gen = map(lambda x: x[1], validation_generator)
+    inputs, outputs = next(validation_generator)
 
-    inputs = get_samples(input_gen, batch_size, nb_val_samples)
-    predictions = one_hot_to_label_batch(model.predict(inputs))
-    outputs = rgb_to_label_batch(get_samples(
-        output_gen, batch_size, nb_val_samples))
+    predictions = one_hot_to_label_batch(model.predict(inputs, nb_val_samples))
+    outputs = one_hot_to_label_batch(outputs)
 
     # Treat each pixel as a separate data point so we can use metric functions.
     predictions = np.ravel(predictions)
