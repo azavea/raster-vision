@@ -71,8 +71,11 @@ def setup_run(options):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('file_path', help='path to the options json file')
-    parser.add_argument('tasks', nargs='*', help='list of tasks to perform')
+    parser.add_argument('file_path', nargs='?',
+                         help='path to the options json file',
+                         default='options.json')
+    parser.add_argument('tasks', nargs='*', help='list of tasks to perform',
+                        default=['setup', 'train', 'eval'])
     return parser.parse_args()
 
 
