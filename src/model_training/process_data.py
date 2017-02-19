@@ -55,7 +55,7 @@ nb_labels = len(label_keys)
 
 data_path = '/opt/data/'
 datasets_path = join(data_path, 'datasets')
-raw_data_path = join(datasets_path, 'ISPRS_semantic_labeling_Vaihingen')
+raw_data_path = join(datasets_path, 'vaihingen')
 raw_rgb_input_path = join(raw_data_path, 'top')
 raw_depth_input_path = join(raw_data_path, 'dsm')
 raw_output_path = join(raw_data_path, 'gts_for_participants')
@@ -233,6 +233,7 @@ def combine_rgb_depth(rgb_depth):
 def make_input_output_generator(base_path, batch_size, include_depth=False):
     rgb_input_path = join(base_path, RGB_INPUT)
     depth_input_path = join(base_path, DEPTH_INPUT)
+    output_path = join(base_path, OUTPUT)
 
     rgb_input_gen = make_data_generator(
         rgb_input_path, batch_size=batch_size, shuffle=True, augment=True,
@@ -248,7 +249,6 @@ def make_input_output_generator(base_path, batch_size, include_depth=False):
 
     # Don't scale the outputs (because they are labels) and convert to
     # one-hot encoding.
-    output_path = join(base_path, OUTPUT)
     output_gen = make_data_generator(output_path, batch_size=batch_size,
                                      shuffle=True, augment=True, one_hot=True)
 
@@ -266,53 +266,72 @@ def make_input_output_generators(batch_size, include_depth=False):
     return train_gen, validation_gen
 
 
-def plot_batch(inputs, outputs, path):
+def plot_batch(inputs, outputs, file_path):
+    rgb_outputs = one_hot_to_rgb_batch(outputs)
+    inputs = np.clip((inputs + 1) * 128, 0, 255)
+    outputs = outputs * 128
+
     fig = plt.figure()
     nb_input_channels = inputs.shape[3]
     nb_output_channels = outputs.shape[3]
     batch_size = inputs.shape[0]
-    nb_subplot_cols = nb_input_channels + nb_output_channels
+    nb_subplot_cols = nb_input_channels + nb_output_channels + 2
     gs = mpl.gridspec.GridSpec(batch_size, nb_subplot_cols)
     gs.update(wspace=0.1, hspace=0.1, left=0.1, right=0.4, bottom=0.1, top=0.9)
 
-    def plot_image(subplot_index, im):
+    def plot_image(subplot_index, im, rgb=False):
         a = fig.add_subplot(gs[subplot_index])
         a.axes.get_xaxis().set_visible(False)
         a.axes.get_yaxis().set_visible(False)
-        a.imshow(im, cmap='gray', vmin=0, vmax=255)
+        if rgb:
+            a.imshow(im.astype(np.uint8))
+        else:
+            a.imshow(im, cmap='gray', vmin=0, vmax=255)
 
     subplot_index = 0
     for batch_ind in range(batch_size):
+        # Plot input channels
         for channel_ind in range(nb_input_channels):
-            im = (inputs[batch_ind, :, :, channel_ind] + 1) * 64
-            if channel_ind == 3:
-                im = inputs[batch_ind, :, :, channel_ind]
-            plot_image(subplot_index, im)
-            subplot_index += 1
-        for channel_ind in range(nb_output_channels):
-            im = outputs[batch_ind, :, :, channel_ind] * 64
+            im = inputs[batch_ind, :, :, channel_ind]
             plot_image(subplot_index, im)
             subplot_index += 1
 
-    predictions_path = join(path, 'batch.pdf')
-    plt.savefig(predictions_path, bbox_inches='tight', format='pdf', dpi=600)
+        # Plot RGB input
+        im = inputs[batch_ind, :, :, 0:3]
+        plot_image(subplot_index, im, rgb=True)
+        subplot_index += 1
+
+        # Plot output channels
+        for channel_ind in range(nb_output_channels):
+            im = outputs[batch_ind, :, :, channel_ind]
+            plot_image(subplot_index, im)
+            subplot_index += 1
+
+        # Plot output channels jointly
+        im = rgb_outputs[batch_ind, :, :, :]
+        plot_image(subplot_index, im, rgb=True)
+        subplot_index += 1
+
+    plt.savefig(file_path, bbox_inches='tight', format='pdf', dpi=600)
 
 
 def plot_generators():
-    batch_size = 16
+    batch_size = 12
+    nb_batches = 1
     include_depth = True
+
     train_gen, validation_gen = \
         make_input_output_generators(batch_size, include_depth)
 
-    inputs, outputs = next(train_gen)
-    path = join(proc_data_path, TRAIN)
-    plot_batch(inputs, outputs, path)
+    for batch_ind in range(nb_batches):
+        inputs, outputs = next(train_gen)
+        file_path = join(proc_data_path, TRAIN, 'batch_{}.pdf'.format(batch_ind))
+        plot_batch(inputs, outputs, file_path)
 
-    inputs, outputs = next(validation_gen)
-    path = join(proc_data_path, VALIDATION)
-    plot_batch(inputs, outputs, path)
-
+        inputs, outputs = next(validation_gen)
+        file_path = join(proc_data_path, VALIDATION, 'batch_{}.pdf'.format(batch_ind))
+        plot_batch(inputs, outputs, file_path)
 
 if __name__ == '__main__':
     process_data()
-    #plot_generators()
+    # plot_generators()
