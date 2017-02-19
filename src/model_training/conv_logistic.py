@@ -8,12 +8,11 @@ from keras.models import Sequential
 from keras.layers import Activation, Convolution2D, Reshape
 
 
-def make_conv_logistic(input_shape, nb_labels):
+def make_conv_logistic(input_shape, nb_labels, kernel_size):
     nb_rows, nb_cols, _ = input_shape
     nb_labels = nb_labels
 
     model = Sequential()
-    kernel_size = (10, 10)
     model.add(Convolution2D(nb_labels, kernel_size[0], kernel_size[1],
                             border_mode='same', input_shape=input_shape))
     model.add(Reshape([nb_rows * nb_cols, nb_labels]))

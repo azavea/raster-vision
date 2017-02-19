@@ -18,7 +18,8 @@ def make_model(options):
     model_type = options.model_type
     if model_type == 'conv_logistic':
         from conv_logistic import make_conv_logistic
-        model = make_conv_logistic(options.input_shape, options.nb_labels)
+        model = make_conv_logistic(options.input_shape, options.nb_labels,
+                                   options.kernel_size)
     elif model_type == 'fcn_vgg':
         from fcn_vgg import make_fcn_vgg
         model = make_fcn_vgg(options.input_shape, options.nb_labels)

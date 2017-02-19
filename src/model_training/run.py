@@ -21,7 +21,7 @@ class RunOptions():
                  nb_labels=None, run_name=None, batch_size=None,
                  samples_per_epoch=None, nb_epoch=None, nb_val_samples=None,
                  nb_prediction_images=None, patience=None, cooldown=None,
-                 include_depth=False):
+                 include_depth=False, kernel_size=None):
         # Run `git rev-parse head` to get this.
         self.git_commit = git_commit
         self.model_type = model_type
@@ -35,6 +35,9 @@ class RunOptions():
         self.nb_prediction_images = nb_prediction_images
         self.patience = patience
         self.cooldown = cooldown
+
+        if self.model_type == 'conv_logistic':
+            self.kernel_size = kernel_size or [1, 1]
 
         self.include_depth = include_depth
         if self.input_shape[2] == 4:
