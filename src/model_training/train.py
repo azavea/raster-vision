@@ -17,17 +17,17 @@ def make_model(options):
     model = None
     model_type = options.model_type
     if model_type == 'conv_logistic':
-        from conv_logistic import make_conv_logistic
+        from models.conv_logistic import make_conv_logistic
         model = make_conv_logistic(options.input_shape, options.nb_labels,
                                    options.kernel_size)
     elif model_type == 'fcn_vgg':
-        from fcn_vgg import make_fcn_vgg
+        from models.fcn_vgg import make_fcn_vgg
         model = make_fcn_vgg(options.input_shape, options.nb_labels)
     elif model_type == 'fcn':
-        from fcn import make_fcn
+        from models.fcn import make_fcn
         model = make_fcn(options.input_shape, options.nb_labels)
     elif model_type == 'fcn_vgg_skip':
-        from fcn_vgg_skip import make_fcn_vgg_skip
+        from models.fcn_vgg_skip import make_fcn_vgg_skip
         model = make_fcn_vgg_skip(options.input_shape, options.nb_labels)
 
     return model
