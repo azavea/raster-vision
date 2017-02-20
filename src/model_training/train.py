@@ -7,7 +7,8 @@ from os.path import join
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau)
 
-from process_data import make_input_output_generators, results_path
+from .data.generators import make_input_output_generators
+from .data.preprocess import get_dataset_path, results_path
 
 np.random.seed(1337)
 
@@ -17,17 +18,17 @@ def make_model(options):
     model = None
     model_type = options.model_type
     if model_type == 'conv_logistic':
-        from models.conv_logistic import make_conv_logistic
+        from .models.conv_logistic import make_conv_logistic
         model = make_conv_logistic(options.input_shape, options.nb_labels,
                                    options.kernel_size)
     elif model_type == 'fcn_vgg':
-        from models.fcn_vgg import make_fcn_vgg
+        from .models.fcn_vgg import make_fcn_vgg
         model = make_fcn_vgg(options.input_shape, options.nb_labels)
     elif model_type == 'fcn':
-        from models.fcn import make_fcn
+        from .models.fcn import make_fcn
         model = make_fcn(options.input_shape, options.nb_labels)
     elif model_type == 'fcn_vgg_skip':
-        from models.fcn_vgg_skip import make_fcn_vgg_skip
+        from .models.fcn_vgg_skip import make_fcn_vgg_skip
         model = make_fcn_vgg_skip(options.input_shape, options.nb_labels)
 
     return model
@@ -35,9 +36,10 @@ def make_model(options):
 
 def train_model(model, options):
     print(model.summary())
-
+    path = get_dataset_path(options.dataset)
     train_generator, validation_generator = \
-        make_input_output_generators(options.batch_size, options.include_depth)
+        make_input_output_generators(
+            path, options.batch_size, options.include_depth)
 
     model.compile(
         loss='categorical_crossentropy',

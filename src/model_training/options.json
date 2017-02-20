@@ -1,19 +1,24 @@
 {
-    "batch_size": 16,
+    "batch_size": 2,
     "cooldown": null,
+    "dataset": "potsdam",
     "git_commit": null,
-    "include_depth": false,
+    "include_depth": true,
     "input_shape": [
-        256,
-        256,
-        3
+        512,
+        512,
+        4
+    ],
+    "kernel_size": [
+        10,
+        10
     ],
     "model_type": "conv_logistic",
     "nb_epoch": 10,
     "nb_labels": 6,
     "nb_prediction_images": 8,
-    "nb_val_samples": 256,
+    "nb_val_samples": 512,
     "patience": 3,
-    "run_name": "conv_logistic/debug_no_rot",
+    "run_name": "conv_logistic/potstdam_test",
     "samples_per_epoch": 512
 }

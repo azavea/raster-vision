@@ -7,9 +7,9 @@ import json
 from os.path import join
 import argparse
 
-from process_data import _makedirs, results_path
-from train import make_model, train_model
-from eval_run import eval_run
+from .data.preprocess import _makedirs, results_path
+from .train import make_model, train_model
+from .eval_run import eval_run
 
 SETUP = 'setup'
 TRAIN = 'train'
@@ -21,7 +21,7 @@ class RunOptions():
                  nb_labels=None, run_name=None, batch_size=None,
                  samples_per_epoch=None, nb_epoch=None, nb_val_samples=None,
                  nb_prediction_images=None, patience=None, cooldown=None,
-                 include_depth=False, kernel_size=None):
+                 include_depth=False, kernel_size=None, dataset=None):
         # Run `git rev-parse head` to get this.
         self.git_commit = git_commit
         self.model_type = model_type
@@ -38,6 +38,8 @@ class RunOptions():
 
         if self.model_type == 'conv_logistic':
             self.kernel_size = kernel_size or [1, 1]
+
+        self.dataset = dataset
 
         self.include_depth = include_depth
         if self.input_shape[2] == 4:
@@ -75,8 +77,8 @@ def setup_run(options):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('file_path', nargs='?',
-                         help='path to the options json file',
-                         default='options.json')
+                        help='path to the options json file',
+                        default='/opt/model_training/options.json')
     parser.add_argument('tasks', nargs='*', help='list of tasks to perform',
                         default=['setup', 'train', 'eval'])
     return parser.parse_args()

@@ -12,34 +12,28 @@ mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 from sklearn import metrics
 
-from process_data import (results_path,
-                          one_hot_to_rgb_batch,
-                          one_hot_to_label_batch,
-                          rgb_to_label_batch,
-                          label_names,
-                          make_input_output_generators,
-                          make_data_generator,
-                          proc_data_path,
-                          VALIDATION,
-                          RGB_INPUT,
-                          OUTPUT)
+from .data.generators import make_input_output_generators, make_data_generator
+from .data.preprocess import (
+    results_path, one_hot_to_rgb_batch, one_hot_to_label_batch, label_names,
+    get_dataset_path, VALIDATION, RGB_INPUT, OUTPUT)
 
 np.random.seed(1337)
 
 
-def plot_predictions(model, run_path, nb_prediction_images, include_depth):
+def plot_predictions(model, data_path, run_path, nb_prediction_images,
+                     include_depth):
     _, validation_generator = make_input_output_generators(
-        nb_prediction_images, include_depth)
+        data_path, nb_prediction_images, include_depth)
 
     inputs, _ = next(validation_generator)
     # Get unscaled RGB images for display
     display_inputs = next(
         make_data_generator(
-            join(proc_data_path, VALIDATION, RGB_INPUT),
+            join(data_path, VALIDATION, RGB_INPUT),
             batch_size=nb_prediction_images, shuffle=True, augment=True))
     display_outputs = next(
         make_data_generator(
-            join(proc_data_path, VALIDATION, OUTPUT),
+            join(data_path, VALIDATION, OUTPUT),
             batch_size=nb_prediction_images, shuffle=True, augment=True))
 
     predictions = one_hot_to_rgb_batch(
@@ -78,18 +72,12 @@ def get_samples(data_gen, batch_size, nb_samples):
     return np.concatenate(samples, axis=0)[0:nb_samples, :, :, :]
 
 
-def compute_scores(model, run_path, batch_size, nb_val_samples, include_depth):
-    # This returns almost the same exact accuracy score as computed below
-    # so that's good.
-    #_, validation_generator = make_input_output_generators(
-    #    batch_size, include_depth)
-    #score = model.evaluate_generator(validation_generator, nb_val_samples)
-    #print(score)
-
+def compute_scores(model, data_path, run_path, batch_size, nb_val_samples,
+                   include_depth):
     # This is a hack until I figure out why predict_generator isn't working.
     batch_size = nb_val_samples
     _, validation_generator = make_input_output_generators(
-        batch_size, include_depth)
+        data_path, batch_size, include_depth)
 
     inputs, outputs = next(validation_generator)
 
@@ -155,14 +143,16 @@ def plot_graphs(model, run_path):
 def eval_run(options):
     run_path = join(results_path, options.run_name)
     model = load_model(join(run_path, 'model.h5'))
+    data_path = get_dataset_path(options.dataset)
 
     print('Plotting predictions...')
-    plot_predictions(model, run_path, options.nb_prediction_images,
+    plot_predictions(model, data_path, run_path, options.nb_prediction_images,
                      options.include_depth)
 
     print('Computing scores...')
-    compute_scores(model, run_path, options.batch_size, options.nb_val_samples,
-                   options.include_depth)
+    compute_scores(
+        model, data_path, run_path, options.batch_size, options.nb_val_samples,
+        options.include_depth)
 
     print('Plotting graphs...')
     plot_graphs(model, run_path)

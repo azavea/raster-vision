@@ -21,7 +21,7 @@ def make_fcn(input_shape, nb_labels):
 
     input_tensor = Input(shape=input_shape)
 
-    # Block 1 256x256 -> 64x64
+    # Block 1 512x512 -> 64x64
     x = Convolution2D(64, 3, 3, border_mode='same', subsample=(2, 2),
                       input_shape=input_shape)(input_tensor)
     x = BatchNormalization()(x)
@@ -45,11 +45,11 @@ def make_fcn(input_shape, nb_labels):
     x = MaxPooling2D()(x)
 
     # Block 3 32x32 -> 16x16
-    x = Convolution2D(256, 3, 3, border_mode='same')(x)
+    x = Convolution2D(512, 3, 3, border_mode='same')(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(256, 3, 3, border_mode='same')(x)
+    x = Convolution2D(512, 3, 3, border_mode='same')(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
 
@@ -68,8 +68,8 @@ def make_fcn(input_shape, nb_labels):
         # Workaround for
         # https://github.com/fchollet/keras/issues/4609
         import tensorflow as tf
-        nb_rows = 256
-        nb_cols = 256
+        nb_rows = 512
+        nb_cols = 512
         return tf.image.resize_bilinear(images, [nb_rows, nb_cols])
 
     x = Convolution2D(nb_labels, 1, 1)(x)

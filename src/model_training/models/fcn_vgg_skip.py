@@ -38,15 +38,15 @@ def make_fcn_vgg_skip(input_shape, nb_labels):
     c32 = Convolution2D(128, 1, 1, border_mode='same', activation='relu')(x32)
     l32 = Convolution2D(nb_labels, 1, 1, border_mode='same')(c32)
 
-    c16 = Convolution2D(256, 1, 1, border_mode='same', activation='relu')(x16)
+    c16 = Convolution2D(512, 1, 1, border_mode='same', activation='relu')(x16)
     l16 = Convolution2D(nb_labels, 1, 1, border_mode='same')(c16)
 
     def resize_bilinear(images):
         # Workaround for
         # https://github.com/fchollet/keras/issues/4609
         import tensorflow as tf
-        nb_rows = 256
-        nb_cols = 256
+        nb_rows = 512
+        nb_cols = 512
         return tf.image.resize_bilinear(images, [nb_rows, nb_cols])
 
     b64 = Lambda(resize_bilinear)(l64)
