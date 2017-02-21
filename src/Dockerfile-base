@@ -35,3 +35,6 @@ RUN conda install -y python=${python_version} && \
     conda install Pillow scikit-learn six h5py && \
     conda install matplotlib pillow && \
     conda clean -yt
+
+RUN pip install git+git://github.com/jakebian/quiver.git && \
+    pip install flake8 awscli

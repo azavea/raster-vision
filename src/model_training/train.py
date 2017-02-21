@@ -1,11 +1,11 @@
 """
 Functions for training a model given a RunOptions object.
 """
-import numpy as np
 from os.path import join, isfile
 
+import numpy as np
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
-                             ReduceLROnPlateau)
+                             ReduceLROnPlateau, LambdaCallback)
 from keras.optimizers import Adam
 
 from .data.generators import make_input_output_generators
@@ -35,7 +35,7 @@ def make_model(options):
     return model
 
 
-def train_model(model, options):
+def train_model(model, sync_results, options):
     print(model.summary())
     path = get_dataset_path(options.dataset)
     train_generator, validation_generator = \
@@ -63,8 +63,10 @@ def train_model(model, options):
     logger = CSVLogger(log_path, append=True)
     reduce_lr = ReduceLROnPlateau(
         verbose=1, epsilon=0.001, patience=options.patience)
+    sync_results_callback = LambdaCallback(
+        on_epoch_end=lambda epoch, logs: sync_results())
 
-    callbacks = [checkpoint, logger, reduce_lr]
+    callbacks = [checkpoint, logger, reduce_lr, sync_results_callback]
 
     model.fit_generator(
         train_generator,

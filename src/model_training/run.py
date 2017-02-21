@@ -6,6 +6,7 @@ import uuid
 import json
 from os.path import join, isfile
 import argparse
+from subprocess import call
 
 from keras.models import load_model
 
@@ -94,6 +95,10 @@ if __name__ == '__main__':
     options = load_options(args.file_path)
     run_path = join(results_path, options.run_name)
 
+    def sync_results():
+        call(['aws', 's3', 'sync', run_path,
+              's3://otid-data/results/{}'.format(options.run_name)])
+
     for task in args.tasks:
         if task == SETUP:
             setup_run(options)
@@ -104,6 +109,7 @@ if __name__ == '__main__':
                 print('Continuing training on {}'.format(model_path))
             else:
                 model = make_model(options)
-            train_model(model, options)
+            train_model(model, sync_results, options)
         elif task == EVAL:
             eval_run(options)
+            sync_results()
