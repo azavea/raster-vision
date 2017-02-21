@@ -1,5 +1,5 @@
 {
-    "batch_size": 7,
+    "batch_size": 2,
     "cooldown": null,
     "dataset": "potsdam",
     "git_commit": null,
@@ -13,12 +13,13 @@
         10,
         10
     ],
+    "lr": 0.0001,
     "model_type": "conv_logistic",
-    "nb_epoch": 10,
+    "nb_epoch": 6,
     "nb_labels": 6,
     "nb_prediction_images": 8,
-    "nb_val_samples": 512,
-    "patience": 3,
-    "run_name": "conv_logistic/potstdam_test",
-    "samples_per_epoch": 512
+    "nb_val_samples": 8,
+    "patience": 5,
+    "run_name": "conv_logistic/restart_test",
+    "samples_per_epoch": 16
 }

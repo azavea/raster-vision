@@ -2,10 +2,11 @@
 Functions for training a model given a RunOptions object.
 """
 import numpy as np
-from os.path import join
+from os.path import join, isfile
 
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau)
+from keras.optimizers import Adam
 
 from .data.generators import make_input_output_generators
 from .data.preprocess import get_dataset_path, results_path
@@ -24,12 +25,12 @@ def make_model(options):
     elif model_type == 'fcn_vgg':
         from .models.fcn_vgg import make_fcn_vgg
         model = make_fcn_vgg(options.input_shape, options.nb_labels)
-    elif model_type == 'fcn':
-        from .models.fcn import make_fcn
-        model = make_fcn(options.input_shape, options.nb_labels)
     elif model_type == 'fcn_vgg_skip':
         from .models.fcn_vgg_skip import make_fcn_vgg_skip
         model = make_fcn_vgg_skip(options.input_shape, options.nb_labels)
+    elif model_type == 'fcn_resnet':
+        from .models.fcn_resnet import make_fcn_resnet
+        model = make_fcn_resnet(options.input_shape, options.nb_labels)
 
     return model
 

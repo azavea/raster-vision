@@ -149,10 +149,10 @@ def eval_run(options):
     plot_predictions(model, data_path, run_path, options.nb_prediction_images,
                      options.include_depth)
 
+    print('Plotting graphs...')
+    plot_graphs(model, run_path)
+
     print('Computing scores...')
     compute_scores(
         model, data_path, run_path, options.batch_size, options.nb_val_samples,
         options.include_depth)
-
-    print('Plotting graphs...')
-    plot_graphs(model, run_path)
