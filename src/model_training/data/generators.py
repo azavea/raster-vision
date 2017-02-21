@@ -1,4 +1,5 @@
 from os.path import join
+from os import listdir
 
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
@@ -8,7 +9,7 @@ mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 
 from .preprocess import (
-    RGB_INPUT, DEPTH_INPUT, OUTPUT, TRAIN, VALIDATION, POTSDAM,
+    RGB_INPUT, DEPTH_INPUT, OUTPUT, TRAIN, VALIDATION, POTSDAM, BOGUS_CLASS,
     get_dataset_path, seed, target_size, rgb_to_one_hot_batch,
     one_hot_to_rgb_batch)
 
@@ -61,6 +62,11 @@ def make_input_output_generator(base_path, batch_size, include_depth=False):
     rgb_input_path = join(base_path, RGB_INPUT)
     depth_input_path = join(base_path, DEPTH_INPUT)
     output_path = join(base_path, OUTPUT)
+
+    rgb_count = len(listdir(join(rgb_input_path, BOGUS_CLASS)))
+    depth_count = len(listdir(join(depth_input_path, BOGUS_CLASS)))
+    output_count = len(listdir(join(output_path, BOGUS_CLASS)))
+    assert(rgb_count == depth_count == output_count)
 
     rgb_input_gen = make_data_generator(
         rgb_input_path, batch_size=batch_size, shuffle=True, augment=True,
