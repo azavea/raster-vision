@@ -92,11 +92,18 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     options = load_options(args.file_path)
+    run_path = join(results_path, options.run_name)
+
     for task in args.tasks:
         if task == SETUP:
             setup_run(options)
         elif task == TRAIN:
-            model = make_model(options)
+            model_path = join(run_path, 'model.h5')
+            if isfile(model_path):
+                model = load_model(model_path)
+                print('Continuing training on {}'.format(model_path))
+            else:
+                model = make_model(options)
             train_model(model, options)
         elif task == EVAL:
             eval_run(options)

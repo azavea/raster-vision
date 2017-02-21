@@ -44,20 +44,31 @@ def train_model(model, options):
 
     model.compile(
         loss='categorical_crossentropy',
-        optimizer='nadam',
+        optimizer=Adam(lr=options.lr),
         metrics=['accuracy'])
 
     run_path = join(results_path, options.run_name)
+    log_path = join(run_path, 'log.txt')
+
+    initial_epoch = 0
+    if isfile(log_path):
+        with open(log_path) as log_file:
+            line_ind = 0
+            for line_ind, _ in enumerate(log_file):
+                pass
+            initial_epoch = line_ind
 
     checkpoint = ModelCheckpoint(filepath=join(run_path, 'model.h5'),
                                  verbose=1, save_best_only=True)
-    logger = CSVLogger(join(run_path, 'log.txt'))
+    logger = CSVLogger(log_path, append=True)
     reduce_lr = ReduceLROnPlateau(
         verbose=1, epsilon=0.001, patience=options.patience)
+
     callbacks = [checkpoint, logger, reduce_lr]
 
     model.fit_generator(
         train_generator,
+        initial_epoch=initial_epoch,
         samples_per_epoch=options.samples_per_epoch,
         nb_epoch=options.nb_epoch,
         validation_data=validation_generator,
