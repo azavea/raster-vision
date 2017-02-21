@@ -12,9 +12,9 @@ RUN pip install https://storage.googleapis.com/tensorflow/linux/${architecture}/
     pip install git+git://github.com/jakebian/quiver.git && \
     pip install flake8
 
-WORKDIR /opt/model_training
+WORKDIR /opt/src
 
-COPY ./model_training /opt/model_training
+COPY . /opt/src
 
 # Ensure that the keras user will have permission to write model
 # outputs into /opt/data

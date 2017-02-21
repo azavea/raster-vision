@@ -78,7 +78,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('file_path', nargs='?',
                         help='path to the options json file',
-                        default='/opt/model_training/options.json')
+                        default='/opt/src/options.json')
     parser.add_argument('tasks', nargs='*', help='list of tasks to perform',
                         default=['setup', 'train', 'eval'])
     return parser.parse_args()

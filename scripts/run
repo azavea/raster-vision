@@ -20,16 +20,16 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     if [ "${1:-}" = "--cpu" ]
     then
-        MODEL_TRAINING="$PROJECT_ROOT/src/model_training"
+        MODEL_TRAINING="$PROJECT_ROOT/src"
 
         docker run --rm -it \
-            -v "$MODEL_TRAINING":/opt/model_training \
+            -v "$MODEL_TRAINING":/opt/src \
             -v /opt/data:/opt/data \
-            otid-model-training-cpu "${@:2}"
+            keras-semantic-segmentation-cpu "${@:2}"
     elif [ "${1:-}" = "--gpu" ]
     then
         sudo nvidia-docker run --rm -it \
-            -v ~/keras-semantic-segmentation/src/model_training:/opt/model_training \
+            -v ~/keras-semantic-segmentation/src:/opt/src \
             -v ~/data:/opt/data \
             002496907356.dkr.ecr.us-east-1.amazonaws.com/keras-semantic-segmentation-gpu "${@:2}"
     else

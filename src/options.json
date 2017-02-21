@@ -1,5 +1,5 @@
 {
-    "batch_size": 2,
+    "batch_size": 7,
     "cooldown": null,
     "dataset": "potsdam",
     "git_commit": null,
