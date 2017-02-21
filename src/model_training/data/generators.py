@@ -63,11 +63,11 @@ def make_input_output_generator(base_path, batch_size, include_depth=False):
     output_path = join(base_path, OUTPUT)
 
     rgb_input_gen = make_data_generator(
-        rgb_input_path, batch_size=batch_size, shuffle=False, augment=True,
+        rgb_input_path, batch_size=batch_size, shuffle=True, augment=True,
         scale=True)
 
     depth_input_gen = make_data_generator(
-        depth_input_path, batch_size=batch_size, shuffle=False, augment=True,
+        depth_input_path, batch_size=batch_size, shuffle=True, augment=True,
         scale=True)
 
     input_gen = rgb_input_gen
@@ -77,7 +77,7 @@ def make_input_output_generator(base_path, batch_size, include_depth=False):
     # Don't scale the outputs (because they are labels) and convert to
     # one-hot encoding.
     output_gen = make_data_generator(output_path, batch_size=batch_size,
-                                     shuffle=False, augment=True, one_hot=True)
+                                     shuffle=True, augment=True, one_hot=True)
 
     return zip(input_gen, output_gen)
 
