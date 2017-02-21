@@ -6,9 +6,9 @@ cd /home/ubuntu
 apt-get install -y awscli git unzip
 
 # Copy data
-aws s3 cp s3://otid-data/processed_vaihingen.zip data/datasets/processed_vaihingen.zip
+aws s3 cp s3://otid-data/processed_potsdam.zip data/datasets/processed_potsdam.zip
 pushd data/datasets
-unzip -q -o processed_vaihingen.zip
+unzip -q -o processed_potsdam.zip
 popd
 
 # Download source repo
