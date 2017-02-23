@@ -2,7 +2,6 @@
 Execute a sequence of tasks for a run, given a json file with options for that
 run. Example usage: `python run.py options.json setup train eval`
 """
-import uuid
 import json
 from os.path import join, isfile, isdir
 import sys
@@ -55,25 +54,14 @@ class RunOptions():
 
 
 def load_options(file_path):
-    """
-    Load options from file_path and inserts a run_name based on a uuid if
-    not present.
-    """
     options = None
     with open(file_path) as options_file:
         options_dict = json.load(options_file)
         options = RunOptions(**options_dict)
-        if options.run_name is None:
-            options.run_name = '{}/{}'.format(options.model_type, uuid.uuid1())
-    save_options(options, file_path)
 
     return options
 
 
-def save_options(options, file_path):
-    options_json = json.dumps(options.__dict__, sort_keys=True, indent=4)
-    with open(file_path, 'w') as options_file:
-        options_file.write(options_json)
 class Logger(object):
     def __init__(self, run_path):
         self.terminal = sys.stdout
