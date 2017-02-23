@@ -39,13 +39,14 @@ class RunOptions():
         self.nb_prediction_images = nb_prediction_images
         self.patience = patience
         self.cooldown = cooldown
+        self.lr_schedule = lr_schedule
+        self.dataset = dataset
 
         if self.model_type == 'conv_logistic':
             self.kernel_size = kernel_size or [1, 1]
 
-        self.dataset = dataset
-
-        self.lr = lr
+        if self.model_type == 'fcn_resnet':
+            self.drop_prob = drop_prob or 0.0
 
         self.include_depth = include_depth
         if self.input_shape[2] == 4:

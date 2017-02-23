@@ -5,7 +5,8 @@ from os.path import join, isfile
 
 import numpy as np
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
-                             ReduceLROnPlateau, LambdaCallback)
+                             ReduceLROnPlateau, LambdaCallback,
+                             LearningRateScheduler)
 from keras.optimizers import Adam
 
 from .data.generators import make_input_output_generators
@@ -30,7 +31,8 @@ def make_model(options):
         model = make_fcn_vgg_skip(options.input_shape, options.nb_labels)
     elif model_type == 'fcn_resnet':
         from .models.fcn_resnet import make_fcn_resnet
-        model = make_fcn_resnet(options.input_shape, options.nb_labels)
+        model = make_fcn_resnet(options.input_shape, options.nb_labels,
+                                options.drop_prob)
 
     return model
 
@@ -44,7 +46,7 @@ def train_model(model, sync_results, options):
 
     model.compile(
         loss='categorical_crossentropy',
-        optimizer=Adam(lr=options.lr),
+        optimizer='adam',
         metrics=['accuracy'])
 
     run_path = join(results_path, options.run_name)
@@ -58,15 +60,30 @@ def train_model(model, sync_results, options):
                 pass
             initial_epoch = line_ind
 
-    checkpoint = ModelCheckpoint(filepath=join(run_path, 'model.h5'),
-                                 verbose=1, save_best_only=True)
+    model_checkpoint = ModelCheckpoint(
+        filepath=join(run_path, 'model.h5'), period=2)
+    best_model_checkpoint = ModelCheckpoint(
+        filepath=join(run_path, 'best_model.h5'), save_best_only=True)
     logger = CSVLogger(log_path, append=True)
-    reduce_lr = ReduceLROnPlateau(
-        verbose=1, epsilon=0.001, patience=options.patience)
+    callbacks = [model_checkpoint, best_model_checkpoint, logger]
+    if options.patience:
+        reduce_lr = ReduceLROnPlateau(
+            verbose=1, epsilon=0.001, patience=options.patience)
+        callbacks.append(reduce_lr)
+    if options.lr_schedule:
+        def get_lr(epoch):
+            for epoch_thresh, lr in options.lr_schedule:
+                if epoch >= epoch_thresh:
+                    curr_lr = lr
+                else:
+                    break
+            print(curr_lr)
+            return curr_lr
+        lr_scheduler = LearningRateScheduler(get_lr)
+        callbacks.append(lr_scheduler)
     sync_results_callback = LambdaCallback(
         on_epoch_end=lambda epoch, logs: sync_results())
-
-    callbacks = [checkpoint, logger, reduce_lr, sync_results_callback]
+    callbacks.append(sync_results_callback)
 
     model.fit_generator(
         train_generator,

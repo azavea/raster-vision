@@ -12,27 +12,28 @@ from keras.layers import (Input,
 from .resnet import ResNet
 
 
-def make_fcn_resnet(input_shape, nb_labels):
+def make_fcn_resnet(input_shape, nb_labels, drop_prob):
     input_shape = tuple(input_shape)
     nb_rows, nb_cols, _ = input_shape
     nb_labels = nb_labels
 
     input_tensor = Input(shape=input_shape)
-    model = ResNet(input_tensor=input_tensor)
+    print('Dropout prob: {}'.format(drop_prob))
+    model = ResNet(input_tensor=input_tensor, drop_prob=drop_prob)
 
     x = model.output
-
-    x64 = model.get_layer('activation_10').output
-    x32 = model.get_layer('activation_22').output
-    x16 = model.get_layer('activation_37').output
 
     def resize_bilinear(images):
         # Workaround for
         # https://github.com/fchollet/keras/issues/4609
         import tensorflow as tf
-        nb_rows = 512
-        nb_cols = 512
+        nb_rows = 256
+        nb_cols = 256
         return tf.image.resize_bilinear(images, [nb_rows, nb_cols])
+
+    x64 = model.get_layer('activation_22').output
+    x32 = model.get_layer('activation_37').output
+    x16 = model.get_layer('activation_49').output
 
     c64 = Convolution2D(nb_labels, 1, 1)(x64)
     c32 = Convolution2D(nb_labels, 1, 1)(x32)
