@@ -72,9 +72,6 @@ class Logger(object):
         self.log.write(message)
 
     def flush(self):
-        #this flush method is needed for python 3 compatibility.
-        #this handles the flush command by doing nothing.
-        #you might want to specify some extra behavior here.
         pass
 
 
@@ -92,6 +89,7 @@ def setup_run(options, sync_results):
 
     sys.stdout = Logger(run_path)
 
+
 def train_run(options, run_path, sync_results):
     model_path = join(run_path, 'model.h5')
 
@@ -100,6 +98,7 @@ def train_run(options, run_path, sync_results):
         print('Continuing training on {}'.format(model_path))
     else:
         model = make_model(options)
+        print('Creating new model.')
     train_model(model, sync_results, options)
 
 

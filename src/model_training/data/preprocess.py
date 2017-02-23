@@ -3,7 +3,7 @@ Process data from the 2D semantic labeling for aerial imagery dataset
 http://www2.isprs.org/commissions/comm3/wg4/semantic-labeling.html
 to put it into a Keras-friendly format.
 """
-from os.path import join
+from os.path import join, isfile
 from os import listdir, makedirs
 import random
 import re
@@ -63,6 +63,16 @@ def get_dataset_path(dataset):
         return processed_vaihingen_path
     elif dataset == POTSDAM:
         return processed_potsdam_path
+
+
+def get_nb_validation_samples(data_path):
+    validation_path = join(data_path, 'validation', RGB_INPUT, BOGUS_CLASS)
+    nb_files = 0
+    for file_name in listdir(validation_path):
+        if isfile(join(validation_path, file_name)):
+            nb_files += 1
+
+    return nb_files
 
 
 def _makedirs(path):

@@ -12,38 +12,114 @@ mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 from sklearn import metrics
 
-from .data.generators import make_input_output_generators, make_data_generator
+from .data.generators import (make_data_generator, combine_rgb_depth)
 from .data.preprocess import (
-    results_path, one_hot_to_rgb_batch, one_hot_to_label_batch, label_names,
-    get_dataset_path, VALIDATION, RGB_INPUT, OUTPUT)
+    label_names, results_path, one_hot_to_rgb_batch, one_hot_to_label_batch,
+    get_nb_validation_samples, _makedirs, get_dataset_path, VALIDATION,
+    RGB_INPUT, DEPTH_INPUT, OUTPUT)
 
-np.random.seed(1337)
+
+class Scores():
+    def __init__(self):
+        pass
+
+    def to_json(self):
+        scores = Scores()
+        scores.label_names = self.label_names
+        scores.jaccard = self.jaccard
+        scores.avg_f1 = self.avg_f1
+        scores.avg_accuracy = self.avg_accuracy
+        scores.precision = self.precision.tolist()
+        scores.recall = self.recall.tolist()
+        scores.f1 = self.f1.tolist()
+        scores.support = self.support.tolist()
+        scores.confusion_mat = self.confusion_mat.tolist()
+        scores.accuracy = self.accuracy.tolist()
+
+        return json.dumps(scores.__dict__, sort_keys=True, indent=4)
 
 
-def plot_predictions(model, data_path, run_path, nb_prediction_images,
-                     include_depth):
-    _, validation_generator = make_input_output_generators(
-        data_path, nb_prediction_images, include_depth)
+def compute_scores(outputs, predictions, nb_labels):
+    # Treat each pixel as a separate data point so we can use metric functions.
+    outputs = np.ravel(outputs)
+    predictions = np.ravel(predictions)
 
-    inputs, _ = next(validation_generator)
-    # Get unscaled RGB images for display
-    display_inputs = next(
-        make_data_generator(
-            join(data_path, VALIDATION, RGB_INPUT),
-            batch_size=nb_prediction_images, shuffle=True, augment=True))
-    display_outputs = next(
-        make_data_generator(
-            join(data_path, VALIDATION, OUTPUT),
-            batch_size=nb_prediction_images, shuffle=True, augment=True))
+    # Force each image to have at least one pixel of each label so that
+    # there will be an element for each label. This makes the calculation
+    # slightly innaccurate but shouldn't even show up after rounding.
+    # Maybe we should do something more rigorous if we have time.
+    bogus_pixels = np.arange(0, nb_labels)
+    outputs = np.concatenate([outputs, bogus_pixels])
+    predictions = np.concatenate([predictions, bogus_pixels])
 
-    predictions = one_hot_to_rgb_batch(
-        model.predict(inputs, nb_prediction_images))
+    scores = Scores()
+    scores.label_names = label_names
+    scores.jaccard = metrics.jaccard_similarity_score(outputs, predictions)
+    scores.avg_f1 = metrics.f1_score(outputs, predictions, average='macro')
+    scores.avg_accuracy = metrics.accuracy_score(outputs, predictions)
+    scores.precision, scores.recall, scores.f1, scores.support = \
+        metrics.precision_recall_fscore_support(outputs, predictions)
+    scores.confusion_mat = metrics.confusion_matrix(outputs, predictions)
+    # Avoid divide by zero error by adding 0.1
+    scores.accuracy = scores.confusion_mat.diagonal() / (scores.support + 0.1)
 
+    return scores
+
+
+def get_attr_array(name, a_list):
+    return np.array(list(map(lambda el: getattr(el, name), a_list)))
+
+
+def aggregate_scores(scores_list):
+    image_sizes = np.array(
+        list(map(lambda scores: np.sum(scores.support), scores_list)))
+    image_weights = image_sizes / np.sum(image_sizes)
+
+    agg_scores = Scores()
+
+    agg_scores.jaccard = np.sum(
+        get_attr_array('jaccard', scores_list) * image_weights)
+    agg_scores.avg_f1 = np.sum(
+        get_attr_array('avg_f1', scores_list) * image_weights)
+    agg_scores.avg_accuracy = np.sum(
+        get_attr_array('avg_accuracy', scores_list) * image_weights)
+
+    agg_scores.precision = np.sum(
+        get_attr_array('precision', scores_list)
+        * image_weights[:, np.newaxis],
+        axis=0)
+    agg_scores.recall = np.sum(
+        get_attr_array('recall', scores_list)
+        * image_weights[:, np.newaxis],
+        axis=0)
+    agg_scores.f1 = np.sum(
+        get_attr_array('f1', scores_list)
+        * image_weights[:, np.newaxis],
+        axis=0)
+    agg_scores.support = np.sum(
+        get_attr_array('support', scores_list)
+        * image_weights[:, np.newaxis],
+        axis=0)
+    agg_scores.accuracy = np.sum(
+        get_attr_array('accuracy', scores_list)
+        * image_weights[:, np.newaxis],
+        axis=0)
+
+    agg_scores.confusion_mat = np.sum(
+        get_attr_array('confusion_mat', scores_list)
+        * image_weights[:, np.newaxis, np.newaxis],
+        axis=0)
+
+    agg_scores.label_names = scores_list[0].label_names
+
+    return agg_scores
+
+
+def plot_prediction(run_path, val_index, display_inputs, display_outputs,
+                    display_predictions):
     fig = plt.figure()
-    subplot_index = 0
     nb_subplot_cols = 3
-    gs = mpl.gridspec.GridSpec(nb_prediction_images, nb_subplot_cols)
-    gs.update(wspace=0.1, hspace=0.1, left=0.1, right=0.4, bottom=0.1, top=0.9)
+    gs = mpl.gridspec.GridSpec(1, nb_subplot_cols)
 
     def plot_image(subplot_index, im, title):
         a = fig.add_subplot(gs[subplot_index])
@@ -53,69 +129,69 @@ def plot_predictions(model, data_path, run_path, nb_prediction_images,
         if subplot_index < nb_subplot_cols:
             a.set_title(title, fontsize=6)
 
-    for i in range(nb_prediction_images):
-        plot_image(subplot_index, display_inputs[i, :, :, :], 'Input')
-        subplot_index += 1
-        plot_image(subplot_index, display_outputs[i, :, :, :], 'Ground Truth')
-        subplot_index += 1
-        plot_image(subplot_index, predictions[i, :, :, :], 'Prediction')
-        subplot_index += 1
+    subplot_index = 0
+    plot_image(subplot_index, display_inputs[0, :, :, :], 'Input')
+    subplot_index = 1
+    plot_image(subplot_index, display_outputs[0, :, :, :], 'Ground Truth')
+    subplot_index = 2
+    plot_image(subplot_index, display_predictions[0, :, :, :], 'Prediction')
 
-    predictions_path = join(run_path, 'predictions.pdf')
+    predictions_path = join(
+        run_path, 'predictions', '{}.pdf'.format(val_index))
     plt.savefig(predictions_path, bbox_inches='tight', format='pdf', dpi=300)
+    plt.close(fig)
 
 
-def get_samples(data_gen, batch_size, nb_samples):
-    samples = []
-    for _ in range(0, nb_samples, batch_size):
-        samples.append(next(data_gen))
-    return np.concatenate(samples, axis=0)[0:nb_samples, :, :, :]
+def compute_predictions(model, data_path, run_path, include_depth, nb_labels):
+    _makedirs(join(run_path, 'predictions'))
+
+    # Change to the following after we start using big tiles for validation.
+    # nb_validation_samples = get_nb_validation_samples(data_path)
+    nb_validation_samples = 10
+
+    inputs_gen = make_data_generator(
+        join(data_path, VALIDATION, RGB_INPUT),
+        scale=True, batch_size=1)
+    if include_depth:
+        depth_inputs_gen = make_data_generator(
+            join(data_path, VALIDATION, DEPTH_INPUT),
+            scale=True, batch_size=1)
+        inputs_gen = map(combine_rgb_depth, zip(inputs_gen, depth_inputs_gen))
+    display_inputs_gen = make_data_generator(
+        join(data_path, VALIDATION, RGB_INPUT),
+        scale=False, batch_size=1)
+    outputs_gen = make_data_generator(
+        join(data_path, VALIDATION, OUTPUT),
+        batch_size=1, one_hot=True)
+
+    scores_list = []
+
+    for val_index in range(nb_validation_samples):
+        inputs = next(inputs_gen)
+        outputs = next(outputs_gen)
+        predictions = model.predict(inputs)
+
+        display_inputs = next(display_inputs_gen)
+        display_outputs = one_hot_to_rgb_batch(outputs)
+        display_predictions = one_hot_to_rgb_batch(predictions)
+
+        plot_prediction(
+            run_path, val_index, display_inputs, display_outputs,
+            display_predictions)
+
+        scores = compute_scores(
+            one_hot_to_label_batch(outputs),
+            one_hot_to_label_batch(predictions),
+            nb_labels)
+        scores_list.append(scores)
+
+    agg_scores = aggregate_scores(scores_list)
+    save_scores(agg_scores, run_path)
 
 
-def compute_scores(model, data_path, run_path, batch_size, nb_val_samples,
-                   include_depth):
-    # This is a hack until I figure out why predict_generator isn't working.
-    batch_size = nb_val_samples
-    _, validation_generator = make_input_output_generators(
-        data_path, batch_size, include_depth)
-
-    inputs, outputs = next(validation_generator)
-
-    predictions = one_hot_to_label_batch(model.predict(inputs, nb_val_samples))
-    outputs = one_hot_to_label_batch(outputs)
-
-    # Treat each pixel as a separate data point so we can use metric functions.
-    predictions = np.ravel(predictions)
-    outputs = np.ravel(outputs)
-
-    # See https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection#evaluation # NOQA
-    jaccard = metrics.jaccard_similarity_score(outputs, predictions)
-    avg_f1 = metrics.f1_score(outputs, predictions, average='macro')
-    avg_accuracy = metrics.accuracy_score(outputs, predictions)
-    precision, recall, f1, support = \
-        metrics.precision_recall_fscore_support(outputs, predictions)
-    confusion_mat = metrics.confusion_matrix(outputs, predictions)
-    # Avoid divide by zero error by adding 0.1
-    accuracy = confusion_mat.diagonal() / (support + 0.1)
-
-    scores = {
-        'label_names': label_names,
-        'jaccard': jaccard,
-        'avg_f1': avg_f1,
-        'avg_accuracy': avg_accuracy,
-        'precision': precision.tolist(),
-        'recall': recall.tolist(),
-        'f1': f1.tolist(),
-        'support': support.tolist(),
-        'confusion_mat': confusion_mat.tolist(),
-        'accuracy': accuracy.tolist()
-    }
-    scores_json = json.dumps(scores, sort_keys=True, indent=4)
-    print(scores_json)
+def save_scores(scores, run_path):
     with open(join(run_path, 'scores.txt'), 'w') as scores_file:
-        scores_file.write(scores_json)
-
-    return scores
+        scores_file.write(scores.to_json())
 
 
 def plot_graphs(model, run_path):
@@ -145,14 +221,9 @@ def eval_run(options):
     model = load_model(join(run_path, 'model.h5'))
     data_path = get_dataset_path(options.dataset)
 
-    print('Plotting predictions...')
-    plot_predictions(model, data_path, run_path, options.nb_prediction_images,
-                     options.include_depth)
+    print('Generating predictions and scores...')
+    compute_predictions(
+        model, data_path, run_path, options.include_depth, options.nb_labels)
 
     print('Plotting graphs...')
     plot_graphs(model, run_path)
-
-    print('Computing scores...')
-    compute_scores(
-        model, data_path, run_path, options.batch_size, options.nb_val_samples,
-        options.include_depth)

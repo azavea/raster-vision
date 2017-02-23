@@ -7,7 +7,6 @@ import numpy as np
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau, LambdaCallback,
                              LearningRateScheduler)
-from keras.optimizers import Adam
 
 from .data.generators import make_input_output_generators
 from .data.preprocess import get_dataset_path, results_path
@@ -62,14 +61,17 @@ def train_model(model, sync_results, options):
 
     model_checkpoint = ModelCheckpoint(
         filepath=join(run_path, 'model.h5'), period=2)
+
     best_model_checkpoint = ModelCheckpoint(
         filepath=join(run_path, 'best_model.h5'), save_best_only=True)
     logger = CSVLogger(log_path, append=True)
     callbacks = [model_checkpoint, best_model_checkpoint, logger]
+
     if options.patience:
         reduce_lr = ReduceLROnPlateau(
             verbose=1, epsilon=0.001, patience=options.patience)
         callbacks.append(reduce_lr)
+
     if options.lr_schedule:
         def get_lr(epoch):
             for epoch_thresh, lr in options.lr_schedule:
@@ -81,6 +83,7 @@ def train_model(model, sync_results, options):
             return curr_lr
         lr_scheduler = LearningRateScheduler(get_lr)
         callbacks.append(lr_scheduler)
+
     sync_results_callback = LambdaCallback(
         on_epoch_end=lambda epoch, logs: sync_results())
     callbacks.append(sync_results_callback)
