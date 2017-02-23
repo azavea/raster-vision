@@ -1,0 +1,20 @@
+{
+    "batch_size": 16,
+    "cooldown": null,
+    "dataset": "potsdam",
+    "git_commit": "a2908f",
+    "input_shape": [
+        256,
+        256,
+        3
+    ],
+    "lr_schedule": [[0, 0.001], [50, 0.0001], [100, 0.00001]],
+    "drop_prob": 0.0,
+    "model_type": "fcn_resnet",
+    "nb_epoch": 150,
+    "nb_labels": 6,
+    "nb_prediction_images": 12,
+    "nb_val_samples": 512,
+    "run_name": "fcn_resnet/2_22_base",
+    "samples_per_epoch": 4096
+}
