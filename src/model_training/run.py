@@ -25,7 +25,7 @@ class RunOptions():
                  samples_per_epoch=None, nb_epoch=None, nb_val_samples=None,
                  nb_prediction_images=None, patience=None, cooldown=None,
                  include_depth=False, kernel_size=None, dataset=None,
-                 lr=0.001):
+                 lr_schedule=None, drop_prob=None):
         # Run `git rev-parse head` to get this.
         self.git_commit = git_commit
         self.model_type = model_type
