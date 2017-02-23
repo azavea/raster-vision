@@ -39,8 +39,8 @@ def make_data_generator(path, batch_size=32, shuffle=False, augment=False,
         path, class_mode=None, target_size=target_size,
         batch_size=batch_size, shuffle=shuffle, seed=seed)
 
-#    if augment:
-#        gen = map(rand_rotate_batch, gen)
+    if augment:
+        gen = map(rand_rotate_batch, gen)
 
     if one_hot:
         gen = map(rgb_to_one_hot_batch, gen)
@@ -101,7 +101,7 @@ def make_input_output_generators(base_path, batch_size, include_depth=False):
 
 def plot_batch(inputs, outputs, file_path):
     rgb_outputs = one_hot_to_rgb_batch(outputs)
-    inputs = np.clip((inputs + 1) * 128, 0, 255)
+    inputs = np.clip((inputs + 3) * 32, 0, 255)
     outputs = outputs * 128
 
     fig = plt.figure()

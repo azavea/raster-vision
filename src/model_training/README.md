@@ -13,17 +13,17 @@ An experiment is a run of an algorithm on a specific dataset and set of paramete
     "batch_size": 32,
     "git_commit": "7c8755dcf9a22089c8a53a1a0ca702ae20c208d2",
     "input_shape": [
-        512,
-        512,
+        256,
+        256,
         3
     ],
     "model_type": "fcn_vgg",
     "nb_epoch": 2,
     "nb_labels": 6,
     "nb_prediction_images": 8,
-    "nb_val_samples": 512,
+    "nb_val_samples": 256,
     "patience": 3,
-    "samples_per_epoch": 512
+    "samples_per_epoch": 256
 }
 ```
 In order to run an experiment, you must also provide a list of tasks to perform. These tasks

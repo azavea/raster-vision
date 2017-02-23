@@ -51,7 +51,7 @@ results_path = join(data_path, 'results')
 processed_potsdam_path = join(datasets_path, 'processed_potsdam')
 processed_vaihingen_path = join(datasets_path, 'processed_vaihingen')
 
-tile_size = 512
+tile_size = 256
 target_size = (tile_size, tile_size)
 
 seed = 1
@@ -222,7 +222,7 @@ def process_potsdam():
     proc_data_path = processed_potsdam_path
 
     train_ratio = 0.8
-    tile_stride = 512
+    tile_stride = 256
 
     output_file_name_re = re.compile('^top_potsdam_(\d+)_(\d+)_label.tif')
 

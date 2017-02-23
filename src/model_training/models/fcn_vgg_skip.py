@@ -45,8 +45,8 @@ def make_fcn_vgg_skip(input_shape, nb_labels):
         # Workaround for
         # https://github.com/fchollet/keras/issues/4609
         import tensorflow as tf
-        nb_rows = 512
-        nb_cols = 512
+        nb_rows = 256
+        nb_cols = 256
         return tf.image.resize_bilinear(images, [nb_rows, nb_cols])
 
     b64 = Lambda(resize_bilinear)(l64)
