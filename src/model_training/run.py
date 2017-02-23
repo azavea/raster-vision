@@ -4,7 +4,8 @@ run. Example usage: `python run.py options.json setup train eval`
 """
 import uuid
 import json
-from os.path import join, isfile
+from os.path import join, isfile, isdir
+import sys
 import argparse
 from subprocess import call
 
@@ -73,12 +74,45 @@ def save_options(options, file_path):
     options_json = json.dumps(options.__dict__, sort_keys=True, indent=4)
     with open(file_path, 'w') as options_file:
         options_file.write(options_json)
+class Logger(object):
+    def __init__(self, run_path):
+        self.terminal = sys.stdout
+        self.log = open(join(run_path, 'stdout.txt'), 'a')
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        #this flush method is needed for python 3 compatibility.
+        #this handles the flush command by doing nothing.
+        #you might want to specify some extra behavior here.
+        pass
 
 
-def setup_run(options):
+def setup_run(options, sync_results):
     run_path = join(results_path, options.run_name)
+    if not isdir(run_path):
+        sync_results(download=True)
+
     _makedirs(run_path)
-    save_options(options, join(run_path, 'options.json'))
+
+    options_json = json.dumps(options.__dict__, sort_keys=True, indent=4)
+    options_path = join(run_path, 'options.json')
+    with open(options_path, 'w') as options_file:
+        options_file.write(options_json)
+
+    sys.stdout = Logger(run_path)
+
+def train_run(options, run_path, sync_results):
+    model_path = join(run_path, 'model.h5')
+
+    if isfile(model_path):
+        model = load_model(model_path)
+        print('Continuing training on {}'.format(model_path))
+    else:
+        model = make_model(options)
+    train_model(model, sync_results, options)
 
 
 def parse_args():
@@ -96,21 +130,18 @@ if __name__ == '__main__':
     options = load_options(args.file_path)
     run_path = join(results_path, options.run_name)
 
-    def sync_results():
-        call(['aws', 's3', 'sync', run_path,
-              's3://otid-data/results/{}'.format(options.run_name)])
+    def sync_results(download=False):
+        s3_run_path = 's3://otid-data/results/{}'.format(options.run_name)
+        if download:
+            call(['aws', 's3', 'sync', s3_run_path, run_path])
+        else:
+            call(['aws', 's3', 'sync', run_path, s3_run_path])
 
     for task in args.tasks:
         if task == SETUP:
-            setup_run(options)
+            setup_run(options, sync_results)
         elif task == TRAIN:
-            model_path = join(run_path, 'model.h5')
-            if isfile(model_path):
-                model = load_model(model_path)
-                print('Continuing training on {}'.format(model_path))
-            else:
-                model = make_model(options)
-            train_model(model, sync_results, options)
+            train_run(options, run_path, sync_results)
         elif task == EVAL:
             eval_run(options)
             sync_results()
