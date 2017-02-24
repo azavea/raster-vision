@@ -13,8 +13,9 @@ def make_conv_logistic(input_shape, nb_labels, kernel_size):
     nb_labels = nb_labels
 
     model = Sequential()
-    model.add(Convolution2D(nb_labels, kernel_size[0], kernel_size[1],
-                            border_mode='same', input_shape=input_shape))
+    model.add(Convolution2D(
+        nb_labels, kernel_size[0], kernel_size[1], border_mode='same',
+        input_shape=input_shape, name='conv_labels'))
     model.add(Reshape([nb_rows * nb_cols, nb_labels]))
     model.add(Activation('softmax'))
     model.add(Reshape([nb_rows, nb_cols, nb_labels]))

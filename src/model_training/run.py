@@ -90,16 +90,24 @@ def setup_run(options, sync_results):
     sys.stdout = Logger(run_path)
 
 
+def load_model(options, run_path):
+    model = make_model(options)
+    model.load_weights(join(run_path, 'model.h5'), by_name=True)
+    return model
+
+
 def train_run(options, run_path, sync_results):
     model_path = join(run_path, 'model.h5')
 
     if isfile(model_path):
-        model = load_model(model_path)
+        model = load_model(options, run_path)
         print('Continuing training on {}'.format(model_path))
     else:
         model = make_model(options)
         print('Creating new model.')
     train_model(model, sync_results, options)
+
+    return model
 
 
 def parse_args():
@@ -130,5 +138,6 @@ if __name__ == '__main__':
         elif task == TRAIN:
             train_run(options, run_path, sync_results)
         elif task == EVAL:
-            eval_run(options)
+            model = load_model(options, run_path)
+            eval_run(model, options)
             sync_results()

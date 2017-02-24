@@ -216,9 +216,8 @@ def plot_graphs(model, run_path):
     plt.savefig(accuracy_path, format='pdf', dpi=300)
 
 
-def eval_run(options):
+def eval_run(model, options):
     run_path = join(results_path, options.run_name)
-    model = load_model(join(run_path, 'model.h5'))
     data_path = get_dataset_path(options.dataset)
 
     print('Generating predictions and scores...')

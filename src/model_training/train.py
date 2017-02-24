@@ -57,10 +57,11 @@ def train_model(model, sync_results, options):
             initial_epoch = line_ind
 
     model_checkpoint = ModelCheckpoint(
-        filepath=join(run_path, 'model.h5'), period=2)
+        filepath=join(run_path, 'model.h5'), period=2, save_weights_only=True)
 
     best_model_checkpoint = ModelCheckpoint(
-        filepath=join(run_path, 'best_model.h5'), save_best_only=True)
+        filepath=join(run_path, 'best_model.h5'), save_best_only=True,
+        save_weights_only=True)
     logger = CSVLogger(log_path, append=True)
     callbacks = [model_checkpoint, best_model_checkpoint, logger]
 

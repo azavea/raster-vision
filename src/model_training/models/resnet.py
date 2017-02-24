@@ -56,7 +56,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block,
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
     x = merge([x, input_tensor], mode='sum')
-    x = Activation('relu')(x)
+    x = Activation('relu', name='activation' + str(stage) + block)(x)
     x = Dropout(drop_prob)(x)
 
     return x
@@ -102,7 +102,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2),
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
 
     x = merge([x, shortcut], mode='sum')
-    x = Activation('relu')(x)
+    x = Activation('relu', name='activation' + str(stage) + block)(x)
     x = Dropout(drop_prob)(x)
 
     return x
