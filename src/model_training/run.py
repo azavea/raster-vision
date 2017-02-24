@@ -10,7 +10,7 @@ from subprocess import call
 
 from keras.models import load_model
 
-from .data.preprocess import _makedirs, results_path
+from .data.preprocess import _makedirs, results_path, get_input_shape
 from .train import make_model, train_model
 from .eval_run import eval_run
 
@@ -20,7 +20,7 @@ EVAL = 'eval'
 
 
 class RunOptions():
-    def __init__(self, git_commit=None, model_type=None, input_shape=None,
+    def __init__(self, git_commit=None, model_type=None,
                  nb_labels=None, run_name=None, batch_size=None,
                  samples_per_epoch=None, nb_epoch=None, nb_val_samples=None,
                  nb_prediction_images=None, patience=None, cooldown=None,
@@ -29,7 +29,6 @@ class RunOptions():
         # Run `git rev-parse head` to get this.
         self.git_commit = git_commit
         self.model_type = model_type
-        self.input_shape = input_shape
         self.nb_labels = nb_labels
         self.run_name = run_name
         self.batch_size = batch_size
@@ -49,9 +48,7 @@ class RunOptions():
             self.drop_prob = drop_prob or 0.0
 
         self.include_depth = include_depth
-        if self.input_shape[2] == 4:
-            self.include_depth = True
-
+        self.input_shape = get_input_shape(include_depth)
 
 def load_options(file_path):
     options = None

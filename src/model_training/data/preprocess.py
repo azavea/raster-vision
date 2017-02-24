@@ -75,6 +75,11 @@ def get_nb_validation_samples(data_path):
     return nb_files
 
 
+def get_input_shape(include_depth):
+    nb_channels = 4 if include_depth else 3
+    return (tile_size, tile_size, nb_channels)
+
+
 def _makedirs(path):
     try:
         makedirs(path)
