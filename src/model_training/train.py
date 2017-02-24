@@ -25,9 +25,6 @@ def make_model(options):
     elif model_type == 'fcn_vgg':
         from .models.fcn_vgg import make_fcn_vgg
         model = make_fcn_vgg(options.input_shape, options.nb_labels)
-    elif model_type == 'fcn_vgg_skip':
-        from .models.fcn_vgg_skip import make_fcn_vgg_skip
-        model = make_fcn_vgg_skip(options.input_shape, options.nb_labels)
     elif model_type == 'fcn_resnet':
         from .models.fcn_resnet import make_fcn_resnet
         model = make_fcn_resnet(options.input_shape, options.nb_labels,
