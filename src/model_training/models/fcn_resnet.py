@@ -13,20 +13,21 @@ import tensorflow as tf
 from .resnet import ResNet
 
 
-def make_fcn_resnet(input_shape, nb_labels, drop_prob):
+def make_fcn_resnet(input_shape, nb_labels, drop_prob, is_big):
     input_shape = tuple(input_shape)
     nb_rows, nb_cols, _ = input_shape
     nb_labels = nb_labels
 
     input_tensor = Input(shape=input_shape)
-    model = ResNet(input_tensor=input_tensor, drop_prob=drop_prob)
+    model = ResNet(input_tensor=input_tensor, drop_prob=drop_prob,
+                   is_big=is_big)
     print(model.summary())
     def resize_bilinear(images):
         return tf.image.resize_bilinear(images, [nb_rows, nb_cols])
 
-    x32 = model.get_layer('activation3d').output
-    x16 = model.get_layer('activation4f').output
-    x8 = model.get_layer('activation5c').output
+    x32 = model.get_layer('output3').output
+    x16 = model.get_layer('output4').output
+    x8 = model.get_layer('output5').output
 
     c32 = Convolution2D(nb_labels, 1, 1, name='conv_labels_32')(x32)
     c16 = Convolution2D(nb_labels, 1, 1, name='conv_labels_16')(x16)

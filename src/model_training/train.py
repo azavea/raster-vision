@@ -28,7 +28,7 @@ def make_model(options):
     elif model_type == 'fcn_resnet':
         from .models.fcn_resnet import make_fcn_resnet
         model = make_fcn_resnet(options.input_shape, options.nb_labels,
-                                options.drop_prob)
+                                options.drop_prob, options.is_big)
 
     return model
 

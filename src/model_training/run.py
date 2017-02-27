@@ -23,7 +23,7 @@ class RunOptions():
                  samples_per_epoch=None, nb_epoch=None, nb_val_samples=None,
                  nb_prediction_images=None, patience=None, cooldown=None,
                  include_depth=False, kernel_size=None, dataset=None,
-                 lr_schedule=None, drop_prob=None):
+                 lr_schedule=None, drop_prob=None, is_big=True):
         # Run `git rev-parse head` to get this.
         self.git_commit = git_commit
         self.model_type = model_type
@@ -44,6 +44,8 @@ class RunOptions():
 
         if self.model_type == 'fcn_resnet':
             self.drop_prob = drop_prob or 0.0
+
+        self.is_big = is_big
 
         self.include_depth = include_depth
         self.set_input_shape()

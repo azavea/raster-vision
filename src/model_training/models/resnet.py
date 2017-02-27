@@ -24,7 +24,7 @@ from keras.utils.data_utils import get_file
 
 
 def identity_block(input_tensor, kernel_size, filters, stage, block,
-                   drop_prob=0.0):
+                   drop_prob=0.0, last_in_stage=False):
     '''The identity_block is the block that has no conv layer at shortcut
     # Arguments
         input_tensor: input tensor
@@ -56,7 +56,10 @@ def identity_block(input_tensor, kernel_size, filters, stage, block,
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
     x = merge([x, input_tensor], mode='sum')
-    x = Activation('relu', name='activation' + str(stage) + block)(x)
+    if last_in_stage:
+        x = Activation('relu', name='output' + str(stage))(x)
+    else:
+        x = Activation('relu')(x)
     x = Dropout(drop_prob)(x)
 
     return x
@@ -108,7 +111,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2),
     return x
 
 
-def ResNet(input_tensor=None, drop_prob=0.0):
+def ResNet(input_tensor=None, drop_prob=0.0, is_big=True):
     img_input = input_tensor
     if K.image_dim_ordering() == 'tf':
         bn_axis = 3
@@ -124,38 +127,42 @@ def ResNet(input_tensor=None, drop_prob=0.0):
     x = conv_block(x, 3, [64, 64, 256], stage=2, block='a', strides=(1, 1),
         drop_prob=drop_prob)
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='b',
-        drop_prob=drop_prob)
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='c',
-        drop_prob=drop_prob)
+        drop_prob=drop_prob, last_in_stage=(not is_big))
+    if is_big:
+        x = identity_block(x, 3, [64, 64, 256], stage=2, block='c',
+            drop_prob=drop_prob, last_in_stage=True)
 
     x = conv_block(x, 3, [128, 128, 512], stage=3, block='a',
         drop_prob=drop_prob)
     x = identity_block(x, 3, [128, 128, 512], stage=3, block='b',
-        drop_prob=drop_prob)
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='c',
-        drop_prob=drop_prob)
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='d',
-        drop_prob=drop_prob)
+        drop_prob=drop_prob, last_in_stage=(not is_big))
+    if is_big:
+        x = identity_block(x, 3, [128, 128, 512], stage=3, block='c',
+            drop_prob=drop_prob)
+        x = identity_block(x, 3, [128, 128, 512], stage=3, block='d',
+            drop_prob=drop_prob, last_in_stage=True)
 
     x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a',
         drop_prob=drop_prob)
     x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b',
-        drop_prob=drop_prob)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c',
-        drop_prob=drop_prob)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d',
-        drop_prob=drop_prob)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e',
-        drop_prob=drop_prob)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f',
-        drop_prob=drop_prob)
+        drop_prob=drop_prob, last_in_stage=(not is_big))
+    if is_big:
+        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c',
+            drop_prob=drop_prob)
+        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d',
+            drop_prob=drop_prob)
+        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e',
+            drop_prob=drop_prob)
+        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f',
+            drop_prob=drop_prob, last_in_stage=True)
 
     x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a',
         drop_prob=drop_prob)
     x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b',
-        drop_prob=drop_prob)
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c',
-        drop_prob=drop_prob)
+        drop_prob=drop_prob, last_in_stage=(not is_big))
+    if is_big:
+        x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c',
+                           drop_prob=drop_prob, last_in_stage=True)
 
     model = Model(img_input, x)
 
