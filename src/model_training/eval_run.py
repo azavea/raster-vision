@@ -15,7 +15,7 @@ from sklearn import metrics
 from .data.generators import (make_data_generator, combine_rgb_depth)
 from .data.preprocess import (
     label_names, results_path, one_hot_to_rgb_batch, one_hot_to_label_batch,
-    get_nb_validation_samples, _makedirs, get_dataset_path, VALIDATION,
+    get_nb_validation_samples, _makedirs, get_dataset_path, BIG_VALIDATION,
     RGB_INPUT, DEPTH_INPUT, OUTPUT)
 
 
@@ -142,27 +142,27 @@ def plot_prediction(run_path, val_index, display_inputs, display_outputs,
     plt.close(fig)
 
 
-def compute_predictions(model, data_path, run_path, include_depth, nb_labels):
+def compute_predictions(model, data_path, run_path, input_shape, include_depth,
+                        nb_labels):
     _makedirs(join(run_path, 'predictions'))
 
-    # Change to the following after we start using big tiles for validation.
-    # nb_validation_samples = get_nb_validation_samples(data_path)
-    nb_validation_samples = 10
+    nb_validation_samples = get_nb_validation_samples(data_path,
+        use_big_tiles=True)
 
     inputs_gen = make_data_generator(
-        join(data_path, VALIDATION, RGB_INPUT),
-        scale=True, batch_size=1)
+        join(data_path, BIG_VALIDATION, RGB_INPUT),
+        target_size=input_shape[0:2], scale=True, batch_size=1)
     if include_depth:
         depth_inputs_gen = make_data_generator(
-            join(data_path, VALIDATION, DEPTH_INPUT),
-            scale=True, batch_size=1)
+            join(data_path, BIG_VALIDATION, DEPTH_INPUT),
+            target_size=input_shape[0:2], scale=True, batch_size=1)
         inputs_gen = map(combine_rgb_depth, zip(inputs_gen, depth_inputs_gen))
     display_inputs_gen = make_data_generator(
-        join(data_path, VALIDATION, RGB_INPUT),
-        scale=False, batch_size=1)
+        join(data_path, BIG_VALIDATION, RGB_INPUT),
+        target_size=input_shape[0:2], scale=False, batch_size=1)
     outputs_gen = make_data_generator(
-        join(data_path, VALIDATION, OUTPUT),
-        batch_size=1, one_hot=True)
+        join(data_path, BIG_VALIDATION, OUTPUT),
+        target_size=input_shape[0:2], batch_size=1, one_hot=True)
 
     scores_list = []
 
@@ -222,7 +222,8 @@ def eval_run(model, options):
 
     print('Generating predictions and scores...')
     compute_predictions(
-        model, data_path, run_path, options.include_depth, options.nb_labels)
+        model, data_path, run_path, options.input_shape, options.include_depth,
+        options.nb_labels)
 
     print('Plotting graphs...')
     plot_graphs(model, run_path)

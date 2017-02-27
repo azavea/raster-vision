@@ -18,9 +18,9 @@ def rand_rotate_batch(x):
     np.rot90(x, np.random.randint(1, 5))
     return x
 
-
-def make_data_generator(path, batch_size=32, shuffle=False, augment=False,
-                        scale=False, one_hot=False):
+def make_data_generator(path, target_size=(256, 256), batch_size=32,
+                        shuffle=False, augment=False, scale=False,
+                        one_hot=False):
     gen_params = {}
     if augment:
         gen_params['horizontal_flip'] = True

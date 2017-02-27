@@ -16,6 +16,7 @@ DEPTH_INPUT = 'depth_input'
 OUTPUT = 'output'
 TRAIN = 'train'
 VALIDATION = 'validation'
+BIG_VALIDATION = 'big_validation'
 BOGUS_CLASS = 'bogus_class'
 
 VAIHINGEN = 'vaihingen'
@@ -54,6 +55,9 @@ processed_vaihingen_path = join(datasets_path, 'processed_vaihingen')
 tile_size = 256
 target_size = (tile_size, tile_size)
 
+big_tile_size = 2000
+big_target_size = (big_tile_size, big_tile_size)
+
 seed = 1
 random.seed(seed)
 
@@ -65,8 +69,9 @@ def get_dataset_path(dataset):
         return processed_potsdam_path
 
 
-def get_nb_validation_samples(data_path):
-    validation_path = join(data_path, 'validation', RGB_INPUT, BOGUS_CLASS)
+def get_nb_validation_samples(data_path, use_big_tiles=False):
+    partition_name = BIG_VALIDATION if use_big_tiles else 'validation'
+    validation_path = join(data_path, partition_name, RGB_INPUT, BOGUS_CLASS)
     nb_files = 0
     for file_name in listdir(validation_path):
         if isfile(join(validation_path, file_name)):
@@ -75,9 +80,12 @@ def get_nb_validation_samples(data_path):
     return nb_files
 
 
-def get_input_shape(include_depth):
+def get_input_shape(include_depth, is_big):
     nb_channels = 4 if include_depth else 3
-    return (tile_size, tile_size, nb_channels)
+    if is_big:
+        return (big_tile_size, big_tile_size, nb_channels)
+    else:
+        return (tile_size, tile_size, nb_channels)
 
 
 def _makedirs(path):
@@ -161,7 +169,8 @@ def process_data(raw_data_path, raw_rgb_input_path, raw_depth_input_path,
     train_file_names = output_file_names[0:nb_train_files]
     validation_file_names = output_file_names[nb_train_files:]
 
-    def _process_data(output_file_names, partition_name):
+    def _process_data(output_file_names, partition_name, tile_size,
+                      tile_stride):
         # Keras expects a directory for each class, but there are none,
         # so put all images in a single bogus class directory.
         proc_rgb_input_path = join(
@@ -200,9 +209,10 @@ def process_data(raw_data_path, raw_rgb_input_path, raw_depth_input_path,
                            output_tile)
                 proc_file_index += 1
 
-    _process_data(train_file_names, TRAIN)
-    _process_data(validation_file_names, VALIDATION)
-
+    _process_data(train_file_names, TRAIN, tile_size, tile_stride)
+    _process_data(validation_file_names, VALIDATION, tile_size, tile_stride)
+    _process_data(validation_file_names, BIG_VALIDATION, big_tile_size,
+                  big_tile_size)
 
 def process_vaihingen():
     raw_data_path = join(datasets_path, 'vaihingen')

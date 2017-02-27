@@ -8,8 +8,6 @@ import sys
 import argparse
 from subprocess import call
 
-from keras.models import load_model
-
 from .data.preprocess import _makedirs, results_path, get_input_shape
 from .train import make_model, train_model
 from .eval_run import eval_run
@@ -48,7 +46,11 @@ class RunOptions():
             self.drop_prob = drop_prob or 0.0
 
         self.include_depth = include_depth
-        self.input_shape = get_input_shape(include_depth)
+        self.set_input_shape()
+
+    def set_input_shape(self, use_big_tiles=False):
+        self.input_shape = get_input_shape(self.include_depth, use_big_tiles)
+
 
 def load_options(file_path):
     options = None
@@ -135,6 +137,7 @@ if __name__ == '__main__':
         elif task == TRAIN:
             train_run(options, run_path, sync_results)
         elif task == EVAL:
+            options.set_input_shape(use_big_tiles=True)
             model = load_model(options, run_path)
             eval_run(model, options)
             sync_results()
