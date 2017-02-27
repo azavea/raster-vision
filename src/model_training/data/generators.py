@@ -14,10 +14,6 @@ from .preprocess import (
     one_hot_to_rgb_batch)
 
 
-def rand_rotate_batch(x):
-    np.rot90(x, np.random.randint(1, 5))
-    return x
-
 def make_data_generator(path, target_size=(256, 256), batch_size=32,
                         shuffle=False, augment=False, scale=False,
                         one_hot=False):
@@ -38,9 +34,6 @@ def make_data_generator(path, target_size=(256, 256), batch_size=32,
     gen = gen.flow_from_directory(
         path, class_mode=None, target_size=target_size,
         batch_size=batch_size, shuffle=shuffle, seed=seed)
-
-    if augment:
-        gen = map(rand_rotate_batch, gen)
 
     if one_hot:
         gen = map(rgb_to_one_hot_batch, gen)
