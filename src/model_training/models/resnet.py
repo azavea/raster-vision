@@ -105,7 +105,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2),
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
 
     x = merge([x, shortcut], mode='sum')
-    x = Activation('relu', name='activation' + str(stage) + block)(x)
+    x = Activation('relu')(x)
     x = Dropout(drop_prob)(x)
 
     return x
@@ -124,44 +124,48 @@ def ResNet(input_tensor=None, drop_prob=0.0, is_big=True):
     x = Activation('relu')(x)
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)
 
-    x = conv_block(x, 3, [64, 64, 256], stage=2, block='a', strides=(1, 1),
+    filters = [64, 64, 256] if is_big else [32, 32, 128]
+    x = conv_block(x, 3, filters, stage=2, block='a', strides=(1, 1),
         drop_prob=drop_prob)
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='b',
+    x = identity_block(x, 3, filters, stage=2, block='b',
         drop_prob=drop_prob, last_in_stage=(not is_big))
     if is_big:
-        x = identity_block(x, 3, [64, 64, 256], stage=2, block='c',
+        x = identity_block(x, 3, filters, stage=2, block='c',
             drop_prob=drop_prob, last_in_stage=True)
 
-    x = conv_block(x, 3, [128, 128, 512], stage=3, block='a',
+    filters = [128, 128, 512] if is_big else [64, 64, 256]
+    x = conv_block(x, 3, filters, stage=3, block='a',
         drop_prob=drop_prob)
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='b',
+    x = identity_block(x, 3, filters, stage=3, block='b',
         drop_prob=drop_prob, last_in_stage=(not is_big))
     if is_big:
-        x = identity_block(x, 3, [128, 128, 512], stage=3, block='c',
+        x = identity_block(x, 3, filters, stage=3, block='c',
             drop_prob=drop_prob)
-        x = identity_block(x, 3, [128, 128, 512], stage=3, block='d',
+        x = identity_block(x, 3, filters, stage=3, block='d',
             drop_prob=drop_prob, last_in_stage=True)
 
-    x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a',
+    filters = [256, 256, 1024] if is_big else [128, 128, 512]
+    x = conv_block(x, 3, filters, stage=4, block='a',
         drop_prob=drop_prob)
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b',
+    x = identity_block(x, 3, filters, stage=4, block='b',
         drop_prob=drop_prob, last_in_stage=(not is_big))
     if is_big:
-        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c',
+        x = identity_block(x, 3, filters, stage=4, block='c',
             drop_prob=drop_prob)
-        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d',
+        x = identity_block(x, 3, filters, stage=4, block='d',
             drop_prob=drop_prob)
-        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e',
+        x = identity_block(x, 3, filters, stage=4, block='e',
             drop_prob=drop_prob)
-        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f',
+        x = identity_block(x, 3, filters, stage=4, block='f',
             drop_prob=drop_prob, last_in_stage=True)
 
-    x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a',
+    filters = [512, 512, 2048] if is_big else [256, 256, 1024]
+    x = conv_block(x, 3, filters, stage=5, block='a',
         drop_prob=drop_prob)
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b',
+    x = identity_block(x, 3, filters, stage=5, block='b',
         drop_prob=drop_prob, last_in_stage=(not is_big))
     if is_big:
-        x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c',
+        x = identity_block(x, 3, filters, stage=5, block='c',
                            drop_prob=drop_prob, last_in_stage=True)
 
     model = Model(img_input, x)
