@@ -1,0 +1,15 @@
+{
+    "batch_size": 16,
+    "patience": 10,
+    "dataset": "potsdam",
+    "git_commit": "f83660",
+    "include_depth": false,
+    "drop_prob": 0.20,
+    "is_big": true,
+    "model_type": "fcn_resnet",
+    "nb_epoch": 100,
+    "nb_labels": 6,
+    "nb_val_samples": 512,
+    "run_name": "fcn_resnet/2_27_17_dropout",
+    "samples_per_epoch": 4096
+}
