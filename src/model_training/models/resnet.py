@@ -56,11 +56,12 @@ def identity_block(input_tensor, kernel_size, filters, stage, block,
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
     x = merge([x, input_tensor], mode='sum')
+    x = Activation('relu')(x)
+
     if last_in_stage:
-        x = Activation('relu', name='output' + str(stage))(x)
+        x = Dropout(drop_prob, name='output' + str(stage))(x)
     else:
-        x = Activation('relu')(x)
-    x = Dropout(drop_prob)(x)
+        x = Dropout(drop_prob)(x)
 
     return x
 
