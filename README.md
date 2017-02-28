@@ -2,18 +2,6 @@
 
 Experiments in using deep learning with Keras/Tensorflow to perform semantic segmentation.
 
-## Table of Contents
-
-- [Usage](#usage)
-  - [Requirements](#requirements)
-  - [Quick Setup](#quick-setup)
-  - [Scripts](#scripts)
-
-* [Amazon EC2 GPU Instances](#amazon-ec2-gpu-instances)
-  * [Credentials](#credentials)
-  * [Spot Fleet](#spot-fleet)
-  * [NVIDIA Docker](#nvidia-docker)
-
 ## Usage
 
 ### Requirements
@@ -22,118 +10,81 @@ Experiments in using deep learning with Keras/Tensorflow to perform semantic seg
 - VirtualBox 4.3+
 - Pip 8.1+
 
-### Quick Setup
+### Scripts
 
-From within the project root, execute the following commands:
+| Name     | Description                              |
+| -------- | ---------------------------------------- |
+| `cipublish`  | Publish docker image to ECR |
+| `clean`  | Remove build outputs inside virtual machine |
+| `infra`  | Execute Terraform subcommands            |
+| `lint`   | Run flake8 on source code |
+| `run` | Run container locally or remotely |
+| `setup`  | Bring up the virtual machine and install dependent software on it |
+| `update` | Install dependent software inside virtual machine |
+| `upload_code` | Upload code to EC2 instance for rapid debugging |
+
+### Initial Setup
+
+From within the project root, execute the following commands.
 
 ```bash
 $ ./scripts/setup
 $ vagrant ssh
 ```
 
-### Scripts
-
-| Name     | Description                              |
-| -------- | ---------------------------------------- |
-| `setup`  | Bring up the virtual machine and install dependent software on it |
-| `infra`  | Execute Terraform subcommands            |
-| `update` | Install dependent software inside virtual machine |
-| `run` | Run container locally or remotely |
-| `clean`  | Remove build outputs inside virtual machine |
-| `lint`   | Run flake8 on source code |
-| `download` | Download result files from EC2 instance |
+You will be prompted to enter the OpenTreeID AWS credentials, along with a default region. These credentials will be used to authenticate calls to the AWS API when using the AWS CLI and Terraform.
 
 ## Running locally on CPUs
 
 To run an experiment locally, invoke
 ```shell
-# ./scripts/update
-vagrant@otid:/vagrant$ ./scripts/run --local
-root@230fb62d8ecd:/opt/model_training# python run.py options.json setup train eval
+vagrant ssh
+vagrant@otid:/vagrant$ ./scripts/update --cpu
+vagrant@otid:/vagrant$ ./scripts/run --cpu
+root@230fb62d8ecd:/opt/src# python -m model_training.run experiments/2_28_17/conv_logistic_test.json setup train eval
 ```
+
 ⚠️️ See [model_training/README.md](src/model_training/README.md) for more information on preparing data and running experiments.
 
 ## Running remotely on AWS EC2 GPUs
 
 Support for Amazon EC2 GPU instances is provided through a combination of the AWS CLI and Terraform. The AWS CLI is used to produce a local AWS profile with valid credentials, and Terraform is used to bring up the appropriate EC2 instances using spot pricing.
 
-### Credentials
-
-Using the AWS CLI, create an AWS profile named `open-tree-id`:
-
-```bash
-vagrant@vagrant-ubuntu-trusty-64:/vagrant$ unset AWS_PROFILE
-vagrant@vagrant-ubuntu-trusty-64:/vagrant$ aws --profile open-tree-id configure
-AWS Access Key ID [****************F2DQ]:
-AWS Secret Access Key [****************TLJ/]:
-Default region name [us-east-1]: us-east-1
-Default output format [None]:
-```
-
-You will be prompted to enter the OpenTreeID AWS credentials, along with a default region. These credentials will be used to authenticate calls to the AWS API when using the AWS CLI and Terraform.
-
 ### Spot Fleet
 
-Once an AWS profile exists, use the `infra` script to interact with Amazon EC2 Spot Fleet API, which will request the lowest priced GPU instance across all availability zones:
-
+Once an AWS profile exists, use the `infra` script to interact with Amazon EC2 Spot Fleet API, which will request the lowest priced P2 GPU instance across all availability zones. The following command will start 1 instance and print their
+public DNS names. More than 1 instance can be specified if needed.
 ```bash
-vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ./scripts/infra plan
-vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ./scripts/infra apply
+vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ./scripts/infra start 1
 ```
-
-**Note**: Currently only the `g2.2xlarge` and `p2.xlarge` instance types are part of the Spot Fleet request.
 
 Afterwards, navigate to the [spot request](https://console.aws.amazon.com/ec2sp/v1/spot/home?region=us-east-1#) section of the EC2 console to monitor the request's progress. Once fulfilled, a running instance will visible in the [instances](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:sort=instanceId) section.
 
-### NVIDIA Docker
-
-After a GPU instance is up-and-running, use SSH to connect to it via its public hostname. Once logged in, the NVIDIA drivers and `nvidia-docker` tooling will be available.
-
-Below is an example of using the `nvidia-docker`tooling to confirm that the GPUs can be accessed from within the running container:
-
-```bash
-$ ssh -i ~/.ssh/open-tree-id.pem -l ec2-user ec2-52-201-251-205.compute-1.amazonaws.com
-[ec2-user@ip-172-31-31-168 ~]$ nvidia-docker run --rm nvidia/cuda:7.5-runtime nvidia-smi
-7.5-runtime: Pulling from nvidia/cuda
-04c996abc244: Pull complete
-d394d3da86fe: Pull complete
-bac77aae22d4: Pull complete
-b48b86b78e97: Pull complete
-09b3dd842bf5: Pull complete
-6800a2eb7cad: Pull complete
-9cddad8d6231: Pull complete
-8f8b080957aa: Pull complete
-5fc28fb955da: Pull complete
-Digest: sha256:bbb67fd482c06bc9159209abd3f0aed3fc80643f01cd1d27acc988fc5830ec6c
-Status: Downloaded newer image for nvidia/cuda:7.5-runtime
-Thu Oct 20 21:28:46 2016
-+------------------------------------------------------+
-| NVIDIA-SMI 352.99     Driver Version: 352.99         |
-|-------------------------------|----------------------|----------------------+
-| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-|===============================+======================+======================|
-|   0  Tesla K80           On   | 0000:00:1E.0     Off |                    0 |
-| N/A   32C    P8    30W / 149W |     55MiB / 11519MiB |      0%      Default |
-+-------------------------------|----------------------|----------------------+
-
-+-----------------------------------------------------------------------------+
-| Processes:                                                       GPU Memory |
-|  GPU       PID  Type  Process name                               Usage      |
-|=============================================================================|
-|  No running processes found                                                 |
-+-----------------------------------------------------------------------------+
-```
+After initializing, the instance should have `nvidia-docker`, the GPU-enabled Docker image for this repo, and this repo and the datasets in the home directory.
 
 ### Running Models On A GPU Instance
 
-You can use the `run` script to bring up a GPU-enabled AWS instance, download data to it from S3, and build and run the docker image. This requires adding the `open-tree-id.pem` key to your `ssh-agent`.
+After starting an instance, ssh into it with
 ```shell
-./scripts/run --remote
-python run.py options.json setup train eval
+ssh-add ~/.aws/open-tree-id.pem
+ssh ubuntu@<public dns>
 ```
-The script leaves the EC2 instance running, so you can tweak changes locally and call `run` again to rerun the docker image with your latest changes.
-Results can be downloaded from the EC2 instance onto the local host using the `download` script. When done, you should shut down the EC2 instance with:
+
+Then you can train a model with
+```shell
+cd keras-semantic-segmentation
+./scripts/run --gpu
+root@230fb62d8ecd:/opt/src# python -m model_training.run experiments/2_28_17/conv_logistic_test.json setup train eval
+```
+
+When running on EC2, the results will be saved to the `otid-data` S3 bucket after each epoch and the evaluation. If a run is terminated for any reason and you would like to resume it,
+simply run the above command with the same options file, and it should pick up where it left off.
+
+⚠️️ When done with all the instances, you should shut them down with
 ```shell
 ./scripts/infra destroy
 ```
+
+### Publishing the Docker container to ECR
+
+To enable fast bootup, we publish the latest Docker image to ECR and then download it when initializing the EC2 instance. To build and publish the container, run `./scripts/cipublish`.

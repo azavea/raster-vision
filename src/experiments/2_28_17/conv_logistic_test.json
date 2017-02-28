@@ -1,0 +1,16 @@
+{
+    "batch_size": 1,
+    "patience": 10,
+    "dataset": "potsdam",
+    "git_commit": "d5ae66",
+    "include_depth": false,
+    "kernel_size": [5, 5],
+    "is_big_model": false,
+    "model_type": "conv_logistic",
+    "nb_epoch": 2,
+    "nb_labels": 6,
+    "nb_val_samples": 1,
+    "run_name": "2_28_17/conv_logistic_test",
+    "samples_per_epoch": 2,
+    "nb_eval_samples": 1
+}
