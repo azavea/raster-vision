@@ -10,13 +10,14 @@ import matplotlib as mpl
 # For headless environments
 mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from sklearn import metrics
 
 from .data.generators import (make_data_generator, combine_rgb_depth)
 from .data.preprocess import (
-    label_names, results_path, one_hot_to_rgb_batch, one_hot_to_label_batch,
-    get_nb_validation_samples, _makedirs, get_dataset_path, BIG_VALIDATION,
-    RGB_INPUT, DEPTH_INPUT, OUTPUT)
+    label_names, label_keys, results_path, one_hot_to_rgb_batch,
+    one_hot_to_label_batch, get_nb_validation_samples, _makedirs,
+    get_dataset_path, BIG_VALIDATION, RGB_INPUT, DEPTH_INPUT, OUTPUT)
 
 
 class Scores():
@@ -115,6 +116,17 @@ def aggregate_scores(scores_list):
     return agg_scores
 
 
+def make_legend():
+    patches = []
+    for label_key, label_name in zip(label_keys, label_names):
+        color = tuple(np.array(label_key) / 255.)
+        patch = mpatches.Patch(
+            facecolor=color, edgecolor='black', linewidth=0.5, label=label_name)
+        patches.append(patch)
+    plt.legend(handles=patches, loc='upper left',
+               bbox_to_anchor=(1, 1), fontsize=4)
+
+
 def plot_prediction(run_path, val_index, display_inputs, display_outputs,
                     display_predictions):
     fig = plt.figure()
@@ -136,6 +148,7 @@ def plot_prediction(run_path, val_index, display_inputs, display_outputs,
     subplot_index = 2
     plot_image(subplot_index, display_predictions[0, :, :, :], 'Prediction')
 
+    make_legend()
     predictions_path = join(
         run_path, 'predictions', '{}.pdf'.format(val_index))
     plt.savefig(predictions_path, bbox_inches='tight', format='pdf', dpi=300)
