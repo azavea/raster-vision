@@ -4,7 +4,6 @@ Compute prediction images, learning curve graph and various metrics for a run.
 from os.path import join
 import json
 
-from keras.models import load_model
 import numpy as np
 import matplotlib as mpl
 # For headless environments
@@ -15,9 +14,12 @@ from sklearn import metrics
 
 from .data.generators import (make_data_generator, combine_rgb_depth)
 from .data.preprocess import (
-    label_names, label_keys, results_path, one_hot_to_rgb_batch,
-    one_hot_to_label_batch, get_nb_validation_samples, _makedirs,
-    get_dataset_path, BIG_VALIDATION, RGB_INPUT, DEPTH_INPUT, OUTPUT)
+    one_hot_to_rgb_batch, one_hot_to_label_batch, _makedirs
+)
+from .data.settings import (
+    get_dataset_path, BIG_VALIDATION, RGB_INPUT, DEPTH_INPUT, OUTPUT,
+    label_names, label_keys, results_path, get_nb_validation_samples
+)
 
 
 class Scores():
@@ -121,13 +123,14 @@ def make_legend():
     for label_key, label_name in zip(label_keys, label_names):
         color = tuple(np.array(label_key) / 255.)
         patch = mpatches.Patch(
-            facecolor=color, edgecolor='black', linewidth=0.5, label=label_name)
+            facecolor=color, edgecolor='black', linewidth=0.5,
+            label=label_name)
         patches.append(patch)
     plt.legend(handles=patches, loc='upper left',
                bbox_to_anchor=(1, 1), fontsize=4)
 
 
-def plot_prediction(run_path, val_index, display_inputs, display_outputs,
+def plot_prediction(run_path, sample_index, display_inputs, display_outputs,
                     display_predictions):
     fig = plt.figure()
     nb_subplot_cols = 3
@@ -150,36 +153,36 @@ def plot_prediction(run_path, val_index, display_inputs, display_outputs,
 
     make_legend()
     predictions_path = join(
-        run_path, 'predictions', '{}.pdf'.format(val_index))
+        run_path, 'predictions', '{}.pdf'.format(sample_index))
     plt.savefig(predictions_path, bbox_inches='tight', format='pdf', dpi=300)
     plt.close(fig)
 
 
-def compute_predictions(model, data_path, run_path, input_shape, include_depth,
-                        nb_labels):
+def compute_predictions(model, data_path, run_path, options):
     _makedirs(join(run_path, 'predictions'))
 
-    nb_validation_samples = get_nb_validation_samples(data_path,
-        use_big_tiles=True)
+    nb_eval_samples = options.nb_eval_samples \
+        if options.nb_eval_samples is not None \
+        else get_nb_validation_samples(data_path, use_big_tiles=True)
 
     inputs_gen = make_data_generator(
         join(data_path, BIG_VALIDATION, RGB_INPUT),
-        target_size=input_shape[0:2], scale=True, batch_size=1)
-    if include_depth:
+        target_size=options.input_shape[0:2], scale=True, batch_size=1)
+    if options.include_depth:
         depth_inputs_gen = make_data_generator(
             join(data_path, BIG_VALIDATION, DEPTH_INPUT),
-            target_size=input_shape[0:2], scale=True, batch_size=1)
+            target_size=options.input_shape[0:2], scale=True, batch_size=1)
         inputs_gen = map(combine_rgb_depth, zip(inputs_gen, depth_inputs_gen))
     display_inputs_gen = make_data_generator(
         join(data_path, BIG_VALIDATION, RGB_INPUT),
-        target_size=input_shape[0:2], scale=False, batch_size=1)
+        target_size=options.input_shape[0:2], scale=False, batch_size=1)
     outputs_gen = make_data_generator(
         join(data_path, BIG_VALIDATION, OUTPUT),
-        target_size=input_shape[0:2], batch_size=1, one_hot=True)
+        target_size=options.input_shape[0:2], batch_size=1, one_hot=True)
 
     scores_list = []
 
-    for val_index in range(nb_validation_samples):
+    for sample_index in range(nb_eval_samples):
         inputs = next(inputs_gen)
         outputs = next(outputs_gen)
         predictions = model.predict(inputs)
@@ -189,13 +192,13 @@ def compute_predictions(model, data_path, run_path, input_shape, include_depth,
         display_predictions = one_hot_to_rgb_batch(predictions)
 
         plot_prediction(
-            run_path, val_index, display_inputs, display_outputs,
+            run_path, sample_index, display_inputs, display_outputs,
             display_predictions)
 
         scores = compute_scores(
             one_hot_to_label_batch(outputs),
             one_hot_to_label_batch(predictions),
-            nb_labels)
+            options.nb_labels)
         scores_list.append(scores)
 
     agg_scores = aggregate_scores(scores_list)
@@ -235,8 +238,7 @@ def eval_run(model, options):
 
     print('Generating predictions and scores...')
     compute_predictions(
-        model, data_path, run_path, options.input_shape, options.include_depth,
-        options.nb_labels)
+        model, data_path, run_path, options)
 
     print('Plotting graphs...')
     plot_graphs(model, run_path)

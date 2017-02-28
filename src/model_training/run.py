@@ -8,8 +8,9 @@ import sys
 import argparse
 from subprocess import call
 
-from .data.preprocess import _makedirs, results_path, get_input_shape
-from .train import make_model, train_model
+from .data.preprocess import _makedirs
+from .data.settings import results_path, get_input_shape, nb_labels
+from .train import make_model, train_model, CONV_LOGISTIC, FCN_RESNET
 from .eval_run import eval_run
 
 SETUP = 'setup'
@@ -18,36 +19,36 @@ EVAL = 'eval'
 
 
 class RunOptions():
-    def __init__(self, git_commit=None, model_type=None,
-                 nb_labels=None, run_name=None, batch_size=None,
-                 samples_per_epoch=None, nb_epoch=None, nb_val_samples=None,
-                 nb_prediction_images=None, patience=None, cooldown=None,
-                 include_depth=False, kernel_size=None, dataset=None,
-                 lr_schedule=None, drop_prob=None, is_big=True):
-        # Run `git rev-parse head` to get this.
-        self.git_commit = git_commit
-        self.model_type = model_type
+    """ Represents the options used to control an experimental run. """
+    def __init__(self, options):
+        # Required options
+        self.model_type = options['model_type']
+        self.run_name = options['run_name']
+        self.dataset = options['dataset']
+        self.include_depth = options['include_depth']
+
+        self.batch_size = options['batch_size']
+        self.nb_epoch = options['nb_epoch']
+        self.samples_per_epoch = options['samples_per_epoch']
+        self.nb_val_samples = options['nb_val_samples']
+
+        self.git_commit = options['git_commit']
+
+        # Optional options
+        self.patience = options.get('patience')
+        self.lr_schedule = options.get('lr_schedule')
+        # Controls how many samples to use in the final evaluation of the run.
+        self.nb_eval_samples = options.get('nb_eval_samples')
+
+        # model_type dependent options
+        if self.model_type == CONV_LOGISTIC:
+            self.kernel_size = options['kernel_size']
+        elif self.model_type == FCN_RESNET:
+            self.drop_prob = options['drop_prob']
+            self.is_big_model = options['is_big_model']
+
+        # Computed options
         self.nb_labels = nb_labels
-        self.run_name = run_name
-        self.batch_size = batch_size
-        self.samples_per_epoch = samples_per_epoch
-        self.nb_epoch = nb_epoch
-        self.nb_val_samples = nb_val_samples
-        self.nb_prediction_images = nb_prediction_images
-        self.patience = patience
-        self.cooldown = cooldown
-        self.lr_schedule = lr_schedule
-        self.dataset = dataset
-
-        if self.model_type == 'conv_logistic':
-            self.kernel_size = kernel_size or [1, 1]
-
-        if self.model_type == 'fcn_resnet':
-            self.drop_prob = drop_prob or 0.0
-
-        self.is_big = is_big
-
-        self.include_depth = include_depth
         self.set_input_shape()
 
     def set_input_shape(self, use_big_tiles=False):
@@ -57,13 +58,14 @@ class RunOptions():
 def load_options(file_path):
     options = None
     with open(file_path) as options_file:
-        options_dict = json.load(options_file)
-        options = RunOptions(**options_dict)
+        options = json.load(options_file)
+        options = RunOptions(options)
 
     return options
 
 
 class Logger(object):
+    """ Used to log stdout to a file and to the console. """
     def __init__(self, run_path):
         self.terminal = sys.stdout
         self.log = open(join(run_path, 'stdout.txt'), 'a')
@@ -77,12 +79,16 @@ class Logger(object):
 
 
 def setup_run(options, sync_results):
+    """ Setup directory for the results of the run """
+    # If there isn't a run directory, try to download it from S3.
     run_path = join(results_path, options.run_name)
     if not isdir(run_path):
         sync_results(download=True)
 
+    # Ensure there is a run directory.
     _makedirs(run_path)
 
+    # Read the options file and write it to the run directory.
     options_json = json.dumps(options.__dict__, sort_keys=True, indent=4)
     options_path = join(run_path, 'options.json')
     with open(options_path, 'w') as options_file:
@@ -92,6 +98,9 @@ def setup_run(options, sync_results):
 
 
 def load_model(options, run_path):
+    # Load the model by weights. This permits loading weights from a saved
+    # model into a model with a different architecture assuming the named
+    # layers have compatible dimensions.
     model = make_model(options)
     model.load_weights(join(run_path, 'model.h5'), by_name=True)
     return model
@@ -100,6 +109,7 @@ def load_model(options, run_path):
 def train_run(options, run_path, sync_results):
     model_path = join(run_path, 'model.h5')
 
+    # Load the model if it's saved, or create a new one.
     if isfile(model_path):
         model = load_model(options, run_path)
         print('Continuing training on {}'.format(model_path))
@@ -114,8 +124,7 @@ def train_run(options, run_path, sync_results):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('file_path', nargs='?',
-                        help='path to the options json file',
-                        default='/opt/src/options.json')
+                        help='path to the options json file')
     parser.add_argument('tasks', nargs='*', help='list of tasks to perform',
                         default=['setup', 'train', 'eval'])
     return parser.parse_args()
@@ -132,6 +141,11 @@ if __name__ == '__main__':
             call(['aws', 's3', 'sync', s3_run_path, run_path])
         else:
             call(['aws', 's3', 'sync', run_path, s3_run_path])
+
+    valid_tasks = [SETUP, TRAIN, EVAL]
+    for task in args.tasks:
+        if task not in valid_tasks:
+            raise ValueError('{} is not a valid task'.format(task))
 
     for task in args.tasks:
         if task == SETUP:

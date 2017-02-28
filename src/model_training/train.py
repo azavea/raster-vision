@@ -9,26 +9,32 @@ from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              LearningRateScheduler)
 
 from .data.generators import make_input_output_generators
-from .data.preprocess import get_dataset_path, results_path
+from .data.settings import get_dataset_path, results_path
 
 np.random.seed(1337)
+
+CONV_LOGISTIC = 'conv_logistic'
+FCN_VGG = 'fcn_vgg'
+FCN_RESNET = 'fcn_resnet'
 
 
 def make_model(options):
     """ A factory for generating models from options """
     model = None
     model_type = options.model_type
-    if model_type == 'conv_logistic':
+    if model_type == CONV_LOGISTIC:
         from .models.conv_logistic import make_conv_logistic
         model = make_conv_logistic(options.input_shape, options.nb_labels,
                                    options.kernel_size)
-    elif model_type == 'fcn_vgg':
+    elif model_type == FCN_VGG:
         from .models.fcn_vgg import make_fcn_vgg
         model = make_fcn_vgg(options.input_shape, options.nb_labels)
-    elif model_type == 'fcn_resnet':
+    elif model_type == FCN_RESNET:
         from .models.fcn_resnet import make_fcn_resnet
         model = make_fcn_resnet(options.input_shape, options.nb_labels,
-                                options.drop_prob, options.is_big)
+                                options.drop_prob, options.is_big_model)
+    else:
+        raise ValueError('{} is not a valid model_type'.format(model_type))
 
     return model
 

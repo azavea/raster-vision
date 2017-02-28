@@ -8,10 +8,10 @@ import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 
-from .preprocess import (
+from .settings import (
     RGB_INPUT, DEPTH_INPUT, OUTPUT, TRAIN, VALIDATION, POTSDAM, BOGUS_CLASS,
-    get_dataset_path, seed, target_size, rgb_to_one_hot_batch,
-    one_hot_to_rgb_batch)
+    seed, get_dataset_path)
+from .preprocess import rgb_to_one_hot_batch, one_hot_to_rgb_batch
 
 
 def rand_rotate_batch(x):
@@ -43,11 +43,11 @@ def make_data_generator(path, target_size=(256, 256), batch_size=32,
     if one_hot:
         gen = map(rgb_to_one_hot_batch, gen)
 
-    # It might seem like indepndently randomly rotating images for each
-    # generator would cause them to become out of sync, but that's not the
-    # case because the numpy seed is set each iteration for each generator,
-    # and the sequence of seeds is the same for all generators. So, as
-    # the generators are iterated through in tandem, there isn't a problem.
+    # If you have an input and an output generator and iterate through them
+    # in tandem, it might seem like the random rotations generated for each
+    # generator would be out of sync. But, that doesn't happen because
+    # each generator sets the global numpy seed when next is called on it, and
+    # each generator uses the same sequence of seeds.
     if augment:
         gen = map(rand_rotate_batch, gen)
 
@@ -65,6 +65,7 @@ def combine_rgb_depth(rgb_depth):
 
 
 def make_input_output_generator(base_path, batch_size, include_depth=False):
+    """ Make a generator which yields input, output pairs """
     rgb_input_path = join(base_path, RGB_INPUT)
     depth_input_path = join(base_path, DEPTH_INPUT)
     output_path = join(base_path, OUTPUT)
@@ -95,6 +96,9 @@ def make_input_output_generator(base_path, batch_size, include_depth=False):
 
 
 def make_input_output_generators(base_path, batch_size, include_depth=False):
+    """
+    Make the input_output generators for the training and validation sets
+    """
     train_gen = \
         make_input_output_generator(
             join(base_path, TRAIN), batch_size, include_depth)
@@ -106,6 +110,7 @@ def make_input_output_generators(base_path, batch_size, include_depth=False):
 
 
 def plot_batch(inputs, outputs, file_path):
+    # Unscale the data for visualization purposes
     rgb_outputs = one_hot_to_rgb_batch(outputs)
     inputs = np.clip((inputs + 3) * 32, 0, 255)
     outputs = outputs * 128
@@ -155,6 +160,7 @@ def plot_batch(inputs, outputs, file_path):
 
 
 def plot_generators():
+    """ Plot a minibatch for debugging purposes """
     batch_size = 12
     nb_batches = 1
     include_depth = True

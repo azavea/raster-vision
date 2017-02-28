@@ -18,6 +18,7 @@ from keras.layers import (Input,
 from keras.applications.vgg16 import VGG16
 import tensorflow as tf
 
+
 def make_fcn_vgg_skip(input_shape, nb_labels):
     nb_rows, nb_cols, _ = input_shape
     nb_labels = nb_labels
