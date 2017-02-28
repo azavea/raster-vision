@@ -14,6 +14,11 @@ from .preprocess import (
     one_hot_to_rgb_batch)
 
 
+def rand_rotate_batch(x):
+    np.rot90(x, np.random.randint(1, 5))
+    return x
+
+
 def make_data_generator(path, target_size=(256, 256), batch_size=32,
                         shuffle=False, augment=False, scale=False,
                         one_hot=False):
@@ -37,6 +42,14 @@ def make_data_generator(path, target_size=(256, 256), batch_size=32,
 
     if one_hot:
         gen = map(rgb_to_one_hot_batch, gen)
+
+    # It might seem like indepndently randomly rotating images for each
+    # generator would cause them to become out of sync, but that's not the
+    # case because the numpy seed is set each iteration for each generator,
+    # and the sequence of seeds is the same for all generators. So, as
+    # the generators are iterated through in tandem, there isn't a problem.
+    if augment:
+        gen = map(rand_rotate_batch, gen)
 
     return gen
 
