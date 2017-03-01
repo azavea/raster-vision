@@ -7,6 +7,7 @@ Modified to enable dropout and a smaller sized model to control overfitting.
 Adapted from code contributed by BigMoyan.
 Adapted from code from
 https://github.com/fchollet/deep-learning-models/blob/master/resnet50.py
+which has an MIT license.
 '''
 from __future__ import print_function
 

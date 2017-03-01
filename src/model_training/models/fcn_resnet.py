@@ -16,7 +16,6 @@ from .resnet import ResNet
 def make_fcn_resnet(input_shape, nb_labels, drop_prob, is_big_model):
     input_shape = tuple(input_shape)
     nb_rows, nb_cols, _ = input_shape
-    nb_labels = nb_labels
 
     input_tensor = Input(shape=input_shape)
     model = ResNet(input_tensor=input_tensor, drop_prob=drop_prob,

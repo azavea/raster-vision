@@ -10,12 +10,17 @@ from keras.callbacks import (ModelCheckpoint, CSVLogger,
 
 from .data.generators import make_input_output_generators
 from .data.settings import get_dataset_path, results_path
+from .models.conv_logistic import make_conv_logistic
+from .models.fcn_vgg import make_fcn_vgg
+from .models.fcn_resnet import make_fcn_resnet
+from .models.unet import make_unet
 
 np.random.seed(1337)
 
 CONV_LOGISTIC = 'conv_logistic'
 FCN_VGG = 'fcn_vgg'
 FCN_RESNET = 'fcn_resnet'
+UNET = 'unet'
 
 
 def make_model(options):
@@ -23,16 +28,15 @@ def make_model(options):
     model = None
     model_type = options.model_type
     if model_type == CONV_LOGISTIC:
-        from .models.conv_logistic import make_conv_logistic
         model = make_conv_logistic(options.input_shape, options.nb_labels,
                                    options.kernel_size)
     elif model_type == FCN_VGG:
-        from .models.fcn_vgg import make_fcn_vgg
         model = make_fcn_vgg(options.input_shape, options.nb_labels)
     elif model_type == FCN_RESNET:
-        from .models.fcn_resnet import make_fcn_resnet
         model = make_fcn_resnet(options.input_shape, options.nb_labels,
                                 options.drop_prob, options.is_big_model)
+    elif model_type == UNET:
+        model = make_unet(options.input_shape, options.nb_labels)
     else:
         raise ValueError('{} is not a valid model_type'.format(model_type))
 
