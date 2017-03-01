@@ -1,0 +1,13 @@
+{
+    "batch_size": 16,
+    "patience": 10,
+    "git_commit": "bf3fbe",
+    "dataset": "potsdam",
+    "include_depth": false,
+    "model_type": "unet",
+    "nb_epoch": 100,
+    "nb_labels": 6,
+    "nb_val_samples": 512,
+    "run_name": "3_1_17/unet",
+    "samples_per_epoch": 4096
+}
