@@ -9,7 +9,7 @@ import argparse
 from subprocess import call
 
 from .data.preprocess import _makedirs
-from .data.settings import results_path, get_input_shape, nb_labels
+from .data.settings import results_path, nb_labels, get_dataset_info
 from .train import make_model, train_model, CONV_LOGISTIC, FCN_RESNET
 from .eval_run import eval_run
 
@@ -53,8 +53,9 @@ class RunOptions():
         self.set_input_shape()
 
     def set_input_shape(self, use_big_tiles=False):
-        self.input_shape = get_input_shape(
-            self.dataset, self.include_ir, self.include_depth, use_big_tiles)
+        dataset_info = get_dataset_info(self.dataset)
+        self.input_shape = dataset_info.get_input_shape(
+            self.include_ir, self.include_depth, use_big_tiles)
 
 
 def load_options(file_path):

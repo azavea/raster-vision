@@ -17,8 +17,7 @@ from .data.utils import (
 from .data.generators import (
     make_split_generator, unscale_inputs, load_channel_stats)
 from .data.settings import (
-    get_dataset_path, big_tile_size, label_names, label_keys, results_path,
-    get_channel_inds, VALIDATION)
+    label_names, label_keys, results_path, VALIDATION, get_dataset_info)
 
 
 class Scores():
@@ -158,7 +157,7 @@ def plot_prediction(run_path, sample_index, display_inputs, display_outputs,
     plt.close(fig)
 
 
-def compute_predictions(model, data_path, run_path, options):
+def compute_predictions(model, dataset_info, run_path, options):
     _makedirs(join(run_path, 'predictions'))
 
     tile_size = options.input_shape[0:2]
@@ -166,18 +165,17 @@ def compute_predictions(model, data_path, run_path, options):
         options.dataset, VALIDATION, tile_size=tile_size,
         batch_size=1, shuffle=False, augment=False, scale=True,
         include_ir=options.include_ir, include_depth=options.include_depth)
-    input_channels, _ = get_channel_inds(
-        options.dataset, include_ir=options.include_ir,
-        include_depth=options.include_depth)
-    scale_params = load_channel_stats(data_path)
+    rgb_input_inds, input_inds, _ = dataset_info.get_channel_inds(
+        include_ir=options.include_ir, include_depth=options.include_depth)
+    scale_params = load_channel_stats(dataset_info.dataset_path)
 
     scores_list = []
 
     for sample_index, (inputs, outputs) in enumerate(validation_gen):
         predictions = model.predict(inputs)
 
-        display_inputs = unscale_inputs(inputs, input_channels, scale_params)
-        display_inputs = display_inputs[:, :, :, 0:3]
+        display_inputs = unscale_inputs(inputs, input_inds, scale_params)
+        display_inputs = display_inputs[:, :, :, rgb_input_inds]
         display_outputs = one_hot_to_rgb_batch(outputs)
         display_predictions = one_hot_to_rgb_batch(predictions)
 
@@ -217,18 +215,18 @@ def plot_graphs(model, run_path):
     plt.plot(epochs, acc, '-', label='Training')
     plt.plot(epochs, val_acc, '--', label='Validation')
 
-    plt.legend(loc="best")
+    plt.legend(loc='best')
     accuracy_path = join(run_path, 'accuracy.pdf')
     plt.savefig(accuracy_path, format='pdf', dpi=300)
 
 
 def eval_run(model, options):
     run_path = join(results_path, options.run_name)
-    data_path = get_dataset_path(options.dataset)
+    dataset_info = get_dataset_info(options.dataset)
 
     print('Generating predictions and scores...')
     compute_predictions(
-        model, data_path, run_path, options)
+        model, dataset_info, run_path, options)
 
     print('Plotting graphs...')
     plot_graphs(model, run_path)

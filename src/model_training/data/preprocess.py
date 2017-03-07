@@ -8,8 +8,7 @@ from os.path import join
 import numpy as np
 
 from .settings import (
-    raw_potsdam_path, POTSDAM, TRAIN, VALIDATION, seed, get_dataset_path,
-    potsdam_sharah_training, potsdam_sharah_validation)
+    POTSDAM, TRAIN, VALIDATION, seed, get_dataset_info)
 from .utils import (
     _makedirs, load_tiff, load_image, rgb_to_label_batch, save_image)
 from .generators import save_channel_stats
@@ -61,10 +60,13 @@ def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
 
 
 def process_potsdam():
-    proc_data_path = get_dataset_path(POTSDAM)
-    raw_rgbir_input_path = join(raw_potsdam_path, '4_Ortho_RGBIR')
-    raw_depth_input_path = join(raw_potsdam_path, '1_DSM_normalisation')
-    raw_output_path = join(raw_potsdam_path, '5_Labels_for_participants')
+    dataset_info = get_dataset_info(POTSDAM)
+    proc_data_path = dataset_info.dataset_path
+    raw_data_path = dataset_info.raw_dataset_path
+
+    raw_rgbir_input_path = join(raw_data_path, '4_Ortho_RGBIR')
+    raw_depth_input_path = join(raw_data_path, '1_DSM_normalisation')
+    raw_output_path = join(raw_data_path, '5_Labels_for_participants')
 
     def get_file_names(index1, index2):
         rgbir_file_name = 'top_potsdam_{}_{}_RGBIR.tif'.format(index1, index2)
@@ -75,17 +77,19 @@ def process_potsdam():
 
         return rgbir_file_name, depth_file_name, output_file_name
 
+    train_file_indices, validation_file_inds = dataset_info.get_file_inds()
+
     train_path = join(proc_data_path, TRAIN)
-    file_indices = potsdam_sharah_training
-    process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
-                 raw_output_path, train_path, get_file_names)
+    process_data(
+        train_file_indices, raw_rgbir_input_path, raw_depth_input_path,
+        raw_output_path, train_path, get_file_names)
 
     save_channel_stats(proc_data_path)
 
     validation_path = join(proc_data_path, VALIDATION)
-    file_indices = potsdam_sharah_validation
-    process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
-                 raw_output_path, validation_path, get_file_names)
+    process_data(
+        validation_file_inds, raw_rgbir_input_path, raw_depth_input_path,
+        raw_output_path, validation_path, get_file_names)
 
 
 if __name__ == '__main__':
