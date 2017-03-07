@@ -1,0 +1,14 @@
+{
+    "batch_size": 8,
+    "patience": 10,
+    "git_commit": "a9aab7",
+    "dataset": "potsdam",
+    "include_depth": true,
+    "include_ir": true,
+    "model_type": "unet",
+    "nb_epoch": 75,
+    "nb_labels": 6,
+    "nb_val_samples": 512,
+    "run_name": "3_6_17/unet_rgbird",
+    "samples_per_epoch": 4096
+}
