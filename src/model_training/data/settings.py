@@ -1,15 +1,9 @@
-from os.path import join, isfile
-from os import listdir
+from os.path import join
 
-RGB_INPUT = 'rgb_input'
+RGBIR_INPUT = 'rgbir_input'
 DEPTH_INPUT = 'depth_input'
-OUTPUT = 'output'
 TRAIN = 'train'
 VALIDATION = 'validation'
-BIG_VALIDATION = 'big_validation'
-BOGUS_CLASS = 'bogus_class'
-
-VAIHINGEN = 'vaihingen'
 POTSDAM = 'potsdam'
 
 # Impervious surfaces (RGB: 255, 255, 255)
@@ -24,7 +18,7 @@ label_keys = [
     [0, 255, 255],
     [0, 255, 0],
     [255, 255, 0],
-    [255, 0, 0]
+    [255, 0, 0],
 ]
 label_names = [
     'Impervious',
@@ -39,8 +33,7 @@ nb_labels = len(label_keys)
 data_path = '/opt/data/'
 datasets_path = join(data_path, 'datasets')
 results_path = join(data_path, 'results')
-processed_potsdam_path = join(datasets_path, 'processed_potsdam')
-processed_vaihingen_path = join(datasets_path, 'processed_vaihingen')
+raw_potsdam_path = join(datasets_path, POTSDAM)
 
 tile_size = 256
 target_size = (tile_size, tile_size)
@@ -50,30 +43,57 @@ big_target_size = (big_tile_size, big_tile_size)
 
 seed = 1
 
+# Split used in https://arxiv.org/abs/1606.02585
+potsdam_sharah_training = [
+    (2, 10), (3, 10), (3, 11), (3, 12), (4, 11), (4, 12), (5, 10), (5, 12),
+    (6, 10), (6, 11), (6, 12), (6, 8), (6, 9), (7, 11), (7, 12), (7, 7), (7, 9)
+]
+potsdam_sharah_validation = [
+    (2, 11), (2, 12), (4, 10), (5, 11), (6, 7), (7, 10), (7, 8)
+]
+
 
 def get_dataset_path(dataset):
-    if dataset == VAIHINGEN:
-        return processed_vaihingen_path
-    elif dataset == POTSDAM:
-        return processed_potsdam_path
+    if dataset == POTSDAM:
+        return join(datasets_path, 'processed_potsdam')
     else:
         raise ValueError('{} is not a valid dataset'.format(dataset))
 
 
-def get_nb_validation_samples(data_path, use_big_tiles=False):
-    partition_name = BIG_VALIDATION if use_big_tiles else 'validation'
-    validation_path = join(data_path, partition_name, RGB_INPUT, BOGUS_CLASS)
-    nb_files = 0
-    for file_name in listdir(validation_path):
-        if isfile(join(validation_path, file_name)):
-            nb_files += 1
-
-    return nb_files
-
-
-def get_input_shape(include_depth, is_big):
-    nb_channels = 4 if include_depth else 3
-    if is_big:
-        return (big_tile_size, big_tile_size, nb_channels)
+def get_raw_dataset_path(dataset):
+    if dataset == POTSDAM:
+        return join(datasets_path, POTSDAM)
     else:
-        return (tile_size, tile_size, nb_channels)
+        raise ValueError('{} is not a valid dataset'.format(dataset))
+
+
+def get_channel_inds(dataset, include_ir=False, include_depth=False):
+    if dataset == POTSDAM:
+        input_channels = [0, 1, 2]
+        if include_ir:
+            input_channels.append(3)
+        if include_depth:
+            input_channels.append(4)
+
+        output_channels = [5]
+
+        return input_channels, output_channels
+    else:
+        raise ValueError('{} is not a valid dataset'.format(dataset))
+
+
+def get_input_shape(dataset, include_ir=False, include_depth=False,
+                    use_big_tiles=False):
+    if dataset == POTSDAM:
+        nb_channels = 3
+        if include_ir:
+            nb_channels += 1
+        if include_depth:
+            nb_channels += 1
+
+        if use_big_tiles:
+            return (big_tile_size, big_tile_size, nb_channels)
+        else:
+            return (tile_size, tile_size, nb_channels)
+    else:
+        raise ValueError('{} is not a valid dataset'.format(dataset))

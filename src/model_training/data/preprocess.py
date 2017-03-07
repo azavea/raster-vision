@@ -4,74 +4,17 @@ http://www2.isprs.org/commissions/comm3/wg4/semantic-labeling.html
 to put it into a Keras-friendly format.
 """
 from os.path import join
-from os import listdir, makedirs
-import random
-import re
 
 import numpy as np
-from PIL import Image
 
 from .settings import (
-    RGB_INPUT, DEPTH_INPUT, OUTPUT, TRAIN, VALIDATION, BIG_VALIDATION,
-    BOGUS_CLASS, label_keys, nb_labels, datasets_path, processed_potsdam_path,
-    processed_vaihingen_path, tile_size, big_tile_size, seed)
+    raw_potsdam_path, POTSDAM, TRAIN, VALIDATION, seed, get_dataset_path,
+    potsdam_sharah_training, potsdam_sharah_validation)
+from .utils import (
+    _makedirs, load_tiff, load_image, rgb_to_label_batch, save_image)
+from .generators import save_channel_stats
 
-random.seed(seed)
-
-
-def _makedirs(path):
-    try:
-        makedirs(path)
-    except:
-        pass
-
-
-def load_image(file_path):
-    im = Image.open(file_path)
-    return np.array(im)
-
-
-def save_image(file_path, im):
-    Image.fromarray(np.squeeze(im).astype(np.uint8)).save(file_path)
-
-
-def rgb_to_label_batch(rgb_batch):
-    label_batch = np.zeros(rgb_batch.shape[:-1])
-    for label, key in enumerate(label_keys):
-        mask = (rgb_batch[:, :, :, 0] == key[0]) & \
-               (rgb_batch[:, :, :, 1] == key[1]) & \
-               (rgb_batch[:, :, :, 2] == key[2])
-        label_batch[mask] = label
-
-    return label_batch
-
-
-def label_to_one_hot_batch(label_batch):
-    one_hot_batch = np.zeros(np.concatenate([label_batch.shape, [nb_labels]]))
-    for label in range(nb_labels):
-        one_hot_batch[:, :, :, label][label_batch == label] = 1.
-    return one_hot_batch
-
-
-def rgb_to_one_hot_batch(rgb_batch):
-    return label_to_one_hot_batch(rgb_to_label_batch(rgb_batch))
-
-
-def label_to_rgb_batch(label_batch):
-    rgb_batch = np.zeros(np.concatenate([label_batch.shape, [3]]))
-    for label, key in enumerate(label_keys):
-        mask = label_batch == label
-        rgb_batch[mask, :] = key
-
-    return rgb_batch
-
-
-def one_hot_to_label_batch(one_hot_batch):
-    return np.argmax(one_hot_batch, axis=3)
-
-
-def one_hot_to_rgb_batch(one_hot_batch):
-    return label_to_rgb_batch(one_hot_to_label_batch(one_hot_batch))
+np.random.seed(seed)
 
 
 def tile_image(im, size, stride):
@@ -87,121 +30,63 @@ def tile_image(im, size, stride):
     return tiles
 
 
-def process_data(raw_data_path, raw_rgb_input_path, raw_depth_input_path,
-                 raw_output_path, proc_data_path, train_ratio, tile_stride,
-                 get_file_names):
+def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
+                 raw_output_path, proc_data_path, get_file_names):
     print('Processing data...')
-    output_file_names = [file_name for file_name in listdir(raw_output_path)
-                         if file_name.endswith('.tif')]
-    random.shuffle(output_file_names)
-    nb_files = len(output_file_names)
+    _makedirs(proc_data_path)
 
-    nb_train_files = int(nb_files * train_ratio)
-    train_file_names = output_file_names[0:nb_train_files]
-    validation_file_names = output_file_names[nb_train_files:]
+    for index1, index2 in file_indices:
+        print('{}_{}'.format(index1, index2))
 
-    def _process_data(output_file_names, partition_name, tile_size,
-                      tile_stride):
-        # Keras expects a directory for each class, but there are none,
-        # so put all images in a single bogus class directory.
-        proc_rgb_input_path = join(
-            proc_data_path, partition_name, RGB_INPUT, BOGUS_CLASS)
-        proc_depth_input_path = join(
-            proc_data_path, partition_name, DEPTH_INPUT, BOGUS_CLASS)
-        proc_output_path = join(
-            proc_data_path, partition_name, OUTPUT, BOGUS_CLASS)
+        rgbir_file_name, depth_file_name, output_file_name = \
+            get_file_names(index1, index2)
 
-        _makedirs(proc_rgb_input_path)
-        _makedirs(proc_depth_input_path)
-        _makedirs(proc_output_path)
+        rgbir_input_im = load_tiff(join(raw_rgbir_input_path, rgbir_file_name))
 
-        proc_file_index = 0
-        for output_file_name in output_file_names:
-            rgb_file_name, depth_file_name = get_file_names(output_file_name)
+        depth_input_im = load_image(
+            join(raw_depth_input_path, depth_file_name))
+        depth_input_im = np.expand_dims(depth_input_im, axis=2)
 
-            output_im = load_image(join(raw_output_path, output_file_name))
-            rgb_input_im = load_image(join(raw_rgb_input_path, rgb_file_name))
-            depth_input_im = load_image(
-                join(raw_depth_input_path, depth_file_name))[:, :, np.newaxis]
+        output_im = load_tiff(join(raw_output_path, output_file_name))
+        output_im = np.expand_dims(output_im, axis=0)
+        output_im = rgb_to_label_batch(output_im)
+        output_im = np.squeeze(output_im, axis=0)
+        output_im = np.expand_dims(output_im, axis=2)
 
-            rgb_input_tiles = tile_image(rgb_input_im, tile_size, tile_stride)
-            depth_input_tiles = tile_image(
-                depth_input_im, tile_size, tile_stride)
-            output_tiles = tile_image(output_im, tile_size, tile_stride)
+        concat_im = np.concatenate(
+            [rgbir_input_im, depth_input_im, output_im], axis=2)
 
-            for rgb_input_tile, depth_input_tile, output_tile in \
-                    zip(rgb_input_tiles, depth_input_tiles, output_tiles):
-                proc_file_name = '{}.png'.format(proc_file_index)
-                save_image(join(proc_rgb_input_path, proc_file_name),
-                           rgb_input_tile)
-                save_image(join(proc_depth_input_path, proc_file_name),
-                           depth_input_tile)
-                save_image(join(proc_output_path, proc_file_name),
-                           output_tile)
-                proc_file_index += 1
-
-    _process_data(train_file_names, TRAIN, tile_size, tile_stride)
-    _process_data(validation_file_names, VALIDATION, tile_size, tile_stride)
-    _process_data(validation_file_names, BIG_VALIDATION, big_tile_size,
-                  big_tile_size)
-
-
-def process_vaihingen():
-    raw_data_path = join(datasets_path, 'vaihingen')
-    raw_rgb_input_path = join(raw_data_path, 'top')
-    raw_depth_input_path = join(raw_data_path, 'dsm')
-    raw_output_path = join(raw_data_path, 'gts_for_participants')
-    proc_data_path = processed_vaihingen_path
-
-    train_ratio = 0.8
-    tile_stride = int(tile_size / 2)
-
-    output_file_name_re = re.compile('.*area(\d+).tif')
-
-    def get_file_names(output_file_name):
-        index = output_file_name_re.search(output_file_name).group(1)
-        rgb_file_name = output_file_name
-        depth_file_name = 'dsm_09cm_matching_area{}.tif'.format(index)
-
-        return rgb_file_name, depth_file_name
-
-    process_data(
-        raw_data_path, raw_rgb_input_path, raw_depth_input_path,
-        raw_output_path, proc_data_path, train_ratio, tile_stride,
-        get_file_names)
+        proc_file_name = '{}_{}'.format(index1, index2)
+        save_image(join(proc_data_path, proc_file_name), concat_im)
 
 
 def process_potsdam():
-    raw_data_path = join(datasets_path, 'potsdam')
-    raw_rgb_input_path = join(raw_data_path, '3_Ortho_IRRG')
-    raw_depth_input_path = join(raw_data_path, '1_DSM_normalisation')
-    raw_output_path = join(raw_data_path, '5_Labels_for_participants')
-    proc_data_path = processed_potsdam_path
+    proc_data_path = get_dataset_path(POTSDAM)
+    raw_rgbir_input_path = join(raw_potsdam_path, '4_Ortho_RGBIR')
+    raw_depth_input_path = join(raw_potsdam_path, '1_DSM_normalisation')
+    raw_output_path = join(raw_potsdam_path, '5_Labels_for_participants')
 
-    train_ratio = 0.8
-    tile_stride = 256
-
-    output_file_name_re = re.compile('^top_potsdam_(\d+)_(\d+)_label.tif')
-
-    def get_file_names(output_file_name):
-        search = output_file_name_re.search(output_file_name)
-        index1 = search.group(1)
-        index2 = search.group(2)
-        rgb_file_name = 'top_potsdam_{}_{}_IRRG.tif'.format(index1, index2)
-        print(rgb_file_name)
-
+    def get_file_names(index1, index2):
+        rgbir_file_name = 'top_potsdam_{}_{}_RGBIR.tif'.format(index1, index2)
         depth_file_name = \
             'dsm_potsdam_{:0>2}_{:0>2}_normalized_lastools.jpg' \
             .format(index1, index2)
+        output_file_name = 'top_potsdam_{}_{}_label.tif'.format(index1, index2)
 
-        return rgb_file_name, depth_file_name
+        return rgbir_file_name, depth_file_name, output_file_name
 
-    process_data(
-        raw_data_path, raw_rgb_input_path, raw_depth_input_path,
-        raw_output_path, proc_data_path, train_ratio, tile_stride,
-        get_file_names)
+    train_path = join(proc_data_path, TRAIN)
+    file_indices = potsdam_sharah_training
+    process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
+                 raw_output_path, train_path, get_file_names)
+
+    save_channel_stats(proc_data_path)
+
+    validation_path = join(proc_data_path, VALIDATION)
+    file_indices = potsdam_sharah_validation
+    process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
+                 raw_output_path, validation_path, get_file_names)
 
 
 if __name__ == '__main__':
-    # process_vaihingen()
     process_potsdam()

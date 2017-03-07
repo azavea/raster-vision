@@ -1,185 +1,257 @@
 from os.path import join
-from os import listdir
+import glob
+import json
 
 import numpy as np
-from keras.preprocessing.image import ImageDataGenerator
 import matplotlib as mpl
 # For headless environments
 mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 
 from .settings import (
-    RGB_INPUT, DEPTH_INPUT, OUTPUT, TRAIN, VALIDATION, POTSDAM, BOGUS_CLASS,
-    seed, get_dataset_path)
-from .preprocess import rgb_to_one_hot_batch, one_hot_to_rgb_batch
+    TRAIN, VALIDATION, POTSDAM, seed,
+    get_dataset_path, get_channel_inds)
+from .utils import label_to_one_hot_batch, one_hot_to_rgb_batch, _makedirs
+
+np.random.seed(seed)
 
 
-def rand_rotate_batch(x):
-    np.rot90(x, np.random.randint(1, 5))
-    return x
+def get_samples(gen, nb_samples):
+    samples = []
+    for i, sample in enumerate(gen):
+        samples.append(np.expand_dims(sample, axis=0))
+        if i+1 == nb_samples:
+            break
+
+    if len(samples) > 0:
+        return np.concatenate(samples, axis=0)
+    return None
 
 
-def make_data_generator(path, target_size=(256, 256), batch_size=32,
-                        shuffle=False, augment=False, scale=False,
-                        one_hot=False):
-    gen_params = {}
+def get_channel_stats(path):
+    tile_size = (10, 10)
+    nb_samples = 2000
+    tile_gen = make_random_tile_generator(path, tile_size)
+    samples = get_samples(tile_gen, nb_samples)
+    nb_channels = samples.shape[3]
+    channel_data = np.reshape(
+        np.transpose(samples, [3, 0, 1, 2]), (nb_channels, -1))
+
+    means = np.mean(channel_data, axis=1)
+    stds = np.std(channel_data, axis=1)
+    return means, stds
+
+
+def save_channel_stats(path):
+    means, stds = get_channel_stats(join(path, TRAIN))
+    channel_stats = map(lambda x: {'mean': x[0], 'std': x[1]},
+                        zip(means, stds))
+    channel_stats_json = json.dumps({'stats': list(channel_stats)}, indent=4)
+    with open(join(path, 'stats.txt'), 'w') as stats_file:
+        stats_file.write(channel_stats_json)
+
+
+def load_channel_stats(path):
+    with open(join(path, 'stats.txt'), 'r') as stats_file:
+        stats_json = stats_file.read()
+        stats = json.loads(stats_json)
+        means = np.array(list(map(lambda x: x['mean'], stats['stats'])))
+        stds = np.array(list(map(lambda x: x['std'], stats['stats'])))
+
+        return means, stds
+
+
+def make_tile_generator(path, tile_size):
+    file_paths = glob.glob(join(path, '*.npy'))
+
+    for file_path in file_paths:
+        concat_im = np.load(file_path, mmap_mode='r')
+        nb_rows, nb_cols, _ = concat_im.shape
+
+        for row_begin in range(0, nb_rows, tile_size[0]):
+            for col_begin in range(0, nb_cols, tile_size[1]):
+                row_end = row_begin + tile_size[0]
+                col_end = col_begin + tile_size[1]
+                if row_end <= nb_rows and col_end <= nb_cols:
+                    tile = concat_im[row_begin:row_end, col_begin:col_end, :]
+                    # Make writeable in-memory copy
+                    tile = np.array(tile)
+                    yield tile
+
+
+def make_random_tile_generator(path, tile_size):
+    file_paths = glob.glob(join(path, '*.npy'))
+    nb_files = len(file_paths)
+
+    while True:
+        file_ind = np.random.randint(0, nb_files)
+
+        file_path = file_paths[file_ind]
+        concat_im = np.load(file_path, mmap_mode='r')
+        nb_rows, nb_cols, _ = concat_im.shape
+
+        row_begin = np.random.randint(0, nb_rows - tile_size[0] + 1)
+        col_begin = np.random.randint(0, nb_cols - tile_size[1] + 1)
+        row_end = row_begin + tile_size[0]
+        col_end = col_begin + tile_size[1]
+
+        tile = concat_im[row_begin:row_end, col_begin:col_end, :]
+        # Make writeable in-memory copy
+        tile = np.array(tile)
+        yield tile
+
+
+def make_batch_generator(path, tile_size, batch_size, shuffle):
+    if shuffle:
+        gen = make_random_tile_generator(path, tile_size)
+    else:
+        gen = make_tile_generator(path, tile_size)
+
+    while True:
+        samples = get_samples(gen, batch_size)
+        if samples is None:
+            raise StopIteration()
+        yield samples
+
+
+def transform_batch(batch, input_channels, output_channels, augment=False,
+                    scale_params=None):
+    batch = batch.astype(np.float32)
+
     if augment:
-        gen_params['horizontal_flip'] = True
-        gen_params['vertical_flip'] = True
+        nb_rotations = np.random.randint(0, 4)
 
-    if scale:
-        gen_params['featurewise_center'] = True
-        gen_params['featurewise_std_normalization'] = True
-        samples = get_samples_for_fit(path)
+        batch = np.transpose(batch, [1, 2, 3, 0])
+        batch = np.rot90(batch, nb_rotations)
+        batch = np.transpose(batch, [3, 0, 1, 2])
 
-    gen = ImageDataGenerator(**gen_params)
-    if scale:
-        gen.fit(samples)
+        if np.random.uniform() > 0.5:
+            batch = np.flip(batch, axis=1)
+        if np.random.uniform() > 0.5:
+            batch = np.flip(batch, axis=2)
 
-    gen = gen.flow_from_directory(
-        path, class_mode=None, target_size=target_size,
-        batch_size=batch_size, shuffle=shuffle, seed=seed)
+    if scale_params is not None:
+        means, stds = scale_params
+        batch[:, :, :, input_channels] -= \
+            means[np.newaxis, np.newaxis, np.newaxis, input_channels]
+        batch[:, :, :, input_channels] /= \
+            stds[np.newaxis, np.newaxis, np.newaxis, input_channels]
 
-    if one_hot:
-        gen = map(rgb_to_one_hot_batch, gen)
+    inputs = batch[:, :, :, input_channels]
+    outputs = batch[:, :, :, output_channels]
+    outputs = np.squeeze(outputs, axis=3)
+    outputs = label_to_one_hot_batch(outputs)
 
-    # If you have an input and an output generator and iterate through them
-    # in tandem, it might seem like the random rotations generated for each
-    # generator would be out of sync. But, that doesn't happen because
-    # each generator sets the global numpy seed when next is called on it, and
-    # each generator uses the same sequence of seeds.
-    if augment:
-        gen = map(rand_rotate_batch, gen)
+    return inputs, outputs
+
+
+def make_split_generator(dataset, split, tile_size=(256, 256),
+                         batch_size=32, shuffle=False, augment=False,
+                         scale=False, include_ir=False, include_depth=False):
+    path = get_dataset_path(dataset)
+    split_path = join(path, split)
+
+    input_channels, output_channels = get_channel_inds(
+        dataset, include_ir=include_ir, include_depth=include_depth)
+    scale_params = load_channel_stats(path) \
+        if scale else None
+
+    gen = make_batch_generator(split_path, tile_size, batch_size, shuffle)
+
+    def transform(batch):
+        return transform_batch(batch, input_channels, output_channels,
+                               augment=augment, scale_params=scale_params)
+    gen = map(transform, gen)
 
     return gen
 
 
-def get_samples_for_fit(path):
-    return next(make_data_generator(path, shuffle=True))
+def unscale_inputs(inputs, input_channels, scale_params):
+    means, stds = scale_params
+    nb_dims = len(inputs.shape)
+    if nb_dims == 3:
+        inputs = np.expand_dims(inputs, 0)
+
+    inputs = inputs * stds[np.newaxis, np.newaxis, np.newaxis, input_channels]
+    inputs = inputs + means[np.newaxis, np.newaxis, np.newaxis, input_channels]
+
+    if nb_dims == 3:
+        inputs = np.squeeze(inputs, 0)
+    return inputs
 
 
-def combine_rgb_depth(rgb_depth):
-    rgb, depth = rgb_depth
-    depth = depth[:, :, :, 0][:, :, :, np.newaxis]
-    return np.concatenate([rgb, depth], axis=3)
-
-
-def make_input_output_generator(base_path, batch_size, include_depth=False):
-    """ Make a generator which yields input, output pairs """
-    rgb_input_path = join(base_path, RGB_INPUT)
-    depth_input_path = join(base_path, DEPTH_INPUT)
-    output_path = join(base_path, OUTPUT)
-
-    rgb_count = len(listdir(join(rgb_input_path, BOGUS_CLASS)))
-    depth_count = len(listdir(join(depth_input_path, BOGUS_CLASS)))
-    output_count = len(listdir(join(output_path, BOGUS_CLASS)))
-    assert(rgb_count == depth_count == output_count)
-
-    rgb_input_gen = make_data_generator(
-        rgb_input_path, batch_size=batch_size, shuffle=True, augment=True,
-        scale=True)
-
-    depth_input_gen = make_data_generator(
-        depth_input_path, batch_size=batch_size, shuffle=True, augment=True,
-        scale=True)
-
-    input_gen = rgb_input_gen
-    if include_depth:
-        input_gen = map(combine_rgb_depth, zip(rgb_input_gen, depth_input_gen))
-
-    # Don't scale the outputs (because they are labels) and convert to
-    # one-hot encoding.
-    output_gen = make_data_generator(output_path, batch_size=batch_size,
-                                     shuffle=True, augment=True, one_hot=True)
-
-    return zip(input_gen, output_gen)
-
-
-def make_input_output_generators(base_path, batch_size, include_depth=False):
-    """
-    Make the input_output generators for the training and validation sets
-    """
-    train_gen = \
-        make_input_output_generator(
-            join(base_path, TRAIN), batch_size, include_depth)
-    validation_gen = \
-        make_input_output_generator(
-            join(base_path, VALIDATION), batch_size, include_depth)
-
-    return train_gen, validation_gen
-
-
-def plot_batch(inputs, outputs, file_path):
-    # Unscale the data for visualization purposes
-    rgb_outputs = one_hot_to_rgb_batch(outputs)
-    inputs = np.clip((inputs + 3) * 32, 0, 255)
-    outputs = outputs * 128
+def plot_sample(file_path, inputs, outputs, input_channels, scale_params):
+    inputs = unscale_inputs(inputs, input_channels, scale_params)
 
     fig = plt.figure()
-    nb_input_channels = inputs.shape[3]
-    nb_output_channels = outputs.shape[3]
-    batch_size = inputs.shape[0]
-    nb_subplot_cols = nb_input_channels + nb_output_channels + 2
-    gs = mpl.gridspec.GridSpec(batch_size, nb_subplot_cols)
-    gs.update(wspace=0.1, hspace=0.1, left=0.1, right=0.4, bottom=0.1, top=0.9)
+    nb_input_channels = inputs.shape[2]
+    nb_output_channels = outputs.shape[2]
 
-    def plot_image(subplot_index, im, rgb=False):
-        a = fig.add_subplot(gs[subplot_index])
+    gs = mpl.gridspec.GridSpec(2, 7)
+
+    def plot_image(plot_row, plot_col, im, is_rgb=False):
+        a = fig.add_subplot(gs[plot_row, plot_col])
         a.axes.get_xaxis().set_visible(False)
         a.axes.get_yaxis().set_visible(False)
-        if rgb:
+
+        if is_rgb:
             a.imshow(im.astype(np.uint8))
         else:
             a.imshow(im, cmap='gray', vmin=0, vmax=255)
 
-    subplot_index = 0
-    for batch_ind in range(batch_size):
-        # Plot input channels
-        for channel_ind in range(nb_input_channels):
-            im = inputs[batch_ind, :, :, channel_ind]
-            plot_image(subplot_index, im)
-            subplot_index += 1
+    plot_row = 0
+    plot_col = 0
+    im = inputs[:, :, 0:3]
+    plot_image(plot_row, plot_col, im, is_rgb=True)
 
-        # Plot RGB input
-        im = inputs[batch_ind, :, :, 0:3]
-        plot_image(subplot_index, im, rgb=True)
-        subplot_index += 1
+    for channel_ind in range(nb_input_channels):
+        plot_col += 1
+        im = inputs[:, :, channel_ind]
+        plot_image(plot_row, plot_col, im)
 
-        # Plot output channels
-        for channel_ind in range(nb_output_channels):
-            im = outputs[batch_ind, :, :, channel_ind]
-            plot_image(subplot_index, im)
-            subplot_index += 1
+    plot_row = 1
+    plot_col = 0
+    rgb_outputs = np.squeeze(
+        one_hot_to_rgb_batch(np.expand_dims(outputs, axis=0)))
+    plot_image(plot_row, plot_col, rgb_outputs, is_rgb=True)
 
-        # Plot output channels jointly
-        im = rgb_outputs[batch_ind, :, :, :]
-        plot_image(subplot_index, im, rgb=True)
-        subplot_index += 1
+    for channel_ind in range(nb_output_channels):
+        plot_col += 1
+        im = outputs[:, :, channel_ind] * 150
+        plot_image(plot_row, plot_col, im)
 
     plt.savefig(file_path, bbox_inches='tight', format='pdf', dpi=600)
+    plt.close(fig)
 
 
-def plot_generators():
-    """ Plot a minibatch for debugging purposes """
-    batch_size = 12
-    nb_batches = 1
-    include_depth = True
-    proc_data_path = get_dataset_path(POTSDAM)
+def viz_generator(split):
+    dataset = POTSDAM
+    nb_batches = 4
+    batch_size = 4
 
-    train_gen, validation_gen = \
-        make_input_output_generators(proc_data_path, batch_size, include_depth)
+    path = get_dataset_path(dataset)
+    viz_path = join(path, split, 'gen_samples')
+    _makedirs(viz_path)
+
+    scale_params = load_channel_stats(path)
+    input_channels, _ = get_channel_inds(
+        dataset, include_ir=True, include_depth=True)
+
+    gen = make_split_generator(
+        POTSDAM, split, tile_size=(256, 256),
+        batch_size=batch_size, shuffle=True, augment=True, scale=True,
+        include_ir=True, include_depth=True)
 
     for batch_ind in range(nb_batches):
-        inputs, outputs = next(train_gen)
-        file_path = join(
-            proc_data_path, TRAIN, 'batch_{}.pdf'.format(batch_ind))
-        plot_batch(inputs, outputs, file_path)
-
-        inputs, outputs = next(validation_gen)
-        file_path = join(
-            proc_data_path, VALIDATION, 'batch_{}.pdf'.format(batch_ind))
-        plot_batch(inputs, outputs, file_path)
+        inputs, outputs = next(gen)
+        for sample_ind in range(batch_size):
+            file_path = join(
+                viz_path, '{}_{}.pdf'.format(batch_ind, sample_ind))
+            plot_sample(
+                file_path, inputs[sample_ind, :, :, :],
+                outputs[sample_ind, :, :, :], input_channels, scale_params)
 
 
 if __name__ == '__main__':
-    plot_generators()
+    viz_generator(TRAIN)
+    viz_generator(VALIDATION)
