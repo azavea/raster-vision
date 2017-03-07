@@ -7,9 +7,10 @@ import numpy as np
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau, LambdaCallback,
                              LearningRateScheduler)
+from keras.optimizers import Adam
 
-from .data.generators import make_input_output_generators
-from .data.settings import get_dataset_path, results_path
+from .data.generators import make_split_generator
+from .data.settings import results_path, TRAIN, VALIDATION
 from .models.conv_logistic import make_conv_logistic
 from .models.fcn_vgg import make_fcn_vgg
 from .models.fcn_resnet import make_fcn_resnet
@@ -45,14 +46,20 @@ def make_model(options):
 
 def train_model(model, sync_results, options):
     print(model.summary())
-    path = get_dataset_path(options.dataset)
-    train_generator, validation_generator = \
-        make_input_output_generators(
-            path, options.batch_size, options.include_depth)
+
+    tile_size = options.input_shape[0:2]
+    train_gen = make_split_generator(
+        options.dataset, TRAIN, tile_size=tile_size,
+        batch_size=options.batch_size, shuffle=True, augment=True, scale=True,
+        include_ir=options.include_ir, include_depth=options.include_depth)
+    validation_gen = make_split_generator(
+        options.dataset, VALIDATION, tile_size=tile_size,
+        batch_size=options.batch_size, shuffle=True, augment=True, scale=True,
+        include_ir=options.include_ir, include_depth=options.include_depth)
 
     model.compile(
         loss='categorical_crossentropy',
-        optimizer='adam',
+        optimizer=Adam(0.0001),
         metrics=['accuracy'])
 
     run_path = join(results_path, options.run_name)
@@ -97,10 +104,10 @@ def train_model(model, sync_results, options):
     callbacks.append(sync_results_callback)
 
     model.fit_generator(
-        train_generator,
+        train_gen,
         initial_epoch=initial_epoch,
         samples_per_epoch=options.samples_per_epoch,
         nb_epoch=options.nb_epoch,
-        validation_data=validation_generator,
+        validation_data=validation_gen,
         nb_val_samples=options.nb_val_samples,
         callbacks=callbacks)

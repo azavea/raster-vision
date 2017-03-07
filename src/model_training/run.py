@@ -25,6 +25,7 @@ class RunOptions():
         self.model_type = options['model_type']
         self.run_name = options['run_name']
         self.dataset = options['dataset']
+        self.include_ir = options['include_ir']
         self.include_depth = options['include_depth']
 
         self.batch_size = options['batch_size']
@@ -52,7 +53,8 @@ class RunOptions():
         self.set_input_shape()
 
     def set_input_shape(self, use_big_tiles=False):
-        self.input_shape = get_input_shape(self.include_depth, use_big_tiles)
+        self.input_shape = get_input_shape(
+            self.dataset, self.include_ir, self.include_depth, use_big_tiles)
 
 
 def load_options(file_path):
@@ -97,12 +99,13 @@ def setup_run(options, sync_results):
     sys.stdout = Logger(run_path)
 
 
-def load_model(options, run_path):
+def load_model(options, run_path, use_best=False):
     # Load the model by weights. This permits loading weights from a saved
     # model into a model with a different architecture assuming the named
     # layers have compatible dimensions.
     model = make_model(options)
-    model.load_weights(join(run_path, 'model.h5'), by_name=True)
+    file_name = 'best_model.h5' if use_best else 'model.h5'
+    model.load_weights(join(run_path, file_name), by_name=True)
     return model
 
 
@@ -154,6 +157,6 @@ if __name__ == '__main__':
             train_run(options, run_path, sync_results)
         elif task == EVAL:
             options.set_input_shape(use_big_tiles=True)
-            model = load_model(options, run_path)
+            model = load_model(options, run_path, use_best=True)
             eval_run(model, options)
             sync_results()

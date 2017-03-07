@@ -12,14 +12,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from sklearn import metrics
 
-from .data.generators import (make_data_generator, combine_rgb_depth)
-from .data.preprocess import (
-    one_hot_to_rgb_batch, one_hot_to_label_batch, _makedirs
-)
+from .data.utils import (
+    one_hot_to_rgb_batch, one_hot_to_label_batch, _makedirs)
+from .data.generators import (
+    make_split_generator, unscale_inputs, load_channel_stats)
 from .data.settings import (
-    get_dataset_path, BIG_VALIDATION, RGB_INPUT, DEPTH_INPUT, OUTPUT,
-    label_names, label_keys, results_path, get_nb_validation_samples
-)
+    get_dataset_path, big_tile_size, label_names, label_keys, results_path,
+    get_channel_inds, VALIDATION)
 
 
 class Scores():
@@ -140,6 +139,7 @@ def plot_prediction(run_path, sample_index, display_inputs, display_outputs,
         a = fig.add_subplot(gs[subplot_index])
         a.axes.get_xaxis().set_visible(False)
         a.axes.get_yaxis().set_visible(False)
+
         a.imshow(im.astype(np.uint8))
         if subplot_index < nb_subplot_cols:
             a.set_title(title, fontsize=6)
@@ -161,33 +161,23 @@ def plot_prediction(run_path, sample_index, display_inputs, display_outputs,
 def compute_predictions(model, data_path, run_path, options):
     _makedirs(join(run_path, 'predictions'))
 
-    nb_eval_samples = options.nb_eval_samples \
-        if options.nb_eval_samples is not None \
-        else get_nb_validation_samples(data_path, use_big_tiles=True)
-
-    inputs_gen = make_data_generator(
-        join(data_path, BIG_VALIDATION, RGB_INPUT),
-        target_size=options.input_shape[0:2], scale=True, batch_size=1)
-    if options.include_depth:
-        depth_inputs_gen = make_data_generator(
-            join(data_path, BIG_VALIDATION, DEPTH_INPUT),
-            target_size=options.input_shape[0:2], scale=True, batch_size=1)
-        inputs_gen = map(combine_rgb_depth, zip(inputs_gen, depth_inputs_gen))
-    display_inputs_gen = make_data_generator(
-        join(data_path, BIG_VALIDATION, RGB_INPUT),
-        target_size=options.input_shape[0:2], scale=False, batch_size=1)
-    outputs_gen = make_data_generator(
-        join(data_path, BIG_VALIDATION, OUTPUT),
-        target_size=options.input_shape[0:2], batch_size=1, one_hot=True)
+    tile_size = options.input_shape[0:2]
+    validation_gen = make_split_generator(
+        options.dataset, VALIDATION, tile_size=tile_size,
+        batch_size=1, shuffle=False, augment=False, scale=True,
+        include_ir=options.include_ir, include_depth=options.include_depth)
+    input_channels, _ = get_channel_inds(
+        options.dataset, include_ir=options.include_ir,
+        include_depth=options.include_depth)
+    scale_params = load_channel_stats(data_path)
 
     scores_list = []
 
-    for sample_index in range(nb_eval_samples):
-        inputs = next(inputs_gen)
-        outputs = next(outputs_gen)
+    for sample_index, (inputs, outputs) in enumerate(validation_gen):
         predictions = model.predict(inputs)
 
-        display_inputs = next(display_inputs_gen)
+        display_inputs = unscale_inputs(inputs, input_channels, scale_params)
+        display_inputs = display_inputs[:, :, :, 0:3]
         display_outputs = one_hot_to_rgb_batch(outputs)
         display_predictions = one_hot_to_rgb_batch(predictions)
 
