@@ -21,7 +21,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     user_data                   = "${file("config-ec2")}"
 
     root_block_device {
-      volume_size = "16"
+      volume_size = "32"
       volume_type = "gp2"
     }
   }
@@ -36,7 +36,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     user_data                   = "${file("config-ec2")}"
 
     root_block_device {
-      volume_size = "16"
+      volume_size = "32"
       volume_type = "gp2"
     }
   }
@@ -51,7 +51,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     user_data                   = "${file("config-ec2")}"
 
     root_block_device {
-      volume_size = "16"
+      volume_size = "32"
       volume_type = "gp2"
     }
   }
@@ -66,7 +66,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     user_data                   = "${file("config-ec2")}"
 
     root_block_device {
-      volume_size = "16"
+      volume_size = "32"
       volume_type = "gp2"
     }
   }
