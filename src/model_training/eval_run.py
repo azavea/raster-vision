@@ -25,101 +25,43 @@ class Scores():
     def __init__(self):
         pass
 
+    def compute_scores(self, label_names, confusion_mat):
+        self.label_names = label_names
+        self.confusion_mat = confusion_mat
+
+        true_pos = np.diagonal(self.confusion_mat)
+        false_pos = np.sum(self.confusion_mat, axis=0) - true_pos
+        false_neg = np.sum(self.confusion_mat, axis=1) - true_pos
+        self.support = np.sum(self.confusion_mat, axis=1)
+        self.precision = true_pos / (true_pos + false_pos)
+        self.recall = true_pos / (true_pos + false_neg)
+        self.f1 = 2 * ((self.precision * self.recall) /
+                       (self.precision + self.recall))
+        self.avg_accuracy = np.sum(true_pos) / np.sum(self.support)
+
     def to_json(self):
         scores = Scores()
         scores.label_names = self.label_names
-        scores.jaccard = self.jaccard
-        scores.avg_f1 = self.avg_f1
-        scores.avg_accuracy = self.avg_accuracy
+        scores.confusion_mat = self.confusion_mat.tolist()
+        scores.support = self.support.tolist()
         scores.precision = self.precision.tolist()
         scores.recall = self.recall.tolist()
         scores.f1 = self.f1.tolist()
-        scores.support = self.support.tolist()
-        scores.confusion_mat = self.confusion_mat.tolist()
-        scores.accuracy = self.accuracy.tolist()
+        scores.avg_accuracy = self.avg_accuracy
 
         return json.dumps(scores.__dict__, sort_keys=True, indent=4)
 
 
-def compute_scores(outputs, predictions, outputs_mask, nb_labels):
-    # Treat each pixel as a separate data point so we can use metric functions.
+def compute_confusion_mat(outputs, predictions, outputs_mask, nb_labels):
     outputs = np.ravel(outputs)
     predictions = np.ravel(predictions)
     outputs_mask = np.ravel(outputs_mask).astype(np.bool)
 
-    # Remove boundary pixels
     outputs = outputs[outputs_mask]
     predictions = predictions[outputs_mask]
 
-    # Force each image to have at least one pixel of each label so that
-    # there will be an element for each label. This makes the calculation
-    # slightly innaccurate but shouldn't even show up after rounding.
-    # Maybe we should do something more rigorous if we have time.
-    bogus_pixels = np.arange(0, nb_labels)
-    outputs = np.concatenate([outputs, bogus_pixels])
-    predictions = np.concatenate([predictions, bogus_pixels])
-
-    scores = Scores()
-    scores.label_names = label_names
-    scores.jaccard = metrics.jaccard_similarity_score(outputs, predictions)
-    scores.avg_f1 = metrics.f1_score(outputs, predictions, average='macro')
-    scores.avg_accuracy = metrics.accuracy_score(outputs, predictions)
-    scores.precision, scores.recall, scores.f1, scores.support = \
-        metrics.precision_recall_fscore_support(outputs, predictions)
-    scores.confusion_mat = metrics.confusion_matrix(outputs, predictions)
-    # Avoid divide by zero error by adding 0.1
-    scores.accuracy = scores.confusion_mat.diagonal() / (scores.support + 0.1)
-
-    return scores
-
-
-def get_attr_array(name, a_list):
-    return np.array(list(map(lambda el: getattr(el, name), a_list)))
-
-
-def aggregate_scores(scores_list):
-    image_sizes = np.array(
-        list(map(lambda scores: np.sum(scores.support), scores_list)))
-    image_weights = image_sizes / np.sum(image_sizes)
-
-    agg_scores = Scores()
-
-    agg_scores.jaccard = np.sum(
-        get_attr_array('jaccard', scores_list) * image_weights)
-    agg_scores.avg_f1 = np.sum(
-        get_attr_array('avg_f1', scores_list) * image_weights)
-    agg_scores.avg_accuracy = np.sum(
-        get_attr_array('avg_accuracy', scores_list) * image_weights)
-
-    agg_scores.precision = np.sum(
-        get_attr_array('precision', scores_list)
-        * image_weights[:, np.newaxis],
-        axis=0)
-    agg_scores.recall = np.sum(
-        get_attr_array('recall', scores_list)
-        * image_weights[:, np.newaxis],
-        axis=0)
-    agg_scores.f1 = np.sum(
-        get_attr_array('f1', scores_list)
-        * image_weights[:, np.newaxis],
-        axis=0)
-    agg_scores.support = np.sum(
-        get_attr_array('support', scores_list)
-        * image_weights[:, np.newaxis],
-        axis=0)
-    agg_scores.accuracy = np.sum(
-        get_attr_array('accuracy', scores_list)
-        * image_weights[:, np.newaxis],
-        axis=0)
-
-    agg_scores.confusion_mat = np.sum(
-        get_attr_array('confusion_mat', scores_list)
-        * image_weights[:, np.newaxis, np.newaxis],
-        axis=0)
-
-    agg_scores.label_names = scores_list[0].label_names
-
-    return agg_scores
+    return metrics.confusion_matrix(
+        outputs, predictions, labels=np.arange(nb_labels))
 
 
 def make_legend():
@@ -176,9 +118,10 @@ def compute_predictions(model, dataset_info, run_path, options):
         include_ir=options.include_ir, include_depth=options.include_depth)
     scale_params = load_channel_stats(dataset_info.dataset_path)
 
-    scores_list = []
+    confusion_mat = np.zeros((options.nb_labels, options.nb_labels))
 
     for sample_index, (inputs, outputs, outputs_mask) in enumerate(validation_gen):
+        print('.')
         predictions = model.predict(inputs)
 
         display_inputs = unscale_inputs(inputs, input_inds, scale_params)
@@ -190,15 +133,13 @@ def compute_predictions(model, dataset_info, run_path, options):
             run_path, sample_index, display_inputs, display_outputs,
             display_predictions)
 
-        scores = compute_scores(
-            outputs,
-            one_hot_to_label_batch(predictions),
-            outputs_mask,
+        confusion_mat += compute_confusion_mat(
+            outputs, one_hot_to_label_batch(predictions), outputs_mask,
             options.nb_labels)
-        scores_list.append(scores)
 
-    agg_scores = aggregate_scores(scores_list)
-    save_scores(agg_scores, run_path)
+    scores = Scores()
+    scores.compute_scores(label_names, confusion_mat)
+    save_scores(scores, run_path)
 
 
 def save_scores(scores, run_path):
