@@ -13,7 +13,8 @@ import matplotlib.patches as mpatches
 from sklearn import metrics
 
 from .data.utils import (
-    one_hot_to_rgb_batch, one_hot_to_label_batch, _makedirs)
+    one_hot_to_rgb_batch, one_hot_to_label_batch, label_to_rgb_batch,
+    _makedirs)
 from .data.generators import (
     make_split_generator, unscale_inputs, load_channel_stats)
 from .data.settings import (
@@ -40,10 +41,15 @@ class Scores():
         return json.dumps(scores.__dict__, sort_keys=True, indent=4)
 
 
-def compute_scores(outputs, predictions, nb_labels):
+def compute_scores(outputs, predictions, outputs_mask, nb_labels):
     # Treat each pixel as a separate data point so we can use metric functions.
     outputs = np.ravel(outputs)
     predictions = np.ravel(predictions)
+    outputs_mask = np.ravel(outputs_mask).astype(np.bool)
+
+    # Remove boundary pixels
+    outputs = outputs[outputs_mask]
+    predictions = predictions[outputs_mask]
 
     # Force each image to have at least one pixel of each label so that
     # there will be an element for each label. This makes the calculation
@@ -164,19 +170,20 @@ def compute_predictions(model, dataset_info, run_path, options):
     validation_gen = make_split_generator(
         options.dataset, VALIDATION, tile_size=tile_size,
         batch_size=1, shuffle=False, augment=False, scale=True,
-        include_ir=options.include_ir, include_depth=options.include_depth)
-    rgb_input_inds, input_inds, _ = dataset_info.get_channel_inds(
+        include_ir=options.include_ir, include_depth=options.include_depth,
+        eval_mode=True)
+    rgb_input_inds, input_inds, _, _ = dataset_info.get_channel_inds(
         include_ir=options.include_ir, include_depth=options.include_depth)
     scale_params = load_channel_stats(dataset_info.dataset_path)
 
     scores_list = []
 
-    for sample_index, (inputs, outputs) in enumerate(validation_gen):
+    for sample_index, (inputs, outputs, outputs_mask) in enumerate(validation_gen):
         predictions = model.predict(inputs)
 
         display_inputs = unscale_inputs(inputs, input_inds, scale_params)
         display_inputs = display_inputs[:, :, :, rgb_input_inds]
-        display_outputs = one_hot_to_rgb_batch(outputs)
+        display_outputs = label_to_rgb_batch(np.squeeze(outputs, axis=3))
         display_predictions = one_hot_to_rgb_batch(predictions)
 
         plot_prediction(
@@ -184,8 +191,9 @@ def compute_predictions(model, dataset_info, run_path, options):
             display_predictions)
 
         scores = compute_scores(
-            one_hot_to_label_batch(outputs),
+            outputs,
             one_hot_to_label_batch(predictions),
+            outputs_mask,
             options.nb_labels)
         scores_list.append(scores)
 

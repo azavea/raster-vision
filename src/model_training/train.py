@@ -59,7 +59,7 @@ def train_model(model, sync_results, options):
 
     model.compile(
         loss='categorical_crossentropy',
-        optimizer=Adam(0.0001),
+        optimizer=Adam(0.001),
         metrics=['accuracy'])
 
     run_path = join(results_path, options.run_name)

@@ -113,8 +113,8 @@ def make_batch_generator(path, tile_size, batch_size, shuffle):
         yield samples
 
 
-def transform_batch(batch, input_inds, output_inds, augment=False,
-                    scale_params=None):
+def transform_batch(batch, input_inds, output_inds, output_mask_inds,
+                    augment=False, scale_params=None, eval_mode=False):
     batch = batch.astype(np.float32)
 
     if augment:
@@ -137,22 +137,29 @@ def transform_batch(batch, input_inds, output_inds, augment=False,
             stds[np.newaxis, np.newaxis, np.newaxis, input_inds]
 
     inputs = batch[:, :, :, input_inds]
-    outputs = batch[:, :, :, output_inds]
-    outputs = np.squeeze(outputs, axis=3)
-    outputs = label_to_one_hot_batch(outputs)
 
-    return inputs, outputs
+    if eval_mode:
+        outputs = batch[:, :, :, output_inds]
+        outputs_mask = batch[:, :, :, output_mask_inds]
+        return inputs, outputs, outputs_mask
+    else:
+        outputs = batch[:, :, :, output_inds]
+        outputs = np.squeeze(outputs, axis=3)
+        outputs = label_to_one_hot_batch(outputs)
+        return inputs, outputs
 
 
 def make_split_generator(dataset, split, tile_size=(256, 256),
                          batch_size=32, shuffle=False, augment=False,
-                         scale=False, include_ir=False, include_depth=False):
+                         scale=False, include_ir=False, include_depth=False,
+                         eval_mode=False):
     dataset_info = get_dataset_info(dataset)
     path = dataset_info.dataset_path
     split_path = join(path, split)
 
-    _, input_inds, output_inds = dataset_info.get_channel_inds(
-        include_ir=include_ir, include_depth=include_depth)
+    _, input_inds, output_inds, output_mask_inds = \
+        dataset_info.get_channel_inds(
+            include_ir=include_ir, include_depth=include_depth)
     scale_params = load_channel_stats(path) \
         if scale else None
 
@@ -160,7 +167,8 @@ def make_split_generator(dataset, split, tile_size=(256, 256),
 
     def transform(batch):
         return transform_batch(batch, input_inds, output_inds,
-                               augment=augment, scale_params=scale_params)
+                               output_mask_inds, augment=augment,
+                               scale_params=scale_params, eval_mode=eval_mode)
     gen = map(transform, gen)
 
     return gen
@@ -236,7 +244,7 @@ def viz_generator(split):
     _makedirs(viz_path)
 
     scale_params = load_channel_stats(path)
-    rgb_input_inds, input_inds, _ = dataset_info.get_channel_inds(
+    rgb_input_inds, input_inds, _, _ = dataset_info.get_channel_inds(
         include_ir=True, include_depth=True)
 
     gen = make_split_generator(

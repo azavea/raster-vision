@@ -40,12 +40,24 @@ def rgb_to_label_batch(rgb_batch):
     return label_batch
 
 
+def rgb_to_mask(im):
+    """
+    Used to convert a label image where boundary pixels are black into
+    an image where non-boundary pixel are true and boundary pixels are false.
+    """
+    mask = (im[:, :, 0] == 0) & \
+           (im[:, :, 1] == 0) & \
+           (im[:, :, 2] == 0)
+    mask = np.bitwise_not(mask)
+
+    return mask
+
+
 def label_to_one_hot_batch(label_batch):
     one_hot_batch = np.zeros(np.concatenate([label_batch.shape, [nb_labels]]))
     for label in range(nb_labels):
         one_hot_batch[:, :, :, label][label_batch == label] = 1.
     return one_hot_batch
-
 
 def rgb_to_one_hot_batch(rgb_batch):
     return label_to_one_hot_batch(rgb_to_label_batch(rgb_batch))

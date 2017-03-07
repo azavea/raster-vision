@@ -58,8 +58,8 @@ class PotsdamInfo():
             input_inds.append(4)
 
         output_inds = [5]
-
-        return rgb_input_inds, input_inds, output_inds
+        output_mask_inds = [6]
+        return rgb_input_inds, input_inds, output_inds, output_mask_inds
 
     def get_input_shape(self, include_ir=False, include_depth=False,
                         use_big_tiles=False):
@@ -74,7 +74,7 @@ class PotsdamInfo():
         else:
             return (tile_size, tile_size, nb_channels)
 
-    def get_file_inds():
+    def get_file_inds(self):
         # Split used in https://arxiv.org/abs/1606.02585
         training_inds = [
             (2, 10), (3, 10), (3, 11), (3, 12), (4, 11), (4, 12), (5, 10),
