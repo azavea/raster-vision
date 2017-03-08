@@ -1,6 +1,8 @@
 # keras-semantic-segmentation
 
-Experiments in using deep learning with Keras/Tensorflow to perform semantic segmentation.
+This repo contains code for doing semantic segmentation using Keras/Tensorflow, with a focus on aerial imagery. Here's a sample segmentation using a U-Net model we trained on RGBIR+D data from the [ISPRS Potsdam 2D dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html).
+
+![Example segmentation](images/example-segmentation.png)
 
 ## Usage
 
