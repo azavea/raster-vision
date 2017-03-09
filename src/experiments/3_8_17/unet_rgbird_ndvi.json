@@ -1,0 +1,15 @@
+{
+    "batch_size": 8,
+    "patience": 10,
+    "git_commit": "df8723",
+    "dataset": "potsdam",
+    "include_depth": true,
+    "include_ir": true,
+    "include_ndvi": true,
+    "model_type": "unet",
+    "nb_epoch": 100,
+    "nb_labels": 6,
+    "nb_val_samples": 512,
+    "run_name": "3_8_17/unet_rgbird_ndvi",
+    "samples_per_epoch": 4096
+}

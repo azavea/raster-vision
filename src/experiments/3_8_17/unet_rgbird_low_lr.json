@@ -1,0 +1,15 @@
+{
+    "batch_size": 8,
+    "lr_schedule": [[0, 0.00001]],
+    "git_commit": "a9aab7",
+    "dataset": "potsdam",
+    "include_depth": true,
+    "include_ir": true,
+    "include_ndvi": false,
+    "model_type": "unet",
+    "nb_epoch": 200,
+    "nb_labels": 6,
+    "nb_val_samples": 512,
+    "run_name": "3_8_17/unet_rgbird_low_lr",
+    "samples_per_epoch": 4096
+}
