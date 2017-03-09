@@ -1,7 +1,7 @@
 {
     "batch_size": 8,
     "lr_schedule": [[0, 0.00001]],
-    "git_commit": "a9aab7",
+    "git_commit": "df8723",
     "dataset": "potsdam",
     "include_depth": true,
     "include_ir": true,
