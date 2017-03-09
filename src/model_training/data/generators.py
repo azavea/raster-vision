@@ -27,10 +27,10 @@ def get_samples(gen, nb_samples):
     return None
 
 
-def get_channel_stats(path):
+def get_channel_stats(path, file_names):
     tile_size = (10, 10)
     nb_samples = 2000
-    tile_gen = make_random_tile_generator(path, tile_size)
+    tile_gen = make_random_tile_generator(path, file_names, tile_size)
     samples = get_samples(tile_gen, nb_samples)
     nb_channels = samples.shape[3]
     channel_data = np.reshape(
@@ -59,10 +59,9 @@ def load_channel_stats(path):
         return means, stds
 
 
-def make_tile_generator(path, tile_size):
-    file_paths = glob.glob(join(path, '*.npy'))
-
-    for file_path in file_paths:
+def make_tile_generator(path, file_names, tile_size):
+    for file_name in file_names:
+        file_path = join(path, file_name)
         concat_im = np.load(file_path, mmap_mode='r')
         nb_rows, nb_cols, _ = concat_im.shape
 
@@ -77,14 +76,13 @@ def make_tile_generator(path, tile_size):
                     yield tile
 
 
-def make_random_tile_generator(path, tile_size):
-    file_paths = glob.glob(join(path, '*.npy'))
-    nb_files = len(file_paths)
+def make_random_tile_generator(path, file_names, tile_size):
+    nb_files = len(file_names)
 
     while True:
         file_ind = np.random.randint(0, nb_files)
 
-        file_path = file_paths[file_ind]
+        file_path = join(path, file_names[file_ind])
         concat_im = np.load(file_path, mmap_mode='r')
         nb_rows, nb_cols, _ = concat_im.shape
 
@@ -99,11 +97,12 @@ def make_random_tile_generator(path, tile_size):
         yield tile
 
 
-def make_batch_generator(path, tile_size, batch_size, shuffle, reset_interval):
+def make_batch_generator(path, file_names, tile_size, batch_size, shuffle,
+                         reset_interval):
     def make_gen():
         if shuffle:
-            return make_random_tile_generator(path, tile_size)
-        return make_tile_generator(path, tile_size)
+            return make_random_tile_generator(path, file_names, tile_size)
+        return make_tile_generator(path, file_names, tile_size)
 
     gen = make_gen()
     sample_count = 0
@@ -157,13 +156,14 @@ def make_split_generator(dataset_info, split, batch_size=32, shuffle=False,
                          reset_interval=None, augment=False, scale=False,
                          eval_mode=False):
     path = dataset_info.dataset_path
-    split_path = join(path, split)
 
     scale_params = load_channel_stats(path) \
         if scale else None
 
     tile_size = dataset_info.input_shape[0:2]
-    gen = make_batch_generator(split_path, tile_size,
+    file_names = dataset_info.train_file_names if split == TRAIN \
+        else dataset_info.validation_file_names
+    gen = make_batch_generator(path, file_names, tile_size,
         batch_size, shuffle, reset_interval)
 
     def transform(batch):
@@ -234,21 +234,22 @@ def plot_sample(file_path, inputs, outputs, dataset_info,
     plt.close(fig)
 
 
-def viz_generator(split):
+def viz_generator():
     dataset = POTSDAM
     nb_batches = 4
     batch_size = 4
 
     dataset_info = get_dataset_info(dataset)
-    dataset_info.setup(include_ir=True, include_depth=True, include_ndvi=True)
+    dataset_info.setup(include_ir=True, include_depth=True, include_ndvi=True,
+        train_ratio=dataset_info.sharah_train_ratio)
     path = dataset_info.dataset_path
-    viz_path = join(path, split, 'gen_samples')
+    viz_path = join(path, 'gen_samples')
     _makedirs(viz_path)
 
     scale_params = load_channel_stats(path)
 
     gen = make_split_generator(
-        dataset_info, split, batch_size=batch_size, shuffle=True, augment=True,
+        dataset_info, TRAIN, batch_size=batch_size, shuffle=True, augment=True,
         scale=True)
 
     for batch_ind in range(nb_batches):
@@ -262,5 +263,4 @@ def viz_generator(split):
 
 
 if __name__ == '__main__':
-    viz_generator(TRAIN)
-    viz_generator(VALIDATION)
+    viz_generator()

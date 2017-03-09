@@ -9,7 +9,7 @@ import argparse
 from subprocess import call
 
 from .data.preprocess import _makedirs
-from .data.settings import results_path, get_dataset_info
+from .data.settings import results_path, get_dataset_info, POTSDAM
 from .train import make_model, train_model, CONV_LOGISTIC, FCN_RESNET
 from .eval_run import eval_run
 
@@ -48,6 +48,13 @@ class RunOptions():
         elif self.model_type == FCN_RESNET:
             self.drop_prob = options['drop_prob']
             self.is_big_model = options['is_big_model']
+
+        # dataset dependent options
+        if self.dataset == POTSDAM and 'sharah_train_ratio' in options:
+            dataset_info = get_dataset_info(POTSDAM)
+            self.train_ratio = dataset_info.sharah_train_ratio
+        else:
+            self.train_ratio = options['train_ratio']
 
 
 def load_options(file_path):
@@ -132,7 +139,7 @@ if __name__ == '__main__':
     dataset_info = get_dataset_info(options.dataset)
     dataset_info.setup(
         include_ir=options.include_ir, include_depth=options.include_depth,
-        include_ndvi=options.include_ndvi)
+        include_ndvi=options.include_ndvi, train_ratio=options.train_ratio)
     run_path = join(results_path, options.run_name)
 
     def sync_results(download=False):
@@ -157,7 +164,8 @@ if __name__ == '__main__':
                 include_ir=options.include_ir,
                 include_depth=options.include_depth,
                 include_ndvi=options.include_ndvi,
-                use_big_tiles=True)
+                use_big_tiles=True,
+                train_ratio=options.train_ratio)
             model = load_model(options, dataset_info, run_path, use_best=True)
             eval_run(model, options, dataset_info)
             sync_results()

@@ -85,27 +85,22 @@ def process_potsdam():
         return (rgbir_file_name, depth_file_name, output_file_name,
                 output_mask_file_name)
 
-    train_path = join(proc_data_path, TRAIN)
-    process_data(
-        dataset_info.train_inds, raw_rgbir_input_path, raw_depth_input_path,
-        raw_output_path, raw_output_mask_path, train_path,
-        get_file_names)
+    if False:
+        process_data(
+            dataset_info.all_file_inds, raw_rgbir_input_path, raw_depth_input_path,
+            raw_output_path, raw_output_mask_path, proc_data_path, get_file_names)
 
-    means, stds = get_channel_stats(train_path)
+    means, stds = get_channel_stats(
+        proc_data_path, dataset_info.all_file_names)
+
     # The NDVI values are in [-1,1] by definition, but we store them as uint8s
     # in [0, 255]. So, we use a hard coded scaling for this channel to make the
-    # values go back to [-1, 1], since they are more easily interpreted that way
-    # and fall into the range we want for the neural network.
+    # values go back to [-1, 1], since they are more easily interpreted that
+    # way and fall into the range we want for the neural network.
     ndvi_ind = dataset_info.ndvi_ind
     means[ndvi_ind] = 1.0
     stds[ndvi_ind] = 127.0
     save_channel_stats(proc_data_path, means, stds)
-
-    validation_path = join(proc_data_path, VALIDATION)
-    process_data(
-        dataset_info.validation_inds, raw_rgbir_input_path,
-        raw_depth_input_path, raw_output_path, raw_output_mask_path,
-        validation_path, get_file_names)
 
 
 if __name__ == '__main__':

@@ -168,6 +168,10 @@ def compute_predictions(model, run_path, options, dataset_info):
             outputs, one_hot_to_label_batch(predictions), outputs_mask,
             dataset_info.nb_labels)
 
+        if (options.nb_eval_samples is not None and
+            sample_index == options.nb_eval_samples - 1):
+            break
+
     scores = Scores()
     scores.compute_scores(label_names, confusion_mat)
     save_scores(scores, run_path)
