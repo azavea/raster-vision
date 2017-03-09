@@ -76,31 +76,63 @@ def make_legend():
                bbox_to_anchor=(1, 1), fontsize=4)
 
 
-def plot_prediction(run_path, sample_index, display_inputs, display_outputs,
-                    display_predictions):
+def plot_prediction(dataset_info, run_path, sample_index, display_inputs,
+                    display_outputs, display_predictions, is_debug=False):
     fig = plt.figure()
+
     nb_subplot_cols = 3
+    if is_debug:
+        nb_subplot_cols += dataset_info.include_ir + \
+            dataset_info.include_depth + dataset_info.include_ndvi
+
     gs = mpl.gridspec.GridSpec(1, nb_subplot_cols)
 
-    def plot_image(subplot_index, im, title):
+    def plot_image(subplot_index, im, title, is_rgb=False):
         a = fig.add_subplot(gs[subplot_index])
         a.axes.get_xaxis().set_visible(False)
         a.axes.get_yaxis().set_visible(False)
 
-        a.imshow(im.astype(np.uint8))
+        if is_rgb:
+            a.imshow(im.astype(np.uint8))
+        else:
+            a.imshow(im, cmap='gray', vmin=0, vmax=255)
         if subplot_index < nb_subplot_cols:
             a.set_title(title, fontsize=6)
 
     subplot_index = 0
-    plot_image(subplot_index, display_inputs[0, :, :, :], 'Input')
-    subplot_index = 1
-    plot_image(subplot_index, display_outputs[0, :, :, :], 'Ground Truth')
-    subplot_index = 2
-    plot_image(subplot_index, display_predictions[0, :, :, :], 'Prediction')
+    display_inputs = display_inputs[0, :, :, :]
+    rgb_input_im = display_inputs[:, :, dataset_info.rgb_input_inds]
+    plot_image(subplot_index, rgb_input_im, 'RGB', is_rgb=True)
+
+    if is_debug:
+        if dataset_info.include_ir:
+            subplot_index += 1
+            ir_im = display_inputs[:, :, dataset_info.ir_ind]
+            plot_image(subplot_index, ir_im, 'IR')
+
+        if dataset_info.include_depth:
+            subplot_index += 1
+            depth_im = display_inputs[:, :, dataset_info.depth_ind]
+            plot_image(subplot_index, depth_im, 'Depth')
+
+        if dataset_info.include_ndvi:
+            subplot_index += 1
+            nvdi_im = display_inputs[:, :, dataset_info.ndvi_ind]
+            plot_image(subplot_index, nvdi_im, 'NDVI')
+
+    subplot_index += 1
+    plot_image(subplot_index, display_outputs[0, :, :, :], 'Ground Truth',
+        is_rgb=True)
+    subplot_index += 1
+    plot_image(subplot_index, display_predictions[0, :, :, :], 'Prediction',
+        is_rgb=True)
 
     make_legend()
-    predictions_path = join(
-        run_path, 'predictions', '{}.pdf'.format(sample_index))
+
+    file_name = '{}_debug.pdf' if is_debug else '{}.pdf'
+    file_name = file_name.format(sample_index)
+    predictions_path = join(run_path, 'predictions', file_name)
+
     plt.savefig(predictions_path, bbox_inches='tight', format='pdf', dpi=300)
     plt.close(fig)
 
@@ -120,14 +152,17 @@ def compute_predictions(model, run_path, options, dataset_info):
         print('.')
         predictions = model.predict(inputs)
 
-        display_inputs = unscale_inputs(inputs, dataset_info.input_inds, scale_params)
-        display_inputs = display_inputs[:, :, :, dataset_info.rgb_input_inds]
+        display_inputs = unscale_inputs(inputs, dataset_info.input_inds,
+            scale_params)
         display_outputs = label_to_rgb_batch(np.squeeze(outputs, axis=3))
         display_predictions = one_hot_to_rgb_batch(predictions)
 
         plot_prediction(
-            run_path, sample_index, display_inputs, display_outputs,
-            display_predictions)
+            dataset_info, run_path, sample_index, display_inputs,
+            display_outputs, display_predictions)
+        plot_prediction(
+            dataset_info, run_path, sample_index, display_inputs,
+            display_outputs, display_predictions, is_debug=True)
 
         confusion_mat += compute_confusion_mat(
             outputs, one_hot_to_label_batch(predictions), outputs_mask,
