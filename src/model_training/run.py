@@ -9,7 +9,7 @@ import argparse
 from subprocess import call
 
 from .data.preprocess import _makedirs
-from .data.settings import results_path, nb_labels, get_dataset_info
+from .data.settings import results_path, get_dataset_info
 from .train import make_model, train_model, CONV_LOGISTIC, FCN_RESNET
 from .eval_run import eval_run
 
@@ -27,6 +27,7 @@ class RunOptions():
         self.dataset = options['dataset']
         self.include_ir = options['include_ir']
         self.include_depth = options['include_depth']
+        self.include_ndvi = options['include_ndvi']
 
         self.batch_size = options['batch_size']
         self.nb_epoch = options['nb_epoch']
@@ -47,15 +48,6 @@ class RunOptions():
         elif self.model_type == FCN_RESNET:
             self.drop_prob = options['drop_prob']
             self.is_big_model = options['is_big_model']
-
-        # Computed options
-        self.nb_labels = nb_labels
-        self.set_input_shape()
-
-    def set_input_shape(self, use_big_tiles=False):
-        dataset_info = get_dataset_info(self.dataset)
-        self.input_shape = dataset_info.get_input_shape(
-            self.include_ir, self.include_depth, use_big_tiles)
 
 
 def load_options(file_path):
@@ -100,27 +92,27 @@ def setup_run(options, sync_results):
     sys.stdout = Logger(run_path)
 
 
-def load_model(options, run_path, use_best=False):
+def load_model(options, dataset_info, run_path, use_best=False):
     # Load the model by weights. This permits loading weights from a saved
     # model into a model with a different architecture assuming the named
     # layers have compatible dimensions.
-    model = make_model(options)
+    model = make_model(options, dataset_info)
     file_name = 'best_model.h5' if use_best else 'model.h5'
     model.load_weights(join(run_path, file_name), by_name=True)
     return model
 
 
-def train_run(options, run_path, sync_results):
+def train_run(options, dataset_info, run_path, sync_results):
     model_path = join(run_path, 'model.h5')
 
     # Load the model if it's saved, or create a new one.
     if isfile(model_path):
-        model = load_model(options, run_path)
+        model = load_model(options, dataset_info, run_path)
         print('Continuing training on {}'.format(model_path))
     else:
-        model = make_model(options)
+        model = make_model(options, dataset_info)
         print('Creating new model.')
-    train_model(model, sync_results, options)
+    train_model(model, sync_results, options, dataset_info)
 
     return model
 
@@ -137,6 +129,10 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     options = load_options(args.file_path)
+    dataset_info = get_dataset_info(options.dataset)
+    dataset_info.setup(
+        include_ir=options.include_ir, include_depth=options.include_depth,
+        include_ndvi=options.include_ndvi)
     run_path = join(results_path, options.run_name)
 
     def sync_results(download=False):
@@ -155,9 +151,13 @@ if __name__ == '__main__':
         if task == SETUP:
             setup_run(options, sync_results)
         elif task == TRAIN:
-            train_run(options, run_path, sync_results)
+            train_run(options, dataset_info, run_path, sync_results)
         elif task == EVAL:
-            options.set_input_shape(use_big_tiles=True)
-            model = load_model(options, run_path, use_best=True)
-            eval_run(model, options)
+            dataset_info.setup(
+                include_ir=options.include_ir,
+                include_depth=options.include_depth,
+                include_ndvi=options.include_ndvi,
+                use_big_tiles=True)
+            model = load_model(options, dataset_info, run_path, use_best=True)
+            eval_run(model, options, dataset_info)
             sync_results()

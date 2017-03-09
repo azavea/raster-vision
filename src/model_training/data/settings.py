@@ -1,7 +1,5 @@
 from os.path import join
 
-RGBIR_INPUT = 'rgbir_input'
-DEPTH_INPUT = 'depth_input'
 TRAIN = 'train'
 VALIDATION = 'validation'
 POTSDAM = 'potsdam'
@@ -28,18 +26,10 @@ label_names = [
     'Car',
     'Clutter'
 ]
-nb_labels = len(label_keys)
 
 data_path = '/opt/data/'
 datasets_path = join(data_path, 'datasets')
 results_path = join(data_path, 'results')
-raw_potsdam_path = join(datasets_path, POTSDAM)
-
-tile_size = 256
-target_size = (tile_size, tile_size)
-
-big_tile_size = 2000
-big_target_size = (big_tile_size, big_tile_size)
 
 seed = 1
 
@@ -48,45 +38,52 @@ class PotsdamInfo():
     def __init__(self):
         self.dataset_path = join(datasets_path, 'processed_potsdam')
         self.raw_dataset_path = join(datasets_path, POTSDAM)
+        self.small_tile_size = 256
+        self.big_tile_size = 2000
+        self.nb_labels = len(label_keys)
 
-    def get_channel_inds(self, include_ir=False, include_depth=False):
-        rgb_input_inds = [0, 1, 2]
-        input_inds = [0, 1, 2]
-        if include_ir:
-            input_inds.append(3)
-        if include_depth:
-            input_inds.append(4)
-
-        output_inds = [5]
-        output_mask_inds = [6]
-        return rgb_input_inds, input_inds, output_inds, output_mask_inds
-
-    def get_input_shape(self, include_ir=False, include_depth=False,
-                        use_big_tiles=False):
-        nb_channels = 3
-        if include_ir:
-            nb_channels += 1
-        if include_depth:
-            nb_channels += 1
-
-        if use_big_tiles:
-            return (big_tile_size, big_tile_size, nb_channels)
-        else:
-            return (tile_size, tile_size, nb_channels)
-
-    def get_file_inds(self):
         # Split used in https://arxiv.org/abs/1606.02585
-        training_inds = [
+        self.train_inds = [
             (2, 10), (3, 10), (3, 11), (3, 12), (4, 11), (4, 12), (5, 10),
             (5, 12), (6, 10), (6, 11), (6, 12), (6, 8), (6, 9), (7, 11),
             (7, 12), (7, 7), (7, 9)
         ]
-        validation_inds = [
+        self.validation_inds = [
             (2, 11), (2, 12), (4, 10), (5, 11), (6, 7), (7, 10), (7, 8)
         ]
 
-        return training_inds, validation_inds
+        self.setup(include_ir=False, include_depth=False,
+                   include_ndvi=False, use_big_tiles=False)
 
+    def setup(self, include_ir=False, include_depth=False,
+              include_ndvi=False, use_big_tiles=False):
+        self.include_ir = include_ir
+        self.include_depth = include_depth
+        self.include_ndvi = include_ndvi
+
+        self.red_ind = 0
+        self.green_ind = 1
+        self.blue_ind = 2
+        self.ir_ind = 3
+        self.depth_ind = 4
+        self.ndvi_ind = 5
+
+        self.rgb_input_inds = [self.red_ind, self.green_ind, self.blue_ind]
+        self.input_inds = list(self.rgb_input_inds)
+        if include_ir:
+            self.input_inds.append(self.ir_ind)
+        if include_depth:
+            self.input_inds.append(self.depth_ind)
+        if include_ndvi:
+            self.input_inds.append(self.ndvi_ind)
+
+        self.output_inds = [6]
+        self.output_mask_inds = [7]
+
+        self.nb_channels = len(self.input_inds)
+        self.input_shape = (self.small_tile_size, self.small_tile_size, self.nb_channels)
+        if use_big_tiles:
+            self.input_shape = (self.big_tile_size, self.big_tile_size, self.nb_channels)
 
 def get_dataset_info(dataset):
     if dataset == POTSDAM:

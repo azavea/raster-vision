@@ -105,27 +105,23 @@ def plot_prediction(run_path, sample_index, display_inputs, display_outputs,
     plt.close(fig)
 
 
-def compute_predictions(model, dataset_info, run_path, options):
+def compute_predictions(model, run_path, options, dataset_info):
     _makedirs(join(run_path, 'predictions'))
 
-    tile_size = options.input_shape[0:2]
+    tile_size = dataset_info.input_shape[0:2]
     validation_gen = make_split_generator(
-        options.dataset, VALIDATION, tile_size=tile_size,
-        batch_size=1, shuffle=False, augment=False, scale=True,
-        include_ir=options.include_ir, include_depth=options.include_depth,
-        eval_mode=True)
-    rgb_input_inds, input_inds, _, _ = dataset_info.get_channel_inds(
-        include_ir=options.include_ir, include_depth=options.include_depth)
+        dataset_info, VALIDATION, batch_size=1, shuffle=False, augment=False,
+        scale=True, eval_mode=True)
     scale_params = load_channel_stats(dataset_info.dataset_path)
 
-    confusion_mat = np.zeros((options.nb_labels, options.nb_labels))
+    confusion_mat = np.zeros((dataset_info.nb_labels, dataset_info.nb_labels))
 
     for sample_index, (inputs, outputs, outputs_mask) in enumerate(validation_gen):
         print('.')
         predictions = model.predict(inputs)
 
-        display_inputs = unscale_inputs(inputs, input_inds, scale_params)
-        display_inputs = display_inputs[:, :, :, rgb_input_inds]
+        display_inputs = unscale_inputs(inputs, dataset_info.input_inds, scale_params)
+        display_inputs = display_inputs[:, :, :, dataset_info.rgb_input_inds]
         display_outputs = label_to_rgb_batch(np.squeeze(outputs, axis=3))
         display_predictions = one_hot_to_rgb_batch(predictions)
 
@@ -135,7 +131,7 @@ def compute_predictions(model, dataset_info, run_path, options):
 
         confusion_mat += compute_confusion_mat(
             outputs, one_hot_to_label_batch(predictions), outputs_mask,
-            options.nb_labels)
+            dataset_info.nb_labels)
 
     scores = Scores()
     scores.compute_scores(label_names, confusion_mat)
@@ -169,13 +165,12 @@ def plot_graphs(model, run_path):
     plt.savefig(accuracy_path, format='pdf', dpi=300)
 
 
-def eval_run(model, options):
+def eval_run(model, options, dataset_info):
     run_path = join(results_path, options.run_name)
-    dataset_info = get_dataset_info(options.dataset)
 
     print('Generating predictions and scores...')
     compute_predictions(
-        model, dataset_info, run_path, options)
+        model, run_path, options, dataset_info)
 
     print('Plotting graphs...')
     plot_graphs(model, run_path)

@@ -11,8 +11,8 @@ from .settings import (
     POTSDAM, TRAIN, VALIDATION, seed, get_dataset_info)
 from .utils import (
     _makedirs, load_tiff, load_image, rgb_to_label_batch, save_image,
-    rgb_to_mask)
-from .generators import save_channel_stats
+    rgb_to_mask, compute_ndvi)
+from .generators import save_channel_stats, get_channel_stats
 
 np.random.seed(seed)
 
@@ -36,6 +36,13 @@ def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
             join(raw_depth_input_path, depth_file_name))
         depth_input_im = np.expand_dims(depth_input_im, axis=2)
 
+        red = rgbir_input_im[:, :, 0]
+        ir = rgbir_input_im[:, :, 3]
+        ndvi_im = compute_ndvi(red, ir)
+        # NDVI ranges from [-1.0, 1.0]. We need to make this value fit into a
+        # uint8 so we scale it.
+        ndvi_im = (ndvi_im + 1) * 127
+
         output_im = load_tiff(join(raw_output_path, output_file_name))
         output_im = np.expand_dims(output_im, axis=0)
         output_im = rgb_to_label_batch(output_im)
@@ -48,8 +55,8 @@ def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
         output_mask_im = np.expand_dims(output_mask_im, axis=2)
 
         concat_im = np.concatenate(
-            [rgbir_input_im, depth_input_im, output_im, output_mask_im],
-            axis=2)
+            [rgbir_input_im, depth_input_im, ndvi_im, output_im,
+            output_mask_im], axis=2)
 
         proc_file_name = '{}_{}'.format(index1, index2)
         save_image(join(proc_data_path, proc_file_name), concat_im)
@@ -78,20 +85,27 @@ def process_potsdam():
         return (rgbir_file_name, depth_file_name, output_file_name,
                 output_mask_file_name)
 
-    train_file_indices, validation_file_inds = dataset_info.get_file_inds()
-
     train_path = join(proc_data_path, TRAIN)
     process_data(
-        train_file_indices, raw_rgbir_input_path, raw_depth_input_path,
+        dataset_info.train_inds, raw_rgbir_input_path, raw_depth_input_path,
         raw_output_path, raw_output_mask_path, train_path,
         get_file_names)
 
-    save_channel_stats(proc_data_path)
+    means, stds = get_channel_stats(train_path)
+    # The NDVI values are in [-1,1] by definition, but we store them as uint8s
+    # in [0, 255]. So, we use a hard coded scaling for this channel to make the
+    # values go back to [-1, 1], since they are more easily interpreted that way
+    # and fall into the range we want for the neural network.
+    ndvi_ind = dataset_info.ndvi_ind
+    means[ndvi_ind] = 1.0
+    stds[ndvi_ind] = 127.0
+    save_channel_stats(proc_data_path, means, stds)
 
     validation_path = join(proc_data_path, VALIDATION)
     process_data(
-        validation_file_inds, raw_rgbir_input_path, raw_depth_input_path,
-        raw_output_path, raw_output_mask_path, validation_path, get_file_names)
+        dataset_info.validation_inds, raw_rgbir_input_path,
+        raw_depth_input_path, raw_output_path, raw_output_mask_path,
+        validation_path, get_file_names)
 
 
 if __name__ == '__main__':

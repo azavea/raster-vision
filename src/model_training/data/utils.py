@@ -5,7 +5,9 @@ from PIL import Image
 import numpy as np
 import rasterio
 
-from .settings import label_keys, nb_labels
+from .settings import label_keys
+
+nb_labels = len(label_keys)
 
 
 def _makedirs(path):
@@ -78,3 +80,21 @@ def one_hot_to_label_batch(one_hot_batch):
 
 def one_hot_to_rgb_batch(one_hot_batch):
     return label_to_rgb_batch(one_hot_to_label_batch(one_hot_batch))
+
+
+def safe_divide(a, b):
+    """
+    Avoid divide by zero
+    http://stackoverflow.com/questions/26248654/numpy-return-0-with-divide-by-zero
+    """
+    with np.errstate(divide='ignore', invalid='ignore'):
+        c = np.true_divide(a,b)
+        c[c == np.inf] = 0
+        c = np.nan_to_num(c)
+        return c
+
+
+def compute_ndvi(red, ir):
+    ndvi = safe_divide((ir - red), (ir + red))
+    ndvi = np.expand_dims(ndvi, axis=3)
+    return ndvi

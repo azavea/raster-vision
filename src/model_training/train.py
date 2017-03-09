@@ -16,46 +16,43 @@ from .models.fcn_vgg import make_fcn_vgg
 from .models.fcn_resnet import make_fcn_resnet
 from .models.unet import make_unet
 
-np.random.seed(1337)
-
 CONV_LOGISTIC = 'conv_logistic'
 FCN_VGG = 'fcn_vgg'
 FCN_RESNET = 'fcn_resnet'
 UNET = 'unet'
 
 
-def make_model(options):
+def make_model(options, dataset_info):
     """ A factory for generating models from options """
-    model = None
     model_type = options.model_type
+    input_shape = dataset_info.input_shape
+    nb_labels = dataset_info.nb_labels
+
     if model_type == CONV_LOGISTIC:
-        model = make_conv_logistic(options.input_shape, options.nb_labels,
+        model = make_conv_logistic(input_shape, nb_labels,
                                    options.kernel_size)
     elif model_type == FCN_VGG:
-        model = make_fcn_vgg(options.input_shape, options.nb_labels)
+        model = make_fcn_vgg(input_shape, nb_labels)
     elif model_type == FCN_RESNET:
-        model = make_fcn_resnet(options.input_shape, options.nb_labels,
+        model = make_fcn_resnet(input_shape, nb_labels,
                                 options.drop_prob, options.is_big_model)
     elif model_type == UNET:
-        model = make_unet(options.input_shape, options.nb_labels)
+        model = make_unet(input_shape, nb_labels)
     else:
         raise ValueError('{} is not a valid model_type'.format(model_type))
 
     return model
 
 
-def train_model(model, sync_results, options):
+def train_model(model, sync_results, options, dataset_info):
     print(model.summary())
 
-    tile_size = options.input_shape[0:2]
     train_gen = make_split_generator(
-        options.dataset, TRAIN, tile_size=tile_size,
-        batch_size=options.batch_size, shuffle=True, augment=True, scale=True,
-        include_ir=options.include_ir, include_depth=options.include_depth)
+        dataset_info, TRAIN,
+        batch_size=options.batch_size, shuffle=True, augment=True, scale=True)
     validation_gen = make_split_generator(
-        options.dataset, VALIDATION, tile_size=tile_size,
-        batch_size=options.batch_size, shuffle=True, augment=True, scale=True,
-        include_ir=options.include_ir, include_depth=options.include_depth)
+        dataset_info, VALIDATION,
+        batch_size=options.batch_size, shuffle=True, augment=True, scale=True)
 
     model.compile(
         loss='categorical_crossentropy',

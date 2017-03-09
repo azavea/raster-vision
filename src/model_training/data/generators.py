@@ -41,8 +41,7 @@ def get_channel_stats(path):
     return means, stds
 
 
-def save_channel_stats(path):
-    means, stds = get_channel_stats(join(path, TRAIN))
+def save_channel_stats(path, means, stds):
     channel_stats = map(lambda x: {'mean': x[0], 'std': x[1]},
                         zip(means, stds))
     channel_stats_json = json.dumps({'stats': list(channel_stats)}, indent=4)
@@ -113,8 +112,8 @@ def make_batch_generator(path, tile_size, batch_size, shuffle):
         yield samples
 
 
-def transform_batch(batch, input_inds, output_inds, output_mask_inds,
-                    augment=False, scale_params=None, eval_mode=False):
+def transform_batch(batch, dataset_info, augment=False, scale_params=None,
+                    eval_mode=False):
     batch = batch.astype(np.float32)
 
     if augment:
@@ -131,44 +130,40 @@ def transform_batch(batch, input_inds, output_inds, output_mask_inds,
 
     if scale_params is not None:
         means, stds = scale_params
-        batch[:, :, :, input_inds] -= \
-            means[np.newaxis, np.newaxis, np.newaxis, input_inds]
-        batch[:, :, :, input_inds] /= \
-            stds[np.newaxis, np.newaxis, np.newaxis, input_inds]
+        batch[:, :, :, dataset_info.input_inds] -= \
+            means[np.newaxis, np.newaxis, np.newaxis, dataset_info.input_inds]
+        batch[:, :, :, dataset_info.input_inds] /= \
+            stds[np.newaxis, np.newaxis, np.newaxis, dataset_info.input_inds]
 
-    inputs = batch[:, :, :, input_inds]
+    inputs = batch[:, :, :, dataset_info.input_inds]
 
     if eval_mode:
-        outputs = batch[:, :, :, output_inds]
-        outputs_mask = batch[:, :, :, output_mask_inds]
+        outputs = batch[:, :, :, dataset_info.output_inds]
+        outputs_mask = batch[:, :, :, dataset_info.output_mask_inds]
         return inputs, outputs, outputs_mask
     else:
-        outputs = batch[:, :, :, output_inds]
+        outputs = batch[:, :, :, dataset_info.output_inds]
         outputs = np.squeeze(outputs, axis=3)
         outputs = label_to_one_hot_batch(outputs)
         return inputs, outputs
 
 
-def make_split_generator(dataset, split, tile_size=(256, 256),
-                         batch_size=32, shuffle=False, augment=False,
-                         scale=False, include_ir=False, include_depth=False,
-                         eval_mode=False):
-    dataset_info = get_dataset_info(dataset)
+def make_split_generator(dataset_info, split, batch_size=32, shuffle=False,
+                         augment=False, scale=False, eval_mode=False):
     path = dataset_info.dataset_path
     split_path = join(path, split)
 
-    _, input_inds, output_inds, output_mask_inds = \
-        dataset_info.get_channel_inds(
-            include_ir=include_ir, include_depth=include_depth)
     scale_params = load_channel_stats(path) \
         if scale else None
 
-    gen = make_batch_generator(split_path, tile_size, batch_size, shuffle)
+    tile_size = dataset_info.input_shape[0:2]
+    gen = make_batch_generator(split_path, tile_size,
+        batch_size, shuffle)
 
     def transform(batch):
-        return transform_batch(batch, input_inds, output_inds,
-                               output_mask_inds, augment=augment,
-                               scale_params=scale_params, eval_mode=eval_mode)
+        return transform_batch(
+            batch, dataset_info, augment=augment, scale_params=scale_params,
+            eval_mode=eval_mode)
     gen = map(transform, gen)
 
     return gen
@@ -188,9 +183,9 @@ def unscale_inputs(inputs, input_inds, scale_params):
     return inputs
 
 
-def plot_sample(file_path, inputs, outputs, rgb_input_inds, input_inds,
+def plot_sample(file_path, inputs, outputs, dataset_info,
                 scale_params):
-    inputs = unscale_inputs(inputs, input_inds, scale_params)
+    inputs = unscale_inputs(inputs, dataset_info.input_inds, scale_params)
 
     fig = plt.figure()
     nb_input_inds = inputs.shape[2]
@@ -210,7 +205,7 @@ def plot_sample(file_path, inputs, outputs, rgb_input_inds, input_inds,
 
     plot_row = 0
     plot_col = 0
-    im = inputs[:, :, rgb_input_inds]
+    im = inputs[:, :, dataset_info.rgb_input_inds]
     plot_image(plot_row, plot_col, im, is_rgb=True)
 
     for channel_ind in range(nb_input_inds):
@@ -239,18 +234,16 @@ def viz_generator(split):
     batch_size = 4
 
     dataset_info = get_dataset_info(dataset)
+    dataset_info.setup(include_ir=True, include_depth=True, include_ndvi=True)
     path = dataset_info.dataset_path
     viz_path = join(path, split, 'gen_samples')
     _makedirs(viz_path)
 
     scale_params = load_channel_stats(path)
-    rgb_input_inds, input_inds, _, _ = dataset_info.get_channel_inds(
-        include_ir=True, include_depth=True)
 
     gen = make_split_generator(
-        POTSDAM, split, tile_size=(256, 256),
-        batch_size=batch_size, shuffle=True, augment=True, scale=True,
-        include_ir=True, include_depth=True)
+        dataset_info, split, batch_size=batch_size, shuffle=True, augment=True,
+        scale=True)
 
     for batch_ind in range(nb_batches):
         inputs, outputs = next(gen)
@@ -259,8 +252,7 @@ def viz_generator(split):
                 viz_path, '{}_{}.pdf'.format(batch_ind, sample_ind))
             plot_sample(
                 file_path, inputs[sample_ind, :, :, :],
-                outputs[sample_ind, :, :, :], rgb_input_inds, input_inds,
-                scale_params)
+                outputs[sample_ind, :, :, :], dataset_info, scale_params)
 
 
 if __name__ == '__main__':
