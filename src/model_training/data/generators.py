@@ -99,14 +99,19 @@ def make_random_tile_generator(path, tile_size):
         yield tile
 
 
-def make_batch_generator(path, tile_size, batch_size, shuffle):
-    if shuffle:
-        gen = make_random_tile_generator(path, tile_size)
-    else:
-        gen = make_tile_generator(path, tile_size)
+def make_batch_generator(path, tile_size, batch_size, shuffle, reset_interval):
+    def make_gen():
+        if shuffle:
+            return make_random_tile_generator(path, tile_size)
+        return make_tile_generator(path, tile_size)
 
+    gen = make_gen()
+    sample_count = 0
     while True:
         samples = get_samples(gen, batch_size)
+        sample_count += batch_size
+        if reset_interval is not None and sample_count >= reset_interval:
+            gen = make_gen()
         if samples is None:
             raise StopIteration()
         yield samples
@@ -149,7 +154,8 @@ def transform_batch(batch, dataset_info, augment=False, scale_params=None,
 
 
 def make_split_generator(dataset_info, split, batch_size=32, shuffle=False,
-                         augment=False, scale=False, eval_mode=False):
+                         reset_interval=None, augment=False, scale=False,
+                         eval_mode=False):
     path = dataset_info.dataset_path
     split_path = join(path, split)
 
@@ -158,7 +164,7 @@ def make_split_generator(dataset_info, split, batch_size=32, shuffle=False,
 
     tile_size = dataset_info.input_shape[0:2]
     gen = make_batch_generator(split_path, tile_size,
-        batch_size, shuffle)
+        batch_size, shuffle, reset_interval)
 
     def transform(batch):
         return transform_batch(

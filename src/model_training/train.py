@@ -50,9 +50,13 @@ def train_model(model, sync_results, options, dataset_info):
     train_gen = make_split_generator(
         dataset_info, TRAIN,
         batch_size=options.batch_size, shuffle=True, augment=True, scale=True)
+    # Use the same validation set for each epoch using shuffle and
+    # reset_interval.
     validation_gen = make_split_generator(
         dataset_info, VALIDATION,
-        batch_size=options.batch_size, shuffle=True, augment=True, scale=True)
+        batch_size=options.batch_size, shuffle=False,
+        reset_interval=options.nb_val_samples,
+        scale=True, augment=True)
 
     model.compile(
         loss='categorical_crossentropy',
