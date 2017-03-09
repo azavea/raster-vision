@@ -14,7 +14,7 @@ from sklearn import metrics
 
 from .data.utils import (
     one_hot_to_rgb_batch, one_hot_to_label_batch, label_to_rgb_batch,
-    _makedirs)
+    _makedirs, safe_divide)
 from .data.generators import (
     make_split_generator, unscale_inputs, load_channel_stats)
 from .data.settings import (
@@ -33,10 +33,10 @@ class Scores():
         false_pos = np.sum(self.confusion_mat, axis=0) - true_pos
         false_neg = np.sum(self.confusion_mat, axis=1) - true_pos
         self.support = np.sum(self.confusion_mat, axis=1)
-        self.precision = true_pos / (true_pos + false_pos)
-        self.recall = true_pos / (true_pos + false_neg)
-        self.f1 = 2 * ((self.precision * self.recall) /
-                       (self.precision + self.recall))
+        self.precision = safe_divide(true_pos, (true_pos + false_pos))
+        self.recall = safe_divide(true_pos, (true_pos + false_neg))
+        self.f1 = 2 * safe_divide((self.precision * self.recall),
+                                  (self.precision + self.recall))
         self.avg_accuracy = np.sum(true_pos) / np.sum(self.support)
 
     def to_json(self):
