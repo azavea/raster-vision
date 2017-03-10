@@ -8,13 +8,11 @@ from os.path import join
 import numpy as np
 
 from .settings import (
-    POTSDAM, TRAIN, VALIDATION, seed, get_dataset_info)
+    POTSDAM, TRAIN, VALIDATION, get_dataset_info)
 from .utils import (
     _makedirs, load_tiff, load_image, rgb_to_label_batch, save_image,
     rgb_to_mask, compute_ndvi)
 from .generators import save_channel_stats, get_channel_stats
-
-np.random.seed(seed)
 
 
 def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,

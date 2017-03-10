@@ -9,10 +9,8 @@ mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 
 from .settings import (
-    TRAIN, VALIDATION, POTSDAM, seed, get_dataset_info)
+    TRAIN, VALIDATION, POTSDAM, get_dataset_info)
 from .utils import label_to_one_hot_batch, one_hot_to_rgb_batch, _makedirs
-
-np.random.seed(seed)
 
 
 def get_samples(gen, nb_samples):

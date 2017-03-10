@@ -31,8 +31,6 @@ data_path = '/opt/data/'
 datasets_path = join(data_path, 'datasets')
 results_path = join(data_path, 'results')
 
-seed = 1
-
 
 def file_inds_to_name(file_inds):
     return '{}_{}.npy'.format(file_inds[0], file_inds[1])
