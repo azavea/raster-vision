@@ -3,7 +3,6 @@ Functions for training a model given a RunOptions object.
 """
 from os.path import join, isfile
 
-import numpy as np
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau, LambdaCallback,
                              LearningRateScheduler)

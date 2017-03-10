@@ -18,7 +18,7 @@ from .data.utils import (
 from .data.generators import (
     make_split_generator, unscale_inputs, load_channel_stats)
 from .data.settings import (
-    label_names, label_keys, results_path, VALIDATION, get_dataset_info)
+    label_names, label_keys, results_path, VALIDATION)
 
 
 class Scores():
@@ -122,10 +122,10 @@ def plot_prediction(dataset_info, run_path, sample_index, display_inputs,
 
     subplot_index += 1
     plot_image(subplot_index, display_outputs[0, :, :, :], 'Ground Truth',
-        is_rgb=True)
+               is_rgb=True)
     subplot_index += 1
     plot_image(subplot_index, display_predictions[0, :, :, :], 'Prediction',
-        is_rgb=True)
+               is_rgb=True)
 
     make_legend()
 
@@ -140,7 +140,6 @@ def plot_prediction(dataset_info, run_path, sample_index, display_inputs,
 def compute_predictions(model, run_path, options, dataset_info):
     _makedirs(join(run_path, 'predictions'))
 
-    tile_size = dataset_info.input_shape[0:2]
     validation_gen = make_split_generator(
         dataset_info, VALIDATION, batch_size=1, shuffle=False, augment=False,
         scale=True, eval_mode=True)
@@ -148,12 +147,13 @@ def compute_predictions(model, run_path, options, dataset_info):
 
     confusion_mat = np.zeros((dataset_info.nb_labels, dataset_info.nb_labels))
 
-    for sample_index, (inputs, outputs, outputs_mask) in enumerate(validation_gen):
+    for sample_index, (inputs, outputs, outputs_mask) in \
+            enumerate(validation_gen):
         print('.')
         predictions = model.predict(inputs)
 
         display_inputs = unscale_inputs(inputs, dataset_info.input_inds,
-            scale_params)
+                                        scale_params)
         display_outputs = label_to_rgb_batch(np.squeeze(outputs, axis=3))
         display_predictions = one_hot_to_rgb_batch(predictions)
 
@@ -169,7 +169,7 @@ def compute_predictions(model, run_path, options, dataset_info):
             dataset_info.nb_labels)
 
         if (options.nb_eval_samples is not None and
-            sample_index == options.nb_eval_samples - 1):
+                sample_index == options.nb_eval_samples - 1):
             break
 
     scores = Scores()

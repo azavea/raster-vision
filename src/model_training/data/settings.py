@@ -60,7 +60,6 @@ class PotsdamInfo():
 
     def setup_file_names(self):
         nb_train_inds = int(round(self.train_ratio * len(self.all_file_inds)))
-        nb_validation_inds = len(self.all_file_inds) - nb_train_inds
         train_inds = self.all_file_inds[0:nb_train_inds]
         validation_inds = self.all_file_inds[nb_train_inds:]
         self.train_file_names = list(map(file_inds_to_name, train_inds))
@@ -88,9 +87,11 @@ class PotsdamInfo():
         self.output_mask_inds = [7]
 
         self.nb_channels = len(self.input_inds)
-        self.input_shape = (self.small_tile_size, self.small_tile_size, self.nb_channels)
+        self.input_shape = (self.small_tile_size, self.small_tile_size,
+                            self.nb_channels)
         if self.use_big_tiles:
-            self.input_shape = (self.big_tile_size, self.big_tile_size, self.nb_channels)
+            self.input_shape = (self.big_tile_size, self.big_tile_size,
+                                self.nb_channels)
 
     def setup(self, include_ir=False, include_depth=False,
               include_ndvi=False, use_big_tiles=False,

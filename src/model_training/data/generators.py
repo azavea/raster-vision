@@ -1,5 +1,4 @@
 from os.path import join
-import glob
 import json
 
 import numpy as np
@@ -9,7 +8,7 @@ mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 
 from .settings import (
-    TRAIN, VALIDATION, POTSDAM, get_dataset_info)
+    TRAIN, POTSDAM, get_dataset_info)
 from .utils import label_to_one_hot_batch, one_hot_to_rgb_batch, _makedirs
 
 
@@ -161,8 +160,8 @@ def make_split_generator(dataset_info, split, batch_size=32, shuffle=False,
     tile_size = dataset_info.input_shape[0:2]
     file_names = dataset_info.train_file_names if split == TRAIN \
         else dataset_info.validation_file_names
-    gen = make_batch_generator(path, file_names, tile_size,
-        batch_size, shuffle, reset_interval)
+    gen = make_batch_generator(
+        path, file_names, tile_size, batch_size, shuffle, reset_interval)
 
     def transform(batch):
         return transform_batch(
@@ -238,7 +237,8 @@ def viz_generator():
     batch_size = 4
 
     dataset_info = get_dataset_info(dataset)
-    dataset_info.setup(include_ir=True, include_depth=True, include_ndvi=True,
+    dataset_info.setup(
+        include_ir=True, include_depth=True, include_ndvi=True,
         train_ratio=dataset_info.sharah_train_ratio)
     path = dataset_info.dataset_path
     viz_path = join(path, 'gen_samples')

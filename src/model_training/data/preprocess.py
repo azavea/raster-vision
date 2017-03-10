@@ -8,7 +8,7 @@ from os.path import join
 import numpy as np
 
 from .settings import (
-    POTSDAM, TRAIN, VALIDATION, get_dataset_info)
+    POTSDAM, get_dataset_info)
 from .utils import (
     _makedirs, load_tiff, load_image, rgb_to_label_batch, save_image,
     rgb_to_mask, compute_ndvi)
@@ -24,9 +24,8 @@ def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
     for index1, index2 in file_indices:
         print('{}_{}'.format(index1, index2))
 
-        rgbir_file_name, depth_file_name, output_file_name, \
-        output_mask_file_name = \
-            get_file_names(index1, index2)
+        (rgbir_file_name, depth_file_name, output_file_name,
+         output_mask_file_name) = get_file_names(index1, index2)
 
         rgbir_input_im = load_tiff(join(raw_rgbir_input_path, rgbir_file_name))
 
@@ -54,7 +53,7 @@ def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
 
         concat_im = np.concatenate(
             [rgbir_input_im, depth_input_im, ndvi_im, output_im,
-            output_mask_im], axis=2)
+             output_mask_im], axis=2)
 
         proc_file_name = '{}_{}'.format(index1, index2)
         save_image(join(proc_data_path, proc_file_name), concat_im)
@@ -85,8 +84,9 @@ def process_potsdam():
 
     if False:
         process_data(
-            dataset_info.all_file_inds, raw_rgbir_input_path, raw_depth_input_path,
-            raw_output_path, raw_output_mask_path, proc_data_path, get_file_names)
+            dataset_info.all_file_inds, raw_rgbir_input_path,
+            raw_depth_input_path, raw_output_path, raw_output_mask_path,
+            proc_data_path, get_file_names)
 
     means, stds = get_channel_stats(
         proc_data_path, dataset_info.all_file_names)

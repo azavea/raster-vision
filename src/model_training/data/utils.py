@@ -61,6 +61,7 @@ def label_to_one_hot_batch(label_batch):
         one_hot_batch[:, :, :, label][label_batch == label] = 1.
     return one_hot_batch
 
+
 def rgb_to_one_hot_batch(rgb_batch):
     return label_to_one_hot_batch(rgb_to_label_batch(rgb_batch))
 
@@ -88,7 +89,7 @@ def safe_divide(a, b):
     http://stackoverflow.com/questions/26248654/numpy-return-0-with-divide-by-zero
     """
     with np.errstate(divide='ignore', invalid='ignore'):
-        c = np.true_divide(a,b)
+        c = np.true_divide(a, b)
         c[c == np.inf] = 0
         c = np.nan_to_num(c)
         return c
