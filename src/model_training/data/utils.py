@@ -4,6 +4,7 @@ from os import makedirs
 from PIL import Image
 import numpy as np
 import rasterio
+from rasterio.profiles import default_gtiff_profile
 
 from .settings import label_keys
 
@@ -20,6 +21,15 @@ def _makedirs(path):
 def load_tiff(file_path):
     with rasterio.open(file_path, 'r+') as r:
         return np.transpose(r.read(), axes=[1, 2, 0])
+
+
+def save_tiff(im, file_path):
+    height, width, count = im.shape
+    with rasterio.open(file_path, 'w', driver='GTiff', height=height,
+                       width=width, count=3, dtype=np.uint8) as dst:
+        dst.write(im[:, :, 0], 1)
+        dst.write(im[:, :, 1], 2)
+        dst.write(im[:, :, 2], 3)
 
 
 def load_image(file_path):

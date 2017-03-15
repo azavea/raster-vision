@@ -160,12 +160,6 @@ if __name__ == '__main__':
         elif task == TRAIN:
             train_run(options, dataset_info, run_path, sync_results)
         elif task == EVAL:
-            dataset_info.setup(
-                include_ir=options.include_ir,
-                include_depth=options.include_depth,
-                include_ndvi=options.include_ndvi,
-                use_big_tiles=True,
-                train_ratio=options.train_ratio)
             model = load_model(options, dataset_info, run_path, use_best=True)
             eval_run(model, options, dataset_info)
             sync_results()

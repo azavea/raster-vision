@@ -16,8 +16,8 @@ from .generators import save_channel_stats, get_channel_stats
 
 
 def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
-                 raw_output_path, raw_output_mask_path, proc_data_path,
-                 get_file_names):
+                 proc_data_path, get_file_names, raw_output_path=None,
+                 raw_output_mask_path=None):
     print('Processing data...')
     _makedirs(proc_data_path)
 
@@ -40,20 +40,31 @@ def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
         # uint8 so we scale it.
         ndvi_im = (ndvi_im + 1) * 127
 
-        output_im = load_tiff(join(raw_output_path, output_file_name))
-        output_im = np.expand_dims(output_im, axis=0)
-        output_im = rgb_to_label_batch(output_im)
-        output_im = np.squeeze(output_im, axis=0)
-        output_im = np.expand_dims(output_im, axis=2)
+        if raw_output_path and raw_output_mask_path:
+            output_im = load_tiff(join(raw_output_path, output_file_name))
+            output_im = np.expand_dims(output_im, axis=0)
+            output_im = rgb_to_label_batch(output_im)
+            output_im = np.squeeze(output_im, axis=0)
+            output_im = np.expand_dims(output_im, axis=2)
 
-        output_mask_im = load_tiff(
-            join(raw_output_mask_path, output_mask_file_name))
-        output_mask_im = rgb_to_mask(output_mask_im)
-        output_mask_im = np.expand_dims(output_mask_im, axis=2)
+            output_mask_im = load_tiff(
+                join(raw_output_mask_path, output_mask_file_name))
+            output_mask_im = rgb_to_mask(output_mask_im)
+            output_mask_im = np.expand_dims(output_mask_im, axis=2)
 
-        concat_im = np.concatenate(
-            [rgbir_input_im, depth_input_im, ndvi_im, output_im,
-             output_mask_im], axis=2)
+            concat_im = np.concatenate(
+                [rgbir_input_im, depth_input_im, ndvi_im, output_im,
+                 output_mask_im], axis=2)
+        else:
+            # There's one depth image that's missing a column,
+            # so we add a column with zeros.
+            if depth_input_im.shape[1] == 5999:
+                depth_input_im_fix = np.zeros((6000, 6000, 1), dtype=np.uint8)
+                depth_input_im_fix[:, 0:-1, :] = depth_input_im
+                depth_input_im = depth_input_im_fix
+
+            concat_im = np.concatenate(
+                [rgbir_input_im, depth_input_im, ndvi_im], axis=2)
 
         proc_file_name = '{}_{}'.format(index1, index2)
         save_image(join(proc_data_path, proc_file_name), concat_im)
@@ -82,14 +93,17 @@ def process_potsdam():
         return (rgbir_file_name, depth_file_name, output_file_name,
                 output_mask_file_name)
 
-    if False:
-        process_data(
-            dataset_info.all_file_inds, raw_rgbir_input_path,
-            raw_depth_input_path, raw_output_path, raw_output_mask_path,
-            proc_data_path, get_file_names)
+    process_data(
+        dataset_info.file_inds, raw_rgbir_input_path,
+        raw_depth_input_path, proc_data_path, get_file_names,
+        raw_output_path, raw_output_mask_path)
+
+    process_data(
+        dataset_info.test_file_inds, raw_rgbir_input_path,
+        raw_depth_input_path, proc_data_path, get_file_names)
 
     means, stds = get_channel_stats(
-        proc_data_path, dataset_info.all_file_names)
+        proc_data_path, dataset_info.file_names)
 
     # The NDVI values are in [-1,1] by definition, but we store them as uint8s
     # in [0, 255]. So, we use a hard coded scaling for this channel to make the

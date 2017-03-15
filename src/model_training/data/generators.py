@@ -8,7 +8,7 @@ mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 
 from .settings import (
-    TRAIN, POTSDAM, get_dataset_info)
+    TRAIN, VALIDATION, TEST, POTSDAM, get_dataset_info)
 from .utils import label_to_one_hot_batch, one_hot_to_rgb_batch, _makedirs
 
 
@@ -56,7 +56,7 @@ def load_channel_stats(path):
         return means, stds
 
 
-def make_tile_generator(path, file_names, tile_size):
+def make_tile_generator(path, file_names, tile_size, include_file_name=False):
     for file_name in file_names:
         file_path = join(path, file_name)
         concat_im = np.load(file_path, mmap_mode='r')
@@ -70,7 +70,10 @@ def make_tile_generator(path, file_names, tile_size):
                     tile = concat_im[row_begin:row_end, col_begin:col_end, :]
                     # Make writeable in-memory copy
                     tile = np.array(tile)
-                    yield tile
+                    if include_file_name:
+                        yield tile, file_name
+                    else:
+                        yield tile
 
 
 def make_random_tile_generator(path, file_names, tile_size):
@@ -113,6 +116,14 @@ def make_batch_generator(path, file_names, tile_size, batch_size, shuffle,
         yield samples
 
 
+def scale_batch(batch, input_inds, scale_params):
+    means, stds = scale_params
+    batch[:, :, :, input_inds] -= \
+        means[np.newaxis, np.newaxis, np.newaxis, input_inds]
+    batch[:, :, :, input_inds] /= \
+        stds[np.newaxis, np.newaxis, np.newaxis, input_inds]
+
+
 def transform_batch(batch, dataset_info, augment=False, scale_params=None,
                     eval_mode=False):
     batch = batch.astype(np.float32)
@@ -130,11 +141,7 @@ def transform_batch(batch, dataset_info, augment=False, scale_params=None,
             batch = np.flip(batch, axis=2)
 
     if scale_params is not None:
-        means, stds = scale_params
-        batch[:, :, :, dataset_info.input_inds] -= \
-            means[np.newaxis, np.newaxis, np.newaxis, dataset_info.input_inds]
-        batch[:, :, :, dataset_info.input_inds] /= \
-            stds[np.newaxis, np.newaxis, np.newaxis, dataset_info.input_inds]
+        scale_batch(batch, dataset_info.input_inds, scale_params)
 
     inputs = batch[:, :, :, dataset_info.input_inds]
 
@@ -149,15 +156,17 @@ def transform_batch(batch, dataset_info, augment=False, scale_params=None,
         return inputs, outputs
 
 
-def make_split_generator(dataset_info, split, batch_size=32, shuffle=False,
-                         reset_interval=None, augment=False, scale=False,
-                         eval_mode=False):
+def make_split_generator(dataset_info, split, tile_size=None, batch_size=32,
+                         shuffle=False, reset_interval=None, augment=False,
+                         scale=False, eval_mode=False):
     path = dataset_info.dataset_path
 
     scale_params = load_channel_stats(path) \
         if scale else None
 
-    tile_size = dataset_info.input_shape[0:2]
+    if tile_size is None:
+        tile_size = dataset_info.input_shape[0:2]
+        
     file_names = dataset_info.train_file_names if split == TRAIN \
         else dataset_info.validation_file_names
     gen = make_batch_generator(
@@ -169,6 +178,25 @@ def make_split_generator(dataset_info, split, batch_size=32, shuffle=False,
             eval_mode=eval_mode)
     gen = map(transform, gen)
 
+    return gen
+
+
+def make_test_generator(dataset_info):
+    path = dataset_info.dataset_path
+    scale_params = load_channel_stats(path)
+    tile_size = (dataset_info.full_tile_size, dataset_info.full_tile_size)
+
+    gen = make_tile_generator(
+        path, dataset_info.test_file_names, tile_size, include_file_name=True)
+
+    def transform_tile(x):
+        tile, file_name = x
+        tile = tile[:, :, dataset_info.input_inds]
+        batch = np.expand_dims(tile, axis=0).astype(np.float32)
+        scale_batch(batch, dataset_info.input_inds, scale_params)
+        return batch, file_name
+
+    gen = map(transform_tile, gen)
     return gen
 
 
