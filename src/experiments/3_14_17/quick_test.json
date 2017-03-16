@@ -1,0 +1,17 @@
+{
+    "batch_size": 8,
+    "git_commit": null,
+    "dataset": "potsdam",
+    "include_depth": true,
+    "include_ir": true,
+    "include_ndvi": false,
+    "model_type": "conv_logistic",
+    "train_ratio": 0.8,
+    "kernel_size": [5, 5],
+    "nb_epoch": 2,
+    "nb_labels": 6,
+    "nb_val_samples": 128,
+    "nb_eval_samples": 2,
+    "run_name": "3_14_17/quick_test",
+    "samples_per_epoch": 512
+}
