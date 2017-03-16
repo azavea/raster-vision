@@ -15,13 +15,13 @@ from .utils import (
 from .generators import save_channel_stats, get_channel_stats
 
 
-def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
+def process_data(file_inds, label_keys, raw_rgbir_input_path, raw_depth_input_path,
                  proc_data_path, get_file_names, raw_output_path=None,
                  raw_output_mask_path=None):
     print('Processing data...')
     _makedirs(proc_data_path)
 
-    for index1, index2 in file_indices:
+    for index1, index2 in file_inds:
         print('{}_{}'.format(index1, index2))
 
         (rgbir_file_name, depth_file_name, output_file_name,
@@ -43,7 +43,7 @@ def process_data(file_indices, raw_rgbir_input_path, raw_depth_input_path,
         if raw_output_path and raw_output_mask_path:
             output_im = load_tiff(join(raw_output_path, output_file_name))
             output_im = np.expand_dims(output_im, axis=0)
-            output_im = rgb_to_label_batch(output_im)
+            output_im = rgb_to_label_batch(output_im, label_keys)
             output_im = np.squeeze(output_im, axis=0)
             output_im = np.expand_dims(output_im, axis=2)
 
@@ -94,13 +94,14 @@ def process_potsdam():
                 output_mask_file_name)
 
     process_data(
-        dataset_info.file_inds, raw_rgbir_input_path,
+        dataset_info.file_inds, dataset_info.label_keys, raw_rgbir_input_path,
         raw_depth_input_path, proc_data_path, get_file_names,
         raw_output_path, raw_output_mask_path)
 
     process_data(
-        dataset_info.test_file_inds, raw_rgbir_input_path,
-        raw_depth_input_path, proc_data_path, get_file_names)
+        dataset_info.test_file_inds, dataset_info.label_keys,
+        raw_rgbir_input_path, raw_depth_input_path, proc_data_path,
+        get_file_names)
 
     means, stds = get_channel_stats(
         proc_data_path, dataset_info.file_names)

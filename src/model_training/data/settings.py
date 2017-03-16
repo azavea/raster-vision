@@ -5,29 +5,6 @@ VALIDATION = 'validation'
 TEST = 'test'
 POTSDAM = 'potsdam'
 
-# Impervious surfaces (RGB: 255, 255, 255)
-# Building (RGB: 0, 0, 255)
-# Low vegetation (RGB: 0, 255, 255)
-# Tree (RGB: 0, 255, 0)
-# Car (RGB: 255, 255, 0)
-# Clutter/background (RGB: 255, 0, 0)
-label_keys = [
-    [255, 255, 255],
-    [0, 0, 255],
-    [0, 255, 255],
-    [0, 255, 0],
-    [255, 255, 0],
-    [255, 0, 0],
-]
-label_names = [
-    'Impervious',
-    'Building',
-    'Low vegetation',
-    'Tree',
-    'Car',
-    'Clutter'
-]
-
 data_path = '/opt/data/'
 datasets_path = join(data_path, 'datasets')
 results_path = join(data_path, 'results')
@@ -37,14 +14,42 @@ def file_inds_to_name(file_inds):
     return '{}_{}.npy'.format(file_inds[0], file_inds[1])
 
 
-class PotsdamInfo():
+class IsprsInfo():
     def __init__(self):
+        # Impervious surfaces (RGB: 255, 255, 255)
+        # Building (RGB: 0, 0, 255)
+        # Low vegetation (RGB: 0, 255, 255)
+        # Tree (RGB: 0, 255, 0)
+        # Car (RGB: 255, 255, 0)
+        # Clutter/background (RGB: 255, 0, 0)
+        self.label_keys = [
+            [255, 255, 255],
+            [0, 0, 255],
+            [0, 255, 255],
+            [0, 255, 0],
+            [255, 255, 0],
+            [255, 0, 0],
+        ]
+
+        self.nb_labels = len(self.label_keys)
+
+        self.label_names = [
+            'Impervious',
+            'Building',
+            'Low vegetation',
+            'Tree',
+            'Car',
+            'Unknown'
+        ]
+
+class PotsdamInfo(IsprsInfo):
+    def __init__(self):
+        super().__init__()
         self.dataset_path = join(datasets_path, 'processed_potsdam')
         self.raw_dataset_path = join(datasets_path, POTSDAM)
         self.tile_size = 256
         self.eval_tile_size = 2000
         self.full_tile_size = 6000
-        self.nb_labels = len(label_keys)
 
         # The first 17 indices correspond to the training set,
         # and the rest to the validation set used

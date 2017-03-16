@@ -6,10 +6,6 @@ import numpy as np
 import rasterio
 from rasterio.profiles import default_gtiff_profile
 
-from .settings import label_keys
-
-nb_labels = len(label_keys)
-
 
 def _makedirs(path):
     try:
@@ -41,17 +37,6 @@ def save_image(file_path, im):
     np.save(file_path, im.astype(np.uint8))
 
 
-def rgb_to_label_batch(rgb_batch):
-    label_batch = np.zeros(rgb_batch.shape[:-1])
-    for label, key in enumerate(label_keys):
-        mask = (rgb_batch[:, :, :, 0] == key[0]) & \
-               (rgb_batch[:, :, :, 1] == key[1]) & \
-               (rgb_batch[:, :, :, 2] == key[2])
-        label_batch[mask] = label
-
-    return label_batch
-
-
 def rgb_to_mask(im):
     """
     Used to convert a label image where boundary pixels are black into
@@ -65,18 +50,31 @@ def rgb_to_mask(im):
     return mask
 
 
-def label_to_one_hot_batch(label_batch):
+def rgb_to_label_batch(rgb_batch, label_keys):
+    label_batch = np.zeros(rgb_batch.shape[:-1])
+    for label, key in enumerate(label_keys):
+        mask = (rgb_batch[:, :, :, 0] == key[0]) & \
+               (rgb_batch[:, :, :, 1] == key[1]) & \
+               (rgb_batch[:, :, :, 2] == key[2])
+        label_batch[mask] = label
+
+    return label_batch
+
+
+def label_to_one_hot_batch(label_batch, label_keys):
+    nb_labels = len(label_keys)
     one_hot_batch = np.zeros(np.concatenate([label_batch.shape, [nb_labels]]))
     for label in range(nb_labels):
         one_hot_batch[:, :, :, label][label_batch == label] = 1.
     return one_hot_batch
 
 
-def rgb_to_one_hot_batch(rgb_batch):
-    return label_to_one_hot_batch(rgb_to_label_batch(rgb_batch))
+def rgb_to_one_hot_batch(rgb_batch, label_keys):
+    label_batch = rgb_to_label_batch(rgb_batch, label_keys)
+    return label_to_one_hot_batch(label_batch, label_keys)
 
 
-def label_to_rgb_batch(label_batch):
+def label_to_rgb_batch(label_batch, label_keys):
     rgb_batch = np.zeros(np.concatenate([label_batch.shape, [3]]))
     for label, key in enumerate(label_keys):
         mask = label_batch == label
@@ -89,8 +87,9 @@ def one_hot_to_label_batch(one_hot_batch):
     return np.argmax(one_hot_batch, axis=3)
 
 
-def one_hot_to_rgb_batch(one_hot_batch):
-    return label_to_rgb_batch(one_hot_to_label_batch(one_hot_batch))
+def one_hot_to_rgb_batch(one_hot_batch, label_keys):
+    label_batch = one_hot_to_label_batch(one_hot_batch)
+    return label_to_rgb_batch(label_batch, label_keys)
 
 
 def safe_divide(a, b):

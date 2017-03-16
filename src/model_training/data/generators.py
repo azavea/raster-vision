@@ -152,7 +152,7 @@ def transform_batch(batch, dataset_info, augment=False, scale_params=None,
     else:
         outputs = batch[:, :, :, dataset_info.output_inds]
         outputs = np.squeeze(outputs, axis=3)
-        outputs = label_to_one_hot_batch(outputs)
+        outputs = label_to_one_hot_batch(outputs, dataset_info.label_keys)
         return inputs, outputs
 
 
@@ -166,7 +166,7 @@ def make_split_generator(dataset_info, split, tile_size=None, batch_size=32,
 
     if tile_size is None:
         tile_size = dataset_info.input_shape[0:2]
-        
+
     file_names = dataset_info.train_file_names if split == TRAIN \
         else dataset_info.validation_file_names
     gen = make_batch_generator(
@@ -247,7 +247,8 @@ def plot_sample(file_path, inputs, outputs, dataset_info,
     plot_row = 1
     plot_col = 0
     rgb_outputs = np.squeeze(
-        one_hot_to_rgb_batch(np.expand_dims(outputs, axis=0)))
+        one_hot_to_rgb_batch(np.expand_dims(outputs, axis=0),
+        dataset_info.label_keys))
     plot_image(plot_row, plot_col, rgb_outputs, is_rgb=True)
 
     for channel_ind in range(nb_output_inds):
