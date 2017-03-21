@@ -8,8 +8,8 @@ from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              LearningRateScheduler)
 from keras.optimizers import Adam
 
-from .data.generators import make_split_generator
-from .data.settings import results_path, TRAIN, VALIDATION
+from .data.settings import results_path
+from .data.datasets import TRAIN, VALIDATION
 from .models.conv_logistic import make_conv_logistic
 from .models.fcn_vgg import make_fcn_vgg
 from .models.fcn_resnet import make_fcn_resnet
@@ -21,11 +21,11 @@ FCN_RESNET = 'fcn_resnet'
 UNET = 'unet'
 
 
-def make_model(options, dataset_info):
+def make_model(options, dataset):
     """ A factory for generating models from options """
     model_type = options.model_type
-    input_shape = dataset_info.input_shape
-    nb_labels = dataset_info.nb_labels
+    input_shape = dataset.input_shape
+    nb_labels = dataset.nb_labels
 
     if model_type == CONV_LOGISTIC:
         model = make_conv_logistic(input_shape, nb_labels,
@@ -43,19 +43,15 @@ def make_model(options, dataset_info):
     return model
 
 
-def train_model(model, sync_results, options, dataset_info):
+def train_model(model, sync_results, options, generator):
     print(model.summary())
 
-    train_gen = make_split_generator(
-        dataset_info, TRAIN,
-        batch_size=options.batch_size, shuffle=True, augment=True, scale=True)
-    # Use the same validation set for each epoch using shuffle and
-    # reset_interval.
-    validation_gen = make_split_generator(
-        dataset_info, VALIDATION,
-        batch_size=options.batch_size, shuffle=False,
-        reset_interval=options.nb_val_samples,
-        scale=True, augment=True)
+    train_gen = generator.make_split_generator(
+        TRAIN, batch_size=options.batch_size, shuffle=True, augment=True,
+        normalize=True)
+    validation_gen = generator.make_split_generator(
+        VALIDATION, batch_size=options.batch_size, shuffle=False,
+        augment=True, normalize=True)
 
     model.compile(
         loss='categorical_crossentropy',
@@ -94,7 +90,6 @@ def train_model(model, sync_results, options, dataset_info):
                     curr_lr = lr
                 else:
                     break
-            print(curr_lr)
             return curr_lr
         lr_scheduler = LearningRateScheduler(get_lr)
         callbacks.append(lr_scheduler)

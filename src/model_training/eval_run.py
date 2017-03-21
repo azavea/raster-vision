@@ -1,7 +1,7 @@
 """
 Compute prediction images, learning curve graph and various metrics for a run.
 """
-from os.path import join, splitext
+from os.path import join
 import json
 
 import numpy as np
@@ -12,13 +12,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from sklearn import metrics
 
-from .data.utils import (
-    one_hot_to_rgb_batch, one_hot_to_label_batch, label_to_rgb_batch,
-    rgb_to_label_batch, _makedirs, safe_divide, save_tiff)
-from .data.generators import (
-    make_split_generator, unscale_inputs, load_channel_stats,
-    make_test_generator)
-from .data.settings import (results_path, VALIDATION)
+from .data.utils import (_makedirs, safe_divide, save_image, predict_image)
+from .data.settings import results_path
+from .data.datasets import VALIDATION, TEST
 
 
 class Scores():
@@ -76,14 +72,14 @@ def make_legend(label_keys, label_names):
                bbox_to_anchor=(1, 1), fontsize=4)
 
 
-def plot_prediction(dataset_info, predictions_path, sample_index, display_inputs,
+def plot_prediction(dataset, predictions_path, sample_index, display_inputs,
                     display_outputs, display_predictions, is_debug=False):
     fig = plt.figure()
 
     nb_subplot_cols = 3
     if is_debug:
-        nb_subplot_cols += dataset_info.include_ir + \
-            dataset_info.include_depth + dataset_info.include_ndvi
+        nb_subplot_cols += dataset.include_ir + \
+            dataset.include_depth + dataset.include_ndvi
 
     gs = mpl.gridspec.GridSpec(1, nb_subplot_cols)
 
@@ -100,34 +96,34 @@ def plot_prediction(dataset_info, predictions_path, sample_index, display_inputs
             a.set_title(title, fontsize=6)
 
     subplot_index = 0
-    display_inputs = display_inputs[0, :, :, :]
-    rgb_input_im = display_inputs[:, :, dataset_info.rgb_input_inds]
+    rgb_input_im = display_inputs[:, :, dataset.rgb_input_inds]
     plot_image(subplot_index, rgb_input_im, 'RGB', is_rgb=True)
 
     if is_debug:
-        if dataset_info.include_ir:
+        if dataset.include_ir:
             subplot_index += 1
-            ir_im = display_inputs[:, :, dataset_info.ir_ind]
+            ir_im = display_inputs[:, :, dataset.ir_ind]
             plot_image(subplot_index, ir_im, 'IR')
 
-        if dataset_info.include_depth:
+        if dataset.include_depth:
             subplot_index += 1
-            depth_im = display_inputs[:, :, dataset_info.depth_ind]
+            depth_im = display_inputs[:, :, dataset.depth_ind]
             plot_image(subplot_index, depth_im, 'Depth')
 
-        if dataset_info.include_ndvi:
+        if dataset.include_ndvi:
             subplot_index += 1
-            nvdi_im = display_inputs[:, :, dataset_info.ndvi_ind]
-            plot_image(subplot_index, nvdi_im, 'NDVI')
+            ndvi_im = display_inputs[:, :, dataset.ndvi_ind]
+            ndvi_im = (np.clip(ndvi_im, -1, 1) + 1) * 100
+            plot_image(subplot_index, ndvi_im, 'NDVI')
 
     subplot_index += 1
-    plot_image(subplot_index, display_outputs[0, :, :, :], 'Ground Truth',
+    plot_image(subplot_index, display_outputs[:, :, :], 'Ground Truth',
                is_rgb=True)
     subplot_index += 1
-    plot_image(subplot_index, display_predictions[0, :, :, :], 'Prediction',
+    plot_image(subplot_index, display_predictions[:, :, :], 'Prediction',
                is_rgb=True)
 
-    make_legend(dataset_info.label_keys, dataset_info.label_names)
+    make_legend(dataset.label_keys, dataset.label_names)
 
     file_name = '{}_debug.pdf' if is_debug else '{}.pdf'
     file_name = file_name.format(sample_index)
@@ -137,57 +133,7 @@ def plot_prediction(dataset_info, predictions_path, sample_index, display_inputs
     plt.close(fig)
 
 
-def validation_eval(model, run_path, options, dataset_info):
-    eval_tile_size = dataset_info.eval_tile_size
-    tile_size = dataset_info.tile_size
-    label_keys = dataset_info.label_keys
-    label_names = dataset_info.label_names
-
-    validation_gen = make_split_generator(
-        dataset_info, VALIDATION,
-        tile_size=(eval_tile_size, eval_tile_size),
-        batch_size=1, shuffle=False, augment=False, scale=True, eval_mode=True)
-    scale_params = load_channel_stats(dataset_info.dataset_path)
-
-    confusion_mat = np.zeros((dataset_info.nb_labels, dataset_info.nb_labels))
-
-    predictions_path = join(run_path, 'validation_predictions')
-    _makedirs(predictions_path)
-
-    for sample_index, (inputs, outputs, outputs_mask) in \
-            enumerate(validation_gen):
-        print('.')
-
-        display_inputs = unscale_inputs(inputs, dataset_info.input_inds,
-                                        scale_params)
-        display_outputs = label_to_rgb_batch(
-            np.squeeze(outputs, axis=3), label_keys)
-        display_predictions = make_prediction_tile(
-            inputs, eval_tile_size, tile_size, label_keys, model)
-        display_predictions = np.expand_dims(display_predictions, axis=0)
-        label_predictions = rgb_to_label_batch(
-            display_predictions, label_keys)
-
-        plot_prediction(
-            dataset_info, predictions_path, sample_index, display_inputs,
-            display_outputs, display_predictions)
-        plot_prediction(
-            dataset_info, predictions_path, sample_index, display_inputs,
-            display_outputs, display_predictions, is_debug=True)
-
-        confusion_mat += compute_confusion_mat(
-            outputs, label_predictions, outputs_mask, dataset_info.nb_labels)
-
-        if (options.nb_eval_samples is not None and
-                sample_index == options.nb_eval_samples - 1):
-            break
-
-    scores = Scores()
-    scores.compute_scores(label_names, confusion_mat)
-    save_scores(scores, run_path)
-
-
-def make_prediction_tile(full_tile, full_tile_size, tile_size, label_keys,
+def make_prediction_tile(full_tile, full_tile_size, tile_size, dataset,
                          model):
     quarter_tile_size = tile_size // 4
     half_tile_size = tile_size // 2
@@ -211,9 +157,9 @@ def make_prediction_tile(full_tile, full_tile_size, tile_size, label_keys,
         row_begin, row_end, col_begin, col_end = \
             snap_bounds(row_begin, row_end, col_begin, col_end)
 
-        tile = full_tile[:, row_begin:row_end, col_begin:col_end, :]
-        prediction_tile = np.squeeze(
-            one_hot_to_rgb_batch(model.predict(tile), label_keys))
+        tile = full_tile[row_begin:row_end, col_begin:col_end, :]
+        prediction_tile = dataset.one_hot_to_rgb_batch(
+            predict_image(tile, model))
         full_prediction_tile[row_begin:row_end, col_begin:col_end, :] = \
             prediction_tile
 
@@ -221,10 +167,9 @@ def make_prediction_tile(full_tile, full_tile_size, tile_size, label_keys,
         row_begin, row_end, col_begin, col_end = \
             snap_bounds(row_begin, row_end, col_begin, col_end)
 
-        tile = full_tile[:, row_begin:row_end, col_begin:col_end, :]
-        prediction_tile = model.predict(tile)
-        prediction_tile = np.squeeze(
-            one_hot_to_rgb_batch(prediction_tile, label_keys))
+        tile = full_tile[row_begin:row_end, col_begin:col_end, :]
+        prediction_tile = dataset.one_hot_to_rgb_batch(
+            predict_image(tile, model))
 
         prediction_tile_crop = prediction_tile[
             quarter_tile_size:tile_size - quarter_tile_size,
@@ -252,26 +197,83 @@ def make_prediction_tile(full_tile, full_tile_size, tile_size, label_keys,
     return full_prediction_tile
 
 
-def test_eval(model, run_path, options, dataset_info):
-    label_keys = dataset_info.label_keys
+def validation_eval(model, run_path, options, generator):
+    dataset = generator.dataset
+    eval_tile_size = dataset.eval_tile_size
+    tile_size = dataset.tile_size
+    label_names = dataset.label_names
+
+    validation_gen = generator.make_split_generator(
+        VALIDATION, tile_size=(eval_tile_size, eval_tile_size),
+        batch_size=1, shuffle=False, augment=False, normalize=True,
+        eval_mode=True)
+
+    confusion_mat = np.zeros((dataset.nb_labels, dataset.nb_labels))
+    predictions_path = join(run_path, 'validation_predictions')
+    _makedirs(predictions_path)
+
+    for sample_index, (inputs, outputs, outputs_mask, file_ind) in \
+            enumerate(validation_gen):
+        file_ind = file_ind[0]
+        print('Processing {}'.format(file_ind))
+
+        inputs = np.squeeze(inputs, axis=0)
+        outputs = np.squeeze(outputs, axis=0)
+        outputs_mask = np.squeeze(outputs_mask, axis=0)
+
+        display_inputs = generator.unnormalize_inputs(inputs)
+        display_outputs = dataset.one_hot_to_rgb_batch(outputs)
+        display_predictions = make_prediction_tile(
+            inputs, eval_tile_size, tile_size, dataset, model)
+
+        label_outputs = dataset.one_hot_to_label_batch(outputs)
+        label_predictions = dataset.rgb_to_label_batch(display_predictions)
+
+        plot_prediction(
+            dataset, predictions_path, sample_index, display_inputs,
+            display_outputs, display_predictions)
+        plot_prediction(
+            dataset, predictions_path, sample_index, display_inputs,
+            display_outputs, display_predictions, is_debug=True)
+
+        confusion_mat += compute_confusion_mat(
+            label_outputs, label_predictions, outputs_mask, dataset.nb_labels)
+
+        if (options.nb_eval_samples is not None and
+                sample_index == options.nb_eval_samples - 1):
+            break
+
+    scores = Scores()
+    scores.compute_scores(label_names, confusion_mat)
+    save_scores(scores, run_path)
+
+
+def test_eval(model, run_path, options, generator):
+    dataset = generator.dataset
     test_predictions_path = join(run_path, 'test_predictions')
     _makedirs(test_predictions_path)
 
-    tile_size = dataset_info.tile_size
-    full_tile_size = dataset_info.full_tile_size
+    tile_size = dataset.tile_size
+    full_tile_size = dataset.full_tile_size
 
-    test_gen = make_test_generator(dataset_info)
-    for sample_ind, (full_tile, file_name) in enumerate(test_gen):
-        print('Processing {}'.format(file_name))
+    test_gen = generator.make_split_generator(
+        TEST, tile_size=(full_tile_size, full_tile_size),
+        batch_size=1, shuffle=False, augment=False, normalize=True,
+        eval_mode=True)
+
+    for sample_ind, (full_tile, _, _, file_ind) in enumerate(test_gen):
+        file_ind = file_ind[0]
+        print('Processing {}'.format(file_ind))
+
+        full_tile = np.squeeze(full_tile, axis=0)
 
         prediction_tile = make_prediction_tile(
-            full_tile, full_tile_size, tile_size, label_keys, model)
+            full_tile, full_tile_size, tile_size, dataset, model)
 
-        file_base = splitext(file_name)[0]
         prediction_file_path = join(
             test_predictions_path,
-            'top_potsdam_{}_label.tif'.format(file_base))
-        save_tiff(prediction_tile, prediction_file_path)
+            'top_potsdam_{}_{}_label.tif'.format(file_ind[0], file_ind[1]))
+        save_image(prediction_tile, prediction_file_path)
 
         if (options.nb_eval_samples is not None and
                 sample_ind == options.nb_eval_samples - 1):
@@ -305,16 +307,15 @@ def plot_graphs(model, run_path):
     plt.savefig(accuracy_path, format='pdf', dpi=300)
 
 
-def eval_run(model, options, dataset_info):
+def eval_run(model, options, generator):
     run_path = join(results_path, options.run_name)
 
     print('Generating predictions and scores for validation set...')
     validation_eval(
-        model, run_path, options, dataset_info)
+        model, run_path, options, generator)
 
     print('Generating predictions for test set...')
-    test_eval(
-        model, run_path, options, dataset_info)
+    test_eval(model, run_path, options, generator)
 
     print('Plotting graphs...')
     plot_graphs(model, run_path)

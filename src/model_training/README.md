@@ -4,13 +4,13 @@ All data including datasets and results are stored in a single directory outside
 
 ## Preparing datasets
 
-Before running any experiments locally, the data needs to be prepared so that Keras can consume it. This involves splitting large images into tiles and saving them in a specific directory structure. For the
+Before running any experiments locally, the data needs to be prepared so that Keras can consume it. For the
 [ISPRS 2D Semantic Labeling Potsdam dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html), you can download the data after filling out the [request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html).
 After following the link to the Potsdam dataset, download
 `1_DSM_normalisation.zip`, `4_Ortho_RGBIR.zip`, `5_Labels_for_participants.zip`, and `5_Labels_for_participants_no_Boundary.zip`. Then unzip the files into
 `/opt/data/datasets/potsdam`, resulting in `/opt/data/datasets/potsdam/1_DSM_normalisation/`, etc.
 
-Then run `python -m model_training.data.preprocess`. This will generate `/opt/data/datasets/processed_potsdam`. As a test, you may want to run `python -m model_training.data.generators` which will generate PDF files that visualize samples produced by the data generator. These samples will appear in  `/opt/data/datasets/processed_potsdam/train/gen_samples/`.
+Then run `python -m model_training.data.generators --preprocess`. This will generate `/opt/data/datasets/processed_potsdam`. As a test, you may want to run `python -m model_training.data.generators --plot` which will generate PDF files that visualize samples produced by the data generator in  `/opt/data/results/gen_samples/`.
  To make the processed data available for use on EC2, upload a zip file of `/opt/data/datasets/processed_potsdam` named `processed_potsdam.zip` to the `otid-data` bucket.
 
 ## Running experiments

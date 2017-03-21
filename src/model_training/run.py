@@ -8,8 +8,10 @@ import sys
 import argparse
 from subprocess import call
 
-from .data.preprocess import _makedirs
-from .data.settings import results_path, get_dataset_info, POTSDAM
+from .data.utils import _makedirs
+from .data.settings import results_path, datasets_path
+from .data.datasets import POTSDAM, PotsdamDataset
+from .data.generators import get_data_generator
 from .train import make_model, train_model, CONV_LOGISTIC, FCN_RESNET
 from .eval_run import eval_run
 
@@ -24,7 +26,8 @@ class RunOptions():
         # Required options
         self.model_type = options['model_type']
         self.run_name = options['run_name']
-        self.dataset = options['dataset']
+        self.dataset_name = options['dataset_name']
+        self.generator_name = options['generator_name']
         self.include_ir = options['include_ir']
         self.include_depth = options['include_depth']
         self.include_ndvi = options['include_ndvi']
@@ -50,9 +53,9 @@ class RunOptions():
             self.is_big_model = options['is_big_model']
 
         # dataset dependent options
-        if self.dataset == POTSDAM and 'sharah_train_ratio' in options:
-            dataset_info = get_dataset_info(POTSDAM)
-            self.train_ratio = dataset_info.sharah_train_ratio
+        if (self.dataset_name == POTSDAM and 'sharah_train_ratio' in options
+                and options['sharah_train_ratio']):
+            self.train_ratio = PotsdamDataset.sharah_train_ratio
         else:
             self.train_ratio = options['train_ratio']
 
@@ -99,27 +102,27 @@ def setup_run(options, sync_results):
     sys.stdout = Logger(run_path)
 
 
-def load_model(options, dataset_info, run_path, use_best=False):
+def load_model(options, dataset, run_path, use_best=False):
     # Load the model by weights. This permits loading weights from a saved
     # model into a model with a different architecture assuming the named
     # layers have compatible dimensions.
-    model = make_model(options, dataset_info)
+    model = make_model(options, dataset)
     file_name = 'best_model.h5' if use_best else 'model.h5'
     model.load_weights(join(run_path, file_name), by_name=True)
     return model
 
 
-def train_run(options, dataset_info, run_path, sync_results):
+def start_train(options, generator, run_path, sync_results):
     model_path = join(run_path, 'model.h5')
 
     # Load the model if it's saved, or create a new one.
     if isfile(model_path):
-        model = load_model(options, dataset_info, run_path)
+        model = load_model(options, generator.dataset, run_path)
         print('Continuing training on {}'.format(model_path))
     else:
-        model = make_model(options, dataset_info)
+        model = make_model(options, generator.dataset)
         print('Creating new model.')
-    train_model(model, sync_results, options, dataset_info)
+    train_model(model, sync_results, options, generator)
 
     return model
 
@@ -136,10 +139,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     options = load_options(args.file_path)
-    dataset_info = get_dataset_info(options.dataset)
-    dataset_info.setup(
-        include_ir=options.include_ir, include_depth=options.include_depth,
-        include_ndvi=options.include_ndvi, train_ratio=options.train_ratio)
+    generator = get_data_generator(options, datasets_path)
     run_path = join(results_path, options.run_name)
 
     def sync_results(download=False):
@@ -158,8 +158,9 @@ if __name__ == '__main__':
         if task == SETUP:
             setup_run(options, sync_results)
         elif task == TRAIN:
-            train_run(options, dataset_info, run_path, sync_results)
+            start_train(options, generator, run_path, sync_results)
         elif task == EVAL:
-            model = load_model(options, dataset_info, run_path, use_best=True)
-            eval_run(model, options, dataset_info)
+            model = load_model(
+                options, generator.dataset, run_path, use_best=True)
+            eval_run(model, options, generator)
             sync_results()
