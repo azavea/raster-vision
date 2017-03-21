@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from sklearn import metrics
 
-from .data.utils import (_makedirs, safe_divide, save_image, predict_image)
+from .data.utils import (
+    _makedirs, safe_divide, save_image, predict_image, zip_dir)
 from .data.settings import results_path
 from .data.datasets import VALIDATION, TEST
 
@@ -278,6 +279,9 @@ def test_eval(model, run_path, options, generator):
         if (options.nb_eval_samples is not None and
                 sample_ind == options.nb_eval_samples - 1):
             break
+
+    zip_path = join(run_path, 'submission.zip')
+    zip_dir(test_predictions_path, zip_path)
 
 
 def save_scores(scores, run_path):

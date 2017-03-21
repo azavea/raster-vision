@@ -1,5 +1,7 @@
+import os
 from os import makedirs
-from os.path import splitext
+from os.path import splitext, basename
+import zipfile
 
 # For some reason, you need to import PIL first.
 from PIL import Image
@@ -65,6 +67,7 @@ def save_rasterio(im, file_path):
     # TODO turn compression off
     height, width, count = im.shape
     with rasterio.open(file_path, 'w', driver='GTiff', height=height,
+                       compression=rasterio.enums.Compression.none,
                        width=width, count=3, dtype=np.uint8) as dst:
         dst.write(im[:, :, 0], 1)
         dst.write(im[:, :, 1], 2)
@@ -125,6 +128,16 @@ def get_channel_stats(batch):
     means = np.mean(channel_data, axis=1)
     stds = np.std(channel_data, axis=1)
     return (means, stds)
+
+
+def zip_dir(in_path, out_path):
+    zipf = zipfile.ZipFile(out_path, 'w', zipfile.ZIP_DEFLATED)
+
+    for root, dirs, files in os.walk(in_path):
+        for f in files:
+            zipf.write(os.path.join(root, f), basename(f))
+
+    zipf.close()
 
 
 def predict_image(image, model):
