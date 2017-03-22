@@ -1,0 +1,16 @@
+{
+    "batch_size": 8,
+    "patience": 10,
+    "git_commit": "e6a7bf",
+    "dataset_name": "potsdam",
+    "train_ratio": 0.8,
+    "generator_name": "numpy",
+    "include_depth": false,
+    "include_ir": false,
+    "include_ndvi": false,
+    "model_type": "unet",
+    "nb_epoch": 100,
+    "nb_val_samples": 512,
+    "run_name": "3_21_17/unet_rgb",
+    "samples_per_epoch": 4096
+}
