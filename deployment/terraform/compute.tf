@@ -6,7 +6,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
   iam_fleet_role                      = "${var.fleet_iam_role_arn}"
   spot_price                          = "${var.fleet_spot_price}"
   allocation_strategy                 = "${var.fleet_allocation_strategy}"
-  terminate_instances_with_expiration = true
+  terminate_instances_with_expiration = false
   excess_capacity_termination_policy  = "Default"
   target_capacity                     = "${var.fleet_target_capacity}"
 
