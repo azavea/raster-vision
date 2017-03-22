@@ -50,7 +50,7 @@ def train_model(model, sync_results, options, generator):
         TRAIN, batch_size=options.batch_size, shuffle=True, augment=True,
         normalize=True)
     validation_gen = generator.make_split_generator(
-        VALIDATION, batch_size=options.batch_size, shuffle=False,
+        VALIDATION, batch_size=options.batch_size, shuffle=True,
         augment=True, normalize=True)
 
     model.compile(
