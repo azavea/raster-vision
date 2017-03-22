@@ -6,7 +6,7 @@ from os.path import join, isfile
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau, LambdaCallback,
                              LearningRateScheduler)
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 
 from .data.settings import results_path
 from .data.datasets import TRAIN, VALIDATION
@@ -14,12 +14,16 @@ from .models.conv_logistic import make_conv_logistic
 from .models.fcn_vgg import make_fcn_vgg
 from .models.fcn_resnet import make_fcn_resnet
 from .models.unet import make_unet
+from .models.fc_densenet import make_fc_densenet
 
 CONV_LOGISTIC = 'conv_logistic'
 FCN_VGG = 'fcn_vgg'
 FCN_RESNET = 'fcn_resnet'
 UNET = 'unet'
+FC_DENSENET = 'fc_densenet'
 
+ADAM = 'adam'
+RMS_PROP = 'rms_prop'
 
 def make_model(options, dataset):
     """ A factory for generating models from options """
@@ -37,6 +41,12 @@ def make_model(options, dataset):
                                 options.drop_prob, options.is_big_model)
     elif model_type == UNET:
         model = make_unet(input_shape, nb_labels)
+    elif model_type == FC_DENSENET:
+        model = make_fc_densenet(
+            input_shape, nb_labels, drop_prob=options.drop_prob,
+            weight_decay=options.weight_decay,
+            down_blocks=options.down_blocks,
+            up_blocks=options.up_blocks)
     else:
         raise ValueError('{} is not a valid model_type'.format(model_type))
 
@@ -53,9 +63,14 @@ def train_model(model, sync_results, options, generator):
         VALIDATION, batch_size=options.batch_size, shuffle=True,
         augment=True, normalize=True)
 
+    if options.optimizer == ADAM:
+        optimizer = Adam(options.init_lr)
+    elif options.optimizer == RMS_PROP:
+        optimizer = RMSprop(options.init_lr)
+
     model.compile(
         loss='categorical_crossentropy',
-        optimizer=Adam(0.001),
+        optimizer=optimizer,
         metrics=['accuracy'])
 
     run_path = join(results_path, options.run_name)

@@ -1,0 +1,22 @@
+{
+    "batch_size": 3,
+    "git_commit": null,
+    "dataset": "potsdam",
+    "optimizer": "adam",
+    "init_lr": 1e-3,
+    "lr_schedule": [[0, 0.001], [33, 0.0003], [50, 0.0001]],
+    "sharah_train_ratio": true,
+    "include_depth": true,
+    "include_ir": true,
+    "include_ndvi": false,
+    "growth_rate": 16,
+    "drop_prob": null,
+    "weight_decay": null,
+    "down_blocks": [4, 5, 7, 10, 12, 15],
+    "up_blocks": [12, 10, 7, 5, 4],
+    "model_type": "fc_densenet",
+    "nb_epoch": 75,
+    "nb_val_samples": 512,
+    "run_name": "3_14_17/densenet",
+    "samples_per_epoch": 4096
+}

@@ -12,7 +12,8 @@ from .data.utils import _makedirs
 from .data.settings import results_path, datasets_path
 from .data.datasets import POTSDAM, PotsdamDataset
 from .data.generators import get_data_generator
-from .train import make_model, train_model, CONV_LOGISTIC, FCN_RESNET
+from .train import (
+    make_model, train_model, CONV_LOGISTIC, FCN_RESNET, FC_DENSENET)
 from .eval_run import eval_run
 
 SETUP = 'setup'
@@ -36,6 +37,8 @@ class RunOptions():
         self.nb_epoch = options['nb_epoch']
         self.samples_per_epoch = options['samples_per_epoch']
         self.nb_val_samples = options['nb_val_samples']
+        self.optimizer = options['optimizer']
+        self.init_lr = options['init_lr']
 
         self.git_commit = options['git_commit']
 
@@ -51,6 +54,12 @@ class RunOptions():
         elif self.model_type == FCN_RESNET:
             self.drop_prob = options['drop_prob']
             self.is_big_model = options['is_big_model']
+        elif self.model_type == FC_DENSENET:
+            self.growth_rate = options['growth_rate']
+            self.drop_prob = options['drop_prob']
+            self.weight_decay = options['weight_decay']
+            self.down_blocks = options['down_blocks']
+            self.up_blocks = options['up_blocks']
 
         # dataset dependent options
         if (self.dataset_name == POTSDAM and 'sharah_train_ratio' in options
