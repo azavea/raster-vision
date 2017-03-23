@@ -25,10 +25,12 @@ FC_DENSENET = 'fc_densenet'
 ADAM = 'adam'
 RMS_PROP = 'rms_prop'
 
+
 def make_model(options, dataset):
     """ A factory for generating models from options """
     model_type = options.model_type
-    input_shape = dataset.input_shape
+    input_shape = (
+        options.tile_size[0], options.tile_size[1], dataset.nb_channels)
     nb_labels = dataset.nb_labels
 
     if model_type == CONV_LOGISTIC:
@@ -57,11 +59,11 @@ def train_model(model, sync_results, options, generator):
     print(model.summary())
 
     train_gen = generator.make_split_generator(
-        TRAIN, batch_size=options.batch_size, shuffle=True, augment=True,
-        normalize=True)
+        TRAIN, tile_size=options.tile_size, batch_size=options.batch_size,
+        shuffle=True, augment=True, normalize=True)
     validation_gen = generator.make_split_generator(
-        VALIDATION, batch_size=options.batch_size, shuffle=True,
-        augment=True, normalize=True)
+        VALIDATION, tile_size=options.tile_size, batch_size=options.batch_size,
+        shuffle=True, augment=True, normalize=True)
 
     if options.optimizer == ADAM:
         optimizer = Adam(options.init_lr)

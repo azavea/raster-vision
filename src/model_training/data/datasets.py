@@ -6,6 +6,7 @@ TRAIN = 'train'
 VALIDATION = 'validation'
 TEST = 'test'
 POTSDAM = 'potsdam'
+VAIHINGEN = 'vaihingen'
 
 
 class IsprsDataset():
@@ -111,12 +112,6 @@ class PotsdamDataset(IsprsDataset):
         self.include_ir = include_ir
         self.include_depth = include_depth
         self.include_ndvi = include_ndvi
-
-        self.name = POTSDAM
-        self.tile_size = 256
-        self.eval_tile_size = 2000
-        self.full_tile_size = 6000
-
         self.setup_channels()
         super().__init__()
 
@@ -142,5 +137,36 @@ class PotsdamDataset(IsprsDataset):
 
         self.nb_channels = curr_ind + 1
 
-        self.input_shape = (
-            self.tile_size, self.tile_size, self.nb_channels)
+    def get_output_file_name(self, file_ind):
+        return 'top_potsdam_{}_{}_label.tif'.format(file_ind[0], file_ind[1])
+
+
+class VaihingenDataset(IsprsDataset):
+    def __init__(self, include_depth=False, include_ndvi=False):
+        self.include_ir = True
+        self.include_depth = include_depth
+        self.include_ndvi = include_ndvi
+        self.setup_channels()
+        super().__init__()
+
+    def setup_channels(self):
+        self.ir_ind = 0
+        self.red_ind = 1
+        self.green_ind = 2
+        self.irrg_input_inds = [self.ir_ind, self.red_ind, self.green_ind]
+        self.rgb_input_inds = self.irrg_input_inds
+
+        curr_ind = 2
+
+        if self.include_depth:
+            curr_ind += 1
+            self.depth_ind = curr_ind
+
+        if self.include_ndvi:
+            curr_ind += 1
+            self.ndvi_ind = curr_ind
+
+        self.nb_channels = curr_ind + 1
+
+    def get_output_file_name(self, file_ind):
+        return 'top_mosaic_09cm_area{}.tif'.format(file_ind)

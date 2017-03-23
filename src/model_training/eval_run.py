@@ -79,8 +79,7 @@ def plot_prediction(dataset, predictions_path, sample_index, display_inputs,
 
     nb_subplot_cols = 3
     if is_debug:
-        nb_subplot_cols += dataset.include_ir + \
-            dataset.include_depth + dataset.include_ndvi
+        nb_subplot_cols += dataset.nb_channels
 
     gs = mpl.gridspec.GridSpec(1, nb_subplot_cols)
 
@@ -134,23 +133,23 @@ def plot_prediction(dataset, predictions_path, sample_index, display_inputs,
     plt.close(fig)
 
 
-def make_prediction_tile(full_tile, full_tile_size, tile_size, dataset,
-                         model):
+def make_prediction_tile(full_tile, tile_size, dataset, model):
     quarter_tile_size = tile_size // 4
     half_tile_size = tile_size // 2
+    full_tile_size = full_tile.shape[0:2]
     full_prediction_tile = \
-        np.zeros((full_tile_size, full_tile_size, 3), dtype=np.uint8)
+        np.zeros((full_tile_size[0], full_tile_size[1], 3), dtype=np.uint8)
 
     def snap_bounds(row_begin, row_end, col_begin, col_end):
         # If the tile straddles the edge of the full_tile, then
         # snap it to the edge.
-        if row_end > full_tile_size:
-            row_begin = full_tile_size - tile_size
-            row_end = full_tile_size
+        if row_end > full_tile_size[0]:
+            row_begin = full_tile_size[0] - tile_size
+            row_end = full_tile_size[0]
 
-        if col_end > full_tile_size:
-            col_begin = full_tile_size - tile_size
-            col_end = full_tile_size
+        if col_end > full_tile_size[1]:
+            col_begin = full_tile_size[1] - tile_size
+            col_end = full_tile_size[1]
 
         return row_begin, row_end, col_begin, col_end
 
@@ -182,13 +181,13 @@ def make_prediction_tile(full_tile, full_tile_size, tile_size, dataset,
             col_begin + quarter_tile_size:col_end - quarter_tile_size,
             :] = prediction_tile_crop
 
-    for row_begin in range(0, full_tile_size, half_tile_size):
-        for col_begin in range(0, full_tile_size, half_tile_size):
+    for row_begin in range(0, full_tile_size[0], half_tile_size):
+        for col_begin in range(0, full_tile_size[1], half_tile_size):
             row_end = row_begin + tile_size
             col_end = col_begin + tile_size
 
-            is_edge = (row_begin == 0 or row_end >= full_tile_size or
-                       col_begin == 0 or col_end >= full_tile_size)
+            is_edge = (row_begin == 0 or row_end >= full_tile_size[0] or
+                       col_begin == 0 or col_end >= full_tile_size[1])
 
             if is_edge:
                 update_prediction(row_begin, row_end, col_begin, col_end)
@@ -200,12 +199,10 @@ def make_prediction_tile(full_tile, full_tile_size, tile_size, dataset,
 
 def validation_eval(model, run_path, options, generator):
     dataset = generator.dataset
-    eval_tile_size = dataset.eval_tile_size
-    tile_size = dataset.tile_size
     label_names = dataset.label_names
 
     validation_gen = generator.make_split_generator(
-        VALIDATION, tile_size=(eval_tile_size, eval_tile_size),
+        VALIDATION, tile_size=options.eval_tile_size,
         batch_size=1, shuffle=False, augment=False, normalize=True,
         eval_mode=True)
 
@@ -225,7 +222,7 @@ def validation_eval(model, run_path, options, generator):
         display_inputs = generator.unnormalize_inputs(inputs)
         display_outputs = dataset.one_hot_to_rgb_batch(outputs)
         display_predictions = make_prediction_tile(
-            inputs, eval_tile_size, tile_size, dataset, model)
+            inputs, options.tile_size[0], dataset, model)
 
         label_outputs = dataset.one_hot_to_label_batch(outputs)
         label_predictions = dataset.rgb_to_label_batch(display_predictions)
@@ -254,11 +251,8 @@ def test_eval(model, run_path, options, generator):
     test_predictions_path = join(run_path, 'test_predictions')
     _makedirs(test_predictions_path)
 
-    tile_size = dataset.tile_size
-    full_tile_size = dataset.full_tile_size
-
     test_gen = generator.make_split_generator(
-        TEST, tile_size=(full_tile_size, full_tile_size),
+        TEST, tile_size=None,
         batch_size=1, shuffle=False, augment=False, normalize=True,
         eval_mode=True)
 
@@ -269,11 +263,11 @@ def test_eval(model, run_path, options, generator):
         full_tile = np.squeeze(full_tile, axis=0)
 
         prediction_tile = make_prediction_tile(
-            full_tile, full_tile_size, tile_size, dataset, model)
+            full_tile, options.tile_size[0], dataset, model)
 
         prediction_file_path = join(
             test_predictions_path,
-            'top_potsdam_{}_{}_label.tif'.format(file_ind[0], file_ind[1]))
+            generator.dataset.get_output_file_name(file_ind))
         save_image(prediction_tile, prediction_file_path)
 
         if (options.nb_eval_samples is not None and

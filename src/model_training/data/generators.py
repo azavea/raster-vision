@@ -3,7 +3,9 @@ import argparse
 
 import numpy as np
 
-from .datasets import (POTSDAM, TRAIN, VALIDATION, TEST, PotsdamDataset)
+from .datasets import (
+    POTSDAM, VAIHINGEN, TRAIN, VALIDATION, TEST, PotsdamDataset,
+    VaihingenDataset)
 from .settings import datasets_path, results_path
 from .utils import (
     load_image, get_image_size, get_channel_stats, plot_sample, _makedirs,
@@ -12,7 +14,7 @@ from .utils import (
 NUMPY = 'numpy'
 IMAGE = 'image'
 PROCESSED_POTSDAM = 'processed_potsdam'
-
+PROCESSED_VAIHINGEN = 'processed_vaihingen'
 
 class Generator():
     def make_split_generator(self, split, tile_size=None, batch_size=32,
@@ -27,6 +29,10 @@ class FileGenerator(Generator):
     windows of data from disk without loading the entire file into memory.
     """
     def __init__(self):
+        nb_train_inds = int(round(self.train_ratio * len(self.file_inds)))
+        self.train_file_inds = self.file_inds[0:nb_train_inds]
+        self.validation_file_inds = self.file_inds[nb_train_inds:]
+
         print('Computing dataset stats...')
         gen = self.make_split_generator(
             TRAIN, tile_size=(10, 10), batch_size=100, shuffle=True,
@@ -34,6 +40,17 @@ class FileGenerator(Generator):
         inputs, _ = next(gen)
         self.normalize_params = get_channel_stats(inputs)
         print('Done.')
+
+    def get_file_inds(self, split):
+        if split == TRAIN:
+            file_inds = self.train_file_inds
+        elif split == VALIDATION:
+            file_inds = self.validation_file_inds
+        elif split == TEST:
+            file_inds = self.test_file_inds
+        else:
+            raise ValueError('{} is not a valid split'.format(split))
+        return file_inds
 
     def get_samples(self, gen, nb_samples):
         samples = []
@@ -52,15 +69,20 @@ class FileGenerator(Generator):
         for file_ind in file_inds:
             nb_rows, nb_cols = self.get_file_size(file_ind)
 
-            for row_begin in range(0, nb_rows, tile_size[0]):
-                for col_begin in range(0, nb_cols, tile_size[1]):
-                    row_end = row_begin + tile_size[0]
-                    col_end = col_begin + tile_size[1]
-                    if row_end <= nb_rows and col_end <= nb_cols:
-                        window = ((row_begin, row_end), (col_begin, col_end))
-                        tile = self.get_tile(file_ind, window, has_outputs)
-
-                        yield tile, file_ind
+            if tile_size is None:
+                window = ((0, nb_rows), (0, nb_cols))
+                tile = self.get_tile(file_ind, window, has_outputs)
+                yield tile, file_ind
+            else:
+                for row_begin in range(0, nb_rows, tile_size[0]):
+                    for col_begin in range(0, nb_cols, tile_size[1]):
+                        row_end = row_begin + tile_size[0]
+                        col_end = col_begin + tile_size[1]
+                        if row_end <= nb_rows and col_end <= nb_cols:
+                            window = ((row_begin, row_end),
+                                      (col_begin, col_end))
+                            tile = self.get_tile(file_ind, window, has_outputs)
+                            yield tile, file_ind
 
     def make_random_tile_generator(self, file_inds, tile_size, has_outputs):
         nb_files = len(file_inds)
@@ -139,12 +161,9 @@ class FileGenerator(Generator):
 
         return inputs, outputs, outputs_mask
 
-    def make_split_generator(self, split, tile_size=None, batch_size=32,
-                             shuffle=False, augment=False, normalize=False,
-                             eval_mode=False):
-        tile_size = self.dataset.input_shape[0:2] if tile_size is None \
-            else tile_size
-
+    def make_split_generator(self, split, tile_size=None,
+                             batch_size=32, shuffle=False, augment=False,
+                             normalize=False, eval_mode=False):
         file_inds = self.get_file_inds(split)
         has_outputs = split != TEST
 
@@ -186,27 +205,12 @@ class PotsdamFileGenerator(FileGenerator):
             (6, 7), (7, 10), (7, 8)
         ]
 
-        nb_train_inds = int(round(self.train_ratio * len(self.file_inds)))
-        self.train_file_inds = self.file_inds[0:nb_train_inds]
-        self.validation_file_inds = self.file_inds[nb_train_inds:]
-
         self.test_file_inds = [
             (2, 13), (2, 14), (3, 13), (3, 14), (4, 13), (4, 14), (4, 15),
             (5, 13), (5, 14), (5, 15), (6, 13), (6, 14), (6, 15), (7, 13)
         ]
 
         super().__init__()
-
-    def get_file_inds(self, split):
-        if split == TRAIN:
-            file_inds = self.train_file_inds
-        elif split == VALIDATION:
-            file_inds = self.validation_file_inds
-        elif split == TEST:
-            file_inds = self.test_file_inds
-        else:
-            raise ValueError('{} is not a valid split'.format(split))
-        return file_inds
 
 
 class PotsdamImageFileGenerator(PotsdamFileGenerator):
@@ -395,6 +399,186 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
         return inputs, outputs, outputs_mask
 
 
+class VaihingenFileGenerator(FileGenerator):
+    """
+    A data generator for the Vaihingen dataset that creates batches from
+    files on disk.
+    """
+    def __init__(self, include_depth, include_ndvi, train_ratio):
+        self.dataset = VaihingenDataset(include_depth, include_ndvi)
+        self.train_ratio = train_ratio
+
+        self.file_inds = [
+            1, 3, 5, 7, 11, 13, 15, 17, 21, 23, 26, 28, 30, 32, 34, 37]
+
+        self.test_file_inds = [
+            2, 4, 6, 8, 10, 12, 14, 16, 20, 22, 24, 27, 29, 31, 33, 35, 38]
+
+        super().__init__()
+
+
+class VaihingenImageFileGenerator(VaihingenFileGenerator):
+    """
+    A data generator for the Vaihingen dataset that creates batches from
+    the original TIFF and JPG files.
+    """
+    def __init__(self, datasets_path, include_depth=False, include_ndvi=False,
+                 train_ratio=0.8):
+        self.dataset_path = join(datasets_path, VAIHINGEN)
+        super().__init__(include_depth, include_ndvi, train_ratio)
+
+    @staticmethod
+    def preprocess(datasets_path):
+        pass
+
+    def get_file_size(self, file_ind):
+        irrg_file_path = join(
+            self.dataset_path,
+            'top/top_mosaic_09cm_area{}.tif'.format(file_ind))
+        nb_rows, nb_cols = get_image_size(irrg_file_path)
+        return nb_rows, nb_cols
+
+    def get_tile(self, file_ind, window, has_outputs=True):
+        irrg_file_path = join(
+            self.dataset_path,
+            'top/top_mosaic_09cm_area{}.tif'.format(file_ind))
+        depth_file_path = join(
+            self.dataset_path,
+            'dsm/dsm_09cm_matching_area{}.tif'.format(file_ind))
+        outputs_file_path = join(
+            self.dataset_path,
+            'gts_for_participants/top_mosaic_09cm_area{}.tif'.format(file_ind))
+        outputs_no_boundary_file_path = join(
+            self.dataset_path,
+            'ISPRS_semantic_labeing_Vaihingen_ground_truth_eroded_for_participants/top_mosaic_09cm_area{}_noBoundary.tif'.format(file_ind)) # noqa
+
+        irrg = load_image(irrg_file_path, window)
+        depth = load_image(depth_file_path, window)
+        depth = ((depth - 240) * 2).astype(np.uint8)
+        channels = [irrg, depth]
+
+        if has_outputs:
+            outputs = load_image(outputs_file_path, window)
+            outputs_no_boundary = load_image(
+                outputs_no_boundary_file_path, window)
+            channels.extend([outputs, outputs_no_boundary])
+
+        tile = np.concatenate(channels, axis=2)
+        return tile
+
+    def parse_batch(self, batch, has_outputs=True):
+        irrg = batch[:, :, :, 0:3]
+        depth = batch[:, :, :, 3:4]
+
+        input_channels = [irrg]
+        if self.dataset.include_depth:
+            input_channels.append(depth)
+        if self.dataset.include_ndvi:
+            ir = irrg[:, :, :, 0:1]
+            red = irrg[:, :, :, 1:2]
+            ndvi = compute_ndvi(red, ir)
+            input_channels.append(ndvi)
+
+        inputs = np.concatenate(input_channels, axis=3)
+
+        outputs = None
+        outputs_mask = None
+        if has_outputs:
+            outputs = self.dataset.rgb_to_one_hot_batch(batch[:, :, :, 4:7])
+            outputs_mask = self.dataset.rgb_to_mask_batch(batch[:, :, :, 7:])
+        return inputs, outputs, outputs_mask
+
+
+class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
+    """
+    A data generator for the Vaihingen dataset that creates batches from
+    numpy array files. This is about 20x faster than reading the raw files.
+    """
+    def __init__(self, datasets_path, include_depth=False,
+                 include_ndvi=False, train_ratio=0.8):
+        self.raw_dataset_path = join(datasets_path, VAIHINGEN)
+        self.dataset_path = join(datasets_path, PROCESSED_VAIHINGEN)
+        super().__init__(include_depth, include_ndvi, train_ratio)
+
+    @staticmethod
+    def preprocess(datasets_path):
+        proc_data_path = join(datasets_path, PROCESSED_VAIHINGEN)
+        _makedirs(proc_data_path)
+
+        generator = VaihingenImageFileGenerator(
+            datasets_path, include_depth=True,
+            include_ndvi=False)
+        dataset = generator.dataset
+
+        def _preprocess(split):
+            gen = generator.make_split_generator(
+                split, batch_size=1, shuffle=False, augment=False,
+                normalize=False, eval_mode=True)
+
+            for inputs, outputs, outputs_mask, file_inds in gen:
+                file_ind = file_inds[0]
+                inputs = np.squeeze(inputs, axis=0)
+                channels = [inputs]
+
+                if outputs is not None:
+                    outputs = np.squeeze(outputs, axis=0)
+                    outputs = dataset.one_hot_to_label_batch(outputs)
+                    outputs_mask = np.squeeze(outputs_mask, axis=0)
+                    channels.extend([outputs, outputs_mask])
+                channels = np.concatenate(channels, axis=2)
+
+                file_name = '{}'.format(file_ind)
+                save_numpy_array(
+                    join(proc_data_path, file_name), channels)
+
+                # Free memory
+                channels = None
+                inputs = None
+                outputs = None
+                outputs_mask = None
+
+        _preprocess(TRAIN)
+        _preprocess(VALIDATION)
+        _preprocess(TEST)
+
+    def get_file_path(self, file_ind):
+        return join(self.dataset_path, '{}.npy'.format(file_ind))
+
+    def get_file_size(self, file_ind):
+        file_path = self.get_file_path(file_ind)
+        im = np.load(file_path, mmap_mode='r')
+        nb_rows, nb_cols = im.shape[0:2]
+        return nb_rows, nb_cols
+
+    def get_tile(self, file_ind, window, has_outputs=True):
+        file_path = self.get_file_path(file_ind)
+        im = np.load(file_path, mmap_mode='r')
+        ((row_begin, row_end), (col_begin, col_end)) = window
+        tile = im[row_begin:row_end, col_begin:col_end, :]
+
+        return tile
+
+    def parse_batch(self, batch, has_outputs=True):
+        irrg = batch[:, :, :, 0:3]
+        depth = batch[:, :, :, 3:4]
+
+        input_channels = [irrg]
+        if self.dataset.include_depth:
+            input_channels.append(depth)
+        if self.dataset.include_ndvi:
+            ir = irrg[:, :, :, 0:1]
+            red = irrg[:, :, :, 1:2]
+            ndvi = compute_ndvi(red, ir)
+            input_channels.append(ndvi)
+
+        inputs = np.concatenate(input_channels, axis=3)
+        outputs = None
+        outputs_mask = None
+        if has_outputs:
+            outputs = self.dataset.label_to_one_hot_batch(batch[:, :, :, 4:5])
+            outputs_mask = batch[:, :, :, 5:6]
+        return inputs, outputs, outputs_mask
+
 def get_data_generator(options, datasets_path):
     if options.dataset_name == POTSDAM:
         if options.generator_name == NUMPY:
@@ -405,6 +589,20 @@ def get_data_generator(options, datasets_path):
         elif options.generator_name == IMAGE:
             return PotsdamImageFileGenerator(
                 datasets_path, options.include_ir,
+                options.include_depth, options.include_ndvi,
+                options.train_ratio)
+        else:
+            raise ValueError('{} is not a valid generator'.format(
+                options.generator_name))
+    elif options.dataset_name == VAIHINGEN:
+        if options.generator_name == IMAGE:
+            return VaihingenImageFileGenerator(
+                datasets_path,
+                options.include_depth, options.include_ndvi,
+                options.train_ratio)
+        elif options.generator_name == NUMPY:
+            return VaihingenNumpyFileGenerator(
+                datasets_path,
                 options.include_depth, options.include_ndvi,
                 options.train_ratio)
         else:
@@ -436,8 +634,8 @@ def plot_generator(dataset_name, generator_name, split):
     _makedirs(viz_path)
 
     gen = generator.make_split_generator(
-        TRAIN, batch_size=batch_size, shuffle=True, augment=True,
-        normalize=True, eval_mode=True)
+        TRAIN, tile_size=(400, 400), batch_size=batch_size, shuffle=True,
+        augment=True, normalize=True, eval_mode=True)
 
     for batch_ind in range(nb_batches):
         inputs, outputs, _, _ = next(gen)
@@ -450,16 +648,27 @@ def plot_generator(dataset_name, generator_name, split):
 
 
 def preprocess():
-    PotsdamImageFileGenerator.preprocess(datasets_path)
-    PotsdamNumpyFileGenerator.preprocess(datasets_path)
+    if False:
+        PotsdamImageFileGenerator.preprocess(datasets_path)
+        PotsdamNumpyFileGenerator.preprocess(datasets_path)
+
+    VaihingenImageFileGenerator.preprocess(datasets_path)
+    VaihingenNumpyFileGenerator.preprocess(datasets_path)
 
 
 def plot_generators():
-    plot_generator(POTSDAM, NUMPY, TRAIN)
-    plot_generator(POTSDAM, NUMPY, VALIDATION)
+    if False:
+        plot_generator(POTSDAM, IMAGE, TRAIN)
+        plot_generator(POTSDAM, IMAGE, VALIDATION)
 
-    plot_generator(POTSDAM, IMAGE, TRAIN)
-    plot_generator(POTSDAM, IMAGE, VALIDATION)
+        plot_generator(POTSDAM, NUMPY, TRAIN)
+        plot_generator(POTSDAM, NUMPY, VALIDATION)
+
+    plot_generator(VAIHINGEN, IMAGE, TRAIN)
+    plot_generator(VAIHINGEN, IMAGE, VALIDATION)
+
+    plot_generator(VAIHINGEN, NUMPY, TRAIN)
+    plot_generator(VAIHINGEN, NUMPY, VALIDATION)
 
 
 def parse_args():

@@ -9,7 +9,7 @@ import argparse
 from subprocess import call
 
 from .data.utils import _makedirs
-from .data.settings import results_path, datasets_path
+from .data.settings import results_path, datasets_path, s3_bucket_name
 from .data.datasets import POTSDAM, PotsdamDataset
 from .data.generators import get_data_generator
 from .train import (
@@ -22,7 +22,8 @@ EVAL = 'eval'
 
 
 class RunOptions():
-    """ Represents the options used to control an experimental run. """
+    """Represents the options used to control an experimental run."""
+
     def __init__(self, options):
         # Required options
         self.model_type = options['model_type']
@@ -32,6 +33,13 @@ class RunOptions():
         self.include_ir = options['include_ir']
         self.include_depth = options['include_depth']
         self.include_ndvi = options['include_ndvi']
+        # Size of the tiles used as input to the network
+        # [nb_rows, nb_cols]
+        self.tile_size = options['tile_size']
+        # Size of the tiles evaluated at each iteration in validation_eval.
+        # This should evenly divide the size of the original image.
+        # None means to use the size of the original image.
+        self.eval_tile_size = options['eval_tile_size']
 
         self.batch_size = options['batch_size']
         self.nb_epoch = options['nb_epoch']
@@ -45,7 +53,9 @@ class RunOptions():
         # Optional options
         self.patience = options.get('patience')
         self.lr_schedule = options.get('lr_schedule')
-        # Controls how many samples to use in the final evaluation of the run.
+        # Controls how many samples to use in the final evaluation.
+        # Setting this to a low value can be useful when testing
+        # the code, since it will save time.
         self.nb_eval_samples = options.get('nb_eval_samples')
 
         # model_type dependent options
@@ -80,6 +90,7 @@ def load_options(file_path):
 
 class Logger(object):
     """ Used to log stdout to a file and to the console. """
+
     def __init__(self, run_path):
         self.terminal = sys.stdout
         self.log = open(join(run_path, 'stdout.txt'), 'a')
@@ -93,7 +104,6 @@ class Logger(object):
 
 
 def setup_run(options, sync_results):
-    """ Setup directory for the results of the run """
     # If there isn't a run directory, try to download it from S3.
     run_path = join(results_path, options.run_name)
     if not isdir(run_path):
@@ -152,7 +162,8 @@ if __name__ == '__main__':
     run_path = join(results_path, options.run_name)
 
     def sync_results(download=False):
-        s3_run_path = 's3://otid-data/results/{}'.format(options.run_name)
+        s3_run_path = 's3://{}/results/{}'.format(
+            s3_bucket_name, options.run_name)
         if download:
             call(['aws', 's3', 'sync', s3_run_path, run_path])
         else:
