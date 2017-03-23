@@ -2,12 +2,6 @@ import numpy as np
 
 from .utils import expand_dims
 
-TRAIN = 'train'
-VALIDATION = 'validation'
-TEST = 'test'
-POTSDAM = 'potsdam'
-VAIHINGEN = 'vaihingen'
-
 
 class IsprsDataset():
     def __init__(self):
@@ -102,71 +96,3 @@ class IsprsDataset():
     def one_hot_to_rgb_batch(self, one_hot_batch):
         label_batch = self.one_hot_to_label_batch(one_hot_batch)
         return self.label_to_rgb_batch(label_batch)
-
-
-class PotsdamDataset(IsprsDataset):
-    sharah_train_ratio = 17 / 24
-
-    def __init__(self, include_ir=False, include_depth=False,
-                 include_ndvi=False):
-        self.include_ir = include_ir
-        self.include_depth = include_depth
-        self.include_ndvi = include_ndvi
-        self.setup_channels()
-        super().__init__()
-
-    def setup_channels(self):
-        self.red_ind = 0
-        self.green_ind = 1
-        self.blue_ind = 2
-        self.rgb_input_inds = [self.red_ind, self.green_ind, self.blue_ind]
-
-        curr_ind = 2
-
-        if self.include_ir:
-            curr_ind += 1
-            self.ir_ind = curr_ind
-
-        if self.include_depth:
-            curr_ind += 1
-            self.depth_ind = curr_ind
-
-        if self.include_ndvi:
-            curr_ind += 1
-            self.ndvi_ind = curr_ind
-
-        self.nb_channels = curr_ind + 1
-
-    def get_output_file_name(self, file_ind):
-        return 'top_potsdam_{}_{}_label.tif'.format(file_ind[0], file_ind[1])
-
-
-class VaihingenDataset(IsprsDataset):
-    def __init__(self, include_depth=False, include_ndvi=False):
-        self.include_ir = True
-        self.include_depth = include_depth
-        self.include_ndvi = include_ndvi
-        self.setup_channels()
-        super().__init__()
-
-    def setup_channels(self):
-        self.ir_ind = 0
-        self.red_ind = 1
-        self.green_ind = 2
-        self.irrg_input_inds = [self.ir_ind, self.red_ind, self.green_ind]
-        self.rgb_input_inds = self.irrg_input_inds
-
-        curr_ind = 2
-
-        if self.include_depth:
-            curr_ind += 1
-            self.depth_ind = curr_ind
-
-        if self.include_ndvi:
-            curr_ind += 1
-            self.ndvi_ind = curr_ind
-
-        self.nb_channels = curr_ind + 1
-
-    def get_output_file_name(self, file_ind):
-        return 'top_mosaic_09cm_area{}.tif'.format(file_ind)

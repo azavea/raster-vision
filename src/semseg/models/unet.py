@@ -10,6 +10,8 @@ from keras.layers import (
     Input, merge, Convolution2D, MaxPooling2D, UpSampling2D, Activation,
     Reshape, BatchNormalization)
 
+UNET = 'unet'
+
 
 def make_conv_block(nb_filters, input_tensor, block):
     def make_stage(input_tensor, stage):

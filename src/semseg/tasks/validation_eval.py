@@ -12,10 +12,12 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from sklearn import metrics
 
-from .data.utils import (
-    _makedirs, safe_divide, save_image, predict_image, zip_dir)
-from .data.settings import results_path
-from .data.datasets import VALIDATION, TEST
+from ..data.utils import _makedirs, safe_divide
+from ..data.generators import VALIDATION
+from .utils import make_prediction_tile
+
+
+VALIDATION_EVAL = 'validation_eval'
 
 
 class Scores():
@@ -133,71 +135,12 @@ def plot_prediction(dataset, predictions_path, sample_index, display_inputs,
     plt.close(fig)
 
 
-def make_prediction_tile(full_tile, tile_size, dataset, model):
-    quarter_tile_size = tile_size // 4
-    half_tile_size = tile_size // 2
-    full_tile_size = full_tile.shape[0:2]
-    full_prediction_tile = \
-        np.zeros((full_tile_size[0], full_tile_size[1], 3), dtype=np.uint8)
-
-    def snap_bounds(row_begin, row_end, col_begin, col_end):
-        # If the tile straddles the edge of the full_tile, then
-        # snap it to the edge.
-        if row_end > full_tile_size[0]:
-            row_begin = full_tile_size[0] - tile_size
-            row_end = full_tile_size[0]
-
-        if col_end > full_tile_size[1]:
-            col_begin = full_tile_size[1] - tile_size
-            col_end = full_tile_size[1]
-
-        return row_begin, row_end, col_begin, col_end
-
-    def update_prediction(row_begin, row_end, col_begin, col_end):
-        row_begin, row_end, col_begin, col_end = \
-            snap_bounds(row_begin, row_end, col_begin, col_end)
-
-        tile = full_tile[row_begin:row_end, col_begin:col_end, :]
-        prediction_tile = dataset.one_hot_to_rgb_batch(
-            predict_image(tile, model))
-        full_prediction_tile[row_begin:row_end, col_begin:col_end, :] = \
-            prediction_tile
-
-    def update_prediction_crop(row_begin, row_end, col_begin, col_end):
-        row_begin, row_end, col_begin, col_end = \
-            snap_bounds(row_begin, row_end, col_begin, col_end)
-
-        tile = full_tile[row_begin:row_end, col_begin:col_end, :]
-        prediction_tile = dataset.one_hot_to_rgb_batch(
-            predict_image(tile, model))
-
-        prediction_tile_crop = prediction_tile[
-            quarter_tile_size:tile_size - quarter_tile_size,
-            quarter_tile_size:tile_size - quarter_tile_size,
-            :]
-
-        full_prediction_tile[
-            row_begin + quarter_tile_size:row_end - quarter_tile_size,
-            col_begin + quarter_tile_size:col_end - quarter_tile_size,
-            :] = prediction_tile_crop
-
-    for row_begin in range(0, full_tile_size[0], half_tile_size):
-        for col_begin in range(0, full_tile_size[1], half_tile_size):
-            row_end = row_begin + tile_size
-            col_end = col_begin + tile_size
-
-            is_edge = (row_begin == 0 or row_end >= full_tile_size[0] or
-                       col_begin == 0 or col_end >= full_tile_size[1])
-
-            if is_edge:
-                update_prediction(row_begin, row_end, col_begin, col_end)
-            else:
-                update_prediction_crop(row_begin, row_end, col_begin, col_end)
-
-    return full_prediction_tile
+def save_scores(scores, run_path):
+    with open(join(run_path, 'scores.txt'), 'w') as scores_file:
+        scores_file.write(scores.to_json())
 
 
-def validation_eval(model, run_path, options, generator):
+def validation_eval(run_path, model, options, generator):
     dataset = generator.dataset
     label_names = dataset.label_names
 
@@ -244,76 +187,3 @@ def validation_eval(model, run_path, options, generator):
     scores = Scores()
     scores.compute_scores(label_names, confusion_mat)
     save_scores(scores, run_path)
-
-
-def test_eval(model, run_path, options, generator):
-    dataset = generator.dataset
-    test_predictions_path = join(run_path, 'test_predictions')
-    _makedirs(test_predictions_path)
-
-    test_gen = generator.make_split_generator(
-        TEST, tile_size=None,
-        batch_size=1, shuffle=False, augment=False, normalize=True,
-        eval_mode=True)
-
-    for sample_ind, (full_tile, _, _, file_ind) in enumerate(test_gen):
-        file_ind = file_ind[0]
-        print('Processing {}'.format(file_ind))
-
-        full_tile = np.squeeze(full_tile, axis=0)
-
-        prediction_tile = make_prediction_tile(
-            full_tile, options.tile_size[0], dataset, model)
-
-        prediction_file_path = join(
-            test_predictions_path,
-            generator.dataset.get_output_file_name(file_ind))
-        save_image(prediction_tile, prediction_file_path)
-
-        if (options.nb_eval_samples is not None and
-                sample_ind == options.nb_eval_samples - 1):
-            break
-
-    zip_path = join(run_path, 'submission.zip')
-    zip_dir(test_predictions_path, zip_path)
-
-
-def save_scores(scores, run_path):
-    with open(join(run_path, 'scores.txt'), 'w') as scores_file:
-        scores_file.write(scores.to_json())
-
-
-def plot_graphs(model, run_path):
-    log_path = join(run_path, 'log.txt')
-
-    log = np.genfromtxt(log_path, delimiter=',', skip_header=1)
-    epochs = log[:, 0]
-    acc = log[:, 1]
-    val_acc = log[:, 3]
-
-    plt.figure()
-    plt.title('Training Log')
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy')
-
-    plt.grid()
-    plt.plot(epochs, acc, '-', label='Training')
-    plt.plot(epochs, val_acc, '--', label='Validation')
-
-    plt.legend(loc='best')
-    accuracy_path = join(run_path, 'accuracy.pdf')
-    plt.savefig(accuracy_path, format='pdf', dpi=300)
-
-
-def eval_run(model, options, generator):
-    run_path = join(results_path, options.run_name)
-
-    print('Generating predictions and scores for validation set...')
-    validation_eval(
-        model, run_path, options, generator)
-
-    print('Generating predictions for test set...')
-    test_eval(model, run_path, options, generator)
-
-    print('Plotting graphs...')
-    plot_graphs(model, run_path)

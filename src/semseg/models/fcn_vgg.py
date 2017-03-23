@@ -18,6 +18,8 @@ from keras.layers import (Input,
 from keras.applications.vgg16 import VGG16
 import tensorflow as tf
 
+FCN_VGG = 'fcn_vgg'
+
 
 def make_fcn_vgg(input_shape, nb_labels):
     nb_rows, nb_cols, _ = input_shape

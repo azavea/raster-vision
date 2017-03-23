@@ -1,6 +1,3 @@
-"""
-Functions for training a model given a RunOptions object.
-"""
 from os.path import join, isfile
 
 from keras.callbacks import (ModelCheckpoint, CSVLogger,
@@ -8,54 +5,15 @@ from keras.callbacks import (ModelCheckpoint, CSVLogger,
                              LearningRateScheduler)
 from keras.optimizers import Adam, RMSprop
 
-from .data.settings import results_path
-from .data.datasets import TRAIN, VALIDATION
-from .models.conv_logistic import make_conv_logistic
-from .models.fcn_vgg import make_fcn_vgg
-from .models.fcn_resnet import make_fcn_resnet
-from .models.unet import make_unet
-from .models.fc_densenet import make_fc_densenet
-
-CONV_LOGISTIC = 'conv_logistic'
-FCN_VGG = 'fcn_vgg'
-FCN_RESNET = 'fcn_resnet'
-UNET = 'unet'
-FC_DENSENET = 'fc_densenet'
+from ..data.generators import TRAIN, VALIDATION
 
 ADAM = 'adam'
 RMS_PROP = 'rms_prop'
 
-
-def make_model(options, dataset):
-    """ A factory for generating models from options """
-    model_type = options.model_type
-    input_shape = (
-        options.tile_size[0], options.tile_size[1], dataset.nb_channels)
-    nb_labels = dataset.nb_labels
-
-    if model_type == CONV_LOGISTIC:
-        model = make_conv_logistic(input_shape, nb_labels,
-                                   options.kernel_size)
-    elif model_type == FCN_VGG:
-        model = make_fcn_vgg(input_shape, nb_labels)
-    elif model_type == FCN_RESNET:
-        model = make_fcn_resnet(input_shape, nb_labels,
-                                options.drop_prob, options.is_big_model)
-    elif model_type == UNET:
-        model = make_unet(input_shape, nb_labels)
-    elif model_type == FC_DENSENET:
-        model = make_fc_densenet(
-            input_shape, nb_labels, drop_prob=options.drop_prob,
-            weight_decay=options.weight_decay,
-            down_blocks=options.down_blocks,
-            up_blocks=options.up_blocks)
-    else:
-        raise ValueError('{} is not a valid model_type'.format(model_type))
-
-    return model
+TRAIN_MODEL = 'train_model'
 
 
-def train_model(model, sync_results, options, generator):
+def train_model(run_path, model, sync_results, options, generator):
     print(model.summary())
 
     train_gen = generator.make_split_generator(
@@ -75,7 +33,6 @@ def train_model(model, sync_results, options, generator):
         optimizer=optimizer,
         metrics=['accuracy'])
 
-    run_path = join(results_path, options.run_name)
     log_path = join(run_path, 'log.txt')
 
     initial_epoch = 0

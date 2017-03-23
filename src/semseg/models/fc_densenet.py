@@ -8,7 +8,8 @@ from keras.layers import (
     Input, merge, Convolution2D, MaxPooling2D, UpSampling2D, Activation,
     Reshape, BatchNormalization, Dropout)
 from keras.regularizers import l2
-from keras.backend import shape
+
+FC_DENSENET = 'fc_densenet'
 
 
 def make_conv_layer(input_tensor, block_idx, layer_idx, nb_filters=16,

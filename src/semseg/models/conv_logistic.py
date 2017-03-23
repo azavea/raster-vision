@@ -7,6 +7,8 @@ know how to use Keras.
 from keras.models import Sequential
 from keras.layers import Activation, Convolution2D, Reshape
 
+CONV_LOGISTIC = 'conv_logistic'
+
 
 def make_conv_logistic(input_shape, nb_labels, kernel_size):
     nb_rows, nb_cols, _ = input_shape

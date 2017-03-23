@@ -12,6 +12,8 @@ import tensorflow as tf
 
 from .resnet import ResNet
 
+FCN_RESNET = 'fcn_resnet'
+
 
 def make_fcn_resnet(input_shape, nb_labels, drop_prob, is_big_model):
     input_shape = tuple(input_shape)
