@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${OTID_DEBUG}" ]]; then
+    set -x
+fi
+
+PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+SRC="$PROJECT_ROOT/src"
+
+docker run --rm -it \
+    -v "$SRC":/opt/src \
+    keras-semantic-segmentation-cpu python -m unittest
+
+docker run --rm -it \
+    -v "$SRC":/opt/src \
+    keras-semantic-segmentation-cpu flake8 .

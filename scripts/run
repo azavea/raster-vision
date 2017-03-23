@@ -7,6 +7,7 @@ if [[ -n "${OTID_DEBUG}" ]]; then
 fi
 
 PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+SRC="$PROJECT_ROOT/src"
 
 function usage() {
     echo -n \
@@ -20,10 +21,8 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     if [ "${1:-}" = "--cpu" ]
     then
-        MODEL_TRAINING="$PROJECT_ROOT/src"
-
         docker run --rm -it \
-            -v "$MODEL_TRAINING":/opt/src \
+            -v "$SRC":/opt/src \
             -v /opt/data:/opt/data \
             keras-semantic-segmentation-cpu "${@:2}"
     elif [ "${1:-}" = "--gpu" ]

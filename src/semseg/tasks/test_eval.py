@@ -4,7 +4,7 @@ import numpy as np
 
 from .utils import make_prediction_tile
 from ..data.generators import TEST
-from ..data.utils import _makedirs, save_image, zip_dir
+from ..data.utils import _makedirs, save_image, zip_dir, predict_image
 
 TEST_EVAL = 'test_eval'
 
@@ -26,7 +26,8 @@ def test_eval(run_path, model, options, generator):
         full_tile = np.squeeze(full_tile, axis=0)
 
         prediction_tile = make_prediction_tile(
-            full_tile, options.tile_size[0], dataset, model)
+            full_tile, options.tile_size[0],
+            lambda x: dataset.one_hot_to_rgb_batch(predict_image(x, model)))
 
         prediction_file_path = join(
             test_predictions_path,

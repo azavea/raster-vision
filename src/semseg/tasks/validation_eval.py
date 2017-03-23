@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from sklearn import metrics
 
-from ..data.utils import _makedirs, safe_divide
+from ..data.utils import _makedirs, safe_divide, predict_image
 from ..data.generators import VALIDATION
 from .utils import make_prediction_tile
 
@@ -165,7 +165,8 @@ def validation_eval(run_path, model, options, generator):
         display_inputs = generator.unnormalize_inputs(inputs)
         display_outputs = dataset.one_hot_to_rgb_batch(outputs)
         display_predictions = make_prediction_tile(
-            inputs, options.tile_size[0], dataset, model)
+            inputs, options.tile_size[0],
+            lambda x: dataset.one_hot_to_rgb_batch(predict_image(x, model)))
 
         label_outputs = dataset.one_hot_to_label_batch(outputs)
         label_predictions = dataset.rgb_to_label_batch(display_predictions)
