@@ -4,7 +4,23 @@ from .utils import expand_dims
 
 
 class IsprsDataset():
+    """Metadata and utilities for dealing with ISPRS data.
+
+    The ISPRS semantic labeling datasets can be found at
+    http://www2.isprs.org/commissions/comm3/wg4/semantic-labeling.html
+    The ground truth label images can be represented in several ways: 1) the
+    contest organizers provide the ground truth as RGB images, where each RGB
+    value represents a different label. 2) When evaluating the output of the
+    model, it is more convenient to represent each label as an integer. 3) The
+    neural network generates output that is one-hot coded. It is useful to be
+    able to translate between the representations, so this contains methods to
+    do so. Each method can take a batch with shape [batch_size, nb_rows,
+    nb_cols, nb_channels], or a single image with shape [nb_rows, nb_cols,
+    nb_channels], and the returned array will have the  same shape as the
+    input.
+    """
     def __init__(self):
+        # RGB vectors corresponding to different labels
         # Impervious surfaces (RGB: 255, 255, 255)
         # Building (RGB: 0, 0, 255)
         # Low vegetation (RGB: 0, 255, 255)
@@ -28,15 +44,22 @@ class IsprsDataset():
             'Low vegetation',
             'Tree',
             'Car',
-            'Unknown'
+            'Clutter'
         ]
 
     @expand_dims
     def rgb_to_mask_batch(self, batch):
-        """
-        Used to convert a label image where boundary pixels are black into
-        an image where non-boundary pixel are true and boundary pixels are
-        false.
+        """Convert a label image with black boundary pixels into a mask.
+
+        Since there is uncertainty associated with the boundary of
+        objects/regions in the ground truth segmentation, it makes sense
+        to ignore these boundaries during evaluation. To help, the contest
+        organizers have provided special ground truth images where the boundary
+        pixels (in a 3 pixel radius) are black.
+
+        # Returns
+            A boolean array where an element is True if it should be used in
+            the evaluation, and ignored otherwise.
         """
         mask = (batch[:, :, :, 0] == 0) & \
                (batch[:, :, :, 1] == 0) & \

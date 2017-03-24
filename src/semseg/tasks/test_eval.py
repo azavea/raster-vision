@@ -10,6 +10,17 @@ TEST_EVAL = 'test_eval'
 
 
 def test_eval(run_path, model, options, generator):
+    """Generate predictions for test data.
+
+    For each test image, create a prediction image .tif file, and then zip
+    them into submission.zip.
+
+    # Arguments
+        run_path: the path to the files for a run
+        model: a Keras model that has been trained
+        options: RunOptions object that specifies the run
+        generator: a Generator object to generate the test data
+    """
     dataset = generator.dataset
     test_predictions_path = join(run_path, 'test_predictions')
     _makedirs(test_predictions_path)

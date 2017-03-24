@@ -1,6 +1,6 @@
 """
 Execute a sequence of tasks for a run, given a json file with options for that
-run. Example usage: `python run.py options.json setup train eval`
+run. Example usage: `python run.py options.json setup_run train_model`
 """
 import sys
 import argparse
@@ -25,7 +25,7 @@ valid_tasks = [SETUP_RUN, TRAIN_MODEL, PLOT_CURVES, VALIDATION_EVAL, TEST_EVAL]
 
 
 class Logger(object):
-    """ Used to log stdout to a file and to the console. """
+    """Used to log stdout to a file and to the console."""
 
     def __init__(self, run_path):
         self.terminal = sys.stdout
@@ -48,7 +48,12 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+def run_tasks():
+    """Run tasks specified on command line.
+
+    This creates the RunOptions object from the json file specified on the
+    command line, creates a data generator, and then runs the tasks.
+    """
     args = parse_args()
     options = load_options(args.file_path)
     generator = get_data_generator(options, datasets_path)
@@ -89,3 +94,7 @@ if __name__ == '__main__':
                 run_path, options, generator.dataset, use_best=True)
             test_eval(run_path, model, options, generator)
             sync_results()
+
+
+if __name__ == '__main__':
+    run_tasks()

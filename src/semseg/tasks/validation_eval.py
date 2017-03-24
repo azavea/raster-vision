@@ -1,6 +1,3 @@
-"""
-Compute prediction images, learning curve graph and various metrics for a run.
-"""
 from os.path import join
 import json
 
@@ -21,10 +18,19 @@ VALIDATION_EVAL = 'validation_eval'
 
 
 class Scores():
+    """A set of scores for the performance of a model on a dataset."""
+
     def __init__(self):
         pass
 
     def compute_scores(self, label_names, confusion_mat):
+        """Compute scores from a confusion matrix.
+
+        # Arguments
+            label_names: a list of labels (ie. class) names
+            confusion_mat: a 2D array of size [nb_labels, nb_labels]
+                containing a confusion matrix
+        """
         self.label_names = label_names
         self.confusion_mat = confusion_mat
 
@@ -51,16 +57,30 @@ class Scores():
         return json.dumps(scores.__dict__, sort_keys=True, indent=4)
 
 
-def compute_confusion_mat(outputs, predictions, outputs_mask, nb_labels):
-    outputs = np.ravel(outputs)
-    predictions = np.ravel(predictions)
-    outputs_mask = np.ravel(outputs_mask).astype(np.bool)
+def compute_confusion_mat(ground_truth, ground_truth_mask, predictions,
+                          nb_labels):
+    """Compute a confusion matrix for an image.
 
-    outputs = outputs[outputs_mask]
-    predictions = predictions[outputs_mask]
+    # Arguments
+        ground_truth: ground truth label array of size [nb_rows, nb_cols]
+        ground_truth_mask: boolean array of size [nb_rows, nb_cols] that is
+            true for pixels that should be used in the evaluation.
+        predictions: a label array of size [nb_rows, nb_cols] that has the
+            values predicted by the model
+        nb_labels: the number of labels in the dataset
+
+    # Returns
+        A confusion matrix of size [nb_labels, nb_labels]
+    """
+    ground_truth = np.ravel(ground_truth)
+    predictions = np.ravel(predictions)
+    ground_truth_mask = np.ravel(ground_truth_mask).astype(np.bool)
+
+    ground_truth = ground_truth[ground_truth_mask]
+    predictions = predictions[ground_truth_mask]
 
     return metrics.confusion_matrix(
-        outputs, predictions, labels=np.arange(nb_labels))
+        ground_truth, predictions, labels=np.arange(nb_labels))
 
 
 def make_legend(label_keys, label_names):
@@ -141,6 +161,20 @@ def save_scores(scores, run_path):
 
 
 def validation_eval(run_path, model, options, generator):
+    """Evaluate model on validation data.
+
+    For each validation image, make a prediction, plot the prediction along
+    with the ground truth, and increment a confusion matrix. After all
+    validation images have been processed, compute and save scores based on the
+    confusion matrix. This allows us to compute scores for datasets that cannot
+    fit into memory.
+
+    # Arguments
+        run_path: the path to the files for a run
+        model: a Keras model that has been trained
+        options: RunOptions object that specifies the run
+        generator: a Generator object to generate the test data
+    """
     dataset = generator.dataset
     label_names = dataset.label_names
 
@@ -179,7 +213,7 @@ def validation_eval(run_path, model, options, generator):
             display_outputs, display_predictions, is_debug=True)
 
         confusion_mat += compute_confusion_mat(
-            label_outputs, label_predictions, outputs_mask, dataset.nb_labels)
+            label_outputs, outputs_mask, label_predictions, dataset.nb_labels)
 
         if (options.nb_eval_samples is not None and
                 sample_index == options.nb_eval_samples - 1):

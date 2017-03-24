@@ -1,6 +1,6 @@
-"""
-A model inspired by U-Net.
-https://arxiv.org/pdf/1505.04597
+"""A simplified U-Net model.
+
+See https://arxiv.org/pdf/1505.04597
 Code was modified from
 https://github.com/jocicmarko/ultrasound-nerve-segmentation
 """
@@ -29,6 +29,15 @@ def make_conv_block(nb_filters, input_tensor, block):
 
 
 def make_unet(input_shape, nb_labels):
+    """Make a U-Net model.
+
+    # Arguments
+        input_shape: tuple of form (nb_rows, nb_cols, nb_channels)
+        nb_labels: number of labels in dataset
+
+    # Return
+        The Keras model
+    """
     nb_rows, nb_cols, _ = input_shape
 
     inputs = Input(input_shape)

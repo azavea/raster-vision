@@ -1,6 +1,8 @@
-"""
-Implementation of Fully Convolutional DenseNets for Semantic Segmentation
-(aka The One Hundred Layers Tiramisu) https://arxiv.org/abs/1611.09326
+"""Fully Convolutional DenseNet model
+
+An implementation of Fully Convolutional DenseNets for Semantic Segmentation
+(aka The One Hundred Layers Tiramisu)
+https://arxiv.org/abs/1611.09326
 """
 
 from keras.models import Model
@@ -77,6 +79,21 @@ def make_fc_densenet(input_shape, nb_labels, growth_rate=16,
                      drop_prob=0.2, weight_decay=1e-4,
                      down_blocks=[4, 5, 7, 10, 12, 15],
                      up_blocks=[12, 10, 7, 5, 4]):
+    """Make a Fully Convolutional DenseNet model.
+
+    # Arguments
+        input_shape: tuple of form (nb_rows, nb_cols, nb_channels)
+        nb_labels: number of labels in dataset
+        growth_rate: the number of filters added by each layer within a dense
+            block
+        drop_prob: the dropout probability
+        weight_decay: the weight decay
+        down_blocks: the number of layers in each downsampling block
+        up_blocks: the number of layers in each upsampling block
+
+    # Return
+        The Keras model
+    """
     skips = []
 
     name = 'conv_initial'
@@ -126,5 +143,4 @@ def make_fc_densenet(input_shape, nb_labels, growth_rate=16,
     x = Reshape((nb_rows, nb_cols, nb_labels))(x)
 
     model = Model(input=input_tensor, output=x)
-    print('layers: {}'.format(len(model.layers)))
     return model

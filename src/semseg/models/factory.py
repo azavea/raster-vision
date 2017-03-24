@@ -8,7 +8,7 @@ from .fc_densenet import make_fc_densenet, FC_DENSENET
 
 
 def make_model(options, dataset):
-    """ A factory for generating models from options """
+    """Make a new model."""
     model_type = options.model_type
     input_shape = (
         options.tile_size[0], options.tile_size[1], dataset.nb_channels)
@@ -37,6 +37,7 @@ def make_model(options, dataset):
 
 
 def load_model(run_path, options, dataset, use_best=True):
+    """Load an existing model."""
     # Load the model by weights. This permits loading weights from a saved
     # model into a model with a different architecture assuming the named
     # layers have compatible dimensions.
@@ -49,6 +50,7 @@ def load_model(run_path, options, dataset, use_best=True):
 
 
 def get_model(run_path, options, dataset, use_best=True):
+    """Get a model by loading if it exists or making a new one."""
     model_path = join(run_path, 'model.h5')
 
     # Load the model if it's saved, or create a new one.

@@ -14,6 +14,18 @@ TRAIN_MODEL = 'train_model'
 
 
 def train_model(run_path, model, sync_results, options, generator):
+    """Train a model according to options using generator.
+
+    This saves results after each epoch and attempts to resume training
+    at the last saved point.
+
+    # Arguments
+        run_path: the path to the files for a run
+        model: a Keras model
+        options: RunOptions object that specifies the run
+        generator: a Generator object to generate the training and validation
+            data
+    """
     print(model.summary())
 
     train_gen = generator.make_split_generator(

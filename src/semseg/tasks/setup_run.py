@@ -7,10 +7,19 @@ SETUP_RUN = 'setup_run'
 
 
 def setup_run(run_path, options, sync_results):
+    """Setup path for the results of a run.
+
+    Creates directory if doesn't exist, downloads results from cloud, and
+    copies the options.json file to run_path.
+
+    # Arguments
+        run_path: the path to the files for a run
+        options: RunOptions object that specifies the run
+        sync_results: function used to sync results with cloud
+    """
     if not isdir(run_path):
         sync_results(download=True)
 
-    # Ensure there is a run directory.
     _makedirs(run_path)
 
     # TODO just copy the file over

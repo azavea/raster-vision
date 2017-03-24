@@ -10,6 +10,11 @@ PLOT_CURVES = 'plot_curves'
 
 
 def plot_curves(run_path):
+    """Plot the training and validation accuracy over epochs.
+
+    # Arguments
+        run_path: the path to the files for a run
+    """
     log_path = join(run_path, 'log.txt')
 
     log = np.genfromtxt(log_path, delimiter=',', skip_header=1)

@@ -1,4 +1,5 @@
-"""
+"""Convolutional logistic regression model.
+
 An extremely simple model for semantic labeling which is expected to have
 poor results. It does logistic regression across sliding windows in the
 image. This is just to test that our data is processed correctly and that we
@@ -11,6 +12,16 @@ CONV_LOGISTIC = 'conv_logistic'
 
 
 def make_conv_logistic(input_shape, nb_labels, kernel_size):
+    """Make a convolutional logistic regression model.
+
+    # Arguments
+        input_shape: tuple of form (nb_rows, nb_cols, nb_channels)
+        nb_labels: number of labels in dataset
+        kernel_size: 2d tuple with shape of convolutional kernel
+
+    # Return
+        The Keras model
+    """
     nb_rows, nb_cols, _ = input_shape
     nb_labels = nb_labels
 
