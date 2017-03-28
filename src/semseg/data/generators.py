@@ -14,6 +14,33 @@ class Generator():
     def make_split_generator(self, split, tile_size=None, batch_size=32,
                              shuffle=False, augment=False, normalize=False,
                              eval_mode=False):
+        """Make a generator for a split of data.
+
+        # Arguments
+            split: a string with the name of a dataset split (eg. train,
+                validation, test)
+            tile_size: tuple of form (nb_rows, nb_cols) with the shape of
+                the generated tiles
+            batch_size: the size of the minibatches that are generated
+            shuffle: True if tiles should be randomly selected from dataset
+            augment: True if tiles should be randomly flipped and rotated
+            normalize: True if tiles should be shifted and scaled
+            eval_mode: True if file_inds and outputs_masks should be returned
+
+        # Returns
+            Returns a Python generator. If eval_mode == True, the generator
+            returns a tuple of form
+            (inputs, outputs, outputs_mask, batch_file_inds). inputs is of form
+            (batch_size, nb_rows, nb_cols, nb_channels), outputs is one-hot
+            coded and is of form (batch_size, nb_rows, nb_cols, nb_labels),
+            outputs_mask is of form (batch_size, nb_rows, nb_cols) and is True
+            if that pixel should be used in the final evaluation,
+            batch_file_inds is a list of length batch_size and has the
+            indices of the files used to generate that batch. If
+            eval_mode == False, the outputs_mask and batch_file_inds are
+            omitted. outputs and outputs_mask are None when the split has no
+            output images available.
+        """
         pass
 
 
