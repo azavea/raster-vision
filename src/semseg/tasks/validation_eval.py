@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from sklearn import metrics
 
-from ..data.utils import _makedirs, safe_divide, predict_image
+from ..data.utils import _makedirs, safe_divide, predict_img
 from ..data.generators import VALIDATION
-from .utils import make_prediction_tile
+from .utils import make_prediction_img
 
 
 VALIDATION_EVAL = 'validation_eval'
@@ -95,8 +95,8 @@ def make_legend(label_keys, label_names):
                bbox_to_anchor=(1, 1), fontsize=4)
 
 
-def plot_prediction(dataset, predictions_path, sample_index, display_inputs,
-                    display_outputs, display_predictions, is_debug=False):
+def plot_prediction(dataset, predictions_path, sample_index, display_batch_x,
+                    display_batch_y, display_predictions, is_debug=False):
     fig = plt.figure()
 
     nb_subplot_cols = 3
@@ -105,7 +105,7 @@ def plot_prediction(dataset, predictions_path, sample_index, display_inputs,
 
     gs = mpl.gridspec.GridSpec(1, nb_subplot_cols)
 
-    def plot_image(subplot_index, im, title, is_rgb=False):
+    def plot_img(subplot_index, im, title, is_rgb=False):
         a = fig.add_subplot(gs[subplot_index])
         a.axes.get_xaxis().set_visible(False)
         a.axes.get_yaxis().set_visible(False)
@@ -118,31 +118,31 @@ def plot_prediction(dataset, predictions_path, sample_index, display_inputs,
             a.set_title(title, fontsize=6)
 
     subplot_index = 0
-    rgb_input_im = display_inputs[:, :, dataset.rgb_input_inds]
-    plot_image(subplot_index, rgb_input_im, 'RGB', is_rgb=True)
+    rgb_input_im = display_batch_x[:, :, dataset.rgb_input_inds]
+    plot_img(subplot_index, rgb_input_im, 'RGB', is_rgb=True)
 
     if is_debug:
         if dataset.include_ir:
             subplot_index += 1
-            ir_im = display_inputs[:, :, dataset.ir_ind]
-            plot_image(subplot_index, ir_im, 'IR')
+            ir_im = display_batch_x[:, :, dataset.ir_ind]
+            plot_img(subplot_index, ir_im, 'IR')
 
         if dataset.include_depth:
             subplot_index += 1
-            depth_im = display_inputs[:, :, dataset.depth_ind]
-            plot_image(subplot_index, depth_im, 'Depth')
+            depth_im = display_batch_x[:, :, dataset.depth_ind]
+            plot_img(subplot_index, depth_im, 'Depth')
 
         if dataset.include_ndvi:
             subplot_index += 1
-            ndvi_im = display_inputs[:, :, dataset.ndvi_ind]
+            ndvi_im = display_batch_x[:, :, dataset.ndvi_ind]
             ndvi_im = (np.clip(ndvi_im, -1, 1) + 1) * 100
-            plot_image(subplot_index, ndvi_im, 'NDVI')
+            plot_img(subplot_index, ndvi_im, 'NDVI')
 
     subplot_index += 1
-    plot_image(subplot_index, display_outputs[:, :, :], 'Ground Truth',
+    plot_img(subplot_index, display_batch_y[:, :, :], 'Ground Truth',
                is_rgb=True)
     subplot_index += 1
-    plot_image(subplot_index, display_predictions[:, :, :], 'Prediction',
+    plot_img(subplot_index, display_predictions[:, :, :], 'Prediction',
                is_rgb=True)
 
     make_legend(dataset.label_keys, dataset.label_names)
@@ -179,7 +179,7 @@ def validation_eval(run_path, model, options, generator):
     label_names = dataset.label_names
 
     validation_gen = generator.make_split_generator(
-        VALIDATION, tile_size=options.eval_tile_size,
+        VALIDATION, target_size=options.eval_target_size,
         batch_size=1, shuffle=False, augment=False, normalize=True,
         eval_mode=True)
 
@@ -187,33 +187,33 @@ def validation_eval(run_path, model, options, generator):
     predictions_path = join(run_path, 'validation_predictions')
     _makedirs(predictions_path)
 
-    for sample_index, (inputs, outputs, outputs_mask, file_ind) in \
+    for sample_index, (batch_x, batch_y, batch_y_mask, file_ind) in \
             enumerate(validation_gen):
         file_ind = file_ind[0]
         print('Processing {}'.format(file_ind))
 
-        inputs = np.squeeze(inputs, axis=0)
-        outputs = np.squeeze(outputs, axis=0)
-        outputs_mask = np.squeeze(outputs_mask, axis=0)
+        batch_x = np.squeeze(batch_x, axis=0)
+        batch_y = np.squeeze(batch_y, axis=0)
+        batch_y_mask = np.squeeze(batch_y_mask, axis=0)
 
-        display_inputs = generator.unnormalize_inputs(inputs)
-        display_outputs = dataset.one_hot_to_rgb_batch(outputs)
-        display_predictions = make_prediction_tile(
-            inputs, options.tile_size[0],
-            lambda x: dataset.one_hot_to_rgb_batch(predict_image(x, model)))
+        display_batch_x = generator.unnormalize(batch_x)
+        display_batch_y = dataset.one_hot_to_rgb_batch(batch_y)
+        display_predictions = make_prediction_img(
+            batch_x, options.target_size[0],
+            lambda x: dataset.one_hot_to_rgb_batch(predict_img(x, model)))
 
-        label_outputs = dataset.one_hot_to_label_batch(outputs)
+        label_batch_y = dataset.one_hot_to_label_batch(batch_y)
         label_predictions = dataset.rgb_to_label_batch(display_predictions)
 
         plot_prediction(
-            dataset, predictions_path, sample_index, display_inputs,
-            display_outputs, display_predictions)
+            dataset, predictions_path, sample_index, display_batch_x,
+            display_batch_y, display_predictions)
         plot_prediction(
-            dataset, predictions_path, sample_index, display_inputs,
-            display_outputs, display_predictions, is_debug=True)
+            dataset, predictions_path, sample_index, display_batch_x,
+            display_batch_y, display_predictions, is_debug=True)
 
         confusion_mat += compute_confusion_mat(
-            label_outputs, outputs_mask, label_predictions, dataset.nb_labels)
+            label_batch_y, batch_y_mask, label_predictions, dataset.nb_labels)
 
         if (options.nb_eval_samples is not None and
                 sample_index == options.nb_eval_samples - 1):

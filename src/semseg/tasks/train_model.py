@@ -29,10 +29,10 @@ def train_model(run_path, model, sync_results, options, generator):
     print(model.summary())
 
     train_gen = generator.make_split_generator(
-        TRAIN, tile_size=options.tile_size, batch_size=options.batch_size,
+        TRAIN, target_size=options.target_size, batch_size=options.batch_size,
         shuffle=True, augment=True, normalize=True)
     validation_gen = generator.make_split_generator(
-        VALIDATION, tile_size=options.tile_size, batch_size=options.batch_size,
+        VALIDATION, target_size=options.target_size, batch_size=options.batch_size,
         shuffle=True, augment=True, normalize=True)
 
     if options.optimizer == ADAM:

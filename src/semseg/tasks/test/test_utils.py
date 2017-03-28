@@ -2,22 +2,22 @@ import unittest
 
 import numpy as np
 
-from ..utils import make_prediction_tile
+from ..utils import make_prediction_img
 
 
-class MakePredictionTileTestCase(unittest.TestCase):
+class MakePredictionimgTestCase(unittest.TestCase):
     def test_identity_predict(self):
         # When predict is the identity function, the input and output
         # should be equal.
-        full_tile = np.random.randint(0, 2, size=(200, 200, 1))
-        tile_size = 64
+        full_img = np.random.randint(0, 2, size=(200, 200, 1))
+        target_size = 64
 
-        def predict(tile):
-            return tile
+        def predict(img):
+            return img
 
-        output_tile = make_prediction_tile(
-            full_tile, tile_size, predict)
-        self.assertTrue(np.array_equal(full_tile, output_tile))
+        output_img = make_prediction_img(
+            full_img, target_size, predict)
+        self.assertTrue(np.array_equal(full_img, output_img))
 
 
 if __name__ == '__main__':

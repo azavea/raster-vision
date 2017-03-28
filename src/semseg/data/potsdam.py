@@ -5,7 +5,7 @@ import numpy as np
 from .isprs import IsprsDataset
 from .generators import FileGenerator, TRAIN, VALIDATION, TEST
 from .utils import (
-    save_image, load_image, get_image_size, compute_ndvi, _makedirs,
+    save_img, load_img, get_img_size, compute_ndvi, _makedirs,
     save_numpy_array)
 
 POTSDAM = 'potsdam'
@@ -96,11 +96,11 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
             data_path,
             '1_DSM_normalisation/dsm_potsdam_03_13_normalized_lastools.jpg')
 
-        im = load_image(file_path)
+        im = load_img(file_path)
         if im.shape[1] == 5999:
             im_fix = np.zeros((6000, 6000), dtype=np.uint8)
             im_fix[:, 0:-1] = im[:, :, 0]
-            save_image(im_fix, file_path)
+            save_img(im_fix, file_path)
 
     def get_file_size(self, file_ind):
         ind0, ind1 = file_ind
@@ -108,10 +108,10 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
         rgbir_file_path = join(
             self.dataset_path,
             '4_Ortho_RGBIR/top_potsdam_{}_{}_RGBIR.tif'.format(ind0, ind1))
-        nb_rows, nb_cols = get_image_size(rgbir_file_path)
+        nb_rows, nb_cols = get_img_size(rgbir_file_path)
         return nb_rows, nb_cols
 
-    def get_tile(self, file_ind, window, has_outputs=True):
+    def get_img(self, file_ind, window, has_y=True):
         ind0, ind1 = file_ind
 
         rgbir_file_path = join(
@@ -120,27 +120,27 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
         depth_file_path = join(
             self.dataset_path,
             '1_DSM_normalisation/dsm_potsdam_{:0>2}_{:0>2}_normalized_lastools.jpg'.format(ind0, ind1)) # noqa
-        outputs_file_path = join(
+        batch_y_file_path = join(
             self.dataset_path,
             '5_Labels_for_participants/top_potsdam_{}_{}_label.tif'.format(ind0, ind1)) # noqa
-        outputs_no_boundary_file_path = join(
+        batch_y_no_boundary_file_path = join(
             self.dataset_path,
             '5_Labels_for_participants_no_Boundary/top_potsdam_{}_{}_label_noBoundary.tif'.format(ind0, ind1)) # noqa
 
-        rgbir = load_image(rgbir_file_path, window)
-        depth = load_image(depth_file_path, window)
+        rgbir = load_img(rgbir_file_path, window)
+        depth = load_img(depth_file_path, window)
         channels = [rgbir, depth]
 
-        if has_outputs:
-            outputs = load_image(outputs_file_path, window)
-            outputs_no_boundary = load_image(
-                outputs_no_boundary_file_path, window)
-            channels.extend([outputs, outputs_no_boundary])
+        if has_y:
+            batch_y = load_img(batch_y_file_path, window)
+            batch_y_no_boundary = load_img(
+                batch_y_no_boundary_file_path, window)
+            channels.extend([batch_y, batch_y_no_boundary])
 
-        tile = np.concatenate(channels, axis=2)
-        return tile
+        img = np.concatenate(channels, axis=2)
+        return img
 
-    def parse_batch(self, batch, has_outputs=True):
+    def parse_batch(self, batch, has_y=True):
         rgb = batch[:, :, :, 0:3]
         ir = batch[:, :, :, 3:4]
         depth = batch[:, :, :, 4:5]
@@ -155,14 +155,14 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
             ndvi = compute_ndvi(red, ir)
             input_channels.append(ndvi)
 
-        inputs = np.concatenate(input_channels, axis=3)
+        batch_x = np.concatenate(input_channels, axis=3)
 
-        outputs = None
-        outputs_mask = None
-        if has_outputs:
-            outputs = self.dataset.rgb_to_one_hot_batch(batch[:, :, :, 5:8])
-            outputs_mask = self.dataset.rgb_to_mask_batch(batch[:, :, :, 8:])
-        return inputs, outputs, outputs_mask
+        batch_y = None
+        batch_y_mask = None
+        if has_y:
+            batch_y = self.dataset.rgb_to_one_hot_batch(batch[:, :, :, 5:8])
+            batch_y_mask = self.dataset.rgb_to_mask_batch(batch[:, :, :, 8:])
+        return batch_x, batch_y, batch_y_mask
 
 
 class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
@@ -185,25 +185,23 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
             datasets_path, include_ir=True, include_depth=True,
             include_ndvi=False)
         dataset = generator.dataset
-        full_tile_size = dataset.full_tile_size
 
         def _preprocess(split):
             gen = generator.make_split_generator(
-                split, tile_size=(full_tile_size, full_tile_size),
-                batch_size=1, shuffle=False, augment=False, normalize=False,
-                eval_mode=True)
+                split, batch_size=1, shuffle=False, augment=False,
+                normalize=False, eval_mode=True)
 
-            for inputs, outputs, outputs_mask, file_inds in gen:
+            for batch_x, batch_y, batch_y_mask, file_inds in gen:
                 file_ind = file_inds[0]
 
-                inputs = np.squeeze(inputs, axis=0)
-                channels = [inputs]
+                batch_x = np.squeeze(batch_x, axis=0)
+                channels = [batch_x]
 
-                if outputs is not None:
-                    outputs = np.squeeze(outputs, axis=0)
-                    outputs = dataset.one_hot_to_label_batch(outputs)
-                    outputs_mask = np.squeeze(outputs_mask, axis=0)
-                    channels.extend([outputs, outputs_mask])
+                if batch_y is not None:
+                    batch_y = np.squeeze(batch_y, axis=0)
+                    batch_y = dataset.one_hot_to_label_batch(batch_y)
+                    batch_y_mask = np.squeeze(batch_y_mask, axis=0)
+                    channels.extend([batch_y, batch_y_mask])
                 channels = np.concatenate(channels, axis=2)
 
                 ind0, ind1 = file_ind
@@ -213,9 +211,9 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
 
                 # Free memory
                 channels = None
-                inputs = None
-                outputs = None
-                outputs_mask = None
+                batch_x = None
+                batch_y = None
+                batch_y_mask = None
 
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
@@ -231,15 +229,15 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
         nb_rows, nb_cols = im.shape[0:2]
         return nb_rows, nb_cols
 
-    def get_tile(self, file_ind, window, has_outputs=True):
+    def get_img(self, file_ind, window, has_y=True):
         file_path = self.get_file_path(file_ind)
         im = np.load(file_path, mmap_mode='r')
         ((row_begin, row_end), (col_begin, col_end)) = window
-        tile = im[row_begin:row_end, col_begin:col_end, :]
+        img = im[row_begin:row_end, col_begin:col_end, :]
 
-        return tile
+        return img
 
-    def parse_batch(self, batch, has_outputs=True):
+    def parse_batch(self, batch, has_y=True):
         rgb = batch[:, :, :, 0:3]
         ir = batch[:, :, :, 3:4]
         depth = batch[:, :, :, 4:5]
@@ -254,10 +252,10 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
             ndvi = compute_ndvi(red, ir)
             input_channels.append(ndvi)
 
-        inputs = np.concatenate(input_channels, axis=3)
-        outputs = None
-        outputs_mask = None
-        if has_outputs:
-            outputs = self.dataset.label_to_one_hot_batch(batch[:, :, :, 5:6])
-            outputs_mask = batch[:, :, :, 6:7]
-        return inputs, outputs, outputs_mask
+        batch_x = np.concatenate(input_channels, axis=3)
+        batch_y = None
+        batch_y_mask = None
+        if has_y:
+            batch_y = self.dataset.label_to_one_hot_batch(batch[:, :, :, 5:6])
+            batch_y_mask = batch[:, :, :, 6:7]
+        return batch_x, batch_y, batch_y_mask

@@ -18,13 +18,13 @@ class RunOptions():
         self.include_ir = options['include_ir']
         self.include_depth = options['include_depth']
         self.include_ndvi = options['include_ndvi']
-        # Size of the tiles used as input to the network
+        # Size of the imgs used as input to the network
         # [nb_rows, nb_cols]
-        self.tile_size = options['tile_size']
-        # Size of the tiles evaluated at each iteration in validation_eval.
+        self.target_size = options['target_size']
+        # Size of the imgs evaluated at each iteration in validation_eval.
         # This should evenly divide the size of the original image.
         # None means to use the size of the original image.
-        self.eval_tile_size = options['eval_tile_size']
+        self.eval_target_size = options['eval_target_size']
 
         self.batch_size = options['batch_size']
         self.nb_epoch = options['nb_epoch']

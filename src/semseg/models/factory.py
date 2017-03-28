@@ -11,7 +11,7 @@ def make_model(options, dataset):
     """Make a new model."""
     model_type = options.model_type
     input_shape = (
-        options.tile_size[0], options.tile_size[1], dataset.nb_channels)
+        options.target_size[0], options.target_size[1], dataset.nb_channels)
     nb_labels = dataset.nb_labels
 
     if model_type == CONV_LOGISTIC:

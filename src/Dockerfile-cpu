@@ -14,8 +14,7 @@ WORKDIR /opt/src
 
 COPY . /opt/src
 
-# Ensure that the keras user will have permission to write model
-# outputs into /opt/data
+# Ensure that the keras user will have permission to write model into /opt/data
 USER root
 RUN mkdir /opt/data
 RUN chown -R keras:root /opt/data

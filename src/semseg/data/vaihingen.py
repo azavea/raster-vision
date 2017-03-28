@@ -5,7 +5,7 @@ import numpy as np
 from .isprs import IsprsDataset
 from .generators import FileGenerator, TRAIN, VALIDATION, TEST
 from .utils import (
-    load_image, get_image_size, compute_ndvi, _makedirs,
+    load_img, get_img_size, compute_ndvi, _makedirs,
     save_numpy_array)
 
 VAIHINGEN = 'vaihingen'
@@ -79,38 +79,38 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
         irrg_file_path = join(
             self.dataset_path,
             'top/top_mosaic_09cm_area{}.tif'.format(file_ind))
-        nb_rows, nb_cols = get_image_size(irrg_file_path)
+        nb_rows, nb_cols = get_img_size(irrg_file_path)
         return nb_rows, nb_cols
 
-    def get_tile(self, file_ind, window, has_outputs=True):
+    def get_img(self, file_ind, window, has_y=True):
         irrg_file_path = join(
             self.dataset_path,
             'top/top_mosaic_09cm_area{}.tif'.format(file_ind))
         depth_file_path = join(
             self.dataset_path,
             'dsm/dsm_09cm_matching_area{}.tif'.format(file_ind))
-        outputs_file_path = join(
+        batch_y_file_path = join(
             self.dataset_path,
             'gts_for_participants/top_mosaic_09cm_area{}.tif'.format(file_ind))
-        outputs_no_boundary_file_path = join(
+        batch_y_no_boundary_file_path = join(
             self.dataset_path,
             'ISPRS_semantic_labeing_Vaihingen_ground_truth_eroded_for_participants/top_mosaic_09cm_area{}_noBoundary.tif'.format(file_ind)) # noqa
 
-        irrg = load_image(irrg_file_path, window)
-        depth = load_image(depth_file_path, window)
+        irrg = load_img(irrg_file_path, window)
+        depth = load_img(depth_file_path, window)
         depth = ((depth - 240) * 2).astype(np.uint8)
         channels = [irrg, depth]
 
-        if has_outputs:
-            outputs = load_image(outputs_file_path, window)
-            outputs_no_boundary = load_image(
-                outputs_no_boundary_file_path, window)
-            channels.extend([outputs, outputs_no_boundary])
+        if has_y:
+            batch_y = load_img(batch_y_file_path, window)
+            batch_y_no_boundary = load_img(
+                batch_y_no_boundary_file_path, window)
+            channels.extend([batch_y, batch_y_no_boundary])
 
-        tile = np.concatenate(channels, axis=2)
-        return tile
+        img = np.concatenate(channels, axis=2)
+        return img
 
-    def parse_batch(self, batch, has_outputs=True):
+    def parse_batch(self, batch, has_y=True):
         irrg = batch[:, :, :, 0:3]
         depth = batch[:, :, :, 3:4]
 
@@ -123,14 +123,14 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
             ndvi = compute_ndvi(red, ir)
             input_channels.append(ndvi)
 
-        inputs = np.concatenate(input_channels, axis=3)
+        batch_x = np.concatenate(input_channels, axis=3)
 
-        outputs = None
-        outputs_mask = None
-        if has_outputs:
-            outputs = self.dataset.rgb_to_one_hot_batch(batch[:, :, :, 4:7])
-            outputs_mask = self.dataset.rgb_to_mask_batch(batch[:, :, :, 7:])
-        return inputs, outputs, outputs_mask
+        batch_y = None
+        batch_y_mask = None
+        if has_y:
+            batch_y = self.dataset.rgb_to_one_hot_batch(batch[:, :, :, 4:7])
+            batch_y_mask = self.dataset.rgb_to_mask_batch(batch[:, :, :, 7:])
+        return batch_x, batch_y, batch_y_mask
 
 
 class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
@@ -159,16 +159,16 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
                 split, batch_size=1, shuffle=False, augment=False,
                 normalize=False, eval_mode=True)
 
-            for inputs, outputs, outputs_mask, file_inds in gen:
+            for batch_x, batch_y, batch_y_mask, file_inds in gen:
                 file_ind = file_inds[0]
-                inputs = np.squeeze(inputs, axis=0)
-                channels = [inputs]
+                batch_x = np.squeeze(batch_x, axis=0)
+                channels = [batch_x]
 
-                if outputs is not None:
-                    outputs = np.squeeze(outputs, axis=0)
-                    outputs = dataset.one_hot_to_label_batch(outputs)
-                    outputs_mask = np.squeeze(outputs_mask, axis=0)
-                    channels.extend([outputs, outputs_mask])
+                if batch_y is not None:
+                    batch_y = np.squeeze(batch_y, axis=0)
+                    batch_y = dataset.one_hot_to_label_batch(batch_y)
+                    batch_y_mask = np.squeeze(batch_y_mask, axis=0)
+                    channels.extend([batch_y, batch_y_mask])
                 channels = np.concatenate(channels, axis=2)
 
                 file_name = '{}'.format(file_ind)
@@ -177,9 +177,9 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
 
                 # Free memory
                 channels = None
-                inputs = None
-                outputs = None
-                outputs_mask = None
+                batch_x = None
+                batch_y = None
+                batch_y_mask = None
 
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
@@ -194,15 +194,15 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
         nb_rows, nb_cols = im.shape[0:2]
         return nb_rows, nb_cols
 
-    def get_tile(self, file_ind, window, has_outputs=True):
+    def get_img(self, file_ind, window, has_y=True):
         file_path = self.get_file_path(file_ind)
         im = np.load(file_path, mmap_mode='r')
         ((row_begin, row_end), (col_begin, col_end)) = window
-        tile = im[row_begin:row_end, col_begin:col_end, :]
+        img = im[row_begin:row_end, col_begin:col_end, :]
 
-        return tile
+        return img
 
-    def parse_batch(self, batch, has_outputs=True):
+    def parse_batch(self, batch, has_y=True):
         irrg = batch[:, :, :, 0:3]
         depth = batch[:, :, :, 3:4]
 
@@ -215,10 +215,10 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
             ndvi = compute_ndvi(red, ir)
             input_channels.append(ndvi)
 
-        inputs = np.concatenate(input_channels, axis=3)
-        outputs = None
-        outputs_mask = None
-        if has_outputs:
-            outputs = self.dataset.label_to_one_hot_batch(batch[:, :, :, 4:5])
-            outputs_mask = batch[:, :, :, 5:6]
-        return inputs, outputs, outputs_mask
+        batch_x = np.concatenate(input_channels, axis=3)
+        batch_y = None
+        batch_y_mask = None
+        if has_y:
+            batch_y = self.dataset.label_to_one_hot_batch(batch[:, :, :, 4:5])
+            batch_y_mask = batch[:, :, :, 5:6]
+        return batch_x, batch_y, batch_y_mask

@@ -37,7 +37,7 @@ def load_pillow(file_path, window=None):
     return im
 
 
-def load_image(file_path, window=None):
+def load_img(file_path, window=None):
     ext = splitext(file_path)[1]
     if ext in ['.tif', '.tiff']:
         return load_rasterio(file_path, window)
@@ -56,7 +56,7 @@ def get_pillow_size(file_path):
     return nb_cols, nb_rows
 
 
-def get_image_size(file_path):
+def get_img_size(file_path):
     ext = splitext(file_path)[1]
     if ext in ['.tif', '.tiff']:
         return get_rasterio_size(file_path)
@@ -79,7 +79,7 @@ def save_pillow(im, file_path):
     im.save(file_path)
 
 
-def save_image(im, file_path):
+def save_img(im, file_path):
     ext = splitext(file_path)[1]
     if ext in ['.tif', '.tiff']:
         save_rasterio(im, file_path)
@@ -140,24 +140,24 @@ def zip_dir(in_path, out_path):
     zipf.close()
 
 
-def predict_image(image, model):
+def predict_img(image, model):
     batch = np.expand_dims(image, axis=0)
-    outputs = model.predict(batch)
-    outputs = np.squeeze(outputs, axis=0)
-    return outputs
+    batch_y = model.predict(batch)
+    batch_y = np.squeeze(batch_y, axis=0)
+    return batch_y
 
 
-def plot_sample(file_path, inputs, outputs, generator):
-    inputs = generator.unnormalize_inputs(inputs)
+def plot_sample(file_path, batch_x, batch_y, generator):
+    batch_x = generator.unnormalize(batch_x)
     dataset = generator.dataset
 
     fig = plt.figure()
-    nb_input_inds = inputs.shape[2]
-    nb_output_inds = outputs.shape[2]
+    nb_input_inds = batch_x.shape[2]
+    nb_output_inds = batch_y.shape[2]
 
     gs = mpl.gridspec.GridSpec(2, 7)
 
-    def plot_image(plot_row, plot_col, im, is_rgb=False):
+    def plot_img(plot_row, plot_col, im, is_rgb=False):
         a = fig.add_subplot(gs[plot_row, plot_col])
         a.axes.get_xaxis().set_visible(False)
         a.axes.get_yaxis().set_visible(False)
@@ -169,26 +169,26 @@ def plot_sample(file_path, inputs, outputs, generator):
 
     plot_row = 0
     plot_col = 0
-    im = inputs[:, :, dataset.rgb_input_inds]
-    plot_image(plot_row, plot_col, im, is_rgb=True)
+    im = batch_x[:, :, dataset.rgb_input_inds]
+    plot_img(plot_row, plot_col, im, is_rgb=True)
 
     for channel_ind in range(nb_input_inds):
         plot_col += 1
         if channel_ind == dataset.ndvi_ind:
-            im = (np.clip(inputs[:, :, channel_ind], -1, 1) + 1) * 100
+            im = (np.clip(batch_x[:, :, channel_ind], -1, 1) + 1) * 100
         else:
-            im = inputs[:, :, channel_ind]
-        plot_image(plot_row, plot_col, im)
+            im = batch_x[:, :, channel_ind]
+        plot_img(plot_row, plot_col, im)
 
     plot_row = 1
     plot_col = 0
-    rgb_outputs = dataset.one_hot_to_rgb_batch(outputs)
-    plot_image(plot_row, plot_col, rgb_outputs, is_rgb=True)
+    rgb_batch_y = dataset.one_hot_to_rgb_batch(batch_y)
+    plot_img(plot_row, plot_col, rgb_batch_y, is_rgb=True)
 
     for channel_ind in range(nb_output_inds):
         plot_col += 1
-        im = outputs[:, :, channel_ind] * 150
-        plot_image(plot_row, plot_col, im)
+        im = batch_y[:, :, channel_ind] * 150
+        plot_img(plot_row, plot_col, im)
 
     plt.savefig(file_path, bbox_inches='tight', format='pdf', dpi=600)
     plt.close(fig)

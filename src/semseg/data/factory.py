@@ -65,39 +65,39 @@ def plot_generator(dataset_name, generator_name, split):
     _makedirs(viz_path)
 
     gen = generator.make_split_generator(
-        TRAIN, tile_size=(400, 400), batch_size=batch_size, shuffle=True,
+        TRAIN, target_size=(400, 400), batch_size=batch_size, shuffle=True,
         augment=True, normalize=True, eval_mode=True)
 
     for batch_ind in range(nb_batches):
-        inputs, outputs, _, _ = next(gen)
+        batch_x, batch_y, _, _ = next(gen)
         for sample_ind in range(batch_size):
             file_path = join(
                 viz_path, '{}_{}.pdf'.format(batch_ind, sample_ind))
             plot_sample(
-                file_path, inputs[sample_ind, :, :, :],
-                outputs[sample_ind, :, :, :], generator)
+                file_path, batch_x[sample_ind, :, :, :],
+                batch_y[sample_ind, :, :, :], generator)
 
 
 def preprocess():
-    PotsdamImageFileGenerator.preprocess(datasets_path)
-    PotsdamNumpyFileGenerator.preprocess(datasets_path)
-
     VaihingenImageFileGenerator.preprocess(datasets_path)
     VaihingenNumpyFileGenerator.preprocess(datasets_path)
 
+    PotsdamImageFileGenerator.preprocess(datasets_path)
+    PotsdamNumpyFileGenerator.preprocess(datasets_path)
+
 
 def plot_generators():
-    plot_generator(POTSDAM, IMAGE, TRAIN)
-    plot_generator(POTSDAM, IMAGE, VALIDATION)
-
-    plot_generator(POTSDAM, NUMPY, TRAIN)
-    plot_generator(POTSDAM, NUMPY, VALIDATION)
-
     plot_generator(VAIHINGEN, IMAGE, TRAIN)
     plot_generator(VAIHINGEN, IMAGE, VALIDATION)
 
     plot_generator(VAIHINGEN, NUMPY, TRAIN)
     plot_generator(VAIHINGEN, NUMPY, VALIDATION)
+
+    plot_generator(POTSDAM, IMAGE, TRAIN)
+    plot_generator(POTSDAM, IMAGE, VALIDATION)
+
+    plot_generator(POTSDAM, NUMPY, TRAIN)
+    plot_generator(POTSDAM, NUMPY, VALIDATION)
 
 
 def parse_args():
