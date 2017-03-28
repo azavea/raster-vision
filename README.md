@@ -12,7 +12,7 @@ This repo contains code for semantic segmentation using convolutional neural net
 There is code for building Docker containers, running experiments on AWS EC2, loading data, training models, and evaluating models on validation and test data.
 Here is an example of an aerial image segmented using a model learned by our system.
 
-![Example segmentation](images/example-segmentation.png)
+![Example segmentation](results/unet/img/good1.png)
 
 The following datasets and model architectures are implemented.
 
