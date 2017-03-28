@@ -140,10 +140,10 @@ def plot_prediction(dataset, predictions_path, sample_index, display_batch_x,
 
     subplot_index += 1
     plot_img(subplot_index, display_batch_y[:, :, :], 'Ground Truth',
-               is_rgb=True)
+             is_rgb=True)
     subplot_index += 1
     plot_img(subplot_index, display_predictions[:, :, :], 'Prediction',
-               is_rgb=True)
+             is_rgb=True)
 
     make_legend(dataset.label_keys, dataset.label_names)
 
