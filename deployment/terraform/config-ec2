@@ -11,6 +11,11 @@ pushd data/datasets
 unzip -q -o processed_potsdam.zip
 popd
 
+aws s3 cp s3://otid-data/processed_vaihingen.zip data/datasets/processed_vaihingen.zip
+pushd data/datasets
+unzip -q -o processed_vaihingen.zip
+popd
+
 # Download source repo
 sudo -H -u ubuntu bash -c "yes | git clone https://github.com/azavea/keras-semantic-segmentation.git"
 
