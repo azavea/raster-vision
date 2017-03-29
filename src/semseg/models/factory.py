@@ -1,7 +1,6 @@
 from os.path import isfile, join
 
 from .conv_logistic import make_conv_logistic, CONV_LOGISTIC
-from .fcn_vgg import make_fcn_vgg, FCN_VGG
 from .fcn_resnet import make_fcn_resnet, FCN_RESNET
 from .unet import make_unet, UNET
 from .fc_densenet import make_fc_densenet, FC_DENSENET
@@ -17,8 +16,6 @@ def make_model(options, dataset):
     if model_type == CONV_LOGISTIC:
         model = make_conv_logistic(input_shape, nb_labels,
                                    options.kernel_size)
-    elif model_type == FCN_VGG:
-        model = make_fcn_vgg(input_shape, nb_labels)
     elif model_type == FCN_RESNET:
         model = make_fcn_resnet(input_shape, nb_labels,
                                 options.drop_prob, options.is_big_model)
