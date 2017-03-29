@@ -1,9 +1,46 @@
 from os.path import isfile, join
+from subprocess import call
 
 from .conv_logistic import make_conv_logistic, CONV_LOGISTIC
 from .fcn_resnet import make_fcn_resnet, FCN_RESNET
 from .unet import make_unet, UNET
 from .fc_densenet import make_fc_densenet, FC_DENSENET
+from .ensemble import Ensemble, ENSEMBLE
+from ..data.settings import datasets_path, results_path, s3_bucket_name
+
+
+def s3_download(run_name, file_name):
+    s3_run_path = 's3://{}/results/{}'.format(
+        s3_bucket_name, run_name)
+    s3_file_path = join(s3_run_path, file_name)
+
+    run_path = join(results_path, run_name)
+    call(['aws', 's3', 'sync', s3_file_path, run_path + '/'])
+
+
+def make_ensemble(options, input_shape, nb_labels):
+    from ..options import load_options
+    from ..data.factory import get_data_generator
+
+    models = []
+    active_inds_list = []
+
+    for run_name in options.ensemble_run_names:
+        s3_download(run_name, 'options.json')
+        s3_download(run_name, 'best_model.h5')
+
+        run_path = join(results_path, run_name)
+        options_path = join(run_path, 'options.json')
+        options = load_options(options_path)
+        generator = get_data_generator(options, datasets_path)
+        active_inds = generator.dataset.active_inds
+        model = load_model(
+            run_path, options, generator.dataset, use_best=True)
+
+        models.append(model)
+        active_inds_list.append(active_inds)
+
+    return Ensemble(models, active_inds_list, input_shape, nb_labels)
 
 
 def make_model(options, dataset):
@@ -28,6 +65,8 @@ def make_model(options, dataset):
             weight_decay=options.weight_decay,
             down_blocks=options.down_blocks,
             up_blocks=options.up_blocks)
+    elif model_type == ENSEMBLE:
+        model = make_ensemble(options, input_shape, nb_labels)
     else:
         raise ValueError('{} is not a valid model_type'.format(model_type))
 

@@ -1,0 +1,64 @@
+from os.path import join
+
+import numpy as np
+
+import tensorflow as tf
+from keras.models import Model
+from keras.layers import (
+    Input, Convolution2D, Activation, Reshape)
+
+ENSEMBLE = 'ensemble'
+
+
+class Ensemble(Model):
+    """Combines several saved models into an ensemble."""
+
+    def __init__(self, models, active_inds_list, input_shape, nb_labels):
+        # See https://github.com/fchollet/keras/issues/2397
+        self.graph = tf.get_default_graph()
+        self.models = models
+        self.active_inds_list = active_inds_list
+
+        nb_channels = len(models) * nb_labels
+        input_shape = (input_shape[0], input_shape[1], nb_channels)
+        nb_labels = nb_labels
+
+        nb_rows, nb_cols, _ = input_shape
+        input_tensor = Input(shape=input_shape)
+
+        x = Convolution2D(
+            nb_labels, 1, 1, name='conv_labels')(input_tensor)
+
+        x = Reshape((nb_rows * nb_cols, nb_labels))(x)
+        x = Activation('softmax')(x)
+        x = Reshape((nb_rows, nb_cols, nb_labels))(x)
+
+        super().__init__(input=input_tensor, output=x)
+
+    def make_ensemble_batch(self, batch_x):
+        # See https://github.com/fchollet/keras/issues/2397
+        with self.graph.as_default():
+            ensemble_batch_x = []
+            for model, active_inds in zip(self.models, self.active_inds_list):
+                ensemble_batch_x.append(model.predict(
+                    batch_x[:, :, :, active_inds]))
+            ensemble_batch_x = np.concatenate(ensemble_batch_x, axis=3)
+            return ensemble_batch_x
+
+    def fit_generator(self, train_gen, **kwargs):
+        validation_gen = kwargs['validation_data']
+
+        def make_ensemble_gen(gen):
+            for batch_x, batch_y in gen:
+                ensemble_batch_x = self.make_ensemble_batch(batch_x)
+                yield ensemble_batch_x, batch_y
+
+        train_gen = make_ensemble_gen(train_gen)
+        validation_gen = make_ensemble_gen(validation_gen)
+
+        kwargs['validation_data'] = validation_gen
+        return super().fit_generator(train_gen, **kwargs)
+
+    def predict(self, batch_x):
+        ensemble_batch_x = self.make_ensemble_batch(batch_x)
+        return super().predict(ensemble_batch_x)

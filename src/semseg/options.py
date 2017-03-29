@@ -3,6 +3,7 @@ import json
 from .models.conv_logistic import CONV_LOGISTIC
 from .models.fcn_resnet import FCN_RESNET
 from .models.fc_densenet import FC_DENSENET
+from .models.ensemble import ENSEMBLE
 from .data.potsdam import POTSDAM, PotsdamDataset
 from .data.vaihingen import VAIHINGEN
 
@@ -72,6 +73,11 @@ class RunOptions():
                 raise ValueError(
                     'If freeze_base == True, then use_pretraining must be True'
                 )
+        elif self.model_type == ENSEMBLE:
+            # Names of the runs that should be combined together into an
+            # ensemble. The outputs of each model will be concatenated
+            # together and used as the input to this model.
+            self.ensemble_run_names = options['ensemble_run_names']
 
         # dataset dependent options
         if (self.dataset_name == POTSDAM and 'sharah_train_ratio' in options
