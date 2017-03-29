@@ -4,6 +4,7 @@ from .models.conv_logistic import CONV_LOGISTIC
 from .models.fcn_resnet import FCN_RESNET
 from .models.fc_densenet import FC_DENSENET
 from .data.potsdam import POTSDAM, PotsdamDataset
+from .data.vaihingen import VAIHINGEN
 
 
 class RunOptions():
@@ -48,15 +49,25 @@ class RunOptions():
         # model_type dependent options
         if self.model_type == CONV_LOGISTIC:
             self.kernel_size = options['kernel_size']
-        elif self.model_type == FCN_RESNET:
-            self.drop_prob = options['drop_prob']
-            self.is_big_model = options['is_big_model']
         elif self.model_type == FC_DENSENET:
             self.growth_rate = options['growth_rate']
             self.drop_prob = options['drop_prob']
             self.weight_decay = options['weight_decay']
             self.down_blocks = options['down_blocks']
             self.up_blocks = options['up_blocks']
+        elif self.model_type == FCN_RESNET:
+            self.use_pretraining = options['use_pretraining']
+            self.freeze_base = options['freeze_base']
+
+            not_three_channels = (
+                self.include_ir or self.include_depth or self.include_ndvi)
+            if self.use_pretraining and not_three_channels:
+                raise ValueError(
+                    'Can only use pretraining with 3 input channels')
+            if self.freeze_base and not self.use_pretraining:
+                raise ValueError(
+                    'If freeze_base == True, then use_pretraining must be True'
+                )
 
         # dataset dependent options
         if (self.dataset_name == POTSDAM and 'sharah_train_ratio' in options

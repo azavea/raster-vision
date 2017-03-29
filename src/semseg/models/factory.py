@@ -17,8 +17,9 @@ def make_model(options, dataset):
         model = make_conv_logistic(input_shape, nb_labels,
                                    options.kernel_size)
     elif model_type == FCN_RESNET:
-        model = make_fcn_resnet(input_shape, nb_labels,
-                                options.drop_prob, options.is_big_model)
+        model = make_fcn_resnet(
+            input_shape, nb_labels, options.use_pretraining,
+            options.freeze_base)
     elif model_type == UNET:
         model = make_unet(input_shape, nb_labels)
     elif model_type == FC_DENSENET:

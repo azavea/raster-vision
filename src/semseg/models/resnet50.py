@@ -1,3 +1,4 @@
+# flake8: noqa
 # -*- coding: utf-8 -*-
 """ResNet50 model for Keras.
 # Reference:
@@ -9,16 +10,16 @@ from __future__ import absolute_import
 
 import warnings
 
-from ..layers import merge, Input
-from ..layers import Dense, Activation, Flatten
-from ..layers import Convolution2D, MaxPooling2D, ZeroPadding2D, AveragePooling2D
-from ..layers import BatchNormalization
-from ..models import Model
-from .. import backend as K
-from ..engine.topology import get_source_inputs
-from ..utils.layer_utils import convert_all_kernels_in_model
-from ..utils.data_utils import get_file
-from .imagenet_utils import decode_predictions, preprocess_input, _obtain_input_shape
+from keras.layers import merge, Input
+from keras.layers import Dense, Activation, Flatten
+from keras.layers import Convolution2D, MaxPooling2D, ZeroPadding2D, AveragePooling2D
+from keras.layers import BatchNormalization
+from keras.models import Model
+from keras import backend as K
+from keras.engine.topology import get_source_inputs
+from keras.utils.layer_utils import convert_all_kernels_in_model
+from keras.utils.data_utils import get_file
+from keras.applications.imagenet_utils import decode_predictions, preprocess_input, _obtain_input_shape
 
 
 TH_WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_th_dim_ordering_th_kernels.h5'
@@ -43,6 +44,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
         bn_axis = 1
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
+    act_name = 'act' + str(stage) + block
 
     x = Convolution2D(nb_filter1, 1, 1, name=conv_name_base + '2a')(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
@@ -57,7 +59,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
     x = merge([x, input_tensor], mode='sum')
-    x = Activation('relu')(x)
+    x = Activation('relu', name=act_name)(x)
     return x
 
 
@@ -79,6 +81,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
         bn_axis = 1
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
+    act_name = 'act' + str(stage) + block
 
     x = Convolution2D(nb_filter1, 1, 1, subsample=strides,
                       name=conv_name_base + '2a')(input_tensor)
@@ -98,7 +101,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
 
     x = merge([x, shortcut], mode='sum')
-    x = Activation('relu')(x)
+    x = Activation('relu', name=act_name)(x)
     return x
 
 

@@ -10,29 +10,34 @@ from keras.layers import (Input,
                           merge)
 import tensorflow as tf
 
-from .resnet import ResNet
+from .resnet50 import ResNet50
+
 
 FCN_RESNET = 'fcn_resnet'
 
 
-def make_fcn_resnet(input_shape, nb_labels, drop_prob, is_big_model):
-    input_shape = tuple(input_shape)
+def make_fcn_resnet(input_shape, nb_labels, use_pretraining, freeze_base):
     nb_rows, nb_cols, _ = input_shape
-
     input_tensor = Input(shape=input_shape)
-    model = ResNet(input_tensor=input_tensor, drop_prob=drop_prob,
-                   is_big_model=is_big_model)
+    weights = 'imagenet' if use_pretraining else None
 
-    def resize_bilinear(images):
-        return tf.image.resize_bilinear(images, [nb_rows, nb_cols])
+    model = ResNet50(
+        include_top=False, weights=weights, input_tensor=input_tensor)
 
-    x32 = model.get_layer('output3').output
-    x16 = model.get_layer('output4').output
-    x8 = model.get_layer('output5').output
+    if freeze_base:
+        for layer in model.layers:
+            layer.trainable = False
+
+    x32 = model.get_layer('act3d').output
+    x16 = model.get_layer('act4f').output
+    x8 = model.get_layer('act5c').output
 
     c32 = Convolution2D(nb_labels, 1, 1, name='conv_labels_32')(x32)
     c16 = Convolution2D(nb_labels, 1, 1, name='conv_labels_16')(x16)
     c8 = Convolution2D(nb_labels, 1, 1, name='conv_labels_8')(x8)
+
+    def resize_bilinear(images):
+        return tf.image.resize_bilinear(images, [nb_rows, nb_cols])
 
     r32 = Lambda(resize_bilinear, name='resize_labels_32')(c32)
     r16 = Lambda(resize_bilinear, name='resize_labels_16')(c16)
