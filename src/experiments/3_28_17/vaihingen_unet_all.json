@@ -1,0 +1,20 @@
+{
+    "batch_size": 8,
+    "patience": 10,
+    "git_commit": "dcda93",
+    "dataset_name": "vaihingen",
+    "train_ratio": 0.8,
+    "generator_name": "numpy",
+    "include_depth": true,
+    "include_ir": true,
+    "include_ndvi": true,
+    "optimizer": "adam",
+    "init_lr": 1e-3,
+    "target_size": [256, 256],
+    "eval_target_size": null,
+    "model_type": "unet",
+    "nb_epoch": 100,
+    "nb_val_samples": 512,
+    "run_name": "3_28_17/vaihingen_unet_all",
+    "samples_per_epoch": 4096
+}
