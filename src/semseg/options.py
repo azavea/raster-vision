@@ -15,33 +15,28 @@ class RunOptions():
         if 'train_stages' in options:
             train_stages = options['train_stages']
             options.update(train_stages[0])
-            self.train_stages = train_stages
+        self.train_stages = options.get('train_stages')
+
         # Required options
         self.model_type = options['model_type']
         self.run_name = options['run_name']
         self.dataset_name = options['dataset_name']
         self.generator_name = options['generator_name']
-        self.include_ir = options['include_ir']
-        self.include_depth = options['include_depth']
-        self.include_ndvi = options['include_ndvi']
-        # Size of the imgs used as input to the network
-        # [nb_rows, nb_cols]
-        self.target_size = options['target_size']
-        # Size of the imgs evaluated at each iteration in validation_eval.
-        # This should evenly divide the size of the original image.
-        # None means to use the size of the original image.
-        self.eval_target_size = options['eval_target_size']
-
         self.batch_size = options['batch_size']
         self.nb_epoch = options['nb_epoch']
         self.samples_per_epoch = options['samples_per_epoch']
         self.nb_val_samples = options['nb_val_samples']
-        self.optimizer = options['optimizer']
-        self.init_lr = options['init_lr']
-
-        self.git_commit = options['git_commit']
 
         # Optional options
+        self.git_commit = options.get('git_commit')
+        self.include_ir = options.get('include_ir', False)
+        self.include_depth = options.get('include_depth', False)
+        self.include_ndvi = options.get('include_ndvi', False)
+        # Size of the imgs used as input to the network
+        # [nb_rows, nb_cols]
+        self.target_size = options.get('target_size', (256, 256))
+        self.optimizer = options.get('optimizer', 'adam')
+        self.init_lr = options.get('init_lr', 1e-3)
         self.patience = options.get('patience')
         self.lr_schedule = options.get('lr_schedule')
         # Controls how many samples to use in the final evaluation.
@@ -49,9 +44,7 @@ class RunOptions():
         # the code, since it will save time.
         self.nb_eval_samples = options.get('nb_eval_samples')
 
-        # TODO make all options optional and have datasets and models
-        # check for options that they require
-        # model_type dependent options
+        # Model type dependent options
         if self.model_type == CONV_LOGISTIC:
             self.kernel_size = options['kernel_size']
         elif self.model_type == FC_DENSENET:
@@ -63,7 +56,6 @@ class RunOptions():
         elif self.model_type == FCN_RESNET:
             self.use_pretraining = options['use_pretraining']
             self.freeze_base = options['freeze_base']
-
             not_three_channels = (
                 self.include_ir or self.include_depth or self.include_ndvi)
             if self.use_pretraining and not_three_channels:
@@ -79,12 +71,21 @@ class RunOptions():
             # together and used as the input to this model.
             self.ensemble_run_names = options['ensemble_run_names']
 
-        # dataset dependent options
+        # Dataset dependent options
         if (self.dataset_name == POTSDAM and 'sharah_train_ratio' in options
                 and options['sharah_train_ratio']):
             self.train_ratio = PotsdamDataset.sharah_train_ratio
         else:
             self.train_ratio = options['train_ratio']
+
+        default_eval_target_size = (2000, 2000) \
+            if self.dataset_name == POTSDAM else None
+
+        # Size of the imgs evaluated at each iteration in validation_eval.
+        # This should evenly divide the size of the original image.
+        # None means to use the size of the original image.
+        self.eval_target_size = options.get(
+            'eval_target_size', default_eval_target_size)
 
 
 def load_options(file_path):
