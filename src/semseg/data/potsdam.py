@@ -20,33 +20,35 @@ class PotsdamDataset(IsprsDataset):
         self.include_ir = include_ir
         self.include_depth = include_depth
         self.include_ndvi = include_ndvi
-        self.setup_channels()
-        super().__init__()
+        self.nb_channels = 3 + include_ir + include_depth + include_ndvi
 
-    def setup_channels(self):
         self.red_ind = 0
         self.green_ind = 1
         self.blue_ind = 2
-        self.rgb_input_inds = [self.red_ind, self.green_ind, self.blue_ind]
+        self.rgb_inds = [self.red_ind, self.green_ind, self.blue_ind]
 
-        curr_ind = 2
+        self.ir_ind = 3
+        self.depth_ind = 4
+        self.ndvi_ind = 5
 
-        if self.include_ir:
-            curr_ind += 1
-            self.ir_ind = curr_ind
+        self.active_inds = list(self.rgb_inds)
+        if include_ir:
+            self.active_inds.append(self.ir_ind)
+        if include_depth:
+            self.active_inds.append(self.depth_ind)
+        if include_ndvi:
+            self.active_inds.append(self.ndvi_ind)
 
-        if self.include_depth:
-            curr_ind += 1
-            self.depth_ind = curr_ind
-
-        if self.include_ndvi:
-            curr_ind += 1
-            self.ndvi_ind = curr_ind
-
-        self.nb_channels = curr_ind + 1
+        super().__init__()
 
     def get_output_file_name(self, file_ind):
         return 'top_potsdam_{}_{}_label.tif'.format(file_ind[0], file_ind[1])
+
+    def augment_channels(self, batch_x):
+        red = batch_x[:, :, :, [self.red_ind]]
+        ir = batch_x[:, :, :, [self.ir_ind]]
+        ndvi = compute_ndvi(red, ir)
+        return np.concatenate([batch_x, ndvi], axis=3)
 
 
 class PotsdamFileGenerator(FileGenerator):
@@ -141,22 +143,7 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
         return img
 
     def parse_batch(self, batch, has_y=True):
-        rgb = batch[:, :, :, 0:3]
-        ir = batch[:, :, :, 3:4]
-        depth = batch[:, :, :, 4:5]
-
-        input_channels = [rgb]
-        if self.dataset.include_ir:
-            input_channels.append(ir)
-        if self.dataset.include_depth:
-            input_channels.append(depth)
-        if self.dataset.include_ndvi:
-            red = rgb[:, :, :, 0:1]
-            ndvi = compute_ndvi(red, ir)
-            input_channels.append(ndvi)
-
-        batch_x = np.concatenate(input_channels, axis=3)
-
+        batch_x = batch[:, :, :, 0:5]
         batch_y = None
         batch_y_mask = None
         if has_y:
@@ -238,21 +225,7 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
         return img
 
     def parse_batch(self, batch, has_y=True):
-        rgb = batch[:, :, :, 0:3]
-        ir = batch[:, :, :, 3:4]
-        depth = batch[:, :, :, 4:5]
-
-        input_channels = [rgb]
-        if self.dataset.include_ir:
-            input_channels.append(ir)
-        if self.dataset.include_depth:
-            input_channels.append(depth)
-        if self.dataset.include_ndvi:
-            red = rgb[:, :, :, 0:1]
-            ndvi = compute_ndvi(red, ir)
-            input_channels.append(ndvi)
-
-        batch_x = np.concatenate(input_channels, axis=3)
+        batch_x = batch[:, :, :, 0:5]
         batch_y = None
         batch_y_mask = None
         if has_y:

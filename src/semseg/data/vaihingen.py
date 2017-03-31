@@ -15,32 +15,36 @@ PROCESSED_VAIHINGEN = 'processed_vaihingen'
 class VaihingenDataset(IsprsDataset):
     def __init__(self, include_depth=False, include_ndvi=False):
         self.include_ir = True
+
         self.include_depth = include_depth
         self.include_ndvi = include_ndvi
-        self.setup_channels()
-        super().__init__()
+        self.nb_channels = 3 + include_depth + include_ndvi
 
-    def setup_channels(self):
         self.ir_ind = 0
         self.red_ind = 1
         self.green_ind = 2
-        self.irrg_input_inds = [self.ir_ind, self.red_ind, self.green_ind]
-        self.rgb_input_inds = self.irrg_input_inds
+        self.blue_ind = 2
+        self.rgb_inds = [self.ir_ind, self.red_ind, self.green_ind]
 
-        curr_ind = 2
+        self.depth_ind = 3
+        self.ndvi_ind = 4
 
-        if self.include_depth:
-            curr_ind += 1
-            self.depth_ind = curr_ind
+        self.active_inds = list(self.rgb_inds)
+        if include_depth:
+            self.active_inds.append(self.depth_ind)
+        if include_ndvi:
+            self.active_inds.append(self.ndvi_ind)
 
-        if self.include_ndvi:
-            curr_ind += 1
-            self.ndvi_ind = curr_ind
-
-        self.nb_channels = curr_ind + 1
+        super().__init__()
 
     def get_output_file_name(self, file_ind):
         return 'top_mosaic_09cm_area{}.tif'.format(file_ind)
+
+    def augment_channels(self, batch_x):
+        red = batch_x[:, :, :, [self.red_ind]]
+        ir = batch_x[:, :, :, [self.ir_ind]]
+        ndvi = compute_ndvi(red, ir)
+        return np.concatenate([batch_x, ndvi], axis=3)
 
 
 class VaihingenFileGenerator(FileGenerator):
@@ -111,20 +115,7 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
         return img
 
     def parse_batch(self, batch, has_y=True):
-        irrg = batch[:, :, :, 0:3]
-        depth = batch[:, :, :, 3:4]
-
-        input_channels = [irrg]
-        if self.dataset.include_depth:
-            input_channels.append(depth)
-        if self.dataset.include_ndvi:
-            ir = irrg[:, :, :, 0:1]
-            red = irrg[:, :, :, 1:2]
-            ndvi = compute_ndvi(red, ir)
-            input_channels.append(ndvi)
-
-        batch_x = np.concatenate(input_channels, axis=3)
-
+        batch_x = batch[:, :, :, 0:4]
         batch_y = None
         batch_y_mask = None
         if has_y:
@@ -203,19 +194,7 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
         return img
 
     def parse_batch(self, batch, has_y=True):
-        irrg = batch[:, :, :, 0:3]
-        depth = batch[:, :, :, 3:4]
-
-        input_channels = [irrg]
-        if self.dataset.include_depth:
-            input_channels.append(depth)
-        if self.dataset.include_ndvi:
-            ir = irrg[:, :, :, 0:1]
-            red = irrg[:, :, :, 1:2]
-            ndvi = compute_ndvi(red, ir)
-            input_channels.append(ndvi)
-
-        batch_x = np.concatenate(input_channels, axis=3)
+        batch_x = batch[:, :, :, 0:4]
         batch_y = None
         batch_y_mask = None
         if has_y:

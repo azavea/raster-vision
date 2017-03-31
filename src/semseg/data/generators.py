@@ -58,9 +58,9 @@ class FileGenerator(Generator):
         print('Computing dataset stats...')
         gen = self.make_split_generator(
             TRAIN, target_size=(10, 10), batch_size=100, shuffle=True,
-            augment=False, normalize=False)
-        batch_x, _ = next(gen)
-        self.normalize_params = get_channel_stats(batch_x)
+            augment=False, normalize=False, eval_mode=True)
+        _, _, all_batch_x, _, _ = next(gen)
+        self.normalize_params = get_channel_stats(all_batch_x)
         print('Done.')
 
     def get_file_inds(self, split):
@@ -160,29 +160,6 @@ class FileGenerator(Generator):
             batch_x = np.squeeze(batch_x, 0)
         return batch_x
 
-    def transform_batch(self, batch, augment=False, normalize=False,
-                        has_y=True):
-        batch = batch.astype(np.float32)
-
-        if augment:
-            nb_rotations = np.random.randint(0, 4)
-
-            batch = np.transpose(batch, [1, 2, 3, 0])
-            batch = np.rot90(batch, nb_rotations)
-            batch = np.transpose(batch, [3, 0, 1, 2])
-
-            if np.random.uniform() > 0.5:
-                batch = np.flip(batch, axis=1)
-            if np.random.uniform() > 0.5:
-                batch = np.flip(batch, axis=2)
-
-        batch_x, batch_y, batch_y_mask = self.parse_batch(batch, has_y)
-
-        if normalize:
-            batch_x = self.normalize(batch_x)
-
-        return batch_x, batch_y, batch_y_mask
-
     def make_split_generator(self, split, target_size=None,
                              batch_size=32, shuffle=False, augment=False,
                              normalize=False, eval_mode=False):
@@ -194,12 +171,31 @@ class FileGenerator(Generator):
 
         def transform(x):
             batch, batch_file_inds = x
-            batch_x, batch_y, batch_y_mask = self.transform_batch(
-                batch, augment=augment, normalize=normalize,
-                has_y=has_y)
+            batch = batch.astype(np.float32)
+
+            if augment:
+                nb_rotations = np.random.randint(0, 4)
+
+                batch = np.transpose(batch, [1, 2, 3, 0])
+                batch = np.rot90(batch, nb_rotations)
+                batch = np.transpose(batch, [3, 0, 1, 2])
+
+                if np.random.uniform() > 0.5:
+                    batch = np.flip(batch, axis=1)
+                if np.random.uniform() > 0.5:
+                    batch = np.flip(batch, axis=2)
+
+            all_batch_x, batch_y, batch_y_mask = self.parse_batch(batch, has_y)
+            all_batch_x = self.dataset.augment_channels(all_batch_x)
+
+            if normalize:
+                all_batch_x = self.normalize(all_batch_x)
+
+            batch_x = all_batch_x[:, :, :, self.dataset.active_inds]
 
             if eval_mode:
-                return batch_x, batch_y, batch_y_mask, batch_file_inds
+                return (batch_x, batch_y, all_batch_x, batch_y_mask,
+                        batch_file_inds)
             return batch_x, batch_y
 
         gen = map(transform, gen)

@@ -169,7 +169,7 @@ def plot_sample(file_path, batch_x, batch_y, generator):
 
     plot_row = 0
     plot_col = 0
-    im = batch_x[:, :, dataset.rgb_input_inds]
+    im = batch_x[:, :, dataset.rgb_inds]
     plot_img(plot_row, plot_col, im, is_rgb=True)
 
     for channel_ind in range(nb_input_inds):

@@ -69,12 +69,12 @@ def plot_generator(dataset_name, generator_name, split):
         augment=True, normalize=True, eval_mode=True)
 
     for batch_ind in range(nb_batches):
-        batch_x, batch_y, _, _ = next(gen)
+        _, batch_y, all_batch_x, _, _ = next(gen)
         for sample_ind in range(batch_size):
             file_path = join(
                 viz_path, '{}_{}.pdf'.format(batch_ind, sample_ind))
             plot_sample(
-                file_path, batch_x[sample_ind, :, :, :],
+                file_path, all_batch_x[sample_ind, :, :, :],
                 batch_y[sample_ind, :, :, :], generator)
 
 

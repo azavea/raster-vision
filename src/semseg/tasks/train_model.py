@@ -17,7 +17,7 @@ def train_model(run_path, model, sync_results, options, generator):
     """Train a model according to options using generator.
 
     This saves results after each epoch and attempts to resume training
-    at the last saved point.
+    from the last saved point.
 
     # Arguments
         run_path: the path to the files for a run

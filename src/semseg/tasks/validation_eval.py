@@ -95,8 +95,8 @@ def make_legend(label_keys, label_names):
                bbox_to_anchor=(1, 1), fontsize=4)
 
 
-def plot_prediction(dataset, predictions_path, sample_index, display_batch_x,
-                    display_batch_y, display_predictions, is_debug=False):
+def plot_prediction(dataset, predictions_path, sample_index, display_all_x,
+                    display_y, display_pred, is_debug=False):
     fig = plt.figure()
 
     nb_subplot_cols = 3
@@ -118,31 +118,31 @@ def plot_prediction(dataset, predictions_path, sample_index, display_batch_x,
             a.set_title(title, fontsize=6)
 
     subplot_index = 0
-    rgb_input_im = display_batch_x[:, :, dataset.rgb_input_inds]
+    rgb_input_im = display_all_x[:, :, dataset.rgb_inds]
     plot_img(subplot_index, rgb_input_im, 'RGB', is_rgb=True)
 
     if is_debug:
         if dataset.include_ir:
             subplot_index += 1
-            ir_im = display_batch_x[:, :, dataset.ir_ind]
+            ir_im = display_all_x[:, :, dataset.ir_ind]
             plot_img(subplot_index, ir_im, 'IR')
 
         if dataset.include_depth:
             subplot_index += 1
-            depth_im = display_batch_x[:, :, dataset.depth_ind]
+            depth_im = display_all_x[:, :, dataset.depth_ind]
             plot_img(subplot_index, depth_im, 'Depth')
 
         if dataset.include_ndvi:
             subplot_index += 1
-            ndvi_im = display_batch_x[:, :, dataset.ndvi_ind]
+            ndvi_im = display_all_x[:, :, dataset.ndvi_ind]
             ndvi_im = (np.clip(ndvi_im, -1, 1) + 1) * 100
             plot_img(subplot_index, ndvi_im, 'NDVI')
 
     subplot_index += 1
-    plot_img(subplot_index, display_batch_y[:, :, :], 'Ground Truth',
+    plot_img(subplot_index, display_y, 'Ground Truth',
              is_rgb=True)
     subplot_index += 1
-    plot_img(subplot_index, display_predictions[:, :, :], 'Prediction',
+    plot_img(subplot_index, display_pred, 'Prediction',
              is_rgb=True)
 
     make_legend(dataset.label_keys, dataset.label_names)
@@ -187,33 +187,34 @@ def validation_eval(run_path, model, options, generator):
     predictions_path = join(run_path, 'validation_predictions')
     _makedirs(predictions_path)
 
-    for sample_index, (batch_x, batch_y, batch_y_mask, file_ind) in \
-            enumerate(validation_gen):
+    for sample_index, (batch_x, batch_y, all_batch_x, batch_y_mask, file_ind) \
+            in enumerate(validation_gen):
         file_ind = file_ind[0]
         print('Processing {}'.format(file_ind))
 
-        batch_x = np.squeeze(batch_x, axis=0)
-        batch_y = np.squeeze(batch_y, axis=0)
-        batch_y_mask = np.squeeze(batch_y_mask, axis=0)
+        x = np.squeeze(batch_x, axis=0)
+        all_x = np.squeeze(all_batch_x, axis=0)
+        y = np.squeeze(batch_y, axis=0)
+        y_mask = np.squeeze(batch_y_mask, axis=0)
 
-        display_batch_x = generator.unnormalize(batch_x)
-        display_batch_y = dataset.one_hot_to_rgb_batch(batch_y)
-        display_predictions = make_prediction_img(
-            batch_x, options.target_size[0],
+        display_all_x = generator.unnormalize(all_x)
+        display_y = dataset.one_hot_to_rgb_batch(y)
+        display_pred = make_prediction_img(
+            x, options.target_size[0],
             lambda x: dataset.one_hot_to_rgb_batch(predict_img(x, model)))
 
-        label_batch_y = dataset.one_hot_to_label_batch(batch_y)
-        label_predictions = dataset.rgb_to_label_batch(display_predictions)
+        label_y = dataset.one_hot_to_label_batch(y)
+        label_pred = dataset.rgb_to_label_batch(display_pred)
 
         plot_prediction(
-            dataset, predictions_path, sample_index, display_batch_x,
-            display_batch_y, display_predictions)
+            dataset, predictions_path, sample_index, display_all_x,
+            display_y, display_pred)
         plot_prediction(
-            dataset, predictions_path, sample_index, display_batch_x,
-            display_batch_y, display_predictions, is_debug=True)
+            dataset, predictions_path, sample_index, display_all_x,
+            display_y, display_pred, is_debug=True)
 
         confusion_mat += compute_confusion_mat(
-            label_batch_y, batch_y_mask, label_predictions, dataset.nb_labels)
+            label_y, y_mask, label_pred, dataset.nb_labels)
 
         if (options.nb_eval_samples is not None and
                 sample_index == options.nb_eval_samples - 1):
