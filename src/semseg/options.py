@@ -11,6 +11,10 @@ class RunOptions():
     """Represents the options used to control an experimental run."""
 
     def __init__(self, options):
+        if 'train_stages' in options:
+            train_stages = options['train_stages']
+            options.update(train_stages[0])
+            self.train_stages = train_stages
         # Required options
         self.model_type = options['model_type']
         self.run_name = options['run_name']

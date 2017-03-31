@@ -81,6 +81,19 @@ def run_tasks():
             model = get_model(
                 run_path, options, generator.dataset, use_best=False)
             train_model(run_path, model, sync_results, options, generator)
+
+            if options.train_stages:
+                for stage in options.train_stages[1:]:
+                    for key, value in stage.items():
+                        if key == 'nb_epoch':
+                            options.nb_epoch += value
+                        else:
+                            setattr(options, key, value)
+
+                    model = get_model(
+                        run_path, options, generator.dataset, use_best=False)
+                    train_model(
+                        run_path, model, sync_results, options, generator)
         elif task == PLOT_CURVES:
             plot_curves(run_path)
             sync_results()
