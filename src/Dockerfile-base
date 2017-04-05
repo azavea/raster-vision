@@ -1,5 +1,5 @@
 # Based on https://github.com/fchollet/keras/blob/2b51317be82d4420169d2cc79dc4443028417911/docker/Dockerfile
-FROM nvidia/cuda:7.5-cudnn5-devel
+FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu14.04
 
 ENV CONDA_DIR /opt/conda
 ENV PATH $CONDA_DIR/bin:$PATH
