@@ -29,11 +29,11 @@ class VaihingenDataset(IsprsDataset):
         self.depth_ind = 3
         self.ndvi_ind = 4
 
-        self.active_inds = list(self.rgb_inds)
+        self.active_input_inds = list(self.rgb_inds)
         if include_depth:
-            self.active_inds.append(self.depth_ind)
+            self.active_input_inds.append(self.depth_ind)
         if include_ndvi:
-            self.active_inds.append(self.ndvi_ind)
+            self.active_input_inds.append(self.ndvi_ind)
 
         super().__init__()
 

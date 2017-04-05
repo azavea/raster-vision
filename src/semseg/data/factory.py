@@ -14,14 +14,10 @@ def get_data_generator(options, datasets_path):
     if options.dataset_name == POTSDAM:
         if options.generator_name == NUMPY:
             return PotsdamNumpyFileGenerator(
-                datasets_path, options.include_ir,
-                options.include_depth, options.include_ndvi,
-                options.train_ratio)
+                datasets_path, options.active_input_inds, options.train_ratio)
         elif options.generator_name == IMAGE:
             return PotsdamImageFileGenerator(
-                datasets_path, options.include_ir,
-                options.include_depth, options.include_ndvi,
-                options.train_ratio)
+                datasets_path, options.active_input_inds, options.train_ratio)
         else:
             raise ValueError('{} is not a valid generator'.format(
                 options.generator_name))

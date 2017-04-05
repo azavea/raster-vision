@@ -23,7 +23,7 @@ def make_ensemble(options, input_shape, nb_labels):
     from ..data.factory import get_data_generator
 
     models = []
-    active_inds_list = []
+    active_input_inds_list = []
 
     for run_name in options.ensemble_run_names:
         s3_download(run_name, 'options.json')
@@ -33,22 +33,23 @@ def make_ensemble(options, input_shape, nb_labels):
         options_path = join(run_path, 'options.json')
         options = load_options(options_path)
         generator = get_data_generator(options, datasets_path)
-        active_inds = generator.dataset.active_inds
+        active_input_inds = generator.dataset.active_input_inds
         model = load_model(
             run_path, options, generator.dataset, use_best=True)
 
         models.append(model)
-        active_inds_list.append(active_inds)
+        active_input_inds_list.append(active_input_inds)
 
-    return Ensemble(models, active_inds_list, input_shape, nb_labels)
+    return Ensemble(models, active_input_inds_list, input_shape, nb_labels)
 
 
-def make_model(options, dataset):
+def make_model(options, generator):
     """Make a new model."""
     model_type = options.model_type
     input_shape = (
-        options.target_size[0], options.target_size[1], dataset.nb_channels)
-    nb_labels = dataset.nb_labels
+        options.target_size[0], options.target_size[1],
+        len(generator.active_input_inds))
+    nb_labels = generator.dataset.nb_labels
 
     if model_type == CONV_LOGISTIC:
         model = make_conv_logistic(input_shape, nb_labels,
@@ -73,12 +74,12 @@ def make_model(options, dataset):
     return model
 
 
-def load_model(run_path, options, dataset, use_best=True):
+def load_model(run_path, options, generator, use_best=True):
     """Load an existing model."""
     # Load the model by weights. This permits loading weights from a saved
     # model into a model with a different architecture assuming the named
     # layers have compatible dimensions.
-    model = make_model(options, dataset)
+    model = make_model(options, generator)
     file_name = 'best_model.h5' if use_best else 'model.h5'
     model_path = join(run_path, file_name)
     # TODO raise exception if model_path doesn't exist
@@ -86,16 +87,16 @@ def load_model(run_path, options, dataset, use_best=True):
     return model
 
 
-def get_model(run_path, options, dataset, use_best=True):
+def get_model(run_path, options, generator, use_best=True):
     """Get a model by loading if it exists or making a new one."""
     model_path = join(run_path, 'model.h5')
 
     # Load the model if it's saved, or create a new one.
     if isfile(model_path):
-        model = load_model(run_path, options, dataset, use_best)
+        model = load_model(run_path, options, generator, use_best)
         print('Continuing training from saved model.')
     else:
-        model = make_model(options, dataset)
+        model = make_model(options, generator)
         print('Creating new model.')
 
     return model

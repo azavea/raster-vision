@@ -15,13 +15,7 @@ PROCESSED_POTSDAM = 'processed_potsdam'
 class PotsdamDataset(IsprsDataset):
     sharah_train_ratio = 17 / 24
 
-    def __init__(self, include_ir=False, include_depth=False,
-                 include_ndvi=False):
-        self.include_ir = include_ir
-        self.include_depth = include_depth
-        self.include_ndvi = include_ndvi
-        self.nb_channels = 3 + include_ir + include_depth + include_ndvi
-
+    def __init__(self):
         self.red_ind = 0
         self.green_ind = 1
         self.blue_ind = 2
@@ -30,14 +24,6 @@ class PotsdamDataset(IsprsDataset):
         self.ir_ind = 3
         self.depth_ind = 4
         self.ndvi_ind = 5
-
-        self.active_inds = list(self.rgb_inds)
-        if include_ir:
-            self.active_inds.append(self.ir_ind)
-        if include_depth:
-            self.active_inds.append(self.depth_ind)
-        if include_ndvi:
-            self.active_inds.append(self.ndvi_ind)
 
         super().__init__()
 
@@ -56,9 +42,8 @@ class PotsdamFileGenerator(FileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     files on disk.
     """
-    def __init__(self, include_ir, include_depth, include_ndvi,
-                 train_ratio):
-        self.dataset = PotsdamDataset(include_ir, include_depth, include_ndvi)
+    def __init__(self, active_input_inds, train_ratio):
+        self.dataset = PotsdamDataset()
         self.train_ratio = train_ratio
 
         # The first 17 indices correspond to the training set,
@@ -76,7 +61,7 @@ class PotsdamFileGenerator(FileGenerator):
             (5, 13), (5, 14), (5, 15), (6, 13), (6, 14), (6, 15), (7, 13)
         ]
 
-        super().__init__()
+        super().__init__(active_input_inds)
 
 
 class PotsdamImageFileGenerator(PotsdamFileGenerator):
@@ -84,10 +69,9 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     the original TIFF and JPG files.
     """
-    def __init__(self, datasets_path, include_ir=False, include_depth=False,
-                 include_ndvi=False, train_ratio=0.8):
+    def __init__(self, datasets_path, active_input_inds, train_ratio=0.8):
         self.dataset_path = join(datasets_path, POTSDAM)
-        super().__init__(include_ir, include_depth, include_ndvi, train_ratio)
+        super().__init__(active_input_inds, train_ratio)
 
     @staticmethod
     def preprocess(datasets_path):
@@ -157,11 +141,10 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     numpy array files. This is about 20x faster than reading the raw files.
     """
-    def __init__(self, datasets_path, include_ir=False, include_depth=False,
-                 include_ndvi=False, train_ratio=0.8):
+    def __init__(self, datasets_path, active_input_inds, train_ratio=0.8):
         self.raw_dataset_path = join(datasets_path, POTSDAM)
         self.dataset_path = join(datasets_path, PROCESSED_POTSDAM)
-        super().__init__(include_ir, include_depth, include_ndvi, train_ratio)
+        super().__init__(active_input_inds, train_ratio)
 
     @staticmethod
     def preprocess(datasets_path):

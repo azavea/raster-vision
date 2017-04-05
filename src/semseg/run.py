@@ -79,7 +79,7 @@ def run_tasks():
             setup_run(run_path, options, sync_results)
         elif task == TRAIN_MODEL:
             model = get_model(
-                run_path, options, generator.dataset, use_best=False)
+                run_path, options, generator, use_best=False)
             train_model(run_path, model, sync_results, options, generator)
 
             if options.train_stages:
@@ -91,7 +91,7 @@ def run_tasks():
                             setattr(options, key, value)
 
                     model = get_model(
-                        run_path, options, generator.dataset, use_best=False)
+                        run_path, options, generator, use_best=False)
                     train_model(
                         run_path, model, sync_results, options, generator)
         elif task == PLOT_CURVES:
@@ -99,12 +99,12 @@ def run_tasks():
             sync_results()
         elif task == VALIDATION_EVAL:
             model = load_model(
-                run_path, options, generator.dataset, use_best=True)
+                run_path, options, generator, use_best=True)
             validation_eval(run_path, model, options, generator)
             sync_results()
         elif task == TEST_EVAL:
             model = load_model(
-                run_path, options, generator.dataset, use_best=True)
+                run_path, options, generator, use_best=True)
             test_eval(run_path, model, options, generator)
             sync_results()
 

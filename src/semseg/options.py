@@ -26,12 +26,10 @@ class RunOptions():
         self.nb_epoch = options['nb_epoch']
         self.samples_per_epoch = options['samples_per_epoch']
         self.nb_val_samples = options['nb_val_samples']
+        self.active_input_inds = options['active_input_inds']
 
         # Optional options
         self.git_commit = options.get('git_commit')
-        self.include_ir = options.get('include_ir', False)
-        self.include_depth = options.get('include_depth', False)
-        self.include_ndvi = options.get('include_ndvi', False)
         # Size of the imgs used as input to the network
         # [nb_rows, nb_cols]
         self.target_size = options.get('target_size', (256, 256))
@@ -56,9 +54,7 @@ class RunOptions():
         elif self.model_type == FCN_RESNET:
             self.use_pretraining = options['use_pretraining']
             self.freeze_base = options['freeze_base']
-            not_three_channels = (
-                self.include_ir or self.include_depth or self.include_ndvi)
-            if self.use_pretraining and not_three_channels:
+            if self.use_pretraining and len(self.active_input_inds) != 3:
                 raise ValueError(
                     'Can only use pretraining with 3 input channels')
             if self.freeze_base and not self.use_pretraining:

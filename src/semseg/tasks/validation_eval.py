@@ -95,13 +95,14 @@ def make_legend(label_keys, label_names):
                bbox_to_anchor=(1, 1), fontsize=4)
 
 
-def plot_prediction(dataset, predictions_path, sample_index, display_all_x,
+def plot_prediction(generator, predictions_path, sample_index, display_all_x,
                     display_y, display_pred, is_debug=False):
+    dataset = generator.dataset
     fig = plt.figure()
 
     nb_subplot_cols = 3
     if is_debug:
-        nb_subplot_cols += dataset.nb_channels
+        nb_subplot_cols += len(generator.active_input_inds)
 
     gs = mpl.gridspec.GridSpec(1, nb_subplot_cols)
 
@@ -122,21 +123,18 @@ def plot_prediction(dataset, predictions_path, sample_index, display_all_x,
     plot_img(subplot_index, rgb_input_im, 'RGB', is_rgb=True)
 
     if is_debug:
-        if dataset.include_ir:
-            subplot_index += 1
-            ir_im = display_all_x[:, :, dataset.ir_ind]
-            plot_img(subplot_index, ir_im, 'IR')
+        subplot_index += 1
+        ir_im = display_all_x[:, :, dataset.ir_ind]
+        plot_img(subplot_index, ir_im, 'IR')
 
-        if dataset.include_depth:
-            subplot_index += 1
-            depth_im = display_all_x[:, :, dataset.depth_ind]
-            plot_img(subplot_index, depth_im, 'Depth')
+        subplot_index += 1
+        depth_im = display_all_x[:, :, dataset.depth_ind]
+        plot_img(subplot_index, depth_im, 'Depth')
 
-        if dataset.include_ndvi:
-            subplot_index += 1
-            ndvi_im = display_all_x[:, :, dataset.ndvi_ind]
-            ndvi_im = (np.clip(ndvi_im, -1, 1) + 1) * 100
-            plot_img(subplot_index, ndvi_im, 'NDVI')
+        subplot_index += 1
+        ndvi_im = display_all_x[:, :, dataset.ndvi_ind]
+        ndvi_im = (np.clip(ndvi_im, -1, 1) + 1) * 100
+        plot_img(subplot_index, ndvi_im, 'NDVI')
 
     subplot_index += 1
     plot_img(subplot_index, display_y, 'Ground Truth',
@@ -207,10 +205,10 @@ def validation_eval(run_path, model, options, generator):
         label_pred = dataset.rgb_to_label_batch(display_pred)
 
         plot_prediction(
-            dataset, predictions_path, sample_index, display_all_x,
+            generator, predictions_path, sample_index, display_all_x,
             display_y, display_pred)
         plot_prediction(
-            dataset, predictions_path, sample_index, display_all_x,
+            generator, predictions_path, sample_index, display_all_x,
             display_y, display_pred, is_debug=True)
 
         confusion_mat += compute_confusion_mat(

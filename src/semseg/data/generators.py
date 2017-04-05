@@ -50,7 +50,8 @@ class FileGenerator(Generator):
     A generic data generator that creates batches from files. It can read
     windows of data from disk without loading the entire file into memory.
     """
-    def __init__(self):
+    def __init__(self, active_input_inds):
+        self.active_input_inds = active_input_inds
         nb_train_inds = int(round(self.train_ratio * len(self.file_inds)))
         self.train_file_inds = self.file_inds[0:nb_train_inds]
         self.validation_file_inds = self.file_inds[nb_train_inds:]
@@ -191,7 +192,7 @@ class FileGenerator(Generator):
             if normalize:
                 all_batch_x = self.normalize(all_batch_x)
 
-            batch_x = all_batch_x[:, :, :, self.dataset.active_inds]
+            batch_x = all_batch_x[:, :, :, self.active_input_inds]
 
             if eval_mode:
                 return (batch_x, batch_y, all_batch_x, batch_y_mask,
