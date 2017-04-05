@@ -70,6 +70,28 @@ def make_callbacks(run_path, sync_results, options, log_path):
     return callbacks
 
 
+def get_initial_epoch(log_path):
+    """Get initial_epoch from the last line in the log csv file."""
+    initial_epoch = 0
+    if isfile(log_path):
+        with open(log_path) as log_file:
+            line_ind = 0
+            for line_ind, _ in enumerate(log_file):
+                pass
+            initial_epoch = line_ind
+
+    return initial_epoch
+
+
+def get_lr(epoch, lr_schedule):
+    for epoch_thresh, lr in lr_schedule:
+        if epoch >= epoch_thresh:
+            curr_lr = lr
+        else:
+            break
+    return curr_lr
+
+
 def train_model(run_path, model, sync_results, options, generator):
     """Train a model according to options using generator.
 
@@ -94,32 +116,23 @@ def train_model(run_path, model, sync_results, options, generator):
         shuffle=True, augment=True, normalize=True)
 
     if options.optimizer == ADAM:
-        optimizer = Adam(options.init_lr)
+        optimizer = Adam(lr=options.init_lr)
     elif options.optimizer == RMS_PROP:
-        optimizer = RMSprop(options.init_lr)
+        optimizer = RMSprop(lr=options.init_lr)
 
     model.compile(
-        loss='categorical_crossentropy',
-        optimizer=optimizer,
-        metrics=['accuracy'])
+        optimizer, 'categorical_crossentropy', metrics=['accuracy'])
 
     log_path = join(run_path, 'log.txt')
-
-    initial_epoch = 0
-    if isfile(log_path):
-        with open(log_path) as log_file:
-            line_ind = 0
-            for line_ind, _ in enumerate(log_file):
-                pass
-            initial_epoch = line_ind
+    initial_epoch = get_initial_epoch(log_path)
 
     callbacks = make_callbacks(run_path, sync_results, options, log_path)
 
     model.fit_generator(
         train_gen,
         initial_epoch=initial_epoch,
-        samples_per_epoch=options.samples_per_epoch,
-        nb_epoch=options.nb_epoch,
+        steps_per_epoch=options.steps_per_epoch,
+        epochs=options.epochs,
         validation_data=validation_gen,
-        nb_val_samples=options.nb_val_samples,
+        validation_steps=options.validation_steps,
         callbacks=callbacks)

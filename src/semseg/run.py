@@ -88,8 +88,8 @@ def run_tasks():
             if options.train_stages:
                 for stage in options.train_stages[1:]:
                     for key, value in stage.items():
-                        if key == 'nb_epoch':
-                            options.nb_epoch += value
+                        if key == 'epochs':
+                            options.epochs += value
                         else:
                             setattr(options, key, value)
 
