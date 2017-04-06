@@ -15,13 +15,15 @@ from .data.utils import _makedirs
 
 from .models.factory import get_model, load_model
 
-from .tasks.setup_run import setup_run, SETUP_RUN
+from .tasks.setup_run import setup_run
 from .tasks.train_model import train_model, TRAIN_MODEL
 from .tasks.plot_curves import plot_curves, PLOT_CURVES
 from .tasks.validation_eval import validation_eval, VALIDATION_EVAL
-from .tasks.test_eval import test_eval, TEST_EVAL
+from .tasks.predict import (
+    validation_predict, test_predict, VALIDATION_PREDICT, TEST_PREDICT)
 
-valid_tasks = [SETUP_RUN, TRAIN_MODEL, PLOT_CURVES, VALIDATION_EVAL, TEST_EVAL]
+valid_tasks = [TRAIN_MODEL, PLOT_CURVES,
+               VALIDATION_PREDICT, VALIDATION_EVAL, TEST_PREDICT]
 
 
 class Logger(object):
@@ -58,8 +60,6 @@ def run_tasks():
     options = load_options(args.file_path)
     generator = get_data_generator(options, datasets_path)
     run_path = join(results_path, options.run_name)
-    _makedirs(run_path)
-    sys.stdout = Logger(run_path)
 
     def sync_results(download=False):
         s3_run_path = 's3://{}/results/{}'.format(
@@ -69,15 +69,16 @@ def run_tasks():
         else:
             call(['aws', 's3', 'sync', run_path, s3_run_path])
 
+    setup_run(run_path, options, sync_results)
+    sys.stdout = Logger(run_path)
+
     # Run the tasks specified on the command line.
     for task in args.tasks:
         if task not in valid_tasks:
             raise ValueError('{} is not a valid task'.format(task))
 
     for task in args.tasks:
-        if task == SETUP_RUN:
-            setup_run(run_path, options, sync_results)
-        elif task == TRAIN_MODEL:
+        if task == TRAIN_MODEL:
             model = get_model(
                 run_path, options, generator, use_best=False)
             train_model(run_path, model, sync_results, options, generator)
@@ -102,10 +103,15 @@ def run_tasks():
                 run_path, options, generator, use_best=True)
             validation_eval(run_path, model, options, generator)
             sync_results()
-        elif task == TEST_EVAL:
+        elif task == TEST_PREDICT:
             model = load_model(
                 run_path, options, generator, use_best=True)
-            test_eval(run_path, model, options, generator)
+            test_predict(run_path, model, options, generator)
+            sync_results()
+        elif task == VALIDATION_PREDICT:
+            model = load_model(
+                run_path, options, generator, use_best=True)
+            validation_predict(run_path, model, options, generator)
             sync_results()
 
 

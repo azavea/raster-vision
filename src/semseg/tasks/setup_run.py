@@ -17,6 +17,7 @@ def setup_run(run_path, options, sync_results):
         options: RunOptions object that specifies the run
         sync_results: function used to sync results with cloud
     """
+    print(run_path)
     if not isdir(run_path):
         sync_results(download=True)
 

@@ -182,7 +182,7 @@ def validation_eval(run_path, model, options, generator):
         eval_mode=True)
 
     confusion_mat = np.zeros((dataset.nb_labels, dataset.nb_labels))
-    predictions_path = join(run_path, 'validation_predictions')
+    predictions_path = join(run_path, 'validation_eval')
     _makedirs(predictions_path)
 
     for sample_index, (batch_x, batch_y, all_batch_x, batch_y_mask, file_ind) \
