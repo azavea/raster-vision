@@ -37,6 +37,9 @@ class RunOptions():
         self.init_lr = options.get('init_lr', 1e-3)
         self.patience = options.get('patience')
         self.lr_schedule = options.get('lr_schedule')
+        self.train_ratio = options.get('train_ratio')
+        self.cross_validation = options.get('cross_validation')
+
         # Controls how many samples to use in the final evaluation.
         # Setting this to a low value can be useful when testing
         # the code, since it will save time.
@@ -66,13 +69,6 @@ class RunOptions():
             # ensemble. The outputs of each model will be concatenated
             # together and used as the input to this model.
             self.ensemble_run_names = options['ensemble_run_names']
-
-        # Dataset dependent options
-        if (self.dataset_name == POTSDAM and 'sharah_train_ratio' in options
-                and options['sharah_train_ratio']):
-            self.train_ratio = PotsdamDataset.sharah_train_ratio
-        else:
-            self.train_ratio = options['train_ratio']
 
         default_eval_target_size = (2000, 2000) \
             if self.dataset_name == POTSDAM else None

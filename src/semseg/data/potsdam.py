@@ -42,11 +42,10 @@ class PotsdamFileGenerator(FileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     files on disk.
     """
-    def __init__(self, active_input_inds, train_ratio):
+    def __init__(self, active_input_inds, train_ratio, cross_validation):
         self.dataset = PotsdamDataset()
-        self.train_ratio = train_ratio
 
-        # The first 17 indices correspond to the training set,
+        # The first 24 indices correspond to the training set,
         # and the rest to the validation set used
         # in https://arxiv.org/abs/1606.02585
         self.file_inds = [
@@ -61,7 +60,7 @@ class PotsdamFileGenerator(FileGenerator):
             (5, 13), (5, 14), (5, 15), (6, 13), (6, 14), (6, 15), (7, 13)
         ]
 
-        super().__init__(active_input_inds)
+        super().__init__(active_input_inds, train_ratio, cross_validation)
 
 
 class PotsdamImageFileGenerator(PotsdamFileGenerator):
@@ -69,9 +68,10 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     the original TIFF and JPG files.
     """
-    def __init__(self, datasets_path, active_input_inds, train_ratio=0.8):
+    def __init__(self, datasets_path, active_input_inds,
+                 train_ratio=0.8, cross_validation=None):
         self.dataset_path = join(datasets_path, POTSDAM)
-        super().__init__(active_input_inds, train_ratio)
+        super().__init__(active_input_inds, train_ratio, cross_validation)
 
     @staticmethod
     def preprocess(datasets_path):
@@ -141,10 +141,11 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     numpy array files. This is about 20x faster than reading the raw files.
     """
-    def __init__(self, datasets_path, active_input_inds, train_ratio=0.8):
+    def __init__(self, datasets_path, active_input_inds,
+                 train_ratio=0.8, cross_validation=None):
         self.raw_dataset_path = join(datasets_path, POTSDAM)
         self.dataset_path = join(datasets_path, PROCESSED_POTSDAM)
-        super().__init__(active_input_inds, train_ratio)
+        super().__init__(active_input_inds, train_ratio, cross_validation)
 
     @staticmethod
     def preprocess(datasets_path):

@@ -50,11 +50,18 @@ class FileGenerator(Generator):
     A generic data generator that creates batches from files. It can read
     windows of data from disk without loading the entire file into memory.
     """
-    def __init__(self, active_input_inds):
+    def __init__(self, active_input_inds, train_ratio, cross_validation):
         self.active_input_inds = active_input_inds
-        nb_train_inds = int(round(self.train_ratio * len(self.file_inds)))
-        self.train_file_inds = self.file_inds[0:nb_train_inds]
-        self.validation_file_inds = self.file_inds[nb_train_inds:]
+        self.train_ratio = train_ratio
+        self.cross_validation = cross_validation
+
+        if self.train_ratio is not None:
+            nb_train_inds = int(round(self.train_ratio * len(self.file_inds)))
+            self.train_file_inds = self.file_inds[0:nb_train_inds]
+            self.validation_file_inds = self.file_inds[nb_train_inds:]
+
+        if self.cross_validation is not None:
+            self.process_cross_validation()
 
         print('Computing dataset stats...')
         gen = self.make_split_generator(
@@ -63,6 +70,26 @@ class FileGenerator(Generator):
         _, _, all_batch_x, _, _ = next(gen)
         self.normalize_params = get_channel_stats(all_batch_x)
         print('Done.')
+
+    def process_cross_validation(self):
+        fold_sizes = self.cross_validation['fold_sizes']
+        fold_ind = self.cross_validation['fold_ind']
+
+        fold_ends = list(np.cumsum(fold_sizes))
+        fold_start = 0
+        for curr_fold_ind, fold_end in enumerate(fold_ends):
+            fold_file_inds = self.file_inds[fold_start:fold_end]
+            if fold_ind == curr_fold_ind:
+                break
+            fold_start = fold_end
+
+        self.train_file_inds = []
+        self.validation_file_inds = []
+        for file_ind in self.file_inds:
+            if file_ind in fold_file_inds:
+                self.validation_file_inds.append(file_ind)
+            else:
+                self.train_file_inds.append(file_ind)
 
     def get_file_inds(self, split):
         if split == TRAIN:
