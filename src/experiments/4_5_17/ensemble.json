@@ -1,0 +1,22 @@
+{
+    "batch_size": 8,
+    "git_commit": "287683",
+    "dataset_name": "potsdam",
+    "generator_name": "numpy",
+    "active_input_inds": [0, 1, 2, 3, 4, 5],
+    "optimizer": "adam",
+    "init_lr": 1e-3,
+    "target_size": [256, 256],
+    "eval_target_size": [2000, 2000],
+    "model_type": "avg_ensemble",
+    "ensemble_run_names": [
+        "4_3_17/fcn_resnet_irrg_one_stage_low_lr",
+        "4_3_17/fcn_resnet_irrg_one_stage_patience",
+        "4_3_17/fcn_resnet_irrg_two_stage"
+    ],
+    "run_name": "4_5_17/ensemble",
+    "train_ratio": 0.8,
+    "nb_epoch": 1,
+    "samples_per_epoch": 1,
+    "nb_val_samples": 1
+}
