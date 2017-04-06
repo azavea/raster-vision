@@ -1,0 +1,19 @@
+{
+    "batch_size": 8,
+    "git_commit": "c96f87",
+    "dataset_name": "potsdam",
+    "generator_name": "numpy",
+    "active_input_inds": [0, 1, 2, 3, 4, 5],
+    "use_pretraining": false,
+    "freeze_base": false,
+    "nb_epoch": 150,
+    "init_lr": 1e-5,
+    "optimizer": "adam",
+    "target_size": [256, 256],
+    "eval_target_size": [2000, 2000],
+    "model_type": "fcn_resnet",
+    "train_ratio": 0.8,
+    "nb_val_samples": 512,
+    "run_name": "4_5_17/fcn_resnet_all_scratch_low_lr",
+    "samples_per_epoch": 4096
+}
