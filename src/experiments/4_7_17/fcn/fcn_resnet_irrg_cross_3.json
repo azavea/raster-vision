@@ -1,0 +1,30 @@
+{
+    "batch_size": 8,
+    "git_commit": "118c45",
+    "dataset_name": "potsdam",
+    "generator_name": "numpy",
+    "active_input_inds": [3, 0, 1],
+    "use_pretraining": true,
+    "freeze_base": false,
+    "train_stages": [
+        {
+            "nb_epoch": 80,
+            "init_lr": 1e-5
+        },
+        {
+            "nb_epoch": 20,
+            "init_lr": 1e-6
+        }
+    ],
+    "cross_validation": {
+        "fold_sizes": [5, 5, 5, 5, 4],
+        "fold_ind": 3
+    },
+    "optimizer": "adam",
+    "target_size": [256, 256],
+    "eval_target_size": [2000, 2000],
+    "model_type": "fcn_resnet",
+    "nb_val_samples": 512,
+    "run_name": "4_7_17/fcn/fcn_resnet_irrg_cross_3",
+    "samples_per_epoch": 4096
+}

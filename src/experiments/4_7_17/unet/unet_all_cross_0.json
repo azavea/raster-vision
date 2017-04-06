@@ -1,0 +1,21 @@
+{
+    "batch_size": 8,
+    "git_commit": "118c45",
+    "dataset_name": "potsdam",
+    "generator_name": "numpy",
+    "active_input_inds": [0, 1, 2, 3, 4, 5],
+    "init_lr": 1e-3,
+    "patience": 10,
+    "cross_validation": {
+        "fold_sizes": [5, 5, 5, 5, 4],
+        "fold_ind": 0
+    },
+    "nb_epoch": 100,
+    "optimizer": "adam",
+    "target_size": [256, 256],
+    "eval_target_size": [2000, 2000],
+    "model_type": "unet",
+    "nb_val_samples": 512,
+    "run_name": "4_7_17/unet/unet_all_cross_0",
+    "samples_per_epoch": 4096
+}
