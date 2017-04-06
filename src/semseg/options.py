@@ -3,7 +3,7 @@ import json
 from .models.conv_logistic import CONV_LOGISTIC
 from .models.fcn_resnet import FCN_RESNET
 from .models.fc_densenet import FC_DENSENET
-from .models.ensemble import ENSEMBLE
+from .models.ensemble import CONCAT_ENSEMBLE, AVG_ENSEMBLE
 from .data.potsdam import POTSDAM, PotsdamDataset
 from .data.vaihingen import VAIHINGEN
 
@@ -12,7 +12,7 @@ class RunOptions():
     """Represents the options used to control an experimental run."""
 
     def __init__(self, options):
-        if 'train_stages' in options:
+        if 'train_stages' in options and options['train_stages'] is not None:
             train_stages = options['train_stages']
             options.update(train_stages[0])
         self.train_stages = options.get('train_stages')
@@ -61,7 +61,7 @@ class RunOptions():
                 raise ValueError(
                     'If freeze_base == True, then use_pretraining must be True'
                 )
-        elif self.model_type == ENSEMBLE:
+        elif self.model_type in [CONCAT_ENSEMBLE, AVG_ENSEMBLE]:
             # Names of the runs that should be combined together into an
             # ensemble. The outputs of each model will be concatenated
             # together and used as the input to this model.

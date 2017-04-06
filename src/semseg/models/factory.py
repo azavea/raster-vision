@@ -5,7 +5,8 @@ from .conv_logistic import make_conv_logistic, CONV_LOGISTIC
 from .fcn_resnet import make_fcn_resnet, FCN_RESNET
 from .unet import make_unet, UNET
 from .fc_densenet import make_fc_densenet, FC_DENSENET
-from .ensemble import Ensemble, ENSEMBLE
+from .ensemble import (
+    ConcatEnsemble, AvgEnsemble, CONCAT_ENSEMBLE, AVG_ENSEMBLE)
 from ..data.settings import datasets_path, results_path, s3_bucket_name
 
 
@@ -15,10 +16,12 @@ def s3_download(run_name, file_name):
     s3_file_path = join(s3_run_path, file_name)
 
     run_path = join(results_path, run_name)
-    call(['aws', 's3', 'sync', s3_file_path, run_path + '/'])
+    print(s3_file_path)
+    print(run_path)
+    call(['aws', 's3', 'cp', s3_file_path, run_path + '/'])
 
 
-def make_ensemble(options, input_shape, nb_labels):
+def load_ensemble_models(options):
     from ..options import load_options
     from ..data.factory import get_data_generator
 
@@ -33,14 +36,14 @@ def make_ensemble(options, input_shape, nb_labels):
         options_path = join(run_path, 'options.json')
         options = load_options(options_path)
         generator = get_data_generator(options, datasets_path)
-        active_input_inds = generator.dataset.active_input_inds
+        active_input_inds = generator.active_input_inds
         model = load_model(
-            run_path, options, generator.dataset, use_best=True)
+            run_path, options, generator, use_best=True)
 
         models.append(model)
         active_input_inds_list.append(active_input_inds)
 
-    return Ensemble(models, active_input_inds_list, input_shape, nb_labels)
+    return models, active_input_inds_list
 
 
 def make_model(options, generator):
@@ -66,8 +69,13 @@ def make_model(options, generator):
             weight_decay=options.weight_decay,
             down_blocks=options.down_blocks,
             up_blocks=options.up_blocks)
-    elif model_type == ENSEMBLE:
-        model = make_ensemble(options, input_shape, nb_labels)
+    elif model_type in [CONCAT_ENSEMBLE, AVG_ENSEMBLE]:
+        models, active_input_inds_list = load_ensemble_models(options)
+        if model_type == CONCAT_ENSEMBLE:
+            model = ConcatEnsemble(
+                models, active_input_inds_list, input_shape, nb_labels)
+        elif model_type == AVG_ENSEMBLE:
+            model = AvgEnsemble(models, active_input_inds_list)
     else:
         raise ValueError('{} is not a valid model_type'.format(model_type))
 
