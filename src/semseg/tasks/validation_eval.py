@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from sklearn import metrics
 
-from ..data.utils import _makedirs, safe_divide, predict_img
+from ..data.utils import _makedirs, safe_divide
 from ..data.generators import VALIDATION
-from .utils import make_prediction_img
+from .utils import predict_x, make_prediction_img
 
 
 VALIDATION_EVAL = 'validation_eval'
@@ -199,7 +199,7 @@ def validation_eval(run_path, model, options, generator):
         display_y = dataset.one_hot_to_rgb_batch(y)
         display_pred = make_prediction_img(
             x, options.target_size[0],
-            lambda x: dataset.one_hot_to_rgb_batch(predict_img(x, model)))
+            lambda x: dataset.one_hot_to_rgb_batch(predict_x(x, model)))
 
         label_y = dataset.one_hot_to_label_batch(y)
         label_pred = dataset.rgb_to_label_batch(display_pred)

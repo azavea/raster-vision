@@ -64,14 +64,12 @@ def get_img_size(file_path):
 
 
 def save_rasterio(im, file_path):
-    # TODO turn compression off
     height, width, count = im.shape
     with rasterio.open(file_path, 'w', driver='GTiff', height=height,
                        compression=rasterio.enums.Compression.none,
-                       width=width, count=3, dtype=np.uint8) as dst:
-        dst.write(im[:, :, 0], 1)
-        dst.write(im[:, :, 1], 2)
-        dst.write(im[:, :, 2], 3)
+                       width=width, count=count, dtype=im.dtype) as dst:
+        for channel_ind in range(count):
+            dst.write(im[:, :, channel_ind], channel_ind + 1)
 
 
 def save_pillow(im, file_path):
@@ -138,13 +136,6 @@ def zip_dir(in_path, out_path):
             zipf.write(os.path.join(root, f), basename(f))
 
     zipf.close()
-
-
-def predict_img(image, model):
-    batch = np.expand_dims(image, axis=0)
-    batch_y = model.predict(batch)
-    batch_y = np.squeeze(batch_y, axis=0)
-    return batch_y
 
 
 def plot_sample(file_path, batch_x, batch_y, generator):

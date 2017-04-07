@@ -2,11 +2,19 @@
 import numpy as np
 
 
+def predict_x(x, model):
+    batch_x = np.expand_dims(x, axis=0)
+    batch_y = model.predict(batch_x)
+    y = np.squeeze(batch_y, axis=0)
+    return y
+
+
 def make_prediction_img(x, target_size, predict):
     """Generate a prediction image one window at a time.
 
-    Generate a prediction image consisting of the predicted label for each
-    pixel in RGB format. Passing a very large image as input to a model might
+    Generate a prediction image consisting of a prediction for each pixel. The
+    format of that prediction depends on the output of the predict function.
+    Passing a very large image as input to a model might
     not be possible due to memory limitations. Instead, we slide a window over
     the image and get the predictions for each window. The individual
     predictions can be combined to create a large prediction image. By
@@ -19,15 +27,16 @@ def make_prediction_img(x, target_size, predict):
         target_size: the window size which needs to be the same as what the
             model expects as input
         predict: a function that takes a window image of size
-            target_size and returns the labels for each pixel in RGB format
+            target_size and returns the prediction for each pixel
 
     # Returns
         The prediction image
     """
     quarter_target_size = target_size // 4
     half_target_size = target_size // 2
-    nb_prediction_channels = \
-        predict(x[0:target_size, 0:target_size, :]).shape[2]
+    sample_prediction = predict(x[0:target_size, 0:target_size, :])
+    nb_channels = sample_prediction.shape[2]
+    dtype = sample_prediction.dtype
 
     pad_width = (
         (quarter_target_size, target_size),
@@ -36,8 +45,8 @@ def make_prediction_img(x, target_size, predict):
 
     pad_x = np.pad(x, pad_width, 'edge')
     pad_y = np.zeros(
-        (pad_x.shape[0], pad_x.shape[1], nb_prediction_channels),
-        dtype=np.uint8)
+        (pad_x.shape[0], pad_x.shape[1], nb_channels),
+        dtype=dtype)
 
     def update_prediction_center(row_begin, row_end, col_begin, col_end):
         """Just update the center half of the window."""

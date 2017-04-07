@@ -103,7 +103,8 @@ class IsprsDataset():
         if label_batch.ndim == 4:
             label_batch = np.squeeze(label_batch, axis=3)
 
-        rgb_batch = np.zeros(np.concatenate([label_batch.shape, [3]]))
+        rgb_batch = np.zeros(np.concatenate([label_batch.shape, [3]]),
+                             dtype=np.uint8)
         for label, key in enumerate(self.label_keys):
             mask = label_batch == label
             rgb_batch[mask, :] = key

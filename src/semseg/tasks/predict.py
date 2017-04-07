@@ -3,8 +3,8 @@ from os.path import join
 import numpy as np
 
 from ..data.generators import VALIDATION, TEST
-from .utils import make_prediction_img
-from ..data.utils import _makedirs, save_img, zip_dir, predict_img
+from .utils import make_prediction_img, predict_x
+from ..data.utils import _makedirs, save_img, zip_dir
 
 VALIDATION_PREDICT = 'validation_predict'
 TEST_PREDICT = 'test_predict'
@@ -14,7 +14,7 @@ def predict(run_path, model, options, generator, split):
     """Generate predictions for split data.
 
     For each image in a split, create a prediction image .tif file, and then
-    zip them into a zip file.
+    zip them into a zip file. Do the same for the predicted probability images.
 
     # Arguments
         run_path: the path to the files for a run
@@ -24,6 +24,8 @@ def predict(run_path, model, options, generator, split):
         split: name of the split eg. validation
     """
     dataset = generator.dataset
+    probs_path = join(run_path, '{}_probs'.format(split))
+    _makedirs(probs_path)
     predictions_path = join(run_path, '{}_predictions'.format(split))
     _makedirs(predictions_path)
 
@@ -38,18 +40,26 @@ def predict(run_path, model, options, generator, split):
 
         x = np.squeeze(batch_x, axis=0)
 
-        y = make_prediction_img(
+        y_probs = make_prediction_img(
             x, options.target_size[0],
-            lambda x: dataset.one_hot_to_rgb_batch(predict_img(x, model)))
+            lambda x: predict_x(x, model))
+        probs_file_path = join(
+            probs_path,
+            generator.dataset.get_output_file_name(file_ind))
+        save_img(y_probs, probs_file_path)
 
+        y_preds = dataset.one_hot_to_rgb_batch(y_probs)
         prediction_file_path = join(
             predictions_path,
             generator.dataset.get_output_file_name(file_ind))
-        save_img(y, prediction_file_path)
+        save_img(y_preds, prediction_file_path)
 
         if (options.nb_eval_samples is not None and
                 sample_ind == options.nb_eval_samples - 1):
             break
+
+    zip_path = join(run_path, '{}_probs.zip'.format(split))
+    zip_dir(probs_path, zip_path)
 
     zip_path = join(run_path, '{}_predictions.zip'.format(split))
     zip_dir(predictions_path, zip_path)
