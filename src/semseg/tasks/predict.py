@@ -1,4 +1,5 @@
 from os.path import join
+from shutil import rmtree
 
 import numpy as np
 
@@ -10,7 +11,7 @@ VALIDATION_PREDICT = 'validation_predict'
 TEST_PREDICT = 'test_predict'
 
 
-def predict(run_path, model, options, generator, split):
+def predict(run_path, model, options, generator, split, save_probs=False):
     """Generate predictions for split data.
 
     For each image in a split, create a prediction image .tif file, and then
@@ -24,8 +25,9 @@ def predict(run_path, model, options, generator, split):
         split: name of the split eg. validation
     """
     dataset = generator.dataset
-    probs_path = join(run_path, '{}_probs'.format(split))
-    _makedirs(probs_path)
+    if save_probs:
+        probs_path = join(run_path, '{}_probs'.format(split))
+        _makedirs(probs_path)
     predictions_path = join(run_path, '{}_predictions'.format(split))
     _makedirs(predictions_path)
 
@@ -43,10 +45,12 @@ def predict(run_path, model, options, generator, split):
         y_probs = make_prediction_img(
             x, options.target_size[0],
             lambda x: predict_x(x, model))
-        probs_file_path = join(
-            probs_path,
-            generator.dataset.get_output_file_name(file_ind))
-        save_img(y_probs, probs_file_path)
+
+        if save_probs:
+            probs_file_path = join(
+                probs_path,
+                generator.dataset.get_output_file_name(file_ind))
+            save_img(y_probs, probs_file_path)
 
         y_preds = dataset.one_hot_to_rgb_batch(y_probs)
         prediction_file_path = join(
@@ -58,15 +62,18 @@ def predict(run_path, model, options, generator, split):
                 sample_ind == options.nb_eval_samples - 1):
             break
 
-    zip_path = join(run_path, '{}_probs.zip'.format(split))
-    zip_dir(probs_path, zip_path)
+    if save_probs:
+        zip_path = join(run_path, '{}_probs.zip'.format(split))
+        zip_dir(probs_path, zip_path)
+        rmtree(probs_path)
 
     zip_path = join(run_path, '{}_predictions.zip'.format(split))
     zip_dir(predictions_path, zip_path)
+    rmtree(predictions_path)
 
 
 def validation_predict(run_path, model, options, generator):
-    predict(run_path, model, options, generator, VALIDATION)
+    predict(run_path, model, options, generator, VALIDATION, save_probs=True)
 
 
 def test_predict(run_path, model, options, generator):
