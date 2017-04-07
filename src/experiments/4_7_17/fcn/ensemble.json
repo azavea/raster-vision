@@ -1,0 +1,24 @@
+{
+    "batch_size": 8,
+    "git_commit": "e695cb",
+    "dataset_name": "potsdam",
+    "generator_name": "numpy",
+    "active_input_inds": [0, 1, 2, 3, 4, 5],
+    "optimizer": "adam",
+    "init_lr": 1e-3,
+    "target_size": [256, 256],
+    "eval_target_size": [2000, 2000],
+    "model_type": "avg_ensemble",
+    "ensemble_run_names": [
+        "4_7_17/fcn/fcn_resnet_irrg_cross_0",
+        "4_7_17/fcn/fcn_resnet_irrg_cross_1",
+        "4_7_17/fcn/fcn_resnet_irrg_cross_2",
+        "4_7_17/fcn/fcn_resnet_irrg_cross_3",
+        "4_7_17/fcn/fcn_resnet_irrg_cross_4"
+    ],
+    "run_name": "4_7_17/fcn/ensemble",
+    "train_ratio": 0.8,
+    "nb_epoch": 1,
+    "samples_per_epoch": 1,
+    "nb_val_samples": 1
+}
