@@ -40,6 +40,9 @@ class RunOptions():
         self.lr_schedule = options.get('lr_schedule')
         self.train_ratio = options.get('train_ratio')
         self.cross_validation = options.get('cross_validation')
+        self.delta_model_checkpoint = options.get(
+            'delta_model_checkpoint', None)
+        self.nb_videos = options.get('nb_videos')
 
         # Controls how many samples to use in the final evaluation.
         # Setting this to a low value can be useful when testing
@@ -47,6 +50,7 @@ class RunOptions():
         self.nb_eval_samples = options.get('nb_eval_samples')
 
         # Model type dependent options
+        # TODO have models check/parse options instead of doing it here
         if self.model_type == CONV_LOGISTIC:
             self.kernel_size = options['kernel_size']
         elif self.model_type == FC_DENSENET:

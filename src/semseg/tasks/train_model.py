@@ -1,16 +1,73 @@
 from os.path import join, isfile
+import math
 
-from keras.callbacks import (ModelCheckpoint, CSVLogger,
+from keras.callbacks import (Callback, ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau, LambdaCallback,
                              LearningRateScheduler)
 from keras.optimizers import Adam, RMSprop
 
 from ..data.generators import TRAIN, VALIDATION
+from ..data.utils import _makedirs
 
 ADAM = 'adam'
 RMS_PROP = 'rms_prop'
 
 TRAIN_MODEL = 'train_model'
+
+
+class DeltaModelCheckpoint(Callback):
+    def __init__(self, file_path, acc_delta=0.01):
+        self.file_path = file_path
+        self.acc_delta = acc_delta
+        self.last_acc = -1
+        super().__init__()
+
+    def on_epoch_end(self, epoch, logs=None):
+        acc = logs['acc']
+        if acc - self.last_acc > self.acc_delta:
+            self.last_acc = acc
+            self.model.save_weights(self.file_path.format(epoch=epoch))
+
+
+def make_callbacks(run_path, sync_results, options, log_path):
+    model_checkpoint = ModelCheckpoint(
+        filepath=join(run_path, 'model.h5'), period=1, save_weights_only=True)
+
+    best_model_checkpoint = ModelCheckpoint(
+        filepath=join(run_path, 'best_model.h5'), save_best_only=True,
+        save_weights_only=True)
+    logger = CSVLogger(log_path, append=True)
+    callbacks = [model_checkpoint, best_model_checkpoint, logger]
+
+    if options.delta_model_checkpoint is not None:
+        exp_path = join(run_path, 'delta_model_checkpoints')
+        _makedirs(exp_path)
+        callback = DeltaModelCheckpoint(
+            join(exp_path, 'model_{epoch:0>4}.h5'),
+            acc_delta=options.delta_model_checkpoint)
+        callbacks.append(callback)
+
+    if options.patience:
+        callback = ReduceLROnPlateau(
+            verbose=1, epsilon=0.001, patience=options.patience)
+        callbacks.append(callback)
+
+    if options.lr_schedule:
+        def get_lr(epoch):
+            for epoch_thresh, lr in options.lr_schedule:
+                if epoch >= epoch_thresh:
+                    curr_lr = lr
+                else:
+                    break
+            return curr_lr
+        callback = LearningRateScheduler(get_lr)
+        callbacks.append(callback)
+
+    callback = LambdaCallback(
+        on_epoch_end=lambda epoch, logs: sync_results())
+    callbacks.append(callback)
+
+    return callbacks
 
 
 def train_model(run_path, model, sync_results, options, generator):
@@ -56,34 +113,7 @@ def train_model(run_path, model, sync_results, options, generator):
                 pass
             initial_epoch = line_ind
 
-    model_checkpoint = ModelCheckpoint(
-        filepath=join(run_path, 'model.h5'), period=1, save_weights_only=True)
-
-    best_model_checkpoint = ModelCheckpoint(
-        filepath=join(run_path, 'best_model.h5'), save_best_only=True,
-        save_weights_only=True)
-    logger = CSVLogger(log_path, append=True)
-    callbacks = [model_checkpoint, best_model_checkpoint, logger]
-
-    if options.patience:
-        reduce_lr = ReduceLROnPlateau(
-            verbose=1, epsilon=0.001, patience=options.patience)
-        callbacks.append(reduce_lr)
-
-    if options.lr_schedule:
-        def get_lr(epoch):
-            for epoch_thresh, lr in options.lr_schedule:
-                if epoch >= epoch_thresh:
-                    curr_lr = lr
-                else:
-                    break
-            return curr_lr
-        lr_scheduler = LearningRateScheduler(get_lr)
-        callbacks.append(lr_scheduler)
-
-    sync_results_callback = LambdaCallback(
-        on_epoch_end=lambda epoch, logs: sync_results())
-    callbacks.append(sync_results_callback)
+    callbacks = make_callbacks(run_path, sync_results, options, log_path)
 
     model.fit_generator(
         train_gen,

@@ -21,9 +21,11 @@ from .tasks.plot_curves import plot_curves, PLOT_CURVES
 from .tasks.validation_eval import validation_eval, VALIDATION_EVAL
 from .tasks.predict import (
     validation_predict, test_predict, VALIDATION_PREDICT, TEST_PREDICT)
+from .tasks.make_videos import MAKE_VIDEOS, make_videos
 
 valid_tasks = [TRAIN_MODEL, PLOT_CURVES,
-               VALIDATION_PREDICT, VALIDATION_EVAL, TEST_PREDICT]
+               VALIDATION_PREDICT, VALIDATION_EVAL, TEST_PREDICT,
+               MAKE_VIDEOS]
 
 
 class Logger(object):
@@ -97,22 +99,22 @@ def run_tasks():
                         run_path, model, sync_results, options, generator)
         elif task == PLOT_CURVES:
             plot_curves(run_path)
-            sync_results()
         elif task == VALIDATION_EVAL:
             model = load_model(
                 run_path, options, generator, use_best=True)
             validation_eval(run_path, model, options, generator)
-            sync_results()
         elif task == TEST_PREDICT:
             model = load_model(
                 run_path, options, generator, use_best=True)
             test_predict(run_path, model, options, generator)
-            sync_results()
         elif task == VALIDATION_PREDICT:
             model = load_model(
                 run_path, options, generator, use_best=True)
             validation_predict(run_path, model, options, generator)
-            sync_results()
+        elif task == MAKE_VIDEOS:
+            make_videos(run_path, options, generator)
+
+        sync_results()
 
 
 if __name__ == '__main__':

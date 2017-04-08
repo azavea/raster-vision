@@ -1,5 +1,10 @@
 """Utility functions shared across tasks."""
 import numpy as np
+import matplotlib as mpl
+# For headless environments
+mpl.use('Agg') # NOQA
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 
 def predict_x(x, model):
@@ -76,3 +81,70 @@ def make_prediction_img(x, target_size, predict):
               quarter_target_size:quarter_target_size+x.shape[1],
               :]
     return y
+
+
+def make_legend(label_keys, label_names):
+    patches = []
+    for label_key, label_name in zip(label_keys, label_names):
+        color = tuple(np.array(label_key) / 255.)
+        patch = mpatches.Patch(
+            facecolor=color, edgecolor='black', linewidth=0.5,
+            label=label_name)
+        patches.append(patch)
+    plt.legend(handles=patches, loc='upper left',
+               bbox_to_anchor=(1, 1), fontsize=4)
+
+
+def plot_prediction(generator, display_all_x, display_y, display_pred,
+                    file_path, is_debug=False):
+    dataset = generator.dataset
+    fig = plt.figure()
+
+    nb_subplot_cols = 3
+    if is_debug:
+        nb_subplot_cols += len(generator.active_input_inds)
+
+    gs = mpl.gridspec.GridSpec(1, nb_subplot_cols)
+
+    def plot_img(subplot_index, im, title, is_rgb=False):
+        a = fig.add_subplot(gs[subplot_index])
+        a.axes.get_xaxis().set_visible(False)
+        a.axes.get_yaxis().set_visible(False)
+
+        if is_rgb:
+            a.imshow(im.astype(np.uint8))
+        else:
+            a.imshow(im, cmap='gray', vmin=0, vmax=255)
+        if subplot_index < nb_subplot_cols:
+            a.set_title(title, fontsize=6)
+
+    subplot_index = 0
+    rgb_input_im = display_all_x[:, :, dataset.rgb_inds]
+    plot_img(subplot_index, rgb_input_im, 'RGB', is_rgb=True)
+
+    if is_debug:
+        subplot_index += 1
+        ir_im = display_all_x[:, :, dataset.ir_ind]
+        plot_img(subplot_index, ir_im, 'IR')
+
+        subplot_index += 1
+        depth_im = display_all_x[:, :, dataset.depth_ind]
+        plot_img(subplot_index, depth_im, 'Depth')
+
+        subplot_index += 1
+        ndvi_im = display_all_x[:, :, dataset.ndvi_ind]
+        ndvi_im = (np.clip(ndvi_im, -1, 1) + 1) * 100
+        plot_img(subplot_index, ndvi_im, 'NDVI')
+
+    subplot_index += 1
+    plot_img(subplot_index, display_y, 'Ground Truth',
+             is_rgb=True)
+             
+    subplot_index += 1
+    plot_img(subplot_index, display_pred, 'Prediction',
+             is_rgb=True)
+
+    make_legend(dataset.label_keys, dataset.label_names)
+    plt.savefig(file_path, bbox_inches='tight', format='png', dpi=300)
+
+    plt.close(fig)
