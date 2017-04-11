@@ -2,6 +2,7 @@ import json
 
 from .models.conv_logistic import CONV_LOGISTIC
 from .models.fcn_resnet import FCN_RESNET
+from .models.dual_fcn_resnet import DUAL_FCN_RESNET
 from .models.fc_densenet import FC_DENSENET
 from .models.ensemble import CONCAT_ENSEMBLE, AVG_ENSEMBLE
 from .data.potsdam import POTSDAM, PotsdamDataset
@@ -54,16 +55,11 @@ class RunOptions():
             self.weight_decay = options['weight_decay']
             self.down_blocks = options['down_blocks']
             self.up_blocks = options['up_blocks']
-        elif self.model_type == FCN_RESNET:
+        elif self.model_type in [FCN_RESNET, DUAL_FCN_RESNET]:
             self.use_pretraining = options['use_pretraining']
             self.freeze_base = options['freeze_base']
-            if self.use_pretraining and len(self.active_input_inds) != 3:
-                raise ValueError(
-                    'Can only use pretraining with 3 input channels')
-            if self.freeze_base and not self.use_pretraining:
-                raise ValueError(
-                    'If freeze_base == True, then use_pretraining must be True'
-                )
+        if self.model_type == DUAL_FCN_RESNET:
+            self.dual_active_input_inds = options['dual_active_input_inds']
         elif self.model_type in [CONCAT_ENSEMBLE, AVG_ENSEMBLE]:
             # Names of the runs that should be combined together into an
             # ensemble. The outputs of each model will be concatenated

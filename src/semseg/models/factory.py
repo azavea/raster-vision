@@ -3,6 +3,7 @@ from subprocess import call
 
 from .conv_logistic import make_conv_logistic, CONV_LOGISTIC
 from .fcn_resnet import make_fcn_resnet, FCN_RESNET
+from .dual_fcn_resnet import make_dual_fcn_resnet, DUAL_FCN_RESNET
 from .unet import make_unet, UNET
 from .fc_densenet import make_fc_densenet, FC_DENSENET
 from .ensemble import (
@@ -49,9 +50,8 @@ def load_ensemble_models(options):
 def make_model(options, generator):
     """Make a new model."""
     model_type = options.model_type
-    input_shape = (
-        options.target_size[0], options.target_size[1],
-        len(generator.active_input_inds))
+    input_shape = (options.target_size[0], options.target_size[1],
+                   len(options.active_input_inds))
     nb_labels = generator.dataset.nb_labels
 
     if model_type == CONV_LOGISTIC:
@@ -61,6 +61,10 @@ def make_model(options, generator):
         model = make_fcn_resnet(
             input_shape, nb_labels, options.use_pretraining,
             options.freeze_base)
+    elif model_type == DUAL_FCN_RESNET:
+        model = make_dual_fcn_resnet(
+            input_shape, options.dual_active_input_inds,
+            nb_labels, options.use_pretraining, options.freeze_base)
     elif model_type == UNET:
         model = make_unet(input_shape, nb_labels)
     elif model_type == FC_DENSENET:

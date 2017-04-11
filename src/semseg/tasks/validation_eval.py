@@ -102,7 +102,7 @@ def plot_prediction(generator, predictions_path, sample_index, display_all_x,
 
     nb_subplot_cols = 3
     if is_debug:
-        nb_subplot_cols += len(generator.active_input_inds)
+        nb_subplot_cols = generator.dataset.nb_channels
 
     gs = mpl.gridspec.GridSpec(1, nb_subplot_cols)
 

@@ -25,6 +25,8 @@ class PotsdamDataset(IsprsDataset):
         self.depth_ind = 4
         self.ndvi_ind = 5
 
+        self.nb_channels = 6
+
         super().__init__()
 
     def get_output_file_name(self, file_ind):
