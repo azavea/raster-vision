@@ -1,0 +1,34 @@
+{
+    "batch_size": 8,
+    "git_commit": "550d87",
+    "dataset_name": "potsdam",
+    "generator_name": "numpy",
+    "active_input_inds": [3, 0, 1],
+    "use_pretraining": true,
+    "freeze_base": false,
+    "train_stages": [
+        {
+            "samples_per_epoch": 64,
+            "nb_epoch": 128
+        },
+        {
+            "samples_per_epoch": 512,
+            "nb_epoch": 72
+        },
+        {
+            "samples_per_epoch": 4096,
+            "nb_epoch": 70
+        }
+    ],
+    "init_lr": 1e-5,
+    "train_ratio": 0.8,
+    "optimizer": "adam",
+    "target_size": [256, 256],
+    "eval_target_size": [2000, 2000],
+    "delta_model_checkpoint": 0.01,
+    "model_type": "fcn_resnet",
+    "nb_val_samples": 8,
+    "nb_videos": 8,
+    "run_name": "4_9_17/make_videos",
+    "samples_per_epoch": 64
+}
