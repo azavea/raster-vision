@@ -1,0 +1,35 @@
+{
+    "batch_size": 8,
+    "git_commit": "bffa19",
+    "dataset_name": "potsdam",
+    "generator_name": "numpy",
+    "active_input_inds": [3, 0, 1, 5],
+    "use_pretraining": false,
+    "freeze_base": false,
+    "train_stages": [
+        {
+            "epochs": 150,
+            "init_lr": 1e-5
+        },
+        {
+            "epochs": 50,
+            "init_lr": 1e-6
+        },
+        {
+            "epochs": 75,
+            "init_lr": 1e-5
+        },
+        {
+            "epochs": 25,
+            "init_lr": 1e-6
+        }
+    ],
+    "train_ratio": 0.8,
+    "optimizer": "adam",
+    "target_size": [256, 256],
+    "eval_target_size": [2000, 2000],
+    "model_type": "fcn_resnet",
+    "run_name": "4_20_17/fcn_ndvi_0",
+    "validation_steps": 64,
+    "steps_per_epoch": 512
+}
