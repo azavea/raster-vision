@@ -26,12 +26,14 @@ def get_data_generator(options, datasets_path):
     elif options.dataset_name == VAIHINGEN:
         if options.generator_name == IMAGE:
             return VaihingenImageFileGenerator(
-                datasets_path, options.active_input_inds,
-                options.train_ratio, options.cross_validation)
+                datasets_path,
+                options.include_depth, options.include_ndvi,
+                options.train_ratio)
         elif options.generator_name == NUMPY:
             return VaihingenNumpyFileGenerator(
-                datasets_path, options.active_input_inds,
-                options.train_ratio, options.cross_validation)
+                datasets_path,
+                options.include_depth, options.include_ndvi,
+                options.train_ratio)
         else:
             raise ValueError('{} is not a valid generator'.format(
                 options.generator_name))

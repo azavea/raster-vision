@@ -1,6 +1,6 @@
 import numpy as np
 
-from .utils import expand_dims, compute_ndvi
+from .utils import expand_dims
 
 
 class IsprsDataset():
@@ -120,9 +120,3 @@ class IsprsDataset():
     def one_hot_to_rgb_batch(self, one_hot_batch):
         label_batch = self.one_hot_to_label_batch(one_hot_batch)
         return self.label_to_rgb_batch(label_batch)
-
-    def augment_channels(self, batch_x):
-        red = batch_x[:, :, :, [self.red_ind]]
-        ir = batch_x[:, :, :, [self.ir_ind]]
-        ndvi = compute_ndvi(red, ir)
-        return np.concatenate([batch_x, ndvi], axis=3)

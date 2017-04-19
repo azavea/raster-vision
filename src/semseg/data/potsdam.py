@@ -5,7 +5,7 @@ import numpy as np
 from .isprs import IsprsDataset
 from .generators import FileGenerator, TRAIN, VALIDATION, TEST
 from .utils import (
-    save_img, load_img, get_img_size, _makedirs,
+    save_img, load_img, get_img_size, compute_ndvi, _makedirs,
     save_numpy_array)
 
 POTSDAM = 'potsdam'
@@ -31,6 +31,12 @@ class PotsdamDataset(IsprsDataset):
 
     def get_output_file_name(self, file_ind):
         return 'top_potsdam_{}_{}_label.tif'.format(file_ind[0], file_ind[1])
+
+    def augment_channels(self, batch_x):
+        red = batch_x[:, :, :, [self.red_ind]]
+        ir = batch_x[:, :, :, [self.ir_ind]]
+        ndvi = compute_ndvi(red, ir)
+        return np.concatenate([batch_x, ndvi], axis=3)
 
 
 class PotsdamFileGenerator(FileGenerator):
