@@ -4,7 +4,7 @@ FROM keras-semantic-segmentation-base
 USER keras
 
 # Python
-ARG tensorflow_version=1.0.1-cp35-cp35m
+ARG tensorflow_version=0.10.0-cp35-cp35m
 ARG architecture=cpu
 
 RUN pip install https://storage.googleapis.com/tensorflow/linux/${architecture}/tensorflow-${tensorflow_version}-linux_x86_64.whl && \
