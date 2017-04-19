@@ -1,23 +1,23 @@
 {
     "batch_size": 1,
     "git_commit": null,
-    "dataset_name": "vaihingen",
+    "dataset_name": "potsdam",
     "generator_name": "numpy",
     "active_input_inds": [0, 1, 2],
     "optimizer": "adam",
     "init_lr": 1e-3,
     "target_size": [256, 256],
-    "eval_target_size": null,
+    "eval_target_size": [2000, 2000],
     "model_type": "conv_logistic",
     "cross_validation": {
-        "fold_sizes": [4, 4, 4, 4],
+        "fold_sizes": [5, 5, 5, 5, 4],
         "fold_ind": 5
     },
     "kernel_size": [5, 5],
-    "epochs": 2,
+    "nb_epoch": 2,
     "nb_labels": 6,
-    "validation_steps": 1,
+    "nb_val_samples": 1,
     "nb_eval_samples": 1,
     "run_name": "quick_test",
-    "steps_per_epoch": 2
+    "samples_per_epoch": 2
 }

@@ -28,6 +28,7 @@ class Scores():
         """
         self.label_names = label_names
         self.confusion_mat = confusion_mat
+
         true_pos = np.diagonal(self.confusion_mat)
         false_pos = np.sum(self.confusion_mat, axis=0) - true_pos
         false_neg = np.sum(self.confusion_mat, axis=1) - true_pos

@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import (
-    Input, Conv2D, Activation, Reshape)
+    Input, Convolution2D, Activation, Reshape)
 
 CONCAT_ENSEMBLE = 'concat_ensemble'
 AVG_ENSEMBLE = 'avg_ensemble'
@@ -27,9 +27,12 @@ class ConcatEnsemble(Model):
         nb_rows, nb_cols, _ = input_shape
         input_tensor = Input(shape=input_shape)
 
-        x = Conv2D(
+        x = Convolution2D(
             nb_labels, 1, 1, name='conv_labels')(input_tensor)
-        x = Activation('softmax', axis=3)(x)
+
+        x = Reshape((nb_rows * nb_cols, nb_labels))(x)
+        x = Activation('softmax')(x)
+        x = Reshape((nb_rows, nb_cols, nb_labels))(x)
 
         super().__init__(input=input_tensor, output=x)
 
