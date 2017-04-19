@@ -24,9 +24,9 @@ class RunOptions():
         self.dataset_name = options['dataset_name']
         self.generator_name = options['generator_name']
         self.batch_size = options['batch_size']
-        self.epochs = options['epochs']
-        self.steps_per_epoch = options['steps_per_epoch']
-        self.validation_steps = options['validation_steps']
+        self.nb_epoch = options['nb_epoch']
+        self.samples_per_epoch = options['samples_per_epoch']
+        self.nb_val_samples = options['nb_val_samples']
         self.active_input_inds = options['active_input_inds']
 
         # Optional options
