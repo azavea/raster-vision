@@ -123,8 +123,7 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
         _makedirs(proc_data_path)
 
         generator = VaihingenImageFileGenerator(
-            datasets_path, include_depth=True,
-            include_ndvi=False)
+            datasets_path, [0, 1, 2, 3])
         dataset = generator.dataset
 
         def _preprocess(split):
@@ -132,17 +131,17 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
                 split, batch_size=1, shuffle=False, augment=False,
                 normalize=False, eval_mode=True)
 
-            for batch_x, batch_y, batch_y_mask, file_inds in gen:
-                file_ind = file_inds[0]
-
-                batch_x = np.squeeze(batch_x, axis=0)
-                channels = [batch_x]
+            for (batch_x, batch_y, all_batch_x, batch_y_mask,
+                    batch_file_inds) in gen:
+                file_ind = batch_file_inds[0]
+                x = np.squeeze(batch_x, axis=0)
+                channels = [x]
 
                 if batch_y is not None:
-                    batch_y = np.squeeze(batch_y, axis=0)
-                    batch_y = dataset.one_hot_to_label_batch(batch_y)
-                    batch_y_mask = np.squeeze(batch_y_mask, axis=0)
-                    channels.extend([batch_y, batch_y_mask])
+                    y = np.squeeze(batch_y, axis=0)
+                    y = dataset.one_hot_to_label_batch(y)
+                    y_mask = np.squeeze(batch_y_mask, axis=0)
+                    channels.extend([y, y_mask])
                 channels = np.concatenate(channels, axis=2)
 
                 file_name = '{}'.format(file_ind)
@@ -151,9 +150,9 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
 
                 # Free memory
                 channels = None
-                batch_x = None
-                batch_y = None
-                batch_y_mask = None
+                batch_x = x = None
+                batch_y = y = None
+                batch_y_mask = y_mask = None
 
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
