@@ -19,18 +19,6 @@ Vagrant.configure("2") do |config|
       vb.cpus = 2
     end
 
-    # Gunicorn
-    otid.vm.network :forwarded_port, guest: 8080, host: 8080
-
-    # Django debug server
-    otid.vm.network :forwarded_port, guest: 8081, host: 8081
-
-    # Nginx
-    otid.vm.network :forwarded_port, guest: 9100, host: 9100
-
-    # Webpack
-    otid.vm.network :forwarded_port, guest: 4567, host: 4567
-
     # Change working directory to /vagrant upon session start.
     otid.vm.provision "shell", inline: <<SCRIPT
       if ! grep -q "cd /vagrant" "/home/vagrant/.bashrc"; then
