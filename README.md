@@ -3,10 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Introduction
-One of the longstanding goals of computer vision is to automatically infer *what* things are in an image, and *where* those things are located.
-In particular, the problem of semantic segmentation is to infer the category of each pixel in an image.
-It is too difficult to directly program a computer to do this,
-so machine learning is used to search for a model that is good at this task.
+A key task in computer vision is semantic segmentation, which attempts to simultaneously answer the questions of what is in an image, and where it is located. More formally, the task is to assign to each pixel a meaningful label such as "road" or "building."
 
 This repo contains code for semantic segmentation using convolutional neural networks built on top of the [Keras](https://keras.io/) and [Tensorflow](https://www.tensorflow.org/) libraries.
 There is code for building Docker containers, running experiments on AWS EC2, loading data, training models, and evaluating models on validation and test data.
@@ -33,6 +30,8 @@ The following datasets and model architectures are implemented.
 
 - Vagrant 1.8+
 - VirtualBox 4.3+
+- Python 2.7
+- Ansible 2.1+
 
 ### Scripts
 
@@ -81,10 +80,11 @@ After following the link to the Potsdam dataset, download
 `1_DSM_normalisation.zip`, `4_Ortho_RGBIR.zip`, `5_Labels_for_participants.zip`, and `5_Labels_for_participants_no_Boundary.zip`. Then unzip the files into
 `/opt/data/datasets/potsdam`, resulting in `/opt/data/datasets/potsdam/1_DSM_normalisation/`, etc.
 
-TODO: instructions for Vaihingen
+For the [ISPRS 2D Semantic Labeling Vaihingen dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html) dataset, download `ISPRS_semantic_labeling_Vaihingen.zip` and `ISPRS_semantic_labeling_Vaihingen_ground_truth_eroded_for_participants.zip`. Then unzip the files into `/opt/data/datasets/vaihingen`, resulting in
+`/opt/data/datasets/vaihingen/dsm`, `/opt/data/datasets/vaihingen/gts_for_participants`, etc.
 
-Then run `python -m semseg.data.factory --preprocess`. This will generate `/opt/data/datasets/processed_potsdam`. As a test, you may want to run `python -m semseg.data.factory --plot` which will generate PDF files that visualize samples produced by the data generator in  `/opt/data/results/gen_samples/`.
- To make the processed data available for use on EC2, upload a zip file of `/opt/data/datasets/processed_potsdam` named `processed_potsdam.zip` to the `otid-data` bucket.
+Then run `python -m semseg.data.factory --preprocess`. This takes about 15 minutes and will generate `/opt/data/datasets/processed_potsdam` and `/opt/data/datasets/processed_vaihingen`. As a test, you may want to run `python -m semseg.data.factory --plot` which will generate PDF files that visualize samples produced by the data generator in  `/opt/data/results/gen_samples/`.
+ To make the processed data available for use on EC2, upload a zip file of `/opt/data/datasets/processed_potsdam` named `processed_potsdam.zip` (and similar for Vaihingen) to the `otid-data` bucket.
 
 ### Running experiments
 
@@ -124,7 +124,7 @@ After initializing, the instance should have `nvidia-docker`, the GPU-enabled Do
 After starting an instance, `ssh` into it with
 ```shell
 ssh-add ~/.aws/open-tree-id.pem
-ssh ubuntu@<public dns>
+ssh ec2-user@<public dns>
 ```
 
 Then you can train a model with
