@@ -31,5 +31,5 @@ variable "fleet_security_group_id" {
 }
 
 variable "fleet_ami" {
-  default = "ami-b1e2c4a6"
+  default = "ami-50b4f047"
 }

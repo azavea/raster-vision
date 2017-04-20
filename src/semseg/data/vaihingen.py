@@ -13,38 +13,21 @@ PROCESSED_VAIHINGEN = 'processed_vaihingen'
 
 
 class VaihingenDataset(IsprsDataset):
-    def __init__(self, include_depth=False, include_ndvi=False):
-        self.include_ir = True
-
-        self.include_depth = include_depth
-        self.include_ndvi = include_ndvi
-        self.nb_channels = 3 + include_depth + include_ndvi
-
+    def __init__(self):
         self.ir_ind = 0
         self.red_ind = 1
         self.green_ind = 2
-        self.blue_ind = 2
         self.rgb_inds = [self.ir_ind, self.red_ind, self.green_ind]
 
         self.depth_ind = 3
         self.ndvi_ind = 4
 
-        self.active_input_inds = list(self.rgb_inds)
-        if include_depth:
-            self.active_input_inds.append(self.depth_ind)
-        if include_ndvi:
-            self.active_input_inds.append(self.ndvi_ind)
+        self.nb_channels = 5
 
         super().__init__()
 
     def get_output_file_name(self, file_ind):
         return 'top_mosaic_09cm_area{}.tif'.format(file_ind)
-
-    def augment_channels(self, batch_x):
-        red = batch_x[:, :, :, [self.red_ind]]
-        ir = batch_x[:, :, :, [self.ir_ind]]
-        ndvi = compute_ndvi(red, ir)
-        return np.concatenate([batch_x, ndvi], axis=3)
 
 
 class VaihingenFileGenerator(FileGenerator):
@@ -52,9 +35,8 @@ class VaihingenFileGenerator(FileGenerator):
     A data generator for the Vaihingen dataset that creates batches from
     files on disk.
     """
-    def __init__(self, include_depth, include_ndvi, train_ratio):
-        self.dataset = VaihingenDataset(include_depth, include_ndvi)
-        self.train_ratio = train_ratio
+    def __init__(self, active_input_inds, train_ratio, cross_validation):
+        self.dataset = VaihingenDataset()
 
         self.file_inds = [
             1, 3, 5, 7, 11, 13, 15, 17, 21, 23, 26, 28, 30, 32, 34, 37]
@@ -62,7 +44,7 @@ class VaihingenFileGenerator(FileGenerator):
         self.test_file_inds = [
             2, 4, 6, 8, 10, 12, 14, 16, 20, 22, 24, 27, 29, 31, 33, 35, 38]
 
-        super().__init__()
+        super().__init__(active_input_inds, train_ratio, cross_validation)
 
 
 class VaihingenImageFileGenerator(VaihingenFileGenerator):
@@ -70,10 +52,10 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
     A data generator for the Vaihingen dataset that creates batches from
     the original TIFF and JPG files.
     """
-    def __init__(self, datasets_path, include_depth=False, include_ndvi=False,
-                 train_ratio=0.8):
+    def __init__(self, datasets_path, active_input_inds,
+                 train_ratio=0.8, cross_validation=None):
         self.dataset_path = join(datasets_path, VAIHINGEN)
-        super().__init__(include_depth, include_ndvi, train_ratio)
+        super().__init__(active_input_inds, train_ratio, cross_validation)
 
     @staticmethod
     def preprocess(datasets_path):
@@ -129,11 +111,11 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
     A data generator for the Vaihingen dataset that creates batches from
     numpy array files. This is about 20x faster than reading the raw files.
     """
-    def __init__(self, datasets_path, include_depth=False,
-                 include_ndvi=False, train_ratio=0.8):
+    def __init__(self, datasets_path, active_input_inds,
+                 train_ratio=0.8, cross_validation=None):
         self.raw_dataset_path = join(datasets_path, VAIHINGEN)
         self.dataset_path = join(datasets_path, PROCESSED_VAIHINGEN)
-        super().__init__(include_depth, include_ndvi, train_ratio)
+        super().__init__(active_input_inds, train_ratio, cross_validation)
 
     @staticmethod
     def preprocess(datasets_path):
@@ -152,6 +134,7 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
 
             for batch_x, batch_y, batch_y_mask, file_inds in gen:
                 file_ind = file_inds[0]
+
                 batch_x = np.squeeze(batch_x, axis=0)
                 channels = [batch_x]
 

@@ -13,10 +13,10 @@
     "model_type": "ensemble",
     "ensemble_run_names": ["ensemble/depth", "ensemble/ir"],
     "train_ratio": 0.8,
-    "nb_epoch": 3,
+    "epochs": 3,
     "nb_labels": 6,
-    "nb_val_samples": 128,
+    "validation_steps": 2,
     "nb_eval_samples": 1,
     "run_name": "ensemble/ensemble",
-    "samples_per_epoch": 64
+    "steps_per_epoch": 8
 }
