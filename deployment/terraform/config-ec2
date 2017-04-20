@@ -1,23 +1,32 @@
 #!/bin/bash
 
-cd /home/ubuntu
+cd /home/ec2-user
 
 # Install command line tools
-apt-get install -y awscli git unzip
+sudo yum install -y aws-cli git unzip
+
+# Install nvidia-docker and nvidia-docker-plugin
+wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1_amd64.tar.xz
+sudo tar --strip-components=1 -C /usr/bin -xvf /tmp/nvidia-docker*.tar.xz && rm /tmp/nvidia-docker*.tar.xz
+
+# Run nvidia-docker-plugin
+sudo -b nohup nvidia-docker-plugin > /tmp/nvidia-docker.log
 
 # Copy data
 aws s3 cp s3://otid-data/processed_potsdam.zip data/datasets/processed_potsdam.zip
 pushd data/datasets
-unzip -q -o processed_potsdam.zip
+unzip processed_potsdam.zip
+rm processed_potsdam.zip
 popd
 
 aws s3 cp s3://otid-data/processed_vaihingen.zip data/datasets/processed_vaihingen.zip
 pushd data/datasets
-unzip -q -o processed_vaihingen.zip
+unzip processed_vaihingen.zip
+rm processed_vaihingen.zip
 popd
 
 # Download source repo
-sudo -H -u ubuntu bash -c "yes | git clone https://github.com/azavea/keras-semantic-segmentation.git"
+sudo -H -u ec2-user bash -c "yes | git clone https://github.com/azavea/keras-semantic-segmentation.git"
 
 # Get docker container
 `aws ecr get-login --region us-east-1`
