@@ -13,10 +13,10 @@
     "model_type": "conv_logistic",
     "kernel_size": [5, 5],
     "train_ratio": 0.8,
-    "nb_epoch": 2,
+    "epochs": 2,
     "nb_labels": 6,
-    "nb_val_samples": 16,
+    "validation_steps": 2,
     "nb_eval_samples": 1,
     "run_name": "ensemble/depth",
-    "samples_per_epoch": 64
+    "steps_per_epoch": 8
 }
