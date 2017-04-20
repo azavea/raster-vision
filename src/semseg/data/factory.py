@@ -48,10 +48,11 @@ def plot_generator(dataset_name, generator_name, split):
         def __init__(self):
             self.dataset_name = dataset_name
             self.generator_name = generator_name
-            self.include_ir = True
-            self.include_depth = True
-            self.include_ndvi = True
-            self.train_ratio = 0.7
+            self.active_input_inds = [0, 1, 2, 3]
+            if dataset_name == POTSDAM:
+                self.active_input_inds = [0, 1, 2, 3, 4]
+            self.train_ratio = 0.8
+            self.cross_validation = None
 
     options = Options()
     generator = get_data_generator(options, datasets_path)
