@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n "${OTID_DEBUG}" ]]; then
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
@@ -11,8 +11,8 @@ SRC="$PROJECT_ROOT/src"
 
 docker run --rm -it \
     -v "$SRC":/opt/src \
-    keras-semantic-segmentation-cpu python -m unittest
+    raster-vision-cpu python -m unittest
 
 docker run --rm -it \
     -v "$SRC":/opt/src \
-    keras-semantic-segmentation-cpu flake8 .
+    raster-vision-cpu flake8 .

@@ -1,5 +1,5 @@
 # Based on https://github.com/fchollet/keras/blob/7c6463da6f972ffaa466b0f55d06b760a98caf8e/docker/Dockerfile
-FROM keras-semantic-segmentation-base
+FROM raster-vision-base
 
 USER keras
 

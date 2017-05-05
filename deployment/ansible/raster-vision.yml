@@ -10,7 +10,7 @@
     - { role: "azavea.ntp" }
     - { role: "azavea.terraform" }
     - { role: "azavea.docker" }
-    - { role: "open-tree-id.environment" }
-    - { role: "open-tree-id.awscli" }
-    - { role: "open-tree-id.nvidia-docker" }
-    - { role: "open-tree-id.compose-docker" }
+    - { role: "raster-vision.environment" }
+    - { role: "raster-vision.awscli" }
+    - { role: "raster-vision.nvidia-docker" }
+    - { role: "raster-vision.compose-docker" }

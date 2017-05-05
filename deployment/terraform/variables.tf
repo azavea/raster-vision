@@ -1,17 +1,17 @@
 variable "aws_key_name" {
-  default = "open-tree-id"
+  default = "raster-vision"
 }
 
 variable "aws_vpc_id" {
-  default = "vpc-3aa9ab5d"
+  default = "vpc-7e3f2618"
 }
 
 variable "fleet_iam_role_arn" {
-  default = "arn:aws:iam::002496907356:role/aws-ec2-spot-fleet-role"
+  default = "arn:aws:iam::279682201306:role/aws-ec2-spot-fleet-role"
 }
 
 variable "fleet_instance_profile" {
-  default = "OpenTreeIDInstanceProfile"
+  default = "raster-vision-instance-profile"
 }
 
 variable "fleet_spot_price" {
@@ -27,9 +27,13 @@ variable "fleet_target_capacity" {
 }
 
 variable "fleet_security_group_id" {
-  default = "sg-0ed0cc74"
+  default = "sg-4c00d332"
 }
 
 variable "fleet_ami" {
-  default = "ami-917eec87"
+  default = "ami-dd493dcb"
+}
+
+variable "s3_bucket" {
+  default = "raster-vision"
 }

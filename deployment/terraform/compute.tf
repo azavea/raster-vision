@@ -2,6 +2,14 @@
 # Spot Fleet Resources
 #
 
+data "template_file" "init" {
+  template = "${file("config-ec2")}"
+
+  vars {
+    s3_bucket = "${var.s3_bucket}"
+  }
+}
+
 resource "aws_spot_fleet_request" "gpu_worker" {
   iam_fleet_role                      = "${var.fleet_iam_role_arn}"
   spot_price                          = "${var.fleet_spot_price}"
@@ -16,9 +24,9 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     instance_type               = "p2.xlarge"
     ami                         = "${var.fleet_ami}"
     key_name                    = "${var.aws_key_name}"
-    subnet_id                   = "subnet-7aeb2121"
+    subnet_id                   = "subnet-b2f915e8"
     vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${file("config-ec2")}"
+    user_data                   = "${data.template_file.init.rendered}"
 
     root_block_device {
       volume_size = "64"
@@ -31,9 +39,9 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     instance_type               = "p2.xlarge"
     ami                         = "${var.fleet_ami}"
     key_name                    = "${var.aws_key_name}"
-    subnet_id                   = "subnet-76d6134a"
+    subnet_id                   = "subnet-7f16321a"
     vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${file("config-ec2")}"
+    user_data                   = "${data.template_file.init.rendered}"
 
     root_block_device {
       volume_size = "64"
@@ -46,9 +54,9 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     instance_type               = "p2.xlarge"
     ami                         = "${var.fleet_ami}"
     key_name                    = "${var.aws_key_name}"
-    subnet_id                   = "subnet-42b83e0b"
+    subnet_id                   = "subnet-e121d7cd"
     vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${file("config-ec2")}"
+    user_data                   = "${data.template_file.init.rendered}"
 
     root_block_device {
       volume_size = "64"
@@ -61,9 +69,9 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     instance_type               = "p2.xlarge"
     ami                         = "${var.fleet_ami}"
     key_name                    = "${var.aws_key_name}"
-    subnet_id                   = "subnet-5f538472"
+    subnet_id                   = "subnet-173c9c5f"
     vpc_security_group_ids      = ["${var.fleet_security_group_id}"]
-    user_data                   = "${file("config-ec2")}"
+    user_data                   = "${data.template_file.init.rendered}"
 
     root_block_device {
       volume_size = "64"

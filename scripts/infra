@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n "${OTID_DEBUG}" ]]; then
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
@@ -38,8 +38,11 @@ then
                 ;;
             start)
                 NB_INSTANCES=${2:-1}
-                echo "NB_INSTANCES: $NB_INSTANCES"
-                "$PROJECT_ROOT/scripts/infra" plan -var fleet_target_capacity="$NB_INSTANCES"
+
+                "$PROJECT_ROOT/scripts/infra" plan \
+                -var fleet_target_capacity="$NB_INSTANCES" \
+                -var s3_bucket="$S3_BUCKET"
+
                 "$PROJECT_ROOT/scripts/infra" apply
 
                 # Wait for it to be ready, then get the hostname

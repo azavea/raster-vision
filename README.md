@@ -1,28 +1,29 @@
-# keras-semantic-segmentation
+# Raster Vision
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Introduction
-A key task in computer vision is semantic segmentation, which attempts to simultaneously answer the questions of what is in an image, and where it is located. More formally, the task is to assign to each pixel a meaningful label such as "road" or "building."
 
-This repo contains code for semantic segmentation using convolutional neural networks built on top of the [Keras](https://keras.io/) and [Tensorflow](https://www.tensorflow.org/) libraries.
-There is code for building Docker containers, running experiments on AWS EC2, loading data, training models, and evaluating models on validation and test data.
-Here is an example of an aerial image segmented using a model learned by our system.
+This goal of this project is to implement a variety of deep learning architectures for analyzing aerial and satellite imagery. At the moment, we have implemented approaches for semantic segmentation, and are about to begin work on tagging/recognition. In the future we may add support for object detection. There is code for building Docker containers, running experiments on AWS EC2, loading and processing data, and constructing, training and evaluating models
+using the [Keras](https://keras.io/) and [Tensorflow](https://www.tensorflow.org/) libraries.
+
+⚠️ 🚧 This project is under construction. Some things are poorly documented, may change drastically without notice, and are tied to the particular experiments that we are running.
+
+### Semantic Segmentation
+The goal of semantic segmentation is to simultaneously answer the questions of what is in an image, and where it is located. More formally, the task is to assign to each pixel a meaningful label such as "road" or "building." Here is an example of an aerial image segmented using a model learned by our system.
 
 ![Example segmentation](results/unet/img/good1.png)
 
 The following datasets and model architectures are implemented.
 
-### Datasets
+#### Datasets
 * [ISPRS Potsdam 2D dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html) ✈️
 * [ISPRS Vaihingen 2D dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html) ✈️
 
-### Model architectures
+#### Model architectures
 * [FCN](https://arxiv.org/abs/1411.4038) (Fully Convolutional Networks) using [ResNets](https://arxiv.org/abs/1512.03385)
 * [U-Net](https://arxiv.org/abs/1505.04597)
 * [Fully Convolutional DenseNets](https://arxiv.org/abs/1611.09326) (aka the 100 Layer Tiramisu)
-
-⚠️ 🚧 This project is under construction. Some things are poorly documented, may change drastically without notice, and are tied to the particular experiments that we are running.
 
 ## Usage
 
@@ -55,21 +56,22 @@ $ ./scripts/setup
 $ vagrant ssh
 ```
 
-You will be prompted to enter the OpenTreeID AWS credentials, along with a default region. These credentials will be used to authenticate calls to the AWS API when using the AWS CLI and Terraform. Note that if you are not at Azavea, deployment code will need to be manually updated or ignored entirely.
+You will be prompted to enter credentials for the `raster-vision` AWS user, along with a default region. These credentials will be used to authenticate calls to the AWS API when using the AWS CLI and Terraform. Note that if you are not at Azavea and want to use the deployment code, you will need to set the `RASTER_VISION_S3_BUCKET` environment variable and update values in
+[deployment/terraform/variables.tf](deployment/terraform/variables.tf).
 
 ## Running locally on CPUs
 
 ### Data directory
 
-All data including datasets and results are stored in a single directory outside of the repo. The `Vagrantfile` maps `~/data` on the host machine to `/opt/data` on the guest machine. The datasets are stored in `/opt/data/datasets` and results are stored in `/opt/data/results`.
+All data including datasets and results are stored in a single directory outside of the repo. The `Vagrantfile` maps the `RASTER_VISION_DATA_DIR` environment variable on the host machine to `/opt/data` on the guest machine. The datasets are stored in `/opt/data/datasets` and results are stored in `/opt/data/results`.
 
 ### Running the Docker container
 
 You can get into the bash console for the Docker container which has Keras and Tensorflow installed with
 ```shell
 vagrant ssh
-vagrant@otid:/vagrant$ ./scripts/update --cpu
-vagrant@otid:/vagrant$ ./scripts/run --cpu
+vagrant@raster-vision:/vagrant$ ./scripts/update --cpu
+vagrant@raster-vision:/vagrant$ ./scripts/run --cpu
 ```
 
 ### Preparing datasets
@@ -84,7 +86,7 @@ For the [ISPRS 2D Semantic Labeling Vaihingen dataset](http://www2.isprs.org/com
 `/opt/data/datasets/vaihingen/dsm`, `/opt/data/datasets/vaihingen/gts_for_participants`, etc.
 
 Then run `python -m semseg.data.factory --preprocess`. This takes about 15 minutes and will generate `/opt/data/datasets/processed_potsdam` and `/opt/data/datasets/processed_vaihingen`. As a test, you may want to run `python -m semseg.data.factory --plot` which will generate PDF files that visualize samples produced by the data generator in  `/opt/data/results/gen_samples/`.
- To make the processed data available for use on EC2, upload a zip file of `/opt/data/datasets/processed_potsdam` named `processed_potsdam.zip` (and similar for Vaihingen) to the `otid-data` bucket.
+ To make the processed data available for use on EC2, upload a zip file of `/opt/data/datasets/processed_potsdam` named `processed_potsdam.zip` (and similar for Vaihingen) to the `raster-vision` bucket.
 
 ### Running experiments
 
@@ -123,18 +125,18 @@ After initializing, the instance should have `nvidia-docker`, the GPU-enabled Do
 
 After starting an instance, `ssh` into it with
 ```shell
-ssh-add ~/.aws/open-tree-id.pem
+ssh-add ~/.aws/raster-vision.pem
 ssh ec2-user@<public dns>
 ```
 
 Then you can train a model with
 ```shell
-cd keras-semantic-segmentation
+cd raster-vision
 ./scripts/run --gpu
 root@230fb62d8ecd:/opt/src# python -m semseg.run experiments/quick_test.json
 ```
 
-When running on EC2, the results will be saved to the `otid-data` S3 bucket after each epoch and the final evaluation. If a run is terminated for any reason and you would like to resume it,
+When running on EC2, the results will be saved to the S3 bucket after each epoch and the final evaluation. If a run is terminated for any reason and you would like to resume it,
 simply run the above command with the same options file, and it should pick up where it left off.
 
 ⚠️️ When finished with all the instances, you should shut them down with
