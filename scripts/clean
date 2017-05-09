@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n "${OTID_DEBUG}" ]]; then
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 

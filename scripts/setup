@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n "${OTID_DEBUG}" ]]; then
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
@@ -26,7 +26,7 @@ then
         # the virtual machine.
         pip install -r requirements.txt
         vagrant up --provision
-        vagrant ssh -c "unset AWS_PROFILE && aws --profile open-tree-id configure"
+        vagrant ssh -c "unset AWS_PROFILE && aws --profile raster-vision configure"
         vagrant ssh -c "cd /vagrant && ./scripts/update"
     fi
 fi

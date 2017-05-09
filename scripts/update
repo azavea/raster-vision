@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n "${OTID_DEBUG}" ]]; then
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
@@ -22,14 +22,14 @@ then
         exit
     fi
 
-    docker build -t keras-semantic-segmentation-base -f src/Dockerfile-base src
+    docker build -t raster-vision-base -f src/Dockerfile-base src
 
     if [ $# -eq 0 -o "${1:-}" = "--cpu" ]
     then
-        docker build -t keras-semantic-segmentation-cpu -f src/Dockerfile-cpu src
+        docker build -t raster-vision-cpu -f src/Dockerfile-cpu src
     fi
     if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
     then
-        docker build -t keras-semantic-segmentation-gpu -f src/Dockerfile-gpu src
+        docker build -t raster-vision-gpu -f src/Dockerfile-gpu src
     fi
 fi

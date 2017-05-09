@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n "${OTID_DEBUG}" ]]; then
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
@@ -23,7 +23,7 @@ then
     else
         $PROJECT_ROOT/scripts/update --gpu
         `aws ecr get-login --region us-east-1`
-        docker tag keras-semantic-segmentation-gpu:latest 002496907356.dkr.ecr.us-east-1.amazonaws.com/keras-semantic-segmentation-gpu:latest
-        docker push 002496907356.dkr.ecr.us-east-1.amazonaws.com/keras-semantic-segmentation-gpu:latest
+        docker tag raster-vision-gpu:latest 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest
+        docker push 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest
     fi
 fi
