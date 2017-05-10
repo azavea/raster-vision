@@ -27,6 +27,6 @@ then
         # Copy learned models back down to the local machine
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
             /vagrant/src/ \
-            "ubuntu@$EC2_HOSTNAME:/home/ubuntu/raster-vision/src"
+            "ec2-user@$EC2_HOSTNAME:/home/ec2-user/raster-vision/src"
     fi
 fi
