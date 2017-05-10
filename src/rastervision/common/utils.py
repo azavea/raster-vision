@@ -1,6 +1,6 @@
 import os
 from os import makedirs
-from os.path import splitext, basename, join, isdir
+from os.path import splitext, basename, join, isdir, dirname
 import sys
 import zipfile
 from subprocess import call
@@ -10,6 +10,9 @@ import json
 from PIL import Image
 import numpy as np
 import rasterio
+
+from rastervision.common.settings import (
+    s3_results_path, results_path, s3_datasets_path, datasets_path)
 
 
 def _makedirs(path):
@@ -137,16 +140,48 @@ def zip_dir(in_path, out_path):
     zipf.close()
 
 
-def make_sync_results(s3_bucket_name, run_name, run_path):
+def s3_sync(src_path, dst_path):
+    call(['aws', 's3', 'sync', src_path, dst_path])
+
+
+def s3_cp(src_path, dst_path):
+    call(['aws', 's3', 'cp', src_path, dst_path])
+
+
+def make_sync_results(run_name):
     def sync_results(download=False):
-        s3_run_path = 's3://{}/results/{}'.format(
-            s3_bucket_name, run_name)
+        s3_run_path = join(s3_results_path, run_name)
+        run_path = join(results_path, run_name)
         if download:
-            call(['aws', 's3', 'sync', s3_run_path, run_path])
+            s3_sync(s3_run_path, run_path)
         else:
-            call(['aws', 's3', 'sync', run_path, s3_run_path])
+            s3_sync(run_path, s3_run_path)
 
     return sync_results
+
+
+def download_dataset(dataset_path):
+    src_path = join(s3_datasets_path, dataset_path)
+    dst_path = join(datasets_path, dataset_path)
+    s3_cp(src_path, dst_path)
+
+
+def get_zip_dataset(dataset_name):
+    dataset_path = join(
+        datasets_path, dataset_name)
+    dataset_zip_path = '{}.zip'.format(dataset_name)
+
+    if not isdir(dataset_path):
+        _makedirs(dataset_path)
+
+        print('Downloading {}...'.format(dataset_zip_path))
+        download_dataset(dataset_zip_path)
+
+        zip_path = join(
+            datasets_path, dataset_zip_path)
+        dataset_path_parent = dirname(dataset_path)
+        cmd = ['unzip', zip_path, '-d', dataset_path_parent]
+        call(cmd)
 
 
 class Logger(object):

@@ -1,6 +1,8 @@
 from os.path import isfile, join
 from subprocess import call
 
+from rastervision.common.settings import datasets_path, results_path, s3_bucket
+
 from .conv_logistic import make_conv_logistic, CONV_LOGISTIC
 from .fcn_resnet import make_fcn_resnet, FCN_RESNET
 from .dual_fcn_resnet import make_dual_fcn_resnet, DUAL_FCN_RESNET
@@ -8,12 +10,11 @@ from .unet import make_unet, UNET
 from .fc_densenet import make_fc_densenet, FC_DENSENET
 from .ensemble import (
     ConcatEnsemble, AvgEnsemble, CONCAT_ENSEMBLE, AVG_ENSEMBLE)
-from ..data.settings import datasets_path, results_path, s3_bucket_name
 
 
 def s3_download(run_name, file_name):
     s3_run_path = 's3://{}/results/{}'.format(
-        s3_bucket_name, run_name)
+        s3_bucket, run_name)
     s3_file_path = join(s3_run_path, file_name)
 
     run_path = join(results_path, run_name)

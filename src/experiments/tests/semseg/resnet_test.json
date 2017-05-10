@@ -2,7 +2,7 @@
     "batch_size": 1,
     "git_commit": null,
     "problem_type": "semseg",
-    "dataset_name": "potsdam",
+    "dataset_name": "isprs/potsdam",
     "generator_name": "numpy",
     "active_input_inds": [0, 1, 2],
     "use_pretraining": true,

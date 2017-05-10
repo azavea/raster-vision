@@ -15,18 +15,8 @@ sudo tar --strip-components=1 -C /usr/bin -xvf /tmp/nvidia-docker*.tar.xz && rm 
 # Run nvidia-docker-plugin
 sudo -b nohup nvidia-docker-plugin > /tmp/nvidia-docker.log
 
-# Copy data
-aws s3 cp s3://"$S3_BUCKET"/datasets/isprs/processed_potsdam.zip data/datasets/isprs/processed_potsdam.zip
-pushd data/datasets/isprs
-unzip processed_potsdam.zip
-rm processed_potsdam.zip
-popd
-
-aws s3 cp s3://"$S3_BUCKET"/datasets/isprs/processed_vaihingen.zip data/datasets/isprs/processed_vaihingen.zip
-pushd data/datasets/isprs
-unzip processed_vaihingen.zip
-rm processed_vaihingen.zip
-popd
+# Setup data directory
+sudo mkdir /home/ec2-user/data
 
 # Download source repo
 sudo -H -u ec2-user bash -c "yes | git clone https://github.com/azavea/raster-vision.git"

@@ -3,9 +3,9 @@ import sys
 
 from rastervision.common.utils import Logger, make_sync_results, setup_run
 from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
+from rastervision.common.settings import results_path, datasets_path, s3_bucket
 
 from .options import SemsegOptions
-from .data.settings import results_path, datasets_path, s3_bucket_name
 from .data.factory import get_data_generator
 from .models.factory import get_model, load_model
 from .tasks.train_model import train_model, TRAIN_MODEL
@@ -29,8 +29,7 @@ def run_tasks(options_dict, tasks):
     generator = get_data_generator(options, datasets_path)
     run_path = join(results_path, options.run_name)
 
-    sync_results = make_sync_results(
-        s3_bucket_name, options.run_name, run_path)
+    sync_results = make_sync_results(options.run_name)
     setup_run(run_path, options, sync_results)
     sys.stdout = Logger(run_path)
 

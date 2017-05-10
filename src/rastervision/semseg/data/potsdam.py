@@ -6,10 +6,10 @@ from .isprs import IsprsDataset
 from .generators import FileGenerator, TRAIN, VALIDATION, TEST
 from rastervision.common.utils import (
     save_img, load_img, get_img_size, _makedirs,
-    save_numpy_array)
+    save_numpy_array, get_zip_dataset)
 
-POTSDAM = 'potsdam'
-PROCESSED_POTSDAM = 'processed_potsdam'
+POTSDAM = 'isprs/potsdam'
+PROCESSED_POTSDAM = 'isprs/processed_potsdam'
 
 
 class PotsdamDataset(IsprsDataset):
@@ -141,6 +141,8 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
                  train_ratio=0.8, cross_validation=None):
         self.raw_dataset_path = join(datasets_path, POTSDAM)
         self.dataset_path = join(datasets_path, PROCESSED_POTSDAM)
+        get_zip_dataset(PROCESSED_POTSDAM)
+
         super().__init__(active_input_inds, train_ratio, cross_validation)
 
     @staticmethod

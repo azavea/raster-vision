@@ -8,7 +8,7 @@ from .vaihingen import (
 from .generators import NUMPY, IMAGE, TRAIN, VALIDATION
 from .utils import plot_sample
 from rastervision.common.utils import _makedirs
-from .settings import datasets_path, results_path
+from rastervision.common.settings import datasets_path, results_path
 
 
 def get_data_generator(options, datasets_path):

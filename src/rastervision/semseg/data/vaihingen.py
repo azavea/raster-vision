@@ -6,10 +6,10 @@ from .isprs import IsprsDataset
 from .generators import FileGenerator, TRAIN, VALIDATION, TEST
 from rastervision.common.utils import (
     load_img, get_img_size, compute_ndvi, _makedirs,
-    save_numpy_array)
+    save_numpy_array, get_zip_dataset)
 
-VAIHINGEN = 'vaihingen'
-PROCESSED_VAIHINGEN = 'processed_vaihingen'
+VAIHINGEN = 'isprs/vaihingen'
+PROCESSED_VAIHINGEN = 'isprs/processed_vaihingen'
 
 
 class VaihingenDataset(IsprsDataset):
@@ -115,6 +115,7 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
                  train_ratio=0.8, cross_validation=None):
         self.raw_dataset_path = join(datasets_path, VAIHINGEN)
         self.dataset_path = join(datasets_path, PROCESSED_VAIHINGEN)
+        get_zip_dataset(PROCESSED_VAIHINGEN)
         super().__init__(active_input_inds, train_ratio, cross_validation)
 
     @staticmethod
