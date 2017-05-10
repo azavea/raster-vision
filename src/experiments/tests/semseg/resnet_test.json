@@ -1,0 +1,22 @@
+{
+    "batch_size": 1,
+    "git_commit": null,
+    "problem_type": "semseg",
+    "dataset_name": "isprs/potsdam",
+    "generator_name": "numpy",
+    "active_input_inds": [0, 1, 2],
+    "use_pretraining": true,
+    "freeze_base": false,
+    "epochs": 2,
+    "init_lr": 1e-3,
+    "optimizer": "adam",
+    "target_size": [256, 256],
+    "eval_target_size": [2000, 2000],
+    "model_type": "fcn_resnet",
+    "train_ratio": 0.8,
+    "nb_labels": 6,
+    "validation_steps": 1,
+    "nb_eval_samples": 1,
+    "run_name": "tests/semseg/resnet_test",
+    "steps_per_epoch": 2
+}
