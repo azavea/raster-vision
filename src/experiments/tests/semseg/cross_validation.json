@@ -1,6 +1,7 @@
 {
     "batch_size": 1,
     "git_commit": null,
+    "problem_type": "semseg",
     "dataset_name": "vaihingen",
     "generator_name": "numpy",
     "active_input_inds": [0, 1, 2],
@@ -18,6 +19,6 @@
     "nb_labels": 6,
     "validation_steps": 1,
     "nb_eval_samples": 1,
-    "run_name": "quick_test",
+    "run_name": "tests/semseg/cross_validation",
     "steps_per_epoch": 2
 }
