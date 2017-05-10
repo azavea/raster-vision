@@ -4,7 +4,7 @@ import json
 import numpy as np
 from sklearn import metrics
 
-from ..data.utils import _makedirs, safe_divide
+from rastervision.common.utils import _makedirs, safe_divide
 from ..data.generators import VALIDATION
 from .utils import predict_x, make_prediction_img, plot_prediction
 

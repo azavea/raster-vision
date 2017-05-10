@@ -7,7 +7,7 @@ import numpy as np
 
 from ..data.generators import VALIDATION
 from .utils import make_prediction_img, plot_prediction, predict_x
-from ..data.utils import _makedirs, save_img, zip_dir
+from rastervision.common.utils import _makedirs, save_img, zip_dir
 from ..models.factory import make_model
 
 MAKE_VIDEOS = 'make_videos'

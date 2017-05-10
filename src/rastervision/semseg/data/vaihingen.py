@@ -4,7 +4,7 @@ import numpy as np
 
 from .isprs import IsprsDataset
 from .generators import FileGenerator, TRAIN, VALIDATION, TEST
-from .utils import (
+from rastervision.common.utils import (
     load_img, get_img_size, compute_ndvi, _makedirs,
     save_numpy_array)
 

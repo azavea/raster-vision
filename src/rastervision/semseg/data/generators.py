@@ -1,6 +1,6 @@
 import numpy as np
 
-from .utils import get_channel_stats
+from rastervision.common.utils import get_channel_stats
 
 TRAIN = 'train'
 VALIDATION = 'validation'

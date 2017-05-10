@@ -6,7 +6,8 @@ from .potsdam import (
 from .vaihingen import (
     VAIHINGEN, VaihingenImageFileGenerator, VaihingenNumpyFileGenerator)
 from .generators import NUMPY, IMAGE, TRAIN, VALIDATION
-from .utils import _makedirs, plot_sample
+from .utils import plot_sample
+from rastervision.common.utils import _makedirs
 from .settings import datasets_path, results_path
 
 

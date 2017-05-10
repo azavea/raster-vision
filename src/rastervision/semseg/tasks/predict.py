@@ -5,7 +5,7 @@ import numpy as np
 
 from ..data.generators import VALIDATION, TEST
 from .utils import make_prediction_img, predict_x
-from ..data.utils import _makedirs, save_img, zip_dir
+from rastervision.common.utils import _makedirs, save_img, zip_dir
 
 VALIDATION_PREDICT = 'validation_predict'
 TEST_PREDICT = 'test_predict'

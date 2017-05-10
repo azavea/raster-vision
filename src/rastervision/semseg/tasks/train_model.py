@@ -7,7 +7,7 @@ from keras.callbacks import (Callback, ModelCheckpoint, CSVLogger,
 from keras.optimizers import Adam, RMSprop
 
 from ..data.generators import TRAIN, VALIDATION
-from ..data.utils import _makedirs
+from rastervision.common.utils import _makedirs
 
 ADAM = 'adam'
 RMS_PROP = 'rms_prop'

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .utils import expand_dims, compute_ndvi
+from rastervision.common.utils import expand_dims, compute_ndvi
 
 
 class IsprsDataset():
