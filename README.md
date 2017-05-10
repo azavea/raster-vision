@@ -49,6 +49,9 @@ The following datasets and model architectures are implemented.
 
 ### Initial setup
 
+First, set the `RASTER_VISION_DATA_DIR` environment variable on your host machine. If you are not at Azavea and want to use the deployment code, you will need to set the `RASTER_VISION_S3_BUCKET` environment variable and update various values in
+[deployment/terraform/variables.tf](deployment/terraform/variables.tf).
+
 From within the project root, execute the following commands.
 
 ```bash
@@ -56,8 +59,7 @@ $ ./scripts/setup
 $ vagrant ssh
 ```
 
-You will be prompted to enter credentials for the `raster-vision` AWS user, along with a default region. These credentials will be used to authenticate calls to the AWS API when using the AWS CLI and Terraform. Note that if you are not at Azavea and want to use the deployment code, you will need to set the `RASTER_VISION_S3_BUCKET` environment variable and update values in
-[deployment/terraform/variables.tf](deployment/terraform/variables.tf).
+You will be prompted to enter credentials for the `raster-vision` AWS user, along with a default region. These credentials will be used to authenticate calls to the AWS API when using the AWS CLI and Terraform.
 
 ## Running locally on CPUs
 
@@ -80,28 +82,28 @@ Before running any experiments locally, the data needs to be prepared so that Ke
 [ISPRS 2D Semantic Labeling Potsdam dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html), you can download the data after filling out the [request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html).
 After following the link to the Potsdam dataset, download
 `1_DSM_normalisation.zip`, `4_Ortho_RGBIR.zip`, `5_Labels_for_participants.zip`, and `5_Labels_for_participants_no_Boundary.zip`. Then unzip the files into
-`/opt/data/datasets/potsdam`, resulting in `/opt/data/datasets/potsdam/1_DSM_normalisation/`, etc.
+`/opt/data/datasets/isprs/potsdam`, resulting in `/opt/data/datasets/isprs/potsdam/1_DSM_normalisation/`, etc.
 
-For the [ISPRS 2D Semantic Labeling Vaihingen dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html) dataset, download `ISPRS_semantic_labeling_Vaihingen.zip` and `ISPRS_semantic_labeling_Vaihingen_ground_truth_eroded_for_participants.zip`. Then unzip the files into `/opt/data/datasets/vaihingen`, resulting in
-`/opt/data/datasets/vaihingen/dsm`, `/opt/data/datasets/vaihingen/gts_for_participants`, etc.
+For the [ISPRS 2D Semantic Labeling Vaihingen dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html) dataset, download `ISPRS_semantic_labeling_Vaihingen.zip` and `ISPRS_semantic_labeling_Vaihingen_ground_truth_eroded_for_participants.zip`. Then unzip the files into `/opt/data/datasets/isprs/vaihingen`, resulting in
+`/opt/data/datasets/isprs/vaihingen/dsm`, `/opt/data/datasets/isprs/vaihingen/gts_for_participants`, etc.
 
-Then run `python -m semseg.data.factory --preprocess`. This takes about 15 minutes and will generate `/opt/data/datasets/processed_potsdam` and `/opt/data/datasets/processed_vaihingen`. As a test, you may want to run `python -m semseg.data.factory --plot` which will generate PDF files that visualize samples produced by the data generator in  `/opt/data/results/gen_samples/`.
- To make the processed data available for use on EC2, upload a zip file of `/opt/data/datasets/processed_potsdam` named `processed_potsdam.zip` (and similar for Vaihingen) to the `raster-vision` bucket.
+Then run `python -m rastervision.semseg.data.factory --preprocess`. This takes about 15 minutes and will generate `/opt/data/datasets/isprs/processed_potsdam` and `/opt/data/datasets/isprs/processed_vaihingen`. As a test, you may want to run `python -m rastervision.semseg.data.factory --plot` which will generate PDF files that visualize samples produced by the data generator in  `/opt/data/results/gen_samples/`.
+ To make the processed data available for use on EC2, upload a zip file of `/opt/data/datasets/isprs/processed_potsdam` named `processed_potsdam.zip` (and similar for Vaihingen) to `s3://<RASTER_VISION_S3_BUCKET>/datasets/isprs/`.
 
 ### Running experiments
 
 An experiment consists of training a model on a dataset using a set of hyperparameters. Each experiment is defined using an options `json` file.
-An example can be found in [src/experiments/quick_test.json](src/experiments/quick_test.json), and this
+An example can be found in [potsdam_quick_test.json](src/experiments/semseg/potsdam_quick_test.json), and this
 can be used as a quick integration test.
 In order to run an experiment, you must also provide a list of tasks to perform. These tasks
-include `setup_run`, `train_model`, `plot_curves`, `validation_eval`, `test_eval`. More details about these can be found in [src/semseg/run.py](src/semseg/run.py).
+include `setup_run`, `train_model`, `plot_curves`, `validation_eval`, `test_eval`. More details about these can be found in [run.py](src/rastervision/semseg/run.py).
 
 Here are some examples of how to use the `run` command.
 ```shell
 # Run all tasks by default
-python -m semseg.run experiments/quick_test.json
-# Only run the plot_curves tasks which requires that setup_run and train_model were previously run
-python -m semseg.run experiments/quick_test.json plot_curves
+python -m rastervision.run experiments/tests/semseg/potsdam_quick_test.json
+# Only run the plot_curves tasks which requires that train_model were previously run
+python -m rastervision.run experiments/tests/semseg/potsdam_quick_test.json plot_curves
 ```
 This will generate a directory structure in `/opt/data/results/<run_name>/` which contains the options file, the learned model, and various metrics and visualization files.
 
@@ -133,7 +135,7 @@ Then you can train a model with
 ```shell
 cd raster-vision
 ./scripts/run --gpu
-root@230fb62d8ecd:/opt/src# python -m semseg.run experiments/quick_test.json
+root@230fb62d8ecd:/opt/src# python -m rastervision.run experiments/tests/semseg/potsdam_quick_test.json
 ```
 
 When running on EC2, the results will be saved to the S3 bucket after each epoch and the final evaluation. If a run is terminated for any reason and you would like to resume it,
