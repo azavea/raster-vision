@@ -4,7 +4,7 @@
     "problem_type": "semseg",
     "dataset_name": "isprs/potsdam",
     "generator_name": "numpy",
-    "active_input_inds": [0, 1, 2],
+    "active_input_inds": [0, 1, 2, 4, 5],
     "optimizer": "adam",
     "init_lr": 1e-3,
     "target_size": [256, 256],

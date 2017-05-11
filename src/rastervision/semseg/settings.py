@@ -1,1 +1,1 @@
-semseg = 'semseg'
+SEMSEG = 'semseg'

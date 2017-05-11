@@ -1,14 +1,15 @@
 from os.path import join
 import argparse
 
+from rastervision.common.utils import _makedirs
+from rastervision.common.settings import (
+    datasets_path, results_path, TRAIN, VALIDATION)
+
 from .potsdam import (
     POTSDAM, PotsdamImageFileGenerator, PotsdamNumpyFileGenerator)
 from .vaihingen import (
     VAIHINGEN, VaihingenImageFileGenerator, VaihingenNumpyFileGenerator)
-from .generators import NUMPY, IMAGE, TRAIN, VALIDATION
-from .utils import plot_sample
-from rastervision.common.utils import _makedirs
-from rastervision.common.settings import datasets_path, results_path
+from .settings import NUMPY, IMAGE
 
 
 def get_data_generator(options, datasets_path):
@@ -64,16 +65,17 @@ def plot_generator(dataset_name, generator_name, split):
 
     gen = generator.make_split_generator(
         TRAIN, target_size=(400, 400), batch_size=batch_size, shuffle=True,
-        augment=True, normalize=True, eval_mode=True)
+        augment=True, normalize=True, only_xy=False)
 
     for batch_ind in range(nb_batches):
-        _, batch_y, all_batch_x, _, _ = next(gen)
+        batch = next(gen)
         for sample_ind in range(batch_size):
             file_path = join(
                 viz_path, '{}_{}.pdf'.format(batch_ind, sample_ind))
-            plot_sample(
-                file_path, all_batch_x[sample_ind, :, :, :],
-                batch_y[sample_ind, :, :, :], generator)
+            generator.plot_sample(
+                file_path,
+                batch.all_x[sample_ind, :, :, :],
+                batch.y[sample_ind, :, :, :])
 
 
 def preprocess():

@@ -6,8 +6,9 @@ from keras.callbacks import (Callback, ModelCheckpoint, CSVLogger,
                              LearningRateScheduler)
 from keras.optimizers import Adam, RMSprop
 
-from ..data.generators import TRAIN, VALIDATION
 from rastervision.common.utils import _makedirs
+from rastervision.common.settings import TRAIN, VALIDATION
+
 
 ADAM = 'adam'
 RMS_PROP = 'rms_prop'
@@ -109,11 +110,11 @@ def train_model(run_path, model, sync_results, options, generator):
 
     train_gen = generator.make_split_generator(
         TRAIN, target_size=options.target_size, batch_size=options.batch_size,
-        shuffle=True, augment=True, normalize=True)
+        shuffle=True, augment=True, normalize=True, only_xy=True)
     validation_gen = generator.make_split_generator(
         VALIDATION, target_size=options.target_size,
         batch_size=options.batch_size,
-        shuffle=True, augment=True, normalize=True)
+        shuffle=True, augment=True, normalize=True, only_xy=True)
 
     if options.optimizer == ADAM:
         optimizer = Adam(lr=options.init_lr)

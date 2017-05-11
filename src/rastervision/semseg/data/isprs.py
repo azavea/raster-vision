@@ -1,6 +1,24 @@
-import numpy as np
+from os.path import join, isdir, dirname
+from subprocess import call
 
-from rastervision.common.utils import expand_dims, compute_ndvi
+import numpy as np
+import matplotlib as mpl
+# For headless environments
+mpl.use('Agg') # NOQA
+import matplotlib.pyplot as plt
+
+from rastervision.common.utils import (
+    expand_dims, compute_ndvi, plot_img_row, download_dataset)
+from rastervision.common.generators import Batch, FileGenerator
+
+ISPRS = 'isprs'
+
+
+class IsprsBatch(Batch):
+    def __init__(self):
+        self.y_mask = None
+
+        super().__init__()
 
 
 class IsprsDataset():
@@ -126,3 +144,41 @@ class IsprsDataset():
         ir = batch_x[:, :, :, [self.ir_ind]]
         ndvi = compute_ndvi(red, ir)
         return np.concatenate([batch_x, ndvi], axis=3)
+
+
+class IsprsFileGenerator(FileGenerator):
+    def __init__(self, active_input_inds, train_ratio, cross_validation):
+        super().__init__(active_input_inds, train_ratio, cross_validation)
+
+    def plot_sample(self, file_path, x, y):
+        fig = plt.figure()
+        nb_cols = max(self.dataset.nb_channels + 1, self.dataset.nb_labels + 1)
+        grid_spec = mpl.gridspec.GridSpec(2, nb_cols)
+
+        # Plot x channels
+        x = self.unnormalize(x)
+        rgb_x = x[:, :, self.dataset.rgb_inds]
+        imgs = [rgb_x]
+        nb_channels = x.shape[2]
+        for channel_ind in range(nb_channels):
+            img = x[:, :, channel_ind]
+            if channel_ind == self.dataset.ndvi_ind:
+                img = (np.clip(img, -1, 1) + 1) * 100
+            imgs.append(img)
+        row_ind = 0
+        plot_img_row(fig, grid_spec, row_ind, imgs)
+
+        # Plot y channels
+        rgb_y = self.dataset.one_hot_to_rgb_batch(y)
+        imgs = [rgb_y]
+        for channel_ind in range(y.shape[2]):
+            img = y[:, :, channel_ind] * 150
+            imgs.append(img)
+        row_ind = 1
+        plot_img_row(fig, grid_spec, row_ind, imgs)
+
+        plt.savefig(file_path, bbox_inches='tight', format='pdf', dpi=600)
+        plt.close(fig)
+
+    def download_dataset(self, file_names):
+        download_dataset(ISPRS, file_names)
