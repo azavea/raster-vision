@@ -1,1 +1,1 @@
-tagging = 'tagging'
+TAGGING = 'tagging'
