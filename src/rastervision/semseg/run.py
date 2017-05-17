@@ -3,12 +3,13 @@ import sys
 
 from rastervision.common.utils import Logger, make_sync_results, setup_run
 from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
-from rastervision.common.settings import results_path, datasets_path, s3_bucket
+from rastervision.common.tasks.train_model import TRAIN_MODEL
+from rastervision.common.settings import results_path, datasets_path
 
 from .options import SemsegOptions
 from .data.factory import get_data_generator
-from .models.factory import get_model, load_model
-from .tasks.train_model import train_model, TRAIN_MODEL
+from .models.factory import SemsegModelFactory
+from .tasks.train_model import SemsegTrainModel
 from .tasks.validation_eval import validation_eval, VALIDATION_EVAL
 from .tasks.predict import (
     validation_predict, test_predict, VALIDATION_PREDICT, TEST_PREDICT)
@@ -26,6 +27,7 @@ def run_tasks(options_dict, tasks):
     command line, creates a data generator, and then runs the tasks.
     """
     options = SemsegOptions(options_dict)
+    model_factory = SemsegModelFactory()
     generator = get_data_generator(options, datasets_path)
     run_path = join(results_path, options.run_name)
 
@@ -42,9 +44,11 @@ def run_tasks(options_dict, tasks):
 
     for task in tasks:
         if task == TRAIN_MODEL:
-            model = get_model(
+            model = model_factory.get_model(
                 run_path, options, generator, use_best=False)
-            train_model(run_path, model, sync_results, options, generator)
+            train_model = SemsegTrainModel(
+                run_path, sync_results, options, generator, model)
+            train_model.train_model()
 
             if options.train_stages:
                 for stage in options.train_stages[1:]:
@@ -54,22 +58,23 @@ def run_tasks(options_dict, tasks):
                         else:
                             setattr(options, key, value)
 
-                    model = get_model(
+                    model = model_factory.get_model(
                         run_path, options, generator, use_best=False)
-                    train_model(
-                        run_path, model, sync_results, options, generator)
+                    train_model = SemsegTrainModel(
+                        run_path, sync_results, options, generator, model)
+                    train_model.train_model()
         elif task == PLOT_CURVES:
             plot_curves(run_path)
         elif task == VALIDATION_EVAL:
-            model = load_model(
+            model = model_factory.load_model(
                 run_path, options, generator, use_best=True)
             validation_eval(run_path, model, options, generator)
         elif task == TEST_PREDICT:
-            model = load_model(
+            model = model_factory.load_model(
                 run_path, options, generator, use_best=True)
             test_predict(run_path, model, options, generator)
         elif task == VALIDATION_PREDICT:
-            model = load_model(
+            model = model_factory.load_model(
                 run_path, options, generator, use_best=True)
             validation_predict(run_path, model, options, generator)
         elif task == MAKE_VIDEOS:
