@@ -2,11 +2,14 @@ from os.path import join
 
 import numpy as np
 
-from .isprs import IsprsDataset
-from .generators import FileGenerator, TRAIN, VALIDATION, TEST
 from rastervision.common.utils import (
-    load_img, get_img_size, compute_ndvi, _makedirs,
-    save_numpy_array, get_zip_dataset)
+    load_img, get_img_size, _makedirs,
+    save_numpy_array)
+from rastervision.common.settings import (
+    TRAIN, VALIDATION, TEST
+)
+
+from .isprs import IsprsDataset, IsprsBatch, IsprsFileGenerator
 
 VAIHINGEN = 'isprs/vaihingen'
 PROCESSED_VAIHINGEN = 'isprs/processed_vaihingen'
@@ -30,7 +33,7 @@ class VaihingenDataset(IsprsDataset):
         return 'top_mosaic_09cm_area{}.tif'.format(file_ind)
 
 
-class VaihingenFileGenerator(FileGenerator):
+class VaihingenFileGenerator(IsprsFileGenerator):
     """
     A data generator for the Vaihingen dataset that creates batches from
     files on disk.
@@ -38,7 +41,7 @@ class VaihingenFileGenerator(FileGenerator):
     def __init__(self, active_input_inds, train_ratio, cross_validation):
         self.dataset = VaihingenDataset()
 
-        self.file_inds = [
+        self.dev_file_inds = [
             1, 3, 5, 7, 11, 13, 15, 17, 21, 23, 26, 28, 30, 32, 34, 37]
 
         self.test_file_inds = [
@@ -68,7 +71,7 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
         nb_rows, nb_cols = get_img_size(irrg_file_path)
         return nb_rows, nb_cols
 
-    def get_img(self, file_ind, window, has_y=True):
+    def get_img(self, file_ind, window):
         irrg_file_path = join(
             self.dataset_path,
             'top/top_mosaic_09cm_area{}.tif'.format(file_ind))
@@ -87,7 +90,7 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
         depth = ((depth - 240) * 2).astype(np.uint8)
         channels = [irrg, depth]
 
-        if has_y:
+        if self.has_y(file_ind):
             batch_y = load_img(batch_y_file_path, window)
             batch_y_no_boundary = load_img(
                 batch_y_no_boundary_file_path, window)
@@ -96,14 +99,18 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
         img = np.concatenate(channels, axis=2)
         return img
 
-    def parse_batch(self, batch, has_y=True):
-        batch_x = batch[:, :, :, 0:4]
-        batch_y = None
-        batch_y_mask = None
-        if has_y:
-            batch_y = self.dataset.rgb_to_one_hot_batch(batch[:, :, :, 4:7])
-            batch_y_mask = self.dataset.rgb_to_mask_batch(batch[:, :, :, 7:])
-        return batch_x, batch_y, batch_y_mask
+    def make_batch(self, img_batch, file_inds):
+        batch = IsprsBatch()
+        batch.all_x = img_batch[:, :, :, 0:4]
+        batch.all_x = self.dataset.augment_channels(batch.all_x)
+        batch.file_inds = file_inds
+
+        if self.has_y(file_inds[0]):
+            batch.y = self.dataset.rgb_to_one_hot_batch(
+                img_batch[:, :, :, 4:7])
+            batch.y_mask = self.dataset.rgb_to_mask_batch(
+                img_batch[:, :, :, 7:])
+        return batch
 
 
 class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
@@ -115,7 +122,7 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
                  train_ratio=0.8, cross_validation=None):
         self.raw_dataset_path = join(datasets_path, VAIHINGEN)
         self.dataset_path = join(datasets_path, PROCESSED_VAIHINGEN)
-        get_zip_dataset(PROCESSED_VAIHINGEN)
+        self.download_dataset(['processed_vaihingen.zip'])
         super().__init__(active_input_inds, train_ratio, cross_validation)
 
     @staticmethod
@@ -130,18 +137,18 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
         def _preprocess(split):
             gen = generator.make_split_generator(
                 split, batch_size=1, shuffle=False, augment=False,
-                normalize=False, eval_mode=True)
+                normalize=False, only_xy=False)
 
-            for (batch_x, batch_y, all_batch_x, batch_y_mask,
-                    batch_file_inds) in gen:
-                file_ind = batch_file_inds[0]
-                x = np.squeeze(batch_x, axis=0)
+            for batch in gen:
+                print('.')
+                file_ind = batch.file_inds[0]
+                x = np.squeeze(batch.x, axis=0)
                 channels = [x]
 
-                if batch_y is not None:
-                    y = np.squeeze(batch_y, axis=0)
+                if batch.y is not None:
+                    y = np.squeeze(batch.y, axis=0)
                     y = dataset.one_hot_to_label_batch(y)
-                    y_mask = np.squeeze(batch_y_mask, axis=0)
+                    y_mask = np.squeeze(batch.y_mask, axis=0)
                     channels.extend([y, y_mask])
                 channels = np.concatenate(channels, axis=2)
 
@@ -151,9 +158,10 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
 
                 # Free memory
                 channels = None
-                batch_x = x = None
-                batch_y = y = None
-                batch_y_mask = y_mask = None
+                batch.all_x = None
+                batch.x = x = None
+                batch.y = y = None
+                batch.y_mask = y_mask = None
 
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
@@ -168,7 +176,7 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
         nb_rows, nb_cols = im.shape[0:2]
         return nb_rows, nb_cols
 
-    def get_img(self, file_ind, window, has_y=True):
+    def get_img(self, file_ind, window):
         file_path = self.get_file_path(file_ind)
         im = np.load(file_path, mmap_mode='r')
         ((row_begin, row_end), (col_begin, col_end)) = window
@@ -176,11 +184,14 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
 
         return img
 
-    def parse_batch(self, batch, has_y=True):
-        batch_x = batch[:, :, :, 0:4]
-        batch_y = None
-        batch_y_mask = None
-        if has_y:
-            batch_y = self.dataset.label_to_one_hot_batch(batch[:, :, :, 4:5])
-            batch_y_mask = batch[:, :, :, 5:6]
-        return batch_x, batch_y, batch_y_mask
+    def make_batch(self, img_batch, file_inds):
+        batch = IsprsBatch()
+        batch.all_x = img_batch[:, :, :, 0:4]
+        batch.all_x = self.dataset.augment_channels(batch.all_x)
+        batch.file_inds = file_inds
+
+        if self.has_y(file_inds[0]):
+            batch.y = self.dataset.label_to_one_hot_batch(
+                img_batch[:, :, :, 4:5])
+            batch.y_mask = img_batch[:, :, :, 5:6]
+        return batch

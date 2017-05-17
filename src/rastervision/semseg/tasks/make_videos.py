@@ -5,9 +5,10 @@ from subprocess import call
 
 import numpy as np
 
-from ..data.generators import VALIDATION
+from rastervision.common.utils import _makedirs
+from rastervision.common.settings import VALIDATION
+
 from .utils import make_prediction_img, plot_prediction, predict_x
-from rastervision.common.utils import _makedirs, save_img, zip_dir
 from ..models.factory import make_model
 
 MAKE_VIDEOS = 'make_videos'
@@ -33,14 +34,14 @@ def make_videos(run_path, options, generator):
     split_gen = generator.make_split_generator(
         VALIDATION, target_size=options.eval_target_size,
         batch_size=1, shuffle=False, augment=False, normalize=True,
-        eval_mode=True)
+        only_xy=False)
 
-    for video_ind, (batch_x, batch_y, all_batch_x, _, _) in \
+    for video_ind, batch in \
             enumerate(split_gen):
-        x = np.squeeze(batch_x, axis=0)
-        y = np.squeeze(batch_y, axis=0)
+        x = np.squeeze(batch.x, axis=0)
+        y = np.squeeze(batch.y, axis=0)
         display_y = generator.dataset.one_hot_to_rgb_batch(y)
-        all_x = np.squeeze(all_batch_x, axis=0)
+        all_x = np.squeeze(batch.all_x, axis=0)
         display_all_x = generator.unnormalize(all_x)
 
         make_video(

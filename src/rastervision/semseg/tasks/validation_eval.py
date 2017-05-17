@@ -5,7 +5,8 @@ import numpy as np
 from sklearn import metrics
 
 from rastervision.common.utils import _makedirs, safe_divide
-from ..data.generators import VALIDATION
+from rastervision.common.settings import VALIDATION
+
 from .utils import predict_x, make_prediction_img, plot_prediction
 
 
@@ -103,21 +104,20 @@ def validation_eval(run_path, model, options, generator):
     validation_gen = generator.make_split_generator(
         VALIDATION, target_size=options.eval_target_size,
         batch_size=1, shuffle=False, augment=False, normalize=True,
-        eval_mode=True)
+        only_xy=False)
 
     confusion_mat = np.zeros((dataset.nb_labels, dataset.nb_labels))
     predictions_path = join(run_path, 'validation_eval')
     _makedirs(predictions_path)
 
-    for sample_index, (batch_x, batch_y, all_batch_x, batch_y_mask, file_ind) \
-            in enumerate(validation_gen):
-        file_ind = file_ind[0]
+    for sample_index, batch in enumerate(validation_gen):
+        file_ind = batch.file_inds[0]
         print('Processing {}'.format(file_ind))
 
-        x = np.squeeze(batch_x, axis=0)
-        all_x = np.squeeze(all_batch_x, axis=0)
-        y = np.squeeze(batch_y, axis=0)
-        y_mask = np.squeeze(batch_y_mask, axis=0)
+        x = np.squeeze(batch.x, axis=0)
+        all_x = np.squeeze(batch.all_x, axis=0)
+        y = np.squeeze(batch.y, axis=0)
+        y_mask = np.squeeze(batch.y_mask, axis=0)
 
         display_all_x = generator.unnormalize(all_x)
         display_y = dataset.one_hot_to_rgb_batch(y)

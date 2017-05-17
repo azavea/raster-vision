@@ -29,7 +29,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     user_data                   = "${data.template_file.init.rendered}"
 
     root_block_device {
-      volume_size = "64"
+      volume_size = "128"
       volume_type = "gp2"
     }
   }
@@ -44,7 +44,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     user_data                   = "${data.template_file.init.rendered}"
 
     root_block_device {
-      volume_size = "64"
+      volume_size = "128"
       volume_type = "gp2"
     }
   }
@@ -59,7 +59,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     user_data                   = "${data.template_file.init.rendered}"
 
     root_block_device {
-      volume_size = "64"
+      volume_size = "128"
       volume_type = "gp2"
     }
   }
@@ -74,7 +74,7 @@ resource "aws_spot_fleet_request" "gpu_worker" {
     user_data                   = "${data.template_file.init.rendered}"
 
     root_block_device {
-      volume_size = "64"
+      volume_size = "128"
       volume_type = "gp2"
     }
   }

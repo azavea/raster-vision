@@ -3,9 +3,11 @@ from shutil import rmtree
 
 import numpy as np
 
-from ..data.generators import VALIDATION, TEST
-from .utils import make_prediction_img, predict_x
 from rastervision.common.utils import _makedirs, save_img, zip_dir
+from rastervision.common.settings import VALIDATION, TEST
+
+from .utils import make_prediction_img, predict_x
+
 
 VALIDATION_PREDICT = 'validation_predict'
 TEST_PREDICT = 'test_predict'
@@ -34,13 +36,13 @@ def predict(run_path, model, options, generator, split, save_probs=False):
     split_gen = generator.make_split_generator(
         split, target_size=None,
         batch_size=1, shuffle=False, augment=False, normalize=True,
-        eval_mode=True)
+        only_xy=False)
 
-    for sample_ind, (batch_x, _, _, _, file_ind) in enumerate(split_gen):
-        file_ind = file_ind[0]
+    for sample_ind, batch in enumerate(split_gen):
+        file_ind = batch.file_inds[0]
         print('Processing {}'.format(file_ind))
 
-        x = np.squeeze(batch_x, axis=0)
+        x = np.squeeze(batch.x, axis=0)
 
         y_probs = make_prediction_img(
             x, options.target_size[0],

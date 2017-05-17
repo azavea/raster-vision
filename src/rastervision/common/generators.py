@@ -1,19 +1,21 @@
 import numpy as np
 
 from rastervision.common.utils import get_channel_stats
+from rastervision.common.settings import TRAIN, VALIDATION, TEST
 
-TRAIN = 'train'
-VALIDATION = 'validation'
-TEST = 'test'
 
-NUMPY = 'numpy'
-IMAGE = 'image'
+class Batch():
+    def __init__(self):
+        self.file_inds = None
+        self.all_x = None
+        self.x = None
+        self.y = None
 
 
 class Generator():
     def make_split_generator(self, split, target_size=None, batch_size=32,
                              shuffle=False, augment=False, normalize=False,
-                             eval_mode=False):
+                             only_xy=False):
         """Make a generator for a split of data.
 
         # Arguments
@@ -25,7 +27,7 @@ class Generator():
             shuffle: True if imgs should be randomly selected from dataset
             augment: True if imgs should be randomly flipped and rotated
             normalize: True if imgs should be shifted and scaled
-            eval_mode: True if file_inds and batch_y_mask should be returned
+            only_xy: True if only (x,y) should be returned
 
         # Returns
             Returns a Python generator. If eval_mode == True, the generator
@@ -56,20 +58,22 @@ class FileGenerator(Generator):
         self.cross_validation = cross_validation
 
         if self.train_ratio is not None:
-            nb_train_inds = int(round(self.train_ratio * len(self.file_inds)))
-            self.train_file_inds = self.file_inds[0:nb_train_inds]
-            self.validation_file_inds = self.file_inds[nb_train_inds:]
+            nb_train_inds = \
+                int(round(self.train_ratio * len(self.dev_file_inds)))
+            self.train_file_inds = self.dev_file_inds[0:nb_train_inds]
+            self.validation_file_inds = self.dev_file_inds[nb_train_inds:]
 
         if self.cross_validation is not None:
             self.process_cross_validation()
 
-        print('Computing dataset stats...')
         gen = self.make_split_generator(
             TRAIN, target_size=(10, 10), batch_size=100, shuffle=True,
-            augment=False, normalize=False, eval_mode=True)
-        _, _, all_batch_x, _, _ = next(gen)
-        self.normalize_params = get_channel_stats(all_batch_x)
-        print('Done.')
+            augment=False, normalize=False, only_xy=False)
+        batch = next(gen)
+        self.normalize_params = get_channel_stats(batch.all_x)
+
+    def has_y(self, file_ind):
+        return file_ind in self.dev_file_inds
 
     def process_cross_validation(self):
         fold_sizes = self.cross_validation['fold_sizes']
@@ -78,14 +82,14 @@ class FileGenerator(Generator):
         fold_ends = list(np.cumsum(fold_sizes))
         fold_start = 0
         for curr_fold_ind, fold_end in enumerate(fold_ends):
-            fold_file_inds = self.file_inds[fold_start:fold_end]
+            fold_file_inds = self.dev_file_inds[fold_start:fold_end]
             if fold_ind == curr_fold_ind:
                 break
             fold_start = fold_end
 
         self.train_file_inds = []
         self.validation_file_inds = []
-        for file_ind in self.file_inds:
+        for file_ind in self.dev_file_inds:
             if file_ind in fold_file_inds:
                 self.validation_file_inds.append(file_ind)
             else:
@@ -115,13 +119,13 @@ class FileGenerator(Generator):
             return np.concatenate(samples, axis=0), file_inds
         return None, None
 
-    def make_img_generator(self, file_inds, target_size, has_y):
+    def make_img_generator(self, file_inds, target_size):
         for file_ind in file_inds:
             nb_rows, nb_cols = self.get_file_size(file_ind)
 
             if target_size is None:
                 window = ((0, nb_rows), (0, nb_cols))
-                img = self.get_img(file_ind, window, has_y)
+                img = self.get_img(file_ind, window)
                 yield img, file_ind
             else:
                 for row_begin in range(0, nb_rows, target_size[0]):
@@ -131,10 +135,10 @@ class FileGenerator(Generator):
                         if row_end <= nb_rows and col_end <= nb_cols:
                             window = ((row_begin, row_end),
                                       (col_begin, col_end))
-                            img = self.get_img(file_ind, window, has_y)
+                            img = self.get_img(file_ind, window)
                             yield img, file_ind
 
-    def make_random_img_generator(self, file_inds, target_size, has_y):
+    def make_random_img_generator(self, file_inds, target_size):
         nb_files = len(file_inds)
 
         while True:
@@ -143,23 +147,25 @@ class FileGenerator(Generator):
 
             nb_rows, nb_cols = self.get_file_size(file_ind)
 
-            row_begin = np.random.randint(0, nb_rows - target_size[0] + 1)
-            col_begin = np.random.randint(0, nb_cols - target_size[1] + 1)
-            row_end = row_begin + target_size[0]
-            col_end = col_begin + target_size[1]
-
-            window = ((row_begin, row_end), (col_begin, col_end))
-            img = self.get_img(file_ind, window, has_y)
+            if target_size is None:
+                window = ((0, nb_rows), (0, nb_cols))
+            else:
+                row_begin = np.random.randint(0, nb_rows - target_size[0] + 1)
+                col_begin = np.random.randint(0, nb_cols - target_size[1] + 1)
+                row_end = row_begin + target_size[0]
+                col_end = col_begin + target_size[1]
+                window = ((row_begin, row_end), (col_begin, col_end))
+            img = self.get_img(file_ind, window)
 
             yield img, file_ind
 
-    def make_batch_generator(self, file_inds, target_size, batch_size, shuffle,
-                             has_y):
+    def make_img_batch_generator(self, file_inds, target_size, batch_size,
+                                 shuffle):
         def make_gen():
             if shuffle:
                 return self.make_random_img_generator(
-                    file_inds, target_size, has_y)
-            return self.make_img_generator(file_inds, target_size, has_y)
+                    file_inds, target_size)
+            return self.make_img_generator(file_inds, target_size)
 
         gen = make_gen()
         while True:
@@ -188,44 +194,50 @@ class FileGenerator(Generator):
             batch_x = np.squeeze(batch_x, 0)
         return batch_x
 
+    def augment_img_batch(self, img_batch):
+        nb_rotations = np.random.randint(0, 4)
+
+        img_batch = np.transpose(img_batch, [1, 2, 3, 0])
+        img_batch = np.rot90(img_batch, nb_rotations)
+        img_batch = np.transpose(img_batch, [3, 0, 1, 2])
+
+        if np.random.uniform() > 0.5:
+            img_batch = np.flip(img_batch, axis=1)
+        if np.random.uniform() > 0.5:
+            img_batch = np.flip(img_batch, axis=2)
+
+        return img_batch
+
     def make_split_generator(self, split, target_size=None,
                              batch_size=32, shuffle=False, augment=False,
-                             normalize=False, eval_mode=False):
+                             normalize=False, only_xy=True):
         file_inds = self.get_file_inds(split)
-        has_y = split != TEST
+        img_batch_gen = self.make_img_batch_generator(
+            file_inds, target_size, batch_size, shuffle)
 
-        gen = self.make_batch_generator(
-            file_inds, target_size, batch_size, shuffle, has_y)
-
-        def transform(x):
-            batch, batch_file_inds = x
-            batch = batch.astype(np.float32)
+        def transform_img_batch(x):
+            # An img_batch is a batch of images. For segmentation problems,
+            # this will contain images corresponding to both x and y. For
+            # tagging problems, it will only contain images corresponding to
+            # the x.
+            img_batch, batch_file_inds = x
+            img_batch = img_batch.astype(np.float32)
 
             if augment:
-                nb_rotations = np.random.randint(0, 4)
+                img_batch = self.augment_img_batch(img_batch)
 
-                batch = np.transpose(batch, [1, 2, 3, 0])
-                batch = np.rot90(batch, nb_rotations)
-                batch = np.transpose(batch, [3, 0, 1, 2])
-
-                if np.random.uniform() > 0.5:
-                    batch = np.flip(batch, axis=1)
-                if np.random.uniform() > 0.5:
-                    batch = np.flip(batch, axis=2)
-
-            all_batch_x, batch_y, batch_y_mask = self.parse_batch(batch, has_y)
-            all_batch_x = self.dataset.augment_channels(all_batch_x)
+            # The batch is an object that contains x, y, file_inds
+            # and whatever else constitutes a batch for the problem type.
+            batch = self.make_batch(img_batch, batch_file_inds)
 
             if normalize:
-                all_batch_x = self.normalize(all_batch_x)
+                batch.all_x = self.normalize(batch.all_x)
+            batch.x = batch.all_x[:, :, :, self.active_input_inds]
 
-            batch_x = all_batch_x[:, :, :, self.active_input_inds]
+            if only_xy:
+                return batch.x, batch.y
+            return batch
 
-            if eval_mode:
-                return (batch_x, batch_y, all_batch_x, batch_y_mask,
-                        batch_file_inds)
-            return batch_x, batch_y
+        split_gen = map(transform_img_batch, img_batch_gen)
 
-        gen = map(transform, gen)
-
-        return gen
+        return split_gen
