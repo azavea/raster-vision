@@ -6,7 +6,7 @@ from keras.layers import (
     Input, Activation, Reshape, Conv2D, Lambda, Add)
 import tensorflow as tf
 
-from .resnet50 import ResNet50
+from rastervision.common.models.resnet50 import ResNet50
 
 
 FCN_RESNET = 'fcn_resnet'

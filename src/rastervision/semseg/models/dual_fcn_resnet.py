@@ -10,7 +10,7 @@ from keras.layers import (Input,
                           merge)
 import tensorflow as tf
 
-from .resnet50 import ResNet50
+from rastervision.common.models.resnet50 import ResNet50
 
 
 DUAL_FCN_RESNET = 'dual_fcn_resnet'

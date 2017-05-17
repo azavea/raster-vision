@@ -67,6 +67,8 @@ class Dataset():
         self.ndvi_ind = 4
         self.nb_channels = 5
 
+        self.image_shape = (256, 256)
+
     def augment_channels(self, batch_x):
         red = batch_x[:, :, :, [self.red_ind]]
         ir = batch_x[:, :, :, [self.ir_ind]]

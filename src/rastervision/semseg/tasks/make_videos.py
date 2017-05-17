@@ -9,12 +9,13 @@ from rastervision.common.utils import _makedirs
 from rastervision.common.settings import VALIDATION
 
 from .utils import make_prediction_img, plot_prediction, predict_x
-from ..models.factory import make_model
+from ..models.factory import SemsegModelFactory
 
 MAKE_VIDEOS = 'make_videos'
 
 
 def make_videos(run_path, options, generator):
+    model_factory = SemsegModelFactory()
     videos_path = join(run_path, 'videos')
     _makedirs(videos_path)
 
@@ -27,7 +28,7 @@ def make_videos(run_path, options, generator):
     model_paths.sort()
     models = []
     for model_path in model_paths:
-        model = make_model(options, generator)
+        model = model_factory.make_model(options, generator)
         model.load_weights(model_path, by_name=True)
         models.append(model)
 
