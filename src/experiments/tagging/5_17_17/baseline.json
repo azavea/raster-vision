@@ -1,0 +1,17 @@
+{
+    "batch_size": 32,
+    "git_commit": "609600",
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "tiff",
+    "active_input_inds": [0, 1, 2, 3],
+    "use_pretraining": false,
+    "optimizer": "adam",
+    "lr_schedule": [[0, 0.001], [100, 0.0001], [125, 0.00001]],
+    "model_type": "baseline_resnet",
+    "train_ratio": 0.8,
+    "epochs": 150,
+    "validation_steps": 32,
+    "run_name": "tagging/5_17_17/baseline",
+    "steps_per_epoch": 128
+}
