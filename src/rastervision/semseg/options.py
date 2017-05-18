@@ -16,11 +16,6 @@ class SemsegOptions(Options):
 
         self.nb_videos = options.get('nb_videos')
 
-        # Controls how many samples to use in the final evaluation.
-        # Setting this to a low value can be useful when testing
-        # the code, since it will save time.
-        self.nb_eval_samples = options.get('nb_eval_samples')
-
         if self.model_type == CONV_LOGISTIC:
             self.kernel_size = options['kernel_size']
         elif self.model_type == FC_DENSENET:

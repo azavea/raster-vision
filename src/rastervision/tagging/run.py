@@ -4,14 +4,19 @@ import sys
 from rastervision.common.utils import Logger, make_sync_results, setup_run
 from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
 from rastervision.common.tasks.train_model import TRAIN_MODEL
-from rastervision.common.settings import results_path, datasets_path
+from rastervision.common.settings import results_path
+from rastervision.tagging.tasks.predict import (
+    VALIDATION_PREDICT, TEST_PREDICT, validation_predict, test_predict)
+from rastervision.tagging.tasks.validation_eval import (
+    VALIDATION_EVAL, validation_eval)
 
 from .options import TaggingOptions
 from .data.factory import get_data_generator
 from .models.factory import TaggingModelFactory
 from .tasks.train_model import TaggingTrainModel
 
-valid_tasks = [TRAIN_MODEL, PLOT_CURVES]
+valid_tasks = [TRAIN_MODEL, PLOT_CURVES, VALIDATION_PREDICT,
+               VALIDATION_EVAL, TEST_PREDICT]
 
 
 def run_tasks(options_dict, tasks):
@@ -36,14 +41,23 @@ def run_tasks(options_dict, tasks):
         if task not in valid_tasks:
             raise ValueError('{} is not a valid task'.format(task))
 
+    model = model_factory.get_model(
+        run_path, options, generator, use_best=True)
+
     for task in tasks:
         if task == TRAIN_MODEL:
-            model = model_factory.get_model(
-                run_path, options, generator, use_best=False)
             train_model = TaggingTrainModel(
                 run_path, sync_results, options, generator, model)
             train_model.train_model()
         elif task == PLOT_CURVES:
             plot_curves(run_path)
+        elif task == VALIDATION_PREDICT:
+            validation_predict(run_path, model, options, generator)
+        elif task == VALIDATION_EVAL:
+            validation_eval(run_path, generator)
+        elif task == TEST_PREDICT:
+            test_predict(run_path, model, options, generator)
+        else:
+            raise ValueError('{} is not a valid task'.format(task))
 
         sync_results()

@@ -77,12 +77,16 @@ class Dataset():
 
 
 class TagStore():
-    def __init__(self, tags_path, dataset):
-        self.dataset = dataset
-        self.load_tags(tags_path)
+    def __init__(self, tags_path=None):
+        self.dataset = Dataset()
+        self.file_ind_to_tags = {}
+        if tags_path is not None:
+            self.load_tags(tags_path)
+
+    def add_tags(self, file_ind, binary_tags):
+        self.file_ind_to_tags[file_ind] = binary_tags
 
     def load_tags(self, tags_path):
-        self.file_ind_to_tags = {}
         with open(tags_path, newline='') as tags_file:
             reader = csv.reader(tags_file)
             # Skip header
@@ -91,13 +95,14 @@ class TagStore():
             for line_ind, row in enumerate(reader):
                 file_ind, tags = row
                 tags = tags.split(' ')
-                self.file_ind_to_tags[file_ind] = self.strs_to_binary(tags)
+                self.add_tags(file_ind, self.strs_to_binary(tags))
 
     def strs_to_binary(self, str_tags):
         binary_tags = np.zeros((self.dataset.nb_tags,))
         for str_tag in str_tags:
-            ind = self.dataset.tag_to_ind[str_tag]
-            binary_tags[ind] = 1
+            if str_tag.strip() != '':
+                ind = self.dataset.tag_to_ind[str_tag]
+                binary_tags[ind] = 1
         return binary_tags
 
     def binary_to_strs(self, binary_tags):
@@ -107,7 +112,7 @@ class TagStore():
                 str_tags.append(self.dataset.all_tags[tag_ind])
         return str_tags
 
-    def get_tags(self, file_inds):
+    def get_tag_array(self, file_inds):
         tags = []
         for file_ind in file_inds:
             tags.append(
@@ -116,7 +121,7 @@ class TagStore():
         return tags
 
     def get_tag_counts(self, tags):
-        file_tags = self.get_tags(self.file_ind_to_tags.keys())
+        file_tags = self.get_tag_array(self.file_ind_to_tags.keys())
         counts = file_tags.sum(axis=0)
         tag_counts = {}
         for tag in tags:
@@ -124,12 +129,20 @@ class TagStore():
             tag_counts[tag] = counts[tag_ind]
         return tag_counts
 
+    def save(self, path):
+        with open(path, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['image_name', 'tags'])
+            for file_ind, tags in self.file_ind_to_tags.items():
+                tags = ' '.join(self.binary_to_strs(tags))
+                writer.writerow([file_ind, tags])
+
 
 class PlanetKaggleFileGenerator(FileGenerator):
     def __init__(self, active_input_inds, train_ratio, cross_validation):
         tags_path = join(self.dataset_path, 'train_v2.csv')
         self.dataset = Dataset()
-        self.tag_store = TagStore(tags_path, self.dataset)
+        self.tag_store = TagStore(tags_path)
 
         super().__init__(active_input_inds, train_ratio, cross_validation)
 
@@ -138,7 +151,7 @@ class PlanetKaggleFileGenerator(FileGenerator):
         dataset_path = join(datasets_path, PLANET_KAGGLE)
         tags_path = join(dataset_path, 'train_v2.csv')
         dataset = Dataset()
-        tag_store = TagStore(tags_path, dataset)
+        tag_store = TagStore(tags_path)
         counts_path = join(dataset_path, 'tag_counts.json')
         save_json(tag_store.get_tag_counts(dataset.all_tags), counts_path)
 
@@ -212,8 +225,9 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
         plt.close(fig)
 
     def get_file_path(self, file_ind):
-        split, _ = file_ind.split('_')
-        data_dir = self.test_path if split == 'test' else self.dev_path
+        prefix, _ = file_ind.split('_')
+        data_dir = self.test_path if prefix in ['file', 'test'] \
+            else self.dev_path
         return join(
             self.dataset_path, data_dir, '{}.tif'.format(file_ind))
 
@@ -239,5 +253,5 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
         batch.file_inds = file_inds
 
         if self.has_y(file_inds[0]):
-            batch.y = self.tag_store.get_tags(file_inds)
+            batch.y = self.tag_store.get_tag_array(file_inds)
         return batch
