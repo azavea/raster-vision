@@ -31,6 +31,7 @@ def predict(run_path, model, options, generator, split):
         normalize=True, only_xy=False)
 
     tag_store = TagStore()
+
     atmos_inds = [generator.dataset.tag_to_ind[tag]
                   for tag in generator.dataset.atmos_tags]
 
