@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from rastervision.common.utils import (
     save_json, compute_ndvi, plot_img_row, download_dataset)
-from rastervision.common.generators import FileGenerator, Batch
+from rastervision.common.data.generators import FileGenerator, Batch
 
 PLANET_KAGGLE = 'planet_kaggle'
 TIFF = 'tiff'

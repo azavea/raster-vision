@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from rastervision.common.utils import (
     expand_dims, compute_ndvi, plot_img_row, download_dataset)
-from rastervision.common.generators import Batch, FileGenerator
+from rastervision.common.data.generators import Batch, FileGenerator
 
 ISPRS = 'isprs'
 
