@@ -12,3 +12,4 @@ s3_results_path = join('s3://{}'.format(s3_bucket), 'results')
 TRAIN = 'train'
 VALIDATION = 'validation'
 TEST = 'test'
+split_names = [TRAIN, VALIDATION, TEST]
