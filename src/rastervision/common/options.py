@@ -32,3 +32,8 @@ class Options():
         self.cross_validation = options.get('cross_validation')
         self.delta_model_checkpoint = options.get(
             'delta_model_checkpoint', None)
+
+        # Controls how many samples to use in the final evaluation.
+        # Setting this to a low value can be useful when testing
+        # the code, since it will save time.
+        self.nb_eval_samples = options.get('nb_eval_samples')

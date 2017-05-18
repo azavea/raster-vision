@@ -12,7 +12,6 @@
     "train_ratio": 0.8,
     "epochs": 2,
     "validation_steps": 1,
-    "nb_eval_samples": 1,
     "run_name": "tests/tagging/planet_kaggle_quick_test",
     "steps_per_epoch": 2
 }
