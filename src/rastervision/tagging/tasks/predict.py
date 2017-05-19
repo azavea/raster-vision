@@ -3,6 +3,7 @@ from os.path import join
 import numpy as np
 
 from rastervision.common.settings import VALIDATION, TEST
+
 from rastervision.tagging.data.planet_kaggle import TagStore
 
 VALIDATION_PREDICT = 'validation_predict'

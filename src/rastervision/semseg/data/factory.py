@@ -3,11 +3,11 @@ from os.path import join
 from rastervision.common.data.factory import DataGeneratorFactory
 from rastervision.common.utils import _makedirs
 
-from .potsdam import (
+from rastervision.semseg.data.potsdam import (
     POTSDAM, PotsdamImageFileGenerator, PotsdamNumpyFileGenerator)
-from .vaihingen import (
+from rastervision.semseg.data.vaihingen import (
     VAIHINGEN, VaihingenImageFileGenerator, VaihingenNumpyFileGenerator)
-from .settings import NUMPY, IMAGE
+from rastervision.semseg.data.settings import NUMPY, IMAGE
 
 
 class SemsegDataGeneratorFactory(DataGeneratorFactory):

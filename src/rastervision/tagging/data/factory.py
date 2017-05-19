@@ -2,6 +2,7 @@ from os.path import join
 
 from rastervision.common.data.factory import DataGeneratorFactory
 from rastervision.common.utils import _makedirs
+
 from rastervision.tagging.data.planet_kaggle import (
     PLANET_KAGGLE, TIFF, PlanetKaggleTiffFileGenerator)
 

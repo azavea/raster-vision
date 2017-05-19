@@ -7,7 +7,8 @@ from sklearn import metrics
 from rastervision.common.utils import _makedirs, safe_divide
 from rastervision.common.settings import VALIDATION
 
-from .utils import predict_x, make_prediction_img, plot_prediction
+from rastervision.semseg.tasks.utils import (
+    predict_x, make_prediction_img, plot_prediction)
 
 
 VALIDATION_EVAL = 'validation_eval'

@@ -7,8 +7,9 @@ import numpy as np
 from rastervision.common.utils import _makedirs
 from rastervision.common.settings import VALIDATION
 
-from .utils import make_prediction_img, plot_prediction, predict_x
-from ..models.factory import SemsegModelFactory
+from rastervision.semseg.tasks.utils import (
+    make_prediction_img, plot_prediction, predict_x)
+from rastervision.semseg.models.factory import SemsegModelFactory
 
 MAKE_VIDEOS = 'make_videos'
 

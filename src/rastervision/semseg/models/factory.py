@@ -2,12 +2,17 @@ from os.path import join
 
 from rastervision.common.models.factory import ModelFactory
 
-from .conv_logistic import make_conv_logistic, CONV_LOGISTIC
-from .fcn_resnet import make_fcn_resnet, FCN_RESNET
-from .dual_fcn_resnet import make_dual_fcn_resnet, DUAL_FCN_RESNET
-from .unet import make_unet, UNET
-from .fc_densenet import make_fc_densenet, FC_DENSENET
-from .ensemble import (
+from rastervision.semseg.models.conv_logistic import (
+    make_conv_logistic, CONV_LOGISTIC)
+from rastervision.semseg.models.fcn_resnet import (
+    make_fcn_resnet, FCN_RESNET)
+from rastervision.semseg.models.dual_fcn_resnet import (
+    make_dual_fcn_resnet, DUAL_FCN_RESNET)
+from rastervision.semseg.models.unet import (
+    make_unet, UNET)
+from rastervision.semseg.models.fc_densenet import (
+    make_fc_densenet, FC_DENSENET)
+from rastervision.semseg.models.ensemble import (
     ConcatEnsemble, AvgEnsemble, CONCAT_ENSEMBLE, AVG_ENSEMBLE)
 
 

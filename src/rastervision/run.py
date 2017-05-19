@@ -7,6 +7,7 @@ import json
 
 from rastervision.semseg.settings import SEMSEG
 from rastervision.semseg.run import run_tasks as semseg_run_tasks
+
 from rastervision.tagging.settings import TAGGING
 from rastervision.tagging.run import run_tasks as tagging_run_tasks
 

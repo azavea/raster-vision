@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from ..validation_eval import Scores
+from rastervision.semseg.tasks.validation_eval import Scores
 
 
 class ScoresTestCase(unittest.TestCase):
