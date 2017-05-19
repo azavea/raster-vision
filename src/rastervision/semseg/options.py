@@ -3,8 +3,7 @@ from .models.fcn_resnet import FCN_RESNET
 from .models.dual_fcn_resnet import DUAL_FCN_RESNET
 from .models.fc_densenet import FC_DENSENET
 from .models.ensemble import CONCAT_ENSEMBLE, AVG_ENSEMBLE
-from .data.potsdam import POTSDAM, PotsdamDataset
-from .data.vaihingen import VAIHINGEN
+from .data.potsdam import POTSDAM
 from rastervision.common.options import Options
 
 

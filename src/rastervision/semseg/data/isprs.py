@@ -1,6 +1,3 @@
-from os.path import join, isdir, dirname
-from subprocess import call
-
 import numpy as np
 import matplotlib as mpl
 # For headless environments

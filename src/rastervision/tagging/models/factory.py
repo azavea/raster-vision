@@ -1,6 +1,3 @@
-from os.path import isfile, join
-from subprocess import call
-
 from rastervision.common.models.factory import ModelFactory
 from rastervision.common.models.resnet50 import ResNet50
 

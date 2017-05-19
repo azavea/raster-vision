@@ -1,7 +1,7 @@
 import argparse
 
 from rastervision.common.settings import (
-    split_names, datasets_path, results_path, TRAIN, VALIDATION, TEST)
+    split_names, datasets_path, results_path, TRAIN, VALIDATION)
 
 PLOT = 'plot'
 PREPROCESS = 'preprocess'

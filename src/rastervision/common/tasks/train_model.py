@@ -1,5 +1,4 @@
 from os.path import join, isfile
-import math
 
 from keras.callbacks import (Callback, ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau, LambdaCallback,

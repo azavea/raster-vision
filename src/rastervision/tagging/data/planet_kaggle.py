@@ -1,7 +1,6 @@
-from os.path import join, basename, splitext, isdir, dirname
+from os.path import join, basename, splitext
 import csv
 import glob
-from subprocess import call
 
 import numpy as np
 import matplotlib as mpl

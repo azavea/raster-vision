@@ -1,11 +1,9 @@
-from os.path import join
-
 import numpy as np
 
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import (
-    Input, Conv2D, Activation, Reshape)
+    Input, Conv2D, Activation)
 
 CONCAT_ENSEMBLE = 'concat_ensemble'
 AVG_ENSEMBLE = 'avg_ensemble'

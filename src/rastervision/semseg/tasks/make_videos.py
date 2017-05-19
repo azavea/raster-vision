@@ -1,5 +1,4 @@
 from os.path import join, isdir
-from shutil import rmtree
 import glob
 from subprocess import call
 

@@ -1,5 +1,4 @@
-from os.path import isfile, join
-from subprocess import call
+from os.path import join
 
 from rastervision.common.models.factory import ModelFactory
 
