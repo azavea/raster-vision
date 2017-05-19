@@ -9,6 +9,28 @@ VALIDATION_PREDICT = 'validation_predict'
 TEST_PREDICT = 'test_predict'
 
 
+def compute_prediction(y_probs, dataset):
+    atmos_inds = [dataset.get_tag_ind(tag)
+                  for tag in dataset.atmos_tags]
+
+    # TODO experimenting with a different threshold
+    # remove this after the loss function is a better approximate
+    # of f2
+    decision_thresh = 0.2
+    y_pred = (y_probs > decision_thresh).astype(np.float32)
+
+    # TODO remove this post-processing step once our model
+    # enforces the constraint that there is at least one atmospheric
+    # tag.
+    if np.sum(y_pred[atmos_inds]) == 0:
+        max_ind = np.argmax(y_probs[atmos_inds])
+        max_tag = dataset.atmos_tags[max_ind]
+        max_ind = dataset.get_tag_ind(max_tag)
+        y_pred[max_ind] = 1
+
+    return y_pred
+
+
 def predict(run_path, model, options, generator, split):
     """Generate predictions for split data.
 
@@ -32,31 +54,13 @@ def predict(run_path, model, options, generator, split):
 
     tag_store = TagStore()
 
-    atmos_inds = [generator.dataset.tag_to_ind[tag]
-                  for tag in generator.dataset.atmos_tags]
-
     for batch_ind, batch in enumerate(split_gen):
-        y_prob = model.predict(batch.x)
-
-        # TODO experimenting with a different threshold
-        # remove this after the loss function is a better approximate
-        # of f2
-        y_pred = (y_prob > 0.2).astype(np.float32)
+        y_probs = model.predict(batch.x)
         for sample_ind in range(batch.x.shape[0]):
-            y_pred_sample = y_pred[sample_ind, :]
-            y_prob_sample = y_prob[sample_ind, :]
-
-            # TODO remove this post-processing step once our model
-            # enforces the constraint that there is at least one atmospheric
-            # tag.
-            if np.sum(y_pred_sample[atmos_inds]) == 0:
-                max_ind = np.argmax(y_prob_sample[atmos_inds])
-                max_tag = generator.dataset.atmos_tags[max_ind]
-                max_ind = generator.dataset.tag_to_ind[max_tag]
-                y_pred_sample[max_ind] = 1
-
+            y_pred = compute_prediction(
+                y_probs[sample_ind, :], generator.dataset)
             tag_store.add_tags(
-                batch.file_inds[sample_ind], y_pred_sample)
+                batch.file_inds[sample_ind], y_pred)
 
         if (options.nb_eval_samples is not None and
                 batch_ind * options.batch_size >= options.nb_eval_samples):

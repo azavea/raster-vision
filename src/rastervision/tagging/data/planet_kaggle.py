@@ -69,6 +69,9 @@ class Dataset():
 
         self.image_shape = (256, 256)
 
+    def get_tag_ind(self, tag):
+        return self.tag_to_ind[tag]
+
     def augment_channels(self, batch_x):
         red = batch_x[:, :, :, [self.red_ind]]
         ir = batch_x[:, :, :, [self.ir_ind]]
@@ -91,17 +94,19 @@ class TagStore():
             reader = csv.reader(tags_file)
             # Skip header
             next(reader)
+            for row in reader:
+                self.add_csv_row(row)
 
-            for line_ind, row in enumerate(reader):
-                file_ind, tags = row
-                tags = tags.split(' ')
-                self.add_tags(file_ind, self.strs_to_binary(tags))
+    def add_csv_row(self, row):
+        file_ind, tags = row
+        tags = tags.split(' ')
+        self.add_tags(file_ind, self.strs_to_binary(tags))
 
     def strs_to_binary(self, str_tags):
         binary_tags = np.zeros((self.dataset.nb_tags,))
         for str_tag in str_tags:
             if str_tag.strip() != '':
-                ind = self.dataset.tag_to_ind[str_tag]
+                ind = self.dataset.get_tag_ind(str_tag)
                 binary_tags[ind] = 1
         return binary_tags
 
@@ -125,7 +130,7 @@ class TagStore():
         counts = file_tags.sum(axis=0)
         tag_counts = {}
         for tag in tags:
-            tag_ind = self.tag_to_ind[tag]
+            tag_ind = self.dataset.get_tag_ind(tag)
             tag_counts[tag] = counts[tag_ind]
         return tag_counts
 
