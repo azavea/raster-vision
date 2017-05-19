@@ -7,7 +7,7 @@ from rastervision.common.tasks.train_model import TRAIN_MODEL
 from rastervision.common.settings import results_path
 
 from rastervision.tagging.options import TaggingOptions
-from rastervision.tagging.data.factory import get_data_generator
+from rastervision.tagging.data.factory import TaggingDataGeneratorFactory
 from rastervision.tagging.models.factory import TaggingModelFactory
 from rastervision.tagging.tasks.train_model import TaggingTrainModel
 from rastervision.tagging.tasks.predict import (
@@ -27,7 +27,7 @@ def run_tasks(options_dict, tasks):
     """
     options = TaggingOptions(options_dict)
     model_factory = TaggingModelFactory()
-    generator = get_data_generator(options)
+    generator = TaggingDataGeneratorFactory().get_data_generator(options)
     run_path = join(results_path, options.run_name)
 
     sync_results = make_sync_results(options.run_name)

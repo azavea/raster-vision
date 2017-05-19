@@ -7,7 +7,7 @@ from rastervision.common.tasks.train_model import TRAIN_MODEL
 from rastervision.common.settings import results_path, datasets_path
 
 from rastervision.semseg.options import SemsegOptions
-from rastervision.semseg.data.factory import get_data_generator
+from rastervision.semseg.data.factory import SemsegDataGeneratorFactory
 from rastervision.semseg.models.factory import SemsegModelFactory
 from rastervision.semseg.tasks.train_model import SemsegTrainModel
 from rastervision.semseg.tasks.validation_eval import (
@@ -29,7 +29,7 @@ def run_tasks(options_dict, tasks):
     """
     options = SemsegOptions(options_dict)
     model_factory = SemsegModelFactory()
-    generator = get_data_generator(options, datasets_path)
+    generator = SemsegDataGeneratorFactory().get_data_generator(options)
     run_path = join(results_path, options.run_name)
 
     sync_results = make_sync_results(options.run_name)
