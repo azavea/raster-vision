@@ -9,7 +9,8 @@ from rastervision.common.settings import (
     TRAIN, VALIDATION, TEST
 )
 
-from .isprs import IsprsDataset, IsprsBatch, IsprsFileGenerator
+from rastervision.semseg.data.isprs import (
+    IsprsDataset, IsprsBatch, IsprsFileGenerator)
 
 VAIHINGEN = 'isprs/vaihingen'
 PROCESSED_VAIHINGEN = 'isprs/processed_vaihingen'

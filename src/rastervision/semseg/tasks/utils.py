@@ -139,7 +139,7 @@ def plot_prediction(generator, display_all_x, display_y, display_pred,
     subplot_index += 1
     plot_img(subplot_index, display_y, 'Ground Truth',
              is_rgb=True)
-             
+
     subplot_index += 1
     plot_img(subplot_index, display_pred, 'Prediction',
              is_rgb=True)

@@ -9,7 +9,8 @@ from rastervision.common.settings import (
     TRAIN, VALIDATION, TEST
 )
 
-from .isprs import IsprsDataset, IsprsBatch, IsprsFileGenerator
+from rastervision.semseg.data.isprs import (
+    IsprsDataset, IsprsBatch, IsprsFileGenerator)
 
 POTSDAM = 'isprs/potsdam'
 PROCESSED_POTSDAM = 'isprs/processed_potsdam'

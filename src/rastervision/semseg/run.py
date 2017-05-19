@@ -6,14 +6,15 @@ from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
 from rastervision.common.tasks.train_model import TRAIN_MODEL
 from rastervision.common.settings import results_path, datasets_path
 
-from .options import SemsegOptions
-from .data.factory import get_data_generator
-from .models.factory import SemsegModelFactory
-from .tasks.train_model import SemsegTrainModel
-from .tasks.validation_eval import validation_eval, VALIDATION_EVAL
-from .tasks.predict import (
+from rastervision.semseg.options import SemsegOptions
+from rastervision.semseg.data.factory import SemsegDataGeneratorFactory
+from rastervision.semseg.models.factory import SemsegModelFactory
+from rastervision.semseg.tasks.train_model import SemsegTrainModel
+from rastervision.semseg.tasks.validation_eval import (
+    validation_eval, VALIDATION_EVAL)
+from rastervision.semseg.tasks.predict import (
     validation_predict, test_predict, VALIDATION_PREDICT, TEST_PREDICT)
-from .tasks.make_videos import MAKE_VIDEOS, make_videos
+from rastervision.semseg.tasks.make_videos import MAKE_VIDEOS, make_videos
 
 valid_tasks = [TRAIN_MODEL, PLOT_CURVES,
                VALIDATION_PREDICT, VALIDATION_EVAL, TEST_PREDICT,
@@ -28,7 +29,7 @@ def run_tasks(options_dict, tasks):
     """
     options = SemsegOptions(options_dict)
     model_factory = SemsegModelFactory()
-    generator = get_data_generator(options, datasets_path)
+    generator = SemsegDataGeneratorFactory().get_data_generator(options)
     run_path = join(results_path, options.run_name)
 
     sync_results = make_sync_results(options.run_name)

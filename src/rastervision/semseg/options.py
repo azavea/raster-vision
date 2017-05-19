@@ -1,11 +1,11 @@
-from .models.conv_logistic import CONV_LOGISTIC
-from .models.fcn_resnet import FCN_RESNET
-from .models.dual_fcn_resnet import DUAL_FCN_RESNET
-from .models.fc_densenet import FC_DENSENET
-from .models.ensemble import CONCAT_ENSEMBLE, AVG_ENSEMBLE
-from .data.potsdam import POTSDAM, PotsdamDataset
-from .data.vaihingen import VAIHINGEN
 from rastervision.common.options import Options
+
+from rastervision.semseg.models.conv_logistic import CONV_LOGISTIC
+from rastervision.semseg.models.fcn_resnet import FCN_RESNET
+from rastervision.semseg.models.dual_fcn_resnet import DUAL_FCN_RESNET
+from rastervision.semseg.models.fc_densenet import FC_DENSENET
+from rastervision.semseg.models.ensemble import CONCAT_ENSEMBLE, AVG_ENSEMBLE
+from rastervision.semseg.data.potsdam import POTSDAM
 
 
 class SemsegOptions(Options):

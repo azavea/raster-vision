@@ -6,7 +6,7 @@ import numpy as np
 from rastervision.common.utils import _makedirs, save_img, zip_dir
 from rastervision.common.settings import VALIDATION, TEST
 
-from .utils import make_prediction_img, predict_x
+from rastervision.semseg.tasks.utils import make_prediction_img, predict_x
 
 
 VALIDATION_PREDICT = 'validation_predict'

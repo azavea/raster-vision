@@ -3,7 +3,7 @@ from os import makedirs
 from os.path import splitext, basename, join, isdir
 import sys
 import zipfile
-from subprocess import call, Popen
+from subprocess import call
 import json
 
 # For some reason, you need to import PIL first.

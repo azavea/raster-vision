@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from ..utils import make_prediction_img
+from rastervision.semseg.tasks.utils import make_prediction_img
 
 
 class MakePredictionimgTestCase(unittest.TestCase):

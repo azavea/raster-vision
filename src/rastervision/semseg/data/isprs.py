@@ -1,6 +1,3 @@
-from os.path import join, isdir, dirname
-from subprocess import call
-
 import numpy as np
 import matplotlib as mpl
 # For headless environments
@@ -9,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from rastervision.common.utils import (
     expand_dims, compute_ndvi, plot_img_row, download_dataset)
-from rastervision.common.generators import Batch, FileGenerator
+from rastervision.common.data.generators import Batch, FileGenerator
 
 ISPRS = 'isprs'
 
@@ -157,13 +154,15 @@ class IsprsFileGenerator(FileGenerator):
 
         # Plot x channels
         x = self.unnormalize(x)
-        rgb_x = x[:, :, self.dataset.rgb_inds]
+        rgb_x = x[:, :, self.dataset.rgb_inds] / 256
         imgs = [rgb_x]
         nb_channels = x.shape[2]
         for channel_ind in range(nb_channels):
-            img = x[:, :, channel_ind]
+            img = x[:, :, channel_ind] / 256
             if channel_ind == self.dataset.ndvi_ind:
-                img = (np.clip(img, -1, 1) + 1) * 100
+                img = (np.clip(img, -1, 1) + 1) / 2
+            else:
+                img = x[:, :, channel_ind] / 256
             imgs.append(img)
         row_ind = 0
         plot_img_row(fig, grid_spec, row_ind, imgs)
@@ -172,7 +171,7 @@ class IsprsFileGenerator(FileGenerator):
         rgb_y = self.dataset.one_hot_to_rgb_batch(y)
         imgs = [rgb_y]
         for channel_ind in range(y.shape[2]):
-            img = y[:, :, channel_ind] * 150
+            img = y[:, :, channel_ind]
             imgs.append(img)
         row_ind = 1
         plot_img_row(fig, grid_spec, row_ind, imgs)
