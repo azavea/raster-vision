@@ -12,12 +12,12 @@
     "model_type": "conv_logistic",
     "train_ratio": 0.8,
     "kernel_size": [5, 5],
-    "nb_epoch": 10,
+    "epochs": 10,
     "nb_labels": 6,
     "delta_model_checkpoint": 0.01,
-    "nb_val_samples": 1,
-    "nb_eval_samples": 1,
     "nb_videos": 2,
+    "validation_steps": 1,
+    "nb_eval_samples": 1,
     "run_name": "tests/semseg/make_videos",
-    "samples_per_epoch": 1
+    "steps_per_epoch": 1
 }

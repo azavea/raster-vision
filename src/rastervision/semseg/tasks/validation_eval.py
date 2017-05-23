@@ -120,11 +120,10 @@ def validation_eval(run_path, model, options, generator):
         y = np.squeeze(batch.y, axis=0)
         y_mask = np.squeeze(batch.y_mask, axis=0)
 
-        display_all_x = generator.unnormalize(all_x)
-        display_y = dataset.one_hot_to_rgb_batch(y)
         display_pred = make_prediction_img(
             x, options.target_size[0],
             lambda x: dataset.one_hot_to_rgb_batch(predict_x(x, model)))
+        display_y = dataset.one_hot_to_rgb_batch(y)
 
         label_y = dataset.one_hot_to_label_batch(y)
         label_pred = dataset.rgb_to_label_batch(display_pred)
@@ -132,12 +131,7 @@ def validation_eval(run_path, model, options, generator):
         file_path = '{}.png'.format(sample_index)
         file_path = join(predictions_path, file_path)
         plot_prediction(
-            generator, display_all_x, display_y, display_pred, file_path)
-
-        file_path = '{}_debug.png'.format(sample_index)
-        file_path = join(predictions_path, file_path)
-        plot_prediction(
-            generator, display_all_x, display_y, display_pred, file_path,
+            generator, all_x, display_y, display_pred, file_path,
             is_debug=True)
 
         confusion_mat += compute_confusion_mat(

@@ -7,5 +7,5 @@ class SemsegTrainModel(TrainModel):
         super().__init__(
             run_path, sync_results, options, generator, model)
 
-        self.metrics = ['categorical_accuracy']
+        self.metrics = ['accuracy']
         self.loss_function = 'categorical_crossentropy'
