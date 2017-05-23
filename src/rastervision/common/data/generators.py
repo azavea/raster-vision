@@ -72,6 +72,15 @@ class FileGenerator(Generator):
         batch = next(gen)
         self.normalize_params = get_channel_stats(batch.all_x)
 
+    def calibrate_image(self, normalized_image):
+        calibrated_image = normalized_image.copy()
+        for i in range(self.dataset.nb_channels):
+            calibrated_image[:, :, i] = \
+                (normalized_image[:, :, i] * self.dataset.display_stds[i] +
+                 self.dataset.display_means[i])
+        calibrated_image = np.clip(calibrated_image, 0, 1)
+        return calibrated_image
+
     def has_y(self, file_ind):
         return file_ind in self.dev_file_inds
 

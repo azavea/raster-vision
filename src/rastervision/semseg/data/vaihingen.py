@@ -28,6 +28,10 @@ class VaihingenDataset(IsprsDataset):
 
         self.nb_channels = 5
 
+        self.display_means = np.array([0.5] * self.nb_channels)
+        self.display_stds = np.array([0.2] * self.nb_channels)
+        self.display_means[self.green_ind] = 0.45
+
         super().__init__()
 
     def get_output_file_name(self, file_ind):

@@ -31,6 +31,9 @@ class PotsdamDataset(IsprsDataset):
 
         self.nb_channels = 6
 
+        self.display_means = np.array([0.5] * self.nb_channels)
+        self.display_stds = np.array([0.2] * self.nb_channels)
+
         super().__init__()
 
     def get_output_file_name(self, file_ind):
