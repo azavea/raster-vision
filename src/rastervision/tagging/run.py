@@ -54,7 +54,7 @@ def run_tasks(options_dict, tasks):
         elif task == VALIDATION_PREDICT:
             validation_predict(run_path, model, options, generator)
         elif task == VALIDATION_EVAL:
-            validation_eval(run_path, generator)
+            validation_eval(run_path, model, options, generator)
         elif task == TEST_PREDICT:
             test_predict(run_path, model, options, generator)
         else:

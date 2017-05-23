@@ -119,6 +119,15 @@ class TagStore():
                 str_tags.append(self.dataset.all_tags[tag_ind])
         return str_tags
 
+    def get_tag_diff(self, y_true, y_pred):
+        y_true = set(self.binary_to_strs(y_true))
+        y_pred = set(self.binary_to_strs(y_pred))
+
+        add_pred_tags = sorted(list(y_pred.difference(y_true)))
+        remove_pred_tags = sorted(list(y_true.difference(y_pred)))
+
+        return add_pred_tags, remove_pred_tags
+
     def get_tag_array(self, file_inds):
         tags = []
         for file_ind in file_inds:
