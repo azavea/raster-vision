@@ -66,6 +66,9 @@ class Dataset():
         self.ndvi_ind = 4
         self.nb_channels = 5
 
+        self.display_means = np.array([0.45, 0.5, 0.5, 0.5, 0.5])
+        self.display_stds = np.array([0.25, 0.2, 0.2, 0.2, 0.2])
+
         self.image_shape = (256, 256)
 
     def get_tag_ind(self, tag):
@@ -115,6 +118,15 @@ class TagStore():
             if binary_tags[tag_ind] == 1:
                 str_tags.append(self.dataset.all_tags[tag_ind])
         return str_tags
+
+    def get_tag_diff(self, y_true, y_pred):
+        y_true = set(self.binary_to_strs(y_true))
+        y_pred = set(self.binary_to_strs(y_pred))
+
+        add_pred_tags = sorted(list(y_pred.difference(y_true)))
+        remove_pred_tags = sorted(list(y_true.difference(y_pred)))
+
+        return add_pred_tags, remove_pred_tags
 
     def get_tag_array(self, file_inds):
         tags = []
@@ -187,29 +199,13 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
             file_inds.append(file_ind)
         return file_inds
 
-    def display_scale(self, x):
-        # TODO do this in a better way following the kaggle jupiter notebook
-        x = np.copy(x)
-        rgbir_x = x[:, :, 0:4]
-        ndvi_x = x[:, :, 4]
-        uint16_max = float(np.iinfo(np.uint16).max)
-
-        rgbir_x /= uint16_max
-        rgbir_x *= 3
-
-        ndvi_x += 1.0
-        ndvi_x /= 2
-
-        return x
-
     def plot_sample(self, file_path, x, y, file_ind):
         fig = plt.figure()
         nb_cols = self.dataset.nb_channels + 1
         grid_spec = mpl.gridspec.GridSpec(1, nb_cols)
 
         # Plot x channels
-        x = self.unnormalize(x)
-        x = self.display_scale(x)
+        x = self.calibrate_image(x)
         rgb_x = x[:, :, self.dataset.rgb_inds]
         imgs = [rgb_x]
         nb_channels = x.shape[2]

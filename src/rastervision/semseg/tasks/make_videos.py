@@ -43,10 +43,9 @@ def make_videos(run_path, options, generator):
         y = np.squeeze(batch.y, axis=0)
         display_y = generator.dataset.one_hot_to_rgb_batch(y)
         all_x = np.squeeze(batch.all_x, axis=0)
-        display_all_x = generator.unnormalize(all_x)
 
         make_video(
-            x, display_y, display_all_x, models, videos_path, video_ind,
+            x, display_y, all_x, models, videos_path, video_ind,
             options, generator)
 
         if video_ind == options.nb_videos - 1:

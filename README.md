@@ -87,23 +87,23 @@ vagrant@raster-vision:/vagrant$ ./scripts/run --cpu
 ```
 
 ### Preparing datasets
-These are instructions for replicating our setup from scratch. If you are at Azavea, the prepared data is already on S3 and you can download it from there onto your local machine.
+These are instructions for replicating our setup from scratch. If you are at Azavea, the prepared data is already on S3 and you can download it from there onto your local machine. The directories mentioned below are assumed to be relative to the `RASTER_VISION_DATA_DIR`.
 
 #### ISPRS
 Before running any experiments locally, the data needs to be prepared so that Keras can consume it. For the
 [ISPRS 2D Semantic Labeling Potsdam dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html), you can download the data after filling out the [request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html).
 After following the link to the Potsdam dataset, download
 `1_DSM_normalisation.zip`, `4_Ortho_RGBIR.zip`, `5_Labels_for_participants.zip`, and `5_Labels_for_participants_no_Boundary.zip`. Then unzip the files into
-`<RASTER_VISION_DATA_DIR>/datasets/isprs/potsdam`, resulting in `<RASTER_VISION_DATA_DIR>/datasets/isprs/potsdam/1_DSM_normalisation/`, etc.
+`datasets/isprs/potsdam/`, resulting in `datasets/isprs/potsdam/1_DSM_normalisation/`, etc.
 
-For the [ISPRS 2D Semantic Labeling Vaihingen dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html) dataset, download `ISPRS_semantic_labeling_Vaihingen.zip` and `ISPRS_semantic_labeling_Vaihingen_ground_truth_eroded_for_participants.zip`. Then unzip the files into `<RASTER_VISION_DATA_DIR>/datasets/isprs/vaihingen`, resulting in
-`<RASTER_VISION_DATA_DIR>/datasets/isprs/vaihingen/dsm`, `<RASTER_VISION_DATA_DIR>/datasets/isprs/vaihingen/gts_for_participants`, etc.
+For the [ISPRS 2D Semantic Labeling Vaihingen dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html) dataset, download `ISPRS_semantic_labeling_Vaihingen.zip` and `ISPRS_semantic_labeling_Vaihingen_ground_truth_eroded_for_participants.zip`. Then unzip the files into `datasets/isprs/vaihingen/`, resulting in
+`datasets/isprs/vaihingen/dsm/`, `datasets/isprs/vaihingen/gts_for_participants/`, etc.
 
-Then run `python -m rastervision.semseg.data.factory all all all`. This takes about 30 minutes and will generate `<RASTER_VISION_DATA_DIR>/datasets/isprs/processed_potsdam` and `<RASTER_VISION_DATA_DIR>/datasets/isprs/processed_vaihingen`, as well as PDF files that visualize samples produced by the data generator in  `<RASTER_VISION_DATA_DIR>/results/gen_samples/`. You can also run the command for a specific task, dataset, and generator. For instance, you can run `python -m rastervision.semseg.data.factory isprs/potsdam numpy plot`.
- To make the processed data available for use on EC2, upload a zip file of `<RASTER_VISION_DATA_DIR>/datasets/isprs/processed_potsdam` named `processed_potsdam.zip` (and similar for Vaihingen) to `s3://<RASTER_VISION_S3_BUCKET>/datasets/isprs/`.
+Then run `python -m rastervision.semseg.data.factory all all all`. This takes about 30 minutes and will generate `datasets/isprs/processed_potsdam/` and `datasets/isprs/processed_vaihingen/`, as well as PDF files that visualize samples produced by the data generator in  `results/gen_samples/`. You can also run the command for a specific task, dataset, and generator. For instance, you can run `python -m rastervision.semseg.data.factory isprs/potsdam numpy plot`.
+ To make the processed data available for use on EC2, upload a zip file of `datasets/isprs/processed_potsdam/` named `processed_potsdam.zip` (and similar for Vaihingen) to `s3://<RASTER_VISION_S3_BUCKET>/datasets/isprs/`.
 
 #### Planet Kaggle
-The data is available from the Kaggle [website](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/data) and requires logging in. For running locally, you will need to create a directory `<RASTER_VISION_DATA_DIR>/datasets/planet_kaggle`, and place the  `train-tif-v2/` and `test-tif-v2/` directories in it, as well as the `train_v2.csv` file. To save disk space, you can just keep a small sample of the data in these directories for testing purposes. You will then need to convert the corresponding 7zip files into zip files and upload them to `s3://<RASTER_VISION_S3_BUCKET>/datasets/planet_kaggle/`. To test that the generator works for this dataset, you can run `python -m rastervision.semseg.taging.factory planet_kaggle tiff plot`, which will generate debug plots in `<RASTER_VISION_DATA_DIR>/results/gen_samples/`.
+The data is available from the Kaggle [website](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/data) and requires logging in. For running locally, you will need to create a directory `datasets/planet_kaggle/`, and place the  `train-tif-v2/` and `test-tif-v2/` directories in it, as well as the `train_v2.csv` file. To save disk space, you can just keep a small sample of the data in these directories for testing purposes. You will then need to convert the corresponding 7zip files into zip files and upload them to `s3://<RASTER_VISION_S3_BUCKET>/datasets/planet_kaggle/`. To test that the generator works for this dataset, you can run `python -m rastervision.semseg.taging.factory planet_kaggle tiff plot`, which will generate debug plots in `results/gen_samples/`.
 
 ### Running experiments
 
@@ -120,7 +120,7 @@ python -m rastervision.run experiments/tests/semseg/potsdam_quick_test.json
 # Only run the plot_curves tasks which requires that train_model were previously run
 python -m rastervision.run experiments/tests/semseg/potsdam_quick_test.json plot_curves
 ```
-This will generate a directory structure in `<RASTER_VISION_DATA_DIR>/results/<run_name>/` which contains the options file, the learned model, and various metrics and visualization files.
+This will generate a directory structure in `results/<run_name>/` which contains the options file, the learned model, and various metrics and visualization files.
 
 ## Running remotely on AWS EC2 GPUs
 

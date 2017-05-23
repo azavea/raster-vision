@@ -223,7 +223,7 @@ def setup_run(run_path, options, sync_results):
     return run_path
 
 
-def plot_img_row(fig, grid_spec, row_ind, imgs):
+def plot_img_row(fig, grid_spec, row_ind, imgs, titles=None):
     for col_ind, img in enumerate(imgs):
         a = fig.add_subplot(grid_spec[row_ind, col_ind])
         a.axes.get_xaxis().set_visible(False)
@@ -232,3 +232,6 @@ def plot_img_row(fig, grid_spec, row_ind, imgs):
             a.imshow(img, cmap='gray', vmin=0., vmax=1.0)
         else:
             a.imshow(img)
+
+        if titles is not None:
+            a.set_title(titles[col_ind], fontsize=6)

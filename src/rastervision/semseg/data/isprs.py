@@ -153,16 +153,12 @@ class IsprsFileGenerator(FileGenerator):
         grid_spec = mpl.gridspec.GridSpec(2, nb_cols)
 
         # Plot x channels
-        x = self.unnormalize(x)
-        rgb_x = x[:, :, self.dataset.rgb_inds] / 256
+        x = self.calibrate_image(x)
+        rgb_x = x[:, :, self.dataset.rgb_inds]
         imgs = [rgb_x]
         nb_channels = x.shape[2]
         for channel_ind in range(nb_channels):
-            img = x[:, :, channel_ind] / 256
-            if channel_ind == self.dataset.ndvi_ind:
-                img = (np.clip(img, -1, 1) + 1) / 2
-            else:
-                img = x[:, :, channel_ind] / 256
+            img = x[:, :, channel_ind]
             imgs.append(img)
         row_ind = 0
         plot_img_row(fig, grid_spec, row_ind, imgs)

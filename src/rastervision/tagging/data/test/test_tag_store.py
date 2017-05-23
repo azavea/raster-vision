@@ -45,6 +45,17 @@ class TagStoreTestCase(unittest.TestCase):
         count_sum = sum(tag_counts.values())
         self.assertEqual(count_sum, 3)
 
+    def test_get_tag_diff(self):
+        y_true = self.tag_store.strs_to_binary(
+            [self.dataset.bare_ground, self.dataset.partly_cloudy])
+        y_pred = self.tag_store.strs_to_binary(
+            [self.dataset.bare_ground, self.dataset.cultivation])
+
+        add_pred_tags, remove_pred_tags = \
+            self.tag_store.get_tag_diff(y_true, y_pred)
+        self.assertEqual(add_pred_tags, [self.dataset.cultivation])
+        self.assertEqual(remove_pred_tags, [self.dataset.partly_cloudy])
+
 
 if __name__ == '__main__':
     unittest.main()
