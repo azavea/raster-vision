@@ -2,7 +2,7 @@
 aws_region: "us-east-1"
 aws_profile: "raster-vision"
 
-aws_cli_version: "1.11.8"
+aws_cli_version: "1.11.84"
 
 terraform_version: "0.7.7"
 
