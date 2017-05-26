@@ -6,7 +6,6 @@ from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
 from rastervision.common.tasks.train_model import TRAIN_MODEL
 from rastervision.common.settings import results_path, datasets_path
 
-from rastervision.semseg.options import SemsegOptions
 from rastervision.semseg.data.factory import SemsegDataGeneratorFactory
 from rastervision.semseg.models.factory import SemsegModelFactory
 from rastervision.semseg.tasks.train_model import SemsegTrainModel
@@ -21,13 +20,12 @@ valid_tasks = [TRAIN_MODEL, PLOT_CURVES,
                MAKE_VIDEOS]
 
 
-def run_tasks(options_dict, tasks):
+def run_tasks(options, tasks):
     """Run tasks specified on command line.
 
     This creates the RunOptions object from the json file specified on the
     command line, creates a data generator, and then runs the tasks.
     """
-    options = SemsegOptions(options_dict)
     model_factory = SemsegModelFactory()
     generator = SemsegDataGeneratorFactory().get_data_generator(options)
     run_path = join(results_path, options.run_name)

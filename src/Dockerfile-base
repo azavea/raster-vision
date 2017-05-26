@@ -22,7 +22,7 @@ RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
     mkdir -p /src && \
     chown keras /src
 
-ENV PYTHONPATH='/src/:$PYTHONPATH'
+ENV PYTHONPATH=/src/:$PYTHONPATH
 
 ENV KERAS_BACKEND tensorflow
 
@@ -39,6 +39,7 @@ RUN pip install git+git://github.com/jakebian/quiver.git && \
     pip install flake8 awscli
 
 WORKDIR /opt/src
+ENV PYTHONPATH=/opt/src/:$PYTHONPATH
 
 # Ensure that the keras user will have permission to write model into /opt/data
 USER root
