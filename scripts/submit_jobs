@@ -1,0 +1,62 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0") <branch_name> <experiment_dir> <space separated list of tasks>
+Submits a set of jobs to AWS Batch. experiment_dir should be a directory containing experiment json files with root at experiments/
+"
+}
+
+PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+
+if [[ (("$#" < 2)) || "${1:-}" = "--help" ]]; then
+    usage
+    exit
+fi
+
+branch_name=$1
+exp_dir=$2
+tasks=${@:3}
+file_paths="$PROJECT_ROOT"/src/"$exp_dir"/*.json
+nb_files=$(echo $file_paths | wc -w)
+
+echo "Branch name: $branch_name"
+echo "Experiment dir: $exp_dir"
+echo "Tasks: $tasks"
+
+function prompt() {
+    read -r response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            ;;
+        *)
+            exit
+            ;;
+    esac
+}
+
+echo "Are your experiment files pushed to $branch_name? [y/N]"
+prompt
+echo "Do you really want to run $nb_files jobs? [y/N]"
+prompt
+
+echo "Ok, launching $nb_files jobs..."
+for file_path in $file_paths; do
+    exp_path="$exp_dir"/$(basename "$file_path")
+    job_name=$(echo $exp_path | tr \/. _)
+    if [ -z "$tasks" ]; then
+        command="command=[run_experiment.sh,$S3_BUCKET,$branch_name,$exp_path]"
+    else
+        command="command=[run_experiment.sh,$S3_BUCKET,$branch_name,$exp_path,$(echo $tasks | tr ' ' ,)]"
+    fi
+
+    aws batch submit-job --job-name $job_name --job-queue raster-vision-experiments \
+        --job-definition raster-vision-experiment \
+        --container-overrides $command
+done
