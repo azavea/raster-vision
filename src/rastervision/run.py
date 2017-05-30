@@ -5,6 +5,8 @@ run. Example usage: `python run.py options.json train_model`
 import argparse
 import json
 
+from rastervision.options import make_options
+
 from rastervision.semseg.settings import SEMSEG
 from rastervision.semseg.run import run_tasks as semseg_run_tasks
 
@@ -29,18 +31,14 @@ def run_tasks():
     args = parse_args()
     with open(args.file_path) as options_file:
         options_dict = json.load(options_file)
-        problem_type = options_dict.get('problem_type')
-
-        if problem_type is None:
-            raise ValueError('problem_type must be specified in options file')
-
-        if problem_type == SEMSEG:
-            semseg_run_tasks(options_dict, args.tasks)
-        elif problem_type == TAGGING:
-            tagging_run_tasks(options_dict, args.tasks)
+        options = make_options(options_dict)
+        if options.problem_type == SEMSEG:
+            semseg_run_tasks(options, args.tasks)
+        elif options.problem_type == TAGGING:
+            tagging_run_tasks(options, args.tasks)
         else:
             raise ValueError('{} is not a valid problem_type'.format(
-                problem_type))
+                options.problem_type))
 
 
 if __name__ == '__main__':

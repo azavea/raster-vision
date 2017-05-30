@@ -6,14 +6,7 @@ echo "export S3_BUCKET=\"$S3_BUCKET\"" >> /etc/environment
 cd /home/ec2-user
 
 # Install command line tools
-sudo yum install -y aws-cli git unzip
-
-# Install nvidia-docker and nvidia-docker-plugin
-wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1_amd64.tar.xz
-sudo tar --strip-components=1 -C /usr/bin -xvf /tmp/nvidia-docker*.tar.xz && rm /tmp/nvidia-docker*.tar.xz
-
-# Run nvidia-docker-plugin
-sudo -b nohup nvidia-docker-plugin > /tmp/nvidia-docker.log
+sudo yum install -y aws git unzip aws-cli
 
 # Setup data directory
 sudo mkdir /home/ec2-user/data

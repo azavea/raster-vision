@@ -6,7 +6,6 @@ from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
 from rastervision.common.tasks.train_model import TRAIN_MODEL
 from rastervision.common.settings import results_path
 
-from rastervision.tagging.options import TaggingOptions
 from rastervision.tagging.data.factory import TaggingDataGeneratorFactory
 from rastervision.tagging.models.factory import TaggingModelFactory
 from rastervision.tagging.tasks.train_model import TaggingTrainModel
@@ -19,13 +18,12 @@ valid_tasks = [TRAIN_MODEL, PLOT_CURVES, VALIDATION_PREDICT,
                VALIDATION_EVAL, TEST_PREDICT]
 
 
-def run_tasks(options_dict, tasks):
+def run_tasks(options, tasks):
     """Run tasks specified on command line.
 
     This creates the RunOptions object from the json file specified on the
     command line, creates a data generator, and then runs the tasks.
     """
-    options = TaggingOptions(options_dict)
     model_factory = TaggingModelFactory()
     generator = TaggingDataGeneratorFactory().get_data_generator(options)
     run_path = join(results_path, options.run_name)
