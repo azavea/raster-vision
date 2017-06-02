@@ -27,6 +27,6 @@
     "train_ratio": 0.8,
     "nb_eval_samples": 1,
     "nb_val_samples": 1,
-    "run_name": "tests/semseg/dual_fcn_resnet",
+    "run_name": "semseg/tests/dual_fcn_resnet",
     "samples_per_epoch": 1
 }

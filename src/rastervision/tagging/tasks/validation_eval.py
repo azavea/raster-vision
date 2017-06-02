@@ -13,8 +13,6 @@ from rastervision.common.utils import plot_img_row, _makedirs
 
 from rastervision.tagging.tasks.utils import compute_prediction
 
-VALIDATION_EVAL = 'validation_eval'
-
 
 class Scores():
     """A set of scores for the performance of a model on a dataset."""

@@ -201,28 +201,6 @@ def save_json(a_dict, path):
         json_file.write(json_str)
 
 
-def setup_run(run_path, options, sync_results):
-    """Setup path for the results of a run.
-
-    Creates directory if doesn't exist, downloads results from cloud, and
-    write the options to <run_path>/options.json
-
-    # Arguments
-        run_path: the path to the files for a run
-        options: RunOptions object that specifies the run
-        sync_results: function used to sync results with cloud
-    """
-    if not isdir(run_path):
-        sync_results(download=True)
-
-    _makedirs(run_path)
-
-    options_path = join(run_path, 'options.json')
-    save_json(options.__dict__, options_path)
-
-    return run_path
-
-
 def plot_img_row(fig, grid_spec, row_ind, imgs, titles=None):
     for col_ind, img in enumerate(imgs):
         a = fig.add_subplot(grid_spec[row_ind, col_ind])
