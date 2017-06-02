@@ -8,10 +8,10 @@ import json
 from rastervision.options import make_options
 
 from rastervision.semseg.settings import SEMSEG
-from rastervision.semseg.run import run_tasks as semseg_run_tasks
+from rastervision.semseg.run import SemsegRunner
 
 from rastervision.tagging.settings import TAGGING
-from rastervision.tagging.run import run_tasks as tagging_run_tasks
+from rastervision.tagging.run import TaggingRunner
 
 
 def parse_args():
@@ -33,9 +33,11 @@ def run_tasks():
         options_dict = json.load(options_file)
         options = make_options(options_dict)
         if options.problem_type == SEMSEG:
-            semseg_run_tasks(options, args.tasks)
+            runner = SemsegRunner()
+            runner.run_tasks(options, args.tasks)
         elif options.problem_type == TAGGING:
-            tagging_run_tasks(options, args.tasks)
+            runner = TaggingRunner()
+            runner.run_tasks(options, args.tasks)
         else:
             raise ValueError('{} is not a valid problem_type'.format(
                 options.problem_type))
