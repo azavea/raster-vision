@@ -9,23 +9,19 @@ class TestExperimentGenerator(ExperimentGenerator):
     def generate_experiments(self):
         base_exp = {
             'batch_size': 1,
-            'git_commit': None,
-            'problem_type': 'semseg',
-            'dataset_name': 'isprs/potsdam',
-            'generator_name': 'numpy',
-            'active_input_inds': [0, 1, 2, 4, 5],
+            'problem_type': 'tagging',
+            'dataset_name': 'planet_kaggle',
+            'generator_name': 'tiff',
+            'active_input_inds': [0, 1, 3],
+            'use_pretraining': True,
             'optimizer': 'adam',
             'init_lr': 1e-3,
-            'target_size': [256, 256],
-            'eval_target_size': [2000, 2000],
-            'model_type': 'conv_logistic',
+            'model_type': 'baseline_resnet',
             'train_ratio': 0.8,
-            'kernel_size': [5, 5],
             'epochs': 2,
-            'nb_labels': 6,
+            'nb_eval_samples': 10,
             'validation_steps': 1,
-            'nb_eval_samples': 1,
-            'run_name': 'tests/semseg/potsdam_generator_quick_test',
+            'run_name': 'tests/tagging/planet_kaggle_quick_test',
             'steps_per_epoch': 2
         }
 
@@ -39,6 +35,14 @@ class TestExperimentGenerator(ExperimentGenerator):
             exp['run_name'] = join(exp['run_name'], str(exp_count))
             exps.append(exp)
             exp_count += 1
+
+        agg_exp = {
+            'problem_type': base_exp['problem_type'],
+            'run_name': join(base_exp['run_name'], str(exp_count)),
+            'aggregate_run_names': [exp['run_name'] for exp in exps]
+        }
+        exps.append(agg_exp)
+        exp_count += 1
 
         return exps
 
