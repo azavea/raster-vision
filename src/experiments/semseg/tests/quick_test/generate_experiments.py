@@ -23,7 +23,7 @@ class TestExperimentGenerator(ExperimentGenerator):
             'nb_labels': 6,
             'validation_steps': 1,
             'nb_eval_samples': 1,
-            'run_name': 'tests/semseg/quick_test',
+            'run_name': 'semseg/tests/quick_test',
             'steps_per_epoch': 2
         }
 

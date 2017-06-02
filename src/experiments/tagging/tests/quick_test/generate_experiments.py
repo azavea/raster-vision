@@ -21,7 +21,7 @@ class TestExperimentGenerator(ExperimentGenerator):
             'epochs': 2,
             'nb_eval_samples': 10,
             'validation_steps': 1,
-            'run_name': 'tests/tagging/planet_kaggle_quick_test',
+            'run_name': 'tagging/tests/quick_test',
             'steps_per_epoch': 2
         }
 
