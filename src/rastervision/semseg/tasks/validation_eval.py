@@ -11,9 +11,6 @@ from rastervision.semseg.tasks.utils import (
     predict_x, make_prediction_img, plot_prediction)
 
 
-VALIDATION_EVAL = 'validation_eval'
-
-
 class Scores():
     """A set of scores for the performance of a model on a dataset."""
 
@@ -80,7 +77,7 @@ def compute_confusion_mat(ground_truth, ground_truth_mask, predictions,
 
 
 def save_scores(scores, run_path):
-    with open(join(run_path, 'scores.txt'), 'w') as scores_file:
+    with open(join(run_path, 'scores.json'), 'w') as scores_file:
         scores_file.write(scores.to_json())
 
 

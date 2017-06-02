@@ -1,5 +1,7 @@
 from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
 from rastervision.common.tasks.train_model import TRAIN_MODEL
+from rastervision.common.tasks.validation_eval import VALIDATION_EVAL
+from rastervision.common.tasks.aggregate_scores import aggregate_scores
 from rastervision.common.run import Runner
 
 from rastervision.tagging.data.factory import TaggingDataGeneratorFactory
@@ -7,8 +9,7 @@ from rastervision.tagging.models.factory import TaggingModelFactory
 from rastervision.tagging.tasks.train_model import TaggingTrainModel
 from rastervision.tagging.tasks.predict import (
     VALIDATION_PREDICT, TEST_PREDICT, validation_predict, test_predict)
-from rastervision.tagging.tasks.validation_eval import (
-    VALIDATION_EVAL, validation_eval)
+from rastervision.tagging.tasks.validation_eval import validation_eval
 
 
 class TaggingRunner(Runner):
@@ -31,8 +32,12 @@ class TaggingRunner(Runner):
             validation_predict(
                 self.run_path, self.model, self.options, self.generator)
         elif task == VALIDATION_EVAL:
-            validation_eval(
-                self.run_path, self.model, self.options, self.generator)
+            if self.options.aggregate_run_names is None:
+                validation_eval(
+                    self.run_path, self.model, self.options, self.generator)
+            else:
+                best_score_key = 'f2'
+                aggregate_scores(self.options, best_score_key)
         elif task == TEST_PREDICT:
             test_predict(
                 self.run_path, self.model, self.options, self.generator)

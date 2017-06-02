@@ -1,12 +1,13 @@
 from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
 from rastervision.common.tasks.train_model import TRAIN_MODEL
+from rastervision.common.tasks.aggregate_scores import aggregate_scores
+from rastervision.common.tasks.validation_eval import VALIDATION_EVAL
 from rastervision.common.run import Runner
 
 from rastervision.semseg.data.factory import SemsegDataGeneratorFactory
 from rastervision.semseg.models.factory import SemsegModelFactory
 from rastervision.semseg.tasks.train_model import SemsegTrainModel
-from rastervision.semseg.tasks.validation_eval import (
-    validation_eval, VALIDATION_EVAL)
+from rastervision.semseg.tasks.validation_eval import validation_eval
 from rastervision.semseg.tasks.predict import (
     validation_predict, test_predict, VALIDATION_PREDICT, TEST_PREDICT)
 from rastervision.semseg.tasks.make_videos import MAKE_VIDEOS, make_videos
@@ -46,8 +47,12 @@ class SemsegRunner(Runner):
         elif task == PLOT_CURVES:
             plot_curves(self.options)
         elif task == VALIDATION_EVAL:
-            validation_eval(
-                self.run_path, self.model, self.options, self.generator)
+            if self.options.aggregate_run_names is None:
+                validation_eval(
+                    self.run_path, self.model, self.options, self.generator)
+            else:
+                best_score_key = 'avg_accuracy'
+                aggregate_scores(self.options, best_score_key)
         elif task == TEST_PREDICT:
             test_predict(
                 self.run_path, self.model, self.options, self.generator)

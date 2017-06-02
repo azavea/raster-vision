@@ -2,6 +2,7 @@ from os.path import join, isdir
 import sys
 
 from rastervision.common.tasks.plot_curves import PLOT_CURVES
+from rastervision.common.tasks.validation_eval import VALIDATION_EVAL
 from rastervision.common.utils import (
     Logger, make_sync_results, _makedirs, save_json)
 from rastervision.common.settings import results_path
@@ -20,7 +21,7 @@ class Runner():
             return False
 
         if self.options.aggregate_run_names is not None:
-            if task == PLOT_CURVES:
+            if task in [PLOT_CURVES, VALIDATION_EVAL]:
                 return True
             return False
 
