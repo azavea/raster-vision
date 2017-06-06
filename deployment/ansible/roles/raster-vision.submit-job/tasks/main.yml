@@ -1,0 +1,6 @@
+---
+- name: Install boto3
+  pip: name=boto3 version="{{ boto3_version }}"
+
+- name: Install networkx
+  pip: name=networkx version="{{ networkx_version }}"
