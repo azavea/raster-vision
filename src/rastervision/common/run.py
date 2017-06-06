@@ -4,7 +4,7 @@ import sys
 from rastervision.common.tasks.plot_curves import PLOT_CURVES
 from rastervision.common.tasks.validation_eval import VALIDATION_EVAL
 from rastervision.common.utils import (
-    Logger, make_sync_results, _makedirs, save_json)
+    Logger, make_sync_results, _makedirs, save_json, s3_download)
 from rastervision.common.settings import results_path
 
 
@@ -65,6 +65,10 @@ class Runner():
                             .get_data_generator(self.options)
             self.model = model_factory.get_model(
                 self.run_path, self.options, self.generator, use_best=True)
+        else:
+            for run_name in self.options.aggregate_run_names:
+                s3_download(run_name, 'log.txt')
+                s3_download(run_name, 'scores.json')
 
         for task in self.tasks:
             if self.is_valid_task(task):
