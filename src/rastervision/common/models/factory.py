@@ -1,7 +1,8 @@
 from os.path import isfile, join
 from subprocess import call
 
-from rastervision.common.settings import datasets_path, results_path, s3_bucket
+from rastervision.common.settings import datasets_path, results_path
+from rastervision.common.utils import s3_download
 
 
 class ModelFactory():
@@ -10,14 +11,7 @@ class ModelFactory():
         self.results_path = results_path
 
     def s3_download(self, run_name, file_name):
-        s3_run_path = 's3://{}/results/{}'.format(
-            s3_bucket, run_name)
-        s3_file_path = join(s3_run_path, file_name)
-
-        run_path = join(results_path, run_name)
-        print(s3_file_path)
-        print(run_path)
-        call(['aws', 's3', 'cp', s3_file_path, run_path + '/'])
+        s3_download(run_name, file_name)
 
     def make_model(self, options, generator):
         """Make a new model."""

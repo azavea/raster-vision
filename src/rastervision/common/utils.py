@@ -12,7 +12,8 @@ import numpy as np
 import rasterio
 
 from rastervision.common.settings import (
-    s3_results_path, results_path, s3_datasets_path, datasets_path)
+    s3_results_path, results_path, s3_datasets_path, datasets_path,
+    s3_bucket)
 
 
 def _makedirs(path):
@@ -146,6 +147,15 @@ def s3_sync(src_path, dst_path):
 
 def s3_cp(src_path, dst_path):
     call(['aws', 's3', 'cp', src_path, dst_path])
+
+
+def s3_download(run_name, file_name):
+    s3_run_path = 's3://{}/results/{}'.format(
+        s3_bucket, run_name)
+    s3_file_path = join(s3_run_path, file_name)
+
+    run_path = join(results_path, run_name)
+    call(['aws', 's3', 'cp', s3_file_path, run_path + '/'])
 
 
 def download_dataset(dataset_name, file_names):
