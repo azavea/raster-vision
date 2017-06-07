@@ -43,13 +43,14 @@ def plot_prediction(generator, all_x, y_true, y_pred,
     imgs = [rgb_input_im]
     titles = ['RGB']
 
-    ir_im = all_x[:, :, dataset.ir_ind]
-    imgs.append(ir_im)
-    titles.append('IR')
+    if generator.dataset.nb_channels > 3:
+        ir_im = all_x[:, :, dataset.ir_ind]
+        imgs.append(ir_im)
+        titles.append('IR')
 
-    ndvi_im = all_x[:, :, dataset.ndvi_ind]
-    imgs.append(ndvi_im)
-    titles.append('NDVI')
+        ndvi_im = all_x[:, :, dataset.ndvi_ind]
+        imgs.append(ndvi_im)
+        titles.append('NDVI')
 
     plot_img_row(fig, grid_spec, 0, imgs, titles)
 
@@ -84,7 +85,7 @@ def plot_predictions(run_path, model, options, generator):
         y_probs = model.predict(batch.x)
         for sample_ind in range(batch.x.shape[0]):
             file_ind = batch.file_inds[sample_ind]
-            all_x = np.squeeze(batch.all_x)
+            all_x = batch.all_x[sample_ind, :, :, :]
 
             y_pred = compute_prediction(
                 y_probs[sample_ind, :], generator.dataset)
