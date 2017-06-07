@@ -1,0 +1,18 @@
+{
+    "batch_size": 32,
+    "git_commit": "d62829",
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "jpg",
+    "active_input_inds": [0, 1, 2],
+    "use_pretraining": false,
+    "optimizer": "adam",
+    "lr_schedule": [[0, 0.001], [100, 0.0001], [125, 0.00001]],
+    "model_type": "baseline_resnet",
+    "train_ratio": 0.8,
+    "nb_eval_plot_samples": 100,
+    "epochs": 150,
+    "validation_steps": 32,
+    "run_name": "tagging/6_7_17/jpg",
+    "steps_per_epoch": 128
+}
