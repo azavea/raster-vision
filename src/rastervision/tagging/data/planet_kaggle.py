@@ -14,9 +14,7 @@ from rastervision.common.data.generators import FileGenerator, Batch
 
 PLANET_KAGGLE = 'planet_kaggle'
 TIFF = 'tiff'
-
-DEV_DIR = 'train-tif-v2'
-TEST_DIR = 'test-tif-v2'
+JPG = 'jpg'
 
 
 class Dataset():
@@ -62,6 +60,23 @@ class Dataset():
         self.green_ind = 1
         self.blue_ind = 2
         self.rgb_inds = [self.red_ind, self.green_ind, self.blue_ind]
+
+        self.image_shape = (256, 256)
+
+        self.setup_channels()
+
+    def get_tag_ind(self, tag):
+        return self.tag_to_ind[tag]
+
+    def augment_channels(self, batch_x):
+        return batch_x
+
+    def setup_channels(self):
+        pass
+
+
+class TiffDataset(Dataset):
+    def setup_channels(self):
         self.ir_ind = 3
         self.ndvi_ind = 4
         self.nb_channels = 5
@@ -69,16 +84,18 @@ class Dataset():
         self.display_means = np.array([0.45, 0.5, 0.5, 0.5, 0.5])
         self.display_stds = np.array([0.25, 0.2, 0.2, 0.2, 0.2])
 
-        self.image_shape = (256, 256)
-
-    def get_tag_ind(self, tag):
-        return self.tag_to_ind[tag]
-
     def augment_channels(self, batch_x):
         red = batch_x[:, :, :, [self.red_ind]]
         ir = batch_x[:, :, :, [self.ir_ind]]
         ndvi = compute_ndvi(red, ir)
         return np.concatenate([batch_x, ndvi], axis=3)
+
+
+class JpgDataset(Dataset):
+    def setup_channels(self):
+        self.nb_channels = 3
+        self.display_means = np.array([0.45, 0.5, 0.5])
+        self.display_stds = np.array([0.25, 0.2, 0.2])
 
 
 class TagStore():
@@ -155,9 +172,18 @@ class TagStore():
 
 
 class PlanetKaggleFileGenerator(FileGenerator):
-    def __init__(self, active_input_inds, train_ratio, cross_validation):
+    def __init__(self, datasets_path, active_input_inds, train_ratio,
+                 cross_validation):
+        download_dataset(PLANET_KAGGLE, self.zip_file_names)
+
+        self.dataset_path = join(datasets_path, PLANET_KAGGLE)
+        self.dev_path = join(self.dataset_path, self.dev_dir)
+        self.test_path = join(self.dataset_path, self.test_dir)
+
+        self.dev_file_inds = self.generate_file_inds(self.dev_path)
+        self.test_file_inds = self.generate_file_inds(self.test_path)
+
         tags_path = join(self.dataset_path, 'train_v2.csv')
-        self.dataset = Dataset()
         self.tag_store = TagStore(tags_path)
 
         super().__init__(active_input_inds, train_ratio, cross_validation)
@@ -171,28 +197,8 @@ class PlanetKaggleFileGenerator(FileGenerator):
         counts_path = join(dataset_path, 'tag_counts.json')
         save_json(tag_store.get_tag_counts(dataset.all_tags), counts_path)
 
-
-class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
-    def __init__(self, datasets_path, active_input_inds, train_ratio,
-                 cross_validation):
-        self.download_dataset()
-
-        self.dataset_path = join(datasets_path, PLANET_KAGGLE)
-        self.dev_path = join(self.dataset_path, DEV_DIR)
-        self.test_path = join(self.dataset_path, TEST_DIR)
-
-        self.dev_file_inds = self.generate_file_inds(self.dev_path)
-        self.test_file_inds = self.generate_file_inds(self.test_path)
-
-        super().__init__(active_input_inds, train_ratio, cross_validation)
-
-    def download_dataset(self):
-        file_names = [
-            'train-tif-v2.zip', 'test-tif-v2.zip', 'train_v2.csv.zip']
-        download_dataset(PLANET_KAGGLE, file_names)
-
     def generate_file_inds(self, path):
-        paths = glob.glob(join(path, '*.tif'))
+        paths = glob.glob(join(path, '*.{}'.format(self.file_extension)))
         file_inds = []
         for path in paths:
             file_ind = splitext(basename(path))[0]
@@ -229,17 +235,11 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
         data_dir = self.test_path if prefix in ['file', 'test'] \
             else self.dev_path
         return join(
-            self.dataset_path, data_dir, '{}.tif'.format(file_ind))
+            self.dataset_path, data_dir, '{}.{}'.format(
+                file_ind, self.file_extension))
 
     def get_file_size(self, file_ind):
         return 256, 256
-
-    def load_img(self, file_path, window):
-        import rasterio
-        with rasterio.open(file_path) as src:
-            b, g, r, nir = src.read(window=window)
-            img = np.dstack([r, g, b, nir])
-            return img
 
     def get_img(self, file_ind, window):
         file_path = self.get_file_path(file_ind)
@@ -248,10 +248,51 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
 
     def make_batch(self, img_batch, file_inds):
         batch = Batch()
-        batch.all_x = img_batch
-        batch.all_x = self.dataset.augment_channels(batch.all_x)
+        batch.all_x = self.dataset.augment_channels(img_batch)
         batch.file_inds = file_inds
 
         if self.has_y(file_inds[0]):
             batch.y = self.tag_store.get_tag_array(file_inds)
         return batch
+
+
+class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
+    def __init__(self, datasets_path, active_input_inds, train_ratio,
+                 cross_validation):
+        self.dev_dir = 'train-tif-v2'
+        self.test_dir = 'test-tif-v2'
+        self.zip_file_names = [
+            'train-tif-v2.zip', 'test-tif-v2.zip', 'train_v2.csv.zip']
+        self.file_extension = 'tif'
+        self.dataset = TiffDataset()
+
+        super().__init__(
+            datasets_path, active_input_inds, train_ratio, cross_validation)
+
+    def load_img(self, file_path, window):
+        import rasterio
+        with rasterio.open(file_path) as src:
+            b, g, r, nir = src.read(window=window)
+            img = np.dstack([r, g, b, nir])
+            return img
+
+
+class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
+    def __init__(self, datasets_path, active_input_inds, train_ratio,
+                 cross_validation):
+        self.dev_dir = 'train-jpg'
+        self.test_dir = 'test-jpg'
+        self.zip_file_names = [
+            'train-jpg.zip', 'test-jpg.zip', 'train_v2.csv.zip']
+        self.file_extension = 'jpg'
+        self.dataset = JpgDataset()
+
+        super().__init__(
+            datasets_path, active_input_inds, train_ratio, cross_validation)
+
+    def load_img(self, file_path, window):
+        import rasterio
+        with rasterio.open(file_path) as src:
+            r, g, b = src.read(window=window)
+            img = np.dstack([r, g, b])
+            return img

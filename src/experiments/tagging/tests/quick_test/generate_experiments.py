@@ -11,8 +11,8 @@ class TestExperimentGenerator(ExperimentGenerator):
             'batch_size': 1,
             'problem_type': 'tagging',
             'dataset_name': 'planet_kaggle',
-            'generator_name': 'tiff',
-            'active_input_inds': [0, 1, 3],
+            'generator_name': 'jpg',
+            'active_input_inds': [0, 1, 2],
             'use_pretraining': True,
             'optimizer': 'adam',
             'init_lr': 1e-3,
@@ -20,6 +20,7 @@ class TestExperimentGenerator(ExperimentGenerator):
             'train_ratio': 0.8,
             'epochs': 2,
             'nb_eval_samples': 10,
+            'nb_eval_plot_samples': 3,
             'validation_steps': 1,
             'run_name': 'tagging/tests/quick_test',
             'steps_per_epoch': 2

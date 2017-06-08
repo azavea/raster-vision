@@ -4,18 +4,24 @@ from rastervision.common.data.factory import DataGeneratorFactory
 from rastervision.common.utils import _makedirs
 
 from rastervision.tagging.data.planet_kaggle import (
-    PLANET_KAGGLE, TIFF, PlanetKaggleTiffFileGenerator)
+    PLANET_KAGGLE, TIFF, JPG, PlanetKaggleTiffFileGenerator,
+    PlanetKaggleJpgFileGenerator)
 
 
 class TaggingDataGeneratorFactory(DataGeneratorFactory):
     def __init__(self):
-        super().__init__([PLANET_KAGGLE], [TIFF])
+        dataset_names = [PLANET_KAGGLE]
+        generator_names = [JPG, TIFF]
+
+        super().__init__(dataset_names, generator_names)
 
     def get_class(self, dataset_name, generator_name):
         self.validate_keys(dataset_name, generator_name)
         if dataset_name == PLANET_KAGGLE:
             if generator_name == TIFF:
                 return PlanetKaggleTiffFileGenerator
+            elif generator_name == JPG:
+                return PlanetKaggleJpgFileGenerator
 
     def plot_generator(self, dataset_name, generator_name, split):
         nb_batches = 2
@@ -25,7 +31,9 @@ class TaggingDataGeneratorFactory(DataGeneratorFactory):
             def __init__(self):
                 self.dataset_name = dataset_name
                 self.generator_name = generator_name
-                self.active_input_inds = [0, 1, 2, 3]
+                self.active_input_inds = [0, 1, 2]
+                if generator_name == TIFF:
+                    self.active_input_inds = [0, 1, 2, 3]
                 self.train_ratio = 0.8
                 self.cross_validation = None
 
