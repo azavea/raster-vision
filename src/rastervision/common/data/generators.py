@@ -1,8 +1,11 @@
+from os.path import exists, join
+import json
+
 import numpy as np
 from skimage import transform
 
-from rastervision.common.utils import get_channel_stats
 from rastervision.common.settings import TRAIN, VALIDATION, TEST
+from rastervision.common.utils import get_channel_stats, save_json
 
 ROTATE90 = 'rotate90'
 HFLIP = 'hflip'
@@ -74,11 +77,18 @@ class FileGenerator(Generator):
         if self.cross_validation is not None:
             self.process_cross_validation()
 
-        gen = self.make_split_generator(
-            TRAIN, target_size=(10, 10), batch_size=100, shuffle=True,
-            augment_methods=None, normalize=False, only_xy=False)
-        batch = next(gen)
-        self.normalize_params = get_channel_stats(batch.all_x)
+        # If a dataset's normalized parameters have already been
+        # calculated, load its json file. Otherwise, calculate parameters
+        # with a small batch.
+        channel_stats_path = join(self.dataset_path,
+                                  self.name + '_channel_stats.json')
+        if exists(channel_stats_path):
+            with open(channel_stats_path) as channel_stats_file:
+                channel_stats = json.load(channel_stats_file)
+            self.channel_stats = (np.array(channel_stats['means']),
+                                     np.array(channel_stats['stds']))
+        else:
+            self.channel_stats = self.compute_channel_stats(100, False)
 
     def calibrate_image(self, normalized_image):
         calibrated_image = normalized_image.copy()
@@ -193,13 +203,13 @@ class FileGenerator(Generator):
             yield batch, batch_file_inds
 
     def normalize(self, batch_x):
-        means, stds = self.normalize_params
+        means, stds = self.channel_stats
         batch_x = batch_x - means[np.newaxis, np.newaxis, np.newaxis, :]
         batch_x = batch_x / stds[np.newaxis, np.newaxis, np.newaxis, :]
         return batch_x
 
     def unnormalize(self, batch_x):
-        means, stds = self.normalize_params
+        means, stds = self.channel_stats
         nb_dims = len(batch_x.shape)
         if nb_dims == 3:
             batch_x = np.expand_dims(batch_x, 0)
@@ -292,3 +302,17 @@ class FileGenerator(Generator):
         split_gen = map(transform_img_batch, img_batch_gen)
 
         return split_gen
+
+    def compute_channel_stats(self, batch_size, normalize):
+        gen = self.make_split_generator(
+            TRAIN, target_size=(10, 10), batch_size=batch_size,
+            shuffle=True, augment_methods=None, normalize=normalize,
+            only_xy=False)
+        batch = next(gen)
+        return get_channel_stats(batch.all_x)
+
+    def write_channel_stats(self, datasets_path):
+        means, stds = self.compute_channel_stats(1000, False)
+        param_dict = {'means': means.tolist(), 'stds': stds.tolist()}
+        param_path = join(datasets_path, self.name + '_channel_stats.json')
+        save_json(param_dict, param_path)

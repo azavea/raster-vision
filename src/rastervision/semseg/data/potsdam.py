@@ -74,6 +74,7 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
     def __init__(self, datasets_path, active_input_inds,
                  train_ratio=0.8, cross_validation=None):
         self.dataset_path = join(datasets_path, POTSDAM)
+        self.name = "potsdam_image"
         super().__init__(active_input_inds, train_ratio, cross_validation)
 
     @staticmethod
@@ -90,6 +91,9 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
             im_fix = np.zeros((6000, 6000), dtype=np.uint8)
             im_fix[:, 0:-1] = im[:, :, 0]
             save_img(im_fix, file_path)
+
+        PotsdamImageFileGenerator(
+            datasets_path, [0, 1, 2, 3, 4]).write_channel_stats(data_path)
 
     def get_file_size(self, file_ind):
         ind0, ind1 = file_ind
@@ -153,6 +157,7 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
         self.raw_dataset_path = join(datasets_path, POTSDAM)
         self.dataset_path = join(datasets_path, PROCESSED_POTSDAM)
         self.download_dataset(['processed_potsdam.zip'])
+        self.name = "potsdam_numpy"
 
         super().__init__(active_input_inds, train_ratio, cross_validation)
 
@@ -198,6 +203,9 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
         _preprocess(TEST)
+
+        PotsdamNumpyFileGenerator(
+            datasets_path, [0, 1, 2, 3, 4]).write_channel_stats(proc_data_path)
 
     def get_file_path(self, file_ind):
         ind0, ind1 = file_ind
