@@ -125,14 +125,16 @@ def validation_eval(run_path, model, options, generator):
         label_y = dataset.one_hot_to_label_batch(y)
         label_pred = dataset.rgb_to_label_batch(display_pred)
 
-        file_path = '{}.png'.format(sample_index)
-        file_path = join(predictions_path, file_path)
-        plot_prediction(
-            generator, all_x, display_y, display_pred, file_path,
-            is_debug=True)
-
         confusion_mat += compute_confusion_mat(
             label_y, y_mask, label_pred, dataset.nb_labels)
+
+        if (options.nb_eval_plot_samples is not None and
+                sample_index < options.nb_eval_plot_samples):
+            file_path = '{}.png'.format(sample_index)
+            file_path = join(predictions_path, file_path)
+            plot_prediction(
+                generator, all_x, display_y, display_pred, file_path,
+                is_debug=True)
 
         if (options.nb_eval_samples is not None and
                 sample_index == options.nb_eval_samples - 1):

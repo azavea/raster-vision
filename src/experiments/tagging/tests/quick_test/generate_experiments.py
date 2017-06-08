@@ -20,6 +20,7 @@ class TestExperimentGenerator(ExperimentGenerator):
             'train_ratio': 0.8,
             'epochs': 2,
             'nb_eval_samples': 10,
+            'nb_eval_plot_samples': 3,
             'validation_steps': 1,
             'run_name': 'tagging/tests/quick_test',
             'steps_per_epoch': 2

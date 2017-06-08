@@ -81,6 +81,7 @@ def plot_predictions(run_path, model, options, generator):
         batch_size=options.batch_size, shuffle=False, augment=False,
         normalize=True, only_xy=False)
 
+    sample_count = 0
     for batch_ind, batch in enumerate(split_gen):
         y_probs = model.predict(batch.x)
         for sample_ind in range(batch.x.shape[0]):
@@ -93,15 +94,19 @@ def plot_predictions(run_path, model, options, generator):
             y_preds.append(np.expand_dims(y_pred, axis=0))
             y_trues.append(np.expand_dims(y_true, axis=0))
 
-            is_mistake = not np.array_equal(y_true, y_pred)
+            if (options.nb_eval_plot_samples is not None and
+                    sample_count < options.nb_eval_plot_samples):
+                is_mistake = not np.array_equal(y_true, y_pred)
+                if is_mistake:
+                    plot_path = join(
+                        validation_plot_path, '{}_debug.png'.format(file_ind))
+                    plot_prediction(
+                        generator, all_x, y_true, y_pred, plot_path)
 
-            plot_path = join(
-                validation_plot_path, '{}_debug.png'.format(file_ind))
-            if is_mistake:
-                plot_prediction(generator, all_x, y_true, y_pred, plot_path)
+            sample_count += 1
 
         if (options.nb_eval_samples is not None and
-                batch_ind * options.batch_size >= options.nb_eval_samples):
+                sample_count >= options.nb_eval_samples):
             break
 
     y_trues = np.concatenate(y_trues, axis=0)

@@ -36,7 +36,10 @@ class Options():
                 options.update(train_stages[0])
             self.train_stages = options.get('train_stages')
 
-            # Controls how many samples to use in the final evaluation.
+            # Controls how many samples to use in validation_eval, test_predict
+            # and validation_predict.
             # Setting this to a low value can be useful when testing
             # the code, since it will save time.
             self.nb_eval_samples = options.get('nb_eval_samples')
+            # Controls how many samples to plot as part of validation_eval
+            self.nb_eval_plot_samples = options.get('nb_eval_plot_samples')
