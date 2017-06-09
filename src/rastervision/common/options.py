@@ -29,6 +29,7 @@ class Options():
             self.cross_validation = options.get('cross_validation')
             self.delta_model_checkpoint = options.get(
                 'delta_model_checkpoint', None)
+            self.augment_types = options.get('augment_types')
 
             if 'train_stages' in options and \
                     options['train_stages'] is not None:

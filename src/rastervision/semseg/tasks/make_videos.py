@@ -34,7 +34,7 @@ def make_videos(run_path, options, generator):
 
     split_gen = generator.make_split_generator(
         VALIDATION, target_size=options.eval_target_size,
-        batch_size=1, shuffle=False, augment=False, normalize=True,
+        batch_size=1, shuffle=False, augment_types=None, normalize=True,
         only_xy=False)
 
     for video_ind, batch in \

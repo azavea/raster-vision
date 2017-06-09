@@ -141,7 +141,7 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
 
         def _preprocess(split):
             gen = generator.make_split_generator(
-                split, batch_size=1, shuffle=False, augment=False,
+                split, batch_size=1, shuffle=False, augment_types=None,
                 normalize=False, only_xy=False)
 
             for batch in gen:
