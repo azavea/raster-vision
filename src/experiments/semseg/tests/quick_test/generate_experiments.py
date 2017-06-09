@@ -25,7 +25,8 @@ class TestExperimentGenerator(ExperimentGenerator):
             'nb_eval_samples': 2,
             'nb_eval_plot_samples': 1,
             'run_name': 'semseg/tests/quick_test',
-            'steps_per_epoch': 2
+            'steps_per_epoch': 2,
+            'augment_types': ['rotate90', 'hflip', 'vflip']
         }
 
         init_lrs = [1e-3, 1e-4]

@@ -19,5 +19,10 @@
     "validation_steps": 2,
     "nb_eval_samples": 1,
     "run_name": "semseg/tests/ensemble/ensemble",
-    "steps_per_epoch": 8
+    "steps_per_epoch": 8,
+    "augment_types": [
+        "rotate90",
+        "hflip",
+        "vflip"
+    ]
 }
