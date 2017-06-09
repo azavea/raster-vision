@@ -25,6 +25,8 @@ Vagrant.configure("2") do |config|
     raster_vision.vm.synced_folder "~/.aws", "/home/vagrant/.aws"
     raster_vision.vm.synced_folder DATA_DIR, "/opt/data"
 
+    raster_vision.vm.network "forwarded_port", guest: 8888, host: 8888
+
     raster_vision.vm.provider :virtualbox do |vb|
       vb.memory = 8192
       vb.cpus = 2
@@ -41,6 +43,6 @@ Vagrant.configure("2") do |config|
       }
     end
 
-    raster_vision.ssh.forward_agent = true    
+    raster_vision.ssh.forward_agent = true
   end
 end

@@ -32,11 +32,10 @@ USER keras
 ARG python_version=3.5.1
 
 RUN conda install -y python=${python_version} scikit-learn six h5py \
-        matplotlib pillow rasterio && \
+        matplotlib pillow rasterio jupyter scikit-image && \
     conda clean -yt
 
-RUN pip install git+git://github.com/jakebian/quiver.git && \
-    pip install flake8 awscli
+RUN pip install flake8 awscli
 
 WORKDIR /opt/src
 ENV PYTHONPATH=/opt/src/:$PYTHONPATH
