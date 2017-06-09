@@ -1,4 +1,4 @@
-from rastervision.common.data.generators import all_augment_types
+from rastervision.common.data.generators import all_augment_methods
 
 
 class Options():
@@ -32,14 +32,14 @@ class Options():
             self.cross_validation = options.get('cross_validation')
             self.delta_model_checkpoint = options.get(
                 'delta_model_checkpoint', None)
-            self.augment_types = options.get('augment_types')
-            if self.augment_types is not None:
-                invalid_augment_types = \
-                    set(self.augment_types) - set(all_augment_types)
-                if invalid_augment_types:
+            self.augment_methods = options.get('augment_methods')
+            if self.augment_methods is not None:
+                invalid_augment_methods = \
+                    set(self.augment_methods) - set(all_augment_methods)
+                if invalid_augment_methods:
                     raise ValueError(
-                        '{} are not valid augment_types'.format(
-                            str(invalid_augment_types)))
+                        '{} are not valid augment_methods'.format(
+                            str(invalid_augment_methods)))
 
             if 'train_stages' in options and \
                     options['train_stages'] is not None:

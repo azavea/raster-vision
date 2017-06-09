@@ -116,12 +116,12 @@ class TrainModel():
         train_gen = self.generator.make_split_generator(
             TRAIN, target_size=self.options.target_size,
             batch_size=self.options.batch_size,
-            shuffle=True, augment_types=self.options.augment_types,
+            shuffle=True, augment_methods=self.options.augment_methods,
             normalize=True, only_xy=True)
         validation_gen = self.generator.make_split_generator(
             VALIDATION, target_size=self.options.target_size,
             batch_size=self.options.batch_size,
-            shuffle=True, augment_types=self.options.augment_types,
+            shuffle=True, augment_methods=self.options.augment_methods,
             normalize=True, only_xy=True)
 
         if self.options.optimizer == ADAM:

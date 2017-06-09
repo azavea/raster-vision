@@ -42,7 +42,7 @@ class SemsegDataGeneratorFactory(DataGeneratorFactory):
                     self.active_input_inds = [0, 1, 2, 3, 4]
                 self.train_ratio = 0.8
                 self.cross_validation = None
-                self.augment_types = [HFLIP, VFLIP, ROTATE90]
+                self.augment_methods = [HFLIP, VFLIP, ROTATE90]
 
         options = Options()
         generator = self.get_data_generator(options)
@@ -54,7 +54,7 @@ class SemsegDataGeneratorFactory(DataGeneratorFactory):
 
         gen = generator.make_split_generator(
             split, target_size=(400, 400), batch_size=batch_size, shuffle=True,
-            augment_types=options.augment_types, normalize=True, only_xy=False)
+            augment_methods=options.augment_methods, normalize=True, only_xy=False)
 
         for batch_ind in range(nb_batches):
             batch = next(gen)

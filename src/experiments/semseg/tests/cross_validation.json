@@ -21,7 +21,7 @@
     "nb_eval_samples": 1,
     "run_name": "semseg/tests/cross_validation",
     "steps_per_epoch": 2,
-    "augment_types": [
+    "augment_methods": [
         "rotate90",
         "hflip",
         "vflip"

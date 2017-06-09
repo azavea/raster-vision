@@ -16,9 +16,9 @@ class SemsegOptions(Options):
         super().__init__(options)
 
         if self.aggregate_run_names is None:
-            if (self.augment_types is not None and
-                (ROTATE in self.augment_types or
-                 TRANSLATE in self.augment_types)):
+            if (self.augment_methods is not None and
+                (ROTATE in self.augment_methods or
+                 TRANSLATE in self.augment_methods)):
                 raise ValueError('Cannot use rotate or translate with semseg.')
 
             self.nb_videos = options.get('nb_videos')

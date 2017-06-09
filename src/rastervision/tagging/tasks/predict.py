@@ -29,7 +29,7 @@ def predict(run_path, model, options, generator, split):
     batch_size = options.batch_size
     split_gen = generator.make_split_generator(
         split, target_size=None,
-        batch_size=batch_size, shuffle=False, augment_types=None,
+        batch_size=batch_size, shuffle=False, augment_methods=None,
         normalize=True, only_xy=False)
 
     tag_store = TagStore()

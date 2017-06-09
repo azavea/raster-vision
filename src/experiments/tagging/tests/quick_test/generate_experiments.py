@@ -24,7 +24,7 @@ class TestExperimentGenerator(ExperimentGenerator):
             'validation_steps': 1,
             'run_name': 'tagging/tests/quick_test',
             'steps_per_epoch': 2,
-            'augment_types': ['hflip', 'vflip', 'rotate', 'translate']
+            'augment_methods': ['hflip', 'vflip', 'rotate', 'translate']
         }
 
         init_lrs = [1e-3, 1e-4]
