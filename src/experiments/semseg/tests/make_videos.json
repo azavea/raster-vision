@@ -19,5 +19,10 @@
     "validation_steps": 1,
     "nb_eval_samples": 1,
     "run_name": "semseg/tests/make_videos",
-    "steps_per_epoch": 1
+    "steps_per_epoch": 1,
+    "augment_methods": [
+        "rotate90",
+        "hflip",
+        "vflip"
+    ]
 }

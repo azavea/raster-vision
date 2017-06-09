@@ -101,7 +101,7 @@ def validation_eval(run_path, model, options, generator):
 
     validation_gen = generator.make_split_generator(
         VALIDATION, target_size=options.eval_target_size,
-        batch_size=1, shuffle=False, augment=False, normalize=True,
+        batch_size=1, shuffle=False, augment_methods=None, normalize=True,
         only_xy=False)
 
     confusion_mat = np.zeros((dataset.nb_labels, dataset.nb_labels))

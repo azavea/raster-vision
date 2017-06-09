@@ -23,7 +23,8 @@ class TestExperimentGenerator(ExperimentGenerator):
             'nb_eval_plot_samples': 3,
             'validation_steps': 1,
             'run_name': 'tagging/tests/quick_test',
-            'steps_per_epoch': 2
+            'steps_per_epoch': 2,
+            'augment_methods': ['hflip', 'vflip', 'rotate', 'translate']
         }
 
         init_lrs = [1e-3, 1e-4]

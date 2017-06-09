@@ -1,7 +1,15 @@
 import numpy as np
+from skimage import transform
 
 from rastervision.common.utils import get_channel_stats
 from rastervision.common.settings import TRAIN, VALIDATION, TEST
+
+ROTATE90 = 'rotate90'
+HFLIP = 'hflip'
+VFLIP = 'vflip'
+ROTATE = 'rotate'
+TRANSLATE = 'translate'
+all_augment_methods = [ROTATE90, HFLIP, VFLIP, ROTATE, TRANSLATE]
 
 
 class Batch():
@@ -14,8 +22,8 @@ class Batch():
 
 class Generator():
     def make_split_generator(self, split, target_size=None, batch_size=32,
-                             shuffle=False, augment=False, normalize=False,
-                             only_xy=False):
+                             shuffle=False, augment_methods=None,
+                             normalize=False, only_xy=False):
         """Make a generator for a split of data.
 
         # Arguments
@@ -25,7 +33,7 @@ class Generator():
                 the generated imgs
             batch_size: the size of the minibatches that are generated
             shuffle: True if imgs should be randomly selected from dataset
-            augment: True if imgs should be randomly flipped and rotated
+            augment_methods: list of augmentation types
             normalize: True if imgs should be shifted and scaled
             only_xy: True if only (x,y) should be returned
 
@@ -68,7 +76,7 @@ class FileGenerator(Generator):
 
         gen = self.make_split_generator(
             TRAIN, target_size=(10, 10), batch_size=100, shuffle=True,
-            augment=False, normalize=False, only_xy=False)
+            augment_methods=None, normalize=False, only_xy=False)
         batch = next(gen)
         self.normalize_params = get_channel_stats(batch.all_x)
 
@@ -203,22 +211,56 @@ class FileGenerator(Generator):
             batch_x = np.squeeze(batch_x, 0)
         return batch_x
 
-    def augment_img_batch(self, img_batch):
-        nb_rotations = np.random.randint(0, 4)
+    def augment_img_batch(self, img_batch, augment_methods):
+        imgs = []
+        for sample_ind in range(img_batch.shape[0]):
+            img = img_batch[sample_ind, :, :, :]
 
-        img_batch = np.transpose(img_batch, [1, 2, 3, 0])
-        img_batch = np.rot90(img_batch, nb_rotations)
-        img_batch = np.transpose(img_batch, [3, 0, 1, 2])
+            if VFLIP in augment_methods:
+                if np.random.uniform() > 0.5:
+                    img = np.flipud(img)
 
-        if np.random.uniform() > 0.5:
-            img_batch = np.flip(img_batch, axis=1)
-        if np.random.uniform() > 0.5:
-            img_batch = np.flip(img_batch, axis=2)
+            if HFLIP in augment_methods:
+                if np.random.uniform() > 0.5:
+                    img = np.fliplr(img)
 
+            if ROTATE90 in augment_methods:
+                nb_rotations = np.random.randint(0, 4)
+                img = np.rot90(img, nb_rotations)
+
+            skimage_augment_methods = [ROTATE, TRANSLATE]
+            if set(skimage_augment_methods).intersection(set(augment_methods)):
+                # skimage requires that float images have values
+                # in [-1, 1] so we have to scale and then unscale the image to
+                # achieve this.
+                max_val = np.max(np.absolute(img.ravel()))
+                img = img / max_val
+                nb_rows, nb_cols = img.shape[0:2]
+
+                if TRANSLATE in augment_methods:
+                    max_trans_ratio = 0.1
+                    trans_row_bound = int(nb_rows * max_trans_ratio)
+                    trans_col_bound = int(nb_cols * max_trans_ratio)
+                    translation = (
+                        np.random.randint(-trans_row_bound, trans_row_bound),
+                        np.random.randint(-trans_col_bound, trans_col_bound)
+                    )
+                    tf = transform.SimilarityTransform(translation=translation)
+                    img = transform.warp(img, tf, mode='reflect')
+
+                if ROTATE in augment_methods:
+                    degrees = np.random.uniform(0, 360)
+                    img = transform.rotate(img, degrees, mode='reflect')
+
+                img = img * max_val
+
+            imgs.append(np.expand_dims(img, axis=0))
+
+        img_batch = np.concatenate(imgs, axis=0)
         return img_batch
 
     def make_split_generator(self, split, target_size=None,
-                             batch_size=32, shuffle=False, augment=False,
+                             batch_size=32, shuffle=False, augment_methods=None,
                              normalize=False, only_xy=True):
         file_inds = self.get_file_inds(split)
         img_batch_gen = self.make_img_batch_generator(
@@ -232,8 +274,8 @@ class FileGenerator(Generator):
             img_batch, batch_file_inds = x
             img_batch = img_batch.astype(np.float32)
 
-            if augment:
-                img_batch = self.augment_img_batch(img_batch)
+            if augment_methods:
+                img_batch = self.augment_img_batch(img_batch, augment_methods)
 
             # The batch is an object that contains x, y, file_inds
             # and whatever else constitutes a batch for the problem type.

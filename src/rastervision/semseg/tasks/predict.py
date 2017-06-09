@@ -35,7 +35,7 @@ def predict(run_path, model, options, generator, split, save_probs=False):
 
     split_gen = generator.make_split_generator(
         split, target_size=None,
-        batch_size=1, shuffle=False, augment=False, normalize=True,
+        batch_size=1, shuffle=False, augment_methods=None, normalize=True,
         only_xy=False)
 
     for sample_ind, batch in enumerate(split_gen):
