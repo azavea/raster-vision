@@ -9,6 +9,7 @@ HFLIP = 'hflip'
 VFLIP = 'vflip'
 ROTATE = 'rotate'
 TRANSLATE = 'translate'
+all_augment_types = [ROTATE90, HFLIP, VFLIP, ROTATE, TRANSLATE]
 
 
 class Batch():

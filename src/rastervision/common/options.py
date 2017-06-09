@@ -1,3 +1,6 @@
+from rastervision.common.data.generators import all_augment_types
+
+
 class Options():
     """Represents the options used to control an experimental run."""
 
@@ -30,6 +33,13 @@ class Options():
             self.delta_model_checkpoint = options.get(
                 'delta_model_checkpoint', None)
             self.augment_types = options.get('augment_types')
+            if self.augment_types is not None:
+                invalid_augment_types = \
+                    set(self.augment_types) - set(all_augment_types)
+                if invalid_augment_types:
+                    raise ValueError(
+                        '{} are not valid augment_types'.format(
+                            str(invalid_augment_types)))
 
             if 'train_stages' in options and \
                     options['train_stages'] is not None:

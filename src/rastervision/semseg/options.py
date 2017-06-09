@@ -1,4 +1,5 @@
 from rastervision.common.options import Options
+from rastervision.common.data.generators import ROTATE, TRANSLATE
 
 from rastervision.semseg.models.conv_logistic import CONV_LOGISTIC
 from rastervision.semseg.models.fcn_resnet import FCN_RESNET
@@ -15,6 +16,11 @@ class SemsegOptions(Options):
         super().__init__(options)
 
         if self.aggregate_run_names is None:
+            if (self.augment_types is not None and
+                (ROTATE in self.augment_types or
+                 TRANSLATE in self.augment_types)):
+                raise ValueError('Cannot use rotate or translate with semseg.')
+
             self.nb_videos = options.get('nb_videos')
 
             if self.model_type == CONV_LOGISTIC:
