@@ -77,6 +77,8 @@ class FileGenerator(Generator):
         if self.cross_validation is not None:
             self.process_cross_validation()
 
+        self.train_weights = self.compute_train_weights()
+
         # If a dataset's normalized parameters have already been
         # calculated, load its json file. Otherwise, calculate parameters
         # with a small batch.
@@ -86,9 +88,12 @@ class FileGenerator(Generator):
             with open(channel_stats_path) as channel_stats_file:
                 channel_stats = json.load(channel_stats_file)
             self.channel_stats = (np.array(channel_stats['means']),
-                                     np.array(channel_stats['stds']))
+                                  np.array(channel_stats['stds']))
         else:
             self.channel_stats = self.compute_channel_stats(100, False)
+
+    def compute_train_weights(self):
+        return None
 
     def calibrate_image(self, normalized_image):
         calibrated_image = normalized_image.copy()
@@ -165,11 +170,16 @@ class FileGenerator(Generator):
                             img = self.get_img(file_ind, window)
                             yield img, file_ind
 
-    def make_random_img_generator(self, file_inds, target_size):
+    def make_random_img_generator(self, file_inds, target_size,
+                                  sample_probs=None):
         nb_files = len(file_inds)
 
         while True:
-            rand_ind = np.random.randint(0, nb_files)
+            if sample_probs is None:
+                rand_ind = np.random.randint(0, nb_files)
+            else:
+                rand_ind = np.random.choice(np.arange(0, nb_files),
+                                            p=sample_probs)
             file_ind = file_inds[rand_ind]
 
             nb_rows, nb_cols = self.get_file_size(file_ind)
@@ -187,11 +197,11 @@ class FileGenerator(Generator):
             yield img, file_ind
 
     def make_img_batch_generator(self, file_inds, target_size, batch_size,
-                                 shuffle):
+                                 shuffle, sample_probs=None):
         def make_gen():
             if shuffle:
                 return self.make_random_img_generator(
-                    file_inds, target_size)
+                    file_inds, target_size, sample_probs)
             return self.make_img_generator(file_inds, target_size)
 
         gen = make_gen()
@@ -270,11 +280,13 @@ class FileGenerator(Generator):
         return img_batch
 
     def make_split_generator(self, split, target_size=None,
-                             batch_size=32, shuffle=False, augment_methods=None,
+                             batch_size=32, shuffle=False,
+                             augment_methods=None,
                              normalize=False, only_xy=True):
         file_inds = self.get_file_inds(split)
+        sample_probs = self.train_weights if split == TRAIN else None
         img_batch_gen = self.make_img_batch_generator(
-            file_inds, target_size, batch_size, shuffle)
+            file_inds, target_size, batch_size, shuffle, sample_probs)
 
         def transform_img_batch(x):
             # An img_batch is a batch of images. For segmentation problems,
