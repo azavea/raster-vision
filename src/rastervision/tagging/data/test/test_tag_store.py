@@ -56,6 +56,13 @@ class TagStoreTestCase(unittest.TestCase):
         self.assertEqual(add_pred_tags, [self.dataset.cultivation])
         self.assertEqual(remove_pred_tags, [self.dataset.partly_cloudy])
 
+    def test_compute_train_probs(self):
+        ind3 = 'ind3'
+        self.tag_store.add_csv_row((ind3, 'artisinal_mine'))
+        sample_probs = \
+            self.tag_store.compute_sample_probs([self.ind1, self.ind2, ind3])
+        self.assertTrue(np.array_equal(sample_probs, [0.25, 0.25, 0.5]))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -170,6 +170,23 @@ class TagStore():
                 tags = ' '.join(self.binary_to_strs(tags))
                 writer.writerow([file_ind, tags])
 
+    def compute_sample_probs(self, file_inds):
+        # Make it so samples with rare labels are sampled as often
+        # as other samples, on average.
+        tag_array = self.get_tag_array(file_inds)
+        rare_tag_inds = [
+            self.dataset.get_tag_ind(tag) for tag in self.dataset.rare_tags]
+        is_rare_file_ind = np.any(tag_array[:, rare_tag_inds], axis=1)
+        nb_rare_file_inds = np.sum(is_rare_file_ind)
+        nb_other_file_inds = len(file_inds) - nb_rare_file_inds
+
+        other_prob = 0.5 / nb_other_file_inds
+        sample_probs = np.ones((len(file_inds),)) * other_prob
+        rare_prob = 0.5 / nb_rare_file_inds
+        sample_probs[is_rare_file_ind] = rare_prob
+
+        return sample_probs
+
 
 class PlanetKaggleFileGenerator(FileGenerator):
     def __init__(self, datasets_path, active_input_inds, train_ratio,
@@ -187,6 +204,9 @@ class PlanetKaggleFileGenerator(FileGenerator):
         self.tag_store = TagStore(tags_path)
 
         super().__init__(active_input_inds, train_ratio, cross_validation)
+
+    def compute_train_probs(self):
+        return self.tag_store.compute_sample_probs(self.train_file_inds)
 
     @staticmethod
     def preprocess(datasets_path):
