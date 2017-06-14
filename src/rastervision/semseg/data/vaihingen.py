@@ -143,6 +143,9 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
                 self.cross_validation = None
         options = Options()
 
+        VaihingenNumpyFileGenerator(
+            datasets_path, options).write_channel_stats(proc_data_path)
+
         generator = VaihingenImageFileGenerator(datasets_path, options)
         dataset = generator.dataset
 
@@ -178,9 +181,6 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
         _preprocess(TEST)
-
-        VaihingenNumpyFileGenerator(
-            datasets_path, [0, 1, 2, 3]).write_channel_stats(proc_data_path)
 
     def get_file_path(self, file_ind):
         return join(self.dataset_path, '{}.npy'.format(file_ind))

@@ -171,6 +171,9 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
                 self.cross_validation = None
 
         options = Options()
+        PotsdamNumpyFileGenerator(
+            datasets_path, options).write_channel_stats(proc_data_path)
+
         generator = PotsdamImageFileGenerator(datasets_path, options)
         dataset = generator.dataset
 
@@ -207,9 +210,6 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
         _preprocess(TEST)
-
-        PotsdamNumpyFileGenerator(
-            datasets_path, [0, 1, 2, 3, 4]).write_channel_stats(proc_data_path)
 
     def get_file_path(self, file_ind):
         ind0, ind1 = file_ind
