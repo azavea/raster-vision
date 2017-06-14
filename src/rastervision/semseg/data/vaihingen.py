@@ -43,7 +43,7 @@ class VaihingenFileGenerator(IsprsFileGenerator):
     A data generator for the Vaihingen dataset that creates batches from
     files on disk.
     """
-    def __init__(self, active_input_inds, train_ratio, cross_validation):
+    def __init__(self, options):
         self.dataset = VaihingenDataset()
 
         self.dev_file_inds = [
@@ -52,7 +52,7 @@ class VaihingenFileGenerator(IsprsFileGenerator):
         self.test_file_inds = [
             2, 4, 6, 8, 10, 12, 14, 16, 20, 22, 24, 27, 29, 31, 33, 35, 38]
 
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+        super().__init__(options)
 
 
 class VaihingenImageFileGenerator(VaihingenFileGenerator):
@@ -60,11 +60,10 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
     A data generator for the Vaihingen dataset that creates batches from
     the original TIFF and JPG files.
     """
-    def __init__(self, datasets_path, active_input_inds,
-                 train_ratio=0.8, cross_validation=None):
+    def __init__(self, datasets_path, options):
         self.dataset_path = join(datasets_path, VAIHINGEN)
         self.name = "vaihingen_image"
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+        super().__init__(options)
 
     @staticmethod
     def preprocess(datasets_path):
@@ -125,21 +124,26 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
     A data generator for the Vaihingen dataset that creates batches from
     numpy array files. This is about 20x faster than reading the raw files.
     """
-    def __init__(self, datasets_path, active_input_inds,
-                 train_ratio=0.8, cross_validation=None):
+    def __init__(self, datasets_path, options):
         self.raw_dataset_path = join(datasets_path, VAIHINGEN)
         self.dataset_path = join(datasets_path, PROCESSED_VAIHINGEN)
         self.download_dataset(['processed_vaihingen.zip'])
         self.name = "vaihingen_numpy"
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+        super().__init__(options)
 
     @staticmethod
     def preprocess(datasets_path):
         proc_data_path = join(datasets_path, PROCESSED_VAIHINGEN)
         _makedirs(proc_data_path)
 
-        generator = VaihingenImageFileGenerator(
-            datasets_path, [0, 1, 2, 3])
+        class Options():
+            def __init__(self):
+                self.active_input_inds = [0, 1, 2, 3]
+                self.train_ratio = 0.8
+                self.cross_validation = None
+        options = Options()
+
+        generator = VaihingenImageFileGenerator(datasets_path, options)
         dataset = generator.dataset
 
         def _preprocess(split):

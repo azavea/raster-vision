@@ -170,7 +170,7 @@ class TagStore():
                 tags = ' '.join(self.binary_to_strs(tags))
                 writer.writerow([file_ind, tags])
 
-    def compute_sample_probs(self, file_inds):
+    def compute_sample_probs(self, file_inds, rare_sample_prob):
         # Make it so samples with rare labels are sampled as often
         # as other samples, on average.
         tag_array = self.get_tag_array(file_inds)
@@ -180,17 +180,16 @@ class TagStore():
         nb_rare_file_inds = np.sum(is_rare_file_ind)
         nb_other_file_inds = len(file_inds) - nb_rare_file_inds
 
-        other_prob = 0.5 / nb_other_file_inds
+        other_prob = (1.0 - rare_sample_prob) / nb_other_file_inds
         sample_probs = np.ones((len(file_inds),)) * other_prob
-        rare_prob = 0.5 / nb_rare_file_inds
+        rare_prob = rare_sample_prob / nb_rare_file_inds
         sample_probs[is_rare_file_ind] = rare_prob
 
         return sample_probs
 
 
 class PlanetKaggleFileGenerator(FileGenerator):
-    def __init__(self, datasets_path, active_input_inds, train_ratio,
-                 cross_validation):
+    def __init__(self, datasets_path, options):
         download_dataset(PLANET_KAGGLE, self.zip_file_names)
 
         self.dataset_path = join(datasets_path, PLANET_KAGGLE)
@@ -203,10 +202,14 @@ class PlanetKaggleFileGenerator(FileGenerator):
         tags_path = join(self.dataset_path, 'train_v2.csv')
         self.tag_store = TagStore(tags_path)
 
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+        self.rare_sample_prob = options.rare_sample_prob
+        super().__init__(options)
 
     def compute_train_probs(self):
-        return self.tag_store.compute_sample_probs(self.train_file_inds)
+        if self.rare_sample_prob is not None:
+            return self.tag_store.compute_sample_probs(
+                self.train_file_inds, self.rare_sample_prob)
+        return None
 
     @staticmethod
     def preprocess(datasets_path):
@@ -277,8 +280,7 @@ class PlanetKaggleFileGenerator(FileGenerator):
 
 
 class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
-    def __init__(self, datasets_path, active_input_inds, train_ratio,
-                 cross_validation):
+    def __init__(self, datasets_path, options):
         self.dev_dir = 'train-tif-v2'
         self.test_dir = 'test-tif-v2'
         self.zip_file_names = [
@@ -286,8 +288,7 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
         self.file_extension = 'tif'
         self.dataset = TiffDataset()
 
-        super().__init__(
-            datasets_path, active_input_inds, train_ratio, cross_validation)
+        super().__init__(datasets_path, options)
 
     def load_img(self, file_path, window):
         import rasterio
@@ -298,8 +299,7 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
 
 
 class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
-    def __init__(self, datasets_path, active_input_inds, train_ratio,
-                 cross_validation):
+    def __init__(self, datasets_path, options):
         self.dev_dir = 'train-jpg'
         self.test_dir = 'test-jpg'
         self.zip_file_names = [
@@ -307,8 +307,7 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
         self.file_extension = 'jpg'
         self.dataset = JpgDataset()
 
-        super().__init__(
-            datasets_path, active_input_inds, train_ratio, cross_validation)
+        super().__init__(datasets_path, options)
 
     def load_img(self, file_path, window):
         import rasterio

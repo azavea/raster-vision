@@ -63,10 +63,10 @@ class FileGenerator(Generator):
     A generic data generator that creates batches from files. It can read
     windows of data from disk without loading the entire file into memory.
     """
-    def __init__(self, active_input_inds, train_ratio, cross_validation):
-        self.active_input_inds = active_input_inds
-        self.train_ratio = train_ratio
-        self.cross_validation = cross_validation
+    def __init__(self, options):
+        self.active_input_inds = options.active_input_inds
+        self.train_ratio = options.train_ratio
+        self.cross_validation = options.cross_validation
 
         if self.train_ratio is not None:
             nb_train_inds = \
@@ -77,7 +77,7 @@ class FileGenerator(Generator):
         if self.cross_validation is not None:
             self.process_cross_validation()
 
-        self.train_weights = self.compute_train_weights()
+        self.train_probs = self.compute_train_probs()
 
         # If a dataset's normalized parameters have already been
         # calculated, load its json file. Otherwise, calculate parameters
@@ -92,7 +92,7 @@ class FileGenerator(Generator):
         else:
             self.channel_stats = self.compute_channel_stats(100, False)
 
-    def compute_train_weights(self):
+    def compute_train_probs(self):
         return None
 
     def calibrate_image(self, normalized_image):
@@ -284,7 +284,7 @@ class FileGenerator(Generator):
                              augment_methods=None,
                              normalize=False, only_xy=True):
         file_inds = self.get_file_inds(split)
-        sample_probs = self.train_weights if split == TRAIN else None
+        sample_probs = self.train_probs if split == TRAIN else None
         img_batch_gen = self.make_img_batch_generator(
             file_inds, target_size, batch_size, shuffle, sample_probs)
 

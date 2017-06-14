@@ -34,8 +34,7 @@ class DataGeneratorFactory():
         data_generator_class = \
             self.get_class(options.dataset_name, options.generator_name)
         return data_generator_class(
-            self.datasets_path, options.active_input_inds, options.train_ratio,
-            options.cross_validation)
+            self.datasets_path, options)
 
     def preprocess(self, dataset_name, generator_name):
         data_generator_class = \
