@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+SRC="$PROJECT_ROOT/src"
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0") (--local|--remote)
+Run the jupyter notebook in a raster-vision docker image locally
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    docker run --rm -it \
+           -v "$SRC":/opt/src \
+           -v /opt/data:/opt/data \
+           -v /opt/notebooks:/opt/notebooks \
+           -p 8888:8888 \
+           raster-vision-base \
+           jupyter notebook \
+           --ip 0.0.0.0 \
+           --port 8888 \
+           --no-browser \
+           --allow-root \
+           --notebook-dir=/opt/notebooks
+fi
