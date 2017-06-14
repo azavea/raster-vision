@@ -144,8 +144,8 @@ class IsprsDataset():
 
 
 class IsprsFileGenerator(FileGenerator):
-    def __init__(self, active_input_inds, train_ratio, cross_validation):
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+    def __init__(self, options):
+        super().__init__(options)
 
     def plot_sample(self, file_path, x, y):
         fig = plt.figure()

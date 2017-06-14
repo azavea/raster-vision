@@ -8,3 +8,4 @@ class TaggingOptions(Options):
         if self.aggregate_run_names is None:
             self.use_pretraining = options.get('use_pretraining', False)
             self.target_size = None
+            self.rare_sample_prob = options.get('rare_sample_prob')
