@@ -1,5 +1,4 @@
 from os.path import isfile, join
-from subprocess import call
 
 from rastervision.common.settings import datasets_path, results_path
 from rastervision.common.utils import s3_download

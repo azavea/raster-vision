@@ -50,7 +50,8 @@ class TaggingDataGeneratorFactory(DataGeneratorFactory):
 
         gen = generator.make_split_generator(
             split, batch_size=batch_size, shuffle=True,
-            augment_methods=options.augment_methods, normalize=True, only_xy=False)
+            augment_methods=options.augment_methods, normalize=True,
+            only_xy=False)
 
         for batch_ind in range(nb_batches):
             batch = next(gen)
