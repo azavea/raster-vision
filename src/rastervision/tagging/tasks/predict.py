@@ -4,6 +4,7 @@ from rastervision.common.settings import VALIDATION, TEST
 
 from rastervision.tagging.data.planet_kaggle import TagStore
 from rastervision.tagging.tasks.utils import compute_prediction
+from rastervision.tagging.tasks.train_thresholds import load_thresholds
 
 VALIDATION_PREDICT = 'validation_predict'
 TEST_PREDICT = 'test_predict'
@@ -24,6 +25,7 @@ def predict(run_path, model, options, generator, split):
     """
     predictions_path = join(run_path, '{}_predictions.csv'.format(split))
 
+    thresholds = load_thresholds(run_path)
     batch_size = options.batch_size
     split_gen = generator.make_split_generator(
         split, target_size=None,
@@ -36,7 +38,7 @@ def predict(run_path, model, options, generator, split):
         y_probs = model.predict(batch.x)
         for sample_ind in range(batch.x.shape[0]):
             y_pred = compute_prediction(
-                y_probs[sample_ind, :], generator.dataset)
+                y_probs[sample_ind, :], generator.dataset, thresholds)
             tag_store.add_tags(
                 batch.file_inds[sample_ind], y_pred)
 
