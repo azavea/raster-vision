@@ -81,6 +81,9 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
         # Fix the depth image that is missing a column if it hasn't been
         # fixed already.
         data_path = join(datasets_path, POTSDAM)
+        proc_data_path = join(datasets_path, PROCESSED_POTSDAM)
+        _makedirs(proc_data_path)
+
         file_path = join(
             data_path,
             '1_DSM_normalisation/dsm_potsdam_03_13_normalized_lastools.jpg')
@@ -91,8 +94,15 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
             im_fix[:, 0:-1] = im[:, :, 0]
             save_img(im_fix, file_path)
 
+        class Options():
+            def __init__(self):
+                self.active_input_inds = [0, 1, 2, 3, 4]
+                self.train_ratio = 0.8
+                self.cross_validation = None
+
+        options = Options()
         PotsdamImageFileGenerator(
-            datasets_path, [0, 1, 2, 3, 4]).write_channel_stats(data_path)
+            datasets_path, options).write_channel_stats(proc_data_path)
 
     def get_file_size(self, file_ind):
         ind0, ind1 = file_ind
@@ -171,9 +181,6 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
                 self.cross_validation = None
 
         options = Options()
-        PotsdamNumpyFileGenerator(
-            datasets_path, options).write_channel_stats(proc_data_path)
-
         generator = PotsdamImageFileGenerator(datasets_path, options)
         dataset = generator.dataset
 
@@ -210,6 +217,9 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
         _preprocess(TEST)
+
+        PotsdamNumpyFileGenerator(
+            datasets_path, options).write_channel_stats(proc_data_path)
 
     def get_file_path(self, file_ind):
         ind0, ind1 = file_ind

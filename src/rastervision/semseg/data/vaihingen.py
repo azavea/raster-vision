@@ -67,8 +67,17 @@ class VaihingenImageFileGenerator(VaihingenFileGenerator):
 
     @staticmethod
     def preprocess(datasets_path):
+        proc_data_path = join(datasets_path, PROCESSED_VAIHINGEN)
+        _makedirs(proc_data_path)
+
+        class Options():
+            def __init__(self):
+                self.active_input_inds = [0, 1, 2, 3]
+                self.train_ratio = 0.8
+                self.cross_validation = None
+        options = Options()
         VaihingenImageFileGenerator(
-            datasets_path, [0, 1, 2, 3]).write_channel_stats(datasets_path)
+            datasets_path, options).write_channel_stats(proc_data_path)
 
     def get_file_size(self, file_ind):
         irrg_file_path = join(
@@ -142,10 +151,6 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
                 self.train_ratio = 0.8
                 self.cross_validation = None
         options = Options()
-
-        VaihingenNumpyFileGenerator(
-            datasets_path, options).write_channel_stats(proc_data_path)
-
         generator = VaihingenImageFileGenerator(datasets_path, options)
         dataset = generator.dataset
 
@@ -181,6 +186,9 @@ class VaihingenNumpyFileGenerator(VaihingenFileGenerator):
         _preprocess(TRAIN)
         _preprocess(VALIDATION)
         _preprocess(TEST)
+
+        VaihingenNumpyFileGenerator(
+            datasets_path, options).write_channel_stats(proc_data_path)
 
     def get_file_path(self, file_ind):
         return join(self.dataset_path, '{}.npy'.format(file_ind))
