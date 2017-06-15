@@ -66,7 +66,7 @@ class DataGeneratorFactory():
             else [args.dataset_name]
         generator_names = self.generator_names if args.generator_name == ALL \
             else [args.generator_name]
-        tasks = [PLOT, PREPROCESS] if args.task == ALL else [args.task]
+        tasks = [PREPROCESS, PLOT] if args.task == ALL else [args.task]
 
         for dataset_name in dataset_names:
             for generator_name in generator_names:
