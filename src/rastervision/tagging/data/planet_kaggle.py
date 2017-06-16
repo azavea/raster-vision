@@ -190,7 +190,7 @@ class TagStore():
 
 class PlanetKaggleFileGenerator(FileGenerator):
     def __init__(self, datasets_path, options):
-        download_dataset(PLANET_KAGGLE, self.zip_file_names)
+        download_dataset(PLANET_KAGGLE, self.file_names)
 
         self.dataset_path = join(datasets_path, PLANET_KAGGLE)
         self.dev_path = join(self.dataset_path, self.dev_dir)
@@ -283,7 +283,7 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
     def __init__(self, datasets_path, options):
         self.dev_dir = 'train-tif-v2'
         self.test_dir = 'test-tif-v2'
-        self.zip_file_names = [
+        self.file_names = [
             'train-tif-v2.zip', 'test-tif-v2.zip', 'train_v2.csv.zip',
             'planet_kaggle_tiff_channel_stats.json']
         self.file_extension = 'tif'
@@ -322,7 +322,7 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
     def __init__(self, datasets_path, options):
         self.dev_dir = 'train-jpg'
         self.test_dir = 'test-jpg'
-        self.zip_file_names = [
+        self.file_names = [
             'train-jpg.zip', 'test-jpg.zip', 'train_v2.csv.zip',
             'planet_kaggle_jpg_channel_stats.json']
         self.file_extension = 'jpg'
