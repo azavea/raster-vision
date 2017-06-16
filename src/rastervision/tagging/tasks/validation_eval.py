@@ -12,6 +12,7 @@ from rastervision.common.settings import VALIDATION
 from rastervision.common.utils import plot_img_row, _makedirs
 
 from rastervision.tagging.tasks.utils import compute_prediction
+from rastervision.tagging.tasks.train_thresholds import load_thresholds
 
 
 class Scores():
@@ -76,6 +77,7 @@ def plot_predictions(run_path, model, options, generator):
     y_trues = []
     y_preds = []
 
+    thresholds = load_thresholds(run_path)
     split_gen = generator.make_split_generator(
         VALIDATION, target_size=None,
         batch_size=options.batch_size, shuffle=False, augment_methods=None,
@@ -89,7 +91,7 @@ def plot_predictions(run_path, model, options, generator):
             all_x = batch.all_x[sample_ind, :, :, :]
 
             y_pred = compute_prediction(
-                y_probs[sample_ind, :], generator.dataset)
+                y_probs[sample_ind, :], generator.dataset, thresholds)
             y_true = generator.tag_store.get_tag_array([file_ind])[0, :]
             y_preds.append(np.expand_dims(y_pred, axis=0))
             y_trues.append(np.expand_dims(y_true, axis=0))

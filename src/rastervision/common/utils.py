@@ -205,10 +205,15 @@ class Logger(object):
         pass
 
 
-def save_json(a_dict, path):
-    json_str = json.dumps(a_dict, sort_keys=True, indent=4)
+def save_json(obj, path):
+    json_str = json.dumps(obj, sort_keys=True, indent=4)
     with open(path, 'w') as json_file:
         json_file.write(json_str)
+
+
+def load_json(path):
+    with open(path) as f:
+        return json.load(f)
 
 
 def plot_img_row(fig, grid_spec, row_ind, imgs, titles=None):

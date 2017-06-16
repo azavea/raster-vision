@@ -10,13 +10,15 @@ from rastervision.tagging.tasks.train_model import TaggingTrainModel
 from rastervision.tagging.tasks.predict import (
     VALIDATION_PREDICT, TEST_PREDICT, validation_predict, test_predict)
 from rastervision.tagging.tasks.validation_eval import validation_eval
+from rastervision.tagging.tasks.train_thresholds import (
+    TRAIN_THRESHOLDS, train_thresholds)
 
 
 class TaggingRunner(Runner):
     def __init__(self):
         self.valid_tasks = [
-            TRAIN_MODEL, PLOT_CURVES, VALIDATION_PREDICT, VALIDATION_EVAL,
-            TEST_PREDICT]
+            TRAIN_MODEL, TRAIN_THRESHOLDS, PLOT_CURVES, VALIDATION_PREDICT,
+            VALIDATION_EVAL, TEST_PREDICT]
         self.model_factory_class = TaggingModelFactory
         self.data_generator_factory_class = TaggingDataGeneratorFactory
 
@@ -26,6 +28,9 @@ class TaggingRunner(Runner):
                 self.run_path, self.sync_results, self.options,
                 self.generator, self.model)
             train_model.train_model()
+        elif task == TRAIN_THRESHOLDS:
+            train_thresholds(
+                self.run_path, self.model, self.options, self.generator)
         elif task == PLOT_CURVES:
             plot_curves(self.options)
         elif task == VALIDATION_PREDICT:
