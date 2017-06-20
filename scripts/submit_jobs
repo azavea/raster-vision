@@ -45,19 +45,6 @@ def query_yes_no(question, default="yes"):
                              "(or 'y' or 'n').\n")
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('branch_name', help='Branch with code to run on AWS')
-    parser.add_argument(
-        'experiment_path',
-        help='Directory with experiment files rooted at src/experiments/...')
-    parser.add_argument(
-        'tasks', nargs='*',
-        help='Space-delimited list of tasks to run on AWS. ' +
-             'Can be empty to run all tasks.')
-    return parser.parse_args()
-
-
 def read_experiment_files(path):
     run_name_to_file_path = {}
     run_name_to_parent_run_names = {}
@@ -92,7 +79,8 @@ def build_dep_graph(run_name_to_parent_run_names):
     return g
 
 
-def submit_job(branch_name, file_path, tasks, run_name, parent_job_ids=None):
+def submit_job(branch_name, file_path, tasks, run_name,
+               attempts, parent_job_ids=None):
     s3_bucket = environ.get('S3_BUCKET')
 
     job_name = run_name.replace('/', '-')
@@ -109,6 +97,7 @@ def submit_job(branch_name, file_path, tasks, run_name, parent_job_ids=None):
         dependsOn = [{'jobId': job_id} for job_id in parent_job_ids]
 
     client = boto3.client('batch')
+
     job_id = client.submit_job(
         jobName=job_name,
         jobQueue='raster-vision-experiments',
@@ -116,7 +105,10 @@ def submit_job(branch_name, file_path, tasks, run_name, parent_job_ids=None):
         containerOverrides={
             'command': command
         },
-        dependsOn=dependsOn)['jobId']
+        dependsOn=dependsOn,
+        retryStrategy={
+            'attempts': attempts
+        })['jobId']
 
     print(
         'Submitted job with jobName={} and jobId={}'.format(job_name, job_id))
@@ -138,11 +130,27 @@ def prompt_user(branch_name, experiment_path):
     return pushed_branch, want_to_run
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('branch_name', help='Branch with code to run on AWS')
+    parser.add_argument(
+        'experiment_path',
+        help='Directory with experiment files rooted at src/experiments/...')
+    parser.add_argument(
+        'tasks', nargs='*',
+        help='Space-delimited list of tasks to run on AWS. ' +
+             'Can be empty to run all tasks.')
+    parser.add_argument(
+        '--attempts', type=int, default=5, help='Number of times to retry job')
+    return parser.parse_args()
+
+
 def run():
     args = parse_args()
     print('Branch name: {}'.format(args.branch_name))
     print('Experiment path: {}'.format(args.experiment_path))
     print('Tasks: {}'.format(args.tasks))
+    print('Number of attempts: {}'.format(args.attempts))
 
     experiment_path = join(args.experiment_path, '*.json') \
         if isdir(args.experiment_path) else args.experiment_path
@@ -168,7 +176,7 @@ def run():
 
             run_name_to_job_id[run_name] = submit_job(
                 args.branch_name, file_path, args.tasks, run_name,
-                parent_job_ids)
+                args.attempts, parent_job_ids)
 
 
 if __name__ == '__main__':
