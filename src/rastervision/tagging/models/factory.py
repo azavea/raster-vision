@@ -1,8 +1,10 @@
 from rastervision.common.models.factory import ModelFactory
 from rastervision.common.models.resnet50 import ResNet50
+from rastervision.common.models.wideresnet import WideResidualNetwork
+from rastervision.semseg.models.fcn_wrn import make_fcn_wrn, FCN_WRN
 
 BASELINE_RESNET = 'baseline_resnet'
-
+WIDERESNET = 'wideresnet'
 
 class TaggingModelFactory(ModelFactory):
     def __init__(self):
@@ -20,9 +22,25 @@ class TaggingModelFactory(ModelFactory):
             # as a loss function.
             weights = 'imagenet' if options.use_pretraining else None
             model = ResNet50(
-                include_top=True, weights=weights,
+                include_top=False,
+                weights=weights,
                 input_shape=input_shape,
                 classes=generator.dataset.nb_tags,
+                activation='sigmoid')
+        elif model_type == WIDERESNET:
+            weights = 'cifar10' if options.use_pretraining else None
+            model = WideResidualNetwork(
+                nb_classes=generator.dataset.nb_tags,
+                include_top=True,
+                weights=weights,
+                #classes=generator.dataset.nb_tags,
+                input_shape=input_shape,
+                activation='sigmoid')
+        elif model_type == FCN_WRN:
+            model = make_fcn_wrn(
+                input_shape,
+                generator.dataset.nb_tags,
+                use_pretraining=options.use_pretraining,
                 activation='sigmoid')
         else:
             raise ValueError('{} is not a valid model_type'.format(model_type))
