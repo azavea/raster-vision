@@ -11,6 +11,10 @@ class Options():
         self.aggregate_run_names = options.get('aggregate_run_names')
 
         if self.aggregate_run_names is None:
+            self.train_stages = options.get('train_stages')
+            if self.train_stages is not None:
+                options.update(self.train_stages[0])
+
             self.model_type = options['model_type']
             self.dataset_name = options['dataset_name']
             self.generator_name = options['generator_name']
@@ -42,12 +46,6 @@ class Options():
                     raise ValueError(
                         '{} are not valid augment_methods'.format(
                             str(invalid_augment_methods)))
-
-            if 'train_stages' in options and \
-                    options['train_stages'] is not None:
-                train_stages = options['train_stages']
-                options.update(train_stages[0])
-            self.train_stages = options.get('train_stages')
 
             # Controls how many samples to use in validation_eval, test_predict
             # and validation_predict.

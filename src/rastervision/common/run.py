@@ -54,7 +54,7 @@ class Runner():
 
         self.run_path = join(results_path, self.options.run_name)
         self.sync_results = make_sync_results(self.options.run_name)
-        model_factory = self.model_factory_class()
+        self.model_factory = self.model_factory_class()
         self.setup_run()
         sys.stdout = Logger(self.run_path)
 
@@ -63,7 +63,7 @@ class Runner():
         if self.options.aggregate_run_names is None:
             self.generator = self.data_generator_factory_class() \
                             .get_data_generator(self.options)
-            self.model = model_factory.get_model(
+            self.model = self.model_factory.get_model(
                 self.run_path, self.options, self.generator, use_best=True)
         else:
             for run_name in self.options.aggregate_run_names:
