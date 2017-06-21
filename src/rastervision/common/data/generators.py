@@ -13,6 +13,8 @@ VFLIP = 'vflip'
 ROTATE = 'rotate'
 TRANSLATE = 'translate'
 all_augment_methods = [ROTATE90, HFLIP, VFLIP, ROTATE, TRANSLATE]
+# safe methods don't destroy any information in the original image
+safe_augment_methods = [HFLIP, VFLIP, ROTATE90]
 
 
 class Batch():
