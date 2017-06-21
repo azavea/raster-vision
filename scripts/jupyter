@@ -23,7 +23,7 @@ then
            -v /opt/data:/opt/data \
            -v /opt/notebooks:/opt/notebooks \
            -p 8888:8888 \
-           raster-vision-base \
+           raster-vision-cpu \
            jupyter notebook \
            --ip 0.0.0.0 \
            --port 8888 \
