@@ -42,7 +42,10 @@ class TestExperimentGenerator(ExperimentGenerator):
         agg_exp = {
             'problem_type': base_exp['problem_type'],
             'run_name': join(base_exp['run_name'], str(exp_count)),
-            'aggregate_run_names': [exp['run_name'] for exp in exps]
+            'aggregate_run_names': [exp['run_name'] for exp in exps],
+            'aggregate_type': 'agg_ensemble',
+            'nb_eval_samples': base_exp['nb_eval_samples'],
+            'batch_size': base_exp['batch_size']
         }
         exps.append(agg_exp)
         exp_count += 1
