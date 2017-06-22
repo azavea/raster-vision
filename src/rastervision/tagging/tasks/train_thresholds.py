@@ -17,35 +17,17 @@ def save_thresholds(run_path, thresholds):
     save_json(thresholds.tolist(), join(run_path, 'thresholds.json'))
 
 
-def compute_model_output(model, options, generator):
-    y_true_list = []
-    y_probs_list = []
+def get_model_output(run_path, generator, nb_eval_samples=None):
+    split = TRAIN
+    file_inds = generator.get_file_inds(split)
+    if nb_eval_samples is not None:
+        file_inds = file_inds[0:nb_eval_samples]
+    y_true = generator.tag_store.get_tag_array(file_inds)
 
-    split_gen = generator.make_split_generator(
-        TRAIN, target_size=None,
-        batch_size=options.batch_size, shuffle=False, augment_methods=None,
-        normalize=True, only_xy=False)
-
-    sample_count = 0
-    for batch_ind, batch in enumerate(split_gen):
-        batch_y_probs = model.predict(batch.x)
-        for sample_ind in range(batch.x.shape[0]):
-            file_ind = batch.file_inds[sample_ind]
-
-            y_probs = batch_y_probs[sample_ind, :]
-            y_probs_list.append(np.expand_dims(y_probs, axis=0))
-
-            y_true = generator.tag_store.get_tag_array([file_ind])[0, :]
-            y_true_list.append(np.expand_dims(y_true, axis=0))
-
-            sample_count += 1
-
-        if (options.nb_eval_samples is not None and
-                sample_count >= options.nb_eval_samples):
-            break
-
-    y_true = np.concatenate(y_true_list, axis=0)
-    y_probs = np.concatenate(y_probs_list, axis=0)
+    probs_path = join(run_path, '{}_probs.npy'.format(split))
+    y_probs = np.load(probs_path)
+    if nb_eval_samples is not None:
+        y_probs = y_probs[0:nb_eval_samples, :]
 
     return y_true, y_probs
 
@@ -58,7 +40,7 @@ def optimize_thresholds(y_true, y_probs):
 
     for tag_ind in range(nb_tags):
         thresholds = np.copy(best_thresholds)
-        for tag_thresh in np.arange(0, 1.0, 0.01):
+        for tag_thresh in np.arange(0, 1.0, 0.02):
             thresholds[tag_ind] = tag_thresh
             y_preds = y_probs > np.expand_dims(thresholds, axis=0)
             f2 = fbeta_score(y_true, y_preds, beta=2, average='samples')
@@ -69,13 +51,14 @@ def optimize_thresholds(y_true, y_probs):
     return best_thresholds
 
 
-def train_thresholds(run_path, model, options, generator):
+def train_thresholds(run_path, options, generator):
     # Finding the correct thresholds seems to result in a small decrease in
     # test performance. I'm not sure what's going on, so for now
     # I'm commenting this out and setting thresholds to a default of 0.2 to
     # maintain the previous performance.
-    
-    # y_true, y_probs = compute_model_output(model, options, generator)
+
+    # y_true, y_probs = get_model_output(
+    #    run_path, generator, options.nb_eval_samples)
     # thresholds = optimize_thresholds(y_true, y_probs)
     thresholds = 0.2 * np.ones((len(generator.dataset.all_tags),))
     save_thresholds(run_path, thresholds)
