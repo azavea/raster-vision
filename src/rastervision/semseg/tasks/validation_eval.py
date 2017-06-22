@@ -10,6 +10,8 @@ from rastervision.common.settings import VALIDATION
 from rastervision.semseg.tasks.utils import (
     predict_x, make_prediction_img, plot_prediction)
 
+VALIDATION_EVAL = 'validation_eval'
+
 
 class Scores():
     """A set of scores for the performance of a model on a dataset."""

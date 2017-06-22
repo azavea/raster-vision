@@ -1,6 +1,9 @@
 from rastervision.common.data.generators import (
     all_augment_methods, safe_augment_methods)
 
+AGG_SUMMARY = 'agg_summary'
+AGG_ENSEMBLE = 'agg_ensemble'
+
 
 class Options():
     """Represents the options used to control an experimental run."""
@@ -8,9 +11,18 @@ class Options():
     def __init__(self, options):
         self.problem_type = options['problem_type']
         self.run_name = options['run_name']
+        self.aggregate_type = options.get('aggregate_type')
         self.aggregate_run_names = options.get('aggregate_run_names')
+        self.batch_size = options.get('batch_size', 32)
 
-        if self.aggregate_run_names is None:
+        # Controls how many samples to use in eval tasks.
+        # Setting this to a low value can be useful when testing
+        # the code, since it will save time.
+        self.nb_eval_samples = options.get('nb_eval_samples')
+        # Controls how many samples to plot as part of validation_eval
+        self.nb_eval_plot_samples = options.get('nb_eval_plot_samples')
+
+        if self.aggregate_type is None:
             self.train_stages = options.get('train_stages')
             if self.train_stages is not None:
                 options.update(self.train_stages[0])
@@ -18,7 +30,6 @@ class Options():
             self.model_type = options['model_type']
             self.dataset_name = options['dataset_name']
             self.generator_name = options['generator_name']
-            self.batch_size = options['batch_size']
             self.epochs = options['epochs']
             self.steps_per_epoch = options['steps_per_epoch']
             self.validation_steps = options['validation_steps']
@@ -46,11 +57,3 @@ class Options():
                     raise ValueError(
                         '{} are not valid augment_methods'.format(
                             str(invalid_augment_methods)))
-
-            # Controls how many samples to use in validation_eval, test_predict
-            # and validation_predict.
-            # Setting this to a low value can be useful when testing
-            # the code, since it will save time.
-            self.nb_eval_samples = options.get('nb_eval_samples')
-            # Controls how many samples to plot as part of validation_eval
-            self.nb_eval_plot_samples = options.get('nb_eval_plot_samples')

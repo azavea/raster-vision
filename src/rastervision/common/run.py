@@ -1,8 +1,7 @@
 from os.path import join, isdir
+import json
 import sys
 
-from rastervision.common.tasks.plot_curves import PLOT_CURVES
-from rastervision.common.tasks.validation_eval import VALIDATION_EVAL
 from rastervision.common.utils import (
     Logger, make_sync_results, _makedirs, save_json, s3_download)
 from rastervision.common.settings import results_path
@@ -14,18 +13,20 @@ class Runner():
     # self.model_factory_class = None
     # self.data_generator_factory_class = None
     # self.train_model_class = None
-    # self.run_task
+    # self.options_class = None
+    # self.agg_file_names = None
 
     def is_valid_task(self, task):
         if task not in self.valid_tasks:
             return False
 
-        if self.options.aggregate_run_names is not None:
-            if task in [PLOT_CURVES, VALIDATION_EVAL]:
-                return True
-            return False
-
         return True
+
+    def get_options(self, options_path):
+        with open(options_path) as options_file:
+            options_dict = json.load(options_file)
+            options = self.options_class(options_dict)
+            return options
 
     def setup_run(self):
         """Setup path for the results of a run.
@@ -41,13 +42,13 @@ class Runner():
         options_path = join(self.run_path, 'options.json')
         save_json(self.options.__dict__, options_path)
 
-    def run_tasks(self, options, tasks):
+    def run_tasks(self, options_path, tasks):
         """Run tasks specified on command line.
 
         This creates the RunOptions object from the json file specified on the
         command line, creates a data generator, and then runs the tasks.
         """
-        self.options = options
+        self.options = self.get_options(options_path)
         self.tasks = tasks
         if len(self.tasks) == 0:
             self.tasks = self.valid_tasks
@@ -60,15 +61,22 @@ class Runner():
 
         self.model = None
         self.generator = None
-        if self.options.aggregate_run_names is None:
+        if self.options.aggregate_type is None:
             self.generator = self.data_generator_factory_class() \
                             .get_data_generator(self.options)
             self.model = self.model_factory.get_model(
                 self.run_path, self.options, self.generator, use_best=True)
         else:
             for run_name in self.options.aggregate_run_names:
-                s3_download(run_name, 'log.txt')
-                s3_download(run_name, 'scores.json')
+                for file_name in self.agg_file_names:
+                    s3_download(run_name, file_name)
+
+            # Load the generator for the first run being aggregated
+            run0_name = self.options.aggregate_run_names[0]
+            options0_path = join(results_path, run0_name, 'options.json')
+            options0 = self.get_options(options0_path)
+            generator_factory = self.data_generator_factory_class()
+            self.generator = generator_factory.get_data_generator(options0)
 
         for task in self.tasks:
             if self.is_valid_task(task):

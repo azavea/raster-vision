@@ -221,7 +221,9 @@ class PlanetKaggleFileGenerator(FileGenerator):
         save_json(tag_store.get_tag_counts(dataset.all_tags), counts_path)
 
     def generate_file_inds(self, path):
-        paths = glob.glob(join(path, '*.{}'.format(self.file_extension)))
+        paths = sorted(
+            glob.glob(join(path, '*.{}'.format(self.file_extension))))
+
         file_inds = []
         for path in paths:
             file_ind = splitext(basename(path))[0]
