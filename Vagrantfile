@@ -11,8 +11,13 @@ SCRIPT
 
 DATA_DIR = ENV["RASTER_VISION_DATA_DIR"]
 if DATA_DIR.nil?
-  puts "You must set the environment variable: RASTER_VISION_DATA_DIR"
+  puts "ERROR: You must set the environment variable: RASTER_VISION_DATA_DIR"
   exit 1
+end
+
+NOTEBOOK_DIR = ENV["RASTER_VISION_NOTEBOOK_DIR"]
+if NOTEBOOK_DIR.nil?
+  puts "WARN: To use juptyer, You must set the environment variable: RASTER_VISION_NOTEBOOK_DIR"
 end
 
 S3_BUCKET = ENV.fetch("RASTER_VISION_BUCKET", "raster-vision")
@@ -24,6 +29,11 @@ Vagrant.configure("2") do |config|
     raster_vision.vm.hostname = "raster-vision"
     raster_vision.vm.synced_folder "~/.aws", "/home/vagrant/.aws"
     raster_vision.vm.synced_folder DATA_DIR, "/opt/data"
+
+    # If RASTER_VISION_NOTEBOOK_DIR is set, sync it to the VM
+    if NOTEBOOK_DIR and File.directory?(File.expand_path(NOTEBOOK_DIR))
+      raster_vision.vm.synced_folder NOTEBOOK_DIR, "/opt/notebooks"
+    end
 
     raster_vision.vm.network "forwarded_port", guest: 8888, host: 8888
 
