@@ -3,6 +3,7 @@ from rastervision.common.data.generators import ROTATE, TRANSLATE
 
 from rastervision.semseg.models.conv_logistic import CONV_LOGISTIC
 from rastervision.semseg.models.fcn_resnet import FCN_RESNET
+from rastervision.semseg.models.fcn_wrn import FCN_WRN
 from rastervision.semseg.models.dual_fcn_resnet import DUAL_FCN_RESNET
 from rastervision.semseg.models.fc_densenet import FC_DENSENET
 from rastervision.semseg.models.ensemble import CONCAT_ENSEMBLE, AVG_ENSEMBLE
@@ -34,7 +35,8 @@ class SemsegOptions(Options):
             elif self.model_type in [FCN_RESNET, DUAL_FCN_RESNET]:
                 self.use_pretraining = options['use_pretraining']
                 self.freeze_base = options['freeze_base']
-
+            elif self.model_type in [FCN_WRN]:
+                self.use_pretraining = options['use_pretraining']
             if self.model_type == DUAL_FCN_RESNET:
                 self.dual_active_input_inds = options['dual_active_input_inds']
             elif self.model_type in [CONCAT_ENSEMBLE, AVG_ENSEMBLE]:

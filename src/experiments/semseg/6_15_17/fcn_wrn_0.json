@@ -1,0 +1,40 @@
+{
+    "active_input_inds": [
+        0,
+        1,
+        2,
+        4,
+        5
+    ],
+    "augment_methods": [
+        "rotate90",
+        "hflip",
+        "vflip"
+    ],
+    "batch_size": 4,
+    "dataset_name": "isprs/potsdam",
+    "epochs": 50,
+    "eval_target_size": [
+        2000,
+        2000
+    ],
+    "generator_name": "numpy",
+    "init_lr": 1e-5,
+    "kernel_size": [
+        5,
+        5
+    ],
+    "model_type": "fcn_wrn",
+    "nb_labels": 6,
+    "optimizer": "adam",
+    "problem_type": "semseg",
+    "run_name": "6_15_17/fcn_wrn_0",
+    "steps_per_epoch": 512,
+    "target_size": [
+        256,
+        256
+    ],
+    "train_ratio": 0.8,
+    "use_pretraining": false,
+    "validation_steps": 64
+}

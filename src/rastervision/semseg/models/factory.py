@@ -6,6 +6,8 @@ from rastervision.semseg.models.conv_logistic import (
     make_conv_logistic, CONV_LOGISTIC)
 from rastervision.semseg.models.fcn_resnet import (
     make_fcn_resnet, FCN_RESNET)
+from rastervision.semseg.models.fcn_wrn import (
+    make_fcn_wrn, FCN_WRN)
 from rastervision.semseg.models.dual_fcn_resnet import (
     make_dual_fcn_resnet, DUAL_FCN_RESNET)
 from rastervision.semseg.models.unet import (
@@ -58,6 +60,9 @@ class SemsegModelFactory(ModelFactory):
             model = make_fcn_resnet(
                 input_shape, nb_labels, options.use_pretraining,
                 options.freeze_base)
+        elif model_type == FCN_WRN:
+            model = make_fcn_wrn(
+                input_shape, nb_labels, options.use_pretraining)
         elif model_type == DUAL_FCN_RESNET:
             model = make_dual_fcn_resnet(
                 input_shape, options.dual_active_input_inds,
