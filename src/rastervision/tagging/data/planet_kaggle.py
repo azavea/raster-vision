@@ -43,9 +43,6 @@ class Dataset():
             self.conventional_mine, self.cultivation, self.habitation,
             self.haze, self.partly_cloudy, self.primary, self.road,
             self.selective_logging, self.slash_burn, self.water]
-        self.nb_tags = len(self.all_tags)
-        self.tag_to_ind = dict(
-            [(tag, ind) for ind, tag in enumerate(self.all_tags)])
 
         self.atmos_tags = [
             self.clear, self.cloudy, self.haze, self.partly_cloudy]
@@ -64,9 +61,6 @@ class Dataset():
         self.image_shape = (256, 256)
 
         self.setup_channels()
-
-    def get_tag_ind(self, tag):
-        return self.tag_to_ind[tag]
 
     def augment_channels(self, batch_x):
         return batch_x
@@ -99,13 +93,26 @@ class JpgDataset(Dataset):
 
 
 class TagStore():
-    def __init__(self, tags_path=None):
+    def __init__(self, tags_path=None, active_tags=None):
         self.dataset = Dataset()
         self.file_ind_to_tags = {}
+        self.active_tags = self.dataset.all_tags if active_tags is None \
+            else active_tags
+        assert(set(self.active_tags) <= set(self.dataset.all_tags))
+
+        self.tag_to_ind = dict(
+            [(tag, ind) for ind, tag in enumerate(self.active_tags)])
+
         if tags_path is not None:
             self.load_tags(tags_path)
 
+    def get_tag_ind(self, tag):
+        if tag in self.tag_to_ind:
+            return self.tag_to_ind[tag]
+        return None
+
     def add_tags(self, file_ind, binary_tags):
+        assert(binary_tags.shape[0] == len(self.active_tags))
         self.file_ind_to_tags[file_ind] = binary_tags
 
     def load_tags(self, tags_path):
@@ -122,18 +129,19 @@ class TagStore():
         self.add_tags(file_ind, self.strs_to_binary(tags))
 
     def strs_to_binary(self, str_tags):
-        binary_tags = np.zeros((self.dataset.nb_tags,))
+        binary_tags = np.zeros((len(self.active_tags),))
         for str_tag in str_tags:
             if str_tag.strip() != '':
-                ind = self.dataset.get_tag_ind(str_tag)
-                binary_tags[ind] = 1
+                ind = self.get_tag_ind(str_tag)
+                if ind is not None:
+                    binary_tags[ind] = 1
         return binary_tags
 
     def binary_to_strs(self, binary_tags):
         str_tags = []
-        for tag_ind in range(self.dataset.nb_tags):
+        for tag_ind in range(len(self.active_tags)):
             if binary_tags[tag_ind] == 1:
-                str_tags.append(self.dataset.all_tags[tag_ind])
+                str_tags.append(self.active_tags[tag_ind])
         return str_tags
 
     def get_tag_diff(self, y_true, y_pred):
@@ -153,12 +161,12 @@ class TagStore():
         tags = np.concatenate(tags, axis=0)
         return tags
 
-    def get_tag_counts(self, tags):
+    def get_tag_counts(self):
         file_tags = self.get_tag_array(self.file_ind_to_tags.keys())
         counts = file_tags.sum(axis=0)
         tag_counts = {}
-        for tag in tags:
-            tag_ind = self.dataset.get_tag_ind(tag)
+        for tag in self.active_tags:
+            tag_ind = self.get_tag_ind(tag)
             tag_counts[tag] = counts[tag_ind]
         return tag_counts
 
@@ -171,18 +179,32 @@ class TagStore():
                 writer.writerow([file_ind, tags])
 
     def compute_sample_probs(self, file_inds, rare_sample_prob):
-        # Make it so samples with rare labels are sampled as often
-        # as other samples, on average.
+        # Compute prob for each sample such that the sum of the probs of
+        # samples with rare labels is equal to rare_sample_prob
         tag_array = self.get_tag_array(file_inds)
-        rare_tag_inds = [
-            self.dataset.get_tag_ind(tag) for tag in self.dataset.rare_tags]
+        rare_tag_inds = []
+        for tag in self.dataset.rare_tags:
+            tag_ind = self.get_tag_ind(tag)
+            if tag_ind is not None:
+                rare_tag_inds.append(tag_ind)
+
         is_rare_file_ind = np.any(tag_array[:, rare_tag_inds], axis=1)
         nb_rare_file_inds = np.sum(is_rare_file_ind)
         nb_other_file_inds = len(file_inds) - nb_rare_file_inds
 
-        other_prob = (1.0 - rare_sample_prob) / nb_other_file_inds
+        if nb_rare_file_inds == 0:
+            rare_sample_prob = 0.
+        if nb_other_file_inds == 0:
+            rare_sample_prob = 1.
+
+        other_prob = 0.
+        rare_prob = 0.
+        if nb_other_file_inds > 0:
+            other_prob = (1.0 - rare_sample_prob) / nb_other_file_inds
+        if nb_rare_file_inds > 0:
+            rare_prob = rare_sample_prob / nb_rare_file_inds
+
         sample_probs = np.ones((len(file_inds),)) * other_prob
-        rare_prob = rare_sample_prob / nb_rare_file_inds
         sample_probs[is_rare_file_ind] = rare_prob
 
         return sample_probs
