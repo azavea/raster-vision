@@ -65,12 +65,13 @@ def compute_preds(run_path, options, generator, split):
 
     predictions_path = join(run_path, '{}_preds.csv'.format(split))
     thresholds = load_thresholds(run_path)
-    tag_store = TagStore()
+    tag_store = TagStore(active_tags=options.active_tags)
     file_inds = generator.get_file_inds(split)
 
     for sample_ind in range(y_probs.shape[0]):
         y_pred = compute_prediction(
-            y_probs[sample_ind, :], generator.dataset, thresholds)
+            y_probs[sample_ind, :], generator.dataset, generator.tag_store,
+            thresholds)
         file_ind = file_inds[sample_ind]
         tag_store.add_tags(file_ind, y_pred)
 

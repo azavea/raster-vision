@@ -39,6 +39,8 @@ class TaggingDataGeneratorFactory(DataGeneratorFactory):
                 self.cross_validation = None
                 self.augment_methods = [HFLIP, VFLIP, ROTATE, TRANSLATE]
                 self.rare_sample_prob = 0.5
+                # TODO remove
+                self.active_tags = ['primary', 'clear']
 
         options = Options()
         generator = self.get_data_generator(options)

@@ -1,7 +1,6 @@
 from os.path import join
 import json
 from json import encoder
-encoder.FLOAT_REPR = lambda o: format(o, '.5f')
 
 from sklearn.metrics import fbeta_score
 import numpy as np
@@ -17,22 +16,27 @@ from rastervision.tagging.data.planet_kaggle import TagStore
 
 VALIDATION_EVAL = 'validation_eval'
 
+encoder.FLOAT_REPR = lambda o: format(o, '.5f')
+
 
 class Scores():
     """A set of scores for the performance of a model on a dataset."""
-    def __init__(self, y_true, y_pred, dataset):
-        self.f2_samples = fbeta_score(y_true, y_pred, beta=2, average='samples')
+    def __init__(self, y_true, y_pred, dataset, active_tags):
+        self.f2_samples = fbeta_score(
+            y_true, y_pred, beta=2, average='samples')
         self.f2_labels = fbeta_score(y_true, y_pred, beta=2,
-                                       average='macro')
-        self.atmos_scores, self.common_scores, self.rare_scores = {},{},{}
+                                     average='macro')
         f2_subscores = fbeta_score(y_true, y_pred, beta=2, average=None)
-        # TODO: update all_tags usage with active_tags PR
-        for tag in dataset.atmos_tags:
-            self.atmos_scores[tag] = f2_subscores[dataset.all_tags.index(tag)]
-        for tag in dataset.common_tags:
-            self.common_scores[tag] = f2_subscores[dataset.all_tags.index(tag)]
-        for tag in dataset.rare_tags:
-            self.rare_scores[tag] = f2_subscores[dataset.all_tags.index(tag)]
+
+        self.atmos_scores, self.common_scores, self.rare_scores = {}, {}, {}
+        for tag_ind, tag in enumerate(active_tags):
+            f2_subscore = f2_subscores[tag_ind]
+            if tag in dataset.atmos_tags:
+                self.atmos_scores[tag] = f2_subscore
+            if tag in dataset.common_tags:
+                self.common_scores[tag] = f2_subscore
+            if tag in dataset.rare_tags:
+                self.rare_scores[tag] = f2_subscore
 
     def to_json(self):
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
@@ -88,7 +92,8 @@ def plot_predictions(run_path, options, generator):
     validation_plot_path = join(run_path, 'validation_plots')
     _makedirs(validation_plot_path)
 
-    validation_pred_tag_store = TagStore(validation_pred_path)
+    validation_pred_tag_store = TagStore(
+        tags_path=validation_pred_path, active_tags=options.active_tags)
     split_gen = generator.make_split_generator(
         VALIDATION, target_size=None,
         batch_size=options.batch_size, shuffle=False, augment_methods=None,
@@ -110,7 +115,7 @@ def plot_predictions(run_path, options, generator):
 
             if (options.nb_eval_plot_samples is None or
                     plot_sample_count < options.nb_eval_plot_samples):
-                is_mistake = not np.array_equal(y_true[-1], y_pred[-1])
+                is_mistake = not np.array_equal(y_true, y_pred)
                 if is_mistake:
                     plot_sample_count += 1
                     plot_path = join(
@@ -141,6 +146,7 @@ def plot_predictions(run_path, options, generator):
 def validation_eval(run_path, options, generator):
     y_true, y_pred = plot_predictions(run_path, options, generator)
 
-    scores = Scores(y_true, y_pred, generator.dataset)
+    scores = Scores(
+        y_true, y_pred, generator.dataset, generator.tag_store.active_tags)
     scores_path = join(run_path, 'scores.json')
     scores.save(scores_path)

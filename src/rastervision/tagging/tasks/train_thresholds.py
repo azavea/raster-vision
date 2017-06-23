@@ -57,8 +57,8 @@ def train_thresholds(run_path, options, generator):
     # I'm commenting this out and setting thresholds to a default of 0.2 to
     # maintain the previous performance.
 
-    # y_true, y_probs = get_model_output(
-    #    run_path, generator, options.nb_eval_samples)
+    y_true, y_probs = get_model_output(
+        run_path, generator, options.nb_eval_samples)
     # thresholds = optimize_thresholds(y_true, y_probs)
-    thresholds = 0.2 * np.ones((len(generator.dataset.all_tags),))
+    thresholds = 0.2 * np.ones((len(generator.tag_store.active_tags),))
     save_thresholds(run_path, thresholds)

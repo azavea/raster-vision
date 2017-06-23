@@ -221,10 +221,15 @@ class PlanetKaggleFileGenerator(FileGenerator):
         self.dev_file_inds = self.generate_file_inds(self.dev_path)
         self.test_file_inds = self.generate_file_inds(self.test_path)
 
-        tags_path = join(self.dataset_path, 'train_v2.csv')
-        self.tag_store = TagStore(tags_path)
-
+        self.active_tags = options.active_tags
+        self.active_tags = options.active_tags \
+            if options.active_tags is not None else self.dataset.all_tags
         self.rare_sample_prob = options.rare_sample_prob
+
+        tags_path = join(self.dataset_path, 'train_v2.csv')
+        self.tag_store = TagStore(
+            tags_path=tags_path, active_tags=self.active_tags)
+
         super().__init__(options)
 
     def compute_train_probs(self):
@@ -237,10 +242,9 @@ class PlanetKaggleFileGenerator(FileGenerator):
     def preprocess(datasets_path):
         dataset_path = join(datasets_path, PLANET_KAGGLE)
         tags_path = join(dataset_path, 'train_v2.csv')
-        dataset = Dataset()
-        tag_store = TagStore(tags_path)
+        tag_store = TagStore(tags_path=tags_path)
         counts_path = join(dataset_path, 'tag_counts.json')
-        save_json(tag_store.get_tag_counts(dataset.all_tags), counts_path)
+        save_json(tag_store.get_tag_counts(), counts_path)
 
     def generate_file_inds(self, path):
         paths = sorted(
@@ -336,6 +340,7 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
                 self.train_ratio = 0.8
                 self.cross_validation = None
                 self.rare_sample_prob = None
+                self.active_tags = None
 
         options = Options()
         PlanetKaggleTiffFileGenerator(
@@ -375,6 +380,7 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
                 self.train_ratio = 0.8
                 self.cross_validation = None
                 self.rare_sample_prob = None
+                self.active_tags = None
 
         options = Options()
         PlanetKaggleJpgFileGenerator(
