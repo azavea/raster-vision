@@ -171,8 +171,10 @@ def download_dataset(dataset_name, file_names):
             src_path = join(s3_dataset_path, file_name)
             dst_path = join(dataset_path, file_name)
             s3_cp(src_path, dst_path)
-            call(['unzip', file_name], cwd=dataset_path)
-            call(['rm', file_name], cwd=dataset_path)
+            _, file_ext = splitext(file_name)
+            if file_ext == '.zip':
+                call(['unzip', file_name], cwd=dataset_path)
+                call(['rm', file_name], cwd=dataset_path)
 
         for file_name in file_names:
             get_file(file_name)
@@ -205,10 +207,15 @@ class Logger(object):
         pass
 
 
-def save_json(a_dict, path):
-    json_str = json.dumps(a_dict, sort_keys=True, indent=4)
+def save_json(obj, path):
+    json_str = json.dumps(obj, sort_keys=True, indent=4)
     with open(path, 'w') as json_file:
         json_file.write(json_str)
+
+
+def load_json(path):
+    with open(path) as f:
+        return json.load(f)
 
 
 def plot_img_row(fig, grid_spec, row_ind, imgs, titles=None):

@@ -135,7 +135,7 @@ In order to run experiments on GPUs and in parallel, we use AWS EC2. There are t
 The latest Docker image should be stored in ECR so that it can be downloaded onto EC2 instances. To build and publish the container, run `./scripts/cipublish`.
 
 ### Submit jobs to AWS Batch
-To setup the AWS Batch stack, which should only be done once per AWS account, run `./scripts/setup_aws_batch`. To submit a set of jobs to Batch, use the `submit_jobs` script. The syntax for invoking it is `./scripts/submit_jobs <branch_name> <experiment_path> <space separated list of tasks>`. The `branch_name` should be the name of the branch with the code to run, `experiment_path` should be a directory full of experiment json files rooted at `src/experiments` (or a single json file), and the list of tasks should contain the task you want to run. For example, you could run
+To setup the AWS Batch stack, which should only be done once per AWS account, run `./scripts/setup_aws_batch`. To submit a set of jobs to Batch, use the `submit_jobs` script. The syntax for invoking it is `./scripts/submit_jobs <branch_name> <experiment_path> <space separated list of tasks> --attempts <# of attempts>`. The `branch_name` should be the name of the branch with the code to run, `experiment_path` should be a directory full of experiment json files rooted at `src/experiments` (or a single json file), and the list of tasks should contain the task you want to run. By default, the job will be attempted five times. If you are testing a job to see if it might fail, you should run it with `--attempts 1` so that it won't be retried if it fails. For example, you could run
 ```shell
 ./scripts/submit_jobs lf/batch src/experiments/tests/generator/experiments train_model validation_eval
 ```

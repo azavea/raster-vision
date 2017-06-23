@@ -15,7 +15,7 @@ class SemsegOptions(Options):
     def __init__(self, options):
         super().__init__(options)
 
-        if self.aggregate_run_names is None:
+        if self.aggregate_type is None:
             if (self.augment_methods is not None and
                 (ROTATE in self.augment_methods or
                  TRANSLATE in self.augment_methods)):

@@ -34,8 +34,7 @@ class DataGeneratorFactory():
         data_generator_class = \
             self.get_class(options.dataset_name, options.generator_name)
         return data_generator_class(
-            self.datasets_path, options.active_input_inds, options.train_ratio,
-            options.cross_validation)
+            self.datasets_path, options)
 
     def preprocess(self, dataset_name, generator_name):
         data_generator_class = \
@@ -67,7 +66,7 @@ class DataGeneratorFactory():
             else [args.dataset_name]
         generator_names = self.generator_names if args.generator_name == ALL \
             else [args.generator_name]
-        tasks = [PLOT, PREPROCESS] if args.task == ALL else [args.task]
+        tasks = [PREPROCESS, PLOT] if args.task == ALL else [args.task]
 
         for dataset_name in dataset_names:
             for generator_name in generator_names:

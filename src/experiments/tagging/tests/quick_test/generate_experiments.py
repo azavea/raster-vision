@@ -24,7 +24,8 @@ class TestExperimentGenerator(ExperimentGenerator):
             'validation_steps': 1,
             'run_name': 'tagging/tests/quick_test',
             'steps_per_epoch': 2,
-            'augment_methods': ['hflip', 'vflip', 'rotate', 'translate']
+            'augment_methods': ['hflip', 'vflip', 'rotate', 'translate'],
+            'rare_sample_prob': 0.5
         }
 
         init_lrs = [1e-3, 1e-4]
@@ -41,7 +42,10 @@ class TestExperimentGenerator(ExperimentGenerator):
         agg_exp = {
             'problem_type': base_exp['problem_type'],
             'run_name': join(base_exp['run_name'], str(exp_count)),
-            'aggregate_run_names': [exp['run_name'] for exp in exps]
+            'aggregate_run_names': [exp['run_name'] for exp in exps],
+            'aggregate_type': 'agg_ensemble',
+            'nb_eval_samples': base_exp['nb_eval_samples'],
+            'batch_size': base_exp['batch_size']
         }
         exps.append(agg_exp)
         exp_count += 1

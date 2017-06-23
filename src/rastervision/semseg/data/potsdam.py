@@ -45,7 +45,7 @@ class PotsdamFileGenerator(IsprsFileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     files on disk.
     """
-    def __init__(self, active_input_inds, train_ratio, cross_validation):
+    def __init__(self, options):
         self.dataset = PotsdamDataset()
 
         # The first 24 indices correspond to the training set,
@@ -63,7 +63,7 @@ class PotsdamFileGenerator(IsprsFileGenerator):
             (5, 13), (5, 14), (5, 15), (6, 13), (6, 14), (6, 15), (7, 13)
         ]
 
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+        super().__init__(options)
 
 
 class PotsdamImageFileGenerator(PotsdamFileGenerator):
@@ -71,17 +71,19 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     the original TIFF and JPG files.
     """
-    def __init__(self, datasets_path, active_input_inds,
-                 train_ratio=0.8, cross_validation=None):
+    def __init__(self, datasets_path, options):
         self.dataset_path = join(datasets_path, POTSDAM)
         self.name = "potsdam_image"
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+        super().__init__(options)
 
     @staticmethod
     def preprocess(datasets_path):
         # Fix the depth image that is missing a column if it hasn't been
         # fixed already.
         data_path = join(datasets_path, POTSDAM)
+        proc_data_path = join(datasets_path, PROCESSED_POTSDAM)
+        _makedirs(proc_data_path)
+
         file_path = join(
             data_path,
             '1_DSM_normalisation/dsm_potsdam_03_13_normalized_lastools.jpg')
@@ -92,8 +94,15 @@ class PotsdamImageFileGenerator(PotsdamFileGenerator):
             im_fix[:, 0:-1] = im[:, :, 0]
             save_img(im_fix, file_path)
 
+        class Options():
+            def __init__(self):
+                self.active_input_inds = [0, 1, 2, 3, 4]
+                self.train_ratio = 0.8
+                self.cross_validation = None
+
+        options = Options()
         PotsdamImageFileGenerator(
-            datasets_path, [0, 1, 2, 3, 4]).write_channel_stats(data_path)
+            datasets_path, options).write_channel_stats(proc_data_path)
 
     def get_file_size(self, file_ind):
         ind0, ind1 = file_ind
@@ -152,22 +161,27 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
     A data generator for the Potsdam dataset that creates batches from
     numpy array files. This is about 20x faster than reading the raw files.
     """
-    def __init__(self, datasets_path, active_input_inds,
-                 train_ratio=0.8, cross_validation=None):
+    def __init__(self, datasets_path, options):
         self.raw_dataset_path = join(datasets_path, POTSDAM)
         self.dataset_path = join(datasets_path, PROCESSED_POTSDAM)
         self.download_dataset(['processed_potsdam.zip'])
         self.name = "potsdam_numpy"
 
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+        super().__init__(options)
 
     @staticmethod
     def preprocess(datasets_path):
         proc_data_path = join(datasets_path, PROCESSED_POTSDAM)
         _makedirs(proc_data_path)
 
-        generator = PotsdamImageFileGenerator(
-            datasets_path, [0, 1, 2, 3, 4])
+        class Options():
+            def __init__(self):
+                self.active_input_inds = [0, 1, 2, 3, 4]
+                self.train_ratio = 0.8
+                self.cross_validation = None
+
+        options = Options()
+        generator = PotsdamImageFileGenerator(datasets_path, options)
         dataset = generator.dataset
 
         def _preprocess(split):
@@ -205,7 +219,7 @@ class PotsdamNumpyFileGenerator(PotsdamFileGenerator):
         _preprocess(TEST)
 
         PotsdamNumpyFileGenerator(
-            datasets_path, [0, 1, 2, 3, 4]).write_channel_stats(proc_data_path)
+            datasets_path, options).write_channel_stats(proc_data_path)
 
     def get_file_path(self, file_ind):
         ind0, ind1 = file_ind

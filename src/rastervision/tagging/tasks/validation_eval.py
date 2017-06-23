@@ -1,4 +1,4 @@
-from os.path import join, isfile
+from os.path import join
 import json
 
 from sklearn.metrics import fbeta_score
@@ -11,7 +11,9 @@ import matplotlib.pyplot as plt
 from rastervision.common.settings import VALIDATION
 from rastervision.common.utils import plot_img_row, _makedirs
 
-from rastervision.tagging.tasks.utils import compute_prediction
+from rastervision.tagging.data.planet_kaggle import TagStore
+
+VALIDATION_EVAL = 'validation_eval'
 
 
 class Scores():
@@ -69,53 +71,64 @@ def plot_prediction(generator, all_x, y_true, y_pred,
     plt.close(fig)
 
 
-def plot_predictions(run_path, model, options, generator):
+def plot_predictions(run_path, options, generator):
+    validation_pred_path = join(run_path, 'validation_preds.csv')
+
     validation_plot_path = join(run_path, 'validation_plots')
     _makedirs(validation_plot_path)
 
-    y_trues = []
-    y_preds = []
-
+    validation_pred_tag_store = TagStore(validation_pred_path)
     split_gen = generator.make_split_generator(
         VALIDATION, target_size=None,
         batch_size=options.batch_size, shuffle=False, augment_methods=None,
         normalize=True, only_xy=False)
 
     sample_count = 0
+    plot_sample_count = 0
+    y_trues = []
+    y_preds = []
     for batch_ind, batch in enumerate(split_gen):
-        y_probs = model.predict(batch.x)
         for sample_ind in range(batch.x.shape[0]):
             file_ind = batch.file_inds[sample_ind]
             all_x = batch.all_x[sample_ind, :, :, :]
 
-            y_pred = compute_prediction(
-                y_probs[sample_ind, :], generator.dataset)
-            y_true = generator.tag_store.get_tag_array([file_ind])[0, :]
-            y_preds.append(np.expand_dims(y_pred, axis=0))
-            y_trues.append(np.expand_dims(y_true, axis=0))
+            y_true = generator.tag_store.get_tag_array([file_ind])
+            y_trues.append(y_true)
+            y_pred = validation_pred_tag_store.get_tag_array([file_ind])
+            y_preds.append(y_pred)
 
-            if (options.nb_eval_plot_samples is not None and
-                    sample_count < options.nb_eval_plot_samples):
-                is_mistake = not np.array_equal(y_true, y_pred)
+            if (options.nb_eval_plot_samples is None or
+                    plot_sample_count < options.nb_eval_plot_samples):
+                is_mistake = not np.array_equal(y_true[-1], y_pred[-1])
                 if is_mistake:
+                    plot_sample_count += 1
                     plot_path = join(
                         validation_plot_path, '{}_debug.png'.format(file_ind))
                     plot_prediction(
-                        generator, all_x, y_true, y_pred, plot_path)
+                        generator, all_x, y_true[0, :], y_pred[0, :],
+                        plot_path)
 
             sample_count += 1
+
+            if (options.nb_eval_samples is not None and
+                    sample_count >= options.nb_eval_samples):
+                break
 
         if (options.nb_eval_samples is not None and
                 sample_count >= options.nb_eval_samples):
             break
 
-    y_trues = np.concatenate(y_trues, axis=0)
-    y_preds = np.concatenate(y_preds, axis=0)
-    return y_trues, y_preds
+    y_true = np.concatenate(y_trues, axis=0)
+    y_pred = np.concatenate(y_preds, axis=0)
+    if options.nb_eval_samples is not None:
+        y_true = y_true[0:options.nb_eval_samples, :]
+        y_pred = y_pred[0:options.nb_eval_samples, :]
+
+    return y_true, y_pred
 
 
-def validation_eval(run_path, model, options, generator):
-    y_true, y_pred = plot_predictions(run_path, model, options, generator)
+def validation_eval(run_path, options, generator):
+    y_true, y_pred = plot_predictions(run_path, options, generator)
 
     scores = Scores(y_true, y_pred, generator.dataset.all_tags)
     scores_path = join(run_path, 'scores.json')

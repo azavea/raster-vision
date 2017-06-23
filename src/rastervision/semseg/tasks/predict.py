@@ -34,7 +34,7 @@ def predict(run_path, model, options, generator, split, save_probs=False):
     _makedirs(predictions_path)
 
     split_gen = generator.make_split_generator(
-        split, target_size=None,
+        split, target_size=options.eval_target_size,
         batch_size=1, shuffle=False, augment_methods=None, normalize=True,
         only_xy=False)
 

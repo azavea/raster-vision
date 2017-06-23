@@ -45,19 +45,6 @@ def query_yes_no(question, default="yes"):
                              "(or 'y' or 'n').\n")
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('branch_name', help='Branch with code to run on AWS')
-    parser.add_argument(
-        'experiment_path',
-        help='Directory with experiment files rooted at src/experiments/...')
-    parser.add_argument(
-        'tasks', nargs='*',
-        help='Space-delimited list of tasks to run on AWS. ' +
-             'Can be empty to run all tasks.')
-    return parser.parse_args()
-
-
 def read_experiment_files(path):
     run_name_to_file_path = {}
     run_name_to_parent_run_names = {}
@@ -92,7 +79,8 @@ def build_dep_graph(run_name_to_parent_run_names):
     return g
 
 
-def submit_job(branch_name, file_path, tasks, run_name, parent_job_ids=None):
+def submit_job(branch_name, file_path, tasks, run_name,
+               attempts, parent_job_ids=None):
     s3_bucket = environ.get('S3_BUCKET')
 
     job_name = run_name.replace('/', '-')
@@ -109,6 +97,7 @@ def submit_job(branch_name, file_path, tasks, run_name, parent_job_ids=None):
         dependsOn = [{'jobId': job_id} for job_id in parent_job_ids]
 
     client = boto3.client('batch')
+
     job_id = client.submit_job(
         jobName=job_name,
         jobQueue='raster-vision-experiments',
@@ -116,7 +105,10 @@ def submit_job(branch_name, file_path, tasks, run_name, parent_job_ids=None):
         containerOverrides={
             'command': command
         },
-        dependsOn=dependsOn)['jobId']
+        dependsOn=dependsOn,
+        retryStrategy={
+            'attempts': attempts
+        })['jobId']
 
     print(
         'Submitted job with jobName={} and jobId={}'.format(job_name, job_id))
@@ -124,18 +116,32 @@ def submit_job(branch_name, file_path, tasks, run_name, parent_job_ids=None):
     return job_id
 
 
-def prompt_user(branch_name, experiment_path):
+def prompt_user(branch_name, experiment_path, nb_jobs):
     question = 'Are your experiment files pushed to the remote branch {}' \
         .format(branch_name)
     pushed_branch = query_yes_no(question, default='no')
 
     want_to_run = False
     if pushed_branch:
-        nb_jobs = len(list(glob.iglob(experiment_path)))
         question = 'Are you sure you want to run {} jobs?'.format(nb_jobs)
         want_to_run = query_yes_no(question, default='no')
 
     return pushed_branch, want_to_run
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('branch_name', help='Branch with code to run on AWS')
+    parser.add_argument(
+        'experiment_path',
+        help='Directory with experiment files rooted at src/experiments/...')
+    parser.add_argument(
+        'tasks', nargs='*',
+        help='Space-delimited list of tasks to run on AWS. ' +
+             'Can be empty to run all tasks.')
+    parser.add_argument(
+        '--attempts', type=int, default=5, help='Number of times to retry job')
+    return parser.parse_args()
 
 
 def run():
@@ -143,32 +149,45 @@ def run():
     print('Branch name: {}'.format(args.branch_name))
     print('Experiment path: {}'.format(args.experiment_path))
     print('Tasks: {}'.format(args.tasks))
+    print('Number of attempts: {}'.format(args.attempts))
 
     experiment_path = join(args.experiment_path, '*.json') \
         if isdir(args.experiment_path) else args.experiment_path
+    experiment_paths = list(glob.iglob(experiment_path))
+    nb_jobs = len(experiment_paths)
 
     pushed_branch, want_to_run = prompt_user(
-        args.branch_name, experiment_path)
+        args.branch_name, experiment_path, nb_jobs)
 
     if pushed_branch and want_to_run:
-        run_name_to_file_path, run_name_to_parent_run_names = \
-            read_experiment_files(experiment_path)
-        dep_graph = build_dep_graph(run_name_to_parent_run_names)
-        sorted_run_names = nx.topological_sort(dep_graph)
+        if nb_jobs == 1:
+            with open(experiment_path, 'r') as exp_file:
+                exp = json.load(exp_file)
+                run_name = exp['run_name']
+                submit_job(
+                    args.branch_name, experiment_path, args.tasks, run_name,
+                    args.attempts)
+        else:
+            # If directory of files, then build dependency graph and run
+            # them in the right order, feeding the parent job ids to batch.
+            run_name_to_file_path, run_name_to_parent_run_names = \
+                read_experiment_files(experiment_path)
+            dep_graph = build_dep_graph(run_name_to_parent_run_names)
+            sorted_run_names = nx.topological_sort(dep_graph)
 
-        run_name_to_job_id = {}
-        for run_name in sorted_run_names:
-            file_path = run_name_to_file_path[run_name]
+            run_name_to_job_id = {}
+            for run_name in sorted_run_names:
+                file_path = run_name_to_file_path[run_name]
 
-            parent_run_names = run_name_to_parent_run_names[run_name]
-            parent_job_ids = None
-            if parent_run_names is not None:
-                parent_job_ids = [run_name_to_job_id[parent_run_name]
-                                  for parent_run_name in parent_run_names]
+                parent_run_names = run_name_to_parent_run_names[run_name]
+                parent_job_ids = None
+                if parent_run_names is not None:
+                    parent_job_ids = [run_name_to_job_id[parent_run_name]
+                                      for parent_run_name in parent_run_names]
 
-            run_name_to_job_id[run_name] = submit_job(
-                args.branch_name, file_path, args.tasks, run_name,
-                parent_job_ids)
+                run_name_to_job_id[run_name] = submit_job(
+                    args.branch_name, file_path, args.tasks, run_name,
+                    args.attempts, parent_job_ids)
 
 
 if __name__ == '__main__':

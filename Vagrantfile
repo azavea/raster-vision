@@ -31,7 +31,7 @@ Vagrant.configure("2") do |config|
     raster_vision.vm.synced_folder DATA_DIR, "/opt/data"
 
     # If RASTER_VISION_NOTEBOOK_DIR is set, sync it to the VM
-    if File.directory?(File.expand_path(NOTEBOOK_DIR))
+    if NOTEBOOK_DIR and File.directory?(File.expand_path(NOTEBOOK_DIR))
       raster_vision.vm.synced_folder NOTEBOOK_DIR, "/opt/notebooks"
     end
 

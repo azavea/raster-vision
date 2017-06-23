@@ -9,7 +9,7 @@ mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 
 from rastervision.common.utils import (
-    save_json, compute_ndvi, plot_img_row, download_dataset)
+    save_json, compute_ndvi, plot_img_row, download_dataset, _makedirs)
 from rastervision.common.data.generators import FileGenerator, Batch
 
 PLANET_KAGGLE = 'planet_kaggle'
@@ -170,11 +170,27 @@ class TagStore():
                 tags = ' '.join(self.binary_to_strs(tags))
                 writer.writerow([file_ind, tags])
 
+    def compute_sample_probs(self, file_inds, rare_sample_prob):
+        # Make it so samples with rare labels are sampled as often
+        # as other samples, on average.
+        tag_array = self.get_tag_array(file_inds)
+        rare_tag_inds = [
+            self.dataset.get_tag_ind(tag) for tag in self.dataset.rare_tags]
+        is_rare_file_ind = np.any(tag_array[:, rare_tag_inds], axis=1)
+        nb_rare_file_inds = np.sum(is_rare_file_ind)
+        nb_other_file_inds = len(file_inds) - nb_rare_file_inds
+
+        other_prob = (1.0 - rare_sample_prob) / nb_other_file_inds
+        sample_probs = np.ones((len(file_inds),)) * other_prob
+        rare_prob = rare_sample_prob / nb_rare_file_inds
+        sample_probs[is_rare_file_ind] = rare_prob
+
+        return sample_probs
+
 
 class PlanetKaggleFileGenerator(FileGenerator):
-    def __init__(self, datasets_path, active_input_inds, train_ratio,
-                 cross_validation):
-        download_dataset(PLANET_KAGGLE, self.zip_file_names)
+    def __init__(self, datasets_path, options):
+        download_dataset(PLANET_KAGGLE, self.file_names)
 
         self.dataset_path = join(datasets_path, PLANET_KAGGLE)
         self.dev_path = join(self.dataset_path, self.dev_dir)
@@ -186,7 +202,14 @@ class PlanetKaggleFileGenerator(FileGenerator):
         tags_path = join(self.dataset_path, 'train_v2.csv')
         self.tag_store = TagStore(tags_path)
 
-        super().__init__(active_input_inds, train_ratio, cross_validation)
+        self.rare_sample_prob = options.rare_sample_prob
+        super().__init__(options)
+
+    def compute_train_probs(self):
+        if self.rare_sample_prob is not None:
+            return self.tag_store.compute_sample_probs(
+                self.train_file_inds, self.rare_sample_prob)
+        return None
 
     @staticmethod
     def preprocess(datasets_path):
@@ -198,7 +221,9 @@ class PlanetKaggleFileGenerator(FileGenerator):
         save_json(tag_store.get_tag_counts(dataset.all_tags), counts_path)
 
     def generate_file_inds(self, path):
-        paths = glob.glob(join(path, '*.{}'.format(self.file_extension)))
+        paths = sorted(
+            glob.glob(join(path, '*.{}'.format(self.file_extension))))
+
         file_inds = []
         for path in paths:
             file_ind = splitext(basename(path))[0]
@@ -257,17 +282,17 @@ class PlanetKaggleFileGenerator(FileGenerator):
 
 
 class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
-    def __init__(self, datasets_path, active_input_inds, train_ratio,
-                 cross_validation):
+    def __init__(self, datasets_path, options):
         self.dev_dir = 'train-tif-v2'
-        self.test_dir = 'test-tif-v2'
-        self.zip_file_names = [
-            'train-tif-v2.zip', 'test-tif-v2.zip', 'train_v2.csv.zip']
+        self.test_dir = 'test-tif-v3'
+        self.file_names = [
+            'train-tif-v2.zip', 'test-tif-v3.zip', 'train_v2.csv.zip',
+            'planet_kaggle_tiff_channel_stats.json']
         self.file_extension = 'tif'
         self.dataset = TiffDataset()
+        self.name = 'planet_kaggle_tiff'
 
-        super().__init__(
-            datasets_path, active_input_inds, train_ratio, cross_validation)
+        super().__init__(datasets_path, options)
 
     def load_img(self, file_path, window):
         import rasterio
@@ -276,19 +301,37 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
             img = np.dstack([r, g, b, nir])
             return img
 
+    @staticmethod
+    def preprocess(datasets_path):
+        PlanetKaggleFileGenerator.preprocess(datasets_path)
+
+        proc_data_path = join(datasets_path, PLANET_KAGGLE)
+        _makedirs(proc_data_path)
+
+        class Options():
+            def __init__(self):
+                self.active_input_inds = [0, 1, 2, 3]
+                self.train_ratio = 0.8
+                self.cross_validation = None
+                self.rare_sample_prob = None
+
+        options = Options()
+        PlanetKaggleTiffFileGenerator(
+            datasets_path, options).write_channel_stats(proc_data_path)
+
 
 class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
-    def __init__(self, datasets_path, active_input_inds, train_ratio,
-                 cross_validation):
+    def __init__(self, datasets_path, options):
         self.dev_dir = 'train-jpg'
         self.test_dir = 'test-jpg'
-        self.zip_file_names = [
-            'train-jpg.zip', 'test-jpg.zip', 'train_v2.csv.zip']
+        self.file_names = [
+            'train-jpg.zip', 'test-jpg.zip', 'train_v2.csv.zip',
+            'planet_kaggle_jpg_channel_stats.json']
         self.file_extension = 'jpg'
         self.dataset = JpgDataset()
+        self.name = 'planet_kaggle_jpg'
 
-        super().__init__(
-            datasets_path, active_input_inds, train_ratio, cross_validation)
+        super().__init__(datasets_path, options)
 
     def load_img(self, file_path, window):
         import rasterio
@@ -296,3 +339,21 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
             r, g, b = src.read(window=window)
             img = np.dstack([r, g, b])
             return img
+
+    @staticmethod
+    def preprocess(datasets_path):
+        PlanetKaggleFileGenerator.preprocess(datasets_path)
+
+        proc_data_path = join(datasets_path, PLANET_KAGGLE)
+        _makedirs(proc_data_path)
+
+        class Options():
+            def __init__(self):
+                self.active_input_inds = [0, 1, 2]
+                self.train_ratio = 0.8
+                self.cross_validation = None
+                self.rare_sample_prob = None
+
+        options = Options()
+        PlanetKaggleJpgFileGenerator(
+            datasets_path, options).write_channel_stats(proc_data_path)

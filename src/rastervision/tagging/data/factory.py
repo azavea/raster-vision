@@ -38,6 +38,7 @@ class TaggingDataGeneratorFactory(DataGeneratorFactory):
                 self.train_ratio = 0.8
                 self.cross_validation = None
                 self.augment_methods = [HFLIP, VFLIP, ROTATE, TRANSLATE]
+                self.rare_sample_prob = 0.5
 
         options = Options()
         generator = self.get_data_generator(options)
@@ -49,7 +50,8 @@ class TaggingDataGeneratorFactory(DataGeneratorFactory):
 
         gen = generator.make_split_generator(
             split, batch_size=batch_size, shuffle=True,
-            augment_methods=options.augment_methods, normalize=True, only_xy=False)
+            augment_methods=options.augment_methods, normalize=True,
+            only_xy=False)
 
         for batch_ind in range(nb_batches):
             batch = next(gen)

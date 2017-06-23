@@ -8,7 +8,7 @@
     "containerProperties": {
         "image": "279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest",
         "vcpus": 4,
-        "memory": 2000,
+        "memory": 40000,
         "command": [
             "run_experiment.sh",
             "raster-vision",
