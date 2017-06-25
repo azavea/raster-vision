@@ -8,7 +8,7 @@ fi
 
 function usage() {
     echo -n \
-         "Usage: $(basename "$0") [--cpu|--gpu]
+         "Usage: $(basename "$0") [--cpu|--gpu|--jupyter]
 Build docker images for model training.
 If the type is not specified, it will build both cpu and gpu docker images.
 "
@@ -31,5 +31,9 @@ then
     if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
     then
         docker build -t raster-vision-gpu -f src/Dockerfile-gpu src
+    fi
+    if [ $# -eq 0 -o "${1:-}" = "--jupyter" ]
+    then
+        docker build -t raster-vision-jupyter -f src/Dockerfile-jupyter src
     fi
 fi
