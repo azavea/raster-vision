@@ -1,0 +1,20 @@
+{
+    "batch_size": 1,
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "tiff",
+    "active_input_inds": [3, 0, 1],
+    "use_pretraining": "true",
+    "optimizer": "adam",
+    "init_lr": 1e-3,
+    "model_type": "baseline_resnet",
+    "train_ratio": 0.8,
+    "epochs": 2,
+    "nb_eval_samples": 10,
+    "nb_eval_plot_samples": 3,
+    "validation_steps": 1,
+    "run_name": "tagging/tests/quick_test",
+    "steps_per_epoch": 2,
+    "augment_methods": ["hflip", "vflip", "rotate", "translate"],
+    "rare_sample_prob": 0.5
+}
