@@ -221,6 +221,11 @@ class PlanetKaggleFileGenerator(FileGenerator):
         self.dev_path = join(self.dataset_path, self.dev_dir)
         self.test_path = join(self.dataset_path, self.test_dir)
 
+        self.drop_file_inds = []
+        if self.drop_file_inds_file:
+            with open(join(self.dataset_path, self.drop_file_inds_file)) as f:
+                self.drop_file_inds = f.read().split('\n')
+
         self.dev_file_inds = self.generate_file_inds(self.dev_path)
         self.test_file_inds = self.generate_file_inds(self.test_path)
 
@@ -256,7 +261,8 @@ class PlanetKaggleFileGenerator(FileGenerator):
         file_inds = []
         for path in paths:
             file_ind = splitext(basename(path))[0]
-            file_inds.append(file_ind)
+            if not file_ind in self.drop_file_inds:
+                file_inds.append(file_ind)
         return file_inds
 
     def plot_sample(self, file_path, x, y, file_ind):
@@ -316,10 +322,11 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
         self.test_dir = 'test-tif-v3'
         self.file_names = [
             'train-tif-v2.zip', 'test-tif-v3.zip', 'train_v2.csv.zip',
-            'planet_kaggle_tiff_channel_stats.json']
+            'planet_kaggle_tiff_channel_stats.json', 'unaligned_tifs.csv']
         self.file_extension = 'tif'
         self.dataset = TiffDataset()
         self.name = 'planet_kaggle_tiff'
+        self.drop_file_inds_file = 'unaligned_tifs.csv'
 
         super().__init__(datasets_path, options)
 
@@ -360,6 +367,7 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
         self.file_extension = 'jpg'
         self.dataset = JpgDataset()
         self.name = 'planet_kaggle_jpg'
+        self.drop_file_inds_file = None
 
         super().__init__(datasets_path, options)
 
