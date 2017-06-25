@@ -98,3 +98,8 @@ deployment/ansible/*.retry
 *.tfvars
 *.tfstate
 *.tfstate.backup
+
+# Emacs
+\#*#
+*~
+.#*
