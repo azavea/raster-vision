@@ -1,4 +1,4 @@
-from os.path import join, basename, splitext
+from os.path import join, basename, splitext, exists
 import csv
 import glob
 
@@ -9,7 +9,7 @@ mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 
 from rastervision.common.utils import (
-    save_json, compute_ndvi, plot_img_row, download_dataset, _makedirs)
+    save_json, compute_ndvi, plot_img_row, download_dataset, _makedirs, eprint)
 from rastervision.common.data.generators import FileGenerator, Batch
 
 PLANET_KAGGLE = 'planet_kaggle'
@@ -255,14 +255,25 @@ class PlanetKaggleFileGenerator(FileGenerator):
         save_json(tag_store.get_tag_counts(), counts_path)
 
     def generate_file_inds(self, path):
-        paths = sorted(
-            glob.glob(join(path, '*.{}'.format(self.file_extension))))
-
         file_inds = []
-        for path in paths:
-            file_ind = splitext(basename(path))[0]
-            if not file_ind in self.drop_file_inds:
-                file_inds.append(file_ind)
+        if self.file_extension:
+            paths = glob.glob(join(path, '*.{}'.format(self.file_extension)))
+            for path in paths:
+                file_ind = splitext(basename(path))[0]
+                if not file_ind in self.drop_file_inds:
+                    file_inds.append(file_ind)
+        else:
+            paths = glob.glob(join(path, '*.{}'.format('tif')))
+            for path in paths:
+                file_ind = splitext(basename(path))[0]
+                if not file_ind in self.drop_file_inds:
+                    file_inds.append(file_ind)
+            paths = glob.glob(join(path, '*.{}'.format('jpg')))
+            for path in paths:
+                file_ind = splitext(basename(path))[0]
+                if not file_ind in self.drop_file_inds:
+                    file_inds.append(file_ind)
+        eprint("FILE INDS SIZE: %d" % len(file_inds))
         return file_inds
 
     def plot_sample(self, file_path, x, y, file_ind):
@@ -294,9 +305,14 @@ class PlanetKaggleFileGenerator(FileGenerator):
         prefix, _ = file_ind.split('_')
         data_dir = self.test_path if prefix in ['file', 'test'] \
             else self.dev_path
-        return join(
-            self.dataset_path, data_dir, '{}.{}'.format(
-                file_ind, self.file_extension))
+        n1 = '{}.{}'.format(file_ind, 'tif')
+        n2 = '{}.{}'.format(file_ind, 'jpg')
+        p1 = join(self.dataset_path, data_dir, n1)
+        p2 = join(self.dataset_path, data_dir, n2)
+        if exists(p1):
+            return p1
+        else:
+            return p2
 
     def get_file_size(self, file_ind):
         return 256, 256
@@ -357,14 +373,14 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
             datasets_path, options).write_channel_stats(proc_data_path)
 
 
-class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
+class PlanetKaggleTiffPredictFileGenerator(PlanetKaggleFileGenerator):
     def __init__(self, datasets_path, options):
         self.dev_dir = 'train-jpg'
-        self.test_dir = 'test-jpg'
+        self.test_dir = 'train-tif-v2'
         self.file_names = [
-            'train-jpg.zip', 'test-jpg.zip', 'train_v2.csv.zip',
+            'train-jpg.zip', 'train-tif-v2.zip', 'train_v2.csv.zip',
             'planet_kaggle_jpg_channel_stats.json']
-        self.file_extension = 'jpg'
+        self.file_extension = None
         self.dataset = JpgDataset()
         self.name = 'planet_kaggle_jpg'
         self.drop_file_inds_file = None
@@ -373,6 +389,50 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
 
     def load_img(self, file_path, window):
         import rasterio
+        try:
+            with rasterio.open(file_path) as src:
+                r, g, b = src.read(window=window)
+                img = np.dstack([r, g, b])
+                return img
+        except:
+            raise Exception("FAILED ON %s" % file_path)
+
+    @staticmethod
+    def preprocess(datasets_path):
+        PlanetKaggleFileGenerator.preprocess(datasets_path)
+
+        proc_data_path = join(datasets_path, PLANET_KAGGLE)
+        _makedirs(proc_data_path)
+
+        class Options():
+            def __init__(self):
+                self.active_input_inds = [0, 1, 2]
+                self.train_ratio = 0.8
+                self.cross_validation = None
+                self.rare_sample_prob = None
+
+        options = Options()
+        PlanetKaggleJpgFileGenerator(
+            datasets_path, options).write_channel_stats(proc_data_path)
+
+class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
+    def __init__(self, datasets_path, options):
+        self.dev_dir = 'train-jpg'
+        self.test_dir = 'train-tif-v2'
+        self.file_names = [
+            'train-jpg.zip', 'train-tif-v2.zip', 'train_v2.csv.zip',
+            'planet_kaggle_jpg_channel_stats.json']
+        self.file_extension = None
+        self.dataset = JpgDataset()
+        self.name = 'planet_kaggle_jpg'
+        self.drop_file_inds_file = None
+
+        super().__init__(datasets_path, options)
+
+    def load_img(self, file_path, window):
+        import rasterio
+        if not exists(file_path):
+            raise Exception("Does not exist: %s" % file_path)
         with rasterio.open(file_path) as src:
             r, g, b = src.read(window=window)
             img = np.dstack([r, g, b])

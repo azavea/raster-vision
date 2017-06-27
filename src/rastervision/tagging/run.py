@@ -96,6 +96,9 @@ class TaggingRunner(Runner):
             if aggregate_type == AGG_SUMMARY:
                 best_score_key = 'f2'
                 aggregate_scores(self.options, best_score_key)
-            else:
-                validation_eval(
-                    self.run_path, self.options, self.generator)
+        elif task == TEST_PREDICT:
+            test_predict(
+                self.run_path, self.model, self.options, self.generator)
+        elif task == "TIFF_PREDICT":
+            test_predict(
+                self.run_path, self.model, self.options, self.generator)

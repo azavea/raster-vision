@@ -6,13 +6,13 @@ from rastervision.common.data.generators import HFLIP, VFLIP, ROTATE, TRANSLATE
 
 from rastervision.tagging.data.planet_kaggle import (
     PLANET_KAGGLE, TIFF, JPG, PlanetKaggleTiffFileGenerator,
-    PlanetKaggleJpgFileGenerator)
+    PlanetKaggleJpgFileGenerator, PlanetKaggleTiffPredictFileGenerator)
 
 
 class TaggingDataGeneratorFactory(DataGeneratorFactory):
     def __init__(self):
         dataset_names = [PLANET_KAGGLE]
-        generator_names = [JPG, TIFF]
+        generator_names = [JPG, TIFF, "tiffpredict"]
 
         super().__init__(dataset_names, generator_names)
 
@@ -23,6 +23,8 @@ class TaggingDataGeneratorFactory(DataGeneratorFactory):
                 return PlanetKaggleTiffFileGenerator
             elif generator_name == JPG:
                 return PlanetKaggleJpgFileGenerator
+            elif generator_name == "tiffpredict":
+                return PlanetKaggleTiffPredictFileGenerator
 
     def plot_generator(self, dataset_name, generator_name, split):
         nb_batches = 2
