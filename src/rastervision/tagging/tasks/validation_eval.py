@@ -21,11 +21,12 @@ VALIDATION_EVAL = 'validation_eval'
 class Scores():
     """A set of scores for the performance of a model on a dataset."""
     def __init__(self, y_true, y_pred, dataset):
-        self.f2 = fbeta_score(y_true, y_pred, beta=2, average='samples')
-        self.f2_weighted = fbeta_score(y_true, y_pred, beta=2,
-                                       average='weighted')
+        self.f2_samples = fbeta_score(y_true, y_pred, beta=2, average='samples')
+        self.f2_labels = fbeta_score(y_true, y_pred, beta=2,
+                                       average='macro')
         self.atmos_scores, self.common_scores, self.rare_scores = {},{},{}
         f2_subscores = fbeta_score(y_true, y_pred, beta=2, average=None)
+        # TODO: update all_tags usage with active_tags PR
         for tag in dataset.atmos_tags:
             self.atmos_scores[tag] = f2_subscores[dataset.all_tags.index(tag)]
         for tag in dataset.common_tags:
@@ -34,7 +35,7 @@ class Scores():
             self.rare_scores[tag] = f2_subscores[dataset.all_tags.index(tag)]
 
     def to_json(self):
-        return json.dumps(self.__dict__, sort_keys=False, indent=4)
+        return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
     def save(self, path):
         scores_json = self.to_json()
