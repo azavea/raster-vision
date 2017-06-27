@@ -66,11 +66,11 @@ class TagStoreTestCase(unittest.TestCase):
 
     def test_compute_train_probs(self):
         ind3 = 'ind3'
-        self.tag_store.add_csv_row((ind3, 'artisinal_mine'))
-        rare_sample_prob = 0.5
+        self.tag_store.add_csv_row((ind3, 'blooming'))
+        active_tags_prob = 0.5
         sample_probs = \
             self.tag_store.compute_sample_probs(
-                [self.ind1, self.ind2, ind3], rare_sample_prob)
+                [self.ind1, self.ind2, ind3], active_tags_prob)
         self.assertTrue(np.array_equal(sample_probs, [0.25, 0.25, 0.5]))
 
 

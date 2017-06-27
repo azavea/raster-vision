@@ -26,7 +26,7 @@ class TestExperimentGenerator(ExperimentGenerator):
             'run_name': 'tagging/tests/agg_concat_test',
             'steps_per_epoch': 2,
             'augment_methods': ['hflip', 'vflip', 'rotate', 'translate'],
-            'rare_sample_prob': 0.5
+            'active_tags_prob': 0.75
         }
 
         dataset = Dataset()

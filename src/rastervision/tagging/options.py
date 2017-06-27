@@ -8,4 +8,4 @@ class TaggingOptions(Options):
         self.active_tags = options.get('active_tags')
         self.use_pretraining = options.get('use_pretraining', False)
         self.target_size = None
-        self.rare_sample_prob = options.get('rare_sample_prob')
+        self.active_tags_prob = options.get('active_tags_prob')

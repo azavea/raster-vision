@@ -178,34 +178,37 @@ class TagStore():
                 tags = ' '.join(self.binary_to_strs(tags))
                 writer.writerow([file_ind, tags])
 
-    def compute_sample_probs(self, file_inds, rare_sample_prob):
+    def compute_sample_probs(self, file_inds, active_tags_prob):
         # Compute prob for each sample such that the sum of the probs of
-        # samples with rare labels is equal to rare_sample_prob
+        # samples with rare labels is equal to active_tags_prob
         tag_array = self.get_tag_array(file_inds)
-        rare_tag_inds = []
-        for tag in self.dataset.rare_tags:
+        active_tag_file_inds = []
+        for tag in self.active_tags:
             tag_ind = self.get_tag_ind(tag)
             if tag_ind is not None:
-                rare_tag_inds.append(tag_ind)
+                active_tag_file_inds.append(tag_ind)
 
-        is_rare_file_ind = np.any(tag_array[:, rare_tag_inds], axis=1)
-        nb_rare_file_inds = np.sum(is_rare_file_ind)
-        nb_other_file_inds = len(file_inds) - nb_rare_file_inds
+        is_active_tag_file_ind = np.any(
+            tag_array[:, active_tag_file_inds], axis=1)
+        nb_active_tag_file_inds = np.sum(is_active_tag_file_ind)
+        nb_other_file_inds = len(file_inds) - nb_active_tag_file_inds
 
-        if nb_rare_file_inds == 0:
-            rare_sample_prob = 0.
+        if nb_active_tag_file_inds == 0:
+            active_tags_prob = 0.
         if nb_other_file_inds == 0:
-            rare_sample_prob = 1.
+            active_tags_prob = 1.
 
-        other_prob = 0.
-        rare_prob = 0.
+        other_per_sample_prob = 0.
+        active_tag_per_sample_prob = 0.
         if nb_other_file_inds > 0:
-            other_prob = (1.0 - rare_sample_prob) / nb_other_file_inds
-        if nb_rare_file_inds > 0:
-            rare_prob = rare_sample_prob / nb_rare_file_inds
+            other_per_sample_prob = \
+                (1.0 - active_tags_prob) / nb_other_file_inds
+        if nb_active_tag_file_inds > 0:
+            active_tag_per_sample_prob = \
+                active_tags_prob / nb_active_tag_file_inds
 
-        sample_probs = np.ones((len(file_inds),)) * other_prob
-        sample_probs[is_rare_file_ind] = rare_prob
+        sample_probs = np.ones((len(file_inds),)) * other_per_sample_prob
+        sample_probs[is_active_tag_file_ind] = active_tag_per_sample_prob
 
         return sample_probs
 
@@ -224,7 +227,7 @@ class PlanetKaggleFileGenerator(FileGenerator):
         self.active_tags = options.active_tags
         self.active_tags = options.active_tags \
             if options.active_tags is not None else self.dataset.all_tags
-        self.rare_sample_prob = options.rare_sample_prob
+        self.active_tags_prob = options.active_tags_prob
 
         tags_path = join(self.dataset_path, 'train_v2.csv')
         self.tag_store = TagStore(
@@ -233,9 +236,9 @@ class PlanetKaggleFileGenerator(FileGenerator):
         super().__init__(options)
 
     def compute_train_probs(self):
-        if self.rare_sample_prob is not None:
+        if self.active_tags_prob is not None:
             return self.tag_store.compute_sample_probs(
-                self.train_file_inds, self.rare_sample_prob)
+                self.train_file_inds, self.active_tags_prob)
         return None
 
     @staticmethod
@@ -339,7 +342,7 @@ class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
                 self.active_input_inds = [0, 1, 2, 3]
                 self.train_ratio = 0.8
                 self.cross_validation = None
-                self.rare_sample_prob = None
+                self.active_tags_prob = None
                 self.active_tags = None
 
         options = Options()
@@ -379,7 +382,7 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
                 self.active_input_inds = [0, 1, 2]
                 self.train_ratio = 0.8
                 self.cross_validation = None
-                self.rare_sample_prob = None
+                self.active_tags_prob = None
                 self.active_tags = None
 
         options = Options()

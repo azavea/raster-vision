@@ -50,7 +50,6 @@ def compute_concat_probs(run_path, options, generator, split):
     nb_samples = y_probs_list[0].shape[0]
     nb_active_tags = sum(map(lambda x: len(x), active_tags_list))
     concat_y_probs = np.zeros((nb_samples, nb_active_tags))
-    print(concat_y_probs.shape)
     for y_probs, active_tags in zip(y_probs_list, active_tags_list):
         for tag_ind, active_tag in enumerate(active_tags):
             concat_tag_ind = generator.tag_store.get_tag_ind(active_tag)
