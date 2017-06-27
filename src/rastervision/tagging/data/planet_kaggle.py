@@ -50,7 +50,7 @@ class Dataset():
             self.agriculture, self.bare_ground, self.cultivation,
             self.habitation, self.primary, self.road, self.water]
         self.rare_tags = [
-            self.artisinal_mine, self.blooming, self.blow_down, self.blooming,
+            self.artisinal_mine, self.blooming, self.blow_down,
             self.conventional_mine, self.selective_logging, self.slash_burn]
 
         self.red_ind = 0
