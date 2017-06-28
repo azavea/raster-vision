@@ -1,0 +1,10 @@
+FROM raster-vision-cpu
+
+ARG python_version=3.5.1
+
+RUN conda install -y python=${python_version} jupyter opencv && \
+    conda clean -yt
+
+RUN pip install pandas
+
+ENTRYPOINT ["jupyter"]
