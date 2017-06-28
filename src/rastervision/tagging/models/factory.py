@@ -43,4 +43,8 @@ class TaggingModelFactory(ModelFactory):
         else:
             raise ValueError('{} is not a valid model_type'.format(model_type))
 
+        if options.freeze_base:
+            for layer in model.layers[:-1]:
+                layer.trainable = False
+
         return model

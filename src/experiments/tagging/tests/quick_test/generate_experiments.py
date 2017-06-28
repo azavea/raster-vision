@@ -29,13 +29,15 @@ class TestExperimentGenerator(ExperimentGenerator):
         }
 
         model_types = ['baseline_resnet', 'densenet121']
+        freeze_base = [False, True]
 
         exps = []
         exp_count = 0
-        for model_type in model_types:
+        for model_type, freeze_base in zip(model_types, freeze_base):
             exp = deepcopy(base_exp)
             exp['run_name'] = join(exp['run_name'], str(exp_count))
             exp['model_type'] = model_type
+            exp['freeze_base'] = freeze_base
             exps.append(exp)
             exp_count += 1
 
