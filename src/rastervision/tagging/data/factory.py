@@ -5,8 +5,8 @@ from rastervision.common.utils import _makedirs
 from rastervision.common.data.generators import HFLIP, VFLIP, ROTATE, TRANSLATE
 
 from rastervision.tagging.data.planet_kaggle import (
-    PLANET_KAGGLE, TIFF, JPG, PlanetKaggleTiffFileGenerator,
-    PlanetKaggleJpgFileGenerator, PlanetKaggleTiffPredictFileGenerator)
+    PLANET_KAGGLE, TIFF, JPG,
+    PlanetKaggleTiffFileGenerator, PlanetKaggleJpgFileGenerator)
 
 
 class TaggingDataGeneratorFactory(DataGeneratorFactory):
