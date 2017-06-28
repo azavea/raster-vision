@@ -11,7 +11,7 @@ SRC="$PROJECT_ROOT/src"
 
 function usage() {
     echo -n \
-         "Usage: $(basename "$0") (--local|--remote)
+         "Usage: $(basename "$0") (--cpu|--gpu)
 Run raster-vision docker image either locally or on an AWS GPU-enabled
 EC2 instance. All arguments except the first are passed to 'docker run'.
 "

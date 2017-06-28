@@ -1,4 +1,4 @@
-from os.path import join, isdir
+from os.path import join, isdir, isfile
 import json
 import sys
 
@@ -60,23 +60,17 @@ class Runner():
         sys.stdout = Logger(self.run_path)
 
         self.model = None
-        self.generator = None
+        self.generator = self.data_generator_factory_class() \
+                        .get_data_generator(self.options)
+
         if self.options.aggregate_type is None:
-            self.generator = self.data_generator_factory_class() \
-                            .get_data_generator(self.options)
             self.model = self.model_factory.get_model(
                 self.run_path, self.options, self.generator, use_best=True)
         else:
             for run_name in self.options.aggregate_run_names:
                 for file_name in self.agg_file_names:
-                    s3_download(run_name, file_name)
-
-            # Load the generator for the first run being aggregated
-            run0_name = self.options.aggregate_run_names[0]
-            options0_path = join(results_path, run0_name, 'options.json')
-            options0 = self.get_options(options0_path)
-            generator_factory = self.data_generator_factory_class()
-            self.generator = generator_factory.get_data_generator(options0)
+                    if not isfile(join(results_path, run_name, file_name)):
+                        s3_download(run_name, file_name)
 
         for task in self.tasks:
             if self.is_valid_task(task):

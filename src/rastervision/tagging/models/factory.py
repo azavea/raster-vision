@@ -1,7 +1,11 @@
 from rastervision.common.models.factory import ModelFactory
 from rastervision.common.models.resnet50 import ResNet50
+from rastervision.common.models.densenet121 import DenseNet121
+from rastervision.common.models.densenet169 import DenseNet169
 
 BASELINE_RESNET = 'baseline_resnet'
+DENSENET_121 = 'densenet121'
+DENSENET_169 = 'densenet169'
 
 
 class TaggingModelFactory(ModelFactory):
@@ -22,8 +26,20 @@ class TaggingModelFactory(ModelFactory):
             model = ResNet50(
                 include_top=True, weights=weights,
                 input_shape=input_shape,
-                classes=generator.dataset.nb_tags,
+                classes=len(generator.active_tags),
                 activation='sigmoid')
+        elif model_type == DENSENET_121:
+            weights = 'imagenet' if options.use_pretraining else None
+            model = DenseNet121(weights=weights,
+                                input_shape=input_shape,
+                                classes=generator.dataset.nb_tags,
+                                activation='sigmoid')
+        elif model_type == DENSENET_169:
+            weights = 'imagenet' if options.use_pretraining else None
+            model = DenseNet169(weights=weights,
+                                input_shape=input_shape,
+                                classes=generator.dataset.nb_tags,
+                                activation='sigmoid')
         else:
             raise ValueError('{} is not a valid model_type'.format(model_type))
 

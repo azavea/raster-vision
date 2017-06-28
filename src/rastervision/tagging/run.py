@@ -3,7 +3,8 @@ from rastervision.common.tasks.plot_curves import plot_curves, PLOT_CURVES
 from rastervision.common.tasks.train_model import TRAIN_MODEL
 from rastervision.common.tasks.aggregate_scores import aggregate_scores
 from rastervision.common.run import Runner
-from rastervision.common.options import AGG_SUMMARY, AGG_ENSEMBLE
+from rastervision.common.options import (
+    AGG_SUMMARY, AGG_ENSEMBLE, AGG_CONCAT)
 
 from rastervision.tagging.data.factory import TaggingDataGeneratorFactory
 from rastervision.tagging.options import TaggingOptions
@@ -12,7 +13,7 @@ from rastervision.tagging.tasks.train_model import TaggingTrainModel
 from rastervision.tagging.tasks.predict import (
     TRAIN_PROBS, TRAIN_PREDICT, VALIDATION_PROBS, VALIDATION_PREDICT,
     TEST_PROBS, TEST_PREDICT, compute_ensemble_probs, compute_probs,
-    compute_preds)
+    compute_preds, compute_concat_probs)
 from rastervision.tagging.tasks.validation_eval import (
     VALIDATION_EVAL, validation_eval)
 from rastervision.tagging.tasks.train_thresholds import (
@@ -43,10 +44,14 @@ class TaggingRunner(Runner):
                     self.generator, self.model)
                 train_model.train_model()
         elif task == PLOT_CURVES:
-            plot_curves(self.options)
+            if aggregate_type in [None, AGG_SUMMARY]:
+                plot_curves(self.options)
         elif task == TRAIN_PROBS:
             if aggregate_type == AGG_ENSEMBLE:
                 compute_ensemble_probs(
+                    self.run_path, self.options, self.generator, TRAIN)
+            elif aggregate_type == AGG_CONCAT:
+                compute_concat_probs(
                     self.run_path, self.options, self.generator, TRAIN)
             elif aggregate_type is None:
                 compute_probs(self.run_path, self.model, self.options,
@@ -55,6 +60,9 @@ class TaggingRunner(Runner):
             if aggregate_type == AGG_ENSEMBLE:
                 compute_ensemble_probs(
                     self.run_path, self.options, self.generator, VALIDATION)
+            elif aggregate_type == AGG_CONCAT:
+                compute_concat_probs(
+                    self.run_path, self.options, self.generator, VALIDATION)
             elif aggregate_type is None:
                 compute_probs(self.run_path, self.model, self.options,
                               self.generator, VALIDATION)
@@ -62,23 +70,26 @@ class TaggingRunner(Runner):
             if aggregate_type == AGG_ENSEMBLE:
                 compute_ensemble_probs(
                     self.run_path, self.options, self.generator, TEST)
+            elif aggregate_type == AGG_CONCAT:
+                compute_concat_probs(
+                    self.run_path, self.options, self.generator, TEST)
             elif aggregate_type is None:
                 compute_probs(self.run_path, self.model, self.options,
                               self.generator, TEST)
         elif task == TRAIN_THRESHOLDS:
-            if aggregate_type in [None, AGG_ENSEMBLE]:
+            if aggregate_type in [None, AGG_ENSEMBLE, AGG_CONCAT]:
                 train_thresholds(
                     self.run_path, self.options, self.generator)
         elif task == TRAIN_PREDICT:
-            if aggregate_type in [None, AGG_ENSEMBLE]:
+            if aggregate_type in [None, AGG_ENSEMBLE, AGG_CONCAT]:
                 compute_preds(
                     self.run_path, self.options, self.generator, TRAIN)
         elif task == VALIDATION_PREDICT:
-            if aggregate_type in [None, AGG_ENSEMBLE]:
+            if aggregate_type in [None, AGG_ENSEMBLE, AGG_CONCAT]:
                 compute_preds(self.run_path, self.options,
                               self.generator, VALIDATION)
         elif task == TEST_PREDICT:
-            if aggregate_type in [None, AGG_ENSEMBLE]:
+            if aggregate_type in [None, AGG_ENSEMBLE, AGG_CONCAT]:
                 compute_preds(
                     self.run_path, self.options, self.generator, TEST)
         elif task == VALIDATION_EVAL:

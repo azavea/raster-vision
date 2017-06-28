@@ -13,7 +13,7 @@ import rasterio
 
 from rastervision.common.settings import (
     s3_results_path, results_path, s3_datasets_path, datasets_path,
-    s3_bucket)
+    s3_weights_path, weights_path, s3_bucket)
 
 
 def _makedirs(path):
@@ -178,6 +178,13 @@ def download_dataset(dataset_name, file_names):
 
         for file_name in file_names:
             get_file(file_name)
+
+
+def download_weights(file_name):
+    print('Downloading {}...'.format(file_name))
+    src_path = join(s3_weights_path, file_name)
+    dst_path = join(weights_path, file_name)
+    s3_cp(src_path, dst_path)
 
 
 def make_sync_results(run_name):
