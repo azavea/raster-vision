@@ -28,14 +28,14 @@ class TestExperimentGenerator(ExperimentGenerator):
             'rare_sample_prob': 0.5
         }
 
-        init_lrs = [1e-3, 1e-4]
+        model_types = ['baseline_resnet', 'densenet121']
 
         exps = []
         exp_count = 0
-        for init_lr in init_lrs:
+        for model_type in model_types:
             exp = deepcopy(base_exp)
-            exp['init_lr'] = init_lr
             exp['run_name'] = join(exp['run_name'], str(exp_count))
+            exp['model_type'] = model_type
             exps.append(exp)
             exp_count += 1
 
