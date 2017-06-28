@@ -32,13 +32,13 @@ class TaggingModelFactory(ModelFactory):
             weights = 'imagenet' if options.use_pretraining else None
             model = DenseNet121(weights=weights,
                                 input_shape=input_shape,
-                                classes=generator.dataset.nb_tags,
+                                classes=len(generator.tag_store.active_tags),
                                 activation='sigmoid')
         elif model_type == DENSENET_169:
             weights = 'imagenet' if options.use_pretraining else None
             model = DenseNet169(weights=weights,
                                 input_shape=input_shape,
-                                classes=generator.dataset.nb_tags,
+                                classes=len(generator.tag_store.active_tags),
                                 activation='sigmoid')
         else:
             raise ValueError('{} is not a valid model_type'.format(model_type))
