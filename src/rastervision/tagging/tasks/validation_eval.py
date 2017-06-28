@@ -1,5 +1,7 @@
 from os.path import join
 import json
+from json import encoder
+encoder.FLOAT_REPR = lambda o: format(o, '.5f')
 
 from sklearn.metrics import fbeta_score
 import numpy as np
@@ -18,10 +20,19 @@ VALIDATION_EVAL = 'validation_eval'
 
 class Scores():
     """A set of scores for the performance of a model on a dataset."""
-    def __init__(self, y_true, y_pred, all_tags):
-        self.f2 = fbeta_score(y_true, y_pred, beta=2, average='samples')
+    def __init__(self, y_true, y_pred, dataset):
+        self.f2_samples = fbeta_score(y_true, y_pred, beta=2, average='samples')
+        self.f2_labels = fbeta_score(y_true, y_pred, beta=2,
+                                       average='macro')
+        self.atmos_scores, self.common_scores, self.rare_scores = {},{},{}
         f2_subscores = fbeta_score(y_true, y_pred, beta=2, average=None)
-        self.f2_subscores = dict(zip(all_tags, f2_subscores))
+        # TODO: update all_tags usage with active_tags PR
+        for tag in dataset.atmos_tags:
+            self.atmos_scores[tag] = f2_subscores[dataset.all_tags.index(tag)]
+        for tag in dataset.common_tags:
+            self.common_scores[tag] = f2_subscores[dataset.all_tags.index(tag)]
+        for tag in dataset.rare_tags:
+            self.rare_scores[tag] = f2_subscores[dataset.all_tags.index(tag)]
 
     def to_json(self):
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
@@ -130,6 +141,6 @@ def plot_predictions(run_path, options, generator):
 def validation_eval(run_path, options, generator):
     y_true, y_pred = plot_predictions(run_path, options, generator)
 
-    scores = Scores(y_true, y_pred, generator.dataset.all_tags)
+    scores = Scores(y_true, y_pred, generator.dataset)
     scores_path = join(run_path, 'scores.json')
     scores.save(scores_path)
