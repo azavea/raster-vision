@@ -26,7 +26,7 @@ class TaggingModelFactory(ModelFactory):
             model = ResNet50(
                 include_top=True, weights=weights,
                 input_shape=input_shape,
-                classes=generator.dataset.nb_tags,
+                classes=len(generator.active_tags),
                 activation='sigmoid')
         elif model_type == DENSENET_121:
             weights = 'imagenet' if options.use_pretraining else None
