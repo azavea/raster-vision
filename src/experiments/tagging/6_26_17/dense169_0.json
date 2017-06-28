@@ -1,0 +1,19 @@
+{
+    "batch_size": 8,
+    "git_commit": "059350",
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "jpg",
+    "active_input_inds": [0, 1, 2],
+    "use_pretraining": true,
+    "optimizer": "adam",
+    "lr_schedule": [[0, 0.00001], [20, 0.000001]],
+    "model_type": "densenet169",
+    "train_ratio": 0.8,
+    "nb_eval_plot_samples": 100,
+    "epochs": 30,
+    "validation_steps": 480,
+    "augment_methods": ["hflip", "vflip", "rotate90"],
+    "run_name": "tagging/6_26_17/dense169_0",
+    "steps_per_epoch": 2400
+}
