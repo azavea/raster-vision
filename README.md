@@ -51,6 +51,7 @@ The goal of tagging is to infer a set of labels for each image. The following da
 | `infra`  | Execute Terraform subcommands            |
 | `test`   | Run unit tests and lint on source code |
 | `run` | Run container locally or remotely |
+| `jupyter` | Run container with juptyer notebook with mounted data and notebook directory from `RASTER_VISION_NOTEBOOK_DIR` |
 | `setup`  | Bring up the virtual machine and install dependent software on it |
 | `setup_aws_batch`  | Setup AWS Batch |
 | `submit_jobs`  | Submit jobs to AWS Batch |
@@ -84,6 +85,17 @@ You can get into the bash console for the Docker container which has Keras and T
 vagrant ssh
 vagrant@raster-vision:/vagrant$ ./scripts/update --cpu
 vagrant@raster-vision:/vagrant$ ./scripts/run --cpu
+```
+
+### Running a Jupyter Notebook instance
+
+You can run a juptyer notebook that has the data from `RASTER_VISION_DATA_DIR` mounted to `/opt/data`
+and `RASTER_VISION_NOTEBOOK_DIR` mounted to `/opt/notebooks` and set as the juptyer notebook directory.
+
+```shell
+vagrant ssh
+vagrant@raster-vision:/vagrant$ ./scripts/update --jupyter
+vagrant@raster-vision:/vagrant$ ./scripts/jupyter
 ```
 
 ### Preparing datasets
