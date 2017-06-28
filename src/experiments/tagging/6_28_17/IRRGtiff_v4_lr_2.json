@@ -1,0 +1,36 @@
+{
+    "batch_size": 32,
+    "git_commit": "a37cfc2",
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "tiff",
+    "active_input_inds": [3, 0, 1],
+    "use_pretraining": true,
+    "optimizer": "adam",
+    "lr_schedule": [
+        [
+            0,
+            0.001
+        ],
+        [
+            7,
+            0.0001
+        ],
+        [
+            14,
+            1e-05
+        ],
+        [
+            21,
+            1e-06
+        ]
+    ],
+    "model_type": "baseline_resnet",
+    "train_ratio": 0.8,
+    "nb_eval_plot_samples": 100,
+    "epochs": 28,
+    "validation_steps": 120,
+    "augment_methods": ["hflip", "vflip", "rotate90"],
+    "run_name": "tagging/6_28_17/IRRGtiff_drop_v4_lr_2",
+    "steps_per_epoch": 600
+}
