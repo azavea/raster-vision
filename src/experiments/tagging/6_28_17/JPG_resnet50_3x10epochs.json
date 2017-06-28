@@ -1,0 +1,49 @@
+{
+    "active_input_inds": [
+        0,
+        1,
+        2
+    ],
+    "aggregate_run_names": null,
+    "augment_methods": [
+        "hflip",
+        "vflip",
+        "rotate90"
+    ],
+    "batch_size": 8,
+    "cross_validation": null,
+    "dataset_name": "planet_kaggle",
+    "delta_model_checkpoint": null,
+    "epochs": 30,
+    "generator_name": "jpg",
+    "git_commit": "fc9feff",
+    "init_lr": 0.001,
+    "lr_schedule": [
+        [
+            0,
+            0.0001
+        ],
+        [
+            10,
+            1e-05
+        ],
+        [
+            20,
+            1e-06
+        ]
+    ],
+    "model_type": "baseline_resnet",
+    "nb_eval_plot_samples": 100,
+    "nb_eval_samples": null,
+    "optimizer": "adam",
+    "patience": null,
+    "problem_type": "tagging",
+    "rare_sample_prob": null,
+    "run_name": "tagging/6_28_17/JPG_resnet50_3x10epochs",
+    "steps_per_epoch": 2400,
+    "target_size": null,
+    "train_ratio": 0.8,
+    "train_stages": null,
+    "use_pretraining": true,
+    "validation_steps": 480
+}
