@@ -377,7 +377,7 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
         self.dev_dir = 'train-jpg'
         self.test_dir = 'test-jpg'
         self.file_names = [
-            'train-jpg.zip', 'train-tif-v2.zip', 'train_v2.csv.zip',
+            'train-jpg.zip', 'test-jpg.zip', 'train_v2.csv.zip',
             'planet_kaggle_jpg_channel_stats.json']
         self.file_extension = 'jpg'
         self.dataset = JpgDataset()
