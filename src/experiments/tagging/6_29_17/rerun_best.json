@@ -1,0 +1,19 @@
+{
+    "batch_size": 8,
+    "git_commit": "176ef3",
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "jpg",
+    "active_input_inds": [0, 1, 2],
+    "use_pretraining": true,
+    "optimizer": "adam",
+    "lr_schedule": [[0, 0.0001], [10, 0.00001],[20, 0.000001]],
+    "model_type": "densenet121",
+    "train_ratio": 0.8,
+    "nb_eval_plot_samples": 100,
+    "epochs": 30,
+    "validation_steps": 480,
+    "augment_methods": ["hflip", "vflip", "rotate90"],
+    "run_name": "tagging/6_29_17/rerun_best",
+    "steps_per_epoch": 2400
+}
