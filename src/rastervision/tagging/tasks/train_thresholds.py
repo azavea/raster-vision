@@ -5,6 +5,7 @@ import numpy as np
 
 from rastervision.common.settings import TRAIN
 from rastervision.common.utils import save_json, load_json
+from rastervision.tagging.tasks.utils import compute_prediction
 
 TRAIN_THRESHOLDS = 'train_thresholds'
 
@@ -32,19 +33,26 @@ def get_model_output(run_path, generator, nb_eval_samples=None):
     return y_true, y_probs
 
 
-def optimize_thresholds(y_true, y_probs):
+def optimize_thresholds(y_true, y_probs, tag_store, dataset):
     nb_tags = y_true.shape[1]
     best_thresholds = np.ones((nb_tags,)) * 0.2
-    y_preds = y_probs > np.expand_dims(best_thresholds, axis=0)
-    best_f2 = fbeta_score(y_true, y_preds, beta=2, average='samples')
+    thresh_inc = 0.03
 
-    for tag_ind in range(nb_tags):
+    y_preds = compute_prediction(y_probs, dataset, tag_store, best_thresholds)
+    best_f2 = fbeta_score(y_true, y_preds, beta=2, average='samples')
+    print(best_f2)
+
+    for tag in tag_store.active_tags:
+        tag_ind = tag_store.get_tag_ind(tag)
         thresholds = np.copy(best_thresholds)
-        for tag_thresh in np.arange(0, 1.0, 0.02):
+        for tag_thresh in np.arange(0, 1.0, thresh_inc):
             thresholds[tag_ind] = tag_thresh
-            y_preds = y_probs > np.expand_dims(thresholds, axis=0)
+            y_preds = compute_prediction(
+                y_probs, dataset, tag_store, thresholds)
             f2 = fbeta_score(y_true, y_preds, beta=2, average='samples')
             if f2 > best_f2:
+                print('tag: {:>20}, thresh: {:>10}, f2: {:>10.5}'.format(
+                    tag, tag_thresh, f2))
                 best_f2 = f2
                 best_thresholds = np.copy(thresholds)
 
@@ -52,13 +60,8 @@ def optimize_thresholds(y_true, y_probs):
 
 
 def train_thresholds(run_path, options, generator):
-    # Finding the correct thresholds seems to result in a small decrease in
-    # test performance. I'm not sure what's going on, so for now
-    # I'm commenting this out and setting thresholds to a default of 0.2 to
-    # maintain the previous performance.
-
     y_true, y_probs = get_model_output(
         run_path, generator, options.nb_eval_samples)
-    # thresholds = optimize_thresholds(y_true, y_probs)
-    thresholds = 0.2 * np.ones((len(generator.tag_store.active_tags),))
+    thresholds = optimize_thresholds(
+        y_true, y_probs, generator.tag_store, generator.dataset)
     save_thresholds(run_path, thresholds)
