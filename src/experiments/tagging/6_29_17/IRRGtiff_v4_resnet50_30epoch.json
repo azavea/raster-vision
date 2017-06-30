@@ -1,0 +1,45 @@
+{
+    "active_input_inds": [
+        3,
+        0,
+        1
+    ],
+    "aggregate_run_names": null,
+    "augment_methods": [
+        "hflip",
+        "vflip",
+        "rotate90"
+    ],
+    "batch_size": 32,
+    "cross_validation": null,
+    "dataset_name": "planet_kaggle",
+    "delta_model_checkpoint": null,
+    "epochs": 30,
+    "generator_name": "tiff",
+    "git_commit": "fc9feff",
+    "init_lr": 0.001,
+    "lr_schedule": [
+        [
+            0,
+            1e-05
+        ],
+        [
+            20,
+            1e-06
+        ]
+    ],
+    "model_type": "baseline_resnet",
+    "nb_eval_plot_samples": 100,
+    "nb_eval_samples": null,
+    "optimizer": "adam",
+    "patience": null,
+    "problem_type": "tagging",
+    "rare_sample_prob": null,
+    "run_name": "tagging/6_29_17/IRRGtiff_v4_resnet50_30epoch",
+    "steps_per_epoch": 600,
+    "target_size": null,
+    "train_ratio": 0.8,
+    "train_stages": null,
+    "use_pretraining": true,
+    "validation_steps": 120
+}
