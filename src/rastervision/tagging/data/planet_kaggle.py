@@ -135,7 +135,7 @@ class TagStore():
                 ind = self.get_tag_ind(str_tag)
                 if ind is not None:
                     binary_tags[ind] = 1
-        return binary_tags
+        return binary_tagsp
 
     def binary_to_strs(self, binary_tags):
         str_tags = []
@@ -258,13 +258,13 @@ class PlanetKaggleFileGenerator(FileGenerator):
         file_inds = []
         if isinstance(self.file_extension, list):
             for fe in self.file_extension:
-                paths = glob.glob(join(path, '*.{}'.format(fe)))
+                paths = sorted(glob.glob(join(path, '*.{}'.format(fe))))
                 for path in paths:
                     file_ind = splitext(basename(path))[0]
                     if not file_ind in self.drop_file_inds:
                         file_inds.append(file_ind)
         else:
-            paths = glob.glob(join(path, '*.{}'.format(self.file_extension)))
+            paths = sorted(glob.glob(join(path, '*.{}'.format(self.file_extension))))
             for path in paths:
                 file_ind = splitext(basename(path))[0]
                 if not file_ind in self.drop_file_inds:
