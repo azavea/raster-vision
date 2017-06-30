@@ -135,7 +135,7 @@ class TagStore():
                 ind = self.get_tag_ind(str_tag)
                 if ind is not None:
                     binary_tags[ind] = 1
-        return binary_tagsp
+        return binary_tags
 
     def binary_to_strs(self, binary_tags):
         str_tags = []
