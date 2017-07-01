@@ -334,7 +334,7 @@ class PlanetKaggleFileGenerator(FileGenerator):
 class PlanetKaggleTiffFileGenerator(PlanetKaggleFileGenerator):
     def __init__(self, datasets_path, options):
         self.dev_dir = 'train-tif-v2'
-        self.test_dir = 'test-tif-v2' # Zip is named v3, but unzipped still named v2
+        self.test_dir = 'test-tif-v3'
         self.file_names = [
             'train-tif-v2.zip', 'test-tif-v3.zip', 'train_v2.csv.zip',
             'planet_kaggle_tiff_channel_stats.json', 'unaligned_tifs.csv']
