@@ -33,10 +33,10 @@ def make_dual_resnet(input_shape, dual_active_input_inds,
     nb_rows, nb_cols, nb_channels = input_shape
     input_tensor = Input(shape=input_shape)
 
+    CUT_STAGE = 5
+
     # Split input_tensor into two
     def get_input_tensor(it, model_ind):
-        # TODO calls to split and concat will need to be updated after
-        # upgrading TF
         channel_tensors = tf.split(it, nb_channels, 3)
         input_tensors = []
         for ind in dual_active_input_inds[model_ind]:
@@ -51,7 +51,7 @@ def make_dual_resnet(input_shape, dual_active_input_inds,
         include_top=False, weights=weights, input_tensor=input_tensor1)
     for layer in base_model1.layers:
         layer.name += '_1'
-    if True:#freeze_base:
+    if freeze_base:
         for layer in base_model1.layers:
             layer.trainable = False
 
@@ -64,15 +64,20 @@ def make_dual_resnet(input_shape, dual_active_input_inds,
     for layer in base_model2.layers:
         layer.name += '_2'
 
-    x_1 = base_model1.get_layer('act4f_1').output
+    if CUT_STAGE == 4:
+        x_1 = base_model1.get_layer('act4f_1').output
+        x_2 = base_model2.get_layer('act4f_2').output
 
-    x_2 = base_model2.get_layer('act4f_2').output
+        x = merge([x_1, x_2], mode='concat')
 
-    x = merge([x_1, x_2], mode='concat')
+        x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a')
+        x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
+        x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c')
+    else:
+        x_1 = base_model1.get_layer('act5c_1').output
+        x_2 = base_model2.get_layer('act5c_2').output
 
-    x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c')
+        x = merge([x_1, x_2], mode='concat')
 
     x = AveragePooling2D((7, 7), name='avg_pool')(x)
 
