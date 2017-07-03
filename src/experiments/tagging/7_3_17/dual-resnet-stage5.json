@@ -1,0 +1,20 @@
+{
+    "batch_size": 16,
+    "git_commit": "100d726",
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "dual",
+    "active_input_inds": [0, 1, 2, 3, 4, 6],
+    "dual_active_input_inds": [[0, 1, 2], [5, 3, 4]],
+    "use_pretraining": true,
+    "optimizer": "adam",
+    "lr_schedule": [[0, 0.00001], [20, 0.000001]],
+    "model_type": "dual_resnet",
+    "train_ratio": 0.8,
+    "nb_eval_plot_samples": 100,
+    "epochs": 30,
+    "validation_steps": 120,
+    "augment_methods": ["hflip", "vflip", "rotate90"],
+    "run_name": "tagging/7_3_17/dual_resnet-stage5",
+    "steps_per_epoch": 600
+}
