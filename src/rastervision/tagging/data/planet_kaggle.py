@@ -225,15 +225,20 @@ class PlanetKaggleFileGenerator(FileGenerator):
 
         self.dataset_path = join(datasets_path, PLANET_KAGGLE)
 
+        self.drop_file_inds = []
+        if self.drop_file_inds_file:
+            with open(join(self.dataset_path, self.drop_file_inds_file)) as f:
+                self.drop_file_inds = f.read().split('\n')
+
         # dev_dir and test_ dir can contain multiple directories
         # Assume file_inds are the same in every dev_dir and test_dir, respectively
         if isinstance(self.dev_dir, list):
             self.dev_path = list(map(lambda d: join(self.dataset_path, d), self.dev_dir))
-            self.dev_file_inds = self.generate_file_inds(self.dev_path)
+            self.dev_file_inds = self.generate_file_inds(self.dev_path[0])
 
         else:
             self.dev_path = join(self.dataset_path, self.dev_dir)
-            self.dev_file_inds = self.generate_file_inds(self.dev_path[0])
+            self.dev_file_inds = self.generate_file_inds(self.dev_path)
 
         if isinstance(self.test_dir, list):
             self.test_path = list(map(lambda d: join(self.dataset_path, d), self.test_dir))
@@ -241,14 +246,6 @@ class PlanetKaggleFileGenerator(FileGenerator):
         else:
             self.test_path = join(self.dataset_path, self.test_dir)
             self.test_file_inds = self.generate_file_inds(self.test_path)
-
-        self.drop_file_inds = []
-        if self.drop_file_inds_file:
-            with open(join(self.dataset_path, self.drop_file_inds_file)) as f:
-                self.drop_file_inds = f.read().split('\n')
-
-        self.dev_file_inds = self.generate_file_inds(self.dev_path)
-        self.test_file_inds = self.generate_file_inds(self.test_path)
 
         self.active_tags = options.active_tags
         self.active_tags = options.active_tags \
@@ -330,7 +327,7 @@ class PlanetKaggleFileGenerator(FileGenerator):
                     p = join(self.dataset_path, d, n)
                     if exists(p):
                         return p
-                raise IOError("File %s.{%s} does not exist" % (file_ind, '|'.join(self.file_extension)))
+                raise IOError("File %s/%s.{%s} does not exist" % (join(self.dataset_path, d), file_ind, '|'.join(self.file_extension)))
             else:
                 n = '{}.{}'.format(file_ind, self.file_extension)
                 return join(self.dataset_path, d, n)
@@ -449,7 +446,7 @@ class PlanetKaggleDualFileGenerator(PlanetKaggleFileGenerator):
             'planet_kaggle_jpg_channel_stats.json',
             'train-tif-v2.zip', 'test-tif-v3.zip',
             'planet_kaggle_tiff_channel_stats.json']
-        self.file_extension = ['jpg', 'tiff']
+        self.file_extension = ['jpg', 'tif']
         self.dataset = DualDataset()
         self.name = 'planet_kaggle_dual'
         self.drop_file_inds_file = None

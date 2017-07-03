@@ -7,14 +7,14 @@
         4,
         6
     ],
-    "dual_active_input_inds": [[0, 1, 2], [6, 3, 4]],
+    "dual_active_input_inds": [[0, 1, 2], [5, 3, 4]],
     "aggregate_run_names": null,
     "augment_methods": [
         "hflip",
         "vflip",
         "rotate90"
     ],
-    "batch_size": 32,
+    "batch_size": 16,
     "cross_validation": null,
     "dataset_name": "planet_kaggle",
     "delta_model_checkpoint": null,

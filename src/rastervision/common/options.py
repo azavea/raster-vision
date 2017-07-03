@@ -58,3 +58,5 @@ class Options():
                 raise ValueError(
                     '{} are not valid augment_methods'.format(
                         str(invalid_augment_methods)))
+
+        self.dual_active_input_inds = options.get('dual_active_input_inds')

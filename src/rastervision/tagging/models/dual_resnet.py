@@ -7,19 +7,27 @@ from keras.layers import (Input,
                           Convolution2D,
                           Reshape,
                           Lambda,
+                          Dense,
+                          Flatten,
+                          AveragePooling2D,
+                          GlobalAveragePooling2D,
+                          GlobalMaxPooling2D,
                           merge)
+
 import tensorflow as tf
 
 from rastervision.common.models.resnet50 import (ResNet50,
                                                  identity_block,
                                                  conv_block)
 
+from rastervision.common.utils import eprint
+
 
 DUAL_RESNET = 'dual_resnet'
 
 
-def make_dual_fcn_resnet(input_shape, dual_active_input_inds,
-                         use_pretraining, freeze_base=False,
+def make_dual_resnet(input_shape, dual_active_input_inds,
+                         weights='imagenet', freeze_base=False,
                          include_top=True, pooling=None,
                          classes=1000, activation='softmax'):
     nb_rows, nb_cols, nb_channels = input_shape
@@ -38,9 +46,6 @@ def make_dual_fcn_resnet(input_shape, dual_active_input_inds,
 
     input_tensor1 = Lambda(lambda x: get_input_tensor(x, 0))(input_tensor)
     input_tensor2 = Lambda(lambda x: get_input_tensor(x, 1))(input_tensor)
-
-    # Use weights for either both or none
-    weights = 'imagenet' if use_pretraining else None
 
     base_model1 = ResNet50(
         include_top=False, weights=weights, input_tensor=input_tensor1)

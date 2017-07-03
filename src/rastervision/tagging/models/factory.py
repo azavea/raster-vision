@@ -2,7 +2,7 @@ from rastervision.common.models.factory import ModelFactory
 from rastervision.common.models.resnet50 import ResNet50
 from rastervision.common.models.densenet121 import DenseNet121
 from rastervision.common.models.densenet169 import DenseNet169
-from rastervision.common.models.dual_resnet import (make_dual_resnet, DUAL_RESNET)
+from rastervision.tagging.models.dual_resnet import (make_dual_resnet, DUAL_RESNET)
 
 BASELINE_RESNET = 'baseline_resnet'
 DENSENET_121 = 'densenet121'
