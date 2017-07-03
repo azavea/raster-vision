@@ -5,6 +5,7 @@ AGG_SUMMARY = 'agg_summary'
 AGG_ENSEMBLE = 'agg_ensemble'
 AGG_CONCAT = 'agg_concat'
 
+
 class Options():
     """Represents the options used to control an experimental run."""
 
@@ -45,6 +46,7 @@ class Options():
         self.lr_schedule = options.get('lr_schedule')
         self.train_ratio = options.get('train_ratio')
         self.cross_validation = options.get('cross_validation')
+        self.test_augmentation = options.get('test_augmentation', True)
         self.delta_model_checkpoint = options.get(
             'delta_model_checkpoint', None)
         self.augment_methods = options.get(

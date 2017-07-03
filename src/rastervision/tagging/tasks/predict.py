@@ -9,6 +9,7 @@ from rastervision.common.options import AGG_CONCAT, AGG_ENSEMBLE
 from rastervision.tagging.data.planet_kaggle import TagStore
 from rastervision.tagging.tasks.utils import compute_prediction
 from rastervision.tagging.tasks.train_thresholds import load_thresholds
+from rastervision.common.settings import TEST
 
 TRAIN_PROBS = 'train_probs'
 VALIDATION_PROBS = 'validation_probs'
@@ -87,7 +88,28 @@ def compute_probs(run_path, model, options, generator, split):
         normalize=True, only_xy=False)
 
     for batch_ind, batch in enumerate(split_gen):
-        y_probs.append(model.predict(batch.x))
+        # Performing safe augmentations on images one by one, predicting
+        # probs and taking average, if calculating test probabilities
+        if split == TEST and options.test_augmentation:
+            for img_ind in range(batch.x.shape[0]):
+                img = batch.x[img_ind, :, :, :]
+                aug_batch = []
+                for rotation in range(4):
+                    rot_img = np.rot90(img, rotation)
+                    aug_batch.append(np.expand_dims(rot_img, axis=0))
+                flip_img = np.flipud(img)
+                aug_batch.append(np.expand_dims(flip_img, axis=0))
+                flip_img = np.fliplr(img)
+                aug_batch.append(np.expand_dims(flip_img, axis=0))
+                aug_batch = np.concatenate(aug_batch, axis=0)
+
+                aug_probs = np.mean(model.predict(aug_batch), axis=0,
+                                    keepdims=True)
+
+                y_probs.append(aug_probs)
+        # Otherwise, predicting probs on unaugmented images by batch
+        else:
+            y_probs.append(model.predict(batch.x))
 
         if (options.nb_eval_samples is not None and
                 batch_ind * options.batch_size >= options.nb_eval_samples):
