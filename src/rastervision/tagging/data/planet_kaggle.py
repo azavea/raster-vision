@@ -15,6 +15,7 @@ from rastervision.common.data.generators import FileGenerator, Batch
 PLANET_KAGGLE = 'planet_kaggle'
 TIFF = 'tiff'
 JPG = 'jpg'
+DUAL = 'dual'
 
 
 class Dataset():
@@ -84,12 +85,17 @@ class TiffDataset(Dataset):
         ndvi = compute_ndvi(red, ir)
         return np.concatenate([batch_x, ndvi], axis=3)
 
-
 class JpgDataset(Dataset):
     def setup_channels(self):
         self.nb_channels = 3
         self.display_means = np.array([0.45, 0.5, 0.5])
         self.display_stds = np.array([0.25, 0.2, 0.2])
+
+class DualDataset(Dataset):
+    def setup_channels(self):
+        self.nb_channels = 7
+        self.display_means = np.array([0.45, 0.5, 0.5, 0.45, 0.5, 0.5, 0.5, 0.5])
+        self.display_stds = np.array([0.25, 0.2, 0.2, 0.25, 0.2, 0.2, 0.2, 0.2])
 
 
 class TagStore():
@@ -218,8 +224,23 @@ class PlanetKaggleFileGenerator(FileGenerator):
         download_dataset(PLANET_KAGGLE, self.file_names)
 
         self.dataset_path = join(datasets_path, PLANET_KAGGLE)
-        self.dev_path = join(self.dataset_path, self.dev_dir)
-        self.test_path = join(self.dataset_path, self.test_dir)
+
+        # dev_dir and test_ dir can contain multiple directories
+        # Assume file_inds are the same in every dev_dir and test_dir, respectively
+        if isinstance(self.dev_dir, list):
+            self.dev_path = list(map(lambda d: join(self.dataset_path, d), self.dev_dir))
+            self.dev_file_inds = self.generate_file_inds(self.dev_path)
+
+        else:
+            self.dev_path = join(self.dataset_path, self.dev_dir)
+            self.dev_file_inds = self.generate_file_inds(self.dev_path[0])
+
+        if isinstance(self.test_dir, list):
+            self.test_path = list(map(lambda d: join(self.dataset_path, d), self.test_dir))
+            self.test_file_inds = self.generate_file_inds(self.test_path[0])
+        else:
+            self.test_path = join(self.dataset_path, self.test_dir)
+            self.test_file_inds = self.generate_file_inds(self.test_path)
 
         self.drop_file_inds = []
         if self.drop_file_inds_file:
@@ -301,17 +322,22 @@ class PlanetKaggleFileGenerator(FileGenerator):
     def get_file_path(self, file_ind):
         prefix, _ = file_ind.split('_')
         data_dir = self.test_path if prefix in ['file', 'test'] \
-            else self.dev_path
-        if isinstance(self.file_extension, list):
-            for fe in self.file_extension:
-                n = '{}.{}'.format(file_ind, fe)
-                p = join(self.dataset_path, data_dir, n)
-                if exists(p):
-                    return p
-            raise IOError("File %s.{%s} does not exist" % (file_ind, '|'.join(self.file_extension)))
+                                  else self.dev_path
+        def _get_file_path(d):
+            if isinstance(self.file_extension, list):
+                for fe in self.file_extension:
+                    n = '{}.{}'.format(file_ind, fe)
+                    p = join(self.dataset_path, d, n)
+                    if exists(p):
+                        return p
+                raise IOError("File %s.{%s} does not exist" % (file_ind, '|'.join(self.file_extension)))
+            else:
+                n = '{}.{}'.format(file_ind, self.file_extension)
+                return join(self.dataset_path, d, n)
+        if isinstance(data_dir, list):
+            return list(map(lambda d: _get_file_path(d), data_dir))
         else:
-            n = '{}.{}'.format(file_ind, self.file_extension)
-            return join(self.dataset_path, data_dir, n)
+            return _get_file_path(data_dir)
 
     def get_file_size(self, file_ind):
         return 256, 256
@@ -413,3 +439,43 @@ class PlanetKaggleJpgFileGenerator(PlanetKaggleFileGenerator):
         options = Options()
         PlanetKaggleJpgFileGenerator(
             datasets_path, options).write_channel_stats(proc_data_path)
+
+class PlanetKaggleDualFileGenerator(PlanetKaggleFileGenerator):
+    def __init__(self, datasets_path, options):
+        self.dev_dir = ['train-jpg', 'train-tif-v2']
+        self.test_dir = ['test-jpg', 'test-tif-v3']
+        self.file_names = [
+            'train-jpg.zip', 'test-jpg.zip', 'train_v2.csv.zip',
+            'planet_kaggle_jpg_channel_stats.json',
+            'train-tif-v2.zip', 'test-tif-v3.zip',
+            'planet_kaggle_tiff_channel_stats.json']
+        self.file_extension = ['jpg', 'tiff']
+        self.dataset = DualDataset()
+        self.name = 'planet_kaggle_dual'
+        self.drop_file_inds_file = None
+
+        super().__init__(datasets_path, options)
+
+    def load_img(self, file_path, window):
+        import rasterio
+
+        assert(len(file_path) == 2)
+
+        bands = [1] * 7
+        for f in file_path:
+            if f.endswith('jpg'):
+                with rasterio.open(f) as src:
+                    r, g, b = src.read(window=window)
+                    bands[0] = r
+                    bands[1] = g
+                    bands[2] = b
+            else:
+                with rasterio.open(f) as src:
+                    b, g, r, nir = src.read(window=window)
+                    bands[3] = r
+                    bands[4] = g
+                    bands[5] = b
+                    bands[6] = nir
+
+        img = np.dstack(bands)
+        return img

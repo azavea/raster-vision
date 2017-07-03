@@ -2,6 +2,7 @@ from rastervision.common.models.factory import ModelFactory
 from rastervision.common.models.resnet50 import ResNet50
 from rastervision.common.models.densenet121 import DenseNet121
 from rastervision.common.models.densenet169 import DenseNet169
+from rastervision.common.models.dual_resnet import (make_dual_resnet, DUAL_RESNET)
 
 BASELINE_RESNET = 'baseline_resnet'
 DENSENET_121 = 'densenet121'
@@ -40,6 +41,13 @@ class TaggingModelFactory(ModelFactory):
                                 input_shape=input_shape,
                                 classes=len(generator.tag_store.active_tags),
                                 activation='sigmoid')
+        elif model_type == DUAL_RESNET:
+            weights = 'imagenet' if options.use_pretraining else None
+            model = make_dual_resnet(input_shape=input_shape,
+                                     dual_active_input_inds = options.dual_active_input_inds,
+                                     weights=weights,
+                                     classes=len(generator.active_tags),
+                                     activation='sigmoid')
         else:
             raise ValueError('{} is not a valid model_type'.format(model_type))
 

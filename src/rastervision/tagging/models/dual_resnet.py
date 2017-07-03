@@ -1,5 +1,5 @@
 """
-ResNet based FCN.
+Late Fusion of 2 stream ResNet
 """
 from keras.models import Model
 from keras.layers import (Input,
@@ -10,14 +10,18 @@ from keras.layers import (Input,
                           merge)
 import tensorflow as tf
 
-from rastervision.common.models.resnet50 import ResNet50
+from rastervision.common.models.resnet50 import (ResNet50,
+                                                 identity_block,
+                                                 conv_block)
 
 
-DUAL_FCN_RESNET = 'dual_fcn_resnet'
+DUAL_RESNET = 'dual_resnet'
 
 
 def make_dual_fcn_resnet(input_shape, dual_active_input_inds,
-                         nb_labels, use_pretraining, freeze_base):
+                         use_pretraining, freeze_base=False,
+                         include_top=True, pooling=None,
+                         classes=1000, activation='softmax'):
     nb_rows, nb_cols, nb_channels = input_shape
     input_tensor = Input(shape=input_shape)
 
@@ -35,8 +39,9 @@ def make_dual_fcn_resnet(input_shape, dual_active_input_inds,
     input_tensor1 = Lambda(lambda x: get_input_tensor(x, 0))(input_tensor)
     input_tensor2 = Lambda(lambda x: get_input_tensor(x, 1))(input_tensor)
 
-    # Train first model using pretraining and freezing as specified
+    # Use weights for either both or none
     weights = 'imagenet' if use_pretraining else None
+
     base_model1 = ResNet50(
         include_top=False, weights=weights, input_tensor=input_tensor1)
     for layer in base_model1.layers:
@@ -45,40 +50,36 @@ def make_dual_fcn_resnet(input_shape, dual_active_input_inds,
         for layer in base_model1.layers:
             layer.trainable = False
 
-    # Train second model from scratch
     base_model2 = ResNet50(
-        include_top=False, weights=None, input_tensor=input_tensor2)
+        include_top=False, weights=weights, input_tensor=input_tensor2)
+    if freeze_base:
+        for layer in base_model2.layers:
+            layer.trainable = False
+
     for layer in base_model2.layers:
         layer.name += '_2'
 
-    x32_1 = base_model1.get_layer('act3d_1').output
-    x16_1 = base_model1.get_layer('act4f_1').output
-    x8_1 = base_model1.get_layer('act5c_1').output
+    x_1 = base_model1.get_layer('act4f_1').output
 
-    x32_2 = base_model2.get_layer('act3d_2').output
-    x16_2 = base_model2.get_layer('act4f_2').output
-    x8_2 = base_model2.get_layer('act5c_2').output
+    x_2 = base_model2.get_layer('act4f_2').output
 
-    x32 = merge([x32_1, x32_2], mode='concat')
-    x16 = merge([x16_1, x16_2], mode='concat')
-    x8 = merge([x8_1, x8_2], mode='concat')
+    x = merge([x_1, x_2], mode='concat')
 
-    c32 = Convolution2D(nb_labels, 1, 1, name='conv_labels_32')(x32)
-    c16 = Convolution2D(nb_labels, 1, 1, name='conv_labels_16')(x16)
-    c8 = Convolution2D(nb_labels, 1, 1, name='conv_labels_8')(x8)
+    x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a')
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c')
 
-    def resize_bilinear(images):
-        return tf.image.resize_bilinear(images, [nb_rows, nb_cols])
+    x = AveragePooling2D((7, 7), name='avg_pool')(x)
 
-    r32 = Lambda(resize_bilinear, name='resize_labels_32')(c32)
-    r16 = Lambda(resize_bilinear, name='resize_labels_16')(c16)
-    r8 = Lambda(resize_bilinear, name='resize_labels_8')(c8)
+    if include_top:
+        x = Flatten()(x)
+        x = Dense(classes, activation=activation, name='dense')(x)
+    else:
+        if pooling == 'avg':
+            x = GlobalAveragePooling2D()(x)
+        elif pooling == 'max':
+            x = GlobalMaxPooling2D()(x)
 
-    m = merge([r32, r16, r8], mode='sum', name='merge_labels')
-
-    x = Reshape((nb_rows * nb_cols, nb_labels))(m)
-    x = Activation('softmax')(x)
-    x = Reshape((nb_rows, nb_cols, nb_labels))(x)
 
     model = Model(input_tensor, output=x)
 
