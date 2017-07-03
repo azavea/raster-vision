@@ -61,7 +61,7 @@ class Runner():
 
         self.model = None
         self.generator = self.data_generator_factory_class() \
-                        .get_data_generator(self.options)
+                             .get_data_generator(self.options)
 
         if self.options.aggregate_type is None:
             self.model = self.model_factory.get_model(
