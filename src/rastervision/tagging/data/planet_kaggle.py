@@ -94,6 +94,8 @@ class JpgDataset(Dataset):
 class DualDataset(Dataset):
     def setup_channels(self):
         self.nb_channels = 7
+        self.ndvi_ind = None
+        self.ir_ind = 6
         self.display_means = np.array([0.45, 0.5, 0.5, 0.45, 0.5, 0.5, 0.5, 0.5])
         self.display_stds = np.array([0.25, 0.2, 0.2, 0.25, 0.2, 0.2, 0.2, 0.2])
 
