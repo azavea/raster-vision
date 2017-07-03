@@ -51,7 +51,7 @@ def make_dual_resnet(input_shape, dual_active_input_inds,
         include_top=False, weights=weights, input_tensor=input_tensor1)
     for layer in base_model1.layers:
         layer.name += '_1'
-    if freeze_base:
+    if True:#freeze_base:
         for layer in base_model1.layers:
             layer.trainable = False
 
