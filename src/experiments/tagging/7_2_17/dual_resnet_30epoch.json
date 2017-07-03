@@ -1,0 +1,49 @@
+{
+    "active_input_inds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6
+    ],
+    "dual_active_input_inds": [[0, 1, 2], [6, 3, 4]],
+    "aggregate_run_names": null,
+    "augment_methods": [
+        "hflip",
+        "vflip",
+        "rotate90"
+    ],
+    "batch_size": 32,
+    "cross_validation": null,
+    "dataset_name": "planet_kaggle",
+    "delta_model_checkpoint": null,
+    "epochs": 30,
+    "generator_name": "dual",
+    "git_commit": "cc12a32",
+    "init_lr": 0.001,
+    "lr_schedule": [
+        [
+            0,
+            1e-05
+        ],
+        [
+            20,
+            1e-06
+        ]
+    ],
+    "model_type": "dual_resnet",
+    "nb_eval_plot_samples": 100,
+    "nb_eval_samples": null,
+    "optimizer": "adam",
+    "patience": null,
+    "problem_type": "tagging",
+    "rare_sample_prob": null,
+    "run_name": "tagging/7_2_17/dual_resnet_30epoch",
+    "steps_per_epoch": 600,
+    "target_size": null,
+    "train_ratio": 0.8,
+    "train_stages": null,
+    "use_pretraining": true,
+    "validation_steps": 120
+}
