@@ -59,4 +59,6 @@ class Options():
                     '{} are not valid augment_methods'.format(
                         str(invalid_augment_methods)))
 
+
         self.dual_active_input_inds = options.get('dual_active_input_inds')
+        self.dual_resnet_merge_stage = options.get('dual_resnet_merge_stage')

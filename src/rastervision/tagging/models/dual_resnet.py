@@ -27,13 +27,15 @@ DUAL_RESNET = 'dual_resnet'
 
 
 def make_dual_resnet(input_shape, dual_active_input_inds,
-                         weights='imagenet', freeze_base=False,
-                         include_top=True, pooling=None,
-                         classes=1000, activation='softmax'):
+                     weights='imagenet', freeze_base=False,
+                     include_top=True, pooling=None,
+                     merge_stage=None,
+                     classes=1000, activation='softmax'):
     nb_rows, nb_cols, nb_channels = input_shape
     input_tensor = Input(shape=input_shape)
 
-    CUT_STAGE = 5
+    if not merge_stage:
+        merge_stage = 5
 
     # Split input_tensor into two
     def get_input_tensor(it, model_ind):
@@ -64,7 +66,7 @@ def make_dual_resnet(input_shape, dual_active_input_inds,
     for layer in base_model2.layers:
         layer.name += '_2'
 
-    if CUT_STAGE == 4:
+    if merge_stage == 4:
         x_1 = base_model1.get_layer('act4f_1').output
         x_2 = base_model2.get_layer('act4f_2').output
 
