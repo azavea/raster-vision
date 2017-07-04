@@ -42,6 +42,7 @@ class TaggingModelFactory(ModelFactory):
                                 classes=len(generator.tag_store.active_tags),
                                 activation='sigmoid')
         elif model_type == DUAL_RESNET:
+            weights = 'imagenet' if options.use_pretraining else None
             model = make_dual_resnet(input_shape=input_shape,
                                      dual_active_input_inds = options.dual_active_input_inds,
                                      merge_stage=options.dual_resnet_merge_stage,

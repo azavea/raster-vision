@@ -23,8 +23,6 @@ def make_dual_fcn_resnet(input_shape, dual_active_input_inds,
 
     # Split input_tensor into two
     def get_input_tensor(it, model_ind):
-        # TODO calls to split and concat will need to be updated after
-        # upgrading TF
         channel_tensors = tf.split(it, nb_channels, 3)
         input_tensors = []
         for ind in dual_active_input_inds[model_ind]:
