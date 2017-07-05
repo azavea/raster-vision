@@ -1,6 +1,6 @@
 import os
 from os import makedirs
-from os.path import splitext, basename, join, isdir
+from os.path import splitext, basename, join, isfile
 import sys
 import zipfile
 from subprocess import call
@@ -158,12 +158,32 @@ def s3_download(run_name, file_name):
     call(['aws', 's3', 'cp', s3_file_path, run_path + '/'])
 
 
+def download_done(file_names, dataset_path):
+    dataset_done_path = join(dataset_path, 'done.txt')
+    if not isfile(dataset_done_path):
+        return False
+
+    file_names_str = ','.join(file_names)
+    with open(dataset_done_path, 'r') as done_file:
+        for line in done_file:
+            if line.strip() == file_names_str:
+                return True
+    return False
+
+
+def mark_as_done(file_names, dataset_path):
+    file_names_str = ','.join(file_names)
+    dataset_done_path = join(dataset_path, 'done.txt')
+    with open(dataset_done_path, 'a') as done_file:
+        done_file.write(file_names_str + '\n')
+
+
 def download_dataset(dataset_name, file_names):
     dataset_path = join(
         datasets_path, dataset_name)
     s3_dataset_path = join(s3_datasets_path, dataset_name)
 
-    if not isdir(dataset_path):
+    if not download_done(file_names, dataset_path):
         _makedirs(dataset_path)
 
         def get_file(file_name):
@@ -178,6 +198,8 @@ def download_dataset(dataset_name, file_names):
 
         for file_name in file_names:
             get_file(file_name)
+
+        mark_as_done(file_names, dataset_path)
 
 
 def download_weights(file_name):
