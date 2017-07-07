@@ -1,0 +1,60 @@
+{
+    "jobDefinitionName": "raster-vision-cpu",
+    "type": "container",
+    "parameters": {},
+    "retryStrategy": {
+        "attempts": 1
+    },
+    "containerProperties": {
+        "image": "279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-cpu:latest",
+        "vcpus": 1,
+        "memory": 3500,
+        "command": [
+            "run_experiment.sh",
+            "raster-vision",
+            "lf/batch",
+            "experiments/tests/semseg/potsdam_quick_test.json",
+            "validation_eval"
+        ],
+        "volumes": [
+            {
+                "host": {
+                    "sourcePath": "/usr"
+                },
+                "name": "usr"
+            },
+            {
+                "host": {
+                    "sourcePath": "/lib"
+                },
+                "name": "lib"
+            },
+            {
+                "host": {
+                    "sourcePath": "/home/ec2-user"
+                },
+                "name": "home"
+            }
+        ],
+        "mountPoints": [
+            {
+                "containerPath": "/hostusr",
+                "readOnly": false,
+                "sourceVolume": "usr"
+            },
+            {
+                "containerPath": "/hostlib",
+                "readOnly": false,
+                "sourceVolume": "lib"
+            },
+            {
+                "containerPath": "/opt/data",
+                "readOnly": false,
+                "sourceVolume": "home"
+            }
+        ],
+        "readonlyRootFilesystem": false,
+        "privileged": true,
+        "ulimits": []
+    }
+}

@@ -17,6 +17,15 @@ should only be done once per AWS account.
 PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
 BATCH_CONFIG=$PROJECT_ROOT/deployment/batch
 
-aws batch create-compute-environment --cli-input-json file://$BATCH_CONFIG/compute_environment.json
-aws batch create-job-queue --cli-input-json file://$BATCH_CONFIG/job_queue.json
-aws batch register-job-definition --cli-input-json file://$BATCH_CONFIG/job_def.json
+aws batch create-compute-environment --cli-input-json file://$BATCH_CONFIG/compute_environment_gpu.json
+aws batch create-compute-environment --cli-input-json file://$BATCH_CONFIG/compute_environment_cpu.json
+echo 'Waiting 10s...'
+sleep 10s
+
+aws batch create-job-queue --cli-input-json file://$BATCH_CONFIG/job_queue_gpu.json
+aws batch create-job-queue --cli-input-json file://$BATCH_CONFIG/job_queue_cpu.json
+echo 'Waiting 10s...'
+sleep 10s
+
+aws batch register-job-definition --cli-input-json file://$BATCH_CONFIG/job_def_gpu.json
+aws batch register-job-definition --cli-input-json file://$BATCH_CONFIG/job_def_cpu.json

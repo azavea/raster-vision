@@ -1,5 +1,5 @@
 {
-    "jobDefinitionName": "raster-vision-experiment",
+    "jobDefinitionName": "raster-vision-gpu",
     "type": "container",
     "parameters": {},
     "retryStrategy": {

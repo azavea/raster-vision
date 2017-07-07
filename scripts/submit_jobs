@@ -80,7 +80,7 @@ def build_dep_graph(run_name_to_parent_run_names):
 
 
 def submit_job(branch_name, file_path, tasks, run_name,
-               attempts, parent_job_ids=None):
+               attempts, parent_job_ids=None, cpu=False):
     s3_bucket = environ.get('S3_BUCKET')
 
     job_name = run_name.replace('/', '-')
@@ -98,10 +98,15 @@ def submit_job(branch_name, file_path, tasks, run_name,
 
     client = boto3.client('batch')
 
+    job_queue = 'raster-vision-cpu' if cpu else \
+        'raster-vision-gpu'
+    job_definition = 'raster-vision-cpu' if cpu else \
+        'raster-vision-gpu'
+
     job_id = client.submit_job(
         jobName=job_name,
-        jobQueue='raster-vision-experiments',
-        jobDefinition='raster-vision-experiment',
+        jobQueue=job_queue,
+        jobDefinition=job_definition,
         containerOverrides={
             'command': command
         },
@@ -141,6 +146,8 @@ def parse_args():
              'Can be empty to run all tasks.')
     parser.add_argument(
         '--attempts', type=int, default=5, help='Number of times to retry job')
+    parser.add_argument(
+        '--cpu', dest='cpu', action='store_true', help='Use CPU EC2 instances')
     return parser.parse_args()
 
 
@@ -150,6 +157,7 @@ def run():
     print('Experiment path: {}'.format(args.experiment_path))
     print('Tasks: {}'.format(args.tasks))
     print('Number of attempts: {}'.format(args.attempts))
+    print('Using {}'.format('CPU' if args.cpu else 'GPU'))
 
     experiment_path = join(args.experiment_path, '*.json') \
         if isdir(args.experiment_path) else args.experiment_path
@@ -166,7 +174,7 @@ def run():
                 run_name = exp['run_name']
                 submit_job(
                     args.branch_name, experiment_path, args.tasks, run_name,
-                    args.attempts)
+                    args.attempts, cpu=args.cpu)
         else:
             # If directory of files, then build dependency graph and run
             # them in the right order, feeding the parent job ids to batch.
@@ -187,7 +195,7 @@ def run():
 
                 run_name_to_job_id[run_name] = submit_job(
                     args.branch_name, file_path, args.tasks, run_name,
-                    args.attempts, parent_job_ids)
+                    args.attempts, parent_job_ids, cpu=args.cpu)
 
 
 if __name__ == '__main__':

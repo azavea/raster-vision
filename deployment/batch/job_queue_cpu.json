@@ -1,11 +1,11 @@
 {
-  "jobQueueName": "raster-vision-experiments",
+  "jobQueueName": "raster-vision-cpu",
   "state": "ENABLED",
   "priority": 1,
   "computeEnvironmentOrder": [
     {
       "order": 1,
-      "computeEnvironment": "raster-vision-p2"
+      "computeEnvironment": "raster-vision-cpu"
     }
   ]
 }
