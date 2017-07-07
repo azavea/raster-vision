@@ -1,0 +1,11 @@
+{
+  "jobQueueName": "raster-vision-gpu",
+  "state": "ENABLED",
+  "priority": 1,
+  "computeEnvironmentOrder": [
+    {
+      "order": 1,
+      "computeEnvironment": "raster-vision-gpu"
+    }
+  ]
+}

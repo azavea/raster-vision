@@ -1,11 +1,11 @@
 {
-    "computeEnvironmentName": "raster-vision-p2",
+    "computeEnvironmentName": "raster-vision-gpu",
     "type": "MANAGED",
     "state": "ENABLED",
     "computeResources": {
         "type": "SPOT",
         "minvCpus": 0,
-        "maxvCpus": 400,
+        "maxvCpus": 200,
         "desiredvCpus": 0,
         "instanceTypes": [
             "p2.xlarge"
