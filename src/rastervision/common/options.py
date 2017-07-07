@@ -58,3 +58,7 @@ class Options():
                 raise ValueError(
                     '{} are not valid augment_methods'.format(
                         str(invalid_augment_methods)))
+
+        # Option for determining whether or not to compute or load channel stats;
+        # if channel stats for normalization of images are not needed, can set this to false.
+        self.requires_channel_stats = options.get('requires_channel_stats', True)

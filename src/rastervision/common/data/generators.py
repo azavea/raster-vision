@@ -81,18 +81,23 @@ class FileGenerator(Generator):
 
         self.train_probs = self.compute_train_probs()
 
-        # If a dataset's normalized parameters have already been
-        # calculated, load its json file. Otherwise, calculate parameters
-        # with a small batch.
-        channel_stats_path = join(self.dataset_path,
-                                  self.name + '_channel_stats.json')
-        if exists(channel_stats_path):
-            with open(channel_stats_path) as channel_stats_file:
-                channel_stats = json.load(channel_stats_file)
-            self.channel_stats = (np.array(channel_stats['means']),
-                                  np.array(channel_stats['stds']))
+        # We may be using this generator for tasks that don't require
+        # channel stats; if so, avoid loading or computing them
+        if options.requires_channel_stats:
+            # If a dataset's normalized parameters have already been
+            # calculated, load its json file. Otherwise, calculate parameters
+            # with a small batch.
+            channel_stats_path = join(self.dataset_path,
+                                      self.name + '_channel_stats.json')
+            if exists(channel_stats_path):
+                with open(channel_stats_path) as channel_stats_file:
+                    channel_stats = json.load(channel_stats_file)
+                self.channel_stats = (np.array(channel_stats['means']),
+                                      np.array(channel_stats['stds']))
+            else:
+                self.channel_stats = self.compute_channel_stats(100, False)
         else:
-            self.channel_stats = self.compute_channel_stats(100, False)
+            self.channel_stats = None
 
     def compute_train_probs(self):
         return None
@@ -215,12 +220,16 @@ class FileGenerator(Generator):
             yield batch, batch_file_inds
 
     def normalize(self, batch_x):
+        if not self.channel_stats:
+            raise Exception("channel_stats is undefined; this task requires channel_stats")
         means, stds = self.channel_stats
         batch_x = batch_x - means[np.newaxis, np.newaxis, np.newaxis, :]
         batch_x = batch_x / stds[np.newaxis, np.newaxis, np.newaxis, :]
         return batch_x
 
     def unnormalize(self, batch_x):
+        if not self.channel_stats:
+            raise Exception("channel_stats is undefined; this task requires channel_stats")
         means, stds = self.channel_stats
         nb_dims = len(batch_x.shape)
         if nb_dims == 3:
