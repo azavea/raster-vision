@@ -7,4 +7,19 @@ RUN conda install -y python=${python_version} jupyter opencv && \
 
 RUN pip install pandas boto3==1.4.4
 
+### Install XGBoost
+
+# install gcc with openmp support in conda
+RUN conda install -y gcc
+WORKDIR /opt
+RUN git clone --recursive https://github.com/dmlc/xgboost
+WORKDIR xgboost
+#RUN cp make/minimum.mk ./config.mk
+RUN make -j4
+WORKDIR python-package
+RUN python setup.py install
+WORKDIR /opt
+RUN rm -rf xgboost
+
+
 ENTRYPOINT ["jupyter"]
