@@ -42,6 +42,7 @@ class Options():
         self.target_size = options.get('target_size', (256, 256))
         self.optimizer = options.get('optimizer', 'adam')
         self.init_lr = options.get('init_lr', 1e-3)
+        self.momentum = options.get('momentum')
         self.patience = options.get('patience')
         self.lr_schedule = options.get('lr_schedule')
         self.train_ratio = options.get('train_ratio')
