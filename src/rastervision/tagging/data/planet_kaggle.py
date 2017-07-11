@@ -235,10 +235,10 @@ class PlanetKaggleFileGenerator(FileGenerator):
 
         super().__init__(options)
 
-    def compute_train_probs(self):
+    def compute_split_probs(self, split):
         if self.active_tags_prob is not None:
             return self.tag_store.compute_sample_probs(
-                self.train_file_inds, self.active_tags_prob)
+                self.get_file_inds(split), self.active_tags_prob)
         return None
 
     @staticmethod
