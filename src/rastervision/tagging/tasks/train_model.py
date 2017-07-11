@@ -7,5 +7,5 @@ class TaggingTrainModel(TrainModel):
         super().__init__(
             run_path, sync_results, options, generator, model)
 
-        self.metrics = ['binary_accuracy']
-        self.loss_function = 'binary_crossentropy'
+        self.metrics = options.metrics
+        self.loss_function = options.loss_function
