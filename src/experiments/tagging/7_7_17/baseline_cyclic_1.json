@@ -1,0 +1,24 @@
+{
+    "batch_size": 32,
+    "git_commit": "059350",
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "jpg",
+    "active_input_inds": [0, 1, 2],
+    "use_pretraining": true,
+    "optimizer": "adam",
+    "model_type": "baseline_resnet",
+    "train_ratio": 0.8,
+    "cyclic_lr": {
+      "base_lr": 1e-6,
+      "max_lr": 1e-4,
+      "step_size": 2000,
+      "cycle_mode": "triangular"
+    },
+    "nb_eval_plot_samples": 100,
+    "epochs": 30,
+    "validation_steps": 120,
+    "augment_methods": ["hflip", "vflip", "rotate90"],
+    "run_name": "tagging/7_7_17/baseline_cyclic_1",
+    "steps_per_epoch": 600
+}
