@@ -58,3 +58,21 @@ class Options():
                 raise ValueError(
                     '{} are not valid augment_methods'.format(
                         str(invalid_augment_methods)))
+        # decay options
+        decay_set = False
+        self.lr_step_decay = options.get('lr_step_decay')
+        if self.lr_step_decay is not None:
+            decay_set = True
+        self.lr_epoch_decay = options.get('lr_epoch_decay')
+        if self.lr_epoch_decay is not None:
+            if decay_set:
+                raise ValueError('Cannot set more than one decay option.')
+            decay_set = True
+        self.cyclic_lr = options.get('cyclic_lr')
+        if self.cyclic_lr is not None:
+            if decay_set:
+                raise ValueError('Cannot set more than one decay option.')
+            self.base_lr = options['cyclic_lr']['base_lr']
+            self.max_lr = options['cyclic_lr']['max_lr']
+            self.step_size = options['cyclic_lr']['step_size']
+            self.cycle_mode = options['cyclic_lr']['cycle_mode']
