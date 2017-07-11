@@ -1,0 +1,51 @@
+{
+    "active_input_inds": [
+        3,
+        0,
+        1
+    ],
+    "active_tags": null,
+    "active_tags_prob": null,
+    "aggregate_run_names": null,
+    "aggregate_type": null,
+    "augment_methods": [
+        "hflip",
+        "vflip",
+        "rotate90"
+    ],
+    "batch_size": 8,
+    "cross_validation": null,
+    "dataset_name": "planet_kaggle",
+    "delta_model_checkpoint": null,
+    "epochs": 30,
+    "generator_name": "tiff",
+    "git_commit": "7b24850",
+    "init_lr": 0.00100,
+    "lr_schedule": [
+        [
+            0,
+            0.00010
+        ],
+        [
+            10,
+            0.00001
+        ],
+        [
+            20,
+            0.00000
+        ]
+    ],
+    "model_type": "densenet121",
+    "nb_eval_plot_samples": 100,
+    "nb_eval_samples": null,
+    "optimizer": "adam",
+    "patience": null,
+    "problem_type": "tagging",
+    "run_name": "tagging/7_2_17/IRRGtiff_v5actual_dense121_3x10epochs_0",
+    "steps_per_epoch": 2400,
+    "target_size": null,
+    "train_ratio": 0.80000,
+    "train_stages": null,
+    "use_pretraining": true,
+    "validation_steps": 480
+}

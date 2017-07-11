@@ -65,9 +65,10 @@ def plot_prediction(generator, all_x, y_true, y_pred,
         imgs.append(ir_im)
         titles.append('IR')
 
-        ndvi_im = all_x[:, :, dataset.ndvi_ind]
-        imgs.append(ndvi_im)
-        titles.append('NDVI')
+        if dataset.ndvi_ind:
+            ndvi_im = all_x[:, :, dataset.ndvi_ind]
+            imgs.append(ndvi_im)
+            titles.append('NDVI')
 
     plot_img_row(fig, grid_spec, 0, imgs, titles)
 
