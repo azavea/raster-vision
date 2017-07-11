@@ -1,0 +1,29 @@
+{
+    "batch_size": 8,
+    "git_commit": "86b3a0",
+    "problem_type": "tagging",
+    "dataset_name": "planet_kaggle",
+    "generator_name": "jpg",
+    "active_input_inds": [0, 1, 2],
+    "use_pretraining": true,
+    "freeze_base": false,
+    "optimizer": "adam",
+    "lr_schedule":  [[0, 0.0001], [10, 0.00001], [20, 0.000001]],
+    "model_type": "densenet121",
+    "train_ratio": 0.8,
+    "nb_eval_plot_samples": 100,
+    "epochs": 30,
+    "active_tags": [
+        "artisinal_mine",
+        "blooming",
+        "blow_down",
+        "conventional_mine",
+        "selective_logging",
+        "slash_burn"
+    ],
+    "active_tags_prob": 0.25,
+    "validation_steps": 480,
+    "augment_methods": ["hflip", "vflip", "rotate", "translate"],
+    "run_name": "tagging/6_28_17/rare_jpg4",
+    "steps_per_epoch": 2400
+}

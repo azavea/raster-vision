@@ -79,7 +79,8 @@ class FileGenerator(Generator):
         if self.cross_validation is not None:
             self.process_cross_validation()
 
-        self.train_probs = self.compute_train_probs()
+        self.train_probs = self.compute_split_probs(TRAIN)
+        self.validation_probs = self.compute_split_probs(VALIDATION)
 
         # If a dataset's normalized parameters have already been
         # calculated, load its json file. Otherwise, calculate parameters
@@ -94,7 +95,7 @@ class FileGenerator(Generator):
         else:
             self.channel_stats = self.compute_channel_stats(100, False)
 
-    def compute_train_probs(self):
+    def compute_split_probs(self):
         return None
 
     def calibrate_image(self, normalized_image):
@@ -286,7 +287,12 @@ class FileGenerator(Generator):
                              augment_methods=None,
                              normalize=False, only_xy=True):
         file_inds = self.get_file_inds(split)
-        sample_probs = self.train_probs if split == TRAIN else None
+        sample_probs = None
+        if split == TRAIN:
+            sample_probs = self.train_probs
+        elif split == VALIDATION:
+            sample_probs = self.validation_probs
+
         img_batch_gen = self.make_img_batch_generator(
             file_inds, target_size, batch_size, shuffle, sample_probs)
 

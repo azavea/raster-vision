@@ -4,7 +4,6 @@ import json
 import numpy as np
 
 from rastervision.common.settings import results_path
-from rastervision.common.options import AGG_CONCAT, AGG_ENSEMBLE
 
 from rastervision.tagging.data.planet_kaggle import TagStore
 from rastervision.tagging.tasks.utils import compute_prediction
@@ -127,7 +126,7 @@ def compute_preds(run_path, options, generator, split):
     y_probs = np.load(probs_path)
 
     predictions_path = join(run_path, get_preds_fn(split))
-    thresholds = load_thresholds(run_path)
+    thresholds = load_thresholds(run_path, options.loss_function)
     tag_store = TagStore(active_tags=options.active_tags)
     file_inds = generator.get_file_inds(split)
 

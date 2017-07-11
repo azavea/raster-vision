@@ -8,10 +8,13 @@ from rastervision.common.utils import save_json, load_json
 from rastervision.tagging.tasks.utils import compute_prediction
 
 TRAIN_THRESHOLDS = 'train_thresholds'
+BINARY_CROSSENTROPY = 'binary_crossentropy'
 
 
-def load_thresholds(run_path):
-    return np.array(load_json(join(run_path, 'thresholds.json')))
+def load_thresholds(run_path, loss_function):
+    if loss_function == BINARY_CROSSENTROPY:
+        return np.array(load_json(join(run_path, 'thresholds.json')))
+    return None
 
 
 def save_thresholds(run_path, thresholds):
@@ -60,8 +63,9 @@ def optimize_thresholds(y_true, y_probs, tag_store, dataset):
 
 
 def train_thresholds(run_path, options, generator):
-    y_true, y_probs = get_model_output(
-        run_path, generator, options.nb_eval_samples)
-    thresholds = optimize_thresholds(
-        y_true, y_probs, generator.tag_store, generator.dataset)
-    save_thresholds(run_path, thresholds)
+    if options.loss_function == BINARY_CROSSENTROPY:
+        y_true, y_probs = get_model_output(
+            run_path, generator, options.nb_eval_samples)
+        thresholds = optimize_thresholds(
+            y_true, y_probs, generator.tag_store, generator.dataset)
+        save_thresholds(run_path, thresholds)

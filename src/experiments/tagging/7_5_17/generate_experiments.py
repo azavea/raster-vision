@@ -8,45 +8,36 @@ from rastervision.experiment_generator import (
 class TestExperimentGenerator(ExperimentGenerator):
     def generate_experiments(self):
         base_exp = {
-            'batch_size': 1,
+            'batch_size': 8,
             'problem_type': 'tagging',
             'dataset_name': 'planet_kaggle',
             'generator_name': 'jpg',
             'active_input_inds': [0, 1, 2],
             'use_pretraining': True,
             'optimizer': 'adam',
-            'init_lr': 1e-3,
-            'model_type': 'baseline_resnet',
+            'lr_schedule': [[0, 0.0001], [10, 0.00001], [20, 0.000001]],
+            'model_type': 'densenet121',
             'train_ratio': 0.8,
-            'epochs': 2,
-            'nb_eval_samples': 10,
-            'nb_eval_plot_samples': 3,
-            'validation_steps': 1,
-            'run_name': 'tagging/tests/quick_test',
-            'steps_per_epoch': 2,
-            'augment_methods': ['hflip', 'vflip', 'rotate', 'translate'],
-            'rare_sample_prob': 0.5
+            'epochs': 30,
+            'nb_eval_plot_samples': 100,
+            'validation_steps': 480,
+            'run_name': 'tagging/7_5_17/ensemble',
+            'steps_per_epoch': 2400,
+            'augment_methods': ['hflip', 'vflip', 'rotate90']
         }
 
-        model_types = ['baseline_resnet', 'densenet121']
-        freeze_base = [False, True]
-
         exps = []
-        exp_count = 0
-        for model_type, freeze_base in zip(model_types, freeze_base):
+        nb_exps = 5
+        for exp_ind in range(nb_exps):
             exp = deepcopy(base_exp)
-            exp['run_name'] = join(exp['run_name'], str(exp_count))
-            exp['model_type'] = model_type
-            exp['freeze_base'] = freeze_base
+            exp['run_name'] = join(exp['run_name'], str(exp_ind))
             exps.append(exp)
-            exp_count += 1
 
         agg_exp = deepcopy(base_exp)
-        agg_exp['run_name'] = join(base_exp['run_name'], str(exp_count))
+        agg_exp['run_name'] = join(agg_exp['run_name'], 'avg')
         agg_exp['aggregate_run_names'] = [exp['run_name'] for exp in exps]
         agg_exp['aggregate_type'] = 'agg_ensemble'
         exps.append(agg_exp)
-        exp_count += 1
 
         return exps
 
