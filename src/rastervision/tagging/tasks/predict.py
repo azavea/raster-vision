@@ -4,7 +4,6 @@ import json
 import numpy as np
 
 from rastervision.common.settings import results_path
-from rastervision.common.options import AGG_CONCAT, AGG_ENSEMBLE
 
 from rastervision.tagging.data.planet_kaggle import TagStore
 from rastervision.tagging.tasks.utils import compute_prediction
