@@ -5,6 +5,7 @@ from keras.callbacks import (Callback, ModelCheckpoint, CSVLogger,
                              LearningRateScheduler)
 from keras.optimizers import Adam, RMSprop
 
+from rastervision.common.tasks.cyclic_lr import CyclicLR
 from rastervision.common.utils import _makedirs
 from rastervision.common.settings import TRAIN, VALIDATION
 
@@ -80,6 +81,20 @@ class TrainModel():
             callback = LearningRateScheduler(get_lr)
             callbacks.append(callback)
 
+        if self.options.lr_epoch_decay:
+            def get_lr(epoch):
+                decay_factor = 1 / (1.0 + self.options.lr_epoch_decay * epoch)
+                return self.options.init_lr * decay_factor
+            callback = LearningRateScheduler(get_lr)
+            callbacks.append(callback)
+
+        if self.options.cyclic_lr is not None:
+            callback = CyclicLR(base_lr=self.options.base_lr,
+                                max_lr=self.options.max_lr,
+                                step_size=self.options.step_size,
+                                mode=self.options.cycle_mode)
+            callbacks.append(callback)
+
         callback = LambdaCallback(
             on_epoch_end=lambda epoch, logs: self.sync_results())
         callbacks.append(callback)
@@ -125,9 +140,11 @@ class TrainModel():
             normalize=True, only_xy=True)
 
         if self.options.optimizer == ADAM:
-            optimizer = Adam(lr=self.options.init_lr)
+            optimizer = Adam(lr=self.options.init_lr,
+                             decay=self.options.lr_step_decay)
         elif self.options.optimizer == RMS_PROP:
-            optimizer = RMSprop(lr=self.options.init_lr)
+            optimizer = RMSprop(lr=self.options.init_lr,
+                                decay=self.options.lr_step_decay)
 
         self.model.compile(
             optimizer, self.loss_function, metrics=self.metrics)
