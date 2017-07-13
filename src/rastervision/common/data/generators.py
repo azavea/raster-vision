@@ -12,7 +12,8 @@ HFLIP = 'hflip'
 VFLIP = 'vflip'
 ROTATE = 'rotate'
 TRANSLATE = 'translate'
-all_augment_methods = [ROTATE90, HFLIP, VFLIP, ROTATE, TRANSLATE]
+ZOOM = 'zoom'
+all_augment_methods = [ROTATE90, HFLIP, VFLIP, ROTATE, TRANSLATE, ZOOM]
 # safe methods don't destroy any information in the original image
 safe_augment_methods = [HFLIP, VFLIP, ROTATE90]
 
@@ -251,7 +252,7 @@ class FileGenerator(Generator):
                 nb_rotations = np.random.randint(0, 4)
                 img = np.rot90(img, nb_rotations)
 
-            skimage_augment_methods = [ROTATE, TRANSLATE]
+            skimage_augment_methods = [ROTATE, TRANSLATE, ZOOM]
             if set(skimage_augment_methods).intersection(set(augment_methods)):
                 # skimage requires that float images have values
                 # in [-1, 1] so we have to scale and then unscale the image to
@@ -270,6 +271,20 @@ class FileGenerator(Generator):
                     )
                     tf = transform.SimilarityTransform(translation=translation)
                     img = transform.warp(img, tf, mode='reflect')
+
+                if ZOOM in augment_methods:
+                    shift_x = shift_y = int(nb_rows / 2)
+                    scale_x = scale_y = np.random.uniform(-0.15, 0.15) + 1.0
+                    matrix_to_topleft = transform.SimilarityTransform(
+                        translation=[-shift_x, -shift_y])
+                    matrix_transforms = transform.AffineTransform(
+                        scale=(scale_x, scale_y))
+                    matrix_to_center = transform.SimilarityTransform(
+                        translation=[shift_x, shift_y])
+                    matrix = (matrix_to_topleft + matrix_transforms +
+                              matrix_to_center)
+                    matrix = matrix.inverse
+                    img = transform.warp(img, matrix, mode='reflect')
 
                 if ROTATE in augment_methods:
                     degrees = np.random.uniform(0, 360)
