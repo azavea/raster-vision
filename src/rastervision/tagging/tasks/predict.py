@@ -18,6 +18,8 @@ TRAIN_PREDICT = 'train_predict'
 VALIDATION_PREDICT = 'validation_predict'
 TEST_PREDICT = 'test_predict'
 
+NUM_AUG = 6
+
 
 def get_probs_fn(split):
     return '{}_probs.npy'.format(split)
@@ -25,6 +27,9 @@ def get_probs_fn(split):
 
 def get_preds_fn(split):
     return '{}_preds.csv'.format(split)
+
+def get_aug_probs_fn(split, aug_ind):
+    return str(aug_ind) + '_' + get_probs_fn(split)
 
 
 def compute_concat_probs(run_path, options, generator, split):
@@ -77,22 +82,21 @@ def compute_ensemble_probs(run_path, options, generator, split):
 
 
 def compute_probs(run_path, model, options, generator, split):
-    probs_path = join(run_path, get_probs_fn(split))
-    y_probs = []
-
     batch_size = options.batch_size
     split_gen = generator.make_split_generator(
         split, target_size=None,
         batch_size=batch_size, shuffle=False, augment_methods=None,
         normalize=True, only_xy=False)
 
-    for batch_ind, batch in enumerate(split_gen):
-        # Performing safe augmentations on images one by one, predicting
-        # probs and taking average, if calculating test probabilities
-        if split == TEST and options.test_augmentation:
+    # Performing safe augmentations on images one by one, predicting
+    # probs and taking average, if calculating test probabilities
+    if split == TEST and options.test_augmentation:
+        y_probs = [[] for i in range(NUM_AUG)]
+        for batch_ind, batch in enumerate(split_gen):
             for img_ind in range(batch.x.shape[0]):
                 img = batch.x[img_ind, :, :, :]
                 aug_batch = []
+
                 for rotation in range(4):
                     rot_img = np.rot90(img, rotation)
                     aug_batch.append(np.expand_dims(rot_img, axis=0))
@@ -101,40 +105,78 @@ def compute_probs(run_path, model, options, generator, split):
                 flip_img = np.fliplr(img)
                 aug_batch.append(np.expand_dims(flip_img, axis=0))
                 aug_batch = np.concatenate(aug_batch, axis=0)
+                aug_probs = model.predict(aug_batch)
 
-                aug_probs = np.mean(model.predict(aug_batch), axis=0,
-                                    keepdims=True)
+                for aug_ind in range(NUM_AUG):
+                    y_probs[aug_ind].append(aug_probs[aug_ind])
 
-                y_probs.append(aug_probs)
-        # Otherwise, predicting probs on unaugmented images by batch
-        else:
+            if (options.nb_eval_samples is not None and
+                    batch_ind * options.batch_size >= options.nb_eval_samples):
+                break
+
+        for aug_ind in range(NUM_AUG):
+            y_probs[aug_ind] = np.concatenate([y_probs[aug_ind]])
+            if options.nb_eval_samples is not None:
+                y_probs[aug_ind] = y_probs[aug_ind][0:options.nb_eval_samples]
+            probs_path = join(run_path, get_aug_probs_fn(split, aug_ind))
+            np.save(probs_path, y_probs[aug_ind])
+    # Otherwise, predicting probs on unaugmented images by batch
+    else:
+        y_probs = []
+        for batch_ind, batch in enumerate(split_gen):
             y_probs.append(model.predict(batch.x))
 
-        if (options.nb_eval_samples is not None and
-                batch_ind * options.batch_size >= options.nb_eval_samples):
-            break
+            if (options.nb_eval_samples is not None and
+                    batch_ind * options.batch_size >= options.nb_eval_samples):
+                break
 
-    y_probs = np.concatenate(y_probs, axis=0)
-    if options.nb_eval_samples is not None:
-        y_probs = y_probs[0:options.nb_eval_samples, :]
+        y_probs = np.concatenate(y_probs, axis=0)
 
-    np.save(probs_path, y_probs)
+        if options.nb_eval_samples is not None:
+            y_probs = y_probs[0:options.nb_eval_samples, :]
+
+        probs_path = join(run_path, get_probs_fn(split))
+        np.save(probs_path, y_probs)
 
 
 def compute_preds(run_path, options, generator, split):
-    probs_path = join(run_path, get_probs_fn(split))
-    y_probs = np.load(probs_path)
-
-    predictions_path = join(run_path, get_preds_fn(split))
     thresholds = load_thresholds(run_path, options.loss_function)
-    tag_store = TagStore(active_tags=options.active_tags)
-    file_inds = generator.get_file_inds(split)
 
-    for sample_ind in range(y_probs.shape[0]):
-        y_pred = compute_prediction(
-            y_probs[sample_ind, :], generator.dataset, generator.tag_store,
-            thresholds)
-        file_ind = file_inds[sample_ind]
-        tag_store.add_tags(file_ind, y_pred)
+    if split == TEST and options.test_augmentation:
+        tag_stores = []
+        file_inds = generator.get_file_inds(split)
 
-    tag_store.save(predictions_path)
+        y_probs = []
+        for aug_ind in range(NUM_AUG):
+            tag_store = TagStore(active_tags=options.active_tags)
+            tag_stores.append(tag_store)
+
+        for aug_ind in range(NUM_AUG):
+            probs_path = join(run_path, get_aug_probs_fn(split, aug_ind))
+            y_probs = np.load(probs_path)
+
+            for sample_ind in range(y_probs.shape[0]):
+                y_pred = compute_prediction(
+                    y_probs[sample_ind, :], generator.dataset,
+                    generator.tag_store, thresholds)
+                file_ind = file_inds[sample_ind]
+                tag_stores[aug_ind].add_tags(file_ind, y_pred)
+
+            predictions_path = join(run_path, str(aug_ind) + '_' +
+                                    get_preds_fn(split))
+            tag_stores[aug_ind].save(predictions_path)
+    else:
+        probs_path = join(run_path, get_probs_fn(split))
+        y_probs = np.load(probs_path)
+        predictions_path = join(run_path, get_preds_fn(split))
+        tag_store = TagStore(active_tags=options.active_tags)
+        file_inds = generator.get_file_inds(split)
+
+        for sample_ind in range(y_probs.shape[0]):
+            y_pred = compute_prediction(
+                y_probs[sample_ind, :], generator.dataset, generator.tag_store,
+                thresholds)
+            file_ind = file_inds[sample_ind]
+            tag_store.add_tags(file_ind, y_pred)
+
+        tag_store.save(predictions_path)
