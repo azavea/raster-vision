@@ -60,11 +60,11 @@ class Options():
                         str(invalid_augment_methods)))
         # decay options
         decay_set = False
-        self.lr_step_decay = options.get('lr_step_decay')
-        if self.lr_step_decay is not None:
+        self.lr_step_decay = options.get('lr_step_decay', 0.0)
+        if self.lr_step_decay != 0.0:
             decay_set = True
-        self.lr_epoch_decay = options.get('lr_epoch_decay')
-        if self.lr_epoch_decay is not None:
+        self.lr_epoch_decay = options.get('lr_epoch_decay', 0.0)
+        if self.lr_epoch_decay != 0.0:
             if decay_set:
                 raise ValueError('Cannot set more than one decay option.')
             decay_set = True
