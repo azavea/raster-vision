@@ -2,7 +2,7 @@ from os.path import join
 
 from rastervision.common.data.factory import DataGeneratorFactory
 from rastervision.common.utils import _makedirs
-from rastervision.common.data.generators import HFLIP, VFLIP, ROTATE, TRANSLATE
+from rastervision.common.data.generators import HFLIP, VFLIP, ROTATE, TRANSLATE, ZOOM
 
 from rastervision.tagging.data.planet_kaggle import (
     PLANET_KAGGLE, TIFF, JPG, PlanetKaggleTiffFileGenerator,
@@ -38,6 +38,8 @@ class TaggingDataGeneratorFactory(DataGeneratorFactory):
                 self.train_ratio = 0.8
                 self.cross_validation = None
                 self.augment_methods = [HFLIP, VFLIP, ROTATE, TRANSLATE]
+                self.active_tags = None
+                self.active_tags_prob = None
 
         options = Options()
         generator = self.get_data_generator(options)
