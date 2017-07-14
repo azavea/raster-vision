@@ -25,7 +25,6 @@ then
             -e "S3_BUCKET=$S3_BUCKET" \
             -v "$SRC":/opt/src \
             -v /opt/data:/opt/data \
-            -p 8888:8888 \
             raster-vision-cpu "${@:2}"
     elif [ "${1:-}" = "--gpu" ]
     then
