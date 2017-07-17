@@ -1,0 +1,33 @@
+{
+    "active_input_inds": [
+        0,
+        1,
+        2
+    ],
+    "augment_methods": [
+        "hflip",
+        "vflip",
+        "rotate",
+        "translate"
+    ],
+    "batch_size": 1,
+    "dataset_name": "planet_kaggle",
+    "epochs": 2,
+    "freeze_base": false,
+    "generator_name": "jpg",
+    "init_lr": 0.001,
+    "model_type": "baseline_resnet",
+    "nb_eval_plot_samples": 3,
+    "nb_eval_samples": 10,
+    "optimizer": "adam",
+    "problem_type": "tagging",
+    "rare_sample_prob": 0.5,
+    "run_name": "tagging/tests/quick_test/more_preds",
+    "train_augmentation": true,
+    "val_augmentation": true,
+    "test_augmentation": true,
+    "steps_per_epoch": 2,
+    "train_ratio": 0.8,
+    "use_pretraining": true,
+    "validation_steps": 1
+}
