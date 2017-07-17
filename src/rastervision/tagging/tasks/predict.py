@@ -8,7 +8,7 @@ from rastervision.common.settings import results_path
 from rastervision.tagging.data.planet_kaggle import TagStore
 from rastervision.tagging.tasks.utils import compute_prediction
 from rastervision.tagging.tasks.train_thresholds import load_thresholds
-from rastervision.common.settings import TEST
+from rastervision.common.settings import TRAIN, VALIDATION, TEST
 
 TRAIN_PROBS = 'train_probs'
 VALIDATION_PROBS = 'validation_probs'
@@ -28,8 +28,22 @@ def get_probs_fn(split):
 def get_preds_fn(split):
     return '{}_preds.csv'.format(split)
 
+
 def get_aug_probs_fn(split, aug_ind):
     return str(aug_ind) + '_' + get_probs_fn(split)
+
+
+def check_augmentation(options, split):
+    train_flag, val_flag, test_flag = False, False, False
+
+    if options.train_augmentation and split == TRAIN:
+        return True
+    if options.val_augmentation and split == VALIDATION:
+        return True
+    if options.test_augmentation and split == TEST:
+        return True
+
+    return False
 
 
 def compute_concat_probs(run_path, options, generator, split):
@@ -90,7 +104,7 @@ def compute_probs(run_path, model, options, generator, split):
 
     # Performing safe augmentations on images one by one, predicting
     # probs and taking average, if calculating test probabilities
-    if split == TEST and options.test_augmentation:
+    if check_augmentation(options, split):
         y_probs = [[] for i in range(NUM_AUG)]
         for batch_ind, batch in enumerate(split_gen):
             for img_ind in range(batch.x.shape[0]):
@@ -142,7 +156,7 @@ def compute_probs(run_path, model, options, generator, split):
 def compute_preds(run_path, options, generator, split):
     thresholds = load_thresholds(run_path, options.loss_function)
 
-    if split == TEST and options.test_augmentation:
+    if check_augmentation(options, split):
         tag_stores = []
         file_inds = generator.get_file_inds(split)
 
