@@ -18,6 +18,9 @@
     "nb_eval_plot_samples": 100,
     "epochs": 30,
     "validation_steps": 120,
+    "train_augmentation": true,
+    "val_augmentation": true,
+    "test_augmentation": true,
     "augment_methods": ["hflip", "vflip", "rotate90"],
     "run_name": "tagging/7_7_17/baseline_cyclic_2",
     "steps_per_epoch": 600
