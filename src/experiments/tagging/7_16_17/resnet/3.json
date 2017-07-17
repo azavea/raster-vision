@@ -1,0 +1,60 @@
+{
+    "active_input_inds": [
+        0,
+        1,
+        2
+    ],
+    "active_tags": null,
+    "active_tags_prob": null,
+    "aggregate_run_names": null,
+    "aggregate_type": null,
+    "augment_methods": [
+        "hflip",
+        "vflip",
+        "rotate90"
+    ],
+    "batch_size": 32,
+    "cross_validation": null,
+    "cyclic_lr": null,
+    "dataset_name": "planet_kaggle",
+    "delta_model_checkpoint": null,
+    "epochs": 20,
+    "freeze_base": false,
+    "generator_name": "jpg",
+    "git_commit": "7f79ca",
+    "init_lr": 0.00100,
+    "loss_function": "binary_crossentropy",
+    "lr_epoch_decay": 0.00000,
+    "lr_schedule": [
+        [
+            0,
+            0.01000
+        ],
+        [
+            10,
+            0.00100
+        ]
+    ],
+    "lr_step_decay": 0.00000,
+    "metrics": [
+        "binary_accuracy"
+    ],
+    "model_type": "baseline_resnet",
+    "momentum": 0.90000,
+    "nb_eval_plot_samples": 100,
+    "nb_eval_samples": null,
+    "nesterov": true,
+    "optimizer": "sgd",
+    "patience": null,
+    "problem_type": "tagging",
+    "run_name": "tagging/7_16_17/resnet/3",
+    "steps_per_epoch": 600,
+    "target_size": null,
+    "train_augmentation": true,
+    "val_augmentation": true,
+    "test_augmentation": true,
+    "train_ratio": 0.99000,
+    "train_stages": null,
+    "use_pretraining": true,
+    "validation_steps": 8
+}
