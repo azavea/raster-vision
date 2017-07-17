@@ -22,6 +22,6 @@
     "val_augmentation": true,
     "test_augmentation": true,
     "augment_methods": ["hflip", "vflip", "rotate90"],
-    "run_name": "tagging/7_7_17/baseline_cyclic_2400steps",
+    "run_name": "tagging/7_10_17/cyclic_2400steps",
     "steps_per_epoch": 600
 }
