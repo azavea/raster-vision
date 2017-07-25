@@ -65,7 +65,8 @@ class Runner():
 
         if self.options.aggregate_type is None:
             self.model = self.model_factory.get_model(
-                self.run_path, self.options, self.generator, use_best=True)
+                self.run_path, self.options, self.generator,
+                use_best=self.options.use_best_model)
         else:
             for run_name in self.options.aggregate_run_names:
                 for file_name in self.agg_file_names:

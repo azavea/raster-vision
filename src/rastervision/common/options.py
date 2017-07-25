@@ -67,6 +67,8 @@ class Options():
         self.rho = options.get('rho', 0.9)
         self.epsilon = options.get('epsilon', 1e-8)
 
+        self.use_best_model = options.get('use_best_model', True)
+
         # decay options
         decay_set = False
         self.lr_step_decay = options.get('lr_step_decay', 0.0)
