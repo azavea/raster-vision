@@ -50,6 +50,9 @@ Vagrant.configure("2") do |config|
         shell.binary = true
         shell.path = "scripts/provision.sh"
         shell.args = "deployment/ansible/raster-vision.yml deployment/ansible/roles.yml"
+        shell.extra_vars = {
+            s3_bucket: S3_BUCKET
+        }
       end
     else
       raster_vision.vm.provision "ansible" do |ansible|
