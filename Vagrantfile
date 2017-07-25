@@ -45,12 +45,23 @@ Vagrant.configure("2") do |config|
     # Change working directory to /vagrant upon session start.
     raster_vision.vm.provision "shell", inline: $CHANGE_DIR
 
-    raster_vision.vm.provision "ansible" do |ansible|
-      ansible.playbook = "deployment/ansible/raster-vision.yml"
-      ansible.galaxy_role_file = "deployment/ansible/roles.yml"
-      ansible.extra_vars = {
-          s3_bucket: S3_BUCKET
-      }
+    if Vagrant::Util::Platform.windows?
+      raster_vision.vm.provision "shell" do |shell|
+        shell.binary = true
+        shell.path = "scripts/provision.sh"
+        shell.args = "deployment/ansible/raster-vision.yml deployment/ansible/roles.yml"
+        shell.extra_vars = {
+            s3_bucket: S3_BUCKET
+        }
+      end
+    else
+      raster_vision.vm.provision "ansible" do |ansible|
+        ansible.playbook = "deployment/ansible/raster-vision.yml"
+        ansible.galaxy_role_file = "deployment/ansible/roles.yml"
+        ansible.extra_vars = {
+            s3_bucket: S3_BUCKET
+        }
+      end
     end
 
     raster_vision.ssh.forward_agent = true
