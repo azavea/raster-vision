@@ -144,6 +144,8 @@ class TrainModel():
                              decay=self.options.lr_step_decay)
         elif self.options.optimizer == RMS_PROP:
             optimizer = RMSprop(lr=self.options.init_lr,
+                                rho=self.options.rho,
+                                epsilon=self.options.epsilon,
                                 decay=self.options.lr_step_decay)
         elif self.options.optimizer == 'sgd':
             optimizer = SGD(

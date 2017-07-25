@@ -63,6 +63,10 @@ class Options():
         self.momentum = options.get('momentum', 0)
         self.nesterov = options.get('nesterov', False)
 
+        # for rmsprop
+        self.rho = options.get('rho', 0.9)
+        self.epsilon = options.get('epsilon', 1e-8)
+
         # decay options
         decay_set = False
         self.lr_step_decay = options.get('lr_step_decay', 0.0)
