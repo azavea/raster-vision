@@ -46,7 +46,9 @@ class Options():
         self.lr_schedule = options.get('lr_schedule')
         self.train_ratio = options.get('train_ratio')
         self.cross_validation = options.get('cross_validation')
-        self.test_augmentation = options.get('test_augmentation', True)
+        self.train_augmentation = options.get('train_augmentation', False)
+        self.val_augmentation = options.get('val_augmentation', False)
+        self.test_augmentation = options.get('test_augmentation', False)
         self.delta_model_checkpoint = options.get(
             'delta_model_checkpoint', None)
         self.augment_methods = options.get(
