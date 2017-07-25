@@ -18,6 +18,8 @@ class TaggingModelFactory(ModelFactory):
         nb_channels = len(options.active_input_inds)
         image_shape = generator.dataset.image_shape
         input_shape = (image_shape[0], image_shape[1], nb_channels)
+        activation = 'sigmoid' \
+            if options.loss_function == 'binary_crossentropy' else 'softmax'
 
         if model_type == BASELINE_RESNET:
             # A ResNet50 model with sigmoid activation and binary_crossentropy
@@ -27,19 +29,19 @@ class TaggingModelFactory(ModelFactory):
                 include_top=True, weights=weights,
                 input_shape=input_shape,
                 classes=len(generator.active_tags),
-                activation='sigmoid')
+                activation=activation)
         elif model_type == DENSENET_121:
             weights = 'imagenet' if options.use_pretraining else None
             model = DenseNet121(weights=weights,
                                 input_shape=input_shape,
                                 classes=len(generator.tag_store.active_tags),
-                                activation='sigmoid')
+                                activation=activation)
         elif model_type == DENSENET_169:
             weights = 'imagenet' if options.use_pretraining else None
             model = DenseNet169(weights=weights,
                                 input_shape=input_shape,
                                 classes=len(generator.tag_store.active_tags),
-                                activation='sigmoid')
+                                activation=activation)
         else:
             raise ValueError('{} is not a valid model_type'.format(model_type))
 

@@ -3,7 +3,7 @@ from os.path import join, isfile
 from keras.callbacks import (Callback, ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau, LambdaCallback,
                              LearningRateScheduler)
-from keras.optimizers import Adam, RMSprop
+from keras.optimizers import Adam, RMSprop, SGD
 
 from rastervision.common.tasks.cyclic_lr import CyclicLR
 from rastervision.common.utils import _makedirs
@@ -144,7 +144,15 @@ class TrainModel():
                              decay=self.options.lr_step_decay)
         elif self.options.optimizer == RMS_PROP:
             optimizer = RMSprop(lr=self.options.init_lr,
+                                rho=self.options.rho,
+                                epsilon=self.options.epsilon,
                                 decay=self.options.lr_step_decay)
+        elif self.options.optimizer == 'sgd':
+            optimizer = SGD(
+                lr=self.options.init_lr,
+                momentum=self.options.momentum,
+                nesterov=self.options.nesterov
+            )
 
         self.model.compile(
             optimizer, self.loss_function, metrics=self.metrics)

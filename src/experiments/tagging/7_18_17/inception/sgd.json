@@ -1,0 +1,40 @@
+{
+    "active_input_inds": [
+        0,
+        1,
+        2
+    ],
+    "augment_methods": [
+        "hflip",
+        "vflip",
+        "rotate90"
+    ],
+    "batch_size": 32,
+    "dataset_name": "planet_kaggle",
+    "epochs": 30,
+    "generator_name": "jpg",
+    "model_type": "inception_v3",
+    "nb_eval_plot_samples": 100,
+    "optimizer": "sgd",
+    "lr_schedule": [
+        [
+            0,
+            0.01
+        ],
+        [
+            15,
+            0.001
+        ]
+    ],
+    "optimizer": "sgd",
+    "momentum": 0.9,
+    "nesterov": true,
+    "problem_type": "tagging",
+    "run_name": "tagging/7_18_17/inception/sgd",
+    "test_augmentation": false,
+    "use_best_model": true,
+    "steps_per_epoch": 600,
+    "train_ratio": 0.8,
+    "use_pretraining": true,
+    "validation_steps": 120
+}

@@ -43,6 +43,10 @@ class TaggingRunner(Runner):
                     self.run_path, self.sync_results, self.options,
                     self.generator, self.model)
                 train_model.train_model()
+
+                self.model = self.model_factory.get_model(
+                    self.run_path, self.options, self.generator,
+                    use_best=self.options.use_best_model)
         elif task == PLOT_CURVES:
             if aggregate_type in [None, AGG_SUMMARY]:
                 plot_curves(self.options)

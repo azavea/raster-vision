@@ -2,7 +2,7 @@ from os.path import join
 
 from rastervision.common.data.factory import DataGeneratorFactory
 from rastervision.common.utils import _makedirs
-from rastervision.common.data.generators import HFLIP, VFLIP, ROTATE, TRANSLATE, ZOOM
+from rastervision.common.data.generators import HFLIP, VFLIP, ROTATE, TRANSLATE
 
 from rastervision.tagging.data.planet_kaggle import (
     PLANET_KAGGLE, TIFF, JPG, PlanetKaggleTiffFileGenerator,

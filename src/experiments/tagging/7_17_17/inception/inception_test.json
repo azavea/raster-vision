@@ -1,0 +1,39 @@
+{
+    "active_input_inds": [
+        0,
+        1,
+        2
+    ],
+    "augment_methods": [
+        "hflip",
+        "vflip",
+        "rotate90"
+    ],
+    "batch_size": 1,
+    "dataset_name": "planet_kaggle",
+    "epochs": 2,
+    "generator_name": "jpg",
+    "lr_schedule": [
+        [
+            0,
+            0.005
+        ],
+        [
+            10,
+            0.0005
+        ]
+    ],
+    "nb_eval_samples": 1,
+    "nb_eval_plot_samples": 1,
+    "model_type": "inception_v3",
+    "nb_eval_plot_samples": 1,
+    "optimizer": "rms_prop",
+    "rho": 0.9,
+    "epsilon": 1.0,
+    "problem_type": "tagging",
+    "run_name": "tagging/7_17_17/inception/inception_test",
+    "steps_per_epoch": 1,
+    "train_ratio": 0.8,
+    "use_pretraining": true,
+    "validation_steps": 1
+}
