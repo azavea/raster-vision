@@ -3,8 +3,9 @@ from os.path import join, isfile
 from keras.callbacks import (Callback, ModelCheckpoint, CSVLogger,
                              ReduceLROnPlateau, LambdaCallback,
                              LearningRateScheduler)
-from keras.optimizers import Adam, RMSprop, SGD
 
+from keras.optimizers import Adam, RMSprop, SGD, TFOptimizer
+from rastervision.common.optimizers.yellowfin import YFOptimizer
 from rastervision.common.tasks.cyclic_lr import CyclicLR
 from rastervision.common.utils import _makedirs
 from rastervision.common.settings import TRAIN, VALIDATION
@@ -12,6 +13,7 @@ from rastervision.common.settings import TRAIN, VALIDATION
 
 ADAM = 'adam'
 RMS_PROP = 'rms_prop'
+YELLOWFIN = 'yellowfin'
 
 TRAIN_MODEL = 'train_model'
 
@@ -153,6 +155,10 @@ class TrainModel():
                 momentum=self.options.momentum,
                 nesterov=self.options.nesterov
             )
+        elif self.options.optimizer == YELLOWFIN:
+            optimizer = TFOptimizer(YFOptimizer(
+                learning_rate=self.options.init_lr,
+                momentum=self.options.momentum))
 
         self.model.compile(
             optimizer, self.loss_function, metrics=self.metrics)
