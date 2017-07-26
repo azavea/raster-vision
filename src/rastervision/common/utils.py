@@ -23,6 +23,10 @@ def _makedirs(path):
         pass
 
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
 def load_rasterio(file_path, window=None):
     with rasterio.open(file_path, 'r+') as r:
         return np.transpose(r.read(window=window), axes=[1, 2, 0])
@@ -187,9 +191,10 @@ def download_dataset(dataset_name, file_names):
         _makedirs(dataset_path)
 
         def get_file(file_name):
-            print('Downloading {}...'.format(file_name))
             src_path = join(s3_dataset_path, file_name)
             dst_path = join(dataset_path, file_name)
+            eprint('Downloading {} from {} to {}...'.format(
+                file_name, src_path, dst_path))
             s3_cp(src_path, dst_path)
             _, file_ext = splitext(file_name)
             if file_ext == '.zip':
@@ -198,6 +203,10 @@ def download_dataset(dataset_name, file_names):
 
         for file_name in file_names:
             get_file(file_name)
+
+        eprint("Dataset directory files in %s:" % dataset_path)
+        for x in os.listdir(dataset_path):
+            eprint(" - " + x)
 
         mark_as_done(file_names, dataset_path)
 
