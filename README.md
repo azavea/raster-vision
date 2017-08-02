@@ -12,6 +12,8 @@ The goal of semantic segmentation is to infer a meaningful label such as "road" 
 
 ![Example segmentation](results/unet/img/good1.png)
 
+More details on this feature can be found in this [blog post](https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/).
+
 The following datasets and model architectures are implemented.
 
 #### Datasets
@@ -25,13 +27,24 @@ The following datasets and model architectures are implemented.
 
 ### Tagging / Recognition
 
-The goal of tagging is to infer a set of labels for each image. The following datasets and model architectures are implemented.
+The goal of tagging is to infer a set of labels for each image. Here are some examples of training chips from the [Planet Kaggle competition](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space) with labels predicted by our best single-model network, a DenseNet121 using the Adam optimizer.
+
+![Example tagging](results/tagging/debug_plots_labeled.png)
+
+There are 17 possible tags: agriculture, artisinal_mine, bare_ground, blooming, blow_down, clear, cloudy, conventional_mine, cultivation, habitation, haze, partly_cloudy, primary, road, selective_logging, slash_burn, water. In the above figure, the ground truth tags (ie. tagged by hand) for the Planet Kaggle dataset are bolded. Green bolded tags are correct. Unbolded and uncolored tags mean that they have been incorrectly predicted for the chip. Red bolded tags are ones missed by the network prediction.
+
+In order for this task to perform accurately, it is important that the labeling criteria be distinct and unambiguous in the training data. For example, we can see that the network often mistakes when to label a chip with the tag `agriculture`. However, if we examine the ground truth tags for each chip, it's not obvious that the human classifications are correct either.
+
+The following datasets and model architectures are implemented.
 
 #### Datasets
 * [Planet: Understanding the Amazon from Space (Kaggle Competition)](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space)
 
 #### Model architectures
-* [ResNet](https://arxiv.org/abs/1512.03385)
+* [ResNet50](https://arxiv.org/abs/1512.03385)
+* [Inception v3](https://arxiv.org/abs/1512.00567)
+* [DenseNet121](https://arxiv.org/abs/1608.06993)
+* [DenseNet169](https://arxiv.org/abs/1608.06993)
 
 ## Usage
 
