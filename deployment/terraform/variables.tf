@@ -31,7 +31,7 @@ variable "fleet_security_group_id" {
 }
 
 variable "fleet_ami" {
-  default = "ami-dd493dcb"
+  default = "ami-3583a74e"
 }
 
 variable "s3_bucket" {

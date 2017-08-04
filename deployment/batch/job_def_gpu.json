@@ -19,15 +19,9 @@
         "volumes": [
             {
                 "host": {
-                    "sourcePath": "/usr"
+                    "sourcePath": "/var/lib/nvidia-docker/volumes/nvidia_driver/latest"
                 },
-                "name": "usr"
-            },
-            {
-                "host": {
-                    "sourcePath": "/lib"
-                },
-                "name": "lib"
+                "name": "nvidia"
             },
             {
                 "host": {
@@ -38,14 +32,9 @@
         ],
         "mountPoints": [
             {
-                "containerPath": "/hostusr",
+                "containerPath": "/usr/local/nvidia",
                 "readOnly": false,
-                "sourceVolume": "usr"
-            },
-            {
-                "containerPath": "/hostlib",
-                "readOnly": false,
-                "sourceVolume": "lib"
+                "sourceVolume": "nvidia"
             },
             {
                 "containerPath": "/opt/data",

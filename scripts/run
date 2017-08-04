@@ -32,7 +32,8 @@ then
             -e "S3_BUCKET=$S3_BUCKET" \
             -v ~/raster-vision/src:/opt/src \
             -v ~/data:/opt/data \
-            --privileged -v /usr:/hostusr -v /lib:/hostlib  \
+            --privileged \
+            -v /var/lib/nvidia-docker/volumes/nvidia_driver/latest:/usr/local/nvidia \
             279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest "${@:2}"
     else
         usage

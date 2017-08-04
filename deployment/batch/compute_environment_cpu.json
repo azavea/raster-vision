@@ -25,7 +25,7 @@
         "securityGroupIds": [
             "sg-4c00d332"
         ],
-        "imageId": "ami-d09fd7c6",
+        "imageId": "ami-3583a74e",
         "bidPercentage": 50,
         "instanceRole": "arn:aws:iam::279682201306:instance-profile/raster-vision-instance-profile",
         "ec2KeyPair": "raster-vision"
