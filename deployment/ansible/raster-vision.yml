@@ -10,6 +10,7 @@
     - { role: "azavea.ntp" }
     - { role: "azavea.terraform" }
     - { role: "azavea.docker" }
+    - { role: "azavea.packer" }
     - { role: "raster-vision.environment" }
     - { role: "raster-vision.awscli" }
     - { role: "raster-vision.nvidia-docker" }
