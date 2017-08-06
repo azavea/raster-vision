@@ -160,12 +160,36 @@ In order to run experiments on GPUs and in parallel, we use AWS EC2. There are t
 The latest Docker image should be stored in ECR so that it can be downloaded onto EC2 instances. To build and publish the container, run `./scripts/cipublish`.
 
 ### Submit jobs to AWS Batch
+
+#### `setup_aws_batch`
 To setup the AWS Batch stack, which should only be done once per AWS account, run `./scripts/setup_aws_batch`. To submit a set of jobs to Batch, use the `submit_jobs` script. The syntax for invoking it is `./scripts/submit_jobs <branch_name> <experiment_path> <space separated list of tasks> --attempts <# of attempts>`. The `branch_name` should be the name of the branch with the code to run, `experiment_path` should be a directory full of experiment json files rooted at `src/experiments` (or a single json file), and the list of tasks should contain the task you want to run. By default, the job will be attempted five times. If you are testing a job to see if it might fail, you should run it with `--attempts 1` so that it won't be retried if it fails. For example, you could run
 ```shell
 ./scripts/submit_jobs lf/batch src/experiments/tests/generator/experiments train_model validation_eval
 ```
 After submitting jobs, AWS Batch will start an EC2 instance for each experiment and will shut them down when finished.
 
+#### Updating the Batch AMI
+
+Use `deployment/batch_amis.py` to update the Batch environment AMI. This requires your `raster-vision` AWS profile to be configured.
+
+```bash
+$ aws --profile raster-vision configure
+$ cd deployment
+$ pip install -r requirements.txt
+$ ./batch_amis.py  build-amis --aws-profile raster-vision
+...
+==> Builds finished. The artifacts of successful builds are:
+--> raster-vision-gpu: AMIs were created:
+
+us-east-1: ami-fb5c7980
+```
+
+Use the AMI ID provided above, to update the ComputeResources > imageId field in `deployment/batch/compute_environment_{gpu,cpu}.json`. To apply these changes, delete the existing Batch environments using the AWS Console, and then re-run the steps in the section above.
+
+Prune any old AMIs by using the `prune-amis` command to `batch_amis.py`
+```bash
+$ ./batch_amis.py  prune-amis --keep 10
+```
 ### Run directly on EC2
 
 For debugging purposes, it may be desirable to start an EC2 spot instance (with the container image and this repo downloaded), log into the instance, and run the container manually. This can be done with Terraform using the `infra` script. The following command will start 1 instance and print their
