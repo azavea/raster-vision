@@ -26,7 +26,7 @@ then
         docker tag raster-vision-gpu:latest 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest
         docker push 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest
 
-        docker tag raster-vision-gpu:latest 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-cpu:latest
+        docker tag raster-vision-cpu:latest 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-cpu:latest
         docker push 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-cpu:latest
     fi
 fi
