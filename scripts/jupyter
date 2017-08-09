@@ -23,7 +23,6 @@ then
            -v "$HOME/.aws":/root/.aws \
            -v "$SRC":/opt/src \
            -v /opt/data:/opt/data \
-           -v /opt/notebooks:/opt/notebooks \
            -p 8888:8888 \
            raster-vision-jupyter \
            notebook \
@@ -31,5 +30,5 @@ then
            --port 8888 \
            --no-browser \
            --allow-root \
-           --notebook-dir=/opt/notebooks
+           --notebook-dir=/opt/src
 fi

@@ -23,6 +23,7 @@ then
     then
         docker run --rm -it \
             -e "S3_BUCKET=$S3_BUCKET" \
+            -p 6006:6006 \
             -v "$SRC":/opt/src \
             -v /opt/data:/opt/data \
             raster-vision-cpu "${@:2}"
@@ -30,6 +31,7 @@ then
     then
         sudo docker run --rm -it \
             -e "S3_BUCKET=$S3_BUCKET" \
+            -p 6006:6006 \
             -v ~/raster-vision/src:/opt/src \
             -v ~/data:/opt/data \
             --privileged \
