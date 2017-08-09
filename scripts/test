@@ -15,4 +15,8 @@ docker run --rm -it \
 
 docker run --rm -it \
     -v "$SRC":/opt/src \
-    raster-vision-cpu flake8 .
+    raster-vision-cpu flake8 /opt/src/rastervision
+
+docker run --rm -it \
+    -v "$SRC":/opt/src \
+    raster-vision-cpu flake8 /opt/src/detection/scripts
