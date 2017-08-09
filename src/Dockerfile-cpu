@@ -27,6 +27,6 @@ RUN python setup.py install
 WORKDIR /opt
 RUN rm -rf xgboost
 
-
 COPY run_experiment.sh /usr/local/bin/
+COPY run_script.sh /usr/local/bin/
 CMD ["bash"]
