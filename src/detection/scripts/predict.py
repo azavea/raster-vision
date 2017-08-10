@@ -43,6 +43,9 @@ def load_frozen_graph(frozen_graph_path):
 
 
 def compute_prediction(image_np, detection_graph, sess):
+    # TODO i'm not sure, but we might get a big speedup
+    # by feeding a batch of images through instead of
+    # one image at a time.
     image_np_expanded = np.expand_dims(image_np, axis=0)
     image_tensor = detection_graph.get_tensor_by_name(
         'image_tensor:0')
@@ -81,7 +84,7 @@ def main(_):
     image_paths = glob.glob(os.path.join(FLAGS.input_dir, '*.jpg'))
     predictions = {}
     predictions_path = os.path.join(
-        FLAGS.output_dir, 'predictions.csv')
+        FLAGS.output_dir, 'predictions.json')
 
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
