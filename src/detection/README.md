@@ -56,3 +56,15 @@ python src/detection/scripts/create_ships_tf_record.py \
     --output_dir=/opt/data/datasets/detection/mock_ships \
     --label_map_path=/opt/data/datasets/detection/mock_ships/ships_label_map.pbtxt
 ```
+
+### Using ship generator script to create new chips
+In order to create a set of chips from the Planet Explorer labeled ships dataset,
+run the following command.
+
+```
+python scripts/ship_generator.py \
+    --visualize true \
+    --data_type jpg \
+```
+
+The two supported outputs are tifs and jpgs. Ensure that the dataset is unpacked under the detection data directory before running this command. Also, make sure to create a new directory in detection data named `singapore_train` as the script assumes it exists. The chips and accompanying `.csv` of ship locations in each chip are written here.
