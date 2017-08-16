@@ -8,17 +8,17 @@ from scipy.ndimage import imread
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
+from cv2 import groupRectangles
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
 
 def compute_agg_predictions(window_offsets, window_size, im_size, predictions):
+    ''' Aggregate window predictions into predictions for original image. '''
     boxes = []
     scores = []
     classes = []
-
-    y_im_size, x_im_size = im_size
 
     for file_name, preds in predictions.items():
         x, y = window_offsets[file_name]
@@ -34,16 +34,16 @@ def compute_agg_predictions(window_offsets, window_size, im_size, predictions):
             box[2] += y  # ymax
             box[3] += x  # xmax
 
-            box[0] /= y_im_size
-            box[1] /= x_im_size
-            box[2] /= y_im_size
-            box[3] /= x_im_size
+            box[0] /= im_size[1]
+            box[1] /= im_size[0]
+            box[2] /= im_size[1]
+            box[3] /= im_size[0]
 
             box = np.clip(box, 0, 1).tolist()
             boxes.append(box)
 
         scores.extend(preds['scores'])
-        classes.extend(preds['classes'])
+        classes.extend([int(class_code) for class_code in preds['classes']])
 
     return boxes, scores, classes
 
@@ -69,11 +69,76 @@ def plot_predictions(plot_path, im, label_map_path, boxes, scores, classes):
     plt.savefig(plot_path)
 
 
+def box_to_cv2_rect(im_size, box):
+    ymin, xmin, ymax, xmax = box
+    width = xmax - xmin
+    height = ymax - ymin
+
+    xmin = int(xmin * im_size[0])
+    width = int(width * im_size[0])
+    ymin = int(ymin * im_size[1])
+    height = int(height * im_size[1])
+
+    rect = (xmin, ymin, width, height)
+    return rect
+
+
+def cv2_rect_to_box(im_size, rect):
+    x, y, width, height = rect
+
+    x /= im_size[0]
+    width /= im_size[0]
+    y /= im_size[1]
+    height /= im_size[1]
+
+    box = [y, x, y + height, x + width]
+    return box
+
+
+def group_predictions(boxes, classes, im_size):
+    '''For each class, group boxes that are overlapping.'''
+    unique_classes = list(set(classes))
+
+    boxes = np.array(boxes)
+    classes = np.array(classes)
+
+    grouped_boxes = []
+    grouped_classes = []
+
+    for class_code in unique_classes:
+        class_boxes = boxes[classes == class_code]
+        # Convert boxes to opencv rectangles
+        nboxes = class_boxes.shape[0]
+        rects = []
+        for box_ind in range(nboxes):
+            box = class_boxes[box_ind, :].tolist()
+            rect = box_to_cv2_rect(im_size, box)
+
+            # Convert to pixel offsets
+            rects.append(rect)
+
+        # Add last rect again to ensure that there are at least two rectangles
+        # which seems to be required by groupRectangles.
+        rects.append(rect)
+
+        group_threshold = 1
+        # May need to tune this parameter for other datasets depending on size
+        # of detected objects.
+        eps = 0.5
+        grouped_rects, weights = groupRectangles(rects, group_threshold, eps)
+
+        grouped_boxes.extend(
+            [cv2_rect_to_box(im_size, rect) for rect in grouped_rects])
+        grouped_classes.extend([class_code] * grouped_rects.shape[0])
+
+    return grouped_boxes, grouped_classes
+
+
 def aggregate_predictions(image_path, window_info_path, predictions_path,
                           label_map_path, output_dir):
     print('Aggregating predictions over windows...')
     im = imread(image_path)
-    im_size = im.shape[0:2]
+    im_size = [im.shape[1], im.shape[0]]
 
     with open(window_info_path) as window_info_file:
         window_info = json.load(window_info_file)
@@ -86,6 +151,10 @@ def aggregate_predictions(image_path, window_info_path, predictions_path,
     makedirs(output_dir, exist_ok=True)
     boxes, scores, classes = compute_agg_predictions(
         window_offsets, window_size, im_size, predictions)
+    # Due to the sliding window approach, sometimes there are multiple
+    # slightly different detections where there should only be one. So
+    # we group them together.
+    boxes, classes = group_predictions(boxes, classes, im_size)
 
     agg_predictions = {
         'boxes': boxes,
