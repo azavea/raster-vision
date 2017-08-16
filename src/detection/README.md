@@ -46,7 +46,9 @@ python scripts/aggregate_predictions.py \
     --label-map-path /opt/data/datasets/detection/pets/pet_label_map.pbtxt \
     --output-dir /opt/data/results/detection/windows
 ```
+Due to the sliding window approach, sometimes there are multiple detections where there should be one, so we group them using a clustering algorithm in OpenCV. There is an `eps` parameter in `detection/scripts/aggregate_predictions.py` that will probably need to be tuned further depending on the dataset. Here are the predictions before and after grouping.
 ![Predictions on animal montage](img/animal_montage_predictions.jpg)
+![Predictions on animal montage with detection grouping](img/animal_montage_predictions2.jpg)
 
 ### Converting to TFRecord format
 The real ships dataset isn't ready yet, so we are using a mock ships dataset. To convert this to TFRecord format, run this command locally in the CPU container.
