@@ -314,7 +314,7 @@ def parse_args():
 
 
 def run():
-    output = {'jpg': '.jpg', 'tif': '.tif'}
+    output = ['jpg', 'tif']
     viz = False
     args = parse_args()
 
