@@ -1,18 +1,19 @@
 from os.path import join
+from os import makedirs
 from random import randrange
 import argparse
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 import rasterio
 import json
-from shapely import geometry
-from shapely.ops import transform
-import pyproj
-from functools import partial
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from sklearn.preprocessing import MinMaxScaler
 
 from data_extent import data, folders
+from rastervision.common.utils import _makedirs
 
 
 def visualize(bbox_coords, windows, culled_windows, src_ds):
@@ -49,111 +50,6 @@ def visualize(bbox_coords, windows, culled_windows, src_ds):
     plt.show()
 
 
-def get_image_corners(x):
-    return [
-        x[0][0],  # minX
-        x[2][0],
-        x[1][1],  # minY
-        x[0][1]
-    ]
-
-
-def coordinate_width_and_height(corners):
-    return corners[1]-corners[0], corners[3]-corners[2]
-
-
-def points_from_rectangle(rectangle, maxXcoord, minYcoord):
-    rectangle_js = rectangle['geometry']['coordinates'][0]
-    return [
-        min(maxXcoord - rectangle_js[0][0], maxXcoord - rectangle_js[1][0]),
-        max(maxXcoord - rectangle_js[0][0], maxXcoord - rectangle_js[1][0]),
-        min(rectangle_js[0][1] - minYcoord, rectangle_js[2][1] - minYcoord),
-        max(rectangle_js[0][1] - minYcoord, rectangle_js[2][1] - minYcoord)
-    ]
-
-
-def scale_to_pixel(rect, height_scale, width_scale):
-    pixels = []
-    pixels.append(rect[0]*width_scale)
-    pixels.append(rect[1]*width_scale)
-    pixels.append(rect[2]*height_scale)
-    pixels.append(rect[3]*height_scale)
-
-    return [int(pixel) for pixel in pixels]
-
-
-def percentiles_from_rectangle(rectangle, maxXcoord, maxYcoord, w, h):
-    rectangle_js = rectangle['geometry']['coordinates'][0]
-    return [
-        min(maxXcoord - rectangle_js[0][0], maxXcoord - rectangle_js[1][0])/w,
-        max(maxXcoord - rectangle_js[0][0], maxXcoord - rectangle_js[1][0])/w,
-        min(maxYcoord - rectangle_js[0][1], maxYcoord - rectangle_js[2][1])/h,
-        max(maxYcoord - rectangle_js[0][1], maxYcoord - rectangle_js[2][1])/h
-    ]
-
-
-def match_percent_to_pixel(rect, img_w, img_h):
-    pixels = []
-    pixels.append(rect[0]*img_w)
-    pixels.append(rect[1]*img_w)
-    pixels.append(rect[2]*img_h)
-    pixels.append(rect[3]*img_h)
-
-    return [int(pixel) for pixel in pixels]
-
-
-def create_coordinate_rectangle(rectangle):
-    rectangle_js = rectangle['geometry']['coordinates'][0]
-    return [
-        min(rectangle_js[0][0], rectangle_js[1][0]),  # minX/left
-        max(rectangle_js[0][0], rectangle_js[1][0]),  # maxX/right
-        min(rectangle_js[0][1], rectangle_js[2][1]),  # minY/bottom
-        max(rectangle_js[0][1], rectangle_js[2][1])   # maxY/top
-    ]
-
-
-def shapely_polygon_map_to_grid(rect):
-    """
-    shape: Shapely box geometry
-
-    returns transformed coordinates in [minx, maxx, miny, maxy]
-    """
-    shape = geometry.geo.box(*rect)
-    project = partial(
-            pyproj.transform,
-            pyproj.Proj(init='epsg:32648'),
-            pyproj.Proj(init='epsg:32648'))
-    new_shape = transform(project, shape)
-    # Note that a box [1,2,3,4] is altered and then dumped as
-    # [(3.0, 2.0), (3.0, 4.0), (1.0, 4.0), (1.0, 2.0), (3.0, 2.0)]
-    pts = geometry.base.dump_coords(new_shape)
-
-    return [pts[3][0], pts[3][1], pts[4][0], pts[1][1]]
-
-
-def rasterio_index(rect, src):
-    ul = src.index(rect[0], rect[2])
-    lr = src.index(rect[1], rect[3])
-
-    minx = min(ul[0], lr[0])
-    maxx = max(ul[0], lr[0])
-    miny = min(ul[1], lr[1])
-    maxy = max(ul[1], lr[1])
-
-    return [minx, maxx, miny, maxy]
-
-
-def convert_to_pixels(src_ds, ogr_filename, img_corners):
-    with open(ogr_filename) as ogr:
-        ogr_dict = json.load(ogr)
-
-    coord_rectangles = [create_coordinate_rectangle(feat)
-                        for feat in ogr_dict['features'][::2]]
-    pixel_coords = [rasterio_index(rect, src_ds) for rect in coord_rectangles]
-
-    return pixel_coords
-
-
 def window_ordered_coords(bbox):
     # ymin, ymax, xmin, xmax
     return ((bbox[0], bbox[2]), (bbox[1], bbox[3]))
@@ -175,6 +71,50 @@ def contains(big, sml):
        big[3] >= sml[3]:
         return True
     return False
+
+
+def create_coordinate_rectangle(rectangle):
+    rectangle_js = rectangle['geometry']['coordinates'][0]
+    rect = [
+        min(rectangle_js[0][0], rectangle_js[1][0]),  # minX/left
+        max(rectangle_js[0][0], rectangle_js[1][0]),  # maxX/right
+        min(rectangle_js[0][1], rectangle_js[2][1]),  # minY/bottom
+        max(rectangle_js[0][1], rectangle_js[2][1])   # maxY/top
+    ]
+    print(rect)
+    return [
+        min(rectangle_js[0][0], rectangle_js[1][0]),  # minX/left
+        max(rectangle_js[0][0], rectangle_js[1][0]),  # maxX/right
+        min(rectangle_js[0][1], rectangle_js[2][1]),  # minY/bottom
+        max(rectangle_js[0][1], rectangle_js[2][1])   # maxY/top
+    ]
+
+
+def rasterio_index(rect, src):
+    ul = src.index(rect[0], rect[3])
+    lr = src.index(rect[1], rect[2])
+
+    minx = min(ul[0], lr[0])
+    maxx = max(ul[0], lr[0])
+    miny = min(ul[1], lr[1])
+    maxy = max(ul[1], lr[1])
+
+    if miny == maxy:
+        maxy += 20
+        print("I'm bad!", rect[2], rect[3], miny, maxy, minx, maxx)
+
+    return [minx, maxx, miny, maxy]
+
+
+def convert_to_pixels(src_ds, ogr_filename, img_corners):
+    with open(ogr_filename) as ogr:
+        ogr_dict = json.load(ogr)
+
+    coord_rectangles = [create_coordinate_rectangle(feat)
+                        for feat in ogr_dict['features'][::2]]
+    pixel_coords = [rasterio_index(rect, src_ds) for rect in coord_rectangles]
+
+    return pixel_coords
 
 
 def expand_window_with_offset(bbox):
@@ -205,7 +145,7 @@ def expand_window_no_offset(bbox):
     return [bbox[0] - 128, bbox[0] + 128, bbox[2] - 128, bbox[2] + 128]
 
 
-def create_valid(chip_boxes, ship_boxes, maxX, maxY):
+def filter_windows(chip_boxes, ship_boxes, maxX, maxY):
     windows, ships = [], []
     for chip in chip_boxes:
         ships_in_chip = []
@@ -230,21 +170,21 @@ def create_valid(chip_boxes, ship_boxes, maxX, maxY):
     return windows, ships
 
 
-def generate_chips(data_type, viz):
-    from sklearn.preprocessing import MinMaxScaler
-    datasets_path = '/opt/Data/datasets/detection'
-    singapore_path = join(datasets_path, 'singapore')
+def generate_chips(data_type, viz, datasets_path, singapore_path, img_dict,
+                   active_inds, write_dir):
     chip_ships_list = []
     chip_ind = 0
 
-    for img_ind, folder_name in enumerate(folders):
-        folder_path = join(singapore_path, folder_name) + '/'
+    for img_ind in active_inds:
+        dir_path = join(singapore_path, img_dict[img_ind]) + '/'
         img_name = data[img_ind][0]
         img_corners = data[img_ind][1]
-        # src_path = folder_path + img_name                       # direct data
-        src_path = folder_path + 'test_' + str(img_ind) + '.tif'  # warped data
-        ogr_path = folder_path + 'ships_ogr_' + str(img_ind) + '.geojson'
-        write_path = join(datasets_path, 'singapore_train/')
+        # src_path = dir_path + img_name                       # direct data
+        src_path = dir_path + 'test_' + str(img_ind) + '.tif'  # warped data
+        ogr_path = dir_path + 'ships_ogr_' + str(img_ind) + '.geojson'
+
+        write_path = join(datasets_path, write_dir)
+        _makedirs(write_path)
 
         with rasterio.open(src_path) as src_ds:
             flag = raw_input("Generate using " + img_name + "? ('q' to stop) ")
@@ -252,6 +192,7 @@ def generate_chips(data_type, viz):
                 break
 
             bbox_coords = convert_to_pixels(src_ds, ogr_path, img_corners)
+            print(bbox_coords)
             ship_boxes = [rasterio.coords.BoundingBox(*bbox_ordered_coords(
                           bbox)) for bbox in bbox_coords]
             chip_coords = [expand_window_with_offset(bbox)
@@ -259,8 +200,9 @@ def generate_chips(data_type, viz):
             chip_boxes = [rasterio.coords.BoundingBox(*bbox_ordered_coords(
                           chip)) for chip in chip_coords]
             box_up = [expand_window_no_offset(bbox) for bbox in bbox_coords]
-            windows, all_ships = create_valid(chip_boxes, ship_boxes,
-                                              src_ds.shape[0], src_ds.shape[1])
+            windows, all_ships = filter_windows(chip_boxes, ship_boxes,
+                                                src_ds.shape[0],
+                                                src_ds.shape[1])
 
             masks = [window_ordered_coords(window) for window in windows]
 
@@ -283,17 +225,18 @@ def generate_chips(data_type, viz):
                             driver='JPEG', width=256, height=256, count=3,
                             dtype='uint8') as dst:
                         mask_img = src_ds.read([3, 2, 1], window=mask)
-                        rescaleIMG = np.reshape(mask_img, (-1, 1))
+                        rescale_img = np.reshape(mask_img, (-1, 1))
                         scaler = MinMaxScaler(feature_range=(0, 255))
-                        rescaleIMG = scaler.fit_transform(rescaleIMG)
-                        mask_img_scaled = (np.reshape(rescaleIMG,
+                        rescale_img = scaler.fit_transform(rescale_img)
+                        mask_img_scaled = (np.reshape(rescale_img,
                                            mask_img.shape)).astype(np.uint8)
                         dst.write(mask_img_scaled)
                         dst.close()
                 for ship in ships_in_mask:
-                    chip_ships_list.append((str(chip_ind) + '.' + data_type,
-                                            ship[0], ship[1], ship[2], ship[3],
-                                            'ship'))
+                    write_debug_chip(chip, write_path, data_type, ships_in_mask
+                                     )
+                    chip_ships_list.append((chip + '.' + data_type, ship[0],
+                                           ship[1], ship[2], ship[3], 'ship'))
                 chip_ind += 1
                 print(str(chip_ind) + " chip written")
             if flag == 'q':
@@ -303,6 +246,45 @@ def generate_chips(data_type, viz):
     df = pd.DataFrame.from_records(chip_ships_list, columns=csv_labels)
     csv_write_path = write_path + 'ship_locations.csv'
     df.to_csv(csv_write_path, index=False)
+
+
+def write_debug_chip(chip, write_path, data_type, ships):
+    img_name = chip + '.' + data_type
+    img_file_path = join(write_path, img_name)
+    debug_path = join(write_path, 'debug')
+    _makedirs(debug_path)
+    img_write_path = join(debug_path, chip + '_debug.jpg')
+    image = np.array(Image.open(img_file_path), dtype=np.uint8)
+
+    # Create figure and axes
+    fig, ax = plt.subplots(1)
+    for ship in ships:
+        rect = patches.Rectangle((ship[2], ship[0]), ship[3] - ship[2],
+                                 ship[1] - ship[0],
+                                 linewidth=1, edgecolor='r',
+                                 facecolor='none')
+        ax.add_patch(rect)
+
+    plt.imshow(image, origin='upper')
+
+    plt.savefig(img_write_path)
+    plt.close()
+
+
+def generate_all_chips(data_type, viz, datasets_path, singapore_path):
+    img_dict = {}
+    for img_ind, dir_name in enumerate(folders):
+        img_dict[img_ind] = dir_name
+
+    active_inds = range(0, 8)  # Train source indices
+    write_dir = 'singapore_train/'
+    generate_chips(data_type, viz, datasets_path, singapore_path, img_dict,
+                   active_inds, write_dir)
+    active_inds = [8, 9, 10]  # Validation source indices
+    write_dir = 'singapore_val/'
+    generate_chips(data_type, viz, datasets_path, singapore_path, img_dict,
+                   active_inds, write_dir)
+
 
 
 def parse_args():
@@ -317,6 +299,8 @@ def run():
     output = ['jpg', 'tif']
     viz = False
     args = parse_args()
+    datasets_path = '/opt/Data/datasets/detection'
+    singapore_path = join(datasets_path, 'singapore')
 
     if args.output_type in output:
         if visualize == 'true':
@@ -325,7 +309,8 @@ def run():
 green marks windows centered
 on ships prior to being offset and blue marks all valid offset windows that
 will be used to generate chips from the provided image.\n""")
-        generate_chips(args.output_type, viz)
+        generate_all_chips(args.output_type, viz, datasets_path,
+                           singapore_path)
     else:
         "That's not a valid data type!"
 
