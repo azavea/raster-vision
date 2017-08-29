@@ -24,7 +24,8 @@ def get_boxes_from_geojson(json_path, image_dataset):
     for feature in features:
         polygon = feature['geometry']['coordinates'][0]
         # Convert to pixel coords.
-        polygon = np.array([image_dataset.index(p[0], p[1]) for p in polygon])
+        polygon = [image_dataset.index(p[0], p[1]) for p in polygon]
+        polygon = np.array([(p[1], p[0]) for p in polygon])
 
         xmin, ymin = np.min(polygon, axis=0)
         xmax, ymax = np.max(polygon, axis=0)
@@ -48,11 +49,11 @@ def print_box_stats(boxes):
     print('# boxes: {}'.format(len(boxes)))
     np_boxes = np.array(boxes)
 
-    width = np_boxes[:, 2] - np_boxes[:, 0]
+    width = np_boxes[:, 2] - np_boxes[:, 0] + 1
     print('width (mean, min, max): ({}, {}, {})'.format(
           np.mean(width), np.min(width), np.max(width)))
 
-    height = np_boxes[:, 3] - np_boxes[:, 1]
+    height = np_boxes[:, 3] - np_boxes[:, 1] + 1
     print('height (mean, min, max): ({}, {}, {})'.format(
           np.mean(height), np.min(height), np.max(height)))
 
@@ -63,10 +64,10 @@ def make_debug_plot(output_debug_dir, boxes, box_ind, im):
 
     for box in boxes:
         xmin, ymin, xmax, ymax = box
-        debug_im[xmin, ymin:ymax, :] = 0
-        debug_im[xmax - 1, ymin:ymax, :] = 0
-        debug_im[xmin:xmax, ymin, :] = 0
-        debug_im[xmin:xmax, ymax - 1, :] = 0
+        debug_im[ymin:ymax+1, xmin, :] = 0
+        debug_im[ymin:ymax+1, xmax, :] = 0
+        debug_im[ymin, xmin:xmax+1, :] = 0
+        debug_im[ymax, xmin:xmax+1, :] = 0
 
     debug_path = join(
         output_debug_dir, '{}.jpg'.format(box_ind))
@@ -95,13 +96,19 @@ def find_intersected_boxes(rand_x, rand_y, chip_size, rtree_boxes, boxes):
     return [boxes[id] for id in intersection_ids]
 
 
-def get_random_window(box, chip_size):
+def get_random_window(box, im_width, im_height, chip_size):
     xmin, ymin, xmax, ymax = box
+
+    # ensure that window doesn't go off the edge of the array.
     width = xmax - xmin
-    rand_x = int(np.random.uniform(xmin - (chip_size - width), xmin))
+    lb = max(0, xmin - (chip_size - width))
+    ub = min(im_width - chip_size, xmin)
+    rand_x = int(np.random.uniform(lb, ub))
 
     height = ymax - ymin
-    rand_y = int(np.random.uniform(ymin - (chip_size - height), ymin))
+    lb = max(0, ymin - (chip_size - height))
+    ub = min(im_height - chip_size, ymin)
+    rand_y = int(np.random.uniform(lb, ub))
 
     return (rand_x, rand_y)
 
@@ -134,8 +141,10 @@ def make_chips(image_path, json_path, output_dir, debug=False,
 
         # extract random window around anchor_box.
         chip_file_name = '{}.jpg'.format(chip_ind)
-        rand_x, rand_y = get_random_window(anchor_box, chip_size)
-        window = ((rand_x, rand_x + chip_size), (rand_y, rand_y + chip_size))
+        rand_x, rand_y = get_random_window(
+            anchor_box, image_dataset.width, image_dataset.height, chip_size)
+        window = ((rand_y, rand_y + chip_size), (rand_x, rand_x + chip_size))
+
         chip_im = np.transpose(
             image_dataset.read(window=window), axes=[1, 2, 0])
         # XXX is this specific to the dataset?
@@ -172,39 +181,38 @@ def make_chips(image_path, json_path, output_dir, debug=False,
                 # you are trying to detect are black boxes :)
                 clip_xmin, clip_ymin, clip_xmax, clip_ymax = \
                     np.clip(chip_box, 0, chip_size)
-                redacted_chip_im[clip_xmin:clip_xmax, clip_ymin:clip_ymax, :] = 0   # noqa
+                redacted_chip_im[clip_ymin:clip_ymax, clip_xmin:clip_xmax, :] = 0   # noqa
 
         # save the chip.
         chip_path = join(output_image_dir, chip_file_name)
+
         imsave(chip_path, redacted_chip_im)
         if debug:
             make_debug_plot(output_debug_dir, chip_boxes, chip_ind,
                             chip_im)
 
     # save csv.
-    chip_csv_path = join(output_dir, 'chips.csv')
+    chip_csv_path = join(output_dir, 'annotations.csv')
     write_chips_csv(chip_csv_path, chip_rows)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    description = """
+        Generate a set of training chips and a CSV from a GeoTIFF and GeoJSON
+        file containing labels in the form of polygon bounding boxes.
+    """
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--tiff-path')
     parser.add_argument('--json-path')
     parser.add_argument('--output-dir')
     parser.add_argument('--debug', dest='debug', action='store_true')
     parser.add_argument('--chip-size', type=int, default=300)
-    args = parser.parse_args()
-
-    print('tiff_path: {}'.format(args.tiff_path))
-    print('json_path: {}'.format(args.json_path))
-    print('output_dir: {}'.format(args.output_dir))
-    print('debug: {}'.format(args.debug))
-    print('chip_size: {}'.format(args.chip_size))
-
-    return args
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
+    print(args)
+
     make_chips(args.tiff_path, args.json_path, args.output_dir, args.debug,
                args.chip_size)
