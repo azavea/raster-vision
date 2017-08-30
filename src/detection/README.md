@@ -1,60 +1,68 @@
-### Overview
-This is a demonstration of how to use the Tensorflow Object Detection API to train a detection model and then make predictions with it on AWS EC2. It uses the Pets dataset, but it should be easy to swap this out for the ships dataset using the `create_ships_tf_record.py` script. This code is very different than the rest of the Raster Vision codebase, so it's in its own directory which is `src/detection`. The TF API doesn't have a pip installer so I've just included it in the repo for now.
+# Object Detection
 
-### Training a model on EC2
-To start a training job, run the following from the VM
-```
-src/detection/scripts/batch_submit.py lf/detect \
-    /opt/src/detection/scripts/train_ec2.sh \ configs/ssd_mobilenet_v1_pets.config pets0
-```
-You can view the progress of the training using Tensorboard by pointing your browser at `<ec2 instance ip>:6006`. When you are satisfied with the results, you need to kill the job since it's running in an infinite loop. Recent model checkpoints are synced to the S3 bucket under `results/detection/pet0`.
+## Overview
 
+This guide shows how to train a model on a tiny dataset containing ships, and then how to make predictions on a TIFF file. This makes use of a set of scripts utilizing the Tensorflow Object Detection API, and AWS Batch to run jobs. Unless otherwise stated, all commands should be run from inside the Docker CPU container relative to `/opt/src/detection`. In addition, the paths are with reference to the file system of the Docker CPU container. Note that there are bugs, so make sure to check the issues with the `object-detection` and `bug` labels.
 
-### Making predictions for individual images on EC2
-To start a prediction job, you can run
-```
-src/detection/scripts/batch_submit.py lf/detect \
-    /opt/src/detection/scripts/predict_ec2.sh \
-    /opt/src/detection/configs/ssd_mobilenet_v1_pets.config pets0 135656
-```
-which will put predictions in the S3 bucket in `results/detection/pets0/predictions`.
+## Data Prep
 
-### Making predictions for a large image with many objects locally
-The neural network can only handle small images with a fixed size. Therefore, for large images which contain many objects, we use the following strategy. First, we slide a window over the large image and generate a directory
-full of window images. Then, we run the usual predict script over that directory
-of images. Finally, we aggregate the predictions on the windows, taking into
-account the offset of each window within the larger image.
+First, download the raw ships data from  `s3://raster-vision/datasets/detection/singapore_ships.zip` to `/opt/data/datasets/detection/singapore_ships.zip` and unzip it.
 
-The following commands assume that you have the frozen inference graph at `/opt/data/results/detection/pets0/output_inference_graph.pb` and the [animal montage image](src/detection/img/animal_montage.jpg) at `/opt/data/datasets/detection/pets/images_subset/animal_montage.jpg`.
-Running these should generate output at `/opt/data/results/detection/windows`.
-```
-python scripts/make_windows.py \
-    --image-path /opt/data/datasets/detection/pets/images_subset/animal_montage.jpg \
-    --output-dir /opt/data/results/detection/windows \
-    --window-size 300
+In order to train a model, you must convert a GeoTIFF and GeoJSON file with annotations into training chips and a CSV file representing bounding boxes in the chips' frame of reference. To do this for the first file in the dataset, run this:
 
-python scripts/predict.py \
-    --frozen_graph_path=/opt/data/results/detection/pets0/output_inference_graph.pb \
-    --label_map_path=/opt/data/datasets/detection/pets/pet_label_map.pbtxt \
-    --input_dir=/opt/data/results/detection/windows/windows \
-    --output_dir=/opt/data/results/detection/windows/predictions
+```
+python scripts/tiff_chipper.py \
+    --tiff-path /opt/data/datasets/detection/singapore_ships/0.tif \
+    --json-path /opt/data/datasets/detection/singapore_ships/0.geojson \
+    --output-dir /opt/data/datasets/detection/singapore_ships_chips_tiny \
+    --chip-size 300 --debug
+```
 
-python scripts/aggregate_predictions.py \
-    --image-path /opt/data/datasets/detection/pets/images_subset/animal_montage.jpg \
-    --window-info-path /opt/data/results/detection/windows/window_info.json \
-    --predictions-path /opt/data/results/detection/windows/predictions/predictions.json \
-    --label-map-path /opt/data/datasets/detection/pets/pet_label_map.pbtxt \
-    --output-dir /opt/data/results/detection/windows
-```
-Due to the sliding window approach, sometimes there are multiple detections where there should be one, so we group them using a clustering algorithm in OpenCV. There is an `eps` parameter in `detection/scripts/aggregate_predictions.py` that will probably need to be tuned further depending on the dataset. Here are the predictions before and after grouping.
-![Predictions on animal montage](img/animal_montage_predictions.jpg)
-![Predictions on animal montage with detection grouping](img/animal_montage_predictions2.jpg)
+Create a `label_map.pbtxt` file in the `singapore_ships_chips_tiny` directory. It should have a single entry with `id=1` and `name=Ships`. An example of this kind of file can be found in `pet_label_map.pbtxt`. Then, convert the output to TFRecord format, which is the required format for the TF Object Detection API. The files will be placed in the `singapore_ships_chips_tiny` directory
 
-### Converting to TFRecord format
-The real ships dataset isn't ready yet, so we are using a mock ships dataset. To convert this to TFRecord format, run this command locally in the CPU container.
 ```
-python src/detection/scripts/create_ships_tf_record.py \
-    --data_dir=/opt/data/datasets/detection/mock_ships \
-    --output_dir=/opt/data/datasets/detection/mock_ships \
-    --label_map_path=/opt/data/datasets/detection/mock_ships/ships_label_map.pbtxt
+python scripts/create_tf_record.py \
+    --data-dir /opt/data/datasets/detection/singapore_ships_chips_tiny \
+    --label-map-path /opt/data/datasets/detection/singapore_ships_chips_tiny/label_map.pbtxt \
+    --output-dir /opt/data/datasets/detection/singapore_ships_chips_tiny
 ```
+
+When this is done, zip the `singapore_ships_chips_tiny` folder into `singapore_ships_chips_tiny.zip` and upload to S3 inside `s3://raster-vision/datasets/detection`.
+
+## Training a model on EC2
+
+The training algorithm is configured in a file, an example of which can be seen at `configs/ships/ssd_mobilenet_v1.config`. This file needs to be modified if the local paths for data files change, or to tweak the hyperparameters or model architecture.
+Once this file is committed to a branch (with name denoted by `branch-name`) and pushed to the remote repo, start a training job on AWS Batch, by running the following *from the VM*. Note the quotes around the command to run on the container.
+```
+src/detection/scripts/batch_submit.py  <branch-name> \
+    "/opt/src/detection/scripts/train_ec2.sh \
+    --config-path /opt/src/detection/configs/ships/ssd_mobilenet_v1.config \
+    --train-id ships1 \
+    --dataset-id singapore_ships_chips_tiny \
+    --model-id ssd_mobilenet_v1_coco_11_06_2017"
+```
+
+This requires that there is a model checkpoint file (for using a pre-trained model) at `s3://raster-vision/datasets/detection/ssd_mobilenet_v1_coco_11_06_2017.zip`. This file can be downloaded from the website for the TF Object Detection API.
+
+Every 10 minutes, model checkpoints are synced to the S3 bucket under `results/detection/train/ships1`, since `ships1` is the `train_id`.
+You can monitor training using Tensorboard by pointing your browser at `http://<ec2 instance ip>:6006`. It may take a few minutes before results show up. When you are done training the model (ie. after the total loss flattens out), you need to kill the Batch job since it's running in an infinite loop. If this script fails due to instance shutdown and is run again, it should pick up where it left off using saved checkpoints.
+
+## Making predictions on EC2
+
+After training finishes, you can make predictions for a GeoTIFF file. To do this, first upload the image to `s3://raster-vision/results/detection/predict/ships_2/image.tif`.
+To start a prediction job, run the following command with the `checkpoint-id` set to the id in the filename of the latest training checkpoint file, which can be found in `s3://raster-vision/results/detection/ships1/train/train`.
+```
+src/detection/scripts/batch_submit.py <branch-name> \
+    "/opt/src/detection/scripts/predict_ec2.sh \
+    --config-path /opt/src/detection/configs/ships/ssd_mobilenet_v1.config \
+    --train-id ships1 \
+    --checkpoint-id 64336 \
+    --tiff-id ships_2 \
+    --dataset-id singapore_ships_chips_tiny"
+```
+
+You may want to run this with the `--cpu` flag to `batch_submit.py`, since the speedup from the GPU might be negligible. When this is finished running, there should be a GeoJSON file with predictions at `s3://raster-vision/results/detection/predict/ships_2/output/predictions.geojson`.
+
+## Debugging
+
+To debug, it will be helpful to run the above two scripts locally. This can be done by copying the necessary files from S3 and then running the scripts with the `--local` flag. These two scripts call other scripts in turn, and you will probably want to run them individually. When using the `--local` flag with the `predict_ec2.py` script, temporary files will be placed in `/opt/data/temp` which may be helpful for debugging.

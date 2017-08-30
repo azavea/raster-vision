@@ -32,8 +32,10 @@ USER keras
 ARG python_version=3.5.1
 
 RUN conda install -y python=${python_version} scikit-learn six h5py \
-        matplotlib pillow rasterio scikit-image && \
+        matplotlib pillow rasterio scikit-image opencv && \
+    conda install -c conda-forge rtree && \
     conda clean -yt
+
 
 RUN pip install flake8 awscli spectral lxml
 

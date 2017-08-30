@@ -23,17 +23,15 @@ def make_geotiff(image_path):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    description = 'Convert image to GeoTIFF centered in Philly.'
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--image-path')
 
     return parser.parse_args()
 
 
-def run():
-    args = parse_args()
-    print('image_path: {}'.format(args.image_path))
-    make_geotiff(args.image_path)
-
-
 if __name__ == '__main__':
-    run()
+    args = parse_args()
+    print(args)
+
+    make_geotiff(args.image_path)

@@ -2,6 +2,7 @@ import numpy as np
 import os
 import glob
 import json
+import argparse
 
 import tensorflow as tf
 # For headless environments
@@ -9,20 +10,14 @@ import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 from PIL import Image
+from scipy.misc import imsave
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
-
-flags = tf.app.flags
-flags.DEFINE_string('frozen_graph_path', '', 'Path to frozen inference graph.')
-flags.DEFINE_string('label_map_path', '', 'Path to label map proto')
-flags.DEFINE_string('input_dir', '', 'Path to directory of input images.')
-flags.DEFINE_string('output_dir', '', 'Path to output images')
-FLAGS = flags.FLAGS
+from settings import max_num_classes, min_score_threshold
 
 image_size = (12, 8)
-min_score_threshold = 0.5
 
 
 def load_image_into_numpy_array(image):
@@ -69,22 +64,23 @@ def write_predictions_csv(predictions, predictions_path):
         json.dump(predictions, predictions_file)
 
 
-def main(_):
-    output_images_dir = os.path.join(FLAGS.output_dir, 'images')
-    os.makedirs(FLAGS.output_dir, exist_ok=True)
+def predict(frozen_graph_path, label_map_path, input_dir,
+            output_dir):
+    output_images_dir = os.path.join(output_dir, 'images')
+    os.makedirs(output_dir, exist_ok=True)
     os.makedirs(output_images_dir, exist_ok=True)
 
-    detection_graph = load_frozen_graph(FLAGS.frozen_graph_path)
+    detection_graph = load_frozen_graph(frozen_graph_path)
 
-    label_map = label_map_util.load_labelmap(FLAGS.label_map_path)
+    label_map = label_map_util.load_labelmap(label_map_path)
     categories = label_map_util.convert_label_map_to_categories(
-        label_map, max_num_classes=37, use_display_name=True)
+        label_map, max_num_classes=max_num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
 
-    image_paths = glob.glob(os.path.join(FLAGS.input_dir, '*.jpg'))
+    image_paths = glob.glob(os.path.join(input_dir, '*.jpg'))
     predictions = {}
     predictions_path = os.path.join(
-        FLAGS.output_dir, 'predictions.json')
+        output_dir, 'predictions.json')
 
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
@@ -103,13 +99,11 @@ def main(_):
                     np.squeeze(scores),
                     category_index,
                     use_normalized_coordinates=True,
-                    line_thickness=8)
+                    line_thickness=4)
 
-                plt.figure(figsize=image_size)
-                plt.imshow(image_np)
                 out_image_path = os.path.join(
                     output_images_dir, os.path.basename(image_path))
-                plt.savefig(out_image_path)
+                imsave(out_image_path, image_np)
 
                 filename = os.path.basename(image_path)
                 detections = scores > min_score_threshold
@@ -122,5 +116,23 @@ def main(_):
     write_predictions_csv(predictions, predictions_path)
 
 
+def parse_args():
+    description = """
+        Make predictions over a directory of images and write results to CSV.
+    """
+    parser = argparse.ArgumentParser(description=description)
+
+    parser.add_argument('--frozen-graph-path')
+    parser.add_argument('--label-map-path')
+    parser.add_argument('--input-dir')
+    parser.add_argument('--output-dir')
+
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    tf.app.run()
+    args = parse_args()
+    print(args)
+
+    predict(args.frozen_graph_path, args.label_map_path, args.input_dir,
+            args.output_dir)

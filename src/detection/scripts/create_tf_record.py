@@ -3,6 +3,7 @@ import logging
 import os
 import io
 from collections import OrderedDict
+import argparse
 
 import PIL.Image
 import tensorflow as tf
@@ -10,15 +11,10 @@ import tensorflow as tf
 from object_detection.utils import dataset_util
 from object_detection.utils import label_map_util
 
-flags = tf.app.flags
-flags.DEFINE_string('data_dir', '', 'Root directory to raw pet dataset.')
-flags.DEFINE_string('output_dir', '', 'Path to directory to output TFRecords.')
-flags.DEFINE_string('label_map_path', 'data/ships_label_map.pbtxt',
-                    'Path to label map proto')
-FLAGS = flags.FLAGS
+from settings import max_num_classes
 
 
-def create_tf_example(image_dir, image_file_name, boxes, label_map_dict):
+def create_tf_example(image_dir, image_file_name, boxes, category_index):
     image_path = os.path.join(image_dir, image_file_name)
     with tf.gfile.GFile(image_path, 'rb') as fid:
         encoded_jpg = fid.read()
@@ -37,12 +33,14 @@ def create_tf_example(image_dir, image_file_name, boxes, label_map_dict):
     classes_text = []
     classes = []
     for box in boxes:
-        xmins.append(box.xmin)
-        xmaxs.append(box.xmax)
-        ymins.append(box.ymin)
-        ymaxs.append(box.ymax)
-        classes_text.append(box.class_name.encode('utf8'))
-        classes.append(label_map_dict[box.class_name])
+        xmins.append(box.xmin / width)
+        xmaxs.append(box.xmax / width)
+        ymins.append(box.ymin / height)
+        ymaxs.append(box.ymax / height)
+        class_id = int(box.class_id)
+        classes_text.append(
+            category_index[class_id]['name'].encode('utf8'))
+        classes.append(class_id)
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
@@ -62,7 +60,7 @@ def create_tf_example(image_dir, image_file_name, boxes, label_map_dict):
     return tf_example
 
 
-def create_tf_record(output_path, label_map_dict, annotations,
+def create_tf_record(output_path, category_index, annotations,
                      image_dir, image_file_names):
     writer = tf.python_io.TFRecordWriter(output_path)
     for idx, image_file_name in enumerate(image_file_names):
@@ -70,18 +68,18 @@ def create_tf_record(output_path, label_map_dict, annotations,
             logging.info('On image %d of %d', idx, len(image_file_names))
         tf_example = create_tf_example(
             image_dir, image_file_name, annotations[image_file_name],
-            label_map_dict)
+            category_index)
         writer.write(tf_example.SerializeToString())
     writer.close()
 
 
 class Box():
-    def __init__(self, xmin, xmax, ymin, ymax, class_name):
+    def __init__(self, xmin, xmax, ymin, ymax, class_id):
         self.xmin = xmin
         self.xmax = xmax
         self.ymin = ymin
         self.ymax = ymax
-        self.class_name = class_name
+        self.class_id = class_id
 
 
 def read_annotations(annotations_path):
@@ -93,16 +91,18 @@ def read_annotations(annotations_path):
             boxes = annotations.get(filename, [])
             boxes.append(Box(
                 int(row['xmin']), int(row['xmax']), int(row['ymin']),
-                int(row['ymax']), row['class_name']))
+                int(row['ymax']), row['class_id']))
             annotations[filename] = boxes
     return annotations
 
 
-def main(_):
-    data_dir = FLAGS.data_dir
-    label_map_dict = label_map_util.get_label_map_dict(FLAGS.label_map_path)
+def create_tf_records(data_dir, output_dir, label_map_path):
+    label_map = label_map_util.load_labelmap(label_map_path)
+    categories = label_map_util.convert_label_map_to_categories(
+        label_map, max_num_classes=max_num_classes, use_display_name=True)
+    category_index = label_map_util.create_category_index(categories)
 
-    logging.info('Reading from Ships dataset.')
+    logging.info('Reading from dataset.')
     image_dir = os.path.join(data_dir, 'images')
     annotations_path = os.path.join(data_dir, 'annotations.csv')
     annotations = read_annotations(annotations_path)
@@ -116,14 +116,31 @@ def main(_):
     logging.info('%d training and %d validation examples.',
                  len(train_file_names), len(val_file_names))
 
-    train_output_path = os.path.join(FLAGS.output_dir, 'ship_train.record')
-    val_output_path = os.path.join(FLAGS.output_dir, 'ship_val.record')
+    train_output_path = os.path.join(output_dir, 'train.record')
+    val_output_path = os.path.join(output_dir, 'val.record')
 
-    create_tf_record(train_output_path, label_map_dict, annotations,
+    create_tf_record(train_output_path, category_index, annotations,
                      image_dir, train_file_names)
-    create_tf_record(val_output_path, label_map_dict, annotations,
+    create_tf_record(val_output_path, category_index, annotations,
                      image_dir, val_file_names)
 
 
+def parse_args():
+    description = """
+        Convert training chips and CSV into TFRecord format which TF needs.
+    """
+    parser = argparse.ArgumentParser(description=description)
+
+    parser.add_argument('--data-dir')
+    parser.add_argument('--output-dir')
+    parser.add_argument('--label-map-path')
+
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    tf.app.run()
+    args = parse_args()
+    print(args)
+
+    create_tf_records(
+        args.data_dir, args.output_dir, args.label_map_path)

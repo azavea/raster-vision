@@ -4,8 +4,10 @@ from os import makedirs
 from os.path import join
 
 import numpy as np
-from scipy.ndimage import imread
+# from scipy.ndimage import imread
 from scipy.misc import imsave
+
+from utils import load_tiff
 
 
 def pad_image(im, window_size):
@@ -25,10 +27,10 @@ def pad_image(im, window_size):
 
 
 def make_windows(image_path, output_dir, window_size):
-    images_dir = join(output_dir, 'windows')
+    images_dir = join(output_dir, 'images')
     makedirs(images_dir, exist_ok=True)
 
-    im = imread(image_path)
+    im, _ = load_tiff(image_path)
     pad_im, row_left_pad, col_left_pad = pad_image(im, window_size)
 
     offsets = {}
@@ -58,7 +60,10 @@ def make_windows(image_path, output_dir, window_size):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    description = """
+        Slide window over image and generate small window image files.
+    """
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--image-path')
     parser.add_argument('--output-dir')
     parser.add_argument('--window-size', type=int, default=300)
@@ -66,13 +71,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def run():
-    args = parse_args()
-    print('image_path: {}'.format(args.image_path))
-    print('output_dir: {}'.format(args.output_dir))
-    print('window_size: {}'.format(args.window_size))
-    make_windows(args.image_path, args.output_dir, args.window_size)
-
-
 if __name__ == '__main__':
-    run()
+        args = parse_args()
+        print(args)
+
+        make_windows(args.image_path, args.output_dir, args.window_size)

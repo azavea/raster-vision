@@ -5,14 +5,17 @@ from os.path import join, splitext
 
 import numpy as np
 from scipy.ndimage import imread
+from scipy.misc import imsave
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 from cv2 import groupRectangles
-import rasterio
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
+
+from utils import load_tiff
+from settings import max_num_classes
 
 
 def compute_agg_predictions(window_offsets, window_size, im_size, predictions):
@@ -21,7 +24,9 @@ def compute_agg_predictions(window_offsets, window_size, im_size, predictions):
     scores = []
     classes = []
 
-    for file_name, preds in predictions.items():
+    file_names = sorted(predictions.keys())
+    for file_name in file_names:
+        preds = predictions[file_name]
         x, y = window_offsets[file_name]
 
         for box in preds['boxes']:
@@ -50,19 +55,21 @@ def compute_agg_predictions(window_offsets, window_size, im_size, predictions):
 
 
 def plot_predictions(plot_path, im, category_index, boxes, scores, classes):
+    min_val = np.min(im)
+    max_val = np.max(im)
+    norm_im = 256 * ((im - min_val) / (max_val - min_val))
+    norm_im = norm_im.astype(np.uint8)
+
     vis_util.visualize_boxes_and_labels_on_image_array(
-        im,
+        norm_im,
         np.squeeze(boxes),
         np.squeeze(classes).astype(np.int32),
         np.squeeze(scores),
         category_index,
         use_normalized_coordinates=True,
-        line_thickness=8)
+        line_thickness=4)
 
-    image_size = (24, 16)
-    plt.figure(figsize=image_size)
-    plt.imshow(im)
-    plt.savefig(plot_path)
+    imsave(plot_path, norm_im)
 
 
 def box_to_cv2_rect(im_size, box):
@@ -246,14 +253,12 @@ def aggregate_predictions(image_path, window_info_path, predictions_path,
 
     label_map = label_map_util.load_labelmap(label_map_path)
     categories = label_map_util.convert_label_map_to_categories(
-        label_map, max_num_classes=37, use_display_name=True)
+        label_map, max_num_classes=max_num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
 
     image_dataset = None
     if splitext(image_path)[1] == '.tif':
-        image_dataset = rasterio.open(image_path)
-        im = image_dataset.read()
-        im = np.transpose(im, [1, 2, 0])
+        im, image_dataset = load_tiff(image_path)
     else:
         im = imread(image_path)
 
@@ -273,18 +278,23 @@ def aggregate_predictions(image_path, window_info_path, predictions_path,
     # Due to the sliding window approach, sometimes there are multiple
     # slightly different detections where there should only be one. So
     # we group them together.
-    boxes, classes, scores = group_predictions(boxes, classes, scores, im_size)
+    # boxes, classes, scores = group_predictions(boxes, classes, scores, im_size)
 
-    agg_predictions_path = join(output_dir, 'agg_predictions.json')
+    agg_predictions_path = join(output_dir, 'predictions.geojson')
     save_geojson(agg_predictions_path, boxes, classes, scores, im_size,
                  category_index, image_dataset=image_dataset)
 
-    plot_path = join(output_dir, 'agg_predictions.jpg')
+    plot_path = join(output_dir, 'predictions.jpg')
     plot_predictions(plot_path, im, category_index, boxes, scores, classes)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    description = """
+        Aggregate predictions from windows into predictions over original
+        image. The output is GeoJSON in the CRS of the input image.
+    """
+    parser = argparse.ArgumentParser(description=description)
+
     parser.add_argument('--image-path')
     parser.add_argument('--window-info-path')
     parser.add_argument('--predictions-path')
@@ -294,18 +304,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def run():
+if __name__ == '__main__':
     args = parse_args()
-    print('image_path: {}'.format(args.image_path))
-    print('window_info_path: {}'.format(args.window_info_path))
-    print('predictions_path: {}'.format(args.predictions_path))
-    print('labels_map_path: {}'.format(args.label_map_path))
-    print('output_dir: {}'.format(args.output_dir))
+    print(args)
 
     aggregate_predictions(
         args.image_path, args.window_info_path, args.predictions_path,
         args.label_map_path, args.output_dir)
-
-
-if __name__ == '__main__':
-    run()

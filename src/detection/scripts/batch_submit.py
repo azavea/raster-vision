@@ -38,7 +38,11 @@ def submit(branch_name, command_args, attempts=3, cpu=False):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    description = """
+        Submit a git branch and command to run on the GPU Docker container
+        using AWS Batch.
+    """
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument('branch_name', help='Branch with code to run on AWS')
     parser.add_argument(
         'command', nargs='*',
@@ -50,16 +54,9 @@ def parse_args():
     return parser.parse_args()
 
 
-def run():
+if __name__ == '__main__':
     args = parse_args()
-    print('Branch name: {}'.format(args.branch_name))
-    print('Command: {}'.format(args.command))
-    print('Number of attempts: {}'.format(args.attempts))
-    print('Using {}'.format('CPU' if args.cpu else 'GPU'))
+    print(args)
 
     submit(args.branch_name, args.command, attempts=args.attempts,
            cpu=args.cpu)
-
-
-if __name__ == '__main__':
-    run()
