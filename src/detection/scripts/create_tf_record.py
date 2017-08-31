@@ -38,13 +38,13 @@ def create_tf_example(image_dir, image_file_name, boxes, category_index,
                       debug_dir):
     image_path = os.path.join(image_dir, image_file_name)
     with tf.gfile.GFile(image_path, 'rb') as fid:
-        encoded_jpg = fid.read()
-    encoded_jpg_io = io.BytesIO(encoded_jpg)
-    image = PIL.Image.open(encoded_jpg_io)
+        encoded_png = fid.read()
+    encoded_png_io = io.BytesIO(encoded_png)
+    image = PIL.Image.open(encoded_png_io)
 
     width, height = image.size
     filename = image_file_name
-    encoded_image_data = encoded_jpg
+    encoded_image_data = encoded_png
     image_format = image.format.lower().encode('utf8')
 
     xmins = []

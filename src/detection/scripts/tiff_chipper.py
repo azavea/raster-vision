@@ -118,7 +118,7 @@ def make_pos_chips(image_id, image_dataset, chip_size,
             continue
 
         # extract random window around anchor_box.
-        chip_fn = '{}_{}.jpg'.format(image_id, chip_ind)
+        chip_fn = '{}_{}.png'.format(image_id, chip_ind)
         rand_x, rand_y = get_random_window_for_box(
             anchor_box, image_dataset.width, image_dataset.height, chip_size)
         window = ((rand_y, rand_y + chip_size), (rand_x, rand_x + chip_size))
@@ -194,7 +194,7 @@ def make_neg_chips(image_id, image_dataset, chip_size,
             chip_im = chip_im[:, :, [2, 1, 0]]
 
             # save to disk
-            chip_fn = '{}_neg_{}.jpg'.format(image_id, neg_chips_count)
+            chip_fn = '{}_neg_{}.png'.format(image_id, neg_chips_count)
             chip_path = join(output_image_dir, chip_fn)
             imsave(chip_path, chip_im)
 

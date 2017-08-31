@@ -77,7 +77,7 @@ def predict(frozen_graph_path, label_map_path, input_dir,
         label_map, max_num_classes=max_num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
 
-    image_paths = glob.glob(os.path.join(input_dir, '*.jpg'))
+    image_paths = glob.glob(os.path.join(input_dir, '*.png'))
     predictions = {}
     predictions_path = os.path.join(
         output_dir, 'predictions.json')
