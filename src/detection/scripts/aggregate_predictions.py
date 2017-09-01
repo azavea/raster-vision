@@ -15,7 +15,7 @@ from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
 from utils import load_tiff
-from settings import max_num_classes
+from settings import max_num_classes, line_thickness
 
 
 def compute_agg_predictions(window_offsets, window_size, im_size, predictions):
@@ -40,6 +40,7 @@ def compute_agg_predictions(window_offsets, window_size, im_size, predictions):
             box[2] += y  # ymax
             box[3] += x  # xmax
 
+            # Coordinates are floats between 0 and 1.
             box[0] /= im_size[1]
             box[1] /= im_size[0]
             box[2] /= im_size[1]
@@ -67,7 +68,7 @@ def plot_predictions(plot_path, im, category_index, boxes, scores, classes):
         np.squeeze(scores),
         category_index,
         use_normalized_coordinates=True,
-        line_thickness=4)
+        line_thickness=line_thickness)
 
     imsave(plot_path, norm_im)
 

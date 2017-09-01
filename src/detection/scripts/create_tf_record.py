@@ -11,10 +11,11 @@ import tensorflow as tf
 from object_detection.utils import dataset_util
 from object_detection.utils import label_map_util
 
-from settings import max_num_classes
+from settings import max_num_classes, line_thickness
 
 
 def create_tf_example(image_dir, image_file_name, boxes, category_index):
+        use_normalized_coordinates=True, line_thickness=line_thickness)
     image_path = os.path.join(image_dir, image_file_name)
     with tf.gfile.GFile(image_path, 'rb') as fid:
         encoded_jpg = fid.read()
