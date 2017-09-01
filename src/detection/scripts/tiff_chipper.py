@@ -58,22 +58,6 @@ def print_box_stats(boxes):
           np.mean(height), np.min(height), np.max(height)))
 
 
-def make_debug_plot(output_debug_dir, boxes, box_ind, im):
-    # draw rectangle representing box
-    debug_im = np.copy(im)
-
-    for box in boxes:
-        xmin, ymin, xmax, ymax = box
-        debug_im[ymin:ymax+1, xmin, :] = 0
-        debug_im[ymin:ymax+1, xmax, :] = 0
-        debug_im[ymin, xmin:xmax+1, :] = 0
-        debug_im[ymax, xmin:xmax+1, :] = 0
-
-    debug_path = join(
-        output_debug_dir, '{}.jpg'.format(box_ind))
-    imsave(debug_path, debug_im)
-
-
 def write_chips_csv(csv_path, chip_rows, append_csv=False):
     mode = 'a' if append_csv else 'w'
     with open(csv_path, mode) as csv_file:
