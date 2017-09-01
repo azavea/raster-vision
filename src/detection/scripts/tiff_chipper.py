@@ -3,11 +3,11 @@ import argparse
 from os import makedirs
 from os.path import join, splitext, basename
 import csv
+import glob
 
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
-import matplotlib.pyplot as plt
 import rasterio
 from scipy.misc import imsave
 from rtree import index
@@ -74,11 +74,14 @@ def make_debug_plot(output_debug_dir, boxes, box_ind, im):
     imsave(debug_path, debug_im)
 
 
-def write_chips_csv(csv_path, chip_rows):
-    with open(csv_path, 'w') as csv_file:
+def write_chips_csv(csv_path, chip_rows, append_csv=False):
+    mode = 'a' if append_csv else 'w'
+    with open(csv_path, mode) as csv_file:
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(
-            ('filename', 'xmin', 'xmax', 'ymin', 'ymax', 'class_id'))
+        # Only write header if not appending.
+        if not append_csv:
+            csv_writer.writerow(
+                ('filename', 'xmin', 'xmax', 'ymin', 'ymax', 'class_id'))
         for row in chip_rows:
             csv_writer.writerow(row)
 
@@ -96,7 +99,7 @@ def find_intersected_boxes(rand_x, rand_y, chip_size, rtree_boxes, boxes):
     return [boxes[id] for id in intersection_ids]
 
 
-def get_random_window(box, im_width, im_height, chip_size):
+def get_random_window_for_box(box, im_width, im_height, chip_size):
     xmin, ymin, xmax, ymax = box
 
     # ensure that window doesn't go off the edge of the array.
@@ -113,24 +116,15 @@ def get_random_window(box, im_width, im_height, chip_size):
     return (rand_x, rand_y)
 
 
-def make_chips(image_path, json_path, output_dir, debug=False,
-               chip_size=300):
-    '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
-    makedirs(output_dir, exist_ok=True)
-    output_image_dir = join(output_dir, 'images')
-    makedirs(output_image_dir, exist_ok=True)
+def get_random_window(im_width, im_height, chip_size):
+    rand_x = int(np.random.uniform(0, im_width - chip_size))
+    rand_y = int(np.random.uniform(0, im_height - chip_size))
+    return (rand_x, rand_y)
 
-    output_debug_dir = None
-    if debug is not None:
-        output_debug_dir = join(output_dir, 'debug')
-        makedirs(output_debug_dir, exist_ok=True)
 
-    image_dataset = rasterio.open(image_path)
-    boxes, box_to_class_id = get_boxes_from_geojson(json_path, image_dataset)
-    # build spatial index of boxes to use for fast intersection test.
-    rtree_boxes = make_box_index(boxes)
-
-    print_box_stats(boxes)
+def make_pos_chips(image_id, image_dataset, chip_size,
+                   boxes, rtree_boxes, box_to_class_id,
+                   output_dir, output_image_dir, append_csv):
     chip_rows = []
     done_boxes = set()
 
@@ -140,8 +134,8 @@ def make_chips(image_path, json_path, output_dir, debug=False,
             continue
 
         # extract random window around anchor_box.
-        chip_file_name = '{}.jpg'.format(chip_ind)
-        rand_x, rand_y = get_random_window(
+        chip_fn = '{}_{}.jpg'.format(image_id, chip_ind)
+        rand_x, rand_y = get_random_window_for_box(
             anchor_box, image_dataset.width, image_dataset.height, chip_size)
         window = ((rand_y, rand_y + chip_size), (rand_x, rand_x + chip_size))
 
@@ -170,7 +164,7 @@ def make_chips(image_path, json_path, output_dir, debug=False,
             is_contained = (np.all(chip_box >= 0) and
                             np.all(chip_box < chip_size))
             if is_contained:
-                row = [chip_file_name, chip_xmin, chip_xmax,
+                row = [chip_fn, chip_xmin, chip_xmax,
                        chip_ymin, chip_ymax, chip_class_id]
                 chip_rows.append(row)
                 chip_boxes.append(chip_box)
@@ -184,16 +178,86 @@ def make_chips(image_path, json_path, output_dir, debug=False,
                 redacted_chip_im[clip_ymin:clip_ymax, clip_xmin:clip_xmax, :] = 0   # noqa
 
         # save the chip.
-        chip_path = join(output_image_dir, chip_file_name)
+        chip_path = join(output_image_dir, chip_fn)
 
         imsave(chip_path, redacted_chip_im)
-        if debug:
-            make_debug_plot(output_debug_dir, chip_boxes, chip_ind,
-                            chip_im)
 
-    # save csv.
     chip_csv_path = join(output_dir, 'annotations.csv')
-    write_chips_csv(chip_csv_path, chip_rows)
+    write_chips_csv(chip_csv_path, chip_rows, append_csv)
+
+
+def make_neg_chips(image_id, image_dataset, chip_size,
+                   boxes, rtree_boxes, output_image_dir,
+                   num_neg_chips, max_attempts):
+    neg_chips_count = 0
+    attempt_count = 0
+    while attempt_count < max_attempts and neg_chips_count < num_neg_chips:
+        # extract random window
+        rand_x, rand_y = get_random_window(
+            image_dataset.width, image_dataset.height, chip_size)
+
+        # check if intersects with any boxes
+        intersected_boxes = find_intersected_boxes(
+            rand_x, rand_y, chip_size, rtree_boxes, boxes)
+
+        # if no intersection
+        if len(intersected_boxes) == 0:
+            # extract chip
+            window = ((rand_y, rand_y + chip_size),
+                      (rand_x, rand_x + chip_size))
+            chip_im = np.transpose(
+                image_dataset.read(window=window), axes=[1, 2, 0])
+            chip_im = chip_im[:, :, [2, 1, 0]]
+
+            # save to disk
+            chip_fn = '{}_neg_{}.jpg'.format(image_id, neg_chips_count)
+            chip_path = join(output_image_dir, chip_fn)
+            imsave(chip_path, chip_im)
+
+            neg_chips_count += 1
+        attempt_count += 1
+    print('Wrote {} negative chips.'.format(neg_chips_count))
+
+
+def make_chips_for_image(image_path, image_id, json_path, output_dir,
+                         append_csv=False, chip_size=300,
+                         num_neg_chips=0, max_attempts=0):
+    '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
+    output_image_dir = join(output_dir, 'images')
+    makedirs(output_image_dir, exist_ok=True)
+
+    image_dataset = rasterio.open(image_path)
+    boxes, box_to_class_id = get_boxes_from_geojson(json_path, image_dataset)
+    print_box_stats(boxes)
+    # build spatial index of boxes to use for fast intersection test.
+    rtree_boxes = make_box_index(boxes)
+
+    make_pos_chips(
+        image_id, image_dataset, chip_size, boxes, rtree_boxes,
+        box_to_class_id, output_dir, output_image_dir, append_csv)
+
+    make_neg_chips(image_id, image_dataset, chip_size,
+                   boxes, rtree_boxes, output_image_dir,
+                   num_neg_chips=num_neg_chips, max_attempts=max_attempts)
+
+
+def make_chips(input_dir, output_dir, chip_size=300,
+               num_neg_chips=0, max_attempts=0):
+    image_paths = glob.glob(join(input_dir, '*.tif'))
+    append_csv = False
+    for image_path in image_paths:
+        image_fn = basename(image_path)
+        image_id = splitext(image_fn)[0]
+        json_fn = image_id + '.geojson'
+        json_path = join(input_dir, json_fn)
+
+        print('Making chips for {}...'.format(image_fn))
+        make_chips_for_image(image_path, image_id, json_path, output_dir,
+                             append_csv=append_csv,
+                             chip_size=chip_size, num_neg_chips=num_neg_chips,
+                             max_attempts=max_attempts)
+        print()
+        append_csv = True
 
 
 def parse_args():
@@ -202,11 +266,16 @@ def parse_args():
         file containing labels in the form of polygon bounding boxes.
     """
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--tiff-path')
-    parser.add_argument('--json-path')
+    parser.add_argument('--input-dir')
     parser.add_argument('--output-dir')
-    parser.add_argument('--debug', dest='debug', action='store_true')
     parser.add_argument('--chip-size', type=int, default=300)
+    parser.add_argument('--num-neg-chips', type=int, default=0,
+                        help='Number of chips without objects to generate ' +
+                             'per image')
+    parser.add_argument('--max-attempts', type=int, default=0,
+                        help='Maximum num of random windows to try per ' +
+                             'image when generating negative chips')
+
     return parser.parse_args()
 
 
@@ -214,5 +283,5 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
 
-    make_chips(args.tiff_path, args.json_path, args.output_dir, args.debug,
-               args.chip_size)
+    make_chips(args.input_dir, args.output_dir, args.chip_size,
+               args.num_neg_chips, args.max_attempts)
