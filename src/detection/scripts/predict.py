@@ -15,7 +15,7 @@ from scipy.misc import imsave
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
-from settings import max_num_classes, min_score_threshold
+from settings import max_num_classes, min_score_threshold, line_thickness
 
 image_size = (12, 8)
 
@@ -77,7 +77,7 @@ def predict(frozen_graph_path, label_map_path, input_dir,
         label_map, max_num_classes=max_num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
 
-    image_paths = glob.glob(os.path.join(input_dir, '*.jpg'))
+    image_paths = glob.glob(os.path.join(input_dir, '*.png'))
     predictions = {}
     predictions_path = os.path.join(
         output_dir, 'predictions.json')
@@ -99,7 +99,7 @@ def predict(frozen_graph_path, label_map_path, input_dir,
                     np.squeeze(scores),
                     category_index,
                     use_normalized_coordinates=True,
-                    line_thickness=4)
+                    line_thickness=line_thickness)
 
                 out_image_path = os.path.join(
                     output_images_dir, os.path.basename(image_path))

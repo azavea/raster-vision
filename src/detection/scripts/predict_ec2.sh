@@ -42,7 +42,7 @@ echo "TIFF_ID         = ${TIFF_ID}"
 echo "DATASET_ID      = ${DATASET_ID}"
 echo "LOCAL           = ${LOCAL}"
 
-set -x
+set -e -x
 cd /opt/src/detection
 
 S3_DATASETS=s3://raster-vision/datasets/detection

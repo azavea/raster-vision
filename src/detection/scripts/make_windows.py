@@ -41,7 +41,7 @@ def make_windows(image_path, output_dir, window_size):
                 break
 
             window = pad_im[i:i+window_size, j:j+window_size, :]
-            window_file_name = '{}_{}.jpg'.format(i, j)
+            window_file_name = '{}_{}.png'.format(i, j)
             window_path = join(images_dir, window_file_name)
             imsave(window_path, window)
 
