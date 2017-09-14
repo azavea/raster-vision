@@ -53,7 +53,7 @@ cd /opt/src/detection
 
 # sync results of previous run just in case it crashed in the middle of running
 if [ "$LOCAL" = false ] ; then
-    rm -R ${LOCAL_TRAIN}/${TRAIN_ID}
+    rm -Rf ${LOCAL_TRAIN}/${TRAIN_ID}
     aws s3 sync ${S3_TRAIN}/${TRAIN_ID} ${LOCAL_TRAIN}/${TRAIN_ID}
 
     # download pre-trained model (to use as starting point) and unzip
