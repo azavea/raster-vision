@@ -76,6 +76,10 @@ fi
 
 mkdir -p ${LOCAL_TRAIN}/${TRAIN_ID}
 
+# kill child processes when this exits
+# https://stackoverflow.com/questions/360201/how-do-i-kill-background-processes-jobs-when-my-shell-script-exits
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+
 python models/object_detection/train.py \
     --logtostderr \
     --pipeline_config_path=${CONFIG_PATH} \
@@ -89,7 +93,3 @@ python models/object_detection/eval.py \
 
 # monitor results using tensorboard app
 tensorboard --logdir=${LOCAL_TRAIN}/${TRAIN_ID}
-
-# kill child processes when this exits
-# https://stackoverflow.com/questions/360201/how-do-i-kill-background-processes-jobs-when-my-shell-script-exits
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
