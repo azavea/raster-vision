@@ -54,7 +54,7 @@ LOCAL_TRAIN=/opt/data/results/detection/train/${TRAIN_ID}
 S3_PREDICT=s3://raster-vision/results/detection/predict/${PREDICT_ID}
 LOCAL_PREDICT=/opt/data/results/detection/predict/${PREDICT_ID}
 
-TIFF_PATH=${LOCAL_PREDICT}/image.tif
+TIFF_PATH=${LOCAL_PREDICT}/index.vrt
 MASK_PATH=${LOCAL_PREDICT}/mask.json
 INFERENCE_GRAPH_PATH=${LOCAL_TRAIN}/inference_graph.pb
 LABEL_MAP_PATH=${LOCAL_DATASETS}/${DATASET_ID}/label_map.pbtxt
