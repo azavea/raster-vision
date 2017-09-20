@@ -273,16 +273,16 @@ def aggregate_predictions(image_path, window_info_path, predictions_path,
     # Due to the sliding window approach, sometimes there are multiple
     # slightly different detections where there should only be one. So
     # we group them together.
-    # boxes, classes, scores = \
-    #    group_predictions(boxes, classes, scores, im_size)
+    boxes, classes, scores = group_predictions(boxes, classes, scores, im_size)
 
     agg_predictions_path = join(output_dir, 'predictions.geojson')
     save_geojson(agg_predictions_path, boxes, classes, scores, im_size,
                  category_index, image_dataset=image_dataset)
 
-    im = load_window(image_dataset)
-    plot_path = join(output_dir, 'predictions.png')
-    plot_predictions(plot_path, im, category_index, boxes, scores, classes)
+    if debug:
+        im = load_window(image_dataset)
+        plot_path = join(output_dir, 'predictions.png')
+        plot_predictions(plot_path, im, category_index, boxes, scores, classes)
 
 
 def parse_args():
@@ -297,6 +297,7 @@ def parse_args():
     parser.add_argument('--predictions-path')
     parser.add_argument('--label-map-path')
     parser.add_argument('--output-dir')
+    parser.add_argument('--debug', dest='debug', action='store_true')
 
     return parser.parse_args()
 
@@ -307,4 +308,4 @@ if __name__ == '__main__':
 
     aggregate_predictions(
         args.image_path, args.window_info_path, args.predictions_path,
-        args.label_map_path, args.output_dir)
+        args.label_map_path, args.output_dir, args.debug)
