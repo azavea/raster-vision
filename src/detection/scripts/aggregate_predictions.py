@@ -1,21 +1,20 @@
 import json
 import argparse
 from os import makedirs
-from os.path import join, splitext
+from os.path import join
 
 import numpy as np
-from scipy.ndimage import imread
 from scipy.misc import imsave
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
-import matplotlib.pyplot as plt
 from cv2 import groupRectangles
+import rasterio
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
-from utils import load_tiff
 from settings import max_num_classes, line_thickness
+from utils import load_window
 
 
 def compute_agg_predictions(window_offsets, window_size, im_size, predictions):
@@ -257,13 +256,8 @@ def aggregate_predictions(image_path, window_info_path, predictions_path,
         label_map, max_num_classes=max_num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
 
-    image_dataset = None
-    if splitext(image_path)[1] == '.tif':
-        im, image_dataset = load_tiff(image_path)
-    else:
-        im = imread(image_path)
-
-    im_size = [im.shape[1], im.shape[0]]
+    image_dataset = rasterio.open(image_path)
+    im_size = [image_dataset.width, image_dataset.height]
 
     with open(window_info_path) as window_info_file:
         window_info = json.load(window_info_file)
@@ -279,12 +273,14 @@ def aggregate_predictions(image_path, window_info_path, predictions_path,
     # Due to the sliding window approach, sometimes there are multiple
     # slightly different detections where there should only be one. So
     # we group them together.
-    # boxes, classes, scores = group_predictions(boxes, classes, scores, im_size)
+    # boxes, classes, scores = \
+    #    group_predictions(boxes, classes, scores, im_size)
 
     agg_predictions_path = join(output_dir, 'predictions.geojson')
     save_geojson(agg_predictions_path, boxes, classes, scores, im_size,
                  category_index, image_dataset=image_dataset)
 
+    im = load_window(image_dataset)
     plot_path = join(output_dir, 'predictions.png')
     plot_predictions(plot_path, im, category_index, boxes, scores, classes)
 
@@ -296,7 +292,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(description=description)
 
-    parser.add_argument('--image-path')
+    parser.add_argument('--image-path', help='Path to TIFF or VRT file')
     parser.add_argument('--window-info-path')
     parser.add_argument('--predictions-path')
     parser.add_argument('--label-map-path')

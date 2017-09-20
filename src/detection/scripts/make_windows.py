@@ -6,49 +6,36 @@ from os.path import join
 import numpy as np
 # from scipy.ndimage import imread
 from scipy.misc import imsave
+import rasterio
 
-from utils import load_tiff
-
-
-def pad_image(im, window_size):
-    '''Pad image so it's divisible by window_size.'''
-    row_pad = window_size - (im.shape[0] % window_size)
-    col_pad = window_size - (im.shape[1] % window_size)
-    row_left_pad = row_pad // 2
-    col_left_pad = col_pad // 2
-
-    pad_width = (
-        (row_left_pad, row_pad - row_left_pad),
-        (col_left_pad, col_pad - col_left_pad),
-        (0, 0)
-    )
-    pad_im = np.pad(im, pad_width, mode='constant')
-    return pad_im, row_left_pad, col_left_pad
+from utils import load_window
 
 
 def make_windows(image_path, output_dir, window_size):
     images_dir = join(output_dir, 'images')
     makedirs(images_dir, exist_ok=True)
-
-    im, _ = load_tiff(image_path)
-    pad_im, row_left_pad, col_left_pad = pad_image(im, window_size)
+    image_dataset = rasterio.open(image_path)
 
     offsets = {}
-    for i in range(0, pad_im.shape[0], window_size // 2):
-        for j in range(0, pad_im.shape[1], window_size // 2):
-            if (i + window_size > pad_im.shape[0] or
-                    j + window_size > pad_im.shape[1]):
-                break
+    for row_start in range(0, image_dataset.height, window_size // 2):
+        row_end = min(row_start + window_size, image_dataset.height)
+        for col_start in range(0, image_dataset.width, window_size // 2):
+            col_end = min(col_start + window_size, image_dataset.width)
 
-            window = pad_im[i:i+window_size, j:j+window_size, :]
-            window_file_name = '{}_{}.png'.format(i, j)
+            window = load_window(
+                image_dataset,
+                window=((row_start, row_end), (col_start, col_end)))
+            padded_window = np.zeros(
+                (image_dataset.height, image_dataset.width, 3))
+            padded_window[row_start:row_end, col_start:col_end, :] = window
+
+            window_file_name = '{}_{}.png'.format(row_start, col_start)
             window_path = join(images_dir, window_file_name)
             imsave(window_path, window)
 
             # Position of the upper-left corner of window in the
             # original, unpadded image.
-            offsets[window_file_name] = \
-                (j - col_left_pad, i - row_left_pad)
+            offsets[window_file_name] = (col_start, row_start)
 
     window_info = {
         'offsets': offsets,

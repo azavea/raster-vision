@@ -12,6 +12,8 @@ import rasterio
 from scipy.misc import imsave
 from rtree import index
 
+from utils import load_window
+
 
 def get_boxes_from_geojson(json_path, image_dataset):
     with open(json_path, 'r') as json_file:
@@ -123,11 +125,7 @@ def make_pos_chips(image_id, image_dataset, chip_size,
             anchor_box, image_dataset.width, image_dataset.height, chip_size)
         window = ((rand_y, rand_y + chip_size), (rand_x, rand_x + chip_size))
 
-        chip_im = np.transpose(
-            image_dataset.read(window=window), axes=[1, 2, 0])
-        # XXX is this specific to the dataset?
-        # bgr-ir
-        chip_im = chip_im[:, :, [2, 1, 0]]
+        chip_im = load_window(image_dataset, window=window)
         redacted_chip_im = np.copy(chip_im)
 
         # find all boxes inside window and transform coordinates so they
@@ -189,9 +187,7 @@ def make_neg_chips(image_id, image_dataset, chip_size,
             # extract chip
             window = ((rand_y, rand_y + chip_size),
                       (rand_x, rand_x + chip_size))
-            chip_im = np.transpose(
-                image_dataset.read(window=window), axes=[1, 2, 0])
-            chip_im = chip_im[:, :, [2, 1, 0]]
+            chip_im = load_window(image_dataset, window=window)
 
             # save to disk
             chip_fn = '{}_neg_{}.png'.format(image_id, neg_chips_count)

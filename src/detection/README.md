@@ -49,7 +49,7 @@ You can monitor training using Tensorboard by pointing your browser at `http://<
 
 ## Making predictions on EC2
 
-After training finishes, you can make predictions for a GeoTIFF file. To do this, first upload the image to `s3://raster-vision/results/detection/predict/<predict-id>/image.tif`. If you would like to remove predictions that are contained inside a mask multi-polygon, you should also upload a GeoJSON file with the mask to
+After training finishes, you can make predictions for a set of GeoTIFF file. To do this, first create a VRT using `gdalbuildvrt index.vrt *.tif` or similar. Then upload the files to `s3://raster-vision/results/detection/predict/<predict-id>/`, and make sure the index of the VRT is named `index.vrt`. If you would like to remove predictions that are contained inside a mask multi-polygon, you should also upload a GeoJSON file with the mask to
 `s3://raster-vision/results/detection/predict/<predict-id>/mask.json`.
 The `predict-id` should be a unique id for the files for which to make a prediction, and should follow the same format as the `train-id`.
 To start a prediction job, run the following command with the `checkpoint-id` set to the integer id in the filename of the latest training checkpoint file, which can be found in `s3://raster-vision/results/detection/train/<train-id>/train`.
