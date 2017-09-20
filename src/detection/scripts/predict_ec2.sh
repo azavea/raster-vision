@@ -5,25 +5,34 @@
 
 # Parse args
 LOCAL=false
+DEBUG_FLAG=""
 while :; do
     case $1 in
         --config-path)
             CONFIG_PATH=$2
+            shift
             ;;
         --train-id)
             TRAIN_ID=$2
+            shift
             ;;
         --checkpoint-id)
             CHECKPOINT_ID=$2
+            shift
             ;;
         --predict-id)
             PREDICT_ID=$2
+            shift
             ;;
         --dataset-id)
             DATASET_ID=$2
+            shift
             ;;
         --local)
             LOCAL=true
+            ;;
+        --debug)
+            DEBUG_FLAG="--debug"
             ;;
         -?*)
             printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
@@ -31,7 +40,6 @@ while :; do
         *)
             break
     esac
-    shift
     shift
 done
 
@@ -41,6 +49,7 @@ echo "CHECKPOINT_ID   = ${CHECKPOINT_ID}"
 echo "PREDICT_ID      = ${PREDICT_ID}"
 echo "DATASET_ID      = ${DATASET_ID}"
 echo "LOCAL           = ${LOCAL}"
+echo "DEBUG_FLAG      = ${DEBUG_FLAG}"
 
 set -e -x
 cd /opt/src/detection
@@ -102,7 +111,7 @@ python scripts/aggregate_predictions.py \
     --window-info-path ${TEMP_PATH}/windows/window_info.json \
     --predictions-path ${TEMP_PATH}/windows/predictions/predictions.json \
     --label-map-path ${LABEL_MAP_PATH} \
-    --output-dir ${LOCAL_PREDICT}/output
+    --output-dir ${LOCAL_PREDICT}/output ${DEBUG_FLAG}
 
 if [ -e ${MASK_PATH} ]
 then

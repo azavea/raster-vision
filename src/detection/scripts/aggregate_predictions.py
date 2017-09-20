@@ -98,8 +98,7 @@ def cv2_rect_to_box(im_size, rect):
     return box
 
 
-# From https://stackoverflow.com/questions/28723670/intersection-over-union-between-two-detections # noqa
-def bb_intersection_over_union(boxA, boxB):
+def compute_overlap_score(boxA, boxB):
     # determine the (x, y)-coordinates of the intersection rectangle
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
@@ -107,20 +106,22 @@ def bb_intersection_over_union(boxA, boxB):
     yB = min(boxA[3], boxB[3])
 
     # compute the area of intersection rectangle
-    interArea = (xB - xA + 1) * (yB - yA + 1)
+    interArea = (xB - xA) * (yB - yA)
 
     # compute the area of both the prediction and ground-truth
     # rectangles
-    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
-    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+    boxAArea = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
+    boxBArea = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
 
-    # compute the intersection over union by taking the intersection
-    # area and dividing it by the sum of prediction + ground-truth
-    # areas - the interesection area
-    iou = interArea / float(boxAArea + boxBArea - interArea)
+    return max(interArea / boxAArea, interArea / boxBArea)
 
-    # return the intersection over union value
-    return iou
+
+def overlaps(box1, box2):
+    return not (
+        box1[2] < box2[0] or  # left is to the left of right
+        box1[0] > box2[0] or  # left is to the right of right
+        box1[3] < box2[1] or  # bottom is above the top
+        box1[1] > box2[3])  # top is below the bottom
 
 
 def rect_to_bbox(rect):
@@ -128,43 +129,43 @@ def rect_to_bbox(rect):
     return [x, y, x + width, y + height]
 
 
-def group_boxes(boxes, scores, im_size):
+def group_boxes(boxes, scores, im_size, nb_passes=1):
     '''Group boxes belonging to a single class.'''
-    # Convert boxes to opencv rectangles
-    rects = []
-    for box_ind in range(boxes.shape[0]):
-        box = boxes[box_ind, :].tolist()
-        rect = box_to_cv2_rect(im_size, box)
-        rects.append(rect)
+    box_to_score = dict(zip(boxes, scores))
+    threshold = 0.5
 
-    # Add last rect again to ensure that there are at least two rectangles
-    # which seems to be required by groupRectangles.
-    rects.append(rect)
+    grouped_boxes = set(boxes)
 
-    # Group the rects
-    group_threshold = 1
-    # May need to tune this parameter for other datasets depending on size
-    # of detected objects.
-    eps = 0.5
-    grouped_rects = groupRectangles(rects, group_threshold, eps)[0]
-    grouped_boxes = []
-    grouped_scores = []
+    for pass_ind in range(nb_passes):
+        for box in boxes:
+            # Find other box that overlaps the most with box.
+            max_overlap_score = 0.0
+            max_box = None
+            for other_box in grouped_boxes:
+                if box != other_box and overlaps(box, other_box):
+                    overlap_score = compute_overlap_score(box, other_box)
+                    if overlap_score > max_overlap_score:
+                        max_overlap_score = overlap_score
+                        max_box = other_box
 
-    # Find the rects and corresponding scores that best match the grouped_rects
-    for grouped_rect in grouped_rects:
-        bbox1 = rect_to_bbox(grouped_rect)
-        best_iou = 0.0
-        best_ind = None
+            # If overlaps enough, then replace box and other_box with
+            # the box with the highest score (probability of detection).
+            if max_overlap_score > threshold:
+                box_score = box_to_score[box]
+                max_box_score = box_to_score[max_box]
 
-        for rect_ind, rect in enumerate(rects[:-1]):
-            bbox2 = rect_to_bbox(rect)
-            iou = bb_intersection_over_union(bbox1, bbox2)
-            if iou > best_iou:
-                best_iou = iou
-                best_ind = rect_ind
+                if max_box in grouped_boxes:
+                    grouped_boxes.remove(max_box)
+                if box in grouped_boxes:
+                    grouped_boxes.remove(box)
 
-        grouped_boxes.append(cv2_rect_to_box(im_size, rects[best_ind]))
-        grouped_scores.append(scores[best_ind])
+                if box_score > max_box_score:
+                    grouped_boxes.add(box)
+                else:
+                    grouped_boxes.add(max_box)
+
+    grouped_boxes = list(grouped_boxes)
+    grouped_scores = [box_to_score[box] for box in grouped_boxes]
 
     return grouped_boxes, grouped_scores
 
@@ -173,23 +174,24 @@ def group_predictions(boxes, classes, scores, im_size):
     '''For each class, group boxes that are overlapping.'''
     unique_classes = list(set(classes))
 
-    boxes = np.array(boxes)
-    classes = np.array(classes)
-    scores = np.array(scores)
-
     grouped_boxes = []
     grouped_classes = []
     grouped_scores = []
 
     for class_id in unique_classes:
-        class_boxes = boxes[classes == class_id]
-        class_scores = scores[classes == class_id]
+        class_boxes = []
+        class_scores = []
+        for ind, a_class_id in enumerate(classes):
+            if class_id == a_class_id:
+                class_boxes.append(tuple(boxes[ind]))
+                class_scores.append(scores[ind])
 
         class_grouped_boxes, class_grouped_scores = \
-            group_boxes(class_boxes, class_scores, im_size)
+            group_boxes(class_boxes, class_scores, im_size, nb_passes=10)
+
         grouped_boxes.extend(class_grouped_boxes)
-        grouped_classes.extend([class_id] * len(class_grouped_boxes))
         grouped_scores.extend(class_grouped_scores)
+        grouped_classes.extend([class_id] * len(class_grouped_boxes))
 
     return grouped_boxes, grouped_classes, grouped_scores
 
@@ -248,7 +250,7 @@ def save_geojson(path, boxes, classes, scores, im_size, category_index,
 
 
 def aggregate_predictions(image_path, window_info_path, predictions_path,
-                          label_map_path, output_dir):
+                          label_map_path, output_dir, debug=False):
     print('Aggregating predictions over windows...')
 
     label_map = label_map_util.load_labelmap(label_map_path)
@@ -273,16 +275,16 @@ def aggregate_predictions(image_path, window_info_path, predictions_path,
     # Due to the sliding window approach, sometimes there are multiple
     # slightly different detections where there should only be one. So
     # we group them together.
-    # boxes, classes, scores = \
-    #    group_predictions(boxes, classes, scores, im_size)
+    boxes, classes, scores = group_predictions(boxes, classes, scores, im_size)
 
     agg_predictions_path = join(output_dir, 'predictions.geojson')
     save_geojson(agg_predictions_path, boxes, classes, scores, im_size,
                  category_index, image_dataset=image_dataset)
 
-    im = load_window(image_dataset)
-    plot_path = join(output_dir, 'predictions.png')
-    plot_predictions(plot_path, im, category_index, boxes, scores, classes)
+    if debug:
+        im = load_window(image_dataset)
+        plot_path = join(output_dir, 'predictions.png')
+        plot_predictions(plot_path, im, category_index, boxes, scores, classes)
 
 
 def parse_args():
@@ -297,6 +299,7 @@ def parse_args():
     parser.add_argument('--predictions-path')
     parser.add_argument('--label-map-path')
     parser.add_argument('--output-dir')
+    parser.add_argument('--debug', dest='debug', action='store_true')
 
     return parser.parse_args()
 
@@ -307,4 +310,4 @@ if __name__ == '__main__':
 
     aggregate_predictions(
         args.image_path, args.window_info_path, args.predictions_path,
-        args.label_map_path, args.output_dir)
+        args.label_map_path, args.output_dir, args.debug)
