@@ -9,9 +9,10 @@ from scipy.misc import imsave
 import rasterio
 
 from utils import load_window
+from settings import planet_channel_order
 
 
-def make_windows(image_path, output_dir, window_size):
+def make_windows(image_path, output_dir, window_size, channel_order):
     images_dir = join(output_dir, 'images')
     makedirs(images_dir, exist_ok=True)
     image_dataset = rasterio.open(image_path)
@@ -23,7 +24,7 @@ def make_windows(image_path, output_dir, window_size):
             col_end = min(col_start + window_size, image_dataset.width)
 
             window = load_window(
-                image_dataset,
+                image_dataset, channel_order,
                 window=((row_start, row_end), (col_start, col_end)))
             padded_window = np.zeros(
                 (image_dataset.height, image_dataset.width, 3))
@@ -54,6 +55,8 @@ def parse_args():
     parser.add_argument('--image-path')
     parser.add_argument('--output-dir')
     parser.add_argument('--window-size', type=int, default=300)
+    parser.add_argument('--channel-order', nargs=3, type=int,
+                        default=planet_channel_order)
 
     return parser.parse_args()
 
@@ -62,4 +65,5 @@ if __name__ == '__main__':
         args = parse_args()
         print(args)
 
-        make_windows(args.image_path, args.output_dir, args.window_size)
+        make_windows(args.image_path, args.output_dir, args.window_size,
+                     args.channel_order)

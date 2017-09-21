@@ -9,13 +9,14 @@ This guide shows how to train a model on a tiny dataset containing ships, and th
 First, download the raw ships data from  `s3://raster-vision/datasets/detection/singapore_ships.zip` to `/opt/data/datasets/detection/singapore_ships.zip` and unzip it. Then, split
 the files into two directories, `train` and `test`. I used all images except `1.tif` and `3.tif` for the training set.
 
-In order to train a model, you must convert a set of GeoTIFF and GeoJSON file with annotations into training chips and a CSV file representing bounding boxes in the chips' frame of reference.
+In order to train a model, you must convert a set of GeoTIFF and GeoJSON file with annotations into training chips and a CSV file representing bounding boxes in the chips' frame of reference. The `--channel-order` argument can be omitted
+to use a default ordering of `2 1 0` for Planet imagery, or can be specified for different orderings.
 
 ```
 python scripts/tiff_chipper.py \
     --input-dir /opt/data/datasets/detection/singapore_ships/train/ \
     --output-dir /opt/data/datasets/detection/singapore_ships_chips_neg \
-    --chip-size 300 --num-neg-chips 50 --max-attempts 500
+    --chip-size 300 --num-neg-chips 50 --max-attempts 500 --channel-order 2 1 0
 ```
 
 Create a `label_map.pbtxt` file in the `singapore_ships_chips_neg` directory. It should have a single entry with `id=1` and `name=Ships`. An example of this kind of file can be found in `pet_label_map.pbtxt`. Then, convert the output to TFRecord format, which is the required format for the TF Object Detection API. The files will be placed in the `singapore_ships_chips_neg` directory, which will include a directory of debug plots if the `--debug` flag is used.
@@ -60,8 +61,8 @@ src/detection/scripts/batch_submit.py <branch-name> \
     --train-id <train-id> \
     --checkpoint-id <checkpoint-id> \
     --predict-id <predict-id> \
-    --dataset-id singapore_ships_chips_neg"
-    --attempts 1
+    --dataset-id singapore_ships_chips_neg \
+    --channel-order 2 1 0" --attempts 1
 ```
 
 You may want to run this locally, since the speedup from the GPU might be negligible. When this is finished running, there should be a GeoJSON file with predictions at `s3://raster-vision/results/detection/predict/ships_2/output/predictions.geojson`.
