@@ -13,7 +13,7 @@ import rasterio
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
-from settings import max_num_classes, line_thickness
+from settings import max_num_classes, line_thickness, planet_channel_order
 from utils import load_window
 
 
@@ -250,7 +250,8 @@ def save_geojson(path, boxes, classes, scores, im_size, category_index,
 
 
 def aggregate_predictions(image_path, window_info_path, predictions_path,
-                          label_map_path, output_dir, debug=False):
+                          label_map_path, output_dir, channel_order,
+                          debug=False):
     print('Aggregating predictions over windows...')
 
     label_map = label_map_util.load_labelmap(label_map_path)
@@ -282,7 +283,7 @@ def aggregate_predictions(image_path, window_info_path, predictions_path,
                  category_index, image_dataset=image_dataset)
 
     if debug:
-        im = load_window(image_dataset)
+        im = load_window(image_dataset, channel_order)
         plot_path = join(output_dir, 'predictions.png')
         plot_predictions(plot_path, im, category_index, boxes, scores, classes)
 
@@ -299,6 +300,8 @@ def parse_args():
     parser.add_argument('--predictions-path')
     parser.add_argument('--label-map-path')
     parser.add_argument('--output-dir')
+    parser.add_argument('--channel-order', nargs=3, type=int,
+                        default=planet_channel_order)
     parser.add_argument('--debug', dest='debug', action='store_true')
 
     return parser.parse_args()
@@ -310,4 +313,4 @@ if __name__ == '__main__':
 
     aggregate_predictions(
         args.image_path, args.window_info_path, args.predictions_path,
-        args.label_map_path, args.output_dir, args.debug)
+        args.label_map_path, args.output_dir, args.channel_order, args.debug)

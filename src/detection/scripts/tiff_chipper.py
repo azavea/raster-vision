@@ -13,6 +13,7 @@ from scipy.misc import imsave
 from rtree import index
 
 from utils import load_window
+from settings import planet_channel_order
 
 
 def get_boxes_from_geojson(json_path, image_dataset):
@@ -108,9 +109,9 @@ def get_random_window(im_width, im_height, chip_size):
     return (rand_x, rand_y)
 
 
-def make_pos_chips(image_id, image_dataset, chip_size,
-                   boxes, rtree_boxes, box_to_class_id,
-                   output_dir, output_image_dir, append_csv):
+def make_pos_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
+                   box_to_class_id, output_dir, output_image_dir,
+                   channel_order, append_csv):
     chip_rows = []
     done_boxes = set()
 
@@ -125,7 +126,8 @@ def make_pos_chips(image_id, image_dataset, chip_size,
             anchor_box, image_dataset.width, image_dataset.height, chip_size)
         window = ((rand_y, rand_y + chip_size), (rand_x, rand_x + chip_size))
 
-        chip_im = load_window(image_dataset, window=window)
+        chip_im = load_window(
+            image_dataset, channel_order, window=window)
         redacted_chip_im = np.copy(chip_im)
 
         # find all boxes inside window and transform coordinates so they
@@ -170,7 +172,7 @@ def make_pos_chips(image_id, image_dataset, chip_size,
 
 def make_neg_chips(image_id, image_dataset, chip_size,
                    boxes, rtree_boxes, output_image_dir,
-                   num_neg_chips, max_attempts):
+                   num_neg_chips, max_attempts, channel_order):
     neg_chips_count = 0
     attempt_count = 0
     while attempt_count < max_attempts and neg_chips_count < num_neg_chips:
@@ -187,7 +189,8 @@ def make_neg_chips(image_id, image_dataset, chip_size,
             # extract chip
             window = ((rand_y, rand_y + chip_size),
                       (rand_x, rand_x + chip_size))
-            chip_im = load_window(image_dataset, window=window)
+            chip_im = load_window(
+                image_dataset, channel_order, window=window)
 
             # save to disk
             chip_fn = '{}_neg_{}.png'.format(image_id, neg_chips_count)
@@ -200,8 +203,8 @@ def make_neg_chips(image_id, image_dataset, chip_size,
 
 
 def make_chips_for_image(image_path, image_id, json_path, output_dir,
-                         append_csv=False, chip_size=300,
-                         num_neg_chips=0, max_attempts=0):
+                         chip_size, num_neg_chips, max_attempts, channel_order,
+                         append_csv=False):
     '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
     output_image_dir = join(output_dir, 'images')
     makedirs(output_image_dir, exist_ok=True)
@@ -214,15 +217,16 @@ def make_chips_for_image(image_path, image_id, json_path, output_dir,
 
     make_pos_chips(
         image_id, image_dataset, chip_size, boxes, rtree_boxes,
-        box_to_class_id, output_dir, output_image_dir, append_csv)
+        box_to_class_id, output_dir, output_image_dir, channel_order,
+        append_csv)
 
     make_neg_chips(image_id, image_dataset, chip_size,
                    boxes, rtree_boxes, output_image_dir,
-                   num_neg_chips=num_neg_chips, max_attempts=max_attempts)
+                   num_neg_chips, max_attempts, channel_order)
 
 
-def make_chips(input_dir, output_dir, chip_size=300,
-               num_neg_chips=0, max_attempts=0):
+def make_chips(input_dir, output_dir, chip_size, num_neg_chips, max_attempts,
+               channel_order):
     image_paths = glob.glob(join(input_dir, '*.tif'))
     append_csv = False
     for image_path in image_paths:
@@ -233,9 +237,8 @@ def make_chips(input_dir, output_dir, chip_size=300,
 
         print('Making chips for {}...'.format(image_fn))
         make_chips_for_image(image_path, image_id, json_path, output_dir,
-                             append_csv=append_csv,
-                             chip_size=chip_size, num_neg_chips=num_neg_chips,
-                             max_attempts=max_attempts)
+                             chip_size, num_neg_chips, max_attempts,
+                             channel_order, append_csv=append_csv)
         print()
         append_csv = True
 
@@ -255,6 +258,8 @@ def parse_args():
     parser.add_argument('--max-attempts', type=int, default=0,
                         help='Maximum num of random windows to try per ' +
                              'image when generating negative chips')
+    parser.add_argument('--channel-order', nargs=3, type=int,
+                        default=planet_channel_order)
 
     return parser.parse_args()
 
@@ -264,4 +269,4 @@ if __name__ == '__main__':
     print(args)
 
     make_chips(args.input_dir, args.output_dir, args.chip_size,
-               args.num_neg_chips, args.max_attempts)
+               args.num_neg_chips, args.max_attempts, args.channel_order)

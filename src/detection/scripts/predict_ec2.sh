@@ -6,6 +6,8 @@
 # Parse args
 LOCAL=false
 DEBUG_FLAG=""
+# Planet ordering is default
+CHANNEL_ORDER="2 1 0"
 while :; do
     case $1 in
         --config-path)
@@ -34,6 +36,12 @@ while :; do
         --debug)
             DEBUG_FLAG="--debug"
             ;;
+        --channel-order)
+            CHANNEL_ORDER="$2 $3 $4"
+            shift
+            shift
+            shift
+            ;;
         -?*)
             printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
             ;;
@@ -50,6 +58,7 @@ echo "PREDICT_ID      = ${PREDICT_ID}"
 echo "DATASET_ID      = ${DATASET_ID}"
 echo "LOCAL           = ${LOCAL}"
 echo "DEBUG_FLAG      = ${DEBUG_FLAG}"
+echo "CHANNEL_ORDER   = ${CHANNEL_ORDER}"
 
 set -e -x
 cd /opt/src/detection
@@ -96,7 +105,8 @@ python models/object_detection/export_inference_graph.py \
 python scripts/make_windows.py \
     --image-path ${TIFF_PATH} \
     --output-dir ${TEMP_PATH}/windows \
-    --window-size 300
+    --window-size 300 \
+    --channel-order ${CHANNEL_ORDER}
 
 # run prediction on the windows
 python scripts/predict.py \
@@ -111,7 +121,8 @@ python scripts/aggregate_predictions.py \
     --window-info-path ${TEMP_PATH}/windows/window_info.json \
     --predictions-path ${TEMP_PATH}/windows/predictions/predictions.json \
     --label-map-path ${LABEL_MAP_PATH} \
-    --output-dir ${LOCAL_PREDICT}/output ${DEBUG_FLAG}
+    --output-dir ${LOCAL_PREDICT}/output ${DEBUG_FLAG} \
+    --channel-order ${CHANNEL_ORDER}
 
 if [ -e ${MASK_PATH} ]
 then
