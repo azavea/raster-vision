@@ -53,7 +53,7 @@ cd /opt/src/detection
 
 # sync results of previous run just in case it crashed in the middle of running
 if [ "$LOCAL" = false ] ; then
-    rm -R ${LOCAL_TRAIN}/${TRAIN_ID}
+    rm -Rf ${LOCAL_TRAIN}/${TRAIN_ID}
     aws s3 sync ${S3_TRAIN}/${TRAIN_ID} ${LOCAL_TRAIN}/${TRAIN_ID}
 
     # download pre-trained model (to use as starting point) and unzip
@@ -76,6 +76,10 @@ fi
 
 mkdir -p ${LOCAL_TRAIN}/${TRAIN_ID}
 
+# kill child processes when this exits
+# https://stackoverflow.com/questions/360201/how-do-i-kill-background-processes-jobs-when-my-shell-script-exits
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+
 python models/object_detection/train.py \
     --logtostderr \
     --pipeline_config_path=${CONFIG_PATH} \
@@ -89,7 +93,3 @@ python models/object_detection/eval.py \
 
 # monitor results using tensorboard app
 tensorboard --logdir=${LOCAL_TRAIN}/${TRAIN_ID}
-
-# kill child processes when this exits
-# https://stackoverflow.com/questions/360201/how-do-i-kill-background-processes-jobs-when-my-shell-script-exits
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
