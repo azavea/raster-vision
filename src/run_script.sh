@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex 
+
 BRANCH=$1
 COMMAND="${@:2}"
 

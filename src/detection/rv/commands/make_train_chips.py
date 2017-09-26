@@ -1,10 +1,9 @@
 import json
-import argparse
 from os import makedirs
-from os.path import join, splitext, basename
+from os.path import join, splitext, basename, dirname
 import csv
-import glob
 
+import click
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
@@ -12,8 +11,9 @@ import rasterio
 from scipy.misc import imsave
 from rtree import index
 
-from utils import load_window
-from settings import planet_channel_order
+from rv.commands.utils import (
+    load_window, download_and_build_vrt, download_if_needed, make_temp_dir)
+from rv.commands.settings import planet_channel_order
 
 
 def get_boxes_from_geojson(json_path, image_dataset):
@@ -49,16 +49,16 @@ def get_boxes_from_geojson(json_path, image_dataset):
 
 
 def print_box_stats(boxes):
-    print('# boxes: {}'.format(len(boxes)))
+    click.echo('# boxes: {}'.format(len(boxes)))
     np_boxes = np.array(boxes)
 
     width = np_boxes[:, 2] - np_boxes[:, 0] + 1
-    print('width (mean, min, max): ({}, {}, {})'.format(
-          np.mean(width), np.min(width), np.max(width)))
+    click.echo('width (mean, min, max): ({}, {}, {})'.format(
+               np.mean(width), np.min(width), np.max(width)))
 
     height = np_boxes[:, 3] - np_boxes[:, 1] + 1
-    print('height (mean, min, max): ({}, {}, {})'.format(
-          np.mean(height), np.min(height), np.max(height)))
+    click.echo('height (mean, min, max): ({}, {}, {})'.format(
+               np.mean(height), np.min(height), np.max(height)))
 
 
 def write_chips_csv(csv_path, chip_rows, append_csv=False):
@@ -110,7 +110,7 @@ def get_random_window(im_width, im_height, chip_size):
 
 
 def make_pos_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
-                   box_to_class_id, output_dir, output_image_dir,
+                   box_to_class_id, chip_dir, chip_label_path,
                    channel_order, append_csv):
     chip_rows = []
     done_boxes = set()
@@ -162,17 +162,15 @@ def make_pos_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
                 redacted_chip_im[clip_ymin:clip_ymax, clip_xmin:clip_xmax, :] = 0   # noqa
 
         # save the chip.
-        chip_path = join(output_image_dir, chip_fn)
+        chip_path = join(chip_dir, chip_fn)
 
         imsave(chip_path, redacted_chip_im)
 
-    chip_csv_path = join(output_dir, 'annotations.csv')
-    write_chips_csv(chip_csv_path, chip_rows, append_csv)
+    write_chips_csv(chip_label_path, chip_rows, append_csv)
 
 
-def make_neg_chips(image_id, image_dataset, chip_size,
-                   boxes, rtree_boxes, output_image_dir,
-                   num_neg_chips, max_attempts, channel_order):
+def make_neg_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
+                   chip_dir, num_neg_chips, max_attempts, channel_order):
     neg_chips_count = 0
     attempt_count = 0
     while attempt_count < max_attempts and neg_chips_count < num_neg_chips:
@@ -194,21 +192,18 @@ def make_neg_chips(image_id, image_dataset, chip_size,
 
             # save to disk
             chip_fn = '{}_neg_{}.png'.format(image_id, neg_chips_count)
-            chip_path = join(output_image_dir, chip_fn)
+            chip_path = join(chip_dir, chip_fn)
             imsave(chip_path, chip_im)
 
             neg_chips_count += 1
         attempt_count += 1
-    print('Wrote {} negative chips.'.format(neg_chips_count))
+    click.echo('Wrote {} negative chips.'.format(neg_chips_count))
 
 
-def make_chips_for_image(image_path, image_id, json_path, output_dir,
-                         chip_size, num_neg_chips, max_attempts, channel_order,
-                         append_csv=False):
+def make_train_chips_for_image(image_path, image_id, json_path, chip_dir,
+                               chip_label_path, chip_size, num_neg_chips,
+                               max_attempts, channel_order, append_csv=False):
     '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
-    output_image_dir = join(output_dir, 'images')
-    makedirs(output_image_dir, exist_ok=True)
-
     image_dataset = rasterio.open(image_path)
     boxes, box_to_class_id = get_boxes_from_geojson(json_path, image_dataset)
     print_box_stats(boxes)
@@ -217,56 +212,56 @@ def make_chips_for_image(image_path, image_id, json_path, output_dir,
 
     make_pos_chips(
         image_id, image_dataset, chip_size, boxes, rtree_boxes,
-        box_to_class_id, output_dir, output_image_dir, channel_order,
+        box_to_class_id, chip_dir, chip_label_path, channel_order,
         append_csv)
 
-    make_neg_chips(image_id, image_dataset, chip_size,
-                   boxes, rtree_boxes, output_image_dir,
-                   num_neg_chips, max_attempts, channel_order)
+    make_neg_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
+                   chip_dir, num_neg_chips, max_attempts, channel_order)
 
 
-def make_chips(input_dir, output_dir, chip_size, num_neg_chips, max_attempts,
-               channel_order):
-    image_paths = glob.glob(join(input_dir, '*.tif'))
-    append_csv = False
-    for image_path in image_paths:
-        image_fn = basename(image_path)
-        image_id = splitext(image_fn)[0]
-        json_fn = image_id + '.geojson'
-        json_path = join(input_dir, json_fn)
+@click.command()
+@click.argument('image_uris', nargs=-1)
+@click.argument('label_uri')
+@click.argument('chip_dir')
+@click.argument('chip_label_path')
+@click.option('--chip-size', default=300, help='Height and width of each chip')
+@click.option('--num-neg-chips', default=0,
+              help='Number of chips without objects to generate per image')
+@click.option('--max-attempts', default=0,
+              help='Maximum num of random windows to try per image when ' +
+                   'generating negative chips.')
+@click.option('--channel-order', nargs=3, type=int,
+              default=planet_channel_order, help='Indices of the RGB channels')
+def make_train_chips(image_uris, label_uri, chip_dir, chip_label_path,
+                     chip_size, num_neg_chips, max_attempts, channel_order):
+    """Generate a set of training chips.
 
-        print('Making chips for {}...'.format(image_fn))
-        make_chips_for_image(image_path, image_id, json_path, output_dir,
-                             chip_size, num_neg_chips, max_attempts,
-                             channel_order, append_csv=append_csv)
-        print()
-        append_csv = True
+    Given imagery and a GeoJSON file with labels in the form of bounding
+    boxes, this generates a set of chips centered around the boxes, and a
+    CSV file with all the bounding boxes.
 
-
-def parse_args():
-    description = """
-        Generate a set of training chips and a CSV from a GeoTIFF and GeoJSON
-        file containing labels in the form of polygon bounding boxes.
+    Args:
+        image_uris: List of URIs of TIFF files for training data
+        label_uri: GeoJSON file with training labels
+        chip_dir: Directory of chips
+        chip_label_path: CSV file with labels for each chip
     """
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--input-dir')
-    parser.add_argument('--output-dir')
-    parser.add_argument('--chip-size', type=int, default=300)
-    parser.add_argument('--num-neg-chips', type=int, default=0,
-                        help='Number of chips without objects to generate ' +
-                             'per image')
-    parser.add_argument('--max-attempts', type=int, default=0,
-                        help='Maximum num of random windows to try per ' +
-                             'image when generating negative chips')
-    parser.add_argument('--channel-order', nargs=3, type=int,
-                        default=planet_channel_order)
+    temp_dir = '/opt/data/temp/'
+    make_temp_dir(temp_dir)
 
-    return parser.parse_args()
+    image_path = download_and_build_vrt(temp_dir, image_uris)
+    image_fn = basename(image_path)
+    image_id = splitext(image_fn)[0]
+    label_path = download_if_needed(temp_dir, label_uri)
+
+    makedirs(chip_dir, exist_ok=True)
+    makedirs(dirname(chip_label_path), exist_ok=True)
+
+    click.echo('Making chips for {}...'.format(image_fn))
+    make_train_chips_for_image(
+        image_path, image_id, label_path, chip_dir, chip_label_path,
+        chip_size, num_neg_chips, max_attempts, channel_order)
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    print(args)
-
-    make_chips(args.input_dir, args.output_dir, args.chip_size,
-               args.num_neg_chips, args.max_attempts, args.channel_order)
+    make_train_chips()

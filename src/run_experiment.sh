@@ -3,6 +3,8 @@
 # Copies the git branch into the right place inside the container and then runs
 # Raster Vision.
 
+set -ex
+
 export S3_BUCKET=$1
 branch=$2
 run_args=${@:3}
