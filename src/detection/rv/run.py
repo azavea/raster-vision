@@ -8,6 +8,7 @@ from rv.commands.make_tf_record import make_tf_record
 from rv.commands.make_predict_chips import make_predict_chips
 from rv.commands.filter_geojson import filter_geojson
 from rv.commands.aggregate_predictions import aggregate_predictions
+from rv.commands.eval_predictions import eval_predictions
 
 
 @click.group()
@@ -23,6 +24,7 @@ run.add_command(make_tf_record)
 run.add_command(make_predict_chips)
 run.add_command(filter_geojson)
 run.add_command(aggregate_predictions)
+run.add_command(eval_predictions)
 
 
 if __name__ == '__main__':
