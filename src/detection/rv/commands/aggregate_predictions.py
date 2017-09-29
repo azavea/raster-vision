@@ -8,6 +8,7 @@ from scipy.misc import imsave
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import rasterio
+from pyproj import Proj, transform
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
@@ -198,6 +199,13 @@ def group_predictions(boxes, classes, scores, im_size):
 
 def save_geojson(path, boxes, classes, scores, im_size, category_index,
                  image_dataset=None):
+    if image_dataset:
+        src_crs = image_dataset.crs['init']
+        src_proj = Proj(init=src_crs)
+        # Convert to lat/lng
+        dst_crs = 'epsg:4326'
+        dst_proj = Proj(init=dst_crs)
+
     polygons = []
     for box in boxes:
         x, y, width, height = box_to_cv2_rect(im_size, box)
@@ -208,18 +216,20 @@ def save_geojson(path, boxes, classes, scores, im_size, category_index,
         polygon = [nw, ne, se, sw, nw]
         # Transform from pixel coords to spatial coords
         if image_dataset:
-            polygon = [image_dataset.ul(point[1], point[0])
-                       for point in polygon]
-        polygons.append(polygon)
+            dst_polygon = []
+            for point in polygon:
+                src_crs_point = image_dataset.ul(point[1], point[0])
+                dst_crs_point = transform(
+                    src_proj, dst_proj, src_crs_point[0], src_crs_point[1])
+                dst_polygon.append(dst_crs_point)
+        polygons.append(dst_polygon)
 
     crs = None
     if image_dataset:
-        # XXX not sure if I'm getting this properly
-        crs_name = image_dataset.crs['init']
         crs = {
             'type': 'name',
             'properties': {
-                'name': crs_name
+                'name': dst_crs
             }
         }
 
