@@ -1,9 +1,10 @@
 import numpy as np
-import os
+from os import makedirs
+from os.path import join, dirname, basename
 import glob
 import json
-import argparse
 
+import click
 import tensorflow as tf
 # For headless environments
 import matplotlib as mpl
@@ -15,7 +16,8 @@ from scipy.misc import imsave
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
-from settings import max_num_classes, min_score_threshold, line_thickness
+from rv.commands.settings import (
+    max_num_classes, min_score_threshold, line_thickness)
 
 image_size = (12, 8)
 
@@ -26,11 +28,11 @@ def load_image_into_numpy_array(image):
         (im_height, im_width, 3)).astype(np.uint8)
 
 
-def load_frozen_graph(frozen_graph_path):
+def load_frozen_graph(inference_graph_path):
     detection_graph = tf.Graph()
     with detection_graph.as_default():
         od_graph_def = tf.GraphDef()
-        with tf.gfile.GFile(frozen_graph_path, 'rb') as fid:
+        with tf.gfile.GFile(inference_graph_path, 'rb') as fid:
             serialized_graph = fid.read()
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
@@ -38,9 +40,6 @@ def load_frozen_graph(frozen_graph_path):
 
 
 def compute_prediction(image_np, detection_graph, sess):
-    # TODO i'm not sure, but we might get a big speedup
-    # by feeding a batch of images through instead of
-    # one image at a time.
     image_np_expanded = np.expand_dims(image_np, axis=0)
     image_tensor = detection_graph.get_tensor_by_name(
         'image_tensor:0')
@@ -64,48 +63,47 @@ def write_predictions_csv(predictions, predictions_path):
         json.dump(predictions, predictions_file)
 
 
-def predict(frozen_graph_path, label_map_path, input_dir,
-            output_dir):
-    output_images_dir = os.path.join(output_dir, 'images')
-    os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(output_images_dir, exist_ok=True)
+def _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
+                      predictions_path, predictions_debug_dir=None):
+    makedirs(dirname(predictions_path), exist_ok=True)
+    if predictions_debug_dir is not None:
+        makedirs(predictions_debug_dir, exist_ok=True)
 
-    detection_graph = load_frozen_graph(frozen_graph_path)
+    detection_graph = load_frozen_graph(inference_graph_path)
 
     label_map = label_map_util.load_labelmap(label_map_path)
     categories = label_map_util.convert_label_map_to_categories(
         label_map, max_num_classes=max_num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
 
-    image_paths = glob.glob(os.path.join(input_dir, '*.png'))
+    image_paths = glob.glob(join(chips_dir, '*.png'))
     predictions = {}
-    predictions_path = os.path.join(
-        output_dir, 'predictions.json')
 
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
             for image_ind, image_path in enumerate(image_paths):
-                print('Computing predictions for {}'.format(image_path))
+                click.echo('Computing predictions for {}'.format(image_path))
                 image = Image.open(image_path)
                 image_np = load_image_into_numpy_array(image)
 
                 boxes, scores, classes, num_detections = \
                     compute_prediction(image_np, detection_graph, sess)
 
-                vis_util.visualize_boxes_and_labels_on_image_array(
-                    image_np,
-                    np.squeeze(boxes),
-                    np.squeeze(classes).astype(np.int32),
-                    np.squeeze(scores),
-                    category_index,
-                    use_normalized_coordinates=True,
-                    line_thickness=line_thickness)
+                if predictions_debug_dir is not None:
+                    vis_util.visualize_boxes_and_labels_on_image_array(
+                        image_np,
+                        np.squeeze(boxes),
+                        np.squeeze(classes).astype(np.int32),
+                        np.squeeze(scores),
+                        category_index,
+                        use_normalized_coordinates=True,
+                        line_thickness=line_thickness)
 
-                out_image_path = os.path.join(
-                    output_images_dir, os.path.basename(image_path))
-                imsave(out_image_path, image_np)
+                    debug_image_path = \
+                        join(predictions_debug_dir, basename(image_path))
+                    imsave(debug_image_path, image_np)
 
-                filename = os.path.basename(image_path)
+                filename = basename(image_path)
                 detections = scores > min_score_threshold
                 predictions[filename] = {
                     'boxes': boxes[detections, :].tolist(),
@@ -116,23 +114,19 @@ def predict(frozen_graph_path, label_map_path, input_dir,
     write_predictions_csv(predictions, predictions_path)
 
 
-def parse_args():
-    description = """
-        Make predictions over a directory of images and write results to CSV.
-    """
-    parser = argparse.ArgumentParser(description=description)
-
-    parser.add_argument('--frozen-graph-path')
-    parser.add_argument('--label-map-path')
-    parser.add_argument('--input-dir')
-    parser.add_argument('--output-dir')
-
-    return parser.parse_args()
+@click.command()
+@click.argument('inference_graph_path')
+@click.argument('label_map_path')
+@click.argument('chips_dir')
+@click.argument('predictions_path')
+@click.option('--predictions-debug-dir', default=None)
+def predict_on_chips(inference_graph_path, label_map_path, chips_dir,
+                     predictions_path, predictions_debug_dir=None):
+    """Make predictions over a directory of images and write results to CSV."""
+    _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
+                      predictions_path,
+                      predictions_debug_dir=predictions_debug_dir)
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    print(args)
-
-    predict(args.frozen_graph_path, args.label_map_path, args.input_dir,
-            args.output_dir)
+    predict_on_chips()

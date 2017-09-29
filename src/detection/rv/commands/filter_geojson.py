@@ -1,10 +1,10 @@
 import json
-import argparse
 
+import click
 from shapely.geometry import shape
 
 
-def filter_geojson(mask_path, input_path, output_path):
+def _filter_geojson(mask_path, input_path, output_path):
     with open(input_path) as input_file:
         input_dict = json.load(input_file)
 
@@ -27,24 +27,18 @@ def filter_geojson(mask_path, input_path, output_path):
         json.dump(output_dict, output_file, indent=4)
 
 
-def parse_args():
-    description = """
-        Filter out polygons that are contained in a mask multipolygon. Input
-        and output is GeoJSON.
+@click.command()
+@click.argument('mask_path')
+@click.argument('input_path')
+@click.argument('output_path')
+def filter_geojson(mask_path, input_path, output_path):
+    """Filter out polygons that are contained in a mask multipolygon.
+
+    Args:
+        mask_path: GeoJSON file containing mask multipolygon
     """
-    parser = argparse.ArgumentParser(description=description)
-
-    parser.add_argument('--mask-path', help='GeoJSON file with mask')
-    parser.add_argument('--input-path',
-                        help='GeoJSON file with polygons to filter')
-    parser.add_argument('--output-path')
-
-    return parser.parse_args()
+    _filter_geojson(mask_path, input_path, output_path)
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    print(args)
-
-    filter_geojson(
-        args.mask_path, args.input_path, args.output_path)
+    filter_geojson()
