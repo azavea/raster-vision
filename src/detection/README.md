@@ -85,6 +85,19 @@ python -m rv.run predict \
 
 When this is finished running, there should be a GeoJSON file with predictions at     `s3://raster-vision/results/detection/predict/lhf_ships3_crop/agg_predictions.json`. Note that you can use local paths instead of S3 URIs.
 
+## Evaluating predictions
+
+Aside from qualitatively evaluating the predictions in QGIS, you can quantify how good the predictions are compared to the ground truth using a script as follows. This outputs a JSON file with the precision and recall for each class.
+
+```
+python -m rv.run eval_predictions \
+    /opt/data/datasets/detection/singapore_ships/test/1.tif \
+    /opt/data/datasets/detection/singapore_ships/test/1.geojson \
+    /opt/data/results/detection/predict/lhf_ships1/agg_predictions.json \
+    /opt/data/datasets/detection/ships_label_map.pbtxt \
+    /opt/data/results/detection/predict/lhf_ships1/eval.json
+```
+
 ## Debugging
 
 To debug, it may be helpful to run the above two scripts locally, and inspect the temporary files generated inside `/opt/data/temp`.

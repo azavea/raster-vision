@@ -6,6 +6,7 @@ from subprocess import run
 import signal
 from ctypes import cdll
 from time import sleep
+import json
 
 import numpy as np
 import boto3
@@ -127,3 +128,40 @@ def make_temp_dir(temp_dir):
 
 def sync_dir(src_dir, dest_uri):
     run(['aws', 's3', 'sync', src_dir, dest_uri, '--delete'])
+
+
+def get_boxes_from_geojson(json_path, image_dataset):
+    with open(json_path, 'r') as json_file:
+        geojson = json.load(json_file)
+
+    features = geojson['features']
+    boxes = []
+    box_to_class_id = {}
+    box_to_score = {}
+
+    for feature in features:
+        polygon = feature['geometry']['coordinates'][0]
+        # Convert to pixel coords.
+        polygon = [image_dataset.index(p[0], p[1]) for p in polygon]
+        polygon = np.array([(p[1], p[0]) for p in polygon])
+
+        xmin, ymin = np.min(polygon, axis=0)
+        xmax, ymax = np.max(polygon, axis=0)
+
+        box = (xmin, ymin, xmax, ymax)
+        boxes.append(box)
+
+        # Get class_id if exists, else use default of 1.
+        class_id = 1
+        score = None
+        if 'properties' in feature:
+            if 'class_id' in feature['properties']:
+                class_id = feature['properties']['class_id']
+            if 'score' in feature['properties']:
+                score = feature['properties']['score']
+        box_to_class_id[box] = class_id
+        box_to_score[box] = score
+
+    # Remove duplicates. Needed for ships dataset.
+    boxes = list(set(boxes))
+    return boxes, box_to_class_id, box_to_score

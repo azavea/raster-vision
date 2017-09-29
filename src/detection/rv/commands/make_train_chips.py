@@ -12,40 +12,9 @@ from scipy.misc import imsave
 from rtree import index
 
 from rv.commands.utils import (
-    load_window, download_and_build_vrt, download_if_needed, make_temp_dir)
+    load_window, download_and_build_vrt, download_if_needed, make_temp_dir,
+    get_boxes_from_geojson)
 from rv.commands.settings import planet_channel_order
-
-
-def get_boxes_from_geojson(json_path, image_dataset):
-    with open(json_path, 'r') as json_file:
-        geojson = json.load(json_file)
-
-    features = geojson['features']
-    boxes = []
-    box_to_class_id = {}
-
-    for feature in features:
-        polygon = feature['geometry']['coordinates'][0]
-        # Convert to pixel coords.
-        polygon = [image_dataset.index(p[0], p[1]) for p in polygon]
-        polygon = np.array([(p[1], p[0]) for p in polygon])
-
-        xmin, ymin = np.min(polygon, axis=0)
-        xmax, ymax = np.max(polygon, axis=0)
-
-        box = (xmin, ymin, xmax, ymax)
-        boxes.append(box)
-
-        # Get class_id if exists, else use default of 1.
-        class_id = 1
-        if 'properties' in feature:
-            if 'class_id' in feature['properties']:
-                class_id = feature['properties']['class_id']
-        box_to_class_id[box] = class_id
-
-    # Remove duplicates. Needed for ships dataset.
-    boxes = list(set(boxes))
-    return boxes, box_to_class_id
 
 
 def print_box_stats(boxes):
@@ -205,7 +174,8 @@ def make_train_chips_for_image(image_path, image_id, json_path, chip_dir,
                                max_attempts, channel_order, append_csv=False):
     '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
     image_dataset = rasterio.open(image_path)
-    boxes, box_to_class_id = get_boxes_from_geojson(json_path, image_dataset)
+    boxes, box_to_class_id, _ = get_boxes_from_geojson(
+        json_path, image_dataset)
     print_box_stats(boxes)
     # build spatial index of boxes to use for fast intersection test.
     rtree_boxes = make_box_index(boxes)
