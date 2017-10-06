@@ -214,7 +214,7 @@ def non_max_suppression(boxlist,
   is_index_valid = np.full(num_boxes, 1, dtype=bool)
   selected_indices = []
   num_output = 0
-  for i in xrange(num_boxes):
+  for i in range(num_boxes):
     if num_output < max_output_size:
       if is_index_valid[i]:
         num_output += 1
@@ -299,7 +299,8 @@ def multi_class_non_max_suppression(boxlist, score_thresh, iou_thresh,
                                      iou_threshold=iou_thresh,
                                      score_threshold=score_thresh)
     nms_result.add_field(
-        'classes', np.zeros_like(nms_result.get_field('scores')) + class_idx)
+        'classes',
+        np.zeros_like(nms_result.get_field('scores'), dtype=int) + class_idx)
     selected_boxes_list.append(nms_result)
   selected_boxes = concatenate(selected_boxes_list)
   sorted_boxes = sort_by_field(selected_boxes, 'scores')

@@ -7,10 +7,13 @@ import signal
 from ctypes import cdll
 from time import sleep
 import json
+import pandas
 
 import numpy as np
 import boto3
 import botocore
+
+from object_detection.utils import np_box_list
 
 s3 = boto3.resource('s3')
 
@@ -39,6 +42,12 @@ def on_parent_exit(signame):
 
 
 def load_window(image_dataset, channel_order, window=None):
+    """Load a window of an image from a TIFF file.
+
+    Args:
+        window: ((row_start, row_stop), (col_start, col_stop)) or
+        ((y_min, y_max), (x_min, x_max))
+    """
     im = np.transpose(
         image_dataset.read(window=window), axes=[1, 2, 0])
     im = im[:, :, channel_order]
@@ -131,6 +140,12 @@ def sync_dir(src_dir, dest_uri):
 
 
 def get_boxes_from_geojson(json_path, image_dataset):
+    """Extract boxes and related info from GeoJSON file
+
+    Returns boxes, classes, scores, where each is a numpy array. The
+    array of boxes has shape [N, 4], where the columns correspond to
+    ymin, xmin, ymax, and xmax.
+    """
     with open(json_path, 'r') as json_file:
         geojson = json.load(json_file)
 
@@ -148,20 +163,50 @@ def get_boxes_from_geojson(json_path, image_dataset):
         xmin, ymin = np.min(polygon, axis=0)
         xmax, ymax = np.max(polygon, axis=0)
 
-        box = (xmin, ymin, xmax, ymax)
+        box = (ymin, xmin, ymax, xmax)
         boxes.append(box)
 
         # Get class_id if exists, else use default of 1.
-        class_id = 1
-        score = None
         if 'properties' in feature:
             if 'class_id' in feature['properties']:
                 class_id = feature['properties']['class_id']
+                box_to_class_id[box] = class_id
             if 'score' in feature['properties']:
                 score = feature['properties']['score']
-        box_to_class_id[box] = class_id
-        box_to_score[box] = score
+                box_to_score[box] = score
 
     # Remove duplicates. Needed for ships dataset.
     boxes = list(set(boxes))
-    return boxes, box_to_class_id, box_to_score
+    classes = np.array([box_to_class_id.get(box, 1) for box in boxes],
+                       dtype=int)
+    scores = np.array([box_to_score.get(box) for box in boxes], dtype=float)
+    boxes = np.array(boxes, dtype=float)
+
+    return boxes, classes, scores
+
+
+def translate_boxlist(boxlist, x_offset, y_offset):
+    """Translate box coordinates by an offset.
+
+    Args:
+    boxlist: BoxList holding N boxes
+    x_offset: float
+    y_offset: float
+
+    Returns:
+    boxlist: BoxList holding N boxes
+    """
+    y_min, x_min, y_max, x_max = np.array_split(boxlist.get(), 4, axis=1)
+    y_min = y_min + y_offset
+    y_max = y_max + y_offset
+    x_min = x_min + x_offset
+    x_max = x_max + x_offset
+    translated_boxlist = np_box_list.BoxList(
+       np.hstack([y_min, x_min, y_max, x_max]))
+
+    fields = boxlist.get_extra_fields()
+    for field in fields:
+        extra_field_data = boxlist.get_field(field)
+        translated_boxlist.add_field(field, extra_field_data)
+
+    return translated_boxlist

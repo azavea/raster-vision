@@ -1,6 +1,6 @@
 import json
 from os import makedirs
-from os.path import join, splitext, basename, dirname
+from os.path import join, dirname
 import csv
 
 import click
@@ -17,15 +17,35 @@ from rv.commands.utils import (
 from rv.commands.settings import planet_channel_order
 
 
+class BoxDB():
+    def __init__(self, boxes):
+        """Build DB of boxes for fast intersection queries
+
+        Args:
+            boxes: [N, 4] numpy array of boxes with cols ymin, xmin, ymax, xmax
+        """
+        self.boxes = boxes
+        self.rtree_idx = index.Index()
+        for box_ind, box in enumerate(boxes):
+            # rtree order is xmin, ymin, xmax, ymax
+            rtree_box = (box[1], box[0], box[3], box[2])
+            self.rtree_idx.insert(box_ind, rtree_box)
+
+    def get_intersecting_box_inds(self, x, y, box_size):
+        query_box = (x, y, x + box_size, y + box_size)
+        intersection_inds = list(self.rtree_idx.intersection(query_box))
+        return intersection_inds
+
+
 def print_box_stats(boxes):
     click.echo('# boxes: {}'.format(len(boxes)))
-    np_boxes = np.array(boxes)
 
-    width = np_boxes[:, 2] - np_boxes[:, 0] + 1
+    ymins, xmins, ymaxs, xmaxs = boxes.T
+    width = xmaxs - xmins + 1
     click.echo('width (mean, min, max): ({}, {}, {})'.format(
                np.mean(width), np.min(width), np.max(width)))
 
-    height = np_boxes[:, 3] - np_boxes[:, 1] + 1
+    height = ymaxs - ymins + 1
     click.echo('height (mean, min, max): ({}, {}, {})'.format(
                np.mean(height), np.min(height), np.max(height)))
 
@@ -37,26 +57,17 @@ def write_chips_csv(csv_path, chip_rows, append_csv=False):
         # Only write header if not appending.
         if not append_csv:
             csv_writer.writerow(
-                ('filename', 'xmin', 'xmax', 'ymin', 'ymax', 'class_id'))
+                ('filename', 'ymin', 'xmin', 'ymax', 'xmax', 'class_id'))
         for row in chip_rows:
             csv_writer.writerow(row)
 
 
-def make_box_index(boxes):
-    idx = index.Index()
-    for box_ind, box in enumerate(boxes):
-        idx.insert(box_ind, box)
-    return idx
-
-
-def find_intersected_boxes(rand_x, rand_y, chip_size, rtree_boxes, boxes):
-    box = (rand_x, rand_y, rand_x + chip_size, rand_y + chip_size)
-    intersection_ids = list(rtree_boxes.intersection(box))
-    return [boxes[id] for id in intersection_ids]
-
-
 def get_random_window_for_box(box, im_width, im_height, chip_size):
-    xmin, ymin, xmax, ymax = box
+    """Get random window in image that contains box.
+
+    Returns: upper-left corner of window
+    """
+    ymin, xmin, ymax, xmax = box
 
     # ensure that window doesn't go off the edge of the array.
     width = xmax - xmin
@@ -73,73 +84,82 @@ def get_random_window_for_box(box, im_width, im_height, chip_size):
 
 
 def get_random_window(im_width, im_height, chip_size):
+    """Get random window somewhere in image.
+
+    Returns: upper-left corner of window
+    """
     rand_x = int(np.random.uniform(0, im_width - chip_size))
     rand_y = int(np.random.uniform(0, im_height - chip_size))
     return (rand_x, rand_y)
 
 
-def make_pos_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
-                   box_to_class_id, chip_dir, chip_label_path,
-                   channel_order, append_csv):
+def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
+                   chip_label_path, channel_order, append_csv):
+    box_db = BoxDB(boxes)
     chip_rows = []
     done_boxes = set()
 
     for chip_ind, anchor_box in enumerate(boxes):
         # if the box is contained in a previous chip, then skip it.
-        if anchor_box in done_boxes:
+        if tuple(anchor_box) in done_boxes:
             continue
 
         # extract random window around anchor_box.
-        chip_fn = '{}_{}.png'.format(image_id, chip_ind)
+        chip_fn = '{}.png'.format(chip_ind)
+        # upper left corner of window
         rand_x, rand_y = get_random_window_for_box(
             anchor_box, image_dataset.width, image_dataset.height, chip_size)
+        # note: rasterio windows use a different dimension ordering than
+        # bounding boxes
         window = ((rand_y, rand_y + chip_size), (rand_x, rand_x + chip_size))
-
         chip_im = load_window(
             image_dataset, channel_order, window=window)
         redacted_chip_im = np.copy(chip_im)
 
-        # find all boxes inside window and transform coordinates so they
-        # are in the window frame of reference.
-        intersected_boxes = find_intersected_boxes(
-            rand_x, rand_y, chip_size, rtree_boxes, boxes)
+        # find all boxes inside window (which will be turned into a chip)
+        # and transform coordinates so they are in the window frame of
+        # reference.
+        intersecting_inds = box_db.get_intersecting_box_inds(
+            rand_x, rand_y, chip_size)
 
+        # boxes in the chip's frame of reference
         chip_boxes = []
-        for intersected_box in intersected_boxes:
-            xmin, ymin, xmax, ymax = intersected_box
-            chip_box = np.array((xmin - rand_x, ymin - rand_y,
-                                 xmax - rand_x, ymax - rand_y))
-            chip_xmin, chip_ymin, chip_xmax, chip_ymax = chip_box
-            chip_class_id = box_to_class_id[intersected_box]
+        for intersecting_ind in intersecting_inds:
+            intersecting_box = boxes[intersecting_ind]
+            ymin, xmin, ymax, xmax = intersecting_box
+            chip_box = np.array([ymin - rand_y, xmin - rand_x,
+                                 ymax - rand_y, xmax - rand_x])
+            chip_ymin, chip_xmin, chip_ymax, chip_xmax = chip_box
+            chip_box_class_id = classes[intersecting_ind]
 
             # if box is wholly contained in the window, then add it to the
             # csv.
             is_contained = (np.all(chip_box >= 0) and
                             np.all(chip_box < chip_size))
             if is_contained:
-                row = [chip_fn, chip_xmin, chip_xmax,
-                       chip_ymin, chip_ymax, chip_class_id]
+                row = [chip_fn, chip_ymin, chip_xmin,
+                       chip_ymax, chip_xmax, chip_box_class_id]
                 chip_rows.append(row)
                 chip_boxes.append(chip_box)
-                done_boxes.add(intersected_box)
+                done_boxes.add(tuple(intersecting_box))
             else:
-                # else, black out the box, since we don't want it to count
-                # as a negative example. this could be dangerous if the objects
-                # you are trying to detect are black boxes :)
-                clip_xmin, clip_ymin, clip_xmax, clip_ymax = \
-                    np.clip(chip_box, 0, chip_size)
+                # else, black out (or redact) the box, since we don't want it
+                # to count as a negative example. this could be dangerous if
+                # the objects you are trying to detect are black boxes :)
+                clip_ymin, clip_xmin, clip_ymax, clip_xmax = \
+                    np.clip(chip_box, 0, chip_size).astype(np.int32)
                 redacted_chip_im[clip_ymin:clip_ymax, clip_xmin:clip_xmax, :] = 0   # noqa
 
         # save the chip.
         chip_path = join(chip_dir, chip_fn)
-
         imsave(chip_path, redacted_chip_im)
 
     write_chips_csv(chip_label_path, chip_rows, append_csv)
 
 
-def make_neg_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
-                   chip_dir, num_neg_chips, max_attempts, channel_order):
+def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
+                   num_neg_chips, max_attempts, channel_order):
+    box_db = BoxDB(boxes)
     neg_chips_count = 0
     attempt_count = 0
     while attempt_count < max_attempts and neg_chips_count < num_neg_chips:
@@ -148,45 +168,43 @@ def make_neg_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
             image_dataset.width, image_dataset.height, chip_size)
 
         # check if intersects with any boxes
-        intersected_boxes = find_intersected_boxes(
-            rand_x, rand_y, chip_size, rtree_boxes, boxes)
+        intersecting_inds = box_db.get_intersecting_box_inds(
+            rand_x, rand_y, chip_size)
 
         # if no intersection
-        if len(intersected_boxes) == 0:
+        if len(intersecting_inds) == 0:
             # extract chip
+            # note: row is y, col is x
             window = ((rand_y, rand_y + chip_size),
                       (rand_x, rand_x + chip_size))
             chip_im = load_window(
                 image_dataset, channel_order, window=window)
 
             # save to disk
-            chip_fn = '{}_neg_{}.png'.format(image_id, neg_chips_count)
+            chip_fn = 'neg_{}.png'.format(neg_chips_count)
             chip_path = join(chip_dir, chip_fn)
             imsave(chip_path, chip_im)
-
             neg_chips_count += 1
+
         attempt_count += 1
+
     click.echo('Wrote {} negative chips.'.format(neg_chips_count))
 
 
-def make_train_chips_for_image(image_path, image_id, json_path, chip_dir,
+def make_train_chips_for_image(image_path, json_path, chip_dir,
                                chip_label_path, chip_size, num_neg_chips,
                                max_attempts, channel_order, append_csv=False):
     '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
     image_dataset = rasterio.open(image_path)
-    boxes, box_to_class_id, _ = get_boxes_from_geojson(
-        json_path, image_dataset)
+    boxes, classes, _ = get_boxes_from_geojson(json_path, image_dataset)
     print_box_stats(boxes)
-    # build spatial index of boxes to use for fast intersection test.
-    rtree_boxes = make_box_index(boxes)
 
     make_pos_chips(
-        image_id, image_dataset, chip_size, boxes, rtree_boxes,
-        box_to_class_id, chip_dir, chip_label_path, channel_order,
-        append_csv)
+        image_dataset, chip_size, boxes, classes, chip_dir, chip_label_path,
+        channel_order, append_csv)
 
-    make_neg_chips(image_id, image_dataset, chip_size, boxes, rtree_boxes,
-                   chip_dir, num_neg_chips, max_attempts, channel_order)
+    make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
+                   num_neg_chips, max_attempts, channel_order)
 
 
 @click.command()
@@ -220,16 +238,14 @@ def make_train_chips(image_uris, label_uri, chip_dir, chip_label_path,
     make_temp_dir(temp_dir)
 
     image_path = download_and_build_vrt(temp_dir, image_uris)
-    image_fn = basename(image_path)
-    image_id = splitext(image_fn)[0]
     label_path = download_if_needed(temp_dir, label_uri)
 
     makedirs(chip_dir, exist_ok=True)
     makedirs(dirname(chip_label_path), exist_ok=True)
 
-    click.echo('Making chips for {}...'.format(image_fn))
+    click.echo('Making chips...')
     make_train_chips_for_image(
-        image_path, image_id, label_path, chip_dir, chip_label_path,
+        image_path, label_path, chip_dir, chip_label_path,
         chip_size, num_neg_chips, max_attempts, channel_order)
 
 

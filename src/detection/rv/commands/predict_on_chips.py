@@ -13,8 +13,11 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.misc import imsave
 
-from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as vis_util
+from object_detection.utils import (
+    label_map_util, visualization_utils as vis_util)
+from object_detection.utils.np_box_list_ops import (
+    scale, filter_scores_greater_than)
+from object_detection.utils.np_box_list import BoxList
 
 from rv.commands.settings import (
     max_num_classes, min_score_threshold, line_thickness)
@@ -49,13 +52,15 @@ def compute_prediction(image_np, detection_graph, sess):
         'detection_scores:0')
     classes = detection_graph.get_tensor_by_name(
         'detection_classes:0')
-    num_detections = detection_graph.get_tensor_by_name(
-        'num_detections:0')
 
-    (boxes, scores, classes, num_detections) = sess.run(
-        [boxes, scores, classes, num_detections],
+    (boxes, scores, classes) = sess.run(
+        [boxes, scores, classes],
         feed_dict={image_tensor: image_np_expanded})
-    return (boxes, scores, classes, num_detections)
+    boxlist = BoxList(np.squeeze(boxes))
+    boxlist.add_field('scores', np.squeeze(scores))
+    boxlist.add_field('classes', np.squeeze(classes).astype(np.int32))
+
+    return boxlist
 
 
 def write_predictions_csv(predictions, predictions_path):
@@ -85,18 +90,20 @@ def _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
                 click.echo('Computing predictions for {}'.format(image_path))
                 image = Image.open(image_path)
                 image_np = load_image_into_numpy_array(image)
+                height, width = image_np.shape[0:2]
 
-                boxes, scores, classes, num_detections = \
-                    compute_prediction(image_np, detection_graph, sess)
+                norm_boxlist = compute_prediction(
+                    image_np, detection_graph, sess)
+                boxlist = scale(norm_boxlist, width, height)
 
                 if predictions_debug_dir is not None:
                     vis_util.visualize_boxes_and_labels_on_image_array(
                         image_np,
-                        np.squeeze(boxes),
-                        np.squeeze(classes).astype(np.int32),
-                        np.squeeze(scores),
+                        boxlist.get(),
+                        boxlist.get_field('classes'),
+                        boxlist.get_field('scores'),
                         category_index,
-                        use_normalized_coordinates=True,
+                        use_normalized_coordinates=False,
                         line_thickness=line_thickness)
 
                     debug_image_path = \
@@ -104,11 +111,12 @@ def _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
                     imsave(debug_image_path, image_np)
 
                 filename = basename(image_path)
-                detections = scores > min_score_threshold
+                filtered_boxlist = filter_scores_greater_than(
+                    boxlist, min_score_threshold)
                 predictions[filename] = {
-                    'boxes': boxes[detections, :].tolist(),
-                    'scores': scores[detections].tolist(),
-                    'classes': classes[detections].tolist()
+                    'boxes': filtered_boxlist.get().tolist(),
+                    'scores': filtered_boxlist.get_field('scores').tolist(),
+                    'classes': filtered_boxlist.get_field('classes').tolist()
                 }
 
     write_predictions_csv(predictions, predictions_path)
@@ -122,7 +130,7 @@ def _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
 @click.option('--predictions-debug-dir', default=None)
 def predict_on_chips(inference_graph_path, label_map_path, chips_dir,
                      predictions_path, predictions_debug_dir=None):
-    """Make predictions over a directory of images and write results to CSV."""
+    """Make and save predictions over a directory of images."""
     _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
                       predictions_path,
                       predictions_debug_dir=predictions_debug_dir)
