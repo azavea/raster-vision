@@ -25,9 +25,9 @@ You will need to run this command for each VRT in the training set. Next, create
 ```
 python -m rv.run make_tf_record --debug \
     /opt/data/datasets/detection/singapore_ships_chips_neg/ships_label_map.pbtxt \
-    /opt/data/datasets/detection/singapore_ships_chips_
     /opt/data/datasets/detection/singapore_ships_chips_neg/chips0 /opt/data/datasets/detection/singapore_ships_chips_neg/chips0.csv \
     /opt/data/datasets/detection/singapore_ships_chips_neg/chips2 \ /opt/data/datasets/detection/singapore_ships_chips_neg/chips2.csv
+    /opt/data/datasets/detection/singapore_ships_chips_neg
 ```
 
 When this is done, zip the `singapore_ships_chips_neg` folder into `singapore_ships_chips_neg.zip` and upload to S3 inside `s3://raster-vision/datasets/detection`. Also, separately upload the label map file to `s3://raster-vision/datasets/detection/ships_label_map.pbtxt`.
@@ -92,11 +92,16 @@ Aside from qualitatively evaluating the predictions in QGIS, you can quantify ho
 ```
 python -m rv.run eval_predictions \
     /opt/data/datasets/detection/singapore_ships/test/1.tif \
+    /opt/data/datasets/detection/ships_label_map.pbtxt \
     /opt/data/datasets/detection/singapore_ships/test/1.geojson \
     /opt/data/results/detection/predict/lhf_ships1/agg_predictions.json \
-    /opt/data/datasets/detection/ships_label_map.pbtxt \
     /opt/data/results/detection/predict/lhf_ships1/eval.json
 ```
+
+## Data representation
+
+Unless otherwise stated, we represent bounding boxes as numpy arrays of shape
+`[N, 4]` with `[ymin, xmin, ymax, xmax]` as the columns, following a convention set in the TF Object Detection API. In addition, `y` refers to the index of the columns of an element in an array, and `x` refers to the index of the column.
 
 ## Debugging
 

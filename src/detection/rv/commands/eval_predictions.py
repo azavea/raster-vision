@@ -13,33 +13,25 @@ from rv.commands.settings import max_num_classes
 
 
 def get_eval_result(ground_truth_path, predictions_path, image_dataset):
-    gt_boxes, gt_box_to_class_id, _ = \
+    gt_boxes, gt_classes, _ = \
         get_boxes_from_geojson(ground_truth_path, image_dataset)
-    gt_class_ids = np.array(
-        [gt_box_to_class_id[box] for box in gt_boxes], dtype=int)
     # Subtract one because class id's start at 1, but evaluation api assumes
     # the start at 0. You might think we could just write the label_map.pbtxt
     # so the class ids start at 0, but that throws an exception.
-    gt_class_ids -= 1
-    gt_boxes = np.array(gt_boxes, dtype=float)
+    gt_classes -= 1
 
-    pred_boxes, pred_box_to_class_id, pred_box_to_score = \
+    pred_boxes, pred_classes, pred_scores = \
         get_boxes_from_geojson(predictions_path, image_dataset)
-    pred_class_ids = np.array(
-        [pred_box_to_class_id[box] for box in pred_boxes], dtype=int)
-    pred_class_ids -= 1
-    pred_scores = np.array(
-        [pred_box_to_score[box] for box in pred_boxes], dtype=float)
-    pred_boxes = np.array(pred_boxes, dtype=float)
+    pred_classes -= 1
 
-    nb_gt_classes = len(set(gt_box_to_class_id.values()))
+    nb_gt_classes = len(set(gt_classes))
     od_eval = object_detection_evaluation.ObjectDetectionEvaluation(
         nb_gt_classes, matching_iou_threshold=0.1)
     image_key = 'image'
     od_eval.add_single_ground_truth_image_info(
-        image_key, gt_boxes, gt_class_ids)
+        image_key, gt_boxes, gt_classes)
     od_eval.add_single_detected_image_info(
-        image_key, pred_boxes, pred_scores, pred_class_ids)
+        image_key, pred_boxes, pred_scores, pred_classes)
 
     od_eval.evaluate()
     return od_eval.get_eval_result()
@@ -54,14 +46,20 @@ def write_results(output_path, label_map_path, eval_result):
     results = []
     for class_id in range(1, len(category_index) + 1):
         class_name = category_index[class_id]['name']
-        # Get precision and recall assuming all boxes are used.
         # Subtract one to account for fact that class id's start at 1.
-        precision = eval_result.precisions[class_id - 1][-1]
-        recall = eval_result.recalls[class_id - 1][-1]
+        # precisions and recalls are lists with one element for each
+        # predicted box, assuming they are sorted by score. Each element is
+        # the precision or recall assuming that all predicted boxes with that
+        # score or above are used. So, the last element is the value assuming
+        # that all predictions are used.
+
+        precisions = eval_result.precisions[class_id - 1]
+        recalls = eval_result.recalls[class_id - 1]
+        # Get precision and recall assuming all predicted boxes are used.
         class_results = {
             'name': class_name,
-            'precision': precision,
-            'recall': recall
+            'precision': precisions[-1],
+            'recall': recalls[-1]
         }
         results.append(class_results)
 
@@ -71,12 +69,12 @@ def write_results(output_path, label_map_path, eval_result):
 
 @click.command()
 @click.argument('image_uris', nargs=-1)
+@click.argument('label_map_uri')
 @click.argument('ground_truth_uri')
 @click.argument('predictions_uri')
-@click.argument('label_map_uri')
 @click.argument('output_uri')
-def eval_predictions(image_uris, ground_truth_uri, predictions_uri,
-                     label_map_uri, output_uri):
+def eval_predictions(image_uris, label_map_uri, ground_truth_uri,
+                     predictions_uri, output_uri):
     """Evaluate predictions against ground truth.
 
     Args:

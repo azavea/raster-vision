@@ -57,7 +57,7 @@ def predict(inference_graph_uri, label_map_uri, image_uris,
         channel_order=channel_order)
 
     # Make prediction for each chip.
-    predictions_path = join(temp_dir, 'predictions.csv')
+    predictions_path = join(temp_dir, 'predictions.json')
     predictions_debug_dir = join(temp_dir, 'predictions_debug')
     _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
                       predictions_path,

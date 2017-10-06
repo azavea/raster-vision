@@ -14,11 +14,19 @@ from rv.commands.settings import planet_channel_order
 
 def _make_predict_chips(image_path, chips_dir, chips_info_path,
                         chip_size=300, channel_order=planet_channel_order):
+    """Slide window (with overlap) over image to generate prediction chips.
+
+    The neural network can only make predictions over small, fixed sized images
+    so this breaks a large image into a set of chips to feed into the network.
+    """
+    click.echo('Making predict chips...')
     makedirs(chips_dir, exist_ok=True)
     makedirs(dirname(chips_info_path), exist_ok=True)
     image_dataset = rasterio.open(image_path)
 
     offsets = {}
+    # Add padding to some chips to account for image not being divisible by
+    # the chip_size.
     for row_start in range(0, image_dataset.height, chip_size // 2):
         row_end = min(row_start + chip_size, image_dataset.height)
         for col_start in range(0, image_dataset.width, chip_size // 2):
@@ -31,13 +39,13 @@ def _make_predict_chips(image_path, chips_dir, chips_info_path,
                 (chip_size, chip_size, 3))
             padded_chip[0:chip.shape[0], 0:chip.shape[1], :] = chip
 
-            chip_file_name = '{}_{}.png'.format(row_start, col_start)
-            chip_path = join(chips_dir, chip_file_name)
+            chip_filename = '{}_{}.png'.format(row_start, col_start)
+            chip_path = join(chips_dir, chip_filename)
             imsave(chip_path, padded_chip)
 
             # Position of the upper-left corner of chip in the
             # original, unpadded image.
-            offsets[chip_file_name] = (col_start, row_start)
+            offsets[chip_filename] = (col_start, row_start)
 
     chips_info = {
         'offsets': offsets,
@@ -58,6 +66,10 @@ def _make_predict_chips(image_path, chips_dir, chips_info_path,
 def make_predict_chips(image_path, chips_dir, chips_info_path,
                        chip_size, channel_order):
     """Generate chips from large images to run prediction on.
+
+    The output contains chips and a JSON file with the (x, y) coordinates
+    in pixels of the upper-left corner of each chip in the frame of reference
+    of the original image.
 
     Args:
         image_path: TIFF or VRT file to create chips from
