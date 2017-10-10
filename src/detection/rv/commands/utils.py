@@ -111,8 +111,9 @@ def upload_if_needed(src_path, dst_uri):
 
     parsed_uri = urlparse(dst_uri)
     if parsed_uri.scheme == 's3':
+        # String the leading slash off of the path since S3 does not expect it.
         s3.meta.client.upload_file(
-            src_path, parsed_uri.netloc, parsed_uri.path)
+            src_path, parsed_uri.netloc, parsed_uri.path[1:])
 
 
 def build_vrt(vrt_path, image_paths):
