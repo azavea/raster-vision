@@ -49,12 +49,12 @@ def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
     with zipfile.ZipFile(model_checkpoint_path, 'r') as model_checkpoint_file:
         model_checkpoint_file.extractall(dirname(model_checkpoint_path))
 
-    def sync_train_dir():
-        sync_dir(train_root_dir, train_uri)
+    def sync_train_dir(delete=True):
+        sync_dir(train_root_dir, train_uri, delete=delete)
         Timer(sync_interval, sync_train_dir).start()
 
     if urlparse(train_uri).scheme == 's3':
-        sync_train_dir()
+        sync_train_dir(delete=False)
 
     train_process = Popen([
         'python', '/opt/src/detection/models/object_detection/train.py',
