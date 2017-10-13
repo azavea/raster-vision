@@ -9,6 +9,8 @@ from rv.commands.make_predict_chips import make_predict_chips
 from rv.commands.filter_geojson import filter_geojson
 from rv.commands.aggregate_predictions import aggregate_predictions
 from rv.commands.eval_predictions import eval_predictions
+from rv.commands.make_label_map import make_label_map
+from rv.commands.prep_train_data import prep_train_data
 
 
 @click.group()
@@ -25,6 +27,8 @@ run.add_command(make_predict_chips)
 run.add_command(filter_geojson)
 run.add_command(aggregate_predictions)
 run.add_command(eval_predictions)
+run.add_command(make_label_map)
+run.add_command(prep_train_data)
 
 
 if __name__ == '__main__':
