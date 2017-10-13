@@ -2,48 +2,52 @@
 
 ## Overview
 
-This guide shows how to train a model on a tiny dataset containing ships, and then how to make predictions on a TIFF file. This makes use of a set of scripts utilizing the Tensorflow Object Detection API, and AWS Batch to run jobs. Unless otherwise stated, all commands should be run from inside the Docker CPU container relative to `/opt/src/detection`. In addition, the paths are with reference to the file system of the Docker CPU container. Note that there are bugs, so make sure to check the issues with the `object-detection` and `bug` labels.
+This guide shows how to prepare a training dataset, train a model, make predictions, and evaluate the predictions. This demonstrates a set of scripts which are built on top of the Tensorflow Object Detection API, and AWS Batch to run jobs. Unless otherwise stated, all commands should be run from inside the Docker CPU container. In addition, the paths are with reference to the file system of the Docker CPU container. Note that there are bugs, so make sure to check the issues with the `object-detection` and `bug` labels. If you are not at Azavea, you will need to upload your own data to your own S3 bucket. These scripts handle URIs that can be either local files or S3 URIs.
 
-## Data Prep
+## Prepare training data
 
-First, download the raw ships data from  `s3://raster-vision/datasets/detection/singapore_ships.zip` to `/opt/data/datasets/detection/singapore_ships.zip` and unzip it. Then, split
-the files into two directories, `train` and `test`. I used all images except `1.tif` and `3.tif` for the training set.
-
-In order to train a model, you must convert a list of GeoTIFFs (corresponding to a VRT) and a GeoJSON file with labels into a set of training chips and a CSV file representing bounding boxes in the chips' frame of reference. You can do this for `0.tif` as follows.
+A project is a set of GeoTIFFs covering an area of interest. Given a set of projects, and a set of corresponding annotation GeoJSON files, you can generate a training dataset. Here is an example of how to do so for
+Oakland and Richmond ship data. First, create a projects configuration JSON file with the following content, and upload it to S3.
 
 ```
-python -m rv.run make_train_chips \
+[
+    {
+        "images": [
+            "s3://raster-vision/datasets/detection/ship_test/oakland.tiff"
+        ],
+        "annotations": "s3://raster-vision/datasets/detection/ship_test/2017-07-23-oakland-final.geojson"
+    },
+    {
+        "images": [
+            "s3://raster-vision/datasets/detection/ship_test/richmond.tiff"
+        ],
+        "annotations": "s3://raster-vision/datasets/detection/ship_test/2017-08-27-richmond-final.geojson"
+    }
+]
+```
+
+Next, run the following command which will place the output at `s3://raster-vision/datasets/detection/ship_test_out.zip`. On a larger set of projects, you will probably want to run this on EC2 to avoid downloading a lot of data.
+
+```
+python -m rv.run prep_train_data \
+    --debug \
     --chip-size 300 --num-neg-chips 50 --max-attempts 500 \
-    /opt/data/datasets/detection/singapore_ships/train/0.tif \
-    /opt/data/datasets/detection/singapore_ships/train/0.geojson \
-    /opt/data/datasets/detection/singapore_ships_chips_neg/chips0 \
-    /opt/data/datasets/detection/singapore_ships_chips_neg/chips0.csv
+    s3://raster-vision/datasets/detection/ship_test/projects.json \
+    s3://raster-vision/datasets/detection/ship_test_out.zip
 ```
 
-You will need to run this command for each VRT in the training set. Next, create a `ships_label_map.pbtxt` file in the `singapore_ships_chips_neg` directory. It should have a single entry with `id=1` and `name=Ships`. An example of this kind of file can be found in `pet_label_map.pbtxt`. Then, convert all sets of training chips to TFRecord format, which is the required format for the TF Object Detection API. The files will be placed in the `singapore_ships_chips_neg` directory, which will include a directory of debug plots if the `--debug` flag is used. To do this for training chip sets 0 and 2, run the following.
+## Train a model
 
+The training algorithm is configured in a file, an example of which can be seen at `samples/configs/ships/ship_test.config`. This file needs to be modified if the local paths for data files change, or to tweak the hyperparameters or model architecture.
+After uploading this file to S3, and committing any desired changes to a git branch, start a training job on AWS Batch, by running the following *from the VM*. Note the quotes around the command to run on the container.
 ```
-python -m rv.run make_tf_record --debug \
-    /opt/data/datasets/detection/singapore_ships_chips_neg/ships_label_map.pbtxt \
-    /opt/data/datasets/detection/singapore_ships_chips_neg/chips0 /opt/data/datasets/detection/singapore_ships_chips_neg/chips0.csv \
-    /opt/data/datasets/detection/singapore_ships_chips_neg/chips2 \ /opt/data/datasets/detection/singapore_ships_chips_neg/chips2.csv
-    /opt/data/datasets/detection/singapore_ships_chips_neg
-```
-
-When this is done, zip the `singapore_ships_chips_neg` folder into `singapore_ships_chips_neg.zip` and upload to S3 inside `s3://raster-vision/datasets/detection`. Also, separately upload the label map file to `s3://raster-vision/datasets/detection/ships_label_map.pbtxt`.
-
-## Training a model on EC2
-
-The training algorithm is configured in a file, an example of which can be seen at `configs/ships/ssd_mobilenet_v1.config`. This file needs to be modified if the local paths for data files change, or to tweak the hyperparameters or model architecture.
-Once this file is committed to a branch (with name denoted by `branch-name`) and pushed to the remote repo, start a training job on AWS Batch, by running the following *from the VM*. Note the quotes around the command to run on the container.
-```
-src/detection/scripts/batch_submit.py  <branch-name> \
+src/detection/scripts/batch_submit.py <branch-name> \
     "python -m rv.run train \
         --sync-interval 600 \
-        /opt/src/detection/configs/ships/neg/ssd_mobilenet_v1.config \
-        s3://raster-vision/datasets/detection/singapore_ships_chips_neg.zip \
+        s3://raster-vision/results/detection/train/ship_test/ship_test.config \
+        s3://raster-vision/datasets/detection/ship_test.zip \
         s3://raster-vision/datasets/detection/models/ssd_mobilenet_v1_coco_11_06_2017.zip \
-        s3://raster-vision/results/detection/train/lhf_ships_neg"
+        s3://raster-vision/results/detection/train/ship_test"
     --attempts 1
 ```
 
@@ -51,51 +55,49 @@ This requires that there is a model checkpoint file (for using a pre-trained mod
 As training progresses, the checkpoints are periodically sync'd to S3 according to the `sync-interval` (which is in seconds).
 You can monitor training using Tensorboard by pointing your browser at `http://<ec2 instance ip>:6006`. It may take a few minutes before results show up. When you are done training the model (ie. after the total loss flattens out), you need to kill the Batch job since it's running in an infinite loop. If this script fails due to instance shutdown and is run again, it should pick up where it left off using saved checkpoints.
 
-## Making predictions
+## Make predictions
 
-After training finishes, you can make predictions for a set of GeoTIFF files.  
+After training finishes, you can make predictions for a project.
 First, in order to make the trained model available for inference, you must first convert a checkpoint file into an inference graph. For example, you can do the following.
 
 ```
-aws s3 cp s3://raster-vision/results/detection/train/lhf_ships_neg0/train/model.ckpt-57662.index /tmp/
-aws s3 cp s3://raster-vision/results/detection/train/lhf_ships_neg0/train/model.ckpt-57662.meta /tmp/
-aws s3 cp s3://raster-vision/results/detection/train/lhf_ships_neg0/train/model.ckpt-57662.data-00000-of-00001 /tmp/
+aws s3 cp s3://raster-vision/results/detection/train/ship_test/train/model.ckpt-57662.index /tmp/
+aws s3 cp s3://raster-vision/results/detection/train/ship_test/train/model.ckpt-57662.meta /tmp/
+aws s3 cp s3://raster-vision/results/detection/train/ship_test/train/model.ckpt-57662.data-00000-of-00001 /tmp/
 
 python models/object_detection/export_inference_graph.py \
     --input_type image_tensor \
-    --pipeline_config_path /opt/src/detection/configs/ships/neg/ssd_mobilenet_v1.config \
+    --pipeline_config_path /opt/src/detection/configs/ships/ship_test.config \
     --checkpoint_path /tmp/model.ckpt-57662 \
     --inference_graph_path
 
 aws s3 cp
-/tmp/inference_graph.pb s3://raster-vision/results/detection/train/lhf_ships_neg0/train/
+/tmp/inference_graph.pb s3://raster-vision/results/detection/train/ship_test/train/
 ```
 
-Next, upload some TIFF files to S3. If you would like to remove predictions that are contained inside a mask multi-polygon, you should also upload a GeoJSON file with the mask to S3. To run a prediction job locally, run the following.
+Next, upload some TIFF files to S3. To run a prediction job locally on the Oakland project, run the following. (Remember this is "cheating" though since the model was trained on Oakland.)
 
 ```
 python -m rv.run predict \
-    --agg-predictions-debug-uri s3://raster-vision/results/detection/predict/lhf_ships3_crop/agg_predictions.png \
-    s3://raster-vision/results/detection/train/lhf_ships_neg0/train/inference_graph.pb \
-    s3://raster-vision/datasets/detection/ships_label_map.pbtxt \
-    s3://raster-vision/results/detection/predict/lhf_ships3_crop/crop1.tif \
-    s3://raster-vision/results/detection/predict/lhf_ships3_crop/crop2.tif \
-    s3://raster-vision/results/detection/predict/lhf_ships3_crop/agg_predictions.json
+    s3://raster-vision/results/detection/train/ship_test/train/inference_graph.pb \
+    s3://raster-vision/datasets/detection/ship_test_label_map.pbtxt \
+    s3://raster-vision/results/detection/predict/ship_test/oakland.tif \
+    s3://raster-vision/results/detection/predict/ship_test/agg_predictions.json
 ```
 
-When this is finished running, there should be a GeoJSON file with predictions at     `s3://raster-vision/results/detection/predict/lhf_ships3_crop/agg_predictions.json`. Note that you can use local paths instead of S3 URIs.
+When this is finished running, there should be a GeoJSON file with predictions at     `s3://raster-vision/results/detection/predict/ship_test/agg_predictions.json`.
 
-## Evaluating predictions
+## Evaluate predictions
 
 Aside from qualitatively evaluating the predictions in QGIS, you can quantify how good the predictions are compared to the ground truth using a script as follows. This outputs a JSON file with the precision and recall for each class.
 
 ```
 python -m rv.run eval_predictions \
-    /opt/data/datasets/detection/singapore_ships/test/1.tif \
-    /opt/data/datasets/detection/ships_label_map.pbtxt \
-    /opt/data/datasets/detection/singapore_ships/test/1.geojson \
-    /opt/data/results/detection/predict/lhf_ships1/agg_predictions.json \
-    /opt/data/results/detection/predict/lhf_ships1/eval.json
+    s3://raster-vision/results/detection/predict/ship_test/oakland.tif \
+    s3://raster-vision/datasets/detection/ship_test_label_map.pbtxt \
+    s3://raster-vision/datasets/detection/jm_ships/2017-07-23-oakland-final.geojson \
+    s3://raster-vision/results/detection/predict/ship_test/agg_predictions.json \
+    s3://raster-vision/results/detection/predict/ship_test/eval.json
 ```
 
 ## Data representation
