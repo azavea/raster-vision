@@ -9,6 +9,7 @@ from time import sleep
 import json
 import pandas
 
+from pyproj import Proj, transform
 import numpy as np
 import boto3
 import botocore
@@ -150,6 +151,12 @@ def get_boxes_from_geojson(json_path, image_dataset, label_map=None):
     with open(json_path, 'r') as json_file:
         geojson = json.load(json_file)
 
+    # Convert from lat/lng to image_dataset CRS
+    src_crs = 'epsg:4326'
+    src_proj = Proj(init=src_crs)
+    dst_crs = image_dataset.crs['init']
+    dst_proj = Proj(init=dst_crs)
+
     features = geojson['features']
     boxes = []
     box_to_class_id = {}
@@ -157,7 +164,8 @@ def get_boxes_from_geojson(json_path, image_dataset, label_map=None):
 
     for feature in features:
         polygon = feature['geometry']['coordinates'][0]
-        # Convert to pixel coords.
+        # Convert to image_dataset CRS and then pixel coords.
+        polygon = [transform(src_proj, dst_proj, p[0], p[1]) for p in polygon]
         polygon = [image_dataset.index(p[0], p[1]) for p in polygon]
         polygon = np.array([(p[1], p[0]) for p in polygon])
 
