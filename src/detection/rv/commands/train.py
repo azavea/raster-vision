@@ -12,30 +12,33 @@ from rv.commands.utils import (
 
 
 @click.command()
-@click.argument('config_path')
+@click.argument('config_uri')
 @click.argument('dataset_uri')
 @click.argument('model_checkpoint_uri')
 @click.argument('train_uri')
 @click.option('--sync-interval', default=600,
               help='Interval in seconds for syncing training dir')
-def train(config_path, dataset_uri, model_checkpoint_uri, train_uri,
+def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
           sync_interval):
     """Train an object detection model.
 
     Args:
-        train_uri: Directory for output of training
+        config_uri: Protobuf file configuring the training
         dataset_uri: Zip file containing dataset
         model_checkpoint_uri: Zip file of pre-trained model checkpoint
+        train_uri: Directory for output of training
     """
     temp_dir = '/opt/data/temp/'
     download_dir = '/opt/data/'
     make_temp_dir(temp_dir)
 
+    config_path = download_if_needed(temp_dir, config_uri)
+
     train_root_dir = download_if_needed(
         temp_dir, train_uri, must_exist=False)
-    makedirs(train_root_dir, exist_ok=True)
     train_dir = join(train_root_dir, 'train')
     eval_dir = join(train_root_dir, 'eval')
+    makedirs(train_root_dir, exist_ok=True)
 
     dataset_path = download_if_needed(download_dir, dataset_uri)
     with zipfile.ZipFile(dataset_path, 'r') as dataset_file:
