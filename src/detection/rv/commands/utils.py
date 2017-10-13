@@ -140,7 +140,7 @@ def sync_dir(src_dir, dest_uri):
     run(['aws', 's3', 'sync', src_dir, dest_uri, '--delete'])
 
 
-def get_boxes_from_geojson(json_path, image_dataset):
+def get_boxes_from_geojson(json_path, image_dataset, label_map=None):
     """Extract boxes and related info from GeoJSON file
 
     Returns boxes, classes, scores, where each is a numpy array. The
@@ -167,11 +167,14 @@ def get_boxes_from_geojson(json_path, image_dataset):
         box = (ymin, xmin, ymax, xmax)
         boxes.append(box)
 
-        # Get class_id if exists, else use default of 1.
         if 'properties' in feature:
+            class_id = 1
             if 'class_id' in feature['properties']:
                 class_id = feature['properties']['class_id']
-                box_to_class_id[box] = class_id
+            elif 'label' in feature['properties'] and label_map is not None:
+                class_id = label_map[feature['properties']['label']]
+            box_to_class_id[box] = class_id
+
             if 'score' in feature['properties']:
                 score = feature['properties']['score']
                 box_to_score[box] = score
