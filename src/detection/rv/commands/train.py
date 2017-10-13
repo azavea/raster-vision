@@ -1,4 +1,4 @@
-from os.path import join, dirname
+from os.path import join, dirname, splitext
 from os import makedirs
 from subprocess import Popen
 import zipfile
@@ -42,7 +42,8 @@ def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
 
     dataset_path = download_if_needed(download_dir, dataset_uri)
     with zipfile.ZipFile(dataset_path, 'r') as dataset_file:
-        dataset_file.extractall(dirname(dataset_path))
+        dataset_dir = splitext(dataset_path)[0]
+        dataset_file.extractall(dataset_dir)
     model_checkpoint_path = download_if_needed(
         download_dir, model_checkpoint_uri)
     with zipfile.ZipFile(model_checkpoint_path, 'r') as model_checkpoint_file:
