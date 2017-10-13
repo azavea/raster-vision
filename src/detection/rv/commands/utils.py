@@ -5,15 +5,15 @@ from urllib.parse import urlparse
 from subprocess import run
 import signal
 from ctypes import cdll
-from time import sleep
-import json
-import pandas
 
+import json
+from pyproj import Proj, transform
 import numpy as np
 import boto3
 import botocore
 
 from object_detection.utils import np_box_list
+
 
 s3 = boto3.resource('s3')
 
@@ -83,20 +83,19 @@ def download_if_needed(download_dir, uri, must_exist=True):
 
     path = get_local_path(download_dir, uri)
     parsed_uri = urlparse(uri)
-    not_found = False
     if parsed_uri.scheme == 's3':
         makedirs(dirname(path), exist_ok=True)
         try:
+            print('Downloading {} to {}'.format(uri, path))
             s3.Bucket(parsed_uri.netloc).download_file(
                 parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == '404':
-                not_found = True
+            if must_exist:
+                raise e
     else:
         not_found = not isfile(path)
-
-    if not_found and must_exist:
-        raise NotFoundException('{} does not exist.'.format(uri))
+        if not_found:
+            raise NotFoundException('Could not find {}'.format(uri))
 
     return path
 
@@ -112,6 +111,7 @@ def upload_if_needed(src_path, dst_uri):
     parsed_uri = urlparse(dst_uri)
     if parsed_uri.scheme == 's3':
         # String the leading slash off of the path since S3 does not expect it.
+        print('Uploading {} to {}'.format(src_path, dst_uri))
         s3.meta.client.upload_file(
             src_path, parsed_uri.netloc, parsed_uri.path[1:])
 
@@ -136,11 +136,14 @@ def make_temp_dir(temp_dir):
     makedirs(temp_dir, exist_ok=True)
 
 
-def sync_dir(src_dir, dest_uri):
-    run(['aws', 's3', 'sync', src_dir, dest_uri, '--delete'])
+def sync_dir(src_dir, dest_uri, delete=False):
+    command = ['aws', 's3', 'sync', src_dir, dest_uri]
+    if delete:
+        command.append('--delete')
+    run(command)
 
 
-def get_boxes_from_geojson(json_path, image_dataset):
+def get_boxes_from_geojson(json_path, image_dataset, label_map=None):
     """Extract boxes and related info from GeoJSON file
 
     Returns boxes, classes, scores, where each is a numpy array. The
@@ -150,6 +153,12 @@ def get_boxes_from_geojson(json_path, image_dataset):
     with open(json_path, 'r') as json_file:
         geojson = json.load(json_file)
 
+    # Convert from lat/lng to image_dataset CRS
+    src_crs = 'epsg:4326'
+    src_proj = Proj(init=src_crs)
+    dst_crs = image_dataset.crs['init']
+    dst_proj = Proj(init=dst_crs)
+
     features = geojson['features']
     boxes = []
     box_to_class_id = {}
@@ -157,7 +166,8 @@ def get_boxes_from_geojson(json_path, image_dataset):
 
     for feature in features:
         polygon = feature['geometry']['coordinates'][0]
-        # Convert to pixel coords.
+        # Convert to image_dataset CRS and then pixel coords.
+        polygon = [transform(src_proj, dst_proj, p[0], p[1]) for p in polygon]
         polygon = [image_dataset.index(p[0], p[1]) for p in polygon]
         polygon = np.array([(p[1], p[0]) for p in polygon])
 
@@ -167,11 +177,14 @@ def get_boxes_from_geojson(json_path, image_dataset):
         box = (ymin, xmin, ymax, xmax)
         boxes.append(box)
 
-        # Get class_id if exists, else use default of 1.
         if 'properties' in feature:
+            class_id = 1
             if 'class_id' in feature['properties']:
                 class_id = feature['properties']['class_id']
-                box_to_class_id[box] = class_id
+            elif 'label' in feature['properties'] and label_map is not None:
+                class_id = label_map[feature['properties']['label']]
+            box_to_class_id[box] = class_id
+
             if 'score' in feature['properties']:
                 score = feature['properties']['score']
                 box_to_score[box] = score

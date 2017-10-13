@@ -121,23 +121,8 @@ def read_labels(labels_path):
     return filename_to_boxlist
 
 
-@click.command()
-@click.argument('label_map_path')
-@click.argument('chip_label_paths', nargs=-1)
-@click.argument('output_dir')
-@click.option('--debug', is_flag=True,
-              help='Generate debug plots that contain bounding boxes')
-def make_tf_record(label_map_path, chip_label_paths, output_dir, debug):
-    """
-        Convert training chips and CSV into TFRecord format which TF needs.
-
-        Several sets of chips can be combined into a TFRecord.
-
-        Args:
-            chip_label_paths: alternating list of chip directory and
-            path to labels. eg. /tmp/chips1 /tmp/chips1.csv /tmp/chips2
-            /tmp/chips2.csv
-    """
+def _make_tf_record(label_map_path, chip_dirs, chip_label_paths, output_dir,
+                    debug):
     label_map = label_map_util.load_labelmap(label_map_path)
     categories = label_map_util.convert_label_map_to_categories(
         label_map, max_num_classes=max_num_classes, use_display_name=True)
@@ -145,13 +130,8 @@ def make_tf_record(label_map_path, chip_label_paths, output_dir, debug):
 
     logging.info('Reading from dataset.')
 
-    if len(chip_label_paths) % 2 != 0:
-        raise Exception('chip_label_paths must have even number of elements')
-
-    for chip_set_index in range(int(len(chip_label_paths) / 2)):
-        chip_dir = chip_label_paths[chip_set_index * 2]
-        chip_label_path = chip_label_paths[chip_set_index * 2 + 1]
-
+    for chip_set_index, (chip_dir, chip_label_path) in \
+            enumerate(zip(chip_dirs, chip_label_paths)):
         chip_paths = glob.glob(join(chip_dir, '*.png'))
         chip_filenames = [basename(path) for path in chip_paths]
         filename_to_boxlist = read_labels(chip_label_path)
@@ -177,6 +157,39 @@ def make_tf_record(label_map_path, chip_label_paths, output_dir, debug):
         create_tf_record(val_output_path, category_index,
                          filename_to_boxlist, chip_set_index, chip_dir,
                          val_filenames, debug_dir)
+
+
+@click.command()
+@click.argument('label_map_path')
+@click.argument('chip_dir_label_paths', nargs=-1)
+@click.argument('output_dir')
+@click.option('--debug', is_flag=True,
+              help='Generate debug plots that contain bounding boxes')
+def make_tf_record(label_map_path, chip_dir_label_paths, output_dir, debug):
+    """
+        Convert training chips and CSV into TFRecord format which TF needs.
+
+        Several sets of chips can be combined into a TFRecord.
+
+        Args:
+            chip_dir_label_paths: alternating list of chip directory and
+            path to labels. eg. /tmp/chips1 /tmp/chips1.csv /tmp/chips2
+            /tmp/chips2.csv
+    """
+    if len(chip_dir_label_paths) % 2 != 0:
+        raise Exception(
+            'chip_dir_label_paths must have even number of elements')
+
+    chip_dirs = []
+    chip_label_paths = []
+    for chip_set_index in range(int(len(chip_label_paths) / 2)):
+        chip_dir = chip_label_paths[chip_set_index * 2]
+        chip_dirs.append(chip_dir)
+        chip_label_path = chip_label_paths[chip_set_index * 2 + 1]
+        chip_label_paths.append(chip_label_path)
+
+    _make_tf_record(label_map_path, chip_dirs, chip_label_paths,
+                    output_dir, debug)
 
 
 if __name__ == '__main__':

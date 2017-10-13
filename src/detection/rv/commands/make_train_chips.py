@@ -11,10 +11,12 @@ import rasterio
 from scipy.misc import imsave
 from rtree import index
 
+from object_detection.utils import label_map_util
+
 from rv.commands.utils import (
-    load_window, download_and_build_vrt, download_if_needed, make_temp_dir,
+    load_window, build_vrt, download_if_needed, make_temp_dir,
     get_boxes_from_geojson)
-from rv.commands.settings import planet_channel_order
+from rv.commands.settings import planet_channel_order, max_num_classes
 
 
 class BoxDB():
@@ -192,11 +194,22 @@ def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
 
 
 def make_train_chips_for_image(image_path, json_path, chip_dir,
-                               chip_label_path, chip_size, num_neg_chips,
-                               max_attempts, channel_order, append_csv=False):
+                               chip_label_path, label_map_path, chip_size,
+                               num_neg_chips, max_attempts, channel_order,
+                               append_csv=False):
     '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
     image_dataset = rasterio.open(image_path)
-    boxes, classes, _ = get_boxes_from_geojson(json_path, image_dataset)
+
+    label_map = None
+    if label_map_path is not None:
+        label_map = label_map_util.load_labelmap(label_map_path)
+        categories = label_map_util.convert_label_map_to_categories(
+            label_map, max_num_classes=max_num_classes, use_display_name=True)
+        label_map = dict([(category['name'], category['id'])
+                          for category in categories])
+
+    boxes, classes, _ = get_boxes_from_geojson(
+        json_path, image_dataset, label_map=label_map)
     print_box_stats(boxes)
 
     make_pos_chips(
@@ -207,11 +220,29 @@ def make_train_chips_for_image(image_path, json_path, chip_dir,
                    num_neg_chips, max_attempts, channel_order)
 
 
+def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
+                      label_map_path, chip_size, num_neg_chips, max_attempts,
+                      channel_order):
+    temp_dir = '/opt/data/temp/make_train_chips'
+    make_temp_dir(temp_dir)
+
+    vrt_path = join(temp_dir, 'index.vrt')
+    build_vrt(vrt_path, image_paths)
+    makedirs(chip_dir, exist_ok=True)
+    makedirs(dirname(chip_label_path), exist_ok=True)
+
+    click.echo('Making chips...')
+    make_train_chips_for_image(
+        vrt_path, label_path, chip_dir, chip_label_path,
+        label_map_path, chip_size, num_neg_chips, max_attempts, channel_order)
+
+
 @click.command()
-@click.argument('image_uris', nargs=-1)
-@click.argument('label_uri')
+@click.argument('image_paths', nargs=-1)
+@click.argument('label_path')
 @click.argument('chip_dir')
 @click.argument('chip_label_path')
+@click.option('--label-map-path', help='Path to label map')
 @click.option('--chip-size', default=300, help='Height and width of each chip')
 @click.option('--num-neg-chips', default=0,
               help='Number of chips without objects to generate per image')
@@ -220,8 +251,9 @@ def make_train_chips_for_image(image_path, json_path, chip_dir,
                    'generating negative chips.')
 @click.option('--channel-order', nargs=3, type=int,
               default=planet_channel_order, help='Indices of the RGB channels')
-def make_train_chips(image_uris, label_uri, chip_dir, chip_label_path,
-                     chip_size, num_neg_chips, max_attempts, channel_order):
+def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
+                     label_map_path, chip_size, num_neg_chips, max_attempts,
+                     channel_order):
     """Generate a set of training chips.
 
     Given imagery and a GeoJSON file with labels in the form of bounding
@@ -229,24 +261,14 @@ def make_train_chips(image_uris, label_uri, chip_dir, chip_label_path,
     CSV file with all the bounding boxes.
 
     Args:
-        image_uris: List of URIs of TIFF files for training data
-        label_uri: GeoJSON file with training labels
+        image_paths: List of TIFF files for training data
+        label_path: GeoJSON file with training labels (in lat/lng format)
         chip_dir: Directory of chips
         chip_label_path: CSV file with labels for each chip
     """
-    temp_dir = '/opt/data/temp/'
-    make_temp_dir(temp_dir)
-
-    image_path = download_and_build_vrt(temp_dir, image_uris)
-    label_path = download_if_needed(temp_dir, label_uri)
-
-    makedirs(chip_dir, exist_ok=True)
-    makedirs(dirname(chip_label_path), exist_ok=True)
-
-    click.echo('Making chips...')
-    make_train_chips_for_image(
-        image_path, label_path, chip_dir, chip_label_path,
-        chip_size, num_neg_chips, max_attempts, channel_order)
+    _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
+                      label_map_path, chip_size, num_neg_chips, max_attempts,
+                      channel_order)
 
 
 if __name__ == '__main__':
