@@ -1,7 +1,5 @@
 import csv
-import logging
 import io
-from collections import OrderedDict
 from os.path import join, basename
 from os import makedirs
 import glob
@@ -82,10 +80,7 @@ def create_tf_example(chip_set_index, chip_dir, chip_filename, boxlist,
 def create_tf_record(output_path, category_index, filename_to_boxlist,
                      chip_set_index, chip_dir, chip_filenames, debug_dir):
     writer = tf.python_io.TFRecordWriter(output_path)
-    for chip_ind, chip_filename in enumerate(chip_filenames):
-        if chip_ind % 100 == 0:
-            logging.info('On image %d of %d', chip_ind, len(chip_filenames))
-
+    for chip_filename in chip_filenames:
         tf_example = create_tf_example(
             chip_set_index, chip_dir, chip_filename,
             filename_to_boxlist.get(chip_filename), category_index, debug_dir)
@@ -128,7 +123,7 @@ def _make_tf_record(label_map_path, chip_dirs, chip_label_paths, output_dir,
         label_map, max_num_classes=max_num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
 
-    logging.info('Reading from dataset.')
+    print('Making TFRecord...')
 
     for chip_set_index, (chip_dir, chip_label_path) in \
             enumerate(zip(chip_dirs, chip_label_paths)):
@@ -151,9 +146,14 @@ def _make_tf_record(label_map_path, chip_dirs, chip_label_paths, output_dir,
             debug_dir = join(output_dir, 'debug')
             makedirs(debug_dir, exist_ok=True)
 
+        print('Working on training images for set #{}...'.format(
+            chip_set_index))
         create_tf_record(train_output_path, category_index,
                          filename_to_boxlist, chip_set_index, chip_dir,
                          train_filenames, debug_dir)
+
+        print('Working on validation images for set #{}...'.format(
+            chip_set_index))
         create_tf_record(val_output_path, category_index,
                          filename_to_boxlist, chip_set_index, chip_dir,
                          val_filenames, debug_dir)
@@ -182,10 +182,10 @@ def make_tf_record(label_map_path, chip_dir_label_paths, output_dir, debug):
 
     chip_dirs = []
     chip_label_paths = []
-    for chip_set_index in range(int(len(chip_label_paths) / 2)):
-        chip_dir = chip_label_paths[chip_set_index * 2]
+    for chip_set_index in range(int(len(chip_dir_label_paths) / 2)):
+        chip_dir = chip_dir_label_paths[chip_set_index * 2]
         chip_dirs.append(chip_dir)
-        chip_label_path = chip_label_paths[chip_set_index * 2 + 1]
+        chip_label_path = chip_dir_label_paths[chip_set_index * 2 + 1]
         chip_label_paths.append(chip_label_path)
 
     _make_tf_record(label_map_path, chip_dirs, chip_label_paths,
