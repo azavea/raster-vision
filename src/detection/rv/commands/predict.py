@@ -6,7 +6,7 @@ import click
 from rv.commands.make_predict_chips import _make_predict_chips
 from rv.commands.predict_on_chips import _predict_on_chips
 from rv.commands.aggregate_predictions import _aggregate_predictions
-from rv.commands.filter_geojson import _filter_geojson
+from rv.commands.transform_geojson import _transform_geojson
 from rv.commands.settings import planet_channel_order
 from rv.commands.utils import (
     download_if_needed, upload_if_needed, get_local_path, make_temp_dir,
@@ -74,7 +74,7 @@ def predict(inference_graph_uri, label_map_uri, image_uris,
         unfiltered_predictions_path = join(
             temp_dir, 'unfiltered_predictions.geojson')
         move(agg_predictions_path, unfiltered_predictions_path)
-        _filter_geojson(
+        _transform_geojson(
             mask_path, unfiltered_predictions_path, agg_predictions_path)
 
     # Upload output files if the URIs are remote.

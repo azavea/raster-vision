@@ -96,10 +96,11 @@ def get_random_window(im_width, im_height, chip_size):
 
 
 def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
-                   chip_label_path, channel_order, append_csv):
+                   chip_label_path, no_partial, channel_order, append_csv):
     box_db = BoxDB(boxes)
     chip_rows = []
     done_boxes = set()
+    chip_count = 0
 
     for chip_ind, anchor_box in enumerate(boxes):
         # if the box is contained in a previous chip, then skip it.
@@ -138,7 +139,7 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
             # csv.
             is_contained = (np.all(chip_box >= 0) and
                             np.all(chip_box < chip_size))
-            if is_contained:
+            if is_contained or not no_partial:
                 row = [chip_fn, chip_ymin, chip_xmin,
                        chip_ymax, chip_xmax, chip_box_class_id]
                 chip_rows.append(row)
@@ -155,9 +156,10 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
         # save the chip.
         chip_path = join(chip_dir, chip_fn)
         imsave(chip_path, redacted_chip_im)
+        chip_count += 1
 
     write_chips_csv(chip_label_path, chip_rows, append_csv)
-
+    return chip_count
 
 def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
                    num_neg_chips, max_attempts, channel_order):
@@ -195,8 +197,8 @@ def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
 
 def make_train_chips_for_image(image_path, json_path, chip_dir,
                                chip_label_path, label_map_path, chip_size,
-                               num_neg_chips, max_attempts, channel_order,
-                               append_csv=False):
+                               num_neg_chips, max_attempts, no_partial,
+                               channel_order, append_csv=False):
     '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
     image_dataset = rasterio.open(image_path)
 
@@ -212,17 +214,20 @@ def make_train_chips_for_image(image_path, json_path, chip_dir,
         json_path, image_dataset, label_map=label_map)
     print_box_stats(boxes)
 
-    make_pos_chips(
+    num_pos_chips = make_pos_chips(
         image_dataset, chip_size, boxes, classes, chip_dir, chip_label_path,
-        channel_order, append_csv)
+        no_partial, channel_order, append_csv)
 
+    if num_neg_chips is None:
+        num_neg_chips = num_pos_chips
+        max_attempts = 10 * num_neg_chips
     make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
                    num_neg_chips, max_attempts, channel_order)
 
 
 def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
-                      channel_order):
+                      no_partial, channel_order):
     temp_dir = '/opt/data/temp/make_train_chips'
     make_temp_dir(temp_dir)
 
@@ -234,7 +239,8 @@ def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
     click.echo('Making chips...')
     make_train_chips_for_image(
         vrt_path, label_path, chip_dir, chip_label_path,
-        label_map_path, chip_size, num_neg_chips, max_attempts, channel_order)
+        label_map_path, chip_size, num_neg_chips, max_attempts,
+        no_partial, channel_order)
 
 
 @click.command()
@@ -244,21 +250,25 @@ def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
 @click.argument('chip_label_path')
 @click.option('--label-map-path', help='Path to label map')
 @click.option('--chip-size', default=300, help='Height and width of each chip')
-@click.option('--num-neg-chips', default=0,
+@click.option('--num-neg-chips', default=None, type=float,
               help='Number of chips without objects to generate per image')
-@click.option('--max-attempts', default=0,
+@click.option('--max-attempts', default=None, type=float,
               help='Maximum num of random windows to try per image when ' +
                    'generating negative chips.')
+@click.option('--no-partial', is_flag=True,
+              help='Black out objects that are only partially visible in' +
+                   ' chips')
 @click.option('--channel-order', nargs=3, type=int,
               default=planet_channel_order, help='Indices of the RGB channels')
 def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                      label_map_path, chip_size, num_neg_chips, max_attempts,
-                     channel_order):
+                     no_partial, channel_order):
     """Generate a set of training chips.
 
     Given imagery and a GeoJSON file with labels in the form of bounding
     boxes, this generates a set of chips centered around the boxes, and a
-    CSV file with all the bounding boxes.
+    CSV file with all the bounding boxes. If no num_neg_chips is provided,
+    then there will be one negative chip generated per positive chip.
 
     Args:
         image_paths: List of TIFF files for training data
@@ -268,7 +278,7 @@ def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
     """
     _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
-                      channel_order)
+                      no_partial, channel_order)
 
 
 if __name__ == '__main__':

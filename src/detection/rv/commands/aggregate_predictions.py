@@ -26,7 +26,7 @@ def compute_agg_predictions(chip_size, im_size, filename_to_chip_offset,
                             filename_to_boxlist):
     '''Aggregate chip predictions into predictions for original image.'''
     width, height = im_size
-    boxlist = None
+    boxlists = []
     filenames = sorted(filename_to_boxlist.keys())
 
     for filename in filenames:
@@ -41,11 +41,14 @@ def compute_agg_predictions(chip_size, im_size, filename_to_chip_offset,
             # normalize
             image_window = [0, 0, height, width]
             file_boxlist = clip_to_window(file_boxlist, image_window)
+            boxlists.append(file_boxlist)
 
-            if boxlist is None:
-                boxlist = file_boxlist
-            else:
-                boxlist = concatenate([boxlist, file_boxlist])
+    if len(boxlists) == 0:
+        boxlist = BoxList(np.zeros((0, 4)))
+        boxlist.add_field('classes', np.zeros((0,)))
+        boxlist.add_field('scores', np.zeros((0,)))
+    else:
+        boxlist = concatenate(boxlists)
 
     return boxlist
 
@@ -191,9 +194,9 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
 
     # I'm not sure if this is a bug in TF Object Detection API or a
     # misunderstanding on my part, but the multi_class_non_max_suppression
-    # function returns class ids >= 0, but the label map enforces a constraint
-    # that ids are > 0. So I just add one to the output to get back to ids that
-    # are > 0.
+    # function returns class ids >= 0, but the label map enforces a
+    # constraint that ids are > 0. So I just add one to the output to get
+    # back to ids that are > 0.
     classes = boxlist.get_field('classes')
     classes += 1
 
