@@ -111,8 +111,9 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
     _make_tf_record(label_map_path, chip_dirs, chip_label_paths,
                     output_zip_dir, debug)
 
-    shutil.make_archive(output_zip_dir, 'zip')
+    shutil.make_archive(output_zip_dir, 'zip', output_zip_dir)
     upload_if_needed(output_zip_path, output_zip_uri)
+    upload_if_needed(label_map_path, label_map_uri)
 
 
 if __name__ == '__main__':
