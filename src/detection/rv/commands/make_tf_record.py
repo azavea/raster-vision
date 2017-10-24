@@ -142,22 +142,25 @@ def _make_tf_record(label_map_path, chip_dirs, chip_label_paths, output_dir,
         train_output_path = join(output_dir, 'train.record')
         val_output_path = join(output_dir, 'val.record')
 
-        debug_dir = None
+        train_debug_dir = None
+        val_debug_dir = None
         if debug is not None:
-            debug_dir = join(output_dir, 'debug')
-            makedirs(debug_dir, exist_ok=True)
+            train_debug_dir = join(output_dir, 'train_debug')
+            makedirs(train_debug_dir, exist_ok=True)
+            val_debug_dir = join(output_dir, 'val_debug')
+            makedirs(val_debug_dir, exist_ok=True)
 
         print('Working on training images for set #{}...'.format(
             chip_set_index))
         create_tf_record(train_output_path, category_index,
                          filename_to_boxlist, chip_set_index, chip_dir,
-                         train_filenames, debug_dir)
+                         train_filenames, train_debug_dir)
 
         print('Working on validation images for set #{}...'.format(
             chip_set_index))
         create_tf_record(val_output_path, category_index,
                          filename_to_boxlist, chip_set_index, chip_dir,
-                         val_filenames, debug_dir)
+                         val_filenames, val_debug_dir)
 
 
 @click.command()
