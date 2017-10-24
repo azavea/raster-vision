@@ -8,7 +8,7 @@ import random
 import click
 import PIL.Image
 import tensorflow as tf
-from scipy.misc import imread, imsave
+from scipy.misc import imread
 import numpy as np
 
 from object_detection.utils import (
@@ -17,6 +17,7 @@ from object_detection.utils.np_box_list import BoxList
 from object_detection.utils.np_box_list_ops import scale
 
 from rv.commands.settings import max_num_classes, line_thickness
+from rv.commands.utils import save_img
 
 random.seed(12345)
 
@@ -28,7 +29,7 @@ def make_debug_plot(debug_chip_path, chip_path, norm_boxlist, category_index):
         im, norm_boxlist.get(), norm_boxlist.get_field('classes'), scores,
         category_index, use_normalized_coordinates=True,
         line_thickness=line_thickness, max_boxes_to_draw=None)
-    imsave(debug_chip_path, im)
+    save_img(debug_chip_path, im)
 
 
 def create_tf_example(chip_set_index, chip_dir, chip_filename, boxlist,

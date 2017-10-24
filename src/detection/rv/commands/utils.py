@@ -5,8 +5,9 @@ from urllib.parse import urlparse
 from subprocess import run
 import signal
 from ctypes import cdll
-
 import json
+
+from scipy.misc import imsave
 from pyproj import Proj, transform
 import numpy as np
 import boto3
@@ -224,3 +225,7 @@ def translate_boxlist(boxlist, x_offset, y_offset):
         translated_boxlist.add_field(field, extra_field_data)
 
     return translated_boxlist
+
+
+def save_img(path, arr):
+    imsave(path, arr)

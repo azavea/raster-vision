@@ -4,11 +4,9 @@ from os.path import join, dirname
 
 import click
 import numpy as np
-# from scipy.ndimage import imread
-from scipy.misc import imsave
 import rasterio
 
-from rv.commands.utils import load_window
+from rv.commands.utils import load_window, save_img
 from rv.commands.settings import planet_channel_order
 
 
@@ -41,7 +39,7 @@ def _make_predict_chips(image_path, chips_dir, chips_info_path,
 
             chip_filename = '{}_{}.png'.format(row_start, col_start)
             chip_path = join(chips_dir, chip_filename)
-            imsave(chip_path, padded_chip)
+            save_img(chip_path, padded_chip)
 
             # Position of the upper-left corner of chip in the
             # original, unpadded image.

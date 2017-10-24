@@ -4,7 +4,6 @@ from os.path import dirname
 
 import click
 import numpy as np
-from scipy.misc import imsave
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import rasterio
@@ -19,7 +18,7 @@ from object_detection.utils.np_box_list_ops import (
 from rv.commands.settings import (
     max_num_classes, line_thickness, planet_channel_order)
 from rv.commands.utils import (
-    load_window, translate_boxlist)
+    load_window, translate_boxlist, save_img)
 
 
 def compute_agg_predictions(chip_size, im_size, filename_to_chip_offset,
@@ -69,7 +68,7 @@ def plot_predictions(plot_path, im, category_index, boxlist):
         line_thickness=line_thickness,
         max_boxes_to_draw=None)
 
-    imsave(plot_path, norm_im)
+    save_img(plot_path, norm_im)
 
 
 def save_geojson(path, boxlist, im_size, category_index, image_dataset=None):
