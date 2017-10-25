@@ -139,6 +139,9 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
             # csv.
             is_contained = (np.all(chip_box >= 0) and
                             np.all(chip_box < chip_size))
+
+            chip_ymin, chip_xmin, chip_ymax, chip_xmax = \
+                np.clip(chip_box, 0, chip_size).astype(np.int32)
             if is_contained or not no_partial:
                 row = [chip_fn, chip_ymin, chip_xmin,
                        chip_ymax, chip_xmax, chip_box_class_id]
@@ -149,9 +152,7 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
                 # else, black out (or redact) the box, since we don't want it
                 # to count as a negative example. this could be dangerous if
                 # the objects you are trying to detect are black boxes :)
-                clip_ymin, clip_xmin, clip_ymax, clip_xmax = \
-                    np.clip(chip_box, 0, chip_size).astype(np.int32)
-                redacted_chip_im[clip_ymin:clip_ymax, clip_xmin:clip_xmax, :] = 0   # noqa
+                redacted_chip_im[chip_ymin:chip_ymax, chip_xmin:chip_xmax, :] = 0   # noqa
 
         # save the chip.
         chip_path = join(chip_dir, chip_fn)
