@@ -9,6 +9,7 @@ import click
 
 from rv.commands.utils import (
     download_if_needed, make_temp_dir, on_parent_exit, sync_dir)
+from rv.commands.settings import temp_root_dir
 
 
 @click.command()
@@ -28,7 +29,7 @@ def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
         model_checkpoint_uri: Zip file of pre-trained model checkpoint
         train_uri: Directory for output of training
     """
-    temp_dir = '/opt/data/temp/'
+    temp_dir = join(temp_root_dir, 'train')
     download_dir = '/opt/data/'
     make_temp_dir(temp_dir)
 

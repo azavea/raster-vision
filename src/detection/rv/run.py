@@ -11,6 +11,7 @@ from rv.commands.aggregate_predictions import aggregate_predictions
 from rv.commands.eval_predictions import eval_predictions
 from rv.commands.make_label_map import make_label_map
 from rv.commands.prep_train_data import prep_train_data
+from rv.commands.eval_model import eval_model
 
 
 @click.group()
@@ -29,6 +30,7 @@ run.add_command(aggregate_predictions)
 run.add_command(eval_predictions)
 run.add_command(make_label_map)
 run.add_command(prep_train_data)
+run.add_command(eval_model)
 
 
 if __name__ == '__main__':

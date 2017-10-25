@@ -7,34 +7,16 @@ from rv.commands.make_predict_chips import _make_predict_chips
 from rv.commands.predict_on_chips import _predict_on_chips
 from rv.commands.aggregate_predictions import _aggregate_predictions
 from rv.commands.transform_geojson import _transform_geojson
-from rv.commands.settings import planet_channel_order
+from rv.commands.settings import planet_channel_order, temp_root_dir
 from rv.commands.utils import (
     download_if_needed, upload_if_needed, get_local_path, make_temp_dir,
     download_and_build_vrt)
 
 
-@click.command()
-@click.argument('inference_graph_uri')
-@click.argument('label_map_uri')
-@click.argument('image_uris', nargs=-1)
-@click.argument('agg_predictions_uri')
-@click.option('--agg-predictions-debug-uri', default=None,
-              help='URI for prediction debug plot')
-@click.option('--mask-uri', default=None,
-              help='URI for mask GeoJSON file to use as filter for detections')
-@click.option('--channel-order', nargs=3, type=int,
-              default=planet_channel_order, help='Index of RGB channels')
-@click.option('--chip-size', default=300)
-def predict(inference_graph_uri, label_map_uri, image_uris,
-            agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
-            channel_order, chip_size):
-    """High-level script for running object detection over geospatial imagery.
-
-    Args:
-        image_uris: List of URIs for TIFF files to run prediction on
-        agg_predictions_uri: Output file with aggregated predictions
-    """
-    temp_dir = '/opt/data/temp/'
+def _predict(inference_graph_uri, label_map_uri, image_uris,
+             agg_predictions_uri, agg_predictions_debug_uri=None,
+             mask_uri=None, channel_order=planet_channel_order, chip_size=300):
+    temp_dir = join(temp_root_dir, 'predict')
     make_temp_dir(temp_dir)
 
     # Download input files if needed.
@@ -80,6 +62,32 @@ def predict(inference_graph_uri, label_map_uri, image_uris,
     # Upload output files if the URIs are remote.
     upload_if_needed(agg_predictions_path, agg_predictions_uri)
     upload_if_needed(agg_predictions_debug_path, agg_predictions_debug_uri)
+
+
+@click.command()
+@click.argument('inference_graph_uri')
+@click.argument('label_map_uri')
+@click.argument('image_uris', nargs=-1)
+@click.argument('agg_predictions_uri')
+@click.option('--agg-predictions-debug-uri', default=None,
+              help='URI for prediction debug plot')
+@click.option('--mask-uri', default=None,
+              help='URI for mask GeoJSON file to use as filter for detections')
+@click.option('--channel-order', nargs=3, type=int,
+              default=planet_channel_order, help='Index of RGB channels')
+@click.option('--chip-size', default=300)
+def predict(inference_graph_uri, label_map_uri, image_uris,
+            agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
+            channel_order, chip_size):
+    """High-level script for running object detection over geospatial imagery.
+
+    Args:
+        image_uris: List of URIs for TIFF files to run prediction on
+        agg_predictions_uri: Output file with aggregated predictions
+    """
+    _predict(inference_graph_uri, label_map_uri, image_uris,
+             agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
+             channel_order, chip_size)
 
 
 if __name__ == '__main__':
