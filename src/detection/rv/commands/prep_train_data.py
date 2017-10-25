@@ -1,7 +1,6 @@
 from os.path import splitext, join
 from os import makedirs
 import shutil
-import json
 
 import click
 
@@ -77,7 +76,7 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
     output_zip_dir = splitext(output_zip_path)[0]
     makedirs(output_zip_dir, exist_ok=True)
 
-    label_map_path = join(output_zip_dir, 'label_map.pbtxt')
+    label_map_path = get_local_path(temp_dir, label_map_uri)
     _make_label_map(annotations_paths, label_map_path)
 
     train_chip_dir = join(temp_dir, 'train_chips')
@@ -98,6 +97,9 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
     _make_tf_record(label_map_path, chip_dirs, chip_label_paths,
                     output_zip_dir, debug)
 
+    # Copy label map so it's included in the zip file for convenience.
+    label_map_copy_path = join(output_zip_dir, 'label_map.pbtxt')
+    shutil.copyfile(label_map_path, label_map_copy_path)
     shutil.make_archive(output_zip_dir, 'zip', output_zip_dir)
     upload_if_needed(output_zip_path, output_zip_uri)
     upload_if_needed(label_map_path, label_map_uri)
