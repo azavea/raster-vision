@@ -8,7 +8,7 @@ import random
 import click
 import PIL.Image
 import tensorflow as tf
-from scipy.misc import imread, imsave
+from scipy.misc import imread
 import numpy as np
 
 from object_detection.utils import (
@@ -17,6 +17,7 @@ from object_detection.utils.np_box_list import BoxList
 from object_detection.utils.np_box_list_ops import scale
 
 from rv.commands.settings import max_num_classes, line_thickness
+from rv.commands.utils import save_img
 
 random.seed(12345)
 
@@ -28,7 +29,7 @@ def make_debug_plot(debug_chip_path, chip_path, norm_boxlist, category_index):
         im, norm_boxlist.get(), norm_boxlist.get_field('classes'), scores,
         category_index, use_normalized_coordinates=True,
         line_thickness=line_thickness, max_boxes_to_draw=None)
-    imsave(debug_chip_path, im)
+    save_img(debug_chip_path, im)
 
 
 def create_tf_example(chip_set_index, chip_dir, chip_filename, boxlist,
@@ -141,22 +142,25 @@ def _make_tf_record(label_map_path, chip_dirs, chip_label_paths, output_dir,
         train_output_path = join(output_dir, 'train.record')
         val_output_path = join(output_dir, 'val.record')
 
-        debug_dir = None
+        train_debug_dir = None
+        val_debug_dir = None
         if debug is not None:
-            debug_dir = join(output_dir, 'debug')
-            makedirs(debug_dir, exist_ok=True)
+            train_debug_dir = join(output_dir, 'train_debug')
+            makedirs(train_debug_dir, exist_ok=True)
+            val_debug_dir = join(output_dir, 'val_debug')
+            makedirs(val_debug_dir, exist_ok=True)
 
         print('Working on training images for set #{}...'.format(
             chip_set_index))
         create_tf_record(train_output_path, category_index,
                          filename_to_boxlist, chip_set_index, chip_dir,
-                         train_filenames, debug_dir)
+                         train_filenames, train_debug_dir)
 
         print('Working on validation images for set #{}...'.format(
             chip_set_index))
         create_tf_record(val_output_path, category_index,
                          filename_to_boxlist, chip_set_index, chip_dir,
-                         val_filenames, debug_dir)
+                         val_filenames, val_debug_dir)
 
 
 @click.command()

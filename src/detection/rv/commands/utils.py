@@ -5,8 +5,9 @@ from urllib.parse import urlparse
 from subprocess import run
 import signal
 from ctypes import cdll
-
 import json
+
+from scipy.misc import imsave
 from pyproj import Proj, transform
 import numpy as np
 import boto3
@@ -23,6 +24,23 @@ PR_SET_PDEATHSIG = 1
 
 class PrCtlError(Exception):
     pass
+
+
+def load_projects(temp_dir, projects_path):
+    image_paths_list = []
+    annotations_paths = []
+    with open(projects_path, 'r') as projects_file:
+        projects = json.load(projects_file)
+        for project in projects:
+            image_uris = project['images']
+            image_paths = [download_if_needed(temp_dir, image_uri)
+                           for image_uri in image_uris]
+            image_paths_list.append(image_paths)
+            annotations_uri = project['annotations']
+            annotations_path = download_if_needed(temp_dir, annotations_uri)
+            annotations_paths.append(annotations_path)
+
+    return image_paths_list, annotations_paths
 
 
 # From http://evans.io/legacy/posts/killing-child-processes-on-parent-exit-prctl/  # noqa
@@ -224,3 +242,7 @@ def translate_boxlist(boxlist, x_offset, y_offset):
         translated_boxlist.add_field(field, extra_field_data)
 
     return translated_boxlist
+
+
+def save_img(path, arr):
+    imsave(path, arr)

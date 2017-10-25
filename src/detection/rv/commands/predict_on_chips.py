@@ -11,7 +11,6 @@ import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import matplotlib.pyplot as plt
 from PIL import Image
-from scipy.misc import imsave
 
 from object_detection.utils import (
     label_map_util, visualization_utils as vis_util)
@@ -21,6 +20,7 @@ from object_detection.utils.np_box_list import BoxList
 
 from rv.commands.settings import (
     max_num_classes, min_score_threshold, line_thickness)
+from rv.commands.utils import save_img
 
 image_size = (12, 8)
 
@@ -108,7 +108,7 @@ def _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
 
                     debug_image_path = \
                         join(predictions_debug_dir, basename(image_path))
-                    imsave(debug_image_path, image_np)
+                    save_img(debug_image_path, image_np)
 
                 filename = basename(image_path)
                 filtered_boxlist = filter_scores_greater_than(

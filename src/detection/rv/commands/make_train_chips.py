@@ -8,15 +8,15 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import rasterio
-from scipy.misc import imsave
 from rtree import index
 
 from object_detection.utils import label_map_util
 
 from rv.commands.utils import (
     load_window, build_vrt, download_if_needed, make_temp_dir,
-    get_boxes_from_geojson)
-from rv.commands.settings import planet_channel_order, max_num_classes
+    get_boxes_from_geojson, save_img)
+from rv.commands.settings import (
+    planet_channel_order, max_num_classes, temp_root_dir)
 
 
 class BoxDB():
@@ -155,7 +155,7 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
 
         # save the chip.
         chip_path = join(chip_dir, chip_fn)
-        imsave(chip_path, redacted_chip_im)
+        save_img(chip_path, redacted_chip_im)
         chip_count += 1
 
     write_chips_csv(chip_label_path, chip_rows, append_csv)
@@ -187,7 +187,7 @@ def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
             # save to disk
             chip_fn = 'neg_{}.png'.format(neg_chips_count)
             chip_path = join(chip_dir, chip_fn)
-            imsave(chip_path, chip_im)
+            save_img(chip_path, chip_im)
             neg_chips_count += 1
 
         attempt_count += 1
@@ -228,7 +228,7 @@ def make_train_chips_for_image(image_path, json_path, chip_dir,
 def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
                       no_partial, channel_order):
-    temp_dir = '/opt/data/temp/make_train_chips'
+    temp_dir = join(temp_root_dir, 'make_train_chips')
     make_temp_dir(temp_dir)
 
     vrt_path = join(temp_dir, 'index.vrt')

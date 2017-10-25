@@ -10,25 +10,9 @@ from rv.commands.make_train_chips import _make_train_chips
 from rv.commands.make_tf_record import _make_tf_record
 from rv.commands.transform_geojson import _transform_geojson
 from rv.commands.utils import (
-    download_if_needed, make_temp_dir, get_local_path, upload_if_needed)
-from rv.commands.settings import planet_channel_order
-
-
-def load_projects(temp_dir, projects_path):
-    image_paths_list = []
-    annotations_paths = []
-    with open(projects_path, 'r') as projects_file:
-        projects = json.load(projects_file)
-        for project in projects:
-            image_uris = project['images']
-            image_paths = [download_if_needed(temp_dir, image_uri)
-                           for image_uri in image_uris]
-            image_paths_list.append(image_paths)
-            annotations_uri = project['annotations']
-            annotations_path = download_if_needed(temp_dir, annotations_uri)
-            annotations_paths.append(annotations_path)
-
-    return image_paths_list, annotations_paths
+    download_if_needed, make_temp_dir, get_local_path, upload_if_needed,
+    load_projects)
+from rv.commands.settings import planet_channel_order, temp_root_dir
 
 
 def filter_annotations(temp_dir, annotations_paths, min_area, single_label):
@@ -77,7 +61,7 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
             (each a list of images and an annotation file)
         output_zip_uri: zip file that will contain the training data
     """
-    temp_dir = '/opt/data/temp/'
+    temp_dir = join(temp_root_dir, 'prep_train_data')
     make_temp_dir(temp_dir)
 
     projects_path = download_if_needed(temp_dir, projects_uri)
