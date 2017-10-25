@@ -61,6 +61,9 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
             (each a list of images and an annotation file)
         output_zip_uri: zip file that will contain the training data
     """
+    if num_neg_chips is not None and max_attempts is None:
+        max_attempts = 10 * num_neg_chips
+
     temp_dir = join(temp_root_dir, 'prep_train_data')
     make_temp_dir(temp_dir)
 
