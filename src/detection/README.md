@@ -37,7 +37,7 @@ python -m rv.run prep_train_data --debug \
 
 ## Train a model
 
-The training algorithm is configured in a file, an example of which can be seen at `samples/configs/ship_test.config`. This file needs to be modified so that the paths match those of the dataset being used, and to tweak the hyperparameters or model architecture. After uploading this file to S3, and committing any desired changes to a git branch, start a training job on AWS Batch, by running the following *from the VM*. Note the quotes around the command to run on the container.
+The training algorithm is configured in a file, an example of which can be seen at `samples/configs/ship_test.config`. This file needs to be modified so that the paths match those of the dataset being used, and to tweak the hyperparameters or model architecture. After uploading this file to S3, and committing any desired changes to a git branch, start a training job on AWS Batch, by running the following command. Note the quotes around the command to run on the container.
 ```
 src/detection/scripts/batch_submit.py <branch-name> \
     "python -m rv.run train \

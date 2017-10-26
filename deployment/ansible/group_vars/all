@@ -13,6 +13,4 @@ docker_compose_version: "1.8.0"
 
 boto3_version: "1.4.4"
 
-networkx_version: "1.11"
-
 packer_version: "1.0.3"

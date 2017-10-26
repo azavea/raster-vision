@@ -15,4 +15,3 @@
     - { role: "raster-vision.awscli" }
     - { role: "raster-vision.nvidia-docker" }
     - { role: "raster-vision.compose-docker" }
-    - { role: "raster-vision.submit-job" }
