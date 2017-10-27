@@ -1,2 +1,0 @@
-NUMPY = 'numpy'
-IMAGE = 'image'

@@ -48,7 +48,7 @@ def create_tf_example(chip_set_index, chip_dir, chip_filename, boxlist,
     norm_boxlist = BoxList(np.zeros((0, 4)))
     norm_boxlist.add_field('classes', np.zeros((0,)))
     if boxlist is not None:
-        norm_boxlist = scale(boxlist, 1 / width, 1 / height)
+        norm_boxlist = scale(boxlist, 1 / height, 1 / width)
     ymins, xmins, ymaxs, xmaxs = norm_boxlist.get_coordinates()
     classes = norm_boxlist.get_field('classes')
     class_texts = [category_index[class_id]['name'].encode('utf8')

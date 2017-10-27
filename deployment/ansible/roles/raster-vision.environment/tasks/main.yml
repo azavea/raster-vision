@@ -8,8 +8,3 @@
   lineinfile: dest=/etc/environment
               regexp=^AWS_PROFILE
               line="AWS_PROFILE={{ aws_profile }}"
-
-- name: Set S3_BUCKET globally
-  lineinfile: dest=/etc/environment
-              regexp=^S3_BUCKET
-              line="S3_BUCKET={{ s3_bucket }}"

@@ -20,7 +20,6 @@ if NOTEBOOK_DIR.nil?
   puts "WARN: To use juptyer, You must set the environment variable: RASTER_VISION_NOTEBOOK_DIR"
 end
 
-S3_BUCKET = ENV.fetch("RASTER_VISION_BUCKET", "raster-vision")
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/trusty64"
@@ -51,17 +50,11 @@ Vagrant.configure("2") do |config|
         shell.binary = true
         shell.path = "scripts/provision.sh"
         shell.args = "deployment/ansible/raster-vision.yml deployment/ansible/roles.yml"
-        shell.extra_vars = {
-            s3_bucket: S3_BUCKET
-        }
       end
     else
       raster_vision.vm.provision "ansible" do |ansible|
         ansible.playbook = "deployment/ansible/raster-vision.yml"
         ansible.galaxy_role_file = "deployment/ansible/roles.yml"
-        ansible.extra_vars = {
-            s3_bucket: S3_BUCKET
-        }
       end
     end
 
