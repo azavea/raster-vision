@@ -161,7 +161,8 @@ def load_predictions(predictions_path):
 def _aggregate_predictions(image_path, chip_info_path, predictions_path,
                            label_map_path, agg_predictions_path,
                            agg_predictions_debug_path=None,
-                           channel_order=planet_channel_order):
+                           channel_order=planet_channel_order,
+                           score_thresh=0.5, merge_thresh=0.05):
     click.echo('Aggregating predictions over chips...')
 
     label_map = label_map_util.load_labelmap(label_map_path)
@@ -185,11 +186,9 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
     # Due to the sliding window approach, sometimes there are multiple
     # slightly different detections where there should only be one. So
     # we group them together.
-    score_thresh = 0.5
-    iou_thresh = 0.05
     max_output_size = 10000
     boxlist = multi_class_non_max_suppression(
-        boxlist, score_thresh, iou_thresh, max_output_size)
+        boxlist, score_thresh, merge_thresh, max_output_size)
 
     # I'm not sure if this is a bug in TF Object Detection API or a
     # misunderstanding on my part, but the multi_class_non_max_suppression
@@ -220,10 +219,14 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
               help='Path to aggregate predictions debug plot')
 @click.option('--channel-order', nargs=3, type=int,
               default=planet_channel_order, help='Indices of RGB channels')
+@click.option('--score-thresh', default=0.5,
+              help='Score threshold of predictions to keep')
+@click.option('--merge-thresh', default=0.05,
+              help='IOU threshold for merging predictions')
 def aggregate_predictions(image_path, chip_info_path, predictions_path,
                           label_map_path, agg_predictions_path,
-                          agg_predictions_debug_path=None,
-                          channel_order=planet_channel_order):
+                          agg_predictions_debug_path, channel_order,
+                          score_thresh, merge_thresh):
     """Aggregate predictions from chips.
 
     Args:
@@ -236,7 +239,9 @@ def aggregate_predictions(image_path, chip_info_path, predictions_path,
     _aggregate_predictions(image_path, chip_info_path, predictions_path,
                            label_map_path, agg_predictions_path,
                            agg_predictions_debug_path=agg_predictions_debug_path,  # noqa
-                           channel_order=channel_order)
+                           channel_order=channel_order,
+                           score_thresh=score_thresh,
+                           merge_thresh=merge_thresh)
 
 
 if __name__ == '__main__':

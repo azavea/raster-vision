@@ -15,7 +15,8 @@ from rv.commands.utils import (
 
 def _predict(inference_graph_uri, label_map_uri, image_uris,
              agg_predictions_uri, agg_predictions_debug_uri=None,
-             mask_uri=None, channel_order=planet_channel_order, chip_size=300):
+             mask_uri=None, channel_order=planet_channel_order, chip_size=300,
+             score_thresh=0.5, merge_thresh=0.05):
     temp_dir = join(temp_root_dir, 'predict')
     make_temp_dir(temp_dir)
 
@@ -76,9 +77,13 @@ def _predict(inference_graph_uri, label_map_uri, image_uris,
 @click.option('--channel-order', nargs=3, type=int,
               default=planet_channel_order, help='Index of RGB channels')
 @click.option('--chip-size', default=300)
+@click.option('--score-thresh', default=0.5,
+              help='Score threshold of predictions to keep')
+@click.option('--merge-thresh', default=0.05,
+              help='IOU threshold for merging predictions')
 def predict(inference_graph_uri, label_map_uri, image_uris,
             agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
-            channel_order, chip_size):
+            channel_order, chip_size, score_thresh, merge_thresh):
     """High-level script for running object detection over geospatial imagery.
 
     Args:
@@ -87,7 +92,7 @@ def predict(inference_graph_uri, label_map_uri, image_uris,
     """
     _predict(inference_graph_uri, label_map_uri, image_uris,
              agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
-             channel_order, chip_size)
+             channel_order, chip_size, score_thresh, merge_thresh)
 
 
 if __name__ == '__main__':
