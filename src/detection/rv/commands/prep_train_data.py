@@ -1,4 +1,4 @@
-from os.path import splitext, join
+from os.path import splitext, join, dirname
 from os import makedirs
 import shutil
 
@@ -77,6 +77,7 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
     makedirs(output_zip_dir, exist_ok=True)
 
     label_map_path = get_local_path(temp_dir, label_map_uri)
+    makedirs(dirname(label_map_path), exist_ok=True)
     _make_label_map(annotations_paths, label_map_path)
 
     train_chip_dir = join(temp_dir, 'train_chips')
