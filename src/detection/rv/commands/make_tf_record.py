@@ -37,12 +37,10 @@ def create_tf_example(chip_set_index, chip_dir, chip_filename, boxlist,
     chip_path = join(chip_dir, chip_filename)
     with tf.gfile.GFile(chip_path, 'rb') as fid:
         encoded_png = fid.read()
-    encoded_png_io = io.BytesIO(encoded_png)
-    image = PIL.Image.open(encoded_png_io)
+    image = PIL.Image.open(io.BytesIO(encoded_png))
 
     width, height = image.size
     chip_id = '{}_{}'.format(chip_set_index, chip_filename)
-    encoded_image_data = encoded_png
     image_format = image.format.lower().encode('utf8')
 
     norm_boxlist = BoxList(np.zeros((0, 4)))
@@ -64,7 +62,7 @@ def create_tf_example(chip_set_index, chip_dir, chip_filename, boxlist,
         'image/width': dataset_util.int64_feature(width),
         'image/filename': dataset_util.bytes_feature(chip_id.encode('utf8')),
         'image/source_id': dataset_util.bytes_feature(chip_id.encode('utf8')),
-        'image/encoded': dataset_util.bytes_feature(encoded_image_data),
+        'image/encoded': dataset_util.bytes_feature(encoded_png),
         'image/format': dataset_util.bytes_feature(image_format),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
         'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
