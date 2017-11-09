@@ -98,7 +98,7 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
                     output_zip_dir, debug)
 
     # Copy label map so it's included in the zip file for convenience.
-    label_map_copy_path = join(output_zip_dir, 'label_map.pbtxt')
+    label_map_copy_path = join(output_zip_dir, 'label-map.pbtxt')
     shutil.copyfile(label_map_path, label_map_copy_path)
     shutil.make_archive(output_zip_dir, 'zip', output_zip_dir)
     upload_if_needed(output_zip_path, output_zip_uri)
