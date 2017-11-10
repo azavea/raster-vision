@@ -112,7 +112,7 @@ def download_if_needed(download_dir, uri, must_exist=True):
                 raise e
     else:
         not_found = not isfile(path)
-        if not_found:
+        if not_found and must_exist:
             raise NotFoundException('Could not find {}'.format(uri))
 
     return path
