@@ -2,108 +2,173 @@ from os.path import splitext, join, dirname
 from os import makedirs
 import shutil
 
+import rasterio
 import click
+import csv
 
-from rv.commands.make_label_map import _make_label_map
-from rv.commands.make_train_chips import _make_train_chips
-from rv.commands.make_tf_record import _make_tf_record
-from rv.commands.transform_geojson import _transform_geojson
-from rv.commands.utils import (
-    download_if_needed, make_temp_dir, get_local_path, upload_if_needed,
-    load_projects)
-from rv.commands.settings import planet_channel_order, temp_root_dir
+from rv.utils import (
+    download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
+    load_projects, BoxDB, get_random_window_for_box, get_random_window,
+    load_window, save_img, get_boxes_from_geojson,
+    print_box_stats, build_vrt)
+from rv.cl.commands.settings import (
+    planet_channel_order, temp_root_dir, POS_LABEL, NEG_LABEL)
 
 
-def filter_annotations(temp_dir, annotations_paths, min_area, single_label):
-    filtered_annotations_dir = join(temp_dir, 'filtered_annotations')
-    makedirs(filtered_annotations_dir, exist_ok=True)
-    filtered_annotations_paths = []
-    for annotation_ind, annotations_path in enumerate(annotations_paths):
-        filtered_annotations_path = join(
-            filtered_annotations_dir, '{}.json'.format(annotation_ind))
-        _transform_geojson(
-            annotations_path, filtered_annotations_path, min_area=min_area,
-            single_label=single_label)
-        filtered_annotations_paths.append(filtered_annotations_path)
-    return filtered_annotations_paths
+def write_csv_header(csv_path):
+    with open(csv_path, mode='a') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(('filename', 'class'))
+
+
+def append_csv(csv_path, chip_rows):
+    with open(csv_path, mode='a') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        for row in chip_rows:
+            csv_writer.writerow(row)
+
+
+def make_pos_chips(project_ind, image_dataset, chip_size, boxes, classes,
+                   image_dir, label_path, channel_order):
+    chip_rows = []
+
+    # For each box, extract a randomly located window that contains it.
+    for chip_ind, box in enumerate(boxes):
+        # upper left corner of window
+        rand_x, rand_y = get_random_window_for_box(
+            box, image_dataset.width, image_dataset.height, chip_size)
+        # note: rasterio windows use a different dimension ordering than
+        # bounding boxes
+        window = ((rand_y, rand_y + chip_size), (rand_x, rand_x + chip_size))
+        chip_im = load_window(
+            image_dataset, channel_order, window=window)
+
+        chip_fn = '{}-{}.png'.format(project_ind, chip_ind)
+        chip_path = join(image_dir, chip_fn)
+        chip_rows.append((chip_fn, POS_LABEL))
+        save_img(chip_path, chip_im)
+
+    append_csv(label_path, chip_rows)
+    pos_count = len(boxes)
+    return pos_count
+
+
+def make_neg_chips(project_ind, desired_neg_count, image_dataset, chip_size,
+                   boxes, classes, image_dir, label_path, channel_order):
+    box_db = BoxDB(boxes)
+    neg_count = 0
+    max_attempts = desired_neg_count * 10
+    chip_rows = []
+
+    for _ in range(max_attempts):
+        # extract random window
+        rand_x, rand_y = get_random_window(
+            image_dataset.width, image_dataset.height, chip_size)
+
+        # check if intersects with any boxes
+        intersecting_inds = box_db.get_intersecting_box_inds(
+            rand_x, rand_y, chip_size)
+
+        # if no intersection
+        if len(intersecting_inds) == 0:
+            # extract chip
+            # note: row is y, col is x
+            window = ((rand_y, rand_y + chip_size),
+                      (rand_x, rand_x + chip_size))
+            chip_im = load_window(
+                image_dataset, channel_order, window=window)
+
+            # save to disk
+            chip_fn = 'neg-{}-{}.png'.format(project_ind, neg_count)
+            chip_path = join(image_dir, chip_fn)
+            save_img(chip_path, chip_im)
+            chip_rows.append((chip_fn, NEG_LABEL))
+            neg_count += 1
+
+        if neg_count == desired_neg_count:
+            break
+
+    append_csv(label_path, chip_rows)
+    return neg_count
+
+
+def process_image(project_ind, image_path, annotations_path, image_dir,
+                  label_path, chip_size, neg_ratio, channel_order):
+    '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
+    image_dataset = rasterio.open(image_path)
+
+    boxes, classes, _ = get_boxes_from_geojson(annotations_path, image_dataset)
+    print_box_stats(boxes)
+
+    pos_count = make_pos_chips(
+        project_ind, image_dataset, chip_size, boxes, classes, image_dir,
+        label_path, channel_order)
+    print('Wrote {} positive chips.'.format(pos_count))
+
+    desired_neg_count = int(neg_ratio * pos_count)
+    neg_count = make_neg_chips(
+        project_ind, desired_neg_count, image_dataset, chip_size, boxes,
+        classes, image_dir, label_path, channel_order)
+    print('Wrote {} negative chips.'.format(neg_count))
+    print()
 
 
 @click.command()
 @click.argument('projects_uri')
 @click.argument('output_zip_uri')
-@click.argument('label_map_uri')
 @click.option('--chip-size', default=300, help='Height and width of each chip')
-@click.option('--num-neg-chips', default=None, type=float,
-              help='Number of chips without objects to generate per image')
-@click.option('--max-attempts', default=None, type=float,
-              help='Maximum num of random windows to try per image when ' +
-                   'generating negative chips.')
+@click.option('--neg-ratio', default=3, type=float,
+              help='Ratio of negative to positive chips')
 @click.option('--channel-order', nargs=3, type=int,
               default=planet_channel_order, help='Indices of the RGB channels')
-@click.option('--debug', is_flag=True,
-              help='Generate debug plots that contain bounding boxes')
-@click.option('--min-area', default=0.0,
-              help='Minimum allowed area of objects in meters^2')
-@click.option('--single-label', help='The label to convert all labels to')
-@click.option('--no-partial', is_flag=True, help='Whether to black out ' +
-              'partially visible objects')
-def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
-                    num_neg_chips, max_attempts, channel_order, debug,
-                    min_area, single_label, no_partial):
-    """Generate training chips and TFRecord for set of projects.
+def prep_train_data(projects_uri, output_zip_uri, chip_size,
+                    neg_ratio, channel_order):
+    """Generate training chips and label map for set of projects.
 
     Given a set of projects (each a set of images and a GeoJSON file with
-    labels), this generates training chips, a TFRecord, and zips them.
+    labels), this generates training chips and zips them.
 
     Args:
         projects_uri: JSON file listing projects
             (each a list of images and an annotation file)
         output_zip_uri: zip file that will contain the training data
     """
-    if num_neg_chips is not None and max_attempts is None:
-        max_attempts = 10 * num_neg_chips
-
     temp_dir = join(temp_root_dir, 'prep_train_data')
-    make_temp_dir(temp_dir)
+    make_empty_dir(temp_dir)
 
     projects_path = download_if_needed(temp_dir, projects_uri)
     image_paths_list, annotations_paths = \
         load_projects(temp_dir, projects_path)
-    annotations_paths = filter_annotations(
-        temp_dir, annotations_paths, min_area, single_label)
 
     output_zip_path = get_local_path(temp_dir, output_zip_uri)
     output_zip_dir = splitext(output_zip_path)[0]
-    makedirs(output_zip_dir, exist_ok=True)
+    make_empty_dir(output_zip_dir)
 
-    label_map_path = get_local_path(temp_dir, label_map_uri)
-    makedirs(dirname(label_map_path), exist_ok=True)
-    _make_label_map(annotations_paths, label_map_path)
+    # label_map_path = get_local_path(temp_dir, label_map_uri)
+    # makedirs(dirname(label_map_path), exist_ok=True)
+    # make_label_map(annotations_paths, label_map_path)
 
-    train_chip_dir = join(temp_dir, 'train_chips')
-    chip_dirs = []
-    chip_label_paths = []
+    image_dir = join(output_zip_dir, 'images')
+    makedirs(image_dir, exist_ok=True)
+    label_path = join(output_zip_dir, 'labels.csv')
+    write_csv_header(label_path)
+
     for project_ind, (image_paths, annotations_path) in \
             enumerate(zip(image_paths_list, annotations_paths)):
-        chip_dir = join(train_chip_dir, str(project_ind))
-        chip_dirs.append(chip_dir)
-        chip_label_path = join(train_chip_dir, '{}.csv'.format(project_ind))
-        chip_label_paths.append(chip_label_path)
+        print('Processing project {}'.format(project_ind))
+        vrt_path = join(temp_dir, 'index.vrt')
+        build_vrt(vrt_path, image_paths)
 
-        _make_train_chips(image_paths, annotations_path, chip_dir,
-                          chip_label_path, label_map_path, chip_size,
-                          num_neg_chips, max_attempts, no_partial,
-                          channel_order)
-
-    _make_tf_record(label_map_path, chip_dirs, chip_label_paths,
-                    output_zip_dir, debug)
+        process_image(
+            project_ind, vrt_path, annotations_path, image_dir, label_path,
+            chip_size, neg_ratio, channel_order)
 
     # Copy label map so it's included in the zip file for convenience.
-    label_map_copy_path = join(output_zip_dir, 'label-map.pbtxt')
-    shutil.copyfile(label_map_path, label_map_copy_path)
+    # label_map_copy_path = join(output_zip_dir, 'label-map.pbtxt')
+    # shutil.copyfile(label_map_path, label_map_copy_path)
+    # upload_if_needed(label_map_path, label_map_uri)
     shutil.make_archive(output_zip_dir, 'zip', output_zip_dir)
     upload_if_needed(output_zip_path, output_zip_uri)
-    upload_if_needed(label_map_path, label_map_uri)
 
 
 if __name__ == '__main__':

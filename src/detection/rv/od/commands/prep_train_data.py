@@ -8,8 +8,8 @@ from rv.od.commands.make_label_map import _make_label_map
 from rv.od.commands.make_train_chips import _make_train_chips
 from rv.od.commands.make_tf_record import _make_tf_record
 from rv.od.commands.transform_geojson import _transform_geojson
-from rv.util import (
-    download_if_needed, make_temp_dir, get_local_path, upload_if_needed,
+from rv.utils import (
+    download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
     load_projects)
 from rv.od.commands.settings import planet_channel_order, temp_root_dir
 
@@ -64,7 +64,7 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
         max_attempts = 10 * num_neg_chips
 
     temp_dir = join(temp_root_dir, 'prep_train_data')
-    make_temp_dir(temp_dir)
+    make_empty_dir(temp_dir)
 
     projects_path = download_if_needed(temp_dir, projects_uri)
     image_paths_list, annotations_paths = \

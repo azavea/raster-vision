@@ -1,4 +1,3 @@
-import json
 from os import makedirs
 from os.path import join, dirname
 import csv
@@ -8,48 +7,15 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import rasterio
-from rtree import index
 
 from object_detection.utils import label_map_util
 
-from rv.util import (
-    load_window, build_vrt, download_if_needed, make_temp_dir,
-    get_boxes_from_geojson, save_img)
+from rv.utils import (
+    load_window, build_vrt, make_empty_dir,
+    get_boxes_from_geojson, save_img, BoxDB, print_box_stats,
+    get_random_window_for_box, get_random_window)
 from rv.od.commands.settings import (
     planet_channel_order, max_num_classes, temp_root_dir)
-
-
-class BoxDB():
-    def __init__(self, boxes):
-        """Build DB of boxes for fast intersection queries
-
-        Args:
-            boxes: [N, 4] numpy array of boxes with cols ymin, xmin, ymax, xmax
-        """
-        self.boxes = boxes
-        self.rtree_idx = index.Index()
-        for box_ind, box in enumerate(boxes):
-            # rtree order is xmin, ymin, xmax, ymax
-            rtree_box = (box[1], box[0], box[3], box[2])
-            self.rtree_idx.insert(box_ind, rtree_box)
-
-    def get_intersecting_box_inds(self, x, y, box_size):
-        query_box = (x, y, x + box_size, y + box_size)
-        intersection_inds = list(self.rtree_idx.intersection(query_box))
-        return intersection_inds
-
-
-def print_box_stats(boxes):
-    click.echo('# boxes: {}'.format(len(boxes)))
-
-    ymins, xmins, ymaxs, xmaxs = boxes.T
-    width = xmaxs - xmins + 1
-    click.echo('width (mean, min, max): ({}, {}, {})'.format(
-               np.mean(width), np.min(width), np.max(width)))
-
-    height = ymaxs - ymins + 1
-    click.echo('height (mean, min, max): ({}, {}, {})'.format(
-               np.mean(height), np.min(height), np.max(height)))
 
 
 def write_chips_csv(csv_path, chip_rows, append_csv=False):
@@ -62,37 +28,6 @@ def write_chips_csv(csv_path, chip_rows, append_csv=False):
                 ('filename', 'ymin', 'xmin', 'ymax', 'xmax', 'class_id'))
         for row in chip_rows:
             csv_writer.writerow(row)
-
-
-def get_random_window_for_box(box, im_width, im_height, chip_size):
-    """Get random window in image that contains box.
-
-    Returns: upper-left corner of window
-    """
-    ymin, xmin, ymax, xmax = box
-
-    # ensure that window doesn't go off the edge of the array.
-    width = xmax - xmin
-    lb = max(0, xmin - (chip_size - width))
-    ub = min(im_width - chip_size, xmin)
-    rand_x = int(np.random.uniform(lb, ub))
-
-    height = ymax - ymin
-    lb = max(0, ymin - (chip_size - height))
-    ub = min(im_height - chip_size, ymin)
-    rand_y = int(np.random.uniform(lb, ub))
-
-    return (rand_x, rand_y)
-
-
-def get_random_window(im_width, im_height, chip_size):
-    """Get random window somewhere in image.
-
-    Returns: upper-left corner of window
-    """
-    rand_x = int(np.random.uniform(0, im_width - chip_size))
-    rand_y = int(np.random.uniform(0, im_height - chip_size))
-    return (rand_x, rand_y)
 
 
 def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
@@ -162,6 +97,7 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
     write_chips_csv(chip_label_path, chip_rows, append_csv)
     return chip_count
 
+
 def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
                    num_neg_chips, max_attempts, channel_order):
     box_db = BoxDB(boxes)
@@ -230,7 +166,7 @@ def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
                       no_partial, channel_order):
     temp_dir = join(temp_root_dir, 'make_train_chips')
-    make_temp_dir(temp_dir)
+    make_empty_dir(temp_dir)
 
     vrt_path = join(temp_dir, 'index.vrt')
     build_vrt(vrt_path, image_paths)

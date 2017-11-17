@@ -6,7 +6,7 @@ import click
 import numpy as np
 import rasterio
 
-from rv.util import load_window, save_img
+from rv.utils import load_window, save_img
 from rv.od.commands.settings import planet_channel_order
 
 

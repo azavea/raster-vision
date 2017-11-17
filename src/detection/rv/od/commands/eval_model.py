@@ -6,9 +6,9 @@ import click
 
 from rv.od.commands.predict import _predict
 from rv.od.commands.eval_predictions import _eval_predictions
-from rv.util import (
+from rv.utils import (
     download_if_needed, get_local_path, upload_if_needed, load_projects,
-    make_temp_dir)
+    make_empty_dir)
 from rv.od.commands.settings import planet_channel_order, temp_root_dir
 
 
@@ -36,7 +36,7 @@ def eval_model(inference_graph_uri, projects_uri, label_map_uri, output_uri,
         output_uri: the destination for the JSON output
     """
     temp_dir = join(temp_root_dir, 'eval_projects')
-    make_temp_dir(temp_dir)
+    make_empty_dir(temp_dir)
     predictions_dir = join(temp_dir, 'predictions')
     makedirs(predictions_dir, exist_ok=True)
     evals_dir = join(temp_dir, 'eval')

@@ -7,8 +7,8 @@ from urllib.parse import urlparse
 
 import click
 
-from rv.util import (
-    download_if_needed, make_temp_dir, on_parent_exit, sync_dir)
+from rv.utils import (
+    download_if_needed, make_empty_dir, on_parent_exit, sync_dir)
 from rv.od.commands.settings import temp_root_dir
 
 
@@ -31,7 +31,7 @@ def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
     """
     temp_dir = join(temp_root_dir, 'train')
     download_dir = '/opt/data/'
-    make_temp_dir(temp_dir)
+    make_empty_dir(temp_dir)
 
     config_path = download_if_needed(temp_dir, config_uri)
 

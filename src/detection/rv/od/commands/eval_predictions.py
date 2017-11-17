@@ -7,8 +7,8 @@ import click
 
 from object_detection.utils import object_detection_evaluation, label_map_util
 
-from rv.util import (
-    download_if_needed, make_temp_dir, get_local_path, upload_if_needed,
+from rv.utils import (
+    download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
     get_boxes_from_geojson, download_and_build_vrt)
 from rv.od.commands.settings import max_num_classes, temp_root_dir
 
@@ -71,7 +71,7 @@ def write_results(output_path, label_map_path, eval_result):
 def _eval_predictions(image_uris, label_map_uri, ground_truth_uri,
                       predictions_uri, output_uri):
     temp_dir = join(temp_root_dir, 'eval_predictions')
-    make_temp_dir(temp_dir)
+    make_empty_dir(temp_dir)
 
     image_path = download_and_build_vrt(temp_dir, image_uris)
     image_dataset = rasterio.open(image_path)
