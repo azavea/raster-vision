@@ -3,21 +3,22 @@ from shutil import move
 
 import click
 
-from rv.commands.make_predict_chips import _make_predict_chips
-from rv.commands.predict_on_chips import _predict_on_chips
-from rv.commands.aggregate_predictions import _aggregate_predictions
-from rv.commands.transform_geojson import _transform_geojson
-from rv.commands.settings import planet_channel_order, temp_root_dir
-from rv.commands.utils import (
-    download_if_needed, upload_if_needed, get_local_path, make_temp_dir,
+from rv.od.commands.make_predict_chips import _make_predict_chips
+from rv.od.commands.predict_on_chips import _predict_on_chips
+from rv.od.commands.aggregate_predictions import _aggregate_predictions
+from rv.od.commands.transform_geojson import _transform_geojson
+from rv.od.commands.settings import planet_channel_order, temp_root_dir
+from rv.utils import (
+    download_if_needed, upload_if_needed, get_local_path, make_empty_dir,
     download_and_build_vrt)
 
 
 def _predict(inference_graph_uri, label_map_uri, image_uris,
              agg_predictions_uri, agg_predictions_debug_uri=None,
-             mask_uri=None, channel_order=planet_channel_order, chip_size=300):
+             mask_uri=None, channel_order=planet_channel_order, chip_size=300,
+             score_thresh=0.5, merge_thresh=0.05):
     temp_dir = join(temp_root_dir, 'predict')
-    make_temp_dir(temp_dir)
+    make_empty_dir(temp_dir)
 
     # Download input files if needed.
     inference_graph_path = download_if_needed(temp_dir, inference_graph_uri)
@@ -76,9 +77,13 @@ def _predict(inference_graph_uri, label_map_uri, image_uris,
 @click.option('--channel-order', nargs=3, type=int,
               default=planet_channel_order, help='Index of RGB channels')
 @click.option('--chip-size', default=300)
+@click.option('--score-thresh', default=0.5,
+              help='Score threshold of predictions to keep')
+@click.option('--merge-thresh', default=0.05,
+              help='IOU threshold for merging predictions')
 def predict(inference_graph_uri, label_map_uri, image_uris,
             agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
-            channel_order, chip_size):
+            channel_order, chip_size, score_thresh, merge_thresh):
     """High-level script for running object detection over geospatial imagery.
 
     Args:
@@ -87,7 +92,7 @@ def predict(inference_graph_uri, label_map_uri, image_uris,
     """
     _predict(inference_graph_uri, label_map_uri, image_uris,
              agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
-             channel_order, chip_size)
+             channel_order, chip_size, score_thresh, merge_thresh)
 
 
 if __name__ == '__main__':

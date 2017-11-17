@@ -12,9 +12,9 @@ from pyproj import Proj, transform
 import numpy as np
 import boto3
 import botocore
+from rtree import index
 
 from object_detection.utils import np_box_list
-
 
 s3 = boto3.resource('s3')
 
@@ -112,7 +112,7 @@ def download_if_needed(download_dir, uri, must_exist=True):
                 raise e
     else:
         not_found = not isfile(path)
-        if not_found:
+        if not_found and must_exist:
             raise NotFoundException('Could not find {}'.format(uri))
 
     return path
@@ -148,7 +148,7 @@ def download_and_build_vrt(temp_dir, image_uris):
     return image_path
 
 
-def make_temp_dir(temp_dir):
+def make_empty_dir(temp_dir):
     if isdir(temp_dir):
         rmtree(temp_dir)
     makedirs(temp_dir, exist_ok=True)
@@ -246,3 +246,67 @@ def translate_boxlist(boxlist, x_offset, y_offset):
 
 def save_img(path, arr):
     imsave(path, arr)
+
+
+class BoxDB():
+    def __init__(self, boxes):
+        """Build DB of boxes for fast intersection queries
+
+        Args:
+            boxes: [N, 4] numpy array of boxes with cols ymin, xmin, ymax, xmax
+        """
+        self.boxes = boxes
+        self.rtree_idx = index.Index()
+        for box_ind, box in enumerate(boxes):
+            # rtree order is xmin, ymin, xmax, ymax
+            rtree_box = (box[1], box[0], box[3], box[2])
+            self.rtree_idx.insert(box_ind, rtree_box)
+
+    def get_intersecting_box_inds(self, x, y, box_size):
+        query_box = (x, y, x + box_size, y + box_size)
+        intersection_inds = list(self.rtree_idx.intersection(query_box))
+        return intersection_inds
+
+
+def print_box_stats(boxes):
+    print('# boxes: {}'.format(len(boxes)))
+
+    ymins, xmins, ymaxs, xmaxs = boxes.T
+    width = xmaxs - xmins + 1
+    print('width (mean, min, max): ({}, {}, {})'.format(
+        np.mean(width), np.min(width), np.max(width)))
+
+    height = ymaxs - ymins + 1
+    print('height (mean, min, max): ({}, {}, {})'.format(
+        np.mean(height), np.min(height), np.max(height)))
+
+
+def get_random_window_for_box(box, im_width, im_height, chip_size):
+    """Get random window in image that contains box.
+
+    Returns: upper-left corner of window
+    """
+    ymin, xmin, ymax, xmax = box
+
+    # ensure that window doesn't go off the edge of the array.
+    width = xmax - xmin
+    lb = max(0, xmin - (chip_size - width))
+    ub = min(im_width - chip_size, xmin)
+    rand_x = int(np.random.uniform(lb, ub))
+
+    height = ymax - ymin
+    lb = max(0, ymin - (chip_size - height))
+    ub = min(im_height - chip_size, ymin)
+    rand_y = int(np.random.uniform(lb, ub))
+
+    return (rand_x, rand_y)
+
+
+def get_random_window(im_width, im_height, chip_size):
+    """Get random window somewhere in image.
+
+    Returns: upper-left corner of window
+    """
+    rand_x = int(np.random.uniform(0, im_width - chip_size))
+    rand_y = int(np.random.uniform(0, im_height - chip_size))
+    return (rand_x, rand_y)
