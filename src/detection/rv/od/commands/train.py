@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 import click
 
-from rv.od.commands.utils import (
+from rv.util import (
     download_if_needed, make_temp_dir, on_parent_exit, sync_dir)
 from rv.od.commands.settings import temp_root_dir
 

@@ -17,7 +17,7 @@ from object_detection.utils.np_box_list_ops import (
 
 from rv.od.commands.settings import (
     max_num_classes, line_thickness, planet_channel_order)
-from rv.od.commands.utils import (
+from rv.util import (
     load_window, translate_boxlist, save_img)
 
 

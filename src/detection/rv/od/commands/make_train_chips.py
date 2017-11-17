@@ -12,7 +12,7 @@ from rtree import index
 
 from object_detection.utils import label_map_util
 
-from rv.od.commands.utils import (
+from rv.util import (
     load_window, build_vrt, download_if_needed, make_temp_dir,
     get_boxes_from_geojson, save_img)
 from rv.od.commands.settings import (

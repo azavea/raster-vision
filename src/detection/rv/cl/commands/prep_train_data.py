@@ -4,14 +4,14 @@ import shutil
 
 import click
 
-from rv.od.commands.make_label_map import _make_label_map
-from rv.od.commands.make_train_chips import _make_train_chips
-from rv.od.commands.make_tf_record import _make_tf_record
-from rv.od.commands.transform_geojson import _transform_geojson
-from rv.util import (
+from rv.commands.make_label_map import _make_label_map
+from rv.commands.make_train_chips import _make_train_chips
+from rv.commands.make_tf_record import _make_tf_record
+from rv.commands.transform_geojson import _transform_geojson
+from rv.commands.utils import (
     download_if_needed, make_temp_dir, get_local_path, upload_if_needed,
     load_projects)
-from rv.od.commands.settings import planet_channel_order, temp_root_dir
+from rv.commands.settings import planet_channel_order, temp_root_dir
 
 
 def filter_annotations(temp_dir, annotations_paths, min_area, single_label):

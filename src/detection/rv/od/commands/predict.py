@@ -8,7 +8,7 @@ from rv.od.commands.predict_on_chips import _predict_on_chips
 from rv.od.commands.aggregate_predictions import _aggregate_predictions
 from rv.od.commands.transform_geojson import _transform_geojson
 from rv.od.commands.settings import planet_channel_order, temp_root_dir
-from rv.od.commands.utils import (
+from rv.util import (
     download_if_needed, upload_if_needed, get_local_path, make_temp_dir,
     download_and_build_vrt)
 
