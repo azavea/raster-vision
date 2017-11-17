@@ -12,10 +12,10 @@ from rtree import index
 
 from object_detection.utils import label_map_util
 
-from rv.commands.utils import (
+from rv.od.commands.utils import (
     load_window, build_vrt, download_if_needed, make_temp_dir,
     get_boxes_from_geojson, save_img)
-from rv.commands.settings import (
+from rv.od.commands.settings import (
     planet_channel_order, max_num_classes, temp_root_dir)
 
 

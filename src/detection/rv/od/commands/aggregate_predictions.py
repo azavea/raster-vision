@@ -15,9 +15,9 @@ from object_detection.utils.np_box_list import BoxList
 from object_detection.utils.np_box_list_ops import (
     clip_to_window, concatenate, multi_class_non_max_suppression)
 
-from rv.commands.settings import (
+from rv.od.commands.settings import (
     max_num_classes, line_thickness, planet_channel_order)
-from rv.commands.utils import (
+from rv.od.commands.utils import (
     load_window, translate_boxlist, save_img)
 
 
