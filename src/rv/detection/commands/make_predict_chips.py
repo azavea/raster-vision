@@ -7,7 +7,7 @@ import numpy as np
 import rasterio
 
 from rv.utils import load_window, save_img
-from rv.od.commands.settings import planet_channel_order
+from rv.detection.commands.settings import planet_channel_order
 
 
 def _make_predict_chips(image_path, chips_dir, chips_info_path,

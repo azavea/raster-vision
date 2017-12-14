@@ -14,7 +14,7 @@ from rv.utils import (
     load_window, build_vrt, make_empty_dir,
     get_boxes_from_geojson, save_img, BoxDB, print_box_stats,
     get_random_window_for_box, get_random_window)
-from rv.od.commands.settings import (
+from rv.detection.commands.settings import (
     planet_channel_order, max_num_classes, temp_root_dir)
 
 

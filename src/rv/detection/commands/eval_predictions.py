@@ -10,7 +10,7 @@ from object_detection.utils import object_detection_evaluation, label_map_util
 from rv.utils import (
     download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
     get_boxes_from_geojson, download_and_build_vrt)
-from rv.od.commands.settings import max_num_classes, temp_root_dir
+from rv.detection.commands.settings import max_num_classes, temp_root_dir
 
 
 def get_eval_result(ground_truth_path, predictions_path, image_dataset):

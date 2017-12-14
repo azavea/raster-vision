@@ -9,7 +9,7 @@ import click
 
 from rv.utils import (
     download_if_needed, make_empty_dir, on_parent_exit, sync_dir)
-from rv.od.commands.settings import temp_root_dir
+from rv.detection.commands.settings import temp_root_dir
 
 
 @click.command()
@@ -58,13 +58,13 @@ def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
         sync_train_dir(delete=False)
 
     train_process = Popen([
-        'python', '/opt/src/detection/models/object_detection/train.py',
+        'python', '/opt/src/tf/object_detection/train.py',
         '--logtostderr', '--pipeline_config_path={}'.format(config_path),
         '--train_dir={}'.format(train_dir)],
         preexec_fn=on_parent_exit('SIGTERM'))
 
     eval_process = Popen([
-        'python', '/opt/src/detection/models/object_detection/eval.py',
+        'python', '/opt/src/tf/object_detection/eval.py',
         '--logtostderr', '--pipeline_config_path={}'.format(config_path),
         '--checkpoint_dir={}'.format(train_dir),
         '--eval_dir={}'.format(eval_dir)],

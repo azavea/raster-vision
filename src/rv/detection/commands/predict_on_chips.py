@@ -18,7 +18,7 @@ from object_detection.utils.np_box_list_ops import (
     scale, filter_scores_greater_than)
 from object_detection.utils.np_box_list import BoxList
 
-from rv.od.commands.settings import (
+from rv.detection.commands.settings import (
     max_num_classes, min_score_threshold, line_thickness)
 from rv.utils import save_img
 

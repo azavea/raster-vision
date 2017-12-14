@@ -21,5 +21,8 @@ RUN python setup.py install
 WORKDIR /opt
 RUN rm -rf xgboost
 
+WORKDIR /opt/src/
+ENV PYTHONPATH=/opt/src:/opt/src/tf:/opt/src/tf/slim:$PYTHONPATH
+
 COPY run_script.sh /usr/local/bin/
 CMD ["bash"]

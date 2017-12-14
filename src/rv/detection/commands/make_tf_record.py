@@ -16,7 +16,7 @@ from object_detection.utils import (
 from object_detection.utils.np_box_list import BoxList
 from object_detection.utils.np_box_list_ops import scale
 
-from rv.od.commands.settings import max_num_classes, line_thickness
+from rv.detection.commands.settings import max_num_classes, line_thickness
 from rv.utils import save_img
 
 random.seed(12345)

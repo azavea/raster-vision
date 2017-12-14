@@ -22,7 +22,7 @@ def batch_submit(branch_name, command, attempts=3, cpu=False):
             command: Command in quotes to run on Batch
     """
     full_command = ['run_script.sh', branch_name]
-    full_command.append(command)
+    full_command.extend(command.split())
 
     client = boto3.client('batch')
     job_queue = 'raster-vision-cpu' if cpu else \

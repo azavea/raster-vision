@@ -3,11 +3,11 @@ from shutil import move
 
 import click
 
-from rv.od.commands.make_predict_chips import _make_predict_chips
-from rv.od.commands.predict_on_chips import _predict_on_chips
-from rv.od.commands.aggregate_predictions import _aggregate_predictions
-from rv.od.commands.transform_geojson import _transform_geojson
-from rv.od.commands.settings import planet_channel_order, temp_root_dir
+from rv.detection.commands.make_predict_chips import _make_predict_chips
+from rv.detection.commands.predict_on_chips import _predict_on_chips
+from rv.detection.commands.aggregate_predictions import _aggregate_predictions
+from rv.detection.commands.transform_geojson import _transform_geojson
+from rv.detection.commands.settings import planet_channel_order, temp_root_dir
 from rv.utils import (
     download_if_needed, upload_if_needed, get_local_path, make_empty_dir,
     download_and_build_vrt)
