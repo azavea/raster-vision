@@ -21,6 +21,8 @@ RUN python setup.py install
 WORKDIR /opt
 RUN rm -rf xgboost
 
+RUN conda install -y pytorch torchvision -c pytorch
+
 WORKDIR /opt/src/
 ENV PYTHONPATH=/opt/src:/opt/src/tf:/opt/src/tf/slim:$PYTHONPATH
 
