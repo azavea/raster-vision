@@ -148,9 +148,10 @@ def download_and_build_vrt(temp_dir, image_uris):
     return image_path
 
 
-def make_empty_dir(temp_dir):
-    if isdir(temp_dir):
-        rmtree(temp_dir)
+def make_empty_dir(temp_dir, empty_dir=True):
+    if empty_dir:
+        if isdir(temp_dir):
+            rmtree(temp_dir)
     makedirs(temp_dir, exist_ok=True)
 
 

@@ -29,7 +29,7 @@ Oakland and Richmond ship data. First, create a projects configuration JSON file
 Next, run the following command to generate a zip file with training chips in TFRecord format and a label map. On a larger set of projects, you will probably want to run this on EC2 to avoid downloading a lot of data.
 
 ```
-python -m rv.od.run prep_train_data --debug \
+python -m rv.detection.run prep_train_data --debug \
     s3://raster-vision-od/configs/projects/ship-test.json \
     s3://raster-vision-od/training-data/ships-test.zip \
     s3://raster-vision-od/configs/label-maps/ships-test.pbtxt
@@ -40,7 +40,7 @@ python -m rv.od.run prep_train_data --debug \
 The training algorithm is configured in a file, an example of which can be seen at `samples/configs/ship_test.config`. This file needs to be modified so that the paths match those of the dataset being used, and to tweak the hyperparameters or model architecture. After uploading this file to S3, and committing any desired changes to a git branch, start a training job on AWS Batch, by running the following command. Note the quotes around the command to run on the container.
 ```
 src/detection/scripts/batch_submit.py <branch-name> \
-    "python -m rv.od.run train \
+    "python -m rv.detection.run train \
         --sync-interval 600 \
         s3://raster-vision-od/configs/train/ship_test.config \
         s3://raster-vision-od/training-data/ship_test.zip \
@@ -75,7 +75,7 @@ aws s3 cp
 Upload some TIFF files to S3. To run a prediction job locally on the Oakland project, run the following. (Remember that this is "cheating" though since the model was trained on Oakland.)
 
 ```
-python -m rv.od.run predict \
+python -m rv.detection.run predict \
     s3://raster-vision-od/trained-models/ship-test/inference-graph.pb \
     s3://raster-vision-od/configs/label-maps/ships-test.pbtxt \
     s3://raster-vision-od/raw-data/images/ship-test/oakland.tif \
@@ -87,7 +87,7 @@ python -m rv.od.run predict \
 To evaluate a model on a set of projects and ground truth annotations you can run the following, which will evaluate the model on the training set.
 
 ```
-python -m rv.od.run eval_model \
+python -m rv.detection.run eval_model \
     s3://raster-vision-od/trained-models/ship-test/inference-graph.pb \
     s3://raster-vision-od/configs/projects/ship-test.json \
     s3://raster-vision-od/configs/label-maps/ships-test.pbtxt \

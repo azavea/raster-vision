@@ -4,12 +4,12 @@ import json
 
 import click
 
-from rv.od.commands.predict import _predict
-from rv.od.commands.eval_predictions import _eval_predictions
+from rv.detection.commands.predict import _predict
+from rv.detection.commands.eval_predictions import _eval_predictions
 from rv.utils import (
     download_if_needed, get_local_path, upload_if_needed, load_projects,
     make_empty_dir)
-from rv.od.commands.settings import planet_channel_order, temp_root_dir
+from rv.detection.commands.settings import planet_channel_order, temp_root_dir
 
 
 @click.command()
