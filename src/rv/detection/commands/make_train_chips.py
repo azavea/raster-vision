@@ -31,7 +31,8 @@ def write_chips_csv(csv_path, chip_rows, append_csv=False):
 
 
 def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
-                   chip_label_path, no_partial, channel_order, append_csv):
+                   chip_label_path, no_partial, redact_partial, channel_order,
+                   append_csv):
     box_db = BoxDB(boxes)
     chip_rows = []
     done_boxes = set()
@@ -83,7 +84,7 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
                 chip_rows.append(row)
                 chip_boxes.append(chip_box)
                 done_boxes.add(tuple(intersecting_box))
-            else:
+            elif redact_partial:
                 # else, black out (or redact) the box, since we don't want it
                 # to count as a negative example. this could be dangerous if
                 # the objects you are trying to detect are black boxes :)
@@ -135,6 +136,7 @@ def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
 def make_train_chips_for_image(image_path, json_path, chip_dir,
                                chip_label_path, label_map_path, chip_size,
                                num_neg_chips, max_attempts, no_partial,
+                               redact_partial,
                                channel_order, append_csv=False):
     '''Make training chips from a GeoTIFF and GeoJSON with detections.'''
     image_dataset = rasterio.open(image_path)
@@ -153,7 +155,7 @@ def make_train_chips_for_image(image_path, json_path, chip_dir,
 
     num_pos_chips = make_pos_chips(
         image_dataset, chip_size, boxes, classes, chip_dir, chip_label_path,
-        no_partial, channel_order, append_csv)
+        no_partial, redact_partial, channel_order, append_csv)
 
     if num_neg_chips is None:
         num_neg_chips = num_pos_chips
@@ -164,7 +166,7 @@ def make_train_chips_for_image(image_path, json_path, chip_dir,
 
 def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
-                      no_partial, channel_order):
+                      no_partial, redact_partial, channel_order):
     temp_dir = join(temp_root_dir, 'make_train_chips')
     make_empty_dir(temp_dir)
 
@@ -177,7 +179,7 @@ def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
     make_train_chips_for_image(
         vrt_path, label_path, chip_dir, chip_label_path,
         label_map_path, chip_size, num_neg_chips, max_attempts,
-        no_partial, channel_order)
+        no_partial, redact_partial, channel_order)
 
 
 @click.command()
@@ -192,14 +194,15 @@ def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
 @click.option('--max-attempts', default=None, type=float,
               help='Maximum num of random windows to try per image when ' +
                    'generating negative chips.')
-@click.option('--no-partial', is_flag=True,
-              help='Black out objects that are only partially visible in' +
-                   ' chips')
+@click.option('--no-partial', is_flag=True, help='Whether to include boxes for ' +
+              'partially visible objects')
+@click.option('--redact-partial', is_flag=True, help='Whether to black out ' +
+              'partially visible objects')
 @click.option('--channel-order', nargs=3, type=int,
               default=planet_channel_order, help='Indices of the RGB channels')
 def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                      label_map_path, chip_size, num_neg_chips, max_attempts,
-                     no_partial, channel_order):
+                     no_partial, redact_partial, channel_order):
     """Generate a set of training chips.
 
     Given imagery and a GeoJSON file with labels in the form of bounding
@@ -216,6 +219,7 @@ def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
     _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
                       no_partial, channel_order)
+                      no_partial, redact_partial, channel_order)
 
 
 if __name__ == '__main__':
