@@ -128,10 +128,6 @@ def prep_train_data(projects_uri, output_zip_uri, chip_size,
     output_zip_dir = splitext(output_zip_path)[0]
     make_empty_dir(output_zip_dir)
 
-    # label_map_path = get_local_path(temp_dir, label_map_uri)
-    # makedirs(dirname(label_map_path), exist_ok=True)
-    # make_label_map(annotations_paths, label_map_path)
-
     pos_dir = join(output_zip_dir, 'pos')
     make_empty_dir(pos_dir)
     neg_dir = join(output_zip_dir, 'neg')
