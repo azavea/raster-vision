@@ -50,7 +50,8 @@ def _predict(inference_graph_uri, label_map_uri, image_uris,
     _aggregate_predictions(image_path, chips_info_path, predictions_path,
                            label_map_path, agg_predictions_path,
                            agg_predictions_debug_path=agg_predictions_debug_path,  # noqa
-                           channel_order=channel_order)
+                           channel_order=channel_order,
+                           merge_thresh=merge_thresh)
 
     # Filter out predictions.
     if mask_path is not None:
