@@ -30,6 +30,18 @@ def write_chips_csv(csv_path, chip_rows, append_csv=False):
             csv_writer.writerow(row)
 
 
+def get_box_area(box):
+    ymin, xmin, ymax, xmax = box
+    return (ymax - ymin) * (xmax - xmin)
+
+
+def get_contained_ratio(chip_box, chip_size):
+    clipped_chip_box = np.clip(chip_box, 0, chip_size)
+    contained_area = get_box_area(clipped_chip_box)
+    area = get_box_area(chip_box)
+    return contained_area / area
+
+
 def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
                    chip_label_path, no_partial, redact_partial, channel_order,
                    append_csv):
@@ -71,14 +83,15 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
             chip_ymin, chip_xmin, chip_ymax, chip_xmax = chip_box
             chip_box_class_id = classes[intersecting_ind]
 
-            # if box is wholly contained in the window, then add it to the
+            # if enough of the box is contained in the window, then add it to the
             # csv.
-            is_contained = (np.all(chip_box >= 0) and
-                            np.all(chip_box < chip_size))
+            contained_ratio = get_contained_ratio(chip_box, chip_size)
+            # TODO make this constant an option to the script
+            enough_contained = contained_ratio > 0.5
 
             chip_ymin, chip_xmin, chip_ymax, chip_xmax = \
                 np.clip(chip_box, 0, chip_size).astype(np.int32)
-            if is_contained or not no_partial:
+            if enough_contained or not no_partial:
                 row = [chip_fn, chip_ymin, chip_xmin,
                        chip_ymax, chip_xmax, chip_box_class_id]
                 chip_rows.append(row)
@@ -218,7 +231,6 @@ def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
     """
     _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
-                      no_partial, channel_order)
                       no_partial, redact_partial, channel_order)
 
 
