@@ -18,7 +18,7 @@ from object_detection.utils.np_box_list_ops import (
 from rv.detection.commands.settings import (
     max_num_classes, line_thickness, planet_channel_order)
 from rv.utils import (
-    load_window, translate_boxlist, save_img)
+    load_window, translate_boxlist, save_img, save_geojson)
 
 
 def compute_agg_predictions(chip_size, im_size, filename_to_chip_offset,
@@ -69,73 +69,6 @@ def plot_predictions(plot_path, im, category_index, boxlist):
         max_boxes_to_draw=None)
 
     save_img(plot_path, norm_im)
-
-
-def save_geojson(path, boxlist, im_size, category_index, image_dataset=None):
-    if image_dataset:
-        src_crs = image_dataset.crs['init']
-        src_proj = Proj(init=src_crs)
-        # Convert to lat/lng
-        dst_crs = 'epsg:4326'
-        dst_proj = Proj(init=dst_crs)
-
-    polygons = []
-    for box in boxlist.get():
-        ymin, xmin, ymax, xmax = box
-
-        # four corners
-        nw = (ymin, xmin)
-        ne = (ymin, xmax)
-        se = (ymax, xmax)
-        sw = (ymax, xmin)
-        polygon = [nw, ne, se, sw, nw]
-        # Transform from pixel coords to spatial coords
-        if image_dataset:
-            dst_polygon = []
-            for point in polygon:
-                src_crs_point = image_dataset.ul(point[0], point[1])
-                dst_crs_point = transform(
-                    src_proj, dst_proj, src_crs_point[0], src_crs_point[1])
-                dst_polygon.append(dst_crs_point)
-        polygons.append(dst_polygon)
-
-    crs = None
-    if image_dataset:
-        crs = {
-            'type': 'name',
-            'properties': {
-                'name': dst_crs
-            }
-        }
-
-    features = []
-    classes = boxlist.get_field('classes')
-    scores = boxlist.get_field('scores')
-
-    for polygon, class_id, score in zip(polygons, classes, scores):
-        feature = {
-            'type': 'Feature',
-            'properties': {
-                'class_id': int(class_id),
-                'class_name': category_index[class_id]['name'],
-                'score': score
-
-            },
-            'geometry': {
-                'type': 'Polygon',
-                'coordinates': [polygon]
-            }
-        }
-        features.append(feature)
-
-    geojson = {
-        'type': 'FeatureCollection',
-        'crs': crs,
-        'features': features
-    }
-
-    with open(path, 'w') as json_file:
-        json.dump(geojson, json_file, indent=4)
 
 
 def load_predictions(predictions_path):
@@ -199,8 +132,8 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
     classes += 1
 
     makedirs(dirname(agg_predictions_path), exist_ok=True)
-    save_geojson(agg_predictions_path, boxlist, im_size,
-                 category_index, image_dataset=image_dataset)
+    save_geojson(agg_predictions_path, boxlist, category_index,
+                 image_dataset=image_dataset)
 
     if agg_predictions_debug_path is not None:
         makedirs(dirname(agg_predictions_debug_path), exist_ok=True)

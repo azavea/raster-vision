@@ -218,6 +218,75 @@ def get_boxes_from_geojson(json_path, image_dataset, label_map=None):
     return boxes, classes, scores
 
 
+def save_geojson(path, boxlist, category_index=None, image_dataset=None):
+    if image_dataset:
+        src_crs = image_dataset.crs['init']
+        src_proj = Proj(init=src_crs)
+        # Convert to lat/lng
+        dst_crs = 'epsg:4326'
+        dst_proj = Proj(init=dst_crs)
+
+    polygons = []
+    for box in boxlist.get():
+        ymin, xmin, ymax, xmax = box
+
+        # four corners
+        nw = (ymin, xmin)
+        ne = (ymin, xmax)
+        se = (ymax, xmax)
+        sw = (ymax, xmin)
+        polygon = [nw, ne, se, sw, nw]
+        # Transform from pixel coords to spatial coords
+        if image_dataset:
+            dst_polygon = []
+            for point in polygon:
+                src_crs_point = image_dataset.ul(point[0], point[1])
+                dst_crs_point = transform(
+                    src_proj, dst_proj, src_crs_point[0], src_crs_point[1])
+                dst_polygon.append(dst_crs_point)
+        polygons.append(dst_polygon)
+
+    crs = None
+    if image_dataset:
+        crs = {
+            'type': 'name',
+            'properties': {
+                'name': dst_crs
+            }
+        }
+
+    features = []
+    for ind, polygon in enumerate(polygons):
+        feature = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [polygon]
+            }
+        }
+
+        if boxlist.has_field('classes') and boxlist.has_field('scores'):
+            classes = boxlist.get_field('classes')
+            scores = boxlist.get_field('scores')
+            class_id, score = classes[ind], scores[ind]
+            feature['properties'] = {
+                'class_id': int(class_id),
+                'class_name': category_index[class_id]['name'],
+                'score': score
+            }
+
+        features.append(feature)
+
+    geojson = {
+        'type': 'FeatureCollection',
+        'crs': crs,
+        'features': features
+    }
+
+    with open(path, 'w') as json_file:
+        json.dump(geojson, json_file, indent=4)
+
+
 def translate_boxlist(boxlist, x_offset, y_offset):
     """Translate box coordinates by an offset.
 
