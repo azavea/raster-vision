@@ -37,10 +37,11 @@ def _transform_geojson(input_path, output_path, mask_path=None, min_area=None,
     filtered_features = []
     for feature in features:
         geom = shape(feature['geometry'])
-        properties = feature.get('properties')
+        properties = feature.get('properties', {})
+        feature['properties'] = properties
+
         if single_label is not None:
-            if properties is not None:
-                properties['label'] = single_label
+            properties['label'] = single_label
 
         is_contained = mask_geom is None or mask_geom.contains(geom)
         area = get_area(feature)

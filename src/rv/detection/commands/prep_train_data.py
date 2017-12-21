@@ -1,5 +1,4 @@
 from os.path import splitext, join, dirname
-from os import makedirs
 import shutil
 
 import click
@@ -10,13 +9,13 @@ from rv.detection.commands.make_tf_record import _make_tf_record
 from rv.detection.commands.transform_geojson import _transform_geojson
 from rv.utils import (
     download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
-    load_projects)
+    load_projects, make_empty_dir)
 from rv.detection.commands.settings import planet_channel_order, temp_root_dir
 
 
 def filter_annotations(temp_dir, annotations_paths, min_area, single_label):
     filtered_annotations_dir = join(temp_dir, 'filtered_annotations')
-    makedirs(filtered_annotations_dir, exist_ok=True)
+    make_empty_dir(filtered_annotations_dir, empty_dir=False)
     filtered_annotations_paths = []
     for annotation_ind, annotations_path in enumerate(annotations_paths):
         filtered_annotations_path = join(
@@ -45,11 +44,13 @@ def filter_annotations(temp_dir, annotations_paths, min_area, single_label):
 @click.option('--min-area', default=0.0,
               help='Minimum allowed area of objects in meters^2')
 @click.option('--single-label', help='The label to convert all labels to')
-@click.option('--no-partial', is_flag=True, help='Whether to black out ' +
+@click.option('--no-partial', is_flag=True, help='Whether to include boxes for ' +
+              'partially visible objects')
+@click.option('--redact-partial', is_flag=True, help='Whether to black out ' +
               'partially visible objects')
 def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
                     num_neg_chips, max_attempts, channel_order, debug,
-                    min_area, single_label, no_partial):
+                    min_area, single_label, no_partial, redact_partial):
     """Generate training chips and TFRecord for set of projects.
 
     Given a set of projects (each a set of images and a GeoJSON file with
@@ -74,10 +75,10 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
 
     output_zip_path = get_local_path(temp_dir, output_zip_uri)
     output_zip_dir = splitext(output_zip_path)[0]
-    makedirs(output_zip_dir, exist_ok=True)
+    make_empty_dir(output_zip_dir)
 
     label_map_path = get_local_path(temp_dir, label_map_uri)
-    makedirs(dirname(label_map_path), exist_ok=True)
+    make_empty_dir(dirname(label_map_path), empty_dir=False)
     _make_label_map(annotations_paths, label_map_path)
 
     train_chip_dir = join(temp_dir, 'train_chips')
@@ -93,7 +94,7 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
         _make_train_chips(image_paths, annotations_path, chip_dir,
                           chip_label_path, label_map_path, chip_size,
                           num_neg_chips, max_attempts, no_partial,
-                          channel_order)
+                          redact_partial, channel_order)
 
     _make_tf_record(label_map_path, chip_dirs, chip_label_paths,
                     output_zip_dir, debug)
