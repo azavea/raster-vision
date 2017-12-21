@@ -1,8 +1,6 @@
 import click
 
 from rv.classification.commands.prep_train_data import prep_train_data
-from rv.classification.commands.get_image_stats import get_image_stats
-from rv.classification.commands.split_dataset import split_dataset
 from rv.classification.commands.train import train
 
 
@@ -12,8 +10,6 @@ def run():
 
 
 run.add_command(prep_train_data)
-run.add_command(get_image_stats)
-run.add_command(split_dataset)
 run.add_command(train)
 
 
