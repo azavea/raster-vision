@@ -83,15 +83,14 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
             chip_ymin, chip_xmin, chip_ymax, chip_xmax = chip_box
             chip_box_class_id = classes[intersecting_ind]
 
-            # if enough of the box is contained in the window, then add it to the
-            # csv.
+            # box is considered partially contained if less than
+            # 3/4 is contained.
             contained_ratio = get_contained_ratio(chip_box, chip_size)
-            # TODO make this constant an option to the script
-            enough_contained = contained_ratio > 0.5
+            considered_partial = contained_ratio < 0.75
 
             chip_ymin, chip_xmin, chip_ymax, chip_xmax = \
                 np.clip(chip_box, 0, chip_size).astype(np.int32)
-            if enough_contained or not no_partial:
+            if not (no_partial and considered_partial):
                 row = [chip_fn, chip_ymin, chip_xmin,
                        chip_ymax, chip_xmax, chip_box_class_id]
                 chip_rows.append(row)
