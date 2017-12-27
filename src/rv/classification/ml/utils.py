@@ -119,7 +119,13 @@ class RandomRotate90(object):
         Returns:
             PIL Image: Randomly rotated image.
         """
-        return img.rotate(90 * random.randint(0, 4))
+        rot_choices = [
+            None, Image.ROTATE_90, Image.ROTATE_180,
+            Image.ROTATE_270]
+        rot_choice = random.choice(rot_choices)
+        if rot_choice is None:
+            return img
+        return img.transpose(rot_choice)
 
 
 class Resize(object):

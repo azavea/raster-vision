@@ -1,15 +1,16 @@
-from os.path import splitext, join, dirname
-from os import makedirs
+from os.path import splitext, join
 import shutil
+import glob
 
 import rasterio
 import click
+import numpy as np
 
 from rv.utils import (
     download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
     load_projects, BoxDB, get_random_window_for_box, get_random_window,
     load_window, save_img, get_boxes_from_geojson,
-    print_box_stats, build_vrt)
+    print_box_stats, build_vrt, add_blank_chips)
 from rv.classification.commands.settings import (
     planet_channel_order, temp_root_dir)
 
@@ -38,11 +39,12 @@ def make_pos_chips(project_ind, image_dataset, chip_size, boxes, classes,
     return pos_count
 
 
-def make_neg_chips(project_ind, desired_neg_count, image_dataset, chip_size,
-                   boxes, classes, neg_dir, channel_order):
+def make_neg_chips(project_ind, desired_neg_count,
+                   image_dataset, chip_size, boxes, classes, neg_dir,
+                   channel_order):
     box_db = BoxDB(boxes)
     neg_count = 0
-    max_attempts = desired_neg_count * 10
+    max_attempts = desired_neg_count * 100
 
     for _ in range(max_attempts):
         # extract random window
@@ -62,11 +64,13 @@ def make_neg_chips(project_ind, desired_neg_count, image_dataset, chip_size,
             chip_im = load_window(
                 image_dataset, channel_order, window=window)
 
-            # save to disk
-            chip_fn = '{}-{}.png'.format(project_ind, neg_count)
-            chip_path = join(neg_dir, chip_fn)
-            save_img(chip_path, chip_im)
-            neg_count += 1
+            # if not a blank chip (these are in areas of the VRT with no data)
+            if np.any(chip_im != 0):
+                # save to disk
+                chip_fn = '{}-{}.png'.format(project_ind, neg_count)
+                chip_path = join(neg_dir, chip_fn)
+                save_img(chip_path, chip_im)
+                neg_count += 1
 
         if neg_count == desired_neg_count:
             break
@@ -103,10 +107,12 @@ def process_image(project_ind, image_path, annotations_path, pos_dir, neg_dir,
               help='Number of positive chips to generate per object')
 @click.option('--neg-ratio', default=1,
               help='Ratio of negative to positive chips')
+@click.option('--blank-neg-ratio', default=0.05,
+              help='Ratio of blank to non-blank negative chips')
 @click.option('--channel-order', nargs=3, type=int,
               default=planet_channel_order, help='Indices of the RGB channels')
 def prep_train_data(projects_uri, output_zip_uri, chip_size,
-                    nb_pos_sets, neg_ratio, channel_order):
+                    nb_pos_sets, neg_ratio, blank_neg_ratio, channel_order):
     """Generate training chips and label map for set of projects.
 
     Given a set of projects (each a set of images and a GeoJSON file with
@@ -142,6 +148,14 @@ def prep_train_data(projects_uri, output_zip_uri, chip_size,
         process_image(
             project_ind, vrt_path, annotations_path, pos_dir, neg_dir,
             chip_size, nb_pos_sets, neg_ratio, channel_order)
+
+    # We filter out all blank negative chips when generating them in
+    # make_neg_chips, since sometimes they dominate and are a waste of time
+    # for the model. But we still need some of them, so we add some in at the
+    # end.
+    neg_count = len(glob.glob(join(neg_dir, '*.png')))
+    blank_neg_count = max(10, int(blank_neg_ratio * neg_count))
+    add_blank_chips(blank_neg_count, chip_size, neg_dir)
 
     # Copy label map so it's included in the zip file for convenience.
     # label_map_copy_path = join(output_zip_dir, 'label-map.pbtxt')

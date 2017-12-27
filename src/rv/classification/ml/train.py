@@ -125,8 +125,8 @@ def get_train_loader(config, dataset_dir):
     transform = transforms.Compose([
         Resize((config.image_size, config.image_size)),
         transforms.RandomHorizontalFlip(),
-        # RandomVerticalFlip(),
-        # RandomRotate90(), #  seems to hurt performance due to lossy transform?
+        RandomVerticalFlip(),
+        RandomRotate90(),
         transforms.ToTensor(),
         transforms.Normalize(mean=config.mean, std=config.std),
     ])
@@ -257,11 +257,10 @@ def validate(config, val_loader, model, criterion):
                   'Prec@K {topK.val:.3f} ({topK.avg:.3f})'.format(
                    batch_ind, len(val_loader), batch_time=batch_time,
                    loss=losses, top1=top1, topK=topK))
-            # print('Confusion: {}'.format(confusion.value()))
 
     print(' * Prec@1 {top1.avg:.3f} Prec@K {topK.avg:.3f}'
           .format(top1=top1, topK=topK))
-    # print('Confusion: {}'.format(confusion.value()))
+    print('Confusion: {}'.format(confusion.value()))
 
     return top1.avg
 

@@ -13,7 +13,7 @@ from object_detection.utils import label_map_util
 from rv.utils import (
     load_window, build_vrt, make_empty_dir,
     get_boxes_from_geojson, save_img, BoxDB, print_box_stats,
-    get_random_window_for_box, get_random_window)
+    get_random_window_for_box, get_random_window, add_blank_chips)
 from rv.detection.commands.settings import (
     planet_channel_order, max_num_classes, temp_root_dir)
 
@@ -83,15 +83,14 @@ def make_pos_chips(image_dataset, chip_size, boxes, classes, chip_dir,
             chip_ymin, chip_xmin, chip_ymax, chip_xmax = chip_box
             chip_box_class_id = classes[intersecting_ind]
 
-            # if enough of the box is contained in the window, then add it to the
-            # csv.
+            # box is considered partially contained if less than
+            # 3/4 is contained.
             contained_ratio = get_contained_ratio(chip_box, chip_size)
-            # TODO make this constant an option to the script
-            enough_contained = contained_ratio > 0.5
+            considered_partial = contained_ratio < 0.75
 
             chip_ymin, chip_xmin, chip_ymax, chip_xmax = \
                 np.clip(chip_box, 0, chip_size).astype(np.int32)
-            if enough_contained or not no_partial:
+            if not (no_partial and considered_partial):
                 row = [chip_fn, chip_ymin, chip_xmin,
                        chip_ymax, chip_xmax, chip_box_class_id]
                 chip_rows.append(row)
@@ -135,15 +134,18 @@ def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
             chip_im = load_window(
                 image_dataset, channel_order, window=window)
 
-            # save to disk
-            chip_fn = 'neg_{}.png'.format(neg_chips_count)
-            chip_path = join(chip_dir, chip_fn)
-            save_img(chip_path, chip_im)
-            neg_chips_count += 1
+            # if not a blank chip (these are in areas of the VRT with no data)
+            if np.any(chip_im != 0):
+                # save to disk
+                chip_fn = 'neg_{}.png'.format(neg_chips_count)
+                chip_path = join(chip_dir, chip_fn)
+                save_img(chip_path, chip_im)
+                neg_chips_count += 1
 
         attempt_count += 1
 
     click.echo('Wrote {} negative chips.'.format(neg_chips_count))
+    return neg_chips_count
 
 
 def make_train_chips_for_image(image_path, json_path, chip_dir,
@@ -172,9 +174,18 @@ def make_train_chips_for_image(image_path, json_path, chip_dir,
 
     if num_neg_chips is None:
         num_neg_chips = num_pos_chips
-        max_attempts = 10 * num_neg_chips
-    make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
-                   num_neg_chips, max_attempts, channel_order)
+        max_attempts = 100 * num_neg_chips
+    neg_count = make_neg_chips(
+        image_dataset, chip_size, boxes, classes, chip_dir, num_neg_chips,
+        max_attempts, channel_order)
+
+    # We filter out all blank negative chips when generating them in
+    # make_neg_chips, since sometimes they dominate and are a waste of time
+    # for the model. But we still need some of them, so we add some in at the
+    # end.
+    blank_neg_ratio = 0.05
+    blank_neg_count = max(10, int(blank_neg_ratio * neg_count))
+    add_blank_chips(blank_neg_count, chip_size, chip_dir)
 
 
 def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
