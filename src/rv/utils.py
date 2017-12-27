@@ -351,6 +351,13 @@ def print_box_stats(boxes):
         np.mean(height), np.min(height), np.max(height)))
 
 
+def add_blank_chips(blank_count, chip_size, chip_dir):
+    blank_im = np.zeros((chip_size, chip_size, 3))
+    for blank_neg_ind in range(blank_count):
+        chip_path = join(chip_dir, 'blank-{}.png'.format(blank_neg_ind))
+        save_img(chip_path, blank_im)
+
+
 def get_random_window_for_box(box, im_width, im_height, chip_size):
     """Get random window in image that contains box.
 
