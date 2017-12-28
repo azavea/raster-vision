@@ -1,7 +1,6 @@
 import json
-from os.path import join
+from os.path import join, dirname
 
-import numpy as np
 import rasterio
 import click
 
@@ -13,7 +12,7 @@ from rv.utils import (
 from rv.detection.commands.settings import max_num_classes, temp_root_dir
 
 
-def get_eval_result(ground_truth_path, predictions_path, image_dataset):
+def get_od_eval(ground_truth_path, predictions_path, image_dataset):
     gt_boxes, gt_classes, _ = \
         get_boxes_from_geojson(ground_truth_path, image_dataset)
     # Subtract one because class id's start at 1, but evaluation api assumes
@@ -35,10 +34,12 @@ def get_eval_result(ground_truth_path, predictions_path, image_dataset):
         image_key, pred_boxes, pred_scores, pred_classes)
 
     od_eval.evaluate()
-    return od_eval.get_eval_result()
+    return od_eval
 
 
-def write_results(output_path, label_map_path, eval_result):
+def write_results(output_path, label_map_path, od_eval):
+    make_empty_dir(dirname(output_path), empty_dir=False)
+
     label_map = label_map_util.load_labelmap(label_map_path)
     categories = label_map_util.convert_label_map_to_categories(
         label_map, max_num_classes=max_num_classes, use_display_name=True)
@@ -53,19 +54,30 @@ def write_results(output_path, label_map_path, eval_result):
         # the precision or recall assuming that all predicted boxes with that
         # score or above are used. So, the last element is the value assuming
         # that all predictions are used.
-
+        eval_result = od_eval.get_eval_result()
         precisions = eval_result.precisions[class_id - 1]
         recalls = eval_result.recalls[class_id - 1]
         # Get precision and recall assuming all predicted boxes are used.
+        precision = precisions[-1]
+        recall = recalls[-1]
+        f1 = (2 * precision * recall) / (precision + recall)
+
+        gt_count = od_eval.num_gt_instances_per_class[class_id -1]
+        pred_count = len(recalls)
+        count_error = pred_count - gt_count
+        norm_count_error = count_error / gt_count
+
         class_results = {
             'name': class_name,
-            'precision': precisions[-1],
-            'recall': recalls[-1]
+            'precision': precision,
+            'recall': recall,
+            'f1': f1,
+            'norm_count_error': norm_count_error
         }
         results.append(class_results)
 
     with open(output_path, 'w') as output_file:
-        output_file.write(json.dumps(results, indent=4))
+        output_file.write(json.dumps(results, indent=4, sort_keys=True))
 
 
 def _eval_predictions(image_uris, label_map_uri, ground_truth_uri,
@@ -80,11 +92,11 @@ def _eval_predictions(image_uris, label_map_uri, ground_truth_uri,
     predictions_path = download_if_needed(temp_dir, predictions_uri)
     label_map_path = download_if_needed(temp_dir, label_map_uri)
 
-    eval_result = get_eval_result(
+    od_eval = get_od_eval(
         ground_truth_path, predictions_path, image_dataset)
 
     output_path = get_local_path(temp_dir, output_uri)
-    write_results(output_path, label_map_path, eval_result)
+    write_results(output_path, label_map_path, od_eval)
     upload_if_needed(output_path, output_uri)
 
 
