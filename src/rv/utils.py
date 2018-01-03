@@ -119,19 +119,22 @@ def download_if_needed(download_dir, uri, must_exist=True):
 
 
 def upload_if_needed(src_path, dst_uri):
-    """Upload file if the destination is remote."""
+    """Upload file or dir if the destination is remote."""
     if dst_uri is None:
         return
 
-    if not isfile(src_path):
+    if not (isfile(src_path) or isdir(src_path)):
         raise Exception('{} does not exist.'.format(src_path))
 
     parsed_uri = urlparse(dst_uri)
     if parsed_uri.scheme == 's3':
-        # String the leading slash off of the path since S3 does not expect it.
+        # Strip the leading slash off of the path since S3 does not expect it.
         print('Uploading {} to {}'.format(src_path, dst_uri))
-        s3.meta.client.upload_file(
-            src_path, parsed_uri.netloc, parsed_uri.path[1:])
+        if isfile(src_path):
+            s3.meta.client.upload_file(
+                src_path, parsed_uri.netloc, parsed_uri.path[1:])
+        else:
+            sync_dir(src_path, dst_uri, delete=True)
 
 
 def build_vrt(vrt_path, image_paths):
