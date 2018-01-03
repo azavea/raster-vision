@@ -29,9 +29,11 @@ class PrCtlError(Exception):
 def load_projects(temp_dir, projects_path):
     image_paths_list = []
     annotations_paths = []
+    project_ids = []
     with open(projects_path, 'r') as projects_file:
         projects = json.load(projects_file)
-        for project in projects:
+        for project_ind, project in enumerate(projects):
+            project_ids.append(project.get('id', project_ind))
             image_uris = project['images']
             image_paths = [download_if_needed(temp_dir, image_uri)
                            for image_uri in image_uris]
@@ -40,7 +42,7 @@ def load_projects(temp_dir, projects_path):
             annotations_path = download_if_needed(temp_dir, annotations_uri)
             annotations_paths.append(annotations_path)
 
-    return image_paths_list, annotations_paths
+    return project_ids, image_paths_list, annotations_paths
 
 
 # From http://evans.io/legacy/posts/killing-child-processes-on-parent-exit-prctl/  # noqa
@@ -76,7 +78,6 @@ def get_local_path(temp_dir, uri):
     """Convert a URI into a corresponding local path."""
     if uri is None:
         return None
-
     parsed_uri = urlparse(uri)
     path = parsed_uri.path[1:] if parsed_uri.path[0] == '/' \
         else parsed_uri.path

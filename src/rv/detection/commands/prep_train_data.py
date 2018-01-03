@@ -9,7 +9,7 @@ from rv.detection.commands.make_tf_record import _make_tf_record
 from rv.detection.commands.transform_geojson import _transform_geojson
 from rv.utils import (
     download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
-    load_projects, make_empty_dir)
+    load_projects)
 from rv.detection.commands.settings import planet_channel_order, temp_root_dir
 
 
@@ -68,7 +68,7 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
     make_empty_dir(temp_dir)
 
     projects_path = download_if_needed(temp_dir, projects_uri)
-    image_paths_list, annotations_paths = \
+    project_ids, image_paths_list, annotations_paths = \
         load_projects(temp_dir, projects_path)
     annotations_paths = filter_annotations(
         temp_dir, annotations_paths, min_area, single_label)
@@ -84,11 +84,11 @@ def prep_train_data(projects_uri, output_zip_uri, label_map_uri, chip_size,
     train_chip_dir = join(temp_dir, 'train_chips')
     chip_dirs = []
     chip_label_paths = []
-    for project_ind, (image_paths, annotations_path) in \
-            enumerate(zip(image_paths_list, annotations_paths)):
-        chip_dir = join(train_chip_dir, str(project_ind))
+    for project_id, image_paths, annotations_path in \
+            zip(project_ids, image_paths_list, annotations_paths):
+        chip_dir = join(train_chip_dir, str(project_id))
         chip_dirs.append(chip_dir)
-        chip_label_path = join(train_chip_dir, '{}.csv'.format(project_ind))
+        chip_label_path = join(train_chip_dir, '{}.csv'.format(project_id))
         chip_label_paths.append(chip_label_path)
 
         _make_train_chips(image_paths, annotations_path, chip_dir,
