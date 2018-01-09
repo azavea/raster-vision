@@ -135,8 +135,9 @@ def make_neg_chips(image_dataset, chip_size, boxes, classes, chip_dir,
             chip_im = load_window(
                 image_dataset, channel_order, window=window)
 
-            # if not a blank chip (these are in areas of the VRT with no data)
-            if np.any(chip_im != 0):
+            # if more than half of chip is non-blank
+            mostly_blank = np.mean(np.ravel(chip_im == 0)) > 0.5
+            if not mostly_blank:
                 # save to disk
                 chip_fn = 'neg_{}.png'.format(neg_chips_count)
                 chip_path = join(chip_dir, chip_fn)
