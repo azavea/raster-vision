@@ -1,13 +1,14 @@
 import json
-from os import makedirs
 from os.path import join, dirname
 
 import click
 import numpy as np
 import rasterio
 
-from rv.utils import load_window, save_img
-from rv.detection.commands.settings import planet_channel_order
+from rv.utils.files import make_dir
+from rv.utils.geo import load_window
+from rv.utils.misc import save_img
+from rv.detection.commands.settings import default_channel_order
 
 
 def _make_predict_chips(image_path, chips_dir, chips_info_path,
@@ -18,8 +19,8 @@ def _make_predict_chips(image_path, chips_dir, chips_info_path,
     so this breaks a large image into a set of chips to feed into the network.
     """
     click.echo('Making predict chips...')
-    makedirs(chips_dir, exist_ok=True)
-    makedirs(dirname(chips_info_path), exist_ok=True)
+    make_dir(chips_dir, check_empty=True)
+    make_dir(chips_info_path, use_dirname=True)
     image_dataset = rasterio.open(image_path)
 
     offsets = {}

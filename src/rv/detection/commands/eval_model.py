@@ -1,15 +1,15 @@
-from os.path import join, dirname
-from os import makedirs
+from os.path import join, isfile
 import json
 
 import click
 
 from rv.detection.commands.predict import _predict
 from rv.detection.commands.eval_predictions import _eval_predictions
-from rv.utils import (
-    download_if_needed, get_local_path, upload_if_needed, load_projects,
-    make_empty_dir)
-from rv.detection.commands.settings import planet_channel_order, temp_root_dir
+from rv.detection.commands.aggregate_evals import _aggregate_evals
+from rv.utils.files import (
+    download_if_needed, get_local_path, upload_if_needed, make_dir)
+from rv.utils.misc import load_projects
+from rv.detection.commands.settings import default_channel_order, temp_root_dir
 
 
 @click.command()
@@ -35,20 +35,26 @@ def eval_model(inference_graph_uri, projects_uri, label_map_uri, output_uri,
         label_map_uri: label map for the model
         output_uri: the destination for the JSON output
     """
-    temp_dir = join(temp_root_dir, 'eval_projects')
-    make_empty_dir(temp_dir)
-    predictions_dir = join(temp_dir, 'predictions')
-    makedirs(predictions_dir, exist_ok=True)
-    evals_dir = join(temp_dir, 'eval')
-    makedirs(evals_dir, exist_ok=True)
+    temp_dir = join(temp_root_dir, 'eval-model')
+    make_dir(temp_dir, force_empty=True)
 
-    projects_path = download_if_needed(temp_dir, projects_uri)
-    image_paths_list, annotations_paths = \
-        load_projects(temp_dir, projects_path)
+    if predictions_uri is None:
+        predictions_uri = join(temp_dir, 'predictions')
+    # TODO sync predictions uri with predictions dir
+    predictions_dir = get_local_path(predictions_uri, temp_dir)
+    make_dir(predictions_dir, check_empty=(not use_cached_predictions))
 
-    output_path = get_local_path(temp_dir, output_uri)
-    output_dir = dirname(output_path)
-    makedirs(output_dir, exist_ok=True)
+    if evals_uri is None:
+        evals_uri = join(temp_dir, 'evals')
+    evals_dir = get_local_path(evals_uri, temp_dir)
+    make_dir(evals_dir, check_empty=True)
+
+    projects_path = download_if_needed(projects_uri, temp_dir)
+    project_ids, image_paths_list, annotations_paths = \
+        load_projects(projects_path, temp_dir)
+
+    output_path = get_local_path(output_uri, temp_dir)
+    make_dir(output_path, use_dirname=True)
 
     # Run prediction and evaluation on each project.
     eval_paths = []

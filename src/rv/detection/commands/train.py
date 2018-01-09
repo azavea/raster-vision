@@ -1,5 +1,5 @@
 from os.path import join, dirname, splitext
-from os import makedirs
+import os
 from subprocess import Popen
 import zipfile
 from threading import Timer
@@ -7,8 +7,9 @@ from urllib.parse import urlparse
 
 import click
 
-from rv.utils import (
-    download_if_needed, make_empty_dir, on_parent_exit, sync_dir)
+from rv.utils.files import (
+    download_if_needed, make_dir, sync_dir, get_local_path)
+from rv.utils.misc import on_parent_exit
 from rv.detection.commands.settings import temp_root_dir
 
 
@@ -30,13 +31,12 @@ def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
         train_uri: Directory for output of training
     """
     temp_dir = join(temp_root_dir, 'train')
-    download_dir = '/opt/data/'
-    make_empty_dir(temp_dir)
+    make_dir(temp_dir, force_empty=True)
 
-    config_path = download_if_needed(temp_dir, config_uri)
+    config_path = download_if_needed(config_uri, temp_dir)
 
-    train_root_dir = download_if_needed(
-        temp_dir, train_uri, must_exist=False)
+    train_root_dir = get_local_path(train_uri, temp_dir)
+    make_dir(train_root_dir)
     train_dir = join(train_root_dir, 'train')
     eval_dir = join(train_root_dir, 'eval')
     makedirs(train_root_dir, exist_ok=True)

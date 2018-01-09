@@ -1,4 +1,4 @@
-from os.path import splitext, join, dirname
+from os.path import splitext, join
 import shutil
 
 import click
@@ -7,10 +7,10 @@ from rv.detection.commands.make_label_map import _make_label_map
 from rv.detection.commands.make_train_chips import _make_train_chips
 from rv.detection.commands.make_tf_record import _make_tf_record
 from rv.detection.commands.transform_geojson import _transform_geojson
-from rv.utils import (
-    download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
-    load_projects)
-from rv.detection.commands.settings import planet_channel_order, temp_root_dir
+from rv.detection.commands.settings import temp_root_dir, default_channel_order
+from rv.utils.misc import load_projects
+from rv.utils.files import (
+    download_if_needed, make_dir, get_local_path, upload_if_needed)
 
 
 def filter_annotations(temp_dir, annotations_paths, min_area, single_label):

@@ -1,14 +1,14 @@
 import json
-from os.path import join, dirname
+from os.path import join
 
 import rasterio
 import click
 
 from object_detection.utils import object_detection_evaluation, label_map_util
 
-from rv.utils import (
-    download_if_needed, make_empty_dir, get_local_path, upload_if_needed,
-    get_boxes_from_geojson, download_and_build_vrt)
+from rv.utils.files import (
+    download_if_needed, make_dir, get_local_path, upload_if_needed)
+from rv.utils.geo import get_boxes_from_geojson, download_and_build_vrt
 from rv.detection.commands.settings import max_num_classes, temp_root_dir
 
 
@@ -38,7 +38,7 @@ def get_od_eval(ground_truth_path, predictions_path, image_dataset):
 
 
 def write_results(output_path, label_map_path, od_eval):
-    make_empty_dir(dirname(output_path), empty_dir=False)
+    make_dir(output_path, use_dirname=True)
 
     label_map = label_map_util.load_labelmap(label_map_path)
     categories = label_map_util.convert_label_map_to_categories(
@@ -82,20 +82,20 @@ def write_results(output_path, label_map_path, od_eval):
 
 def _eval_predictions(image_uris, label_map_uri, ground_truth_uri,
                       predictions_uri, output_uri):
-    temp_dir = join(temp_root_dir, 'eval_predictions')
-    make_empty_dir(temp_dir)
+    temp_dir = join(temp_root_dir, 'eval-predictions')
+    make_dir(temp_dir, force_empty=True)
 
-    image_path = download_and_build_vrt(temp_dir, image_uris)
+    image_path = download_and_build_vrt(image_uris, temp_dir)
     image_dataset = rasterio.open(image_path)
 
-    ground_truth_path = download_if_needed(temp_dir, ground_truth_uri)
-    predictions_path = download_if_needed(temp_dir, predictions_uri)
-    label_map_path = download_if_needed(temp_dir, label_map_uri)
+    ground_truth_path = download_if_needed(ground_truth_uri, temp_dir)
+    predictions_path = download_if_needed(predictions_uri, temp_dir)
+    label_map_path = download_if_needed(label_map_uri, temp_dir)
 
     od_eval = get_od_eval(
         ground_truth_path, predictions_path, image_dataset)
 
-    output_path = get_local_path(temp_dir, output_uri)
+    output_path = get_local_path(output_uri, temp_dir)
     write_results(output_path, label_map_path, od_eval)
     upload_if_needed(output_path, output_uri)
 

@@ -10,12 +10,13 @@ import rasterio
 
 from object_detection.utils import label_map_util
 
-from rv.utils import (
-    load_window, build_vrt, make_empty_dir,
-    get_boxes_from_geojson, save_img, BoxDB, print_box_stats,
-    get_random_window_for_box, get_random_window, add_blank_chips)
+from rv.utils.geo import (
+    load_window, build_vrt, get_boxes_from_geojson, BoxDB, print_box_stats,
+    get_random_window_for_box, get_random_window)
+from rv.utils.files import make_dir
+from rv.utils.misc import save_img, add_blank_chips
 from rv.detection.commands.settings import (
-    planet_channel_order, max_num_classes, temp_root_dir)
+    default_channel_order, max_num_classes, temp_root_dir)
 
 
 def write_chips_csv(csv_path, chip_rows, append_csv=False):
@@ -192,12 +193,12 @@ def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
                       no_partial, redact_partial, channel_order):
     temp_dir = join(temp_root_dir, 'make_train_chips')
-    make_empty_dir(temp_dir)
+    make_dir(temp_dir, force_empty=True)
 
     vrt_path = join(temp_dir, 'index.vrt')
     build_vrt(vrt_path, image_paths)
-    makedirs(chip_dir, exist_ok=True)
-    makedirs(dirname(chip_label_path), exist_ok=True)
+    make_dir(chip_dir, check_empty=True)
+    make_dir(chip_label_path, use_dirname=True)
 
     click.echo('Making chips...')
     make_train_chips_for_image(
