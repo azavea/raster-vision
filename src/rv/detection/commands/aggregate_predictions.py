@@ -92,7 +92,7 @@ def load_predictions(predictions_path):
 def _aggregate_predictions(image_path, chip_info_path, predictions_path,
                            label_map_path, agg_predictions_path,
                            agg_predictions_debug_path=None,
-                           channel_order=planet_channel_order,
+                           channel_order=default_channel_order,
                            score_thresh=0.5, merge_thresh=0.05):
     click.echo('Aggregating predictions over chips...')
 
@@ -149,7 +149,7 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
 @click.option('--agg-predictions-debug-path', default=None,
               help='Path to aggregate predictions debug plot')
 @click.option('--channel-order', nargs=3, type=int,
-              default=planet_channel_order, help='Indices of RGB channels')
+              default=default_channel_order, help='Indices of RGB channels')
 @click.option('--score-thresh', default=0.5,
               help='Score threshold of predictions to keep')
 @click.option('--merge-thresh', default=0.05,

@@ -15,13 +15,14 @@ from rv.detection.commands.settings import temp_root_dir
 
 @click.command()
 @click.argument('config_uri')
-@click.argument('dataset_uri')
+@click.argument('train_dataset_uri')
+@click.argument('val_dataset_uri')
 @click.argument('model_checkpoint_uri')
 @click.argument('train_uri')
 @click.option('--sync-interval', default=600,
               help='Interval in seconds for syncing training dir')
-def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
-          sync_interval):
+def train(config_uri, train_dataset_uri, val_dataset_uri, model_checkpoint_uri,
+          train_uri, sync_interval):
     """Train an object detection model.
 
     Args:

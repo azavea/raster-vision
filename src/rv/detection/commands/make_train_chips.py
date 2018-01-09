@@ -225,7 +225,7 @@ def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
 @click.option('--redact-partial', is_flag=True, help='Whether to black out ' +
               'partially visible objects')
 @click.option('--channel-order', nargs=3, type=int,
-              default=planet_channel_order, help='Indices of the RGB channels')
+              default=default_channel_order, help='Indices of the RGB channels')
 def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                      label_map_path, chip_size, num_neg_chips, max_attempts,
                      no_partial, redact_partial, channel_order):

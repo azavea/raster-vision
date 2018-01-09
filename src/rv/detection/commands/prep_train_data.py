@@ -13,7 +13,7 @@ from rv.utils.files import (
     download_if_needed, make_dir, get_local_path, upload_if_needed)
 
 
-def filter_annotations(temp_dir, annotations_paths, min_area, single_label):
+def filter_annotations(annotations_paths, temp_dir, min_area, single_label):
     filtered_annotations_dir = join(temp_dir, 'filtered_annotations')
     make_dir(filtered_annotations_dir)
     filtered_annotations_paths = []
@@ -37,8 +37,8 @@ def filter_annotations(temp_dir, annotations_paths, min_area, single_label):
 @click.option('--max-attempts', default=None, type=float,
               help='Maximum num of random windows to try per image when ' +
                    'generating negative chips.')
-@click.option('--channel-order', nargs=3, type=int,
-              default=planet_channel_order, help='Indices of the RGB channels')
+@click.option('--channel-order', nargs=3, type=int, default=default_channel_order,
+              help='Indices of the RGB channels')
 @click.option('--debug', is_flag=True,
               help='Generate debug plots that contain bounding boxes')
 @click.option('--min-area', default=0.0,

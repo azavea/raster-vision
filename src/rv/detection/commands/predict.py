@@ -15,7 +15,7 @@ from rv.utils.geo import download_and_build_vrt
 
 def _predict(inference_graph_uri, label_map_uri, image_uris,
              agg_predictions_uri, agg_predictions_debug_uri=None,
-             mask_uri=None, channel_order=planet_channel_order, chip_size=300,
+             mask_uri=None, channel_order=default_channel_order, chip_size=300,
              score_thresh=0.5, merge_thresh=0.05):
     temp_dir = join(temp_root_dir, 'predict')
     make_dir(temp_dir, force_empty=True)
@@ -76,7 +76,7 @@ def _predict(inference_graph_uri, label_map_uri, image_uris,
 @click.option('--mask-uri', default=None,
               help='URI for mask GeoJSON file to use as filter for detections')
 @click.option('--channel-order', nargs=3, type=int,
-              default=planet_channel_order, help='Index of RGB channels')
+              default=default_channel_order, help='Index of RGB channels')
 @click.option('--chip-size', default=300)
 @click.option('--score-thresh', default=0.5,
               help='Score threshold of predictions to keep')

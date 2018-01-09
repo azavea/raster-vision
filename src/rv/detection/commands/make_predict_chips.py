@@ -12,7 +12,7 @@ from rv.detection.commands.settings import default_channel_order
 
 
 def _make_predict_chips(image_path, chips_dir, chips_info_path,
-                        chip_size=300, channel_order=planet_channel_order):
+                        chip_size=300, channel_order=default_channel_order):
     """Slide window (with overlap) over image to generate prediction chips.
 
     The neural network can only make predictions over small, fixed sized images
@@ -61,7 +61,7 @@ def _make_predict_chips(image_path, chips_dir, chips_info_path,
 @click.option('--chip-size', default=300,
               help='Height and width of each chip')
 @click.option('--channel-order', nargs=3, type=int,
-              default=planet_channel_order, help='Indices of RGB channels')
+              default=default_channel_order, help='Indices of RGB channels')
 def make_predict_chips(image_path, chips_dir, chips_info_path,
                        chip_size, channel_order):
     """Generate chips from large images to run prediction on.
