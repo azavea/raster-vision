@@ -39,16 +39,24 @@ def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
     make_dir(train_root_dir)
     train_dir = join(train_root_dir, 'train')
     eval_dir = join(train_root_dir, 'eval')
-    makedirs(train_root_dir, exist_ok=True)
 
-    dataset_path = download_if_needed(download_dir, dataset_uri)
-    with zipfile.ZipFile(dataset_path, 'r') as dataset_file:
-        dataset_dir = splitext(dataset_path)[0]
-        dataset_file.extractall(dataset_dir)
-    model_checkpoint_path = download_if_needed(
-        download_dir, model_checkpoint_uri)
-    with zipfile.ZipFile(model_checkpoint_path, 'r') as model_checkpoint_file:
-        model_checkpoint_file.extractall(dirname(model_checkpoint_path))
+    def process_zip_file(uri, temp_dir, link_dir):
+        if uri.endswith('.zip'):
+            path = download_if_needed(uri, temp_dir)
+            with zipfile.ZipFile(path, 'r') as zip_file:
+                zip_file.extractall(link_dir)
+        else:
+            make_dir(link_dir, use_dirname=True)
+            os.symlink(uri, link_dir)
+
+    train_dataset_dir = join(temp_dir, 'train-dataset')
+    process_zip_file(train_dataset_uri, temp_dir, train_dataset_dir)
+
+    val_dataset_dir = join(temp_dir, 'val-dataset')
+    process_zip_file(val_dataset_uri, temp_dir, val_dataset_dir)
+
+    model_checkpoint_dir = join(temp_dir, 'model-checkpoint')
+    process_zip_file(model_checkpoint_uri, temp_dir, model_checkpoint_dir)
 
     def sync_train_dir(delete=True):
         sync_dir(train_root_dir, train_uri, delete=delete)
