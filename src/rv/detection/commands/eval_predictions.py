@@ -25,8 +25,9 @@ def get_od_eval(ground_truth_path, predictions_path, image_dataset):
     pred_classes -= 1
 
     nb_gt_classes = len(set(gt_classes))
+    matching_iou_threshold = 0.5
     od_eval = object_detection_evaluation.ObjectDetectionEvaluation(
-        nb_gt_classes, matching_iou_threshold=0.1)
+        nb_gt_classes, matching_iou_threshold=matching_iou_threshold)
     image_key = 'image'
     od_eval.add_single_ground_truth_image_info(
         image_key, gt_boxes, gt_classes)
