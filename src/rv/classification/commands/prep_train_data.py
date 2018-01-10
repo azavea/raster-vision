@@ -127,7 +127,7 @@ def prep_train_data(projects_uri, output_zip_uri, chip_size,
     make_empty_dir(temp_dir)
 
     projects_path = download_if_needed(temp_dir, projects_uri)
-    image_paths_list, annotations_paths = \
+    project_ids, image_paths_list, annotations_paths = \
         load_projects(temp_dir, projects_path)
 
     output_zip_path = get_local_path(temp_dir, output_zip_uri)
@@ -139,14 +139,14 @@ def prep_train_data(projects_uri, output_zip_uri, chip_size,
     neg_dir = join(output_zip_dir, 'neg')
     make_empty_dir(neg_dir)
 
-    for project_ind, (image_paths, annotations_path) in \
-            enumerate(zip(image_paths_list, annotations_paths)):
-        print('Processing project {}'.format(project_ind))
+    for project_id, image_paths, annotations_path in \
+            zip(project_ids, image_paths_list, annotations_paths):
+        print('Processing project {}'.format(project_id))
         vrt_path = join(temp_dir, 'index.vrt')
         build_vrt(vrt_path, image_paths)
 
         process_image(
-            project_ind, vrt_path, annotations_path, pos_dir, neg_dir,
+            project_id, vrt_path, annotations_path, pos_dir, neg_dir,
             chip_size, nb_pos_sets, neg_ratio, channel_order)
 
     # We filter out all blank negative chips when generating them in

@@ -17,7 +17,7 @@ from object_detection.utils.np_box_list import BoxList
 from object_detection.utils.np_box_list_ops import scale
 
 from rv.detection.commands.settings import max_num_classes, line_thickness
-from rv.utils import save_img
+from rv.utils.misc import save_img
 
 random.seed(12345)
 
@@ -130,36 +130,18 @@ def _make_tf_record(label_map_path, chip_dirs, chip_label_paths, output_dir,
         chip_filenames = [basename(path) for path in chip_paths]
         filename_to_boxlist = read_labels(chip_label_path)
 
-        random.shuffle(chip_filenames)
-        num_examples = len(chip_filenames)
-        train_ratio = 0.7
-        num_train = int(train_ratio * num_examples)
-        train_filenames = chip_filenames[0:num_train]
-        val_filenames = chip_filenames[num_train:]
+        output_path = join(output_dir, 'data.record')
 
-        train_output_path = join(output_dir, 'train.record')
-        val_output_path = join(output_dir, 'val.record')
-
-        train_debug_dir = None
-        val_debug_dir = None
+        debug_dir = None
         if debug is not None:
-            train_debug_dir = join(output_dir, 'train_debug')
-            makedirs(train_debug_dir, exist_ok=True)
-            val_debug_dir = join(output_dir, 'val_debug')
-            makedirs(val_debug_dir, exist_ok=True)
+            debug_dir = join(output_dir, 'debug')
+            makedirs(debug_dir, exist_ok=True)
 
-        print('Working on training images for set #{}...'.format(
+        print('Working on images for set #{}...'.format(
             chip_set_index))
-        create_tf_record(train_output_path, category_index,
+        create_tf_record(output_path, category_index,
                          filename_to_boxlist, chip_set_index, chip_dir,
-                         train_filenames, train_debug_dir)
-
-        print('Working on validation images for set #{}...'.format(
-            chip_set_index))
-        create_tf_record(val_output_path, category_index,
-                         filename_to_boxlist, chip_set_index, chip_dir,
-                         val_filenames, val_debug_dir)
-
+                         chip_filenames, debug_dir)
 
 @click.command()
 @click.argument('label_map_path')

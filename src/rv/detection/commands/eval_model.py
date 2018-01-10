@@ -1,15 +1,16 @@
-from os.path import join, dirname
-from os import makedirs
+from os.path import join, isfile
 import json
 
 import click
 
 from rv.detection.commands.predict import _predict
 from rv.detection.commands.eval_predictions import _eval_predictions
-from rv.utils import (
-    download_if_needed, get_local_path, upload_if_needed, load_projects,
-    make_empty_dir)
-from rv.detection.commands.settings import planet_channel_order, temp_root_dir
+from rv.detection.commands.aggregate_evals import _aggregate_evals
+from rv.utils.files import (
+    download_if_needed, get_local_path, upload_if_needed, make_dir,
+    MyTemporaryDirectory)
+from rv.utils.misc import load_projects
+from rv.detection.commands.settings import default_channel_order, temp_root_dir
 
 
 @click.command()
@@ -17,11 +18,21 @@ from rv.detection.commands.settings import planet_channel_order, temp_root_dir
 @click.argument('projects_uri')
 @click.argument('label_map_uri')
 @click.argument('output_uri')
-@click.option('--chip-size', default=300, help='Height and width of each chip')
+@click.option('--use-cached-predictions', is_flag=True,
+              default=False)
+@click.option('--evals-uri', default=None)
+@click.option('--predictions-uri', default=None)
 @click.option('--channel-order', nargs=3, type=int,
-              default=planet_channel_order, help='Indices of the RGB channels')
+              default=default_channel_order, help='Index of RGB channels')
+@click.option('--chip-size', default=300)
+@click.option('--score-thresh', default=0.5,
+              help='Score threshold of predictions to keep')
+@click.option('--merge-thresh', default=0.05,
+              help='IOU threshold for merging predictions')
+@click.option('--save-temp', is_flag=True)
 def eval_model(inference_graph_uri, projects_uri, label_map_uri, output_uri,
-               chip_size, channel_order):
+               use_cached_predictions, evals_uri, predictions_uri,
+               channel_order, chip_size, score_thresh, merge_thresh, save_temp):
     """Evaluate a model on a set of projects with ground truth annotations.
 
     Makes predictions using a model on a set of projects and then compares them
@@ -35,60 +46,54 @@ def eval_model(inference_graph_uri, projects_uri, label_map_uri, output_uri,
         label_map_uri: label map for the model
         output_uri: the destination for the JSON output
     """
-    temp_dir = join(temp_root_dir, 'eval_projects')
-    make_empty_dir(temp_dir)
-    predictions_dir = join(temp_dir, 'predictions')
-    makedirs(predictions_dir, exist_ok=True)
-    evals_dir = join(temp_dir, 'eval')
-    makedirs(evals_dir, exist_ok=True)
+    prefix = temp_root_dir
+    temp_dir = join(prefix, 'eval-model') if save_temp else None
+    with MyTemporaryDirectory(temp_dir, prefix) as temp_dir:
+        if predictions_uri is None:
+            predictions_uri = join(temp_dir, 'predictions')
+        # TODO sync predictions uri with predictions dir
+        predictions_dir = get_local_path(predictions_uri, temp_dir)
+        make_dir(predictions_dir, check_empty=(not use_cached_predictions))
 
-    projects_path = download_if_needed(temp_dir, projects_uri)
-    image_paths_list, annotations_paths = \
-        load_projects(temp_dir, projects_path)
+        if evals_uri is None:
+            evals_uri = join(temp_dir, 'evals')
+        evals_dir = get_local_path(evals_uri, temp_dir)
+        make_dir(evals_dir, check_empty=True)
 
-    output_path = get_local_path(temp_dir, output_uri)
-    output_dir = dirname(output_path)
-    makedirs(output_dir, exist_ok=True)
+        projects_path = download_if_needed(projects_uri, temp_dir)
+        project_ids, image_paths_list, annotations_paths = \
+            load_projects(projects_path, temp_dir)
 
-    # Run prediction and evaluation on each project.
-    eval_paths = []
-    for project_ind, (image_paths, annotations_path) in \
-            enumerate(zip(image_paths_list, annotations_paths)):
-        predictions_path = join(predictions_dir, '{}.json'.format(project_ind))
-        eval_path = join(evals_dir, '{}.json'.format(project_ind))
-        eval_paths.append(eval_path)
-        _predict(inference_graph_uri, label_map_uri, image_paths,
-                 predictions_path, channel_order=channel_order,
-                 chip_size=chip_size)
-        _eval_predictions(
-            image_paths, label_map_uri, annotations_path, predictions_path,
-            eval_path)
+        output_path = get_local_path(output_uri, temp_dir)
+        make_dir(output_path, use_dirname=True)
 
-    # Average evals and save.
-    precision_sums = {}
-    recall_sums = {}
-    for eval_path in eval_paths:
-        with open(eval_path, 'r') as eval_file:
-            project_eval = json.load(eval_file)
-            for label_eval in project_eval:
-                name = label_eval['name']
-                precision_sums[name] = \
-                    precision_sums.get(name, 0) + label_eval['precision']
-                recall_sums[name] = \
-                    recall_sums.get(name, 0) + label_eval['recall']
+        # Run prediction and evaluation on each project.
+        eval_paths = []
+        for project_id, image_paths, annotations_path in \
+                zip(project_ids, image_paths_list, annotations_paths):
+            predictions_path = join(predictions_dir, '{}.json'.format(project_id))
+            if use_cached_predictions:
+                if not isfile(predictions_path):
+                    raise ValueError(
+                        '--use_cached_predictions is set but {} is missing'.format(
+                            predictions_path))
+            else:
+                print('Making predictions and storing in {}'.format(
+                    predictions_path))
+                _predict(inference_graph_uri, label_map_uri, image_paths,
+                         predictions_path, channel_order=channel_order,
+                         chip_size=chip_size, score_thresh=score_thresh,
+                         merge_thresh=merge_thresh, save_temp=save_temp)
+            eval_path = join(evals_dir, '{}.json'.format(project_id))
+            eval_paths.append(eval_path)
+            _eval_predictions(
+                image_paths, label_map_uri, annotations_path, predictions_path,
+                eval_path, save_temp)
 
-    avg_evals = []
-    nb_projects = len(eval_paths)
-    for name in precision_sums.keys():
-        avg_evals.append({
-            'name': name,
-            'avg_precision': precision_sums[name] / nb_projects,
-            'avg_recall': recall_sums[name] / nb_projects
-        })
-
-    with open(output_path, 'w') as output_file:
-        json.dump(avg_evals, output_file, indent=4)
-    upload_if_needed(output_path, output_uri)
+        _aggregate_evals(eval_paths, output_path)
+        upload_if_needed(output_path, output_uri)
+        upload_if_needed(predictions_dir, predictions_uri)
+        upload_if_needed(evals_dir, evals_uri)
 
 
 if __name__ == '__main__':

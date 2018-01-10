@@ -20,7 +20,8 @@ from object_detection.utils.np_box_list import BoxList
 
 from rv.detection.commands.settings import (
     max_num_classes, min_score_threshold, line_thickness)
-from rv.utils import save_img
+from rv.utils.misc import save_img
+from rv.utils.files import make_dir
 
 image_size = (12, 8)
 
@@ -70,9 +71,9 @@ def write_predictions_csv(predictions, predictions_path):
 
 def _predict_on_chips(inference_graph_path, label_map_path, chips_dir,
                       predictions_path, predictions_debug_dir=None):
-    makedirs(dirname(predictions_path), exist_ok=True)
+    make_dir(predictions_path, use_dirname=True)
     if predictions_debug_dir is not None:
-        makedirs(predictions_debug_dir, exist_ok=True)
+        make_dir(predictions_debug_dir)
 
     detection_graph = load_frozen_graph(inference_graph_path)
 

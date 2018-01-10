@@ -1,13 +1,10 @@
 import json
-from os import makedirs
-from os.path import dirname
 
 import click
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg') # NOQA
 import rasterio
-from pyproj import Proj, transform
 
 from object_detection.utils import (
     label_map_util, visualization_utils as vis_util)
@@ -16,9 +13,10 @@ from object_detection.utils.np_box_list_ops import (
     clip_to_window, concatenate, multi_class_non_max_suppression)
 
 from rv.detection.commands.settings import (
-    max_num_classes, line_thickness, planet_channel_order)
-from rv.utils import (
-    load_window, translate_boxlist, save_img, save_geojson)
+    max_num_classes, line_thickness, default_channel_order)
+from rv.utils.geo import (load_window, translate_boxlist, save_geojson)
+from rv.utils.misc import save_img
+from rv.utils.files import make_dir
 
 
 def compute_agg_predictions(chip_size, im_size, filename_to_chip_offset,
@@ -94,7 +92,7 @@ def load_predictions(predictions_path):
 def _aggregate_predictions(image_path, chip_info_path, predictions_path,
                            label_map_path, agg_predictions_path,
                            agg_predictions_debug_path=None,
-                           channel_order=planet_channel_order,
+                           channel_order=default_channel_order,
                            score_thresh=0.5, merge_thresh=0.05):
     click.echo('Aggregating predictions over chips...')
 
@@ -131,12 +129,12 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
     classes = boxlist.get_field('classes')
     classes += 1
 
-    makedirs(dirname(agg_predictions_path), exist_ok=True)
+    make_dir(agg_predictions_path, use_dirname=True)
     save_geojson(agg_predictions_path, boxlist, category_index,
                  image_dataset=image_dataset)
 
     if agg_predictions_debug_path is not None:
-        makedirs(dirname(agg_predictions_debug_path), exist_ok=True)
+        make_dir(agg_predictions_debug_path, use_dirname=True)
         im = load_window(image_dataset, channel_order)
         plot_predictions(
             agg_predictions_debug_path, im, category_index, boxlist)
@@ -151,7 +149,7 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
 @click.option('--agg-predictions-debug-path', default=None,
               help='Path to aggregate predictions debug plot')
 @click.option('--channel-order', nargs=3, type=int,
-              default=planet_channel_order, help='Indices of RGB channels')
+              default=default_channel_order, help='Indices of RGB channels')
 @click.option('--score-thresh', default=0.5,
               help='Score threshold of predictions to keep')
 @click.option('--merge-thresh', default=0.05,

@@ -1,5 +1,5 @@
 from os.path import join, dirname, splitext
-from os import makedirs
+import os
 from subprocess import Popen
 import zipfile
 from threading import Timer
@@ -7,20 +7,24 @@ from urllib.parse import urlparse
 
 import click
 
-from rv.utils import (
-    download_if_needed, make_empty_dir, on_parent_exit, sync_dir)
+from rv.utils.files import (
+    download_if_needed, make_dir, sync_dir, get_local_path,
+    MyTemporaryDirectory)
+from rv.utils.misc import on_parent_exit
 from rv.detection.commands.settings import temp_root_dir
 
 
 @click.command()
 @click.argument('config_uri')
-@click.argument('dataset_uri')
+@click.argument('train_dataset_uri')
+@click.argument('val_dataset_uri')
 @click.argument('model_checkpoint_uri')
 @click.argument('train_uri')
 @click.option('--sync-interval', default=600,
               help='Interval in seconds for syncing training dir')
-def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
-          sync_interval):
+@click.option('--save-temp', is_flag=True)
+def train(config_uri, train_dataset_uri, val_dataset_uri, model_checkpoint_uri,
+          train_uri, sync_interval, save_temp):
     """Train an object detection model.
 
     Args:
@@ -29,54 +33,61 @@ def train(config_uri, dataset_uri, model_checkpoint_uri, train_uri,
         model_checkpoint_uri: Zip file of pre-trained model checkpoint
         train_uri: Directory for output of training
     """
-    temp_dir = join(temp_root_dir, 'train')
-    download_dir = '/opt/data/'
-    make_empty_dir(temp_dir)
+    prefix = temp_root_dir
+    temp_dir = join(prefix, 'train') if save_temp else None
+    with MyTemporaryDirectory(temp_dir, prefix) as temp_dir:
+        config_path = download_if_needed(config_uri, temp_dir)
 
-    config_path = download_if_needed(temp_dir, config_uri)
+        train_root_dir = get_local_path(train_uri, temp_dir)
+        make_dir(train_root_dir)
+        train_dir = join(train_root_dir, 'train')
+        eval_dir = join(train_root_dir, 'eval')
 
-    train_root_dir = download_if_needed(
-        temp_dir, train_uri, must_exist=False)
-    train_dir = join(train_root_dir, 'train')
-    eval_dir = join(train_root_dir, 'eval')
-    makedirs(train_root_dir, exist_ok=True)
+        def process_zip_file(uri, temp_dir, link_dir):
+            if uri.endswith('.zip'):
+                path = download_if_needed(uri, temp_dir)
+                with zipfile.ZipFile(path, 'r') as zip_file:
+                    zip_file.extractall(link_dir)
+            else:
+                make_dir(link_dir, use_dirname=True)
+                os.symlink(uri, link_dir)
 
-    dataset_path = download_if_needed(download_dir, dataset_uri)
-    with zipfile.ZipFile(dataset_path, 'r') as dataset_file:
-        dataset_dir = splitext(dataset_path)[0]
-        dataset_file.extractall(dataset_dir)
-    model_checkpoint_path = download_if_needed(
-        download_dir, model_checkpoint_uri)
-    with zipfile.ZipFile(model_checkpoint_path, 'r') as model_checkpoint_file:
-        model_checkpoint_file.extractall(dirname(model_checkpoint_path))
+        train_dataset_dir = join(temp_dir, 'train-dataset')
+        process_zip_file(train_dataset_uri, temp_dir, train_dataset_dir)
 
-    def sync_train_dir(delete=True):
-        sync_dir(train_root_dir, train_uri, delete=delete)
-        Timer(sync_interval, sync_train_dir).start()
+        val_dataset_dir = join(temp_dir, 'val-dataset')
+        process_zip_file(val_dataset_uri, temp_dir, val_dataset_dir)
 
-    if urlparse(train_uri).scheme == 's3':
-        sync_train_dir(delete=False)
+        model_checkpoint_dir = join(temp_dir, 'model-checkpoint')
+        process_zip_file(model_checkpoint_uri, temp_dir, model_checkpoint_dir)
 
-    train_process = Popen([
-        'python', '/opt/src/tf/object_detection/train.py',
-        '--logtostderr', '--pipeline_config_path={}'.format(config_path),
-        '--train_dir={}'.format(train_dir)],
-        preexec_fn=on_parent_exit('SIGTERM'))
+        def sync_train_dir(delete=True):
+            sync_dir(train_root_dir, train_uri, delete=delete)
+            Timer(sync_interval, sync_train_dir).start()
 
-    eval_process = Popen([
-        'python', '/opt/src/tf/object_detection/eval.py',
-        '--logtostderr', '--pipeline_config_path={}'.format(config_path),
-        '--checkpoint_dir={}'.format(train_dir),
-        '--eval_dir={}'.format(eval_dir)],
-        preexec_fn=on_parent_exit('SIGTERM'))
+        if urlparse(train_uri).scheme == 's3':
+            sync_train_dir(delete=False)
 
-    tensorboard_process = Popen([
-        'tensorboard', '--logdir={}'.format(train_root_dir)],
-        preexec_fn=on_parent_exit('SIGTERM'))
+        train_process = Popen([
+            'python', '/opt/src/tf/object_detection/train.py',
+            '--logtostderr', '--pipeline_config_path={}'.format(config_path),
+            '--train_dir={}'.format(train_dir)],
+            preexec_fn=on_parent_exit('SIGTERM'))
 
-    train_process.wait()
-    eval_process.wait()
-    tensorboard_process.wait()
+        eval_process = Popen([
+            'python', '/opt/src/tf/object_detection/eval.py',
+            '--logtostderr', '--pipeline_config_path={}'.format(config_path),
+            '--checkpoint_dir={}'.format(train_dir),
+            '--eval_dir={}'.format(eval_dir)],
+            preexec_fn=on_parent_exit('SIGTERM'))
+
+        tensorboard_process = Popen([
+            'tensorboard', '--logdir={}'.format(train_root_dir)],
+            preexec_fn=on_parent_exit('SIGTERM'))
+
+        train_process.wait()
+        eval_process.wait()
+        tensorboard_process.wait()
 
 
 if __name__ == '__main__':
