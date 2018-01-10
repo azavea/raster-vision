@@ -2,6 +2,8 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
+Note: this project is under development and is not in an easily usable form at the moment.
+
 ## Object Detection on Aerial and Satellite Imagery
 
 This project provides a set of scripts for training and running object detection models on aerial and satellite imagery. In traditional object detection, each image is a small PNG file and contains a few objects. In contrast, when working with satellite and aerial imagery, each image is a set of very large GeoTIFF files and contains hundreds of objects that are sparsely distributed. In addition, annotations and predictions are represented in geospatial coordinates using GeoJSON files.
