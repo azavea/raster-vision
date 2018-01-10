@@ -1,6 +1,6 @@
-from os import makedirs
-from os.path import join, dirname
+from os.path import join
 import csv
+import tempfile
 
 import click
 import numpy as np
@@ -13,7 +13,7 @@ from object_detection.utils import label_map_util
 from rv.utils.geo import (
     load_window, build_vrt, get_boxes_from_geojson, BoxDB, print_box_stats,
     get_random_window_for_box, get_random_window)
-from rv.utils.files import make_dir
+from rv.utils.files import make_dir, MyTemporaryDirectory
 from rv.utils.misc import save_img, add_blank_chips
 from rv.detection.commands.settings import (
     default_channel_order, max_num_classes, temp_root_dir)
@@ -192,20 +192,21 @@ def make_train_chips_for_image(image_path, json_path, chip_dir,
 
 def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
-                      no_partial, redact_partial, channel_order):
-    temp_dir = join(temp_root_dir, 'make_train_chips')
-    make_dir(temp_dir, force_empty=True)
+                      no_partial, redact_partial, channel_order,
+                      save_temp):
+    prefix = temp_root_dir
+    temp_dir = join(prefix, 'make-train-chips') if save_temp else None
+    with MyTemporaryDirectory(temp_dir, prefix) as temp_dir:
+        vrt_path = join(temp_dir, 'index.vrt')
+        build_vrt(vrt_path, image_paths)
+        make_dir(chip_dir, check_empty=True)
+        make_dir(chip_label_path, use_dirname=True)
 
-    vrt_path = join(temp_dir, 'index.vrt')
-    build_vrt(vrt_path, image_paths)
-    make_dir(chip_dir, check_empty=True)
-    make_dir(chip_label_path, use_dirname=True)
-
-    click.echo('Making chips...')
-    make_train_chips_for_image(
-        vrt_path, label_path, chip_dir, chip_label_path,
-        label_map_path, chip_size, num_neg_chips, max_attempts,
-        no_partial, redact_partial, channel_order)
+        click.echo('Making chips...')
+        make_train_chips_for_image(
+            vrt_path, label_path, chip_dir, chip_label_path,
+            label_map_path, chip_size, num_neg_chips, max_attempts,
+            no_partial, redact_partial, channel_order)
 
 
 @click.command()
@@ -226,9 +227,10 @@ def _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
               'partially visible objects')
 @click.option('--channel-order', nargs=3, type=int,
               default=default_channel_order, help='Indices of the RGB channels')
+@click.option('--save-temp', is_flag=True)
 def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                      label_map_path, chip_size, num_neg_chips, max_attempts,
-                     no_partial, redact_partial, channel_order):
+                     no_partial, redact_partial, channel_order, save_temp):
     """Generate a set of training chips.
 
     Given imagery and a GeoJSON file with labels in the form of bounding
@@ -244,7 +246,7 @@ def make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
     """
     _make_train_chips(image_paths, label_path, chip_dir, chip_label_path,
                       label_map_path, chip_size, num_neg_chips, max_attempts,
-                      no_partial, redact_partial, channel_order)
+                      no_partial, redact_partial, channel_order, save_temp)
 
 
 if __name__ == '__main__':

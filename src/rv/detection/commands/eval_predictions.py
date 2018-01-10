@@ -7,7 +7,8 @@ import click
 from object_detection.utils import object_detection_evaluation, label_map_util
 
 from rv.utils.files import (
-    download_if_needed, make_dir, get_local_path, upload_if_needed)
+    download_if_needed, make_dir, get_local_path, upload_if_needed,
+    MyTemporaryDirectory)
 from rv.utils.geo import get_boxes_from_geojson, download_and_build_vrt
 from rv.detection.commands.settings import max_num_classes, temp_root_dir
 
@@ -82,23 +83,23 @@ def write_results(output_path, label_map_path, od_eval):
 
 
 def _eval_predictions(image_uris, label_map_uri, ground_truth_uri,
-                      predictions_uri, output_uri):
-    temp_dir = join(temp_root_dir, 'eval-predictions')
-    make_dir(temp_dir, force_empty=True)
+                      predictions_uri, output_uri, save_temp):
+    prefix = temp_root_dir
+    temp_dir = join(prefix, 'eval-predictions') if save_temp else None
+    with MyTemporaryDirectory(temp_dir, prefix) as temp_dir:
+        image_path = download_and_build_vrt(image_uris, temp_dir)
+        image_dataset = rasterio.open(image_path)
 
-    image_path = download_and_build_vrt(image_uris, temp_dir)
-    image_dataset = rasterio.open(image_path)
+        ground_truth_path = download_if_needed(ground_truth_uri, temp_dir)
+        predictions_path = download_if_needed(predictions_uri, temp_dir)
+        label_map_path = download_if_needed(label_map_uri, temp_dir)
 
-    ground_truth_path = download_if_needed(ground_truth_uri, temp_dir)
-    predictions_path = download_if_needed(predictions_uri, temp_dir)
-    label_map_path = download_if_needed(label_map_uri, temp_dir)
+        od_eval = get_od_eval(
+            ground_truth_path, predictions_path, image_dataset)
 
-    od_eval = get_od_eval(
-        ground_truth_path, predictions_path, image_dataset)
-
-    output_path = get_local_path(output_uri, temp_dir)
-    write_results(output_path, label_map_path, od_eval)
-    upload_if_needed(output_path, output_uri)
+        output_path = get_local_path(output_uri, temp_dir)
+        write_results(output_path, label_map_path, od_eval)
+        upload_if_needed(output_path, output_uri)
 
 
 @click.command()
@@ -107,8 +108,9 @@ def _eval_predictions(image_uris, label_map_uri, ground_truth_uri,
 @click.argument('ground_truth_uri')
 @click.argument('predictions_uri')
 @click.argument('output_uri')
+@click.option('--save-temp', is_flag=True)
 def eval_predictions(image_uris, label_map_uri, ground_truth_uri,
-                     predictions_uri, output_uri):
+                     predictions_uri, output_uri, save_temp):
     """Evaluate predictions against ground truth for a single predictions file.
 
     Args:
@@ -117,7 +119,7 @@ def eval_predictions(image_uris, label_map_uri, ground_truth_uri,
         output_uri: JSON file with metrics
     """
     _eval_predictions(image_uris, label_map_uri, ground_truth_uri,
-                      predictions_uri, output_uri)
+                      predictions_uri, output_uri, save_temp)
 
 
 if __name__ == '__main__':

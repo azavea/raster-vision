@@ -2,6 +2,7 @@ import os
 import shutil
 from urllib.parse import urlparse
 import subprocess
+import tempfile
 
 import boto3
 import botocore
@@ -21,6 +22,7 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
     if force_empty and os.path.isdir(directory):
         shutil.rmtree(directory)
 
+    print('Making directory: {}'.format(directory))
     os.makedirs(directory, exist_ok=True)
 
     is_empty = len(os.listdir(directory)) == 0
@@ -93,3 +95,30 @@ def upload_if_needed(src_path, dst_uri):
                 src_path, parsed_uri.netloc, parsed_uri.path[1:])
         else:
             sync_dir(src_path, dst_uri, delete=True)
+
+
+class MyTemporaryDirectory(tempfile.TemporaryDirectory):
+    """Temp dir context manager that can avoid cleanup."""
+    def __init__(self, temp_dir=None, prefix=None):
+        """Constructor
+
+        temp_dir: If this is set, this directory is created and
+            it is not removed when the context manager exits
+        prefix: If temp_dir is not set, then prefix is used to create
+            a temp dir using TemporaryDirectory context manager which
+            removes the dir on exit
+        """
+        if temp_dir is None:
+            self.save_temp = False
+            if prefix[-1] != '/':
+                prefix = prefix + '/'
+            make_dir(prefix)
+            super(MyTemporaryDirectory, self).__init__(prefix=prefix)
+        else:
+            self.save_temp = True
+            make_dir(temp_dir, force_empty=True)
+            self.name = temp_dir
+
+    def cleanup(self):
+        if not self.save_temp:
+            super(MyTemporaryDirectory, self).cleanup()
