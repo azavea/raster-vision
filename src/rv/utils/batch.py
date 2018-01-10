@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from os import environ
 
 import click
@@ -8,12 +6,7 @@ import boto3
 s3_bucket = environ.get('S3_BUCKET')
 
 
-@click.command()
-@click.argument('branch_name')
-@click.argument('command')
-@click.option('--attempts', default=3, help='Number of times to retry job')
-@click.option('--cpu', is_flag=True, help='Use CPU EC2 instances')
-def batch_submit(branch_name, command, attempts=3, cpu=False):
+def _batch_submit(branch_name, command, attempts=3, cpu=False):
     """
         Submit a job to run on Batch.
 
@@ -46,6 +39,15 @@ def batch_submit(branch_name, command, attempts=3, cpu=False):
 
     click.echo(
         'Submitted job with jobName={} and jobId={}'.format(job_name, job_id))
+
+
+@click.command()
+@click.argument('branch_name')
+@click.argument('command')
+@click.option('--attempts', default=3, help='Number of times to retry job')
+@click.option('--cpu', is_flag=True, help='Use CPU EC2 instances')
+def batch_submit(branch_name, command, attempts, cpu):
+    _batch_submit(branch_name, command, attempts=attempts, cpu=cpu)
 
 
 if __name__ == '__main__':
