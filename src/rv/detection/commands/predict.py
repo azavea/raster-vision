@@ -15,9 +15,9 @@ from rv.utils.geo import download_and_build_vrt
 
 
 def _predict(inference_graph_uri, label_map_uri, image_uris,
-             agg_predictions_uri, agg_predictions_debug_uri=None,
+             output_uri, output_debug_uri=None,
              mask_uri=None, channel_order=default_channel_order, chip_size=300,
-             score_thresh=0.5, merge_thresh=0.05, save_temp=False):
+             score_thresh=0.5, merge_thresh=0.5, save_temp=False):
     prefix = temp_root_dir
     temp_dir = join(prefix, 'predict') if save_temp else None
     with MyTemporaryDirectory(temp_dir, prefix) as temp_dir:
@@ -29,9 +29,9 @@ def _predict(inference_graph_uri, label_map_uri, image_uris,
 
         # Output files can't be downloaded since they don't exist yet, but
         # we need to figure out where to store them locally if the URI is remote.
-        agg_predictions_path = get_local_path(agg_predictions_uri, temp_dir)
-        agg_predictions_debug_path = get_local_path(
-            agg_predictions_debug_uri, temp_dir)
+        output_path = get_local_path(output_uri, temp_dir)
+        output_debug_path = get_local_path(
+            output_debug_uri, temp_dir)
 
         # Divide VRT into overlapping chips.
         chips_dir = join(temp_dir, 'chips')
@@ -49,8 +49,7 @@ def _predict(inference_graph_uri, label_map_uri, image_uris,
 
         # Aggregate predictions from local into global coordinate frame.
         _aggregate_predictions(image_path, chips_info_path, predictions_path,
-                               label_map_path, agg_predictions_path,
-                               agg_predictions_debug_path=agg_predictions_debug_path,  # noqa
+                               label_map_path, output_path,
                                channel_order=channel_order,
                                merge_thresh=merge_thresh)
 
@@ -58,21 +57,21 @@ def _predict(inference_graph_uri, label_map_uri, image_uris,
         if mask_path is not None:
             unfiltered_predictions_path = join(
                 temp_dir, 'unfiltered_predictions.geojson')
-            move(agg_predictions_path, unfiltered_predictions_path)
+            move(output_path, unfiltered_predictions_path)
             _transform_geojson(
-                mask_path, unfiltered_predictions_path, agg_predictions_path)
+                mask_path, unfiltered_predictions_path, output_path)
 
         # Upload output files if the URIs are remote.
-        upload_if_needed(agg_predictions_path, agg_predictions_uri)
-        upload_if_needed(agg_predictions_debug_path, agg_predictions_debug_uri)
+        upload_if_needed(output_path, output_uri)
+        upload_if_needed(output_debug_path, output_debug_uri)
 
 
 @click.command()
 @click.argument('inference_graph_uri')
 @click.argument('label_map_uri')
 @click.argument('image_uris', nargs=-1)
-@click.argument('agg_predictions_uri')
-@click.option('--agg-predictions-debug-uri', default=None,
+@click.argument('output_uri')
+@click.option('--output-debug-uri', default=None,
               help='URI for prediction debug plot')
 @click.option('--mask-uri', default=None,
               help='URI for mask GeoJSON file to use as filter for detections')
@@ -81,20 +80,20 @@ def _predict(inference_graph_uri, label_map_uri, image_uris,
 @click.option('--chip-size', default=300)
 @click.option('--score-thresh', default=0.5,
               help='Score threshold of predictions to keep')
-@click.option('--merge-thresh', default=0.05,
+@click.option('--merge-thresh', default=0.5,
               help='IOU threshold for merging predictions')
 @click.option('--save-temp', is_flag=True)
 def predict(inference_graph_uri, label_map_uri, image_uris,
-            agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
+            output_uri, output_debug_uri, mask_uri,
             channel_order, chip_size, score_thresh, merge_thresh, save_temp):
     """High-level script for running object detection over geospatial imagery.
 
     Args:
         image_uris: List of URIs for TIFF files to run prediction on
-        agg_predictions_uri: Output file with aggregated predictions
+        output_uri: Output file with aggregated predictions
     """
     _predict(inference_graph_uri, label_map_uri, image_uris,
-             agg_predictions_uri, agg_predictions_debug_uri, mask_uri,
+             output_uri, output_debug_uri, mask_uri,
              channel_order, chip_size, score_thresh, merge_thresh, save_temp)
 
 

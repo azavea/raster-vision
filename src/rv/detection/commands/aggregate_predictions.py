@@ -93,7 +93,7 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
                            label_map_path, agg_predictions_path,
                            agg_predictions_debug_path=None,
                            channel_order=default_channel_order,
-                           score_thresh=0.5, merge_thresh=0.05):
+                           score_thresh=0.5, merge_thresh=0.5):
     click.echo('Aggregating predictions over chips...')
 
     label_map = label_map_util.load_labelmap(label_map_path)
@@ -152,7 +152,7 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
               default=default_channel_order, help='Indices of RGB channels')
 @click.option('--score-thresh', default=0.5,
               help='Score threshold of predictions to keep')
-@click.option('--merge-thresh', default=0.05,
+@click.option('--merge-thresh', default=0.5,
               help='IOU threshold for merging predictions')
 def aggregate_predictions(image_path, chip_info_path, predictions_path,
                           label_map_path, agg_predictions_path,
