@@ -22,9 +22,8 @@ from rv.detection.commands.settings import temp_root_dir
 @click.argument('train_uri')
 @click.option('--sync-interval', default=600,
               help='Interval in seconds for syncing training dir')
-@click.option('--save-temp', is_flag=True)
 def train(config_uri, train_dataset_uri, val_dataset_uri, model_checkpoint_uri,
-          train_uri, sync_interval, save_temp):
+          train_uri, sync_interval):
     """Train an object detection model.
 
     Args:
@@ -34,7 +33,7 @@ def train(config_uri, train_dataset_uri, val_dataset_uri, model_checkpoint_uri,
         train_uri: Directory for output of training
     """
     prefix = temp_root_dir
-    temp_dir = join(prefix, 'train') if save_temp else None
+    temp_dir = join(prefix, 'train')
     with MyTemporaryDirectory(temp_dir, prefix) as temp_dir:
         config_path = download_if_needed(config_uri, temp_dir)
 
