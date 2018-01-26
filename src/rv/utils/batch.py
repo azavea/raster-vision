@@ -1,4 +1,5 @@
 from os import environ
+import uuid
 
 import click
 import boto3
@@ -6,7 +7,8 @@ import boto3
 s3_bucket = environ.get('S3_BUCKET')
 
 
-def _batch_submit(branch_name, command, attempts=3, cpu=False):
+def _batch_submit(branch_name, command, attempts=3, cpu=False,
+                  parent_job_ids=[], array_size=None):
     """
         Submit a job to run on Batch.
 
@@ -23,22 +25,31 @@ def _batch_submit(branch_name, command, attempts=3, cpu=False):
     job_definition = 'raster-vision-cpu' if cpu else \
         'raster-vision-gpu'
 
-    job_name = command.replace('/', '-').replace('.', '-')
-    job_name = 'batch_submit'
+    job_name = str(uuid.uuid4())
+    depends_on = [{'jobId': job_id} for job_id in parent_job_ids]
 
-    job_id = client.submit_job(
-        jobName=job_name,
-        jobQueue=job_queue,
-        jobDefinition=job_definition,
-        containerOverrides={
+    kwargs = {
+        'jobName': job_name,
+        'jobQueue': job_queue,
+        'jobDefinition': job_definition,
+        'containerOverrides': {
             'command': full_command
         },
-        retryStrategy={
+        'retryStrategy': {
             'attempts': attempts
-        })['jobId']
+        },
+        'dependsOn': depends_on
+    }
+
+    if array_size is not None:
+        kwargs['arrayProperties'] = {'size': array_size}
+
+    job_id = client.submit_job(**kwargs)['jobId']
 
     click.echo(
         'Submitted job with jobName={} and jobId={}'.format(job_name, job_id))
+
+    return job_id
 
 
 @click.command()

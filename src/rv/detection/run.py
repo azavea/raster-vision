@@ -12,6 +12,8 @@ from rv.detection.commands.eval_predictions import eval_predictions
 from rv.detection.commands.make_label_map import make_label_map
 from rv.detection.commands.prep_train_data import prep_train_data
 from rv.detection.commands.eval_model import eval_model
+from rv.detection.commands.merge_predictions import merge_predictions
+from rv.detection.commands.predict_array import predict_array
 
 
 @click.group()
@@ -31,6 +33,8 @@ run.add_command(eval_predictions)
 run.add_command(make_label_map)
 run.add_command(prep_train_data)
 run.add_command(eval_model)
+run.add_command(merge_predictions)
+run.add_command(predict_array)
 
 
 if __name__ == '__main__':
