@@ -37,7 +37,7 @@ RUN conda install -y python=${python_version} scikit-learn six h5py \
     conda clean -yt
 
 
-RUN pip install flake8 awscli spectral lxml shapely pandas boto3==1.4.4 pyproj
+RUN pip install flake8 awscli spectral lxml shapely pandas boto3==1.5.18 pyproj
 
 # Ensure that the keras user will have permission to write model into /opt/data
 USER root
