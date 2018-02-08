@@ -3,7 +3,6 @@ import os
 import shutil
 import time
 import csv
-from collections import namedtuple
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -26,7 +25,7 @@ from rv.classification.ml.utils import (
     AverageMeter, accuracy, ConfusionMeter, RandomVerticalFlip, RandomRotate90,
     Resize
 )
-from rv.utils import make_empty_dir
+from rv.utils import make_empty_dir, parse_config
 
 CUDA = torch.cuda.is_available()
 print('Cuda: {}'.format(CUDA))
@@ -54,14 +53,6 @@ class CsvDataset(torch.utils.data.Dataset):
         im = Image.open(os.path.join(self.image_dir, filename))
         im = self.transform(im)
         return (im, target)
-
-
-def parse_config(config_path):
-    with open(config_path) as config_file:
-        config = json.load(
-            config_file,
-            object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
-        return config
 
 
 def adjust_learning_rate(config, optimizer, epoch):
