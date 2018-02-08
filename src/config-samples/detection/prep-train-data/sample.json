@@ -1,0 +1,9 @@
+{
+    "chip_size": 300,
+    "neg_ratio": 1,
+    "channel_order": [0, 1, 2],
+    "debug": true,
+    "min_area": 0.0,
+    "single_label": "car",
+    "save_temp": false
+}
