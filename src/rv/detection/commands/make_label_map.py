@@ -1,7 +1,5 @@
 import json
 
-import click
-
 
 def get_labels(label_paths):
     labels = set()
@@ -33,14 +31,6 @@ item {{
             label_map_file.write(item_str)
 
 
-def _make_label_map(label_paths, label_map_path):
-    labels = get_labels(label_paths)
-    write_label_map(label_map_path, labels)
-
-
-@click.command()
-@click.argument('label_paths', nargs=-1)
-@click.argument('label_map_path')
 def make_label_map(label_paths, label_map_path):
     """Generate a label map based on the labels in a set of label files.
 
@@ -48,8 +38,5 @@ def make_label_map(label_paths, label_map_path):
         label_paths: List of paths to GeoJSON files containing labels
         label_map_path: Path to Protobuf file with map of labels to ids
     """
-    _make_label_map(label_paths, label_map_path)
-
-
-if __name__ == '__main__':
-    make_label_map()
+    labels = get_labels(label_paths)
+    write_label_map(label_map_path, labels)
