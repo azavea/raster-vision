@@ -182,7 +182,12 @@ def load_window(image_dataset, channel_order, window=None):
 
 def build_vrt(vrt_path, image_paths):
     """Build a VRT for a set of TIFF files."""
-    cmd = ['gdalbuildvrt', vrt_path]
+    # We set the nodata value to 0, overriding the intrinsic nodata values
+    # set in the GeoTIFFs. We need to do this because RF is not setting the
+    # nodata values, but could be dangerous because some files might not use 0
+    # as a nodata value. In the future, we probably want to make this
+    # configurable but should be safe to hardcode for now.
+    cmd = ['gdalbuildvrt', '-srcnodata', '0', vrt_path]
     cmd.extend(image_paths)
     subprocess.run(cmd)
 
