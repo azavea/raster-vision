@@ -2,6 +2,7 @@ import signal
 import ctypes
 import os
 import json
+from collections import namedtuple
 
 import numpy as np
 import scipy
@@ -61,3 +62,11 @@ def load_projects(projects_path, temp_dir):
             annotations_paths.append(annotations_path)
 
     return project_ids, image_paths_list, annotations_paths
+
+
+def parse_config(config_path):
+    with open(config_path) as config_file:
+        config = json.load(
+            config_file,
+            object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
+        return config
