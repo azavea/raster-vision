@@ -1,0 +1,40 @@
+{
+    "machine_learning": {
+        "method": "OBJECT_DETECTION",
+        "backend": "TF_OBJECT_DETECTION_API"
+    },
+    "raster_transformer": {
+        "channel_order": [0, 1, 2]
+    },
+    "label_items": [
+        {
+            "id": 1,
+            "name": "car"
+        }
+    ],
+    "projects": [
+        {
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "/opt/data/lf-dev/detection/processed-data/cowc-potsdam/images/30cm/top_potsdam_2_10_RGBIR.tif"
+                    ]
+                }
+            },
+            "annotation_source": {
+                "geojson_file": {
+                    "uri": "/opt/data/lf-dev/detection/predictions/cowc-potsdam/30cm-test/sample.json"
+                }
+            }
+        }
+    ],
+    "options": {
+        "model_uri": "/opt/data/lf-dev/detection/trained-models/cowc-potsdam/30cm/inference-graph.pb",
+        "chip_size": 300,
+        "debug": true,
+        "object_detection_options": {
+            "merge_thresh": 0.1,
+            "score_thresh": 0.5
+        }
+    }
+}

@@ -13,6 +13,8 @@ RUN mkdir -p $CONDA_DIR && \
     /bin/bash /Miniconda3-3.9.1-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
     rm Miniconda3-3.9.1-Linux-x86_64.sh
 
+RUN apt-get install -y python-protobuf
+
 ENV NB_USER keras
 ENV NB_UID 1000
 
@@ -36,8 +38,8 @@ RUN conda install -y python=${python_version} scikit-learn six h5py \
     conda install -c conda-forge rtree && \
     conda clean -yt
 
-
-RUN pip install flake8 awscli spectral lxml shapely pandas boto3==1.5.18 pyproj
+RUN pip install flake8 awscli spectral lxml shapely pandas boto3==1.6.0 \
+    pyproj imageio
 
 # Ensure that the keras user will have permission to write model into /opt/data
 USER root

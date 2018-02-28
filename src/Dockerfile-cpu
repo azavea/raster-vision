@@ -8,18 +8,13 @@ ARG architecture=cpu
 RUN pip install https://storage.googleapis.com/tensorflow/linux/${architecture}/tensorflow-${tensorflow_version}-linux_x86_64.whl && \
     pip install git+git://github.com/fchollet/keras.git@d4b618bf23d83b1a7306bc6816bd509c23bba15d
 
-### Install XGBoost
-# install gcc with openmp support in conda
-RUN conda install -y gcc
-WORKDIR /opt
-RUN git clone --recursive https://github.com/dmlc/xgboost
-WORKDIR xgboost
-#RUN cp make/minimum.mk ./config.mk
-RUN make -j4
-WORKDIR python-package
-RUN python setup.py install
-WORKDIR /opt
-RUN rm -rf xgboost
+# install protoc
+RUN wget -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip
+RUN unzip /tmp/protoc3.zip -d /tmp/protoc3
+RUN mv /tmp/protoc3/bin/* /usr/local/bin/
+RUN mv /tmp/protoc3/include/* /usr/local/include/
+RUN rm -R /tmp/protoc3
+RUN rm /tmp/protoc3.zip
 
 RUN conda install -y pytorch torchvision -c pytorch
 

@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+package rv.protos;
+
+message RasterTransformer {
+    repeated int32 channel_order = 1;
+}

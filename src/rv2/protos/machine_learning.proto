@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package rv.protos;
+
+message MachineLearning {
+    enum Method {
+        OBJECT_DETECTION = 1;
+        CLASSIFICATION = 2;
+        REGRESSION = 3;
+        SEMANTIC_SEGMENTATION = 4;
+    }
+
+    enum Backend {
+        TF_OBJECT_DETECTION_API = 1;
+    }
+
+    required Method method = 1;
+    required Backend backend = 2;
+}

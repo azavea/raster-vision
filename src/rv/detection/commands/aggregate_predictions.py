@@ -117,7 +117,7 @@ def _aggregate_predictions(image_path, chip_info_path, predictions_path,
     # Due to the sliding window approach, sometimes there are multiple
     # slightly different detections where there should only be one. So
     # we group them together.
-    max_output_size = 10000
+    max_output_size = 100000
     boxlist = multi_class_non_max_suppression(
         boxlist, score_thresh, merge_thresh, max_output_size)
 
