@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rv2/protos/machine_learning.proto";
+
+message Train {
+    message Options {
+        required string config_uri = 1; // Backend-specific config file
+        required string train_data_uri = 2; // Directory with training files
+        required string output_uri = 3;
+        optional string model_checkpoint_uri = 4; // Zip file
+        optional int32 sync_interval = 5 [default=600]; // In seconds
+    }
+
+    required MachineLearning machine_learning = 1;
+    required Options options = 2;
+}

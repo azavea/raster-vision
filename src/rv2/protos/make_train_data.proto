@@ -1,0 +1,38 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rv2/protos/machine_learning.proto";
+import "rv2/protos/raster_transformer.proto";
+import "rv2/protos/raster_source.proto";
+import "rv2/protos/annotation_source.proto";
+import "rv2/protos/label_item.proto";
+
+message MakeTrainData {
+    message Project {
+        required RasterSource raster_source = 1;
+        required AnnotationSource annotation_source = 2;
+    }
+
+    message ObjectDetectionOptions {
+        required float neg_ratio = 1;
+        optional float ioa_thresh = 2 [default=0.8];
+        optional string single_label = 3;
+    }
+
+    message Options {
+        required int32 chip_size = 1;
+        required RasterTransformer raster_transformer = 2;
+        optional bool debug = 3 [default=true];
+        required string output_uri = 4;
+        oneof ml_options_type {
+            ObjectDetectionOptions object_detection_options = 5;
+        }
+    }
+
+    repeated Project train_projects = 1;
+    repeated Project validation_projects = 2;
+    required MachineLearning machine_learning = 3;
+    required Options options = 4;
+    repeated LabelItem label_items = 5;
+}
