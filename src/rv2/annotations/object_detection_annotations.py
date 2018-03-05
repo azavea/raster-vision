@@ -23,11 +23,8 @@ def geojson_to_annotations(geojson, crs_transformer):
         ymax, xmax = np.max(polygon, axis=0)
         boxes.append(Box(ymin, xmin, ymax, xmax))
 
-        default_properties = {
-            'class_id': 1
-        }
-        properties = feature.get('properties', default_properties)
-        classes.append(properties['class_id'])
+        properties = feature.get('properties', {})
+        classes.append(properties.get('class_id', 1))
         scores.append(properties.get('score', 1.0))
 
     boxes = np.array([box.npbox_format() for box in boxes], dtype=float)

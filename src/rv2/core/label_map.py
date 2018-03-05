@@ -3,6 +3,7 @@ class LabelItem(object):
         self.id = id
         self.name = name
 
+
 class LabelMap(object):
     def __init__(self, label_items):
         self.label_item_map = {}
@@ -14,6 +15,9 @@ class LabelMap(object):
 
     def get_items(self):
         return self.label_item_map.values()
+
+    def __len__(self):
+        return len(self.get_items())
 
     def get_category_index(self):
         category_index = {}

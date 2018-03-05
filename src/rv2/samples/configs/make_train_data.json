@@ -6,9 +6,6 @@
     "options": {
         "output_uri": "/opt/data/lf-dev/detection/training-data/sample/",
         "chip_size": 300,
-        "raster_transformer": {
-            "channel_order": [0, 1, 2]
-        },
         "debug": true,
         "object_detection_options": {
             "neg_ratio": 0.5,
@@ -25,13 +22,16 @@
     "train_projects": [
         {
             "raster_source": {
+                "raster_transformer": {
+                    "channel_order": [0, 1, 2]
+                },
                 "geotiff_files": {
                     "uris": [
                         "/opt/data/lf-dev/detection/processed-data/cowc-potsdam/images/30cm/top_potsdam_2_10_RGBIR.tif"
                     ]
                 }
             },
-            "annotation_source": {
+            "ground_truth_annotation_source": {
                 "geojson_file": {
                     "uri": "/opt/data/lf-dev/detection/processed-data/cowc-potsdam/annotations/train/top_potsdam_2_10_RGBIR.json"
                 }
@@ -41,13 +41,16 @@
     "validation_projects": [
         {
             "raster_source": {
+                "raster_transformer": {
+                    "channel_order": [0, 1, 2]
+                },
                 "geotiff_files": {
                     "uris": [
                         "/opt/data/lf-dev/detection/processed-data/cowc-potsdam/images/30cm/top_potsdam_2_12_RGBIR.tif"
                     ]
                 }
             },
-            "annotation_source": {
+            "ground_truth_annotation_source": {
                 "geojson_file": {
                     "uri": "/opt/data/lf-dev/detection/processed-data/cowc-potsdam/annotations/train/top_potsdam_2_12_RGBIR.json"
                 }

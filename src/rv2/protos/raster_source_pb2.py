@@ -13,14 +13,16 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
+from rv2.protos import raster_transformer_pb2 as rv2_dot_protos_dot_raster__transformer__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='rv2/protos/raster_source.proto',
   package='rv.protos',
   syntax='proto2',
-  serialized_pb=_b('\n\x1erv2/protos/raster_source.proto\x12\trv.protos\"\x1c\n\x0cGeoTiffFiles\x12\x0c\n\x04uris\x18\x01 \x03(\t\"V\n\x0cRasterSource\x12\x30\n\rgeotiff_files\x18\x01 \x01(\x0b\x32\x17.rv.protos.GeoTiffFilesH\x00\x42\x14\n\x12raster_source_type')
-)
+  serialized_pb=_b('\n\x1erv2/protos/raster_source.proto\x12\trv.protos\x1a#rv2/protos/raster_transformer.proto\"\x1c\n\x0cGeoTiffFiles\x12\x0c\n\x04uris\x18\x01 \x03(\t\"\x90\x01\n\x0cRasterSource\x12\x38\n\x12raster_transformer\x18\x01 \x02(\x0b\x32\x1c.rv.protos.RasterTransformer\x12\x30\n\rgeotiff_files\x18\x02 \x01(\x0b\x32\x17.rv.protos.GeoTiffFilesH\x00\x42\x14\n\x12raster_source_type')
+  ,
+  dependencies=[rv2_dot_protos_dot_raster__transformer__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
@@ -52,8 +54,8 @@ _GEOTIFFFILES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=45,
-  serialized_end=73,
+  serialized_start=82,
+  serialized_end=110,
 )
 
 
@@ -65,8 +67,15 @@ _RASTERSOURCE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='geotiff_files', full_name='rv.protos.RasterSource.geotiff_files', index=0,
-      number=1, type=11, cpp_type=10, label=1,
+      name='raster_transformer', full_name='rv.protos.RasterSource.raster_transformer', index=0,
+      number=1, type=11, cpp_type=10, label=2,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='geotiff_files', full_name='rv.protos.RasterSource.geotiff_files', index=1,
+      number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -86,10 +95,11 @@ _RASTERSOURCE = _descriptor.Descriptor(
       name='raster_source_type', full_name='rv.protos.RasterSource.raster_source_type',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=75,
-  serialized_end=161,
+  serialized_start=113,
+  serialized_end=257,
 )
 
+_RASTERSOURCE.fields_by_name['raster_transformer'].message_type = rv2_dot_protos_dot_raster__transformer__pb2._RASTERTRANSFORMER
 _RASTERSOURCE.fields_by_name['geotiff_files'].message_type = _GEOTIFFFILES
 _RASTERSOURCE.oneofs_by_name['raster_source_type'].fields.append(
   _RASTERSOURCE.fields_by_name['geotiff_files'])

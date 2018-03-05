@@ -21,6 +21,11 @@
                     ]
                 }
             },
+            "ground_truth_annotation_source": {
+                "geojson_file": {
+                    "uri": "/opt/data/lf-dev/detection/processed-data/cowc-potsdam/annotations/train/top_potsdam_2_10_RGBIR.json"
+                }
+            },
             "prediction_annotation_source": {
                 "geojson_file": {
                     "uri": "/opt/data/lf-dev/detection/predictions/cowc-potsdam/30cm-test/sample.json"
@@ -29,12 +34,7 @@
         }
     ],
     "options": {
-        "model_uri": "/opt/data/lf-dev/detection/trained-models/cowc-potsdam/30cm/inference-graph.pb",
-        "chip_size": 300,
         "debug": true,
-        "object_detection_options": {
-            "merge_thresh": 0.1,
-            "score_thresh": 0.5
-        }
+        "output_uri": "/opt/data/lf-dev/detection/evals/sample.json"
     }
 }
