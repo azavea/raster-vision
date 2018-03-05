@@ -1,7 +1,7 @@
 import click
 
 from rv2.builders import (
-    make_train_data_builder, train_builder, predict_builder)
+    make_train_data_builder, train_builder, predict_builder, eval_builder)
 
 
 @click.command()
@@ -25,6 +25,13 @@ def predict(config_uri):
     command.run()
 
 
+@click.command()
+@click.argument('config_uri')
+def eval(config_uri):
+    command = eval_builder.build(config_uri)
+    command.run()
+
+
 @click.group()
 def run():
     pass
@@ -33,6 +40,7 @@ def run():
 run.add_command(make_train_data)
 run.add_command(train)
 run.add_command(predict)
+run.add_command(eval)
 
 
 if __name__ == '__main__':

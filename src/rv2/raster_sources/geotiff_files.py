@@ -39,13 +39,15 @@ def download_and_build_vrt(image_uris, temp_dir):
 
 
 class GeoTiffFiles(RasterSource):
-    def __init__(self, uris):
+    def __init__(self, raster_transformer, uris):
         print('Loading GeoTiffFFiles...')
         self.uris = uris
         self.temp_dir = tempfile.TemporaryDirectory(dir=RV_TEMP_DIR)
         self.vrt_path = download_and_build_vrt(
             self.uris, self.temp_dir.name)
         self.image_dataset = rasterio.open(self.vrt_path)
+
+        super().__init__(raster_transformer)
 
     def get_crs_transformer(self):
         return CRSTransformer(self.image_dataset)
@@ -54,5 +56,5 @@ class GeoTiffFiles(RasterSource):
         return Box(
             0, 0, self.image_dataset.height, self.image_dataset.width)
 
-    def get_chip(self, window):
+    def _get_chip(self, window):
         return load_window(self.image_dataset, window.rasterio_format())

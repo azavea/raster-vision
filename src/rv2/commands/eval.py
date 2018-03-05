@@ -1,7 +1,7 @@
 from rv2.core.command import Command
 
 
-class Predict(Command):
+class Eval(Command):
     def __init__(self, projects, ml_method, label_map, options):
         self.projects = projects
         self.ml_method = ml_method
@@ -9,4 +9,4 @@ class Predict(Command):
         self.options = options
 
     def run(self):
-        self.ml_method.predict(self.projects, self.label_map, self.options)
+        self.ml_method.eval(self.projects, self.label_map, self.options)

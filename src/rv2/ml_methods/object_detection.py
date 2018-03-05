@@ -1,6 +1,8 @@
 from object_detection.utils import visualization_utils as vis_util
 
 from rv2.core.ml_method import MLMethod
+from rv2.evaluations.object_detection_evaluation import (
+    ObjectDetectionEvaluation)
 from rv2.core.box import Box
 from rv2.utils.misc import save_img
 
@@ -46,9 +48,6 @@ def make_neg_windows(annotation_source, image_extent, chip_size, nb_windows,
 
 
 class ObjectDetection(MLMethod):
-    def __init__(self, backend):
-        self.backend = backend
-
     def get_train_windows(self, image_extent, annotation_source, options):
         # Make positive windows which contain annotations.
         pos_windows = make_pos_windows(
@@ -87,3 +86,6 @@ class ObjectDetection(MLMethod):
                     Box.make_square(row_start, col_start, chip_size))
 
         return windows
+
+    def get_evaluation(self):
+        return ObjectDetectionEvaluation()
