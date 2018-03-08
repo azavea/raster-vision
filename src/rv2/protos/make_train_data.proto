@@ -6,7 +6,7 @@ import "rv2/protos/machine_learning.proto";
 import "rv2/protos/project.proto";
 import "rv2/protos/label_item.proto";
 
-message MakeTrainData {
+message MakeTrainDataConfig {
     message ObjectDetectionOptions {
         required float neg_ratio = 1;
         optional float ioa_thresh = 2 [default=0.8];
@@ -14,9 +14,9 @@ message MakeTrainData {
     }
 
     message Options {
-        required int32 chip_size = 1;
+        optional int32 chip_size = 1;
         optional bool debug = 2 [default=true];
-        required string output_uri = 3;
+        optional string output_uri = 3;
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 4;
         }

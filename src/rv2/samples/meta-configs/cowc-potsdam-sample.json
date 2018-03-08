@@ -1,0 +1,75 @@
+{
+    "train_projects": [
+        {
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_10_RGBIR.tif"
+                    ]
+                }
+            },
+            "ground_truth_annotation_source": {
+                "geojson_file": {
+                    "uri": "processed-data/cowc-potsdam/annotations/train/top_potsdam_2_10_RGBIR.json"
+                }
+            }
+        }
+    ],
+    "test_projects": [
+        {
+            "id": "2_13",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_13_RGBIR.tif"
+                    ]
+                }
+            },
+            "ground_truth_annotation_source": {
+                "geojson_file": {
+                    "uri": "processed-data/cowc-potsdam/annotations/test/top_potsdam_2_13_RGBIR.json"
+                }
+            }
+        }
+    ],
+    "machine_learning": {
+        "method": "OBJECT_DETECTION",
+        "backend": "TF_OBJECT_DETECTION_API"
+    },
+    "label_items": [
+        {
+            "id": 1,
+            "name": "car"
+        }
+    ],
+    "make_train_data_options": {
+        "object_detection_options": {
+            "neg_ratio": 1.0,
+            "ioa_thresh": 0.8
+        }
+    },
+    "train_options": {
+        "pretrained_model_uri": "pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_11_06_2017.zip",
+        "backend_config_uri": "backend-configs/tf-object-detection-api/mobilenet-short.config",
+        "sync_interval": 600
+    },
+    "predict_options": {
+        "object_detection_options": {
+            "merge_thresh": 0.1,
+            "score_thresh": 0.5
+        }
+    },
+    "eval_options": {
+    },
+    "debug": true,
+    "chip_size": 300,
+    "raster_transformer": {
+        "channel_order": [0, 1, 2]
+    },
+    "local_root_uri": "/opt/data/lf-dev/",
+    "remote_root_uri": "s3://raster-vision-lf-dev/",
+    "dataset_key": "cowc-potsdam-5cm-sample",
+    "model_key": "mobilenet",
+    "prediction_key": "test",
+    "eval_key": "default"
+}

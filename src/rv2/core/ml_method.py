@@ -53,7 +53,8 @@ class MLMethod():
             print('Making predictions for project', end='', flush=True)
             raster_source = project.raster_source
             annotation_source = project.prediction_annotation_source
-
+            annotation_source.clear()
+            
             windows = self.get_predict_windows(
                 raster_source.get_extent(), options)
             for window in windows:

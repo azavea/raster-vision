@@ -9,6 +9,8 @@ from subprocess import Popen
 from threading import Timer
 import signal
 import atexit
+import glob
+import re
 
 from PIL import Image
 import tensorflow as tf
@@ -141,16 +143,11 @@ def make_debug_images(record_path, label_map, output_dir):
     print()
 
 
-# Kill child process when this process exits.
-# https://stackoverflow.com/questions/19447603/how-to-kill-a-python-child-process-created-with-subprocess-check-output-when-t  # noqa
-def register_kill(process):
-    def kill_process():
-        if process.pid is None:
-            pass
-        else:
-            print('Killing {}...'.format(process.pid))
-            os.kill(process.pid, signal.SIGTERM)
-    atexit.register(kill_process)
+def terminate_at_exit(process):
+    def terminate():
+        print('Terminating {}...'.format(process.pid))
+        process.terminate()
+    atexit.register(terminate)
 
 
 def train(config_path, output_dir):
@@ -161,18 +158,18 @@ def train(config_path, output_dir):
         'python', '/opt/src/tf/object_detection/train.py',
         '--logtostderr', '--pipeline_config_path={}'.format(config_path),
         '--train_dir={}'.format(output_train_dir)])
-    register_kill(train_process)
+    terminate_at_exit(train_process)
 
     eval_process = Popen([
         'python', '/opt/src/tf/object_detection/eval.py',
         '--logtostderr', '--pipeline_config_path={}'.format(config_path),
         '--checkpoint_dir={}'.format(output_train_dir),
         '--eval_dir={}'.format(output_eval_dir)])
-    register_kill(eval_process)
+    terminate_at_exit(eval_process)
 
     tensorboard_process = Popen([
         'tensorboard', '--logdir={}'.format(output_dir)])
-    register_kill(tensorboard_process)
+    terminate_at_exit(tensorboard_process)
 
     train_process.wait()
     eval_process.terminate()
@@ -190,6 +187,36 @@ def start_sync(output_dir, output_uri, sync_interval=600):
         # On first sync, we don't want to delete files on S3 to match
         # th contents of output_dir since there's nothing there yet.
         sync_train_dir(delete=False)
+
+
+def get_last_checkpoint_path(train_root_dir):
+    index_paths = glob.glob(join(train_root_dir, 'train', '*.index'))
+    checkpoint_ids = []
+    for index_path in index_paths:
+        match = re.match(r'model.ckpt-(\d+).index', os.path.basename(index_path))
+        checkpoint_ids.append(int(match.group(1)))
+
+    if len(checkpoint_ids) == 0:
+        return None
+    checkpoint_id = max(checkpoint_ids)
+    checkpoint_path = join(
+        train_root_dir, 'train', 'model.ckpt-{}'.format(checkpoint_id))
+    return checkpoint_path
+
+
+def export_inference_graph(train_root_dir, config_path, inference_graph_path):
+    checkpoint_path = get_last_checkpoint_path(train_root_dir)
+    if checkpoint_path is None:
+        print('No checkpoints could be found.')
+    else:
+        print('Exporting checkpoint {}...'.format(checkpoint_path))
+        train_process = Popen([
+            'python', '/opt/src/tf/object_detection/export_inference_graph.py',
+            '--input_type', 'image_tensor',
+            '--pipeline_config_path', config_path,
+            '--checkpoint_path', checkpoint_path,
+            '--inference_graph_path', inference_graph_path])
+        train_process.wait()
 
 
 class TrainPackage(object):
@@ -233,24 +260,24 @@ class TrainPackage(object):
         self.download_if_needed(self.get_record_uri(VALIDATION))
         self.download_if_needed(self.get_label_map_uri())
 
-    def download_model_checkpoint(self, model_checkpoint_zip_uri):
-        model_checkpoint_zip_path = self.download_if_needed(
-            model_checkpoint_zip_uri)
-        zip_ref = zipfile.ZipFile(model_checkpoint_zip_path, 'r')
+    def download_pretrained_model(self, pretrained_model_zip_uri):
+        pretrained_model_zip_path = self.download_if_needed(
+            pretrained_model_zip_uri)
+        zip_ref = zipfile.ZipFile(pretrained_model_zip_path, 'r')
         zip_ref.extractall(self.temp_dir)
         zip_ref.close()
-        model_checkpoint_path = join(self.temp_dir, 'model.ckpt')
-        return model_checkpoint_path
+        pretrained_model_path = join(self.temp_dir, 'model.ckpt')
+        return pretrained_model_path
 
-    def download_config(self, model_checkpoint_zip_uri, config_uri):
+    def download_config(self, pretrained_model_zip_uri, backend_config_uri):
         # Download and parse config.
-        config_str = file_to_str(config_uri)
+        config_str = file_to_str(backend_config_uri)
         config = text_format.Parse(config_str, TrainEvalPipelineConfig())
 
         # Update config using local paths.
-        model_checkpoint_path = self.download_model_checkpoint(
-            model_checkpoint_zip_uri)
-        config.train_config.fine_tune_checkpoint = model_checkpoint_path
+        pretrained_model_path = self.download_pretrained_model(
+            pretrained_model_zip_uri)
+        config.train_config.fine_tune_checkpoint = pretrained_model_path
 
         label_map_path = self.get_local_path(self.get_label_map_uri())
 
@@ -343,7 +370,7 @@ class TFObjectDetectionAPI(MLBackend):
         train_package = TrainPackage(options.train_data_uri)
         train_package.download_data()
         config_path = train_package.download_config(
-            options.model_checkpoint_uri, options.config_uri)
+            options.pretrained_model_uri, options.backend_config_uri)
 
         with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
             # Setup output dirs.
@@ -354,7 +381,14 @@ class TFObjectDetectionAPI(MLBackend):
             start_sync(output_dir, options.output_uri,
                        sync_interval=options.sync_interval)
             train(config_path, output_dir)
-            sync_dir(output_dir, options.output_uri, delete=True)
+
+            # Export inference graph.
+            inference_graph_path = join(output_dir, 'model')
+            export_inference_graph(
+                output_dir, config_path, inference_graph_path)
+
+            if urlparse(options.output_uri).scheme == 's3':
+                sync_dir(output_dir, options.output_uri, delete=True)
 
     def predict(self, chip, options):
         # Load and memoize the detection graph and TF session.

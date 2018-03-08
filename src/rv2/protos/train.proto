@@ -4,12 +4,12 @@ package rv.protos;
 
 import "rv2/protos/machine_learning.proto";
 
-message Train {
+message TrainConfig {
     message Options {
-        required string config_uri = 1; // Backend-specific config file
-        required string train_data_uri = 2; // Directory with training files
-        required string output_uri = 3;
-        optional string model_checkpoint_uri = 4; // Zip file
+        optional string backend_config_uri = 1; // Backend-specific config file
+        optional string train_data_uri = 2; // Directory with training files
+        optional string output_uri = 3;
+        optional string pretrained_model_uri = 4; // Zip file
         optional int32 sync_interval = 5 [default=600]; // In seconds
     }
 

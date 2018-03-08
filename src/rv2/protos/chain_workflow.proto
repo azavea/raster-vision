@@ -1,0 +1,35 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rv2/protos/machine_learning.proto";
+import "rv2/protos/project.proto";
+import "rv2/protos/label_item.proto";
+import "rv2/protos/make_train_data.proto";
+import "rv2/protos/train.proto";
+import "rv2/protos/predict.proto";
+import "rv2/protos/eval.proto";
+import "rv2/protos/raster_transformer.proto";
+
+message ChainWorkflowConfig {
+    repeated Project train_projects = 1;
+    repeated Project test_projects = 2;
+
+    required MachineLearning machine_learning = 3;
+    repeated LabelItem label_items = 4;
+    required RasterTransformer raster_transformer = 5;
+    required int32 chip_size = 6;
+    required bool debug = 7;
+
+    required string local_root_uri = 8;
+    required string remote_root_uri = 9;
+    required string dataset_key = 10;
+    required string model_key = 11;
+    required string prediction_key = 12;
+    required string eval_key = 13;
+
+    required MakeTrainDataConfig.Options make_train_data_options = 14;
+    required TrainConfig.Options train_options = 15;
+    required PredictConfig.Options predict_options = 16;
+    required EvalConfig.Options eval_options = 17;
+}

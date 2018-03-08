@@ -6,15 +6,15 @@ import "rv2/protos/machine_learning.proto";
 import "rv2/protos/project.proto";
 import "rv2/protos/label_item.proto";
 
-message Predict {
+message PredictConfig {
     message ObjectDetectionOptions {
         optional float merge_thresh = 1 [default=0.5];
         optional float score_thresh = 2 [default=0.5];
     }
 
     message Options {
-        required string model_uri = 1;
-        required int32 chip_size = 3;
+        optional string model_uri = 1;
+        optional int32 chip_size = 3;
         optional bool debug = 4 [default=true];
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 5;

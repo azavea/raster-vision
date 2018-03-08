@@ -2,12 +2,12 @@ from rv2.builders import (
     project_builder, ml_method_builder, label_map_builder)
 from rv2.utils import files
 from rv2.commands.make_train_data import MakeTrainData
-from rv2.protos.make_train_data_pb2 import MakeTrainData as MakeTrainDataPB
+from rv2.protos.make_train_data_pb2 import MakeTrainDataConfig
 
 
 def build(config):
     if isinstance(config, str):
-        config = files.load_json_config(config, MakeTrainDataPB())
+        config = files.load_json_config(config, MakeTrainDataConfig())
 
     train_projects = [project_builder.build(project_config)
                       for project_config in config.train_projects]

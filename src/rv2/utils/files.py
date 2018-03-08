@@ -25,7 +25,6 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
     if force_empty and os.path.isdir(directory):
         shutil.rmtree(directory)
 
-    print('Making directory: {}'.format(directory))
     os.makedirs(directory, exist_ok=True)
 
     is_empty = len(os.listdir(directory)) == 0
@@ -109,6 +108,11 @@ def load_json_config(uri, message):
     return json_format.Parse(file_to_str(uri), message)
 
 
+def save_json_config(message, uri):
+    json_str = json_format.MessageToJson(message)
+    str_to_file(json_str, uri)
+
+
 def upload_if_needed(src_path, dst_uri):
     """Upload file or dir if the destination is remote."""
     if dst_uri is None:
@@ -128,4 +132,7 @@ def upload_if_needed(src_path, dst_uri):
             sync_dir(src_path, dst_uri, delete=True)
 
 
+# Ensure that RV temp directory exists. We need to use a custom location for
+# the temporary directory so it will be mirrored on the host file system which
+# is needed for running in a Docker container with limited space on EC2.
 make_dir(RV_TEMP_DIR)
