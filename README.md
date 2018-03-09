@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Note: this project is under development and is not in an easily usable form at the moment.
+Note: this project is under development and may be difficult to use at the moment.
 
 ## Object Detection on Aerial and Satellite Imagery
 
@@ -60,9 +60,9 @@ vagrant@raster-vision:/vagrant$ ./scripts/update --cpu
 vagrant@raster-vision:/vagrant$ ./scripts/run --cpu
 ```
 
-### Running object detection scripts
+### Running an object detection workflow
 
-See the [object detection README](src/detection/README.md).
+See the [object detection README](docs/object-detection.md).
 
 ### Running a Jupyter notebook
 

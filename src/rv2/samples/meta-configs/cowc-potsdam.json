@@ -114,7 +114,7 @@
         "raw": "s3://raster-vision-raw-data"
     },
     "dataset_key": "cowc-potsdam-5cm",
-    "model_key": "mobilenet-150",
-    "prediction_key": "test-05",
+    "model_key": "mobilenet",
+    "prediction_key": "test",
     "eval_key": "default"
 }
