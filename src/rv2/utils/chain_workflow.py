@@ -205,32 +205,36 @@ class ChainWorkflow(object):
                              self.path_generator.eval_config_uri)
 
     def remote_run(self, tasks, branch):
+        parent_job_ids = []
         if MAKE_TRAIN_DATA in tasks:
             command = make_command(
                 'make_train_data',
                 self.path_generator.make_train_data_config_uri)
             job_id = _batch_submit(branch, command, attempts=1, gpu=False)
+            parent_job_ids = [job_id]
 
         if TRAIN in tasks:
             command = make_command(
                 'train', self.path_generator.train_config_uri)
             job_id = _batch_submit(
                 branch, command, attempts=1, gpu=True,
-                parent_job_ids=[job_id])
+                parent_job_ids=parent_job_ids)
+            parent_job_ids = [job_id]
 
         if PREDICT in tasks:
             command = make_command(
                 'predict', self.path_generator.predict_config_uri)
             job_id = _batch_submit(
                 branch, command, attempts=1, gpu=False,
-                parent_job_ids=[job_id])
+                parent_job_ids=parent_job_ids)
+            parent_job_ids = [job_id]
 
         if EVAL in tasks:
             command = make_command(
                 'eval', self.path_generator.eval_config_uri)
             job_id = _batch_submit(
                 branch, command, attempts=1, gpu=False,
-                parent_job_ids=[job_id])
+                parent_job_ids=parent_job_ids)
 
     def local_run(self, tasks):
         if MAKE_TRAIN_DATA in tasks:
@@ -251,7 +255,7 @@ class ChainWorkflow(object):
 @click.argument('workflow_uri')
 @click.argument('tasks', nargs=-1)
 @click.option('--remote', is_flag=True)
-@click.option('--branch')
+@click.option('--branch', default='develop')
 @click.option('--run', is_flag=True)
 def main(workflow_uri, tasks, remote, branch, run):
     if len(tasks) == 0:
