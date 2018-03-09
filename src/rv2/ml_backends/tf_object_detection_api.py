@@ -3,6 +3,7 @@ import tempfile
 import os
 import shutil
 import zipfile
+import tarfile
 from os.path import join
 from urllib.parse import urlparse
 from subprocess import Popen
@@ -261,12 +262,20 @@ class TrainPackage(object):
         self.download_if_needed(self.get_label_map_uri())
 
     def download_pretrained_model(self, pretrained_model_zip_uri):
+        # Expected to be .tar.gz file downloaded from
+        # https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md # noqa
         pretrained_model_zip_path = self.download_if_needed(
             pretrained_model_zip_uri)
-        zip_ref = zipfile.ZipFile(pretrained_model_zip_path, 'r')
-        zip_ref.extractall(self.temp_dir)
-        zip_ref.close()
-        pretrained_model_path = join(self.temp_dir, 'model.ckpt')
+        pretrained_model_dir = join(self.temp_dir, 'pretrained_model')
+        make_dir(pretrained_model_dir)
+        with tarfile.open(pretrained_model_zip_path, 'r:gz') as tar:
+            tar.extractall(pretrained_model_dir)
+        model_name = os.path.splitext(os.path.splitext(
+            os.path.basename(pretrained_model_zip_uri))[0])[0]
+        # The unzipped file is assumed to have a single directory with
+        # the name of the model derived from the zip file.
+        pretrained_model_path = join(
+            pretrained_model_dir, model_name, 'model.ckpt')
         return pretrained_model_path
 
     def download_config(self, pretrained_model_zip_uri, backend_config_uri):

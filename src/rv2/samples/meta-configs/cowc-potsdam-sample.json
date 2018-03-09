@@ -49,7 +49,7 @@
         }
     },
     "train_options": {
-        "pretrained_model_uri": "pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_11_06_2017.zip",
+        "pretrained_model_uri": "pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_2017_11_17.tar.gz",
         "backend_config_uri": "backend-configs/tf-object-detection-api/mobilenet-short.config",
         "sync_interval": 600
     },
