@@ -49,3 +49,11 @@ RUN chown -R keras:root /opt/data
 # Needed for click to work
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
+
+# install protoc
+RUN wget -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip
+RUN unzip /tmp/protoc3.zip -d /tmp/protoc3
+RUN mv /tmp/protoc3/bin/* /usr/local/bin/
+RUN mv /tmp/protoc3/include/* /usr/local/include/
+RUN rm -R /tmp/protoc3
+RUN rm /tmp/protoc3.zip
