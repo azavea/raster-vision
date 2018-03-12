@@ -21,8 +21,8 @@ message ChainWorkflowConfig {
     required int32 chip_size = 6;
     required bool debug = 7;
 
-    required string local_root_uri = 8;
-    required string remote_root_uri = 9;
+    map<string, string> local_uri_map = 8;
+    map<string, string> remote_uri_map = 9;
     required string dataset_key = 10;
     required string model_key = 11;
     required string prediction_key = 12;

@@ -1,7 +1,6 @@
 from os.path import join
 
 import click
-from google.protobuf.message import Message
 from google.protobuf.descriptor import FieldDescriptor
 
 from rv2.protos.chain_workflow_pb2 import ChainWorkflowConfig
@@ -30,9 +29,10 @@ def make_command(command, config_uri):
 
 
 class PathGenerator(object):
-    def __init__(self, root_uri, dataset_key, model_key, prediction_key,
+    def __init__(self, uri_map, dataset_key, model_key, prediction_key,
                  eval_key):
-        self.dataset_uri = join(root_uri, 'rv-output', 'datasets', dataset_key)
+        rv_root = uri_map['rv_root']
+        self.dataset_uri = join(rv_root, 'rv-output', 'datasets', dataset_key)
         self.model_uri = join(self.dataset_uri, 'models', model_key)
         self.prediction_uri = join(
             self.model_uri, 'predictions', prediction_key)
@@ -55,8 +55,8 @@ class PathGenerator(object):
         return join(prefix_uri, 'output')
 
 
-def prepend_root_uri(config, root_uri):
-    def _prepend_root_uri(config, root_uri):
+def apply_uri_map(config, uri_map):
+    def _apply_uri_map(config):
         # If config is primitive, do nothing.
         if not hasattr(config, 'ListFields'):
             return
@@ -66,23 +66,21 @@ def prepend_root_uri(config, root_uri):
         for field_desc, field_val in config.ListFields():
             field_name = field_desc.name
 
-            if field_name.endswith('uri') and not field_val.startswith(root_uri):
-                setattr(config, field_name, join(root_uri, field_val))
+            if field_name.endswith('uri'):
+                setattr(config, field_name, field_val.format(**uri_map))
 
             if field_name.endswith('uris'):
                 for ind, uri in enumerate(field_val):
-                    if not uri.startswith(root_uri):
-                        field_val[ind] = join(root_uri, uri)
-
+                    field_val[ind] = uri.format(**uri_map)
             # Recurse.
             if field_desc.label == FieldDescriptor.LABEL_REPEATED:
                 for field_val_item in field_val:
-                    _prepend_root_uri(field_val_item, root_uri)
+                    _apply_uri_map(field_val_item)
             else:
-                _prepend_root_uri(field_val, root_uri)
+                _apply_uri_map(field_val)
 
     new_config = config.__deepcopy__()
-    _prepend_root_uri(new_config, root_uri)
+    _apply_uri_map(new_config)
     return new_config
 
 
@@ -90,10 +88,10 @@ class ChainWorkflow(object):
     def __init__(self, workflow_uri, remote=False):
         self.workflow = load_json_config(workflow_uri, ChainWorkflowConfig())
 
-        self.root_uri = (self.workflow.remote_root_uri
-                         if remote else self.workflow.local_root_uri)
+        self.uri_map = (self.workflow.remote_uri_map
+                        if remote else self.workflow.local_uri_map)
         self.path_generator = PathGenerator(
-            self.root_uri, self.workflow.dataset_key, self.workflow.model_key,
+            self.uri_map, self.workflow.dataset_key, self.workflow.model_key,
             self.workflow.prediction_key, self.workflow.eval_key)
 
         self.update_projects()
@@ -138,7 +136,8 @@ class ChainWorkflow(object):
         config.options.output_uri = \
             self.path_generator.make_train_data_output_uri
         config.label_items.MergeFrom(self.workflow.label_items)
-        config = prepend_root_uri(config, self.root_uri)
+
+        config = apply_uri_map(config, self.uri_map)
         return config
 
     def get_train_config(self):
@@ -149,17 +148,19 @@ class ChainWorkflow(object):
             self.path_generator.make_train_data_output_uri
         config.options.output_uri = \
             self.path_generator.train_output_uri
-        config = prepend_root_uri(config, self.root_uri)
 
         # Copy backend config so that it is nested under model_uri. This way,
         # all config files and corresponding output of RV will be located next
         # to each other in the file system.
-        copy_backend_config_uri = join(
+        backend_config_copy_uri = join(
             self.path_generator.model_uri, 'backend.config')
-        backend_config_str = file_to_str(config.options.backend_config_uri)
-        str_to_file(backend_config_str, copy_backend_config_uri)
-        config.options.backend_config_uri = copy_backend_config_uri
+        backend_config_uri = config.options.backend_config_uri.format(
+            **self.uri_map)
+        backend_config_str = file_to_str(backend_config_uri)
+        str_to_file(backend_config_str, backend_config_copy_uri)
+        config.options.backend_config_uri = backend_config_copy_uri
 
+        config = apply_uri_map(config, self.uri_map)
         return config
 
     def get_predict_config(self):
@@ -172,7 +173,7 @@ class ChainWorkflow(object):
         config.options.chip_size = self.workflow.chip_size
         config.options.model_uri = join(
             self.path_generator.train_output_uri, 'model')
-        config = prepend_root_uri(config, self.root_uri)
+        config = apply_uri_map(config, self.uri_map)
         return config
 
     def get_eval_config(self):
@@ -184,7 +185,7 @@ class ChainWorkflow(object):
         config.options.debug = self.workflow.debug
         config.options.output_uri = join(
             self.path_generator.eval_output_uri, 'eval.json')
-        config = prepend_root_uri(config, self.root_uri)
+        config = apply_uri_map(config, self.uri_map)
         return config
 
     def save_configs(self, tasks):

@@ -4,22 +4,22 @@
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_10_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_11_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_12_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_14_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_3_11_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_3_13_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_4_10_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_5_10_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_6_7_RGBIR.tif",
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_6_9_RGBIR.tif"
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_10_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_11_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_12_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_14_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_3_11_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_3_13_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_4_10_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_5_10_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_6_7_RGBIR.tif",
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_6_9_RGBIR.tif"
                     ]
                 }
             },
             "ground_truth_annotation_source": {
                 "geojson_file": {
-                    "uri": "processed-data/cowc-potsdam/annotations/train.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam/annotations/train.json"
                 }
             }
         }
@@ -30,13 +30,13 @@
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_13_RGBIR.tif"
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_13_RGBIR.tif"
                     ]
                 }
             },
             "ground_truth_annotation_source": {
                 "geojson_file": {
-                    "uri": "processed-data/cowc-potsdam/annotations/test/top_potsdam_2_13_RGBIR.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam/annotations/test/top_potsdam_2_13_RGBIR.json"
                 }
             }
         },
@@ -45,13 +45,13 @@
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_6_8_RGBIR.tif"
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_6_8_RGBIR.tif"
                     ]
                 }
             },
             "ground_truth_annotation_source": {
                 "geojson_file": {
-                    "uri": "processed-data/cowc-potsdam/annotations/test/top_potsdam_6_8_RGBIR.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam/annotations/test/top_potsdam_6_8_RGBIR.json"
                 }
             }
         },
@@ -60,13 +60,13 @@
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "raw-data/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_3_10_RGBIR.tif"
+                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_3_10_RGBIR.tif"
                     ]
                 }
             },
             "ground_truth_annotation_source": {
                 "geojson_file": {
-                    "uri": "processed-data/cowc-potsdam/annotations/test/top_potsdam_3_10_RGBIR.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam/annotations/test/top_potsdam_3_10_RGBIR.json"
                 }
             }
         }
@@ -88,13 +88,13 @@
         }
     },
     "train_options": {
-        "pretrained_model_uri": "pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_2017_11_17.tar.gz",
-        "backend_config_uri": "backend-configs/tf-object-detection-api/mobilenet.config",
+        "pretrained_model_uri": "{rv_root}/pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_2017_11_17.tar.gz",
+        "backend_config_uri": "{rv_root}/backend-configs/tf-object-detection-api/mobilenet.config",
         "sync_interval": 600
     },
     "predict_options": {
         "object_detection_options": {
-            "merge_thresh": 0.1,
+            "merge_thresh": 0.5,
             "score_thresh": 0.5
         }
     },
@@ -105,10 +105,16 @@
     "raster_transformer": {
         "channel_order": [0, 1, 2]
     },
-    "local_root_uri": "/opt/data/lf-dev/",
-    "remote_root_uri": "s3://raster-vision-lf-dev/",
+    "local_uri_map": {
+        "rv_root": "/opt/data/lf-dev",
+        "raw": "/opt/data/raw-data"
+    },
+    "remote_uri_map": {
+        "rv_root": "s3://raster-vision-lf-dev",
+        "raw": "s3://raster-vision-raw-data"
+    },
     "dataset_key": "cowc-potsdam-5cm",
-    "model_key": "mobilenet",
-    "prediction_key": "test",
+    "model_key": "mobilenet-150",
+    "prediction_key": "test-05",
     "eval_key": "default"
 }
