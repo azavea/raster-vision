@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class Evaluation(ABC):
+    """A way of evaluating the predictions for a set of projects."""
     @abstractmethod
     def clear(self):
         pass

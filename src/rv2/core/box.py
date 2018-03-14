@@ -2,6 +2,7 @@ import numpy as np
 
 
 class Box():
+    """A bounding box which can be transformed to different formats."""
     def __init__(self, ymin, xmin, ymax, xmax):
         self.ymin = ymin
         self.xmin = xmin
