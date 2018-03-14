@@ -57,4 +57,14 @@ class GeoTiffFiles(RasterSource):
             0, 0, self.image_dataset.height, self.image_dataset.width)
 
     def _get_chip(self, window):
-        return load_window(self.image_dataset, window.rasterio_format())
+        height = window.get_height()
+        width = window.get_width()
+        # If window is off the edge of the array, the returned image will
+        # have a shortened height and width. Therefore, we need to transform
+        # the partial chip back to full window size.
+        partial_chip = load_window(
+            self.image_dataset, window.rasterio_format())
+        chip = np.zeros((height, width, partial_chip.shape[2]), dtype=np.uint8)
+        chip[0:partial_chip.shape[0], 0:partial_chip.shape[1], :] = partial_chip
+
+        return chip

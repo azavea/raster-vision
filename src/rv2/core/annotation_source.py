@@ -21,3 +21,7 @@ class AnnotationSource(ABC):
     @abstractmethod
     def save(self, label_map):
         pass
+
+    @abstractmethod
+    def clear(self):
+        pass

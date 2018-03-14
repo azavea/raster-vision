@@ -7,7 +7,7 @@ import boto3
 s3_bucket = environ.get('S3_BUCKET')
 
 
-def _batch_submit(branch_name, command, attempts=3, cpu=False,
+def _batch_submit(branch_name, command, attempts=3, gpu=False,
                   parent_job_ids=[], array_size=None):
     """
         Submit a job to run on Batch.
@@ -20,10 +20,10 @@ def _batch_submit(branch_name, command, attempts=3, cpu=False,
     full_command.extend(command.split())
 
     client = boto3.client('batch')
-    job_queue = 'raster-vision-cpu' if cpu else \
-        'raster-vision-gpu'
-    job_definition = 'raster-vision-cpu' if cpu else \
-        'raster-vision-gpu'
+    job_queue = 'raster-vision-gpu' if gpu else \
+        'raster-vision-cpu'
+    job_definition = 'raster-vision-gpu' if gpu else \
+        'raster-vision-cpu'
 
     job_name = str(uuid.uuid4())
     depends_on = [{'jobId': job_id} for job_id in parent_job_ids]
@@ -56,9 +56,9 @@ def _batch_submit(branch_name, command, attempts=3, cpu=False,
 @click.argument('branch_name')
 @click.argument('command')
 @click.option('--attempts', default=3, help='Number of times to retry job')
-@click.option('--cpu', is_flag=True, help='Use CPU EC2 instances')
-def batch_submit(branch_name, command, attempts, cpu):
-    _batch_submit(branch_name, command, attempts=attempts, cpu=cpu)
+@click.option('--gpu', is_flag=True, help='Use CPU EC2 instances')
+def batch_submit(branch_name, command, attempts, gpu):
+    _batch_submit(branch_name, command, attempts=attempts, gpu=gpu)
 
 
 if __name__ == '__main__':

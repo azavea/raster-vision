@@ -1,3 +1,5 @@
+import numpy as np
+
 from object_detection.utils import visualization_utils as vis_util
 
 from rv2.core.ml_method import MLMethod
@@ -21,24 +23,28 @@ def save_debug_image(im, annotations, label_map, output_path):
     save_img(im, output_path)
 
 
-def make_pos_windows(annotation_source, width, height, chip_size):
+def make_pos_windows(image_extent, annotation_source, chip_size):
     pos_windows = []
     for box in annotation_source.get_all_annotations().get_boxes():
         window = box.make_random_square_container(
-            width, height, chip_size)
+            image_extent.get_width(), image_extent.get_height(), chip_size)
         pos_windows.append(window)
 
     return pos_windows
 
 
-def make_neg_windows(annotation_source, image_extent, chip_size, nb_windows,
+def make_neg_windows(raster_source, annotation_source, chip_size, nb_windows,
                      max_attempts):
+    extent = raster_source.get_extent()
     neg_windows = []
     for _ in range(max_attempts):
-        window = image_extent.make_random_square(chip_size)
+        window = extent.make_random_square(chip_size)
+        chip = raster_source.get_chip(window)
         annotations = annotation_source.get_annotations(
             window, ioa_thresh=0.2)
-        if len(annotations) == 0:
+
+        # If no annotations and not blank, append the chip
+        if len(annotations) == 0 and np.sum(chip.ravel()) > 0:
             neg_windows.append(window)
 
         if len(neg_windows) == nb_windows:
@@ -48,11 +54,10 @@ def make_neg_windows(annotation_source, image_extent, chip_size, nb_windows,
 
 
 class ObjectDetection(MLMethod):
-    def get_train_windows(self, image_extent, annotation_source, options):
+    def get_train_windows(self, raster_source, annotation_source, options):
         # Make positive windows which contain annotations.
         pos_windows = make_pos_windows(
-            annotation_source, image_extent.get_width(),
-            image_extent.get_height(), options.chip_size)
+            raster_source.get_extent(), annotation_source, options.chip_size)
 
         # Make negative windows which do not contain annotations.
         # Generate randow windows and save the ones that don't contain
@@ -61,16 +66,17 @@ class ObjectDetection(MLMethod):
         # so we cap the number of attempts.
         nb_neg_windows = \
             int(options.object_detection_options.neg_ratio * len(pos_windows))
-        max_attempts = 10 * nb_neg_windows
+        max_attempts = 100 * nb_neg_windows
         neg_windows = make_neg_windows(
-            annotation_source, image_extent, options.chip_size, nb_neg_windows,
-            max_attempts)
+            raster_source, annotation_source, options.chip_size,
+            nb_neg_windows, max_attempts)
 
         return pos_windows + neg_windows
 
-    def get_train_annotations(self, window, annotation_source, options):
+    def get_train_annotations(self, window, raster_source, annotation_source,
+                              options):
         return annotation_source.get_annotations(
-            window, options.object_detection_options.ioa_thresh)
+            window, ioa_thresh=options.object_detection_options.ioa_thresh)
 
     def get_predict_windows(self, extent, options):
         chip_size = options.chip_size

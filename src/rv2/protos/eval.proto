@@ -7,9 +7,9 @@ import "rv2/protos/project.proto";
 import "rv2/protos/label_item.proto";
 
 
-message Eval {
+message EvalConfig {
     message Options {
-        required string output_uri = 1;
+        optional string output_uri = 1;
         optional bool debug = 4 [default=true];
     }
 

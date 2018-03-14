@@ -9,4 +9,5 @@ message Project {
     optional RasterSource raster_source = 1;
     optional AnnotationSource ground_truth_annotation_source = 2;
     optional AnnotationSource prediction_annotation_source = 3;
+    optional string id = 4;    
 }

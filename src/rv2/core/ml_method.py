@@ -8,11 +8,12 @@ class MLMethod():
         self.backend = backend
 
     @abstractmethod
-    def get_train_windows(self, extent, annotation_source, options):
+    def get_train_windows(self, raster_source, annotation_source, options):
         pass
 
     @abstractmethod
-    def get_train_annotations(self, window, annotation_source, options):
+    def get_train_annotations(self, window, raster_source, annotation_source,
+                              options):
         pass
 
     @abstractmethod
@@ -25,16 +26,17 @@ class MLMethod():
             train_data = TrainData()
             for project in projects:
                 print('Making training chips for project', end='', flush=True)
+
                 raster_source = project.raster_source
                 annotation_source = project.ground_truth_annotation_source
-
                 # Each window is an extent, not the actual image for that extent.
                 windows = self.get_train_windows(
-                    raster_source.get_extent(), annotation_source, options)
+                    raster_source, annotation_source, options)
+
                 for window in windows:
                     chip = raster_source.get_chip(window)
                     annotations = self.get_train_annotations(
-                        window, annotation_source, options)
+                        window, raster_source, annotation_source, options)
                     train_data.append(chip, annotations)
                     print('.', end='', flush=True)
                 print()
@@ -53,6 +55,7 @@ class MLMethod():
             print('Making predictions for project', end='', flush=True)
             raster_source = project.raster_source
             annotation_source = project.prediction_annotation_source
+            annotation_source.clear()
 
             windows = self.get_predict_windows(
                 raster_source.get_extent(), options)

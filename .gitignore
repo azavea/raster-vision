@@ -103,3 +103,6 @@ deployment/ansible/*.retry
 \#*#
 *~
 .#*
+
+# Generated pb2 files
+src/rv2/protos/*_pb2.py
