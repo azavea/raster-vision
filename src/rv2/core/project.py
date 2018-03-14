@@ -1,4 +1,5 @@
 class Project():
+    """The raster data and annotations associated with an area of interest."""
     def __init__(self, raster_source=None,
                 ground_truth_annotation_source=None,
                 prediction_annotation_source=None):

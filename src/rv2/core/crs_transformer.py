@@ -1,7 +1,9 @@
 import pyproj
 
 
+# TODO turn into abstract class and create subclass RasterioCRSTransformer
 class CRSTransformer(object):
+    """Converts between pixel (row/col) and Web Mercator coordinates."""
     def __init__(self, image_dataset):
         self.image_dataset = image_dataset
         self.web_proj = pyproj.Proj(init='epsg:4326')

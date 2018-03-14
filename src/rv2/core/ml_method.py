@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod
 from rv2.core.train_data import TrainData
 
 
+# TODO Rename to MLTask
 class MLMethod():
+    """An abstract machine learning method (eg. object detection)."""
     def __init__(self, backend):
         self.backend = backend
 

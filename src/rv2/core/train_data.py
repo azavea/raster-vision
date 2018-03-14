@@ -1,4 +1,5 @@
 class TrainData(object):
+    """A set of chips and associated annotations used to train a model."""
     def __init__(self):
         self.chips = []
         self.annotations = []

@@ -6,11 +6,21 @@ import "rv2/protos/machine_learning.proto";
 
 message TrainConfig {
     message Options {
-        optional string backend_config_uri = 1; // Backend-specific config file
-        optional string train_data_uri = 2; // Directory with training files
+        // URI for a separate training configuration that is specific to an ML
+        // backend.
+        optional string backend_config_uri = 1;
+
+        // URI for the directory containing the output of make_train_data.
+        optional string train_data_uri = 2;
+
+        // URI for the directory containing the output of training.
         optional string output_uri = 3;
-        optional string pretrained_model_uri = 4; // Zip file
-        optional int32 sync_interval = 5 [default=600]; // In seconds
+
+        // URI for the pretrained model file.
+        optional string pretrained_model_uri = 4;
+
+        // How often to sync output of training to the cloud (in seconds).
+        optional int32 sync_interval = 5 [default=600];
     }
 
     required MachineLearning machine_learning = 1;
