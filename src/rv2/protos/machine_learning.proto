@@ -4,6 +4,7 @@ package rv.protos;
 
 message MachineLearning {
     enum Method {
+        // Only object detection is currently implemented.
         OBJECT_DETECTION = 1;
         CLASSIFICATION = 2;
         REGRESSION = 3;

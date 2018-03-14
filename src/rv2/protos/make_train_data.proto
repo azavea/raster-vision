@@ -8,15 +8,31 @@ import "rv2/protos/label_item.proto";
 
 message MakeTrainDataConfig {
     message ObjectDetectionOptions {
+        /*
+            The ratio of negative chips (those containing no bounding boxes) to
+            positive chips. This can be useful if the statistics of the
+            background is different in positive chips. For example, in car
+            detection, the positive chips will always contain roads, but no
+            examples of rooftops since cars tend to not be near rooftops.
+        */
         required float neg_ratio = 1;
+
+        /*
+            When a box is partially outside of a training chip, it is not
+            clear if (a clipped version) of the box should be included in
+            the chip. If the IOA (intersection over area) of the box with the
+            chip is greater than ioa_thresh, it is included in the chip.
+        */
         optional float ioa_thresh = 2 [default=0.8];
-        optional string single_label = 3;
     }
 
     message Options {
         optional int32 chip_size = 1;
         optional bool debug = 2 [default=true];
+
+        // The directory where all the output should be placed.
         optional string output_uri = 3;
+
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 4;
         }

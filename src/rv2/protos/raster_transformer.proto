@@ -3,5 +3,8 @@ syntax = "proto2";
 package rv.protos;
 
 message RasterTransformer {
+    // The channel indices and order to use when extracting chips from a
+    // RasterSource. For instance, this should be an array of length 3 to
+    // generate RGB chips.
     repeated int32 channel_order = 1;
 }
