@@ -7,7 +7,7 @@ This tutorial introduces some Raster Vision concepts and demonstrates how to run
 ### Commands
 
 Raster Vision supports four *commands*.
-* `make_train_data`: creates training chips from raster data and annotations
+* `process_training_data`: creates training chips from raster data and annotations and converts it to backend-specific format
 * `train`: trains a model
 * `predict`: makes predictions on raster data using a model
 * `eval`: evaluates the quality of the predictions against ground truth annotations
@@ -39,7 +39,7 @@ When using chain workflows, you will need to use the following file hierarchy co
 # Output of running Raster Vision
 <RVROOT>/rv-output
 
-# Output and config file for a run of make_train_data command
+# Output and config file for a run of process_training_data command
 <RVROOT>/rv-output/datasets/<DATASET_KEY>/output/
 <RVROOT>/rv-output/datasets/<DATASET_KEY>/config.json
 

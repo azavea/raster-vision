@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from rv2.core.train_data import TrainData
+from rv2.core.training_data import TrainingData
 
 
 class MLTask():
@@ -60,7 +60,7 @@ class MLTask():
             list of Boxes
         """
 
-    def make_train_data(self, train_projects, validation_projects, label_map,
+    def process_training_data(self, train_projects, validation_projects, label_map,
                         options):
         """Make training data.
 
@@ -73,11 +73,11 @@ class MLTask():
             validation_projects: list of Project
                 (that is disjoint from train_projects)
             label_map: LabelMap
-            options: MakeTrainDataConfig.Options
+            options: ProcessTrainingDataConfig.Options
         """
 
-        def _make_train_data(projects):
-            train_data = TrainData()
+        def _process_training_data(projects):
+            training_data = TrainingData()
             for project in projects:
                 print('Making training chips for project', end='', flush=True)
                 windows = self.get_train_windows(project, options)
@@ -85,15 +85,15 @@ class MLTask():
                     chip = project.raster_source.get_chip(window)
                     annotations = self.get_train_annotations(
                         window, project, options)
-                    train_data.append(chip, annotations)
+                    training_data.append(chip, annotations)
                     print('.', end='', flush=True)
                 print()
-            return train_data
+            return training_data
 
-        train_data = _make_train_data(train_projects)
-        validation_data = _make_train_data(validation_projects)
-        self.backend.convert_train_data(
-            train_data, validation_data, label_map, options)
+        training_data = _process_training_data(train_projects)
+        validation_data = _process_training_data(validation_projects)
+        self.backend.convert_training_data(
+            training_data, validation_data, label_map, options)
 
     def train(self, options):
         """Train a model.

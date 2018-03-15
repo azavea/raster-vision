@@ -4,7 +4,7 @@ import click
 from google.protobuf.descriptor import FieldDescriptor
 
 from rv2.protos.chain_workflow_pb2 import ChainWorkflowConfig
-from rv2.protos.make_train_data_pb2 import MakeTrainDataConfig
+from rv2.protos.process_training_data_pb2 import ProcessTrainingDataConfig
 from rv2.protos.train_pb2 import TrainConfig
 from rv2.protos.predict_pb2 import PredictConfig
 from rv2.protos.eval_pb2 import EvalConfig
@@ -17,11 +17,11 @@ from rv2.utils.files import (
 from rv2.utils.batch import _batch_submit
 from rv2 import run
 
-MAKE_TRAIN_DATA = 'make_train_data'
+MAKE_TRAINING_DATA = 'process_training_data'
 TRAIN = 'train'
 PREDICT = 'predict'
 EVAL = 'eval'
-ALL_TASKS = [MAKE_TRAIN_DATA, TRAIN, PREDICT, EVAL]
+ALL_TASKS = [MAKE_TRAINING_DATA, TRAIN, PREDICT, EVAL]
 
 
 def make_command(command, config_uri):
@@ -38,12 +38,12 @@ class PathGenerator(object):
             self.model_uri, 'predictions', prediction_key)
         self.eval_uri = join(self.prediction_uri, 'evals', eval_key)
 
-        self.make_train_data_config_uri = self.get_config_uri(self.dataset_uri)
+        self.process_training_data_config_uri = self.get_config_uri(self.dataset_uri)
         self.train_config_uri = self.get_config_uri(self.model_uri)
         self.predict_config_uri = self.get_config_uri(self.prediction_uri)
         self.eval_config_uri = self.get_config_uri(self.eval_uri)
 
-        self.make_train_data_output_uri = self.get_output_uri(self.dataset_uri)
+        self.process_training_data_output_uri = self.get_output_uri(self.dataset_uri)
         self.train_output_uri = self.get_output_uri(self.model_uri)
         self.prediction_output_uri = self.get_output_uri(self.prediction_uri)
         self.eval_output_uri = self.get_output_uri(self.eval_uri)
@@ -125,16 +125,16 @@ class ChainWorkflow(object):
                 'Not sure how to generate annotation source config for type {}'
                 .format(annotation_source_type))
 
-    def get_make_train_data_config(self):
-        config = MakeTrainDataConfig()
+    def get_process_training_data_config(self):
+        config = ProcessTrainingDataConfig()
         config.train_projects.MergeFrom(self.workflow.train_projects)
         config.validation_projects.MergeFrom(self.workflow.test_projects)
         config.machine_learning.MergeFrom(self.workflow.machine_learning)
-        config.options.MergeFrom(self.workflow.make_train_data_options)
+        config.options.MergeFrom(self.workflow.process_training_data_options)
         config.options.chip_size = self.workflow.chip_size
         config.options.debug = self.workflow.debug
         config.options.output_uri = \
-            self.path_generator.make_train_data_output_uri
+            self.path_generator.process_training_data_output_uri
         config.label_items.MergeFrom(self.workflow.label_items)
 
         config = apply_uri_map(config, self.uri_map)
@@ -144,8 +144,8 @@ class ChainWorkflow(object):
         config = TrainConfig()
         config.machine_learning.MergeFrom(self.workflow.machine_learning)
         config.options.MergeFrom(self.workflow.train_options)
-        config.options.train_data_uri = \
-            self.path_generator.make_train_data_output_uri
+        config.options.training_data_uri = \
+            self.path_generator.process_training_data_output_uri
         config.options.output_uri = \
             self.path_generator.train_output_uri
 
@@ -190,9 +190,9 @@ class ChainWorkflow(object):
 
     def save_configs(self, tasks):
         print('Generating and saving config files...')
-        if MAKE_TRAIN_DATA in tasks:
-            save_json_config(self.get_make_train_data_config(),
-                             self.path_generator.make_train_data_config_uri)
+        if MAKE_TRAINING_DATA in tasks:
+            save_json_config(self.get_process_training_data_config(),
+                             self.path_generator.process_training_data_config_uri)
         if TRAIN in tasks:
             save_json_config(self.get_train_config(),
                              self.path_generator.train_config_uri)
@@ -207,10 +207,10 @@ class ChainWorkflow(object):
 
     def remote_run(self, tasks, branch):
         parent_job_ids = []
-        if MAKE_TRAIN_DATA in tasks:
+        if MAKE_TRAINING_DATA in tasks:
             command = make_command(
-                'make_train_data',
-                self.path_generator.make_train_data_config_uri)
+                'process_training_data',
+                self.path_generator.process_training_data_config_uri)
             job_id = _batch_submit(branch, command, attempts=1, gpu=False)
             parent_job_ids = [job_id]
 
@@ -238,9 +238,9 @@ class ChainWorkflow(object):
                 parent_job_ids=parent_job_ids)
 
     def local_run(self, tasks):
-        if MAKE_TRAIN_DATA in tasks:
-            run._make_train_data(
-                self.path_generator.make_train_data_config_uri)
+        if MAKE_TRAINING_DATA in tasks:
+            run._process_training_data(
+                self.path_generator.process_training_data_config_uri)
 
         if TRAIN in tasks:
             run._train(self.path_generator.train_config_uri)

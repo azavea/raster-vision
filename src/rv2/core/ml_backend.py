@@ -2,21 +2,21 @@ from abc import ABC, abstractmethod
 
 
 class MLBackend(ABC):
-    """Functionality for a specific implementation of an MLMethod.
+    """Functionality for a specific implementation of an MLTask.
 
     This should be subclassed to provide a bridge to third party ML libraries.
     """
 
     @abstractmethod
-    def convert_train_data(self, train_data, validation_data, label_map,
+    def convert_training_data(self, training_data, validation_data, label_map,
                            options):
         """Convert training data to backend-specific format and save it.
 
         Args:
-            train_data: TrainData
-            validation_data: TrainData
+            training_data: TrainingData
+            validation_data: TrainingData
             label_map: LabelMap
-            options: MakeTrainDataConfig.Options
+            options: ProcessTrainingDataConfig.Options
         """
         pass
 

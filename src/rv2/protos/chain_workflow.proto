@@ -5,7 +5,7 @@ package rv.protos;
 import "rv2/protos/machine_learning.proto";
 import "rv2/protos/project.proto";
 import "rv2/protos/label_item.proto";
-import "rv2/protos/make_train_data.proto";
+import "rv2/protos/process_training_data.proto";
 import "rv2/protos/train.proto";
 import "rv2/protos/predict.proto";
 import "rv2/protos/eval.proto";
@@ -39,7 +39,7 @@ message ChainWorkflowConfig {
     required string prediction_key = 12;
     required string eval_key = 13;
 
-    required MakeTrainDataConfig.Options make_train_data_options = 14;
+    required ProcessTrainingDataConfig.Options process_training_data_options = 14;
     required TrainConfig.Options train_options = 15;
     required PredictConfig.Options predict_options = 16;
     required EvalConfig.Options eval_options = 17;

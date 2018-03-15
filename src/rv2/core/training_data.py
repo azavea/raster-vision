@@ -1,8 +1,8 @@
-class TrainData(object):
+class TrainingData(object):
     """A set of chips and associated annotations used to train a model."""
 
     def __init__(self):
-        """Construct a new TrainData."""
+        """Construct a new TrainingData."""
         self.chips = []
         self.annotations = []
 
