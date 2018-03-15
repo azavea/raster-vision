@@ -26,7 +26,7 @@ from object_detection.protos.string_int_label_map_pb2 import (
 from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 
 from rv2.core.ml_backend import MLBackend
-from rv2.ml_methods.object_detection import save_debug_image
+from rv2.ml_tasks.object_detection import save_debug_image
 from rv2.annotations.object_detection_annotations import (
     ObjectDetectionAnnotations)
 from rv2.utils.files import (
@@ -92,11 +92,11 @@ def save_tf_label_map(tf_label_map, label_map_path):
         label_map_file.write(tf_label_map_str)
 
 
-def make_tf_examples(train_data, label_map):
+def make_tf_examples(training_data, label_map):
     tf_examples = []
-    # TODO make train_data iterable
+    # TODO make training_data iterable
     print('Creating TFRecord', end='', flush=True)
-    for chip, annotations in zip(train_data.chips, train_data.annotations):
+    for chip, annotations in zip(training_data.chips, training_data.annotations):
         tf_example = create_tf_example(chip, annotations, label_map)
         tf_examples.append(tf_example)
         print('.', end='', flush=True)
@@ -343,11 +343,11 @@ class TFObjectDetectionAPI(MLBackend):
     def __init__(self):
         self.detection_graph = None
 
-    def convert_train_data(self, train_data, validation_data, label_map,
+    def convert_training_data(self, training_data, validation_data, label_map,
                            options):
         train_package = TrainPackage(options.output_uri)
 
-        def _convert_train_data(data, split):
+        def _convert_training_data(data, split):
             # Save TFRecord.
             tf_examples = make_tf_examples(data, label_map)
             record_path = train_package.get_local_path(
@@ -363,8 +363,8 @@ class TFObjectDetectionAPI(MLBackend):
                     shutil.make_archive(
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)
 
-        _convert_train_data(train_data, TRAIN)
-        _convert_train_data(validation_data, VALIDATION)
+        _convert_training_data(training_data, TRAIN)
+        _convert_training_data(validation_data, VALIDATION)
 
         # Save TF label map based on label_map.
         label_map_path = train_package.get_local_path(
@@ -376,7 +376,7 @@ class TFObjectDetectionAPI(MLBackend):
 
     def train(self, options):
         # Download training data and update config file.
-        train_package = TrainPackage(options.train_data_uri)
+        train_package = TrainPackage(options.training_data_uri)
         train_package.download_data()
         config_path = train_package.download_config(
             options.pretrained_model_uri, options.backend_config_uri)

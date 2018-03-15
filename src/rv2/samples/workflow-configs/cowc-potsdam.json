@@ -72,7 +72,7 @@
         }
     ],
     "machine_learning": {
-        "method": "OBJECT_DETECTION",
+        "task": "OBJECT_DETECTION",
         "backend": "TF_OBJECT_DETECTION_API"
     },
     "label_items": [
@@ -81,7 +81,7 @@
             "name": "car"
         }
     ],
-    "make_train_data_options": {
+    "process_training_data_options": {
         "object_detection_options": {
             "neg_ratio": 1.0,
             "ioa_thresh": 0.8

@@ -2,7 +2,7 @@ import numpy as np
 
 from object_detection.utils import visualization_utils as vis_util
 
-from rv2.core.ml_method import MLMethod
+from rv2.core.ml_task import MLTask
 from rv2.evaluations.object_detection_evaluation import (
     ObjectDetectionEvaluation)
 from rv2.core.box import Box
@@ -53,8 +53,10 @@ def make_neg_windows(raster_source, annotation_source, chip_size, nb_windows,
     return neg_windows
 
 
-class ObjectDetection(MLMethod):
-    def get_train_windows(self, raster_source, annotation_source, options):
+class ObjectDetection(MLTask):
+    def get_train_windows(self, project, options):
+        raster_source = project.raster_source
+        annotation_source = project.ground_truth_annotation_source
         # Make positive windows which contain annotations.
         pos_windows = make_pos_windows(
             raster_source.get_extent(), annotation_source, options.chip_size)
@@ -73,9 +75,8 @@ class ObjectDetection(MLMethod):
 
         return pos_windows + neg_windows
 
-    def get_train_annotations(self, window, raster_source, annotation_source,
-                              options):
-        return annotation_source.get_annotations(
+    def get_train_annotations(self, window, project, options):
+        return project.ground_truth_annotation_source.get_annotations(
             window, ioa_thresh=options.object_detection_options.ioa_thresh)
 
     def get_predict_windows(self, extent, options):

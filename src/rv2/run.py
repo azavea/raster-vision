@@ -1,17 +1,17 @@
 import click
 
 from rv2.builders import (
-    make_train_data_builder, train_builder, predict_builder, eval_builder)
+    process_training_data_builder, train_builder, predict_builder, eval_builder)
 
 
-def _make_train_data(config_uri):
-    command = make_train_data_builder.build(config_uri)
+def _process_training_data(config_uri):
+    command = process_training_data_builder.build(config_uri)
     command.run()
 
 @click.command()
 @click.argument('config_uri')
-def make_train_data(config_uri):
-    _make_train_data(config_uri)
+def process_training_data(config_uri):
+    _process_training_data(config_uri)
 
 
 def _train(config_uri):
@@ -52,7 +52,7 @@ def run():
     pass
 
 
-run.add_command(make_train_data)
+run.add_command(process_training_data)
 run.add_command(train)
 run.add_command(predict)
 run.add_command(eval)

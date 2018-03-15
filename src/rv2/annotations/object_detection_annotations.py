@@ -41,7 +41,7 @@ def annotations_to_geojson(annotations, crs_transformer, label_map):
 
     features = []
     for box_ind, box in enumerate(boxes):
-        polygon = box.geojson_polygon_format()
+        polygon = box.geojson_coordinates()
         polygon = [crs_transformer.pixel_to_web(p) for p in polygon]
 
         class_id = classes[box_ind]
@@ -77,6 +77,7 @@ def inverse_change_coordinate_frame(boxlist, window):
     return boxlist_new
 
 
+# TODO Move to object_detection_annotation_source?
 class ObjectDetectionAnnotations(object):
     def __init__(self, npboxes, classes, scores=None):
         self.boxlist = BoxList(npboxes)

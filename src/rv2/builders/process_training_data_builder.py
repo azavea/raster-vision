@@ -1,21 +1,21 @@
 from rv2.builders import (
-    project_builder, ml_method_builder, label_map_builder)
+    project_builder, ml_task_builder, label_map_builder)
 from rv2.utils import files
-from rv2.commands.make_train_data import MakeTrainData
-from rv2.protos.make_train_data_pb2 import MakeTrainDataConfig
+from rv2.commands.process_training_data import ProcessTrainingData
+from rv2.protos.process_training_data_pb2 import ProcessTrainingDataConfig
 
 
 def build(config):
     if isinstance(config, str):
-        config = files.load_json_config(config, MakeTrainDataConfig())
+        config = files.load_json_config(config, ProcessTrainingDataConfig())
 
     train_projects = [project_builder.build(project_config)
                       for project_config in config.train_projects]
     validation_projects = [project_builder.build(project_config)
                            for project_config in config.validation_projects]
-    ml_method = ml_method_builder.build(config.machine_learning)
+    ml_task = ml_task_builder.build(config.machine_learning)
     label_map = label_map_builder.build(config.label_items)
     options = config.options
 
-    return MakeTrainData(train_projects, validation_projects, ml_method,
+    return ProcessTrainingData(train_projects, validation_projects, ml_task,
                          label_map, options)

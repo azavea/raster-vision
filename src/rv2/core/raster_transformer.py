@@ -1,7 +1,24 @@
 class RasterTransformer(object):
-    """A mechanism for transforming chips according to a config."""
-    def __init__(self, config):
-        self.config = config
+    """Transforms chips according to a config."""
+
+    def __init__(self, options):
+        """Construct a new RasterTransformer.
+
+        Args:
+            options: protos.raster_transformer_pb2.RasterTransformer
+        """
+        self.options = options
 
     def transform(self, chip):
-        return chip[:, :, self.config.channel_order]
+        """Transform a chip.
+
+        Selects a subset of the channels.
+
+        Args:
+            chip: [height, width, channels] numpy array
+
+        Returns:
+            [height, width, channels] numpy array where channels is equal
+                to len(self.options.channel_order)
+        """
+        return chip[:, :, self.options.channel_order]
