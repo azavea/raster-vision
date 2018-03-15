@@ -1,5 +1,5 @@
 from rv2.ml_backends.tf_object_detection_api import TFObjectDetectionAPI
-from rv2.ml_methods.object_detection import ObjectDetection
+from rv2.ml_tasks.object_detection import ObjectDetection
 from rv2.protos.machine_learning_pb2 import MachineLearning
 
 
@@ -12,7 +12,7 @@ def build(config):
     if config.backend == tf_object_detection_api_val:
         backend = TFObjectDetectionAPI()
 
-    if config.method == object_detection_val:
-        method = ObjectDetection(backend)
+    if config.task == object_detection_val:
+        task = ObjectDetection(backend)
 
-    return method
+    return task

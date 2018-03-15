@@ -2,7 +2,7 @@ import numpy as np
 
 from object_detection.utils import visualization_utils as vis_util
 
-from rv2.core.ml_method import MLMethod
+from rv2.core.ml_task import MLTask
 from rv2.evaluations.object_detection_evaluation import (
     ObjectDetectionEvaluation)
 from rv2.core.box import Box
@@ -53,7 +53,7 @@ def make_neg_windows(raster_source, annotation_source, chip_size, nb_windows,
     return neg_windows
 
 
-class ObjectDetection(MLMethod):
+class ObjectDetection(MLTask):
     def get_train_windows(self, project, options):
         raster_source = project.raster_source
         annotation_source = project.ground_truth_annotation_source

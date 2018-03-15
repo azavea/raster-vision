@@ -26,7 +26,7 @@ from object_detection.protos.string_int_label_map_pb2 import (
 from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 
 from rv2.core.ml_backend import MLBackend
-from rv2.ml_methods.object_detection import save_debug_image
+from rv2.ml_tasks.object_detection import save_debug_image
 from rv2.annotations.object_detection_annotations import (
     ObjectDetectionAnnotations)
 from rv2.utils.files import (

@@ -3,7 +3,7 @@ syntax = "proto2";
 package rv.protos;
 
 message MachineLearning {
-    enum Method {
+    enum Task {
         // Only object detection is currently implemented.
         OBJECT_DETECTION = 1;
         CLASSIFICATION = 2;
@@ -15,6 +15,6 @@ message MachineLearning {
         TF_OBJECT_DETECTION_API = 1;
     }
 
-    required Method method = 1;
+    required Task task = 1;
     required Backend backend = 2;
 }

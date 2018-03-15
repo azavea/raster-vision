@@ -3,16 +3,15 @@ from abc import ABC, abstractmethod
 from rv2.core.train_data import TrainData
 
 
-# TODO Rename to MLTask
-class MLMethod():
-    """Functionality for a specific machine learning method.
+class MLTask():
+    """Functionality for a specific machine learning task.
 
-    This should be subclassed to add a new method, such as object detection
+    This should be subclassed to add a new task, such as object detection
     """
 
     # TODO pass in label_map?
     def __init__(self, backend):
-        """Construct a new MLMethod.
+        """Construct a new MLTask.
 
         Args:
             backend: MLBackend

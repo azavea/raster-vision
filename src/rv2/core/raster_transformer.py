@@ -5,7 +5,7 @@ class RasterTransformer(object):
         """Construct a new RasterTransformer.
 
         Args:
-            options: RasterTransformerConfig
+            options: protos.raster_transformer_pb2.RasterTransformer
         """
         self.options = options
 
