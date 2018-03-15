@@ -6,14 +6,14 @@ This tutorial introduces some Raster Vision concepts and demonstrates how to run
 
 ### Commands
 
-Raster Vision supports four commands.
+Raster Vision supports four *commands*.
 * `make_train_data`: creates training chips from raster data and annotations
 * `train`: trains a model
 * `predict`: makes predictions on raster data using a model
 * `eval`: evaluates the quality of the predictions against ground truth annotations
 
 ### Config files
-Each command is configured with a config file in the form of a JSON-formatted [Protocol Buffer](https://developers.google.com/protocol-buffers/docs/pythontutorial), and there is a different schema for each command. The advantage of using protobufs (rather than conventional JSON files) is that we get compositional schemas, validation, and automatically generated Python clients for free. The schemas are stored in the `.proto` files in [rv2.protos](../src/rv2/protos), and are compiled to Python classes using `./scripts/compile`.
+Each command is configured with a *command config* file in the form of a JSON-formatted [Protocol Buffer](https://developers.google.com/protocol-buffers/docs/pythontutorial), and there is a different schema for each command. The advantage of using protobufs (rather than conventional JSON files) is that we get compositional schemas, validation, and automatically generated Python clients for free. The schemas are stored in the `.proto` files in [rv2.protos](../src/rv2/protos), and are compiled to Python classes using `./scripts/compile`.
 
 ### Projects
 
@@ -27,7 +27,7 @@ Raster Vision is designed to be easy to extend to new raster and annotation sour
 
 ### Workflows
 
-A *workflow* is a network of dependent commands. For instance, you might want to make two variants of a dataset, then train a set of model on each dataset (representing a hyperparameter sweep), make predictions for each model on a test set, and then evaluate the quality of the predictions. This workflow can be represented as a tree of commands. At the moment, we have only implemented a *chain workflow*, which has the structure of a linked list or chain, and simply runs the four commands in sequence. A workflow is configured by a *meta-config* file, so-called since it is used to generate config files for individual commands. By decoupling configs from meta-configs, Raster Vision is designed to make it easy to implement new, more complex workflows.
+A *workflow* is a network of dependent commands. For instance, you might want to make two variants of a dataset, then train a set of model on each dataset (representing a hyperparameter sweep), make predictions for each model on a test set, and then evaluate the quality of the predictions. This workflow can be represented as a tree of commands. At the moment, we have only implemented a *chain workflow*, which has the structure of a linked list or chain, and simply runs the four commands in sequence. A workflow is configured by a *workflow config* file, and executing it generates a set of command config files. By decoupling command and workflow configs, Raster Vision is designed to make it easy to implement new, more complex workflows.
 
 ## File hierarchy
 
@@ -61,8 +61,8 @@ This convention is convenient and intuitive because it stores the config file fo
 ```
 # Pretrained model files provided by ML backend
 <RVROOT>/pretrained-models
-# Config files that are used to generate config files for each command
-<RVROOT>/meta-configs
+# Workflow config files
+<RVROOT>/workflow-configs
 # Config files in format specified by ML backend
 <RVROOT>/backend-configs
 # Data that is derivative of raw data
@@ -78,8 +78,7 @@ Before running any commands, you will need to download some data.
 
 Next, you will need to copy and edit some config files.
 * Copy the Mobilenet [backend config files](../src/rv2/samples/backend-configs/tf-object-detection-api/) to `<RVROOT>/backend-configs/tf-object-detection-api/`.
-* Copy the [meta-config files](../src/rv2/samples/meta-configs/) to `<RVROOT>/meta-configs/`. These configs contain URI schemas which are strings containing parameters (eg. `{rv_root}`) which are expanded into absolute URIs when the workflow is executed. The `local_uri_map` and `remote_uri_map` fields define the value of the parameters for the two execution environments. This makes it easy to switch between local and remote execution. You will need to update the values of these maps for your own environment.
-
+* Copy the [workflow config files](../src/rv2/samples/workflow-configs/) to `<RVROOT>/workflow-configs/`. These configs contain URI schemas which are strings containing parameters (eg. `{rv_root}`) which are expanded into absolute URIs when the workflow is executed. The `local_uri_map` and `remote_uri_map` fields define the value of the parameters for the two execution environments. This makes it easy to switch between local and remote execution. You will need to update the values of these maps for your own environment.
 
 ## Run test workflow locally
 
@@ -94,7 +93,7 @@ Then compile the files in `src/rv2/proto/*.proto` into Python files by running t
 Finally, generate the individual command config files and run the commands locally using
 ```
 python -m rv2.utils.chain_workflow \
-    <RVROOT>/meta-configs/cowc-potsdam-sample.json \
+    <RVROOT>/workflow-configs/cowc-potsdam-sample.json \
     --run
 ```
 This should result in a hierarchy of files in `<RVROOT>/rv-output` which includes the generated config files. You can run a command manually on one of the generated config files, in this case for prediction, using the following. The particular keys can be found in the workflow config file.
@@ -106,7 +105,7 @@ python -m rv2.run predict \
 If for some reason you want to re-run a subset of the commands in the workflow, for instance `predict` and `eval`, you can do so with
 ```
 python -m rv2.utils.chain_workflow \
-    <RVROOT>/meta-configs/cowc-potsdam-sample.json \
+    <RVROOT>/workflow-configs/cowc-potsdam-sample.json \
     predict eval \
     --run
 ```
@@ -116,7 +115,7 @@ python -m rv2.utils.chain_workflow \
 Since it will take a long time to run the full workflow, it probably makes sense to run it remotely on AWS Batch. Before doing so, make sure all data and config files are copied to the right locations (as defined by the `remote_uri_map` field in the workflow config) on S3. Then run
 ```
 python -m rv2.utils.chain_workflow \
-    <RVROOT>/meta-configs/cowc-potsdam.json \
+    <RVROOT>/workflow-configs/cowc-potsdam.json \
     --run --remote --branch <REMOTE_GIT_BRANCH>
 ```
 
@@ -124,7 +123,7 @@ If you don't use AWS and have a local GPU, you can start the GPU container and r
 ```
 ./scripts/run --gpu
 python -m rv2.utils.chain_workflow \
-    <RVROOT>/meta-configs/cowc-potsdam.json \
+    <RVROOT>/workflow-configs/cowc-potsdam.json \
     --run
 ```
 
