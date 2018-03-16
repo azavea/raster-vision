@@ -12,13 +12,13 @@ class RasterioCRSTransformer(CRSTransformer):
 
     def web_to_pixel(self, web_point):
         image_point = pyproj.transform(
-            self.web_proj, self.image_proj, web_point[0], web_point[1])
+            self.web_proj, self.image_proj, web_point[1], web_point[0])
         pixel_point = self.image_dataset.index(image_point[0], image_point[1])
         return pixel_point
 
     def pixel_to_web(self, pixel_point):
         image_point = self.image_dataset.ul(
-            int(pixel_point[0]), int(pixel_point[1]))
+            int(pixel_point[1]), int(pixel_point[0]))
         web_point = pyproj.transform(
             self.image_proj, self.web_proj, image_point[0], image_point[1])
         return web_point

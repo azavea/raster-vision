@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 class CRSTransformer(object):
     """Converts points between CRSs for a RasterSource."""
 
-    # TODO did i get the ordering right in the docs?
     def web_to_pixel(self, web_point):
         """Return point in pixel coordinates.
 
@@ -12,7 +11,7 @@ class CRSTransformer(object):
             web_point: tuple (long, lat) in WebMercator coordinates
 
         Returns:
-            tuple (row, col) in pixel coordinates
+            tuple (x, y) in pixel coordinates
         """
         pass
 
@@ -20,7 +19,7 @@ class CRSTransformer(object):
         """Return point in Web Mercator coordinates.
 
         Args:
-            pixel_point: tuple (row, col) in pixel coordinates
+            pixel_point: tuple (x, y) in pixel coordinates
 
         Returns:
             tuple (long, lat) in WebMercator coordinates

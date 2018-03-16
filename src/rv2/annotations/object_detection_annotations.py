@@ -20,8 +20,8 @@ def geojson_to_annotations(geojson, crs_transformer):
         # Convert polygon to pixel coords and then convert to bounding box.
         polygon = feature['geometry']['coordinates'][0]
         polygon = [crs_transformer.web_to_pixel(p) for p in polygon]
-        ymin, xmin = np.min(polygon, axis=0)
-        ymax, xmax = np.max(polygon, axis=0)
+        xmin, ymin = np.min(polygon, axis=0)
+        xmax, ymax = np.max(polygon, axis=0)
         boxes.append(Box(ymin, xmin, ymax, xmax))
 
         properties = feature.get('properties', {})

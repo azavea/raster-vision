@@ -37,4 +37,5 @@ class MLBackend(ABC):
             chip: [height, width, channels] numpy array
             options: PredictConfig.Options
         """
+        # TODO predict by the batch-load to make better use of the gpu
         pass
