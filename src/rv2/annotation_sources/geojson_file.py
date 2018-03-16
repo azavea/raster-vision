@@ -8,6 +8,8 @@ from rv2.annotation_sources.object_detection_annotation_source import (
 
 
 class GeoJSONFile(ObjectDetectionAnnotationSource):
+    # TODO allow null crs_transformer for when we assume that the annotations
+    # are already in the crs and don't need to be converted.
     def __init__(self, uri, crs_transformer, writable=False):
         self.uri = uri
         self.crs_transformer = crs_transformer

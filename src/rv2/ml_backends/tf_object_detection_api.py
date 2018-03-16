@@ -94,9 +94,8 @@ def save_tf_label_map(tf_label_map, label_map_path):
 
 def make_tf_examples(training_data, label_map):
     tf_examples = []
-    # TODO make training_data iterable
     print('Creating TFRecord', end='', flush=True)
-    for chip, annotations in zip(training_data.chips, training_data.annotations):
+    for chip, annotations in training_data:
         tf_example = create_tf_example(chip, annotations, label_map)
         tf_examples.append(tf_example)
         print('.', end='', flush=True)
@@ -318,7 +317,6 @@ def load_frozen_graph(inference_graph_path):
 
 
 def compute_prediction(image_np, detection_graph, session):
-    # TODO predict by the batch-load
     image_np_expanded = np.expand_dims(image_np, axis=0)
     image_tensor = detection_graph.get_tensor_by_name(
         'image_tensor:0')

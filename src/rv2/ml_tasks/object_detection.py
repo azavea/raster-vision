@@ -85,7 +85,6 @@ class ObjectDetection(MLTask):
         height = extent.get_height()
         width = extent.get_width()
 
-        # TODO make this an iterator
         windows = []
         for row_start in range(0, height, stride):
             for col_start in range(0, width, stride):

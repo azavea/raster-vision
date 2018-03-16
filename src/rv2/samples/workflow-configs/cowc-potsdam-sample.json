@@ -34,14 +34,14 @@
     ],
     "machine_learning": {
         "task": "OBJECT_DETECTION",
-        "backend": "TF_OBJECT_DETECTION_API"
+        "backend": "TF_OBJECT_DETECTION_API",
+        "label_items": [
+            {
+                "id": 1,
+                "name": "car"
+            }
+        ]
     },
-    "label_items": [
-        {
-            "id": 1,
-            "name": "car"
-        }
-    ],
     "process_training_data_options": {
         "object_detection_options": {
             "neg_ratio": 1.0,

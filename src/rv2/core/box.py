@@ -52,11 +52,11 @@ class Box():
     def geojson_coordinates(self):
         """Return Box as GeoJSON coordinates.
         """
-        # Cardinal directions
-        nw = (self.ymin, self.xmin)
-        ne = (self.ymin, self.xmax)
-        se = (self.ymax, self.xmax)
-        sw = (self.ymax, self.xmin)
+        # Compass directions:
+        nw = (self.xmin, self.ymin)
+        ne = (self.xmin, self.ymax)
+        se = (self.xmax, self.ymax)
+        sw = (self.xmax, self.ymin)
         return [nw, ne, se, sw, nw]
 
     def make_random_square_container(self, xlimit, ylimit, size):

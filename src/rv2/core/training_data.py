@@ -15,3 +15,6 @@ class TrainingData(object):
         """
         self.chips.append(chip)
         self.annotations.append(annotations)
+
+    def __iter__(self):
+        return zip(self.chips, self.annotations)

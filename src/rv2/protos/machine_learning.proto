@@ -15,6 +15,13 @@ message MachineLearning {
         TF_OBJECT_DETECTION_API = 1;
     }
 
+    message LabelItem {
+        // A label (ie. car) its id.
+        required int32 id = 1;
+        required string name = 2;
+    }
+
     required Task task = 1;
     required Backend backend = 2;
+    repeated LabelItem label_items = 3;
 }

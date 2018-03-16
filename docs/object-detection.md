@@ -118,6 +118,7 @@ python -m rv2.utils.chain_workflow \
     <RVROOT>/workflow-configs/cowc-potsdam.json \
     --run --remote --branch <REMOTE_GIT_BRANCH>
 ```
+While the `train` command is running, you can view Tensorboard at `http://<ec2_public_dns>:6006`.
 
 If you don't use AWS and have a local GPU, you can start the GPU container and run it locally with
 ```

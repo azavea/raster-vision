@@ -4,7 +4,6 @@ package rv.protos;
 
 import "rv2/protos/machine_learning.proto";
 import "rv2/protos/project.proto";
-import "rv2/protos/label_item.proto";
 
 message PredictConfig {
     message ObjectDetectionOptions {
@@ -35,7 +34,6 @@ message PredictConfig {
     }
 
     required MachineLearning machine_learning = 1;
-    repeated LabelItem label_items = 3;
     repeated Project projects = 4;
     required Options options = 5;
 }

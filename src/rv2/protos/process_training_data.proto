@@ -4,7 +4,6 @@ package rv.protos;
 
 import "rv2/protos/machine_learning.proto";
 import "rv2/protos/project.proto";
-import "rv2/protos/label_item.proto";
 
 message ProcessTrainingDataConfig {
     message ObjectDetectionOptions {
@@ -42,5 +41,4 @@ message ProcessTrainingDataConfig {
     repeated Project validation_projects = 2;
     required MachineLearning machine_learning = 3;
     required Options options = 4;
-    repeated LabelItem label_items = 5;
 }

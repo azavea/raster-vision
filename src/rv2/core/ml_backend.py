@@ -9,7 +9,7 @@ class MLBackend(ABC):
 
     @abstractmethod
     def convert_training_data(self, training_data, validation_data, label_map,
-                           options):
+                              options):
         """Convert training data to backend-specific format and save it.
 
         Args:
@@ -37,4 +37,5 @@ class MLBackend(ABC):
             chip: [height, width, channels] numpy array
             options: PredictConfig.Options
         """
+        # TODO predict by the batch-load to make better use of the gpu
         pass
