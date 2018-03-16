@@ -4,7 +4,6 @@ package rv.protos;
 
 import "rv2/protos/machine_learning.proto";
 import "rv2/protos/project.proto";
-import "rv2/protos/label_item.proto";
 import "rv2/protos/process_training_data.proto";
 import "rv2/protos/train.proto";
 import "rv2/protos/predict.proto";
@@ -15,13 +14,16 @@ message ChainWorkflowConfig {
     repeated Project train_projects = 1;
 
     // The test_projects are used in the eval command for measuring the
-    // quality of models. They are also used to generate validation chips for
-    // training.
-    // TODO We should have a way of distinguishing validation and test projects.
-    repeated Project test_projects = 2;
+    // quality of models, and are used to generate validation chips to use
+    // during training.
+    repeated Project test_projects = 18;
+
+    // The test_projects are used in the eval command for measuring the
+    // quality of models, and are used to generate validation chips to use
+    // during training.
+    repeated Project test_projects = 18;
 
     required MachineLearning machine_learning = 3;
-    repeated LabelItem label_items = 4;
     required RasterTransformer raster_transformer = 5;
     required int32 chip_size = 6;
     required bool debug = 7;

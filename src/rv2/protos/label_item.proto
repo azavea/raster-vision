@@ -1,9 +1,0 @@
-syntax = "proto2";
-
-package rv.protos;
-
-message LabelItem {
-    // A label (ie. car) its id.
-    required int32 id = 1;
-    required string name = 2;
-}

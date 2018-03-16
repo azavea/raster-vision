@@ -135,7 +135,6 @@ class ChainWorkflow(object):
         config.options.debug = self.workflow.debug
         config.options.output_uri = \
             self.path_generator.process_training_data_output_uri
-        config.label_items.MergeFrom(self.workflow.label_items)
 
         config = apply_uri_map(config, self.uri_map)
         return config
@@ -166,7 +165,6 @@ class ChainWorkflow(object):
     def get_predict_config(self):
         config = PredictConfig()
         config.machine_learning.MergeFrom(self.workflow.machine_learning)
-        config.label_items.MergeFrom(self.workflow.label_items)
         config.projects.MergeFrom(self.workflow.test_projects)
         config.options.MergeFrom(self.workflow.predict_options)
         config.options.debug = self.workflow.debug
@@ -179,7 +177,6 @@ class ChainWorkflow(object):
     def get_eval_config(self):
         config = EvalConfig()
         config.machine_learning.MergeFrom(self.workflow.machine_learning)
-        config.label_items.MergeFrom(self.workflow.label_items)
         config.projects.MergeFrom(self.workflow.test_projects)
         config.options.MergeFrom(self.workflow.eval_options)
         config.options.debug = self.workflow.debug
