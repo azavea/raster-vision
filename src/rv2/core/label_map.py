@@ -40,8 +40,6 @@ class LabelMap(object):
     def __len__(self):
         return len(self.get_items())
 
-    # TODO move this into TF object detection-specific code since
-    # that's the only place where it's used?
     def get_category_index(self):
         """Get the corresponding category_index used by TF Object Detection."""
         category_index = {}

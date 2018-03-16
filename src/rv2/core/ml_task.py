@@ -59,9 +59,18 @@ class MLTask():
         Returns:
             list of Boxes
         """
+        pass
 
-    def process_training_data(self, train_projects, validation_projects, label_map,
-                        options):
+    @abstractmethod
+    def get_evaluation(self):
+        """Return empty Evaluation of appropriate type.
+
+        This functions as a factory.
+        """
+        pass
+
+    def process_training_data(self, train_projects, validation_projects,
+                              label_map, options):
         """Make training data.
 
         Convert Projects with a ground_truth_annotation_source into training
@@ -75,7 +84,6 @@ class MLTask():
             label_map: LabelMap
             options: ProcessTrainingDataConfig.Options
         """
-
         def _process_training_data(projects):
             training_data = TrainingData()
             for project in projects:
@@ -88,6 +96,8 @@ class MLTask():
                     training_data.append(chip, annotations)
                     print('.', end='', flush=True)
                 print()
+                # TODO load and delete project data as needed to avoid
+                # running out of disk space
             return training_data
 
         training_data = _process_training_data(train_projects)
@@ -131,14 +141,6 @@ class MLTask():
 
             annotation_source.post_process(options)
             annotation_source.save(label_map)
-
-    @abstractmethod
-    def get_evaluation(self):
-        """Return empty Evaluation of appropriate type.
-
-        This functions as a factory.
-        """
-        pass
 
     def eval(self, projects, label_map, options):
         """Evaluate predictions against ground truth in projects.

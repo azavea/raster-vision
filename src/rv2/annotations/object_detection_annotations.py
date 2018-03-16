@@ -6,6 +6,7 @@ from object_detection.utils.np_box_list_ops import (
     concatenate, scale, multi_class_non_max_suppression, _copy_extra_fields)
 
 from rv2.core.box import Box
+from rv2.core.annotations import Annotations
 
 
 def geojson_to_annotations(geojson, crs_transformer):
@@ -77,8 +78,7 @@ def inverse_change_coordinate_frame(boxlist, window):
     return boxlist_new
 
 
-# TODO Move to object_detection_annotation_source?
-class ObjectDetectionAnnotations(object):
+class ObjectDetectionAnnotations(Annotations):
     def __init__(self, npboxes, classes, scores=None):
         self.boxlist = BoxList(npboxes)
         self.boxlist.add_field('classes', classes)

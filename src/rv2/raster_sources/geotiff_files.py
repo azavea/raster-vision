@@ -7,7 +7,8 @@ import rasterio
 
 from rv2.core.raster_source import RasterSource
 from rv2.core.box import Box
-from rv2.core.crs_transformer import CRSTransformer
+from rv2.crs_transformers.rasterio_crs_transformer import (
+    RasterioCRSTransformer)
 from rv2.utils.files import download_if_needed, RV_TEMP_DIR
 
 
@@ -50,7 +51,7 @@ class GeoTiffFiles(RasterSource):
         super().__init__(raster_transformer)
 
     def get_crs_transformer(self):
-        return CRSTransformer(self.image_dataset)
+        return RasterioCRSTransformer(self.image_dataset)
 
     def get_extent(self):
         return Box(
@@ -65,6 +66,7 @@ class GeoTiffFiles(RasterSource):
         partial_chip = load_window(
             self.image_dataset, window.rasterio_format())
         chip = np.zeros((height, width, partial_chip.shape[2]), dtype=np.uint8)
-        chip[0:partial_chip.shape[0], 0:partial_chip.shape[1], :] = partial_chip
+        chip[0:partial_chip.shape[0], 0:partial_chip.shape[1], :] = \
+            partial_chip
 
         return chip

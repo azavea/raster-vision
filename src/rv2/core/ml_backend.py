@@ -9,7 +9,7 @@ class MLBackend(ABC):
 
     @abstractmethod
     def convert_training_data(self, training_data, validation_data, label_map,
-                           options):
+                              options):
         """Convert training data to backend-specific format and save it.
 
         Args:
