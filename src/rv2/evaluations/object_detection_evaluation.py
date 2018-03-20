@@ -36,28 +36,28 @@ class EvaluationItem(object):
         return self.__dict__
 
 
-def compute_od_eval(ground_truth_annotations, prediction_annotations):
-    nb_gt_classes = len(set(ground_truth_annotations.get_classes()))
+def compute_od_eval(ground_truth_labels, prediction_labels):
+    nb_gt_classes = len(set(ground_truth_labels.get_class_ids()))
     matching_iou_threshold = 0.5
     od_eval = object_detection_evaluation.ObjectDetectionEvaluation(
         nb_gt_classes, matching_iou_threshold=matching_iou_threshold)
     image_key = 'image'
     od_eval.add_single_ground_truth_image_info(
-        image_key, ground_truth_annotations.get_npboxes(),
-        ground_truth_annotations.get_classes() - 1)
+        image_key, ground_truth_labels.get_npboxes(),
+        ground_truth_labels.get_class_ids() - 1)
     od_eval.add_single_detected_image_info(
-        image_key, prediction_annotations.get_npboxes(),
-        prediction_annotations.get_scores(),
-        prediction_annotations.get_classes() - 1)
+        image_key, prediction_labels.get_npboxes(),
+        prediction_labels.get_scores(),
+        prediction_labels.get_class_ids() - 1)
     od_eval.evaluate()
     return od_eval
 
 
-def parse_od_eval(od_eval, label_map):
+def parse_od_eval(od_eval, class_map):
     eval_result = od_eval.get_eval_result()
     class_to_eval_item = {}
-    for class_id in range(1, len(label_map) + 1):
-        class_name = label_map.get_by_id(class_id).name
+    for class_id in range(1, len(class_map) + 1):
+        class_name = class_map.get_by_id(class_id).name
 
         precisions = eval_result.precisions[class_id - 1]
         recalls = eval_result.recalls[class_id - 1]
@@ -90,13 +90,13 @@ class ObjectDetectionEvaluation(Evaluation):
     def get_by_id(self, class_id):
         return self.class_to_eval_item[class_id]
 
-    def compute(self, label_map, ground_truth_annotation_source,
-                prediction_annotation_source):
-        gt_annotations = ground_truth_annotation_source.get_all_annotations()
-        pred_annotations = prediction_annotation_source.get_all_annotations()
+    def compute(self, class_map, ground_truth_label_source,
+                prediction_label_source):
+        gt_labels = ground_truth_label_source.get_all_labels()
+        pred_labels = prediction_label_source.get_all_labels()
 
-        od_eval = compute_od_eval(gt_annotations, pred_annotations)
-        self.class_to_eval_item = parse_od_eval(od_eval, label_map)
+        od_eval = compute_od_eval(gt_labels, pred_labels)
+        self.class_to_eval_item = parse_od_eval(od_eval, class_map)
 
         self.compute_avg()
 

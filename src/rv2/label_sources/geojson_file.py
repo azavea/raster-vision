@@ -1,14 +1,14 @@
 import json
 
-from rv2.annotations.object_detection_annotations import (
-    ObjectDetectionAnnotations)
+from rv2.labels.object_detection_labels import (
+    ObjectDetectionLabels)
 from rv2.utils.files import file_to_str, str_to_file
-from rv2.annotation_sources.object_detection_annotation_source import (
-        ObjectDetectionAnnotationSource)
+from rv2.label_sources.object_detection_label_source import (
+        ObjectDetectionLabelSource)
 
 
-class GeoJSONFile(ObjectDetectionAnnotationSource):
-    # TODO allow null crs_transformer for when we assume that the annotations
+class GeoJSONFile(ObjectDetectionLabelSource):
+    # TODO allow null crs_transformer for when we assume that the labels
     # are already in the crs and don't need to be converted.
     def __init__(self, uri, crs_transformer, writable=False):
         self.uri = uri
@@ -17,18 +17,18 @@ class GeoJSONFile(ObjectDetectionAnnotationSource):
 
         try:
             geojson = json.loads(file_to_str(uri))
-            self.annotations = ObjectDetectionAnnotations.from_geojson(
+            self.labels = ObjectDetectionLabels.from_geojson(
                 geojson, crs_transformer)
         except:
             if writable:
-                self.annotations = ObjectDetectionAnnotations.make_empty()
+                self.labels = ObjectDetectionLabels.make_empty()
             else:
                 raise ValueError('Could not open {}'.format(uri))
 
-    def save(self, label_map):
+    def save(self, class_map):
         if self.writable:
-            geojson = self.annotations.to_geojson(
-                self.crs_transformer, label_map)
+            geojson = self.labels.to_geojson(
+                self.crs_transformer, class_map)
             geojson_str = json.dumps(geojson)
             str_to_file(geojson_str, self.uri)
         else:

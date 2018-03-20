@@ -1,20 +1,20 @@
 class TrainingData(object):
-    """A set of chips and associated annotations used to train a model."""
+    """A set of chips and associated labels used to train a model."""
 
     def __init__(self):
         """Construct a new TrainingData."""
         self.chips = []
-        self.annotations = []
+        self.labels = []
 
-    def append(self, chip, annotations):
-        """Append a chip and associated annotations to the dataset.
+    def append(self, chip, labels):
+        """Append a chip and associated labels to the dataset.
 
         Args:
             chip: [height, width, channels] numpy array
-            annotations: Annotations
+            labels: Labels
         """
         self.chips.append(chip)
-        self.annotations.append(annotations)
+        self.labels.append(labels)
 
     def __iter__(self):
-        return zip(self.chips, self.annotations)
+        return zip(self.chips, self.labels)

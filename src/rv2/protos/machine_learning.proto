@@ -4,7 +4,6 @@ package rv.protos;
 
 message MachineLearning {
     enum Task {
-        // Only object detection is currently implemented.
         OBJECT_DETECTION = 1;
         CLASSIFICATION = 2;
         REGRESSION = 3;
@@ -13,9 +12,10 @@ message MachineLearning {
 
     enum Backend {
         TF_OBJECT_DETECTION_API = 1;
+        KERAS_CLASSIFICATION = 2;
     }
 
-    message LabelItem {
+    message ClassItem {
         // A label (ie. car) its id.
         required int32 id = 1;
         required string name = 2;
@@ -23,5 +23,5 @@ message MachineLearning {
 
     required Task task = 1;
     required Backend backend = 2;
-    repeated LabelItem label_items = 3;
+    repeated ClassItem class_items = 3;
 }

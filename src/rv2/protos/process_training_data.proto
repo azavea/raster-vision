@@ -25,6 +25,10 @@ message ProcessTrainingDataConfig {
         optional float ioa_thresh = 2 [default=0.8];
     }
 
+    message ClassificationOptions {
+
+    }
+
     message Options {
         optional int32 chip_size = 1;
         optional bool debug = 2 [default=true];
@@ -34,6 +38,7 @@ message ProcessTrainingDataConfig {
 
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 4;
+            ClassificationOptions classification_options = 5;
         }
     }
 

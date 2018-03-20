@@ -8,8 +8,8 @@ from rv2.protos.process_training_data_pb2 import ProcessTrainingDataConfig
 from rv2.protos.train_pb2 import TrainConfig
 from rv2.protos.predict_pb2 import PredictConfig
 from rv2.protos.eval_pb2 import EvalConfig
-from rv2.protos.annotation_source_pb2 import (
-    AnnotationSource as AnnotationSourceConfig,
+from rv2.protos.label_source_pb2 import (
+    LabelSource as LabelSourceConfig,
     GeoJSONFile as GeoJSONFileConfig)
 
 from rv2.utils.files import (
@@ -106,24 +106,24 @@ class ChainWorkflow(object):
             project.raster_source.raster_transformer.MergeFrom(
                 self.workflow.raster_transformer)
 
-            # Set prediction_annotation_source from generated URI.
-            project.prediction_annotation_source.MergeFrom(
-                self.make_prediction_annotation_source(project))
+            # Set prediction_label_source from generated URI.
+            project.prediction_label_source.MergeFrom(
+                self.make_prediction_label_source(project))
 
-    def make_prediction_annotation_source(self, project):
-        annotation_source = project.ground_truth_annotation_source
-        annotation_source_type = annotation_source.WhichOneof(
-            'annotation_source_type')
-        if annotation_source_type == 'geojson_file':
+    def make_prediction_label_source(self, project):
+        label_source = project.ground_truth_label_source
+        label_source_type = label_source.WhichOneof(
+            'label_source_type')
+        if label_source_type == 'geojson_file':
             prediction_uri = join(
                 self.path_generator.prediction_output_uri,
                 '{}.json'.format(project.id))
             geojson_file = GeoJSONFileConfig(uri=prediction_uri)
-            return AnnotationSourceConfig(geojson_file=geojson_file)
+            return LabelSourceConfig(geojson_file=geojson_file)
         else:
             raise ValueError(
-                'Not sure how to generate annotation source config for type {}'
-                .format(annotation_source_type))
+                'Not sure how to generate label source config for type {}'
+                .format(label_source_type))
 
     def get_process_training_data_config(self):
         config = ProcessTrainingDataConfig()

@@ -18,11 +18,6 @@ message ChainWorkflowConfig {
     // during training.
     repeated Project test_projects = 18;
 
-    // The test_projects are used in the eval command for measuring the
-    // quality of models, and are used to generate validation chips to use
-    // during training.
-    repeated Project test_projects = 18;
-
     required MachineLearning machine_learning = 3;
     required RasterTransformer raster_transformer = 5;
     required int32 chip_size = 6;

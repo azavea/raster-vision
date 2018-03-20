@@ -9,15 +9,15 @@ class MLTask():
     This should be subclassed to add a new task, such as object detection
     """
 
-    def __init__(self, backend, label_map):
+    def __init__(self, backend, class_map):
         """Construct a new MLTask.
 
         Args:
             backend: MLBackend
-            label_map: LabelMap
+            class_map: ClassMap
         """
         self.backend = backend
-        self.label_map = label_map
+        self.class_map = class_map
 
     @abstractmethod
     def get_train_windows(self, project, options):
@@ -36,8 +36,8 @@ class MLTask():
         pass
 
     @abstractmethod
-    def get_train_annotations(self, window, project, options):
-        """Return the training annotations in a window for a project.
+    def get_train_labels(self, window, project, options):
+        """Return the training labels in a window for a project.
 
         Args:
             window: Box
@@ -45,7 +45,7 @@ class MLTask():
             options: TrainConfig.Options
 
         Returns:
-            Annotations that lie within window
+            Labels that lie within window
         """
         pass
 
@@ -74,7 +74,7 @@ class MLTask():
                               options):
         """Make training data.
 
-        Convert Projects with a ground_truth_annotation_source into training
+        Convert Projects with a ground_truth_label_source into training
         chips in MLBackend-specific format, and write to URI specified in
         options.
 
@@ -91,9 +91,9 @@ class MLTask():
                 windows = self.get_train_windows(project, options)
                 for window in windows:
                     chip = project.raster_source.get_chip(window)
-                    annotations = self.get_train_annotations(
+                    labels = self.get_train_labels(
                         window, project, options)
-                    training_data.append(chip, annotations)
+                    training_data.append(chip, labels)
                     print('.', end='', flush=True)
                 print()
                 # TODO load and delete project data as needed to avoid
@@ -103,7 +103,7 @@ class MLTask():
         training_data = _process_training_data(train_projects)
         validation_data = _process_training_data(validation_projects)
         self.backend.convert_training_data(
-            training_data, validation_data, self.label_map, options)
+            training_data, validation_data, self.class_map, options)
 
     def train(self, options):
         """Train a model.
@@ -116,7 +116,7 @@ class MLTask():
     def predict(self, projects, options):
         """Make predictions for projects.
 
-        The predictions are saved to the prediction_annotation_source in
+        The predictions are saved to the prediction_label_source in
         each project.
 
         Args:
@@ -126,20 +126,20 @@ class MLTask():
         for project in projects:
             print('Making predictions for project', end='', flush=True)
             raster_source = project.raster_source
-            annotation_source = project.prediction_annotation_source
-            annotation_source.clear()
+            label_source = project.prediction_label_source
+            label_source.clear()
 
             windows = self.get_predict_windows(
                 raster_source.get_extent(), options)
             for window in windows:
                 chip = raster_source.get_chip(window)
-                annotations = self.backend.predict(chip, options)
-                annotation_source.extend(window, annotations)
+                labels = self.backend.predict(chip, options)
+                label_source.extend(window, labels)
                 print('.', end='', flush=True)
             print()
 
-            annotation_source.post_process(options)
-            annotation_source.save(self.label_map)
+            label_source.post_process(options)
+            label_source.save(self.class_map)
 
     def eval(self, projects, options):
         """Evaluate predictions against ground truth in projects.
@@ -148,17 +148,17 @@ class MLTask():
 
         Args:
             projects: list of Projects that contain both
-                ground_truth_annotation_source and prediction_annotation_source
+                ground_truth_label_source and prediction_label_source
             options: EvalConfig.Options
         """
         evaluation = self.get_evaluation()
         for project in projects:
             print('Computing evaluation for project...')
-            ground_truth = project.ground_truth_annotation_source
-            predictions = project.prediction_annotation_source
+            ground_truth = project.ground_truth_label_source
+            predictions = project.prediction_label_source
 
             project_evaluation = self.get_evaluation()
             project_evaluation.compute(
-                self.label_map, ground_truth, predictions)
+                self.class_map, ground_truth, predictions)
             evaluation.merge(project_evaluation)
         evaluation.save(options.output_uri)

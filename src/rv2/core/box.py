@@ -34,6 +34,9 @@ class Box():
         """Return Box in Rasterio format."""
         return ((self.ymin, self.ymax), (self.xmin, self.xmax))
 
+    def tuple_format(self):
+        return (self.ymin, self.xmin, self.ymax, self.xmax)
+
     def npbox_format(self):
         """Return Box in npbox format used by TF Object Detection API.
 
@@ -106,3 +109,11 @@ class Box():
     def make_square(ymin, xmin, size):
         """Return new square Box."""
         return Box(ymin, xmin, ymin+size, xmin+size)
+
+    def get_windows(self, chip_size, stride):
+        height = self.get_height()
+        width = self.get_width()
+
+        for row_start in range(0, height, stride):
+            for col_start in range(0, width, stride):
+                yield Box.make_square(row_start, col_start, chip_size)

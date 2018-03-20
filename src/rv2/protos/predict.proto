@@ -19,6 +19,10 @@ message PredictConfig {
         optional float score_thresh = 2 [default=0.5];
     }
 
+    message ClassificationOptions {
+
+    }
+
     message Options {
         // The URI of the model file output by the train command.
         optional string model_uri = 1;
@@ -30,6 +34,7 @@ message PredictConfig {
         optional bool debug = 4 [default=true];
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 5;
+            ClassificationOptions classification_options = 6;
         }
     }
 
