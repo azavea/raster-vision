@@ -16,8 +16,15 @@ We are shooting for a first release in Summer 2018.
 Why do we need yet another deep learning library? In traditional object detection, each image is a small PNG file and contains a few objects. In contrast, when working with satellite and aerial imagery, each image is a set of very large GeoTIFF files and contains hundreds of objects that are sparsely distributed. In addition, annotations and predictions are represented in geospatial coordinates using GeoJSON files.
 
 ### Documentation
+
 * [Vagrant / Docker / AWS Setup](docs/setup.md)
 * [Object Detection Tutorial](docs/object-detection.md)
+
+### Contact and Support
+
+You can find more information and talk to developers (let us know what you're working on!) at:
+* [Gitter](https://gitter.im/azavea/raster-vision)
+* [Mailing List](https://groups.google.com/forum/#!forum/raster-vision)
 
 ### Previous work on semantic segmentation and tagging
 
