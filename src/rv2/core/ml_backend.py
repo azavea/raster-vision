@@ -5,6 +5,7 @@ class MLBackend(ABC):
     """Functionality for a specific implementation of an MLTask.
 
     This should be subclassed to provide a bridge to third party ML libraries.
+    There is a many-to-one relationship from backends to tasks.
     """
 
     @abstractmethod
