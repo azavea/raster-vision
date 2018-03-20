@@ -79,7 +79,7 @@ Before running any commands, you will need to download some data.
 Next, you will need to copy and edit some config files.
 * Copy the Mobilenet [backend config files](../src/rv2/samples/backend-configs/tf-object-detection-api/) to `<RVROOT>/backend-configs/tf-object-detection-api/`.
 * Copy the [workflow config files](../src/rv2/samples/workflow-configs/object-detection/) to `<RVROOT>/workflow-configs/object-detection/`.
-* The workflow configs contain URI schemas which are strings containing parameters (eg. `{rv_root}`) which are expanded into absolute URIs when the workflow is executed. The `local_uri_map` and `remote_uri_map` fields define the value of the parameters for the two execution environments. This makes it easy to switch between local and remote execution. You will need to update the values of these maps for your own environment.
+* The workflow configs contain URI schemas which are strings containing parameters (eg. `{rv_root}`) which are expanded into absolute URIs when the workflow is executed. The `local_uri_map` and `remote_uri_map` fields define the value of the parameters for the two execution environments. This makes it easy to switch between local and remote execution. You will need to update the values of these maps for your own environment. (If you are at Azavea, you should create a new S3 bucket `raster-vision-<your initials>-dev` and use that in the `remote_uri_map`).
 
 ## Run test workflow locally
 
