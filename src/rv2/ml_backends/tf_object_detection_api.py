@@ -27,8 +27,8 @@ from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 
 from rv2.core.ml_backend import MLBackend
 from rv2.ml_tasks.object_detection import save_debug_image
-from rv2.annotations.object_detection_annotations import (
-    ObjectDetectionAnnotations)
+from rv2.labels.object_detection_labels import (
+    ObjectDetectionLabels)
 from rv2.utils.files import (
     get_local_path, upload_if_needed, make_dir, download_if_needed,
     file_to_str, sync_dir, RV_TEMP_DIR)
@@ -37,17 +37,17 @@ TRAIN = 'train'
 VALIDATION = 'validation'
 
 
-def create_tf_example(image, annotations, label_map, chip_id=''):
+def create_tf_example(image, labels, class_map, chip_id=''):
     image = Image.fromarray(image)
     image_format = 'png'
     encoded_image = io.BytesIO()
     image.save(encoded_image, format=image_format)
     width, height = image.size
 
-    ymins, xmins, ymaxs, xmaxs = annotations.get_coordinates()
-    classes = annotations.get_classes()
-    class_texts = [label_map.get_by_id(class_id).name.encode('utf8')
-                   for class_id in classes]
+    ymins, xmins, ymaxs, xmaxs = labels.get_coordinates()
+    class_ids = labels.get_class_ids()
+    class_names = [class_map.get_by_id(class_id).name.encode('utf8')
+                   for class_id in class_ids]
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
@@ -61,9 +61,9 @@ def create_tf_example(image, annotations, label_map, chip_id=''):
         'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
         'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
         'image/object/class/text': dataset_util.bytes_list_feature(
-            class_texts),
+            class_names),
         'image/object/class/label': dataset_util.int64_list_feature(
-            classes)
+            class_ids)
     }))
 
     return tf_example
@@ -76,27 +76,27 @@ def write_tf_record(tf_examples, output_path):
     writer.close()
 
 
-def make_tf_label_map(label_map):
-    tf_label_map = StringIntLabelMap()
+def make_tf_class_map(class_map):
+    tf_class_map = StringIntLabelMap()
     tf_items = []
-    for label_item in label_map.get_items():
-        tf_item = StringIntLabelMapItem(id=label_item.id, name=label_item.name)
+    for class_item in class_map.get_items():
+        tf_item = StringIntLabelMapItem(id=class_item.id, name=class_item.name)
         tf_items.append(tf_item)
-    tf_label_map.item.extend(tf_items)
-    return tf_label_map
+    tf_class_map.item.extend(tf_items)
+    return tf_class_map
 
 
-def save_tf_label_map(tf_label_map, label_map_path):
-    tf_label_map_str = text_format.MessageToString(tf_label_map)
-    with open(label_map_path, 'w') as label_map_file:
-        label_map_file.write(tf_label_map_str)
+def save_tf_class_map(tf_class_map, class_map_path):
+    tf_class_map_str = text_format.MessageToString(tf_class_map)
+    with open(class_map_path, 'w') as class_map_file:
+        class_map_file.write(tf_class_map_str)
 
 
-def make_tf_examples(training_data, label_map):
+def make_tf_examples(training_data, class_map):
     tf_examples = []
     print('Creating TFRecord', end='', flush=True)
-    for chip, annotations in training_data:
-        tf_example = create_tf_example(chip, annotations, label_map)
+    for chip, labels in training_data:
+        tf_example = create_tf_example(chip, labels, class_map)
         tf_examples.append(tf_example)
         print('.', end='', flush=True)
     print()
@@ -109,7 +109,7 @@ def parse_tfexample(example):
     im = Image.open(io.BytesIO(im_str))
     im = np.asarray(im, dtype=np.uint8).copy()
 
-    # Parse annotations.
+    # Parse labels.
     xmins = example.features.feature['image/object/bbox/xmin'].float_list.value
     ymins = example.features.feature['image/object/bbox/ymin'].float_list.value
     xmaxs = example.features.feature['image/object/bbox/xmax'].float_list.value
@@ -125,20 +125,20 @@ def parse_tfexample(example):
     class_ids = example.features.feature['image/object/class/label'].int64_list.value
     class_ids = np.array(class_ids)
 
-    annotations = ObjectDetectionAnnotations(npboxes, class_ids)
-    return im, annotations
+    labels = ObjectDetectionLabels(npboxes, class_ids)
+    return im, labels
 
 
-def make_debug_images(record_path, label_map, output_dir):
+def make_debug_images(record_path, class_map, output_dir):
     make_dir(output_dir, check_empty=True)
 
     print('Generating debug chips', end='', flush=True)
     tfrecord_iter = tf.python_io.tf_record_iterator(record_path)
     for ind, example in enumerate(tfrecord_iter):
         example = tf.train.Example.FromString(example)
-        im, annotations = parse_tfexample(example)
+        im, labels = parse_tfexample(example)
         output_path = join(output_dir, '{}.png'.format(ind))
-        save_debug_image(im, annotations, label_map, output_path)
+        save_debug_image(im, labels, class_map, output_path)
         print('.', end='', flush=True)
     print()
 
@@ -234,7 +234,7 @@ class TrainPackage(object):
     def get_debug_chips_uri(self, split):
         return join(self.base_uri, '{}-debug-chips.zip'.format(split))
 
-    def get_label_map_uri(self):
+    def get_class_map_uri(self):
         return join(self.base_uri, 'label-map.pbtxt')
 
     def get_local_path(self, uri):
@@ -249,7 +249,7 @@ class TrainPackage(object):
     def upload(self, debug=False):
         self.upload_if_needed(self.get_record_uri(TRAIN))
         self.upload_if_needed(self.get_record_uri(VALIDATION))
-        self.upload_if_needed(self.get_label_map_uri())
+        self.upload_if_needed(self.get_class_map_uri())
         if debug:
             self.upload_if_needed(self.get_debug_chips_uri(TRAIN))
             self.upload_if_needed(self.get_debug_chips_uri(VALIDATION))
@@ -258,7 +258,7 @@ class TrainPackage(object):
         # No need to download debug chips.
         self.download_if_needed(self.get_record_uri(TRAIN))
         self.download_if_needed(self.get_record_uri(VALIDATION))
-        self.download_if_needed(self.get_label_map_uri())
+        self.download_if_needed(self.get_class_map_uri())
 
     def download_pretrained_model(self, pretrained_model_zip_uri):
         # Expected to be .tar.gz file downloaded from
@@ -287,15 +287,15 @@ class TrainPackage(object):
             pretrained_model_zip_uri)
         config.train_config.fine_tune_checkpoint = pretrained_model_path
 
-        label_map_path = self.get_local_path(self.get_label_map_uri())
+        class_map_path = self.get_local_path(self.get_class_map_uri())
 
         config.train_input_reader.tf_record_input_reader.input_path = \
             self.get_local_path(self.get_record_uri(TRAIN))
-        config.train_input_reader.label_map_path = label_map_path
+        config.train_input_reader.label_map_path = class_map_path
 
         config.eval_input_reader.tf_record_input_reader.input_path = \
             self.get_local_path(self.get_record_uri(VALIDATION))
-        config.eval_input_reader.label_map_path = label_map_path
+        config.eval_input_reader.label_map_path = class_map_path
 
         # Save an updated copy of the config file.
         config_path = join(self.temp_dir, 'ml.config')
@@ -324,30 +324,30 @@ def compute_prediction(image_np, detection_graph, session):
         'detection_boxes:0')
     scores = detection_graph.get_tensor_by_name(
         'detection_scores:0')
-    classes = detection_graph.get_tensor_by_name(
+    class_ids = detection_graph.get_tensor_by_name(
         'detection_classes:0')
 
-    (boxes, scores, classes) = session.run(
-        [boxes, scores, classes],
+    (boxes, scores, class_ids) = session.run(
+        [boxes, scores, class_ids],
         feed_dict={image_tensor: image_np_expanded})
     npboxes = np.squeeze(boxes)
-    classes = np.squeeze(classes).astype(np.int32)
     scores = np.squeeze(scores)
+    class_ids = np.squeeze(class_ids).astype(np.int32)
 
-    return ObjectDetectionAnnotations(npboxes, classes, scores=scores)
+    return ObjectDetectionLabels(npboxes, class_ids, scores=scores)
 
 
 class TFObjectDetectionAPI(MLBackend):
     def __init__(self):
         self.detection_graph = None
 
-    def convert_training_data(self, training_data, validation_data, label_map,
-                           options):
+    def convert_training_data(self, training_data, validation_data, class_map,
+                              options):
         train_package = TrainPackage(options.output_uri)
 
         def _convert_training_data(data, split):
             # Save TFRecord.
-            tf_examples = make_tf_examples(data, label_map)
+            tf_examples = make_tf_examples(data, class_map)
             record_path = train_package.get_local_path(
                 train_package.get_record_uri(split))
             write_tf_record(tf_examples, record_path)
@@ -357,18 +357,18 @@ class TFObjectDetectionAPI(MLBackend):
                 debug_zip_path = train_package.get_local_path(
                     train_package.get_debug_chips_uri(split))
                 with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as debug_dir:
-                    make_debug_images(record_path, label_map, debug_dir)
+                    make_debug_images(record_path, class_map, debug_dir)
                     shutil.make_archive(
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)
 
         _convert_training_data(training_data, TRAIN)
         _convert_training_data(validation_data, VALIDATION)
 
-        # Save TF label map based on label_map.
-        label_map_path = train_package.get_local_path(
-            train_package.get_label_map_uri())
-        tf_label_map = make_tf_label_map(label_map)
-        save_tf_label_map(tf_label_map, label_map_path)
+        # Save TF label map based on class_map.
+        class_map_path = train_package.get_local_path(
+            train_package.get_class_map_uri())
+        tf_class_map = make_tf_class_map(class_map)
+        save_tf_class_map(tf_class_map, class_map_path)
 
         train_package.upload(debug=options.debug)
 
@@ -407,5 +407,5 @@ class TFObjectDetectionAPI(MLBackend):
 
         # If chip is blank, then return empty predictions.
         if np.sum(np.ravel(chip)) == 0:
-            return ObjectDetectionAnnotations.make_empty()
+            return ObjectDetectionLabels.make_empty()
         return compute_prediction(chip, self.detection_graph, self.session)

@@ -6,8 +6,8 @@ message GeoJSONFile {
     required string uri = 1;
 }
 
-message AnnotationSource {
-    oneof annotation_source_type {
+message LabelSource {
+    oneof label_source_type {
         GeoJSONFile geojson_file = 1;
     }
 }

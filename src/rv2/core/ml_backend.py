@@ -8,14 +8,14 @@ class MLBackend(ABC):
     """
 
     @abstractmethod
-    def convert_training_data(self, training_data, validation_data, label_map,
+    def convert_training_data(self, training_data, validation_data, class_map,
                               options):
         """Convert training data to backend-specific format and save it.
 
         Args:
             training_data: TrainingData
             validation_data: TrainingData
-            label_map: LabelMap
+            class_map: ClassMap
             options: ProcessTrainingDataConfig.Options
         """
         pass

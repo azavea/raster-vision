@@ -17,9 +17,9 @@
                     ]
                 }
             },
-            "ground_truth_annotation_source": {
+            "ground_truth_label_source": {
                 "geojson_file": {
-                    "uri": "{rv_root}/processed-data/cowc-potsdam/annotations/train.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam/labels/train.json"
                 }
             }
         }
@@ -34,9 +34,9 @@
                     ]
                 }
             },
-            "ground_truth_annotation_source": {
+            "ground_truth_label_source": {
                 "geojson_file": {
-                    "uri": "{rv_root}/processed-data/cowc-potsdam/annotations/test/top_potsdam_2_13_RGBIR.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_2_13_RGBIR.json"
                 }
             }
         },
@@ -49,9 +49,9 @@
                     ]
                 }
             },
-            "ground_truth_annotation_source": {
+            "ground_truth_label_source": {
                 "geojson_file": {
-                    "uri": "{rv_root}/processed-data/cowc-potsdam/annotations/test/top_potsdam_6_8_RGBIR.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_6_8_RGBIR.json"
                 }
             }
         },
@@ -64,9 +64,9 @@
                     ]
                 }
             },
-            "ground_truth_annotation_source": {
+            "ground_truth_label_source": {
                 "geojson_file": {
-                    "uri": "{rv_root}/processed-data/cowc-potsdam/annotations/test/top_potsdam_3_10_RGBIR.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_3_10_RGBIR.json"
                 }
             }
         }
@@ -74,7 +74,7 @@
     "machine_learning": {
         "task": "OBJECT_DETECTION",
         "backend": "TF_OBJECT_DETECTION_API",
-        "label_items": [
+        "class_items": [
             {
                 "id": 1,
                 "name": "car"
