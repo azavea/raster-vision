@@ -72,9 +72,9 @@ This convention is convenient and intuitive because it stores the config file fo
 ## Setup
 
 Before running any commands, you will need to download some data.
-* Download the Mobilenet [pretrained model](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2017_11_17.tar.gz) and move the file to `<RVROOT>/pretrained-models/ssd_mobilenet_v1_coco_2017_11_17.tar.gz`.
+* Download the Mobilenet [pretrained model](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2017_11_17.tar.gz) and move the file to `<RVROOT>/pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_2017_11_17.tar.gz`.
 * Download the [ISPRS Potsdam](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html) imagery using the [data request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html) and place it in `<RVROOT>/raw-data/isprs-potsdam`.
-* Download the [cowc-potsdam labels](data/cowc-potsdam-labels.zip) and place them in `<RVROOT>/processed-data/cowc-potsdom/labels/`. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [rv2.utils.cowc](../src/rv2/utils/cowc/).
+* Download the [cowc-potsdam labels](data/cowc-potsdam-labels.zip) and place them in `<RVROOT>/processed-data/cowc-potsdam/labels/`. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [rv2.utils.cowc](../src/rv2/utils/cowc/).
 
 Next, you will need to copy and edit some config files.
 * Copy the Mobilenet [backend config files](../src/rv2/samples/backend-configs/tf-object-detection-api/) to `<RVROOT>/backend-configs/tf-object-detection-api/`.
@@ -87,7 +87,7 @@ After everything is setup, it is wise to run a sample workflow (with a smaller d
 ```
 ./scripts/run --cpu
 ```
-Then compile the files in `src/rv2/proto/*.proto` into Python files by running the following. This only needs to be done once.
+Then compile the files in `src/rv2/protos/*.proto` into Python files by running the following. This only needs to be done once.
 ```
 ./scripts/compile
 ```
