@@ -1,40 +1,41 @@
 {
     "train_projects": [
         {
+            "id": "2-10",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_10_RGBIR.tif"
+                        "{rv_root}/processed-data/cowc-potsdam-test/2-10.tif"
                     ]
                 }
             },
             "ground_truth_label_source": {
                 "geojson_file": {
-                    "uri": "{rv_root}/processed-data/cowc-potsdam/labels/train/top_potsdam_2_10_RGBIR.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam-test/2-10.json"
                 }
             }
         }
     ],
     "test_projects": [
         {
-            "id": "2_13",
+            "id": "2-13",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "{raw}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_2_13_RGBIR.tif"
+                        "{rv_root}/processed-data/cowc-potsdam-test/2-13.tif"
                     ]
                 }
             },
             "ground_truth_label_source": {
                 "geojson_file": {
-                    "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_2_13_RGBIR.json"
+                    "uri": "{rv_root}/processed-data/cowc-potsdam-test/2-13.json"
                 }
             }
         }
     ],
     "machine_learning": {
-        "task": "CLASSIFICATION",
-        "backend": "KERAS_CLASSIFICATION",
+        "task": "OBJECT_DETECTION",
+        "backend": "TF_OBJECT_DETECTION_API",
         "class_items": [
             {
                 "id": 1,
@@ -43,16 +44,20 @@
         ]
     },
     "process_training_data_options": {
-        "classification_options": {
+        "object_detection_options": {
+            "neg_ratio": 1.0,
+            "ioa_thresh": 0.8
         }
     },
     "train_options": {
         "pretrained_model_uri": "{rv_root}/pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_2017_11_17.tar.gz",
-        "backend_config_uri": "{rv_root}/backend-configs/tf-object-detection-api/mobilenet-short.config",
+        "backend_config_uri": "{rv_root}/backend-configs/tf-object-detection-api/mobilenet-test.config",
         "sync_interval": 600
     },
     "predict_options": {
-        "classification_options": {
+        "object_detection_options": {
+            "merge_thresh": 0.1,
+            "score_thresh": 0.5
         }
     },
     "eval_options": {
@@ -70,7 +75,7 @@
         "rv_root": "s3://raster-vision-lf-dev",
         "raw": "s3://raster-vision-raw-data"
     },
-    "dataset_key": "cowc-potsdam-5cm-sample",
+    "dataset_key": "cowc-potsdam-test",
     "model_key": "mobilenet",
     "prediction_key": "test",
     "eval_key": "default"

@@ -33,8 +33,8 @@
         }
     ],
     "machine_learning": {
-        "task": "OBJECT_DETECTION",
-        "backend": "TF_OBJECT_DETECTION_API",
+        "task": "CLASSIFICATION",
+        "backend": "KERAS_CLASSIFICATION",
         "class_items": [
             {
                 "id": 1,
@@ -43,9 +43,7 @@
         ]
     },
     "process_training_data_options": {
-        "object_detection_options": {
-            "neg_ratio": 1.0,
-            "ioa_thresh": 0.8
+        "classification_options": {
         }
     },
     "train_options": {
@@ -54,9 +52,7 @@
         "sync_interval": 600
     },
     "predict_options": {
-        "object_detection_options": {
-            "merge_thresh": 0.1,
-            "score_thresh": 0.5
+        "classification_options": {
         }
     },
     "eval_options": {
@@ -74,7 +70,7 @@
         "rv_root": "s3://raster-vision-lf-dev",
         "raw": "s3://raster-vision-raw-data"
     },
-    "dataset_key": "cowc-potsdam-5cm-sample",
+    "dataset_key": "cowc-potsdam-test",
     "model_key": "mobilenet",
     "prediction_key": "test",
     "eval_key": "default"
