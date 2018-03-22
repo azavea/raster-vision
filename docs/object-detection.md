@@ -69,49 +69,57 @@ This convention is convenient and intuitive because it stores the config file fo
 <RVROOT>/processed-data
 ```
 
-## Setup
+## Running a test workflow locally
 
-Before running any commands, you will need to download some data.
-* Download the Mobilenet [pretrained model](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2017_11_17.tar.gz) and move the file to `<RVROOT>/pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_2017_11_17.tar.gz`.
-* Download the [ISPRS Potsdam](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html) imagery using the [data request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html) and place it in `<RVROOT>/raw-data/isprs-potsdam`.
-* Download the [cowc-potsdam labels](data/cowc-potsdam-labels.zip) and place them in `<RVROOT>/processed-data/cowc-potsdam/labels/`. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [rv2.utils.cowc](../src/rv2/utils/cowc/).
+Before running the full workflow, you should check that the system is setup and running correctly by running a test workflow locally. This workflow uses a very tiny dataset so it will run quickly. First, you will need to copy files, edit configs, and run some commands.
 
-Next, you will need to copy and edit some config files.
-* Copy the Mobilenet [backend config files](../src/rv2/samples/backend-configs/tf-object-detection-api/) to `<RVROOT>/backend-configs/tf-object-detection-api/`.
-* Copy the [workflow config files](../src/rv2/samples/workflow-configs/object-detection/) to `<RVROOT>/workflow-configs/object-detection/`.
+* Copy the Mobilenet [model](http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2017_11_17.tar.gz) that was pre-trained on COCO to `<RVROOT>/pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_2017_11_17.tar.gz`.
+* Copy the [test backend config file](../src/rv2/samples/backend-configs/tf-object-detection-api/mobilenet-test.config) to `<RVROOT>/backend-configs/tf-object-detection-api/mobilenet-test.config`.
+* Copy the [test data](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip) and unzip it to `<RVROOT>/processed-data/cowc-potsdam-test`.
+* Copy the [test workflow config file](../src/rv2/samples/workflow-configs/object-detection/cowc-potsdam-test.json) to `<RVROOT>/workflow-configs/object-detection/cowc-potsdam-test.json`.
 * The workflow configs contain URI schemas which are strings containing parameters (eg. `{rv_root}`) which are expanded into absolute URIs when the workflow is executed. The `local_uri_map` and `remote_uri_map` fields define the value of the parameters for the two execution environments. This makes it easy to switch between local and remote execution. You will need to update the values of these maps for your own environment. (If you are at Azavea, you should create a new S3 bucket `raster-vision-<your initials>-dev` and use that in the `remote_uri_map`).
+* Run the Docker container locally using `./scripts/run --cpu`.
+* Compile the files in `src/rv2/protos/*.proto` into Python files by running `./scripts/compile`.
 
-## Run test workflow locally
+If you run the workflow straight through, the predictions will be generated using a model that was only trained for a single step. Of course, the predictions will not be good, so you should run the workflow in two stages. In the first stage, you will run `process_training_data` and `train`. In the second stage, you will swap in a model that has already been trained on cars, and run `predict` and `eval`.
 
-After everything is setup, it is wise to run a sample workflow (with a smaller dataset and only a few training steps) locally to make sure everything works. To do this, run the Docker container locally using
-```
-./scripts/run --cpu
-```
-Then compile the files in `src/rv2/protos/*.proto` into Python files by running the following. This only needs to be done once.
-```
-./scripts/compile
-```
-Finally, generate the individual command config files and run the commands locally using
+You can run the first stage of the workflow using
 ```
 python -m rv2.utils.chain_workflow \
-    <RVROOT>/workflow-configs/object-detection/cowc-potsdam-sample.json \
+    <RVROOT>/workflow-configs/object-detection/cowc-potsdam-test.json \
+    process_training_data train \
     --run
 ```
-This should result in a hierarchy of files in `<RVROOT>/rv-output` which includes the generated config files. You can run a command manually on one of the generated config files, in this case for prediction, using the following. The particular keys can be found in the workflow config file.
-```
-python -m rv2.run predict \    
-    <RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/config.json
-```
+This should result in a hierarchy of files in `<RVROOT>/rv-output` which includes the generated config files. You should check that the training chips were generated correctly by unzipping `<RVROOT>/rv-output/datasets/<DATASET_KEY>/output/train-debug-chips.zip` and spot checking some of the debug chips. The second half of the chips are negative chips that contain no objects. *If the training chips are generated incorrectly, the rest of the workflow will be corrupted.*
 
-If for some reason you want to re-run a subset of the commands in the workflow, for instance `predict` and `eval`, you can do so with
+![A debug chip](img/cowc-potsdam/debug-chip.png)
+
+Now, download the [trained car model](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-model.zip), unzip it, and place the `model` file in `<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/output/`, replacing the file that is already there. Then run
 ```
 python -m rv2.utils.chain_workflow \
-    <RVROOT>/workflow-configs/object-detection/cowc-potsdam-sample.json \
+    <RVROOT>/workflow-configs/object-detection/cowc-potsdam-test.json \
     predict eval \
     --run
 ```
+You should view the predictions in QGIS and check that it looks something like the following. The predictions are at `<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/output/2-13.json` and the corresponding imagery should be at `<RVROOT>/processed-data/cowc-potsdam-test/2-13.tif`. If the raster layer looks washed out, you will need to turn the alpha channel off in the layer's Properties in QGIS.
+
+![Predictions on test COWC Potsdam dataset](img/cowc-potsdam/test-predictions.png)
+
+It is possible to run commands directly outside of a workflow. To run the `predict` command directly, you would run `python -m rv2.run predict <PREDICTION_CONFIG_FILE>` which in this case would be
+```
+python -m rv2.run predict \
+    <RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/config.json
+```
 
 ## Run full workflow remotely
+
+If running the test locally was successful, you can run the full workflow remotely. First, you will need to copy some data and edit some configs.
+
+* Download the [ISPRS Potsdam](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html) imagery using the [data request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html) and place it in `<RVROOT>/raw-data/isprs-potsdam`.
+* Copy the [cowc-potsdam labels](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip), unzip, and place the files in `<RVROOT>/processed-data/cowc-potsdam/labels/`. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [rv2.utils.cowc](../src/rv2/utils/cowc/).
+* Copy the [backend config](../src/rv2/samples/backend-configs/tf-object-detection-api/mobilenet.config) to `<RVROOT>/backend-configs/tf-object-detection-api/mobilenet.config`.
+* Copy the [workflow config](../src/rv2/samples/workflow-configs/object-detection/cowc-potsdam.json)
+to `<RVROOT>/workflow-configs/object-detection/cowc-potsdam.json`
 
 Since it will take a long time to run the full workflow, it probably makes sense to run it remotely on AWS Batch. Before doing so, make sure all data and config files are copied to the right locations (as defined by the `remote_uri_map` field in the workflow config) on S3. Then run
 ```
@@ -133,4 +141,4 @@ python -m rv2.utils.chain_workflow \
 
 Running the workflow on AWS Batch (using C4 for CPU and P2 for GPU jobs) should take around 12 hours. In the output file generated by the `eval` command, the F1 score should be around 0.85 and the predictions (visualized in QGIS) should look something like this. These results were obtained from training with 1500 labeled car instances for 150,000 steps. It's very likely that better results can be obtained with fewer steps -- more experimentation is needed.
 
-![Predictions on COWC Potsdam dataset](img/cowc-potsdam-predictions.png)
+![Predictions on COWC Potsdam dataset](img/cowc-potsdam/predictions.png)
