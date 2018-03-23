@@ -203,12 +203,14 @@ class ChainWorkflow(object):
                              self.path_generator.eval_config_uri)
 
     def remote_run(self, tasks, branch):
+        # Run everything in GPU queue since Batch doesn't seem to
+        # handle dependencies across different queues.
         parent_job_ids = []
         if MAKE_TRAINING_DATA in tasks:
             command = make_command(
                 'process_training_data',
                 self.path_generator.process_training_data_config_uri)
-            job_id = _batch_submit(branch, command, attempts=1, gpu=False)
+            job_id = _batch_submit(branch, command, attempts=1, gpu=True)
             parent_job_ids = [job_id]
 
         if TRAIN in tasks:
@@ -223,7 +225,7 @@ class ChainWorkflow(object):
             command = make_command(
                 'predict', self.path_generator.predict_config_uri)
             job_id = _batch_submit(
-                branch, command, attempts=1, gpu=False,
+                branch, command, attempts=1, gpu=True,
                 parent_job_ids=parent_job_ids)
             parent_job_ids = [job_id]
 
@@ -231,7 +233,7 @@ class ChainWorkflow(object):
             command = make_command(
                 'eval', self.path_generator.eval_config_uri)
             job_id = _batch_submit(
-                branch, command, attempts=1, gpu=False,
+                branch, command, attempts=1, gpu=True,
                 parent_job_ids=parent_job_ids)
 
     def local_run(self, tasks):
