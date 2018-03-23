@@ -5,7 +5,7 @@ from rv2.labels.object_detection_labels import (
 
 class ObjectDetectionLabelSource(LabelSource):
     def get_labels(self, window, ioa_thresh=1.0):
-        return self.labels.get_subset(
+        return self.labels.get_subwindow(
             window, ioa_thresh=ioa_thresh)
 
     def get_all_labels(self):

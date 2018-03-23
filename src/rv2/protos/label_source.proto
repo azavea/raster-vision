@@ -2,12 +2,38 @@ syntax = "proto2";
 
 package rv.protos;
 
-message GeoJSONFile {
+message ObjectDetectionGeoJSONFile {
     required string uri = 1;
+}
+
+message ClassificationGeoJSONFile {
+    message Options {
+        // The minimum IOA (intersection over area) for a box to be considered
+        // inside a cell.
+        optional float ioa_thresh = 1;
+
+        // If true, the class_id for a cell is the minimum class_id of the
+        // boxes in that cell. Otherwise, pick the class_id of the box
+        // covering the greatest area.
+        optional bool pick_min_class_id = 2;
+
+        // Optional class_id to use as the background class; ie. the one that
+        // is used when a window contains no boxes. If not set, empty windows
+        // have None set as their class_id.
+        optional int32 background_class_id = 3;
+
+        // Height and width of each cell (in pixels) in the spatial grid that
+        // is laid over the raster.
+        required int32 cell_size = 4;
+    }
+
+    required string uri = 1;
+    required Options options = 2;
 }
 
 message LabelSource {
     oneof label_source_type {
-        GeoJSONFile geojson_file = 1;
+        ObjectDetectionGeoJSONFile object_detection_geojson_file = 1;
+        ClassificationGeoJSONFile classification_geojson_file = 2;
     }
 }

@@ -10,7 +10,8 @@ from rv2.protos.predict_pb2 import PredictConfig
 from rv2.protos.eval_pb2 import EvalConfig
 from rv2.protos.label_source_pb2 import (
     LabelSource as LabelSourceConfig,
-    GeoJSONFile as GeoJSONFileConfig)
+    ObjectDetectionGeoJSONFile as ObjectDetectionGeoJSONFileConfig,
+    ClassificationGeoJSONFile as ClassificationGeoJSONFileConfig)
 
 from rv2.utils.files import (
     load_json_config, save_json_config, file_to_str, str_to_file)
@@ -114,12 +115,18 @@ class ChainWorkflow(object):
         label_source = project.ground_truth_label_source
         label_source_type = label_source.WhichOneof(
             'label_source_type')
-        if label_source_type == 'geojson_file':
-            prediction_uri = join(
-                self.path_generator.prediction_output_uri,
-                '{}.json'.format(project.id))
-            geojson_file = GeoJSONFileConfig(uri=prediction_uri)
-            return LabelSourceConfig(geojson_file=geojson_file)
+        prediction_uri = join(
+            self.path_generator.prediction_output_uri,
+            '{}.json'.format(project.id))
+
+        if label_source_type == 'object_detection_geojson_file':
+            geojson_file = ObjectDetectionGeoJSONFileConfig(uri=prediction_uri)
+            return LabelSourceConfig(
+                object_detection_geojson_file=geojson_file)
+        elif label_source_type == 'classification_geojson_file':
+            geojson_file = ClassificationGeoJSONFileConfig(uri=prediction_uri)
+            return LabelSourceConfig(
+                classification_geojson_file=geojson_file)
         else:
             raise ValueError(
                 'Not sure how to generate label source config for type {}'

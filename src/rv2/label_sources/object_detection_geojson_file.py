@@ -7,7 +7,7 @@ from rv2.label_sources.object_detection_label_source import (
         ObjectDetectionLabelSource)
 
 
-class GeoJSONFile(ObjectDetectionLabelSource):
+class ObjectDetectionGeoJSONFile(ObjectDetectionLabelSource):
     # TODO allow null crs_transformer for when we assume that the labels
     # are already in the crs and don't need to be converted.
     def __init__(self, uri, crs_transformer, writable=False):

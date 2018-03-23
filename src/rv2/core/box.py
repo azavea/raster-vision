@@ -30,6 +30,10 @@ class Box():
         """Return width of Box."""
         return self.xmax - self.xmin
 
+    def get_area(self):
+        """Return area of Box."""
+        return self.get_height() * self.get_width()
+
     def rasterio_format(self):
         """Return Box in Rasterio format."""
         return ((self.ymin, self.ymax), (self.xmin, self.xmax))

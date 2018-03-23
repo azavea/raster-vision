@@ -37,6 +37,10 @@ class ClassMap(object):
         """Return list of ClassItems."""
         return self.class_item_map.values()
 
+    def get_class_names(self):
+        """Return list of class names."""
+        return [item.name for item in self.class_item_map.values()]
+
     def __len__(self):
         return len(self.get_items())
 
