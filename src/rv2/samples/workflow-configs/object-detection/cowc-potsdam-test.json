@@ -10,7 +10,7 @@
                 }
             },
             "ground_truth_label_source": {
-                "geojson_file": {
+                "object_detection_geojson_file": {
                     "uri": "{rv_root}/processed-data/cowc-potsdam-test/2-10.json"
                 }
             }
@@ -27,7 +27,7 @@
                 }
             },
             "ground_truth_label_source": {
-                "geojson_file": {
+                "object_detection_geojson_file": {
                     "uri": "{rv_root}/processed-data/cowc-potsdam-test/2-13.json"
                 }
             }
