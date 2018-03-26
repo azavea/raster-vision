@@ -26,7 +26,7 @@
     ],
     "test_projects": [
         {
-            "id": "2_13",
+            "id": "2-13",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
@@ -41,7 +41,7 @@
             }
         },
         {
-            "id": "6_8",
+            "id": "6-8",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
@@ -56,7 +56,7 @@
             }
         },
         {
-            "id": "3_10",
+            "id": "3-10",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
@@ -113,7 +113,7 @@
         "rv_root": "s3://raster-vision-lf-dev",
         "raw": "s3://raster-vision-raw-data"
     },
-    "dataset_key": "cowc-potsdam-5cm",
+    "dataset_key": "cowc-potsdam",
     "model_key": "mobilenet",
     "prediction_key": "test",
     "eval_key": "default"
