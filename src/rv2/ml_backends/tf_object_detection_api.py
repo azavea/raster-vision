@@ -7,7 +7,6 @@ import tarfile
 from os.path import join
 from urllib.parse import urlparse
 from subprocess import Popen
-from threading import Timer
 import signal
 import atexit
 import glob
@@ -31,7 +30,7 @@ from rv2.labels.object_detection_labels import (
     ObjectDetectionLabels)
 from rv2.utils.files import (
     get_local_path, upload_if_needed, make_dir, download_if_needed,
-    file_to_str, sync_dir, RV_TEMP_DIR)
+    file_to_str, sync_dir, RV_TEMP_DIR, start_sync)
 
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -174,19 +173,6 @@ def train(config_path, output_dir):
     train_process.wait()
     eval_process.terminate()
     tensorboard_process.terminate()
-
-
-def start_sync(output_dir, output_uri, sync_interval=600):
-    def sync_train_dir(delete=True):
-        sync_dir(output_dir, output_uri, delete=delete)
-        thread = Timer(sync_interval, sync_train_dir)
-        thread.daemon = True
-        thread.start()
-
-    if urlparse(output_uri).scheme == 's3':
-        # On first sync, we don't want to delete files on S3 to match
-        # th contents of output_dir since there's nothing there yet.
-        sync_train_dir(delete=False)
 
 
 def get_last_checkpoint_path(train_root_dir):

@@ -63,8 +63,7 @@
         }
     },
     "train_options": {
-        "pretrained_model_uri": "{rv_root}/pretrained-models/tf-object-detection-api/ssd_mobilenet_v1_coco_2017_11_17.tar.gz",
-        "backend_config_uri": "{rv_root}/backend-configs/tf-object-detection-api/mobilenet-test.config",
+        "backend_config_uri": "{rv_root}/backend-configs/keras-classification/resnet50-test.json",
         "sync_interval": 600
     },
     "predict_options": {
@@ -87,7 +86,7 @@
         "raw": "s3://raster-vision-raw-data"
     },
     "dataset_key": "cowc-potsdam-cl-test",
-    "model_key": "mobilenet",
+    "model_key": "resnet50",
     "prediction_key": "test",
     "eval_key": "default"
 }

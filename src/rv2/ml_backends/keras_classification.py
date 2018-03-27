@@ -1,31 +1,28 @@
 from os.path import join
+import os
 import tempfile
 import shutil
+from urllib.parse import urlparse
+
+from keras_classification.commands.train import _train
+from keras_classification.protos.pipeline_pb2 import PipelineConfig
+from google.protobuf import json_format
 
 from rv2.core.ml_backend import MLBackend
 from rv2.utils.files import (
     make_dir, get_local_path, upload_if_needed, download_if_needed,
-    RV_TEMP_DIR)
+    RV_TEMP_DIR, start_sync, file_to_str, sync_dir, load_json_config)
 from rv2.utils.misc import save_img
 
 
-class TrainingPackage(object):
-    """Represents paths for training data and associated utilities."""
+class FileGroup(object):
     def __init__(self, base_uri):
         self.temp_dir_obj = tempfile.TemporaryDirectory(dir=RV_TEMP_DIR)
         self.temp_dir = self.temp_dir_obj.name
 
         self.base_uri = base_uri
         self.base_dir = self.get_local_path(base_uri)
-        make_dir(self.base_dir, check_empty=True)
-
-        self.training_uri = join(base_uri, 'training')
-        make_dir(self.get_local_path(self.training_uri))
-        self.training_zip_uri = join(base_uri, 'training.zip')
-
-        self.validation_uri = join(base_uri, 'validation')
-        make_dir(self.get_local_path(self.validation_uri))
-        self.validation_zip_uri = join(base_uri, 'validation.zip')
+        make_dir(self.base_dir)
 
     def get_local_path(self, uri):
         return get_local_path(uri, self.temp_dir)
@@ -36,12 +33,65 @@ class TrainingPackage(object):
     def download_if_needed(self, uri):
         return download_if_needed(uri, self.temp_dir)
 
+
+class DatasetFiles(FileGroup):
+    """Utilities for files produced when calling convert_training_data."""
+    def __init__(self, base_uri):
+        FileGroup.__init__(self, base_uri)
+
+        self.training_uri = join(base_uri, 'training')
+        make_dir(self.get_local_path(self.training_uri))
+        self.training_zip_uri = join(base_uri, 'training.zip')
+
+        self.validation_uri = join(base_uri, 'validation')
+        make_dir(self.get_local_path(self.validation_uri))
+        self.validation_zip_uri = join(base_uri, 'validation.zip')
+
     def download(self):
-        pass
+        def _download(data_zip_uri):
+            data_zip_path = self.download_if_needed(data_zip_uri)
+            data_dir = os.path.splitext(data_zip_path)[0]
+            shutil.unpack_archive(data_zip_path, data_dir)
+
+        _download(self.training_zip_uri)
+        _download(self.validation_zip_uri)
 
     def upload(self):
-        self.upload_if_needed(self.training_zip_uri)
-        self.upload_if_needed(self.validation_zip_uri)
+        def _upload(data_uri):
+            data_dir = self.get_local_path(data_uri)
+            shutil.make_archive(data_dir, 'zip', data_dir)
+            self.upload_if_needed(data_uri + '.zip')
+
+        _upload(self.training_uri)
+        _upload(self.validation_uri)
+
+
+class ModelFiles(FileGroup):
+    """Utilities for files produced when calling train."""
+    def __init__(self, base_uri):
+        FileGroup.__init__(self, base_uri)
+
+        self.model_uri = join(self.base_uri, 'model')
+        self.log_uri = join(self.base_uri, 'log.csv')
+
+    def download_backend_config(self, dataset_files, backend_config_uri):
+        config = load_json_config(backend_config_uri, PipelineConfig())
+
+        # Update config using local paths.
+        config.model.model_path = self.get_local_path(self.model_uri)
+        config.trainer.options.training_data_dir = \
+            dataset_files.get_local_path(dataset_files.training_uri)
+        config.trainer.options.validation_data_dir = \
+            dataset_files.get_local_path(dataset_files.validation_uri)
+        config.trainer.options.output_dir = \
+            dataset_files.get_local_path(self.base_uri)
+
+        # Save an updated copy of the config file.
+        config_path = self.get_local_path(backend_config_uri)
+        config_str = json_format.MessageToJson(config)
+        with open(config_path, 'w') as config_file:
+            config_file.write(config_str)
+        return config_path
 
 
 class KerasClassification(MLBackend):
@@ -52,11 +102,11 @@ class KerasClassification(MLBackend):
         For each dataset, there is a directory for each class_name with chips
         of that class.
         """
-        training_package = TrainingPackage(options.output_uri)
-        training_dir = training_package.get_local_path(
-            training_package.training_uri)
-        validation_dir = training_package.get_local_path(
-            training_package.validation_uri)
+        dataset_files = DatasetFiles(options.output_uri)
+        training_dir = dataset_files.get_local_path(
+            dataset_files.training_uri)
+        validation_dir = dataset_files.get_local_path(
+            dataset_files.validation_uri)
 
         def convert_dataset(dataset, output_dir):
             for class_name in class_map.get_class_names():
@@ -72,14 +122,25 @@ class KerasClassification(MLBackend):
                     chip_path = join(
                         output_dir, class_name, str(chip_ind) + '.png')
                     save_img(chip, chip_path)
-            shutil.make_archive(output_dir, 'zip', output_dir)
 
         convert_dataset(training_data, training_dir)
         convert_dataset(validation_data, validation_dir)
-        training_package.upload()
+        dataset_files.upload()
 
     def train(self, options):
-        pass
+        dataset_files = DatasetFiles(options.training_data_uri)
+        dataset_files.download()
+
+        model_files = ModelFiles(options.output_uri)
+        backend_config_path = model_files.download_backend_config(
+            dataset_files, options.backend_config_uri)
+
+        start_sync(model_files.base_dir, options.output_uri,
+                   sync_interval=options.sync_interval)
+        _train(backend_config_path)
+        if urlparse(options.output_uri).scheme == 's3':
+            sync_dir(model_files.base_dir, options.output_uri, delete=True)
+
 
     def predict(self, chip, options):
         pass
