@@ -72,7 +72,7 @@ class MLTask():
 
     def process_training_data(self, train_projects, validation_projects,
                               options):
-        """Make training data.
+        """Process training data.
 
         Convert Projects with a ground_truth_label_source into training
         chips in MLBackend-specific format, and write to URI specified in

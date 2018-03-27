@@ -1,9 +1,33 @@
+import numpy as np
+
 from rv2.core.labels import Labels
 
 
 class ClassificationLabels(Labels):
+    """Represents a spatial grid of cells associated with classes."""
     def __init__(self):
-        self.box_to_class_id = {}
+        # Mapping from Box tuple to int. This is a sparse representation of
+        # the grid.
+        self.cell_to_class_id = {}
 
-    def append(self, box, class_id):
-        self.box_to_class_id[box.tuple_format()] = class_id
+    def get_class_id(self):
+        """Get the class_id of the lone cell.
+
+        Raises ValueError when there is more than one cell.
+        """
+        if len(self.cell_to_class_id) != 1:
+            raise ValueError(
+                'Needs to represent a single cell to get the class_id')
+        else:
+            return list(self.cell_to_class_id.values())[0]
+
+    def set_cell(self, cell, class_id):
+        """Set cell and its class_id.
+
+        Args:
+            cell: (Box)
+        """
+        self.cell_to_class_id[cell.tuple_format()] = class_id
+
+    def get_cell_class_id(self, cell):
+        return self.cell_to_class_id.get(cell.tuple_format())

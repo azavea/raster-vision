@@ -81,6 +81,8 @@ def inverse_change_coordinate_frame(boxlist, window):
 class ObjectDetectionLabels(Labels):
     def __init__(self, npboxes, class_ids, scores=None):
         self.boxlist = BoxList(npboxes)
+        # This field name actually needs to be 'classes' to be able to use
+        # certain utility functions in the TF Object Detection API.
         self.boxlist.add_field('classes', class_ids)
         if scores is not None:
             self.boxlist.add_field('scores', scores)
@@ -103,7 +105,7 @@ class ObjectDetectionLabels(Labels):
         scores = np.empty((0,))
         return ObjectDetectionLabels(npboxes, labels, scores)
 
-    def get_subset(self, window, ioa_thresh=1.0):
+    def get_subwindow(self, window, ioa_thresh=1.0):
         window_npbox = window.npbox_format()
         window_boxlist = BoxList(np.expand_dims(window_npbox, axis=0))
         boxlist = prune_non_overlapping_boxes(

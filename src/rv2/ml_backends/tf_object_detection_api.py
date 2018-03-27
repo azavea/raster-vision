@@ -219,7 +219,7 @@ def export_inference_graph(train_root_dir, config_path, inference_graph_path):
         train_process.wait()
 
 
-class TrainPackage(object):
+class TrainingPackage(object):
     def __init__(self, base_uri):
         self.temp_dir_obj = tempfile.TemporaryDirectory(dir=RV_TEMP_DIR)
         self.temp_dir = self.temp_dir_obj.name
@@ -227,15 +227,6 @@ class TrainPackage(object):
         self.base_uri = base_uri
         self.base_dir = self.get_local_path(base_uri)
         make_dir(self.base_dir)
-
-    def get_record_uri(self, split):
-        return join(self.base_uri, '{}.record'.format(split))
-
-    def get_debug_chips_uri(self, split):
-        return join(self.base_uri, '{}-debug-chips.zip'.format(split))
-
-    def get_class_map_uri(self):
-        return join(self.base_uri, 'label-map.pbtxt')
 
     def get_local_path(self, uri):
         return get_local_path(uri, self.temp_dir)
@@ -245,6 +236,15 @@ class TrainPackage(object):
 
     def download_if_needed(self, uri):
         return download_if_needed(uri, self.temp_dir)
+
+    def get_record_uri(self, split):
+        return join(self.base_uri, '{}.record'.format(split))
+
+    def get_debug_chips_uri(self, split):
+        return join(self.base_uri, '{}-debug-chips.zip'.format(split))
+
+    def get_class_map_uri(self):
+        return join(self.base_uri, 'label-map.pbtxt')
 
     def upload(self, debug=False):
         self.upload_if_needed(self.get_record_uri(TRAIN))
@@ -343,19 +343,19 @@ class TFObjectDetectionAPI(MLBackend):
 
     def convert_training_data(self, training_data, validation_data, class_map,
                               options):
-        train_package = TrainPackage(options.output_uri)
+        training_package = TrainingPackage(options.output_uri)
 
         def _convert_training_data(data, split):
             # Save TFRecord.
             tf_examples = make_tf_examples(data, class_map)
-            record_path = train_package.get_local_path(
-                train_package.get_record_uri(split))
+            record_path = training_package.get_local_path(
+                training_package.get_record_uri(split))
             write_tf_record(tf_examples, record_path)
 
             # Save debug chips.
             if options.debug:
-                debug_zip_path = train_package.get_local_path(
-                    train_package.get_debug_chips_uri(split))
+                debug_zip_path = training_package.get_local_path(
+                    training_package.get_debug_chips_uri(split))
                 with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as debug_dir:
                     make_debug_images(record_path, class_map, debug_dir)
                     shutil.make_archive(
@@ -365,18 +365,18 @@ class TFObjectDetectionAPI(MLBackend):
         _convert_training_data(validation_data, VALIDATION)
 
         # Save TF label map based on class_map.
-        class_map_path = train_package.get_local_path(
-            train_package.get_class_map_uri())
+        class_map_path = training_package.get_local_path(
+            training_package.get_class_map_uri())
         tf_class_map = make_tf_class_map(class_map)
         save_tf_class_map(tf_class_map, class_map_path)
 
-        train_package.upload(debug=options.debug)
+        training_package.upload(debug=options.debug)
 
     def train(self, options):
         # Download training data and update config file.
-        train_package = TrainPackage(options.training_data_uri)
-        train_package.download_data()
-        config_path = train_package.download_config(
+        training_package = TrainingPackage(options.training_data_uri)
+        training_package.download_data()
+        config_path = training_package.download_config(
             options.pretrained_model_uri, options.backend_config_uri)
 
         with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:

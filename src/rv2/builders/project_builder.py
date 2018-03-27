@@ -9,16 +9,17 @@ def build(config):
     prediction_label_source = None
 
     raster_source = raster_source_builder.build(config.raster_source)
+    extent = raster_source.get_extent()
     crs_transformer = raster_source.get_crs_transformer()
 
     if config.HasField('ground_truth_label_source'):
         ground_truth_label_source = label_source_builder.build(
-            config.ground_truth_label_source, crs_transformer,
+            config.ground_truth_label_source, crs_transformer, extent,
             writable=False)
 
     if config.HasField('prediction_label_source'):
         prediction_label_source = label_source_builder.build(
-            config.prediction_label_source, crs_transformer,
+            config.prediction_label_source, crs_transformer, extent,
             writable=True)
 
     return Project(

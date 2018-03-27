@@ -18,7 +18,7 @@
                 }
             },
             "ground_truth_label_source": {
-                "geojson_file": {
+                "object_detection_geojson_file": {
                     "uri": "{rv_root}/processed-data/cowc-potsdam/labels/train.json"
                 }
             }
@@ -35,7 +35,7 @@
                 }
             },
             "ground_truth_label_source": {
-                "geojson_file": {
+                "object_detection_geojson_file": {
                     "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_2_13_RGBIR.json"
                 }
             }
@@ -50,7 +50,7 @@
                 }
             },
             "ground_truth_label_source": {
-                "geojson_file": {
+                "object_detection_geojson_file": {
                     "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_6_8_RGBIR.json"
                 }
             }
@@ -65,7 +65,7 @@
                 }
             },
             "ground_truth_label_source": {
-                "geojson_file": {
+                "object_detection_geojson_file": {
                     "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_3_10_RGBIR.json"
                 }
             }
