@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+package keras_classification.protos;
+
+message Optimizer {
+    enum Type {
+        ADAM = 1;
+    }
+
+    required Type type = 4;
+    // initial learning rate
+    required float init_lr = 5;
+}

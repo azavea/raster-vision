@@ -106,3 +106,4 @@ deployment/ansible/*.retry
 
 # Generated pb2 files
 src/rv2/protos/*_pb2.py
+src/keras_classification/protos/*_pb2.py
