@@ -24,11 +24,13 @@ message ClassificationGeoJSONFile {
 
         // Height and width of each cell (in pixels) in the spatial grid that
         // is laid over the raster.
-        required int32 cell_size = 4;
+        optional int32 cell_size = 4;
+
+        optional bool infer_cells = 5 [default=false];
     }
 
     required string uri = 1;
-    required Options options = 2;
+    optional Options options = 2;
 }
 
 message LabelSource {

@@ -44,8 +44,7 @@ class Trainer(object):
 
     def make_callbacks(self):
         model_checkpoint = keras.callbacks.ModelCheckpoint(
-            filepath=self.model_path, save_best_only=True,
-            save_weights_only=True)
+            filepath=self.model_path, save_best_only=True)
 
         csv_logger = keras.callbacks.CSVLogger(self.log_path, append=True)
 
@@ -73,6 +72,7 @@ class Trainer(object):
 
         generator = generator.flow_from_directory(
             image_folder_dir,
+            classes=self.options.class_names,
             target_size=(self.options.input_size, self.options.input_size),
             batch_size=self.options.batch_size,
             class_mode='categorical')

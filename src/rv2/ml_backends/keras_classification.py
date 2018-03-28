@@ -4,15 +4,19 @@ import tempfile
 import shutil
 from urllib.parse import urlparse
 
+import numpy as np
 from keras_classification.commands.train import _train
 from keras_classification.protos.pipeline_pb2 import PipelineConfig
+from keras_classification.builders import model_builder
 from google.protobuf import json_format
 
 from rv2.core.ml_backend import MLBackend
 from rv2.utils.files import (
     make_dir, get_local_path, upload_if_needed, download_if_needed,
-    RV_TEMP_DIR, start_sync, file_to_str, sync_dir, load_json_config)
+    RV_TEMP_DIR, start_sync, sync_dir, load_json_config)
 from rv2.utils.misc import save_img
+from rv2.labels.classification_labels import ClassificationLabels
+from rv2.core.box import Box
 
 
 class FileGroup(object):
@@ -74,7 +78,8 @@ class ModelFiles(FileGroup):
         self.model_uri = join(self.base_uri, 'model')
         self.log_uri = join(self.base_uri, 'log.csv')
 
-    def download_backend_config(self, dataset_files, backend_config_uri):
+    def download_backend_config(self, backend_config_uri,
+                                dataset_files, class_map):
         config = load_json_config(backend_config_uri, PipelineConfig())
 
         # Update config using local paths.
@@ -85,6 +90,8 @@ class ModelFiles(FileGroup):
             dataset_files.get_local_path(dataset_files.validation_uri)
         config.trainer.options.output_dir = \
             dataset_files.get_local_path(self.base_uri)
+        config.trainer.options.class_names.extend(
+            class_map.get_class_names())
 
         # Save an updated copy of the config file.
         config_path = self.get_local_path(backend_config_uri)
@@ -95,6 +102,9 @@ class ModelFiles(FileGroup):
 
 
 class KerasClassification(MLBackend):
+    def __init__(self):
+        self.model = None
+
     def convert_training_data(self, training_data, validation_data, class_map,
                               options):
         """Convert training data to ImageFolder format.
@@ -127,13 +137,13 @@ class KerasClassification(MLBackend):
         convert_dataset(validation_data, validation_dir)
         dataset_files.upload()
 
-    def train(self, options):
+    def train(self, class_map, options):
         dataset_files = DatasetFiles(options.training_data_uri)
         dataset_files.download()
 
         model_files = ModelFiles(options.output_uri)
         backend_config_path = model_files.download_backend_config(
-            dataset_files, options.backend_config_uri)
+            options.backend_config_uri, dataset_files, class_map)
 
         start_sync(model_files.base_dir, options.output_uri,
                    sync_interval=options.sync_interval)
@@ -141,6 +151,21 @@ class KerasClassification(MLBackend):
         if urlparse(options.output_uri).scheme == 's3':
             sync_dir(model_files.base_dir, options.output_uri, delete=True)
 
-
     def predict(self, chip, options):
-        pass
+        if self.model is None:
+            with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+                model_path = download_if_needed(options.model_uri, temp_dir)
+                self.model = model_builder.build_from_path(model_path)
+
+        # Make a batch of size 1. This won't be needed once we refactor
+        # the predict method to take batches of chips.
+        batch = np.expand_dims(chip, axis=0)
+        probs = self.model.predict(batch)
+        class_id = int(np.argmax(probs[0]) + 1)
+
+        # Make labels with a single dummy cell.
+        labels = ClassificationLabels()
+        dummy_cell = Box(0, 0, 0, 0)
+        labels.set_cell(dummy_cell, class_id)
+
+        return labels

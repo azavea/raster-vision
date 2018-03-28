@@ -111,7 +111,7 @@ class MLTask():
         Args:
             options: TrainConfig.options
         """
-        self.backend.train(options)
+        self.backend.train(self.class_map, options)
 
     def predict(self, projects, options):
         """Make predictions for projects.

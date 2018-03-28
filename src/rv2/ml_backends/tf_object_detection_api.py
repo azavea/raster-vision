@@ -358,7 +358,7 @@ class TFObjectDetectionAPI(MLBackend):
 
         training_package.upload(debug=options.debug)
 
-    def train(self, options):
+    def train(self, class_map, options):
         # Download training data and update config file.
         training_package = TrainingPackage(options.training_data_uri)
         training_package.download_data()

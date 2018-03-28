@@ -16,7 +16,8 @@
             "nb_epochs": 1,
             "batch_size": 1,
             "input_size": 300,
-            "output_dir": "/opt/data/lf-dev/rv-output/datasets/cowc-potsdam-cl-test/models/resnet50/output"
+            "output_dir": "/opt/data/lf-dev/rv-output/datasets/cowc-potsdam-cl-test/models/resnet50/output",
+            "class_names": ["car", "background"]
         }
     }
 }

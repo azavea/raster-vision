@@ -40,10 +40,9 @@ class ClassificationLabelSource(LabelSource):
         return self.labels
 
     def extend(self, window, labels):
-        # Not implemented yet.
-        pass
+        self.labels.set_cell(window, labels.get_class_id())
 
-    def post_process(self):
+    def post_process(self, options):
         pass
 
     def clear(self):

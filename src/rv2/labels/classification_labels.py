@@ -1,6 +1,7 @@
 import numpy as np
 
 from rv2.core.labels import Labels
+from rv2.core.box import Box
 
 
 class ClassificationLabels(Labels):
@@ -31,3 +32,10 @@ class ClassificationLabels(Labels):
 
     def get_cell_class_id(self, cell):
         return self.cell_to_class_id.get(cell.tuple_format())
+
+    def get_cells(self):
+        return [Box.from_npbox(box_tup)
+                for box_tup in self.cell_to_class_id.keys()]
+
+    def get_class_ids(self):
+        return list(self.cell_to_class_id.values())

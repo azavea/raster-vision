@@ -12,6 +12,7 @@ message Trainer {
         required int32 batch_size = 5;
         required int32 input_size = 6;
         required string output_dir = 7;
+        repeated string class_names = 8;
     }
 
     required Optimizer optimizer = 1;

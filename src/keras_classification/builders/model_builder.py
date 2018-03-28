@@ -1,10 +1,19 @@
 import os
 
+import keras
+
 from keras_classification.models.resnet50 import ResNet50
 from keras_classification.protos.model_pb2 import Model
 
 
+def build_from_path(model_path):
+    return keras.models.load_model(model_path)
+
+
 def build(model_options):
+    if os.path.isfile(model_options.model_path):
+        return build_from_path(model_options.model_path)
+
     nb_channels = 3
     input_shape = (model_options.input_size,
                    model_options.input_size,
@@ -21,11 +30,5 @@ def build(model_options):
     else:
         raise ValueError(
             Model.Type.Name(model_options.type) + ' is not a valid model_type')
-
-    if os.path.isfile(model_options.model_path):
-        # Load the model by weights. This permits loading weights from a saved
-        # model into a model with a different architecture assuming the named
-        # layers have compatible dimensions.
-        model.load_weights(model_options.model_path, by_name=True)
 
     return model
