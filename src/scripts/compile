@@ -1,2 +1,3 @@
 # Compile protobuf files into python files
 protoc -I=/opt/src/ --python_out=. /opt/src/rv2/protos/*.proto
+protoc -I=/opt/src/ --python_out=. /opt/src/keras_classification/protos/*.proto

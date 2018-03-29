@@ -3,6 +3,7 @@ import shutil
 from urllib.parse import urlparse
 import subprocess
 import io
+from threading import Timer
 
 import boto3
 import botocore
@@ -130,6 +131,20 @@ def upload_if_needed(src_path, dst_uri):
                 src_path, parsed_uri.netloc, parsed_uri.path[1:])
         else:
             sync_dir(src_path, dst_uri, delete=True)
+
+
+def start_sync(output_dir, output_uri, sync_interval=600):
+    """Start periodically syncing a directory."""
+    def _sync_dir(delete=True):
+        sync_dir(output_dir, output_uri, delete=delete)
+        thread = Timer(sync_interval, _sync_dir)
+        thread.daemon = True
+        thread.start()
+
+    if urlparse(output_uri).scheme == 's3':
+        # On first sync, we don't want to delete files on S3 to match
+        # th contents of output_dir since there's nothing there yet.
+        _sync_dir(delete=False)
 
 
 # Ensure that RV temp directory exists. We need to use a custom location for

@@ -7,6 +7,7 @@ from object_detection.utils.np_box_list_ops import (
 
 from rv2.core.box import Box
 from rv2.core.labels import Labels
+from rv2.labels.utils import boxes_to_geojson
 
 
 def geojson_to_labels(geojson, crs_transformer):
@@ -33,40 +34,6 @@ def geojson_to_labels(geojson, crs_transformer):
     scores = np.array(scores)
     labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
     return labels
-
-
-def labels_to_geojson(labels, crs_transformer, class_map):
-    boxes = labels.get_boxes()
-    class_ids = labels.get_class_ids().tolist()
-    scores = labels.get_scores().tolist()
-
-    features = []
-    for box_ind, box in enumerate(boxes):
-        polygon = box.geojson_coordinates()
-        polygon = [crs_transformer.pixel_to_web(p) for p in polygon]
-
-        class_id = class_ids[box_ind]
-        class_name = class_map.get_by_id(class_id).name
-        score = scores[box_ind]
-
-        feature = {
-            'type': 'Feature',
-            'geometry': {
-                'type': 'Polygon',
-                'coordinates': [polygon]
-            },
-            'properties': {
-                'class_id': class_id,
-                'class_name': class_name,
-                'score': score
-            }
-        }
-        features.append(feature)
-
-    return {
-        'type': 'FeatureCollection',
-        'features': features
-    }
 
 
 def inverse_change_coordinate_frame(boxlist, window):
@@ -151,4 +118,9 @@ class ObjectDetectionLabels(Labels):
         return ObjectDetectionLabels.from_boxlist(boxlist_new)
 
     def to_geojson(self, crs_transformer, class_map):
-        return labels_to_geojson(self, crs_transformer, class_map)
+        boxes = self.get_boxes()
+        class_ids = self.get_class_ids().tolist()
+        scores = self.get_scores().tolist()
+
+        return boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
+                                scores=scores)

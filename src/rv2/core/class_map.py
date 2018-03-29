@@ -35,11 +35,12 @@ class ClassMap(object):
 
     def get_items(self):
         """Return list of ClassItems."""
-        return self.class_item_map.values()
+        return list(self.class_item_map.values())
 
     def get_class_names(self):
-        """Return list of class names."""
-        return [item.name for item in self.class_item_map.values()]
+        """Return list of class names sorted by id."""
+        sorted_items = sorted(self.get_items(), key=lambda item: item.id)
+        return [item.name for item in sorted_items]
 
     def __len__(self):
         return len(self.get_items())
