@@ -102,7 +102,7 @@ $ ./batch_amis.py  prune-amis --keep 10
 To manually submit a job to Batch, use the `batch_submit` script inside the Docker container as follows.
 
 ```
-python -m rv2.utils.batch <branch_name> "<command_to_run>" --attempts <# of attempts>
+python -m rastervision.utils.batch <branch_name> "<command_to_run>" --attempts <# of attempts>
 ```
 
 The `branch_name` should be the name of the Git branch with the code to run. If you are testing a job to see if it might fail, you should run it with `--attempts 1` so that it won't be retried if it fails. After submitting a job, AWS Batch will start an EC2 instance, run the command inside a Docker container, and will shut it down when finished. You can also add the `--gpu` option to run it on a GPU enabled instance.
