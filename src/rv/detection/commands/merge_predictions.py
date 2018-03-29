@@ -11,46 +11,42 @@ from rv.utils.files import (
     MyTemporaryDirectory)
 
 
-def get_annotations_paths(projects_path, temp_dir):
-    annotations_paths = []
-    with open(projects_path, 'r') as projects_file:
-        projects = json.load(projects_file)
-        for project_ind, project in enumerate(projects):
-            annotations_uri = project['annotations']
-            annotations_path = download_if_needed(
-                annotations_uri, temp_dir)
-            annotations_paths.append(annotations_path)
-    return annotations_paths
-
-
-def merge_annotations(annotations_list):
-    all_annotations = copy.deepcopy(annotations_list[0])
-    for annotations in annotations_list[1:]:
-        all_annotations['features'].extend(annotations['features'])
-    return all_annotations
+def _merge_predictions(predictions_list):
+    merged_predictions = copy.deepcopy(predictions_list[0])
+    for predictions in predictions_list[1:]:
+        merged_predictions['features'].extend(predictions['features'])
+    return merged_predictions
 
 
 @click.command()
 @click.argument('projects_uri')
-@click.argument('output_uri')
+@click.argument('output_dir_uri')
 @click.option('--save-temp', is_flag=True)
-def merge_predictions(projects_uri, output_uri, save_temp):
+def merge_predictions(projects_uri, output_dir_uri, save_temp):
     prefix = temp_root_dir
     temp_dir = os.path.join(prefix, 'merge-predictions') if save_temp else None
     with MyTemporaryDirectory(temp_dir, prefix) as temp_dir:
         projects_path = download_if_needed(projects_uri, temp_dir)
-        output_path = get_local_path(output_uri, temp_dir)
 
-        annotation_paths = get_annotations_paths(projects_path, temp_dir)
-        annotations_list = []
-        for annotation_path in annotation_paths:
-            with open(annotation_path, 'r') as annotation_file:
-                annotations_list.append(json.load(annotation_file))
+        # For each project:
+        # download the predictions files, merge them, and upload the merged
+        # predictions.
+        projects = json.load(open(projects_path))
+        for project in projects:
+            predictions_list = []
+            for image_ind, image in enumerate(project['images']):
+                predictions_uri = os.path.join(
+                    output_dir_uri, project['id'],
+                    '{}.json'.format(image_ind))
+                predictions_path = download_if_needed(
+                    predictions_uri, temp_dir)
+                predictions_list.append(json.load(open(predictions_path)))
 
-        annotations = merge_annotations(annotations_list)
-        with open(output_path, 'w') as output_file:
-            json.dump(annotations, output_file, indent=4)
-        upload_if_needed(output_path, output_uri)
+            output_uri = project['annotations']
+            output_path = get_local_path(output_uri, temp_dir)
+            predictions = _merge_predictions(predictions_list)
+            json.dump(predictions, open(output_path, 'w'))
+            upload_if_needed(output_path, output_uri)
 
 
 if __name__ == '__main__':
