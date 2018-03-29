@@ -8,8 +8,8 @@ from rastervision.protos.process_training_data_pb2 import ProcessTrainingDataCon
 from rastervision.protos.train_pb2 import TrainConfig
 from rastervision.protos.predict_pb2 import PredictConfig
 from rastervision.protos.eval_pb2 import EvalConfig
-from rastervision.protos.label_source_pb2 import (
-    LabelSource as LabelSourceConfig,
+from rastervision.protos.label_store_pb2 import (
+    LabelStore as LabelStoreConfig,
     ObjectDetectionGeoJSONFile as ObjectDetectionGeoJSONFileConfig,
     ClassificationGeoJSONFile as ClassificationGeoJSONFileConfig)
 
@@ -107,30 +107,30 @@ class ChainWorkflow(object):
             project.raster_source.raster_transformer.MergeFrom(
                 self.workflow.raster_transformer)
 
-            # Set prediction_label_source from generated URI.
-            project.prediction_label_source.MergeFrom(
-                self.make_prediction_label_source(project))
+            # Set prediction_label_store from generated URI.
+            project.prediction_label_store.MergeFrom(
+                self.make_prediction_label_store(project))
 
-    def make_prediction_label_source(self, project):
-        label_source = project.ground_truth_label_source
-        label_source_type = label_source.WhichOneof(
-            'label_source_type')
+    def make_prediction_label_store(self, project):
+        label_store = project.ground_truth_label_store
+        label_store_type = label_store.WhichOneof(
+            'label_store_type')
         prediction_uri = join(
             self.path_generator.prediction_output_uri,
             '{}.json'.format(project.id))
 
-        if label_source_type == 'object_detection_geojson_file':
+        if label_store_type == 'object_detection_geojson_file':
             geojson_file = ObjectDetectionGeoJSONFileConfig(uri=prediction_uri)
-            return LabelSourceConfig(
+            return LabelStoreConfig(
                 object_detection_geojson_file=geojson_file)
-        elif label_source_type == 'classification_geojson_file':
+        elif label_store_type == 'classification_geojson_file':
             geojson_file = ClassificationGeoJSONFileConfig(uri=prediction_uri)
-            return LabelSourceConfig(
+            return LabelStoreConfig(
                 classification_geojson_file=geojson_file)
         else:
             raise ValueError(
                 'Not sure how to generate label source config for type {}'
-                .format(label_source_type))
+                .format(label_store_type))
 
     def get_process_training_data_config(self):
         config = ProcessTrainingDataConfig()

@@ -3,11 +3,11 @@ import json
 from rastervision.labels.object_detection_labels import (
     ObjectDetectionLabels)
 from rastervision.utils.files import file_to_str, str_to_file
-from rastervision.label_sources.object_detection_label_source import (
-        ObjectDetectionLabelSource)
+from rastervision.label_stores.object_detection_label_store import (
+        ObjectDetectionLabelStore)
 
 
-class ObjectDetectionGeoJSONFile(ObjectDetectionLabelSource):
+class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
     # TODO allow null crs_transformer for when we assume that the labels
     # are already in the crs and don't need to be converted.
     def __init__(self, uri, crs_transformer, writable=False):

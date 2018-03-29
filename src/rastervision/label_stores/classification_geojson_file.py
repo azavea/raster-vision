@@ -7,8 +7,8 @@ from rastervision.labels.classification_labels import (
 from rastervision.labels.object_detection_labels import ObjectDetectionLabels
 from rastervision.labels.utils import boxes_to_geojson
 from rastervision.utils.files import file_to_str, str_to_file
-from rastervision.label_sources.classification_label_source import (
-        ClassificationLabelSource)
+from rastervision.label_stores.classification_label_store import (
+        ClassificationLabelStore)
 
 
 def infer_labels(od_labels, extent, options):
@@ -79,7 +79,7 @@ def to_geojson(labels, crs_transformer, class_map):
         boxes, class_ids, crs_transformer, class_map)
 
 
-class ClassificationGeoJSONFile(ClassificationLabelSource):
+class ClassificationGeoJSONFile(ClassificationLabelStore):
     """A GeoJSON file with classification labels in it.
 
     Ideally the GeoJSON file contains a square for each cell in the grid. But

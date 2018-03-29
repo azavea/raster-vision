@@ -33,8 +33,8 @@ message ClassificationGeoJSONFile {
     optional Options options = 2;
 }
 
-message LabelSource {
-    oneof label_source_type {
+message LabelStore {
+    oneof label_store_type {
         ObjectDetectionGeoJSONFile object_detection_geojson_file = 1;
         ClassificationGeoJSONFile classification_geojson_file = 2;
     }

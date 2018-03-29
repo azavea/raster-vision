@@ -9,7 +9,7 @@ class Classification(MLTask):
         return extent.get_windows(chip_size, stride)
 
     def get_train_labels(self, window, project, options):
-        return project.ground_truth_label_source.get_labels(window)
+        return project.ground_truth_label_store.get_labels(window)
 
     def get_predict_windows(self, extent, options):
         chip_size = options.chip_size

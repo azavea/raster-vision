@@ -5,7 +5,7 @@ class ClassificationEvaluation(Evaluation):
     def clear(self):
         pass
 
-    def compute(ground_truth_label_source, prediction_label_source):
+    def compute(ground_truth_label_store, prediction_label_store):
         pass
 
     def merge(self, evaluation):

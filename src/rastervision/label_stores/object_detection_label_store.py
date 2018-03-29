@@ -1,9 +1,9 @@
-from rastervision.core.label_source import LabelSource
+from rastervision.core.label_store import LabelStore
 from rastervision.labels.object_detection_labels import (
     ObjectDetectionLabels)
 
 
-class ObjectDetectionLabelSource(LabelSource):
+class ObjectDetectionLabelStore(LabelStore):
     def get_labels(self, window, ioa_thresh=1.0):
         return self.labels.get_subwindow(
             window, ioa_thresh=ioa_thresh)

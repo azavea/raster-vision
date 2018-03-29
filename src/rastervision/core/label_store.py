@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
 
-class LabelSource(ABC):
+class LabelStore(ABC):
     """A source of labels for a project.
 
-    An LabelSource is a read/write source of labels for a project
+    An LabelStore is a read/write source of labels for a project
     that could be backed by a file, a database, an API, etc.
     """
 
@@ -31,7 +31,7 @@ class LabelSource(ABC):
 
     @abstractmethod
     def extend(self, window, labels):
-        """Add labels to the LabelSource.
+        """Add labels to the LabelStore.
 
         Args:
             window: Box covering area where labels are from

@@ -22,9 +22,9 @@ def save_debug_image(im, labels, class_map, output_path):
     save_img(im, output_path)
 
 
-def make_pos_windows(image_extent, label_source, chip_size):
+def make_pos_windows(image_extent, label_store, chip_size):
     pos_windows = []
-    for box in label_source.get_all_labels().get_boxes():
+    for box in label_store.get_all_labels().get_boxes():
         window = box.make_random_square_container(
             image_extent.get_width(), image_extent.get_height(), chip_size)
         pos_windows.append(window)
@@ -32,14 +32,14 @@ def make_pos_windows(image_extent, label_source, chip_size):
     return pos_windows
 
 
-def make_neg_windows(raster_source, label_source, chip_size, nb_windows,
+def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
                      max_attempts):
     extent = raster_source.get_extent()
     neg_windows = []
     for _ in range(max_attempts):
         window = extent.make_random_square(chip_size)
         chip = raster_source.get_chip(window)
-        labels = label_source.get_labels(
+        labels = label_store.get_labels(
             window, ioa_thresh=0.2)
 
         # If no labels and not blank, append the chip
@@ -55,10 +55,10 @@ def make_neg_windows(raster_source, label_source, chip_size, nb_windows,
 class ObjectDetection(MLTask):
     def get_train_windows(self, project, options):
         raster_source = project.raster_source
-        label_source = project.ground_truth_label_source
+        label_store = project.ground_truth_label_store
         # Make positive windows which contain labels.
         pos_windows = make_pos_windows(
-            raster_source.get_extent(), label_source, options.chip_size)
+            raster_source.get_extent(), label_store, options.chip_size)
 
         # Make negative windows which do not contain labels.
         # Generate randow windows and save the ones that don't contain
@@ -69,13 +69,13 @@ class ObjectDetection(MLTask):
             int(options.object_detection_options.neg_ratio * len(pos_windows))
         max_attempts = 100 * nb_neg_windows
         neg_windows = make_neg_windows(
-            raster_source, label_source, options.chip_size,
+            raster_source, label_store, options.chip_size,
             nb_neg_windows, max_attempts)
 
         return pos_windows + neg_windows
 
     def get_train_labels(self, window, project, options):
-        return project.ground_truth_label_source.get_labels(
+        return project.ground_truth_label_store.get_labels(
             window, ioa_thresh=options.object_detection_options.ioa_thresh)
 
     def get_predict_windows(self, extent, options):

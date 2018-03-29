@@ -1,8 +1,8 @@
-from rastervision.core.label_source import LabelSource
+from rastervision.core.label_store import LabelStore
 from rastervision.labels.classification_labels import ClassificationLabels
 
 
-class ClassificationLabelSource(LabelSource):
+class ClassificationLabelStore(LabelStore):
     """Represents source of a spatial grid of cells associated with classes."""
 
     def set_grid(self, extent, cell_size):

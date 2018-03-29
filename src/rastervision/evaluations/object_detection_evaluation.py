@@ -90,10 +90,10 @@ class ObjectDetectionEvaluation(Evaluation):
     def get_by_id(self, class_id):
         return self.class_to_eval_item[class_id]
 
-    def compute(self, class_map, ground_truth_label_source,
-                prediction_label_source):
-        gt_labels = ground_truth_label_source.get_all_labels()
-        pred_labels = prediction_label_source.get_all_labels()
+    def compute(self, class_map, ground_truth_label_store,
+                prediction_label_store):
+        gt_labels = ground_truth_label_store.get_all_labels()
+        pred_labels = prediction_label_store.get_all_labels()
 
         od_eval = compute_od_eval(gt_labels, pred_labels)
         self.class_to_eval_item = parse_od_eval(od_eval, class_map)

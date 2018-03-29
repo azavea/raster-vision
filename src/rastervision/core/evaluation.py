@@ -10,13 +10,13 @@ class Evaluation(ABC):
         pass
 
     @abstractmethod
-    def compute(ground_truth_label_source, prediction_label_source):
+    def compute(ground_truth_label_store, prediction_label_store):
         """Compute metrics for a single project.
 
         Args:
-            ground_truth_label_source: LabelSource with the ground
+            ground_truth_label_store: LabelStore with the ground
                 truth
-            prediction_label_source: LabelSource with the
+            prediction_label_store: LabelStore with the
                 corresponding predictions
         """
         pass

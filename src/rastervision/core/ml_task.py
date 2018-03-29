@@ -74,7 +74,7 @@ class MLTask():
                               options):
         """Process training data.
 
-        Convert Projects with a ground_truth_label_source into training
+        Convert Projects with a ground_truth_label_store into training
         chips in MLBackend-specific format, and write to URI specified in
         options.
 
@@ -116,7 +116,7 @@ class MLTask():
     def predict(self, projects, options):
         """Make predictions for projects.
 
-        The predictions are saved to the prediction_label_source in
+        The predictions are saved to the prediction_label_store in
         each project.
 
         Args:
@@ -126,20 +126,20 @@ class MLTask():
         for project in projects:
             print('Making predictions for project', end='', flush=True)
             raster_source = project.raster_source
-            label_source = project.prediction_label_source
-            label_source.clear()
+            label_store = project.prediction_label_store
+            label_store.clear()
 
             windows = self.get_predict_windows(
                 raster_source.get_extent(), options)
             for window in windows:
                 chip = raster_source.get_chip(window)
                 labels = self.backend.predict(chip, options)
-                label_source.extend(window, labels)
+                label_store.extend(window, labels)
                 print('.', end='', flush=True)
             print()
 
-            label_source.post_process(options)
-            label_source.save(self.class_map)
+            label_store.post_process(options)
+            label_store.save(self.class_map)
 
     def eval(self, projects, options):
         """Evaluate predictions against ground truth in projects.
@@ -148,14 +148,14 @@ class MLTask():
 
         Args:
             projects: list of Projects that contain both
-                ground_truth_label_source and prediction_label_source
+                ground_truth_label_store and prediction_label_store
             options: EvalConfig.Options
         """
         evaluation = self.get_evaluation()
         for project in projects:
             print('Computing evaluation for project...')
-            ground_truth = project.ground_truth_label_source
-            predictions = project.prediction_label_source
+            ground_truth = project.ground_truth_label_store
+            predictions = project.prediction_label_store
 
             project_evaluation = self.get_evaluation()
             project_evaluation.compute(
