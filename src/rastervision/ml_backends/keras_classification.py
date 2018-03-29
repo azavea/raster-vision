@@ -90,6 +90,7 @@ class ModelFiles(FileGroup):
             dataset_files.get_local_path(dataset_files.validation_uri)
         config.trainer.options.output_dir = \
             dataset_files.get_local_path(self.base_uri)
+        del config.trainer.options.class_names[:]
         config.trainer.options.class_names.extend(
             class_map.get_class_names())
 
