@@ -1,9 +1,11 @@
-from os.path import join, dirname, splitext
+from os.path import join, basename
 import os
 from subprocess import Popen
 import zipfile
 from threading import Timer
 from urllib.parse import urlparse
+import glob
+import re
 
 import click
 
@@ -12,6 +14,30 @@ from rv.utils.files import (
     MyTemporaryDirectory)
 from rv.utils.misc import on_parent_exit
 from rv.detection.commands.settings import temp_root_dir
+
+
+def get_last_checkpoint_path(train_root_dir):
+    index_paths = glob.glob(join(train_root_dir, 'train', '*.index'))
+    checkpoint_ids = []
+    for index_path in index_paths:
+        match = re.match(r'model.ckpt-(\d+).index', basename(index_path))
+        checkpoint_ids.append(int(match.group(1)))
+    checkpoint_id = max(checkpoint_ids)
+    checkpoint_path = join(
+        train_root_dir, 'train', 'model.ckpt-{}'.format(checkpoint_id))
+    return checkpoint_path
+
+
+def export_inference_graph(train_root_dir, config_path, inference_graph_path):
+    checkpoint_path = get_last_checkpoint_path(train_root_dir)
+    print('Exporting checkpoint {}...'.format(checkpoint_path))
+    train_process = Popen([
+        'python', '/opt/src/tf/object_detection/export_inference_graph.py',
+        '--input_type', 'image_tensor',
+        '--pipeline_config_path', config_path,
+        '--checkpoint_path', checkpoint_path,
+        '--inference_graph_path', inference_graph_path])
+    train_process.wait()
 
 
 @click.command()
@@ -41,6 +67,7 @@ def train(config_uri, train_dataset_uri, val_dataset_uri, model_checkpoint_uri,
         make_dir(train_root_dir)
         train_dir = join(train_root_dir, 'train')
         eval_dir = join(train_root_dir, 'eval')
+        inference_graph_path = join(train_root_dir, 'inference_graph.pb')
 
         def process_zip_file(uri, temp_dir, link_dir):
             if uri.endswith('.zip'):
@@ -84,9 +111,15 @@ def train(config_uri, train_dataset_uri, val_dataset_uri, model_checkpoint_uri,
             'tensorboard', '--logdir={}'.format(train_root_dir)],
             preexec_fn=on_parent_exit('SIGTERM'))
 
+        # After training finishes due to num_steps exceeded,
+        # kill monitor processes, export inference graph, and upload.
         train_process.wait()
-        eval_process.wait()
-        tensorboard_process.wait()
+        eval_process.kill()
+        tensorboard_process.kill()
+        export_inference_graph(
+            train_root_dir, config_path, inference_graph_path)
+        if urlparse(train_uri).scheme == 's3':
+            sync_dir(train_root_dir, train_uri, delete=True)
 
 
 if __name__ == '__main__':
