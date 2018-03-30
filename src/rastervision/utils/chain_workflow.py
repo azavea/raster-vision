@@ -262,13 +262,14 @@ class ChainWorkflow(object):
 @click.argument('workflow_uri')
 @click.argument('tasks', nargs=-1)
 @click.option('--remote', is_flag=True)
+@click.option('--simulated-remote', is_flag=True)
 @click.option('--branch', default='develop')
 @click.option('--run', is_flag=True)
-def main(workflow_uri, tasks, remote, branch, run):
+def main(workflow_uri, tasks, remote, simulated_remote, branch, run):
     if len(tasks) == 0:
         tasks = ALL_TASKS
 
-    workflow = ChainWorkflow(workflow_uri, remote=remote)
+    workflow = ChainWorkflow(workflow_uri, remote=(remote or simulated_remote))
     workflow.save_configs(tasks)
 
     if run:
