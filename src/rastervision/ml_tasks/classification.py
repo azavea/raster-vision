@@ -1,4 +1,6 @@
 from rastervision.core.ml_task import MLTask
+from rastervision.evaluations.classification_evaluation import (
+    ClassificationEvaluation)
 
 
 class Classification(MLTask):
@@ -17,4 +19,4 @@ class Classification(MLTask):
         return extent.get_windows(chip_size, stride)
 
     def get_evaluation(self):
-        pass
+        return ClassificationEvaluation()
