@@ -3,9 +3,7 @@
         {
             "raster_source": {
                 "image_file": {
-                    "uris": [
-                        "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-10.jpg"
-                    ]
+                    "uri": "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-10.jpg"
                 }
             },
             "ground_truth_label_store": {
@@ -27,9 +25,7 @@
             "id": "2-13",
             "raster_source": {
                 "image_file": {
-                    "uris": [
-                        "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-13.jpg"
-                    ]
+                    "uri": "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-13.jpg"
                 }
             },
             "ground_truth_label_store": {

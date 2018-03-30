@@ -8,9 +8,15 @@ message GeoTiffFiles {
     repeated string uris = 1;
 }
 
+message ImageFile {
+    required string uri = 1;
+}
+
 message RasterSource {
     required RasterTransformer raster_transformer = 1;
+
     oneof raster_source_type {
         GeoTiffFiles geotiff_files = 2;
+        ImageFile image_file = 3;
     }
 }
