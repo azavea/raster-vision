@@ -1,0 +1,94 @@
+{
+    "train_projects": [
+        {
+            "raster_source": {
+                "image_file": {
+                    "uris": [
+                        "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-10.jpg"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "classification_geojson_file": {
+                    "uri": "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-10.json",
+                    "options": {
+                        "ioa_thresh": 0.5,
+                        "pick_min_class_id": true,
+                        "background_class_id": 2,
+                        "cell_size": 300,
+                        "infer_cells": true
+                    }
+                }
+            }
+        }
+    ],
+    "test_projects": [
+        {
+            "id": "2-13",
+            "raster_source": {
+                "image_file": {
+                    "uris": [
+                        "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-13.jpg"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "classification_geojson_file": {
+                    "uri": "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-13.json",
+                    "options": {
+                        "ioa_thresh": 0.5,
+                        "pick_min_class_id": true,
+                        "background_class_id": 2,
+                        "cell_size": 300,
+                        "infer_cells": true
+                    }
+                }
+            }
+        }
+    ],
+    "machine_learning": {
+        "task": "CLASSIFICATION",
+        "backend": "KERAS_CLASSIFICATION",
+        "class_items": [
+            {
+                "id": 1,
+                "name": "car"
+            },
+            {
+                "id": 2,
+                "name": "background"
+            }
+        ]
+    },
+    "process_training_data_options": {
+        "classification_options": {
+        }
+    },
+    "train_options": {
+        "backend_config_uri": "{rv_root}/backend-configs/keras-classification/resnet50-test.json",
+        "sync_interval": 600
+    },
+    "predict_options": {
+        "classification_options": {
+        }
+    },
+    "eval_options": {
+    },
+    "debug": true,
+    "chip_size": 300,
+    "raster_transformer": {
+        "channel_order": [0, 1, 2]
+    },
+    "local_uri_map": {
+        "rv_root": "/opt/data/lf-dev",
+        "raw": "/opt/data/raw-data"
+    },
+    "remote_uri_map": {
+        "rv_root": "s3://raster-vision-lf-dev",
+        "raw": "s3://raster-vision-raw-data"
+    },
+    "dataset_key": "cowc-potsdam-cl-test-jpg",
+    "model_key": "resnet50",
+    "prediction_key": "test",
+    "eval_key": "default"
+}
