@@ -13,6 +13,7 @@ message Trainer {
         required int32 input_size = 6;
         required string output_dir = 7;
         repeated string class_names = 8;
+        required bool short_epoch = 9 [default=false];
     }
 
     required Optimizer optimizer = 1;

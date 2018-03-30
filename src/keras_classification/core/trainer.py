@@ -85,6 +85,12 @@ class Trainer(object):
         initial_epoch = self.get_initial_epoch()
         steps_per_epoch = self.nb_training_samples
         validation_steps = self.nb_validation_samples
+
+        # Useful for testing
+        if self.options.short_epoch:
+            steps_per_epoch = 1
+            validation_steps = 1
+
         callbacks = self.make_callbacks()
 
         self.model.compile(self.optimizer, loss_function, metrics=metrics)
