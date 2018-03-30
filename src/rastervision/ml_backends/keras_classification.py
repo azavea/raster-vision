@@ -83,13 +83,14 @@ class ModelFiles(FileGroup):
         config = load_json_config(backend_config_uri, PipelineConfig())
 
         # Update config using local paths.
+        config.trainer.options.output_dir = self.get_local_path(self.base_uri)
         config.model.model_path = self.get_local_path(self.model_uri)
+
         config.trainer.options.training_data_dir = \
             dataset_files.get_local_path(dataset_files.training_uri)
         config.trainer.options.validation_data_dir = \
             dataset_files.get_local_path(dataset_files.validation_uri)
-        config.trainer.options.output_dir = \
-            dataset_files.get_local_path(self.base_uri)
+
         del config.trainer.options.class_names[:]
         config.trainer.options.class_names.extend(
             class_map.get_class_names())
@@ -149,6 +150,7 @@ class KerasClassification(MLBackend):
         start_sync(model_files.base_dir, options.output_uri,
                    sync_interval=options.sync_interval)
         _train(backend_config_path)
+
         if urlparse(options.output_uri).scheme == 's3':
             sync_dir(model_files.base_dir, options.output_uri, delete=True)
 
