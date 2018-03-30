@@ -24,7 +24,7 @@
     ],
     "test_projects": [
         {
-            "id": "2_13",
+            "id": "2-13",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
