@@ -14,7 +14,7 @@
             "training_data_dir": "",
             "validation_data_dir": "",
             "nb_epochs": 20,
-            "batch_size": 64,
+            "batch_size": 8,
             "input_size": 300,
             "output_dir": "",
             "class_names": ["car", "background"]
