@@ -8,6 +8,7 @@ import numpy as np
 from keras_classification.commands.train import _train
 from keras_classification.protos.pipeline_pb2 import PipelineConfig
 from keras_classification.builders import model_builder
+from keras_classification.utils import predict
 from google.protobuf import json_format
 
 from rastervision.core.ml_backend import MLBackend
@@ -163,10 +164,11 @@ class KerasClassification(MLBackend):
         # Make a batch of size 1. This won't be needed once we refactor
         # the predict method to take batches of chips.
         batch = np.expand_dims(chip, axis=0)
-        probs = self.model.predict(batch)
+        probs = predict(batch, self.model)
+        # Add 1 to class_id since they start at 1.
         class_id = int(np.argmax(probs[0]) + 1)
 
-        # Make labels with a single dummy cell.
+        # Make labels with a single dummy cell. 
         labels = ClassificationLabels()
         dummy_cell = Box(0, 0, 0, 0)
         labels.set_cell(dummy_cell, class_id)
