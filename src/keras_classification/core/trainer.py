@@ -4,7 +4,7 @@ from pathlib import Path
 import keras
 from keras.preprocessing.image import ImageDataGenerator
 
-from keras_classification.utils.files import make_dir
+from keras_classification.utils import make_dir
 
 
 def get_nb_images(image_dir):
@@ -83,8 +83,10 @@ class Trainer(object):
         loss_function = 'categorical_crossentropy'
         metrics = ['accuracy']
         initial_epoch = self.get_initial_epoch()
-        steps_per_epoch = self.nb_training_samples
-        validation_steps = self.nb_validation_samples
+        steps_per_epoch = int(
+            self.nb_training_samples / self.options.batch_size)
+        validation_steps = int(
+            self.nb_validation_samples / self.options.batch_size)
 
         # Useful for testing
         if self.options.short_epoch:
