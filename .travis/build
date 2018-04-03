@@ -1,0 +1,9 @@
+#!/bin/bash
+
+source .travis/env
+
+docker build -t ${CPU_IMAGE} -f src/Dockerfile-cpu src;
+
+if [ "${1}" == "BUILD_ALL" ]; then
+   docker build -t ${GPU_IMAGE} -f src/Dockerfile-gpu src;
+fi

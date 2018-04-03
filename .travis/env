@@ -1,0 +1,9 @@
+#!/bin/bash
+
+FAMILY=quay.io/azavea
+
+CPU_IMAGE=raster-vision-cpu
+GPU_IMAGE=raster-vision-gpu
+
+CPU_TAG=${FAMILY}/raster-vision:cpu
+GPU_TAG=${FAMILY}/raster-vision:gpu
