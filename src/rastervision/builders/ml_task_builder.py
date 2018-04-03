@@ -9,7 +9,7 @@ from rastervision.core.class_map import ClassItem, ClassMap
 def build(config):
     class_items = []
     for item_config in config.class_items:
-        item = ClassItem(item_config.id, item_config.name)
+        item = ClassItem(item_config.id, item_config.name, item_config.color)
         class_items.append(item)
     class_map = ClassMap(class_items)
 

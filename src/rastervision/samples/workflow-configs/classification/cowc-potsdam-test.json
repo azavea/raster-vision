@@ -1,6 +1,7 @@
 {
     "train_projects": [
         {
+            "id": "2-10",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
@@ -52,11 +53,13 @@
         "class_items": [
             {
                 "id": 1,
-                "name": "car"
+                "name": "car",
+                "color": "Red"
             },
             {
                 "id": 2,
-                "name": "background"
+                "name": "background",
+                "color": "Black"
             }
         ]
     },

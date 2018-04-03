@@ -1,15 +1,26 @@
+import random
+
+
 class ClassItem(object):
     """A class id and associated data."""
 
-    def __init__(self, id, name):
+    def __init__(self, id, name, color=None):
         """Construct a new ClassItem.
+
+        Color is picked randomly if it is a null value.
 
         Args:
             id: (int) class id
             name: (string) name of the class
+            color: (string) Pillow color code
         """
         self.id = id
         self.name = name
+        if not color:
+            color = (random.randint(0, 255),
+                     random.randint(0, 255),
+                     random.randint(0, 255))
+        self.color = color
 
 
 class ClassMap(object):
