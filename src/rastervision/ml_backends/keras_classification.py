@@ -86,6 +86,7 @@ class ModelFiles(FileGroup):
         # Update config using local paths.
         config.trainer.options.output_dir = self.get_local_path(self.base_uri)
         config.model.model_path = self.get_local_path(self.model_uri)
+        config.model.nb_classes = len(class_map)
 
         config.trainer.options.training_data_dir = \
             dataset_files.get_local_path(dataset_files.training_uri)

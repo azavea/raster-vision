@@ -1,7 +1,6 @@
 {
     "model": {
         "input_size": 300,
-        "nb_classes": 2,
         "type": "RESNET50",
         "model_path": ""
     },
