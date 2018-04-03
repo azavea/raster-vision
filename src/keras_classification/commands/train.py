@@ -1,6 +1,6 @@
 import click
 
-from keras_classification.utils.files import load_json_config
+from keras_classification.utils import load_json_config
 from keras_classification.builders import trainer_builder, model_builder
 from keras_classification.protos.pipeline_pb2 import PipelineConfig
 
