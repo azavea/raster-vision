@@ -1,8 +1,28 @@
+from os.path import join
+import tempfile
+
 import numpy as np
+from PIL import Image, ImageDraw
 
 from rastervision.core.ml_task import MLTask
 from rastervision.evaluations.classification_evaluation import (
     ClassificationEvaluation)
+from rastervision.utils.files import (
+    get_local_path, upload_if_needed, RV_TEMP_DIR, make_dir)
+
+
+def draw_debug_predict_image(project, class_map):
+    img = project.raster_source.get_image_array()
+    img = Image.fromarray(img)
+    draw = ImageDraw.Draw(img, 'RGB')
+    labels = project.prediction_label_store.get_all_labels()
+    line_width = 4
+    for cell, class_id in zip(labels.get_cells(), labels.get_class_ids()):
+        cell = cell.make_eroded(line_width // 2)
+        coords = cell.geojson_coordinates()
+        color = class_map.get_by_id(class_id).color
+        draw.line(coords, fill=color, width=line_width)
+    return img
 
 
 class Classification(MLTask):
@@ -27,3 +47,13 @@ class Classification(MLTask):
 
     def get_evaluation(self):
         return ClassificationEvaluation()
+
+    def save_debug_predict_image(self, project, debug_dir_uri):
+        img = draw_debug_predict_image(project, self.class_map)
+        # Saving to a jpg leads to segfault for unknown reasons.
+        debug_image_uri = join(debug_dir_uri, project.id + '.png')
+        with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+            debug_image_path = get_local_path(debug_image_uri, temp_dir)
+            make_dir(debug_image_path, use_dirname=True)
+            img.save(debug_image_path)
+            upload_if_needed(debug_image_path, debug_image_uri)

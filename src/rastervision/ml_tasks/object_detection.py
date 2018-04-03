@@ -85,3 +85,7 @@ class ObjectDetection(MLTask):
 
     def get_evaluation(self):
         return ObjectDetectionEvaluation()
+
+    def save_debug_predict_image(self, project, debug_dir_uri):
+        # TODO implement this
+        pass

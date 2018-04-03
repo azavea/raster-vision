@@ -32,6 +32,9 @@ message PredictConfig {
         optional int32 chip_size = 3;
 
         optional bool debug = 4 [default=true];
+        // Root of dir to write debug files to.
+        optional string debug_uri = 7;
+
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 5;
             ClassificationOptions classification_options = 6;

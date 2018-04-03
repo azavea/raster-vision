@@ -16,10 +16,6 @@ class ClassItem(object):
         """
         self.id = id
         self.name = name
-        if not color:
-            color = (random.randint(0, 255),
-                     random.randint(0, 255),
-                     random.randint(0, 255))
         self.color = color
 
 
@@ -55,6 +51,12 @@ class ClassMap(object):
 
     def __len__(self):
         return len(self.get_items())
+
+    def has_all_colors(self):
+        for item in self.get_items():
+            if not item.color:
+                return False
+        return True
 
     def get_category_index(self):
         """Get the corresponding category_index used by TF Object Detection."""

@@ -175,6 +175,8 @@ class ChainWorkflow(object):
         config.projects.MergeFrom(self.workflow.test_projects)
         config.options.MergeFrom(self.workflow.predict_options)
         config.options.debug = self.workflow.debug
+        config.options.debug_uri = join(
+            self.path_generator.prediction_output_uri, 'debug')
         config.options.chip_size = self.workflow.chip_size
         config.options.model_uri = join(
             self.path_generator.train_output_uri, 'model')

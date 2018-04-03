@@ -70,6 +70,14 @@ class MLTask():
         """
         pass
 
+    @abstractmethod
+    def save_debug_predict_image(self, project, debug_dir_uri):
+        """Save a debug image of predictions.
+
+        This writes to debug_dir_uri/<project.id>.jpg.
+        """
+        pass
+
     def process_training_data(self, train_projects, validation_projects,
                               options):
         """Process training data.
@@ -140,6 +148,10 @@ class MLTask():
 
             label_store.post_process(options)
             label_store.save(self.class_map)
+
+            if (options.debug and options.debug_uri and
+                    self.class_map.has_all_colors()):
+                self.save_debug_predict_image(project, options.debug_uri)
 
     def eval(self, projects, options):
         """Evaluate predictions against ground truth in projects.
