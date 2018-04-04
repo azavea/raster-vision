@@ -35,7 +35,7 @@ class Trainer(object):
         self.training_gen = self.make_data_generator(
             options.training_data_dir)
         self.validation_gen = self.make_data_generator(
-            options.validation_data_dir)
+            options.validation_data_dir, validation_mode=True)
 
         self.nb_training_samples = get_nb_images(
             options.training_data_dir)
@@ -64,11 +64,16 @@ class Trainer(object):
 
         return initial_epoch
 
-    def make_data_generator(self, image_folder_dir):
-        generator = ImageDataGenerator(
-            rescale=1./255,
-            horizontal_flip=True,
-            vertical_flip=True)
+    def make_data_generator(self, image_folder_dir, validation_mode=False):
+        # Don't apply randomized data transforms if in validation mode.
+        # This will make the validation scores more comparable between epochs.
+        if validation_mode:
+            generator = ImageDataGenerator(rescale=1./255)
+        else:
+            generator = ImageDataGenerator(
+                rescale=1./255,
+                horizontal_flip=True,
+                vertical_flip=True)
 
         generator = generator.flow_from_directory(
             image_folder_dir,
