@@ -54,3 +54,10 @@ class RasterSource(ABC):
     def get_crs_transformer(self):
         """Return the associated CRSTransformer."""
         pass
+
+    def get_image_array(self):
+        """Return entire image array.
+
+        Not safe to call on very large RasterSources.
+        """
+        return self.get_chip(self.get_extent())

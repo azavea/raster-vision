@@ -86,6 +86,7 @@ class ModelFiles(FileGroup):
         # Update config using local paths.
         config.trainer.options.output_dir = self.get_local_path(self.base_uri)
         config.model.model_path = self.get_local_path(self.model_uri)
+        config.model.nb_classes = len(class_map)
 
         config.trainer.options.training_data_dir = \
             dataset_files.get_local_path(dataset_files.training_uri)
@@ -148,6 +149,10 @@ class KerasClassification(MLBackend):
         backend_config_path = model_files.download_backend_config(
             options.backend_config_uri, dataset_files, class_map)
 
+        # Get output from potential previous run so we can resume training.
+        if urlparse(options.output_uri).scheme == 's3':
+            sync_dir(options.output_uri, model_files.base_dir)
+
         start_sync(model_files.base_dir, options.output_uri,
                    sync_interval=options.sync_interval)
         _train(backend_config_path)
@@ -168,7 +173,7 @@ class KerasClassification(MLBackend):
         # Add 1 to class_id since they start at 1.
         class_id = int(np.argmax(probs[0]) + 1)
 
-        # Make labels with a single dummy cell. 
+        # Make labels with a single dummy cell.
         labels = ClassificationLabels()
         dummy_cell = Box(0, 0, 0, 0)
         labels.set_cell(dummy_cell, class_id)

@@ -105,11 +105,13 @@
         "class_items": [
             {
                 "id": 1,
-                "name": "car"
+                "name": "car",
+                "color": "Red"
             },
             {
                 "id": 2,
-                "name": "background"
+                "name": "background",
+                "color": "Black"                
             }
         ]
     },

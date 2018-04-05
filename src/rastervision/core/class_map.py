@@ -1,15 +1,22 @@
+import random
+
+
 class ClassItem(object):
     """A class id and associated data."""
 
-    def __init__(self, id, name):
+    def __init__(self, id, name, color=None):
         """Construct a new ClassItem.
+
+        Color is picked randomly if it is a null value.
 
         Args:
             id: (int) class id
             name: (string) name of the class
+            color: (string) Pillow color code
         """
         self.id = id
         self.name = name
+        self.color = color
 
 
 class ClassMap(object):
@@ -44,6 +51,12 @@ class ClassMap(object):
 
     def __len__(self):
         return len(self.get_items())
+
+    def has_all_colors(self):
+        for item in self.get_items():
+            if not item.color:
+                return False
+        return True
 
     def get_category_index(self):
         """Get the corresponding category_index used by TF Object Detection."""

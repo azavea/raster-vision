@@ -23,6 +23,7 @@ def build(config):
             writable=True)
 
     return Project(
+        id=config.id,
         raster_source=raster_source,
         ground_truth_label_store=ground_truth_label_store,
         prediction_label_store=prediction_label_store)

@@ -114,6 +114,11 @@ class Box():
         """Return new square Box."""
         return Box(ymin, xmin, ymin+size, xmin+size)
 
+    def make_eroded(self, erosion_size):
+        """Return new Box whose sides are eroded by erosion_size."""
+        return Box(self.ymin + erosion_size, self.xmin + erosion_size,
+                   self.ymax - erosion_size, self.xmax - erosion_size)
+
     def get_windows(self, chip_size, stride):
         height = self.get_height()
         width = self.get_width()
