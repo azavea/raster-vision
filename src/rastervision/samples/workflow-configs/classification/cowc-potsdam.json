@@ -22,6 +22,7 @@
                     "uri":  "{rv_root}/processed-data/cowc-potsdam/labels/train.json",
                     "options": {
                         "ioa_thresh": 0.5,
+                        "use_intersection_over_cell": false,
                         "pick_min_class_id": true,
                         "background_class_id": 2,
                         "cell_size": 300,
@@ -46,6 +47,7 @@
                     "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_2_13_RGBIR.json",
                     "options": {
                         "ioa_thresh": 0.5,
+                        "use_intersection_over_cell": false,
                         "pick_min_class_id": true,
                         "background_class_id": 2,
                         "cell_size": 300,
@@ -68,6 +70,7 @@
                     "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_6_8_RGBIR.json",
                     "options": {
                         "ioa_thresh": 0.5,
+                        "use_intersection_over_cell": false,
                         "pick_min_class_id": true,
                         "background_class_id": 2,
                         "cell_size": 300,
@@ -90,6 +93,7 @@
                     "uri": "{rv_root}/processed-data/cowc-potsdam/labels/test/top_potsdam_3_10_RGBIR.json",
                     "options": {
                         "ioa_thresh": 0.5,
+                        "use_intersection_over_cell": false,
                         "pick_min_class_id": true,
                         "background_class_id": 2,
                         "cell_size": 300,
@@ -111,7 +115,7 @@
             {
                 "id": 2,
                 "name": "background",
-                "color": "Black"                
+                "color": "Black"
             }
         ]
     },
