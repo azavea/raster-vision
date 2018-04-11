@@ -23,6 +23,28 @@ message ProcessTrainingDataConfig {
             chip is greater than ioa_thresh, it is included in the chip.
         */
         optional float ioa_thresh = 2 [default=0.8];
+
+        /*
+            Different models in the Object Detection API have different inputs.
+            Some models allow variable size inputs so several methods
+            of building training data are required
+
+            Valid values are:
+                - chip (default)
+                - label
+                    - each label's bounding box is the positive window
+                - image
+                    - each image is the positive window
+        */
+        optional string window_method = 3 [default="chip"];
+
+        /*
+            If method is "label", the positive window can be buffered.
+            If value is >= 0. and < 1., the value is treated as a percentage
+            If value is >= 1., the value is treated in number of pixels
+        */
+        optional float label_buffer = 4 [default=0.];
+
     }
 
     message ClassificationOptions {
