@@ -92,7 +92,6 @@ class MLTask():
                 (that is disjoint from train_projects)
             options: ProcessTrainingDataConfig.Options
         """
-
         def _process_training_data(projects):
             training_data = TrainingData()
             for project in projects:
