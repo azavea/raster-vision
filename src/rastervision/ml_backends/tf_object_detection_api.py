@@ -149,18 +149,21 @@ def terminate_at_exit(process):
     atexit.register(terminate)
 
 
-def train(config_path, output_dir):
+def train(config_path, output_dir, train_py=None, eval_py=None):
     output_train_dir = join(output_dir, 'train')
     output_eval_dir = join(output_dir, 'eval')
 
+    train_py = train_py or '/opt/src/tf/object_detection/train.py'
+    eval_py = eval_py or '/opt/src/tf/object_detection/eval.py'
+
     train_process = Popen([
-        'python', '/opt/src/tf/object_detection/train.py',
+        'python', train_py,
         '--logtostderr', '--pipeline_config_path={}'.format(config_path),
         '--train_dir={}'.format(output_train_dir)])
     terminate_at_exit(train_process)
 
     eval_process = Popen([
-        'python', '/opt/src/tf/object_detection/eval.py',
+        'python', eval_py,
         '--logtostderr', '--pipeline_config_path={}'.format(config_path),
         '--checkpoint_dir={}'.format(output_train_dir),
         '--eval_dir={}'.format(output_eval_dir)])
@@ -190,14 +193,16 @@ def get_last_checkpoint_path(train_root_dir):
     return checkpoint_path
 
 
-def export_inference_graph(train_root_dir, config_path, inference_graph_path):
+def export_inference_graph(
+    train_root_dir, config_path, inference_graph_path, export_py=None):
+    export_py = export_py or '/opt/src/tf/object_detection/export_inference_graph.py'
     checkpoint_path = get_last_checkpoint_path(train_root_dir)
     if checkpoint_path is None:
         print('No checkpoints could be found.')
     else:
         print('Exporting checkpoint {}...'.format(checkpoint_path))
         train_process = Popen([
-            'python', '/opt/src/tf/object_detection/export_inference_graph.py',
+            'python', export_py,
             '--input_type', 'image_tensor',
             '--pipeline_config_path', config_path,
             '--checkpoint_path', checkpoint_path,
@@ -275,12 +280,24 @@ class TrainingPackage(object):
 
         class_map_path = self.get_local_path(self.get_class_map_uri())
 
-        config.train_input_reader.tf_record_input_reader.input_path = \
-            self.get_local_path(self.get_record_uri(TRAIN))
+        train_path = self.get_local_path(self.get_record_uri(TRAIN))
+        if hasattr(config.train_input_reader.tf_record_input_reader.input_path,
+            'append'):
+            config.train_input_reader.tf_record_input_reader.input_path[:] = \
+                [train_path]
+        else:
+            config.train_input_reader.tf_record_input_reader.input_path = \
+                train_path
         config.train_input_reader.label_map_path = class_map_path
 
-        config.eval_input_reader.tf_record_input_reader.input_path = \
-            self.get_local_path(self.get_record_uri(VALIDATION))
+        eval_path = self.get_local_path(self.get_record_uri(VALIDATION))
+        if hasattr(config.eval_input_reader.tf_record_input_reader.input_path,
+            'append'):
+            config.eval_input_reader.tf_record_input_reader.input_path[:] = \
+                [eval_path]
+        else:
+            config.eval_input_reader.tf_record_input_reader.input_path = \
+                eval_path
         config.eval_input_reader.label_map_path = class_map_path
 
         # Save an updated copy of the config file.
@@ -370,15 +387,20 @@ class TFObjectDetectionAPI(MLBackend):
             output_dir = get_local_path(options.output_uri, temp_dir)
             make_dir(output_dir)
 
+            train_py = options.object_detection_options.train_py
+            eval_py = options.object_detection_options.eval_py
+            export_py = options.object_detection_options.export_py
+
             # Train model and sync output periodically.
             start_sync(output_dir, options.output_uri,
                        sync_interval=options.sync_interval)
-            train(config_path, output_dir)
+            train(config_path, output_dir, train_py=train_py, eval_py=eval_py)
 
             # Export inference graph.
             inference_graph_path = join(output_dir, 'model')
             export_inference_graph(
-                output_dir, config_path, inference_graph_path)
+                output_dir, config_path, inference_graph_path,
+                export_py=export_py)
 
             if urlparse(options.output_uri).scheme == 's3':
                 sync_dir(output_dir, options.output_uri, delete=True)
