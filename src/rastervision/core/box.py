@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from shapely.geometry import box as ShapelyBox
 
 
 class Box():
@@ -41,6 +42,9 @@ class Box():
 
     def tuple_format(self):
         return (self.ymin, self.xmin, self.ymax, self.xmax)
+
+    def shapely_format(self):
+        return (self.xmin, self.ymin, self.xmax, self.ymax)
 
     def npbox_format(self):
         """Return Box in npbox format used by TF Object Detection API.
@@ -109,6 +113,14 @@ class Box():
             npbox: Numpy array of form [ymin, xmin, ymax, xmax] with float type
         """
         return Box(*npbox)
+
+    @staticmethod
+    def from_shapely(shape):
+        bounds = shape.bounds
+        return Box(bounds[1], bounds[0], bounds[3], bounds[2])
+
+    def get_shapely(self):
+        return ShapelyBox(*(self.shapely_format()))
 
     @staticmethod
     def make_square(ymin, xmin, size):

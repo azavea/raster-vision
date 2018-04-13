@@ -84,6 +84,16 @@ class ObjectDetectionLabels(Labels):
     def get_boxes(self):
         return [Box.from_npbox(npbox) for npbox in self.boxlist.get()]
 
+    def get_intersection_boxes(self, other):
+        boxes = []
+        other_shapely = other.get_shapely()
+        for npbox in self.boxlist.get():
+            intersection = other_shapely.intersection(
+                Box.from_npbox(npbox).get_shapely())
+            if not intersection.is_empty:
+                boxes.append(Box.from_shapely(intersection))
+        return boxes 
+
     def get_coordinates(self):
         return self.boxlist.get_coordinates()
 
