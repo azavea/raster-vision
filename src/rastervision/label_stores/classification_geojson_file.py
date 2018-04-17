@@ -19,7 +19,7 @@ def get_str_tree(geojson, crs_transformer):
     class_ids = []
 
     for feature in features:
-        # Convert polygon to pixel coords and then convert to bounding box.
+        # Convert polygon to pixel coords.
         polygon = feature['geometry']['coordinates'][0]
         polygon = [crs_transformer.web_to_pixel(p) for p in polygon]
         json_polygons.append(polygon)
@@ -31,6 +31,9 @@ def get_str_tree(geojson, crs_transformer):
     polygons = []
     for json_polygon, class_id in zip(json_polygons, class_ids):
         polygon = geometry.Polygon([(p[0], p[1]) for p in json_polygon])
+        # Trick to handle self-intersecting polygons which otherwise cause an
+        # error.
+        polygon = polygon.buffer(0)
         polygon.class_id = class_id
         polygons.append(polygon)
 
