@@ -92,10 +92,11 @@ class MLTask():
                 (that is disjoint from train_projects)
             options: ProcessTrainingDataConfig.Options
         """
-        def _process_training_data(projects):
+        def _process_training_data(projects, type_):
             training_data = TrainingData()
             for project in projects:
-                print('Making training chips for project', end='', flush=True)
+                print('Making {} chips for project'.format(type_),
+                    end='', flush=True)
                 windows = self.get_train_windows(project, options)
                 for window in windows:
                     chip = project.raster_source.get_chip(window)
@@ -108,8 +109,10 @@ class MLTask():
                 # running out of disk space
             return training_data
 
-        training_data = _process_training_data(train_projects)
-        validation_data = _process_training_data(validation_projects)
+        # TODO: parallel processing!
+        training_data = _process_training_data(train_projects, 'training')
+        validation_data = _process_training_data(
+            validation_projects, 'validation')
         self.backend.convert_training_data(
             training_data, validation_data, self.class_map, options)
 
