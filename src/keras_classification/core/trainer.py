@@ -47,8 +47,21 @@ class Trainer(object):
             filepath=self.model_path, save_best_only=True)
 
         csv_logger = keras.callbacks.CSVLogger(self.log_path, append=True)
-
         callbacks = [model_checkpoint, csv_logger]
+
+        if self.options.lr_schedule:
+            lr_schedule = sorted(
+                self.options.lr_schedule, key=lambda x: x.epoch, reverse=True)
+            def schedule(curr_epoch):
+                for lr_schedule_item in lr_schedule:
+                    if curr_epoch >= lr_schedule_item.epoch:
+                        if self.options.debug:
+                            print('New lr: {}'.format(lr_schedule_item.lr))
+                        return lr_schedule_item.lr
+
+            lr_scheduler = keras.callbacks.LearningRateScheduler(schedule)
+
+            callbacks.append(lr_scheduler)
 
         return callbacks
 

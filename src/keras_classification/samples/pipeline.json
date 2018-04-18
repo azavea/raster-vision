@@ -13,7 +13,18 @@
         "options": {
             "training_data_dir": "/opt/data/lf-dev/rv-output/datasets/cowc-potsdam-cl-test/output/training",
             "validation_data_dir": "/opt/data/lf-dev/rv-output/datasets/cowc-potsdam-cl-test/output/validation",
-            "nb_epochs": 1,
+            "nb_epochs": 2,
+            "lr_schedule": [
+                {
+                    "epoch": 0,
+                    "lr": 0.0001
+                },
+                {
+                    "epoch": 1,
+                    "lr": 0.00001
+                }
+            ],
+            "debug": true,
             "batch_size": 1,
             "input_size": 300,
             "output_dir": "/opt/data/lf-dev/rv-output/datasets/cowc-potsdam-cl-test/models/resnet50/output",
