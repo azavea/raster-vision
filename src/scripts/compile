@@ -1,3 +1,14 @@
+#!/bin/bash
+
+# where this file physically located
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+set -e
+
+cd $DIR/..
+
 # Compile protobuf files into python files
-protoc -I=/opt/src/ --python_out=. /opt/src/rastervision/protos/*.proto
-protoc -I=/opt/src/ --python_out=. /opt/src/keras_classification/protos/*.proto
+protoc --python_out=. rastervision/protos/*.proto
+protoc --python_out=. keras_classification/protos/*.proto
