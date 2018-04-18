@@ -58,18 +58,12 @@ def sync_dir(src_dir, dest_uri, delete=False):
 
 
 def _is_raster(uri, s3_test=False):
-
     if s3_test:
         uri = uri.replace('s3://', '/vsis3/')
-
     try:
-
         rasterio.open(uri)
-
     except:
-
         return False
-
     return uri
 
 
