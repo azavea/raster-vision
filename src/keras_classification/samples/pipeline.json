@@ -29,7 +29,8 @@
             "input_size": 300,
             "output_dir": "/opt/data/lf-dev/rv-output/datasets/cowc-potsdam-cl-test/models/resnet50/output",
             "class_names": ["car", "background"],
-            "short_epoch": true
+            "short_epoch": true,
+            "save_best": true
         }
     }
 }

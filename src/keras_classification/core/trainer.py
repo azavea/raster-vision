@@ -44,7 +44,7 @@ class Trainer(object):
 
     def make_callbacks(self):
         model_checkpoint = keras.callbacks.ModelCheckpoint(
-            filepath=self.model_path, save_best_only=True)
+            filepath=self.model_path, save_best_only=self.options.save_best)
 
         csv_logger = keras.callbacks.CSVLogger(self.log_path, append=True)
         callbacks = [model_checkpoint, csv_logger]

@@ -21,6 +21,8 @@ message Trainer {
         repeated string class_names = 8;
         required bool short_epoch = 9 [default=false];
         required bool debug = 11;
+        // Only save model if the validation score is the best so far.
+        required bool save_best = 12 [default=true];
     }
 
     required Optimizer optimizer = 1;
