@@ -59,6 +59,7 @@ class ObjectDetection(MLTask):
         # Make positive windows which contain labels.
         pos_windows = make_pos_windows(
             raster_source.get_extent(), label_store, options.chip_size)
+        nb_pos_windows = len(pos_windows)
 
         # Make negative windows which do not contain labels.
         # Generate randow windows and save the ones that don't contain
