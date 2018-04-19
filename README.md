@@ -31,3 +31,25 @@ You can find more information and talk to developers (let us know what you're wo
 
 In the past, we developed prototypes for semantic segmentation and tagging in this repo, which were discussed in our [segmentation ](https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/), and [tagging](https://www.azavea.com/blog/2018/01/03/amazon-deep-learning/) blog posts. This implementation has been removed from the `develop` branch and is unsupported, but can still be found at [this tag](https://github.com/azavea/raster-vision/releases/tag/old-semseg-tagging).
 Similarly, an outdated prototype of object detection can be found at [this tag](https://github.com/azavea/raster-vision/releases/tag/old-object-detection) under the `rv` module.
+
+### Contributing
+
+We are happy to take contributions! It is best to get in touch with the maintainers
+about larger features or design changes *before* starting the work,
+as it will make the process of accepting changes smoother.
+
+Everyone who contributes code to Raster Vision will be asked to sign the
+Azavea CLA, which is based off of the Apache CLA.
+
+1. Download a copy of the [Raster Vision Individual Contributor License
+   Agreement](docs/cla/2018_04_17-Raster-Vision-Open-Source-Contributor-Agreement-Individual.pdf)
+   or the [Raster Vision Corporate Contributor License
+   Agreement](docs/cla/2018_04_18-Raster-Vision-Open-Source-Contributor-Agreement-Corporate.pdf)
+
+2. Print out the CLAs and sign them, or use PDF software that allows placement of a signature image.
+
+3. Send the CLAs to Azavea by one of:
+  - Scanning and emailing the document to cla@azavea.com
+  - Faxing a copy to +1-215-925-2600.
+  - Mailing a hardcopy to:
+    Azavea, 990 Spring Garden Street, 5th Floor, Philadelphia, PA 19107 USA
