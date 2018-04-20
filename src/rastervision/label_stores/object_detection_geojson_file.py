@@ -20,7 +20,7 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
             self.labels = ObjectDetectionLabels.from_geojson(
                 geojson, crs_transformer)
         except:
-            if writable:
+            if self.writable or not self.uri:
                 self.labels = ObjectDetectionLabels.make_empty()
             else:
                 raise ValueError('Could not open {}'.format(uri))
