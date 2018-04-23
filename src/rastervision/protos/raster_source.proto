@@ -13,7 +13,7 @@ message ImageFile {
 }
 
 message RasterSource {
-    required RasterTransformer raster_transformer = 1;
+    optional RasterTransformer raster_transformer = 1;
 
     oneof raster_source_type {
         GeoTiffFiles geotiff_files = 2;

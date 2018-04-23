@@ -1,7 +1,19 @@
 import click
 
 from rastervision.builders import (
-    process_training_data_builder, train_builder, predict_builder, eval_builder)
+    compute_raster_stats_builder, process_training_data_builder, train_builder,
+    predict_builder, eval_builder)
+
+
+def _compute_raster_stats(config_uri):
+    command = compute_raster_stats_builder.build(config_uri)
+    command.run()
+
+
+@click.command()
+@click.argument('config_uri')
+def compute_raster_stats(config_uri):
+    _compute_raster_stats(config_uri)
 
 
 def _process_training_data(config_uri):
@@ -52,6 +64,7 @@ def run():
     pass
 
 
+run.add_command(compute_raster_stats)
 run.add_command(process_training_data)
 run.add_command(train)
 run.add_command(predict)

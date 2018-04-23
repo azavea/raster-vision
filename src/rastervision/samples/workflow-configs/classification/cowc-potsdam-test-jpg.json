@@ -88,8 +88,9 @@
         "rv_root": "s3://raster-vision-lf-dev",
         "raw": "s3://raster-vision-raw-data"
     },
-    "dataset_key": "cowc-potsdam-cl-test-jpg",
+    "raw_dataset_key": "cowc-potsdam-cl-jpg",
+    "dataset_key": "test",
     "model_key": "resnet50",
-    "prediction_key": "test",
+    "prediction_key": "test-set",
     "eval_key": "default"
 }
