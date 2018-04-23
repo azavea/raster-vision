@@ -39,7 +39,7 @@ RUN conda install -y python=${python_version} scikit-learn six h5py \
     conda clean -yt
 
 RUN pip install flake8 awscli spectral lxml shapely pandas boto3==1.6.0 \
-    pyproj imageio
+    pyproj imageio npstreams==1.4.0
 
 # Ensure that the keras user will have permission to write model into /opt/data
 USER root
