@@ -108,6 +108,9 @@ class MLTask(object):
                 data.append(chip, labels)
                 print('.', end='', flush=True)
             print()
+            # Shuffle data so the first N samples which are displayed in
+            # Tensorboard are more diverse.
+            data.shuffle()
             # TODO load and delete project data as needed to avoid
             # running out of disk space
             return self.backend.process_project_data(
