@@ -81,6 +81,9 @@ class MLTask(object):
         """
         pass
 
+    def get_class_map(self):
+        return self.class_map
+
     def process_training_data(self, train_projects, validation_projects,
                               options):
         """Process training data.
@@ -164,7 +167,7 @@ class MLTask(object):
             print()
 
             label_store.post_process(options)
-            label_store.save(self.class_map)
+            label_store.save()
 
             if (options.debug and options.debug_uri and
                     self.class_map.has_all_colors()):

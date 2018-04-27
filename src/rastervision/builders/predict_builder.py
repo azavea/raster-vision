@@ -10,7 +10,8 @@ def build(config):
         config = files.load_json_config(config, PredictConfig())
 
     ml_task = ml_task_builder.build(config.machine_learning)
-    projects = [project_builder.build(project_config)
+    class_map = ml_task.get_class_map()
+    projects = [project_builder.build(project_config, class_map)
                 for project_config in config.projects]
     options = config.options
 
