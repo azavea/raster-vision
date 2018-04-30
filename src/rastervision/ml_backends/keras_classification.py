@@ -112,6 +112,8 @@ class ModelFiles(FileGroup):
 class KerasClassification(MLBackend):
     def __init__(self):
         self.model = None
+        # persist for when output_uri is remote
+        self.project_dataset_files = []
 
     def process_project_data(self, project, data, class_map, options):
         """Process each project's training data
@@ -126,6 +128,8 @@ class KerasClassification(MLBackend):
             dictionary of Project's classes and corresponding local directory path
         """
         dataset_files = DatasetFiles(options.output_uri)
+        self.project_dataset_files.append(dataset_files)
+
         scratch_dir = dataset_files.get_local_path(
             dataset_files.scratch_uri)
         # Ensure directory is unique since project id's could be shared between
