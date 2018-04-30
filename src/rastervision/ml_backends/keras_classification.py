@@ -3,6 +3,7 @@ import os
 import tempfile
 import shutil
 from urllib.parse import urlparse
+import uuid
 
 import numpy as np
 from keras_classification.commands.train import _train
@@ -127,7 +128,10 @@ class KerasClassification(MLBackend):
         dataset_files = DatasetFiles(options.output_uri)
         scratch_dir = dataset_files.get_local_path(
             dataset_files.scratch_uri)
-        project_dir = join(scratch_dir, project.id)
+        # Ensure directory is unique since project id's could be shared between
+        # training and test sets.
+        project_dir = join(scratch_dir, '{}-{}'.format(
+            project.id, uuid.uuid4()))
         class_dirs = {}
 
         for chip_idx, (chip, labels) in enumerate(data):
