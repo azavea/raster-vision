@@ -6,7 +6,7 @@ if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
-PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+PROJECT_ROOT="$(pwd)"
 SRC="$PROJECT_ROOT/src"
 
 function usage() {
@@ -22,10 +22,10 @@ then
            -e "AWS_PROFILE=$AWS_PROFILE" \
            -v "$HOME/.aws":/root/.aws \
            -v "$SRC":/opt/src \
-           -v /opt/data:/opt/data \
+           -v ${RASTER_VISION_DATA_DIR}:/opt/data \
            -p 8888:8888 \
-           raster-vision-jupyter \
-           notebook \
+           raster-vision-cpu \
+           /run_jupyter.sh \
            --ip 0.0.0.0 \
            --port 8888 \
            --no-browser \
