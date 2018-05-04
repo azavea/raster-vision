@@ -30,7 +30,7 @@ def main():
                             help='AWS region to use for launching an EC2 '
                                  'instance')
 
-    build_amis.add_argument('--source-ami-id', default=None,
+    build_amis.add_argument('--source-ami', default=None,
                             help='ID of the base ami to use for launching the '
                                  'EC2 instance.')
     build_amis.set_defaults(func=create_ami)
