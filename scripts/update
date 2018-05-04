@@ -22,8 +22,6 @@ then
         exit
     fi
 
-    docker build -t raster-vision-base -f src/Dockerfile-base src
-
     if [ $# -eq 0 -o "${1:-}" = "--cpu" ]
     then
         docker build -t raster-vision-cpu -f src/Dockerfile-cpu src
@@ -31,9 +29,5 @@ then
     if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
     then
         docker build -t raster-vision-gpu -f src/Dockerfile-gpu src
-    fi
-    if [ $# -eq 0 -o "${1:-}" = "--jupyter" ]
-    then
-        docker build -t raster-vision-jupyter -f src/Dockerfile-jupyter src
     fi
 fi
