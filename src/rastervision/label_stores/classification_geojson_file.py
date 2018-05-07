@@ -8,6 +8,7 @@ from rastervision.labels.classification_labels import (
     ClassificationLabels)
 from rastervision.labels.object_detection_labels import ObjectDetectionLabels
 from rastervision.labels.utils import boxes_to_geojson
+from rastervision.label_stores.utils import add_classes_to_geojson
 from rastervision.utils.files import file_to_str, str_to_file
 from rastervision.label_stores.classification_label_store import (
         ClassificationLabelStore)
@@ -19,7 +20,7 @@ def get_str_tree(geojson, crs_transformer):
     class_ids = []
 
     for feature in features:
-        # Convert polygon to pixel coords and then convert to bounding box.
+        # Convert polygon to pixel coords.
         polygon = feature['geometry']['coordinates'][0]
         polygon = [crs_transformer.web_to_pixel(p) for p in polygon]
         json_polygons.append(polygon)
@@ -31,6 +32,9 @@ def get_str_tree(geojson, crs_transformer):
     polygons = []
     for json_polygon, class_id in zip(json_polygons, class_ids):
         polygon = geometry.Polygon([(p[0], p[1]) for p in json_polygon])
+        # Trick to handle self-intersecting polygons which otherwise cause an
+        # error.
+        polygon = polygon.buffer(0)
         polygon.class_id = class_id
         polygons.append(polygon)
 
@@ -134,15 +138,18 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
     Args:
         options: ClassificationGeoJSONFile.Options
     """
-    def __init__(self, uri, crs_transformer, extent, options, writable=False):
+    def __init__(self, uri, crs_transformer, extent, options, class_map,
+                 writable=False):
         self.uri = uri
         self.crs_transformer = crs_transformer
+        self.class_map = class_map
         self.writable = writable
 
         self.set_grid(extent, options.cell_size)
 
         try:
             geojson = json.loads(file_to_str(uri))
+            geojson = add_classes_to_geojson(geojson, class_map)
             self.labels = load_geojson(
                 geojson, crs_transformer, extent, options)
         except:  # TODO do a better job of only catching "not found" errors
@@ -151,10 +158,10 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
             else:
                 raise ValueError('Could not open {}'.format(uri))
 
-    def save(self, class_map):
+    def save(self):
         if self.writable:
             geojson = to_geojson(
-                self.labels, self.crs_transformer, class_map)
+                self.labels, self.crs_transformer, self.class_map)
             geojson_str = json.dumps(geojson)
             str_to_file(geojson_str, self.uri)
         else:

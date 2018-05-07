@@ -11,6 +11,7 @@ import signal
 import atexit
 import glob
 import re
+import uuid
 
 from PIL import Image
 import tensorflow as tf
@@ -371,8 +372,11 @@ class TFObjectDetectionAPI(MLBackend):
         training_package = TrainingPackage(options.output_uri)
         self.project_training_packages.append(training_package)
         tf_examples = make_tf_examples(data, class_map)
+        # Ensure directory is unique since project id's could be shared between
+        # training and test sets.
         record_path = training_package.get_local_path(
-            training_package.get_record_uri(project.id))
+            training_package.get_record_uri('{}-{}'.format(
+                project.id, uuid.uuid4())))
         write_tf_record(tf_examples, record_path)
 
         return record_path

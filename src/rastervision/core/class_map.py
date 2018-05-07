@@ -40,6 +40,12 @@ class ClassMap(object):
         """
         return self.class_item_map[id]
 
+    def get_by_name(self, name):
+        for item in self.get_items():
+            if name == item.name:
+                return item
+        raise ValueError('{} is not a name in this ClassMap.'.format(name))
+
     def get_items(self):
         """Return list of ClassItems."""
         return list(self.class_item_map.values())

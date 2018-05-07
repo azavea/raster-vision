@@ -113,8 +113,9 @@
         "rv_root": "s3://raster-vision-lf-dev",
         "raw": "s3://raster-vision-raw-data"
     },
-    "dataset_key": "cowc-potsdam",
+    "raw_dataset_key": "cowc-potsdam",
+    "dataset_key": "full",
     "model_key": "mobilenet",
-    "prediction_key": "test",
+    "prediction_key": "test-set",
     "eval_key": "default"
 }

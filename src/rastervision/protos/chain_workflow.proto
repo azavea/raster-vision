@@ -29,8 +29,9 @@ message ChainWorkflowConfig {
     map<string, string> local_uri_map = 8;
     map<string, string> remote_uri_map = 9;
 
-    // The names of the dataset, model, prediction, and eval.
-    // These are used to generate URIs.
+    // The names of the raw dataset, (processed) dataset, model, prediction,
+    // and eval. These are used to generate URIs.
+    required string raw_dataset_key = 19;
     required string dataset_key = 10;
     required string model_key = 11;
     required string prediction_key = 12;

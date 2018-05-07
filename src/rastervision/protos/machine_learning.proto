@@ -16,7 +16,7 @@ message MachineLearning {
     }
 
     message ClassItem {
-        // A label (ie. car) its id.
+        // Eg. car
         required int32 id = 1;
         required string name = 2;
         optional string color = 3;

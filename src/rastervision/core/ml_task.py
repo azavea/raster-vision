@@ -81,6 +81,9 @@ class MLTask(object):
         """
         pass
 
+    def get_class_map(self):
+        return self.class_map
+
     def process_training_data(self, train_projects, validation_projects,
                               options):
         """Process training data.
@@ -108,6 +111,9 @@ class MLTask(object):
                 data.append(chip, labels)
                 print('.', end='', flush=True)
             print()
+            # Shuffle data so the first N samples which are displayed in
+            # Tensorboard are more diverse.
+            data.shuffle()
             # TODO load and delete project data as needed to avoid
             # running out of disk space
             return self.backend.process_project_data(
@@ -161,7 +167,7 @@ class MLTask(object):
             print()
 
             label_store.post_process(options)
-            label_store.save(self.class_map)
+            label_store.save()
 
             if (options.debug and options.debug_uri and
                     self.class_map.has_all_colors()):

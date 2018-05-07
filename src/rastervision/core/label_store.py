@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import copy
 
 
 class LabelStore(ABC):
@@ -45,12 +46,8 @@ class LabelStore(ABC):
         pass
 
     @abstractmethod
-    def save(self, class_map):
-        """Save.
-
-        Args:
-            class_map: ClassMap
-        """
+    def save(self):
+        """Save."""
         pass
 
     @abstractmethod
