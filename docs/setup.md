@@ -1,15 +1,11 @@
 # Raster Vision Setup
 
-## Usage
+## Requirements
 
-### Requirements
+- Docker 18+
+- awscli 1.15+
 
-- Vagrant 1.8+
-- VirtualBox 4.3+
-- Python 2.7
-- Ansible 2.1+
-
-### Scripts
+## Scripts
 
 | Name     | Description                              |
 | -------- | ---------------------------------------- |
@@ -22,27 +18,20 @@
 | `setup_aws_batch`  | Setup AWS Batch |
 | `update` | Install dependent software inside virtual machine |
 
-### Initial setup
+## Initial setup
 
-First, set the `RASTER_VISION_DATA_DIR` environment variable on your host machine. All data including datasets and results should be stored in a single directory outside of the repo. The `Vagrantfile` maps the `RASTER_VISION_DATA_DIR` environment variable on the host machine to `/opt/data` on the guest machine. Within the project root, execute the following commands to setup and then log into the VM.
-
-```bash
-$ ./scripts/setup
-$ vagrant ssh
+First, set the `RASTER_VISION_DATA_DIR` environment variable on your host machine. All data including datasets and results should be stored in a single directory outside of the repo. Also set the `AWS_PROFILE` if you want to use AWS. Then build the CPU container using
 ```
-
-If you get an error message about the Docker daemon not being started, you
-may want to run `vagrant provision`.
+./scripts/update --cpu
+```
 
 ## Running locally on CPUs
 
 ### Running the Docker container
 
 You can build the Docker container and then get into the Bash console for it as follows.
-```shell
-vagrant ssh
-vagrant@raster-vision:/vagrant$ ./scripts/update --cpu
-vagrant@raster-vision:/vagrant$ ./scripts/run --cpu
+```
+./scripts/run
 ```
 
 ### Running an object detection workflow
@@ -52,52 +41,31 @@ See the [object detection tutorial](object-detection.md).
 ### Running a Jupyter notebook
 
 You can run a Juptyer notebook that has the data from `RASTER_VISION_DATA_DIR` mounted to `/opt/data`
-and `RASTER_VISION_NOTEBOOK_DIR` mounted to `/opt/notebooks` and set as the Juptyer notebook directory.
-
-```shell
-vagrant ssh
-vagrant@raster-vision:/vagrant$ ./scripts/update --jupyter
-vagrant@raster-vision:/vagrant$ ./scripts/jupyter
+and `RASTER_VISION_NOTEBOOK_DIR` mounted to `/opt/notebooks` and set as the Juptyer notebook directory using
+```
+./scripts/jupyter
 ```
 
 ## Running remotely using AWS Batch
 
-In order to run scripts on GPUs and in parallel, we use [AWS Batch](https://aws.amazon.com/batch/).
+In order to run Raster Vision on GPUs and in parallel, we use [AWS Batch](https://aws.amazon.com/batch/).
 
 ### Publishing the container to ECR
 
-The latest Docker image should be stored in ECR so that it can be used by Batch. To build and publish the container, run `./scripts/cipublish`.
-
-### Submit jobs to AWS Batch
-
-#### Setup Batch
-
-To setup the AWS Batch stack, which should only be done once per AWS account, run `./scripts/setup_aws_batch`.
-
-#### Updating the Batch AMI
-
-Use `deployment/batch_amis.py` to update the Batch environment AMI. This requires your `raster-vision` AWS profile to be configured.
-
-```bash
-$ aws --profile raster-vision configure
-$ cd deployment
-$ pip install -r requirements.txt
-$ ./batch_amis.py  build-amis --aws-profile raster-vision
-...
-==> Builds finished. The artifacts of successful builds are:
---> raster-vision-gpu: AMIs were created:
-
-us-east-1: ami-fb5c7980
+The latest Docker image should be stored in ECR so that it can be used by Batch. To build and publish the container, run
+```
+./scripts/cipublish
 ```
 
-Use the AMI ID provided above, to update the ComputeResources > imageId field in `deployment/batch/compute_environment_{gpu,cpu}.json`. To apply these changes, delete the existing Batch environments using the AWS Console, and then re-run the steps in the section above.
+### Creating / Updating the Batch AMI
 
-Prune any old AMIs by using the `prune-amis` command to `batch_amis.py`
-```bash
-$ ./batch_amis.py  prune-amis --keep 10
-```
+To run a GPU-enabled container on Batch, you need to use an AMI with the ECS agent installed as well as Nvidia drivers that are matched to the version of CUDA used in the Docker container. See [Vagrant/AMI docs](docs/vagrant-ami.md) for more details.
 
-#### Submitting a job
+### Setup Batch resources
+
+To setup the AWS Batch stack, which should only be done once per AWS account, run `./scripts/setup_aws_batch`. You will need to change some values in `deployment/batch` for your individual setup.
+
+### Submitting a job
 
 To manually submit a job to Batch, use the `batch_submit` script inside the Docker container as follows.
 
