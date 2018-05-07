@@ -14,7 +14,7 @@ from google.protobuf import json_format
 from rastervision.core.ml_backend import MLBackend
 from rastervision.utils.files import (
     make_dir, get_local_path, upload_if_needed, download_if_needed,
-    RV_TEMP_DIR, start_sync, sync_dir, load_json_config)
+    start_sync, sync_dir, load_json_config)
 from rastervision.utils.misc import save_img
 from rastervision.labels.classification_labels import ClassificationLabels
 from rastervision.core.box import Box
@@ -22,7 +22,7 @@ from rastervision.core.box import Box
 
 class FileGroup(object):
     def __init__(self, base_uri):
-        self.temp_dir_obj = tempfile.TemporaryDirectory(dir=RV_TEMP_DIR)
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
 
         self.base_uri = base_uri
@@ -162,7 +162,7 @@ class KerasClassification(MLBackend):
 
     def predict(self, chip, options):
         if self.model is None:
-            with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+            with tempfile.TemporaryDirectory() as temp_dir:
                 model_path = download_if_needed(options.model_uri, temp_dir)
                 self.model = model_builder.build_from_path(model_path)
 

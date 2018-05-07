@@ -8,7 +8,7 @@ from rastervision.core.ml_task import MLTask
 from rastervision.evaluations.classification_evaluation import (
     ClassificationEvaluation)
 from rastervision.utils.files import (
-    get_local_path, upload_if_needed, RV_TEMP_DIR, make_dir)
+    get_local_path, upload_if_needed, make_dir)
 
 
 def draw_debug_predict_image(project, class_map):
@@ -52,7 +52,7 @@ class Classification(MLTask):
         img = draw_debug_predict_image(project, self.class_map)
         # Saving to a jpg leads to segfault for unknown reasons.
         debug_image_uri = join(debug_dir_uri, project.id + '.png')
-        with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             debug_image_path = get_local_path(debug_image_uri, temp_dir)
             make_dir(debug_image_path, use_dirname=True)
             img.save(debug_image_path)

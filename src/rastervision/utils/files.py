@@ -1,18 +1,18 @@
-import os
-import shutil
-from urllib.parse import urlparse
-import subprocess
 import io
+import os
+from pathlib import Path
+import rasterio
+import shutil
+import subprocess
+import tempfile
 from threading import Timer
+from urllib.parse import urlparse
 
 import boto3
 import botocore
 from google.protobuf import json_format
 
 s3 = boto3.client('s3')
-
-RV_TEMP_DIR = '/opt/data/tmp/'
-
 
 class NotFoundException(Exception):
     pass
@@ -146,8 +146,32 @@ def start_sync(output_dir, output_uri, sync_interval=600):
         # th contents of output_dir since there's nothing there yet.
         _sync_dir(delete=False)
 
-
 # Ensure that RV temp directory exists. We need to use a custom location for
 # the temporary directory so it will be mirrored on the host file system which
 # is needed for running in a Docker container with limited space on EC2.
-make_dir(RV_TEMP_DIR)
+RV_TEMP_DIR = '/opt/data/tmp/'
+
+# find explicitly set tempdir
+explicit_temp_dir = next(iter([
+    os.environ.get(k) for k in ['TMPDIR', 'TEMP', 'TMP'] if k in os.environ] +
+    [tempfile.tempdir]))
+
+try:
+    # try to create directory
+    if not os.path.exists(explicit_temp_dir):
+        os.makedirs(explicit_temp_dir, exist_ok=True)
+    # can we interact with directory?
+    explicit_temp_dir_valid = (os.path.isdir(explicit_temp_dir) and
+        Path.touch(Path(os.path.join(explicit_temp_dir, '.can_touch'))))
+except:
+    print('Root temporary directory cannot be used: {}. Using root: {}'.format(
+        explicit_temp_dir, RV_TEMP_DIR))
+    tempfile.tempdir = RV_TEMP_DIR # no guarantee this will work
+    make_dir(RV_TEMP_DIR)
+finally:
+    # now, ensure uniqueness for this process
+    # the host may be running more than one rastervision process
+    RV_TEMP_DIR = tempfile.mkdtemp()
+    tempfile.tempdir = RV_TEMP_DIR
+    print('Temporary directory is: {}'.format(
+        tempfile.tempdir))
