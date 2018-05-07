@@ -69,10 +69,19 @@ def create_tf_example(image, labels, class_map, chip_id=''):
 
 
 def write_tf_record(tf_examples, output_path):
-    writer = tf.python_io.TFRecordWriter(output_path)
-    for tf_example in tf_examples:
-        writer.write(tf_example.SerializeToString())
-    writer.close()
+    with tf.python_io.TFRecordWriter(output_path) as writer:
+        for tf_example in tf_examples:
+            writer.write(tf_example.SerializeToString())
+
+
+def merge_tf_records(output_path, src_records):
+    with tf.python_io.TFRecordWriter(output_path) as writer:
+        print('Merging TFRecords', end='', flush=True)
+        for src_record in src_records:
+            for string_record in tf.python_io.tf_record_iterator(src_record):
+                writer.write(string_record)
+            print('.', end='', flush=True)
+        print()
 
 
 def make_tf_class_map(class_map):
@@ -343,17 +352,52 @@ def compute_prediction(image_np, detection_graph, session):
 class TFObjectDetectionAPI(MLBackend):
     def __init__(self):
         self.detection_graph = None
+        # persist project training packages for when output_uri is remote
+        self.project_training_packages = []
 
-    def convert_training_data(self, training_data, validation_data, class_map,
-                              options):
+    def process_project_data(self, project, data, class_map, options):
+        """Process each project's training data
+
+        Args:
+            project: Project
+            data: TrainingData
+            class_map: ClassMap
+            options: ProcessTrainingDataConfig.Options
+
+        Returns:
+            the local path to the project's TFRecord
+        """
+
+        training_package = TrainingPackage(options.output_uri)
+        self.project_training_packages.append(training_package)
+        tf_examples = make_tf_examples(data, class_map)
+        record_path = training_package.get_local_path(
+            training_package.get_record_uri(project.id))
+        write_tf_record(tf_examples, record_path)
+
+        return record_path
+
+    def process_projectset_results(self, training_results, validation_results,
+                                class_map, options):
+        """After all projects have been processed, merge all TFRecords
+
+        Args:
+            training_results: list of training projects' TFRecords
+            validation_results: list of validation projects' TFRecords
+            class_map: ClassMap
+            options: ProcessTrainingDataConfig.Options
+        """
+
         training_package = TrainingPackage(options.output_uri)
 
-        def _convert_training_data(data, split):
-            # Save TFRecord.
-            tf_examples = make_tf_examples(data, class_map)
+        def _merge_training_results(results, split):
+
+            # "split" tf record
             record_path = training_package.get_local_path(
                 training_package.get_record_uri(split))
-            write_tf_record(tf_examples, record_path)
+
+            # merge each project's tfrecord into "split" tf record
+            merge_tf_records(record_path, results)
 
             # Save debug chips.
             if options.debug:
@@ -364,8 +408,8 @@ class TFObjectDetectionAPI(MLBackend):
                     shutil.make_archive(
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)
 
-        _convert_training_data(training_data, TRAIN)
-        _convert_training_data(validation_data, VALIDATION)
+        _merge_training_results(training_results, TRAIN)
+        _merge_training_results(validation_results, VALIDATION)
 
         # Save TF label map based on class_map.
         class_map_path = training_package.get_local_path(
@@ -374,6 +418,9 @@ class TFObjectDetectionAPI(MLBackend):
         save_tf_class_map(tf_class_map, class_map_path)
 
         training_package.upload(debug=options.debug)
+
+        # clear project training packages
+        del self.project_training_packages[:]
 
     def train(self, class_map, options):
         # Download training data and update config file.

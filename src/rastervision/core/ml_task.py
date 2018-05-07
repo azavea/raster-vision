@@ -2,8 +2,11 @@ from abc import ABC, abstractmethod
 
 from rastervision.core.training_data import TrainingData
 
+# TODO: DRY... same keys as in ml_backends/tf_object_detection_aip.py
+TRAIN = 'train'
+VALIDATION = 'validation'
 
-class MLTask():
+class MLTask(object):
     """Functionality for a specific machine learning task.
 
     This should be subclassed to add a new task, such as object detection
@@ -92,29 +95,37 @@ class MLTask():
                 (that is disjoint from train_projects)
             options: ProcessTrainingDataConfig.Options
         """
-        def _process_training_data(projects, type_):
-            training_data = TrainingData()
-            for project in projects:
-                print('Making {} chips for project'.format(type_),
-                    end='', flush=True)
-                windows = self.get_train_windows(project, options)
-                for window in windows:
-                    chip = project.raster_source.get_chip(window)
-                    labels = self.get_train_labels(
-                        window, project, options)
-                    training_data.append(chip, labels)
-                    print('.', end='', flush=True)
-                print()
-                # TODO load and delete project data as needed to avoid
-                # running out of disk space
-            return training_data
+
+        def _process_project(project, type_):
+            data = TrainingData()
+            print('Making {} chips for project: {}'.format(
+                type_, project.id), end='', flush=True)
+            windows = self.get_train_windows(project, options)
+            for window in windows:
+                chip = project.raster_source.get_chip(window)
+                labels = self.get_train_labels(
+                    window, project, options)
+                data.append(chip, labels)
+                print('.', end='', flush=True)
+            print()
+            # TODO load and delete project data as needed to avoid
+            # running out of disk space
+            return self.backend.process_project_data(
+                project, data, self.class_map, options)
+
+        def _process_projects(projects, type_):
+            return [
+                _process_project(project, type_)
+                for project in projects
+            ]
 
         # TODO: parallel processing!
-        training_data = _process_training_data(train_projects, 'training')
-        validation_data = _process_training_data(
-            validation_projects, 'validation')
-        self.backend.convert_training_data(
-            training_data, validation_data, self.class_map, options)
+        processed_training_results = _process_projects(train_projects, TRAIN)
+        processed_validation_results = _process_projects(
+            validation_projects, VALIDATION)
+        self.backend.process_projectset_results(
+            processed_training_results, processed_validation_results,
+            self.class_map, options)
 
     def train(self, options):
         """Train a model.
