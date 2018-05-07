@@ -30,7 +30,7 @@ from rastervision.labels.object_detection_labels import (
     ObjectDetectionLabels)
 from rastervision.utils.files import (
     get_local_path, upload_if_needed, make_dir, download_if_needed,
-    file_to_str, sync_dir, RV_TEMP_DIR, start_sync)
+    file_to_str, sync_dir, start_sync)
 
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -212,7 +212,7 @@ def export_inference_graph(
 
 class TrainingPackage(object):
     def __init__(self, base_uri):
-        self.temp_dir_obj = tempfile.TemporaryDirectory(dir=RV_TEMP_DIR)
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
 
         self.base_uri = base_uri
@@ -359,7 +359,7 @@ class TFObjectDetectionAPI(MLBackend):
             if options.debug:
                 debug_zip_path = training_package.get_local_path(
                     training_package.get_debug_chips_uri(split))
-                with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as debug_dir:
+                with tempfile.TemporaryDirectory() as debug_dir:
                     make_debug_images(record_path, class_map, debug_dir)
                     shutil.make_archive(
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)
@@ -382,7 +382,7 @@ class TFObjectDetectionAPI(MLBackend):
         config_path = training_package.download_config(
             options.pretrained_model_uri, options.backend_config_uri)
 
-        with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             # Setup output dirs.
             output_dir = get_local_path(options.output_uri, temp_dir)
             make_dir(output_dir)
@@ -408,7 +408,7 @@ class TFObjectDetectionAPI(MLBackend):
     def predict(self, chip, options):
         # Load and memoize the detection graph and TF session.
         if self.detection_graph is None:
-            with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+            with tempfile.TemporaryDirectory() as temp_dir:
                 model_path = download_if_needed(options.model_uri, temp_dir)
                 self.detection_graph = load_frozen_graph(model_path)
                 self.session = tf.Session(graph=self.detection_graph)
