@@ -11,6 +11,7 @@ import signal
 import atexit
 import glob
 import re
+import uuid
 
 from PIL import Image
 import tensorflow as tf
@@ -30,7 +31,7 @@ from rastervision.labels.object_detection_labels import (
     ObjectDetectionLabels)
 from rastervision.utils.files import (
     get_local_path, upload_if_needed, make_dir, download_if_needed,
-    file_to_str, sync_dir, RV_TEMP_DIR, start_sync)
+    file_to_str, sync_dir, start_sync)
 
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -69,10 +70,19 @@ def create_tf_example(image, labels, class_map, chip_id=''):
 
 
 def write_tf_record(tf_examples, output_path):
-    writer = tf.python_io.TFRecordWriter(output_path)
-    for tf_example in tf_examples:
-        writer.write(tf_example.SerializeToString())
-    writer.close()
+    with tf.python_io.TFRecordWriter(output_path) as writer:
+        for tf_example in tf_examples:
+            writer.write(tf_example.SerializeToString())
+
+
+def merge_tf_records(output_path, src_records):
+    with tf.python_io.TFRecordWriter(output_path) as writer:
+        print('Merging TFRecords', end='', flush=True)
+        for src_record in src_records:
+            for string_record in tf.python_io.tf_record_iterator(src_record):
+                writer.write(string_record)
+            print('.', end='', flush=True)
+        print()
 
 
 def make_tf_class_map(class_map):
@@ -149,18 +159,21 @@ def terminate_at_exit(process):
     atexit.register(terminate)
 
 
-def train(config_path, output_dir):
+def train(config_path, output_dir, train_py=None, eval_py=None):
     output_train_dir = join(output_dir, 'train')
     output_eval_dir = join(output_dir, 'eval')
 
+    train_py = train_py or '/opt/src/tf/object_detection/train.py'
+    eval_py = eval_py or '/opt/src/tf/object_detection/eval.py'
+
     train_process = Popen([
-        'python', '/opt/src/tf/object_detection/train.py',
+        'python', train_py,
         '--logtostderr', '--pipeline_config_path={}'.format(config_path),
         '--train_dir={}'.format(output_train_dir)])
     terminate_at_exit(train_process)
 
     eval_process = Popen([
-        'python', '/opt/src/tf/object_detection/eval.py',
+        'python', eval_py,
         '--logtostderr', '--pipeline_config_path={}'.format(config_path),
         '--checkpoint_dir={}'.format(output_train_dir),
         '--eval_dir={}'.format(output_eval_dir)])
@@ -190,14 +203,16 @@ def get_last_checkpoint_path(train_root_dir):
     return checkpoint_path
 
 
-def export_inference_graph(train_root_dir, config_path, inference_graph_path):
+def export_inference_graph(
+    train_root_dir, config_path, inference_graph_path, export_py=None):
+    export_py = export_py or '/opt/src/tf/object_detection/export_inference_graph.py'
     checkpoint_path = get_last_checkpoint_path(train_root_dir)
     if checkpoint_path is None:
         print('No checkpoints could be found.')
     else:
         print('Exporting checkpoint {}...'.format(checkpoint_path))
         train_process = Popen([
-            'python', '/opt/src/tf/object_detection/export_inference_graph.py',
+            'python', export_py,
             '--input_type', 'image_tensor',
             '--pipeline_config_path', config_path,
             '--checkpoint_path', checkpoint_path,
@@ -207,7 +222,7 @@ def export_inference_graph(train_root_dir, config_path, inference_graph_path):
 
 class TrainingPackage(object):
     def __init__(self, base_uri):
-        self.temp_dir_obj = tempfile.TemporaryDirectory(dir=RV_TEMP_DIR)
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
 
         self.base_uri = base_uri
@@ -275,12 +290,24 @@ class TrainingPackage(object):
 
         class_map_path = self.get_local_path(self.get_class_map_uri())
 
-        config.train_input_reader.tf_record_input_reader.input_path = \
-            self.get_local_path(self.get_record_uri(TRAIN))
+        train_path = self.get_local_path(self.get_record_uri(TRAIN))
+        if hasattr(config.train_input_reader.tf_record_input_reader.input_path,
+            'append'):
+            config.train_input_reader.tf_record_input_reader.input_path[:] = \
+                [train_path]
+        else:
+            config.train_input_reader.tf_record_input_reader.input_path = \
+                train_path
         config.train_input_reader.label_map_path = class_map_path
 
-        config.eval_input_reader.tf_record_input_reader.input_path = \
-            self.get_local_path(self.get_record_uri(VALIDATION))
+        eval_path = self.get_local_path(self.get_record_uri(VALIDATION))
+        if hasattr(config.eval_input_reader.tf_record_input_reader.input_path,
+            'append'):
+            config.eval_input_reader.tf_record_input_reader.input_path[:] = \
+                [eval_path]
+        else:
+            config.eval_input_reader.tf_record_input_reader.input_path = \
+                eval_path
         config.eval_input_reader.label_map_path = class_map_path
 
         # Save an updated copy of the config file.
@@ -326,29 +353,67 @@ def compute_prediction(image_np, detection_graph, session):
 class TFObjectDetectionAPI(MLBackend):
     def __init__(self):
         self.detection_graph = None
+        # persist project training packages for when output_uri is remote
+        self.project_training_packages = []
 
-    def convert_training_data(self, training_data, validation_data, class_map,
-                              options):
+    def process_project_data(self, project, data, class_map, options):
+        """Process each project's training data
+
+        Args:
+            project: Project
+            data: TrainingData
+            class_map: ClassMap
+            options: ProcessTrainingDataConfig.Options
+
+        Returns:
+            the local path to the project's TFRecord
+        """
+
+        training_package = TrainingPackage(options.output_uri)
+        self.project_training_packages.append(training_package)
+        tf_examples = make_tf_examples(data, class_map)
+        # Ensure directory is unique since project id's could be shared between
+        # training and test sets.
+        record_path = training_package.get_local_path(
+            training_package.get_record_uri('{}-{}'.format(
+                project.id, uuid.uuid4())))
+        write_tf_record(tf_examples, record_path)
+
+        return record_path
+
+    def process_projectset_results(self, training_results, validation_results,
+                                class_map, options):
+        """After all projects have been processed, merge all TFRecords
+
+        Args:
+            training_results: list of training projects' TFRecords
+            validation_results: list of validation projects' TFRecords
+            class_map: ClassMap
+            options: ProcessTrainingDataConfig.Options
+        """
+
         training_package = TrainingPackage(options.output_uri)
 
-        def _convert_training_data(data, split):
-            # Save TFRecord.
-            tf_examples = make_tf_examples(data, class_map)
+        def _merge_training_results(results, split):
+
+            # "split" tf record
             record_path = training_package.get_local_path(
                 training_package.get_record_uri(split))
-            write_tf_record(tf_examples, record_path)
+
+            # merge each project's tfrecord into "split" tf record
+            merge_tf_records(record_path, results)
 
             # Save debug chips.
             if options.debug:
                 debug_zip_path = training_package.get_local_path(
                     training_package.get_debug_chips_uri(split))
-                with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as debug_dir:
+                with tempfile.TemporaryDirectory() as debug_dir:
                     make_debug_images(record_path, class_map, debug_dir)
                     shutil.make_archive(
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)
 
-        _convert_training_data(training_data, TRAIN)
-        _convert_training_data(validation_data, VALIDATION)
+        _merge_training_results(training_results, TRAIN)
+        _merge_training_results(validation_results, VALIDATION)
 
         # Save TF label map based on class_map.
         class_map_path = training_package.get_local_path(
@@ -358,6 +423,9 @@ class TFObjectDetectionAPI(MLBackend):
 
         training_package.upload(debug=options.debug)
 
+        # clear project training packages
+        del self.project_training_packages[:]
+
     def train(self, class_map, options):
         # Download training data and update config file.
         training_package = TrainingPackage(options.training_data_uri)
@@ -365,20 +433,25 @@ class TFObjectDetectionAPI(MLBackend):
         config_path = training_package.download_config(
             options.pretrained_model_uri, options.backend_config_uri)
 
-        with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir:
             # Setup output dirs.
             output_dir = get_local_path(options.output_uri, temp_dir)
             make_dir(output_dir)
 
+            train_py = options.object_detection_options.train_py
+            eval_py = options.object_detection_options.eval_py
+            export_py = options.object_detection_options.export_py
+
             # Train model and sync output periodically.
             start_sync(output_dir, options.output_uri,
                        sync_interval=options.sync_interval)
-            train(config_path, output_dir)
+            train(config_path, output_dir, train_py=train_py, eval_py=eval_py)
 
             # Export inference graph.
             inference_graph_path = join(output_dir, 'model')
             export_inference_graph(
-                output_dir, config_path, inference_graph_path)
+                output_dir, config_path, inference_graph_path,
+                export_py=export_py)
 
             if urlparse(options.output_uri).scheme == 's3':
                 sync_dir(output_dir, options.output_uri, delete=True)
@@ -386,7 +459,7 @@ class TFObjectDetectionAPI(MLBackend):
     def predict(self, chip, options):
         # Load and memoize the detection graph and TF session.
         if self.detection_graph is None:
-            with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+            with tempfile.TemporaryDirectory() as temp_dir:
                 model_path = download_if_needed(options.model_uri, temp_dir)
                 self.detection_graph = load_frozen_graph(model_path)
                 self.session = tf.Session(graph=self.detection_graph)

@@ -12,6 +12,7 @@
                     "uri": "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-10.json",
                     "options": {
                         "ioa_thresh": 0.5,
+                        "use_intersection_over_cell": false,
                         "pick_min_class_id": true,
                         "background_class_id": 2,
                         "cell_size": 300,
@@ -34,6 +35,7 @@
                     "uri": "{rv_root}/processed-data/cowc-potsdam-test-jpg/2-13.json",
                     "options": {
                         "ioa_thresh": 0.5,
+                        "use_intersection_over_cell": false,
                         "pick_min_class_id": true,
                         "background_class_id": 2,
                         "cell_size": 300,
@@ -86,8 +88,9 @@
         "rv_root": "s3://raster-vision-lf-dev",
         "raw": "s3://raster-vision-raw-data"
     },
-    "dataset_key": "cowc-potsdam-cl-test-jpg",
+    "raw_dataset_key": "cowc-potsdam-cl-jpg",
+    "dataset_key": "test",
     "model_key": "resnet50",
-    "prediction_key": "test",
+    "prediction_key": "test-set",
     "eval_key": "default"
 }

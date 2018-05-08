@@ -25,8 +25,8 @@ def geojson_to_labels(geojson, crs_transformer):
         xmax, ymax = np.max(polygon, axis=0)
         boxes.append(Box(ymin, xmin, ymax, xmax))
 
-        properties = feature.get('properties', {})
-        class_ids.append(properties.get('class_id', 1))
+        properties = feature['properties']
+        class_ids.append(properties['class_id'])
         scores.append(properties.get('score', 1.0))
 
     boxes = np.array([box.npbox_format() for box in boxes], dtype=float)

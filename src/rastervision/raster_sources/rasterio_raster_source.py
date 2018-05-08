@@ -4,7 +4,7 @@ import numpy as np
 
 from rastervision.core.raster_source import RasterSource
 from rastervision.core.box import Box
-from rastervision.utils.files import download_if_needed, RV_TEMP_DIR
+from rastervision.utils.files import download_if_needed
 
 
 def load_window(image_dataset, window=None):
@@ -21,7 +21,7 @@ def load_window(image_dataset, window=None):
 
 class RasterioRasterSource(RasterSource):
     def __init__(self, raster_transformer):
-        self.temp_dir = tempfile.TemporaryDirectory(dir=RV_TEMP_DIR)
+        self.temp_dir = tempfile.TemporaryDirectory()
         self.image_dataset = self.build_image_dataset()
         super().__init__(raster_transformer)
 
@@ -40,7 +40,8 @@ class RasterioRasterSource(RasterSource):
         # the partial chip back to full window size.
         partial_chip = load_window(
             self.image_dataset, window.rasterio_format())
-        chip = np.zeros((height, width, partial_chip.shape[2]), dtype=np.uint8)
+        chip = np.zeros((height, width, partial_chip.shape[2]),
+                        dtype=partial_chip.dtype)
         chip[0:partial_chip.shape[0], 0:partial_chip.shape[1], :] = \
             partial_chip
 

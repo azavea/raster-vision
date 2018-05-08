@@ -8,9 +8,13 @@ message ObjectDetectionGeoJSONFile {
 
 message ClassificationGeoJSONFile {
     message Options {
-        // The minimum IOA (intersection over area) for a box to be considered
-        // inside a cell.
+        // The minimum IOA of a polygon and cell.
         optional float ioa_thresh = 1;
+
+        // If use_intersection_over_cell is true, then use the area of the
+        // cell as the denominator in the IOA. Otherwise, use the area of the
+        // polygon.
+        optional bool use_intersection_over_cell = 6;
 
         // If true, the class_id for a cell is the minimum class_id of the
         // boxes in that cell. Otherwise, pick the class_id of the box

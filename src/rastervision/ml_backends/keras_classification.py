@@ -3,6 +3,7 @@ import os
 import tempfile
 import shutil
 from urllib.parse import urlparse
+import uuid
 
 import numpy as np
 from keras_classification.commands.train import _train
@@ -14,7 +15,7 @@ from google.protobuf import json_format
 from rastervision.core.ml_backend import MLBackend
 from rastervision.utils.files import (
     make_dir, get_local_path, upload_if_needed, download_if_needed,
-    RV_TEMP_DIR, start_sync, sync_dir, load_json_config)
+    start_sync, sync_dir, load_json_config)
 from rastervision.utils.misc import save_img
 from rastervision.labels.classification_labels import ClassificationLabels
 from rastervision.core.box import Box
@@ -22,7 +23,7 @@ from rastervision.core.box import Box
 
 class FileGroup(object):
     def __init__(self, base_uri):
-        self.temp_dir_obj = tempfile.TemporaryDirectory(dir=RV_TEMP_DIR)
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
 
         self.base_uri = base_uri
@@ -51,6 +52,9 @@ class DatasetFiles(FileGroup):
         self.validation_uri = join(base_uri, 'validation')
         make_dir(self.get_local_path(self.validation_uri))
         self.validation_zip_uri = join(base_uri, 'validation.zip')
+
+        self.scratch_uri = join(base_uri, 'scratch')
+        make_dir(self.get_local_path(self.scratch_uri))
 
     def download(self):
         def _download(data_zip_uri):
@@ -108,13 +112,60 @@ class ModelFiles(FileGroup):
 class KerasClassification(MLBackend):
     def __init__(self):
         self.model = None
+        # persist for when output_uri is remote
+        self.project_dataset_files = []
 
-    def convert_training_data(self, training_data, validation_data, class_map,
-                              options):
-        """Convert training data to ImageFolder format.
+    def process_project_data(self, project, data, class_map, options):
+        """Process each project's training data
 
-        For each dataset, there is a directory for each class_name with chips
-        of that class.
+        Args:
+            project: Project
+            data: TrainingData
+            class_map: ClassMap
+            options: ProcessTrainingDataConfig.Options
+
+        Returns:
+            dictionary of Project's classes and corresponding local directory path
+        """
+        dataset_files = DatasetFiles(options.output_uri)
+        self.project_dataset_files.append(dataset_files)
+
+        scratch_dir = dataset_files.get_local_path(
+            dataset_files.scratch_uri)
+        # Ensure directory is unique since project id's could be shared between
+        # training and test sets.
+        project_dir = join(scratch_dir, '{}-{}'.format(
+            project.id, uuid.uuid4()))
+        class_dirs = {}
+
+        for chip_idx, (chip, labels) in enumerate(data):
+            class_id = labels.get_class_id()
+            # If a chip is not associated with a class, don't
+            # use it in training data.
+            if class_id is None:
+                continue
+            class_name = class_map.get_by_id(class_id).name
+            class_dir = join(project_dir, class_name)
+            make_dir(class_dir)
+            class_dirs[class_name] = class_dir
+            chip_name = '{}.png'.format(chip_idx)
+            chip_path = join(class_dir, chip_name)
+            save_img(chip, chip_path)
+
+        return class_dirs
+
+    def process_projectset_results(self, training_results, validation_results,
+                                class_map, options):
+        """After all projects have been processed, collect all the images of
+        each class across all projects
+
+        Args:
+            training_results: list of dictionaries of training projects'
+                classes and corresponding local directory path
+            validation_results: list of dictionaries of validation projects'
+                classes and corresponding local directory path
+            class_map: ClassMap
+            options: ProcessTrainingDataConfig.Options
         """
         dataset_files = DatasetFiles(options.output_uri)
         training_dir = dataset_files.get_local_path(
@@ -122,23 +173,27 @@ class KerasClassification(MLBackend):
         validation_dir = dataset_files.get_local_path(
             dataset_files.validation_uri)
 
-        def convert_dataset(dataset, output_dir):
+        def _merge_training_results(project_class_dirs, output_dir):
             for class_name in class_map.get_class_names():
                 class_dir = join(output_dir, class_name)
                 make_dir(class_dir)
 
-            for chip_ind, (chip, labels) in enumerate(dataset):
-                class_id = labels.get_class_id()
-                # If a chip is not associated with a class, don't
-                # use it in training data.
-                if class_id is not None:
-                    class_name = class_map.get_by_id(class_id).name
-                    chip_path = join(
-                        output_dir, class_name, str(chip_ind) + '.png')
-                    save_img(chip, chip_path)
+            chip_ind = 0
+            for project_class_dir in project_class_dirs:
+                for class_name, src_class_dir in project_class_dir.items():
+                    dst_class_dir = join(output_dir, class_name)
+                    src_class_files = [
+                        join(src_class_dir, class_file)
+                        for class_file in os.listdir(src_class_dir)
+                    ]
+                    for src_class_file in src_class_files:
+                        dst_class_file = join(dst_class_dir,
+                            '{}.png'.format(chip_ind))
+                        shutil.move(src_class_file, dst_class_file)
+                        chip_ind += 1
 
-        convert_dataset(training_data, training_dir)
-        convert_dataset(validation_data, validation_dir)
+        _merge_training_results(training_results, training_dir)
+        _merge_training_results(validation_results, validation_dir)
         dataset_files.upload()
 
     def train(self, class_map, options):
@@ -162,7 +217,7 @@ class KerasClassification(MLBackend):
 
     def predict(self, chip, options):
         if self.model is None:
-            with tempfile.TemporaryDirectory(dir=RV_TEMP_DIR) as temp_dir:
+            with tempfile.TemporaryDirectory() as temp_dir:
                 model_path = download_if_needed(options.model_uri, temp_dir)
                 self.model = model_builder.build_from_path(model_path)
 

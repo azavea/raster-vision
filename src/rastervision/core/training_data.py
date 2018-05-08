@@ -1,3 +1,6 @@
+import random
+
+
 class TrainingData(object):
     """A set of chips and associated labels used to train a model."""
 
@@ -18,3 +21,13 @@ class TrainingData(object):
 
     def __iter__(self):
         return zip(self.chips, self.labels)
+
+    def shuffle(self):
+        """Randomly shuffle the chips and labels in-place.
+
+        This maintains the correspondence between chips and labels.
+        """
+        chip_labels = list(self)
+        random.shuffle(chip_labels)
+        # Unzip the list.
+        self.chips, self.labels = zip(*chip_labels)

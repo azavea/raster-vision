@@ -39,21 +39,25 @@ When using chain workflows, you will need to use the following file hierarchy co
 # Output of running Raster Vision
 <RVROOT>/rv-output
 
+# Output and config file for a run of compute_raster_stats command.
+<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/output/
+<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/config.json
+
 # Output and config file for a run of process_training_data command
-<RVROOT>/rv-output/datasets/<DATASET_KEY>/output/
-<RVROOT>/rv-output/datasets/<DATASET_KEY>/config.json
+.../<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/output/
+.../<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/config.json
 
 # Output (and config file) for a run of train command
-<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/output/
-<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/config.json
+.../<DATASET_KEY>/models/<MODEL_KEY>/output/
+.../<DATASET_KEY>/models/<MODEL_KEY>/config.json
 
 # Output (and config file) for a run of predict command
-<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/output/
-<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/config.json
+.../<MODEL_KEY>/predictions/<PREDICTION_KEY>/output/
+.../<MODEL_KEY>/predictions/<PREDICTION_KEY>/config.json
 
 # Output (and config file) for a run of eval command
-<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/evals/<EVAL_KEY>/output/
-<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/evals/<EVAL_KEY>/config.json
+.../<PREDICTION_KEY>/evals/<EVAL_KEY>/output/
+.../<PREDICTION_KEY>/evals/<EVAL_KEY>/config.json
 ```
 
 This convention is convenient and intuitive because it stores the config file for a run of a command adjacent to its output, which makes it easy to reason about how output files were generated. It also nests models inside datasets, predictions inside models, and evals inside predictions, which mirrors the one-to-many relationship in arbitrary workflows between datasets and models, models and predictions, and predictions and evals. We also like to use the following convention for other files that are input to Raster Vision, but this isn't required.
@@ -81,27 +85,27 @@ Before running the full workflow, you should check that the system is setup and 
 * Run the Docker container locally using `./scripts/run --cpu`.
 * Compile the files in `src/rastervision/protos/*.proto` into Python files by running `./scripts/compile`.
 
-If you run the workflow straight through, the predictions will be generated using a model that was only trained for a single step. Of course, the predictions will not be good, so you should run the workflow in two stages. In the first stage, you will run `process_training_data` and `train`. In the second stage, you will swap in a model that has already been trained on cars, and run `predict` and `eval`.
+If you run the workflow straight through, the predictions will be generated using a model that was only trained for a single step. Of course, the predictions will not be good, so you should run the workflow in two stages. In the first stage, you will run `compute_raster_stats`, `process_training_data` and `train`. In the second stage, you will swap in a model that has already been trained on cars, and run `predict` and `eval`.
 
 You can run the first stage of the workflow using
 ```
 python -m rastervision.utils.chain_workflow \
     <RVROOT>/workflow-configs/object-detection/cowc-potsdam-test.json \
-    process_training_data train \
+    compute_raster_stats process_training_data train \
     --run
 ```
-This should result in a hierarchy of files in `<RVROOT>/rv-output` which includes the generated config files. You should check that the training chips were generated correctly by unzipping `<RVROOT>/rv-output/datasets/<DATASET_KEY>/output/train-debug-chips.zip` and spot checking some of the debug chips. Below is a sample debug chip. The second half of the chips are negative chips that contain no objects. *If the training chips are generated incorrectly, the rest of the workflow will be corrupted.*
+This should result in a hierarchy of files in `<RVROOT>/rv-output` which includes the generated config files. You should check that the training chips were generated correctly by unzipping `<RVROOT>/rv-output/raw-datatsets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/output/train-debug-chips.zip` and spot checking some of the debug chips. Below is a sample debug chip. The second half of the chips are negative chips that contain no objects. *If the training chips are generated incorrectly, the rest of the workflow will be corrupted.*
 
 ![A debug chip](img/cowc-potsdam/debug-chip.png)
 
-Now, download the [trained car model](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-model.zip), unzip it, and place the `model` file in `<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/output/`, replacing the file that is already there. Then run
+Now, download the [trained car model](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-model.zip), unzip it, and place the `model` file in `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/output/`, replacing the file that is already there. Then run
 ```
 python -m rastervision.utils.chain_workflow \
     <RVROOT>/workflow-configs/object-detection/cowc-potsdam-test.json \
     predict eval \
     --run
 ```
-You should view the predictions in QGIS and check that it looks something like the following. The predictions are at `<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/output/2-13.json` and the corresponding imagery should be at `<RVROOT>/processed-data/cowc-potsdam-test/2-13.tif`. If the raster layer looks washed out, you will need to turn the alpha channel off in the layer's Properties in QGIS.
+You should view the predictions in QGIS and check that it looks something like the following. The predictions are at `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/output/2-13.json` and the corresponding imagery should be at `<RVROOT>/processed-data/cowc-potsdam-test/2-13.tif`. If the raster layer looks washed out, you will need to turn the alpha channel off in the layer's Properties in QGIS.
 
 ![Predictions on test COWC Potsdam dataset](img/cowc-potsdam/test-predictions.png)
 
@@ -109,14 +113,14 @@ You should view the predictions in QGIS and check that it looks something like t
 
 A common use case is to train a model as part of a workflow, and then run `predict` on that model for some new imagery. Assuming that a chain workflow was run successfully, producing the usual output rooted at `<RVROOT>/rv-output`, here are the steps to do this.
 
-* Copy the existing prediction config file at `<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/config.json` to `<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<NEW_PREDICTION_KEY>/config.json`. Note the `<NEW_PREDICTION_KEY>` in the path of the copied file.
+* Copy the existing prediction config file at `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/config.json` to `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<NEW_PREDICTION_KEY>/config.json`. Note the `<NEW_PREDICTION_KEY>` in the path of the copied file.
 * Edit the `projects` field in the new config file so that it references the  RasterSource and LabelSource for the new imagery.
 * Run the predict command with the new config file. In this case the command would be
 ```
 python -m rastervision.run predict \
     <RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<NEW_PREDICTION_KEY>/config.json
 ```
-* The predictions will be in `<RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<NEW_PREDICTION_KEY>/output`
+* The predictions will be in `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<NEW_PREDICTION_KEY>/output`
 
 It's also possible to make predictions outside of a workflow entirely. The `predict` config file just references a model file -- it could be located anywhere.
 
