@@ -22,14 +22,35 @@ def save_debug_image(im, labels, class_map, output_path):
     save_img(im, output_path)
 
 
-def make_pos_windows(image_extent, label_store, chip_size):
+def _make_chip_pos_windows(image_extent, label_store, options):
+    chip_size = options.chip_size
     pos_windows = []
-    for box in label_store.get_all_labels().get_boxes():
+    for box in label_store.get_all_labels().get_intersection_boxes(image_extent):
         window = box.make_random_square_container(
             image_extent.get_width(), image_extent.get_height(), chip_size)
         pos_windows.append(window)
 
     return pos_windows
+
+def _make_label_pos_windows(image_extent, label_store, options):
+    label_buffer = options.object_detection_options.label_buffer
+    pos_windows = []
+    for box in label_store.get_all_labels().get_intersection_boxes(image_extent):
+        window = box.make_buffer(label_buffer, image_extent)
+        pos_windows.append(window)
+
+    return pos_windows
+
+def make_pos_windows(image_extent, label_store, options):
+
+    window_method = options.object_detection_options.window_method
+
+    if window_method == 'label':
+        return _make_label_pos_windows(image_extent, label_store, options)
+    elif window_method == 'image':
+        return [image_extent.make_copy()]
+    else:
+        return _make_chip_pos_windows(image_extent, label_store, options)
 
 
 def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
@@ -58,7 +79,7 @@ class ObjectDetection(MLTask):
         label_store = project.ground_truth_label_store
         # Make positive windows which contain labels.
         pos_windows = make_pos_windows(
-            raster_source.get_extent(), label_store, options.chip_size)
+            raster_source.get_extent(), label_store, options)
         nb_pos_windows = len(pos_windows)
 
         # Make negative windows which do not contain labels.

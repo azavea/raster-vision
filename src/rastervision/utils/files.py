@@ -56,6 +56,16 @@ def sync_dir(src_dir, dest_uri, delete=False):
     subprocess.run(command)
 
 
+def _is_raster(uri, s3_test=False):
+    if s3_test:
+        uri = uri.replace('s3://', '/vsis3/')
+    try:
+        rasterio.open(uri)
+    except:
+        return False
+    return uri
+
+
 def download_if_needed(uri, download_dir, must_exist=True):
     """Download a file into a directory if it's remote."""
     if uri is None:
@@ -66,6 +76,12 @@ def download_if_needed(uri, download_dir, must_exist=True):
 
     parsed_uri = urlparse(uri)
     if parsed_uri.scheme == 's3':
+
+        # is it a raster?
+        vsis3_path = _is_raster(uri, s3_test=True)
+        if vsis3_path:
+            return vsis3_path
+
         try:
             print('Downloading {} to {}'.format(uri, path))
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)

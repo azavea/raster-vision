@@ -1,4 +1,6 @@
+import math
 import numpy as np
+from shapely.geometry import box as ShapelyBox
 
 
 class Box():
@@ -40,6 +42,9 @@ class Box():
 
     def tuple_format(self):
         return (self.ymin, self.xmin, self.ymax, self.xmax)
+
+    def shapely_format(self):
+        return (self.xmin, self.ymin, self.xmax, self.ymax)
 
     def npbox_format(self):
         """Return Box in npbox format used by TF Object Detection API.
@@ -110,6 +115,14 @@ class Box():
         return Box(*npbox)
 
     @staticmethod
+    def from_shapely(shape):
+        bounds = shape.bounds
+        return Box(bounds[1], bounds[0], bounds[3], bounds[2])
+
+    def get_shapely(self):
+        return ShapelyBox(*(self.shapely_format()))
+
+    @staticmethod
     def make_square(ymin, xmin, size):
         """Return new square Box."""
         return Box(ymin, xmin, ymin+size, xmin+size)
@@ -118,6 +131,27 @@ class Box():
         """Return new Box whose sides are eroded by erosion_size."""
         return Box(self.ymin + erosion_size, self.xmin + erosion_size,
                    self.ymax - erosion_size, self.xmax - erosion_size)
+
+    def make_buffer(self, buffer_size, max_extent):
+        """Return new Box whose sides are buffered by buffer_size."""
+
+        buffer_size = max(0., buffer_size)
+        if buffer_size < 1.:
+            delta_width = int(round(buffer_size * self.get_width()))
+            delta_height = int(round(buffer_size * self.get_height()))
+        else:
+            delta_height = delta_width = int(round(buffer_size))
+
+        return Box(
+            max(0, math.floor(self.ymin - delta_height)),
+            max(0, math.floor(self.xmin - delta_width)),
+            min(max_extent.get_height(), int(self.ymax) + delta_height),
+            min(max_extent.get_width(), int(self.xmax) + delta_width)
+        )
+
+    def make_copy(self):
+
+        return Box(*(self.tuple_format()))
 
     def get_windows(self, chip_size, stride):
         height = self.get_height()
