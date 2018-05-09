@@ -1,8 +1,8 @@
-FROM tensorflow/tensorflow:1.8.0-py3
+FROM tensorflow/tensorflow:1.5.0-py3
 
 # Everything below this line is shared with the GPU image.
 RUN apt-get update && \
-    apt-get install -y wget git python-protobuf
+    apt-get install -y wget git python-protobuf python3-tk
 
 # Needed for click to work
 ENV LC_ALL C.UTF-8
@@ -29,8 +29,23 @@ RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get install -y python-numpy gdal-bin libgdal-dev && \
     pip install rasterio
 
+# Install TF Object Detection API in /opt/tf-models
+RUN mkdir -p /opt/tf-models/temp/ && \
+    cd /opt/tf-models/temp/ && \
+    git clone https://github.com/tensorflow/models.git && \
+    cd models && \
+    git checkout d0b6a3 && \
+    cd .. && \
+    mv models/research/object_detection/ ../object_detection && \
+    mv models/research/slim/ ../slim && \
+    cd .. && \
+    rm -R temp && \
+    protoc object_detection/protos/*.proto --python_out=. && \
+    pip install cython==0.28.2 && \
+    pip install pycocotools==2.0.0
+
 WORKDIR /opt/src/
-ENV PYTHONPATH=/opt/src:/opt/src/tf:/opt/src/tf/slim:$PYTHONPATH
+ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
 
 COPY run_script.sh /usr/local/bin/
 CMD ["bash"]
