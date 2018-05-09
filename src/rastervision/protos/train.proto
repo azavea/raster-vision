@@ -8,13 +8,13 @@ message TrainConfig {
 
     message ObjectDetectionOptions {
         // path to Object Detection's train.py script
-        optional string train_py = 1 [default="/opt/src/tf/object_detection/train.py"];
+        optional string train_py = 1 [default="/opt/tf-models/object_detection/train.py"];
 
         // path to Object Detection's eval.py script
-        optional string eval_py = 2 [default="/opt/src/tf/object_detection/eval.py"];
+        optional string eval_py = 2 [default="/opt/tf-models/object_detection/eval.py"];
 
         // path to Object Detection's export_inference_graph.py script
-        optional string export_py = 3 [default="/opt/src/tf/object_detection/export_inference_graph.py"];
+        optional string export_py = 3 [default="/opt/tf-models/object_detection/export_inference_graph.py"];
     }
 
     message Options {
