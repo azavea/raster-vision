@@ -19,7 +19,7 @@ sudo nvidia-smi --auto-boost-default=0
 # Set GPU clock speeds
 sudo nvidia-smi -ac 2505,875
 
-sudo yum update
+sudo yum update -y
 sudo yum install -y ecs-init
 sudo service docker start
 wget "https://github.com/NVIDIA/nvidia-docker/releases/download/v${NVIDIA_DOCKER_VERSION}/nvidia-docker-${NVIDIA_DOCKER_FULL_VERSION}.x86_64.rpm"

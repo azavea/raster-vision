@@ -12,11 +12,12 @@ class ObjectDetectionEvaluationItem(EvaluationItem):
     def merge(self, other):
         super().merge(other)
 
-        total_gt_count = self.gt_count + other.gt_count
-        self_ratio = self.gt_count / total_gt_count
-        other_ratio = other.gt_count / total_gt_count
+        if other.gt_count > 0:
+            total_gt_count = self.gt_count + other.gt_count
+            self_ratio = self.gt_count / total_gt_count
+            other_ratio = other.gt_count / total_gt_count
 
-        def avg(self_val, other_val):
-            return self_ratio * self_val + other_ratio * other_val
+            def avg(self_val, other_val):
+                return self_ratio * self_val + other_ratio * other_val
 
-        self.count_error = avg(self.count_error, other.count_error)
+            self.count_error = avg(self.count_error, other.count_error)

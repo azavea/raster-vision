@@ -13,7 +13,10 @@ Publish docker GPU container to ECR.
 "
 }
 
-PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+PROJECT_ROOT="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
@@ -22,7 +25,7 @@ then
         usage
     else
         $PROJECT_ROOT/scripts/update
-        `aws ecr get-login --region us-east-1`
+        `aws ecr get-login --region us-east-1 --no-include-email`
         docker tag raster-vision-gpu:latest 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest
         docker push 279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest
 
