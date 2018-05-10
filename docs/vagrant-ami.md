@@ -13,7 +13,6 @@ These instructions are for getting Vagrant running and building and publishing a
 
 | Name     | Description                              |
 | -------- | ---------------------------------------- |
-| `run` | Run container locally or remotely |
 | `setup`  | Bring up the virtual machine and install dependent software on it |
 
 ## Get Vagrant box running

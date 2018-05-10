@@ -9,14 +9,14 @@
 
 | Name     | Description                              |
 | -------- | ---------------------------------------- |
-| `cipublish`  | Publish docker image to ECR |
-| `clean`  | Remove build outputs inside virtual machine |
+| `update` | Build Docker containers |
+| `run` | Run container locally |
+| `jupyter` | Run Jupyter notebook in container with mounted data and notebook directory from `RASTER_VISION_NOTEBOOK_DIR` |
+| `cipublish`  | Publish Docker image to ECR |
+| `clean`  | Remove dangling containers |
 | `test`   | Run unit tests and lint on source code |
-| `run` | Run container locally or remotely |
-| `jupyter` | Run container with Juptyer notebook with mounted data and notebook directory from `RASTER_VISION_NOTEBOOK_DIR` |
-| `setup`  | Bring up the virtual machine and install dependent software on it |
 | `setup_aws_batch`  | Setup AWS Batch |
-| `update` | Install dependent software inside virtual machine |
+
 
 ## Initial setup
 
