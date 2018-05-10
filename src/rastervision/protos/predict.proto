@@ -3,7 +3,7 @@ syntax = "proto2";
 package rv.protos;
 
 import "rastervision/protos/machine_learning.proto";
-import "rastervision/protos/project.proto";
+import "rastervision/protos/scene.proto";
 
 message PredictConfig {
     message ObjectDetectionOptions {
@@ -42,6 +42,6 @@ message PredictConfig {
     }
 
     required MachineLearning machine_learning = 1;
-    repeated Project projects = 4;
+    repeated Scene scenes = 4;
     required Options options = 5;
 }

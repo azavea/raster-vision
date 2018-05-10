@@ -16,7 +16,7 @@ class MLBackend(ABC):
             project: Project
             data: TrainingData
             class_map: ClassMap
-            options: ProcessTrainingDataConfig.Options
+            options: MakeTrainingChipsConfig.Options
 
         Returns:
             backend-specific data-structures consumed by ml_backend's
@@ -26,14 +26,14 @@ class MLBackend(ABC):
 
     @abstractmethod
     def process_projectset_results(self, training_results, validation_results,
-                                       class_map, options):
+                                   class_map, options):
         """After all projects have been processed, process the resultset
 
         Args:
             training_results: dependent on the ml_backend's process_project_data
             validation_results: dependent on the ml_backend's process_project_data
             class_map: ClassMap
-            options: ProcessTrainingDataConfig.Options
+            options: MakeTrainingChipsConfig.Options
         """
         pass
 

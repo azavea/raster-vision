@@ -1,7 +1,8 @@
 from rastervision.core.command import Command
 
 
-class ProcessTrainingData(Command):
+class MakeTrainingChips(Command):
+
     def __init__(self, train_projects, validation_projects, ml_task,
                  options):
         self.train_projects = train_projects
@@ -10,5 +11,5 @@ class ProcessTrainingData(Command):
         self.options = options
 
     def run(self):
-        self.ml_task.process_training_data(
+        self.ml_task.make_training_chips(
             self.train_projects, self.validation_projects, self.options)

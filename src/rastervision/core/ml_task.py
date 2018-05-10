@@ -6,6 +6,7 @@ from rastervision.core.training_data import TrainingData
 TRAIN = 'train'
 VALIDATION = 'validation'
 
+
 class MLTask(object):
     """Functionality for a specific machine learning task.
 
@@ -84,11 +85,11 @@ class MLTask(object):
     def get_class_map(self):
         return self.class_map
 
-    def process_training_data(self, train_projects, validation_projects,
-                              options):
+    def make_training_chips(self, train_projects, validation_projects,
+                            options):
         """Process training data.
 
-        Convert Projects with a ground_truth_label_store into training
+        Convert Scenes with a ground_truth_label_store into training
         chips in MLBackend-specific format, and write to URI specified in
         options.
 
@@ -96,7 +97,7 @@ class MLTask(object):
             train_projects: list of Project
             validation_projects: list of Project
                 (that is disjoint from train_projects)
-            options: ProcessTrainingDataConfig.Options
+            options: MakeTrainingChipsConfig.Options
         """
 
         def _process_project(project, type_):

@@ -1,4 +1,4 @@
-from rastervision.core.project import Project
+from rastervision.core.scene import Scene
 from rastervision.builders import label_store_builder, raster_source_builder
 
 
@@ -22,7 +22,7 @@ def build(config, class_map):
             config.prediction_label_store, crs_transformer, extent,
             class_map, writable=True)
 
-    return Project(
+    return Scene(
         id=config.id,
         raster_source=raster_source,
         ground_truth_label_store=ground_truth_label_store,

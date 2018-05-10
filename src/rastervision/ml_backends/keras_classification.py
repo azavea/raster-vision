@@ -22,6 +22,7 @@ from rastervision.core.box import Box
 
 
 class FileGroup(object):
+
     def __init__(self, base_uri):
         self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
@@ -42,6 +43,7 @@ class FileGroup(object):
 
 class DatasetFiles(FileGroup):
     """Utilities for files produced when calling convert_training_data."""
+
     def __init__(self, base_uri):
         FileGroup.__init__(self, base_uri)
 
@@ -77,6 +79,7 @@ class DatasetFiles(FileGroup):
 
 class ModelFiles(FileGroup):
     """Utilities for files produced when calling train."""
+
     def __init__(self, base_uri):
         FileGroup.__init__(self, base_uri)
 
@@ -110,6 +113,7 @@ class ModelFiles(FileGroup):
 
 
 class KerasClassification(MLBackend):
+
     def __init__(self):
         self.model = None
         # persist for when output_uri is remote
@@ -122,7 +126,7 @@ class KerasClassification(MLBackend):
             project: Project
             data: TrainingData
             class_map: ClassMap
-            options: ProcessTrainingDataConfig.Options
+            options: MakeTrainingChipsConfig.Options
 
         Returns:
             dictionary of Project's classes and corresponding local directory path
@@ -155,7 +159,7 @@ class KerasClassification(MLBackend):
         return class_dirs
 
     def process_projectset_results(self, training_results, validation_results,
-                                class_map, options):
+                                   class_map, options):
         """After all projects have been processed, collect all the images of
         each class across all projects
 
@@ -165,7 +169,7 @@ class KerasClassification(MLBackend):
             validation_results: list of dictionaries of validation projects'
                 classes and corresponding local directory path
             class_map: ClassMap
-            options: ProcessTrainingDataConfig.Options
+            options: MakeTrainingChipsConfig.Options
         """
         dataset_files = DatasetFiles(options.output_uri)
         training_dir = dataset_files.get_local_path(
@@ -188,7 +192,7 @@ class KerasClassification(MLBackend):
                     ]
                     for src_class_file in src_class_files:
                         dst_class_file = join(dst_class_dir,
-                            '{}.png'.format(chip_ind))
+                                              '{}.png'.format(chip_ind))
                         shutil.move(src_class_file, dst_class_file)
                         chip_ind += 1
 
