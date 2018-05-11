@@ -357,41 +357,41 @@ class TFObjectDetectionAPI(MLBackend):
 
     def __init__(self):
         self.detection_graph = None
-        # persist project training packages for when output_uri is remote
-        self.project_training_packages = []
+        # persist scene training packages for when output_uri is remote
+        self.scene_training_packages = []
 
-    def process_project_data(self, project, data, class_map, options):
-        """Process each project's training data
+    def process_scene_data(self, scene, data, class_map, options):
+        """Process each scene's training data
 
         Args:
-            project: Project
+            scene: Scene
             data: TrainingData
             class_map: ClassMap
             options: MakeTrainingChipsConfig.Options
 
         Returns:
-            the local path to the project's TFRecord
+            the local path to the scene's TFRecord
         """
 
         training_package = TrainingPackage(options.output_uri)
-        self.project_training_packages.append(training_package)
+        self.scene_training_packages.append(training_package)
         tf_examples = make_tf_examples(data, class_map)
-        # Ensure directory is unique since project id's could be shared between
+        # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
         record_path = training_package.get_local_path(
             training_package.get_record_uri('{}-{}'.format(
-                project.id, uuid.uuid4())))
+                scene.id, uuid.uuid4())))
         write_tf_record(tf_examples, record_path)
 
         return record_path
 
-    def process_projectset_results(self, training_results, validation_results,
-                                   class_map, options):
-        """After all projects have been processed, merge all TFRecords
+    def process_sceneset_results(self, training_results, validation_results,
+                                 class_map, options):
+        """After all scenes have been processed, merge all TFRecords
 
         Args:
-            training_results: list of training projects' TFRecords
-            validation_results: list of validation projects' TFRecords
+            training_results: list of training scenes' TFRecords
+            validation_results: list of validation scenes' TFRecords
             class_map: ClassMap
             options: MakeTrainingChipsConfig.Options
         """
@@ -404,7 +404,7 @@ class TFObjectDetectionAPI(MLBackend):
             record_path = training_package.get_local_path(
                 training_package.get_record_uri(split))
 
-            # merge each project's tfrecord into "split" tf record
+            # merge each scene's tfrecord into "split" tf record
             merge_tf_records(record_path, results)
 
             # Save debug chips.
@@ -427,8 +427,8 @@ class TFObjectDetectionAPI(MLBackend):
 
         training_package.upload(debug=options.debug)
 
-        # clear project training packages
-        del self.project_training_packages[:]
+        # clear scene training packages
+        del self.scene_training_packages[:]
 
     def train(self, class_map, options):
         # Download training data and update config file.

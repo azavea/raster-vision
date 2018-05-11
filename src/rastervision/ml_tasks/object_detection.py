@@ -32,6 +32,7 @@ def _make_chip_pos_windows(image_extent, label_store, options):
 
     return pos_windows
 
+
 def _make_label_pos_windows(image_extent, label_store, options):
     label_buffer = options.object_detection_options.label_buffer
     pos_windows = []
@@ -40,6 +41,7 @@ def _make_label_pos_windows(image_extent, label_store, options):
         pos_windows.append(window)
 
     return pos_windows
+
 
 def make_pos_windows(image_extent, label_store, options):
 
@@ -74,9 +76,10 @@ def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
 
 
 class ObjectDetection(MLTask):
-    def get_train_windows(self, project, options):
-        raster_source = project.raster_source
-        label_store = project.ground_truth_label_store
+
+    def get_train_windows(self, scene, options):
+        raster_source = scene.raster_source
+        label_store = scene.ground_truth_label_store
         # Make positive windows which contain labels.
         pos_windows = make_pos_windows(
             raster_source.get_extent(), label_store, options)
@@ -91,7 +94,7 @@ class ObjectDetection(MLTask):
             nb_neg_windows = round(
                 options.object_detection_options.neg_ratio * nb_pos_windows)
         else:
-            nb_neg_windows = 100 # just make some
+            nb_neg_windows = 100  # just make some
         max_attempts = 100 * nb_neg_windows
         neg_windows = make_neg_windows(
             raster_source, label_store, options.chip_size,
@@ -99,8 +102,8 @@ class ObjectDetection(MLTask):
 
         return pos_windows + neg_windows
 
-    def get_train_labels(self, window, project, options):
-        return project.ground_truth_label_store.get_labels(
+    def get_train_labels(self, window, scene, options):
+        return scene.ground_truth_label_store.get_labels(
             window, ioa_thresh=options.object_detection_options.ioa_thresh)
 
     def get_predict_windows(self, extent, options):
@@ -111,6 +114,6 @@ class ObjectDetection(MLTask):
     def get_evaluation(self):
         return ObjectDetectionEvaluation()
 
-    def save_debug_predict_image(self, project, debug_dir_uri):
+    def save_debug_predict_image(self, scene, debug_dir_uri):
         # TODO implement this
         pass

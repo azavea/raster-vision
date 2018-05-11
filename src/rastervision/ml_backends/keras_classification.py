@@ -117,29 +117,29 @@ class KerasClassification(MLBackend):
     def __init__(self):
         self.model = None
         # persist for when output_uri is remote
-        self.project_dataset_files = []
+        self.scene_dataset_files = []
 
-    def process_project_data(self, project, data, class_map, options):
-        """Process each project's training data
+    def process_scene_data(self, scene, data, class_map, options):
+        """Process each scene's training data
 
         Args:
-            project: Project
+            scene: Scene
             data: TrainingData
             class_map: ClassMap
             options: MakeTrainingChipsConfig.Options
 
         Returns:
-            dictionary of Project's classes and corresponding local directory path
+            dictionary of Scene's classes and corresponding local directory path
         """
         dataset_files = DatasetFiles(options.output_uri)
-        self.project_dataset_files.append(dataset_files)
+        self.scene_dataset_files.append(dataset_files)
 
         scratch_dir = dataset_files.get_local_path(
             dataset_files.scratch_uri)
-        # Ensure directory is unique since project id's could be shared between
+        # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
-        project_dir = join(scratch_dir, '{}-{}'.format(
-            project.id, uuid.uuid4()))
+        scene_dir = join(scratch_dir, '{}-{}'.format(
+            scene.id, uuid.uuid4()))
         class_dirs = {}
 
         for chip_idx, (chip, labels) in enumerate(data):
@@ -149,7 +149,7 @@ class KerasClassification(MLBackend):
             if class_id is None:
                 continue
             class_name = class_map.get_by_id(class_id).name
-            class_dir = join(project_dir, class_name)
+            class_dir = join(scene_dir, class_name)
             make_dir(class_dir)
             class_dirs[class_name] = class_dir
             chip_name = '{}.png'.format(chip_idx)
@@ -158,15 +158,15 @@ class KerasClassification(MLBackend):
 
         return class_dirs
 
-    def process_projectset_results(self, training_results, validation_results,
-                                   class_map, options):
-        """After all projects have been processed, collect all the images of
-        each class across all projects
+    def process_sceneset_results(self, training_results, validation_results,
+                                 class_map, options):
+        """After all scenes have been processed, collect all the images of
+        each class across all scenes
 
         Args:
-            training_results: list of dictionaries of training projects'
+            training_results: list of dictionaries of training scenes'
                 classes and corresponding local directory path
-            validation_results: list of dictionaries of validation projects'
+            validation_results: list of dictionaries of validation scenes'
                 classes and corresponding local directory path
             class_map: ClassMap
             options: MakeTrainingChipsConfig.Options
@@ -177,14 +177,14 @@ class KerasClassification(MLBackend):
         validation_dir = dataset_files.get_local_path(
             dataset_files.validation_uri)
 
-        def _merge_training_results(project_class_dirs, output_dir):
+        def _merge_training_results(scene_class_dirs, output_dir):
             for class_name in class_map.get_class_names():
                 class_dir = join(output_dir, class_name)
                 make_dir(class_dir)
 
             chip_ind = 0
-            for project_class_dir in project_class_dirs:
-                for class_name, src_class_dir in project_class_dir.items():
+            for scene_class_dir in scene_class_dirs:
+                for class_name, src_class_dir in scene_class_dir.items():
                     dst_class_dir = join(output_dir, class_name)
                     src_class_files = [
                         join(src_class_dir, class_file)

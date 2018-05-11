@@ -3,9 +3,9 @@ import copy
 
 
 class LabelStore(ABC):
-    """A source of labels for a project.
+    """A source of labels for a scene.
 
-    An LabelStore is a read/write source of labels for a project
+    An LabelStore is a read/write source of labels for a scene
     that could be backed by a file, a database, an API, etc.
     """
 
