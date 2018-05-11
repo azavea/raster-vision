@@ -18,17 +18,35 @@ Run the jupyter notebook in a raster-vision docker image locally
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    docker run --rm -it \
-           -e "AWS_PROFILE=$AWS_PROFILE" \
-           -v "$HOME/.aws":/root/.aws \
-           -v "$SRC":/opt/src \
-           -v ${RASTER_VISION_DATA_DIR}:/opt/data \
-           -p 8888:8888 \
-           raster-vision-cpu \
-           /run_jupyter.sh \
-           --ip 0.0.0.0 \
-           --port 8888 \
-           --no-browser \
-           --allow-root \
-           --notebook-dir=/opt/src
+    if [ -n ${RASTER_VISION_NOTEBOOK_DIR} ]; then
+        NOTEBOOK_DIR=$RASTER_VISION_NOTEBOOK_DIR
+        docker run --rm -it \
+               -e "AWS_PROFILE=$AWS_PROFILE" \
+               -v "$HOME/.aws":/root/.aws \
+               -v "$SRC":/opt/src \
+               -v ${RASTER_VISION_DATA_DIR}:/opt/data \
+               -v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks \
+               -p 8888:8888 \
+               raster-vision-cpu \
+               /run_jupyter.sh \
+               --ip 0.0.0.0 \
+               --port 8888 \
+               --no-browser \
+               --allow-root \
+               --notebook-dir=/opt/notebooks;
+    else
+        docker run --rm -it \
+               -e "AWS_PROFILE=$AWS_PROFILE" \
+               -v "$HOME/.aws":/root/.aws \
+               -v "$SRC":/opt/src \
+               -v ${RASTER_VISION_DATA_DIR}:/opt/data \
+               -p 8888:8888 \
+               raster-vision-cpu \
+               /run_jupyter.sh \
+               --ip 0.0.0.0 \
+               --port 8888 \
+               --no-browser \
+               --allow-root \
+               --notebook-dir=/opt/src;
+    fi
 fi
