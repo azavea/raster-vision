@@ -6,6 +6,7 @@ from rastervision.core.training_data import TrainingData
 TRAIN = 'train'
 VALIDATION = 'validation'
 
+
 class MLTask(object):
     """Functionality for a specific machine learning task.
 
@@ -23,14 +24,14 @@ class MLTask(object):
         self.class_map = class_map
 
     @abstractmethod
-    def get_train_windows(self, project, options):
-        """Return the training windows for a Project.
+    def get_train_windows(self, scene, options):
+        """Return the training windows for a Scene.
 
         The training windows represent the spatial extent of the training
         chips to generate.
 
         Args:
-            project: Project to generate windows for
+            scene: Scene to generate windows for
             options: TrainConfig.Options
 
         Returns:
@@ -39,12 +40,12 @@ class MLTask(object):
         pass
 
     @abstractmethod
-    def get_train_labels(self, window, project, options):
-        """Return the training labels in a window for a project.
+    def get_train_labels(self, window, scene, options):
+        """Return the training labels in a window for a scene.
 
         Args:
             window: Box
-            project: Project
+            scene: Scene
             options: TrainConfig.Options
 
         Returns:
@@ -74,62 +75,62 @@ class MLTask(object):
         pass
 
     @abstractmethod
-    def save_debug_predict_image(self, project, debug_dir_uri):
+    def save_debug_predict_image(self, scene, debug_dir_uri):
         """Save a debug image of predictions.
 
-        This writes to debug_dir_uri/<project.id>.jpg.
+        This writes to debug_dir_uri/<scene.id>.jpg.
         """
         pass
 
     def get_class_map(self):
         return self.class_map
 
-    def process_training_data(self, train_projects, validation_projects,
-                              options):
-        """Process training data.
+    def make_training_chips(self, train_scenes, validation_scenes,
+                            options):
+        """Make training chips.
 
-        Convert Projects with a ground_truth_label_store into training
+        Convert Scenes with a ground_truth_label_store into training
         chips in MLBackend-specific format, and write to URI specified in
         options.
 
         Args:
-            train_projects: list of Project
-            validation_projects: list of Project
-                (that is disjoint from train_projects)
-            options: ProcessTrainingDataConfig.Options
+            train_scenes: list of Scene
+            validation_scenes: list of Scene
+                (that is disjoint from train_scenes)
+            options: MakeTrainingChipsConfig.Options
         """
 
-        def _process_project(project, type_):
+        def _process_scene(scene, type_):
             data = TrainingData()
-            print('Making {} chips for project: {}'.format(
-                type_, project.id), end='', flush=True)
-            windows = self.get_train_windows(project, options)
+            print('Making {} chips for scene: {}'.format(
+                type_, scene.id), end='', flush=True)
+            windows = self.get_train_windows(scene, options)
             for window in windows:
-                chip = project.raster_source.get_chip(window)
+                chip = scene.raster_source.get_chip(window)
                 labels = self.get_train_labels(
-                    window, project, options)
+                    window, scene, options)
                 data.append(chip, labels)
                 print('.', end='', flush=True)
             print()
             # Shuffle data so the first N samples which are displayed in
             # Tensorboard are more diverse.
             data.shuffle()
-            # TODO load and delete project data as needed to avoid
+            # TODO load and delete scene data as needed to avoid
             # running out of disk space
-            return self.backend.process_project_data(
-                project, data, self.class_map, options)
+            return self.backend.process_scene_data(
+                scene, data, self.class_map, options)
 
-        def _process_projects(projects, type_):
+        def _process_scenes(scenes, type_):
             return [
-                _process_project(project, type_)
-                for project in projects
+                _process_scene(scene, type_)
+                for scene in scenes
             ]
 
         # TODO: parallel processing!
-        processed_training_results = _process_projects(train_projects, TRAIN)
-        processed_validation_results = _process_projects(
-            validation_projects, VALIDATION)
-        self.backend.process_projectset_results(
+        processed_training_results = _process_scenes(train_scenes, TRAIN)
+        processed_validation_results = _process_scenes(
+            validation_scenes, VALIDATION)
+        self.backend.process_sceneset_results(
             processed_training_results, processed_validation_results,
             self.class_map, options)
 
@@ -141,20 +142,20 @@ class MLTask(object):
         """
         self.backend.train(self.class_map, options)
 
-    def predict(self, projects, options):
-        """Make predictions for projects.
+    def predict(self, scenes, options):
+        """Make predictions for scenes.
 
         The predictions are saved to the prediction_label_store in
-        each project.
+        each scene.
 
         Args:
-            projects: list of Projects
+            scenes: list of Scenes
             options: PredictConfig.Options
         """
-        for project in projects:
-            print('Making predictions for project', end='', flush=True)
-            raster_source = project.raster_source
-            label_store = project.prediction_label_store
+        for scene in scenes:
+            print('Making predictions for scene', end='', flush=True)
+            raster_source = scene.raster_source
+            label_store = scene.prediction_label_store
             label_store.clear()
 
             windows = self.get_predict_windows(
@@ -171,26 +172,26 @@ class MLTask(object):
 
             if (options.debug and options.debug_uri and
                     self.class_map.has_all_colors()):
-                self.save_debug_predict_image(project, options.debug_uri)
+                self.save_debug_predict_image(scene, options.debug_uri)
 
-    def eval(self, projects, options):
-        """Evaluate predictions against ground truth in projects.
+    def eval(self, scenes, options):
+        """Evaluate predictions against ground truth in scenes.
 
         Writes output to URI in options.
 
         Args:
-            projects: list of Projects that contain both
+            scenes: list of Scenes that contain both
                 ground_truth_label_store and prediction_label_store
             options: EvalConfig.Options
         """
         evaluation = self.get_evaluation()
-        for project in projects:
-            print('Computing evaluation for project...')
-            ground_truth = project.ground_truth_label_store
-            predictions = project.prediction_label_store
+        for scene in scenes:
+            print('Computing evaluation for scene...')
+            ground_truth = scene.ground_truth_label_store
+            predictions = scene.prediction_label_store
 
-            project_evaluation = self.get_evaluation()
-            project_evaluation.compute(
+            scene_evaluation = self.get_evaluation()
+            scene_evaluation.compute(
                 self.class_map, ground_truth, predictions)
-            evaluation.merge(project_evaluation)
+            evaluation.merge(scene_evaluation)
         evaluation.save(options.output_uri)

@@ -22,7 +22,7 @@ message TrainConfig {
         // backend.
         optional string backend_config_uri = 1;
 
-        // URI for the directory containing the output of process_training_data.
+        // URI for the directory containing the output of make_training_chips.
         optional string training_data_uri = 2;
 
         // URI for the directory containing the output of training.

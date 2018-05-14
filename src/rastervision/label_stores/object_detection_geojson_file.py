@@ -5,12 +5,13 @@ from rastervision.labels.object_detection_labels import (
 from rastervision.label_stores.utils import add_classes_to_geojson
 from rastervision.utils.files import file_to_str, str_to_file
 from rastervision.label_stores.object_detection_label_store import (
-        ObjectDetectionLabelStore)
+    ObjectDetectionLabelStore)
 
 
 class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
     # TODO allow null crs_transformer for when we assume that the labels
     # are already in the crs and don't need to be converted.
+
     def __init__(self, uri, crs_transformer, class_map, writable=False):
         self.uri = uri
         self.crs_transformer = crs_transformer
@@ -18,6 +19,7 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
         self.writable = writable
 
         try:
+            # TODO: catch exceptions more specifically
             geojson = json.loads(file_to_str(uri))
             geojson = add_classes_to_geojson(geojson, class_map)
             self.labels = ObjectDetectionLabels.from_geojson(

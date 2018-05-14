@@ -5,7 +5,7 @@ from rastervision.utils.files import str_to_file
 
 
 class Evaluation(ABC):
-    """An evaluation of the predictions for a set of projects."""
+    """An evaluation of the predictions for a set of scenes."""
 
     def __init__(self):
         self.clear()
@@ -35,9 +35,9 @@ class Evaluation(ABC):
         str_to_file(json_str, output_uri)
 
     def merge(self, evaluation):
-        """Merge Evaluation for another Project into this one.
+        """Merge Evaluation for another Scene into this one.
 
-        This is useful for computing the average metrics of a set of projects.
+        This is useful for computing the average metrics of a set of scenes.
         The results of the averaging are stored in this Evaluation.
 
         Args:
@@ -53,7 +53,7 @@ class Evaluation(ABC):
 
     @abstractmethod
     def compute(self, ground_truth_label_store, prediction_label_store):
-        """Compute metrics for a single project.
+        """Compute metrics for a single scene.
 
         Args:
             ground_truth_label_store: LabelStore with the ground

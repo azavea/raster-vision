@@ -1,5 +1,5 @@
 {
-    "train_projects": [
+    "train_scenes": [
         {
             "raster_source": {
                 "geotiff_files": {
@@ -24,7 +24,7 @@
             }
         }
     ],
-    "test_projects": [
+    "test_scenes": [
         {
             "id": "2-13",
             "raster_source": {
@@ -81,7 +81,7 @@
             }
         ]
     },
-    "process_training_data_options": {
+    "make_training_chips_options": {
         "object_detection_options": {
             "neg_ratio": 1.0,
             "ioa_thresh": 0.8

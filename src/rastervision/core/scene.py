@@ -1,10 +1,10 @@
-class Project():
+class Scene():
     """The raster data and labels associated with an area of interest."""
 
     def __init__(self, id=None, raster_source=None,
-                ground_truth_label_store=None,
-                prediction_label_store=None):
-        """Construct a new Project.
+                 ground_truth_label_store=None,
+                 prediction_label_store=None):
+        """Construct a new Scene.
 
         Args:
             id: optional string
