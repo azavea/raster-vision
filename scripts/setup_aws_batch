@@ -14,18 +14,25 @@ should only be done once per AWS account.
 "
 }
 
-PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${0}")")")"
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+PROJECT_ROOT="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
+SRC="${PROJECT_ROOT}/src"
 BATCH_CONFIG=$PROJECT_ROOT/deployment/batch
 
+aws batch create-compute-environment --cli-input-json file://$BATCH_CONFIG/compute_environment_gpu3.json
 aws batch create-compute-environment --cli-input-json file://$BATCH_CONFIG/compute_environment_gpu.json
 aws batch create-compute-environment --cli-input-json file://$BATCH_CONFIG/compute_environment_cpu.json
 echo 'Waiting 10s...'
 sleep 10s
 
+aws batch create-job-queue --cli-input-json file://$BATCH_CONFIG/job_queue_gpu3.json
 aws batch create-job-queue --cli-input-json file://$BATCH_CONFIG/job_queue_gpu.json
 aws batch create-job-queue --cli-input-json file://$BATCH_CONFIG/job_queue_cpu.json
 echo 'Waiting 10s...'
 sleep 10s
 
+aws batch register-job-definition --cli-input-json file://$BATCH_CONFIG/job_def_gpu3.json
 aws batch register-job-definition --cli-input-json file://$BATCH_CONFIG/job_def_gpu.json
 aws batch register-job-definition --cli-input-json file://$BATCH_CONFIG/job_def_cpu.json

@@ -1,0 +1,49 @@
+{
+    "jobDefinitionName": "raster-vision-gpu3",
+    "type": "container",
+    "parameters": {},
+    "retryStrategy": {
+        "attempts": 1
+    },
+    "containerProperties": {
+        "image": "279682201306.dkr.ecr.us-east-1.amazonaws.com/raster-vision-gpu:latest",
+        "vcpus": 8,
+        "memory": 40000,
+        "command": [
+            "run_experiment.sh",
+            "raster-vision",
+            "lf/batch",
+            "experiments/tests/semseg/potsdam_quick_test.json",
+            "validation_eval"
+        ],
+        "volumes": [
+            {
+                "host": {
+                    "sourcePath": "/var/lib/nvidia-docker/volumes/nvidia_driver/latest"
+                },
+                "name": "nvidia"
+            },
+            {
+                "host": {
+                    "sourcePath": "/home/ec2-user"
+                },
+                "name": "home"
+            }
+        ],
+        "mountPoints": [
+            {
+                "containerPath": "/usr/local/nvidia",
+                "readOnly": false,
+                "sourceVolume": "nvidia"
+            },
+            {
+                "containerPath": "/opt/data",
+                "readOnly": false,
+                "sourceVolume": "home"
+            }
+        ],
+        "readonlyRootFilesystem": false,
+        "privileged": true,
+        "ulimits": []
+    }
+}
