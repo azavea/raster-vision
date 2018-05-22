@@ -16,10 +16,6 @@ from rastervision.protos.label_store_pb2 import (
     LabelStore as LabelStoreConfig,
     ObjectDetectionGeoJSONFile as ObjectDetectionGeoJSONFileConfig,
     ClassificationGeoJSONFile as ClassificationGeoJSONFileConfig)
-from rastervision.protos.raster_transformer_pb2 import (
-    RasterTransformer as RasterTransformerConfig)
-from rastervision.protos.raster_source_pb2 import (
-    RasterSource as RasterSourceConfig)
 
 from rastervision.utils.files import (
     load_json_config, save_json_config, file_to_str, str_to_file)
@@ -142,6 +138,16 @@ class ChainWorkflow(object):
             scene.prediction_label_store.MergeFrom(
                 self.make_prediction_label_store(scene))
 
+        for idx, scene in enumerate(self.workflow.predict_scenes):
+            if len(scene.id) < 1:
+                scene.id = 'predict-{}'.format(idx)
+            scene.raster_source.raster_transformer.MergeFrom(
+                self.workflow.raster_transformer)
+
+            # Set prediction_label_store from generated URI.
+            scene.prediction_label_store.MergeFrom(
+                self.make_prediction_label_store(scene))
+
     def make_prediction_label_store(self, scene):
         label_store = scene.ground_truth_label_store
         label_store_type = label_store.WhichOneof(
@@ -167,6 +173,7 @@ class ChainWorkflow(object):
         config = ComputeRasterStatsConfig()
         scenes = copy.deepcopy(self.workflow.train_scenes)
         scenes.extend(self.workflow.test_scenes)
+        scenes.extend(self.workflow.predict_scenes)
         for scene in scenes:
             # Set the raster_transformer so its fields are null since
             # compute_raster_stats will generate stats_uri.
@@ -218,6 +225,7 @@ class ChainWorkflow(object):
         config = PredictConfig()
         config.machine_learning.MergeFrom(self.workflow.machine_learning)
         config.scenes.MergeFrom(self.workflow.test_scenes)
+        config.scenes.MergeFrom(self.workflow.predict_scenes)
         config.options.MergeFrom(self.workflow.predict_options)
         config.options.debug = self.workflow.debug
         config.options.debug_uri = join(
