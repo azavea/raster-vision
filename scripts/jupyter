@@ -6,7 +6,10 @@ if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
-PROJECT_ROOT="$(pwd)"
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+PROJECT_ROOT="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
 SRC="$PROJECT_ROOT/src"
 
 function usage() {
