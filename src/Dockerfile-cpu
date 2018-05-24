@@ -32,9 +32,10 @@ RUN add-apt-repository ppa:ubuntugis/ppa && \
 # Install TF Object Detection API in /opt/tf-models
 RUN mkdir -p /opt/tf-models/temp/ && \
     cd /opt/tf-models/temp/ && \
-    git clone https://github.com/tensorflow/models.git && \
+    git clone https://github.com/azavea/models.git && \
     cd models && \
-    git checkout d0b6a3 && \
+    git checkout lf/fix-python3 && \
+    git checkout eef6bb && \
     cd .. && \
     mv models/research/object_detection/ ../object_detection && \
     mv models/research/slim/ ../slim && \
