@@ -1,0 +1,22 @@
+#!/bin/bash
+
+source .travis/env
+
+TAG_SUFFIX=${1}
+IS_LATEST=${2}
+
+docker login -u="$QUAY_USERNAME" -p="$QUAY_PASSWORD" quay.io
+
+function tag_and_push() {
+    docker tag ${CPU_IMAGE} "${CPU_TAG}-${1}";
+    docker tag ${GPU_IMAGE} "${GPU_TAG}-${1}";
+
+    docker push "${CPU_TAG}-${1}"
+    docker push "${GPU_TAG}-${1}"
+}
+
+tag_and_push ${TAG_SUFFIX}
+
+if [ "$IS_LATEST" == "TRUE" ]; then
+    tag_and_push "latest"
+fi
