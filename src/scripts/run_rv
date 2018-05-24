@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Script to run a command on a specific branch of RV. Used for running commands
+# in AWS Batch jobs.
+
 set -ex
 
 BRANCH=$1
