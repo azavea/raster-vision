@@ -1,0 +1,38 @@
+#!/bin/bash
+
+apt-get update
+apt-get install -y wget git python-protobuf python3-tk
+
+# Install protoc
+wget -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip
+unzip /tmp/protoc3.zip -d /tmp/protoc3
+mv /tmp/protoc3/bin/* /usr/local/bin/
+mv /tmp/protoc3/include/* /usr/local/include/
+rm -R /tmp/protoc3
+rm /tmp/protoc3.zip
+
+# Install Python deps
+pip install keras==2.1.6 flake8 awscli lxml shapely boto3==1.6.0 \
+    pyproj imageio scikit-learn six h5py matplotlib pillow click npstreams
+
+# Install Rasterio
+add-apt-repository ppa:ubuntugis/ppa
+apt-get update
+apt-get install -y python-numpy gdal-bin libgdal-dev
+pip install rasterio
+
+# Install TF Object Detection API in /opt/tf-models
+mkdir -p /opt/tf-models/temp/
+cd /opt/tf-models/temp/
+git clone https://github.com/azavea/models.git
+cd models
+git checkout lf/fix-python3
+git checkout eef6bb
+cd ..
+mv models/research/object_detection/ ../object_detection
+mv models/research/slim/ ../slim
+cd ..
+rm -R temp
+protoc object_detection/protos/*.proto --python_out=.
+pip install cython==0.28.2
+pip install pycocotools==2.0.0
