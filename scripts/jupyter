@@ -19,7 +19,6 @@ Run the jupyter notebook in a raster-vision docker image locally
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     if [ -n ${RASTER_VISION_NOTEBOOK_DIR} ]; then
-        NOTEBOOK_DIR=$RASTER_VISION_NOTEBOOK_DIR
         docker run --rm -it \
                -e "AWS_PROFILE=$AWS_PROFILE" \
                -v "$HOME/.aws":/root/.aws \

@@ -40,7 +40,7 @@ The tag for the `raster-vision` image determines what type of image it is:
 - The `cpu-*` tags are for running the CPU containers.
 - The `gpu-*` tags are for running the GPU containers.
 
-We publish a new tag per commit to `develop`, which is tagged with the commit message.
+We publish a new tag per merge into `develop`, which is tagged with the first 7 characters of the commit hash.
 To use the latest version, pull the `latest` suffix, e.g. `raster-vision:gpu-latest`.
 Git tags are also published, with the github tag name as the docker tag suffix.
 
