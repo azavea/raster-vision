@@ -17,4 +17,5 @@ if [ "$QUAY_USERNAME" != "" -a "$QUAY_PASSWORD" != "" ]; then
     fi
 else
     echo "Error: QUAY_USERNAME and/or QUAY_PASSWORD are not defined."
+    exit 1;
 fi
