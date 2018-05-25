@@ -14,5 +14,14 @@ env:
 script:
    - .travis/build
 
-after_success:
-   - .travis/after_success
+deploy:
+   - provider: script
+     script: .travis/deploy
+     skip_cleanup: true
+     on:
+        branch: develop
+   - provider: script
+     script: .travis/deploy
+     skip_cleanup: true
+     on:
+        tags: true
