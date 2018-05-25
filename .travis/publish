@@ -12,8 +12,8 @@ function tag_and_push() {
     docker tag ${CPU_IMAGE} "${CPU_TAG}-${1}";
     docker tag ${GPU_IMAGE} "${GPU_TAG}-${1}";
 
-    docker push "${CPU_TAG}-${1}"
-    docker push "${GPU_TAG}-${1}"
+    docker push "${CPU_TAG}-${1}";
+    docker push "${GPU_TAG}-${1}";
 }
 
 tag_and_push ${TAG_SUFFIX}

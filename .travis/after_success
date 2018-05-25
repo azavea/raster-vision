@@ -2,11 +2,19 @@
 set -e
 
 if [ "$QUAY_USERNAME" != "" -a "$QUAY_PASSWORD" != "" ]; then
-    if [ -n "$TRAVIS_TAG"]; then
+    if [ -z "${TRAVIS_TAG}" ]; then
+        if [ "$TRAVIS_BRANCH" == "develop" ]; then
+            echo "INFO: Push to develop branch, publishing commit and latest tags";
+            .travis/build "BUILD_ALL" && \
+                .travis/publish "$TRAVIS_COMMIT" "TRUE";
+        else
+            echo "INFO: non-tag branch is not 'develop', skipping publish";
+        fi
+    else
+        echo "INFO: Push to tag, publishing tag name.";
         .travis/build "BUILD_ALL" && \
-            .travis/publish $TRAVIS_TAG "FALSE";
-    elif [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-        .travis/build "BUILD_ALL" && \
-            .travis/publish $COMMIT "TRUE";
+            .travis/publish "$TRAVIS_TAG" "FALSE";
     fi
+else
+    echo "Error: QUAY_USERNAME and/or QUAY_PASSWORD are not defined."
 fi
