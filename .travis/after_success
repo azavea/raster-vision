@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+if [ "$QUAY_USERNAME" != "" -a "$QUAY_PASSWORD" != "" ]; then
+    if [ -n "$TRAVIS_TAG"]; then
+        .travis/build "BUILD_ALL" && \
+            .travis/publish $TRAVIS_TAG "FALSE";
+    elif [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+        .travis/build "BUILD_ALL" && \
+            .travis/publish $COMMIT "TRUE";
+    fi
+fi

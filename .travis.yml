@@ -15,10 +15,4 @@ script:
    - .travis/build
 
 after_success:
-   - if [ -n "$TRAVIS_TAG" -a "$QUAY_USERNAME" != "" -a "$QUAY_PASSWORD" != ""]; then
-       .travis/build "BUILD_ALL" && \
-         .travis/publish $TRAVIS_TAG "FALSE";
-     elif [ "$TRAVIS_PULL_REQUEST" == "false" -a "$QUAY_USERNAME" != "" -a "$QUAY_PASSWORD" != "" ]; then
-       .travis/build "BUILD_ALL" && \
-         .travis/publish $COMMIT "TRUE";
-     fi
+   - .travis/after_success
