@@ -92,7 +92,7 @@ class ObjectDetectionLabels(Labels):
                 Box.from_npbox(npbox).get_shapely())
             if not intersection.is_empty:
                 boxes.append(Box.from_shapely(intersection))
-        return boxes 
+        return boxes
 
     def get_coordinates(self):
         return self.boxlist.get_coordinates()
@@ -111,6 +111,9 @@ class ObjectDetectionLabels(Labels):
     def __len__(self):
         return self.boxlist.get().shape[0]
 
+    def __str__(self):
+        return str(self.boxlist.get())
+
     def concatenate(self, window, labels):
         boxlist_new = concatenate([
             self.boxlist,
@@ -119,13 +122,31 @@ class ObjectDetectionLabels(Labels):
 
     def prune_duplicates(self, score_thresh, merge_thresh):
         max_output_size = 1000000
-        boxlist_new = multi_class_non_max_suppression(
-            self.boxlist, score_thresh, merge_thresh, max_output_size)
+
+        # Create a copy of self.boxlist that has a 2D scores
+        # field with a column for each class which is required
+        # by the multi_class_non_max_suppression function. It's
+        # suprising that the scores field has to be in this form since
+        # I haven't seen other functions require that.
+        boxlist = BoxList(self.boxlist.get())
+        classes = self.boxlist.get_field('classes').astype(np.int32)
+        nb_boxes = classes.shape[0]
+        nb_classes = np.max(classes)
+        class_inds = classes - 1
+        scores_1d = self.boxlist.get_field('scores')
+        scores_2d = np.zeros((nb_boxes, nb_classes))
+        # Not sure how to vectorize this so just do for loop :(
+        for box_ind in range(nb_boxes):
+            scores_2d[box_ind, class_inds[box_ind]] = scores_1d[box_ind]
+        boxlist.add_field('scores', scores_2d)
+
+        pruned_boxlist = multi_class_non_max_suppression(
+            boxlist, score_thresh, merge_thresh, max_output_size)
         # Add one because multi_class_nms outputs labels that start at zero
-        # instead of one like in the rest of the system. This is a kludge.
-        class_ids = boxlist_new.get_field('classes')
+        # instead of one like in the rest of the system.
+        class_ids = pruned_boxlist.get_field('classes')
         class_ids += 1
-        return ObjectDetectionLabels.from_boxlist(boxlist_new)
+        return ObjectDetectionLabels.from_boxlist(pruned_boxlist)
 
     def to_geojson(self, crs_transformer, class_map):
         boxes = self.get_boxes()
