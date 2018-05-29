@@ -164,8 +164,8 @@ def train(config_path, output_dir, train_py=None, eval_py=None):
     output_train_dir = join(output_dir, 'train')
     output_eval_dir = join(output_dir, 'eval')
 
-    train_py = train_py or '/opt/src/tf/object_detection/train.py'
-    eval_py = eval_py or '/opt/src/tf/object_detection/eval.py'
+    train_py = train_py or '/opt/tf-models/object_detection/train.py'
+    eval_py = eval_py or '/opt/tf-models/object_detection/eval.py'
 
     train_process = Popen([
         'python', train_py,
@@ -206,20 +206,28 @@ def get_last_checkpoint_path(train_root_dir):
 
 
 def export_inference_graph(
-        train_root_dir, config_path, inference_graph_path, export_py=None):
-    export_py = export_py or '/opt/src/tf/object_detection/export_inference_graph.py'
+    train_root_dir, config_path, output_dir, export_py=None):
+    export_py = export_py or '/opt/tf-models/object_detection/export_inference_graph.py'
     checkpoint_path = get_last_checkpoint_path(train_root_dir)
     if checkpoint_path is None:
         print('No checkpoints could be found.')
     else:
         print('Exporting checkpoint {}...'.format(checkpoint_path))
+
         train_process = Popen([
             'python', export_py,
             '--input_type', 'image_tensor',
             '--pipeline_config_path', config_path,
-            '--checkpoint_path', checkpoint_path,
-            '--inference_graph_path', inference_graph_path])
+            '--trained_checkpoint_prefix', checkpoint_path,
+            '--output_directory', output_dir])
         train_process.wait()
+
+        # Move frozen inference graph and clean up generated files.
+        inference_graph_path = join(output_dir, 'frozen_inference_graph.pb')
+        output_path = join(output_dir, 'model')
+        shutil.move(inference_graph_path, output_path)
+        saved_model_dir = join(output_dir, 'saved_model')
+        shutil.rmtree(saved_model_dir)
 
 
 class TrainingPackage(object):
@@ -451,10 +459,8 @@ class TFObjectDetectionAPI(MLBackend):
                        sync_interval=options.sync_interval)
             train(config_path, output_dir, train_py=train_py, eval_py=eval_py)
 
-            # Export inference graph.
-            inference_graph_path = join(output_dir, 'model')
             export_inference_graph(
-                output_dir, config_path, inference_graph_path,
+                output_dir, config_path, output_dir,
                 export_py=export_py)
 
             if urlparse(options.output_uri).scheme == 's3':

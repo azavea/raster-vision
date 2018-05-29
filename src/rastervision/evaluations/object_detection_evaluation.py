@@ -28,16 +28,15 @@ def compute_od_eval(ground_truth_labels, prediction_labels):
 
 
 def parse_od_eval(od_eval, class_map):
-    eval_result = od_eval.get_eval_result()
     class_to_eval_item = {}
     for class_id in range(1, len(class_map) + 1):
         class_name = class_map.get_by_id(class_id).name
         gt_count = int(od_eval.num_gt_instances_per_class[class_id - 1])
 
         # If there are predictions for this class.
-        if len(eval_result.precisions[class_id - 1]) > 0:
-            precisions = eval_result.precisions[class_id - 1]
-            recalls = eval_result.recalls[class_id - 1]
+        if len(od_eval.precisions_per_class[class_id - 1]) > 0:
+            precisions = od_eval.precisions_per_class[class_id - 1]
+            recalls = od_eval.recalls_per_class[class_id - 1]
             # Get precision and recall assuming all predicted boxes are used.
             precision = float(precisions[-1])
             recall = float(recalls[-1])
