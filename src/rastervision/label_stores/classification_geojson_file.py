@@ -111,7 +111,7 @@ def load_geojson(geojson, crs_transformer, extent, options):
         # Use the ObjectDetectionLabels to parse bounding boxes out of the
         # GeoJSON.
         od_labels = ObjectDetectionLabels.from_geojson(
-            geojson, crs_transformer)
+            geojson, crs_transformer, extent)
         labels = convert_labels(od_labels, extent, options)
 
     return labels

@@ -10,7 +10,7 @@ from rastervision.core.labels import Labels
 from rastervision.labels.utils import boxes_to_geojson
 
 
-def geojson_to_labels(geojson, crs_transformer):
+def geojson_to_labels(geojson, crs_transformer, extent):
     """Extract boxes and related info from GeoJSON file."""
     features = geojson['features']
     boxes = []
@@ -33,6 +33,7 @@ def geojson_to_labels(geojson, crs_transformer):
     class_ids = np.array(class_ids)
     scores = np.array(scores)
     labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
+    labels = labels.get_intersection(extent)
     return labels
 
 
@@ -62,8 +63,8 @@ class ObjectDetectionLabels(Labels):
             boxlist.get(), boxlist.get_field('classes'), scores)
 
     @staticmethod
-    def from_geojson(geojson, crs_transformer):
-        return geojson_to_labels(geojson, crs_transformer)
+    def from_geojson(geojson, crs_transformer, extent):
+        return geojson_to_labels(geojson, crs_transformer, extent)
 
     @staticmethod
     def make_empty():
@@ -73,6 +74,11 @@ class ObjectDetectionLabels(Labels):
         return ObjectDetectionLabels(npboxes, labels, scores)
 
     def get_subwindow(self, window, ioa_thresh=1.0):
+        """Returns boxes relative to window.
+
+        This returns the boxes that overlap enough with window, clipped to
+        the window and in relative coordinates that lie between 0 and 1.
+        """
         window_npbox = window.npbox_format()
         window_boxlist = BoxList(np.expand_dims(window_npbox, axis=0))
         boxlist = prune_non_overlapping_boxes(
@@ -84,15 +90,16 @@ class ObjectDetectionLabels(Labels):
     def get_boxes(self):
         return [Box.from_npbox(npbox) for npbox in self.boxlist.get()]
 
-    def get_intersection_boxes(self, other):
-        boxes = []
-        other_shapely = other.get_shapely()
-        for npbox in self.boxlist.get():
-            intersection = other_shapely.intersection(
-                Box.from_npbox(npbox).get_shapely())
-            if not intersection.is_empty:
-                boxes.append(Box.from_shapely(intersection))
-        return boxes
+    def get_intersection(self, window):
+        """Returns list of boxes that intersect with window.
+
+        Does not clip or perform coordinate transform.
+        """
+        window_npbox = window.npbox_format()
+        window_boxlist = BoxList(np.expand_dims(window_npbox, axis=0))
+        boxlist = prune_non_overlapping_boxes(
+            self.boxlist, window_boxlist, minoverlap=0.000001)
+        return ObjectDetectionLabels.from_boxlist(boxlist)
 
     def get_coordinates(self):
         return self.boxlist.get_coordinates()

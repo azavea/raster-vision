@@ -12,7 +12,7 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
     # TODO allow null crs_transformer for when we assume that the labels
     # are already in the crs and don't need to be converted.
 
-    def __init__(self, uri, crs_transformer, class_map, writable=False):
+    def __init__(self, uri, crs_transformer, extent, class_map, writable=False):
         self.uri = uri
         self.crs_transformer = crs_transformer
         self.class_map = class_map
@@ -23,7 +23,7 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
             geojson = json.loads(file_to_str(uri))
             geojson = add_classes_to_geojson(geojson, class_map)
             self.labels = ObjectDetectionLabels.from_geojson(
-                geojson, crs_transformer)
+                geojson, crs_transformer, extent)
         except:
             if self.writable or not self.uri:
                 self.labels = ObjectDetectionLabels.make_empty()
