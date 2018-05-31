@@ -1,52 +1,20 @@
 FROM tensorflow/tensorflow:1.5.0-py3
 
-# Everything below this line is shared with the GPU image.
-RUN apt-get update && \
-    apt-get install -y wget git python-protobuf python3-tk
+# Everything below this line is common between CPU and GPU images.
 
 # Needed for click to work
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-# Install protoc
-RUN wget -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip
-RUN unzip /tmp/protoc3.zip -d /tmp/protoc3
-RUN mv /tmp/protoc3/bin/* /usr/local/bin/
-RUN mv /tmp/protoc3/include/* /usr/local/include/
-RUN rm -R /tmp/protoc3
-RUN rm /tmp/protoc3.zip
+COPY scripts/install_deps /tmp/install_deps
+RUN /tmp/install_deps && rm /tmp/install_deps
 
 # Make Python3 default Python
 RUN rm -f /usr/bin/pip && ln -s /usr/bin/pip3 /usr/bin/pip
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 
-# Python deps
-RUN pip install keras==2.1.6 flake8 awscli lxml shapely boto3==1.6.0 \
-    pyproj imageio scikit-learn six h5py matplotlib pillow click npstreams
-
-RUN add-apt-repository ppa:ubuntugis/ppa && \
-    apt-get update && \
-    apt-get install -y python-numpy gdal-bin libgdal-dev && \
-    pip install rasterio
-
-# Install TF Object Detection API in /opt/tf-models
-RUN mkdir -p /opt/tf-models/temp/ && \
-    cd /opt/tf-models/temp/ && \
-    git clone https://github.com/azavea/models.git && \
-    cd models && \
-    git checkout lf/fix-python3 && \
-    git checkout eef6bb && \
-    cd .. && \
-    mv models/research/object_detection/ ../object_detection && \
-    mv models/research/slim/ ../slim && \
-    cd .. && \
-    rm -R temp && \
-    protoc object_detection/protos/*.proto --python_out=. && \
-    pip install cython==0.28.2 && \
-    pip install pycocotools==2.0.0
-
 WORKDIR /opt/src/
 ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
 
-COPY run_script.sh /usr/local/bin/
+COPY scripts/run_rv /usr/local/bin/
 CMD ["bash"]

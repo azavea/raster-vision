@@ -9,7 +9,7 @@ fi
 function usage() {
     echo -n \
          "Usage: $(basename "$0")
-Publish docker GPU container to ECR.
+Publish Docker containers to ECR.
 "
 }
 

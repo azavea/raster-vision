@@ -16,7 +16,7 @@ def _batch_submit(branch_name, command, attempts=3, gpu=False,
             branch_name: Branch with code to run on Batch
             command: Command in quotes to run on Batch
     """
-    full_command = ['run_script.sh', branch_name]
+    full_command = ['run_rv', branch_name]
     full_command.extend(command.split())
 
     client = boto3.client('batch')
