@@ -1,8 +1,11 @@
-from os.path import join
+from os.path import join, isfile
 import copy
+from urllib.parse import urlparse
 
 import click
 from google.protobuf.descriptor import FieldDescriptor
+import boto3
+import botocore
 
 from rastervision.protos.chain_workflow_pb2 import ChainWorkflowConfig
 from rastervision.protos.compute_raster_stats_pb2 import (
@@ -28,6 +31,17 @@ TRAIN = 'train'
 PREDICT = 'predict'
 EVAL = 'eval'
 ALL_TASKS = [COMPUTE_RASTER_STATS, MAKE_TRAINING_CHIPS, TRAIN, PREDICT, EVAL]
+
+validated_uri_fields = set([
+    ('rv.protos.ObjectDetectionGeoJSONFile', 'uri'),
+    ('rv.protos.ClassificationGeoJSONFile', 'uri'),
+    ('rv.protos.GeoTiffFiles', 'uris'),
+    ('rv.protos.ImageFile', 'uri'),
+    ('rv.protos.TrainConfig.Options', 'backend_config_uri'),
+    ('rv.protos.TrainConfig.Options', 'pretrained_model_uri')
+])
+
+s3 = boto3.resource('s3')
 
 
 def make_command(command, config_uri):
@@ -70,6 +84,59 @@ class PathGenerator(object):
         return join(prefix_uri, 'output')
 
 
+def is_uri_valid(uri):
+    parsed_uri = urlparse(uri)
+
+    if parsed_uri.scheme == 's3':
+        try:
+            s3.Object(parsed_uri.netloc, parsed_uri.path[1:]).load()
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                print('URI cannot be found: {}'.format(uri))
+                print(e)
+                return False
+    else:
+        if not isfile(uri):
+            print('URI cannot be found: {}'.format(uri))
+            return False
+
+    return True
+
+
+def is_validated_uri_field(message_type, field_name):
+    return (message_type, field_name) in validated_uri_fields
+
+
+def is_config_valid(config):
+    # If config is primitive, do nothing.
+    if not hasattr(config, 'ListFields'):
+        return True
+
+    message_type = config.DESCRIPTOR.full_name
+
+    is_valid = True
+    for field_desc, field_val in config.ListFields():
+        field_name = field_desc.name
+
+        if is_validated_uri_field(message_type, field_name):
+            if field_name.endswith('uri'):
+                is_valid = is_uri_valid(field_val) and is_valid
+
+            if field_name.endswith('uris'):
+                for uri in field_val:
+                    is_valid = is_uri_valid(uri) and is_valid
+
+        # Recurse.
+        if field_desc.label == FieldDescriptor.LABEL_REPEATED:
+            for field_val_item in field_val:
+                is_valid = \
+                    is_config_valid(field_val_item) and is_valid
+        else:
+            is_valid = is_config_valid(field_val) and is_valid
+
+    return is_valid
+
+
 def apply_uri_map(config, uri_map):
     """Do parameter substitution on any URI fields."""
     def _apply_uri_map(config):
@@ -83,11 +150,14 @@ def apply_uri_map(config, uri_map):
             field_name = field_desc.name
 
             if field_name.endswith('uri'):
-                setattr(config, field_name, field_val.format(**uri_map))
+                new_uri = field_val.format(**uri_map)
+                setattr(config, field_name, new_uri)
 
             if field_name.endswith('uris'):
                 for ind, uri in enumerate(field_val):
-                    field_val[ind] = uri.format(**uri_map)
+                    new_uri = uri.format(**uri_map)
+                    field_val[ind] = new_uri
+
             # Recurse.
             if field_desc.label == FieldDescriptor.LABEL_REPEATED:
                 for field_val_item in field_val:
@@ -101,12 +171,14 @@ def apply_uri_map(config, uri_map):
 
 
 class ChainWorkflow(object):
-
     def __init__(self, workflow_uri, remote=False):
         self.workflow = load_json_config(workflow_uri, ChainWorkflowConfig())
-
         self.uri_map = (self.workflow.remote_uri_map
                         if remote else self.workflow.local_uri_map)
+        is_valid = is_config_valid(apply_uri_map(self.workflow, self.uri_map))
+        if not is_valid:
+            exit()
+
         self.path_generator = PathGenerator(
             self.uri_map, self.workflow.raw_dataset_key,
             self.workflow.dataset_key, self.workflow.model_key,
@@ -346,7 +418,7 @@ def main(workflow_uri, tasks, remote, simulated_remote, branch, run):
         tasks = ALL_TASKS
 
     for task in tasks:
-        if not task in ALL_TASKS:
+        if task not in ALL_TASKS:
             raise Exception("Task '{}' is not a valid task.".format(task))
 
     workflow = ChainWorkflow(workflow_uri, remote=(remote or simulated_remote))
