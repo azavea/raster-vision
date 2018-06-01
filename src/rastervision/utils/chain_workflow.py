@@ -1,6 +1,7 @@
 from os.path import join, isfile
 import copy
 from urllib.parse import urlparse
+import subprocess
 
 import click
 from google.protobuf.descriptor import FieldDescriptor
@@ -84,6 +85,17 @@ class PathGenerator(object):
         return join(prefix_uri, 'output')
 
 
+def is_branch_valid(branch):
+    ls_branch_command = [
+        'git', 'ls-remote', '--heads',
+        'https://github.com/azavea/raster-vision.git', branch]
+
+    if not subprocess.run(ls_branch_command, stdout=subprocess.PIPE).stdout:
+        print('Error: remote branch {} does not exist'.format(branch))
+        return False
+    return True
+
+
 def is_uri_valid(uri):
     parsed_uri = urlparse(uri)
 
@@ -92,12 +104,12 @@ def is_uri_valid(uri):
             s3.Object(parsed_uri.netloc, parsed_uri.path[1:]).load()
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == "404":
-                print('URI cannot be found: {}'.format(uri))
+                print('Error: URI cannot be found: {}'.format(uri))
                 print(e)
                 return False
     else:
         if not isfile(uri):
-            print('URI cannot be found: {}'.format(uri))
+            print('Error: URI cannot be found: {}'.format(uri))
             return False
 
     return True
@@ -345,6 +357,9 @@ class ChainWorkflow(object):
                              self.path_generator.eval_config_uri)
 
     def remote_run(self, tasks, branch):
+        if not is_branch_valid(branch):
+            exit()
+
         # Run everything in GPU queue since Batch doesn't seem to
         # handle dependencies across different queues.
         parent_job_ids = []
