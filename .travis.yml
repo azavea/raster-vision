@@ -13,6 +13,7 @@ env:
 
 script:
    - .travis/build
+   - docker run --rm -it raster-vision-cpu /opt/src/scripts/test
 
 deploy:
    - provider: script
