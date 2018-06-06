@@ -24,6 +24,14 @@ class Box():
         self.ymax = ymax
         self.xmax = xmax
 
+    def __eq__(self, other):
+        """Return true if other has same coordinates."""
+        return self.tuple_format() == other.tuple_format()
+
+    def __ne__(self, other):
+        """Return true if other has different coordinates."""
+        return self.tuple_format() != other.tuple_format()
+
     def get_height(self):
         """Return height of Box."""
         return self.ymax - self.ymin
@@ -133,7 +141,11 @@ class Box():
                    self.ymax - erosion_size, self.xmax - erosion_size)
 
     def make_buffer(self, buffer_size, max_extent):
-        """Return new Box whose sides are buffered by buffer_size."""
+        """Return new Box whose sides are buffered by buffer_size.
+
+        The resulting box is clipped so that the values of the corners are
+        always greater than zero and less than the height and width of
+        max_extent."""
 
         buffer_size = max(0., buffer_size)
         if buffer_size < 1.:
@@ -150,10 +162,15 @@ class Box():
         )
 
     def make_copy(self):
-
         return Box(*(self.tuple_format()))
 
     def get_windows(self, chip_size, stride):
+        """Return iterable grid of boxes within this box.
+
+        Args:
+            chip_size: (int) the length of each square-shaped window
+            stride: (int) how much each window is offset from the last
+        """
         height = self.get_height()
         width = self.get_width()
 

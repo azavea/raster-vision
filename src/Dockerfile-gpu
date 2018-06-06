@@ -17,4 +17,7 @@ WORKDIR /opt/src/
 ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
 
 COPY scripts/run_rv /usr/local/bin/
+COPY ./ /opt/src/
+RUN /opt/src/scripts/compile
+
 CMD ["bash"]

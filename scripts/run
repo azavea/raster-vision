@@ -28,7 +28,7 @@ then
         -p 6006:6006 \
         -v "$SRC":/opt/src \
         -v ${RASTER_VISION_DATA_DIR}:/opt/data \
-        raster-vision-cpu "${@:2}"
+        raster-vision-cpu "${@:1}"
 else
     usage
 fi
