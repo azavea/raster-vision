@@ -90,7 +90,7 @@ class ObjectDetectionLabels(Labels):
     def get_boxes(self):
         return [Box.from_npbox(npbox) for npbox in self.boxlist.get()]
 
-    def get_intersection(self, window):
+    def get_intersection(self, window, min_ioa=0.000001):
         """Returns list of boxes that intersect with window.
 
         Does not clip or perform coordinate transform.
@@ -98,7 +98,7 @@ class ObjectDetectionLabels(Labels):
         window_npbox = window.npbox_format()
         window_boxlist = BoxList(np.expand_dims(window_npbox, axis=0))
         boxlist = prune_non_overlapping_boxes(
-            self.boxlist, window_boxlist, minoverlap=0.000001)
+            self.boxlist, window_boxlist, minoverlap=min_ioa)
         return ObjectDetectionLabels.from_boxlist(boxlist)
 
     def get_coordinates(self):

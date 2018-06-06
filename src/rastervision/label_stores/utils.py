@@ -26,4 +26,6 @@ def add_classes_to_geojson(geojson, class_map):
                 properties['class_id'] = class_id
                 properties['class_name'] = class_name
 
+        feature['properties'] = properties
+
     return geojson

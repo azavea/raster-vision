@@ -25,10 +25,22 @@ def save_debug_image(im, labels, class_map, output_path):
 def _make_chip_pos_windows(image_extent, label_store, options):
     chip_size = options.chip_size
     pos_windows = []
-    for box in label_store.get_all_labels().get_boxes():
-        window = box.make_random_square_container(
-            image_extent.get_width(), image_extent.get_height(), chip_size)
-        pos_windows.append(window)
+    boxes = label_store.get_all_labels().get_boxes()
+    done_boxes = set()
+
+    # Get a random window around each box. If a box was previously included
+    # in a window, then it is skipped.
+    for box in boxes:
+        if box.tuple_format() not in done_boxes:
+            window = box.make_random_square_container(
+                image_extent.get_width(), image_extent.get_height(), chip_size)
+            pos_windows.append(window)
+
+            # Get boxes that lie completely within window
+            window_boxes = label_store.get_all_labels().get_intersection(
+                window, min_ioa=1.0).get_boxes()
+            window_boxes = [box.tuple_format() for box in window_boxes]
+            done_boxes.update(window_boxes)
 
     return pos_windows
 
