@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 apt-get update
 apt-get install -y wget=1.17.1-1ubuntu1.4 git=1:2.7.4-0ubuntu1.3 \
