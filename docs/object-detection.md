@@ -82,7 +82,7 @@ Before running the full workflow, you should check that the system is setup and 
 * Copy the [test data](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip) and unzip it to `<RVROOT>/processed-data/cowc-potsdam-test`.
 * Copy the [test workflow config file](../src/rastervision/samples/workflow-configs/object-detection/cowc-potsdam-test.json) to `<RVROOT>/workflow-configs/object-detection/cowc-potsdam-test.json`.
 * The workflow configs contain URI schemas which are strings containing parameters (eg. `{rv_root}`) which are expanded into absolute URIs when the workflow is executed. The `local_uri_map` and `remote_uri_map` fields define the value of the parameters for the two execution environments. This makes it easy to switch between local and remote execution. You will need to update the values of these maps for your own environment. (If you are at Azavea, you should create a new S3 bucket `raster-vision-<your initials>-dev` and use that in the `remote_uri_map`).
-* Run the Docker container locally using `./scripts/run --cpu`.
+* Run the Docker container locally using `./scripts/run` or `./scripts/run --aws` if you would like to use AWS.
 * Compile the files in `src/rastervision/protos/*.proto` into Python files by running `./scripts/compile`.
 
 If you run the workflow straight through, the predictions will be generated using a model that was only trained for a single step. Of course, the predictions will not be good, so you should run the workflow in two stages. In the first stage, you will run `compute_raster_stats`, `make_training_chips` and `train`. In the second stage, you will swap in a model that has already been trained on cars, and run `predict` and `eval`.

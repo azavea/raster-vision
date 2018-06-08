@@ -15,20 +15,27 @@ SRC="${PROJECT_ROOT}/src"
 function usage() {
     echo -n \
          "Usage: $(basename "$0")
-Run raster-vision CPU image locally.
-All arguments except the first are passed to 'docker run'.
+Run raster-vision CPU image locally. Using --aws forwards AWS credentials.
+All arguments except --aws are passed to 'docker run'.
 "
 }
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    docker run --rm -it \
-        -e "AWS_PROFILE=$AWS_PROFILE" \
-        -v "$HOME/.aws":/root/.aws \
-        -p 6006:6006 \
-        -v "$SRC":/opt/src \
-        -v ${RASTER_VISION_DATA_DIR}:/opt/data \
-        raster-vision-cpu "${@:1}"
-else
-    usage
+    if [ "${1:-}" = "--aws" ]
+    then
+        docker run --rm -it \
+            -e "AWS_PROFILE=$AWS_PROFILE" \
+            -v "$HOME/.aws":/root/.aws \
+            -p 6006:6006 \
+            -v "$SRC":/opt/src \
+            -v ${RASTER_VISION_DATA_DIR}:/opt/data \
+            raster-vision-cpu "${@:2}"
+    else
+        docker run --rm -it \
+            -p 6006:6006 \
+            -v "$SRC":/opt/src \
+            -v ${RASTER_VISION_DATA_DIR}:/opt/data \
+            raster-vision-cpu "${@:1}"
+    fi
 fi
