@@ -14,8 +14,8 @@ def load_window(image_dataset, window=None):
         window: ((row_start, row_stop), (col_start, col_stop)) or
         ((y_min, y_max), (x_min, x_max))
     """
-    im = np.transpose(
-        image_dataset.read(window=window), axes=[1, 2, 0])
+    im = image_dataset.read(window=window, boundless=True)
+    im = np.transpose(im, axes=[1, 2, 0])
     return im
 
 
@@ -33,16 +33,4 @@ class RasterioRasterSource(RasterSource):
             0, 0, self.image_dataset.height, self.image_dataset.width)
 
     def _get_chip(self, window):
-        height = window.get_height()
-        width = window.get_width()
-        # If window is off the edge of the array, the returned image will
-        # have a shortened height and width. Therefore, we need to transform
-        # the partial chip back to full window size.
-        partial_chip = load_window(
-            self.image_dataset, window.rasterio_format())
-        chip = np.zeros((height, width, partial_chip.shape[2]),
-                        dtype=partial_chip.dtype)
-        chip[0:partial_chip.shape[0], 0:partial_chip.shape[1], :] = \
-            partial_chip
-
-        return chip
+        return load_window(self.image_dataset, window.rasterio_format())

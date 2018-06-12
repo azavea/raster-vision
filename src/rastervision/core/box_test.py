@@ -63,14 +63,12 @@ class TestBox(unittest.TestCase):
         self.assertGreaterEqual(box.ymin, 0)
 
     def test_make_random_square_container(self):
-        xlimit = 10
-        ylimit = 10
         size = 5
         nb_tests = 10
         for _ in range(nb_tests):
-            container = self.box.make_random_square_container(
-                xlimit, ylimit, size)
-            self.check_random_square(container, xlimit, ylimit, size)
+            container = self.box.make_random_square_container(size)
+            self.assertEqual(container.get_width(), container.get_height())
+            self.assertEqual(container.get_width(), size)
             self.assertTrue(container.get_shapely().contains(
                 self.box.get_shapely()))
 

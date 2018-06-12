@@ -33,7 +33,7 @@ def geojson_to_labels(geojson, crs_transformer, extent):
     class_ids = np.array(class_ids)
     scores = np.array(scores)
     labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
-    labels = labels.get_intersection(extent)
+    labels = labels.get_overlapping(extent, min_ioa=0.8)
     return labels
 
 
@@ -90,10 +90,13 @@ class ObjectDetectionLabels(Labels):
     def get_boxes(self):
         return [Box.from_npbox(npbox) for npbox in self.boxlist.get()]
 
-    def get_intersection(self, window, min_ioa=0.000001):
-        """Returns list of boxes that intersect with window.
+    def get_overlapping(self, window, min_ioa=0.000001):
+        """Returns list of boxes that overlap with window.
 
         Does not clip or perform coordinate transform.
+
+        Args:
+            min_ioa: the minimum ioa for a Box to be considered as overlapping
         """
         window_npbox = window.npbox_format()
         window_boxlist = BoxList(np.expand_dims(window_npbox, axis=0))

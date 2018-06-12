@@ -79,22 +79,18 @@ class Box():
         sw = (self.xmax, self.ymin)
         return [nw, ne, se, sw, nw]
 
-    def make_random_square_container(self, xlimit, ylimit, size):
+    def make_random_square_container(self, size):
         """Return a new square Box that contains this Box.
 
-        Assumes that the minimum x and y values are 0.
-
         Args:
-            xlimit: the maximum x value for the new Box
-            ylimit: the maximum y value for the new Box
             size: the width and height of the new Box
         """
-        lb = max(0, self.ymin - (size - self.get_height()))
-        ub = min(ylimit - size, self.ymin)
+        lb = self.ymin - (size - self.get_height())
+        ub = self.ymin
         rand_y = int(np.random.uniform(lb, ub))
 
-        lb = max(0, self.xmin - (size - self.get_width()))
-        ub = min(xlimit - size, self.xmin)
+        lb = self.xmin - (size - self.get_width())
+        ub = self.xmin
         rand_x = int(np.random.uniform(lb, ub))
 
         return Box.make_square(rand_y, rand_x, size)
