@@ -12,7 +12,6 @@ import boto3
 import botocore
 from google.protobuf import json_format
 
-s3 = boto3.client('s3')
 
 class NotFoundException(Exception):
     pass
@@ -84,6 +83,7 @@ def download_if_needed(uri, download_dir, must_exist=True):
 
         try:
             print('Downloading {} to {}'.format(uri, path))
+            s3 = boto3.client('s3')
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError:
             if must_exist:
@@ -100,6 +100,7 @@ def file_to_str(file_uri):
     parsed_uri = urlparse(file_uri)
     if parsed_uri.scheme == 's3':
         with io.BytesIO() as file_buffer:
+            s3 = boto3.client('s3')
             s3.download_fileobj(
                 parsed_uri.netloc, parsed_uri.path[1:], file_buffer)
             return file_buffer.getvalue().decode('utf-8')
@@ -114,6 +115,7 @@ def str_to_file(content_str, file_uri):
         bucket = parsed_uri.netloc
         key = parsed_uri.path[1:]
         with io.BytesIO(bytes(content_str, encoding='utf-8')) as str_buffer:
+            s3 = boto3.client('s3')
             s3.upload_fileobj(str_buffer, bucket, key)
     else:
         make_dir(file_uri, use_dirname=True)
@@ -143,6 +145,7 @@ def upload_if_needed(src_path, dst_uri):
         # Strip the leading slash off of the path since S3 does not expect it.
         print('Uploading {} to {}'.format(src_path, dst_uri))
         if os.path.isfile(src_path):
+            s3 = boto3.client('s3')
             s3.upload_file(
                 src_path, parsed_uri.netloc, parsed_uri.path[1:])
         else:

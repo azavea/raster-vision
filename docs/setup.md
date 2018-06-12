@@ -29,10 +29,7 @@ First, set the `RASTER_VISION_DATA_DIR` environment variable on your host machin
 
 ### Running the Docker container
 
-You can build the Docker container and then get into the Bash console for it as follows.
-```
-./scripts/run
-```
+You can build the Docker container and then get into the Bash console for it using `/scripts/run` or `./scripts/run --aws` if you would like to forward AWS  credentials.
 
 ### Running an object detection workflow
 
