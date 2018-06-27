@@ -6,8 +6,7 @@ from object_detection.utils import object_detection_evaluation
 
 from rastervision.core.evaluation import Evaluation
 from rastervision.utils.files import str_to_file
-from rastervision.evaluation_items.object_detection_evaluation_item import (
-    ObjectDetectionEvaluationItem)
+from rastervision.core.evaluation_item import EvaluationItem
 
 
 def compute_od_eval(ground_truth_labels, prediction_labels, nb_classes):
@@ -35,12 +34,8 @@ def parse_od_eval(od_eval, class_map):
         class_name = class_map.get_by_id(class_id).name
 
         if gt_count == 0:
-            # If there are zero ground truth instances, the scores are
-            # undefined so use zeros.
-            # TODO switch to using nulls.
-            eval_item = ObjectDetectionEvaluationItem(
-                0, 0, 0, 1.0, gt_count=gt_count, class_id=class_id,
-                class_name=class_name)
+            eval_item = EvaluationItem(
+                class_id=class_id, class_name=class_name)
         else:
             # precisions_per_class has an element appended to it for each
             # class_id that has gt_count > 0. This means that the length of
@@ -69,8 +64,9 @@ def parse_od_eval(od_eval, class_map):
             if gt_count > 0:
                 norm_count_error = count_error / gt_count
 
-            eval_item = ObjectDetectionEvaluationItem(
-                precision, recall, f1, norm_count_error, gt_count=gt_count,
+            eval_item = EvaluationItem(
+                precision=precision, recall=recall, f1=f1,
+                count_error=norm_count_error, gt_count=gt_count,
                 class_id=class_id, class_name=class_name)
 
         class_to_eval_item[class_id] = eval_item
@@ -87,11 +83,9 @@ class ObjectDetectionEvaluation(Evaluation):
         nb_classes = len(class_map)
         od_eval = compute_od_eval(gt_labels, pred_labels, nb_classes)
         self.class_to_eval_item = parse_od_eval(od_eval, class_map)
-
         self.compute_avg()
 
     def compute_avg(self):
-        self.avg_item = ObjectDetectionEvaluationItem(
-            0, 0, 0, 0, gt_count=0, class_name='average')
+        self.avg_item = EvaluationItem(class_name='average')
         for eval_item in self.class_to_eval_item.values():
             self.avg_item.merge(eval_item)

@@ -2,8 +2,7 @@ import numpy as np
 from sklearn import metrics
 
 from rastervision.core.evaluation import Evaluation
-from rastervision.evaluation_items.classification_evaluation_item import (
-    ClassificationEvaluationItem)
+from rastervision.core.evaluation_item import EvaluationItem
 
 
 def compute_eval_items(gt_labels, pred_labels, class_map):
@@ -31,7 +30,7 @@ def compute_eval_items(gt_labels, pred_labels, class_map):
         class_id = class_map_item.id
         class_name = class_map_item.name
 
-        eval_item = ClassificationEvaluationItem(
+        eval_item = EvaluationItem(
             float(precision[class_id]), float(recall[class_id]),
             float(f1[class_id]), gt_count=float(support[class_id]),
             class_id=class_id, class_name=class_name)
@@ -52,7 +51,6 @@ class ClassificationEvaluation(Evaluation):
         self.compute_avg()
 
     def compute_avg(self):
-        self.avg_item = ClassificationEvaluationItem(
-            0, 0, 0, gt_count=0, class_name='average')
+        self.avg_item = EvaluationItem(class_name='average')
         for eval_item in self.class_to_eval_item.values():
             self.avg_item.merge(eval_item)
