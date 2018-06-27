@@ -28,3 +28,6 @@ class EvaluationItem(object):
 
     def to_json(self):
         return self.__dict__
+
+    def __repr__(self):
+        return str(self.to_json())
