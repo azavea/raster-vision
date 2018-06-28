@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:1.5.0-py3
+FROM tensorflow/tensorflow:1.8.0-py3
 
 # Everything below this line is common between CPU and GPU images.
 
