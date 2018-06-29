@@ -27,7 +27,7 @@ Raster Vision is designed to be easy to extend to new raster sources and label s
 
 ### Workflows
 
-A *workflow* is a network of dependent commands. For instance, you might want to make two variants of a dataset, then train a set of model on each dataset (representing a hyperparameter sweep), make predictions for each model on a test set, and then evaluate the quality of the predictions. This workflow can be represented as a tree of commands. At the moment, we have only implemented a *chain workflow*, which has the structure of a linked list or chain, and simply runs the four commands in sequence. A workflow is configured by a *workflow config* file, and executing it generates a set of command config files. By decoupling command and workflow configs, Raster Vision is designed to make it easy to implement new, more complex workflows.
+A *workflow* is a network of dependent commands. For instance, you might want to make two variants of a dataset, then train a set of models on each dataset (representing a hyperparameter sweep), make predictions for each model on a test set, and then evaluate the quality of the predictions. This workflow can be represented as a tree of commands. At the moment, we have only implemented a *chain workflow*, which has the structure of a linked list or chain, and simply runs the four commands in sequence. A workflow is configured by a *workflow config* file, and executing it generates a set of command config files. By decoupling command and workflow configs, Raster Vision is designed to make it easy to implement new, more complex workflows.
 
 ## File hierarchy
 
