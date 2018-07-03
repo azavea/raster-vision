@@ -52,8 +52,11 @@ class ObjectDetectionLabels(Labels):
         # This field name actually needs to be 'classes' to be able to use
         # certain utility functions in the TF Object Detection API.
         self.boxlist.add_field('classes', class_ids)
-        if scores is not None:
-            self.boxlist.add_field('scores', scores)
+        # We need to ensure that there is always a scores field so that the
+        # concatenate method will work with empty labels objects.
+        if scores is None:
+            scores = np.zeros(class_ids.shape)
+        self.boxlist.add_field('scores', scores)
 
     @staticmethod
     def from_boxlist(boxlist):

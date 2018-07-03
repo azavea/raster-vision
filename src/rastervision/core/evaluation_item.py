@@ -1,19 +1,26 @@
 class EvaluationItem(object):
-    """Evaluation metrics for a single class."""
+    """Evaluation metrics for a single class (or average over classes).
+
+    None is used for values that are undefined because they involve a division
+    by zero (eg. precision when there are no predictions).
+    """
     def __init__(self, precision=None, recall=None, f1=None, count_error=None,
                  gt_count=0, class_id=None, class_name=None):
         self.precision = precision
         self.recall = recall
         self.f1 = f1
         self.count_error = count_error
+        # Ground truth count of elements (boxes for object detection, pixels
+        # for segmentation, cells for classification).
         self.gt_count = gt_count
         self.class_id = class_id
         self.class_name = class_name
 
     def merge(self, other):
-        """Merges another item from a different scene into this oneself.
+        """Merges another item from a different scene into this one.
 
-        Merges by taking a weighted average (by gt_count) of the metrics.
+        This is used to average metrics over scenes. Merges by taking a
+        weighted average (by gt_count) of the metrics.
         """
         if other.gt_count > 0:
             total_gt_count = self.gt_count + other.gt_count
@@ -21,6 +28,9 @@ class EvaluationItem(object):
             other_ratio = other.gt_count / total_gt_count
 
             def weighted_avg(self_val, other_val):
+                if self_val is None and other_val is None:
+                    return None
+                # Handle a single None value by setting them to zero.
                 return (self_ratio * (self_val or 0) +
                         other_ratio * (other_val or 0))
 

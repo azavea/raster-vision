@@ -48,26 +48,33 @@ def parse_od_eval(od_eval, class_map):
             precisions = od_eval.precisions_per_class[score_ind]
             recalls = od_eval.recalls_per_class[score_ind]
 
-            # If we use the lowest detection threshold (ie. use all detected
-            # boxes as defined by score_thresh in the predict protobuf), that
-            # means we use all detected boxes, or the last element in the
-            # precisions array.
-            precision = float(precisions[-1])
-            recall = float(recalls[-1])
-            f1 = 0.
-            if precision + recall != 0.0:
-                f1 = (2 * precision * recall) / (precision + recall)
+            if len(precisions) == 0 or len(recalls) == 0:
+                # No predicted boxes.
+                eval_item = EvaluationItem(
+                    precision=None, recall=0, gt_count=gt_count,
+                    class_id=class_id, class_name=class_name)
+            else:
+                # If we use the lowest detection threshold (ie. use all detected
+                # boxes as defined by score_thresh in the predict protobuf),
+                # that means we use all detected boxes, or the last element in
+                # the precisions array.
+                precision = float(precisions[-1])
+                recall = float(recalls[-1])
 
-            pred_count = len(recalls)
-            count_error = pred_count - gt_count
-            norm_count_error = None
-            if gt_count > 0:
-                norm_count_error = count_error / gt_count
+                f1 = 0.
+                if precision + recall != 0.0:
+                    f1 = (2 * precision * recall) / (precision + recall)
 
-            eval_item = EvaluationItem(
-                precision=precision, recall=recall, f1=f1,
-                count_error=norm_count_error, gt_count=gt_count,
-                class_id=class_id, class_name=class_name)
+                pred_count = len(recalls)
+                count_error = pred_count - gt_count
+                norm_count_error = None
+                if gt_count > 0:
+                    norm_count_error = count_error / gt_count
+
+                eval_item = EvaluationItem(
+                    precision=precision, recall=recall, f1=f1,
+                    count_error=norm_count_error, gt_count=gt_count,
+                    class_id=class_id, class_name=class_name)
 
         class_to_eval_item[class_id] = eval_item
 
