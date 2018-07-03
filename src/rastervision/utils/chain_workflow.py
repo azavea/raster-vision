@@ -23,7 +23,7 @@ from rastervision.protos.label_store_pb2 import (
 
 from rastervision.utils.files import (
     load_json_config, save_json_config, file_to_str, str_to_file)
-from rastervision.utils.batch import _batch_submit
+from rastervision.utils.batch import _batch_submit, is_branch_valid
 from rastervision import run
 
 COMPUTE_RASTER_STATS = 'compute_raster_stats'
@@ -83,17 +83,6 @@ class PathGenerator(object):
 
     def get_output_uri(self, prefix_uri):
         return join(prefix_uri, 'output')
-
-
-def is_branch_valid(branch):
-    ls_branch_command = [
-        'git', 'ls-remote', '--heads',
-        'https://github.com/azavea/raster-vision.git', branch]
-
-    if not subprocess.run(ls_branch_command, stdout=subprocess.PIPE).stdout:
-        print('Error: remote branch {} does not exist'.format(branch))
-        return False
-    return True
 
 
 def is_uri_valid(uri):
@@ -356,8 +345,8 @@ class ChainWorkflow(object):
             save_json_config(self.get_eval_config(),
                              self.path_generator.eval_config_uri)
 
-    def remote_run(self, tasks, branch):
-        if not is_branch_valid(branch):
+    def remote_run(self, tasks, repo, branch):
+        if not is_branch_valid(repo, branch):
             exit()
 
         # Run everything in GPU queue since Batch doesn't seem to
@@ -368,22 +357,24 @@ class ChainWorkflow(object):
             command = make_command(
                 COMPUTE_RASTER_STATS,
                 self.path_generator.compute_raster_stats_config_uri)
-            job_id = _batch_submit(branch, command, attempts=1, gpu=True)
+            job_id = _batch_submit(
+                command, repo=repo, branch=branch, attempts=1, gpu=True)
             parent_job_ids = [job_id]
 
         if MAKE_TRAINING_CHIPS in tasks:
             command = make_command(
                 MAKE_TRAINING_CHIPS,
                 self.path_generator.make_training_chips_config_uri)
-            job_id = _batch_submit(branch, command, attempts=1, gpu=True,
-                                   parent_job_ids=parent_job_ids)
+            job_id = _batch_submit(
+                command, repo=repo, branch=branch, attempts=1, gpu=True,
+                parent_job_ids=parent_job_ids)
             parent_job_ids = [job_id]
 
         if TRAIN in tasks:
             command = make_command(
                 TRAIN, self.path_generator.train_config_uri)
             job_id = _batch_submit(
-                branch, command, attempts=1, gpu=True,
+                command, repo=repo, branch=branch, attempts=1, gpu=True,
                 parent_job_ids=parent_job_ids)
             parent_job_ids = [job_id]
 
@@ -391,7 +382,7 @@ class ChainWorkflow(object):
             command = make_command(
                 PREDICT, self.path_generator.predict_config_uri)
             job_id = _batch_submit(
-                branch, command, attempts=1, gpu=True,
+                command, repo=repo, branch=branch, attempts=1, gpu=True,
                 parent_job_ids=parent_job_ids)
             parent_job_ids = [job_id]
 
@@ -399,7 +390,7 @@ class ChainWorkflow(object):
             command = make_command(
                 EVAL, self.path_generator.eval_config_uri)
             job_id = _batch_submit(
-                branch, command, attempts=1, gpu=True,
+                command, repo=repo, branch=branch, attempts=1, gpu=True,
                 parent_job_ids=parent_job_ids)
 
     def local_run(self, tasks):
@@ -426,9 +417,10 @@ class ChainWorkflow(object):
 @click.argument('tasks', nargs=-1)
 @click.option('--remote', is_flag=True)
 @click.option('--simulated-remote', is_flag=True)
+@click.option('--repo', default='https://github.com/azavea/raster-vision.git')
 @click.option('--branch', default='develop')
 @click.option('--run', is_flag=True)
-def main(workflow_uri, tasks, remote, simulated_remote, branch, run):
+def main(workflow_uri, tasks, remote, simulated_remote, repo, branch, run):
     if len(tasks) == 0:
         tasks = ALL_TASKS
 
@@ -441,7 +433,7 @@ def main(workflow_uri, tasks, remote, simulated_remote, branch, run):
 
     if run:
         if remote:
-            workflow.remote_run(tasks, branch)
+            workflow.remote_run(tasks, repo, branch)
         else:
             workflow.local_run(tasks)
 
