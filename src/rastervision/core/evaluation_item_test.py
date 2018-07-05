@@ -51,4 +51,5 @@ class TestEvaluationItem(unittest.TestCase):
         self.assertEqual(a.count_error, 2/3)
         self.assertEqual(a.gt_count, 3)
 
-        
+if __name__ == "__main__":
+    unittest.main()

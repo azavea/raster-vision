@@ -88,3 +88,6 @@ class TestClassificationEvaluation(unittest.TestCase):
         eval.compute(
             class_map, gt_label_store, pred_label_store)
         self.assert_eval_single_null(eval)
+
+if __name__ == "__main__":
+    unittest.main()
