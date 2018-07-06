@@ -40,5 +40,10 @@ To make these scripts easy to use, and not require manually passing in configura
 ### Flexibility for new, non-Azavea users
 The proposed approach adds complexity, which is unattractive to new users who just want to run RV with the latest image published to Quay. To allow this, they should be able to skip the "Publishing Snapshot" step, and just utilize the latest Docker image published to Quay. To do this, they will need to create a Batch job def that points to the image on Quay, and then set the appropriate  fields in the cloud config file. When using the `batch_submit` script, they will omit the tag option which will default to using the job def in the cloud config file.
 
+## Unsolved issues
+
 ### Seeding random number generators
 Another aspect of repeatability is setting random number generator seeds so the same sequence of random numbers is always generated. Unfortunately, this is more difficult than expected due to limitations of the underlying libraries, and will need to be covered in another issue. See https://github.com/keras-team/keras/issues/2280
+
+### Mutability of data
+If the data referenced by an experiment is modified, moved, or deleted after it has been run, the experiment is no longer repeatable. Due to the size of the files (many GBs) and the fact that they are shared across experiments, it is not feasible to store them on a git branch. Therefore, we need to resort to a convention that data is not mutated in any way after an experiment is run. Unfortunately, this is difficult to enforce, and can be annoying since data files are usually shared between experiments, and sometimes a better data organization scheme is devised as experimentation progresses. However, I don't see any easy solution to this problem at this time.
