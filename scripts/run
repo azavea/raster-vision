@@ -42,25 +42,23 @@ then
     	ARGUMENTS=$(echo "$ARGUMENTS" | sed 's/--gpu//')
     elif echo "$@" | grep -- '\(^\|[[:space:]]\)--cpu\($\|[[:space:]]\)' > /dev/null
     then
-    	IMAGE="raster-vision-cpu"
-    	RUNTIME=""
     	ARGUMENTS=$(echo "$ARGUMENTS" | sed 's/--cpu//')
     fi
 
     if [ "$AWS" = "yes" ]
     then
-        docker run "$RUNTIME" --rm -it \
+        docker run $RUNTIME --rm -it \
             -e "AWS_PROFILE=$AWS_PROFILE" \
             -v "$HOME/.aws":/root/.aws \
             -p 6006:6006 \
             -v "$SRC":/opt/src \
             -v "${RASTER_VISION_DATA_DIR}":/opt/data \
-            "$IMAGE" "$ARGUMENTS"
+            "$IMAGE" $ARGUMENTS
     else
-        docker run --rm "$RUNTIME" -it \
+        docker run $RUNTIME --rm -it \
             -p 6006:6006 \
             -v "$SRC":/opt/src \
             -v "${RASTER_VISION_DATA_DIR}":/opt/data \
-            "$IMAGE" "$ARGUMENTS"
+            "$IMAGE" $ARGUMENTS
     fi
 fi
