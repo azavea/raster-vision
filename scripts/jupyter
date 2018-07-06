@@ -24,7 +24,7 @@ then
     if [ -n ${RASTER_VISION_NOTEBOOK_DIR} ]; then
         docker run --rm -it \
                -e "AWS_PROFILE=$AWS_PROFILE" \
-               -v "$HOME/.aws":/root/.aws \
+               -v "$HOME/.aws":/root/.aws:ro \
                -v "$SRC":/opt/src \
                -v ${RASTER_VISION_DATA_DIR}:/opt/data \
                -v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks \
@@ -39,7 +39,7 @@ then
     else
         docker run --rm -it \
                -e "AWS_PROFILE=$AWS_PROFILE" \
-               -v "$HOME/.aws":/root/.aws \
+               -v "$HOME/.aws":/root/.aws:ro \
                -v "$SRC":/opt/src \
                -v ${RASTER_VISION_DATA_DIR}:/opt/data \
                -p 8888:8888 \

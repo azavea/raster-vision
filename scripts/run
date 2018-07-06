@@ -15,27 +15,50 @@ SRC="${PROJECT_ROOT}/src"
 function usage() {
     echo -n \
          "Usage: $(basename "$0")
-Run raster-vision CPU image locally. Using --aws forwards AWS credentials.
-All arguments except --aws are passed to 'docker run'.
+Run raster-vision CPU or GPU image locally. Using --aws forwards AWS credentials.
+All arguments except --aws, --cpu, and --cpu  are passed to 'docker run'.
 "
 }
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    if [ "${1:-}" = "--aws" ]
+    ARGUMENTS="$@"
+    IMAGE="raster-vision-cpu"
+    RUNTIME=""
+    RASTER_VISION_DATA_DIR="${RASTER_VISION_DATA_DIR:-/tmp}"
+
+    if echo "$@" | grep -- '\(^\|[[:space:]]\)--aws\($\|[[:space:]]\)' > /dev/null
     then
-        docker run --rm -it \
+    	AWS="yes"
+    	ARGUMENTS=$(echo "$ARGUMENTS" | sed 's/--aws//')
+    else
+    	AWS="no"
+    fi
+
+    if echo "$@" | grep -- '\(^\|[[:space:]]\)--gpu\($\|[[:space:]]\)' > /dev/null
+    then
+    	IMAGE="raster-vision-gpu"
+    	RUNTIME="--runtime=nvidia"
+    	ARGUMENTS=$(echo "$ARGUMENTS" | sed 's/--gpu//')
+    elif echo "$@" | grep -- '\(^\|[[:space:]]\)--cpu\($\|[[:space:]]\)' > /dev/null
+    then
+    	ARGUMENTS=$(echo "$ARGUMENTS" | sed 's/--cpu//')
+    fi
+
+    if [ "$AWS" = "yes" ]
+    then
+        docker run $RUNTIME --rm -it \
             -e "AWS_PROFILE=$AWS_PROFILE" \
             -v "$HOME/.aws":/root/.aws \
             -p 6006:6006 \
             -v "$SRC":/opt/src \
-            -v ${RASTER_VISION_DATA_DIR}:/opt/data \
-            raster-vision-cpu "${@:2}"
+            -v "${RASTER_VISION_DATA_DIR}":/opt/data \
+            "$IMAGE" $ARGUMENTS
     else
-        docker run --rm -it \
+        docker run $RUNTIME --rm -it \
             -p 6006:6006 \
             -v "$SRC":/opt/src \
-            -v ${RASTER_VISION_DATA_DIR}:/opt/data \
-            raster-vision-cpu "${@:1}"
+            -v "${RASTER_VISION_DATA_DIR}":/opt/data \
+            "$IMAGE" $ARGUMENTS
     fi
 fi
