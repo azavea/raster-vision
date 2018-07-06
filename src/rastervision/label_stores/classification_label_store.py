@@ -5,6 +5,10 @@ from rastervision.labels.classification_labels import ClassificationLabels
 class ClassificationLabelStore(LabelStore):
     """Represents source of a spatial grid of cells associated with classes."""
 
+    def __init__(self, extent, cell_size):
+        self.clear()
+        self.set_grid(extent, cell_size)
+
     def set_grid(self, extent, cell_size):
         """Set parameters implicitly defining the spatial grid."""
         self.extent = extent
@@ -39,11 +43,17 @@ class ClassificationLabelStore(LabelStore):
     def get_all_labels(self):
         return self.labels
 
+    def set_cell(self, window, class_id):
+        self.labels.set_cell(window, class_id)
+
     def extend(self, window, labels):
-        self.labels.set_cell(window, labels.get_class_id())
+        self.set_cell(window, labels.get_class_id())
 
     def post_process(self, options):
         pass
 
     def clear(self):
         self.labels = ClassificationLabels()
+
+    def save(self):
+        pass

@@ -63,6 +63,15 @@ class Box():
         return np.array(
             [self.ymin, self.xmin, self.ymax, self.xmax], dtype=np.float)
 
+    @staticmethod
+    def to_npboxes(boxes):
+        """Return nx4 numpy array from list of Box."""
+        nb_boxes = len(boxes)
+        npboxes = np.empty((nb_boxes, 4))
+        for boxind, box in enumerate(boxes):
+            npboxes[boxind, :] = box.npbox_format()
+        return npboxes
+
     def __str__(self):
         return str(self.npbox_format())
 

@@ -4,6 +4,9 @@ from rastervision.labels.object_detection_labels import (
 
 
 class ObjectDetectionLabelStore(LabelStore):
+    def __init__(self):
+        self.clear()
+
     def get_labels(self, window, ioa_thresh=1.0):
         return self.labels.get_subwindow(
             window, ioa_thresh=ioa_thresh)
@@ -22,3 +25,6 @@ class ObjectDetectionLabelStore(LabelStore):
 
     def clear(self):
         self.labels = ObjectDetectionLabels.make_empty()
+
+    def save(self):
+        pass

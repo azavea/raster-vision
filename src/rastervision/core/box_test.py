@@ -151,3 +151,6 @@ class TestBox(unittest.TestCase):
         expected_windows = set([window.tuple_format()
                                for window in expected_windows])
         self.assertSetEqual(windows, expected_windows)
+
+if __name__ == "__main__":
+    unittest.main()
