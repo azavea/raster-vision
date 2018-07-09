@@ -30,10 +30,6 @@ def geojson_to_labels(geojson, crs_transformer, extent):
             class_ids.append(properties['class_id'])
             scores.append(properties.get('score', 1.0))
 
-            properties = feature['properties']
-            class_ids.append(properties['class_id'])
-            scores.append(properties.get('score', 1.0))
-
     boxes = np.array([box.npbox_format() for box in boxes], dtype=float)
     class_ids = np.array(class_ids)
     scores = np.array(scores)
