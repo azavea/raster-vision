@@ -8,7 +8,8 @@ from rastervision.labels.classification_labels import (
     ClassificationLabels)
 from rastervision.labels.object_detection_labels import ObjectDetectionLabels
 from rastervision.labels.utils import boxes_to_geojson
-from rastervision.label_stores.utils import add_classes_to_geojson
+from rastervision.label_stores.utils import (
+    add_classes_to_geojson, load_label_store_json)
 from rastervision.utils.files import file_to_str, str_to_file
 from rastervision.label_stores.classification_label_store import (
         ClassificationLabelStore)
@@ -139,24 +140,21 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
         options: ClassificationGeoJSONFile.Options
     """
     def __init__(self, uri, crs_transformer, extent, options, class_map,
-                 writable=False):
+                 readable=True, writable=False):
         self.uri = uri
         self.crs_transformer = crs_transformer
         self.class_map = class_map
+        self.readable = readable
         self.writable = writable
 
         self.set_grid(extent, options.cell_size)
+        self.labels = ClassificationLabels()
 
-        try:
-            geojson = json.loads(file_to_str(uri))
-            geojson = add_classes_to_geojson(geojson, class_map)
+        json_dict = load_label_store_json(uri, readable)
+        if json_dict:
+            geojson = add_classes_to_geojson(json_dict, class_map)
             self.labels = load_geojson(
                 geojson, crs_transformer, extent, options)
-        except:  # TODO do a better job of only catching "not found" errors
-            if writable:
-                self.labels = ClassificationLabels()
-            else:
-                raise ValueError('Could not open {}'.format(uri))
 
     def save(self):
         if self.writable:

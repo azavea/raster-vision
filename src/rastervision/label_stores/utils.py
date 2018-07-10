@@ -1,4 +1,7 @@
 import copy
+import json
+
+from rastervision.utils.files import file_to_str
 
 
 def add_classes_to_geojson(geojson, class_map):
@@ -29,3 +32,14 @@ def add_classes_to_geojson(geojson, class_map):
         feature['properties'] = properties
 
     return geojson
+
+
+def load_label_store_json(uri, readable):
+    """Load JSON for LabelStore.
+
+    Returns JSON for uri or None if it is not readable.
+    """
+    if not readable:
+        return None
+
+    return json.loads(file_to_str(uri))
