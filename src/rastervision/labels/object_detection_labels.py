@@ -17,18 +17,25 @@ def geojson_to_labels(geojson, crs_transformer, extent):
     class_ids = []
     scores = []
 
-    for feature in features:
+    def polygon_to_label(polygon, crs_transformer):
         # Convert polygon to pixel coords and then convert to bounding box.
-        polygons = feature['geometry']['coordinates'][0]
-        for single_polygon in polygons:
-            polygon = [crs_transformer.web_to_pixel(p) for p in single_polygon]
-            xmin, ymin = np.min(polygon, axis=0)
-            xmax, ymax = np.max(polygon, axis=0)
-            boxes.append(Box(ymin, xmin, ymax, xmax))
+        polygon = [crs_transformer.web_to_pixel(p) for p in polygon]
+        xmin, ymin = np.min(polygon, axis=0)
+        xmax, ymax = np.max(polygon, axis=0)
+        boxes.append(Box(ymin, xmin, ymax, xmax))
 
-            properties = feature['properties']
-            class_ids.append(properties['class_id'])
-            scores.append(properties.get('score', 1.0))
+        properties = feature['properties']
+        class_ids.append(properties['class_id'])
+        scores.append(properties.get('score', 1.0))
+
+    for feature in features:
+        multi_or_single_polygon = feature['geometry']['coordinates'][0]
+        # check whether the geojson is a multipolygon
+        if isinstance(multi_or_single_polygon[0][0], list):
+            for polygon in multi_or_single_polygon:
+                polygon_to_label(polygon, crs_transformer)
+        else:
+            polygon_to_label(multi_or_single_polygon, crs_transformer)
 
     boxes = np.array([box.npbox_format() for box in boxes], dtype=float)
     class_ids = np.array(class_ids)
