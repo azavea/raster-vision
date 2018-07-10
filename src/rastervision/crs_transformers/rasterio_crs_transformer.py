@@ -4,19 +4,17 @@ from rastervision.core.crs_transformer import CRSTransformer
 
 
 class RasterioCRSTransformer(CRSTransformer):
-    """Transformer for a RasterioRasterSource.
+    """Transformer for a RasterioRasterSource."""
 
-    This assumes that the map coordinates are always in lon/lat format.
-    """
-
-    def __init__(self, image_dataset):
+    def __init__(self, image_dataset, map_crs='epsg:4326'):
         """Construct transformer.
 
         Args:
             image_dataset: Rasterio DatasetReader
+            map_crs: CRS code
         """
         self.image_dataset = image_dataset
-        self.map_proj = pyproj.Proj(init='epsg:4326')
+        self.map_proj = pyproj.Proj(init=map_crs)
         image_crs = image_dataset.crs['init']
         self.image_proj = pyproj.Proj(init=image_crs)
 
@@ -24,7 +22,7 @@ class RasterioCRSTransformer(CRSTransformer):
         """Transform point from map to pixel-based coordinates.
 
         Args:
-            map_point: (long, lat) tuple
+            map_point: (x, y) tuple in map coordinates
 
         Returns:
             (x, y) tuple in pixel coordinates
@@ -42,7 +40,7 @@ class RasterioCRSTransformer(CRSTransformer):
             pixel_point: (x, y) tuple in pixel coordinates
 
         Returns:
-            (lon, lat) tuple
+            (x, y) tuple in map coordinates
         """
         image_point = self.image_dataset.ul(
             int(pixel_point[1]), int(pixel_point[0]))
