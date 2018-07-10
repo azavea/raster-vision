@@ -20,8 +20,8 @@ def geojson_to_labels(geojson, crs_transformer, extent):
     for feature in features:
         # Convert polygon to pixel coords and then convert to bounding box.
         polygons = feature['geometry']['coordinates'][0]
-        for polygon_list in polygons:
-            polygon = [crs_transformer.web_to_pixel(p) for p in polygon_list]
+        for single_polygon in polygons:
+            polygon = [crs_transformer.web_to_pixel(p) for p in single_polygon]
             xmin, ymin = np.min(polygon, axis=0)
             xmax, ymax = np.max(polygon, axis=0)
             boxes.append(Box(ymin, xmin, ymax, xmax))
