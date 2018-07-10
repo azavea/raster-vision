@@ -29,13 +29,17 @@ def geojson_to_labels(geojson, crs_transformer, extent):
         scores.append(properties.get('score', 1.0))
 
     for feature in features:
-        multi_or_single_polygon = feature['geometry']['coordinates'][0]
-        # check whether the geojson is a multipolygon
-        if isinstance(multi_or_single_polygon[0][0], list):
-            for polygon in multi_or_single_polygon:
+        geom_type = feature['geometry']['type']
+        coordinates = feature['geometry']['coordinates'][0]
+        if geom_type == 'MultiPolygon':
+            for polygon in coordinates:
                 polygon_to_label(polygon, crs_transformer)
+        elif geom_type == 'Polygon':
+            polygon_to_label(coordinates, crs_transformer)
         else:
-            polygon_to_label(multi_or_single_polygon, crs_transformer)
+            raise Exception(
+                "Geometries of type {} are not supported in object detection labels.".
+                format(geom_type))
 
     boxes = np.array([box.npbox_format() for box in boxes], dtype=float)
     class_ids = np.array(class_ids)
