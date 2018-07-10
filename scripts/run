@@ -15,50 +15,48 @@ SRC="${PROJECT_ROOT}/src"
 function usage() {
     echo -n \
          "Usage: $(basename "$0")
-Run raster-vision CPU or GPU image locally. Using --aws forwards AWS credentials.
-All arguments except --aws, --cpu, and --cpu  are passed to 'docker run'.
+Run raster-vision image locally.
+--aws forwards AWS credentials.
+--tensorboard maps port 6006
+--gpu use the NVIDIA runtime and GPU image
+All arguments after above options are passed to 'docker run'.
 "
 }
 
+IMAGE="raster-vision-cpu"
+
+# Parse options using scheme in
+# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --aws)
+        AWS="-e AWS_PROFILE=${AWS_PROFILE} -v ${HOME}/.aws:/root/.aws:ro"
+        shift # past argument
+        ;;
+        --tensorboard)
+        TENSORBOARD="-p 6006:6006"
+        shift # past argument
+        ;;
+        --gpu)
+        IMAGE="raster-vision-gpu"
+        RUNTIME="--runtime=nvidia"
+        shift # past argument
+        ;;
+        *)    # unknown option
+        POSITIONAL+=("$1") # save it in an array for later
+        shift # past argument
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    ARGUMENTS="$@"
-    IMAGE="raster-vision-cpu"
-    RUNTIME=""
-    RASTER_VISION_DATA_DIR="${RASTER_VISION_DATA_DIR:-/tmp}"
-
-    if echo "$@" | grep -- '\(^\|[[:space:]]\)--aws\($\|[[:space:]]\)' > /dev/null
-    then
-    	AWS="yes"
-    	ARGUMENTS=$(echo "$ARGUMENTS" | sed 's/--aws//')
-    else
-    	AWS="no"
-    fi
-
-    if echo "$@" | grep -- '\(^\|[[:space:]]\)--gpu\($\|[[:space:]]\)' > /dev/null
-    then
-    	IMAGE="raster-vision-gpu"
-    	RUNTIME="--runtime=nvidia"
-    	ARGUMENTS=$(echo "$ARGUMENTS" | sed 's/--gpu//')
-    elif echo "$@" | grep -- '\(^\|[[:space:]]\)--cpu\($\|[[:space:]]\)' > /dev/null
-    then
-    	ARGUMENTS=$(echo "$ARGUMENTS" | sed 's/--cpu//')
-    fi
-
-    if [ "$AWS" = "yes" ]
-    then
-        docker run $RUNTIME --rm -it \
-            -e "AWS_PROFILE=$AWS_PROFILE" \
-            -v "$HOME/.aws":/root/.aws \
-            -p 6006:6006 \
-            -v "$SRC":/opt/src \
-            -v "${RASTER_VISION_DATA_DIR}":/opt/data \
-            "$IMAGE" $ARGUMENTS
-    else
-        docker run $RUNTIME --rm -it \
-            -p 6006:6006 \
-            -v "$SRC":/opt/src \
-            -v "${RASTER_VISION_DATA_DIR}":/opt/data \
-            "$IMAGE" $ARGUMENTS
-    fi
+    docker run ${RUNTIME} --rm -it ${TENSORBOARD} ${AWS} \
+        -v "$SRC":/opt/src \
+        -v ${RASTER_VISION_DATA_DIR}:/opt/data \
+        ${IMAGE} "${@:1}"
 fi
