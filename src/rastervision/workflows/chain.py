@@ -421,14 +421,8 @@ class ChainWorkflow(object):
             run._eval(self.path_generator.eval_config_uri)
 
 
-@click.command()
-@click.argument('workflow_uri')
-@click.argument('tasks', nargs=-1)
-@click.option('--remote', is_flag=True)
-@click.option('--simulated-remote', is_flag=True)
-@click.option('--branch', default='develop')
-@click.option('--run', is_flag=True)
-def main(workflow_uri, tasks, remote, simulated_remote, branch, run):
+def _main(workflow_uri, tasks,
+          remote=False, simulated_remote=False, branch='develop', run=False):
     if len(tasks) == 0:
         tasks = ALL_TASKS
 
@@ -444,6 +438,18 @@ def main(workflow_uri, tasks, remote, simulated_remote, branch, run):
             workflow.remote_run(tasks, branch)
         else:
             workflow.local_run(tasks)
+
+
+@click.command()
+@click.argument('workflow_uri')
+@click.argument('tasks', nargs=-1)
+@click.option('--remote', is_flag=True)
+@click.option('--simulated-remote', is_flag=True)
+@click.option('--branch', default='develop')
+@click.option('--run', is_flag=True)
+def main(workflow_uri, tasks, remote, simulated_remote, branch, run):
+    _main(workflow_uri, tasks, remote=remote,
+          simulated_remote=simulated_remote, branch=branch, run=run)
 
 
 if __name__ == '__main__':
