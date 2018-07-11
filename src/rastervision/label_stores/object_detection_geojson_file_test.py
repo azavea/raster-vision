@@ -69,7 +69,7 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
                 'Valid label file raised exception.')
 
         # TODO test that labels was constructed correctly
-        
+
 
 if __name__ == '__main__':
     unittest.main()
