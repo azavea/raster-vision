@@ -17,6 +17,10 @@ class NotFoundException(Exception):
     pass
 
 
+class ProtobufParseException(Exception):
+    pass
+
+
 def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
     directory = path
     if use_dirname:
@@ -65,7 +69,7 @@ def _is_raster(uri, s3_test=False):
     return uri
 
 
-def download_if_needed(uri, download_dir, must_exist=True):
+def download_if_needed(uri, download_dir):
     """Download a file into a directory if it's remote."""
     if uri is None:
         return None
@@ -75,8 +79,6 @@ def download_if_needed(uri, download_dir, must_exist=True):
 
     parsed_uri = urlparse(uri)
     if parsed_uri.scheme == 's3':
-
-        # is it a raster?
         vsis3_path = _is_raster(uri, s3_test=True)
         if vsis3_path:
             return vsis3_path
@@ -86,12 +88,11 @@ def download_if_needed(uri, download_dir, must_exist=True):
             s3 = boto3.client('s3')
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError:
-            if must_exist:
-                raise NotFoundException('Could not find {}'.format(uri))
+            raise NotFoundException('Could not access {}'.format(uri))
     else:
         not_found = not os.path.isfile(path)
-        if not_found and must_exist:
-            raise NotFoundException('Could not find {}'.format(uri))
+        if not_found:
+            raise NotFoundException('Could not access {}'.format(uri))
 
     return path
 
@@ -100,11 +101,16 @@ def file_to_str(file_uri):
     parsed_uri = urlparse(file_uri)
     if parsed_uri.scheme == 's3':
         with io.BytesIO() as file_buffer:
-            s3 = boto3.client('s3')
-            s3.download_fileobj(
-                parsed_uri.netloc, parsed_uri.path[1:], file_buffer)
-            return file_buffer.getvalue().decode('utf-8')
+            try:
+                s3 = boto3.client('s3')
+                s3.download_fileobj(
+                    parsed_uri.netloc, parsed_uri.path[1:], file_buffer)
+                return file_buffer.getvalue().decode('utf-8')
+            except botocore.exceptions.ClientError:
+                raise NotFoundException('Could not access {}'.format(file_uri))
     else:
+        if not os.path.isfile(file_uri):
+            raise NotFoundException('Could not access {}'.format(file_uri))
         with open(file_uri, 'r') as file_buffer:
             return file_buffer.read()
 
@@ -124,7 +130,13 @@ def str_to_file(content_str, file_uri):
 
 
 def load_json_config(uri, message):
-    return json_format.Parse(file_to_str(uri), message)
+    try:
+        return json_format.Parse(file_to_str(uri), message)
+    except json_format.ParseError:
+        error_msg = (
+            'Problem parsing protobuf file {}. '.format(uri) +
+            'You might need to run scripts/compile')
+        raise ProtobufParseException(error_msg)
 
 
 def save_json_config(message, uri):

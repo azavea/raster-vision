@@ -89,7 +89,7 @@ If you run the workflow straight through, the predictions will be generated usin
 
 You can run the first stage of the workflow using
 ```
-python -m rastervision.utils.chain_workflow \
+python -m rastervision.workflows.chain \
     <RVROOT>/workflow-configs/object-detection/cowc-potsdam-test.json \
     compute_raster_stats make_training_chips train \
     --run
@@ -100,7 +100,7 @@ This should result in a hierarchy of files in `<RVROOT>/rv-output` which include
 
 Now, download the [trained car model](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-model.zip), unzip it, and place the `model` file in `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/output/`, replacing the file that is already there. Then run
 ```
-python -m rastervision.utils.chain_workflow \
+python -m rastervision.workflows.chain \
     <RVROOT>/workflow-configs/object-detection/cowc-potsdam-test.json \
     predict eval \
     --run
@@ -136,7 +136,7 @@ to `<RVROOT>/workflow-configs/object-detection/cowc-potsdam.json`
 
 Since it will take a long time to run the full workflow, it probably makes sense to run it remotely on AWS Batch. Before doing so, make sure all data and config files are copied to the right locations (as defined by the `remote_uri_map` field in the workflow config) on S3. Then run
 ```
-python -m rastervision.utils.chain_workflow \
+python -m rastervision.workflows.chain \
     <RVROOT>/workflow-configs/object-detection/cowc-potsdam.json \
     --run --remote --branch <REMOTE_GIT_BRANCH>
 ```

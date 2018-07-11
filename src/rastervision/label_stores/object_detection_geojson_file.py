@@ -2,33 +2,29 @@ import json
 
 from rastervision.labels.object_detection_labels import (
     ObjectDetectionLabels)
-from rastervision.label_stores.utils import add_classes_to_geojson
-from rastervision.utils.files import file_to_str, str_to_file
+from rastervision.label_stores.utils import (
+    add_classes_to_geojson, load_label_store_json)
+from rastervision.utils.files import str_to_file
 from rastervision.label_stores.object_detection_label_store import (
     ObjectDetectionLabelStore)
 
 
 class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
-    # TODO allow null crs_transformer for when we assume that the labels
-    # are already in the crs and don't need to be converted.
-
-    def __init__(self, uri, crs_transformer, extent, class_map, writable=False):
+    def __init__(self, uri, crs_transformer, extent, class_map,
+                 readable=True, writable=False):
         self.uri = uri
         self.crs_transformer = crs_transformer
         self.class_map = class_map
+        self.readable = readable
         self.writable = writable
 
-        try:
-            # TODO: catch exceptions more specifically
-            geojson = json.loads(file_to_str(uri))
-            geojson = add_classes_to_geojson(geojson, class_map)
+        self.labels = ObjectDetectionLabels.make_empty()
+
+        json_dict = load_label_store_json(uri, readable)
+        if json_dict:
+            geojson = add_classes_to_geojson(json_dict, class_map)
             self.labels = ObjectDetectionLabels.from_geojson(
                 geojson, crs_transformer, extent)
-        except:
-            if self.writable or not self.uri:
-                self.labels = ObjectDetectionLabels.make_empty()
-            else:
-                raise ValueError('Could not open {}'.format(uri))
 
     def save(self):
         if self.writable:
