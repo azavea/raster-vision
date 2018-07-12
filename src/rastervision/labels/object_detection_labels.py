@@ -17,9 +17,8 @@ def geojson_to_labels(geojson, crs_transformer, extent):
     class_ids = []
     scores = []
 
-    for feature in features:
+    def polygon_to_label(polygon, crs_transformer):
         # Convert polygon to pixel coords and then convert to bounding box.
-        polygon = feature['geometry']['coordinates'][0]
         polygon = [crs_transformer.web_to_pixel(p) for p in polygon]
         xmin, ymin = np.min(polygon, axis=0)
         xmax, ymax = np.max(polygon, axis=0)
@@ -28,6 +27,19 @@ def geojson_to_labels(geojson, crs_transformer, extent):
         properties = feature['properties']
         class_ids.append(properties['class_id'])
         scores.append(properties.get('score', 1.0))
+
+    for feature in features:
+        geom_type = feature['geometry']['type']
+        coordinates = feature['geometry']['coordinates'][0]
+        if geom_type == 'MultiPolygon':
+            for polygon in coordinates:
+                polygon_to_label(polygon, crs_transformer)
+        elif geom_type == 'Polygon':
+            polygon_to_label(coordinates, crs_transformer)
+        else:
+            raise Exception(
+                "Geometries of type {} are not supported in object detection labels.".
+                format(geom_type))
 
     boxes = np.array([box.npbox_format() for box in boxes], dtype=float)
     class_ids = np.array(class_ids)
