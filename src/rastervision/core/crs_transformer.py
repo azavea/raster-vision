@@ -2,26 +2,28 @@ from abc import ABC, abstractmethod
 
 
 class CRSTransformer(object):
-    """Converts points between CRSs for a RasterSource."""
+    """Transforms map points in some CRS into pixel coordinates.
 
-    def web_to_pixel(self, web_point):
-        """Return point in pixel coordinates.
+    Each transformer is associated with a particular RasterSource."""
+
+    def map_to_pixel(self, map_point):
+        """Transform point from map to pixel-based coordinates.
 
         Args:
-            web_point: tuple (long, lat) in WebMercator coordinates
+            map_point: (x, y) tuple in map coordinates (eg. lon/lat)
 
         Returns:
-            tuple (x, y) in pixel coordinates
+            (x, y) tuple in pixel coordinates
         """
         pass
 
-    def pixel_to_web(self, pixel_point):
-        """Return point in Web Mercator coordinates.
+    def pixel_to_map(self, pixel_point):
+        """Transform point from pixel to map-based coordinates.
 
         Args:
-            pixel_point: tuple (x, y) in pixel coordinates
+            pixel_point: (x, y) tuple in pixel coordinates
 
         Returns:
-            tuple (long, lat) in WebMercator coordinates
+            (x, y) tuple in map coordinates (eg. lon/lat)
         """
         pass

@@ -2,8 +2,28 @@ from rastervision.core.crs_transformer import CRSTransformer
 
 
 class IdentityCRSTransformer(CRSTransformer):
-    def web_to_pixel(self, web_point):
-        return web_point
+    """Transformer for when map coordinates are already in pixel coordinates.
 
-    def pixel_to_web(self, pixel_point):
+    This is useful for non-georeferenced imagery.
+    """
+    def map_to_pixel(self, map_point):
+        """Identity function.
+
+        Args:
+            map_point: (x, y) tuple in pixel coordinates
+
+        Returns:
+            (x, y) tuple in pixel coordinates
+        """
+        return map_point
+
+    def pixel_to_map(self, pixel_point):
+        """Identity function.
+
+        Args:
+            pixel_point: (x, y) tuple in pixel coordinates
+
+        Returns:
+            (x, y) tuple in pixel coordinates
+        """
         return pixel_point

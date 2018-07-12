@@ -23,7 +23,7 @@ def get_str_tree(geojson, crs_transformer):
     for feature in features:
         # Convert polygon to pixel coords.
         polygon = feature['geometry']['coordinates'][0]
-        polygon = [crs_transformer.web_to_pixel(p) for p in polygon]
+        polygon = [crs_transformer.map_to_pixel(p) for p in polygon]
         json_polygons.append(polygon)
 
         properties = feature.get('properties', {})
