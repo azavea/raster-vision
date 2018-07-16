@@ -55,7 +55,7 @@ class ObjectDetectionLabels(Labels):
         # We need to ensure that there is always a scores field so that the
         # concatenate method will work with empty labels objects.
         if scores is None:
-            scores = np.zeros(class_ids.shape)
+            scores = np.ones(class_ids.shape)
         self.boxlist.add_field('scores', scores)
 
     @staticmethod
