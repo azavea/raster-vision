@@ -4,6 +4,7 @@ import tempfile
 import json
 import os
 import math
+import traceback
 
 import click
 import numpy as np
@@ -131,7 +132,8 @@ def run_test(test, temp_dir):
         chain_workflow._main(workflow_path, tasks, run=True)
     except Exception as exc:
         errors.append(TestError(
-            test, 'raised an exception while running', exc))
+            test, 'raised an exception while running',
+            traceback.format_exc()))
         return errors
 
     # Check that the eval is similar to expected eval.
