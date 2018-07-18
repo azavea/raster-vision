@@ -142,8 +142,8 @@ class KerasClassification(MLBackend):
             scene.id, uuid.uuid4()))
         class_dirs = {}
 
-        for chip_idx, (chip, labels) in enumerate(data):
-            class_id = labels.get_class_id()
+        for chip_idx, (chip, window, labels) in enumerate(data):
+            class_id = labels.get_cell_class_id(window)
             # If a chip is not associated with a class, don't
             # use it in training data.
             if class_id is None:
@@ -219,7 +219,7 @@ class KerasClassification(MLBackend):
         if urlparse(options.output_uri).scheme == 's3':
             sync_dir(model_files.base_dir, options.output_uri, delete=True)
 
-    def predict(self, chip, options):
+    def predict(self, chip, window, options):
         if self.model is None:
             with tempfile.TemporaryDirectory() as temp_dir:
                 model_path = download_if_needed(options.model_uri, temp_dir)
@@ -232,9 +232,7 @@ class KerasClassification(MLBackend):
         # Add 1 to class_id since they start at 1.
         class_id = int(np.argmax(probs[0]) + 1)
 
-        # Make labels with a single dummy cell.
         labels = ClassificationLabels()
-        dummy_cell = Box(0, 0, 0, 0)
-        labels.set_cell(dummy_cell, class_id)
+        labels.set_cell(window, class_id)
 
         return labels
