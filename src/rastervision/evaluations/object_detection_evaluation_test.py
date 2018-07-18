@@ -29,8 +29,7 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         npboxes = Box.to_npboxes([nw, ne, se, sw])
         class_ids = np.array([1, 1, 2, 2])
         label_store = ObjectDetectionLabelStore()
-        window = Box.make_square(0, 0, 1000)
-        label_store.extend(window, ObjectDetectionLabels(npboxes, class_ids))
+        label_store.extend(ObjectDetectionLabels(npboxes, class_ids))
         return label_store
 
     def make_predicted_label_store(self):
@@ -44,8 +43,7 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         class_ids = np.array([1, 1, 2])
         scores = np.ones(class_ids.shape)
         label_store = ObjectDetectionLabelStore()
-        window = Box.make_square(0, 0, 1000)
-        label_store.extend(window, ObjectDetectionLabels(
+        label_store.extend(ObjectDetectionLabels(
             npboxes, class_ids, scores=scores))
         return label_store
 

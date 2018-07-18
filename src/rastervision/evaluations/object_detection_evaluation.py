@@ -84,8 +84,8 @@ def parse_od_eval(od_eval, class_map):
 class ObjectDetectionEvaluation(Evaluation):
     def compute(self, class_map, ground_truth_label_store,
                 prediction_label_store):
-        gt_labels = ground_truth_label_store.get_all_labels()
-        pred_labels = prediction_label_store.get_all_labels()
+        gt_labels = ground_truth_label_store.get_labels()
+        pred_labels = prediction_label_store.get_labels()
 
         nb_classes = len(class_map)
         od_eval = compute_od_eval(gt_labels, pred_labels, nb_classes)

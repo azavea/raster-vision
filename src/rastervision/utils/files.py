@@ -17,6 +17,10 @@ class NotFoundException(Exception):
     pass
 
 
+class NotWritableError(Exception):
+    pass
+
+
 class ProtobufParseException(Exception):
     pass
 

@@ -37,14 +37,21 @@ TRAIN = 'train'
 VALIDATION = 'validation'
 
 
-def create_tf_example(image, labels, class_map, chip_id=''):
+def create_tf_example(image, window, labels, class_map, chip_id=''):
     image = Image.fromarray(image)
     image_format = 'png'
     encoded_image = io.BytesIO()
     image.save(encoded_image, format=image_format)
     width, height = image.size
 
-    ymins, xmins, ymaxs, xmaxs = labels.get_coordinates()
+    npboxes = labels.get_npboxes()
+    npboxes = ObjectDetectionLabels.global_to_local(npboxes, window)
+    npboxes = ObjectDetectionLabels.local_to_normalized(
+        npboxes, window)
+    ymins = npboxes[:, 0]
+    xmins = npboxes[:, 1]
+    ymaxs = npboxes[:, 2]
+    xmaxs = npboxes[:, 3]
     class_ids = labels.get_class_ids()
     class_names = [class_map.get_by_id(class_id).name.encode('utf8')
                    for class_id in class_ids]
@@ -104,8 +111,8 @@ def save_tf_class_map(tf_class_map, class_map_path):
 def make_tf_examples(training_data, class_map):
     tf_examples = []
     print('Creating TFRecord', end='', flush=True)
-    for chip, labels in training_data:
-        tf_example = create_tf_example(chip, labels, class_map)
+    for chip, window, labels in training_data:
+        tf_example = create_tf_example(chip, window, labels, class_map)
         tf_examples.append(tf_example)
         print('.', end='', flush=True)
     print()
@@ -340,7 +347,7 @@ def load_frozen_graph(inference_graph_path):
     return detection_graph
 
 
-def compute_prediction(image_np, detection_graph, session):
+def compute_prediction(image_np, window, detection_graph, session):
     image_np_expanded = np.expand_dims(image_np, axis=0)
     image_tensor = detection_graph.get_tensor_by_name(
         'image_tensor:0')
@@ -355,6 +362,8 @@ def compute_prediction(image_np, detection_graph, session):
         [boxes, scores, class_ids],
         feed_dict={image_tensor: image_np_expanded})
     npboxes = np.squeeze(boxes)
+    npboxes = ObjectDetectionLabels.normalized_to_local(npboxes, window)
+    npboxes = ObjectDetectionLabels.local_to_global(npboxes, window)
     scores = np.squeeze(scores)
     class_ids = np.squeeze(class_ids).astype(np.int32)
 
@@ -466,7 +475,7 @@ class TFObjectDetectionAPI(MLBackend):
             if urlparse(options.output_uri).scheme == 's3':
                 sync_dir(output_dir, options.output_uri, delete=True)
 
-    def predict(self, chip, options):
+    def predict(self, chip, window, options):
         # Load and memoize the detection graph and TF session.
         if self.detection_graph is None:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -477,4 +486,5 @@ class TFObjectDetectionAPI(MLBackend):
         # If chip is blank, then return empty predictions.
         if np.sum(np.ravel(chip)) == 0:
             return ObjectDetectionLabels.make_empty()
-        return compute_prediction(chip, self.detection_graph, self.session)
+        return compute_prediction(
+            chip, window, self.detection_graph, self.session)

@@ -54,6 +54,18 @@ class MLTask(object):
         pass
 
     @abstractmethod
+    def post_process_predictions(self, labels, options):
+        """Runs a post-processing step on labels at end of prediction.
+
+        Args:
+            options: PredictConfig.Options
+
+        Returns:
+            Labels
+        """
+        pass
+
+    @abstractmethod
     def get_predict_windows(self, extent, options):
         """Return windows to compute predictions for.
 
@@ -109,7 +121,7 @@ class MLTask(object):
                 chip = scene.raster_source.get_chip(window)
                 labels = self.get_train_labels(
                     window, scene, options)
-                data.append(chip, labels)
+                data.append(chip, window, labels)
                 print('.', end='', flush=True)
             print()
             # Shuffle data so the first N samples which are displayed in
@@ -162,12 +174,14 @@ class MLTask(object):
                 raster_source.get_extent(), options)
             for window in windows:
                 chip = raster_source.get_chip(window)
-                labels = self.backend.predict(chip, options)
-                label_store.extend(window, labels)
+                labels = self.backend.predict(chip, window, options)
+                label_store.extend(labels)
                 print('.', end='', flush=True)
             print()
 
-            label_store.post_process(options)
+            labels = self.post_process_predictions(
+                label_store.get_labels(), options)
+            label_store.set_labels(labels)
             label_store.save()
 
             if (options.debug and options.debug_uri and
