@@ -86,6 +86,7 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
                 geojson, crs_transformer, extent=extent)
 
     def save(self):
+        """Save labels to URI if writable."""
         if self.writable:
             boxes = self.labels.get_boxes()
             class_ids = self.labels.get_class_ids().tolist()
