@@ -42,8 +42,8 @@ def compute_eval_items(gt_labels, pred_labels, class_map):
 class ClassificationEvaluation(Evaluation):
     def compute(self, class_map, ground_truth_label_store,
                 prediction_label_store):
-        gt_labels = ground_truth_label_store.get_all_labels()
-        pred_labels = prediction_label_store.get_all_labels()
+        gt_labels = ground_truth_label_store.get_labels()
+        pred_labels = prediction_label_store.get_labels()
 
         self.class_to_eval_item = compute_eval_items(
             gt_labels, pred_labels, class_map)

@@ -4,6 +4,7 @@ from rastervision.evaluations.classification_evaluation import (
     ClassificationEvaluation)
 from rastervision.core.class_map import ClassItem, ClassMap
 from rastervision.core.box import Box
+from rastervision.labels.classification_labels import ClassificationLabels
 from rastervision.label_stores.classification_label_store import (
     ClassificationLabelStore)
 
@@ -25,8 +26,7 @@ class TestClassificationEvaluation(unittest.TestCase):
         cell_size = 200
         y_cells = 2
         x_cells = 2
-        extent = Box(0, 0, y_cells * cell_size, x_cells * cell_size)
-        label_store = ClassificationLabelStore(extent, cell_size)
+        label_store = ClassificationLabelStore()
 
         for yind in range(y_cells):
             for xind in range(x_cells):
@@ -36,7 +36,9 @@ class TestClassificationEvaluation(unittest.TestCase):
                 xmax = xmin + cell_size
                 window = Box(ymin, xmin, ymax, xmax)
                 class_id = class_ids[yind][xind]
-                label_store.set_cell(window, class_id)
+                labels = ClassificationLabels()
+                labels.set_cell(window, class_id)
+                label_store.extend(labels)
 
         return label_store
 

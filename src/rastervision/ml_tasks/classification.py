@@ -15,7 +15,7 @@ def draw_debug_predict_image(scene, class_map):
     img = scene.raster_source.get_image_array()
     img = Image.fromarray(img)
     draw = ImageDraw.Draw(img, 'RGB')
-    labels = scene.prediction_label_store.get_all_labels()
+    labels = scene.prediction_label_store.get_labels()
     line_width = 4
     for cell, class_id in zip(labels.get_cells(), labels.get_class_ids()):
         cell = cell.make_eroded(line_width // 2)
@@ -26,7 +26,6 @@ def draw_debug_predict_image(scene, class_map):
 
 
 class Classification(MLTask):
-
     def get_train_windows(self, scene, options):
         extent = scene.raster_source.get_extent()
         chip_size = options.chip_size
@@ -39,12 +38,15 @@ class Classification(MLTask):
         return windows
 
     def get_train_labels(self, window, scene, options):
-        return scene.ground_truth_label_store.get_labels(window)
+        return scene.ground_truth_label_store.get_labels(window=window)
 
     def get_predict_windows(self, extent, options):
         chip_size = options.chip_size
         stride = chip_size
         return extent.get_windows(chip_size, stride)
+
+    def post_process_predictions(self, labels, options):
+        return labels
 
     def get_evaluation(self):
         return ClassificationEvaluation()

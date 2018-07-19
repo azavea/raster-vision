@@ -6,17 +6,17 @@ from shapely import geometry
 
 from rastervision.labels.classification_labels import (
     ClassificationLabels)
-from rastervision.labels.object_detection_labels import ObjectDetectionLabels
-from rastervision.labels.utils import boxes_to_geojson
+from rastervision.label_stores.object_detection_geojson_file import (
+    geojson_to_labels as geojson_to_object_detection_labels)
 from rastervision.label_stores.utils import (
-    add_classes_to_geojson, load_label_store_json)
-from rastervision.utils.files import file_to_str, str_to_file
+    add_classes_to_geojson, load_label_store_json, boxes_to_geojson)
+from rastervision.utils.files import str_to_file
 from rastervision.label_stores.classification_label_store import (
         ClassificationLabelStore)
 
 
-def get_str_tree(geojson, crs_transformer):
-    features = geojson['features']
+def get_str_tree(geojson_dict, crs_transformer):
+    features = geojson_dict['features']
     json_polygons = []
     class_ids = []
 
@@ -42,9 +42,9 @@ def get_str_tree(geojson, crs_transformer):
     return STRtree(polygons)
 
 
-def infer_labels(geojson, crs_transformer, extent, options):
+def infer_labels(geojson_dict, crs_transformer, extent, options):
     """Infer the class_id for each grid cell from polygons."""
-    str_tree = get_str_tree(geojson, crs_transformer)
+    str_tree = get_str_tree(geojson_dict, crs_transformer)
     labels = ClassificationLabels()
 
     # For each cell, find intersecting polygons.
@@ -100,19 +100,19 @@ def convert_labels(od_labels, extent, options):
     return labels
 
 
-def load_geojson(geojson, crs_transformer, extent, options):
+def load_geojson(geojson_dict, crs_transformer, extent, options):
     """Construct ClassificationLabels from GeoJSON.
 
     Args:
         options: ClassificationGeoJSONFile.Options
     """
     if options.infer_cells:
-        labels = infer_labels(geojson, crs_transformer, extent, options)
+        labels = infer_labels(geojson_dict, crs_transformer, extent, options)
     else:
         # Use the ObjectDetectionLabels to parse bounding boxes out of the
         # GeoJSON.
-        od_labels = ObjectDetectionLabels.from_geojson(
-            geojson, crs_transformer, extent)
+        od_labels = geojson_to_object_detection_labels(
+            geojson_dict, crs_transformer, extent)
         labels = convert_labels(od_labels, extent, options)
 
     return labels
@@ -139,22 +139,21 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
     Args:
         options: ClassificationGeoJSONFile.Options
     """
-    def __init__(self, uri, crs_transformer, extent, options, class_map,
-                 readable=True, writable=False):
+    def __init__(self, uri, crs_transformer, options, class_map,
+                 extent, readable=True, writable=False):
         self.uri = uri
         self.crs_transformer = crs_transformer
         self.class_map = class_map
         self.readable = readable
         self.writable = writable
 
-        self.set_grid(extent, options.cell_size)
         self.labels = ClassificationLabels()
 
-        json_dict = load_label_store_json(uri, readable)
-        if json_dict:
-            geojson = add_classes_to_geojson(json_dict, class_map)
+        geojson_dict = load_label_store_json(uri, readable)
+        if geojson_dict:
+            geojson_dict = add_classes_to_geojson(geojson_dict, class_map)
             self.labels = load_geojson(
-                geojson, crs_transformer, extent, options)
+                geojson_dict, crs_transformer, extent, options)
 
     def save(self):
         if self.writable:
