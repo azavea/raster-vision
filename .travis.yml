@@ -15,6 +15,7 @@ script:
    - .travis/build
    - docker run --rm -it raster-vision-cpu /opt/src/scripts/unit_tests
    - docker run --rm -it raster-vision-cpu /opt/src/scripts/integration_tests.py
+   - docker run --rm -it raster-vision-cpu /opt/src/scripts/style_tests
 
 deploy:
    - provider: script
