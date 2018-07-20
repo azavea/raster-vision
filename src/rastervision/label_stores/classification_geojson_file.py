@@ -4,15 +4,14 @@ import numpy as np
 from shapely.strtree import STRtree
 from shapely import geometry
 
-from rastervision.labels.classification_labels import (
-    ClassificationLabels)
+from rastervision.labels.classification_labels import (ClassificationLabels)
 from rastervision.label_stores.object_detection_geojson_file import (
     geojson_to_labels as geojson_to_object_detection_labels)
 from rastervision.label_stores.utils import (
     add_classes_to_geojson, load_label_store_json, boxes_to_geojson)
 from rastervision.utils.files import str_to_file
 from rastervision.label_stores.classification_label_store import (
-        ClassificationLabelStore)
+    ClassificationLabelStore)
 
 
 def get_str_tree(geojson_dict, crs_transformer):
@@ -106,8 +105,7 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
 
     # Infer class id for cell.
     if len(class_ids) == 0:
-        class_id = (None if background_class_id == 0
-                    else background_class_id)
+        class_id = (None if background_class_id == 0 else background_class_id)
     elif pick_min_class_id:
         class_id = min(class_ids)
     else:
@@ -139,10 +137,10 @@ def infer_labels(geojson_dict, crs_transformer, extent, options):
 
     cells = extent.get_windows(options.cell_size, options.cell_size)
     for cell in cells:
-        class_id = infer_cell(
-            str_tree, cell, options.ioa_thresh,
-            options.use_intersection_over_cell, options.background_class_id,
-            options.pick_min_class_id)
+        class_id = infer_cell(str_tree, cell, options.ioa_thresh,
+                              options.use_intersection_over_cell,
+                              options.background_class_id,
+                              options.pick_min_class_id)
         labels.set_cell(cell, class_id)
     return labels
 
@@ -164,8 +162,8 @@ def read_labels(geojson_dict, crs_transformer, extent):
         ClassificationLabels
     """
     # Load as ObjectDetectionLabels and convert to ClassificationLabels.
-    od_labels = geojson_to_object_detection_labels(
-        geojson_dict, crs_transformer, extent)
+    od_labels = geojson_to_object_detection_labels(geojson_dict,
+                                                   crs_transformer, extent)
 
     labels = ClassificationLabels()
     boxes = od_labels.get_boxes()
@@ -216,8 +214,7 @@ def to_geojson(labels, crs_transformer, class_map):
     boxes = labels.get_cells()
     class_ids = labels.get_class_ids()
 
-    return boxes_to_geojson(
-        boxes, class_ids, crs_transformer, class_map)
+    return boxes_to_geojson(boxes, class_ids, crs_transformer, class_map)
 
 
 class ClassificationGeoJSONFile(ClassificationLabelStore):
@@ -233,8 +230,15 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
     Args:
         options: ClassificationGeoJSONFile.Options
     """
-    def __init__(self, uri, crs_transformer, options, class_map,
-                 extent, readable=True, writable=False):
+
+    def __init__(self,
+                 uri,
+                 crs_transformer,
+                 options,
+                 class_map,
+                 extent,
+                 readable=True,
+                 writable=False):
         """Construct ClassificationLabelStore backed by a GeoJSON file.
 
         Args:
@@ -258,8 +262,8 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
         geojson_dict = load_label_store_json(uri, readable)
         if geojson_dict:
             geojson_dict = add_classes_to_geojson(geojson_dict, class_map)
-            self.labels = load_geojson(
-                geojson_dict, crs_transformer, extent, options)
+            self.labels = load_geojson(geojson_dict, crs_transformer, extent,
+                                       options)
 
     def save(self):
         """Save labels to URI if writable.
@@ -268,8 +272,8 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
         written, not the original polygons.
         """
         if self.writable:
-            geojson_dict = to_geojson(
-                self.labels, self.crs_transformer, self.class_map)
+            geojson_dict = to_geojson(self.labels, self.crs_transformer,
+                                      self.class_map)
             geojson_str = json.dumps(geojson_dict)
             str_to_file(geojson_str, self.uri)
         else:

@@ -36,18 +36,18 @@ class ObjectDetectionLabels(Labels):
         self.boxlist.add_field('scores', scores)
 
     def assert_equal(self, expected_labels):
-        np.testing.assert_array_equal(
-            self.get_npboxes(), expected_labels.get_npboxes())
-        np.testing.assert_array_equal(
-            self.get_class_ids(), expected_labels.get_class_ids())
-        np.testing.assert_array_equal(
-            self.get_scores(), expected_labels.get_scores())
+        np.testing.assert_array_equal(self.get_npboxes(),
+                                      expected_labels.get_npboxes())
+        np.testing.assert_array_equal(self.get_class_ids(),
+                                      expected_labels.get_class_ids())
+        np.testing.assert_array_equal(self.get_scores(),
+                                      expected_labels.get_scores())
 
     @staticmethod
     def make_empty():
         npboxes = np.empty((0, 4))
-        class_ids = np.empty((0,))
-        scores = np.empty((0,))
+        class_ids = np.empty((0, ))
+        scores = np.empty((0, ))
         return ObjectDetectionLabels(npboxes, class_ids, scores)
 
     @staticmethod
@@ -175,6 +175,8 @@ class ObjectDetectionLabels(Labels):
         """
         max_output_size = 1000000
         pruned_boxlist = non_max_suppression(
-            labels.boxlist, max_output_size=max_output_size,
-            iou_threshold=merge_thresh, score_threshold=score_thresh)
+            labels.boxlist,
+            max_output_size=max_output_size,
+            iou_threshold=merge_thresh,
+            score_threshold=score_thresh)
         return ObjectDetectionLabels.from_boxlist(pruned_boxlist)

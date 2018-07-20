@@ -1,8 +1,8 @@
 import click
 
-from rastervision.builders import (
-    compute_raster_stats_builder, make_training_chips_builder, train_builder,
-    predict_builder, eval_builder)
+from rastervision.builders import (compute_raster_stats_builder,
+                                   make_training_chips_builder, train_builder,
+                                   predict_builder, eval_builder)
 
 
 def _compute_raster_stats(config_uri):
@@ -70,7 +70,6 @@ run.add_command(make_training_chips)
 run.add_command(train)
 run.add_command(predict)
 run.add_command(eval)
-
 
 if __name__ == '__main__':
     run()

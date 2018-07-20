@@ -29,8 +29,7 @@ class RasterioRasterSource(RasterSource):
         pass
 
     def get_extent(self):
-        return Box(
-            0, 0, self.image_dataset.height, self.image_dataset.width)
+        return Box(0, 0, self.image_dataset.height, self.image_dataset.width)
 
     def _get_chip(self, window):
         return load_window(self.image_dataset, window.rasterio_format())

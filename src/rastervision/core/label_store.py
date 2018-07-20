@@ -9,6 +9,7 @@ class LabelStore(ABC):
     between LabelStores and Labels can be understood by analogy to the
     difference between a database and result sets queried from a database.
     """
+
     @abstractmethod
     def clear(self):
         """Clear all labels."""

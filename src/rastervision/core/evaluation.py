@@ -46,7 +46,8 @@ class Evaluation(ABC):
         if len(self.class_to_eval_item) == 0:
             self.class_to_eval_item = evaluation.class_to_eval_item
         else:
-            for class_id, other_eval_item in evaluation.class_to_eval_item.items():
+            for class_id, other_eval_item in evaluation.class_to_eval_item.items(
+            ):
                 self.get_by_id(class_id).merge(other_eval_item)
 
         self.compute_avg()

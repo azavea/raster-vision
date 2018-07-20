@@ -10,10 +10,7 @@ from rastervision.core.box import Box
 
 class TestObjectDetectionLabelStore(unittest.TestCase):
     def setUp(self):
-        self.npboxes = np.array([
-            [0., 0., 2., 2.],
-            [2., 2., 4., 4.]
-        ])
+        self.npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
         self.class_ids = np.array([1, 2])
         self.scores = np.array([0.99, 0.9])
         self.labels = ObjectDetectionLabels(
@@ -44,9 +41,7 @@ class TestObjectDetectionLabelStore(unittest.TestCase):
 
         window = Box.make_square(2, 2, 2)
         labels = store.get_labels(window=window)
-        npboxes = np.array([
-            [2., 2., 4., 4.]
-        ])
+        npboxes = np.array([[2., 2., 4., 4.]])
         class_ids = np.array([2])
         scores = np.array([0.9])
         expected_labels = ObjectDetectionLabels(

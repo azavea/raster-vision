@@ -31,7 +31,6 @@ from keras.utils.data_utils import get_file
 from keras.applications.imagenet_utils import (
     decode_predictions, preprocess_input, _obtain_input_shape)
 
-
 WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels.h5'
 WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
@@ -54,14 +53,14 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
         bn_axis = 1
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
-    act_name = 'act' + str(stage)+ block
+    act_name = 'act' + str(stage) + block
 
     x = Conv2D(filters1, (1, 1), name=conv_name_base + '2a')(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
     x = Activation('relu')(x)
 
-    x = Conv2D(filters2, kernel_size,
-               padding='same', name=conv_name_base + '2b')(x)
+    x = Conv2D(
+        filters2, kernel_size, padding='same', name=conv_name_base + '2b')(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
     x = Activation('relu')(x)
 
@@ -73,7 +72,12 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
     return x
 
 
-def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2)):
+def conv_block(input_tensor,
+               kernel_size,
+               filters,
+               stage,
+               block,
+               strides=(2, 2)):
     """conv_block is the block that has a conv layer at shortcut
     # Arguments
         input_tensor: input tensor
@@ -95,31 +99,38 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     act_name = 'act' + str(stage) + block
 
-    x = Conv2D(filters1, (1, 1), strides=strides,
-               name=conv_name_base + '2a')(input_tensor)
+    x = Conv2D(
+        filters1, (1, 1), strides=strides,
+        name=conv_name_base + '2a')(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
     x = Activation('relu')(x)
 
-    x = Conv2D(filters2, kernel_size, padding='same',
-               name=conv_name_base + '2b')(x)
+    x = Conv2D(
+        filters2, kernel_size, padding='same', name=conv_name_base + '2b')(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
     x = Activation('relu')(x)
 
     x = Conv2D(filters3, (1, 1), name=conv_name_base + '2c')(x)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
-    shortcut = Conv2D(filters3, (1, 1), strides=strides,
-                      name=conv_name_base + '1')(input_tensor)
-    shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
+    shortcut = Conv2D(
+        filters3, (1, 1), strides=strides,
+        name=conv_name_base + '1')(input_tensor)
+    shortcut = BatchNormalization(
+        axis=bn_axis, name=bn_name_base + '1')(shortcut)
 
     x = layers.add([x, shortcut])
     x = Activation('relu', name=act_name)(x)
     return x
 
 
-def ResNet50(include_top=True, weights='imagenet',
-             input_tensor=None, input_shape=None,
-             pooling=None, classes=1000, activation='softmax'):
+def ResNet50(include_top=True,
+             weights='imagenet',
+             input_tensor=None,
+             input_shape=None,
+             pooling=None,
+             classes=1000,
+             activation='softmax'):
     """Instantiates the ResNet50 architecture.
     Optionally loads weights pre-trained
     on ImageNet.
@@ -217,10 +228,11 @@ def ResNet50(include_top=True, weights='imagenet',
 
     # load weights
     if weights == 'imagenet':
-        weights_path = get_file('resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5',
-                                WEIGHTS_PATH_NO_TOP,
-                                cache_subdir='models',
-                                md5_hash='a268eb855778b3df3c7506639542a6af')
+        weights_path = get_file(
+            'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5',
+            WEIGHTS_PATH_NO_TOP,
+            cache_subdir='models',
+            md5_hash='a268eb855778b3df3c7506639542a6af')
         model.load_weights(weights_path, by_name=True)
 
     return model

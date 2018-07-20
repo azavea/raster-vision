@@ -17,12 +17,12 @@ from rastervision.protos.train_pb2 import TrainConfig
 from rastervision.protos.predict_pb2 import PredictConfig
 from rastervision.protos.eval_pb2 import EvalConfig
 from rastervision.protos.label_store_pb2 import (
-    LabelStore as LabelStoreConfig,
-    ObjectDetectionGeoJSONFile as ObjectDetectionGeoJSONFileConfig,
-    ClassificationGeoJSONFile as ClassificationGeoJSONFileConfig)
+    LabelStore as LabelStoreConfig, ObjectDetectionGeoJSONFile as
+    ObjectDetectionGeoJSONFileConfig, ClassificationGeoJSONFile as
+    ClassificationGeoJSONFileConfig)
 
-from rastervision.utils.files import (
-    load_json_config, save_json_config, file_to_str, str_to_file)
+from rastervision.utils.files import (load_json_config, save_json_config,
+                                      file_to_str, str_to_file)
 from rastervision.utils.batch import _batch_submit
 from rastervision import run
 
@@ -33,14 +33,13 @@ PREDICT = 'predict'
 EVAL = 'eval'
 ALL_TASKS = [COMPUTE_RASTER_STATS, MAKE_TRAINING_CHIPS, TRAIN, PREDICT, EVAL]
 
-validated_uri_fields = set([
-    ('rv.protos.ObjectDetectionGeoJSONFile', 'uri'),
-    ('rv.protos.ClassificationGeoJSONFile', 'uri'),
-    ('rv.protos.GeoTiffFiles', 'uris'),
-    ('rv.protos.ImageFile', 'uri'),
-    ('rv.protos.TrainConfig.Options', 'backend_config_uri'),
-    ('rv.protos.TrainConfig.Options', 'pretrained_model_uri')
-])
+validated_uri_fields = set(
+    [('rv.protos.ObjectDetectionGeoJSONFile',
+      'uri'), ('rv.protos.ClassificationGeoJSONFile', 'uri'),
+     ('rv.protos.GeoTiffFiles', 'uris'), ('rv.protos.ImageFile', 'uri'),
+     ('rv.protos.TrainConfig.Options',
+      'backend_config_uri'), ('rv.protos.TrainConfig.Options',
+                              'pretrained_model_uri')])
 
 s3 = boto3.resource('s3')
 
@@ -50,7 +49,6 @@ def make_command(command, config_uri):
 
 
 class PathGenerator(object):
-
     def __init__(self, uri_map, raw_dataset_key, dataset_key, model_key,
                  prediction_key, eval_key):
         rv_root = uri_map['rv_root']
@@ -58,8 +56,8 @@ class PathGenerator(object):
                                     raw_dataset_key)
         self.dataset_uri = join(self.raw_dataset_uri, 'datasets', dataset_key)
         self.model_uri = join(self.dataset_uri, 'models', model_key)
-        self.prediction_uri = join(
-            self.model_uri, 'predictions', prediction_key)
+        self.prediction_uri = join(self.model_uri, 'predictions',
+                                   prediction_key)
         self.eval_uri = join(self.prediction_uri, 'evals', eval_key)
 
         self.compute_raster_stats_config_uri = self.get_config_uri(
@@ -88,7 +86,8 @@ class PathGenerator(object):
 def is_branch_valid(branch):
     ls_branch_command = [
         'git', 'ls-remote', '--heads',
-        'https://github.com/azavea/raster-vision.git', branch]
+        'https://github.com/azavea/raster-vision.git', branch
+    ]
 
     if not subprocess.run(ls_branch_command, stdout=subprocess.PIPE).stdout:
         print('Error: remote branch {} does not exist'.format(branch))
@@ -151,6 +150,7 @@ def is_config_valid(config):
 
 def apply_uri_map(config, uri_map):
     """Do parameter substitution on any URI fields."""
+
     def _apply_uri_map(config):
         # If config is primitive, do nothing.
         if not hasattr(config, 'ListFields'):
@@ -200,8 +200,8 @@ class ChainWorkflow(object):
         self.update_scenes()
 
     def update_raster_transformer(self):
-        stats_uri = join(
-            self.path_generator.compute_raster_stats_output_uri, 'stats.json')
+        stats_uri = join(self.path_generator.compute_raster_stats_output_uri,
+                         'stats.json')
         self.workflow.raster_transformer.stats_uri = stats_uri
 
     def update_scenes(self):
@@ -234,20 +234,16 @@ class ChainWorkflow(object):
 
     def make_prediction_label_store(self, scene):
         label_store = scene.ground_truth_label_store
-        label_store_type = label_store.WhichOneof(
-            'label_store_type')
-        prediction_uri = join(
-            self.path_generator.prediction_output_uri,
-            '{}.json'.format(scene.id))
+        label_store_type = label_store.WhichOneof('label_store_type')
+        prediction_uri = join(self.path_generator.prediction_output_uri,
+                              '{}.json'.format(scene.id))
 
         if label_store_type == 'object_detection_geojson_file':
             geojson_file = ObjectDetectionGeoJSONFileConfig(uri=prediction_uri)
-            return LabelStoreConfig(
-                object_detection_geojson_file=geojson_file)
+            return LabelStoreConfig(object_detection_geojson_file=geojson_file)
         elif label_store_type == 'classification_geojson_file':
             geojson_file = ClassificationGeoJSONFileConfig(uri=prediction_uri)
-            return LabelStoreConfig(
-                classification_geojson_file=geojson_file)
+            return LabelStoreConfig(classification_geojson_file=geojson_file)
         else:
             raise ValueError(
                 'Not sure how to generate label source config for type {}'
@@ -294,8 +290,8 @@ class ChainWorkflow(object):
         # Copy backend config so that it is nested under model_uri. This way,
         # all config files and corresponding output of RV will be located next
         # to each other in the file system.
-        backend_config_copy_uri = join(
-            self.path_generator.model_uri, 'backend.config')
+        backend_config_copy_uri = join(self.path_generator.model_uri,
+                                       'backend.config')
         backend_config_uri = config.options.backend_config_uri.format(
             **self.uri_map)
         backend_config_str = file_to_str(backend_config_uri)
@@ -315,8 +311,8 @@ class ChainWorkflow(object):
         config.options.debug_uri = join(
             self.path_generator.prediction_output_uri, 'debug')
         config.options.chip_size = self.workflow.chip_size
-        config.options.model_uri = join(
-            self.path_generator.train_output_uri, 'model')
+        config.options.model_uri = join(self.path_generator.train_output_uri,
+                                        'model')
         config = apply_uri_map(config, self.uri_map)
         return config
 
@@ -326,8 +322,8 @@ class ChainWorkflow(object):
         config.scenes.MergeFrom(self.workflow.test_scenes)
         config.options.MergeFrom(self.workflow.eval_options)
         config.options.debug = self.workflow.debug
-        config.options.output_uri = join(
-            self.path_generator.eval_output_uri, 'eval.json')
+        config.options.output_uri = join(self.path_generator.eval_output_uri,
+                                         'eval.json')
         config = apply_uri_map(config, self.uri_map)
         return config
 
@@ -375,31 +371,42 @@ class ChainWorkflow(object):
             command = make_command(
                 MAKE_TRAINING_CHIPS,
                 self.path_generator.make_training_chips_config_uri)
-            job_id = _batch_submit(branch, command, attempts=1, gpu=True,
-                                   parent_job_ids=parent_job_ids)
+            job_id = _batch_submit(
+                branch,
+                command,
+                attempts=1,
+                gpu=True,
+                parent_job_ids=parent_job_ids)
             parent_job_ids = [job_id]
 
         if TRAIN in tasks:
-            command = make_command(
-                TRAIN, self.path_generator.train_config_uri)
+            command = make_command(TRAIN, self.path_generator.train_config_uri)
             job_id = _batch_submit(
-                branch, command, attempts=1, gpu=True,
+                branch,
+                command,
+                attempts=1,
+                gpu=True,
                 parent_job_ids=parent_job_ids)
             parent_job_ids = [job_id]
 
         if PREDICT in tasks:
-            command = make_command(
-                PREDICT, self.path_generator.predict_config_uri)
+            command = make_command(PREDICT,
+                                   self.path_generator.predict_config_uri)
             job_id = _batch_submit(
-                branch, command, attempts=1, gpu=True,
+                branch,
+                command,
+                attempts=1,
+                gpu=True,
                 parent_job_ids=parent_job_ids)
             parent_job_ids = [job_id]
 
         if EVAL in tasks:
-            command = make_command(
-                EVAL, self.path_generator.eval_config_uri)
+            command = make_command(EVAL, self.path_generator.eval_config_uri)
             job_id = _batch_submit(
-                branch, command, attempts=1, gpu=True,
+                branch,
+                command,
+                attempts=1,
+                gpu=True,
                 parent_job_ids=parent_job_ids)
 
     def local_run(self, tasks):
@@ -421,8 +428,12 @@ class ChainWorkflow(object):
             run._eval(self.path_generator.eval_config_uri)
 
 
-def _main(workflow_uri, tasks,
-          remote=False, simulated_remote=False, branch='develop', run=False):
+def _main(workflow_uri,
+          tasks,
+          remote=False,
+          simulated_remote=False,
+          branch='develop',
+          run=False):
     if len(tasks) == 0:
         tasks = ALL_TASKS
 
@@ -448,8 +459,13 @@ def _main(workflow_uri, tasks,
 @click.option('--branch', default='develop')
 @click.option('--run', is_flag=True)
 def main(workflow_uri, tasks, remote, simulated_remote, branch, run):
-    _main(workflow_uri, tasks, remote=remote,
-          simulated_remote=simulated_remote, branch=branch, run=run)
+    _main(
+        workflow_uri,
+        tasks,
+        remote=remote,
+        simulated_remote=simulated_remote,
+        branch=branch,
+        run=run)
 
 
 if __name__ == '__main__':

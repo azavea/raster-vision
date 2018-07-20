@@ -31,8 +31,7 @@ class GeoTiffFiles(RasterioRasterSource):
 
     def build_image_dataset(self):
         print('Loading GeoTiffFFiles...')
-        imagery_path = download_and_build_vrt(
-            self.uris, self.temp_dir.name)
+        imagery_path = download_and_build_vrt(self.uris, self.temp_dir.name)
         return rasterio.open(imagery_path)
 
     def get_crs_transformer(self):

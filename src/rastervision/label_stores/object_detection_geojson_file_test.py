@@ -20,6 +20,7 @@ class DoubleCRSTransformer(CRSTransformer):
 
     Assumes map coords are 2x pixels coords.
     """
+
     def map_to_pixel(self, web_point):
         return (web_point[0] * 2, web_point[1] * 2)
 
@@ -38,47 +39,33 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
 
         self.crs_transformer = DoubleCRSTransformer()
         self.geojson_dict = {
-            'type': 'FeatureCollection',
-            'features': [
-                {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'Polygon',
-                        'coordinates': [
-                            [
-                                [0., 0.],
-                                [0., 1.],
-                                [1., 1.],
-                                [1., 0.],
-                                [0., 0.]
-                            ]
-                        ]
-                    },
-                    'properties': {
-                        'class_name': 'car',
-                        'score': 0.9
-                    }
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'Polygon',
+                    'coordinates': [[[0., 0.], [0., 1.], [1., 1.], [1., 0.],
+                                     [0., 0.]]]
                 },
-                {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'Polygon',
-                        'coordinates': [
-                            [
-                                [1., 1.],
-                                [1., 2.],
-                                [2., 2.],
-                                [2., 1.],
-                                [1., 1.]
-                            ]
-                        ]
-                    },
-                    'properties': {
-                        'score': 0.9,
-                        'class_name': 'house'
-                    }
+                'properties': {
+                    'class_name': 'car',
+                    'score': 0.9
                 }
-            ]
+            }, {
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'Polygon',
+                    'coordinates': [[[1., 1.], [1., 2.], [2., 2.], [2., 1.],
+                                     [1., 1.]]]
+                },
+                'properties': {
+                    'score': 0.9,
+                    'class_name': 'house'
+                }
+            }]
         }
 
         self.extent = Box.make_square(0, 0, 10)
@@ -96,8 +83,12 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         try:
             invalid_uri = 's3://invalid_path/invalid.json'
             ObjectDetectionGeoJSONFile(
-                invalid_uri, self.crs_transformer, self.class_map,
-                extent=self.extent, readable=False, writable=False)
+                invalid_uri,
+                self.crs_transformer,
+                self.class_map,
+                extent=self.extent,
+                readable=False,
+                writable=False)
         except NotFoundException:
             self.fail('Should not raise exception if readable=False')
 
@@ -105,19 +96,24 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         with self.assertRaises(NotFoundException):
             invalid_uri = 's3://invalid_path/invalid.json'
             ObjectDetectionGeoJSONFile(
-                invalid_uri, self.crs_transformer, self.class_map,
-                extent=self.extent, readable=True, writable=False)
+                invalid_uri,
+                self.crs_transformer,
+                self.class_map,
+                extent=self.extent,
+                readable=True,
+                writable=False)
 
     def test_read_without_extent(self):
         store = ObjectDetectionGeoJSONFile(
-            self.file_path, self.crs_transformer, self.class_map,
-            extent=None, readable=True, writable=False)
+            self.file_path,
+            self.crs_transformer,
+            self.class_map,
+            extent=None,
+            readable=True,
+            writable=False)
         labels = store.get_labels()
 
-        npboxes = np.array([
-            [0., 0., 2., 2.],
-            [2., 2., 4., 4.]
-        ])
+        npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
         class_ids = np.array([1, 2])
         scores = np.array([0.9, 0.9])
         expected_labels = ObjectDetectionLabels(
@@ -128,13 +124,15 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         # Extent only includes the first box.
         extent = Box.make_square(0, 0, 3)
         store = ObjectDetectionGeoJSONFile(
-            self.file_path, self.crs_transformer, self.class_map,
-            extent=extent, readable=True, writable=False)
+            self.file_path,
+            self.crs_transformer,
+            self.class_map,
+            extent=extent,
+            readable=True,
+            writable=False)
         labels = store.get_labels()
 
-        npboxes = np.array([
-            [0., 0., 2., 2.]
-        ])
+        npboxes = np.array([[0., 0., 2., 2.]])
         class_ids = np.array([1])
         scores = np.array([0.9])
         expected_labels = ObjectDetectionLabels(
@@ -144,14 +142,15 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         # Extent includes both boxes, but clips the second.
         extent = Box.make_square(0, 0, 3.9)
         store = ObjectDetectionGeoJSONFile(
-            self.file_path, self.crs_transformer, self.class_map,
-            extent=extent, readable=True, writable=False)
+            self.file_path,
+            self.crs_transformer,
+            self.class_map,
+            extent=extent,
+            readable=True,
+            writable=False)
         labels = store.get_labels()
 
-        npboxes = np.array([
-            [0., 0., 2., 2.],
-            [2., 2., 3.9, 3.9]
-        ])
+        npboxes = np.array([[0., 0., 2., 2.], [2., 2., 3.9, 3.9]])
         class_ids = np.array([1, 2])
         scores = np.array([0.9, 0.9])
         expected_labels = ObjectDetectionLabels(
@@ -160,16 +159,24 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
 
     def test_write_not_writable(self):
         label_store = ObjectDetectionGeoJSONFile(
-            self.file_path, self.crs_transformer, self.class_map,
-            extent=None, readable=True, writable=False)
+            self.file_path,
+            self.crs_transformer,
+            self.class_map,
+            extent=None,
+            readable=True,
+            writable=False)
         with self.assertRaises(NotWritableError):
             label_store.save()
 
     def test_write_invalid_uri(self):
         invalid_uri = 's3://invalid_path/invalid.json'
         label_store = ObjectDetectionGeoJSONFile(
-            invalid_uri, self.crs_transformer, self.class_map,
-            extent=None, readable=False, writable=True)
+            invalid_uri,
+            self.crs_transformer,
+            self.class_map,
+            extent=None,
+            readable=False,
+            writable=True)
         # TODO replace with NotWritableError once
         # files.utils upload functions are improved/tested.
         with self.assertRaises(Exception):
@@ -178,14 +185,22 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
     def test_valid_uri(self):
         # Read it, write it using label_store, read it again, and compare.
         label_store = ObjectDetectionGeoJSONFile(
-            self.file_path, self.crs_transformer, self.class_map,
-            extent=None, readable=True, writable=True)
+            self.file_path,
+            self.crs_transformer,
+            self.class_map,
+            extent=None,
+            readable=True,
+            writable=True)
         labels1 = label_store.get_labels()
         label_store.save()
 
         label_store = ObjectDetectionGeoJSONFile(
-            self.file_path, self.crs_transformer, self.class_map,
-            extent=None, readable=True, writable=True)
+            self.file_path,
+            self.crs_transformer,
+            self.class_map,
+            extent=None,
+            readable=True,
+            writable=True)
         labels2 = label_store.get_labels()
 
         labels1.assert_equal(labels2)

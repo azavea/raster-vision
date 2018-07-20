@@ -13,16 +13,15 @@ from keras_classification.utils import predict
 from google.protobuf import json_format
 
 from rastervision.core.ml_backend import MLBackend
-from rastervision.utils.files import (
-    make_dir, get_local_path, upload_if_needed, download_if_needed,
-    start_sync, sync_dir, load_json_config)
+from rastervision.utils.files import (make_dir, get_local_path,
+                                      upload_if_needed, download_if_needed,
+                                      start_sync, sync_dir, load_json_config)
 from rastervision.utils.misc import save_img
 from rastervision.labels.classification_labels import ClassificationLabels
 from rastervision.core.box import Box
 
 
 class FileGroup(object):
-
     def __init__(self, base_uri):
         self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
@@ -86,8 +85,8 @@ class ModelFiles(FileGroup):
         self.model_uri = join(self.base_uri, 'model')
         self.log_uri = join(self.base_uri, 'log.csv')
 
-    def download_backend_config(self, backend_config_uri,
-                                dataset_files, class_map):
+    def download_backend_config(self, backend_config_uri, dataset_files,
+                                class_map):
         config = load_json_config(backend_config_uri, PipelineConfig())
 
         # Update config using local paths.
@@ -101,8 +100,7 @@ class ModelFiles(FileGroup):
             dataset_files.get_local_path(dataset_files.validation_uri)
 
         del config.trainer.options.class_names[:]
-        config.trainer.options.class_names.extend(
-            class_map.get_class_names())
+        config.trainer.options.class_names.extend(class_map.get_class_names())
 
         # Save an updated copy of the config file.
         config_path = self.get_local_path(backend_config_uri)
@@ -113,7 +111,6 @@ class ModelFiles(FileGroup):
 
 
 class KerasClassification(MLBackend):
-
     def __init__(self):
         self.model = None
         # persist for when output_uri is remote
@@ -134,12 +131,10 @@ class KerasClassification(MLBackend):
         dataset_files = DatasetFiles(options.output_uri)
         self.scene_dataset_files.append(dataset_files)
 
-        scratch_dir = dataset_files.get_local_path(
-            dataset_files.scratch_uri)
+        scratch_dir = dataset_files.get_local_path(dataset_files.scratch_uri)
         # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
-        scene_dir = join(scratch_dir, '{}-{}'.format(
-            scene.id, uuid.uuid4()))
+        scene_dir = join(scratch_dir, '{}-{}'.format(scene.id, uuid.uuid4()))
         class_dirs = {}
 
         for chip_idx, (chip, window, labels) in enumerate(data):
@@ -172,8 +167,7 @@ class KerasClassification(MLBackend):
             options: MakeTrainingChipsConfig.Options
         """
         dataset_files = DatasetFiles(options.output_uri)
-        training_dir = dataset_files.get_local_path(
-            dataset_files.training_uri)
+        training_dir = dataset_files.get_local_path(dataset_files.training_uri)
         validation_dir = dataset_files.get_local_path(
             dataset_files.validation_uri)
 
@@ -212,8 +206,10 @@ class KerasClassification(MLBackend):
         if urlparse(options.output_uri).scheme == 's3':
             sync_dir(options.output_uri, model_files.base_dir)
 
-        start_sync(model_files.base_dir, options.output_uri,
-                   sync_interval=options.sync_interval)
+        start_sync(
+            model_files.base_dir,
+            options.output_uri,
+            sync_interval=options.sync_interval)
         _train(backend_config_path)
 
         if urlparse(options.output_uri).scheme == 's3':
