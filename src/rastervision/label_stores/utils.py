@@ -25,7 +25,7 @@ def boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
         polygon = box.geojson_coordinates()
         polygon = [list(crs_transformer.pixel_to_map(p)) for p in polygon]
 
-        class_id = class_ids[box_ind]
+        class_id = int(class_ids[box_ind])
         class_name = class_map.get_by_id(class_id).name
         score = 0.0
         if scores is not None:
