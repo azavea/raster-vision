@@ -17,6 +17,10 @@ message TrainConfig {
         optional string export_py = 3 [default="/opt/tf-models/object_detection/export_inference_graph.py"];
     }
 
+    message SegmentationOptions {
+
+    }
+
     message Options {
         // URI for a separate training configuration that is specific to an ML
         // backend.
@@ -36,6 +40,7 @@ message TrainConfig {
 
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 6;
+            SegmentationOptions segmentation_options = 7;
         }
 
     }
