@@ -13,6 +13,7 @@ message MachineLearning {
     enum Backend {
         TF_OBJECT_DETECTION_API = 1;
         KERAS_CLASSIFICATION = 2;
+        TF_DEEPLAB = 3;
     }
 
     message ClassItem {
