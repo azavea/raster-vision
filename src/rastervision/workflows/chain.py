@@ -107,7 +107,7 @@ def is_uri_valid(uri):
                 print(e)
                 return False
     else:
-        if not isfile(uri):
+        if not isfile(uri) and uri != '/dev/null':
             print('Error: URI cannot be found: {}'.format(uri))
             return False
 
@@ -244,6 +244,9 @@ class ChainWorkflow(object):
         elif label_store_type == 'classification_geojson_file':
             geojson_file = ClassificationGeoJSONFileConfig(uri=prediction_uri)
             return LabelStoreConfig(classification_geojson_file=geojson_file)
+        elif label_store_type == 'segmentation_raster_file':
+            raster_file = None
+            return LabelStoreConfig(segmentation_raster_file=raster_file)
         else:
             raise ValueError(
                 'Not sure how to generate label source config for type {}'
