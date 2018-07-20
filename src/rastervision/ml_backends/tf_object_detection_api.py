@@ -2,12 +2,10 @@ import io
 import tempfile
 import os
 import shutil
-import zipfile
 import tarfile
 from os.path import join
 from urllib.parse import urlparse
 from subprocess import Popen
-import signal
 import atexit
 import glob
 import re
@@ -19,8 +17,6 @@ import numpy as np
 from google.protobuf import text_format
 
 from object_detection.utils import dataset_util
-from object_detection.utils.np_box_list import BoxList
-from object_detection.utils.np_box_list_ops import scale
 from object_detection.protos.string_int_label_map_pb2 import (
     StringIntLabelMap, StringIntLabelMapItem)
 from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
@@ -231,7 +227,8 @@ def export_inference_graph(train_root_dir,
                            config_path,
                            output_dir,
                            export_py=None):
-    export_py = export_py or '/opt/tf-models/object_detection/export_inference_graph.py'
+    export_py = (export_py or
+                 '/opt/tf-models/object_detection/export_inference_graph.py')
     checkpoint_path = get_last_checkpoint_path(train_root_dir)
     if checkpoint_path is None:
         print('No checkpoints could be found.')

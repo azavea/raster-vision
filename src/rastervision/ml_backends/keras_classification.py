@@ -18,7 +18,6 @@ from rastervision.utils.files import (make_dir, get_local_path,
                                       start_sync, sync_dir, load_json_config)
 from rastervision.utils.misc import save_img
 from rastervision.labels.classification_labels import ClassificationLabels
-from rastervision.core.box import Box
 
 
 class FileGroup(object):
@@ -126,7 +125,8 @@ class KerasClassification(MLBackend):
             options: MakeTrainingChipsConfig.Options
 
         Returns:
-            dictionary of Scene's classes and corresponding local directory path
+            dictionary of Scene's classes and corresponding local directory
+                path
         """
         dataset_files = DatasetFiles(options.output_uri)
         self.scene_dataset_files.append(dataset_files)

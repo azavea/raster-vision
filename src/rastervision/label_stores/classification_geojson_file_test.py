@@ -3,18 +3,14 @@ import tempfile
 import os
 import json
 
-import numpy as np
-from moto import mock_s3
 from shapely import geometry
 
 from rastervision.label_stores.classification_geojson_file import (
     ClassificationGeoJSONFile, get_str_tree, infer_cell, infer_labels,
     read_labels, to_geojson)
-from rastervision.labels.classification_labels import ClassificationLabels
 from rastervision.core.crs_transformer import CRSTransformer
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.utils.files import NotFoundException, NotWritableError
 from rastervision.protos.label_store_pb2 import (
     ClassificationGeoJSONFile as ClassificationGeoJSONFileConfig)
 
@@ -162,7 +158,7 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
                               pick_min_class_id)
         self.assertEqual(class_id, None)
 
-    def test_infer_cell4(self):
+    def test_infer_cell5(self):
         # More of box1 in cell, using intersection_over_cell with the
         # IOA high enough.
         cell = Box.make_square(0, 0, 3)
@@ -176,7 +172,7 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id1)
 
-    def test_infer_cell5(self):
+    def test_infer_cell6(self):
         # No boxes overlap enough, use background_class_id
         cell = Box.make_square(0, 0, 10)
         ioa_thresh = 0.5
@@ -189,7 +185,7 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
                               pick_min_class_id)
         self.assertEqual(class_id, self.background_class_id)
 
-    def test_infer_cell6(self):
+    def test_infer_cell7(self):
         # Cell doesn't overlap with any boxes.
         cell = Box.make_square(10, 10, 1)
         ioa_thresh = 0.5
@@ -202,7 +198,7 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
                               pick_min_class_id)
         self.assertEqual(class_id, None)
 
-    def test_infer_cell7(self):
+    def test_infer_cell8(self):
         # box2 overlaps more than box1, but using pick_min_class_id, so
         # picks box1.
         cell = Box.make_square(1, 1, 3)

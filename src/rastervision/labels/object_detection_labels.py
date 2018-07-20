@@ -53,8 +53,8 @@ class ObjectDetectionLabels(Labels):
     @staticmethod
     def from_boxlist(boxlist):
         """Make ObjectDetectionLabels from BoxList object."""
-        scores = boxlist.get_field('scores') \
-                 if boxlist.has_field('scores') else None
+        scores = (boxlist.get_field('scores')
+                  if boxlist.has_field('scores') else None)
         return ObjectDetectionLabels(
             boxlist.get(), boxlist.get_field('classes'), scores=scores)
 

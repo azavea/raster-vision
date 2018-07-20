@@ -1,7 +1,5 @@
 import unittest
 
-import numpy as np
-
 from rastervision.label_stores.classification_label_store import (
     ClassificationLabelStore)
 from rastervision.labels.classification_labels import ClassificationLabels

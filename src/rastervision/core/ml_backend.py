@@ -31,7 +31,8 @@ class MLBackend(ABC):
 
         Args:
             training_results: dependent on the ml_backend's process_scene_data
-            validation_results: dependent on the ml_backend's process_scene_data
+            validation_results: dependent on the ml_backend's
+                process_scene_data
             class_map: ClassMap
             options: MakeTrainingChipsConfig.Options
         """

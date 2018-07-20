@@ -4,7 +4,6 @@ import numpy as np
 
 from rastervision.core.raster_source import RasterSource
 from rastervision.core.box import Box
-from rastervision.utils.files import download_if_needed
 
 
 def load_window(image_dataset, window=None):

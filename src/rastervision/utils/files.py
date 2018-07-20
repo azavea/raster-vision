@@ -66,9 +66,10 @@ def sync_dir(src_dir, dest_uri, delete=False):
 def _is_raster(uri, s3_test=False):
     if s3_test:
         uri = uri.replace('s3://', '/vsis3/')
+
     try:
         rasterio.open(uri)
-    except:
+    except Exception:
         return False
     return uri
 
@@ -199,7 +200,7 @@ try:
     # can we interact with directory?
     explicit_temp_dir_valid = (os.path.isdir(explicit_temp_dir) and Path.touch(
         Path(os.path.join(explicit_temp_dir, '.can_touch'))))
-except:
+except Exception:
     print('Root temporary directory cannot be used: {}. Using root: {}'.format(
         explicit_temp_dir, RV_TEMP_DIR))
     tempfile.tempdir = RV_TEMP_DIR  # no guarantee this will work

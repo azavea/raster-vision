@@ -172,7 +172,7 @@ class ObjectDetectionLabelsTest(unittest.TestCase):
             for pruned_box_ind, pruned_box in enumerate(pruned_npboxes):
                 if np.array_equal(pruned_box, box):
                     pruned_inds[box_ind] = pruned_box_ind
-        self.assertTrue(np.all(pruned_inds != None))
+        self.assertTrue(np.all(pruned_inds is not None))
 
         expected_labels = ObjectDetectionLabels(
             expected_npboxes[pruned_inds],

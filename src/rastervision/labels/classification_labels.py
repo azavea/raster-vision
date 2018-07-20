@@ -1,5 +1,3 @@
-import numpy as np
-
 from rastervision.core.labels import Labels
 from rastervision.core.box import Box
 

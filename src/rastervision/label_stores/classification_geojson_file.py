@@ -58,8 +58,8 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
 
     Given a cell and a set of polygons, the problem is to infer the class_id
     that best captures the content of the cell. This is non-trivial since there
-    can be multiple polygons of differing classes overlapping with the cell. Any
-    polygons that sufficiently overlap with the cell are in the running for
+    can be multiple polygons of differing classes overlapping with the cell.
+    Any polygons that sufficiently overlap with the cell are in the running for
     setting the class_id. If there are none in the running, the cell is either
     considered null or background. See args for more details.
 
@@ -72,8 +72,8 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
             cell as the denominator in the IOA. Otherwise, use the area of the
             polygon.
         background_class_id: (None or int) If not None, class_id to use as the
-            background class; ie. the one that is used when a window contains no
-            boxes. If not set, empty windows have None set as their class_id
+            background class; ie. the one that is used when a window contains
+            no boxes. If not set, empty windows have None set as their class_id
             which is considered a null value.
         pick_min_class_id: If true, the class_id for a cell is the minimum
             class_id of the boxes in that cell. Otherwise, pick the class_id of
@@ -127,7 +127,7 @@ def infer_labels(geojson_dict, crs_transformer, extent, options):
         crs_transformer: CRSTransformer used to convert from map to pixel based
             coordinates
         extent: Box representing the bounds of the grid
-        options: rastervision.protos.label_store_pb2.ClassificationGeoJSONFile.Options
+        options: rastervision.protos.label_store_pb2.ClassificationGeoJSONFile.Options  # noqa
 
     Returns:
         ClassificationLabels
@@ -185,7 +185,7 @@ def load_geojson(geojson_dict, crs_transformer, extent, options):
         crs_transformer: CRSTransformer used to convert from map to pixel based
             coordinates
         extent: Box representing the bounds of the grid
-        options: rastervision.protos.label_store_pb2.ClassificationGeoJSONFile.Options
+        options: rastervision.protos.label_store_pb2.ClassificationGeoJSONFile.Options  # noqa
     Returns:
         ClassificationLabels
     """
