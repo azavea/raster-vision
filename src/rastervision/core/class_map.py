@@ -43,6 +43,10 @@ class ClassMap(object):
                 return item
         raise ValueError('{} is not a name in this ClassMap.'.format(name))
 
+    def get_keys(self):
+        """Return the keys."""
+        return list(self.class_item_map.keys())
+
     def get_items(self):
         """Return list of ClassItems."""
         return list(self.class_item_map.values())

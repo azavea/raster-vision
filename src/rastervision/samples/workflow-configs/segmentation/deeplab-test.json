@@ -14,7 +14,7 @@
                     "src": {
                         "geotiff_files": {
                             "uris": [
-                                "/opt/data/top_potsdam_2_10_label_noBoundary.tif"
+                                "/opt/data/top_potsdam_2_10_label_georeferenced.tif"
                             ]
                         }
                     },
@@ -39,7 +39,7 @@
                     "src": {
                         "geotiff_files": {
                             "uris": [
-                                "/opt/data/top_potsdam_2_11_label_noBoundary.tif"
+                                "/opt/data/top_potsdam_2_11_label_georeferenced.tif"
                             ]
                         }
                     },

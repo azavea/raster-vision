@@ -130,6 +130,7 @@ class MLTask(object):
             data.shuffle()
             # TODO load and delete scene data as needed to avoid
             # running out of disk space
+            # import pdb ; pdb.set_trace()
             return self.backend.process_scene_data(scene, data, self.class_map,
                                                    options)
 

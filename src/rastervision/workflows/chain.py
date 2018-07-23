@@ -19,7 +19,8 @@ from rastervision.protos.eval_pb2 import EvalConfig
 from rastervision.protos.label_store_pb2 import (
     LabelStore as LabelStoreConfig, ObjectDetectionGeoJSONFile as
     ObjectDetectionGeoJSONFileConfig, ClassificationGeoJSONFile as
-    ClassificationGeoJSONFileConfig)
+    ClassificationGeoJSONFileConfig, SegmentationRasterFile as
+    SegmentationRasterFileConfig)
 
 from rastervision.utils.files import (load_json_config, save_json_config,
                                       file_to_str, str_to_file)
@@ -237,6 +238,8 @@ class ChainWorkflow(object):
         label_store_type = label_store.WhichOneof('label_store_type')
         prediction_uri = join(self.path_generator.prediction_output_uri,
                               '{}.json'.format(scene.id))
+        prediction_raster = join(self.path_generator.prediction_output_uri,
+                                 '{}.tif'.format(scene.id))
 
         if label_store_type == 'object_detection_geojson_file':
             geojson_file = ObjectDetectionGeoJSONFileConfig(uri=prediction_uri)
@@ -245,7 +248,7 @@ class ChainWorkflow(object):
             geojson_file = ClassificationGeoJSONFileConfig(uri=prediction_uri)
             return LabelStoreConfig(classification_geojson_file=geojson_file)
         elif label_store_type == 'segmentation_raster_file':
-            raster_file = None
+            raster_file = SegmentationRasterFileConfig(dst=prediction_raster)
             return LabelStoreConfig(segmentation_raster_file=raster_file)
         else:
             raise ValueError(
