@@ -3,10 +3,9 @@ import json
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.labels.object_detection_labels import (
-    ObjectDetectionLabels)
-from rastervision.label_stores.utils import (
-    add_classes_to_geojson, load_label_store_json)
+from rastervision.labels.object_detection_labels import (ObjectDetectionLabels)
+from rastervision.label_stores.utils import (add_classes_to_geojson,
+                                             load_label_store_json)
 from rastervision.label_stores.object_detection_label_store import (
     ObjectDetectionLabelStore)
 from rastervision.label_stores.utils import boxes_to_geojson
@@ -57,8 +56,13 @@ def geojson_to_labels(geojson_dict, crs_transformer, extent=None):
 
 
 class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
-    def __init__(self, uri, crs_transformer, class_map,
-                 extent=None, readable=True, writable=False):
+    def __init__(self,
+                 uri,
+                 crs_transformer,
+                 class_map,
+                 extent=None,
+                 readable=True,
+                 writable=False):
         """Construct ObjectDetectionLabelStore backed by a GeoJSON file.
 
         Args:
@@ -92,7 +96,10 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
             class_ids = self.labels.get_class_ids().tolist()
             scores = self.labels.get_scores().tolist()
             geojson_dict = boxes_to_geojson(
-                boxes, class_ids, self.crs_transformer, self.class_map,
+                boxes,
+                class_ids,
+                self.crs_transformer,
+                self.class_map,
                 scores=scores)
             geojson_str = json.dumps(geojson_dict)
             str_to_file(geojson_str, self.uri)

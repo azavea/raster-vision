@@ -1,6 +1,5 @@
 from rastervision.core.label_store import LabelStore
-from rastervision.labels.object_detection_labels import (
-    ObjectDetectionLabels)
+from rastervision.labels.object_detection_labels import (ObjectDetectionLabels)
 
 
 class ObjectDetectionLabelStore(LabelStore):
@@ -20,8 +19,7 @@ class ObjectDetectionLabelStore(LabelStore):
         return ObjectDetectionLabels.get_overlapping(self.labels, window)
 
     def extend(self, labels):
-        self.labels = ObjectDetectionLabels.concatenate(
-            self.labels, labels)
+        self.labels = ObjectDetectionLabels.concatenate(self.labels, labels)
 
     def save(self):
         raise NotImplementedError()

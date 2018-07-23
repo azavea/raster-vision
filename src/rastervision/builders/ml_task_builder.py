@@ -1,4 +1,5 @@
-from rastervision.ml_backends.tf_object_detection_api import TFObjectDetectionAPI
+from rastervision.ml_backends.tf_object_detection_api import (
+    TFObjectDetectionAPI)
 from rastervision.ml_tasks.object_detection import ObjectDetection
 from rastervision.ml_backends.keras_classification import KerasClassification
 from rastervision.ml_tasks.classification import Classification

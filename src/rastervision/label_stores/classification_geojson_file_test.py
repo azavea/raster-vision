@@ -3,18 +3,14 @@ import tempfile
 import os
 import json
 
-import numpy as np
-from moto import mock_s3
 from shapely import geometry
 
 from rastervision.label_stores.classification_geojson_file import (
     ClassificationGeoJSONFile, get_str_tree, infer_cell, infer_labels,
     read_labels, to_geojson)
-from rastervision.labels.classification_labels import ClassificationLabels
 from rastervision.core.crs_transformer import CRSTransformer
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.utils.files import NotFoundException, NotWritableError
 from rastervision.protos.label_store_pb2 import (
     ClassificationGeoJSONFile as ClassificationGeoJSONFileConfig)
 
@@ -24,6 +20,7 @@ class DoubleCRSTransformer(CRSTransformer):
 
     Assumes map coords are 2x pixels coords.
     """
+
     def map_to_pixel(self, web_point):
         return (web_point[0] * 2, web_point[1] * 2)
 
@@ -35,49 +32,35 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
         self.geojson_dict = {
-            'type': 'FeatureCollection',
-            'features': [
-                {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'Polygon',
-                        'coordinates': [
-                            [
-                                [0., 0.],
-                                [0., 1.],
-                                [1., 1.],
-                                [1., 0.],
-                                [0., 0.]
-                            ]
-                        ]
-                    },
-                    'properties': {
-                        'class_name': 'car',
-                        'class_id': 1,
-                        'score': 0.0
-                    }
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'Polygon',
+                    'coordinates': [[[0., 0.], [0., 1.], [1., 1.], [1., 0.],
+                                     [0., 0.]]]
                 },
-                {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'Polygon',
-                        'coordinates': [
-                            [
-                                [1., 1.],
-                                [1., 2.],
-                                [2., 2.],
-                                [2., 1.],
-                                [1., 1.]
-                            ]
-                        ]
-                    },
-                    'properties': {
-                        'score': 0.0,
-                        'class_name': 'house',
-                        'class_id': 2
-                    }
+                'properties': {
+                    'class_name': 'car',
+                    'class_id': 1,
+                    'score': 0.0
                 }
-            ]
+            }, {
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'Polygon',
+                    'coordinates': [[[1., 1.], [1., 2.], [2., 2.], [2., 1.],
+                                     [1., 1.]]]
+                },
+                'properties': {
+                    'score': 0.0,
+                    'class_name': 'house',
+                    'class_id': 2
+                }
+            }]
         }
 
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
@@ -130,9 +113,9 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(
-            self.str_tree, cell, ioa_thresh, use_intersection_over_cell,
-            background_class_id, pick_min_class_id)
+        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
+                              pick_min_class_id)
         self.assertEqual(class_id, self.class_id1)
 
     def test_infer_cell2(self):
@@ -143,9 +126,9 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(
-            self.str_tree, cell, ioa_thresh, use_intersection_over_cell,
-            background_class_id, pick_min_class_id)
+        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
+                              pick_min_class_id)
         self.assertEqual(class_id, self.class_id2)
 
     def test_infer_cell3(self):
@@ -156,9 +139,9 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(
-            self.str_tree, cell, ioa_thresh, use_intersection_over_cell,
-            background_class_id, pick_min_class_id)
+        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
+                              pick_min_class_id)
         self.assertEqual(class_id, None)
 
     def test_infer_cell4(self):
@@ -170,12 +153,12 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(
-            self.str_tree, cell, ioa_thresh, use_intersection_over_cell,
-            background_class_id, pick_min_class_id)
+        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
+                              pick_min_class_id)
         self.assertEqual(class_id, None)
 
-    def test_infer_cell4(self):
+    def test_infer_cell5(self):
         # More of box1 in cell, using intersection_over_cell with the
         # IOA high enough.
         cell = Box.make_square(0, 0, 3)
@@ -184,12 +167,12 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(
-            self.str_tree, cell, ioa_thresh, use_intersection_over_cell,
-            background_class_id, pick_min_class_id)
+        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
+                              pick_min_class_id)
         self.assertEqual(class_id, self.class_id1)
 
-    def test_infer_cell5(self):
+    def test_infer_cell6(self):
         # No boxes overlap enough, use background_class_id
         cell = Box.make_square(0, 0, 10)
         ioa_thresh = 0.5
@@ -197,12 +180,12 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(
-            self.str_tree, cell, ioa_thresh, use_intersection_over_cell,
-            background_class_id, pick_min_class_id)
+        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
+                              pick_min_class_id)
         self.assertEqual(class_id, self.background_class_id)
 
-    def test_infer_cell6(self):
+    def test_infer_cell7(self):
         # Cell doesn't overlap with any boxes.
         cell = Box.make_square(10, 10, 1)
         ioa_thresh = 0.5
@@ -210,12 +193,12 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(
-            self.str_tree, cell, ioa_thresh, use_intersection_over_cell,
-            background_class_id, pick_min_class_id)
+        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
+                              pick_min_class_id)
         self.assertEqual(class_id, None)
 
-    def test_infer_cell7(self):
+    def test_infer_cell8(self):
         # box2 overlaps more than box1, but using pick_min_class_id, so
         # picks box1.
         cell = Box.make_square(1, 1, 3)
@@ -224,9 +207,9 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = True
 
-        class_id = infer_cell(
-            self.str_tree, cell, ioa_thresh, use_intersection_over_cell,
-            background_class_id, pick_min_class_id)
+        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
+                              pick_min_class_id)
         self.assertEqual(class_id, self.class_id2)
 
     def test_infer_labels(self):
@@ -239,8 +222,8 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         options.infer_cells = True
         options.cell_size = 2
 
-        labels = infer_labels(
-            self.geojson_dict, self.crs_transformer, extent, options)
+        labels = infer_labels(self.geojson_dict, self.crs_transformer, extent,
+                              options)
         cells = labels.get_cells()
 
         self.assertEqual(len(cells), 4)
@@ -291,18 +274,28 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         options.infer_cells = False
 
         label_store = ClassificationGeoJSONFile(
-            self.file_path, self.crs_transformer, options, self.class_map,
-            extent, readable=True, writable=True)
+            self.file_path,
+            self.crs_transformer,
+            options,
+            self.class_map,
+            extent,
+            readable=True,
+            writable=True)
         labels1 = label_store.get_labels()
         label_store.save()
 
         label_store = ClassificationGeoJSONFile(
-            self.file_path, self.crs_transformer, options, self.class_map,
-            extent=None, readable=True, writable=True)
+            self.file_path,
+            self.crs_transformer,
+            options,
+            self.class_map,
+            extent=None,
+            readable=True,
+            writable=True)
         labels2 = label_store.get_labels()
 
-        self.assertDictEqual(
-            labels1.cell_to_class_id, labels2.cell_to_class_id)
+        self.assertDictEqual(labels1.cell_to_class_id,
+                             labels2.cell_to_class_id)
 
 
 if __name__ == '__main__':

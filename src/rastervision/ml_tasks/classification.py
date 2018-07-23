@@ -7,8 +7,8 @@ from PIL import Image, ImageDraw
 from rastervision.core.ml_task import MLTask
 from rastervision.evaluations.classification_evaluation import (
     ClassificationEvaluation)
-from rastervision.utils.files import (
-    get_local_path, upload_if_needed, make_dir)
+from rastervision.utils.files import (get_local_path, upload_if_needed,
+                                      make_dir)
 
 
 def draw_debug_predict_image(scene, class_map):

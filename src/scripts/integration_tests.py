@@ -12,7 +12,6 @@ import tensorflow
 
 import rastervision.workflows.chain as chain_workflow
 
-
 CLASSIFICATION = 'classification'
 all_tests = [CLASSIFICATION]
 
@@ -20,8 +19,7 @@ np.random.seed(1234)
 tensorflow.set_random_seed(5678)
 
 TEST_ROOT_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    '../fixtures/tests')
+    os.path.dirname(os.path.abspath(__file__)), '../fixtures/tests')
 
 
 class TestError():
@@ -31,14 +29,9 @@ class TestError():
         self.details = details
 
     def __str__(self):
-        return (
-            'Error\n' +
-            '------\n' +
-            'Test: {}\n'.format(self.test) +
-            'Message: {}\n'.format(self.message) +
-            'Details: {}'.format(str(self.details)) if self.details else '' +
-            '\n'
-        )
+        return ('Error\n' + '------\n' + 'Test: {}\n'.format(self.test) +
+                'Message: {}\n'.format(self.message) + 'Details: {}'.format(
+                    str(self.details)) if self.details else '' + '\n')
 
 
 def get_test_dir(test):
@@ -59,10 +52,9 @@ def get_expected_eval_path(test):
 
 def get_actual_eval_path(test, temp_dir):
     return os.path.join(
-        temp_dir,
-        ('rv-output/raw-datasets/{}-test/datasets/' +
-         'default/models/default/predictions/default/evals/default/' +
-         'output/eval.json').format(test))
+        temp_dir, ('rv-output/raw-datasets/{}-test/datasets/' +
+                   'default/models/default/predictions/default/evals/default/'
+                   + 'output/eval.json').format(test))
 
 
 def open_json(path):
@@ -91,10 +83,11 @@ def check_eval_item(test, expected_item, actual_item):
     class_name = expected_item['class_name']
 
     if math.fabs(expected_item['f1'] - actual_item['f1']) > f1_threshold:
-        errors.append(TestError(
-            test, 'F1 scores are not close enough',
-            'for class_name: {} expected f1: {}, actual f1: {}'.format(
-                class_name, expected_item['f1'], actual_item['f1'])))
+        errors.append(
+            TestError(
+                test, 'F1 scores are not close enough',
+                'for class_name: {} expected f1: {}, actual f1: {}'.format(
+                    class_name, expected_item['f1'], actual_item['f1'])))
 
     return errors
 
@@ -116,8 +109,9 @@ def check_eval(test, temp_dir):
                     lambda x: x['class_name'] == class_name, actual_eval))
             errors.extend(check_eval_item(test, expected_item, actual_item))
     else:
-        errors.append(TestError(
-            test, 'actual eval file does not exist', actual_eval_path))
+        errors.append(
+            TestError(test, 'actual eval file does not exist',
+                      actual_eval_path))
 
     return errors
 
@@ -131,9 +125,9 @@ def run_test(test, temp_dir):
     try:
         chain_workflow._main(workflow_path, tasks, run=True)
     except Exception as exc:
-        errors.append(TestError(
-            test, 'raised an exception while running',
-            traceback.format_exc()))
+        errors.append(
+            TestError(test, 'raised an exception while running',
+                      traceback.format_exc()))
         return errors
 
     # Check that the eval is similar to expected eval.
@@ -162,8 +156,8 @@ def main(tests):
                 print(error)
 
         for test in tests:
-            nb_test_errors = len(list(filter(
-                lambda error: error.test == test, errors)))
+            nb_test_errors = len(
+                list(filter(lambda error: error.test == test, errors)))
             if nb_test_errors == 0:
                 print('{} test passed!'.format(test))
 

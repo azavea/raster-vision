@@ -11,10 +11,7 @@ from rastervision.label_stores.classification_label_store import (
 
 class TestClassificationEvaluation(unittest.TestCase):
     def make_class_map(self):
-        class_items = [
-            ClassItem(1, 'grassy'),
-            ClassItem(2, 'urban')
-        ]
+        class_items = [ClassItem(1, 'grassy'), ClassItem(2, 'urban')]
         return ClassMap(class_items)
 
     def make_label_store(self, class_ids):
@@ -47,49 +44,40 @@ class TestClassificationEvaluation(unittest.TestCase):
         self.assertEqual(eval_item1.gt_count, 2)
         self.assertEqual(eval_item1.precision, 1.0)
         self.assertEqual(eval_item1.recall, 0.5)
-        self.assertAlmostEqual(eval_item1.f1, 2/3, places=2)
+        self.assertAlmostEqual(eval_item1.f1, 2 / 3, places=2)
 
         eval_item2 = eval.class_to_eval_item[2]
         self.assertEqual(eval_item2.gt_count, 1)
         self.assertEqual(eval_item2.precision, 0.5)
         self.assertEqual(eval_item2.recall, 1.0)
-        self.assertAlmostEqual(eval_item2.f1, 2/3, places=2)
+        self.assertAlmostEqual(eval_item2.f1, 2 / 3, places=2)
 
         avg_item = eval.avg_item
         self.assertEqual(avg_item.gt_count, 3)
         self.assertAlmostEqual(avg_item.precision, 0.83, places=2)
-        self.assertAlmostEqual(avg_item.recall, 2/3, places=2)
-        self.assertAlmostEqual(avg_item.f1, 2/3, places=2)
+        self.assertAlmostEqual(avg_item.recall, 2 / 3, places=2)
+        self.assertAlmostEqual(avg_item.f1, 2 / 3, places=2)
 
     def test_compute_single_pred_null(self):
         eval = ClassificationEvaluation()
         class_map = self.make_class_map()
-        gt_class_ids = [
-            [1, 2],
-            [1, 2]]
+        gt_class_ids = [[1, 2], [1, 2]]
         gt_label_store = self.make_label_store(gt_class_ids)
-        pred_class_ids = [
-            [1, None],
-            [2, 2]]
+        pred_class_ids = [[1, None], [2, 2]]
         pred_label_store = self.make_label_store(pred_class_ids)
-        eval.compute(
-            class_map, gt_label_store, pred_label_store)
+        eval.compute(class_map, gt_label_store, pred_label_store)
         self.assert_eval_single_null(eval)
 
     def test_compute_single_gt_null(self):
         eval = ClassificationEvaluation()
         class_map = self.make_class_map()
-        gt_class_ids = [
-            [1, None],
-            [1, 2]]
+        gt_class_ids = [[1, None], [1, 2]]
         gt_label_store = self.make_label_store(gt_class_ids)
-        pred_class_ids = [
-            [1, 2],
-            [2, 2]]
+        pred_class_ids = [[1, 2], [2, 2]]
         pred_label_store = self.make_label_store(pred_class_ids)
-        eval.compute(
-            class_map, gt_label_store, pred_label_store)
+        eval.compute(class_map, gt_label_store, pred_label_store)
         self.assert_eval_single_null(eval)
+
 
 if __name__ == "__main__":
     unittest.main()

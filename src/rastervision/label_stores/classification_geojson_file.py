@@ -4,15 +4,14 @@ import numpy as np
 from shapely.strtree import STRtree
 from shapely import geometry
 
-from rastervision.labels.classification_labels import (
-    ClassificationLabels)
+from rastervision.labels.classification_labels import (ClassificationLabels)
 from rastervision.label_stores.object_detection_geojson_file import (
     geojson_to_labels as geojson_to_object_detection_labels)
 from rastervision.label_stores.utils import (
     add_classes_to_geojson, load_label_store_json, boxes_to_geojson)
 from rastervision.utils.files import str_to_file
 from rastervision.label_stores.classification_label_store import (
-        ClassificationLabelStore)
+    ClassificationLabelStore)
 
 
 def get_str_tree(geojson_dict, crs_transformer):
@@ -59,8 +58,8 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
 
     Given a cell and a set of polygons, the problem is to infer the class_id
     that best captures the content of the cell. This is non-trivial since there
-    can be multiple polygons of differing classes overlapping with the cell. Any
-    polygons that sufficiently overlap with the cell are in the running for
+    can be multiple polygons of differing classes overlapping with the cell.
+    Any polygons that sufficiently overlap with the cell are in the running for
     setting the class_id. If there are none in the running, the cell is either
     considered null or background. See args for more details.
 
@@ -73,8 +72,8 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
             cell as the denominator in the IOA. Otherwise, use the area of the
             polygon.
         background_class_id: (None or int) If not None, class_id to use as the
-            background class; ie. the one that is used when a window contains no
-            boxes. If not set, empty windows have None set as their class_id
+            background class; ie. the one that is used when a window contains
+            no boxes. If not set, empty windows have None set as their class_id
             which is considered a null value.
         pick_min_class_id: If true, the class_id for a cell is the minimum
             class_id of the boxes in that cell. Otherwise, pick the class_id of
@@ -106,8 +105,7 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
 
     # Infer class id for cell.
     if len(class_ids) == 0:
-        class_id = (None if background_class_id == 0
-                    else background_class_id)
+        class_id = (None if background_class_id == 0 else background_class_id)
     elif pick_min_class_id:
         class_id = min(class_ids)
     else:
@@ -129,7 +127,7 @@ def infer_labels(geojson_dict, crs_transformer, extent, options):
         crs_transformer: CRSTransformer used to convert from map to pixel based
             coordinates
         extent: Box representing the bounds of the grid
-        options: rastervision.protos.label_store_pb2.ClassificationGeoJSONFile.Options
+        options: rastervision.protos.label_store_pb2.ClassificationGeoJSONFile.Options  # noqa
 
     Returns:
         ClassificationLabels
@@ -139,10 +137,10 @@ def infer_labels(geojson_dict, crs_transformer, extent, options):
 
     cells = extent.get_windows(options.cell_size, options.cell_size)
     for cell in cells:
-        class_id = infer_cell(
-            str_tree, cell, options.ioa_thresh,
-            options.use_intersection_over_cell, options.background_class_id,
-            options.pick_min_class_id)
+        class_id = infer_cell(str_tree, cell, options.ioa_thresh,
+                              options.use_intersection_over_cell,
+                              options.background_class_id,
+                              options.pick_min_class_id)
         labels.set_cell(cell, class_id)
     return labels
 
@@ -164,8 +162,8 @@ def read_labels(geojson_dict, crs_transformer, extent):
         ClassificationLabels
     """
     # Load as ObjectDetectionLabels and convert to ClassificationLabels.
-    od_labels = geojson_to_object_detection_labels(
-        geojson_dict, crs_transformer, extent)
+    od_labels = geojson_to_object_detection_labels(geojson_dict,
+                                                   crs_transformer, extent)
 
     labels = ClassificationLabels()
     boxes = od_labels.get_boxes()
@@ -187,7 +185,7 @@ def load_geojson(geojson_dict, crs_transformer, extent, options):
         crs_transformer: CRSTransformer used to convert from map to pixel based
             coordinates
         extent: Box representing the bounds of the grid
-        options: rastervision.protos.label_store_pb2.ClassificationGeoJSONFile.Options
+        options: rastervision.protos.label_store_pb2.ClassificationGeoJSONFile.Options  # noqa
     Returns:
         ClassificationLabels
     """
@@ -216,8 +214,7 @@ def to_geojson(labels, crs_transformer, class_map):
     boxes = labels.get_cells()
     class_ids = labels.get_class_ids()
 
-    return boxes_to_geojson(
-        boxes, class_ids, crs_transformer, class_map)
+    return boxes_to_geojson(boxes, class_ids, crs_transformer, class_map)
 
 
 class ClassificationGeoJSONFile(ClassificationLabelStore):
@@ -233,8 +230,15 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
     Args:
         options: ClassificationGeoJSONFile.Options
     """
-    def __init__(self, uri, crs_transformer, options, class_map,
-                 extent, readable=True, writable=False):
+
+    def __init__(self,
+                 uri,
+                 crs_transformer,
+                 options,
+                 class_map,
+                 extent,
+                 readable=True,
+                 writable=False):
         """Construct ClassificationLabelStore backed by a GeoJSON file.
 
         Args:
@@ -258,8 +262,8 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
         geojson_dict = load_label_store_json(uri, readable)
         if geojson_dict:
             geojson_dict = add_classes_to_geojson(geojson_dict, class_map)
-            self.labels = load_geojson(
-                geojson_dict, crs_transformer, extent, options)
+            self.labels = load_geojson(geojson_dict, crs_transformer, extent,
+                                       options)
 
     def save(self):
         """Save labels to URI if writable.
@@ -268,8 +272,8 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
         written, not the original polygons.
         """
         if self.writable:
-            geojson_dict = to_geojson(
-                self.labels, self.crs_transformer, self.class_map)
+            geojson_dict = to_geojson(self.labels, self.crs_transformer,
+                                      self.class_map)
             geojson_str = json.dumps(geojson_dict)
             str_to_file(geojson_str, self.uri)
         else:

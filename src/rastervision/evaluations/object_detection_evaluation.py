@@ -1,11 +1,6 @@
-import json
-
-import numpy as np
-
 from object_detection.utils import object_detection_evaluation
 
 from rastervision.core.evaluation import Evaluation
-from rastervision.utils.files import str_to_file
 from rastervision.core.evaluation_item import EvaluationItem
 
 
@@ -51,13 +46,16 @@ def parse_od_eval(od_eval, class_map):
             if len(precisions) == 0 or len(recalls) == 0:
                 # No predicted boxes.
                 eval_item = EvaluationItem(
-                    precision=None, recall=0, gt_count=gt_count,
-                    class_id=class_id, class_name=class_name)
+                    precision=None,
+                    recall=0,
+                    gt_count=gt_count,
+                    class_id=class_id,
+                    class_name=class_name)
             else:
-                # If we use the lowest detection threshold (ie. use all detected
-                # boxes as defined by score_thresh in the predict protobuf),
-                # that means we use all detected boxes, or the last element in
-                # the precisions array.
+                # If we use the lowest detection threshold (ie. use all
+                # detected boxes as defined by score_thresh in the predict
+                # protobuf), that means we use all detected boxes, or the last
+                # element in the precisions array.
                 precision = float(precisions[-1])
                 recall = float(recalls[-1])
 
@@ -72,9 +70,13 @@ def parse_od_eval(od_eval, class_map):
                     norm_count_error = count_error / gt_count
 
                 eval_item = EvaluationItem(
-                    precision=precision, recall=recall, f1=f1,
-                    count_error=norm_count_error, gt_count=gt_count,
-                    class_id=class_id, class_name=class_name)
+                    precision=precision,
+                    recall=recall,
+                    f1=f1,
+                    count_error=norm_count_error,
+                    gt_count=gt_count,
+                    class_id=class_id,
+                    class_name=class_name)
 
         class_to_eval_item[class_id] = eval_item
 

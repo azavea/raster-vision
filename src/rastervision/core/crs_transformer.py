@@ -1,6 +1,3 @@
-from abc import ABC, abstractmethod
-
-
 class CRSTransformer(object):
     """Transforms map points in some CRS into pixel coordinates.
 

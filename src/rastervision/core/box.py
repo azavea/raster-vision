@@ -138,7 +138,7 @@ class Box():
     @staticmethod
     def make_square(ymin, xmin, size):
         """Return new square Box."""
-        return Box(ymin, xmin, ymin+size, xmin+size)
+        return Box(ymin, xmin, ymin + size, xmin + size)
 
     def make_eroded(self, erosion_size):
         """Return new Box whose sides are eroded by erosion_size."""
@@ -162,9 +162,10 @@ class Box():
         return Box(
             max(0, math.floor(self.ymin - delta_height)),
             max(0, math.floor(self.xmin - delta_width)),
-            min(max_extent.get_height(), int(self.ymax) + delta_height),
-            min(max_extent.get_width(), int(self.xmax) + delta_width)
-        )
+            min(max_extent.get_height(),
+                int(self.ymax) + delta_height),
+            min(max_extent.get_width(),
+                int(self.xmax) + delta_width))
 
     def make_copy(self):
         return Box(*(self.tuple_format()))

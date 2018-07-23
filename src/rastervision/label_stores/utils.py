@@ -45,10 +45,7 @@ def boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
         }
         features.append(feature)
 
-    return {
-        'type': 'FeatureCollection',
-        'features': features
-    }
+    return {'type': 'FeatureCollection', 'features': features}
 
 
 def add_classes_to_geojson(geojson, class_map):

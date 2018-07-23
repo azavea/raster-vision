@@ -8,16 +8,12 @@ from rastervision.core.class_map import ClassItem, ClassMap
 from rastervision.core.box import Box
 from rastervision.label_stores.object_detection_label_store import (
     ObjectDetectionLabelStore)
-from rastervision.labels.object_detection_labels import (
-    ObjectDetectionLabels)
+from rastervision.labels.object_detection_labels import (ObjectDetectionLabels)
 
 
 class TestObjectDetectionEvaluation(unittest.TestCase):
     def make_class_map(self):
-        class_items = [
-            ClassItem(1, 'car'),
-            ClassItem(2, 'building')
-        ]
+        class_items = [ClassItem(1, 'car'), ClassItem(2, 'building')]
         return ClassMap(class_items)
 
     def make_ground_truth_label_store(self):
@@ -43,8 +39,8 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         class_ids = np.array([1, 1, 2])
         scores = np.ones(class_ids.shape)
         label_store = ObjectDetectionLabelStore()
-        label_store.extend(ObjectDetectionLabels(
-            npboxes, class_ids, scores=scores))
+        label_store.extend(
+            ObjectDetectionLabels(npboxes, class_ids, scores=scores))
         return label_store
 
     def test_compute(self):
@@ -53,8 +49,7 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         gt_label_store = self.make_ground_truth_label_store()
         pred_label_store = self.make_predicted_label_store()
 
-        eval.compute(
-            class_map, gt_label_store, pred_label_store)
+        eval.compute(class_map, gt_label_store, pred_label_store)
         eval_item1 = eval.class_to_eval_item[1]
         self.assertEqual(eval_item1.gt_count, 2)
         self.assertEqual(eval_item1.precision, 1.0)
@@ -65,7 +60,7 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         self.assertEqual(eval_item2.gt_count, 2)
         self.assertEqual(eval_item2.precision, 1.0)
         self.assertEqual(eval_item2.recall, 0.5)
-        self.assertEqual(eval_item2.f1, 2/3)
+        self.assertEqual(eval_item2.f1, 2 / 3)
 
         avg_item = eval.avg_item
         self.assertEqual(avg_item.gt_count, 4)
@@ -79,8 +74,7 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         gt_label_store = self.make_ground_truth_label_store()
         pred_label_store = ObjectDetectionLabelStore()
 
-        eval.compute(
-            class_map, gt_label_store, pred_label_store)
+        eval.compute(class_map, gt_label_store, pred_label_store)
         eval_item1 = eval.class_to_eval_item[1]
         self.assertEqual(eval_item1.gt_count, 2)
         self.assertEqual(eval_item1.precision, None)
@@ -105,8 +99,7 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         gt_label_store = ObjectDetectionLabelStore()
         pred_label_store = self.make_predicted_label_store()
 
-        eval.compute(
-            class_map, gt_label_store, pred_label_store)
+        eval.compute(class_map, gt_label_store, pred_label_store)
         eval_item1 = eval.class_to_eval_item[1]
         self.assertEqual(eval_item1.gt_count, 0)
         self.assertEqual(eval_item1.precision, None)
@@ -124,6 +117,7 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         self.assertEqual(avg_item.precision, None)
         self.assertEqual(avg_item.recall, None)
         self.assertEqual(avg_item.f1, None)
+
 
 if __name__ == "__main__":
     unittest.main()

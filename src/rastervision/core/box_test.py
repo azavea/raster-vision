@@ -101,8 +101,7 @@ class TestBox(unittest.TestCase):
         square = Box(0, 0, 10, 10)
         output_square = Box.make_square(0, 0, 10)
         self.assertEqual(output_square, square)
-        self.assertEqual(
-            output_square.get_width(), output_square.get_height())
+        self.assertEqual(output_square.get_width(), output_square.get_height())
 
     def test_make_eroded(self):
         max_extent = Box.make_square(0, 0, 10)
@@ -140,17 +139,18 @@ class TestBox(unittest.TestCase):
         self.assertEqual(len(windows), 400)
 
         extent = Box(0, 0, 20, 20)
-        windows = set([window.tuple_format()
-                       for window in extent.get_windows(10, 10)])
+        windows = set(
+            [window.tuple_format() for window in extent.get_windows(10, 10)])
         expected_windows = [
             Box.make_square(0, 0, 10),
             Box.make_square(10, 0, 10),
             Box.make_square(0, 10, 10),
             Box.make_square(10, 10, 10)
         ]
-        expected_windows = set([window.tuple_format()
-                               for window in expected_windows])
+        expected_windows = set(
+            [window.tuple_format() for window in expected_windows])
         self.assertSetEqual(windows, expected_windows)
+
 
 if __name__ == "__main__":
     unittest.main()

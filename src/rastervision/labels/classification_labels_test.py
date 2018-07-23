@@ -40,21 +40,16 @@ class TestClassificationLabels(unittest.TestCase):
         cells = self.labels.get_cells()
         self.assertEqual(len(cells), 2)
         # ordering of cells isn't known
-        self.assertTrue(
-            (cells[0] == self.cell1 and
-             cells[1] == self.cell2) or
-            (cells[1] == self.cell1 and
-             cells[0] == self.cell2))
+        self.assertTrue((cells[0] == self.cell1 and cells[1] == self.cell2)
+                        or (cells[1] == self.cell1 and cells[0] == self.cell2))
 
     def test_get_class_ids(self):
         cells = self.labels.get_cells()
         class_ids = self.labels.get_class_ids()
         # check that order of class_ids corresponds to order of cells
-        if (cells[0] == self.cell1 and
-                cells[1] == self.cell2):
+        if (cells[0] == self.cell1 and cells[1] == self.cell2):
             self.assertListEqual(class_ids, [1, 2])
-        elif (cells[1] == self.cell1 and
-                cells[0] == self.cell2):
+        elif (cells[1] == self.cell1 and cells[0] == self.cell2):
             self.assertListEqual(class_ids, [2, 1])
 
     def test_extend(self):

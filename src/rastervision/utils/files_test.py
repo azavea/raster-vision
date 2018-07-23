@@ -6,8 +6,8 @@ import json
 import boto3
 from moto import mock_s3
 
-from rastervision.utils.files import (
-    file_to_str, NotFoundException, load_json_config, ProtobufParseException)
+from rastervision.utils.files import (file_to_str, NotFoundException,
+                                      load_json_config, ProtobufParseException)
 from rastervision.protos.machine_learning_pb2 import MachineLearning
 
 
@@ -29,8 +29,7 @@ class TestFileToStr(unittest.TestCase):
         self.bucket_name = 'mock_bucket'
         self.s3.create_bucket(Bucket=self.bucket_name)
         self.s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
-        self.s3.upload_file(
-            self.file_path, self.bucket_name, self.file_name)
+        self.s3.upload_file(self.file_path, self.bucket_name, self.file_name)
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -73,21 +72,17 @@ class TestLoadJsonConfig(unittest.TestCase):
         config = {
             'task': 'CLASSIFICATION',
             'backend': 'KERAS_CLASSIFICATION',
-            'class_items': [
-                {
-                    'id': 1,
-                    'name': 'car'
-                }
-            ]
+            'class_items': [{
+                'id': 1,
+                'name': 'car'
+            }]
         }
         self.write_config_file(config)
         ml_config = load_json_config(self.file_path, MachineLearning())
-        self.assertEqual(
-            ml_config.task,
-            MachineLearning.Backend.Value('KERAS_CLASSIFICATION'))
-        self.assertEqual(
-            ml_config.backend,
-            MachineLearning.Task.Value('CLASSIFICATION'))
+        self.assertEqual(ml_config.task,
+                         MachineLearning.Backend.Value('KERAS_CLASSIFICATION'))
+        self.assertEqual(ml_config.backend,
+                         MachineLearning.Task.Value('CLASSIFICATION'))
         self.assertEqual(ml_config.class_items[0].id, 1)
         self.assertEqual(ml_config.class_items[0].name, 'car')
         self.assertEqual(len(ml_config.class_items), 1)
@@ -96,12 +91,10 @@ class TestLoadJsonConfig(unittest.TestCase):
         config = {
             'task': 'CLASSIFICATION',
             'backend': 'KERAS_CLASSIFICATION',
-            'class_items': [
-                {
-                    'id': 1,
-                    'name': 'car'
-                }
-            ],
+            'class_items': [{
+                'id': 1,
+                'name': 'car'
+            }],
             'bogus_field': 0
         }
 
@@ -110,9 +103,7 @@ class TestLoadJsonConfig(unittest.TestCase):
             load_json_config(self.file_path, MachineLearning())
 
     def test_bogus_value(self):
-        config = {
-            'task': 'bogus_value'
-        }
+        config = {'task': 'bogus_value'}
         self.write_config_file(config)
         with self.assertRaises(ProtobufParseException):
             load_json_config(self.file_path, MachineLearning())

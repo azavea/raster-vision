@@ -1,6 +1,3 @@
-import random
-
-
 class ClassItem(object):
     """A class id and associated data."""
 

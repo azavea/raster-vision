@@ -7,8 +7,12 @@ import boto3
 s3_bucket = environ.get('S3_BUCKET')
 
 
-def _batch_submit(branch_name, command, attempts=3, gpu=False,
-                  parent_job_ids=[], array_size=None):
+def _batch_submit(branch_name,
+                  command,
+                  attempts=3,
+                  gpu=False,
+                  parent_job_ids=[],
+                  array_size=None):
     """
         Submit a job to run on Batch.
 
@@ -46,8 +50,8 @@ def _batch_submit(branch_name, command, attempts=3, gpu=False,
 
     job_id = client.submit_job(**kwargs)['jobId']
 
-    click.echo(
-        'Submitted job with jobName={} and jobId={}'.format(job_name, job_id))
+    click.echo('Submitted job with jobName={} and jobId={}'.format(
+        job_name, job_id))
 
     return job_id
 

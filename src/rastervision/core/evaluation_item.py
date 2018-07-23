@@ -4,8 +4,15 @@ class EvaluationItem(object):
     None is used for values that are undefined because they involve a division
     by zero (eg. precision when there are no predictions).
     """
-    def __init__(self, precision=None, recall=None, f1=None, count_error=None,
-                 gt_count=0, class_id=None, class_name=None):
+
+    def __init__(self,
+                 precision=None,
+                 recall=None,
+                 f1=None,
+                 count_error=None,
+                 gt_count=0,
+                 class_id=None,
+                 class_name=None):
         self.precision = precision
         self.recall = recall
         self.f1 = f1
@@ -37,8 +44,8 @@ class EvaluationItem(object):
             self.precision = weighted_avg(self.precision, other.precision)
             self.recall = weighted_avg(self.recall, other.recall)
             self.f1 = weighted_avg(self.f1, other.f1)
-            self.count_error = weighted_avg(
-                self.count_error, other.count_error)
+            self.count_error = weighted_avg(self.count_error,
+                                            other.count_error)
             self.gt_count = total_gt_count
 
     def to_json(self):

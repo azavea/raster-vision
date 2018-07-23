@@ -1,5 +1,3 @@
-import numpy as np
-
 from rastervision.core.labels import Labels
 from rastervision.core.box import Box
 
@@ -7,6 +5,7 @@ from rastervision.core.box import Box
 # TODO also store scores
 class ClassificationLabels(Labels):
     """Represents a spatial grid of cells associated with classes."""
+
     def __init__(self):
         self.cell_to_class_id = {}
 
@@ -43,8 +42,10 @@ class ClassificationLabels(Labels):
 
     def get_cells(self):
         """Return list of all cells (list of Box)."""
-        return [Box.from_npbox(box_tup)
-                for box_tup in self.cell_to_class_id.keys()]
+        return [
+            Box.from_npbox(box_tup)
+            for box_tup in self.cell_to_class_id.keys()
+        ]
 
     def get_class_ids(self):
         """Return list of class_ids for all cells."""

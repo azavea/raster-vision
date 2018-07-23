@@ -17,9 +17,14 @@ def save_debug_image(im, labels, class_map, output_path):
         scores = [1.0] * len(labels)
 
     vis_util.visualize_boxes_and_labels_on_image_array(
-        im, npboxes, class_ids, scores,
-        class_map.get_category_index(), use_normalized_coordinates=True,
-        line_thickness=2, max_boxes_to_draw=None)
+        im,
+        npboxes,
+        class_ids,
+        scores,
+        class_map.get_category_index(),
+        use_normalized_coordinates=True,
+        line_thickness=2,
+        max_boxes_to_draw=None)
     save_img(im, output_path)
 
 
@@ -93,8 +98,8 @@ class ObjectDetection(MLTask):
         raster_source = scene.raster_source
         label_store = scene.ground_truth_label_store
         # Make positive windows which contain labels.
-        pos_windows = make_pos_windows(
-            raster_source.get_extent(), label_store, options)
+        pos_windows = make_pos_windows(raster_source.get_extent(), label_store,
+                                       options)
         nb_pos_windows = len(pos_windows)
 
         # Make negative windows which do not contain labels.
@@ -108,9 +113,9 @@ class ObjectDetection(MLTask):
         else:
             nb_neg_windows = 100  # just make some
         max_attempts = 100 * nb_neg_windows
-        neg_windows = make_neg_windows(
-            raster_source, label_store, options.chip_size,
-            nb_neg_windows, max_attempts)
+        neg_windows = make_neg_windows(raster_source, label_store,
+                                       options.chip_size, nb_neg_windows,
+                                       max_attempts)
 
         return pos_windows + neg_windows
 
@@ -118,7 +123,8 @@ class ObjectDetection(MLTask):
         window_labels = scene.ground_truth_label_store.get_labels(
             window=window)
         return ObjectDetectionLabels.get_overlapping(
-            window_labels, window,
+            window_labels,
+            window,
             ioa_thresh=options.object_detection_options.ioa_thresh,
             clip=True)
 

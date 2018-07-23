@@ -1,3 +1,20 @@
 #!/bin/bash
 
-python -m unittest discover rastervision "*_test.py"
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+"Usage: $(basename "$0")
+Run all unit tests.
+"
+}
+
+if [ "${1:-}" = "--help" ]; then
+    usage
+else
+    python -m unittest discover rastervision "*_test.py"
+fi

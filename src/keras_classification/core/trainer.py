@@ -32,15 +32,12 @@ class Trainer(object):
         self.log_path = os.path.join(options.output_dir, 'log.csv')
         make_dir(self.log_path, use_dirname=True)
 
-        self.training_gen = self.make_data_generator(
-            options.training_data_dir)
+        self.training_gen = self.make_data_generator(options.training_data_dir)
         self.validation_gen = self.make_data_generator(
             options.validation_data_dir, validation_mode=True)
 
-        self.nb_training_samples = get_nb_images(
-            options.training_data_dir)
-        self.nb_validation_samples = get_nb_images(
-            options.validation_data_dir)
+        self.nb_training_samples = get_nb_images(options.training_data_dir)
+        self.nb_validation_samples = get_nb_images(options.validation_data_dir)
 
     def make_callbacks(self):
         model_checkpoint = keras.callbacks.ModelCheckpoint(
@@ -52,6 +49,7 @@ class Trainer(object):
         if self.options.lr_schedule:
             lr_schedule = sorted(
                 self.options.lr_schedule, key=lambda x: x.epoch, reverse=True)
+
             def schedule(curr_epoch):
                 for lr_schedule_item in lr_schedule:
                     if curr_epoch >= lr_schedule_item.epoch:
@@ -81,12 +79,10 @@ class Trainer(object):
         # Don't apply randomized data transforms if in validation mode.
         # This will make the validation scores more comparable between epochs.
         if validation_mode:
-            generator = ImageDataGenerator(rescale=1./255)
+            generator = ImageDataGenerator(rescale=1. / 255)
         else:
             generator = ImageDataGenerator(
-                rescale=1./255,
-                horizontal_flip=True,
-                vertical_flip=True)
+                rescale=1. / 255, horizontal_flip=True, vertical_flip=True)
 
         generator = generator.flow_from_directory(
             image_folder_dir,

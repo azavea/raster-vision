@@ -14,13 +14,21 @@ def build(config, class_map, predictions_readable=False):
 
     if config.HasField('ground_truth_label_store'):
         ground_truth_label_store = label_store_builder.build(
-            config.ground_truth_label_store, crs_transformer, extent,
-            class_map, readable=True, writable=False)
+            config.ground_truth_label_store,
+            crs_transformer,
+            extent,
+            class_map,
+            readable=True,
+            writable=False)
 
     if config.HasField('prediction_label_store'):
         prediction_label_store = label_store_builder.build(
-            config.prediction_label_store, crs_transformer, extent,
-            class_map, readable=predictions_readable, writable=True)
+            config.prediction_label_store,
+            crs_transformer,
+            extent,
+            class_map,
+            readable=predictions_readable,
+            writable=True)
 
     return Scene(
         id=config.id,

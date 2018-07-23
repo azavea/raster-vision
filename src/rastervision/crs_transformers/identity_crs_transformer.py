@@ -6,6 +6,7 @@ class IdentityCRSTransformer(CRSTransformer):
 
     This is useful for non-georeferenced imagery.
     """
+
     def map_to_pixel(self, map_point):
         """Identity function.
 

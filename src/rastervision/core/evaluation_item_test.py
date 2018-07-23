@@ -45,11 +45,12 @@ class TestEvaluationItem(unittest.TestCase):
         b = EvaluationItem(
             precision=0, recall=0, f1=0, count_error=1, gt_count=2)
         a.merge(b)
-        self.assertEqual(a.precision, 1/3)
-        self.assertEqual(a.recall, 1/3)
-        self.assertEqual(a.f1, 1/3)
-        self.assertEqual(a.count_error, 2/3)
+        self.assertEqual(a.precision, 1 / 3)
+        self.assertEqual(a.recall, 1 / 3)
+        self.assertEqual(a.f1, 1 / 3)
+        self.assertEqual(a.count_error, 2 / 3)
         self.assertEqual(a.gt_count, 3)
+
 
 if __name__ == "__main__":
     unittest.main()

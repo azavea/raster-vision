@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from rastervision.core.training_data import TrainingData
 
@@ -97,8 +97,7 @@ class MLTask(object):
     def get_class_map(self):
         return self.class_map
 
-    def make_training_chips(self, train_scenes, validation_scenes,
-                            options):
+    def make_training_chips(self, train_scenes, validation_scenes, options):
         """Make training chips.
 
         Convert Scenes with a ground_truth_label_store into training
@@ -114,13 +113,14 @@ class MLTask(object):
 
         def _process_scene(scene, type_):
             data = TrainingData()
-            print('Making {} chips for scene: {}'.format(
-                type_, scene.id), end='', flush=True)
+            print(
+                'Making {} chips for scene: {}'.format(type_, scene.id),
+                end='',
+                flush=True)
             windows = self.get_train_windows(scene, options)
             for window in windows:
                 chip = scene.raster_source.get_chip(window)
-                labels = self.get_train_labels(
-                    window, scene, options)
+                labels = self.get_train_labels(window, scene, options)
                 data.append(chip, window, labels)
                 print('.', end='', flush=True)
             print()
@@ -129,22 +129,19 @@ class MLTask(object):
             data.shuffle()
             # TODO load and delete scene data as needed to avoid
             # running out of disk space
-            return self.backend.process_scene_data(
-                scene, data, self.class_map, options)
+            return self.backend.process_scene_data(scene, data, self.class_map,
+                                                   options)
 
         def _process_scenes(scenes, type_):
-            return [
-                _process_scene(scene, type_)
-                for scene in scenes
-            ]
+            return [_process_scene(scene, type_) for scene in scenes]
 
         # TODO: parallel processing!
         processed_training_results = _process_scenes(train_scenes, TRAIN)
-        processed_validation_results = _process_scenes(
-            validation_scenes, VALIDATION)
-        self.backend.process_sceneset_results(
-            processed_training_results, processed_validation_results,
-            self.class_map, options)
+        processed_validation_results = _process_scenes(validation_scenes,
+                                                       VALIDATION)
+        self.backend.process_sceneset_results(processed_training_results,
+                                              processed_validation_results,
+                                              self.class_map, options)
 
     def train(self, options):
         """Train a model.
@@ -170,8 +167,8 @@ class MLTask(object):
             label_store = scene.prediction_label_store
             label_store.clear()
 
-            windows = self.get_predict_windows(
-                raster_source.get_extent(), options)
+            windows = self.get_predict_windows(raster_source.get_extent(),
+                                               options)
             for window in windows:
                 chip = raster_source.get_chip(window)
                 labels = self.backend.predict(chip, window, options)
@@ -179,13 +176,13 @@ class MLTask(object):
                 print('.', end='', flush=True)
             print()
 
-            labels = self.post_process_predictions(
-                label_store.get_labels(), options)
+            labels = self.post_process_predictions(label_store.get_labels(),
+                                                   options)
             label_store.set_labels(labels)
             label_store.save()
 
-            if (options.debug and options.debug_uri and
-                    self.class_map.has_all_colors()):
+            if (options.debug and options.debug_uri
+                    and self.class_map.has_all_colors()):
                 self.save_debug_predict_image(scene, options.debug_uri)
 
     def eval(self, scenes, options):
@@ -205,7 +202,6 @@ class MLTask(object):
             predictions = scene.prediction_label_store
 
             scene_evaluation = self.get_evaluation()
-            scene_evaluation.compute(
-                self.class_map, ground_truth, predictions)
+            scene_evaluation.compute(self.class_map, ground_truth, predictions)
             evaluation.merge(scene_evaluation)
         evaluation.save(options.output_uri)

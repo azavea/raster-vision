@@ -2,12 +2,10 @@ import io
 import tempfile
 import os
 import shutil
-import zipfile
 import tarfile
 from os.path import join
 from urllib.parse import urlparse
 from subprocess import Popen
-import signal
 import atexit
 import glob
 import re
@@ -19,19 +17,16 @@ import numpy as np
 from google.protobuf import text_format
 
 from object_detection.utils import dataset_util
-from object_detection.utils.np_box_list import BoxList
-from object_detection.utils.np_box_list_ops import scale
 from object_detection.protos.string_int_label_map_pb2 import (
     StringIntLabelMap, StringIntLabelMapItem)
 from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 
 from rastervision.core.ml_backend import MLBackend
 from rastervision.ml_tasks.object_detection import save_debug_image
-from rastervision.labels.object_detection_labels import (
-    ObjectDetectionLabels)
-from rastervision.utils.files import (
-    get_local_path, upload_if_needed, make_dir, download_if_needed,
-    file_to_str, sync_dir, start_sync)
+from rastervision.labels.object_detection_labels import (ObjectDetectionLabels)
+from rastervision.utils.files import (get_local_path, upload_if_needed,
+                                      make_dir, download_if_needed,
+                                      file_to_str, sync_dir, start_sync)
 
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -46,32 +41,45 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
 
     npboxes = labels.get_npboxes()
     npboxes = ObjectDetectionLabels.global_to_local(npboxes, window)
-    npboxes = ObjectDetectionLabels.local_to_normalized(
-        npboxes, window)
+    npboxes = ObjectDetectionLabels.local_to_normalized(npboxes, window)
     ymins = npboxes[:, 0]
     xmins = npboxes[:, 1]
     ymaxs = npboxes[:, 2]
     xmaxs = npboxes[:, 3]
     class_ids = labels.get_class_ids()
-    class_names = [class_map.get_by_id(class_id).name.encode('utf8')
-                   for class_id in class_ids]
+    class_names = [
+        class_map.get_by_id(class_id).name.encode('utf8')
+        for class_id in class_ids
+    ]
 
-    tf_example = tf.train.Example(features=tf.train.Features(feature={
-        'image/height': dataset_util.int64_feature(height),
-        'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(chip_id.encode('utf8')),
-        'image/source_id': dataset_util.bytes_feature(chip_id.encode('utf8')),
-        'image/encoded': dataset_util.bytes_feature(encoded_image.getvalue()),
-        'image/format': dataset_util.bytes_feature(image_format.encode('utf8')),
-        'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
-        'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
-        'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
-        'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
-        'image/object/class/text': dataset_util.bytes_list_feature(
-            class_names),
-        'image/object/class/label': dataset_util.int64_list_feature(
-            class_ids)
-    }))
+    tf_example = tf.train.Example(
+        features=tf.train.Features(
+            feature={
+                'image/height':
+                dataset_util.int64_feature(height),
+                'image/width':
+                dataset_util.int64_feature(width),
+                'image/filename':
+                dataset_util.bytes_feature(chip_id.encode('utf8')),
+                'image/source_id':
+                dataset_util.bytes_feature(chip_id.encode('utf8')),
+                'image/encoded':
+                dataset_util.bytes_feature(encoded_image.getvalue()),
+                'image/format':
+                dataset_util.bytes_feature(image_format.encode('utf8')),
+                'image/object/bbox/xmin':
+                dataset_util.float_list_feature(xmins),
+                'image/object/bbox/xmax':
+                dataset_util.float_list_feature(xmaxs),
+                'image/object/bbox/ymin':
+                dataset_util.float_list_feature(ymins),
+                'image/object/bbox/ymax':
+                dataset_util.float_list_feature(ymaxs),
+                'image/object/class/text':
+                dataset_util.bytes_list_feature(class_names),
+                'image/object/class/label':
+                dataset_util.int64_list_feature(class_ids)
+            }))
 
     return tf_example
 
@@ -164,6 +172,7 @@ def terminate_at_exit(process):
     def terminate():
         print('Terminating {}...'.format(process.pid))
         process.terminate()
+
     atexit.register(terminate)
 
 
@@ -175,20 +184,22 @@ def train(config_path, output_dir, train_py=None, eval_py=None):
     eval_py = eval_py or '/opt/tf-models/object_detection/eval.py'
 
     train_process = Popen([
-        'python', train_py,
-        '--logtostderr', '--pipeline_config_path={}'.format(config_path),
-        '--train_dir={}'.format(output_train_dir)])
+        'python', train_py, '--logtostderr',
+        '--pipeline_config_path={}'.format(config_path),
+        '--train_dir={}'.format(output_train_dir)
+    ])
     terminate_at_exit(train_process)
 
     eval_process = Popen([
-        'python', eval_py,
-        '--logtostderr', '--pipeline_config_path={}'.format(config_path),
+        'python', eval_py, '--logtostderr',
+        '--pipeline_config_path={}'.format(config_path),
         '--checkpoint_dir={}'.format(output_train_dir),
-        '--eval_dir={}'.format(output_eval_dir)])
+        '--eval_dir={}'.format(output_eval_dir)
+    ])
     terminate_at_exit(eval_process)
 
-    tensorboard_process = Popen([
-        'tensorboard', '--logdir={}'.format(output_dir)])
+    tensorboard_process = Popen(
+        ['tensorboard', '--logdir={}'.format(output_dir)])
     terminate_at_exit(tensorboard_process)
 
     train_process.wait()
@@ -207,14 +218,17 @@ def get_last_checkpoint_path(train_root_dir):
     if len(checkpoint_ids) == 0:
         return None
     checkpoint_id = max(checkpoint_ids)
-    checkpoint_path = join(
-        train_root_dir, 'train', 'model.ckpt-{}'.format(checkpoint_id))
+    checkpoint_path = join(train_root_dir, 'train',
+                           'model.ckpt-{}'.format(checkpoint_id))
     return checkpoint_path
 
 
-def export_inference_graph(
-    train_root_dir, config_path, output_dir, export_py=None):
-    export_py = export_py or '/opt/tf-models/object_detection/export_inference_graph.py'
+def export_inference_graph(train_root_dir,
+                           config_path,
+                           output_dir,
+                           export_py=None):
+    export_py = (export_py or
+                 '/opt/tf-models/object_detection/export_inference_graph.py')
     checkpoint_path = get_last_checkpoint_path(train_root_dir)
     if checkpoint_path is None:
         print('No checkpoints could be found.')
@@ -222,11 +236,11 @@ def export_inference_graph(
         print('Exporting checkpoint {}...'.format(checkpoint_path))
 
         train_process = Popen([
-            'python', export_py,
-            '--input_type', 'image_tensor',
+            'python', export_py, '--input_type', 'image_tensor',
             '--pipeline_config_path', config_path,
             '--trained_checkpoint_prefix', checkpoint_path,
-            '--output_directory', output_dir])
+            '--output_directory', output_dir
+        ])
         train_process.wait()
 
         # Move frozen inference graph and clean up generated files.
@@ -238,7 +252,6 @@ def export_inference_graph(
 
 
 class TrainingPackage(object):
-
     def __init__(self, base_uri):
         self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
@@ -288,12 +301,12 @@ class TrainingPackage(object):
         make_dir(pretrained_model_dir)
         with tarfile.open(pretrained_model_zip_path, 'r:gz') as tar:
             tar.extractall(pretrained_model_dir)
-        model_name = os.path.splitext(os.path.splitext(
-            os.path.basename(pretrained_model_zip_uri))[0])[0]
+        model_name = os.path.splitext(
+            os.path.splitext(os.path.basename(pretrained_model_zip_uri))[0])[0]
         # The unzipped file is assumed to have a single directory with
         # the name of the model derived from the zip file.
-        pretrained_model_path = join(
-            pretrained_model_dir, model_name, 'model.ckpt')
+        pretrained_model_path = join(pretrained_model_dir, model_name,
+                                     'model.ckpt')
         return pretrained_model_path
 
     def download_config(self, pretrained_model_zip_uri, backend_config_uri):
@@ -349,14 +362,10 @@ def load_frozen_graph(inference_graph_path):
 
 def compute_prediction(image_np, window, detection_graph, session):
     image_np_expanded = np.expand_dims(image_np, axis=0)
-    image_tensor = detection_graph.get_tensor_by_name(
-        'image_tensor:0')
-    boxes = detection_graph.get_tensor_by_name(
-        'detection_boxes:0')
-    scores = detection_graph.get_tensor_by_name(
-        'detection_scores:0')
-    class_ids = detection_graph.get_tensor_by_name(
-        'detection_classes:0')
+    image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
+    boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
+    scores = detection_graph.get_tensor_by_name('detection_scores:0')
+    class_ids = detection_graph.get_tensor_by_name('detection_classes:0')
 
     (boxes, scores, class_ids) = session.run(
         [boxes, scores, class_ids],
@@ -371,7 +380,6 @@ def compute_prediction(image_np, window, detection_graph, session):
 
 
 class TFObjectDetectionAPI(MLBackend):
-
     def __init__(self):
         self.detection_graph = None
         # persist scene training packages for when output_uri is remote
@@ -464,13 +472,14 @@ class TFObjectDetectionAPI(MLBackend):
             export_py = options.object_detection_options.export_py
 
             # Train model and sync output periodically.
-            start_sync(output_dir, options.output_uri,
-                       sync_interval=options.sync_interval)
+            start_sync(
+                output_dir,
+                options.output_uri,
+                sync_interval=options.sync_interval)
             train(config_path, output_dir, train_py=train_py, eval_py=eval_py)
 
             export_inference_graph(
-                output_dir, config_path, output_dir,
-                export_py=export_py)
+                output_dir, config_path, output_dir, export_py=export_py)
 
             if urlparse(options.output_uri).scheme == 's3':
                 sync_dir(output_dir, options.output_uri, delete=True)
@@ -486,5 +495,5 @@ class TFObjectDetectionAPI(MLBackend):
         # If chip is blank, then return empty predictions.
         if np.sum(np.ravel(chip)) == 0:
             return ObjectDetectionLabels.make_empty()
-        return compute_prediction(
-            chip, window, self.detection_graph, self.session)
+        return compute_prediction(chip, window, self.detection_graph,
+                                  self.session)
