@@ -1,5 +1,7 @@
 import io
 import numpy as np
+import shutil
+import tempfile
 import tensorflow as tf
 import uuid
 
@@ -9,20 +11,24 @@ from PIL import Image
 from object_detection.utils import dataset_util
 from rastervision.core.ml_backend import MLBackend
 from rastervision.utils.files import make_dir
+from rastervision.utils.misc import save_img
+
+
+TRAIN = 'train'
+VALIDATION = 'validation'
 
 
 def numpy_to_png(array):
-    im = Image.fromarray(array).convert('L')
+    im = Image.fromarray(array)
     output = io.BytesIO()
     im.save(output, 'png')
     return output.getvalue()
 
 
-def png_to_numpy(png):
-    incoming = io.ByteesIO(png)
+def png_to_numpy(png, dtype=np.uint8):
+    incoming = io.BytesIO(png)
     im = Image.open(incoming)
-    width, height = im.size
-    return np.array(im.getdata(), dtype=np.uint8).reshape(height, width)
+    return np.array(im)
 
 
 def write_tf_record(tf_examples, output_path):
@@ -42,6 +48,39 @@ def make_tf_examples(training_data, class_map):
     return tf_examples
 
 
+def merge_tf_records(output_path, src_records):
+    with tf.python_io.TFRecordWriter(output_path) as writer:
+        print('Merging TFRecords', end='', flush=True)
+        for src_record in src_records:
+            for string_record in tf.python_io.tf_record_iterator(src_record):
+                writer.write(string_record)
+            print('.', end='', flush=True)
+        print()
+
+
+def make_debug_images(record_path, output_dir):
+    make_dir(output_dir, check_empty=True)
+
+    print('Generating debug chips', end='', flush=True)
+    tfrecord_iter = tf.python_io.tf_record_iterator(record_path)
+    for ind, example in enumerate(tfrecord_iter):
+        example = tf.train.Example.FromString(example)
+        im, labels = parse_tfexample(example)
+        output_path = join(output_dir, '{}.png'.format(ind))
+        im[:, :, 0] = im[:, :, 0] * labels
+        save_img(im, output_path)
+        print('.', end='', flush=True)
+    print()
+
+
+def parse_tfexample(example):
+    image_encoded = example.features.feature['image/encoded'].bytes_list.value[0]
+    image_segmentation_class_encoded = example.features.feature['image/segmentation/class/encoded'].bytes_list.value[0]
+    im = png_to_numpy(image_encoded)
+    labels = png_to_numpy(image_segmentation_class_encoded)
+    return im, labels
+
+
 def create_tf_example(image, window, labels, class_map, chip_id=''):
     class_keys = set(class_map.get_keys())
 
@@ -58,7 +97,6 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
     image_segmentation_class_encoded = numpy_to_png(filtered_labels)
     image_segmentation_class_format = 'png'.encode('utf8')
 
-    # import pdb ; pdb.set_trace()
     features = tf.train.Features(
         feature={
             'image/encoded':
@@ -89,10 +127,8 @@ class TFDeeplab(MLBackend):
 
     def process_scene_data(self, scene, data, class_map, options):
         base_uri = options.output_uri
-
         make_dir(base_uri)
 
-        # import pdb ; pdb.set_trace()
         tf_examples = make_tf_examples(data, class_map)
         split = '{}-{}'.format(scene.id, uuid.uuid4())
         record_path = join(base_uri, '{}.record'.format(split))
@@ -102,7 +138,22 @@ class TFDeeplab(MLBackend):
 
     def process_sceneset_results(self, training_results, validation_results,
                                  class_map, options):
-        return 1
+        base_uri = options.output_uri
+
+        training_record_path = join(base_uri, '{}.record'.format(TRAIN))
+        validation_record_path = join(base_uri, '{}.record'.format(VALIDATION))
+        merge_tf_records(training_record_path, training_results)
+        merge_tf_records(validation_record_path, validation_results)
+
+        if options.debug:
+            training_zip_path = join(base_uri, '{}'.format(TRAIN))
+            validation_zip_path = join(base_uri, '{}'.format(VALIDATION))
+            with tempfile.TemporaryDirectory() as debug_dir:
+                make_debug_images(training_record_path, debug_dir)
+                shutil.make_archive(training_zip_path, 'zip', debug_dir)
+            with tempfile.TemporaryDirectory() as debug_dir:
+                make_debug_images(validation_record_path, debug_dir)
+                shutil.make_archive(validation_zip_path, 'zip', debug_dir)
 
     def train(self, options):
         return 1

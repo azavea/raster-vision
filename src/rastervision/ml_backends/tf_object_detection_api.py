@@ -532,7 +532,6 @@ class TFObjectDetectionAPI(MLBackend):
             class_map: ClassMap
             options: MakeTrainingChipsConfig.Options
         """
-
         training_package = TrainingPackage(options.output_uri)
 
         def _merge_training_results(results, split):
@@ -549,10 +548,12 @@ class TFObjectDetectionAPI(MLBackend):
                 debug_zip_path = training_package.get_local_path(
                     training_package.get_debug_chips_uri(split))
                 with tempfile.TemporaryDirectory() as debug_dir:
+                    import pdb ; pdb.set_trace()
                     make_debug_images(record_path, class_map, debug_dir)
                     shutil.make_archive(
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)
 
+        # import pdb ; pdb.set_trace()
         _merge_training_results(training_results, TRAIN)
         _merge_training_results(validation_results, VALIDATION)
 
