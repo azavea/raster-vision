@@ -3,7 +3,6 @@ from rastervision.ml_backends.tf_object_detection_api import (
 from rastervision.ml_tasks.object_detection import ObjectDetection
 from rastervision.ml_backends.keras_classification import KerasClassification
 from rastervision.ml_backends.tf_deeplab import TFDeeplab
-from rastervision.ml_tasks.object_detection import ObjectDetection
 from rastervision.ml_tasks.classification import Classification
 from rastervision.ml_tasks.semantic_segmentation import SemanticSegmentation
 from rastervision.protos.machine_learning_pb2 import MachineLearning

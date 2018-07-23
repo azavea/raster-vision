@@ -43,7 +43,6 @@ def make_tf_examples(training_data, class_map):
 
 
 def create_tf_example(image, window, labels, class_map, chip_id=''):
-
     class_keys = set(class_map.get_keys())
 
     def fn(n):
@@ -60,22 +59,30 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
     image_segmentation_class_format = 'png'.encode('utf8')
 
     # import pdb ; pdb.set_trace()
-    features = tf.train.Features(feature={
-        'image/encoded': dataset_util.bytes_feature(image_encoded),
-        'image/filename': dataset_util.bytes_feature(image_filename),
-        'image/format': dataset_util.bytes_feature(image_format),
-        'image/height': dataset_util.int64_feature(image_height),
-        'image/width': dataset_util.int64_feature(image_width),
-        'image/channels': dataset_util.int64_feature(image_channels),
-        'image/segmentation/class/encoded': dataset_util.bytes_feature(image_segmentation_class_encoded),
-        'image/segmentation/class/format': dataset_util.bytes_feature(image_segmentation_class_format),
-    })
+    features = tf.train.Features(
+        feature={
+            'image/encoded':
+            dataset_util.bytes_feature(image_encoded),
+            'image/filename':
+            dataset_util.bytes_feature(image_filename),
+            'image/format':
+            dataset_util.bytes_feature(image_format),
+            'image/height':
+            dataset_util.int64_feature(image_height),
+            'image/width':
+            dataset_util.int64_feature(image_width),
+            'image/channels':
+            dataset_util.int64_feature(image_channels),
+            'image/segmentation/class/encoded':
+            dataset_util.bytes_feature(image_segmentation_class_encoded),
+            'image/segmentation/class/format':
+            dataset_util.bytes_feature(image_segmentation_class_format),
+        })
 
     return tf.train.Example(features=features)
 
 
 class TFDeeplab(MLBackend):
-
     def __init__(self):
         # persist scene training packages for when output_uri is remote
         self.scene_training_packages = []

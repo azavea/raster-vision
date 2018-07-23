@@ -38,6 +38,5 @@ def build(config,
             dst_classes=config.segmentation_raster_file.dst_classes)
         return None
     else:
-        raise ValueError(
-            'Not sure how to generate label store for type {}'
-            .format(label_store_type))
+        raise ValueError('Not sure how to generate label store for type {}'
+                         .format(label_store_type))
