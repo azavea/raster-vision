@@ -70,117 +70,34 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         }
 
         self.multipolygon_geojson_dict = {
-            'type': 'FeatureCollection',
-            'features': [
-                {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'MultiPolygon',
-                        'coordinates': [
-                            [
-                                [
-                                    [0., 0.],
-                                    [0., 1.],
-                                    [1., 1.],
-                                    [1., 0.],
-                                    [0., 0.]
-                                ]
-                            ]
-                        ]
-                    },
-                    'properties': {
-                        'class_name': 'car',
-                        'score': 0.9
-                    }
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'MultiPolygon',
+                    'coordinates': [[[[0., 0.], [0., 1.], [1., 1.], [1., 0.],
+                                      [0., 0.]]]]
                 },
-                {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'MultiPolygon',
-                        'coordinates': [
-                            [
-                                [
-                                    [1., 1.],
-                                    [1., 2.],
-                                    [2., 2.],
-                                    [2., 1.],
-                                    [1., 1.]
-                                ]
-                            ],
-                            [
-                                [
-                                    [1., 0.],
-                                    [1., 1.],
-                                    [2., 1.],
-                                    [2., 0.],
-                                    [1., 0.]
-                                ]
-                            ]
-                        ]
-                    },
-                    'properties': {
-                        'score': 0.9,
-                        'class_name': 'house'
-                    }
+                'properties': {
+                    'class_name': 'car',
+                    'score': 0.9
                 }
-            ]
-        }
-
-        self.multipolygon_geojson_dict = {
-            'type': 'FeatureCollection',
-            'features': [
-                {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'MultiPolygon',
-                        'coordinates': [
-                            [
-                                [
-                                    [0., 0.],
-                                    [0., 1.],
-                                    [1., 1.],
-                                    [1., 0.],
-                                    [0., 0.]
-                                ]
-                            ]
-                        ]
-                    },
-                    'properties': {
-                        'class_name': 'car',
-                        'score': 0.9
-                    }
+            }, {
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'MultiPolygon',
+                    'coordinates':
+                    [[[[1., 1.], [1., 2.], [2., 2.], [2., 1.], [1., 1.]]],
+                     [[[1., 0.], [1., 1.], [2., 1.], [2., 0.], [1., 0.]]]]
                 },
-                {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'MultiPolygon',
-                        'coordinates': [
-                            [
-                                [
-                                    [1., 1.],
-                                    [1., 2.],
-                                    [2., 2.],
-                                    [2., 1.],
-                                    [1., 1.]
-                                ]
-                            ],
-                            [
-                                [
-                                    [1., 0.],
-                                    [1., 1.],
-                                    [2., 1.],
-                                    [2., 0.],
-                                    [1., 0.]
-                                ]
-                            ]
-                        ]
-                    },
-                    'properties': {
-                        'score': 0.9,
-                        'class_name': 'house'
-                    }
+                'properties': {
+                    'score': 0.9,
+                    'class_name': 'house'
                 }
-            ]
+            }]
         }
 
         self.extent = Box.make_square(0, 0, 10)
@@ -195,29 +112,25 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_multipolygon_geojson_to_labels(self):
-       geojson = add_classes_to_geojson(self.multipolygon_geojson_dict, self.class_map)
-       labels = geojson_to_labels(geojson, self.crs_transformer)
-       label_coordinates = labels.boxlist.get()
+        geojson = add_classes_to_geojson(self.multipolygon_geojson_dict,
+                                         self.class_map)
+        labels = geojson_to_labels(geojson, self.crs_transformer)
+        label_coordinates = labels.boxlist.get()
 
-       expected_box_coordinates = np.array([
-           [0., 0., 2., 2.],
-           [2., 2., 4., 4.],
-           [0., 2., 2., 4.]
-       ])
-       self.assertTrue(np.array_equal(label_coordinates, expected_box_coordinates))
+        expected_box_coordinates = np.array(
+            [[0., 0., 2., 2.], [2., 2., 4., 4.], [0., 2., 2., 4.]])
+        self.assertTrue(
+            np.array_equal(label_coordinates, expected_box_coordinates))
 
     def test_polygon_geojson_to_labels(self):
-       geojson = add_classes_to_geojson(
-           self.geojson_dict, self.class_map)
-       labels = geojson_to_labels(geojson, self.crs_transformer)
-       label_coordinates = labels.boxlist.get()
+        geojson = add_classes_to_geojson(self.geojson_dict, self.class_map)
+        labels = geojson_to_labels(geojson, self.crs_transformer)
+        label_coordinates = labels.boxlist.get()
 
-       expected_box_coordinates = np.array([
-           [0., 0., 2., 2.],
-           [2., 2., 4., 4.]
-       ])
-       self.assertTrue(np.array_equal(
-           label_coordinates, expected_box_coordinates))
+        expected_box_coordinates = np.array([[0., 0., 2., 2.],
+                                             [2., 2., 4., 4.]])
+        self.assertTrue(
+            np.array_equal(label_coordinates, expected_box_coordinates))
 
     def test_read_invalid_uri_readable_false(self):
         try:

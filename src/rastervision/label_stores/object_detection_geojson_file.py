@@ -66,8 +66,9 @@ def geojson_to_labels(geojson_dict, crs_transformer, extent=None):
             polygon_to_label(coordinates, crs_transformer)
         else:
             raise Exception(
-                "Geometries of type {} are not supported in object detection labels.".format(geom_type))
-        
+                "Geometries of type {} are not supported in object detection \
+                labels.".format(geom_type))
+
     boxes = np.array([box.npbox_format() for box in boxes], dtype=float)
     class_ids = np.array(class_ids)
     scores = np.array(scores)
