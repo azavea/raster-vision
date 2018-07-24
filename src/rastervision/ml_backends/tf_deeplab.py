@@ -13,7 +13,6 @@ from rastervision.core.ml_backend import MLBackend
 from rastervision.utils.files import make_dir
 from rastervision.utils.misc import save_img
 
-
 TRAIN = 'train'
 VALIDATION = 'validation'
 
@@ -67,15 +66,20 @@ def make_debug_images(record_path, output_dir):
         example = tf.train.Example.FromString(example)
         im, labels = parse_tfexample(example)
         output_path = join(output_dir, '{}.png'.format(ind))
-        im[:, :, 0] = im[:, :, 0] * labels
+        inv_labels = (labels == 0)
+        im[:, :, 0] = im[:, :, 0] * inv_labels  # XXX
+        im[:, :, 1] = im[:, :, 1] * inv_labels  # XXX
+        im[:, :, 2] = im[:, :, 2] * inv_labels  # XXX
         save_img(im, output_path)
         print('.', end='', flush=True)
     print()
 
 
 def parse_tfexample(example):
-    image_encoded = example.features.feature['image/encoded'].bytes_list.value[0]
-    image_segmentation_class_encoded = example.features.feature['image/segmentation/class/encoded'].bytes_list.value[0]
+    image_encoded = example.features.feature['image/encoded'].bytes_list.value[
+        0]
+    image_segmentation_class_encoded = example.features.feature[
+        'image/segmentation/class/encoded'].bytes_list.value[0]
     im = png_to_numpy(image_encoded)
     labels = png_to_numpy(image_segmentation_class_encoded)
     return im, labels
@@ -87,8 +91,7 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
     def fn(n):
         return (n if n in class_keys else 0)
 
-    filtered_labels = np.vectorize(fn)(labels)
-    filtered_labels = np.array(filtered_labels, dtype=np.uint8)
+    filtered_labels = np.array(np.vectorize(fn)(labels), dtype=np.uint8)
 
     image_encoded = numpy_to_png(image)
     image_filename = chip_id.encode('utf8')

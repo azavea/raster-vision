@@ -18,8 +18,8 @@
                             ]
                         }
                     },
-                    "src_classes": [ 6 ],
-                    "dst_classes": [ 1 ]
+                    "src_classes": [ 6, 1 ],
+                    "dst_classes": [ 1, 0 ]
                 }
             }
         }
