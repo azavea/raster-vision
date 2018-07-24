@@ -7,7 +7,8 @@ import numpy as np
 from moto import mock_s3
 
 from rastervision.label_stores.object_detection_geojson_file import (
-    ObjectDetectionGeoJSONFile)
+    ObjectDetectionGeoJSONFile, geojson_to_labels)
+from rastervision.label_stores.utils import add_classes_to_geojson
 from rastervision.labels.object_detection_labels import ObjectDetectionLabels
 from rastervision.core.crs_transformer import CRSTransformer
 from rastervision.core.box import Box
@@ -81,6 +82,63 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             ]
         }
 
+        self.multipolygon_geojson_dict = {
+            'type': 'FeatureCollection',
+            'features': [
+                {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'MultiPolygon',
+                        'coordinates': [
+                            [
+                                [
+                                    [0., 0.],
+                                    [0., 1.],
+                                    [1., 1.],
+                                    [1., 0.],
+                                    [0., 0.]
+                                ]
+                            ]
+                        ]
+                    },
+                    'properties': {
+                        'class_name': 'car',
+                        'score': 0.9
+                    }
+                },
+                {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'MultiPolygon',
+                        'coordinates': [
+                            [
+                                [
+                                    [1., 1.],
+                                    [1., 2.],
+                                    [2., 2.],
+                                    [2., 1.],
+                                    [1., 1.]
+                                ]
+                            ],
+                            [
+                                [
+                                    [1., 0.],
+                                    [1., 1.],
+                                    [2., 1.],
+                                    [2., 0.],
+                                    [1., 0.]
+                                ]
+                            ]
+                        ]
+                    },
+                    'properties': {
+                        'score': 0.9,
+                        'class_name': 'house'
+                    }
+                }
+            ]
+        }
+
         self.extent = Box.make_square(0, 0, 10)
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
@@ -91,6 +149,31 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
     def tearDown(self):
         self.mock_s3.stop()
         self.temp_dir.cleanup()
+
+    def test_multipolygon_geojson_to_labels(self):
+       geojson = add_classes_to_geojson(self.multipolygon_geojson_dict, self.class_map)
+       labels = geojson_to_labels(geojson, self.crs_transformer)
+       label_coordinates = labels.boxlist.get()
+
+       expected_box_coordinates = np.array([
+           [0., 0., 2., 2.],
+           [2., 2., 4., 4.],
+           [0., 2., 2., 4.]
+       ])
+       self.assertTrue(np.array_equal(label_coordinates, expected_box_coordinates))
+
+    def test_polygon_geojson_to_labels(self):
+       geojson = add_classes_to_geojson(
+           self.geojson_dict, self.class_map)
+       labels = geojson_to_labels(geojson, self.crs_transformer)
+       label_coordinates = labels.boxlist.get()
+
+       expected_box_coordinates = np.array([
+           [0., 0., 2., 2.],
+           [2., 2., 4., 4.]
+       ])
+       self.assertTrue(np.array_equal(
+           label_coordinates, expected_box_coordinates))
 
     def test_read_invalid_uri_readable_false(self):
         try:
