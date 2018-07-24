@@ -100,6 +100,22 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             }]
         }
 
+        self.linestring_geojson_dict = {
+            "type":
+            "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "properties": {
+                    'score': 0.9,
+                    'class_name': 'house'
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [[0., 0.], [0., 1.]]
+                }
+            }]
+        }
+
         self.extent = Box.make_square(0, 0, 10)
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
@@ -131,6 +147,12 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
                                              [2., 2., 4., 4.]])
         self.assertTrue(
             np.array_equal(label_coordinates, expected_box_coordinates))
+
+    def test_read_invalid_geometry_type(self):
+        with self.assertRaises(Exception):
+            geojson = add_classes_to_geojson(self.linestring_geojson_dict,
+                                             self.class_map)
+            geojson_to_labels(geojson, self.crs_transformer, extent=None)
 
     def test_read_invalid_uri_readable_false(self):
         try:

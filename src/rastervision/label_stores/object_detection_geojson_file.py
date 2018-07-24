@@ -32,38 +32,24 @@ def geojson_to_labels(geojson_dict, crs_transformer, extent=None):
     class_ids = []
     scores = []
 
-    def polygon_to_label(polygon, crs_transformer, multipolygon=False):
-        # Convert polygon to pixel coords and then convert to bounding box.
-        # polygon = feature['geometry']['coordinates'][0]
-        if multipolygon:
-            for i in range(len(polygon)):
-                polygon = [crs_transformer.map_to_pixel(p) for p in polygon[i]]
-                xmin, ymin = np.min(polygon, axis=0)
-                xmax, ymax = np.max(polygon, axis=0)
-                boxes.append(Box(ymin, xmin, ymax, xmax))
+    def polygon_to_label(polygon, crs_transformer):
+        polygon = [crs_transformer.map_to_pixel(p) for p in polygon]
+        xmin, ymin = np.min(polygon, axis=0)
+        xmax, ymax = np.max(polygon, axis=0)
+        boxes.append(Box(ymin, xmin, ymax, xmax))
 
-                properties = feature['properties']
-                class_ids.append(properties['class_id'])
-                scores.append(properties.get('score', 1.0))
-        else:
-            polygon = feature['geometry']['coordinates'][0]
-            polygon = [crs_transformer.map_to_pixel(p) for p in polygon]
-            xmin, ymin = np.min(polygon, axis=0)
-            xmax, ymax = np.max(polygon, axis=0)
-            boxes.append(Box(ymin, xmin, ymax, xmax))
-
-            properties = feature['properties']
-            class_ids.append(properties['class_id'])
-            scores.append(properties.get('score', 1.0))
+        properties = feature['properties']
+        class_ids.append(properties['class_id'])
+        scores.append(properties.get('score', 1.0))
 
     for feature in features:
         geom_type = feature['geometry']['type']
         coordinates = feature['geometry']['coordinates']
         if geom_type == 'MultiPolygon':
             for polygon in coordinates:
-                polygon_to_label(polygon, crs_transformer, True)
+                polygon_to_label(polygon[0], crs_transformer)
         elif geom_type == 'Polygon':
-            polygon_to_label(coordinates, crs_transformer)
+            polygon_to_label(coordinates[0], crs_transformer)
         else:
             raise Exception(
                 "Geometries of type {} are not supported in object detection \
