@@ -126,6 +126,63 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             ]
         }
 
+        self.multipolygon_geojson_dict = {
+            'type': 'FeatureCollection',
+            'features': [
+                {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'MultiPolygon',
+                        'coordinates': [
+                            [
+                                [
+                                    [0., 0.],
+                                    [0., 1.],
+                                    [1., 1.],
+                                    [1., 0.],
+                                    [0., 0.]
+                                ]
+                            ]
+                        ]
+                    },
+                    'properties': {
+                        'class_name': 'car',
+                        'score': 0.9
+                    }
+                },
+                {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'MultiPolygon',
+                        'coordinates': [
+                            [
+                                [
+                                    [1., 1.],
+                                    [1., 2.],
+                                    [2., 2.],
+                                    [2., 1.],
+                                    [1., 1.]
+                                ]
+                            ],
+                            [
+                                [
+                                    [1., 0.],
+                                    [1., 1.],
+                                    [2., 1.],
+                                    [2., 0.],
+                                    [1., 0.]
+                                ]
+                            ]
+                        ]
+                    },
+                    'properties': {
+                        'score': 0.9,
+                        'class_name': 'house'
+                    }
+                }
+            ]
+        }
+
         self.extent = Box.make_square(0, 0, 10)
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
