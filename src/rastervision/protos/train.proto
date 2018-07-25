@@ -18,7 +18,8 @@ message TrainConfig {
     }
 
     message SegmentationOptions {
-
+        optional string train_py = 1 [default="/opt/tf-models/deeplab/train.py"];
+        required string tf_initial_checkpoint = 2;
     }
 
     message Options {

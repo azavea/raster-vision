@@ -66,7 +66,10 @@
     "train_options": {
         "pretrained_model_uri": "/dev/null",
         "backend_config_uri": "/dev/null",
-        "sync_interval": 600
+        "sync_interval": 600,
+        "segmentation_options": {
+            "tf_initial_checkpoint": "/opt/data/deeplabv3_mnv2_pascal_train_aug/model.ckpt-30000.index"
+        }
     },
     "predict_options": {
         "segmentation_options": {
