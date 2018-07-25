@@ -30,6 +30,7 @@ class DoubleCRSTransformer(CRSTransformer):
 
 
 class TestObjectDetectionJsonFile(unittest.TestCase):
+
     def setUp(self):
         self.mock_s3 = mock_s3()
         self.mock_s3.start()
@@ -133,20 +134,30 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         labels = geojson_to_labels(geojson, self.crs_transformer)
         label_coordinates = labels.boxlist.get()
 
-        expected_box_coordinates = np.array(
+        # construct expected labels object
+        expected_npboxes = np.array(
             [[0., 0., 2., 2.], [2., 2., 4., 4.], [0., 2., 2., 4.]])
-        self.assertTrue(
-            np.array_equal(label_coordinates, expected_box_coordinates))
+        expected_class_ids = np.array([1, 2, 2])
+        expected_scores = np.array([0.9, 0.9, 0.9])
+        expected_labels = ObjectDetectionLabels(
+            expected_npboxes, expected_class_ids, expected_scores)
+
+        labels.assert_equal(expected_labels)
 
     def test_polygon_geojson_to_labels(self):
         geojson = add_classes_to_geojson(self.geojson_dict, self.class_map)
         labels = geojson_to_labels(geojson, self.crs_transformer)
         label_coordinates = labels.boxlist.get()
 
-        expected_box_coordinates = np.array([[0., 0., 2., 2.],
-                                             [2., 2., 4., 4.]])
-        self.assertTrue(
-            np.array_equal(label_coordinates, expected_box_coordinates))
+        # construct expected labels object
+        expected_npboxes = np.array(
+            [[0., 0., 2., 2.], [2., 2., 4., 4.]])
+        expected_class_ids = np.array([1, 2])
+        expected_scores = np.array([0.9, 0.9])
+        expected_labels = ObjectDetectionLabels(
+            expected_npboxes, expected_class_ids, expected_scores)
+
+        labels.assert_equal(expected_labels)
 
     def test_read_invalid_geometry_type(self):
         with self.assertRaises(Exception):
