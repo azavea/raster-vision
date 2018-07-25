@@ -1,3 +1,4 @@
+import atexit
 import io
 import numpy as np
 import shutil
@@ -7,6 +8,7 @@ import uuid
 
 from os.path import join
 from PIL import Image
+from subprocess import Popen
 
 from object_detection.utils import dataset_util
 from rastervision.core.ml_backend import MLBackend
@@ -123,6 +125,14 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
     return tf.train.Example(features=features)
 
 
+def terminate_at_exit(process):
+    def terminate():
+        print('Terminating {}...'.format(process.pid))
+        process.terminate()
+
+    atexit.register(terminate)
+
+
 class TFDeeplab(MLBackend):
     def __init__(self):
         # persist scene training packages for when output_uri is remote
@@ -143,8 +153,9 @@ class TFDeeplab(MLBackend):
                                  class_map, options):
         base_uri = options.output_uri
 
-        training_record_path = join(base_uri, '{}.record'.format(TRAIN))
-        validation_record_path = join(base_uri, '{}.record'.format(VALIDATION))
+        training_record_path = join(base_uri, '{}-0.record'.format(TRAIN))
+        validation_record_path = join(base_uri,
+                                      '{}-0.record'.format(VALIDATION))
         merge_tf_records(training_record_path, training_results)
         merge_tf_records(validation_record_path, validation_results)
 
@@ -158,8 +169,25 @@ class TFDeeplab(MLBackend):
                 make_debug_images(validation_record_path, debug_dir)
                 shutil.make_archive(validation_zip_path, 'zip', debug_dir)
 
-    def train(self, options):
-        return 1
+    def train(self, class_map, options):
+        train_logdir = options.output_uri
+        dataset_dir = options.training_data_uri
+        train_py = options.segmentation_options.train_py
+        tf_initial_checkpoints = \
+            options.segmentation_options.tf_initial_checkpoint
+
+        args = ['python', train_py]
+        args.append('--train_logdir={}'.format(train_logdir))
+        args.append(
+            '--tf_initial_checkpoint={}'.format(tf_initial_checkpoints))
+        args.append('--dataset_dir={}'.format(dataset_dir))
+
+        train_process = Popen(args)
+        terminate_at_exit(train_process)
+
+        # XXX tensorboard
+
+        train_process.wait()
 
     def predict(self, chip, options):
         return 1

@@ -300,9 +300,10 @@ class ChainWorkflow(object):
                                        'backend.config')
         backend_config_uri = config.options.backend_config_uri.format(
             **self.uri_map)
-        backend_config_str = file_to_str(backend_config_uri)
-        str_to_file(backend_config_str, backend_config_copy_uri)
-        config.options.backend_config_uri = backend_config_copy_uri
+        if backend_config_uri != "/dev/null":
+            backend_config_str = file_to_str(backend_config_uri)
+            str_to_file(backend_config_str, backend_config_copy_uri)
+            config.options.backend_config_uri = backend_config_copy_uri
 
         config = apply_uri_map(config, self.uri_map)
         return config
