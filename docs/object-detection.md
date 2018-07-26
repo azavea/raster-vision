@@ -6,14 +6,16 @@ This tutorial introduces some Raster Vision concepts and demonstrates how to run
 
 ### Commands
 
-Raster Vision supports four *commands*.
+Raster Vision supports the following *commands*.
+* `compute_raster_stats`: saves statistics of rasters in order to convert pixel values to machine learning-friendly uint8 format
 * `make_training_chips`: creates training chips from raster data and ground truth labels and converts them to backend-specific format
 * `train`: trains a model
-* `predict`: makes predictions on raster data using a model
+* `predict`: makes predictions on raster data using a model and configuration file
 * `eval`: evaluates the quality of the predictions against ground truth labels
+* `predict_package`: makes predictions on raster data using a prediction package
 
 ### Config files
-Each command is configured with a *command config* file in the form of a JSON-formatted [Protocol Buffer](https://developers.google.com/protocol-buffers/docs/pythontutorial), and there is a different schema for each command. The advantage of using protobufs (rather than conventional JSON files) is that we get compositional schemas, validation, and automatically generated Python clients for free. The schemas are stored in the `.proto` files in [rastervision.protos](../src/rastervision/protos), and are compiled to Python classes using `./scripts/compile`.
+Each command (except for `predict_package`) is configured with a *command config* file in the form of a JSON-formatted [Protocol Buffer](https://developers.google.com/protocol-buffers/docs/pythontutorial), and there is a different schema for each command. The advantage of using protobufs (rather than conventional JSON files) is that we get compositional schemas, validation, and automatically generated Python clients for free. The schemas are stored in the `.proto` files in [rastervision.protos](../src/rastervision/protos), and are compiled to Python classes using `./scripts/compile`.
 
 ### Scenes
 
@@ -111,18 +113,14 @@ You should view the predictions in QGIS and check that it looks something like t
 
 ## Making predictions on new imagery
 
-A common use case is to train a model as part of a workflow, and then run `predict` on that model for some new imagery. Assuming that a chain workflow was run successfully, producing the usual output rooted at `<RVROOT>/rv-output`, here are the steps to do this.
+A common use case is to train a model and make predictions as part of a workflow, and then later, to make predictions on new imagery using the same model and configuration that was used in the workflow. To make this easier, the `predict`
+command generates a *prediction package* if the `options.predict_package_uri` field is set in the predict config file. If running a chain workflow, the package will be in the predict output directory. This package contains a model, a template predict command config, and a raster statistics file. You can then make predictions using the same model and configuration, but on new images using the `predict_package` command which can be run as follows.
 
-* Copy the existing prediction config file at `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<PREDICTION_KEY>/config.json` to `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<NEW_PREDICTION_KEY>/config.json`. Note the `<NEW_PREDICTION_KEY>` in the path of the copied file.
-* Edit the `scenes` field in the new config file so that it references the  RasterSource and LabelSource for the new imagery.
-* Run the predict command with the new config file. In this case the command would be
 ```
-python -m rastervision.run predict \
-    <RVROOT>/rv-output/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<NEW_PREDICTION_KEY>/config.json
+python -m rastervision.run predict_package <predict_package_uri> <labels_uri> <image_uri1> <image_uri2> ...
 ```
-* The predictions will be in `<RVROOT>/rv-output/raw-datasets/<RAW_DATASET_KEY>/datasets/<DATASET_KEY>/models/<MODEL_KEY>/predictions/<NEW_PREDICTION_KEY>/output`
 
-It's also possible to make predictions outside of a workflow entirely. The `predict` config file just references a model file -- it could be located anywhere.
+A sample prediction package for the `cowc-potsdam` dataset is available [here](https://github.com/azavea/raster-vision-data/releases/download/v0.0.4/cowc-potsdam-od.zip).
 
 ## Run full workflow remotely
 
