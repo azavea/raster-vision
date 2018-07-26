@@ -47,7 +47,7 @@ message PredictConfig {
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 5;
             ClassificationOptions classification_options = 6;
-	    SegmentationOptions segmentation_options = 8;
+	    SegmentationOptions segmentation_options = 9;
         }
     }
 
