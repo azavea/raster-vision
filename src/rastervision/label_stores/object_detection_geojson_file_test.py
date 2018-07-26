@@ -30,7 +30,6 @@ class DoubleCRSTransformer(CRSTransformer):
 
 
 class TestObjectDetectionJsonFile(unittest.TestCase):
-
     def setUp(self):
         self.mock_s3 = mock_s3()
         self.mock_s3.start()
@@ -132,11 +131,10 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         geojson = add_classes_to_geojson(self.multipolygon_geojson_dict,
                                          self.class_map)
         labels = geojson_to_labels(geojson, self.crs_transformer)
-        label_coordinates = labels.boxlist.get()
 
         # construct expected labels object
-        expected_npboxes = np.array(
-            [[0., 0., 2., 2.], [2., 2., 4., 4.], [0., 2., 2., 4.]])
+        expected_npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.],
+                                     [0., 2., 2., 4.]])
         expected_class_ids = np.array([1, 2, 2])
         expected_scores = np.array([0.9, 0.9, 0.9])
         expected_labels = ObjectDetectionLabels(
@@ -147,11 +145,9 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
     def test_polygon_geojson_to_labels(self):
         geojson = add_classes_to_geojson(self.geojson_dict, self.class_map)
         labels = geojson_to_labels(geojson, self.crs_transformer)
-        label_coordinates = labels.boxlist.get()
 
         # construct expected labels object
-        expected_npboxes = np.array(
-            [[0., 0., 2., 2.], [2., 2., 4., 4.]])
+        expected_npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
         expected_class_ids = np.array([1, 2])
         expected_scores = np.array([0.9, 0.9])
         expected_labels = ObjectDetectionLabels(
