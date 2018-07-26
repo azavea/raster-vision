@@ -59,7 +59,7 @@ def merge_tf_records(output_path, src_records):
         print()
 
 
-def make_debug_images(record_path, output_dir):
+def make_debug_images(record_path, output_dir):  # XXX
     make_dir(output_dir, check_empty=True)
 
     print('Generating debug chips', end='', flush=True)
@@ -69,9 +69,9 @@ def make_debug_images(record_path, output_dir):
         im, labels = parse_tfexample(example)
         output_path = join(output_dir, '{}.png'.format(ind))
         inv_labels = (labels == 0)
-        im[:, :, 0] = im[:, :, 0] * inv_labels  # XXX
-        im[:, :, 1] = im[:, :, 1] * inv_labels  # XXX
-        im[:, :, 2] = im[:, :, 2] * inv_labels  # XXX
+        im[:, :, 0] = im[:, :, 0] * inv_labels
+        im[:, :, 1] = im[:, :, 1] * inv_labels
+        im[:, :, 2] = im[:, :, 2] * inv_labels
         save_img(im, output_path)
         print('.', end='', flush=True)
     print()
@@ -170,17 +170,34 @@ class TFDeeplab(MLBackend):
                 shutil.make_archive(validation_zip_path, 'zip', debug_dir)
 
     def train(self, class_map, options):
+        soptions = options.segmentation_options
+
         train_logdir = options.output_uri
         dataset_dir = options.training_data_uri
-        train_py = options.segmentation_options.train_py
-        tf_initial_checkpoints = \
-            options.segmentation_options.tf_initial_checkpoint
+        train_py = soptions.train_py
+        tf_initial_checkpoints = soptions.tf_initial_checkpoint
 
         args = ['python', train_py]
         args.append('--train_logdir={}'.format(train_logdir))
         args.append(
             '--tf_initial_checkpoint={}'.format(tf_initial_checkpoints))
         args.append('--dataset_dir={}'.format(dataset_dir))
+        args.append('--training_number_of_steps={}'.format(
+            soptions.training_number_of_steps))
+        if len(soptions.train_split) > 0:
+            args.append('--train_split="{}"'.format(soptions.train_split))
+        if len(soptions.model_variant) > 0:
+            args.append('--model_variant="{}"'.format(soptions.model_variant))
+        for rate in soptions.atrous_rates:
+            args.append('--atrous_rates={}'.format(rate))
+        args.append('--output_stride={}'.format(soptions.output_stride))
+        args.append('--decoder_output_stride={}'.format(
+            soptions.decoder_output_stride))
+        for size in soptions.train_crop_size:
+            args.append('--train_crop_size={}'.format(size))
+        args.append('--train_batch_size={}'.format(soptions.train_batch_size))
+        if len(soptions.dataset):
+            args.append('--dataset="{}"'.format(soptions.dataset))
 
         train_process = Popen(args)
         terminate_at_exit(train_process)
