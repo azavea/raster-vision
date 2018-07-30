@@ -59,29 +59,32 @@ def merge_tf_records(output_path, src_records):
         print()
 
 
-def make_debug_images(record_path, output_dir):  # XXX
+def make_debug_images(record_path, output_dir, p=0.25):
     make_dir(output_dir, check_empty=True)
 
     print('Generating debug chips', end='', flush=True)
     tfrecord_iter = tf.python_io.tf_record_iterator(record_path)
     for ind, example in enumerate(tfrecord_iter):
         example = tf.train.Example.FromString(example)
-        im, labels = parse_tfexample(example)
+        im, labels = parse_tf_example(example)
         output_path = join(output_dir, '{}.png'.format(ind))
         inv_labels = (labels == 0)
         im[:, :, 0] = im[:, :, 0] * inv_labels
         im[:, :, 1] = im[:, :, 1] * inv_labels
         im[:, :, 2] = im[:, :, 2] * inv_labels
-        save_img(im, output_path)
+        if np.random.rand() <= p:
+            save_img(im, output_path)
         print('.', end='', flush=True)
     print()
 
 
-def parse_tfexample(example):
-    image_encoded = example.features.feature['image/encoded'].bytes_list.value[
-        0]
-    image_segmentation_class_encoded = example.features.feature[
-        'image/segmentation/class/encoded'].bytes_list.value[0]
+def parse_tf_example(example):
+    ie = 'image/encoded'
+    isce = 'image/segmentation/class/encoded'
+    image_encoded = \
+        example.features.feature[ie].bytes_list.value[0]
+    image_segmentation_class_encoded = \
+        example.features.feature[isce].bytes_list.value[0]
     im = png_to_numpy(image_encoded)
     labels = png_to_numpy(image_segmentation_class_encoded)
     return im, labels
