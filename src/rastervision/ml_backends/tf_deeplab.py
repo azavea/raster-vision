@@ -1,6 +1,9 @@
 import io
+import os
+import glob
 import numpy as np
 import shutil
+import tarfile
 import tempfile
 import tensorflow as tf
 import uuid
@@ -10,6 +13,7 @@ from PIL import Image
 from subprocess import Popen
 from tensorflow.core.example.example_pb2 import Example
 from typing import (List, Tuple)
+from urllib.parse import urlparse
 
 from object_detection.utils import dataset_util
 from rastervision.core.box import Box
@@ -18,9 +22,11 @@ from rastervision.core.ml_backend import MLBackend
 from rastervision.core.scene import Scene
 from rastervision.core.training_data import TrainingData
 from rastervision.ml_backends.tf_object_detection_api import (
-    terminate_at_exit, TRAIN, VALIDATION)
-from rastervision.utils.files import make_dir
+    write_tf_record, terminate_at_exit, TRAIN, VALIDATION)
 from rastervision.utils.misc import save_img
+from rastervision.utils.files import (get_local_path, upload_if_needed,
+                                      make_dir, download_if_needed,
+                                      sync_dir, start_sync)
 
 
 def numpy_to_png(array: np.ndarray) -> str:
@@ -55,23 +61,6 @@ def png_to_numpy(png: str, dtype=np.uint8) -> np.ndarray:
     incoming = io.BytesIO(png)
     im = Image.open(incoming)
     return np.array(im)
-
-
-def write_tf_record(tf_examples: List[Example], output_path: str) -> None:
-    """Write an array of TFRecords to the given output path.
-
-    Args:
-         tf_examples: An array of TFRecords; a
-              list(tensorflow.core.example.example_pb2.Example)
-         output_path: The path where the records should be stored.
-
-    Returns:
-         None
-
-    """
-    with tf.python_io.TFRecordWriter(output_path) as writer:
-        for tf_example in tf_examples:
-            writer.write(tf_example.SerializeToString())
 
 
 def make_tf_examples(training_data: TrainingData,
@@ -227,6 +216,10 @@ def create_tf_example(image: np.ndarray,
     return tf.train.Example(features=features)
 
 
+def get_record_uri(uri: str, split: str) -> str:
+    return join(uri, '{}-0.record'.format(split))
+
+
 class TFDeeplab(MLBackend):
     """MLBackend-derived type that implements the TensorFlow DeepLab
     backend.
@@ -234,9 +227,9 @@ class TFDeeplab(MLBackend):
     """
 
     def __init__(self):
-        """Constructor"""
-        # persist scene training packages for when output_uri is remote
-        self.scene_training_packages = []
+        """Constructor."""
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
+        self.temp_dir = self.temp_dir_obj.name
 
     def process_scene_data(self, scene: Scene, data: TrainingData,
                            class_map: ClassMap, options) -> str:
@@ -253,15 +246,17 @@ class TFDeeplab(MLBackend):
                   the config file.
 
         Returns:
-            The path to the generated file.
+            The local path to the generated file.
 
         """
-        base_uri = options.output_uri
-        make_dir(base_uri)
-
         tf_examples = make_tf_examples(data, class_map)
+
+        base_uri = options.output_uri
         split = '{}-{}'.format(scene.id, uuid.uuid4())
         record_path = join(base_uri, '{}.record'.format(split))
+        record_path = get_local_path(record_path, self.temp_dir)
+
+        make_dir(record_path, use_dirname=True)
         write_tf_record(tf_examples, record_path)
 
         return record_path
@@ -273,7 +268,6 @@ class TFDeeplab(MLBackend):
         (one for training data and one for validation data).
 
         Args:
-
              training_results: A list of paths to TFRecords containing
                   training data.
              valiation_results: A list of paths to TFRecords
@@ -287,38 +281,92 @@ class TFDeeplab(MLBackend):
              None
         """
         base_uri = options.output_uri
+        training_record_path = get_record_uri(base_uri, TRAIN)
+        training_record_path_local = get_local_path(training_record_path,
+                                                    self.temp_dir)
+        validation_record_path = get_record_uri(base_uri, VALIDATION)
+        validation_record_path_local = get_local_path(validation_record_path,
+                                                      self.temp_dir)
 
-        training_record_path = join(base_uri, '{}-0.record'.format(TRAIN))
-        validation_record_path = join(base_uri,
-                                      '{}-0.record'.format(VALIDATION))
-        merge_tf_records(training_record_path, training_results)
-        merge_tf_records(validation_record_path, validation_results)
+        make_dir(training_record_path_local, use_dirname=True)
+        make_dir(validation_record_path_local, use_dirname=True)  # sic
+        merge_tf_records(training_record_path_local, training_results)
+        merge_tf_records(validation_record_path_local, validation_results)
+        upload_if_needed(training_record_path_local, training_record_path)
+        upload_if_needed(validation_record_path_local, validation_record_path)
 
         if options.debug:
             training_zip_path = join(base_uri, '{}'.format(TRAIN))
+            training_zip_path_local = get_local_path(training_zip_path,
+                                                     self.temp_dir)
             validation_zip_path = join(base_uri, '{}'.format(VALIDATION))
-            with tempfile.TemporaryDirectory() as debug_dir:
-                make_debug_images(training_record_path, debug_dir)
-                shutil.make_archive(training_zip_path, 'zip', debug_dir)
-            with tempfile.TemporaryDirectory() as debug_dir:
-                make_debug_images(validation_record_path, debug_dir)
-                shutil.make_archive(validation_zip_path, 'zip', debug_dir)
+            validation_zip_path_local = get_local_path(validation_zip_path,
+                                                       self.temp_dir)
 
-    def train(self, class_map, options):
-        import pdb
-        pdb.set_trace()
+            with tempfile.TemporaryDirectory() as debug_dir:
+                make_debug_images(training_record_path_local, debug_dir)
+                shutil.make_archive(training_zip_path_local, 'zip', debug_dir)
+            with tempfile.TemporaryDirectory() as debug_dir:
+                make_debug_images(validation_record_path_local, debug_dir)
+                shutil.make_archive(validation_zip_path_local, 'zip',
+                                    debug_dir)
+            upload_if_needed('{}.zip'.format(training_zip_path_local),
+                             '{}.zip'.format(training_zip_path))
+            upload_if_needed('{}.zip'.format(validation_zip_path_local),
+                             '{}.zip'.format(validation_zip_path))
+
+    def train(self, class_map: ClassMap, options) -> None:
+        """Train a DeepLab model using the options provided in the
+        `segmentation_options` section of the workflow config file.
+
+        Args:
+             class_map: A mapping between integral and textual classes.
+             options: Options provided in the `segmentation_options`
+                  section of the workflow configuration file.
+
+        Returns:
+             None
+        """
         soptions = options.segmentation_options
 
-        train_logdir = options.output_uri
-        dataset_dir = options.training_data_uri
         train_py = soptions.train_py
-        tf_initial_checkpoints = soptions.tf_initial_checkpoint
 
+        # Setup local input and output directories
+        train_logdir = options.output_uri
+        train_logdir_local = get_local_path(train_logdir, self.temp_dir)
+        dataset_dir = options.training_data_uri
+        dataset_dir_local = get_local_path(dataset_dir, self.temp_dir)
+        make_dir(train_logdir_local)
+        make_dir(dataset_dir_local)
+
+        download_if_needed(get_record_uri(dataset_dir, TRAIN), self.temp_dir)
+        # XXX
+        # Inspite of the prohibition, it might make sense to log
+        # directly to s3 in the remote case.  The commented-out code
+        # below does not work because the absolute path seems to be
+        # hard-coded into the state, and that (potentially) changes
+        # run-to-run due to the use of a temporary directory with a
+        # random name.
+        # if urlparse(train_logdir).scheme == 's3':
+        #     sync_dir(train_logdir, train_logdir_local, delete=True)
+
+        # Download and untar initial checkpoint.
+        tf_initial_checkpoints_uri = soptions.tf_initial_checkpoints_uri
+        make_dir(self.temp_dir)
+        download_if_needed(tf_initial_checkpoints_uri, self.temp_dir)
+        tfic_tarball = get_local_path(tf_initial_checkpoints_uri,
+                                      self.temp_dir)
+        tfic_dir = os.path.dirname(tfic_tarball)
+        with tarfile.open(tfic_tarball, 'r:gz') as tar:
+            tar.extractall(tfic_dir)
+        tfic_index = glob.glob('{}/*/*.index'.format(tfic_dir))[0]
+
+        # Build array of argments that will be used to run the DeepLab
+        # training script.
         args = ['python', train_py]
-        args.append('--train_logdir={}'.format(train_logdir))
-        args.append(
-            '--tf_initial_checkpoint={}'.format(tf_initial_checkpoints))
-        args.append('--dataset_dir={}'.format(dataset_dir))
+        args.append('--train_logdir={}'.format(train_logdir_local))
+        args.append('--tf_initial_checkpoint={}'.format(tfic_index))
+        args.append('--dataset_dir={}'.format(dataset_dir_local))
         args.append('--training_number_of_steps={}'.format(
             soptions.training_number_of_steps))
         if len(soptions.train_split) > 0:
@@ -336,12 +384,24 @@ class TFDeeplab(MLBackend):
         if len(soptions.dataset):
             args.append('--dataset="{}"'.format(soptions.dataset))
 
+        # XXX
+        # See the block comment above regarding train_logdir.
+        start_sync(
+            train_logdir_local,
+            train_logdir,
+            sync_interval=options.sync_interval)
+
+        # Train
         train_process = Popen(args)
         terminate_at_exit(train_process)
+        train_process.wait()
+
+        if urlparse(train_logdir).scheme == 's3':
+            sync_dir(train_logdir_local, train_logdir, delete=True)
 
         # XXX tensorboard
 
-        train_process.wait()
-
     def predict(self, chip, options):
+        import pdb
+        pdb.set_trace()
         return 1

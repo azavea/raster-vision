@@ -39,8 +39,6 @@ class SemanticSegmentation(MLTask):
         return windows
 
     def get_train_labels(self, window, scene, options):
-        import pdb
-        pdb.set_trace()
         label_store = scene.ground_truth_label_store
         chip = label_store.src._get_chip(window)
         fn = label_store.fn

@@ -16,6 +16,9 @@ import tensorflow as tf
 import numpy as np
 from google.protobuf import text_format
 
+from tensorflow.core.example.example_pb2 import Example
+from typing import List
+
 from object_detection.utils import dataset_util
 from object_detection.protos.string_int_label_map_pb2 import (
     StringIntLabelMap, StringIntLabelMapItem)
@@ -84,7 +87,18 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
     return tf_example
 
 
-def write_tf_record(tf_examples, output_path):
+def write_tf_record(tf_examples: List[Example], output_path: str) -> None:
+    """Write an array of TFRecords to the given output path.
+
+    Args:
+         tf_examples: An array of TFRecords; a
+              list(tensorflow.core.example.example_pb2.Example)
+         output_path: The path where the records should be stored.
+
+    Returns:
+         None
+
+    """
     with tf.python_io.TFRecordWriter(output_path) as writer:
         for tf_example in tf_examples:
             writer.write(tf_example.SerializeToString())

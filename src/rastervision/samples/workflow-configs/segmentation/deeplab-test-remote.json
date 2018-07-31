@@ -68,7 +68,7 @@
         "backend_config_uri": "/dev/null",
         "sync_interval": 600,
         "segmentation_options": {
-            "tf_initial_checkpoints_uri": "/opt/data/deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz"
+            "tf_initial_checkpoints_uri": "{rv_root}/deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz"
         }
     },
     "predict_options": {
@@ -82,9 +82,9 @@
     "raster_transformer": {
         "channel_order": [0, 1, 2]
     },
-    "local_uri_map": {
-        "rv_root": "/opt/data/mcclain",
-        "raw": "/opt/data/raw-data"
+    "remote_uri_map": {
+        "rv_root": "s3://raster-vision-mcclain",
+        "raw": "s3://raster-vision-mcclain/raw-data"
     },
     "raw_dataset_key": "cowc-potsdam",
     "dataset_key": "test",
