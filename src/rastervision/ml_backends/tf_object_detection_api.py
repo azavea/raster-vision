@@ -420,7 +420,6 @@ class TFObjectDetectionAPI(MLBackend):
             class_map: ClassMap
             options: MakeTrainingChipsConfig.Options
         """
-
         training_package = TrainingPackage(options.output_uri)
 
         def _merge_training_results(results, split):

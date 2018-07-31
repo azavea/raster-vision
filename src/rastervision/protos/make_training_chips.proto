@@ -51,6 +51,10 @@ message MakeTrainingChipsConfig {
 
     }
 
+    message SegmentationOptions {
+
+    }
+
     message Options {
         optional int32 chip_size = 1;
         optional bool debug = 2 [default=true];
@@ -61,6 +65,7 @@ message MakeTrainingChipsConfig {
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 4;
             ClassificationOptions classification_options = 5;
+            SegmentationOptions segmentation_options = 6;
         }
     }
 

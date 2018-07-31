@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package rv.protos;
 
+import "rastervision/protos/raster_source.proto";
+
 message ObjectDetectionGeoJSONFile {
     required string uri = 1;
 }
@@ -37,9 +39,17 @@ message ClassificationGeoJSONFile {
     optional Options options = 2;
 }
 
+message SegmentationRasterFile {
+    optional RasterSource src = 1;
+    optional string dst = 2;
+    repeated uint32 src_classes = 3 [packed=true];
+    repeated int32 dst_classes = 4 [packed=true];
+}
+
 message LabelStore {
     oneof label_store_type {
         ObjectDetectionGeoJSONFile object_detection_geojson_file = 1;
         ClassificationGeoJSONFile classification_geojson_file = 2;
+        SegmentationRasterFile segmentation_raster_file = 3;
     }
 }

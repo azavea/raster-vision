@@ -36,6 +36,7 @@ git checkout lf/fix-python3
 git checkout eef6bb
 cd ..
 mv models/research/object_detection/ ../object_detection
+mv models/research/deeplab/ ../deeplab
 mv models/research/slim/ ../slim
 cd ..
 rm -R temp

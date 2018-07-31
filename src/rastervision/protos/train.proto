@@ -17,6 +17,20 @@ message TrainConfig {
         optional string export_py = 3 [default="/opt/tf-models/object_detection/export_inference_graph.py"];
     }
 
+    message SegmentationOptions {
+        optional string train_py = 1 [default="/opt/tf-models/deeplab/train.py"];
+        required string tf_initial_checkpoint = 2;
+        optional int32 training_number_of_steps = 3 [default=1];
+        optional string train_split = 4;
+        optional string model_variant = 5;
+        repeated int32 atrous_rates = 6;
+        optional int32 output_stride = 7 [default=16];
+        optional int32 decoder_output_stride = 8 [default=4];
+        repeated int32 train_crop_size = 9;
+        optional int32 train_batch_size = 10 [default=1];
+        optional string dataset = 11;
+    }
+
     message Options {
         // URI for a separate training configuration that is specific to an ML
         // backend.
@@ -36,6 +50,7 @@ message TrainConfig {
 
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 6;
+            SegmentationOptions segmentation_options = 7;
         }
 
     }

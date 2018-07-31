@@ -1,0 +1,94 @@
+{
+    "train_scenes": [
+        {
+            "id": "2-10",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "/opt/data/top_potsdam_2_10_RGBIR.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "src": {
+                        "geotiff_files": {
+                            "uris": [
+                                "/opt/data/top_potsdam_2_10_label_georeferenced.tif"
+                            ]
+                        }
+                    },
+                    "src_classes": [ 6, 1 ],
+                    "dst_classes": [ 1, 0 ]
+                }
+            }
+        }
+    ],
+    "test_scenes": [
+        {
+            "id": "2-11",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "/opt/data/top_potsdam_2_11_RGBIR.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "src": {
+                        "geotiff_files": {
+                            "uris": [
+                                "/opt/data/top_potsdam_2_11_label_georeferenced.tif"
+                            ]
+                        }
+                    },
+                    "src_classes": [ 6 ],
+                    "dst_classes": [ 1 ]
+                }
+            }
+        }
+    ],
+    "machine_learning": {
+        "task": "SEMANTIC_SEGMENTATION",
+        "backend": "TF_DEEPLAB",
+        "class_items": [
+            {
+                "id": 1,
+                "name": "car"
+            }
+        ]
+    },
+    "make_training_chips_options": {
+        "segmentation_options": {
+        }
+    },
+    "train_options": {
+        "pretrained_model_uri": "/dev/null",
+        "backend_config_uri": "/dev/null",
+        "sync_interval": 600,
+        "segmentation_options": {
+            "tf_initial_checkpoint": "/opt/data/deeplabv3_mnv2_pascal_train_aug/model.ckpt-30000.index"
+        }
+    },
+    "predict_options": {
+        "segmentation_options": {
+        }
+    },
+    "eval_options": {
+    },
+    "debug": true,
+    "chip_size": 300,
+    "raster_transformer": {
+        "channel_order": [0, 1, 2]
+    },
+    "local_uri_map": {
+        "rv_root": "/opt/data/mcclain",
+        "raw": "/opt/data/raw-data"
+    },
+    "raw_dataset_key": "cowc-potsdam",
+    "dataset_key": "test",
+    "model_key": "deeplab",
+    "prediction_key": "test-set",
+    "eval_key": "default"
+}
