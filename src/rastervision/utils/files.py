@@ -12,7 +12,7 @@ import botocore
 from google.protobuf import json_format
 
 
-class NotFoundException(Exception):
+class NotReadableError(Exception):
     pass
 
 
@@ -80,16 +80,28 @@ def download_if_needed(uri, download_dir):
             s3 = boto3.client('s3')
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError:
-            raise NotFoundException('Could not access {}'.format(uri))
+            raise NotReadableError('Could not read {}'.format(uri))
     else:
         not_found = not os.path.isfile(path)
         if not_found:
-            raise NotFoundException('Could not access {}'.format(uri))
+            raise NotReadableError('Could not read {}'.format(uri))
 
     return path
 
 
 def file_to_str(file_uri):
+    """Download contents of text file into a string.
+
+    Args:
+        file_uri: (string) URI of file
+
+    Returns:
+        (string) with contents of text file
+
+    Raises:
+        NotReadableError if URI cannot be read from
+    """
+
     parsed_uri = urlparse(file_uri)
     if parsed_uri.scheme == 's3':
         with io.BytesIO() as file_buffer:

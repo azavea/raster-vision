@@ -14,6 +14,7 @@ from rastervision.core.crs_transformer import CRSTransformer
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
 from rastervision.utils.files import NotFoundException, NotWritableError
+from rastervision.utils.files import (NotReadableError,
 
 
 class DoubleCRSTransformer(CRSTransformer):
@@ -171,11 +172,11 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
                 extent=self.extent,
                 readable=False,
                 writable=False)
-        except NotFoundException:
+        except NotReadableError:
             self.fail('Should not raise exception if readable=False')
 
     def test_read_invalid_uri_readable_true(self):
-        with self.assertRaises(NotFoundException):
+        with self.assertRaises(NotReadableError):
             invalid_uri = 's3://invalid_path/invalid.json'
             ObjectDetectionGeoJSONFile(
                 invalid_uri,
