@@ -1,7 +1,6 @@
 import io
 import os
 from pathlib import Path
-import rasterio
 import shutil
 import subprocess
 import tempfile
@@ -63,15 +62,7 @@ def sync_dir(src_dir, dest_uri, delete=False):
     subprocess.run(command)
 
 
-def _is_raster(uri, s3_test=False):
-    if s3_test:
-        uri = uri.replace('s3://', '/vsis3/')
 
-    try:
-        rasterio.open(uri)
-    except Exception:
-        return False
-    return uri
 
 
 def download_if_needed(uri, download_dir):
@@ -84,10 +75,6 @@ def download_if_needed(uri, download_dir):
 
     parsed_uri = urlparse(uri)
     if parsed_uri.scheme == 's3':
-        vsis3_path = _is_raster(uri, s3_test=True)
-        if vsis3_path:
-            return vsis3_path
-
         try:
             print('Downloading {} to {}'.format(uri, path))
             s3 = boto3.client('s3')
