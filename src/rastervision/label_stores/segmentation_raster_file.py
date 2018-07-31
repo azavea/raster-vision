@@ -1,5 +1,7 @@
 import numpy as np
 
+from typing import (List, Union)
+
 from rastervision.core.box import Box
 from rastervision.core.label_store import LabelStore
 from rastervision.core.raster_source import RasterSource
@@ -7,9 +9,35 @@ from rastervision.builders import raster_source_builder
 from rastervision.protos.raster_source_pb2 import (RasterSource as
                                                    RasterSourceProto)
 
+RasterUnion = Union[RasterSource, RasterSourceProto, str, None]
+
 
 class SegmentationRasterFile(LabelStore):
-    def __init__(self, src, dst, src_classes=[], dst_classes=[]):
+    """A label store for segmentation raster files.
+
+    """
+
+    def __init__(self,
+                 src: RasterUnion,
+                 dst: RasterUnion,
+                 src_classes: List[int] = [],
+                 dst_classes: List[int] = []):
+        """Constructor.
+
+        Args:
+             src: A source of raster label data (either an object that
+                  can provide it or a path).
+             dst: A destination for raster label data.
+             src_classes: A list of integer classes found in the label
+                  source.  These are zipped with the destination list
+                  to produce a correspondence between input classes
+                  and output classes.
+             dst_classes: A list of integer classes found in the
+                  labels that are to be produced.  These labels should
+                  match those given in the workflow configuration file
+                  (the class map).
+
+        """
         self.set_labels(src)
 
         if isinstance(dst, RasterSource):
@@ -19,7 +47,7 @@ class SegmentationRasterFile(LabelStore):
         elif dst is None or dst is '':
             self.dst = None
         elif isinstance(dst, str):
-            pass  # XXX str instead of RasterSourceProto
+            pass  # XXX seeing str instead of RasterSourceProto
         else:
             raise ValueError('Unsure how to handle dst={}'.format(type(dst)))
 
@@ -35,9 +63,20 @@ class SegmentationRasterFile(LabelStore):
         self.correspondence = correspondence
 
     def clear(self):
+        """Clear all labels."""
         self.src = None
 
-    def set_labels(self, src):
+    def set_labels(self, src: RasterUnion) -> None:
+        """Set labels, overwriting any that existed prior to this call.
+
+        Args:
+             src: A source of raster label data (either an object that
+                  can provide it or a path).
+
+        Returns:
+             None
+
+        """
         if isinstance(src, RasterSource):
             self.src = src
         elif isinstance(src, RasterSourceProto):
@@ -53,7 +92,19 @@ class SegmentationRasterFile(LabelStore):
         else:
             self.channels = 1
 
-    def get_labels(self, window=None):
+    def get_labels(self, window: Union[Box, None] = None) -> np.ndarray:
+        """Get labels from a window or from the entire scene.
+
+        Args:
+             window: Either a window (given as a Box object) or None.
+                  In the former case labels are returned for the
+                  windowed area, in the latter case labels are
+                  returned for the entire scene.
+
+        Returns:
+             numpy.ndarray
+
+        """
         if self.src is not None:
             return self.src._get_chip(window)
         else:

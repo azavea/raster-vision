@@ -1,4 +1,3 @@
-import atexit
 import io
 import numpy as np
 import shutil
@@ -9,36 +8,85 @@ import uuid
 from os.path import join
 from PIL import Image
 from subprocess import Popen
+from tensorflow.core.example.example_pb2 import Example
+from typing import (List, Tuple)
 
 from object_detection.utils import dataset_util
+from rastervision.core.box import Box
+from rastervision.core.class_map import ClassMap
 from rastervision.core.ml_backend import MLBackend
+from rastervision.core.scene import Scene
+from rastervision.core.training_data import TrainingData
+from rastervision.ml_backends.tf_object_detection_api import (
+    terminate_at_exit, TRAIN, VALIDATION)
 from rastervision.utils.files import make_dir
 from rastervision.utils.misc import save_img
 
-TRAIN = 'train'
-VALIDATION = 'validation'
 
+def numpy_to_png(array: np.ndarray) -> str:
+    """Get a PNG string from a Numpy array.
 
-def numpy_to_png(array):
+    Args:
+         array: A Numpy array of shape (w, h, 3) or (w, h), where the
+               former is meant to become a three-channel image and the
+               latter a one-channel image.  The dtype of the array
+               should be uint8.
+
+    Returns:
+         str
+
+    """
     im = Image.fromarray(array)
     output = io.BytesIO()
     im.save(output, 'png')
     return output.getvalue()
 
 
-def png_to_numpy(png, dtype=np.uint8):
+def png_to_numpy(png: str, dtype=np.uint8) -> np.ndarray:
+    """Get a Numpy array from a PNG string.
+
+    Args:
+         png: A str containing a PNG-formatted image.
+
+    Returns:
+         numpy.ndarray
+
+    """
     incoming = io.BytesIO(png)
     im = Image.open(incoming)
     return np.array(im)
 
 
-def write_tf_record(tf_examples, output_path):
+def write_tf_record(tf_examples: List[Example], output_path: str) -> None:
+    """Write an array of TFRecords to the given output path.
+
+    Args:
+         tf_examples: An array of TFRecords; a
+              list(tensorflow.core.example.example_pb2.Example)
+         output_path: The path where the records should be stored.
+
+    Returns:
+         None
+
+    """
     with tf.python_io.TFRecordWriter(output_path) as writer:
         for tf_example in tf_examples:
             writer.write(tf_example.SerializeToString())
 
 
-def make_tf_examples(training_data, class_map):
+def make_tf_examples(training_data: TrainingData,
+                     class_map: ClassMap) -> List[Example]:
+    """Take training data and a class map and return a list of TFRecords.
+
+    Args:
+         training_data: A rastervision.core.training_data.TrainingData
+              object.
+         class_map: A rastervision.core.class_map.ClassMap object.
+
+    Returns:
+         list(tensorflow.core.example.example_pb2.Example)
+
+    """
     tf_examples = []
     print('Creating TFRecord', end='', flush=True)
     for chip, window, labels in training_data:
@@ -49,7 +97,18 @@ def make_tf_examples(training_data, class_map):
     return tf_examples
 
 
-def merge_tf_records(output_path, src_records):
+def merge_tf_records(output_path: str, src_records: List[str]) -> None:
+    """Merge mutiple TFRecord files into one.
+
+    Args:
+         output_path: Where to write the merged TFRecord file.
+         src_records: A list of strings giving the location of the
+              input TFRecord files.
+
+    Returns:
+         None
+
+    """
     with tf.python_io.TFRecordWriter(output_path) as writer:
         print('Merging TFRecords', end='', flush=True)
         for src_record in src_records:
@@ -59,7 +118,20 @@ def merge_tf_records(output_path, src_records):
         print()
 
 
-def make_debug_images(record_path, output_dir, p=0.25):
+def make_debug_images(record_path: str, output_dir: str,
+                      p: float = 0.25) -> None:
+    """Render a random sample of the TFRecords in a given file as
+    human-viewable PNG files.
+
+    Args:
+         record_path: Path to the TFRecord file.
+         output_dir: Destination directory for the generated PNG files.
+         p: The probability of rendering a particular record.
+
+    Return:
+         None
+
+    """
     make_dir(output_dir, check_empty=True)
 
     print('Generating debug chips', end='', flush=True)
@@ -78,7 +150,15 @@ def make_debug_images(record_path, output_dir, p=0.25):
     print()
 
 
-def parse_tf_example(example):
+def parse_tf_example(example: Example) -> Tuple[np.ndarray, np.ndarray]:
+    """Parse a TensorFlow Example into an image array and a label array.
+
+    Args:
+         example: A TensorFlow Example object.
+
+    Return:
+         tuple(np.ndarray, np.ndarray)
+    """
     ie = 'image/encoded'
     isce = 'image/segmentation/class/encoded'
     image_encoded = \
@@ -90,7 +170,26 @@ def parse_tf_example(example):
     return im, labels
 
 
-def create_tf_example(image, window, labels, class_map, chip_id=''):
+def create_tf_example(image: np.ndarray,
+                      window: Box,
+                      labels: np.ndarray,
+                      class_map: ClassMap,
+                      chip_id: str = '') -> Example:
+    """Create a TensorFlow Example from an image, the labels, &c.
+
+    Args:
+         image: An nd.array containing the image data.
+         window: A Box object containing the bounding box for this example.
+         labels: An nd.array containing the label data.
+         class_map: A ClassMap object containing mappings between
+              numerial and textual labels.
+         chip_id: The chip id as a string.
+
+    Returns:
+         A Deeplab-compatible TensorFlow Example object containing the
+              given data.
+
+    """
     class_keys = set(class_map.get_keys())
 
     def fn(n):
@@ -128,20 +227,35 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
     return tf.train.Example(features=features)
 
 
-def terminate_at_exit(process):
-    def terminate():
-        print('Terminating {}...'.format(process.pid))
-        process.terminate()
-
-    atexit.register(terminate)
-
-
 class TFDeeplab(MLBackend):
+    """MLBackend-derived type that implements the TensorFlow DeepLab
+    backend.
+
+    """
+
     def __init__(self):
+        """Constructor"""
         # persist scene training packages for when output_uri is remote
         self.scene_training_packages = []
 
-    def process_scene_data(self, scene, data, class_map, options):
+    def process_scene_data(self, scene: Scene, data: TrainingData,
+                           class_map: ClassMap, options) -> str:
+        """Process the given scene and data into a TFRecord file specifically
+        associated with that file.
+
+        Args:
+             scene: The scene data (labels stores, the raster sources,
+                  and so on).
+             data: The training data.
+             class_map: The mapping from numerical labels to textual
+                  labels.
+             options: The options given to `make_training_chips` in
+                  the config file.
+
+        Returns:
+            The path to the generated file.
+
+        """
         base_uri = options.output_uri
         make_dir(base_uri)
 
@@ -152,8 +266,26 @@ class TFDeeplab(MLBackend):
 
         return record_path
 
-    def process_sceneset_results(self, training_results, validation_results,
-                                 class_map, options):
+    def process_sceneset_results(self, training_results: List[str],
+                                 validation_results: List[str],
+                                 class_map: ClassMap, options) -> None:
+        """Merge TFRecord files from individual scenes into two at-large files
+        (one for training data and one for validation data).
+
+        Args:
+
+             training_results: A list of paths to TFRecords containing
+                  training data.
+             valiation_results: A list of paths to TFRecords
+                  containing validation data.
+             class_map: A mapping from numerical classes to their
+                  textual names.
+             options: The options given to `make_training_chips` in
+                  the config file.
+
+        Returns:
+             None
+        """
         base_uri = options.output_uri
 
         training_record_path = join(base_uri, '{}-0.record'.format(TRAIN))
@@ -173,6 +305,8 @@ class TFDeeplab(MLBackend):
                 shutil.make_archive(validation_zip_path, 'zip', debug_dir)
 
     def train(self, class_map, options):
+        import pdb
+        pdb.set_trace()
         soptions = options.segmentation_options
 
         train_logdir = options.output_uri
