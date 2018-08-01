@@ -7,12 +7,14 @@ import numpy as np
 from moto import mock_s3
 
 from rastervision.label_stores.object_detection_geojson_file import (
-    ObjectDetectionGeoJSONFile)
+    ObjectDetectionGeoJSONFile, geojson_to_labels)
+from rastervision.label_stores.utils import add_classes_to_geojson
 from rastervision.labels.object_detection_labels import ObjectDetectionLabels
 from rastervision.core.crs_transformer import CRSTransformer
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.utils.files import NotFoundException, NotWritableError
+from rastervision.utils.files import (NotReadableError,
+                                      NotWritableError)
 
 
 class DoubleCRSTransformer(CRSTransformer):
@@ -68,6 +70,53 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             }]
         }
 
+        self.multipolygon_geojson_dict = {
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'MultiPolygon',
+                    'coordinates': [[[[0., 0.], [0., 1.], [1., 1.], [1., 0.],
+                                      [0., 0.]]]]
+                },
+                'properties': {
+                    'class_name': 'car',
+                    'score': 0.9
+                }
+            }, {
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'MultiPolygon',
+                    'coordinates':
+                    [[[[1., 1.], [1., 2.], [2., 2.], [2., 1.], [1., 1.]]],
+                     [[[1., 0.], [1., 1.], [2., 1.], [2., 0.], [1., 0.]]]]
+                },
+                'properties': {
+                    'score': 0.9,
+                    'class_name': 'house'
+                }
+            }]
+        }
+
+        self.linestring_geojson_dict = {
+            "type":
+            "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "properties": {
+                    'score': 0.9,
+                    'class_name': 'house'
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [[0., 0.], [0., 1.]]
+                }
+            }]
+        }
+
         self.extent = Box.make_square(0, 0, 10)
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
@@ -79,6 +128,40 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         self.mock_s3.stop()
         self.temp_dir.cleanup()
 
+    def test_multipolygon_geojson_to_labels(self):
+        geojson = add_classes_to_geojson(self.multipolygon_geojson_dict,
+                                         self.class_map)
+        labels = geojson_to_labels(geojson, self.crs_transformer)
+
+        # construct expected labels object
+        expected_npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.],
+                                     [0., 2., 2., 4.]])
+        expected_class_ids = np.array([1, 2, 2])
+        expected_scores = np.array([0.9, 0.9, 0.9])
+        expected_labels = ObjectDetectionLabels(
+            expected_npboxes, expected_class_ids, expected_scores)
+
+        labels.assert_equal(expected_labels)
+
+    def test_polygon_geojson_to_labels(self):
+        geojson = add_classes_to_geojson(self.geojson_dict, self.class_map)
+        labels = geojson_to_labels(geojson, self.crs_transformer)
+
+        # construct expected labels object
+        expected_npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
+        expected_class_ids = np.array([1, 2])
+        expected_scores = np.array([0.9, 0.9])
+        expected_labels = ObjectDetectionLabels(
+            expected_npboxes, expected_class_ids, expected_scores)
+
+        labels.assert_equal(expected_labels)
+
+    def test_read_invalid_geometry_type(self):
+        with self.assertRaises(Exception):
+            geojson = add_classes_to_geojson(self.linestring_geojson_dict,
+                                             self.class_map)
+            geojson_to_labels(geojson, self.crs_transformer, extent=None)
+
     def test_read_invalid_uri_readable_false(self):
         try:
             invalid_uri = 's3://invalid_path/invalid.json'
@@ -89,11 +172,11 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
                 extent=self.extent,
                 readable=False,
                 writable=False)
-        except NotFoundException:
+        except NotReadableError:
             self.fail('Should not raise exception if readable=False')
 
     def test_read_invalid_uri_readable_true(self):
-        with self.assertRaises(NotFoundException):
+        with self.assertRaises(NotReadableError):
             invalid_uri = 's3://invalid_path/invalid.json'
             ObjectDetectionGeoJSONFile(
                 invalid_uri,
@@ -177,9 +260,7 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             extent=None,
             readable=False,
             writable=True)
-        # TODO replace with NotWritableError once
-        # files.utils upload functions are improved/tested.
-        with self.assertRaises(Exception):
+        with self.assertRaises(NotWritableError):
             label_store.save()
 
     def test_valid_uri(self):

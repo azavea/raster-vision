@@ -1,6 +1,7 @@
 from abc import abstractmethod
 
 from rastervision.core.training_data import TrainingData
+from rastervision.core.predict_package import save_predict_package
 
 # TODO: DRY... same keys as in ml_backends/tf_object_detection_aip.py
 TRAIN = 'train'
@@ -151,7 +152,7 @@ class MLTask(object):
         """
         self.backend.train(self.class_map, options)
 
-    def predict(self, scenes, options):
+    def predict(self, scenes, config):
         """Make predictions for scenes.
 
         The predictions are saved to the prediction_label_store in
@@ -159,8 +160,9 @@ class MLTask(object):
 
         Args:
             scenes: list of Scenes
-            options: PredictConfig.Options
+            config: PredictConfig
         """
+        options = config.options
         for scene in scenes:
             print('Making predictions for scene', end='', flush=True)
             raster_source = scene.raster_source
@@ -184,6 +186,9 @@ class MLTask(object):
             if (options.debug and options.debug_uri
                     and self.class_map.has_all_colors()):
                 self.save_debug_predict_image(scene, options.debug_uri)
+
+            if options.prediction_package_uri:
+                save_predict_package(config)
 
     def eval(self, scenes, options):
         """Evaluate predictions against ground truth in scenes.

@@ -14,6 +14,4 @@ def build(config):
         scene_builder.build(scene_config, class_map)
         for scene_config in config.scenes
     ]
-    options = config.options
-
-    return Predict(scenes, ml_task, options)
+    return Predict(scenes, ml_task, config)

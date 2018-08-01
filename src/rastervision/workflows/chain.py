@@ -313,6 +313,9 @@ class ChainWorkflow(object):
         config.options.chip_size = self.workflow.chip_size
         config.options.model_uri = join(self.path_generator.train_output_uri,
                                         'model')
+        config.options.prediction_package_uri = join(
+            self.path_generator.prediction_output_uri, 'predict-package.zip')
+
         config = apply_uri_map(config, self.uri_map)
         return config
 

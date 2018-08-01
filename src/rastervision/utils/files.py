@@ -1,7 +1,6 @@
 import io
 import os
 from pathlib import Path
-import rasterio
 import shutil
 import subprocess
 import tempfile
@@ -13,7 +12,7 @@ import botocore
 from google.protobuf import json_format
 
 
-class NotFoundException(Exception):
+class NotReadableError(Exception):
     pass
 
 
@@ -26,6 +25,18 @@ class ProtobufParseException(Exception):
 
 
 def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
+    """Make a directory.
+
+    Args:
+        path: path to directory
+        check_empty: if True, check that directory is empty
+        force_empty: if True, delete files if necessary to make directory
+            empty
+        use_dirname: if path is a file, use the the parent directory as path
+
+    Raises:
+        ValueError if check_empty is True and directory is not empty
+    """
     directory = path
     if use_dirname:
         directory = os.path.dirname(path)
@@ -41,8 +52,20 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
             '{} needs to be an empty directory!'.format(directory))
 
 
-def get_local_path(uri, temp_dir):
-    """Convert a URI into a corresponding local path."""
+def get_local_path(uri, download_dir):
+    """Convert a URI into a corresponding local path.
+
+    If a uri is local, return it. If it's remote, we generate a path for it
+    within download_dir. For an S3 path of form s3://<bucket>/<key>, the path
+    is <download_dir>/s3/<bucket>/<key>.
+
+    Args:
+        uri: (string) URI of file
+        download_dir: (string) path to directory
+
+    Returns:
+        (string) a local path
+    """
     if uri is None:
         return None
 
@@ -50,32 +73,68 @@ def get_local_path(uri, temp_dir):
     if parsed_uri.scheme == '':
         path = uri
     elif parsed_uri.scheme == 's3':
-        path = os.path.join(temp_dir, 's3', parsed_uri.netloc,
+        path = os.path.join(download_dir, 's3', parsed_uri.netloc,
                             parsed_uri.path[1:])
 
     return path
 
 
-def sync_dir(src_dir, dest_uri, delete=False):
-    command = ['aws', 's3', 'sync', src_dir, dest_uri]
+def sync_dir(src_dir_uri, dest_dir_uri, delete=False):
+    """Synchronize a local and remote directory.
+
+    Transfers files from source to destination directories so that the
+    destination has all the source files. If delete is True, also delete
+    files in the destination to match those in the source directory.
+
+    Args:
+        src_dir_uri: (string) URI of source directory
+        dest_dir_uri: (string) URI of destination directory
+        delete: (bool)
+    """
+    command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
     if delete:
         command.append('--delete')
     subprocess.run(command)
 
 
-def _is_raster(uri, s3_test=False):
-    if s3_test:
-        uri = uri.replace('s3://', '/vsis3/')
+def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600):
+    """Start syncing a directory on a schedule.
 
-    try:
-        rasterio.open(uri)
-    except Exception:
-        return False
-    return uri
+    Calls sync_dir on a schedule.
+
+    Args:
+        src_dir_uri: (string) URI of source directory
+        dest_dir_uri: (string) URI of destination directory
+        sync_interval: (int) period in seconds for syncing
+    """
+
+    def _sync_dir(delete=True):
+        sync_dir(src_dir_uri, dest_dir_uri, delete=delete)
+        thread = Timer(sync_interval, _sync_dir)
+        thread.daemon = True
+        thread.start()
+
+    if urlparse(dest_dir_uri).scheme == 's3':
+        # On first sync, we don't want to delete files on S3 to match
+        # the contents of output_dir since there's nothing there yet.
+        _sync_dir(delete=False)
 
 
 def download_if_needed(uri, download_dir):
-    """Download a file into a directory if it's remote."""
+    """Download a file into a directory if it's remote.
+
+    If uri is local, there is no need to download the file.
+
+    Args:
+        uri: (string) URI of file
+        download_dir: (string) local directory to download file into
+
+    Returns:
+        (string) path to local file
+
+    Raises:
+        NotReadableError if URI cannot be read from
+    """
     if uri is None:
         return None
 
@@ -84,72 +143,32 @@ def download_if_needed(uri, download_dir):
 
     parsed_uri = urlparse(uri)
     if parsed_uri.scheme == 's3':
-        vsis3_path = _is_raster(uri, s3_test=True)
-        if vsis3_path:
-            return vsis3_path
-
         try:
             print('Downloading {} to {}'.format(uri, path))
             s3 = boto3.client('s3')
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError:
-            raise NotFoundException('Could not access {}'.format(uri))
+            raise NotReadableError('Could not read {}'.format(uri))
     else:
         not_found = not os.path.isfile(path)
         if not_found:
-            raise NotFoundException('Could not access {}'.format(uri))
+            raise NotReadableError('Could not read {}'.format(uri))
 
     return path
 
 
-def file_to_str(file_uri):
-    parsed_uri = urlparse(file_uri)
-    if parsed_uri.scheme == 's3':
-        with io.BytesIO() as file_buffer:
-            try:
-                s3 = boto3.client('s3')
-                s3.download_fileobj(parsed_uri.netloc, parsed_uri.path[1:],
-                                    file_buffer)
-                return file_buffer.getvalue().decode('utf-8')
-            except botocore.exceptions.ClientError:
-                raise NotFoundException('Could not access {}'.format(file_uri))
-    else:
-        if not os.path.isfile(file_uri):
-            raise NotFoundException('Could not access {}'.format(file_uri))
-        with open(file_uri, 'r') as file_buffer:
-            return file_buffer.read()
-
-
-def str_to_file(content_str, file_uri):
-    parsed_uri = urlparse(file_uri)
-    if parsed_uri.scheme == 's3':
-        bucket = parsed_uri.netloc
-        key = parsed_uri.path[1:]
-        with io.BytesIO(bytes(content_str, encoding='utf-8')) as str_buffer:
-            s3 = boto3.client('s3')
-            s3.upload_fileobj(str_buffer, bucket, key)
-    else:
-        make_dir(file_uri, use_dirname=True)
-        with open(file_uri, 'w') as content_file:
-            content_file.write(content_str)
-
-
-def load_json_config(uri, message):
-    try:
-        return json_format.Parse(file_to_str(uri), message)
-    except json_format.ParseError:
-        error_msg = ('Problem parsing protobuf file {}. '.format(uri) +
-                     'You might need to run scripts/compile')
-        raise ProtobufParseException(error_msg)
-
-
-def save_json_config(message, uri):
-    json_str = json_format.MessageToJson(message)
-    str_to_file(json_str, uri)
-
-
 def upload_if_needed(src_path, dst_uri):
-    """Upload file or dir if the destination is remote."""
+    """Upload a file if the destination is remote.
+
+    If dst_uri is local, there is no need to upload.
+
+    Args:
+        src_path: (string) path to source file
+        dst_uri: (string) URI of destination for file
+
+    Raises:
+        NotWritableError if URI cannot be written to
+    """
     if dst_uri is None:
         return
 
@@ -161,25 +180,110 @@ def upload_if_needed(src_path, dst_uri):
         # Strip the leading slash off of the path since S3 does not expect it.
         print('Uploading {} to {}'.format(src_path, dst_uri))
         if os.path.isfile(src_path):
-            s3 = boto3.client('s3')
-            s3.upload_file(src_path, parsed_uri.netloc, parsed_uri.path[1:])
+            try:
+                s3 = boto3.client('s3')
+                s3.upload_file(src_path, parsed_uri.netloc,
+                               parsed_uri.path[1:])
+            except Exception:
+                raise NotWritableError(
+                    'Could not write {}'.format(dst_uri))
         else:
             sync_dir(src_path, dst_uri, delete=True)
 
 
-def start_sync(output_dir, output_uri, sync_interval=600):
-    """Start periodically syncing a directory."""
+def file_to_str(file_uri):
+    """Download contents of text file into a string.
 
-    def _sync_dir(delete=True):
-        sync_dir(output_dir, output_uri, delete=delete)
-        thread = Timer(sync_interval, _sync_dir)
-        thread.daemon = True
-        thread.start()
+    Args:
+        file_uri: (string) URI of file
 
-    if urlparse(output_uri).scheme == 's3':
-        # On first sync, we don't want to delete files on S3 to match
-        # th contents of output_dir since there's nothing there yet.
-        _sync_dir(delete=False)
+    Returns:
+        (string) with contents of text file
+
+    Raises:
+        NotReadableError if URI cannot be read from
+    """
+
+    parsed_uri = urlparse(file_uri)
+    if parsed_uri.scheme == 's3':
+        with io.BytesIO() as file_buffer:
+            try:
+                s3 = boto3.client('s3')
+                s3.download_fileobj(parsed_uri.netloc, parsed_uri.path[1:],
+                                    file_buffer)
+                return file_buffer.getvalue().decode('utf-8')
+            except botocore.exceptions.ClientError:
+                raise NotReadableError(
+                    'Could not read {}'.format(file_uri))
+    else:
+        if not os.path.isfile(file_uri):
+            raise NotReadableError('Could not read {}'.format(file_uri))
+        with open(file_uri, 'r') as file_buffer:
+            return file_buffer.read()
+
+
+def str_to_file(content_str, file_uri):
+    """Writes string to text file.
+
+    Args:
+        content_str: string to write
+        file_uri: (string) URI of file to write
+
+    Raise:
+        NotWritableError if file_uri cannot be written
+    """
+    parsed_uri = urlparse(file_uri)
+    if parsed_uri.scheme == 's3':
+        bucket = parsed_uri.netloc
+        key = parsed_uri.path[1:]
+        with io.BytesIO(bytes(content_str, encoding='utf-8')) as str_buffer:
+            try:
+                s3 = boto3.client('s3')
+                s3.upload_fileobj(str_buffer, bucket, key)
+            except Exception:
+                raise NotWritableError(
+                    'Could not write {}'.format(file_uri))
+    else:
+        make_dir(file_uri, use_dirname=True)
+        with open(file_uri, 'w') as content_file:
+            content_file.write(content_str)
+
+
+def load_json_config(uri, message):
+    """Load a JSON-formatted protobuf config file.
+
+    Args:
+        uri: (string) URI of config file
+        message: (google.protobuf.message.Message) empty protobuf message of
+            to load the config into. The type needs to match the content of
+            uri.
+
+    Returns:
+        the same message passed as input with fields filled in from uri
+
+    Raises:
+        ProtobufParseException if uri cannot be parsed
+    """
+    try:
+        return json_format.Parse(file_to_str(uri), message)
+    except json_format.ParseError:
+        error_msg = ('Problem parsing protobuf file {}. '.format(uri) +
+                     'You might need to run scripts/compile')
+        raise ProtobufParseException(error_msg)
+
+
+def save_json_config(message, uri):
+    """Save a protobuf object to a JSON file.
+
+    Args:
+        message: (google.protobuf.message.Message) protobuf message
+        uri: (string) URI of JSON file to write message to
+
+    Raises:
+        NotWritableError if uri cannot be written
+    """
+    json_str = json_format.MessageToJson(message)
+    str_to_file(json_str, uri)
 
 
 # Ensure that RV temp directory exists. We need to use a custom location for

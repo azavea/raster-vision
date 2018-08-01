@@ -35,6 +35,11 @@ message PredictConfig {
         // Root of dir to write debug files to.
         optional string debug_uri = 7;
 
+        // Optional URI of zip file containing model file, raster stats file,
+        // and template of predict config. Using a prediction package makes it
+        // easy to make predictions for new imagery in the future.
+        optional string prediction_package_uri = 8;
+
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 5;
             ClassificationOptions classification_options = 6;
