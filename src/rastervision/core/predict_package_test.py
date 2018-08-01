@@ -25,6 +25,8 @@ class TestPredictPackage(unittest.TestCase):
         str_to_file(self.model_str, model_path)
         str_to_file(self.stats_str, stats_path)
 
+        self.channel_order = [0, 1, 2]
+
         self.config_json = {
             "machine_learning": {
                 "backend": "TF_OBJECT_DETECTION_API",
@@ -55,7 +57,7 @@ class TestPredictPackage(unittest.TestCase):
                     },
                     "raster_transformer": {
                         "stats_uri": stats_path,
-                        "channel_order": [0, 1, 2],
+                        "channel_order": self.channel_order
                     }
                 },
             }]
@@ -67,7 +69,7 @@ class TestPredictPackage(unittest.TestCase):
     def tearDown(self):
         self.temp_dir_obj.cleanup()
 
-    def test_predict_package(self):
+    def test(self):
         # Use predict config linked to saved stats and model files to
         # save a package zip file. Then, load the package and test that
         # the resulting predict config is correct and the model and stats
@@ -77,8 +79,12 @@ class TestPredictPackage(unittest.TestCase):
         image_uris = ['image_uri']
 
         save_predict_package(self.config)
-        out_config = load_predict_package(self.predict_package_uri, out_dir,
-                                          labels_uri, image_uris)
+        out_config = load_predict_package(
+            self.predict_package_uri,
+            out_dir,
+            labels_uri,
+            image_uris,
+            channel_order=None)
 
         out_model_path = os.path.join(out_dir, 'package', model_fn)
         out_stats_path = os.path.join(out_dir, 'package', stats_fn)
@@ -105,6 +111,28 @@ class TestPredictPackage(unittest.TestCase):
         self.assertEqual(scene.raster_source.geotiff_files.uris, image_uris)
         self.assertEqual(scene.raster_source.raster_transformer.stats_uri,
                          out_stats_path)
+        self.assertListEqual(
+            list(scene.raster_source.raster_transformer.channel_order),
+            self.channel_order)
+
+    def test_channel_order(self):
+        out_dir = os.path.join(self.temp_dir, 'output')
+        labels_uri = 'labels_uri'
+        image_uris = ['image_uri']
+
+        save_predict_package(self.config)
+        channel_order = [2, 1, 0]
+        out_config = load_predict_package(
+            self.predict_package_uri,
+            out_dir,
+            labels_uri,
+            image_uris,
+            channel_order=channel_order)
+
+        scene = out_config.scenes[0]
+        self.assertListEqual(
+            list(scene.raster_source.raster_transformer.channel_order),
+            channel_order)
 
 
 if __name__ == '__main__':
