@@ -7,6 +7,9 @@ from rastervision.utils.files import (download_if_needed, load_json_config,
                                       make_dir, save_json_config,
                                       get_local_path, upload_if_needed)
 from rastervision.protos.predict_pb2 import PredictConfig
+from rastervision.core.raster_stats import RasterStats
+from rastervision.raster_sources.geotiff_files import GeoTiffFiles
+from rastervision.core.raster_transformer import RasterTransformer
 
 config_fn = 'predict-config.json'
 model_fn = 'model'
@@ -45,7 +48,11 @@ def save_predict_package(predict_config):
         upload_if_needed(package_path, package_uri)
 
 
-def make_scene_config(scene_template, stats_path, labels_uri, image_uris):
+def make_scene_config(scene_template,
+                      stats_path,
+                      labels_uri,
+                      image_uris,
+                      channel_order=None):
     """Create a scene config for making predictions from a template.
 
     Args:
@@ -73,11 +80,35 @@ def make_scene_config(scene_template, stats_path, labels_uri, image_uris):
     scene.raster_source.geotiff_files.uris.extend(image_uris)
     scene.raster_source.raster_transformer.stats_uri = stats_path
 
+    if channel_order is not None:
+        del scene.raster_source.raster_transformer.channel_order[:]
+        scene.raster_source.raster_transformer.channel_order.extend(
+            channel_order)
+
     return scene
 
 
-def load_predict_package(predict_package_uri, temp_dir, labels_uri,
-                         image_uris):
+def update_stats_file(image_uris, stats_path):
+    """Write a raster stats file for a set of images.
+
+    Args:
+        image_uris: list of URIs of GeoTIFF files
+        stats_path: path to write raster stats to
+    """
+    raster_transformer = RasterTransformer()
+    raster_sources = [GeoTiffFiles(raster_transformer, image_uris)]
+
+    stats = RasterStats()
+    stats.compute(raster_sources)
+    stats.save(stats_path)
+
+
+def load_predict_package(predict_package_uri,
+                         temp_dir,
+                         labels_uri,
+                         image_uris,
+                         update_stats=False,
+                         channel_order=None):
     """Load a prediction package to make predictions on new images.
 
     Downloads prediction package, unzips it, and returns a predict_config for
@@ -89,10 +120,14 @@ def load_predict_package(predict_package_uri, temp_dir, labels_uri,
         temp_dir: path to directory to download model and stats files to
         labels_uri: URI of labels file to write predictions to
         image_uris: list of URIS of image files to make predictions on
+        update_stats: if True, compute raster stats for image_uris and update
+            raster stats file
+        channel_order: if not None, list of channel indices to use
 
     Returns:
         (rastervision.protos.predict_pb2.PredictConfig)
     """
+    # Download and extract package.
     package_zip_path = download_if_needed(predict_package_uri, temp_dir)
     package_dir = os.path.join(temp_dir, 'package')
     make_dir(package_dir)
@@ -103,17 +138,26 @@ def load_predict_package(predict_package_uri, temp_dir, labels_uri,
     stats_path = os.path.join(package_dir, stats_fn)
     model_path = os.path.join(package_dir, model_fn)
 
+    # Update predict config.
     config = load_json_config(config_path, PredictConfig())
-
     config.options.debug = False
     config.options.debug_uri = ''
     config.options.prediction_package_uri = ''
     config.options.model_uri = model_path
 
+    # Update scene config.
     scene_template = config.scenes[0]
+    scene_config = make_scene_config(
+        scene_template,
+        stats_path,
+        labels_uri,
+        image_uris,
+        channel_order=channel_order)
     del config.scenes[:]
-    config.scenes.extend([
-        make_scene_config(scene_template, stats_path, labels_uri, image_uris)
-    ])
+    config.scenes.extend([scene_config])
+
+    # Update stats file.
+    if update_stats:
+        update_stats_file(image_uris, stats_path)
 
     return config

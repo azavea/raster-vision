@@ -185,8 +185,7 @@ def upload_if_needed(src_path, dst_uri):
                 s3.upload_file(src_path, parsed_uri.netloc,
                                parsed_uri.path[1:])
             except Exception:
-                raise NotWritableError(
-                    'Could not write {}'.format(dst_uri))
+                raise NotWritableError('Could not write {}'.format(dst_uri))
         else:
             sync_dir(src_path, dst_uri, delete=True)
 
@@ -213,8 +212,7 @@ def file_to_str(file_uri):
                                     file_buffer)
                 return file_buffer.getvalue().decode('utf-8')
             except botocore.exceptions.ClientError:
-                raise NotReadableError(
-                    'Could not read {}'.format(file_uri))
+                raise NotReadableError('Could not read {}'.format(file_uri))
     else:
         if not os.path.isfile(file_uri):
             raise NotReadableError('Could not read {}'.format(file_uri))
@@ -241,8 +239,7 @@ def str_to_file(content_str, file_uri):
                 s3 = boto3.client('s3')
                 s3.upload_fileobj(str_buffer, bucket, key)
             except Exception:
-                raise NotWritableError(
-                    'Could not write {}'.format(file_uri))
+                raise NotWritableError('Could not write {}'.format(file_uri))
     else:
         make_dir(file_uri, use_dirname=True)
         with open(file_uri, 'w') as content_file:
