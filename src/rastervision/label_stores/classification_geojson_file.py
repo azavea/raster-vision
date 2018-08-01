@@ -233,6 +233,7 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
 
     def __init__(self,
                  uri,
+                 aoi_uri,
                  crs_transformer,
                  options,
                  class_map,
@@ -252,6 +253,7 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
             writable: if True, allow writing to disk
         """
         self.uri = uri
+        self.aoi_uri = aoi_uri
         self.crs_transformer = crs_transformer
         self.class_map = class_map
         self.readable = readable

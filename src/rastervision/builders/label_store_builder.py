@@ -10,7 +10,7 @@ def build(config,
           class_map,
           readable=True,
           writable=False):
-    print(config.aoi_uri)
+
     label_store_type = config.WhichOneof('label_store_type')
     if label_store_type == 'object_detection_geojson_file':
         return ObjectDetectionGeoJSONFile(

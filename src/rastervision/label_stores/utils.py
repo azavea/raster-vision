@@ -1,6 +1,8 @@
 import copy
 import json
 
+from shapely.geometry import shape
+
 from rastervision.utils.files import file_to_str
 
 
@@ -87,3 +89,27 @@ def load_label_store_json(uri, readable):
         return None
 
     return json.loads(file_to_str(uri))
+
+
+def json_to_shapely(uri, crs_transformer):
+    """Load geojson as shapely polygon 
+
+    Returns list of shapely polygons for geojson uri or None if uri doesn't exist
+    """
+    if not uri:
+        return None
+
+    aoi_geojson = json.loads(file_to_str(uri))["features"]
+    aoi_shapely = []
+    for feature in aoi_geojson:
+        coordinates = feature['geometry']['coordinates'][0]
+        pixel_coordinates = []
+        for c in coordinates:
+            pixel_coordinate = list(
+                crs_transformer.map_to_pixel((c[0], c[1])))
+            pixel_coordinates.append(pixel_coordinate)
+        feature['geometry']['coordinates'][0] = pixel_coordinates
+        aoi_shapely.append(shape(feature["geometry"]))
+    return aoi_shapely
+
+    # return [shape(feature["geometry"]) for feature in aoi_geojson]
