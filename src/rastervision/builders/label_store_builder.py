@@ -24,6 +24,7 @@ def build(config,
     elif label_store_type == 'classification_geojson_file':
         return ClassificationGeoJSONFile(
             config.classification_geojson_file.uri,
+            config.aoi_uri,
             crs_transformer,
             config.classification_geojson_file.options,
             class_map,

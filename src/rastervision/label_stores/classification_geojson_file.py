@@ -8,7 +8,7 @@ from rastervision.labels.classification_labels import (ClassificationLabels)
 from rastervision.label_stores.object_detection_geojson_file import (
     geojson_to_labels as geojson_to_object_detection_labels)
 from rastervision.label_stores.utils import (
-    add_classes_to_geojson, load_label_store_json, boxes_to_geojson)
+    add_classes_to_geojson, load_label_store_json, boxes_to_geojson, json_to_shapely)
 from rastervision.utils.files import str_to_file
 from rastervision.label_stores.classification_label_store import (
     ClassificationLabelStore)
@@ -266,6 +266,8 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
             geojson_dict = add_classes_to_geojson(geojson_dict, class_map)
             self.labels = load_geojson(geojson_dict, crs_transformer, extent,
                                        options)
+
+        self.aoi = json_to_shapely(aoi_uri, crs_transformer)
 
     def save(self):
         """Save labels to URI if writable.
