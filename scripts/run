@@ -35,7 +35,7 @@ do
     key="$1"
     case $key in
         --aws)
-        AWS="-e AWS_PROFILE=${AWS_PROFILE} -v ${HOME}/.aws:/root/.aws:ro"
+        AWS="-e AWS_PROFILE=${AWS_PROFILE:-default} -v ${HOME}/.aws:/root/.aws:ro"
         shift # past argument
         ;;
         --tensorboard)

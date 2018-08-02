@@ -19,16 +19,21 @@ message TrainConfig {
 
     message SegmentationOptions {
         optional string train_py = 1 [default="/opt/tf-models/deeplab/train.py"];
-        required string tf_initial_checkpoints_uri = 2;
-        optional int32 training_number_of_steps = 3 [default=1];
-        optional string train_split = 4;
-        optional string model_variant = 5;
-        repeated int32 atrous_rates = 6;
-        optional int32 output_stride = 7 [default=16];
-        optional int32 decoder_output_stride = 8 [default=4];
-        repeated int32 train_crop_size = 9;
-        optional int32 train_batch_size = 10 [default=1];
-        optional string dataset = 11;
+        optional string export_model_py = 2 [default="/opt/tf-models/deeplab/export_model.py"];
+        required string tf_initial_checkpoints_uri = 3;
+        optional int32 training_number_of_steps = 4 [default=0];
+        optional string train_split = 5;
+        optional string model_variant = 6;
+        repeated int32 atrous_rates = 7;
+        optional int32 output_stride = 8 [default=16];
+        optional int32 decoder_output_stride = 9 [default=4];
+        repeated int32 train_crop_size = 10;
+        optional int32 train_batch_size = 11 [default=1];
+        optional string dataset = 12;
+        optional int32 log_steps = 13 [default=10];
+        optional int32 save_interval_secs = 14 [default=1200];
+        optional int32 save_summaries_secs = 15 [default=29];
+        optional bool save_summaries_images = 16 [default=true];
     }
 
     message Options {

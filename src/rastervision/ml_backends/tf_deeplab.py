@@ -25,8 +25,8 @@ from rastervision.ml_backends.tf_object_detection_api import (
     write_tf_record, terminate_at_exit, TRAIN, VALIDATION)
 from rastervision.utils.misc import save_img
 from rastervision.utils.files import (get_local_path, upload_if_needed,
-                                      make_dir, download_if_needed,
-                                      sync_dir, start_sync)
+                                      make_dir, download_if_needed, sync_dir,
+                                      start_sync)
 
 
 def numpy_to_png(array: np.ndarray) -> str:
@@ -220,6 +220,13 @@ def get_record_uri(uri: str, split: str) -> str:
     return join(uri, '{}-0.record'.format(split))
 
 
+def get_latest_checkpoint(train_logdir_local: str) -> str:
+    ckpts = glob.glob(join(train_logdir_local, 'model.ckpt-*.meta'))
+    times = map(os.path.getmtime, ckpts)
+    latest = sorted(zip(times, ckpts))[-1][1]
+    return latest[:len(latest) - len('.meta')]
+
+
 class TFDeeplab(MLBackend):
     """MLBackend-derived type that implements the TensorFlow DeepLab
     backend.
@@ -330,6 +337,7 @@ class TFDeeplab(MLBackend):
         soptions = options.segmentation_options
 
         train_py = soptions.train_py
+        export_model_py = soptions.export_model_py
 
         # Setup local input and output directories
         train_logdir = options.output_uri
@@ -338,17 +346,7 @@ class TFDeeplab(MLBackend):
         dataset_dir_local = get_local_path(dataset_dir, self.temp_dir)
         make_dir(train_logdir_local)
         make_dir(dataset_dir_local)
-
         download_if_needed(get_record_uri(dataset_dir, TRAIN), self.temp_dir)
-        # XXX
-        # Inspite of the prohibition, it might make sense to log
-        # directly to s3 in the remote case.  The commented-out code
-        # below does not work because the absolute path seems to be
-        # hard-coded into the state, and that (potentially) changes
-        # run-to-run due to the use of a temporary directory with a
-        # random name.
-        # if urlparse(train_logdir).scheme == 's3':
-        #     sync_dir(train_logdir, train_logdir_local, delete=True)
 
         # Download and untar initial checkpoint.
         tf_initial_checkpoints_uri = soptions.tf_initial_checkpoints_uri
@@ -364,28 +362,44 @@ class TFDeeplab(MLBackend):
         # Build array of argments that will be used to run the DeepLab
         # training script.
         args = ['python', train_py]
+
         args.append('--train_logdir={}'.format(train_logdir_local))
         args.append('--tf_initial_checkpoint={}'.format(tfic_index))
         args.append('--dataset_dir={}'.format(dataset_dir_local))
-        args.append('--training_number_of_steps={}'.format(
-            soptions.training_number_of_steps))
+
+        steps = soptions.training_number_of_steps
+        if steps > 0:
+            args.append('--training_number_of_steps={}'.format(steps))
+
         if len(soptions.train_split) > 0:
-            args.append('--train_split="{}"'.format(soptions.train_split))
+            args.append('--train_split={}'.format(soptions.train_split))
+
         if len(soptions.model_variant) > 0:
-            args.append('--model_variant="{}"'.format(soptions.model_variant))
+            args.append('--model_variant={}'.format(soptions.model_variant))
+
         for rate in soptions.atrous_rates:
             args.append('--atrous_rates={}'.format(rate))
+
         args.append('--output_stride={}'.format(soptions.output_stride))
         args.append('--decoder_output_stride={}'.format(
             soptions.decoder_output_stride))
+
         for size in soptions.train_crop_size:
             args.append('--train_crop_size={}'.format(size))
+
         args.append('--train_batch_size={}'.format(soptions.train_batch_size))
+
         if len(soptions.dataset):
             args.append('--dataset="{}"'.format(soptions.dataset))
 
-        # XXX
-        # See the block comment above regarding train_logdir.
+        args.append('--save_interval_secs={}'.format(
+            soptions.save_interval_secs))
+        args.append('--save_summaries_secs={}'.format(
+            soptions.save_summaries_secs))
+        args.append('--save_summaries_images={}'.format(
+            soptions.save_summaries_images))
+
+        # Periodically synchronize with remote
         start_sync(
             train_logdir_local,
             train_logdir,
@@ -394,12 +408,27 @@ class TFDeeplab(MLBackend):
         # Train
         train_process = Popen(args)
         terminate_at_exit(train_process)
+        tensorboard_process = Popen(
+            ['tensorboard', '--logdir={}'.format(train_logdir_local)])
+        terminate_at_exit(tensorboard_process)
         train_process.wait()
+        tensorboard_process.terminate()
+
+        # Build array of arguments that will be used to run the DeepLab
+        # export script.
+        args = ['python', export_model_py]
+        args.append('--checkpoint_path={}'.format(
+            get_latest_checkpoint(train_logdir_local)))
+        args.append('--export_path={}'.format(
+            join(train_logdir_local, 'frozen_inference_graph.pb')))
+
+        # Export
+        export_process = Popen(args)
+        terminate_at_exit(export_process)
+        export_process.wait()
 
         if urlparse(train_logdir).scheme == 's3':
             sync_dir(train_logdir_local, train_logdir, delete=True)
-
-        # XXX tensorboard
 
     def predict(self, chip, options):
         import pdb
