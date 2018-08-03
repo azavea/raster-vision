@@ -41,6 +41,7 @@ def save_predict_package(predict_config):
             .raster_source.raster_transformer.stats_uri, temp_dir)
 
         package_path = get_local_path(package_uri, temp_dir)
+        make_dir(package_path, use_dirname=True)
         with zipfile.ZipFile(package_path, 'w') as package_zip:
             package_zip.write(config_path, arcname=config_fn)
             package_zip.write(model_path, arcname=model_fn)
