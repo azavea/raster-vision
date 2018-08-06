@@ -33,12 +33,14 @@ message TrainConfig {
         // URI for the directory containing the output of training.
         optional string output_uri = 3;
 
-        // URI for the pretrained model file.
+        // URI for the pretrained model file. If blank, then it train from
+        // scratch.
         optional string pretrained_model_uri = 4;
 
         // How often to sync output of training to the cloud (in seconds).
         optional int32 sync_interval = 5 [default=600];
 
+        // Run process to monitor training (eg. Tensorboard)
         optional bool do_monitoring = 7 [default=true];
 
         oneof ml_options_type {

@@ -443,9 +443,10 @@ class TrainingPackage(object):
         config = text_format.Parse(config_str, TrainEvalPipelineConfig())
 
         # Update config using local paths.
-        pretrained_model_path = self.download_pretrained_model(
-            pretrained_model_zip_uri)
-        config.train_config.fine_tune_checkpoint = pretrained_model_path
+        if pretrained_model_zip_uri:
+            pretrained_model_path = self.download_pretrained_model(
+                pretrained_model_zip_uri)
+            config.train_config.fine_tune_checkpoint = pretrained_model_path
 
         class_map_path = self.get_local_path(self.get_class_map_uri())
 
