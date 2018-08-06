@@ -42,7 +42,7 @@ message ClassificationGeoJSONFile {
 message SegmentationRasterFile {
     optional RasterSource src = 1;
     optional string dst = 2;
-    repeated uint32 src_classes = 3 [packed=true];
+    repeated string src_classes = 3;
     repeated int32 dst_classes = 4 [packed=true];
 }
 

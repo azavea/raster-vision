@@ -18,7 +18,7 @@
                             ]
                         }
                     },
-                    "src_classes": [ 6, 1 ],
+                    "src_classes": [ "#ffff00", "#0000ff" ],
                     "dst_classes": [ 1, 0 ]
                 }
             }
@@ -43,8 +43,8 @@
                             ]
                         }
                     },
-                    "src_classes": [ 6 ],
-                    "dst_classes": [ 1 ]
+                    "src_classes": [ "#ffff00", "#0000ff" ],
+                    "dst_classes": [ 1, 0 ]
                 }
             }
         }
@@ -55,8 +55,9 @@
         "class_items": [
             {
                 "id": 1,
-                "name": "car"
-            }
+                "name": "car",
+                "color": "#ffff00"
+           }
         ]
     },
     "make_training_chips_options": {

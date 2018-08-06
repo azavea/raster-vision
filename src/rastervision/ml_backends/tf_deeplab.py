@@ -9,7 +9,7 @@ import tensorflow as tf
 import uuid
 
 from os.path import join
-from PIL import Image
+from PIL import Image, ImageColor
 from subprocess import Popen
 from tensorflow.core.example.example_pb2 import Example
 from typing import (List, Tuple)
@@ -107,7 +107,31 @@ def merge_tf_records(output_path: str, src_records: List[str]) -> None:
         print()
 
 
-def make_debug_images(record_path: str, output_dir: str,
+def string_to_triple(color: str) -> np.ndarray:
+    """Turn a PIL colorstring into an RGB triple.
+
+    Args:
+         color: A PIL color string
+
+    Returns:
+         An np.ndarray of shape (1,1,3) whether derived from the
+         string or chosen randomly.
+
+    """
+    try:
+        (r, g, b) = ImageColor.getrgb(color)
+    except AttributeError:
+        r = np.random.randint(0, 256)
+        g = np.random.randint(0, 256)
+        b = np.random.randint(0, 256)
+        (r, g, b)
+
+    return np.array([r, g, b], dtype=np.uint16)
+
+
+def make_debug_images(record_path: str,
+                      output_dir: str,
+                      class_map: ClassMap,
                       p: float = 0.25) -> None:
     """Render a random sample of the TFRecords in a given file as
     human-viewable PNG files.
@@ -117,24 +141,48 @@ def make_debug_images(record_path: str, output_dir: str,
          output_dir: Destination directory for the generated PNG files.
          p: The probability of rendering a particular record.
 
-    Return:
+    Returns:
          None
 
     """
     make_dir(output_dir, check_empty=True)
 
+    def composite(arr: np.ndarray, *args) -> np.ndarray:
+        """Composite the image with the labels.
+
+        args:
+             arr: An np.ndarray of shape (4,) where the first three
+                  entries contains visual data and the fourth contains
+                  a label datum.
+             *args: Ignored
+
+        Returns:
+             An np.ndarray of shape (1,1,3) where the label datum has
+             been composited into the visual data using color
+             information from the color_map variable which has been
+             captured from the environment.
+
+        """
+        label = arr[3]
+        if label == 0:
+            return arr[0:3]
+        else:
+            color = class_map.get_by_id(label).color
+            label_rgb = string_to_triple(color)
+            image_rgb = np.array(arr[0:3], dtype=np.uint16)
+            return np.array((label_rgb + image_rgb) / 2, dtype=np.uint8)
+
     print('Generating debug chips', end='', flush=True)
     tfrecord_iter = tf.python_io.tf_record_iterator(record_path)
     for ind, example in enumerate(tfrecord_iter):
-        example = tf.train.Example.FromString(example)
-        im, labels = parse_tf_example(example)
-        output_path = join(output_dir, '{}.png'.format(ind))
-        inv_labels = (labels == 0)
-        im[:, :, 0] = im[:, :, 0] * inv_labels
-        im[:, :, 1] = im[:, :, 1] * inv_labels
-        im[:, :, 2] = im[:, :, 2] * inv_labels
         if np.random.rand() <= p:
-            save_img(im, output_path)
+            example = tf.train.Example.FromString(example)
+            im, labels = parse_tf_example(example)
+            labels3 = labels[:, :, np.newaxis]
+            im_labels = np.concatenate([im, labels3], axis=2)
+            output_path = join(output_dir, '{}.png'.format(ind))
+            composited = np.apply_along_axis(composite, 2, im_labels)
+            save_img(composited, output_path)
         print('.', end='', flush=True)
     print()
 
@@ -145,8 +193,9 @@ def parse_tf_example(example: Example) -> Tuple[np.ndarray, np.ndarray]:
     Args:
          example: A TensorFlow Example object.
 
-    Return:
+    Returns:
          tuple(np.ndarray, np.ndarray)
+
     """
     ie = 'image/encoded'
     isce = 'image/segmentation/class/encoded'
@@ -311,10 +360,12 @@ class TFDeeplab(MLBackend):
                                                        self.temp_dir)
 
             with tempfile.TemporaryDirectory() as debug_dir:
-                make_debug_images(training_record_path_local, debug_dir)
+                make_debug_images(training_record_path_local, debug_dir,
+                                  class_map)
                 shutil.make_archive(training_zip_path_local, 'zip', debug_dir)
             with tempfile.TemporaryDirectory() as debug_dir:
-                make_debug_images(validation_record_path_local, debug_dir)
+                make_debug_images(validation_record_path_local, debug_dir,
+                                  class_map)
                 shutil.make_archive(validation_zip_path_local, 'zip',
                                     debug_dir)
             upload_if_needed('{}.zip'.format(training_zip_path_local),

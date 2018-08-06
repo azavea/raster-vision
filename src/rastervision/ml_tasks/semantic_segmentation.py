@@ -21,7 +21,7 @@ class SemanticSegmentation(MLTask):
                   `make_training_chips` section of the workflow
                   configuration file.
 
-        Return:
+        Returns:
              A list of windows, list(Box)
 
         """
@@ -38,14 +38,28 @@ class SemanticSegmentation(MLTask):
 
         return windows
 
-    def get_train_labels(self, window, scene, options):
+    def get_train_labels(self, window: Box, scene: Scene,
+                         options) -> np.ndarray:
+        """Get the training labels for the given window in the given scene.
+
+        Args:
+             window: The window over-which the labels are to be
+                  retrieved.
+             scene: The scene from-which the window of labels is to be
+                  extracted.
+             options: Options passed through from the
+                  `make_training_chips` section of the workflow
+                  configuration file.
+
+        Returns:
+             An appropriately-shaped 2d np.ndarray containing the labels.
+
+        """
         label_store = scene.ground_truth_label_store
         chip = label_store.src._get_chip(window)
-        fn = label_store.fn
-
-        bit2 = (chip[:, :, 0] > 0)
-        bit1 = (chip[:, :, 1] > 0)
-        bit0 = (chip[:, :, 2] > 0)
-        retval = np.array(bit2 * 4 + bit1 * 2 + bit0 * 1, dtype=np.uint8)
-
-        return np.array(fn(retval), dtype=np.uint8)
+        r = np.array(chip[:, :, 0], dtype=np.uint32) * (1 << 16)
+        g = np.array(chip[:, :, 1], dtype=np.uint32) * (1 << 8)
+        b = np.array(chip[:, :, 2], dtype=np.uint32) * (1 << 0)
+        packed = r + g + b
+        retval = np.array(label_store.src_to_dst(packed), dtype=np.uint8)
+        return retval
