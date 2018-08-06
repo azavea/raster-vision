@@ -54,17 +54,9 @@ class TestBox(unittest.TestCase):
         geojson_coords = [nw, ne, se, sw, nw]
         self.assertEqual(self.box.geojson_coordinates(), geojson_coords)
 
-    def check_random_square(self, box, xlimit, ylimit, size):
-        self.assertEqual(box.get_width(), box.get_height())
-        self.assertEqual(box.get_width(), size)
-        self.assertLessEqual(box.xmax, xlimit)
-        self.assertLessEqual(box.ymax, ylimit)
-        self.assertGreaterEqual(box.xmin, 0)
-        self.assertGreaterEqual(box.ymin, 0)
-
     def test_make_random_square_container(self):
         size = 5
-        nb_tests = 10
+        nb_tests = 100
         for _ in range(nb_tests):
             container = self.box.make_random_square_container(size)
             self.assertEqual(container.get_width(), container.get_height())
@@ -73,14 +65,14 @@ class TestBox(unittest.TestCase):
                 self.box.get_shapely()))
 
     def test_make_random_square(self):
-        xlimit = 10
-        ylimit = 10
-        window = Box(0, 0, xlimit, ylimit)
+        window = Box(5, 5, 15, 15)
         size = 5
-        nb_tests = 10
+        nb_tests = 100
         for _ in range(nb_tests):
             box = window.make_random_square(size)
-            self.check_random_square(box, xlimit, ylimit, size)
+            self.assertEqual(box.get_width(), box.get_height())
+            self.assertEqual(box.get_width(), size)
+            self.assertTrue(window.get_shapely().contains(box.get_shapely()))
 
     def test_from_npbox(self):
         npbox = np.array([self.ymin, self.xmin, self.ymax, self.xmax])
