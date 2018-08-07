@@ -21,7 +21,6 @@ from rastervision.labels.classification_labels import ClassificationLabels
 
 
 class FileGroup(object):
-
     def __init__(self, base_uri):
         self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
@@ -111,7 +110,6 @@ class ModelFiles(FileGroup):
 
 
 class KerasClassification(MLBackend):
-
     def __init__(self):
         self.model = None
         # persist for when output_uri is remote

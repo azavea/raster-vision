@@ -81,7 +81,6 @@ def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
     for _ in range(max_attempts):
         window = extent.make_random_square(chip_size)
         chip = raster_source.get_chip(window)
-        print(compare_window_to_aoi(window, aoi_polygons))
         if compare_window_to_aoi(window, aoi_polygons):
             labels = ObjectDetectionLabels.get_overlapping(
                 label_store.get_labels(), window, ioa_thresh=0.2)
@@ -97,7 +96,6 @@ def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
 
 
 class ObjectDetection(MLTask):
-
     def get_train_windows(self, scene, options):
         raster_source = scene.raster_source
         label_store = scene.ground_truth_label_store

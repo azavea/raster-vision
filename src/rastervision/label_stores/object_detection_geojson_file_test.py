@@ -13,8 +13,7 @@ from rastervision.labels.object_detection_labels import ObjectDetectionLabels
 from rastervision.core.crs_transformer import CRSTransformer
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.utils.files import (NotReadableError,
-                                      NotWritableError)
+from rastervision.utils.files import (NotReadableError, NotWritableError)
 
 
 class DoubleCRSTransformer(CRSTransformer):

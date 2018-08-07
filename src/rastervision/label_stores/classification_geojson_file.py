@@ -7,8 +7,9 @@ from shapely import geometry
 from rastervision.labels.classification_labels import (ClassificationLabels)
 from rastervision.label_stores.object_detection_geojson_file import (
     geojson_to_labels as geojson_to_object_detection_labels)
-from rastervision.label_stores.utils import (
-    add_classes_to_geojson, load_label_store_json, boxes_to_geojson, json_to_shapely)
+from rastervision.label_stores.utils import (add_classes_to_geojson,
+                                             load_label_store_json,
+                                             boxes_to_geojson, json_to_shapely)
 from rastervision.utils.files import str_to_file
 from rastervision.label_stores.classification_label_store import (
     ClassificationLabelStore)
@@ -198,7 +199,7 @@ def load_geojson(geojson_dict, crs_transformer, extent, options):
 
 
 def to_geojson(labels, crs_transformer, class_map):
-    """Convert ClassificationLabels to to GeoJSON.
+    """Convert ClassificationLabels to GeoJSON.
 
     Outputs the grid in GeoJSON format as a list of squares each
     with a class_id and class_name property.

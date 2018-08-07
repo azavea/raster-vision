@@ -63,6 +63,21 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             }]
         }
 
+        self.aoi_dict = {
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'Polygon',
+                    'coordinates': [[[1., 0.], [1., 1.], [0., 1.], [0., 0.],
+                                     [1., 0.]]]
+                },
+                'properties': {}
+            }]
+        }
+
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
         self.box1 = Box.make_square(0, 0, 2)
@@ -80,6 +95,14 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         with open(self.file_path, 'w') as label_file:
             self.geojson_str = json.dumps(self.geojson_dict)
             label_file.write(self.geojson_str)
+
+        self.aoi_file_name = 'aoi.json'
+        self.aoi_file_path = os.path.join(self.temp_dir.name,
+                                          self.aoi_file_name)
+
+        with open(self.aoi_file_path, 'w') as aoi_file:
+            self.aoi_str = json.dumps(self.aoi_dict)
+            aoi_file.write(self.aoi_str)
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -275,6 +298,7 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
 
         label_store = ClassificationGeoJSONFile(
             self.file_path,
+            self.aoi_file_path,
             self.crs_transformer,
             options,
             self.class_map,
@@ -286,6 +310,7 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
 
         label_store = ClassificationGeoJSONFile(
             self.file_path,
+            self.aoi_file_path,
             self.crs_transformer,
             options,
             self.class_map,
@@ -296,6 +321,22 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
 
         self.assertDictEqual(labels1.cell_to_class_id,
                              labels2.cell_to_class_id)
+
+    def test_constructor_aoi(self):
+        extent = Box.make_square(0, 0, 10)
+        options = ClassificationGeoJSONFileConfig.Options()
+        options.infer_cells = False
+        label_store = ClassificationGeoJSONFile(
+            self.file_path,
+            self.aoi_file_path,
+            self.crs_transformer,
+            options,
+            self.class_map,
+            extent,
+            readable=True,
+            writable=True)
+        aoi = [Box.make_square(0, 0, 2).get_shapely()]
+        self.assertEqual(aoi, label_store.aoi)
 
 
 if __name__ == '__main__':

@@ -105,11 +105,8 @@ def json_to_shapely(uri, crs_transformer):
         coordinates = feature['geometry']['coordinates'][0]
         pixel_coordinates = []
         for c in coordinates:
-            pixel_coordinate = list(
-                crs_transformer.map_to_pixel((c[0], c[1])))
+            pixel_coordinate = list(crs_transformer.map_to_pixel((c[0], c[1])))
             pixel_coordinates.append(pixel_coordinate)
         feature['geometry']['coordinates'][0] = pixel_coordinates
         aoi_shapely.append(shape(feature["geometry"]))
     return aoi_shapely
-
-    # return [shape(feature["geometry"]) for feature in aoi_geojson]

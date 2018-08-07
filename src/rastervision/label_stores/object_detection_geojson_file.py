@@ -67,7 +67,6 @@ def geojson_to_labels(geojson_dict, crs_transformer, extent=None):
 
 
 class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
-
     def __init__(self,
                  uri,
                  aoi_uri,

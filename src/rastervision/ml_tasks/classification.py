@@ -27,7 +27,6 @@ def draw_debug_predict_image(scene, class_map):
 
 
 class Classification(MLTask):
-
     def get_train_windows(self, scene, options):
         extent = scene.raster_source.get_extent()
         chip_size = options.chip_size
