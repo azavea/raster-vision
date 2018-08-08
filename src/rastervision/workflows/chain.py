@@ -1,6 +1,7 @@
 from os.path import join, isfile
 import copy
 from urllib.parse import urlparse
+import urllib.request
 import subprocess
 
 import click
@@ -106,6 +107,13 @@ def is_uri_valid(uri):
             if e.response['Error']['Code'] == "404":
                 print('Error: URI cannot be found: {}'.format(uri))
                 print(e)
+                return False
+    elif parsed_uri.scheme in ['http', 'https']:
+        with urllib.request.urlopen(uri) as response:
+            try:
+                response.read(1)
+            except Exception:
+                print('Error: URI cannot be found: {}'.format(uri))
                 return False
     else:
         if not isfile(uri):
