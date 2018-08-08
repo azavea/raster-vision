@@ -1,7 +1,7 @@
 {
     "train_scenes": [
         {
-            "id": "tiny-test",
+            "id": "cl-test",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
@@ -26,7 +26,7 @@
     ],
     "test_scenes": [
         {
-            "id": "tiny-test",
+            "id": "cl-test",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [

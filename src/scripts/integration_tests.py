@@ -13,7 +13,8 @@ import tensorflow
 import rastervision.workflows.chain as chain_workflow
 
 CLASSIFICATION = 'classification'
-all_tests = [CLASSIFICATION]
+OBJECT_DETECTION = 'object-detection'
+all_tests = [CLASSIFICATION, OBJECT_DETECTION]
 
 np.random.seed(1234)
 tensorflow.set_random_seed(5678)

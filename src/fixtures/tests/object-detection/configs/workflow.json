@@ -1,0 +1,91 @@
+{
+    "train_scenes": [
+        {
+            "id": "od-test",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{test_dir}/scene/image.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "object_detection_geojson_file": {
+                    "uri": "{test_dir}/scene/labels.json"
+                }
+            }
+        }
+    ],
+    "test_scenes": [
+        {
+            "id": "od-test",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{test_dir}/scene/image.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "object_detection_geojson_file": {
+                    "uri": "{test_dir}/scene/labels.json"
+                }
+            }
+        }
+    ],
+    "machine_learning": {
+        "task": "OBJECT_DETECTION",
+        "backend": "TF_OBJECT_DETECTION_API",
+        "class_items": [
+            {
+                "id": 1,
+                "name": "car",
+                "color": "blue"
+            },
+            {
+                "id": 2,
+                "name": "building",
+                "color": "red"
+            }
+        ]
+    },
+    "make_training_chips_options": {
+        "object_detection_options": {
+            "neg_ratio": 0.0,
+            "ioa_thresh": 1.0,
+            "window_method": "sliding"
+        }
+    },
+    "train_options": {
+        "pretrained_model_uri": "https://github.com/azavea/raster-vision-data/releases/download/v0.0.5/od-model.tar.gz",
+        "backend_config_uri": "{test_dir}/configs/backend.config",
+        "sync_interval": 999999,
+        "do_monitoring": false
+    },
+    "predict_options": {
+        "object_detection_options": {
+            "merge_thresh": 0.1,
+            "score_thresh": 0.5
+        }
+    },
+    "eval_options": {
+    },
+    "debug": true,
+    "chip_size": 300,
+    "raster_transformer": {
+        "channel_order": [0, 1, 2]
+    },
+    "local_uri_map": {
+        "rv_root": "/opt/data/lf-dev",
+        "test_dir": "/opt/data/lf-dev/integration-tests/object-detection"
+    },
+    "remote_uri_map": {
+        "rv_root": "s3://raster-vision-lf-dev",
+        "test_dir": "s3://raster-vision-lf-dev/integration-tests/object-detection"
+    },
+    "raw_dataset_key": "object-detection-test",
+    "dataset_key": "default",
+    "model_key": "default",
+    "prediction_key": "default",
+    "eval_key": "default"
+}
