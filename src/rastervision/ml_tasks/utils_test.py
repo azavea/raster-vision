@@ -3,8 +3,6 @@ import tempfile
 import os
 import json
 
-from shapely.geometry import box as ShapelyBox
-
 from rastervision.core.box import Box
 from rastervision.core.crs_transformer import CRSTransformer
 from rastervision.label_stores.utils import json_to_shapely

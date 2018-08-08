@@ -92,9 +92,10 @@ def load_label_store_json(uri, readable):
 
 
 def json_to_shapely(uri, crs_transformer):
-    """Load geojson as shapely polygon 
+    """Load geojson as shapely polygon
 
-    Returns list of shapely polygons for geojson uri or None if uri doesn't exist
+    Returns list of shapely polygons for geojson uri or None if
+    uri doesn't exist
     """
     if not uri:
         return None
