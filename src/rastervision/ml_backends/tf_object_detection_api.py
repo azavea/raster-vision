@@ -190,7 +190,10 @@ def terminate_at_exit(process):
     atexit.register(terminate)
 
 
-def train(config_path, output_dir, train_py=None, eval_py=None,
+def train(config_path,
+          output_dir,
+          train_py=None,
+          eval_py=None,
           do_monitoring=True):
     output_train_dir = join(output_dir, 'train')
     output_eval_dir = join(output_dir, 'eval')
@@ -207,14 +210,15 @@ def train(config_path, output_dir, train_py=None, eval_py=None,
 
     if do_monitoring:
         eval_process = Popen([
-            'python', eval_py,
-            '--logtostderr', '--pipeline_config_path={}'.format(config_path),
+            'python', eval_py, '--logtostderr',
+            '--pipeline_config_path={}'.format(config_path),
             '--checkpoint_dir={}'.format(output_train_dir),
-            '--eval_dir={}'.format(output_eval_dir)])
+            '--eval_dir={}'.format(output_eval_dir)
+        ])
         terminate_at_exit(eval_process)
 
-        tensorboard_process = Popen([
-            'tensorboard', '--logdir={}'.format(output_dir)])
+        tensorboard_process = Popen(
+            ['tensorboard', '--logdir={}'.format(output_dir)])
         terminate_at_exit(tensorboard_process)
 
     train_process.wait()
@@ -600,10 +604,16 @@ class TFObjectDetectionAPI(MLBackend):
             export_py = options.object_detection_options.export_py
 
             # Train model and sync output periodically.
-            start_sync(output_dir, options.output_uri,
-                       sync_interval=options.sync_interval)
-            train(config_path, output_dir, train_py=train_py, eval_py=eval_py,
-                  do_monitoring=options.do_monitoring)
+            start_sync(
+                output_dir,
+                options.output_uri,
+                sync_interval=options.sync_interval)
+            train(
+                config_path,
+                output_dir,
+                train_py=train_py,
+                eval_py=eval_py,
+                do_monitoring=options.do_monitoring)
 
             export_inference_graph(
                 output_dir, config_path, output_dir, export_py=export_py)

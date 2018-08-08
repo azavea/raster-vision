@@ -211,6 +211,7 @@ def create_tf_example(image: np.ndarray,
 
     def _clean(n):
         return (n if n in class_keys else 0x00)
+
     clean = np.vectorize(_clean, otypes=[np.uint8])
 
     image_encoded = numpy_to_png(image)

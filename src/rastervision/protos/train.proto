@@ -41,7 +41,7 @@ message TrainConfig {
         optional int32 sync_interval = 5 [default=600];
 
         // Run process to monitor training (eg. Tensorboard)
-        optional bool do_monitoring = 7 [default=true];
+        optional bool do_monitoring = 8 [default=true];
 
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 6;
