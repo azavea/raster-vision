@@ -18,6 +18,9 @@ all_tests = [CLASSIFICATION]
 np.random.seed(1234)
 tensorflow.set_random_seed(5678)
 
+# Suppress warnings and info to avoid cluttering CI log
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 TEST_ROOT_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), '../fixtures/tests')
 
