@@ -23,6 +23,7 @@ class DoubleCRSTransformer(CRSTransformer):
 
 
 class TestMLTaskUtils(unittest.TestCase):
+
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
         self.aoi_dict = {
@@ -62,6 +63,8 @@ class TestMLTaskUtils(unittest.TestCase):
 
         test_window3 = Box(0, 0, 10, 10)
         self.assertTrue(compare_window_to_aoi(test_window3, aoi_polygon))
+
+        self.assertTrue(compare_window_to_aoi(test_window3, None))
 
 
 if __name__ == '__main__':
