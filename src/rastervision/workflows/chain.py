@@ -108,7 +108,7 @@ def is_uri_valid(uri):
                 print(e)
                 return False
     else:
-        if not isfile(uri) and uri != '/dev/null':
+        if not isfile(uri):
             print('Error: URI cannot be found: {}'.format(uri))
             return False
 
@@ -300,10 +300,9 @@ class ChainWorkflow(object):
                                        'backend.config')
         backend_config_uri = config.options.backend_config_uri.format(
             **self.uri_map)
-        if backend_config_uri != "/dev/null":
-            backend_config_str = file_to_str(backend_config_uri)
-            str_to_file(backend_config_str, backend_config_copy_uri)
-            config.options.backend_config_uri = backend_config_copy_uri
+        backend_config_str = file_to_str(backend_config_uri)
+        str_to_file(backend_config_str, backend_config_copy_uri)
+        config.options.backend_config_uri = backend_config_copy_uri
 
         config = apply_uri_map(config, self.uri_map)
         return config

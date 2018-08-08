@@ -52,8 +52,16 @@ class SegmentationRasterFile(LabelStore):
         else:
             raise ValueError('Unsure how to handle dst={}'.format(type(dst)))
 
-        # XXX move to utils
         def color_to_integer(color: str) -> int:
+            """Given a PIL ImageColor string, return a packed integer.
+
+            Args:
+                 color: A PIL ImageColor string
+
+            Returns:
+                 An integer containing the packed RGB values.
+
+            """
             try:
                 triple = ImageColor.getrgb(color)
             except ValueError:
@@ -119,14 +127,15 @@ class SegmentationRasterFile(LabelStore):
         else:
             self.channels = 1
 
-    def get_labels(self, window: Union[Box, None] = None) -> np.ndarray:
-        """Get labels from a window or from the entire scene.
+    def get_labels(self, window: Box) -> np.ndarray:
+        """Get labels from a window.
+
+        If self.src is not None then a label window is clipped from
+        it.  If self.src is None then return an appropriatly shaped
+        np.ndarray of zeros.
 
         Args:
-             window: Either a window (given as a Box object) or None.
-                  In the former case labels are returned for the
-                  windowed area, in the latter case labels are
-                  returned for the entire scene.
+             window: A window given as a Box object.
 
         Returns:
              np.ndarray
@@ -139,7 +148,7 @@ class SegmentationRasterFile(LabelStore):
             xmin = window.xmin
             ymax = window.ymax
             xmax = window.xmax
-            return np.zeros((self.channels, ymax - ymin, xmax - xmin))
+            return np.zeros((ymax - ymin, xmax - xmin, self.channels))
 
     def extend(self, labels):
         pass

@@ -1,15 +1,18 @@
 import io
 import os
-from pathlib import Path
-import shutil
-import subprocess
-import tempfile
-from threading import Timer
-from urllib.parse import urlparse
 
 import boto3
 import botocore
+import numpy as np
+import shutil
+import subprocess
+import tempfile
+
 from google.protobuf import json_format
+from pathlib import Path
+from PIL import Image
+from threading import Timer
+from urllib.parse import urlparse
 
 
 class NotReadableError(Exception):
@@ -22,6 +25,40 @@ class NotWritableError(Exception):
 
 class ProtobufParseException(Exception):
     pass
+
+
+def numpy_to_png(array: np.ndarray) -> str:
+    """Get a PNG string from a Numpy array.
+
+    Args:
+         array: A Numpy array of shape (w, h, 3) or (w, h), where the
+               former is meant to become a three-channel image and the
+               latter a one-channel image.  The dtype of the array
+               should be uint8.
+
+    Returns:
+         str
+
+    """
+    im = Image.fromarray(array)
+    output = io.BytesIO()
+    im.save(output, 'png')
+    return output.getvalue()
+
+
+def png_to_numpy(png: str, dtype=np.uint8) -> np.ndarray:
+    """Get a Numpy array from a PNG string.
+
+    Args:
+         png: A str containing a PNG-formatted image.
+
+    Returns:
+         numpy.ndarray
+
+    """
+    incoming = io.BytesIO(png)
+    im = Image.open(incoming)
+    return np.array(im)
 
 
 def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
