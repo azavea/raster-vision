@@ -19,7 +19,7 @@
                         }
                     },
                     "src_classes": [ "#ffff00", "#0000ff" ],
-                    "dst_classes": [ 1, 0 ]
+                    "dst_classes": [ 255, 0 ]
                 }
             }
         }
@@ -44,7 +44,7 @@
                         }
                     },
                     "src_classes": [ "#ffff00", "#0000ff" ],
-                    "dst_classes": [ 1, 0 ]
+                    "dst_classes": [ 255, 0 ]
                 }
             }
         }
@@ -54,7 +54,7 @@
         "backend": "TF_DEEPLAB",
         "class_items": [
             {
-                "id": 1,
+                "id": 255,
                 "name": "car",
                 "color": "#ffff00"
            }

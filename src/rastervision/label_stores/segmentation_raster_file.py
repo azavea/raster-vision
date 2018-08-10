@@ -3,12 +3,13 @@ import numpy as np
 from typing import (List, Union)
 from PIL import ImageColor
 
+from rastervision.builders import raster_source_builder
 from rastervision.core.box import Box
 from rastervision.core.label_store import LabelStore
 from rastervision.core.raster_source import RasterSource
-from rastervision.builders import raster_source_builder
 from rastervision.protos.raster_source_pb2 import (RasterSource as
                                                    RasterSourceProto)
+from rastervision.utils.files import color_to_integer
 
 RasterUnion = Union[RasterSource, RasterSourceProto, str, None]
 
@@ -52,35 +53,13 @@ class SegmentationRasterFile(LabelStore):
         else:
             raise ValueError('Unsure how to handle dst={}'.format(type(dst)))
 
-        def color_to_integer(color: str) -> int:
-            """Given a PIL ImageColor string, return a packed integer.
-
-            Args:
-                 color: A PIL ImageColor string
-
-            Returns:
-                 An integer containing the packed RGB values.
-
-            """
-            try:
-                triple = ImageColor.getrgb(color)
-            except ValueError:
-                r = np.random.randint(0, 256)
-                g = np.random.randint(0, 256)
-                b = np.random.randint(0, 256)
-                triple = (r, g, b)
-
-            r = triple[0] * (1 << 16)
-            g = triple[1] * (1 << 8)
-            b = triple[2] * (1 << 0)
-            integer = r + g + b
-            return integer
-
         src_classes = list(map(color_to_integer, src_classes))
         correspondence = dict(zip(src_classes, dst_classes))
+        self.src_classes = src_classes
+        self.dst_classes = dst_classes
 
         def src_to_dst(n: int) -> int:
-            """Translate source classes to destination class.
+            """Translate source classes to destination classes.
 
             args:
                  n: A source class represented as a packed rgb pixel
@@ -95,7 +74,7 @@ class SegmentationRasterFile(LabelStore):
             else:
                 return 0
 
-        self.src_to_dst = np.vectorize(src_to_dst)
+        self.src_to_dst = np.vectorize(src_to_dst, otypes=[np.uint8])
 
     def clear(self):
         """Clear all labels."""
@@ -138,8 +117,8 @@ class SegmentationRasterFile(LabelStore):
 
         """
         if self.src is not None:
-            chip = self.src._get_chip(window)
-            return (chip.sum() > 0)
+            labels = self.get_labels(window)
+            return np.in1d(self.src_classes, labels).any()
         else:
             return False
 
@@ -158,13 +137,18 @@ class SegmentationRasterFile(LabelStore):
 
         """
         if self.src is not None:
-            return self.src._get_chip(window)
+            labels = self.src._get_chip(window)
+            r = np.array(labels[:, :, 0], dtype=np.uint32) * (1 << 16)
+            g = np.array(labels[:, :, 1], dtype=np.uint32) * (1 << 8)
+            b = np.array(labels[:, :, 2], dtype=np.uint32) * (1 << 0)
+            packed = r + g + b
+            return self.src_to_dst(packed)
         else:
             ymin = window.ymin
             xmin = window.xmin
             ymax = window.ymax
             xmax = window.xmax
-            return np.zeros((ymax - ymin, xmax - xmin, self.channels))
+            return np.zeros((xmax - xmin, ymax - ymin), dtype=np.uint8)
 
     def extend(self, labels):
         pass

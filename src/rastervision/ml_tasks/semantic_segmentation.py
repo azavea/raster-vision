@@ -30,13 +30,14 @@ class SemanticSegmentation(MLTask):
         extent = raster_source.get_extent()
         label_store = scene.ground_truth_label_store
         chip_size = options.chip_size
+        p = seg_options.empty_survival_probability
 
         windows = []
         while (len(windows) < seg_options.number_of_chips):
             window = extent.make_random_square(chip_size)
             if label_store.has_labels(window):
                 windows.append(window)
-            elif np.random.rand() <= seg_options.empty_survival_probability:
+            elif (p > 0) and (np.random.rand() <= p):
                 windows.append(window)
 
         return windows
@@ -55,14 +56,9 @@ class SemanticSegmentation(MLTask):
                   configuration file.
 
         Returns:
-             An appropriately-shaped 2d np.ndarray containing the labels.
+             An appropriately-shaped 2d np.ndarray with the labels
+             encoded as packed pixels.
 
         """
         label_store = scene.ground_truth_label_store
-        chip = label_store.src._get_chip(window)
-        r = np.array(chip[:, :, 0], dtype=np.uint32) * (1 << 16)
-        g = np.array(chip[:, :, 1], dtype=np.uint32) * (1 << 8)
-        b = np.array(chip[:, :, 2], dtype=np.uint32) * (1 << 0)
-        packed = r + g + b
-        retval = np.array(label_store.src_to_dst(packed), dtype=np.uint8)
-        return retval
+        return label_store.get_labels(window)

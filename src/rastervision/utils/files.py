@@ -10,7 +10,7 @@ import tempfile
 
 from google.protobuf import json_format
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageColor
 from threading import Timer
 from urllib.parse import urlparse
 
@@ -25,6 +25,31 @@ class NotWritableError(Exception):
 
 class ProtobufParseException(Exception):
     pass
+
+
+def color_to_integer(color: str) -> int:
+    """Given a PIL ImageColor string, return a packed integer.
+
+    Args:
+         color: A PIL ImageColor string
+
+    Returns:
+         An integer containing the packed RGB values.
+
+    """
+    try:
+        triple = ImageColor.getrgb(color)
+    except ValueError:
+        r = np.random.randint(0, 256)
+        g = np.random.randint(0, 256)
+        b = np.random.randint(0, 256)
+        triple = (r, g, b)
+
+    r = triple[0] * (1 << 16)
+    g = triple[1] * (1 << 8)
+    b = triple[2] * (1 << 0)
+    integer = r + g + b
+    return integer
 
 
 def numpy_to_png(array: np.ndarray) -> str:

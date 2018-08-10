@@ -24,9 +24,9 @@ from rastervision.core.training_data import TrainingData
 from rastervision.ml_backends.tf_object_detection_api import (
     write_tf_record, terminate_at_exit, TRAIN, VALIDATION)
 from rastervision.utils.misc import save_img
-from rastervision.utils.files import (get_local_path, upload_if_needed,
-                                      make_dir, download_if_needed, sync_dir,
-                                      start_sync, numpy_to_png, png_to_numpy)
+from rastervision.utils.files import (
+    color_to_integer, download_if_needed, get_local_path, make_dir,
+    numpy_to_png, png_to_numpy, start_sync, sync_dir, upload_if_needed)
 
 
 def make_tf_examples(training_data: TrainingData,
@@ -95,9 +95,8 @@ def string_to_triple(color: str) -> np.ndarray:
     return np.array([r, g, b], dtype=np.uint16)
 
 
-def make_debug_images(record_path: str,
-                      output_dir: str,
-                      class_map: ClassMap, p: float) -> None:
+def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
+                      p: float) -> None:
     """Render a random sample of the TFRecords in a given file as
     human-viewable PNG files.
 
@@ -112,42 +111,50 @@ def make_debug_images(record_path: str,
     """
     make_dir(output_dir, check_empty=True)
 
-    def composite(arr: np.ndarray, *args) -> np.ndarray:
-        """Composite the image with the labels.
+    ids = class_map.get_keys()
+    color_strs = list(map(lambda c: c.color, class_map.get_items()))
+    color_ints = list(map(lambda c: color_to_integer(c), color_strs))
+    correspondence = dict(zip(ids, color_ints))
 
-        args:
-             arr: An np.ndarray of shape (4,) where the first three
-                  entries contains visual data and the fourth contains
-                  a label datum.
-             *args: Ignored
-
-        Returns:
-             An np.ndarray of shape (1,1,3) where the label datum has
-             been composited into the visual data using color
-             information from the color_map variable which has been
-             captured from the environment.
-
-        """
-        label = arr[3]
-        if label == 0:
-            return arr[0:3]
+    def _label_fn(v: int) -> int:
+        if v in correspondence:
+            return correspondence.get(v)
         else:
-            color = class_map.get_by_id(label).color
-            label_rgb = string_to_triple(color)
-            image_rgb = np.array(arr[0:3], dtype=np.uint16)
-            return np.array((label_rgb + image_rgb) / 2, dtype=np.uint8)
+            return 0
+    label_fn = np.vectorize(_label_fn, otypes=[np.uint64])
+
+    def _image_fn(pixel: int) -> int:
+        if (pixel & 0x00ffffff):
+            r = ((pixel>>41 & 0x7f) + (pixel>>17 & 0x7f))<<16
+            g = ((pixel>>33 & 0x7f) + (pixel>>9 & 0x7f))<<8
+            b = ((pixel>>25 & 0x7f) + (pixel>>1 & 0x7f))<<0
+            return r + g + b
+        else:
+            return pixel >> 24
+    image_fn = np.vectorize(_image_fn, otypes=[np.uint64])
 
     print('Generating debug chips', end='', flush=True)
     tfrecord_iter = tf.python_io.tf_record_iterator(record_path)
     for ind, example in enumerate(tfrecord_iter):
         if np.random.rand() <= p:
             example = tf.train.Example.FromString(example)
-            im, labels = parse_tf_example(example)
-            labels3 = labels[:, :, np.newaxis]
-            im_labels = np.concatenate([im, labels3], axis=2)
+            im_unpacked, labels = parse_tf_example(example)
+
+            im_r = np.array(im_unpacked[:, :, 0], dtype=np.uint64) * 1 << 40
+            im_g = np.array(im_unpacked[:, :, 1], dtype=np.uint64) * 1 << 32
+            im_b = np.array(im_unpacked[:, :, 2], dtype=np.uint64) * 1 << 24
+            im_packed = im_r + im_g + im_b
+
+            labels_packed = label_fn(np.array(labels))
+            im_labels_packed = im_packed + labels_packed
+            im_packed = image_fn(im_labels_packed)
+
+            im_unpacked[:, :, 0] = np.bitwise_and(im_packed >> 16, 0xff, dtype=np.uint8)
+            im_unpacked[:, :, 1] = np.bitwise_and(im_packed >> 8, 0xff, dtype=np.uint8)
+            im_unpacked[:, :, 2] = np.bitwise_and(im_packed >> 0, 0xff, dtype=np.uint8)
+
             output_path = join(output_dir, '{}.png'.format(ind))
-            composited = np.apply_along_axis(composite, 2, im_labels)
-            save_img(composited, output_path)
+            save_img(im_unpacked, output_path)
         print('.', end='', flush=True)
     print()
 
@@ -449,11 +456,13 @@ class TFDeeplab(MLBackend):
 
             with tempfile.TemporaryDirectory() as debug_dir:
                 make_debug_images(training_record_path_local, debug_dir,
-                                  class_map, seg_options.debug_chip_probability)
+                                  class_map,
+                                  seg_options.debug_chip_probability)
                 shutil.make_archive(training_zip_path_local, 'zip', debug_dir)
             with tempfile.TemporaryDirectory() as debug_dir:
                 make_debug_images(validation_record_path_local, debug_dir,
-                                  class_map, seg_options.debug_chip_probability)
+                                  class_map,
+                                  seg_options.debug_chip_probability)
                 shutil.make_archive(validation_zip_path_local, 'zip',
                                     debug_dir)
             upload_if_needed('{}.zip'.format(training_zip_path_local),
