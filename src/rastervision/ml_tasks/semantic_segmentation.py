@@ -25,16 +25,19 @@ class SemanticSegmentation(MLTask):
              A list of windows, list(Box)
 
         """
+        seg_options = options.segmentation_options
         raster_source = scene.raster_source
         extent = raster_source.get_extent()
-
-        # label_store = scene.ground_truth_label_store
-
+        label_store = scene.ground_truth_label_store
         chip_size = options.chip_size
 
         windows = []
-        for i in range(100):  # XXX insensitive
-            windows.append(extent.make_random_square(chip_size))
+        while (len(windows) < seg_options.number_of_chips):
+            window = extent.make_random_square(chip_size)
+            if label_store.has_labels(window):
+                windows.append(window)
+            elif np.random.rand() <= seg_options.empty_survival_probability:
+                windows.append(window)
 
         return windows
 

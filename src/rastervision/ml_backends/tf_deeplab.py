@@ -97,8 +97,7 @@ def string_to_triple(color: str) -> np.ndarray:
 
 def make_debug_images(record_path: str,
                       output_dir: str,
-                      class_map: ClassMap,
-                      p: float = 0.25) -> None:
+                      class_map: ClassMap, p: float) -> None:
     """Render a random sample of the TFRecords in a given file as
     human-viewable PNG files.
 
@@ -424,6 +423,7 @@ class TFDeeplab(MLBackend):
              None
 
         """
+        seg_options = options.segmentation_options
         base_uri = options.output_uri
         training_record_path = get_record_uri(base_uri, TRAIN)
         training_record_path_local = get_local_path(training_record_path,
@@ -449,11 +449,11 @@ class TFDeeplab(MLBackend):
 
             with tempfile.TemporaryDirectory() as debug_dir:
                 make_debug_images(training_record_path_local, debug_dir,
-                                  class_map)
+                                  class_map, seg_options.debug_chip_probability)
                 shutil.make_archive(training_zip_path_local, 'zip', debug_dir)
             with tempfile.TemporaryDirectory() as debug_dir:
                 make_debug_images(validation_record_path_local, debug_dir,
-                                  class_map)
+                                  class_map, seg_options.debug_chip_probability)
                 shutil.make_archive(validation_zip_path_local, 'zip',
                                     debug_dir)
             upload_if_needed('{}.zip'.format(training_zip_path_local),

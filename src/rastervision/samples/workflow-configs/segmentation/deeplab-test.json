@@ -62,6 +62,9 @@
     },
     "make_training_chips_options": {
         "segmentation_options": {
+            "empty_survival_probability": 0.01,
+            "number_of_chips": 133,
+            "debug_chip_probability": 0.20
         }
     },
     "train_options": {
@@ -78,7 +81,7 @@
     "eval_options": {
     },
     "debug": true,
-    "chip_size": 300,
+    "chip_size": 513,
     "raster_transformer": {
         "channel_order": [0, 1, 2]
     },

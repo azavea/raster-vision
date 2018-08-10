@@ -127,6 +127,22 @@ class SegmentationRasterFile(LabelStore):
         else:
             self.channels = 1
 
+    def has_labels(self, window: Box) -> bool:
+        """Given a window, deterine whether there are any labels in it.
+
+        Args:
+             window: A window given as a Box object.
+
+        Returns:
+             Either True or False.
+
+        """
+        if self.src is not None:
+            chip = self.src._get_chip(window)
+            return (chip.sum() > 0)
+        else:
+            return False
+
     def get_labels(self, window: Box) -> np.ndarray:
         """Get labels from a window.
 
