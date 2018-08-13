@@ -1,6 +1,5 @@
 import os
 import glob
-import json
 import numpy as np
 import shutil
 import tarfile
@@ -23,9 +22,10 @@ from rastervision.core.scene import Scene
 from rastervision.core.training_data import TrainingData
 from rastervision.ml_backends.tf_object_detection_api import (
     write_tf_record, terminate_at_exit, TRAIN, VALIDATION)
+from rastervision.protos.deeplab import train_pb2
 from rastervision.utils.files import (download_if_needed, get_local_path,
-                                      make_dir, start_sync, sync_dir,
-                                      upload_if_needed)
+                                      load_json_config, make_dir, start_sync,
+                                      sync_dir, upload_if_needed)
 from rastervision.utils.misc import (color_to_integer, numpy_to_png,
                                      png_to_numpy)
 from rastervision.utils.misc import save_img
@@ -298,58 +298,33 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
     """
     args = ['python', train_py]
 
-    args.append('--train_logdir={}'.format(train_logdir_local))
-    args.append('--tf_initial_checkpoint={}'.format(tfic_index))
-    args.append('--dataset_dir={}'.format(dataset_dir_local))
-
-    be_options.setdefault('training_number_of_steps', 0)
-    steps = be_options.get('training_number_of_steps')
+    steps = be_options.training_number_of_steps
     if steps > 0:
         args.append('--training_number_of_steps={}'.format(steps))
 
-    be_options.setdefault('train_split', '')
-    if len(be_options.get('train_split')) > 0:
-        args.append('--train_split={}'.format(be_options.get('train_split')))
-
-    be_options.setdefault('model_variant', '')
-    if len(be_options.get('model_variant')) > 0:
-        args.append('--model_variant={}'.format(
-            be_options.get('model_variant')))
-
-    be_options.setdefault('atrous_rates', [])
-    for rate in be_options.get('atrous_rates'):
+    for rate in be_options.atrous_rates:
         args.append('--atrous_rates={}'.format(rate))
 
-    be_options.setdefault('output_stride', 16)
-    args.append('--output_stride={}'.format(be_options.get('output_stride')))
-
-    be_options.setdefault('decoder_output_stride', 4)
-    args.append('--decoder_output_stride={}'.format(
-        be_options.get('decoder_output_stride')))
-
-    be_options.setdefault('train_crop_size', [])
-    for size in be_options.get('train_crop_size'):
+    for size in be_options.train_crop_size:
         args.append('--train_crop_size={}'.format(size))
 
-    be_options.setdefault('train_batch_size', 1)
-    args.append('--train_batch_size={}'.format(
-        be_options.get('train_batch_size')))
-
-    be_options.setdefault('dataset', '')
-    if len(be_options.get('dataset')):
-        args.append('--dataset="{}"'.format(be_options.get('dataset')))
-
-    be_options.setdefault('save_interval_secs', 1200)
+    args.append('--train_logdir={}'.format(train_logdir_local))
+    args.append('--tf_initial_checkpoint={}'.format(tfic_index))
+    args.append('--dataset_dir={}'.format(dataset_dir_local))
+    args.append('--train_split={}'.format(be_options.train_split))
+    args.append('--model_variant={}'.format(be_options.model_variant))
+    args.append('--output_stride={}'.format(be_options.output_stride))
+    args.append('--decoder_output_stride={}'.format(
+        be_options.decoder_output_stride))
+    args.append('--train_batch_size={}'.format(be_options.train_batch_size))
+    if len(be_options.dataset) > 0:
+        args.append('--dataset="{}"'.format(be_options.dataset))
     args.append('--save_interval_secs={}'.format(
-        be_options.get('save_interval_secs')))
-
-    be_options.setdefault('save_summaries_secs', 29)
+        be_options.save_interval_secs))
     args.append('--save_summaries_secs={}'.format(
-        be_options.get('save_summaries_secs')))
-
-    be_options.setdefault('save_summaries_images', True)
+        be_options.save_summaries_secs))
     args.append('--save_summaries_images={}'.format(
-        be_options.get('save_summaries_images')))
+        be_options.save_summaries_images))
 
     return args
 
@@ -496,8 +471,8 @@ class TFDeeplab(MLBackend):
         download_if_needed(options.backend_config_uri, self.temp_dir)
         backend_config_uri = get_local_path(options.backend_config_uri,
                                             self.temp_dir)
-        with open(backend_config_uri) as f:
-            be_options = json.load(f)
+        be_options = load_json_config(backend_config_uri,
+                                      train_pb2.TrainingParameters())
 
         train_py = seg_options.train_py
         export_model_py = seg_options.export_model_py
