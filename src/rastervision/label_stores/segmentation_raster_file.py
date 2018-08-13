@@ -1,7 +1,6 @@
 import numpy as np
 
 from typing import (List, Union)
-from PIL import ImageColor
 
 from rastervision.builders import raster_source_builder
 from rastervision.core.box import Box
@@ -9,7 +8,7 @@ from rastervision.core.label_store import LabelStore
 from rastervision.core.raster_source import RasterSource
 from rastervision.protos.raster_source_pb2 import (RasterSource as
                                                    RasterSourceProto)
-from rastervision.utils.files import color_to_integer
+from rastervision.utils.misc import color_to_integer
 
 RasterUnion = Union[RasterSource, RasterSourceProto, str, None]
 

@@ -21,7 +21,8 @@ proj4 = proj4[1:-2]
 
 # Get upper left, lower right info
 with open(os.devnull, 'w') as devnull:
-    ullr = check_output(['gdalinfo', input_rgb], stderr=devnull)
+    ullr = check_output(
+        ['gdalinfo', input_rgb], stderr=devnull).decode('utf-8')
 ul_re = re.compile(r'^Upper Left.*?([0-9\.]+).*?([0-9\.]+)', re.MULTILINE)
 lr_re = re.compile(r'^Lower Right.*?([0-9\.]+).*?([0-9\.]+)', re.MULTILINE)
 ul = re.search(ul_re, ullr)

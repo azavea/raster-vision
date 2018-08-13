@@ -23,10 +23,12 @@ from rastervision.core.scene import Scene
 from rastervision.core.training_data import TrainingData
 from rastervision.ml_backends.tf_object_detection_api import (
     write_tf_record, terminate_at_exit, TRAIN, VALIDATION)
+from rastervision.utils.files import (download_if_needed, get_local_path,
+                                      make_dir, start_sync, sync_dir,
+                                      upload_if_needed)
+from rastervision.utils.misc import (color_to_integer, numpy_to_png,
+                                     png_to_numpy)
 from rastervision.utils.misc import save_img
-from rastervision.utils.files import (
-    color_to_integer, download_if_needed, get_local_path, make_dir,
-    numpy_to_png, png_to_numpy, start_sync, sync_dir, upload_if_needed)
 
 
 def make_tf_examples(training_data: TrainingData,
@@ -87,9 +89,9 @@ def string_to_triple(color: str) -> np.ndarray:
     try:
         (r, g, b) = ImageColor.getrgb(color)
     except AttributeError:
-        r = np.random.randint(0, 256)
-        g = np.random.randint(0, 256)
-        b = np.random.randint(0, 256)
+        r = np.random.randint(0, 0x100)
+        g = np.random.randint(0, 0x100)
+        b = np.random.randint(0, 0x100)
         (r, g, b)
 
     return np.array([r, g, b], dtype=np.uint16)
@@ -121,16 +123,18 @@ def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
             return correspondence.get(v)
         else:
             return 0
+
     label_fn = np.vectorize(_label_fn, otypes=[np.uint64])
 
     def _image_fn(pixel: int) -> int:
         if (pixel & 0x00ffffff):
-            r = ((pixel>>41 & 0x7f) + (pixel>>17 & 0x7f))<<16
-            g = ((pixel>>33 & 0x7f) + (pixel>>9 & 0x7f))<<8
-            b = ((pixel>>25 & 0x7f) + (pixel>>1 & 0x7f))<<0
+            r = ((pixel >> 41 & 0x7f) + (pixel >> 17 & 0x7f)) << 16
+            g = ((pixel >> 33 & 0x7f) + (pixel >> 9 & 0x7f)) << 8
+            b = ((pixel >> 25 & 0x7f) + (pixel >> 1 & 0x7f)) << 0
             return r + g + b
         else:
             return pixel >> 24
+
     image_fn = np.vectorize(_image_fn, otypes=[np.uint64])
 
     print('Generating debug chips', end='', flush=True)
@@ -149,9 +153,12 @@ def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
             im_labels_packed = im_packed + labels_packed
             im_packed = image_fn(im_labels_packed)
 
-            im_unpacked[:, :, 0] = np.bitwise_and(im_packed >> 16, 0xff, dtype=np.uint8)
-            im_unpacked[:, :, 1] = np.bitwise_and(im_packed >> 8, 0xff, dtype=np.uint8)
-            im_unpacked[:, :, 2] = np.bitwise_and(im_packed >> 0, 0xff, dtype=np.uint8)
+            im_unpacked[:, :, 0] = np.bitwise_and(
+                im_packed >> 16, 0xff, dtype=np.uint8)
+            im_unpacked[:, :, 1] = np.bitwise_and(
+                im_packed >> 8, 0xff, dtype=np.uint8)
+            im_unpacked[:, :, 2] = np.bitwise_and(
+                im_packed >> 0, 0xff, dtype=np.uint8)
 
             output_path = join(output_dir, '{}.png'.format(ind))
             save_img(im_unpacked, output_path)

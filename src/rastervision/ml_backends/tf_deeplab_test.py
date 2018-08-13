@@ -3,25 +3,26 @@ import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.class_map import (ClassMap, ClassItem)
-from rastervision.ml_backends.tf_deeplab import (
-    numpy_to_png, png_to_numpy, create_tf_example, parse_tf_example)
+from rastervision.ml_backends.tf_deeplab import (create_tf_example,
+                                                 parse_tf_example)
+from rastervision.utils.misc import (numpy_to_png, png_to_numpy)
 
 
 class TFDeeplabTest(unittest.TestCase):
     def test_png_roundtrip_1channel(self):
-        array1 = np.random.randint(0, 256, size=(10, 10), dtype=np.uint8)
+        array1 = np.random.randint(0, 0x100, size=(10, 10), dtype=np.uint8)
         png = numpy_to_png(array1)
         array2 = png_to_numpy(png)
         self.assertEqual(np.equal(array1, array2).all(), True)
 
     def test_png_roundtrip_3channels(self):
-        array1 = np.random.randint(0, 256, size=(10, 10, 3), dtype=np.uint8)
+        array1 = np.random.randint(0, 0x100, size=(10, 10, 3), dtype=np.uint8)
         png = numpy_to_png(array1)
         array2 = png_to_numpy(png)
         self.assertEqual(np.equal(array1, array2).all(), True)
 
     def test_tfrecord_roundtrip(self):
-        image1 = np.random.randint(0, 256, size=(10, 10, 3), dtype=np.uint8)
+        image1 = np.random.randint(0, 0x100, size=(10, 10, 3), dtype=np.uint8)
         window = Box(0, 0, 72, 72)
         labels1 = np.random.randint(0, 20, size=(10, 10), dtype=np.uint8)
         class_array = [

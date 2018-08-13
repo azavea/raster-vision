@@ -3,14 +3,12 @@ import os
 
 import boto3
 import botocore
-import numpy as np
 import shutil
 import subprocess
 import tempfile
 
 from google.protobuf import json_format
 from pathlib import Path
-from PIL import Image, ImageColor
 from threading import Timer
 from urllib.parse import urlparse
 
@@ -25,65 +23,6 @@ class NotWritableError(Exception):
 
 class ProtobufParseException(Exception):
     pass
-
-
-def color_to_integer(color: str) -> int:
-    """Given a PIL ImageColor string, return a packed integer.
-
-    Args:
-         color: A PIL ImageColor string
-
-    Returns:
-         An integer containing the packed RGB values.
-
-    """
-    try:
-        triple = ImageColor.getrgb(color)
-    except ValueError:
-        r = np.random.randint(0, 256)
-        g = np.random.randint(0, 256)
-        b = np.random.randint(0, 256)
-        triple = (r, g, b)
-
-    r = triple[0] * (1 << 16)
-    g = triple[1] * (1 << 8)
-    b = triple[2] * (1 << 0)
-    integer = r + g + b
-    return integer
-
-
-def numpy_to_png(array: np.ndarray) -> str:
-    """Get a PNG string from a Numpy array.
-
-    Args:
-         array: A Numpy array of shape (w, h, 3) or (w, h), where the
-               former is meant to become a three-channel image and the
-               latter a one-channel image.  The dtype of the array
-               should be uint8.
-
-    Returns:
-         str
-
-    """
-    im = Image.fromarray(array)
-    output = io.BytesIO()
-    im.save(output, 'png')
-    return output.getvalue()
-
-
-def png_to_numpy(png: str, dtype=np.uint8) -> np.ndarray:
-    """Get a Numpy array from a PNG string.
-
-    Args:
-         png: A str containing a PNG-formatted image.
-
-    Returns:
-         numpy.ndarray
-
-    """
-    incoming = io.BytesIO(png)
-    im = Image.open(incoming)
-    return np.array(im)
 
 
 def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
