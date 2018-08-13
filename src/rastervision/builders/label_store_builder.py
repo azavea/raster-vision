@@ -31,11 +31,11 @@ def build(config,
             readable=readable,
             writable=writable)
     elif label_store_type == 'segmentation_raster_file':
+        raster_class_map = config.segmentation_raster_file.raster_class_map
         return SegmentationRasterFile(
             src=config.segmentation_raster_file.src,
             dst=config.segmentation_raster_file.dst,
-            src_classes=config.segmentation_raster_file.src_classes,
-            dst_classes=config.segmentation_raster_file.dst_classes)
+            raster_class_map=raster_class_map)
         return None
     else:
         raise ValueError('Not sure how to generate label store for type {}'

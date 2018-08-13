@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import (List, Union)
+from typing import (Dict, Union)
 
 from rastervision.builders import raster_source_builder
 from rastervision.core.box import Box
@@ -21,8 +21,7 @@ class SegmentationRasterFile(LabelStore):
     def __init__(self,
                  src: RasterUnion,
                  dst: RasterUnion,
-                 src_classes: List[str] = [],
-                 dst_classes: List[int] = []):
+                 raster_class_map: Dict[str, int] = {}):
         """Constructor.
 
         Args:
@@ -52,13 +51,22 @@ class SegmentationRasterFile(LabelStore):
         else:
             raise ValueError('Unsure how to handle dst={}'.format(type(dst)))
 
-        src_classes = list(map(color_to_integer, src_classes))
-        correspondence = dict(zip(src_classes, dst_classes))
+        if isinstance(raster_class_map, dict):
+            src_classes = list(
+                map(lambda c: color_to_integer(c), raster_class_map.keys()))
+            rv_classes = list(raster_class_map.values())
+        else:
+            src_classes = list(
+                map(lambda c: color_to_integer(c.source_class),
+                    raster_class_map))
+            rv_classes = list(
+                map(lambda c: c.raster_vision_class, raster_class_map))
+        src_to_rv_class_map = dict(zip(src_classes, rv_classes))
         self.src_classes = src_classes
-        self.dst_classes = dst_classes
+        self.rv_classes = rv_classes
 
-        def src_to_dst(n: int) -> int:
-            """Translate source classes to destination classes.
+        def src_to_rv(n: int) -> int:
+            """Translate source classes to raster vision classes.
 
             args:
                  n: A source class represented as a packed rgb pixel
@@ -68,12 +76,12 @@ class SegmentationRasterFile(LabelStore):
                  The destination class as an integer.
 
             """
-            if n in correspondence:
-                return correspondence.get(n)
+            if n in src_to_rv_class_map:
+                return src_to_rv_class_map.get(n)
             else:
                 return 0
 
-        self.src_to_dst = np.vectorize(src_to_dst, otypes=[np.uint8])
+        self.src_to_rv = np.vectorize(src_to_rv, otypes=[np.uint8])
 
     def clear(self):
         """Clear all labels."""
@@ -141,7 +149,7 @@ class SegmentationRasterFile(LabelStore):
             g = np.array(labels[:, :, 1], dtype=np.uint32) * (1 << 8)
             b = np.array(labels[:, :, 2], dtype=np.uint32) * (1 << 0)
             packed = r + g + b
-            return self.src_to_dst(packed)
+            return self.src_to_rv(packed)
         else:
             ymin = window.ymin
             xmin = window.xmin

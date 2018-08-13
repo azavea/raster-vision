@@ -13,10 +13,16 @@ class TestingRasterSource(RasterSource):
         self.height = 4
         self.channels = 3
         if zeros:
-            self.data = np.zeros((self.height, self.width, self.channels), dtype=np.uint8)
+            self.data = np.zeros(
+                (self.height, self.width, self.channels), dtype=np.uint8)
         elif not zeros:
-            self.data = np.random.randint(0, 2, size=(self.width, self.height, self.channels), dtype=np.uint8)
-            self.data[:, :, 0:(self.channels-1)] = np.zeros((self.height, self.width, self.channels-1), dtype=np.uint8)
+            self.data = np.random.randint(
+                0,
+                2,
+                size=(self.width, self.height, self.channels),
+                dtype=np.uint8)
+            self.data[:, :, 0:(self.channels - 1)] = np.zeros(
+                (self.height, self.width, self.channels - 1), dtype=np.uint8)
 
     def get_extent(self):
         return Box(0, 0, self.height, self.width)
@@ -48,12 +54,10 @@ class TestSegmentationRasterFile(unittest.TestCase):
         label_store = SegmentationRasterFile(
             src=TestingRasterSource(zeros=True),
             dst=None,
-            src_classes=['#000001'],
-            dst_classes=[1])
+            raster_class_map={'#000001': 1})
         label_store.set_labels(raster_source)
         extent = label_store.src.get_extent()
         rs_data = raster_source._get_chip(extent)
-        import pdb ; pdb.set_trace()
         ls_data = label_store.get_labels(extent)
         self.assertEqual(rs_data.sum(), ls_data.sum())
 

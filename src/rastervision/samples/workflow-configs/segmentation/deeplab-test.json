@@ -18,8 +18,12 @@
                             ]
                         }
                     },
-                    "src_classes": [ "#ffff00" ],
-                    "dst_classes": [ 255 ]
+                    "raster_class_map": [
+                        {
+                            "source_class": "#ffff00",
+                            "raster_vision_class": 255
+                        }
+                    ]
                 }
             }
         }
@@ -43,8 +47,12 @@
                             ]
                         }
                     },
-                    "src_classes": [ "#ffff00" ],
-                    "dst_classes": [ 255 ]
+                    "raster_class_map": [
+                        {
+                            "source_class": "#ffff00",
+                            "raster_vision_class": 255
+                        }
+                    ]
                 }
             }
         }
@@ -57,12 +65,17 @@
                 "id": 255,
                 "name": "car",
                 "color": "#ffff00"
+            },
+	    {
+                "id": 127,
+                "name": "building",
+                "color": "#0000ff"
             }
         ]
     },
     "make_training_chips_options": {
         "segmentation_options": {
-            "empty_survival_probability": 0.01,
+            "empty_survival_probability": 0.2,
             "number_of_chips": 133,
             "debug_chip_probability": 0.20
         }

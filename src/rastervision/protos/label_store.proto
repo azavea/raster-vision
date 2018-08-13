@@ -39,6 +39,11 @@ message ClassificationGeoJSONFile {
     optional Options options = 2;
 }
 
+message RasterClassMap {
+    required string source_class = 1;
+    required int32 raster_vision_class = 2;
+}
+
 message SegmentationRasterFile {
 
     // An optional raster source from which the label data are to be
@@ -51,25 +56,10 @@ message SegmentationRasterFile {
     // label store will be write-only.
     optional string dst = 2;
 
-    // `src_classes` is a list of classes that appear in the `src`
-    // RasterSource.  The strings contained in this array must be
-    // recognizable by PIL ImageColor (e.g. '#ff7f00').  Given 24-bit
-    // RGB input data, a string '#ff7f00' referes to pixels with whose
-    // red channel is set to 0xff, whose green channel is set to 0x7f,
-    // and whose blue channel is set to 0x00.
-    //
-    // `dst_classes` is a list of classes that appear in the asset
-    // pointed-to by the `dst` uri string.  The integers contained in
-    // this array must be representable as 8-bit unsigned values.
-    //
-    // There is a correspondence between `src_classes` and
-    // `dst_classes`.  That correspondence is established by the
-    // following logical procedure (though the actual implementation
-    // may vary): dict(zip(src_classes, dst_classes)).  The
-    // correspondence is used to map between source label values and
-    // destination label values.
-    repeated string src_classes = 3;
-    repeated int32 dst_classes = 4 [packed=true];
+    // A mapping between classes in the source raster(s) and classes
+    // used internally in raster vision.  The latter type are also
+    // used in output label rasters.
+    repeated RasterClassMap raster_class_map = 3;
 }
 
 message LabelStore {
