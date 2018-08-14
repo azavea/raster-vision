@@ -209,16 +209,15 @@ def create_tf_example(image: np.ndarray,
     """
     class_keys = set(class_map.get_keys())
 
-    def fn(n):
-        return (n if n in class_keys else 0)
-
-    filtered_labels = np.array(np.vectorize(fn)(labels), dtype=np.uint8)
+    def _clean(n):
+        return (n if n in class_keys else 0x00)
+    clean = np.vectorize(_clean, otypes=[np.uint8])
 
     image_encoded = numpy_to_png(image)
     image_filename = chip_id.encode('utf8')
     image_format = 'png'.encode('utf8')
     image_height, image_width, image_channels = image.shape
-    image_segmentation_class_encoded = numpy_to_png(filtered_labels)
+    image_segmentation_class_encoded = numpy_to_png(clean(labels))
     image_segmentation_class_format = 'png'.encode('utf8')
 
     features = tf.train.Features(
@@ -308,6 +307,9 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
     for size in be_options.train_crop_size:
         args.append('--train_crop_size={}'.format(size))
 
+    if len(be_options.dataset) > 0:
+        args.append('--dataset={}'.format(be_options.dataset))
+
     args.append('--train_logdir={}'.format(train_logdir_local))
     args.append('--tf_initial_checkpoint={}'.format(tfic_index))
     args.append('--dataset_dir={}'.format(dataset_dir_local))
@@ -317,14 +319,22 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
     args.append('--decoder_output_stride={}'.format(
         be_options.decoder_output_stride))
     args.append('--train_batch_size={}'.format(be_options.train_batch_size))
-    if len(be_options.dataset) > 0:
-        args.append('--dataset="{}"'.format(be_options.dataset))
     args.append('--save_interval_secs={}'.format(
         be_options.save_interval_secs))
     args.append('--save_summaries_secs={}'.format(
         be_options.save_summaries_secs))
     args.append('--save_summaries_images={}'.format(
         be_options.save_summaries_images))
+    args.append('--last_layer_gradient_multiplier={}'.format(
+        be_options.last_layer_gradient_multiplier))
+    args.append('--initialize_last_layer={}'.format(
+        be_options.initialize_last_layer))
+    args.append('--min_scale_factor={}'.format(be_options.min_scale_factor))
+    args.append('--max_scale_factor={}'.format(be_options.max_scale_factor))
+    args.append('--fine_tune_batch_norm={}'.format(
+        be_options.fine_tune_batch_norm))
+    args.append('--last_layers_contain_logits_only={}'.format(
+        be_options.last_layers_contain_logits_only))
 
     return args
 

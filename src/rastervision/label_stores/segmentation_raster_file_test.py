@@ -8,6 +8,7 @@ from rastervision.label_stores.segmentation_raster_file import (
 
 
 class TestingRasterSource(RasterSource):
+
     def __init__(self, zeros=False):
         self.width = 4
         self.height = 4
@@ -42,6 +43,7 @@ class TestingRasterSource(RasterSource):
 
 
 class TestSegmentationRasterFile(unittest.TestCase):
+
     def test_clear(self):
         label_store = SegmentationRasterFile(TestingRasterSource(), None)
         extent = label_store.src.get_extent()
@@ -58,7 +60,7 @@ class TestSegmentationRasterFile(unittest.TestCase):
         label_store.set_labels(raster_source)
         extent = label_store.src.get_extent()
         rs_data = raster_source._get_chip(extent)
-        ls_data = label_store.get_labels(extent)
+        ls_data = (label_store.get_labels(extent) == 1)
         self.assertEqual(rs_data.sum(), ls_data.sum())
 
 

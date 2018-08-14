@@ -79,7 +79,7 @@ class SegmentationRasterFile(LabelStore):
             if n in src_to_rv_class_map:
                 return src_to_rv_class_map.get(n)
             else:
-                return 0
+                return 0x00
 
         self.src_to_rv = np.vectorize(src_to_rv, otypes=[np.uint8])
 
