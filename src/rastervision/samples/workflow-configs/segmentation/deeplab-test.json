@@ -12,16 +12,14 @@
             "ground_truth_label_store": {
                 "segmentation_raster_file": {
                     "src": {
-                        "geotiff_files": {
-                            "uris": [
-                                "/opt/data/top_potsdam_2_10_label_georeferenced.tif"
-                            ]
+                        "image_file": {
+                            "uri": "/opt/data/top_potsdam_2_10_label_noBoundary.tif"
                         }
                     },
                     "raster_class_map": [
                         {
                             "source_class": "#ffff00",
-                            "raster_vision_class": 255
+                            "raster_vision_class": 1
                         }
                     ]
                 }
@@ -41,16 +39,14 @@
             "ground_truth_label_store": {
                 "segmentation_raster_file": {
                     "src": {
-                        "geotiff_files": {
-                            "uris": [
-                                "/opt/data/top_potsdam_2_11_label_georeferenced.tif"
-                            ]
+                        "image_file": {
+                            "uri": "/opt/data/top_potsdam_2_11_label_noBoundary.tif"
                         }
                     },
                     "raster_class_map": [
                         {
                             "source_class": "#ffff00",
-                            "raster_vision_class": 255
+                            "raster_vision_class": 1
                         }
                     ]
                 }
@@ -62,22 +58,17 @@
         "backend": "TF_DEEPLAB",
         "class_items": [
             {
-                "id": 255,
+                "id": 1,
                 "name": "car",
                 "color": "#ffff00"
-            },
-	    {
-                "id": 127,
-                "name": "building",
-                "color": "#0000ff"
             }
         ]
     },
     "make_training_chips_options": {
         "segmentation_options": {
-            "empty_survival_probability": 0.2,
+            "empty_survival_probability": 0.1,
             "number_of_chips": 133,
-            "debug_chip_probability": 0.20
+            "debug_chip_probability": 0.1
         }
     },
     "train_options": {
@@ -94,7 +85,7 @@
     "eval_options": {
     },
     "debug": true,
-    "chip_size": 513,
+    "chip_size": 512,
     "raster_transformer": {
         "channel_order": [0, 1, 2]
     },
