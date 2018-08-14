@@ -278,7 +278,7 @@ def get_latest_checkpoint(train_logdir_local: str) -> str:
 
 
 def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
-                      dataset_dir_local: str, be_options: dict) -> List[str]:
+                      dataset_dir_local: str, be_options) -> List[str]:
     """Generate the array of arguments needed to run the training script.
 
     Args:
@@ -289,64 +289,74 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
               checkpoint tarball.
          dataset_dir_local: The directory in which the records are
               found.
-         be_options: A dictionary of backend options.
+         be_options: Options from the backend configuration file.
 
     Returns:
          A list of arguments suitable for starting the training
          script.
 
     """
+
+    fields = [
+        'fine_tune_batch_norm',
+        'initialize_last_layer',
+        'last_layers_contain_logits_only',
+        'save_summaries_images',
+        'upsample_logits',
+        'base_learning_rate',
+        'last_layer_gradient_multiplier',
+        'learning_power',
+        'learning_rate_decay_factor',
+        'max_scale_factor',
+        'min_scale_factor',
+        'momentum',
+        'scale_factor_step_size',
+        'slow_start_learning_rate',
+        'weight_decay',
+        'decoder_output_stride',
+        'learning_rate_decay_step',
+        'output_stride',
+        'save_interval_secs',
+        'save_summaries_secs',
+        'slow_start_step',
+        'train_batch_size',
+        'training_number_of_steps',
+        'dataset',
+        'learning_policy',
+        'model_variant',
+        'train_split',
+    ]
+
+    multi_fields = [
+        'atrous_rates',
+    ]
+
     args = ['python', train_py]
-
-    steps = be_options.training_number_of_steps
-    if steps > 0:
-        args.append('--training_number_of_steps={}'.format(steps))
-
-    for rate in be_options.atrous_rates:
-        args.append('--atrous_rates={}'.format(rate))
-
-    for size in be_options.train_crop_size:
-        args.append('--train_crop_size={}'.format(size))
-
-    if len(be_options.dataset) > 0:
-        args.append('--dataset={}'.format(be_options.dataset))
 
     args.append('--train_logdir={}'.format(train_logdir_local))
     args.append('--tf_initial_checkpoint={}'.format(tfic_index))
     args.append('--dataset_dir={}'.format(dataset_dir_local))
-    args.append('--train_split={}'.format(be_options.train_split))
-    args.append('--model_variant={}'.format(be_options.model_variant))
-    args.append('--output_stride={}'.format(be_options.output_stride))
-    args.append('--decoder_output_stride={}'.format(
-        be_options.decoder_output_stride))
-    args.append('--train_batch_size={}'.format(be_options.train_batch_size))
-    args.append('--save_interval_secs={}'.format(
-        be_options.save_interval_secs))
-    args.append('--save_summaries_secs={}'.format(
-        be_options.save_summaries_secs))
-    args.append('--save_summaries_images={}'.format(
-        be_options.save_summaries_images))
-    args.append('--last_layer_gradient_multiplier={}'.format(
-        be_options.last_layer_gradient_multiplier))
-    args.append('--initialize_last_layer={}'.format(
-        be_options.initialize_last_layer))
-    args.append('--min_scale_factor={}'.format(be_options.min_scale_factor))
-    args.append('--max_scale_factor={}'.format(be_options.max_scale_factor))
-    args.append('--fine_tune_batch_norm={}'.format(
-        be_options.fine_tune_batch_norm))
-    args.append('--last_layers_contain_logits_only={}'.format(
-        be_options.last_layers_contain_logits_only))
+
+    for field in multi_fields:
+        for item in be_options.__getattribute__(field):
+            args.append('--{}={}'.format(field, item))
+
+    for field in fields:
+        args.append('--{}={}'.format(field,
+                                     be_options.__getattribute__(field)))
 
     return args
 
 
-def get_export_args(export_model_py: str, train_logdir_local: str) -> str:
+def get_export_args(export_model_py: str, train_logdir_local: str,
+                    num_classes: int) -> str:
     """Generate the array of arguments needed to run the export script.
 
     Args:
          export_model_py: The URI of the export script.
          train_logdir_local: The directory in-which checkpoints will
               be placed.
+         num_classes: The number of (non-null) classes.
 
     Returns:
          A list of arguments suitable for starting the training
@@ -358,6 +368,7 @@ def get_export_args(export_model_py: str, train_logdir_local: str) -> str:
         get_latest_checkpoint(train_logdir_local)))
     args.append('--export_path={}'.format(
         join(train_logdir_local, 'frozen_inference_graph.pb')))
+    args.append('--num_classes={}'.format(num_classes + 1))
 
     return args
 
@@ -527,7 +538,9 @@ class TFDeeplab(MLBackend):
         tensorboard_process.terminate()
 
         # Export
-        export_args = get_export_args(export_model_py, train_logdir_local)
+        num_classes = len(class_map.get_items())
+        export_args = get_export_args(export_model_py, train_logdir_local,
+                                      num_classes)
         export_process = Popen(export_args)
         terminate_at_exit(export_process)
         export_process.wait()

@@ -20,6 +20,22 @@
                         {
                             "source_class": "#ffff00",
                             "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 3
+                        },
+                        {
+                            "source_class": "#ff0000",
+                            "raster_vision_class": 4
+                        },
+                        {
+                            "source_class": "#00ffff",
+                            "raster_vision_class": 5
                         }
                     ]
                 }
@@ -47,6 +63,22 @@
                         {
                             "source_class": "#ffff00",
                             "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 3
+                        },
+                        {
+                            "source_class": "#ff0000",
+                            "raster_vision_class": 4
+                        },
+                        {
+                            "source_class": "#00ffff",
+                            "raster_vision_class": 5
                         }
                     ]
                 }
@@ -61,6 +93,26 @@
                 "id": 1,
                 "name": "car",
                 "color": "#ffff00"
+            },
+            {
+                "id": 2,
+                "name": "building",
+                "color": "#0000ff"
+            },
+            {
+                "id": 3,
+                "name": "x",
+                "color": "#00ff00"
+            },
+            {
+                "id": 4,
+                "name": "y",
+                "color": "#ff0000"
+            },
+            {
+                "id": 5,
+                "name": "z",
+                "color": "#00ffff"
             }
         ]
     },
