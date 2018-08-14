@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package rv.protos;
 
+import "rastervision/protos/raster_source.proto";
+
 message ObjectDetectionGeoJSONFile {
     required string uri = 1;
 }
@@ -37,9 +39,33 @@ message ClassificationGeoJSONFile {
     optional Options options = 2;
 }
 
+message RasterClassMap {
+    required string source_class = 1;
+    required int32 raster_vision_class = 2;
+}
+
+message SegmentationRasterFile {
+
+    // An optional raster source from which the label data are to be
+    // drawn.  If `src` is provided but `dst` is not, then label store
+    // will be read-only.
+    optional RasterSource src = 1;
+
+    // An optional uri pointing to where the label data should be
+    // stored.  If both `dst` is provided but `src` is not, then the
+    // label store will be write-only.
+    optional string dst = 2;
+
+    // A mapping between classes in the source raster(s) and classes
+    // used internally in raster vision.  The latter type are also
+    // used in output label rasters.
+    repeated RasterClassMap raster_class_map = 3;
+}
+
 message LabelStore {
     oneof label_store_type {
         ObjectDetectionGeoJSONFile object_detection_geojson_file = 1;
         ClassificationGeoJSONFile classification_geojson_file = 2;
+        SegmentationRasterFile segmentation_raster_file = 3;
     }
 }

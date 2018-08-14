@@ -1,15 +1,16 @@
 import io
 import os
-from pathlib import Path
-import shutil
-import subprocess
-import tempfile
-from threading import Timer
-from urllib.parse import urlparse
 
 import boto3
 import botocore
+import shutil
+import subprocess
+import tempfile
+
 from google.protobuf import json_format
+from pathlib import Path
+from threading import Timer
+from urllib.parse import urlparse
 
 
 class NotReadableError(Exception):

@@ -51,6 +51,12 @@ message MakeTrainingChipsConfig {
 
     }
 
+    message SegmentationOptions {
+        optional float debug_chip_probability = 1 [default=0.25];
+        optional float empty_survival_probability = 2 [default=0.25];
+        optional int32 number_of_chips = 3 [default=100];
+    }
+
     message Options {
         optional int32 chip_size = 1;
         optional bool debug = 2 [default=true];
@@ -61,6 +67,7 @@ message MakeTrainingChipsConfig {
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 4;
             ClassificationOptions classification_options = 5;
+            SegmentationOptions segmentation_options = 6;
         }
     }
 

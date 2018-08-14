@@ -1,0 +1,28 @@
+syntax = "proto2";
+
+package deeplab.protos;
+
+
+message TrainingParameters {
+        required string train_logdir_local = 1;
+        required string tf_initial_checkpoint = 2;
+        required string dataset_dir = 3;
+        optional int32 training_number_of_steps = 4 [default = 1];
+        optional string train_split = 5 [default = "train"];
+        required string model_variant = 6;
+        repeated int32 atrous_rates = 7;
+        optional int32 output_stride = 8 [default = 8];
+        optional int32 decoder_output_stride = 9 [default = 8];
+        repeated int32 train_crop_size = 10;
+        optional int32 train_batch_size = 11 [default = 8];
+        optional string dataset = 12 [default = ""];
+        optional int32 save_interval_secs = 13 [default = 600];
+        optional int32 save_summaries_secs = 14 [default = 5];
+        optional bool save_summaries_images = 15 [default = true];
+        optional float last_layer_gradient_multiplier = 16 [default = 1.0];
+        optional bool initialize_last_layer = 17 [default = true];
+        optional float min_scale_factor = 18 [default = 1.0];
+        optional float max_scale_factor = 19 [default = 1.0];
+        optional bool fine_tune_batch_norm = 20 [default = true];
+        optional bool last_layers_contain_logits_only = 21 [default = false];
+}
