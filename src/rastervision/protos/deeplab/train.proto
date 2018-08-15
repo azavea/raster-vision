@@ -32,4 +32,8 @@ message TrainingParameters {
         optional string model_variant = 27 [default = "custom"];
         optional string train_split = 28 [default = "train"];
         repeated int32 atrous_rates = 29;
+        repeated int32 train_crop_size = 30;
+
+        optional int32 dl_custom_train = 31 [default = 1333];
+        optional int32 dl_custom_validation = 32 [default = 1333];
 }

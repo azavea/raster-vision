@@ -11,7 +11,7 @@ from os.path import join
 from PIL import ImageColor
 from subprocess import Popen
 from tensorflow.core.example.example_pb2 import Example
-from typing import (List, Tuple)
+from typing import (Dict, List, Tuple)
 from urllib.parse import urlparse
 
 from object_detection.utils import dataset_util
@@ -278,7 +278,8 @@ def get_latest_checkpoint(train_logdir_local: str) -> str:
 
 
 def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
-                      dataset_dir_local: str, be_options) -> List[str]:
+                      dataset_dir_local: str, num_classes: int,
+                      be_options) -> Tuple[List[str], Dict[str, str]]:
     """Generate the array of arguments needed to run the training script.
 
     Args:
@@ -289,11 +290,13 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
               checkpoint tarball.
          dataset_dir_local: The directory in which the records are
               found.
+         num_classes: The number of classes.
          be_options: Options from the backend configuration file.
 
     Returns:
-         A list of arguments suitable for starting the training
-         script.
+         A tuple of two things: (1) a list of arguments suitable for
+         starting the training script and (2) an environment in-which
+         to start the training script.
 
     """
 
@@ -329,6 +332,12 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
 
     multi_fields = [
         'atrous_rates',
+        'train_crop_size',
+    ]
+
+    env_fields = [
+        'dl_custom_train',
+        'dl_custom_validation',
     ]
 
     args = ['python', train_py]
@@ -345,7 +354,12 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
         args.append('--{}={}'.format(field,
                                      be_options.__getattribute__(field)))
 
-    return args
+    env = os.environ.copy()
+    for field in env_fields:
+        env[field.upper()] = str(be_options.__getattribute__(field))
+    env['DL_CUSTOM_CLASSES'] = str(num_classes)
+
+    return (args, env)
 
 
 def get_export_args(export_model_py: str, train_logdir_local: str,
@@ -356,7 +370,7 @@ def get_export_args(export_model_py: str, train_logdir_local: str,
          export_model_py: The URI of the export script.
          train_logdir_local: The directory in-which checkpoints will
               be placed.
-         num_classes: The number of (non-null) classes.
+         num_classes: The number of classes.
 
     Returns:
          A list of arguments suitable for starting the training
@@ -368,7 +382,7 @@ def get_export_args(export_model_py: str, train_logdir_local: str,
         get_latest_checkpoint(train_logdir_local)))
     args.append('--export_path={}'.format(
         join(train_logdir_local, 'frozen_inference_graph.pb')))
-    args.append('--num_classes={}'.format(num_classes + 1))
+    args.append('--num_classes={}'.format(num_classes))
 
     return args
 
@@ -526,10 +540,11 @@ class TFDeeplab(MLBackend):
             sync_interval=options.sync_interval)
 
         # Train
-        train_args = get_training_args(train_py, train_logdir_local,
-                                       tfic_index, dataset_dir_local,
-                                       be_options)
-        train_process = Popen(train_args)
+        num_classes = len(class_map.get_items()) + 1
+        (train_args, train_env) = get_training_args(
+            train_py, train_logdir_local, tfic_index, dataset_dir_local,
+            num_classes, be_options)
+        train_process = Popen(train_args, env=train_env)
         terminate_at_exit(train_process)
         tensorboard_process = Popen(
             ['tensorboard', '--logdir={}'.format(train_logdir_local)])
@@ -538,7 +553,6 @@ class TFDeeplab(MLBackend):
         tensorboard_process.terminate()
 
         # Export
-        num_classes = len(class_map.get_items())
         export_args = get_export_args(export_model_py, train_logdir_local,
                                       num_classes)
         export_process = Popen(export_args)

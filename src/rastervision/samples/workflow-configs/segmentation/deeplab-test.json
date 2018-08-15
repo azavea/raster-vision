@@ -125,7 +125,7 @@
     },
     "train_options": {
         "pretrained_model_uri": "/opt/data/deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz",
-        "backend_config_uri": "/opt/src/rastervision/samples/backend-configs/deeplab/mobilenet-test.config",
+        "backend_config_uri": "/opt/src/rastervision/samples/backend-configs/deeplab/mobilenet.config",
         "sync_interval": 600,
         "segmentation_options": {
         }
@@ -137,7 +137,7 @@
     "eval_options": {
     },
     "debug": true,
-    "chip_size": 512,
+    "chip_size": 96,
     "raster_transformer": {
         "channel_order": [0, 1, 2]
     },
