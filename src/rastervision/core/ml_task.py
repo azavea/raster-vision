@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 from rastervision.core.training_data import TrainingData
 from rastervision.core.predict_package import save_predict_package
+from rastervision.ml_tasks.utils import compare_window_to_aoi
 
 # TODO: DRY... same keys as in ml_backends/tf_object_detection_aip.py
 TRAIN = 'train'
@@ -119,7 +120,12 @@ class MLTask(object):
                 end='',
                 flush=True)
             windows = self.get_train_windows(scene, options)
-            for window in windows:
+            aoi_windows = [
+                window for window in windows
+                if compare_window_to_aoi(window, scene.aoi_polygons)
+            ]
+
+            for window in aoi_windows:
                 chip = scene.raster_source.get_chip(window)
                 labels = self.get_train_labels(window, scene, options)
                 data.append(chip, window, labels)

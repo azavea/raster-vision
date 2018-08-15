@@ -7,9 +7,8 @@ from shapely import geometry
 from rastervision.labels.classification_labels import (ClassificationLabels)
 from rastervision.label_stores.object_detection_geojson_file import (
     geojson_to_labels as geojson_to_object_detection_labels)
-from rastervision.label_stores.utils import (add_classes_to_geojson,
-                                             load_label_store_json,
-                                             boxes_to_geojson, json_to_shapely)
+from rastervision.label_stores.utils import (
+    add_classes_to_geojson, load_label_store_json, boxes_to_geojson)
 from rastervision.utils.files import str_to_file
 from rastervision.label_stores.classification_label_store import (
     ClassificationLabelStore)
@@ -199,7 +198,7 @@ def load_geojson(geojson_dict, crs_transformer, extent, options):
 
 
 def to_geojson(labels, crs_transformer, class_map):
-    """Convert ClassificationLabels to GeoJSON.
+    """Convert ClassificationLabels to to GeoJSON.
 
     Outputs the grid in GeoJSON format as a list of squares each
     with a class_id and class_name property.
@@ -234,7 +233,6 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
 
     def __init__(self,
                  uri,
-                 aoi_uri,
                  crs_transformer,
                  options,
                  class_map,
@@ -254,7 +252,6 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
             writable: if True, allow writing to disk
         """
         self.uri = uri
-        self.aoi_uri = aoi_uri
         self.crs_transformer = crs_transformer
         self.class_map = class_map
         self.readable = readable
@@ -267,8 +264,6 @@ class ClassificationGeoJSONFile(ClassificationLabelStore):
             geojson_dict = add_classes_to_geojson(geojson_dict, class_map)
             self.labels = load_geojson(geojson_dict, crs_transformer, extent,
                                        options)
-
-        self.aoi = json_to_shapely(aoi_uri, crs_transformer)
 
     def save(self):
         """Save labels to URI if writable.

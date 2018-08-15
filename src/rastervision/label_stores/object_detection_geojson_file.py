@@ -8,7 +8,7 @@ from rastervision.label_stores.utils import (add_classes_to_geojson,
                                              load_label_store_json)
 from rastervision.label_stores.object_detection_label_store import (
     ObjectDetectionLabelStore)
-from rastervision.label_stores.utils import boxes_to_geojson, json_to_shapely
+from rastervision.label_stores.utils import boxes_to_geojson
 from rastervision.utils.files import str_to_file, NotWritableError
 
 
@@ -69,7 +69,6 @@ def geojson_to_labels(geojson_dict, crs_transformer, extent=None):
 class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
     def __init__(self,
                  uri,
-                 aoi_uri,
                  crs_transformer,
                  class_map,
                  extent=None,
@@ -79,7 +78,6 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
 
         Args:
             uri: uri of GeoJSON file containing labels
-            aoi_uri: uri of GeoJSON area of interest polygon
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
             class_map: ClassMap used to infer class_ids from class_name
@@ -89,7 +87,6 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
             writable: if True, allow writing to disk
         """
         self.uri = uri
-        self.aoi_uri = aoi_uri
         self.crs_transformer = crs_transformer
         self.class_map = class_map
         self.readable = readable
@@ -102,8 +99,6 @@ class ObjectDetectionGeoJSONFile(ObjectDetectionLabelStore):
             geojson = add_classes_to_geojson(json_dict, class_map)
             self.labels = geojson_to_labels(
                 geojson, crs_transformer, extent=extent)
-
-        self.aoi = json_to_shapely(aoi_uri, crs_transformer)
 
     def save(self):
         """Save labels to URI if writable."""

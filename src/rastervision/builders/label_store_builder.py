@@ -15,7 +15,6 @@ def build(config,
     if label_store_type == 'object_detection_geojson_file':
         return ObjectDetectionGeoJSONFile(
             config.object_detection_geojson_file.uri,
-            config.aoi_uri,
             crs_transformer,
             class_map,
             extent=extent,
@@ -24,7 +23,6 @@ def build(config,
     elif label_store_type == 'classification_geojson_file':
         return ClassificationGeoJSONFile(
             config.classification_geojson_file.uri,
-            config.aoi_uri,
             crs_transformer,
             config.classification_geojson_file.options,
             class_map,

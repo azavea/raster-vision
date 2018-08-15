@@ -5,7 +5,8 @@ class Scene():
                  id=None,
                  raster_source=None,
                  ground_truth_label_store=None,
-                 prediction_label_store=None):
+                 prediction_label_store=None,
+                 aoi_polygons=None):
         """Construct a new Scene.
 
         Args:
@@ -18,3 +19,4 @@ class Scene():
         self.raster_source = raster_source
         self.ground_truth_label_store = ground_truth_label_store
         self.prediction_label_store = prediction_label_store
+        self.aoi_polygons = aoi_polygons

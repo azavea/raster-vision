@@ -42,5 +42,4 @@ message LabelStore {
         ObjectDetectionGeoJSONFile object_detection_geojson_file = 1;
         ClassificationGeoJSONFile classification_geojson_file = 2;
     }
-    optional string aoi_uri = 3;
 }

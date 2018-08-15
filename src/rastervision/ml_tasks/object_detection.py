@@ -7,7 +7,6 @@ from rastervision.evaluations.object_detection_evaluation import (
     ObjectDetectionEvaluation)
 from rastervision.labels.object_detection_labels import ObjectDetectionLabels
 from rastervision.utils.misc import save_img
-from rastervision.ml_tasks.utils import compare_window_to_aoi
 
 
 def save_debug_image(im, labels, class_map, output_path):
@@ -75,22 +74,21 @@ def make_pos_windows(image_extent, label_store, options):
 
 
 def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
-                     max_attempts, aoi_polygons):
+                     max_attempts):
     extent = raster_source.get_extent()
     neg_windows = []
     for _ in range(max_attempts):
         window = extent.make_random_square(chip_size)
         chip = raster_source.get_chip(window)
-        if compare_window_to_aoi(window, aoi_polygons):
-            labels = ObjectDetectionLabels.get_overlapping(
-                label_store.get_labels(), window, ioa_thresh=0.2)
+        labels = ObjectDetectionLabels.get_overlapping(
+            label_store.get_labels(), window, ioa_thresh=0.2)
 
-            # If no labels and not blank, append the chip
-            if len(labels) == 0 and np.sum(chip.ravel()) > 0:
-                neg_windows.append(window)
+        # If no labels and not blank, append the chip
+        if len(labels) == 0 and np.sum(chip.ravel()) > 0:
+            neg_windows.append(window)
 
-            if len(neg_windows) == nb_windows:
-                break
+        if len(neg_windows) == nb_windows:
+            break
 
     return neg_windows
 
@@ -99,7 +97,6 @@ class ObjectDetection(MLTask):
     def get_train_windows(self, scene, options):
         raster_source = scene.raster_source
         label_store = scene.ground_truth_label_store
-        aoi_polygons = scene.ground_truth_label_store.aoi
         # Make positive windows which contain labels.
         pos_windows = make_pos_windows(raster_source.get_extent(), label_store,
                                        options)
@@ -118,7 +115,7 @@ class ObjectDetection(MLTask):
         max_attempts = 100 * nb_neg_windows
         neg_windows = make_neg_windows(raster_source, label_store,
                                        options.chip_size, nb_neg_windows,
-                                       max_attempts, aoi_polygons)
+                                       max_attempts)
 
         return pos_windows + neg_windows
 

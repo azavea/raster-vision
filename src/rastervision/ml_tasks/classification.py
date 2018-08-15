@@ -9,7 +9,6 @@ from rastervision.evaluations.classification_evaluation import (
     ClassificationEvaluation)
 from rastervision.utils.files import (get_local_path, upload_if_needed,
                                       make_dir)
-from rastervision.ml_tasks.utils import compare_window_to_aoi
 
 
 def draw_debug_predict_image(scene, class_map):
@@ -31,13 +30,11 @@ class Classification(MLTask):
         extent = scene.raster_source.get_extent()
         chip_size = options.chip_size
         stride = chip_size
-        aoi_polygons = scene.ground_truth_label_store.aoi
         windows = []
         for window in extent.get_windows(chip_size, stride):
-            if compare_window_to_aoi(window, aoi_polygons):
-                chip = scene.raster_source.get_chip(window)
-                if np.sum(chip.ravel()) > 0:
-                    windows.append(window)
+            chip = scene.raster_source.get_chip(window)
+            if np.sum(chip.ravel()) > 0:
+                windows.append(window)
         return windows
 
     def get_train_labels(self, window, scene, options):
