@@ -69,21 +69,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             }]
         }
 
-        self.aoi_dict = {
-            'type':
-            'FeatureCollection',
-            'features': [{
-                'type': 'Feature',
-                'geometry': {
-                    'type':
-                    'Polygon',
-                    'coordinates': [[[1., 0.], [1., 1.], [0., 1.], [0., 0.],
-                                     [1., 0.]]]
-                },
-                'properties': {}
-            }]
-        }
-
         self.multipolygon_geojson_dict = {
             'type':
             'FeatureCollection',
@@ -138,14 +123,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             self.geojson_str = json.dumps(self.geojson_dict)
             label_file.write(self.geojson_str)
 
-        self.aoi_file_name = 'aoi.json'
-        self.aoi_file_path = os.path.join(self.temp_dir.name,
-                                          self.aoi_file_name)
-
-        with open(self.aoi_file_path, 'w') as aoi_file:
-            self.aoi_str = json.dumps(self.aoi_dict)
-            aoi_file.write(self.aoi_str)
-
     def tearDown(self):
         self.mock_s3.stop()
         self.temp_dir.cleanup()
@@ -189,7 +166,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             invalid_uri = 's3://invalid_path/invalid.json'
             ObjectDetectionGeoJSONFile(
                 invalid_uri,
-                self.aoi_file_path,
                 self.crs_transformer,
                 self.class_map,
                 extent=self.extent,
@@ -203,7 +179,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
             invalid_uri = 's3://invalid_path/invalid.json'
             ObjectDetectionGeoJSONFile(
                 invalid_uri,
-                self.aoi_file_path,
                 self.crs_transformer,
                 self.class_map,
                 extent=self.extent,
@@ -213,7 +188,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
     def test_read_without_extent(self):
         store = ObjectDetectionGeoJSONFile(
             self.file_path,
-            self.aoi_file_path,
             self.crs_transformer,
             self.class_map,
             extent=None,
@@ -233,7 +207,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         extent = Box.make_square(0, 0, 3)
         store = ObjectDetectionGeoJSONFile(
             self.file_path,
-            self.aoi_file_path,
             self.crs_transformer,
             self.class_map,
             extent=extent,
@@ -252,7 +225,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         extent = Box.make_square(0, 0, 3.9)
         store = ObjectDetectionGeoJSONFile(
             self.file_path,
-            self.aoi_file_path,
             self.crs_transformer,
             self.class_map,
             extent=extent,
@@ -270,7 +242,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
     def test_write_not_writable(self):
         label_store = ObjectDetectionGeoJSONFile(
             self.file_path,
-            self.aoi_file_path,
             self.crs_transformer,
             self.class_map,
             extent=None,
@@ -283,7 +254,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         invalid_uri = 's3://invalid_path/invalid.json'
         label_store = ObjectDetectionGeoJSONFile(
             invalid_uri,
-            self.aoi_file_path,
             self.crs_transformer,
             self.class_map,
             extent=None,
@@ -296,7 +266,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         # Read it, write it using label_store, read it again, and compare.
         label_store = ObjectDetectionGeoJSONFile(
             self.file_path,
-            self.aoi_file_path,
             self.crs_transformer,
             self.class_map,
             extent=None,
@@ -307,7 +276,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
 
         label_store = ObjectDetectionGeoJSONFile(
             self.file_path,
-            self.aoi_file_path,
             self.crs_transformer,
             self.class_map,
             extent=None,
@@ -316,18 +284,6 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         labels2 = label_store.get_labels()
 
         labels1.assert_equal(labels2)
-
-    def test_constructor_aoi(self):
-        label_store = ObjectDetectionGeoJSONFile(
-            self.file_path,
-            self.aoi_file_path,
-            self.crs_transformer,
-            self.class_map,
-            extent=None,
-            readable=True,
-            writable=True)
-        aoi = [Box.make_square(0, 0, 2).get_shapely()]
-        self.assertEqual(aoi, label_store.aoi)
 
 
 if __name__ == '__main__':
