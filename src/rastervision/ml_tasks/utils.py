@@ -1,4 +1,4 @@
-def compare_window_to_aoi(window, aoi_polygons):
+def is_window_inside_aoi(window, aoi_polygons):
 
     if not aoi_polygons:
         return True
