@@ -97,6 +97,14 @@ class ObjectDetection(MLTask):
     def get_train_windows(self, scene, options):
         raster_source = scene.raster_source
         label_store = scene.ground_truth_label_store
+
+        window_method = options.object_detection_options.window_method
+        if window_method == 'sliding':
+            chip_size = options.chip_size
+            stride = chip_size
+            return list(raster_source.get_extent().get_windows(
+                chip_size, stride))
+
         # Make positive windows which contain labels.
         pos_windows = make_pos_windows(raster_source.get_extent(), label_store,
                                        options)
