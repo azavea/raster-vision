@@ -10,9 +10,8 @@
             "name": "raster-vision-gpu",
             "type": "amazon-ebs",
             "region": "{{user `aws_region`}}",
-            "availability_zone": "us-east-1e",
             "source_ami": "{{user `aws_gpu_ami`}}",
-            "instance_type": "p2.xlarge",
+            "instance_type": "p3.2xlarge",
             "ssh_username": "ec2-user",
             "ami_name": "raster-vision-gpu-{{timestamp}}-{{user `branch`}}",
             "run_tags": {
@@ -43,13 +42,11 @@
     "provisioners": [
         {
             "type": "shell",
-            "script": "./packer/install-nvidia-drivers.sh",
-            "expect_disconnect": true
+            "script": "./packer/scripts/configure-gpu.sh"
         },
         {
             "type": "shell",
-            "script": "./packer/install-nvidia-docker.sh",
-            "pause_before": "30s"
+            "script": "./packer/scripts/reset-ecs-state.sh"
         }
     ]
 }
