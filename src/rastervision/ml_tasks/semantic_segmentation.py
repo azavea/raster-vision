@@ -34,11 +34,11 @@ class SemanticSegmentation(MLTask):
 
         windows = []
         while (len(windows) < seg_options.number_of_chips):
-            window = extent.make_random_square(chip_size)
-            if label_store.has_labels(window):
-                windows.append(window)
-            elif (p > 0) and (np.random.rand() <= p):
-                windows.append(window)
+            # window = extent.make_random_square(chip_size)
+            # if label_store.has_labels(window):
+            #     windows.append(window)
+            # elif (p > 0) and (np.random.rand() <= p):
+            #     windows.append(window)
 
         return windows
 

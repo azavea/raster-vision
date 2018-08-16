@@ -113,6 +113,17 @@ class SegmentationRasterFile(LabelStore):
         else:
             self.channels = 1
 
+    def interesting_subwindow(self, window: Box, size: int) -> Union[Box, None]:
+        if self.src is not None:
+            labels = self.src._get_chip(window)
+            r = np.array(labels[:, :, 0], dtype=np.uint32) * (1 << 16)
+            g = np.array(labels[:, :, 1], dtype=np.uint32) * (1 << 8)
+            b = np.array(labels[:, :, 2], dtype=np.uint32) * (1 << 0)
+            packed = r + g + b
+            translated = self.src_to_rv(packed)
+        else:
+            return None
+
     def has_labels(self, window: Box) -> bool:
         """Given a window, deterine whether there are any labels in it.
 
