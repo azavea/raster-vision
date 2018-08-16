@@ -22,7 +22,7 @@ def get_recent_batch_ami(aws_profile):
     sess = boto3.Session(profile_name=aws_profile)
     ec2 = sess.client("ec2")
     images = filter(
-        lambda x: re.search("Deep Learning AMI Amazon Linux .*", x['Name']),
+        lambda x: re.search("Deep Learning Base AMI \(Amazon Linux\) (.*)", x['Name']),
         ec2.describe_images(Filters=filters)['Images'])
     images.sort(key=lambda x: x["CreationDate"])
 
