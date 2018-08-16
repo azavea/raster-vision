@@ -68,7 +68,7 @@ def make_scene_config(scene_template,
             the other arguments of this function injected into it
     """
     scene = copy.deepcopy(scene_template)
-    scene.ground_truth_label_store.Clear()
+    scene.ClearField('ground_truth_label_store')
     label_store = scene.prediction_label_store
     if label_store.HasField('object_detection_geojson_file'):
         label_store.object_detection_geojson_file.uri = \

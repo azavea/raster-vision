@@ -2,6 +2,7 @@ import unittest
 import tempfile
 import os
 import json
+from copy import deepcopy
 
 from google.protobuf import json_format
 
@@ -133,6 +134,35 @@ class TestPredictPackage(unittest.TestCase):
         self.assertListEqual(
             list(scene.raster_source.raster_transformer.channel_order),
             channel_order)
+
+    def test_ignores_no_ground_truth(self):
+        out_dir = os.path.join(self.temp_dir, 'output')
+        labels_uri = 'labels_uri'
+        image_uris = ['image_uri']
+
+        save_predict_package(self.config)
+        out_config = load_predict_package(self.predict_package_uri, out_dir,
+                                          labels_uri, image_uris)
+
+        self.assertFalse(
+            out_config.scenes[0].HasField('ground_truth_label_store'))
+
+    def test_removes_ground_truth(self):
+        print(os.path.curdir)
+        out_dir = os.path.join(self.temp_dir, 'output')
+        labels_uri = 'labels_uri'
+        image_uris = ['image_uri']
+
+        conf_json = deepcopy(self.config_json)
+        conf_json['scenes'][0]['ground_truth_label_store'] = {}
+        conf = json_format.Parse(json.dumps(conf_json), PredictConfig())
+
+        save_predict_package(conf)
+        out_config = load_predict_package(self.predict_package_uri, out_dir,
+                                          labels_uri, image_uris)
+
+        self.assertFalse(
+            out_config.scenes[0].HasField('ground_truth_label_store'))
 
 
 if __name__ == '__main__':
