@@ -39,11 +39,12 @@ message TrainConfig {
         // How often to sync output of training to the cloud (in seconds).
         optional int32 sync_interval = 5 [default=600];
 
+        optional bool do_monitoring = 7 [default=true];
+
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 6;
             SegmentationOptions segmentation_options = 7;
         }
-
     }
 
     required MachineLearning machine_learning = 1;
