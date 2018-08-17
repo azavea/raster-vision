@@ -24,9 +24,9 @@ def _batch_submit(branch_name,
     full_command.extend(command.split())
 
     client = boto3.client('batch')
-    job_queue = 'raster-vision-gpu' if gpu else \
+    job_queue = 'raster-vision-gpu3' if gpu else \
         'raster-vision-cpu'
-    job_definition = 'raster-vision-gpu' if gpu else \
+    job_definition = 'raster-vision-gpu3' if gpu else \
         'raster-vision-cpu'
 
     job_name = str(uuid.uuid4())
@@ -60,7 +60,7 @@ def _batch_submit(branch_name,
 @click.argument('branch_name')
 @click.argument('command')
 @click.option('--attempts', default=3, help='Number of times to retry job')
-@click.option('--gpu', is_flag=True, help='Use CPU EC2 instances')
+@click.option('--gpu', is_flag=True, help='Use GPU EC2 instances')
 def batch_submit(branch_name, command, attempts, gpu):
     _batch_submit(branch_name, command, attempts=attempts, gpu=gpu)
 
