@@ -1,3 +1,6 @@
+import json
+
+from rastervision.utils.files import file_to_str
 from rastervision.core.scene import Scene
 from rastervision.builders import label_store_builder, raster_source_builder
 from rastervision.label_stores.utils import json_to_shapely
@@ -33,7 +36,8 @@ def build(config, class_map, predictions_readable=False):
             writable=True)
 
     if config.HasField('aoi_uri'):
-        aoi_polygons = json_to_shapely(config.aoi_uri, crs_transformer)
+        geojson_dict = json.loads(file_to_str(config.aoi_uri))
+        aoi_polygons = json_to_shapely(geojson_dict, crs_transformer)
 
     return Scene(
         id=config.id,

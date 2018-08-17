@@ -4,10 +4,12 @@ import os
 import json
 
 from shapely import geometry
+from shapely.strtree import STRtree
 
 from rastervision.label_stores.classification_geojson_file import (
-    ClassificationGeoJSONFile, get_str_tree, infer_cell, infer_labels,
-    read_labels, to_geojson)
+    ClassificationGeoJSONFile, infer_cell, infer_labels, read_labels,
+    to_geojson)
+from rastervision.label_stores.utils import geojson_to_shapely_polygons
 from rastervision.core.crs_transformer import CRSTransformer
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
@@ -71,7 +73,9 @@ class TestObjectDetectionJsonFile(unittest.TestCase):
         self.class_id2 = 2
         self.background_class_id = 3
 
-        self.str_tree = get_str_tree(self.geojson_dict, self.crs_transformer)
+        self.polygons = geojson_to_shapely_polygons(self.geojson_dict,
+                                                    self.crs_transformer)
+        self.str_tree = STRtree(self.polygons)
 
         self.file_name = 'labels.json'
         self.temp_dir = tempfile.TemporaryDirectory()
