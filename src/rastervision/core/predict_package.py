@@ -20,7 +20,7 @@ def save_predict_package(predict_config):
     """Save a zip file with stuff needed to make predictions.
 
     Save a zip file containing model (model file), stats.json (output of
-        compute_raster_stats command), and predict-config.json
+        compute_stats command), and predict-config.json
         (predict command config file). This can be used by the predict_package
         command to make predictions on new images using the same configuration
         as in predict_config.
@@ -60,7 +60,7 @@ def make_scene_config(scene_template,
     Args:
         scene_template: rastervision.protos.scene_pb2.Scene
         stats_path: path to raster stats file
-            (output of compute_raster_stats command)
+            (output of compute_stats command)
         labels_uri: URI of labels file to write predictions to
         image_uris: list of URIS of image files to make predictions on
 

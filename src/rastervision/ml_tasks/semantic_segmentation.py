@@ -20,7 +20,7 @@ class SemanticSegmentation(MLTask):
         Args:
              scene: The scene over-which windows are to be generated.
              options: Options passed through from the
-                  `make_training_chips` section of the workflow
+                  `make_chips` section of the workflow
                   configuration file.
 
         Returns:
@@ -66,7 +66,7 @@ class SemanticSegmentation(MLTask):
              scene: The scene from-which the window of labels is to be
                   extracted.
              options: Options passed through from the
-                  `make_training_chips` section of the workflow
+                  `make_chips` section of the workflow
                   configuration file.
 
         Returns:

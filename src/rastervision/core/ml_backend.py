@@ -16,7 +16,7 @@ class MLBackend(ABC):
             scene: Scene
             data: TrainingData
             class_map: ClassMap
-            options: MakeTrainingChipsConfig.Options
+            options: MakeChipsConfig.Options
 
         Returns:
             backend-specific data-structures consumed by ml_backend's
@@ -34,7 +34,7 @@ class MLBackend(ABC):
             validation_results: dependent on the ml_backend's
                 process_scene_data
             class_map: ClassMap
-            options: MakeTrainingChipsConfig.Options
+            options: MakeChipsConfig.Options
         """
         pass
 

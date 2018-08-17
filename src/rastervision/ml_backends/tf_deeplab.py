@@ -438,7 +438,7 @@ class TFDeeplab(MLBackend):
              data: The training data.
              class_map: The mapping from numerical labels to textual
                   labels.
-             options: The options given to `make_training_chips` in
+             options: The options given to `make_chips` in
                   the config file.
 
         Returns:
@@ -470,7 +470,7 @@ class TFDeeplab(MLBackend):
                   containing validation data.
              class_map: A mapping from numerical classes to their
                   textual names.
-             options: The options given to `make_training_chips` in
+             options: The options given to `make_chips` in
                   the config file.
 
         Returns:

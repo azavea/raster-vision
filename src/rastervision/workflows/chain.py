@@ -10,10 +10,8 @@ import boto3
 import botocore
 
 from rastervision.protos.chain_workflow_pb2 import ChainWorkflowConfig
-from rastervision.protos.compute_raster_stats_pb2 import (
-    ComputeRasterStatsConfig)
-from rastervision.protos.make_training_chips_pb2 import (
-    MakeTrainingChipsConfig)
+from rastervision.protos.compute_stats_pb2 import (ComputeStatsConfig)
+from rastervision.protos.make_chips_pb2 import (MakeChipsConfig)
 from rastervision.protos.train_pb2 import TrainConfig
 from rastervision.protos.predict_pb2 import PredictConfig
 from rastervision.protos.eval_pb2 import EvalConfig
@@ -28,12 +26,12 @@ from rastervision.utils.files import (load_json_config, save_json_config,
 from rastervision.utils.batch import _batch_submit
 from rastervision import run
 
-COMPUTE_RASTER_STATS = 'compute_raster_stats'
-MAKE_TRAINING_CHIPS = 'make_training_chips'
+compute_stats = 'compute_stats'
+make_chips = 'make_chips'
 TRAIN = 'train'
 PREDICT = 'predict'
 EVAL = 'eval'
-ALL_TASKS = [COMPUTE_RASTER_STATS, MAKE_TRAINING_CHIPS, TRAIN, PREDICT, EVAL]
+ALL_TASKS = [compute_stats, make_chips, TRAIN, PREDICT, EVAL]
 
 validated_uri_fields = set(
     [('rv.protos.ObjectDetectionGeoJSONFile',
@@ -62,18 +60,16 @@ class PathGenerator(object):
                                    prediction_key)
         self.eval_uri = join(self.prediction_uri, 'evals', eval_key)
 
-        self.compute_raster_stats_config_uri = self.get_config_uri(
+        self.compute_stats_config_uri = self.get_config_uri(
             self.raw_dataset_uri)
-        self.make_training_chips_config_uri = self.get_config_uri(
-            self.dataset_uri)
+        self.make_chips_config_uri = self.get_config_uri(self.dataset_uri)
         self.train_config_uri = self.get_config_uri(self.model_uri)
         self.predict_config_uri = self.get_config_uri(self.prediction_uri)
         self.eval_config_uri = self.get_config_uri(self.eval_uri)
 
-        self.compute_raster_stats_output_uri = self.get_output_uri(
+        self.compute_stats_output_uri = self.get_output_uri(
             self.raw_dataset_uri)
-        self.make_training_chips_output_uri = self.get_output_uri(
-            self.dataset_uri)
+        self.make_chips_output_uri = self.get_output_uri(self.dataset_uri)
         self.train_output_uri = self.get_output_uri(self.model_uri)
         self.prediction_output_uri = self.get_output_uri(self.prediction_uri)
         self.eval_output_uri = self.get_output_uri(self.eval_uri)
@@ -209,7 +205,7 @@ class ChainWorkflow(object):
         self.update_scenes()
 
     def update_raster_transformer(self):
-        stats_uri = join(self.path_generator.compute_raster_stats_output_uri,
+        stats_uri = join(self.path_generator.compute_stats_output_uri,
                          'stats.json')
         self.workflow.raster_transformer.stats_uri = stats_uri
 
@@ -263,14 +259,14 @@ class ChainWorkflow(object):
                 'Not sure how to generate label source config for type {}'
                 .format(label_store_type))
 
-    def get_compute_raster_stats_config(self):
-        config = ComputeRasterStatsConfig()
+    def get_compute_stats_config(self):
+        config = ComputeStatsConfig()
         scenes = copy.deepcopy(self.workflow.train_scenes)
         scenes.extend(self.workflow.test_scenes)
         scenes.extend(self.workflow.predict_scenes)
         for scene in scenes:
             # Set the raster_transformer so its fields are null since
-            # compute_raster_stats will generate stats_uri.
+            # compute_stats will generate stats_uri.
             raster_source = copy.deepcopy(scene.raster_source)
             raster_source.raster_transformer.stats_uri = ''
             config.raster_sources.extend([raster_source])
@@ -278,26 +274,26 @@ class ChainWorkflow(object):
         config = apply_uri_map(config, self.uri_map)
         return config
 
-    def get_make_training_chips_config(self):
-        config = MakeTrainingChipsConfig()
+    def get_make_chips_config(self):
+        config = MakeChipsConfig()
         config.train_scenes.MergeFrom(self.workflow.train_scenes)
         config.validation_scenes.MergeFrom(self.workflow.test_scenes)
-        config.machine_learning.MergeFrom(self.workflow.machine_learning)
-        config.options.MergeFrom(self.workflow.make_training_chips_options)
+        config.model_config.MergeFrom(self.workflow.model_config)
+        config.options.MergeFrom(self.workflow.make_chips_options)
         config.options.chip_size = self.workflow.chip_size
         config.options.debug = self.workflow.debug
         config.options.output_uri = \
-            self.path_generator.make_training_chips_output_uri
+            self.path_generator.make_chips_output_uri
 
         config = apply_uri_map(config, self.uri_map)
         return config
 
     def get_train_config(self):
         config = TrainConfig()
-        config.machine_learning.MergeFrom(self.workflow.machine_learning)
+        config.model_config.MergeFrom(self.workflow.model_config)
         config.options.MergeFrom(self.workflow.train_options)
         config.options.training_data_uri = \
-            self.path_generator.make_training_chips_output_uri
+            self.path_generator.make_chips_output_uri
         config.options.output_uri = \
             self.path_generator.train_output_uri
 
@@ -317,7 +313,7 @@ class ChainWorkflow(object):
 
     def get_predict_config(self):
         config = PredictConfig()
-        config.machine_learning.MergeFrom(self.workflow.machine_learning)
+        config.model_config.MergeFrom(self.workflow.model_config)
         config.scenes.MergeFrom(self.workflow.test_scenes)
         config.scenes.MergeFrom(self.workflow.predict_scenes)
         config.options.MergeFrom(self.workflow.predict_options)
@@ -335,7 +331,7 @@ class ChainWorkflow(object):
 
     def get_eval_config(self):
         config = EvalConfig()
-        config.machine_learning.MergeFrom(self.workflow.machine_learning)
+        config.model_config.MergeFrom(self.workflow.model_config)
         config.scenes.MergeFrom(self.workflow.test_scenes)
         config.options.MergeFrom(self.workflow.eval_options)
         config.options.debug = self.workflow.debug
@@ -347,15 +343,13 @@ class ChainWorkflow(object):
     def save_configs(self, tasks):
         print('Generating and saving config files...')
 
-        if COMPUTE_RASTER_STATS in tasks:
-            save_json_config(
-                self.get_compute_raster_stats_config(),
-                self.path_generator.compute_raster_stats_config_uri)
+        if compute_stats in tasks:
+            save_json_config(self.get_compute_stats_config(),
+                             self.path_generator.compute_stats_config_uri)
 
-        if MAKE_TRAINING_CHIPS in tasks:
-            save_json_config(
-                self.get_make_training_chips_config(),
-                self.path_generator.make_training_chips_config_uri)
+        if make_chips in tasks:
+            save_json_config(self.get_make_chips_config(),
+                             self.path_generator.make_chips_config_uri)
 
         if TRAIN in tasks:
             save_json_config(self.get_train_config(),
@@ -377,17 +371,15 @@ class ChainWorkflow(object):
         # handle dependencies across different queues.
         parent_job_ids = []
 
-        if COMPUTE_RASTER_STATS in tasks:
+        if compute_stats in tasks:
             command = make_command(
-                COMPUTE_RASTER_STATS,
-                self.path_generator.compute_raster_stats_config_uri)
+                compute_stats, self.path_generator.compute_stats_config_uri)
             job_id = _batch_submit(branch, command, attempts=1, gpu=True)
             parent_job_ids = [job_id]
 
-        if MAKE_TRAINING_CHIPS in tasks:
-            command = make_command(
-                MAKE_TRAINING_CHIPS,
-                self.path_generator.make_training_chips_config_uri)
+        if make_chips in tasks:
+            command = make_command(make_chips,
+                                   self.path_generator.make_chips_config_uri)
             job_id = _batch_submit(
                 branch,
                 command,
@@ -427,13 +419,11 @@ class ChainWorkflow(object):
                 parent_job_ids=parent_job_ids)
 
     def local_run(self, tasks):
-        if COMPUTE_RASTER_STATS in tasks:
-            run._compute_raster_stats(
-                self.path_generator.compute_raster_stats_config_uri)
+        if compute_stats in tasks:
+            run._compute_stats(self.path_generator.compute_stats_config_uri)
 
-        if MAKE_TRAINING_CHIPS in tasks:
-            run._make_training_chips(
-                self.path_generator.make_training_chips_config_uri)
+        if make_chips in tasks:
+            run._make_chips(self.path_generator.make_chips_config_uri)
 
         if TRAIN in tasks:
             run._train(self.path_generator.train_config_uri)
