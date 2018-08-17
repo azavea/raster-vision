@@ -118,9 +118,10 @@
     },
     "make_training_chips_options": {
         "segmentation_options": {
-            "empty_survival_probability": 0.001,
+            "empty_survival_probability": 0,
             "number_of_chips": 133,
-            "debug_chip_probability": 1.0
+            "debug_chip_probability": 1.0,
+            "minor_axis_backoff": 33
         }
     },
     "train_options": {

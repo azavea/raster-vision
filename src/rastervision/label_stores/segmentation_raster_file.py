@@ -113,14 +113,35 @@ class SegmentationRasterFile(LabelStore):
         else:
             self.channels = 1
 
-    def interesting_subwindow(self, window: Box, size: int) -> Union[Box, None]:
+    def interesting_subwindow(self, window: Box, size: int,
+                              backoff: int) -> Union[Box, None]:
         if self.src is not None:
+            larger_size = window.xmax - window.xmin  # XXX assumed square
+
             labels = self.src._get_chip(window)
             r = np.array(labels[:, :, 0], dtype=np.uint32) * (1 << 16)
             g = np.array(labels[:, :, 1], dtype=np.uint32) * (1 << 8)
             b = np.array(labels[:, :, 2], dtype=np.uint32) * (1 << 0)
             packed = r + g + b
             translated = self.src_to_rv(packed)
+            argmax = np.argmax(translated > 0)
+
+            if argmax == 0:
+                return None
+            else:
+                major = int(argmax / larger_size)
+                minor = argmax - (major * larger_size)
+                old_ymax = window.ymax
+                old_xmax = window.xmax
+                new_ymin = window.ymin + major
+                new_xmin = window.xmin + minor - backoff
+                ymin = new_ymin if (new_ymin + size <=
+                                    old_ymax) else old_ymax - size
+                xmin = new_xmin if (new_xmin + size <=
+                                    old_xmax) else old_ymax - size
+                retval = Box(
+                    ymin=ymin, xmin=xmin, ymax=ymin + size, xmax=xmin + size)
+                return retval
         else:
             return None
 

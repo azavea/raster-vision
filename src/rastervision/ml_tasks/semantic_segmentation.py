@@ -31,14 +31,23 @@ class SemanticSegmentation(MLTask):
         label_store = scene.ground_truth_label_store
         chip_size = options.chip_size
         p = seg_options.empty_survival_probability
+        m = seg_options.super_window_factor
+        backoff = seg_options.minor_axis_backoff
 
         windows = []
         while (len(windows) < seg_options.number_of_chips):
-            # window = extent.make_random_square(chip_size)
-            # if label_store.has_labels(window):
-            #     windows.append(window)
-            # elif (p > 0) and (np.random.rand() <= p):
-            #     windows.append(window)
+            window = extent.make_random_square(chip_size * m)
+            sub_window = label_store.interesting_subwindow(
+                window, chip_size, backoff)
+            if sub_window is not None:
+                windows.append(sub_window)
+            elif (p > 0) and (np.random.rand() <= p):
+                ymin = window.ymin
+                xmin = window.xmin
+                ymax = ymin + chip_size
+                xmax = xmin + chip_size
+                sub_window = Box(ymin=ymin, xmin=xmin, ymax=ymax, xmax=xmax)
+                windows.append(sub_window)
 
         return windows
 

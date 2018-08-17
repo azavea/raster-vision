@@ -356,7 +356,8 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
 
     env = os.environ.copy()
     for field in env_fields:
-        print('{}={}'.format(field.upper(), be_options.__getattribute__(field)))
+        print('{}={}'.format(field.upper(),
+                             be_options.__getattribute__(field)))
         env[field.upper()] = str(be_options.__getattribute__(field))
     print('DL_CUSTOM_CLASSES={}'.format(num_classes))
     env['DL_CUSTOM_CLASSES'] = str(num_classes)
