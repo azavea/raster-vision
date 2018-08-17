@@ -19,23 +19,12 @@
         "volumes": [
             {
                 "host": {
-                    "sourcePath": "/var/lib/nvidia-docker/volumes/nvidia_driver/latest"
-                },
-                "name": "nvidia"
-            },
-            {
-                "host": {
                     "sourcePath": "/home/ec2-user"
                 },
                 "name": "home"
             }
         ],
         "mountPoints": [
-            {
-                "containerPath": "/usr/local/nvidia",
-                "readOnly": false,
-                "sourceVolume": "nvidia"
-            },
             {
                 "containerPath": "/opt/data",
                 "readOnly": false,

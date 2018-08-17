@@ -8,7 +8,7 @@
         "maxvCpus": 200,
         "desiredvCpus": 0,
         "instanceTypes": [
-            "p2.xlarge"
+            "p3.2xlarge"
         ],
         "subnets": [
             "subnet-e121d7cd",
@@ -21,7 +21,7 @@
         "securityGroupIds": [
             "sg-4c00d332"
         ],
-        "imageId": "ami-1e8a0961",
+        "imageId": "ami-00c23bc4394e09df3",
         "bidPercentage": 50,
         "instanceRole": "arn:aws:iam::279682201306:instance-profile/raster-vision-instance-profile",
         "ec2KeyPair": "raster-vision"
