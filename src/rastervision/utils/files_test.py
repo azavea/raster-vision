@@ -65,6 +65,12 @@ class TestGetLocalPath(unittest.TestCase):
         path = get_local_path(uri, download_dir)
         self.assertEqual(path, '/download_dir/s3/bucket/my/file.txt')
 
+    def test_http(self):
+        download_dir = '/download_dir'
+        uri = 'http://bucket/my/file.txt'
+        path = get_local_path(uri, download_dir)
+        self.assertEqual(path, '/download_dir/http/bucket/my/file.txt')
+
 
 class TestFileToStr(unittest.TestCase):
     """Test file_to_str and str_to_file."""

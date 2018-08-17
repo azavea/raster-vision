@@ -1,4 +1,6 @@
 import math
+import random
+
 import numpy as np
 from shapely.geometry import box as ShapelyBox
 
@@ -96,11 +98,11 @@ class Box():
         """
         lb = self.ymin - (size - self.get_height())
         ub = self.ymin
-        rand_y = int(np.random.uniform(lb, ub))
+        rand_y = random.randint(lb, ub)
 
         lb = self.xmin - (size - self.get_width())
         ub = self.xmin
-        rand_x = int(np.random.uniform(lb, ub))
+        rand_x = random.randint(lb, ub)
 
         return Box.make_square(rand_y, rand_x, size)
 
@@ -110,11 +112,19 @@ class Box():
         Args:
             size: the height and width of the new Box
         """
-        ub = self.get_height() - size
-        rand_y = int(np.random.uniform(0, ub))
+        if size >= self.get_width():
+            raise ValueError('size of random square cannot be >= width')
 
-        ub = self.get_width() - size
-        rand_x = int(np.random.uniform(0, ub))
+        if size >= self.get_height():
+            raise ValueError('size of random square cannot be >= height')
+
+        lb = self.ymin
+        ub = self.ymax - size
+        rand_y = random.randint(lb, ub)
+
+        lb = self.xmin
+        ub = self.xmax - size
+        rand_x = random.randint(lb, ub)
 
         return Box.make_square(rand_y, rand_x, size)
 

@@ -55,11 +55,14 @@ def geojson_to_labels(geojson_dict, crs_transformer, extent=None):
                 "Geometries of type {} are not supported in object detection \
                 labels.".format(geom_type))
 
-    boxes = np.array([box.npbox_format() for box in boxes], dtype=float)
-    class_ids = np.array(class_ids)
-    scores = np.array(scores)
+    if len(boxes):
+        boxes = np.array([box.npbox_format() for box in boxes], dtype=float)
+        class_ids = np.array(class_ids)
+        scores = np.array(scores)
+        labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
+    else:
+        labels = ObjectDetectionLabels.make_empty()
 
-    labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
     if extent is not None:
         labels = ObjectDetectionLabels.get_overlapping(
             labels, extent, ioa_thresh=0.8, clip=True)

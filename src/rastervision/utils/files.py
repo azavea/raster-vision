@@ -1,5 +1,6 @@
 import io
 import os
+import urllib
 
 import boto3
 import botocore
@@ -76,6 +77,9 @@ def get_local_path(uri, download_dir):
     elif parsed_uri.scheme == 's3':
         path = os.path.join(download_dir, 's3', parsed_uri.netloc,
                             parsed_uri.path[1:])
+    elif parsed_uri.scheme in ['http', 'https']:
+        path = os.path.join(download_dir, 'http', parsed_uri.netloc,
+                            parsed_uri.path[1:])
 
     return path
 
@@ -150,6 +154,13 @@ def download_if_needed(uri, download_dir):
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError:
             raise NotReadableError('Could not read {}'.format(uri))
+    elif parsed_uri.scheme in ['http', 'https']:
+        with urllib.request.urlopen(uri) as response:
+            with open(path, 'wb') as out_file:
+                try:
+                    shutil.copyfileobj(response, out_file)
+                except Exception:
+                    raise NotReadableError('Could not read {}'.format(uri))
     else:
         not_found = not os.path.isfile(path)
         if not_found:

@@ -190,7 +190,11 @@ def terminate_at_exit(process):
     atexit.register(terminate)
 
 
-def train(config_path, output_dir, train_py=None, eval_py=None):
+def train(config_path,
+          output_dir,
+          train_py=None,
+          eval_py=None,
+          do_monitoring=True):
     output_train_dir = join(output_dir, 'train')
     output_eval_dir = join(output_dir, 'eval')
 
@@ -204,21 +208,23 @@ def train(config_path, output_dir, train_py=None, eval_py=None):
     ])
     terminate_at_exit(train_process)
 
-    eval_process = Popen([
-        'python', eval_py, '--logtostderr',
-        '--pipeline_config_path={}'.format(config_path),
-        '--checkpoint_dir={}'.format(output_train_dir),
-        '--eval_dir={}'.format(output_eval_dir)
-    ])
-    terminate_at_exit(eval_process)
+    if do_monitoring:
+        eval_process = Popen([
+            'python', eval_py, '--logtostderr',
+            '--pipeline_config_path={}'.format(config_path),
+            '--checkpoint_dir={}'.format(output_train_dir),
+            '--eval_dir={}'.format(output_eval_dir)
+        ])
+        terminate_at_exit(eval_process)
 
-    tensorboard_process = Popen(
-        ['tensorboard', '--logdir={}'.format(output_dir)])
-    terminate_at_exit(tensorboard_process)
+        tensorboard_process = Popen(
+            ['tensorboard', '--logdir={}'.format(output_dir)])
+        terminate_at_exit(tensorboard_process)
 
     train_process.wait()
-    eval_process.terminate()
-    tensorboard_process.terminate()
+    if do_monitoring:
+        eval_process.terminate()
+        tensorboard_process.terminate()
 
 
 def get_last_checkpoint_path(train_root_dir):
@@ -441,9 +447,10 @@ class TrainingPackage(object):
         config = text_format.Parse(config_str, TrainEvalPipelineConfig())
 
         # Update config using local paths.
-        pretrained_model_path = self.download_pretrained_model(
-            pretrained_model_zip_uri)
-        config.train_config.fine_tune_checkpoint = pretrained_model_path
+        if pretrained_model_zip_uri:
+            pretrained_model_path = self.download_pretrained_model(
+                pretrained_model_zip_uri)
+            config.train_config.fine_tune_checkpoint = pretrained_model_path
 
         class_map_path = self.get_local_path(self.get_class_map_uri())
 
@@ -601,7 +608,12 @@ class TFObjectDetectionAPI(MLBackend):
                 output_dir,
                 options.output_uri,
                 sync_interval=options.sync_interval)
-            train(config_path, output_dir, train_py=train_py, eval_py=eval_py)
+            train(
+                config_path,
+                output_dir,
+                train_py=train_py,
+                eval_py=eval_py,
+                do_monitoring=options.do_monitoring)
 
             export_inference_graph(
                 output_dir, config_path, output_dir, export_py=export_py)

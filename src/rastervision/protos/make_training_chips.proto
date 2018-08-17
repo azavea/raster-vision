@@ -13,6 +13,7 @@ message MakeTrainingChipsConfig {
             background is different in positive chips. For example, in car
             detection, the positive chips will always contain roads, but no
             examples of rooftops since cars tend to not be near rooftops.
+            This option is not used when window_method is `sliding`.
         */
         required float neg_ratio = 1;
 
@@ -35,6 +36,8 @@ message MakeTrainingChipsConfig {
                     - each label's bounding box is the positive window
                 - image
                     - each image is the positive window
+                - sliding
+                    - each image is from a sliding window with 50% overlap
         */
         optional string window_method = 3 [default="chip"];
 
@@ -44,7 +47,6 @@ message MakeTrainingChipsConfig {
             If value is >= 1., the value is treated in number of pixels
         */
         optional float label_buffer = 4 [default=0.];
-
     }
 
     message ClassificationOptions {
