@@ -1,17 +1,17 @@
 import io
 import os
 import urllib
-
-import boto3
-import botocore
+from urllib.parse import urlparse
+import urllib.request
 import shutil
 import subprocess
 import tempfile
-
-from google.protobuf import json_format
-from pathlib import Path
 from threading import Timer
-from urllib.parse import urlparse
+from pathlib import Path
+
+import boto3
+import botocore
+from google.protobuf import json_format
 
 
 class NotReadableError(Exception):
@@ -146,10 +146,11 @@ def download_if_needed(uri, download_dir):
     path = get_local_path(uri, download_dir)
     make_dir(path, use_dirname=True)
 
+    print('Downloading {} to {}'.format(uri, path))
+
     parsed_uri = urlparse(uri)
     if parsed_uri.scheme == 's3':
         try:
-            print('Downloading {} to {}'.format(uri, path))
             s3 = boto3.client('s3')
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError:
@@ -169,10 +170,25 @@ def download_if_needed(uri, download_dir):
     return path
 
 
+def file_exists(uri):
+    parsed_uri = urlparse(uri)
+    if parsed_uri.scheme == 's3':
+        s3 = boto3.client('s3')
+        bucket = s3.Bucket(parsed_uri.netloc)
+        key = parsed_uri.path[1:]
+        objs = list(bucket.objects.filter(Prefix=key))
+        if len(objs) > 0 and objs[0].key == key:
+            return True
+        return False
+    else:
+        return os.path.isfile(uri)
+
+
+# TODO change this to upload_or_copy
 def upload_if_needed(src_path, dst_uri):
     """Upload a file if the destination is remote.
 
-    If dst_uri is local, there is no need to upload.
+    If dst_uri is local, the file is copied.
 
     Args:
         src_path: (string) path to source file
@@ -200,6 +216,10 @@ def upload_if_needed(src_path, dst_uri):
                 raise NotWritableError('Could not write {}'.format(dst_uri))
         else:
             sync_dir(src_path, dst_uri, delete=True)
+    else:
+        if src_path != dst_uri:
+            make_dir(dst_uri, use_dirname=True)
+            shutil.copyfile(src_path, dst_uri)
 
 
 def file_to_str(file_uri):
