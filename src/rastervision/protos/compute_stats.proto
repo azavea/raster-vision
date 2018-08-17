@@ -4,7 +4,7 @@ package rv.protos;
 
 import "rastervision/protos/raster_source.proto";
 
-message ComputeRasterStatsConfig {
+message ComputeStatsConfig {
     repeated RasterSource raster_sources = 1;
     required string stats_uri = 2;
 }

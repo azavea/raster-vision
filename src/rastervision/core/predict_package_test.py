@@ -29,7 +29,7 @@ class TestPredictPackage(unittest.TestCase):
         self.channel_order = [0, 1, 2]
 
         self.config_json = {
-            "machine_learning": {
+            "model_config": {
                 "backend": "TF_OBJECT_DETECTION_API",
                 "task": "OBJECT_DETECTION",
                 "class_items": [{
@@ -97,8 +97,7 @@ class TestPredictPackage(unittest.TestCase):
         self.assertEqual(out_config.options.prediction_package_uri, '')
         self.assertEqual(out_config.options.model_uri, out_model_path)
 
-        self.assertEqual(out_config.machine_learning,
-                         self.config.machine_learning)
+        self.assertEqual(out_config.model_config, self.config.model_config)
         self.assertEqual(out_config.options.object_detection_options,
                          self.config.options.object_detection_options)
         self.assertEqual(out_config.options.chip_size,

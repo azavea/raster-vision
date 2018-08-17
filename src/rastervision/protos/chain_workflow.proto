@@ -2,9 +2,9 @@ syntax = "proto2";
 
 package rv.protos;
 
-import "rastervision/protos/machine_learning.proto";
+import "rastervision/protos/model_config.proto";
 import "rastervision/protos/scene.proto";
-import "rastervision/protos/make_training_chips.proto";
+import "rastervision/protos/make_chips.proto";
 import "rastervision/protos/train.proto";
 import "rastervision/protos/predict.proto";
 import "rastervision/protos/eval.proto";
@@ -25,7 +25,7 @@ message ChainWorkflowConfig {
     // to infer the type of the prediction file that should be generated.)
     repeated Scene predict_scenes = 20;
 
-    required MachineLearning machine_learning = 3;
+    required ModelConfig model_config = 3;
     required RasterTransformer raster_transformer = 5;
     required int32 chip_size = 6;
     required bool debug = 7;
@@ -44,7 +44,7 @@ message ChainWorkflowConfig {
     required string prediction_key = 12;
     required string eval_key = 13;
 
-    required MakeTrainingChipsConfig.Options make_training_chips_options = 14;
+    required MakeChipsConfig.Options make_chips_options = 14;
     required TrainConfig.Options train_options = 15;
     required PredictConfig.Options predict_options = 16;
     required EvalConfig.Options eval_options = 17;

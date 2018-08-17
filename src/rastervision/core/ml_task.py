@@ -98,7 +98,7 @@ class MLTask(object):
     def get_class_map(self):
         return self.class_map
 
-    def make_training_chips(self, train_scenes, validation_scenes, options):
+    def make_chips(self, train_scenes, validation_scenes, options):
         """Make training chips.
 
         Convert Scenes with a ground_truth_label_store into training
@@ -109,7 +109,7 @@ class MLTask(object):
             train_scenes: list of Scene
             validation_scenes: list of Scene
                 (that is disjoint from train_scenes)
-            options: MakeTrainingChipsConfig.Options
+            options: MakeChipsConfig.Options
         """
 
         def _process_scene(scene, type_):

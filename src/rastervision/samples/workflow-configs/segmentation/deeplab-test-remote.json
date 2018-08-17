@@ -53,7 +53,7 @@
             }
         }
     ],
-    "machine_learning": {
+    "model_config": {
         "task": "SEMANTIC_SEGMENTATION",
         "backend": "TF_DEEPLAB",
         "class_items": [
@@ -64,7 +64,7 @@
            }
         ]
     },
-    "make_training_chips_options": {
+    "make_chips_options": {
         "segmentation_options": {
             "empty_survival_probability": 0.2,
             "number_of_chips": 133,

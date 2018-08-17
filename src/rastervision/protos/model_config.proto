@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package rv.protos;
 
-message MachineLearning {
+message ModelConfig {
     enum Task {
         OBJECT_DETECTION = 1;
         CLASSIFICATION = 2;
@@ -16,6 +16,11 @@ message MachineLearning {
         TF_DEEPLAB = 3;
     }
 
+    enum ModelType {
+        MOBILENET = 1;
+        RESNET50 = 2;
+    }
+
     message ClassItem {
         // Eg. car
         required int32 id = 1;
@@ -25,5 +30,7 @@ message MachineLearning {
 
     required Task task = 1;
     required Backend backend = 2;
-    repeated ClassItem class_items = 3;
+    required ModelType model_type = 3;
+    repeated ClassItem class_items = 4;
+    required int32 chip_size = 5;
 }

@@ -122,7 +122,7 @@ class KerasClassification(MLBackend):
             scene: Scene
             data: TrainingData
             class_map: ClassMap
-            options: MakeTrainingChipsConfig.Options
+            options: MakeChipsConfig.Options
 
         Returns:
             dictionary of Scene's classes and corresponding local directory
@@ -164,7 +164,7 @@ class KerasClassification(MLBackend):
             validation_results: list of dictionaries of validation scenes'
                 classes and corresponding local directory path
             class_map: ClassMap
-            options: MakeTrainingChipsConfig.Options
+            options: MakeChipsConfig.Options
         """
         dataset_files = DatasetFiles(options.output_uri)
         training_dir = dataset_files.get_local_path(dataset_files.training_uri)

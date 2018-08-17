@@ -5,7 +5,7 @@ from rastervision.ml_backends.keras_classification import KerasClassification
 from rastervision.ml_backends.tf_deeplab import TFDeeplab
 from rastervision.ml_tasks.classification import Classification
 from rastervision.ml_tasks.semantic_segmentation import SemanticSegmentation
-from rastervision.protos.machine_learning_pb2 import MachineLearning
+from rastervision.protos.model_config_pb2 import ModelConfig
 from rastervision.core.class_map import ClassItem, ClassMap
 
 
@@ -17,19 +17,19 @@ def build(config):
     class_map = ClassMap(class_items)
 
     tf_object_detection_api_val = \
-        MachineLearning.Backend.Value('TF_OBJECT_DETECTION_API')
+        ModelConfig.Backend.Value('TF_OBJECT_DETECTION_API')
     object_detection_val = \
-        MachineLearning.Task.Value('OBJECT_DETECTION')
+        ModelConfig.Task.Value('OBJECT_DETECTION')
 
     tf_deeplab_val = \
-        MachineLearning.Backend.Value('TF_DEEPLAB')
+        ModelConfig.Backend.Value('TF_DEEPLAB')
     semantic_segmentation_val = \
-        MachineLearning.Task.Value('SEMANTIC_SEGMENTATION')
+        ModelConfig.Task.Value('SEMANTIC_SEGMENTATION')
 
     keras_classification_val = \
-        MachineLearning.Backend.Value('KERAS_CLASSIFICATION')
+        ModelConfig.Backend.Value('KERAS_CLASSIFICATION')
     classification_val = \
-        MachineLearning.Task.Value('CLASSIFICATION')
+        ModelConfig.Task.Value('CLASSIFICATION')
 
     backend_map = {
         tf_object_detection_api_val: TFObjectDetectionAPI,

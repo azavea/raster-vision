@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package rv.protos;
 
-import "rastervision/protos/machine_learning.proto";
+import "rastervision/protos/model_config.proto";
 
 message TrainConfig {
 
@@ -27,7 +27,7 @@ message TrainConfig {
         // backend.
         optional string backend_config_uri = 1;
 
-        // URI for the directory containing the output of make_training_chips.
+        // URI for the directory containing the output of make_chips.
         optional string training_data_uri = 2;
 
         // URI for the directory containing the output of training.
@@ -49,6 +49,6 @@ message TrainConfig {
         }
     }
 
-    required MachineLearning machine_learning = 1;
+    required ModelConfig model_config = 1;
     required Options options = 2;
 }

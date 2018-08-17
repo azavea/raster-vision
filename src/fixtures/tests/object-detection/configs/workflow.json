@@ -33,7 +33,7 @@
             }
         }
     ],
-    "machine_learning": {
+    "model_config": {
         "task": "OBJECT_DETECTION",
         "backend": "TF_OBJECT_DETECTION_API",
         "class_items": [
