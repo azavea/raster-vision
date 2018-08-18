@@ -29,6 +29,9 @@ class Trainer(object):
 
         self.model_path = os.path.join(options.output_dir, 'model')
         make_dir(self.model_path, use_dirname=True)
+        self.weights_path = os.path.join(options.output_dir,
+                                         'model-weights.hdf5')
+        make_dir(self.weights_path, use_dirname=True)
         self.log_path = os.path.join(options.output_dir, 'log.csv')
         make_dir(self.log_path, use_dirname=True)
 
@@ -41,10 +44,18 @@ class Trainer(object):
 
     def make_callbacks(self):
         model_checkpoint = keras.callbacks.ModelCheckpoint(
-            filepath=self.model_path, save_best_only=self.options.save_best)
+            filepath=self.model_path,
+            save_best_only=self.options.save_best,
+            save_weights_only=False)
+
+        weights_checkpoint = keras.callbacks.ModelCheckpoint(
+            filepath=self.weights_path,
+            save_best_only=self.options.save_best,
+            save_weights_only=True)
 
         csv_logger = keras.callbacks.CSVLogger(self.log_path, append=True)
-        callbacks = [model_checkpoint, csv_logger]
+
+        callbacks = [model_checkpoint, weights_checkpoint, csv_logger]
 
         if self.options.lr_schedule:
             lr_schedule = sorted(

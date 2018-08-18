@@ -78,14 +78,31 @@ class DatasetFiles(FileGroup):
 class ModelFiles(FileGroup):
     """Utilities for files produced when calling train."""
 
-    def __init__(self, base_uri):
+    def __init__(self, base_uri, replace_model=False):
+        """Create these model files.
+
+        Args:
+            base_uri: Base URI of the model files
+            replace_model: If the model file exists, remove.
+                           Used for the training step, to retrain
+                           existing models.
+
+        Returns:
+            A new ModelFile instance.
+        """
         FileGroup.__init__(self, base_uri)
 
         self.model_uri = join(self.base_uri, 'model')
         self.log_uri = join(self.base_uri, 'log.csv')
 
-    def download_backend_config(self, backend_config_uri, dataset_files,
-                                class_map):
+        if replace_model:
+            if os.path.exists(self.model_uri):
+                os.remove(self.model_uri)
+            if os.path.exists(self.log_uri):
+                os.remove(self.log_uri)
+
+    def download_backend_config(self, pretrained_model_uri, backend_config_uri,
+                                dataset_files, class_map):
         config = load_json_config(backend_config_uri, PipelineConfig())
 
         # Update config using local paths.
@@ -101,12 +118,19 @@ class ModelFiles(FileGroup):
         del config.trainer.options.class_names[:]
         config.trainer.options.class_names.extend(class_map.get_class_names())
 
+        # Save the pretrained weights locally
+        pretrained_model_path = None
+        if pretrained_model_uri:
+            pretrained_model_path = self.download_if_needed(
+                pretrained_model_uri)
+
         # Save an updated copy of the config file.
         config_path = self.get_local_path(backend_config_uri)
         config_str = json_format.MessageToJson(config)
         with open(config_path, 'w') as config_file:
             config_file.write(config_str)
-        return config_path
+
+        return (config_path, pretrained_model_path)
 
 
 class KerasClassification(MLBackend):
@@ -198,9 +222,11 @@ class KerasClassification(MLBackend):
         dataset_files = DatasetFiles(options.training_data_uri)
         dataset_files.download()
 
-        model_files = ModelFiles(options.output_uri)
-        backend_config_path = model_files.download_backend_config(
-            options.backend_config_uri, dataset_files, class_map)
+        model_files = ModelFiles(options.output_uri, replace_model=True)
+        model_paths = model_files.download_backend_config(
+            options.pretrained_model_uri, options.backend_config_uri,
+            dataset_files, class_map)
+        backend_config_path, pretrained_model_path = model_paths
 
         # Get output from potential previous run so we can resume training.
         if urlparse(options.output_uri).scheme == 's3':
@@ -210,7 +236,7 @@ class KerasClassification(MLBackend):
             model_files.base_dir,
             options.output_uri,
             sync_interval=options.sync_interval)
-        _train(backend_config_path)
+        _train(backend_config_path, pretrained_model_path)
 
         if urlparse(options.output_uri).scheme == 's3':
             sync_dir(model_files.base_dir, options.output_uri, delete=True)
