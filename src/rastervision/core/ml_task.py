@@ -3,6 +3,8 @@ from abc import abstractmethod
 from rastervision.core.training_data import TrainingData
 from rastervision.core.predict_package import save_predict_package
 
+import numpy as np
+
 # TODO: DRY... same keys as in ml_backends/tf_object_detection_aip.py
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -173,9 +175,12 @@ class MLTask(object):
                                                options)
             for window in windows:
                 chip = raster_source.get_chip(window)
-                labels = self.backend.predict(chip, window, options)
-                label_store.extend(labels)
-                print('.', end='', flush=True)
+
+                # Don't predict on empy chips
+                if np.any(chip):
+                    labels = self.backend.predict(chip, window, options)
+                    label_store.extend(labels)
+                    print('.', end='', flush=True)
             print()
 
             labels = self.post_process_predictions(label_store.get_labels(),
