@@ -9,11 +9,19 @@ from rastervision.core.box import Box
 def load_window(image_dataset, window=None):
     """Load a window of an image from a TIFF file.
 
+    Converts nodata values to 0.
+
     Args:
         window: ((row_start, row_stop), (col_start, col_stop)) or
         ((y_min, y_max), (x_min, x_max))
     """
     im = image_dataset.read(window=window, boundless=True)
+
+    # Handle non-zero NODATA values by setting the data to 0.
+    for channel, nodata in enumerate(image_dataset.nodatavals):
+        if nodata is not None and nodata != 0:
+            im[channel, im[channel] == nodata] = 0
+
     im = np.transpose(im, axes=[1, 2, 0])
     return im
 
