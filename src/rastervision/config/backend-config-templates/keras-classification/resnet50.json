@@ -1,6 +1,7 @@
 {
     "model": {
         "input_size": 300,
+        "nb_classes": 1,
         "type": "RESNET50",
         "model_path": ""
     },
@@ -12,12 +13,11 @@
         "options": {
             "training_data_dir": "",
             "validation_data_dir": "",
-            "nb_epochs": 1,
-            "batch_size": 1,
+            "nb_epochs": 20,
+            "batch_size": 8,
             "input_size": 300,
             "output_dir": "",
-            "class_names": ["car", "background"],
-            "short_epoch": true
+            "class_names": ["car"]
         }
     }
 }

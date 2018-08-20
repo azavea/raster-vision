@@ -49,7 +49,7 @@
             }
         }
     ],
-    "machine_learning": {
+    "model_config": {
         "task": "CLASSIFICATION",
         "backend": "KERAS_CLASSIFICATION",
         "class_items": [

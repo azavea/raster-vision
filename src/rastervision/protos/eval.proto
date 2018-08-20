@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package rv.protos;
 
-import "rastervision/protos/machine_learning.proto";
+import "rastervision/protos/model_config.proto";
 import "rastervision/protos/scene.proto";
 
 
@@ -12,7 +12,7 @@ message EvalConfig {
         optional bool debug = 4 [default=true];
     }
 
-    required MachineLearning machine_learning = 1;
+    required ModelConfig model_config = 1;
     repeated Scene scenes = 4;
     required Options options = 5;
 }

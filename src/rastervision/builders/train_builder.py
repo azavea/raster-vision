@@ -8,7 +8,7 @@ def build(config):
     if isinstance(config, str):
         config = files.load_json_config(config, TrainConfig())
 
-    ml_task = ml_task_builder.build(config.machine_learning)
+    ml_task = ml_task_builder.build(config.model_config)
     options = config.options
 
     return Train(ml_task, options)
