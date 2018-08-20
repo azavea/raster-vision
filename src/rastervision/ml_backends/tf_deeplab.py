@@ -543,7 +543,9 @@ class TFDeeplab(MLBackend):
             sync_interval=options.sync_interval)
 
         # Train
-        num_classes = len(class_map.get_items()) + 1
+        max_class = max(list(map(lambda c: c.id, class_map.get_items())))
+        num_classes = len(class_map.get_items())
+        num_classes = max(max_class, num_classes) + 1
         (train_args, train_env) = get_training_args(
             train_py, train_logdir_local, tfic_index, dataset_dir_local,
             num_classes, be_options)

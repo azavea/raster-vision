@@ -124,7 +124,7 @@ class SegmentationRasterFile(LabelStore):
             b = np.array(labels[:, :, 2], dtype=np.uint32) * (1 << 0)
             packed = r + g + b
             translated = self.src_to_rv(packed)
-            argmax = np.argmax(translated > 0)
+            argmax = np.argmax(translated == 1)
 
             if argmax == 0:
                 return None
