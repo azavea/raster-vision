@@ -255,13 +255,13 @@ def export_inference_graph(train_root_dir,
     else:
         print('Exporting checkpoint {}...'.format(checkpoint_path))
 
-        train_process = Popen([
+        export_process = Popen([
             'python', export_py, '--input_type', 'image_tensor',
             '--pipeline_config_path', config_path,
             '--trained_checkpoint_prefix', checkpoint_path,
             '--output_directory', output_dir
         ])
-        train_process.wait()
+        export_process.wait()
 
         # Move frozen inference graph and clean up generated files.
         inference_graph_path = join(output_dir, 'frozen_inference_graph.pb')

@@ -31,6 +31,8 @@ from rastervision.utils.misc import (color_to_integer, numpy_to_png,
 from rastervision.utils.misc import save_img
 
 
+FROZEN_INFERENCE_GRAPH = 'model'
+
 def make_tf_examples(training_data: TrainingData,
                      class_map: ClassMap) -> List[Example]:
     """Take training data and a class map and return a list of TFRecords.
@@ -55,7 +57,7 @@ def make_tf_examples(training_data: TrainingData,
 
 
 def merge_tf_records(output_path: str, src_records: List[str]) -> None:
-    """Merge mutiple TFRecord files into one.
+    """Merge multiple TFRecord files into one.
 
     Args:
          output_path: Where to write the merged TFRecord file.
@@ -76,7 +78,7 @@ def merge_tf_records(output_path: str, src_records: List[str]) -> None:
 
 
 def string_to_triple(color: str) -> np.ndarray:
-    """Turn a PIL colorstring into an RGB triple.
+    """Turn a PIL color string into an RGB triple.
 
     Args:
          color: A PIL color string
@@ -173,7 +175,7 @@ def parse_tf_example(example: Example) -> Tuple[np.ndarray, np.ndarray]:
          example: A TensorFlow Example object.
 
     Returns:
-         tuple(np.ndarray, np.ndarray)
+         A np.ndarray × np.ndarray pair.
 
     """
     ie = 'image/encoded'
@@ -195,15 +197,15 @@ def create_tf_example(image: np.ndarray,
     """Create a TensorFlow Example from an image, the labels, &c.
 
     Args:
-         image: An nd.array containing the image data.
+         image: An np.ndarray containing the image data.
          window: A Box object containing the bounding box for this example.
          labels: An nd.array containing the label data.
          class_map: A ClassMap object containing mappings between
-              numerial and textual labels.
+              numerical and textual labels.
          chip_id: The chip id as a string.
 
     Returns:
-         A Deeplab-compatible TensorFlow Example object containing the
+         A DeepLab-compatible TensorFlow Example object containing the
          given data.
 
     """
@@ -248,7 +250,7 @@ def get_record_uri(base_uri: str, split: str) -> str:
     """Given a base URI and a split, return a filename to use.
 
     Args:
-         base_uri: The directory underwhich the returned record uri
+         base_uri: The directory under-which the returned record uri
               will reside.
          split: The split ("train", "validate", et cetera).
 
@@ -381,10 +383,8 @@ def get_export_args(export_model_py: str, train_logdir_local: str,
 
     """
     args = ['python', export_model_py]
-    args.append('--checkpoint_path={}'.format(
-        get_latest_checkpoint(train_logdir_local)))
-    args.append('--export_path={}'.format(
-        join(train_logdir_local, 'frozen_inference_graph.pb')))
+    args.append('--checkpoint_path={}'.format(get_latest_checkpoint(train_logdir_local)))
+    args.append('--export_path={}'.format(join(train_logdir_local, FROZEN_INFERENCE_GRAPH)))
     args.append('--num_classes={}'.format(num_classes))
 
     return args
@@ -400,6 +400,7 @@ class TFDeeplab(MLBackend):
         """Constructor."""
         self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
+        self.sess = None
 
     def process_scene_data(self, scene: Scene, data: TrainingData,
                            class_map: ClassMap, options) -> str:
@@ -440,7 +441,7 @@ class TFDeeplab(MLBackend):
         Args:
              training_results: A list of paths to TFRecords containing
                   training data.
-             valiation_results: A list of paths to TFRecords
+             validation_results: A list of paths to TFRecords
                   containing validation data.
              class_map: A mapping from numerical classes to their
                   textual names.
@@ -497,8 +498,8 @@ class TFDeeplab(MLBackend):
 
         Args:
              class_map: A mapping between integral and textual classes.
-             options: Options provided in the `segmentation_options`
-                  section of the workflow configuration file.
+             options: Options provided in the training section of the
+                  workflow configuration file.
 
         Returns:
              None
@@ -558,14 +559,44 @@ class TFDeeplab(MLBackend):
         tensorboard_process.terminate()
 
         # Export
-        export_args = get_export_args(export_model_py, train_logdir_local,
-                                      num_classes)
+        export_args = get_export_args(export_model_py, train_logdir_local, num_classes)
         export_process = Popen(export_args)
         terminate_at_exit(export_process)
         export_process.wait()
 
+        # sync to s3
         if urlparse(train_logdir).scheme == 's3':
             sync_dir(train_logdir_local, train_logdir, delete=True)
 
-    def predict(self, chips, windows, options):
-        return 1
+    def predict(self, chip: np.ndarray, window: Box, options) -> Tuple[Box, np.ndarray]:
+        """Predict using an already-trained DeepLab model.
+
+        Args:
+            chip: An np.ndarray containing the image data.
+            window: The window corresponding to the training chip.
+            options: Options provided in the prediction section of the
+                 workflow configuration file.
+
+        Returns:
+             A Box × np.ndarray pair.
+
+        """
+        make_dir(self.temp_dir)
+
+        # Courtesy of https://github.com/tensorflow/models/blob/cbbb2ffcde66e646d4a47628ffe2ece2322b64e8/research/deeplab/deeplab_demo.ipynb  #noqa
+        INPUT_TENSOR_NAME = 'ImageTensor:0'
+        OUTPUT_TENSOR_NAME = 'SemanticPredictions:0'
+        if self.sess is None:
+            FROZEN_GRAPH_NAME = download_if_needed(options.model_uri, self.temp_dir)
+            graph = tf.Graph()
+            with open(FROZEN_GRAPH_NAME, 'rb') as data:
+                graph_def = tf.GraphDef.FromString(data.read())
+            with graph.as_default():
+                tf.import_graph_def(graph_def, name='')
+            self.sess = tf.Session(graph=graph)
+
+        batch_seg_map = self.sess.run(
+            OUTPUT_TENSOR_NAME, feed_dict={INPUT_TENSOR_NAME: [chip]})
+        seg_map = batch_seg_map[0]
+
+        return (window, seg_map)

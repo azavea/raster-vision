@@ -32,7 +32,7 @@ message PredictConfig {
         optional string model_uri = 1;
 
         // The prediction chip_size needs to be the same as the chip_size
-        // used when training the model.
+        // used when training the model (except for segmentation).
         optional int32 chip_size = 3;
 
         // Number of chips to feed to the backend at one time

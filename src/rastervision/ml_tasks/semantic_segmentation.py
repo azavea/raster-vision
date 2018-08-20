@@ -5,6 +5,7 @@ from typing import List
 from rastervision.core.box import Box
 from rastervision.core.ml_task import MLTask
 from rastervision.core.scene import Scene
+from typing import (Dict, List, Tuple)
 
 
 class SemanticSegmentation(MLTask):
@@ -71,3 +72,25 @@ class SemanticSegmentation(MLTask):
         """
         label_store = scene.ground_truth_label_store
         return label_store.get_labels(window)
+
+    def get_predict_windows(self, extent: Box, options) -> List[Box]:
+        """Get windows over-which predictions will be calculated.
+
+        Args:
+             extent: The overall extent of the area.
+             options: Options from the prediction section of the
+                  workflow configuration file.
+
+        Returns:
+             An sequence of windows.
+        """
+        chip_size = options.chip_size
+        stride = chip_size // 2
+        return extent.get_windows(chip_size, stride)
+
+    def post_process_predictions(self, labels: None, options) -> None:
+        """Post-process predictions.
+
+        Is a nop for this backend.
+        """
+        return None
