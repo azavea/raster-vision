@@ -11,7 +11,7 @@
             },
             "ground_truth_label_store": {
                 "segmentation_raster_file": {
-                    "src": {
+                    "source": {
                         "image_file": {
                             "uri": "/opt/data/top_potsdam_2_10_label_noBoundary.tif"
                         }
@@ -38,7 +38,7 @@
             },
             "ground_truth_label_store": {
                 "segmentation_raster_file": {
-                    "src": {
+                    "source": {
                         "image_file": {
                             "uri": "/opt/data/top_potsdam_2_11_label_noBoundary.tif"
                         }

@@ -43,8 +43,8 @@ class TestingRasterSource(RasterSource):
 
 class TestSegmentationRasterFile(unittest.TestCase):
     def test_clear(self):
-        label_store = SegmentationRasterFile(TestingRasterSource(), None)
-        extent = label_store.src.get_extent()
+        label_store = SegmentationRasterFile(TestingRasterSource(), None, None)
+        extent = label_store.source.get_extent()
         label_store.clear()
         data = label_store.get_labels(extent)
         self.assertEqual(data.sum(), 0)
@@ -52,11 +52,12 @@ class TestSegmentationRasterFile(unittest.TestCase):
     def test_set_labels(self):
         raster_source = TestingRasterSource()
         label_store = SegmentationRasterFile(
-            src=TestingRasterSource(zeros=True),
-            dst=None,
+            source=TestingRasterSource(zeros=True),
+            sink=None,
+            class_map=None,
             raster_class_map={'#000001': 1})
         label_store.set_labels(raster_source)
-        extent = label_store.src.get_extent()
+        extent = label_store.source.get_extent()
         rs_data = raster_source._get_chip(extent)
         ls_data = (label_store.get_labels(extent) == 1)
         self.assertEqual(rs_data.sum(), ls_data.sum())

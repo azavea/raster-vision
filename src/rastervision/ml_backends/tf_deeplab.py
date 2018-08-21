@@ -30,8 +30,8 @@ from rastervision.utils.misc import (color_to_integer, numpy_to_png,
                                      png_to_numpy)
 from rastervision.utils.misc import save_img
 
-
 FROZEN_INFERENCE_GRAPH = 'model'
+
 
 def make_tf_examples(training_data: TrainingData,
                      class_map: ClassMap) -> List[Example]:
@@ -383,8 +383,10 @@ def get_export_args(export_model_py: str, train_logdir_local: str,
 
     """
     args = ['python', export_model_py]
-    args.append('--checkpoint_path={}'.format(get_latest_checkpoint(train_logdir_local)))
-    args.append('--export_path={}'.format(join(train_logdir_local, FROZEN_INFERENCE_GRAPH)))
+    args.append('--checkpoint_path={}'.format(
+        get_latest_checkpoint(train_logdir_local)))
+    args.append('--export_path={}'.format(
+        join(train_logdir_local, FROZEN_INFERENCE_GRAPH)))
     args.append('--num_classes={}'.format(num_classes))
 
     return args
@@ -559,7 +561,8 @@ class TFDeeplab(MLBackend):
         tensorboard_process.terminate()
 
         # Export
-        export_args = get_export_args(export_model_py, train_logdir_local, num_classes)
+        export_args = get_export_args(export_model_py, train_logdir_local,
+                                      num_classes)
         export_process = Popen(export_args)
         terminate_at_exit(export_process)
         export_process.wait()
@@ -568,7 +571,8 @@ class TFDeeplab(MLBackend):
         if urlparse(train_logdir).scheme == 's3':
             sync_dir(train_logdir_local, train_logdir, delete=True)
 
-    def predict(self, chip: np.ndarray, window: Box, options) -> Tuple[Box, np.ndarray]:
+    def predict(self, chip: np.ndarray, window: Box,
+                options) -> Tuple[Box, np.ndarray]:
         """Predict using an already-trained DeepLab model.
 
         Args:
@@ -583,11 +587,12 @@ class TFDeeplab(MLBackend):
         """
         make_dir(self.temp_dir)
 
-        # Courtesy of https://github.com/tensorflow/models/blob/cbbb2ffcde66e646d4a47628ffe2ece2322b64e8/research/deeplab/deeplab_demo.ipynb  #noqa
+        # noqa Courtesy of https://github.com/tensorflow/models/blob/cbbb2ffcde66e646d4a47628ffe2ece2322b64e8/research/deeplab/deeplab_demo.ipynb
         INPUT_TENSOR_NAME = 'ImageTensor:0'
         OUTPUT_TENSOR_NAME = 'SemanticPredictions:0'
         if self.sess is None:
-            FROZEN_GRAPH_NAME = download_if_needed(options.model_uri, self.temp_dir)
+            FROZEN_GRAPH_NAME = download_if_needed(options.model_uri,
+                                                   self.temp_dir)
             graph = tf.Graph()
             with open(FROZEN_GRAPH_NAME, 'rb') as data:
                 graph_def = tf.GraphDef.FromString(data.read())

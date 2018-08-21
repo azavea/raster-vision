@@ -5,7 +5,6 @@ from typing import List
 from rastervision.core.box import Box
 from rastervision.core.ml_task import MLTask
 from rastervision.core.scene import Scene
-from typing import (Dict, List, Tuple)
 
 
 class SemanticSegmentation(MLTask):
@@ -85,8 +84,7 @@ class SemanticSegmentation(MLTask):
              An sequence of windows.
         """
         chip_size = options.chip_size
-        stride = chip_size // 2
-        return extent.get_windows(chip_size, stride)
+        return extent.get_windows(chip_size, chip_size)
 
     def post_process_predictions(self, labels: None, options) -> None:
         """Post-process predictions.
