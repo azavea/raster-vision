@@ -27,15 +27,23 @@
                         },
                         {
                             "source_class": "#00ff00",
-                            "raster_vision_class": 3
+                            "raster_vision_class": 2
                         },
                         {
                             "source_class": "#ff0000",
-                            "raster_vision_class": 4
+                            "raster_vision_class": 2
                         },
                         {
                             "source_class": "#00ffff",
-                            "raster_vision_class": 5
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#ffffff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#000000",
+                            "raster_vision_class": 2
                         }
                     ]
                 }
@@ -70,15 +78,23 @@
                         },
                         {
                             "source_class": "#00ff00",
-                            "raster_vision_class": 3
+                            "raster_vision_class": 2
                         },
                         {
                             "source_class": "#ff0000",
-                            "raster_vision_class": 4
+                            "raster_vision_class": 2
                         },
                         {
                             "source_class": "#00ffff",
-                            "raster_vision_class": 5
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#ffffff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#000000",
+                            "raster_vision_class": 2
                         }
                     ]
                 }
@@ -96,32 +112,17 @@
             },
             {
                 "id": 2,
-                "name": "building",
+                "name": "not car",
                 "color": "#0000ff"
-            },
-            {
-                "id": 3,
-                "name": "x",
-                "color": "#00ff00"
-            },
-            {
-                "id": 4,
-                "name": "y",
-                "color": "#ff0000"
-            },
-            {
-                "id": 5,
-                "name": "z",
-                "color": "#00ffff"
             }
         ]
     },
     "make_training_chips_options": {
         "segmentation_options": {
-            "empty_survival_probability": 0,
-            "number_of_chips": 133,
-            "debug_chip_probability": 1.0,
-            "minor_axis_backoff": 33
+            "empty_survival_probability": 0.33,
+            "number_of_chips": 1333,
+            "debug_chip_probability": 0.05,
+            "minor_axis_backoff": 13
         }
     },
     "train_options": {
