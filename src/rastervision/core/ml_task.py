@@ -100,6 +100,20 @@ class MLTask(object):
     def get_class_map(self):
         return self.class_map
 
+    def transform_training_chip(self, window, chip, labels, options):
+        """Randomly transform a training chip for purposes of data aug.
+
+        This default implementation is a no-op.
+
+        Args:
+            window: Box
+            chip: numpy array of shape [chip_size, chip_size, nb_channels]
+            options: MakeTrainingChipsConfig.Options
+
+        Returns: transformed (chip, labels)
+        """
+        return chip, labels
+
     def make_training_chips(self, train_scenes, validation_scenes, options):
         """Make training chips.
 
@@ -124,9 +138,14 @@ class MLTask(object):
             for window in windows:
                 chip = scene.raster_source.get_chip(window)
                 labels = self.get_train_labels(window, scene, options)
+                # Only do data augmentation on training set.
+                if type_ == TRAIN:
+                    chip, labels = self.transform_training_chip(
+                        window, chip, labels, options)
                 data.append(chip, window, labels)
                 print('.', end='', flush=True)
             print()
+
             # Shuffle data so the first N samples which are displayed in
             # Tensorboard are more diverse.
             data.shuffle()
@@ -176,7 +195,7 @@ class MLTask(object):
             for window in windows:
                 chip = raster_source.get_chip(window)
 
-                # Don't predict on empy chips
+                # Only predict on chips containing at least one NODATA value.
                 if np.any(chip):
                     labels = self.backend.predict(chip, window, options)
                     label_store.extend(labels)

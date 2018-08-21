@@ -46,7 +46,8 @@
     "make_training_chips_options": {
         "object_detection_options": {
             "neg_ratio": 1.0,
-            "ioa_thresh": 0.8
+            "ioa_thresh": 0.8,
+            "nodata_aug_prob": 0.5
         }
     },
     "train_options": {
