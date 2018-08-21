@@ -12,4 +12,7 @@ message Model {
     required int32 nb_classes = 2;
     required Type type = 3;
     required string model_path = 4;
+
+    // Load pre-trained weights "by name" or not.
+    optional bool load_weights_by_name = 5 [default=false];
 }

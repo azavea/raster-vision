@@ -5,9 +5,9 @@ from keras_classification.builders import trainer_builder, model_builder
 from keras_classification.protos.pipeline_pb2 import PipelineConfig
 
 
-def _train(config_path):
+def _train(config_path, pretrained_model_path):
     config = load_json_config(config_path, PipelineConfig())
-    model = model_builder.build(config.model)
+    model = model_builder.build(config.model, pretrained_model_path)
     trainer = trainer_builder.build(config.trainer, model)
     trainer.train()
 

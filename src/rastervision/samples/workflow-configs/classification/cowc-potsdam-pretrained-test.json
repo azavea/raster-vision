@@ -1,23 +1,23 @@
 {
     "train_scenes": [
         {
-            "id": "cl-test",
+            "id": "2-10",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "{test_dir}/scene/image.tif"
+                        "{rv_root}/processed-data/cowc-potsdam-test/2-10.tif"
                     ]
                 }
             },
             "ground_truth_label_store": {
                 "classification_geojson_file": {
-                    "uri": "{test_dir}/scene/labels.json",
+                    "uri": "{rv_root}/processed-data/cowc-potsdam-test/2-10.json",
                     "options": {
                         "ioa_thresh": 0.5,
                         "use_intersection_over_cell": false,
                         "pick_min_class_id": true,
-                        "background_class_id": 3,
-                        "cell_size": 200,
+                        "background_class_id": 2,
+                        "cell_size": 300,
                         "infer_cells": true
                     }
                 }
@@ -26,23 +26,23 @@
     ],
     "test_scenes": [
         {
-            "id": "cl-test",
+            "id": "2-13",
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "{test_dir}/scene/image.tif"
+                        "{rv_root}/processed-data/cowc-potsdam-test/2-13.tif"
                     ]
                 }
             },
             "ground_truth_label_store": {
                 "classification_geojson_file": {
-                    "uri": "{test_dir}/scene/labels.json",
+                    "uri": "{rv_root}/processed-data/cowc-potsdam-test/2-13.json",
                     "options": {
                         "ioa_thresh": 0.5,
                         "use_intersection_over_cell": false,
                         "pick_min_class_id": true,
-                        "background_class_id": 3,
-                        "cell_size": 200,
+                        "background_class_id": 2,
+                        "cell_size": 300,
                         "infer_cells": true
                     }
                 }
@@ -56,17 +56,12 @@
             {
                 "id": 1,
                 "name": "car",
-                "color": "red"
+                "color": "Red"
             },
             {
                 "id": 2,
-                "name": "building",
-                "color": "blue"
-            },
-            {
-                "id": 3,
                 "name": "background",
-                "color": "black"
+                "color": "Black"
             }
         ]
     },
@@ -75,9 +70,9 @@
         }
     },
     "train_options": {
-        "backend_config_uri": "{test_dir}/configs/backend.config",
-        "pretrained_model_uri": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5",
-        "sync_interval": 999999
+        "backend_config_uri": "{rv_root}/backend-configs/keras-classification/resnet50-pretrained-test.json",
+        "sync_interval": 600,
+        "pretrained_model_uri": "s3://azavea-research-public-data/models/cowc-potsdam/classification/resnet50/model-weights.hdf5"
     },
     "predict_options": {
         "classification_options": {
@@ -86,17 +81,21 @@
     "eval_options": {
     },
     "debug": true,
-    "chip_size": 200,
+    "chip_size": 300,
     "raster_transformer": {
         "channel_order": [0, 1, 2]
     },
     "local_uri_map": {
-        "test_dir": "",
-        "rv_root": ""
+        "rv_root": "/opt/data/rv-root/cl-test",
+        "raw": "/opt/data/raw-data"
     },
-    "raw_dataset_key": "classification-test",
-    "dataset_key": "default",
-    "model_key": "default",
-    "prediction_key": "default",
+    "remote_uri_map": {
+        "rv_root": "s3://raster-vision-lf-dev",
+        "raw": "s3://raster-vision-raw-data"
+    },
+    "raw_dataset_key": "cowc-potsdam-cl",
+    "dataset_key": "test",
+    "model_key": "resnet50",
+    "prediction_key": "test-set",
     "eval_key": "default"
 }

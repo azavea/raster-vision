@@ -2,7 +2,7 @@
     "model": {
         "input_size": 300,
         "type": "RESNET50",
-        "load_weights_by_name": true,
+        "load_weights_by_name": false,
         "model_path": ""
     },
     "trainer": {

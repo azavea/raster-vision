@@ -31,9 +31,6 @@ from keras.utils.data_utils import get_file
 from keras.applications.imagenet_utils import (
     decode_predictions, preprocess_input, _obtain_input_shape)
 
-WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels.h5'
-WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5'
-
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
     """The identity block is the block that has no conv layer at shortcut.
@@ -125,7 +122,8 @@ def conv_block(input_tensor,
 
 
 def ResNet50(include_top=True,
-             weights='imagenet',
+             weights=None,
+             load_weights_by_name=False,
              input_tensor=None,
              input_shape=None,
              pooling=None,
@@ -138,7 +136,7 @@ def ResNet50(include_top=True,
         include_top: whether to include the fully-connected
             layer at the top of the network.
         weights: one of `None` (random initialization)
-            or "imagenet" (pre-training on ImageNet).
+            or a path to model weights.
         input_tensor: optional Keras tensor (i.e. output of `layers.Input()`)
             to use as image input for the model.
         input_shape: optional shape tuple, only to be specified
@@ -169,10 +167,6 @@ def ResNet50(include_top=True,
         ValueError: in case of invalid argument for `weights`,
             or invalid input shape.
     """
-    if weights not in {'imagenet', None}:
-        raise ValueError('The `weights` argument should be either '
-                         '`None` (random initialization) or `imagenet` '
-                         '(pre-training on ImageNet).')
     if input_tensor is None:
         img_input = Input(shape=input_shape)
     else:
@@ -227,12 +221,7 @@ def ResNet50(include_top=True,
     model = Model(inputs, x, name='resnet50')
 
     # load weights
-    if weights == 'imagenet':
-        weights_path = get_file(
-            'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5',
-            WEIGHTS_PATH_NO_TOP,
-            cache_subdir='models',
-            md5_hash='a268eb855778b3df3c7506639542a6af')
-        model.load_weights(weights_path, by_name=True)
+    if weights:
+        model.load_weights(weights, by_name=load_weights_by_name)
 
     return model
