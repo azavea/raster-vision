@@ -1,8 +1,10 @@
 import numpy as np
+import random
 
 from object_detection.utils import visualization_utils as vis_util
 
 from rastervision.core.ml_task import MLTask
+from rastervision.core.box import Box
 from rastervision.evaluations.object_detection_evaluation import (
     ObjectDetectionEvaluation)
 from rastervision.labels.object_detection_labels import ObjectDetectionLabels
@@ -94,6 +96,19 @@ def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
 
 
 class ObjectDetection(MLTask):
+    def transform_training_chip(self, window, chip, labels, options):
+        nodata_aug_prob = options.object_detection_options.nodata_aug_prob
+
+        # If negative chip, with some probability, add a random black square
+        # to chip.
+        if len(labels) == 0 and random.uniform(0, 1) < nodata_aug_prob:
+            size = round(random.uniform(0, 1) * chip.shape[0])
+            square = Box(0, 0, chip.shape[0],
+                         chip.shape[1]).make_random_square(size)
+            chip = np.copy(chip)
+            chip[square.ymin:square.ymax, square.xmin:square.xmax, :] = 0
+        return chip, labels
+
     def get_train_windows(self, scene, options):
         raster_source = scene.raster_source
         label_store = scene.ground_truth_label_store

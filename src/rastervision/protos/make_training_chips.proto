@@ -18,6 +18,12 @@ message MakeTrainingChipsConfig {
         required float neg_ratio = 1;
 
         /*
+            The probability of adding a random square of zeros (RV's nodata
+            value) to negative chips.
+        */
+        required float nodata_aug_prob = 5 [default=0.0];
+
+        /*
             When a box is partially outside of a training chip, it is not
             clear if (a clipped version) of the box should be included in
             the chip. If the IOA (intersection over area) of the box with the
