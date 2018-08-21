@@ -43,6 +43,11 @@ message TrainConfig {
         // Run process to monitor training (eg. Tensorboard)
         optional bool do_monitoring = 8 [default=true];
 
+        // Replace the model checkpoint if exists.
+        // If false, this will continue training from checkpoing if exists,
+        // if the backend allows for this.
+        optional bool replace_model = 9 [default=false];
+
         oneof ml_options_type {
             ObjectDetectionOptions object_detection_options = 6;
             SegmentationOptions segmentation_options = 7;

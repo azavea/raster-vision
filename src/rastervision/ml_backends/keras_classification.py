@@ -222,7 +222,8 @@ class KerasClassification(MLBackend):
         dataset_files = DatasetFiles(options.training_data_uri)
         dataset_files.download()
 
-        model_files = ModelFiles(options.output_uri, replace_model=True)
+        model_files = ModelFiles(options.output_uri,
+                                 replace_model=options.replace_model)
         model_paths = model_files.download_backend_config(
             options.pretrained_model_uri, options.backend_config_uri,
             dataset_files, class_map)
