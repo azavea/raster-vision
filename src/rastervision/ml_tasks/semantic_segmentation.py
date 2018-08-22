@@ -5,6 +5,8 @@ from typing import List
 from rastervision.core.box import Box
 from rastervision.core.ml_task import MLTask
 from rastervision.core.scene import Scene
+from rastervision.evaluations.segmentation_evaluation import (
+    SegmentationEvaluation)
 
 
 class SemanticSegmentation(MLTask):
@@ -93,3 +95,7 @@ class SemanticSegmentation(MLTask):
         Is a nop for this backend.
         """
         return None
+
+    def get_evaluation(self) -> SegmentationEvaluation:
+        """Return a segmentation  evaulation object."""
+        return SegmentationEvaluation()
