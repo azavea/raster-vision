@@ -5,7 +5,7 @@
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "/opt/data/top_potsdam_2_10_RGBIR.tif"
+                        "{rv_root}/top_potsdam_2_10_RGBIR.tif"
                     ]
                 }
             },
@@ -13,13 +13,37 @@
                 "segmentation_raster_file": {
                     "source": {
                         "image_file": {
-                            "uri": "/opt/data/top_potsdam_2_10_label_noBoundary.tif"
+                            "uri": "{rv_root}/top_potsdam_2_10_label_noBoundary.tif"
                         }
                     },
                     "raster_class_map": [
                         {
                             "source_class": "#ffff00",
                             "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#ff0000",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#00ffff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#ffffff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#000000",
+                            "raster_vision_class": 2
                         }
                     ]
                 }
@@ -32,7 +56,7 @@
             "raster_source": {
                 "geotiff_files": {
                     "uris": [
-                        "/opt/data/top_potsdam_2_11_RGBIR.tif"
+                        "{rv_root}/top_potsdam_2_11_RGBIR.tif"
                     ]
                 }
             },
@@ -40,13 +64,37 @@
                 "segmentation_raster_file": {
                     "source": {
                         "image_file": {
-                            "uri": "/opt/data/top_potsdam_2_11_label_noBoundary.tif"
+                            "uri": "{rv_root}/top_potsdam_2_11_label_noBoundary.tif"
                         }
                     },
                     "raster_class_map": [
                         {
                             "source_class": "#ffff00",
                             "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#ff0000",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#00ffff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#ffffff",
+                            "raster_vision_class": 2
+                        },
+                        {
+                            "source_class": "#000000",
+                            "raster_vision_class": 2
                         }
                     ]
                 }
@@ -61,14 +109,20 @@
                 "id": 1,
                 "name": "car",
                 "color": "#ffff00"
-           }
+            },
+            {
+                "id": 2,
+                "name": "not car",
+                "color": "#0000ff"
+            }
         ]
     },
     "make_training_chips_options": {
         "segmentation_options": {
-            "empty_survival_probability": 0.2,
-            "number_of_chips": 133,
-            "debug_chip_probability": 0.20
+            "empty_survival_probability": 0.33,
+            "number_of_chips": 1333,
+            "debug_chip_probability": 0.05,
+            "minor_axis_backoff": 13
         }
     },
     "train_options": {
@@ -85,7 +139,7 @@
     "eval_options": {
     },
     "debug": true,
-    "chip_size": 512,
+    "chip_size": 96,
     "raster_transformer": {
         "channel_order": [0, 1, 2]
     },
