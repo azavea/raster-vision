@@ -76,6 +76,9 @@ def make_scene_config(scene_template,
     elif label_store.HasField('classification_geojson_file'):
         label_store.classification_geojson_file.uri = \
             labels_uri
+    elif label_store.HasField('segmentation_raster_file'):
+        label_store.segmentation_raster_file.sink = \
+            labels_uri
 
     del scene.raster_source.geotiff_files.uris[:]
     scene.raster_source.geotiff_files.uris.extend(image_uris)
