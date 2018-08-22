@@ -28,6 +28,7 @@ def save_predict_package(predict_config):
     Args:
         predict_config: (PredictConfig) with the desired location of the
             package in predict_config.options.prediction_package_uri
+
     """
     with tempfile.TemporaryDirectory() as temp_dir:
         package_uri = predict_config.options.prediction_package_uri
@@ -98,6 +99,7 @@ def update_stats_file(image_uris, stats_path):
     Args:
         image_uris: list of URIs of GeoTIFF files
         stats_path: path to write raster stats to
+
     """
     raster_transformer = RasterTransformer()
     raster_sources = [GeoTiffFiles(raster_transformer, image_uris)]
@@ -130,6 +132,7 @@ def load_predict_package(predict_package_uri,
 
     Returns:
         (rastervision.protos.predict_pb2.PredictConfig)
+
     """
     # Download and extract package.
     package_zip_path = download_if_needed(predict_package_uri, temp_dir)

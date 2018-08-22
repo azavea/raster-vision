@@ -115,13 +115,6 @@ class SegmentationRasterFile(LabelStore):
             raise ValueError('Unsure how to handle source={}'.format(
                 type(source)))
 
-        # if self.source is not None:
-        #     small_box = Box(0, 0, 1, 1)
-        #     (self.channels, _, _) = self.source._get_chip(small_box).shape
-        # else:
-        #     self.channels = 1
-        self.channels = 3  # Only support three-channel images
-
     def interesting_subwindow(self, window: Box, size: int,
                               shift: int) -> Union[Box, None]:
         """Given a larger window, return a sub-window that contains interesting
@@ -153,7 +146,7 @@ class SegmentationRasterFile(LabelStore):
             translated = self.source_to_rv(packed)
             argmax = np.argmax(translated == 1)
 
-            if argmax == 0:
+            if argmax == 0 and not translated[0, 0] == 1:
                 return None
             else:
                 major = int(argmax / larger_size)
@@ -216,6 +209,10 @@ class SegmentationRasterFile(LabelStore):
         self.label_pairs.append(labels)
 
     def save(self):
+        """Save the labels to a GeoTiff raster at the location pointed-to by
+        self.sink.
+
+        """
         import rasterio
 
         temp_dir_obj = tempfile.TemporaryDirectory()
@@ -236,6 +233,20 @@ class SegmentationRasterFile(LabelStore):
         mapping = dict(zip(rv_classes, triples))
 
         def class_to_channel(channel: int, c: int) -> int:
+            """Given a channel (red, green, or blue) and a class, return the
+            intensity of that channel.
+
+            Args:
+
+                 channel: An integer with value 0, 1, or 2
+                      representing the channel.
+                 c: The class value represented as an integer.
+
+            Returns:
+                 The intensity of the channel for the color associated
+                      with the given class.
+
+            """
             if c in mapping:
                 return mapping.get(c)[channel]
             else:
@@ -261,7 +272,6 @@ class SegmentationRasterFile(LabelStore):
                 dtype=np.uint8) as dataset:
             for (box, data) in self.label_pairs:
                 window = (box.ymin, box.ymax), (box.xmin, box.xmax)
-                # import pdb ; pdb.set_trace()
                 for chan in range(3):
                     pixels = class_to[chan](data)
                     dataset.write_band(chan + 1, pixels, window=window)

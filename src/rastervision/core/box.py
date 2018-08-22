@@ -20,6 +20,7 @@ class Box():
             xmin: minimum x value (x is column)
             ymax: maximum y value
             xmax: maximum x value
+
         """
         self.ymin = ymin
         self.xmin = xmin
@@ -61,6 +62,7 @@ class Box():
 
         Returns:
             Numpy array of form [ymin, xmin, ymax, xmax] with float type
+
         """
         return np.array(
             [self.ymin, self.xmin, self.ymax, self.xmax], dtype=np.float)
@@ -81,8 +83,7 @@ class Box():
         return str(self)
 
     def geojson_coordinates(self):
-        """Return Box as GeoJSON coordinates.
-        """
+        """Return Box as GeoJSON coordinates."""
         # Compass directions:
         nw = (self.xmin, self.ymin)
         ne = (self.xmin, self.ymax)
@@ -95,6 +96,7 @@ class Box():
 
         Args:
             size: the width and height of the new Box
+
         """
         lb = self.ymin - (size - self.get_height())
         ub = self.ymin
@@ -111,6 +113,7 @@ class Box():
 
         Args:
             size: the height and width of the new Box
+
         """
         if size >= self.get_width():
             raise ValueError('size of random square cannot be >= width')
@@ -134,6 +137,7 @@ class Box():
 
         Args:
             npbox: Numpy array of form [ymin, xmin, ymax, xmax] with float type
+
         """
         return Box(*npbox)
 
@@ -160,8 +164,9 @@ class Box():
 
         The resulting box is clipped so that the values of the corners are
         always greater than zero and less than the height and width of
-        max_extent."""
+        max_extent.
 
+        """
         buffer_size = max(0., buffer_size)
         if buffer_size < 1.:
             delta_width = int(round(buffer_size * self.get_width()))
@@ -186,6 +191,7 @@ class Box():
         Args:
             chip_size: (int) the length of each square-shaped window
             stride: (int) how much each window is offset from the last
+
         """
         height = self.get_height()
         width = self.get_width()

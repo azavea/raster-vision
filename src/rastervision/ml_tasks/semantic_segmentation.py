@@ -82,6 +82,7 @@ class SemanticSegmentation(MLTask):
 
         Returns:
              An sequence of windows.
+
         """
         chip_size = options.chip_size
         return extent.get_windows(chip_size, chip_size)

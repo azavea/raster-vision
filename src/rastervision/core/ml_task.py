@@ -198,9 +198,15 @@ class MLTask(object):
 
             print()
 
+            # This is needed for object detection and classification,
+            # is a nop for segmentation.
             labels = self.post_process_predictions(label_store.get_labels(),
                                                    options)
+
+            # This is needed for object detection and classification,
+            # is a nop for segmentation.
             label_store.set_labels(labels)
+
             label_store.save()
 
             if (options.debug and options.debug_uri
