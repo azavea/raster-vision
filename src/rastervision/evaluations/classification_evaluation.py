@@ -54,6 +54,6 @@ class ClassificationEvaluation(Evaluation):
         self.compute_avg()
 
     def compute_avg(self):
-        self.avg_item = EvaluationItem(class_name='average')
+        self.avg_item = EvaluationItem(class_name='average', class_id=-1)
         for eval_item in self.class_to_eval_item.values():
             self.avg_item.merge(eval_item)

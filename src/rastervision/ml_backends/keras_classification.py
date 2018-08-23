@@ -222,8 +222,8 @@ class KerasClassification(MLBackend):
         dataset_files = DatasetFiles(options.training_data_uri)
         dataset_files.download()
 
-        model_files = ModelFiles(options.output_uri,
-                                 replace_model=options.replace_model)
+        model_files = ModelFiles(
+            options.output_uri, replace_model=options.replace_model)
         model_paths = model_files.download_backend_config(
             options.pretrained_model_uri, options.backend_config_uri,
             dataset_files, class_map)
@@ -242,20 +242,20 @@ class KerasClassification(MLBackend):
         if urlparse(options.output_uri).scheme == 's3':
             sync_dir(model_files.base_dir, options.output_uri, delete=True)
 
-    def predict(self, chip, window, options):
+    def predict(self, chips, windows, options):
         if self.model is None:
             with tempfile.TemporaryDirectory() as temp_dir:
                 model_path = download_if_needed(options.model_uri, temp_dir)
                 self.model = model_builder.build_from_path(model_path)
 
-        # Make a batch of size 1. This won't be needed once we refactor
-        # the predict method to take batches of chips.
-        batch = np.expand_dims(chip, axis=0)
-        probs = predict(batch, self.model)
-        # Add 1 to class_id since they start at 1.
-        class_id = int(np.argmax(probs[0]) + 1)
+        probs = predict(chips, self.model)
 
         labels = ClassificationLabels()
-        labels.set_cell(window, class_id)
+
+        for chip_probs, window in zip(probs, windows):
+            # Add 1 to class_id since they start at 1.
+            class_id = int(np.argmax(chip_probs) + 1)
+
+            labels.set_cell(window, class_id)
 
         return labels

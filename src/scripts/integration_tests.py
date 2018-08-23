@@ -86,7 +86,9 @@ def check_eval_item(test, expected_item, actual_item):
     f1_threshold = 0.01
     class_name = expected_item['class_name']
 
-    if math.fabs(expected_item['f1'] - actual_item['f1']) > f1_threshold:
+    expected_f1 = expected_item['f1'] or 0.0
+    actual_f1 = actual_item['f1'] or 0.0
+    if math.fabs(expected_f1 - actual_f1) > f1_threshold:
         errors.append(
             TestError(
                 test, 'F1 scores are not close enough',

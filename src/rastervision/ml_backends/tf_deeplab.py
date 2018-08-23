@@ -535,5 +535,5 @@ class TFDeeplab(MLBackend):
         if urlparse(train_logdir).scheme == 's3':
             sync_dir(train_logdir_local, train_logdir, delete=True)
 
-    def predict(self, chip, options):
+    def predict(self, chips, windows, options):
         return 1
