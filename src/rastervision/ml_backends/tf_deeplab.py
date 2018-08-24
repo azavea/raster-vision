@@ -571,18 +571,19 @@ class TFDeeplab(MLBackend):
         if urlparse(train_logdir).scheme == 's3':
             sync_dir(train_logdir_local, train_logdir, delete=True)
 
-    def predict(self, chip: np.ndarray, window: Box,
-                options) -> Tuple[Box, np.ndarray]:
+    def predict(self, chips: np.ndarray, windows: List[Box],
+                options) -> List[Tuple[Box, np.ndarray]]:
         """Predict using an already-trained DeepLab model.
 
         Args:
-            chip: An np.ndarray containing the image data.
-            window: The window corresponding to the training chip.
+            chips: An np.ndarray containing the image data.
+            windows: A list of windows corresponding to the respective
+                 training chips.
             options: Options provided in the prediction section of the
                  workflow configuration file.
 
         Returns:
-             A Box × np.ndarray pair.
+             A list of Box × np.ndarray pairs.
 
         """
         make_dir(self.temp_dir)
@@ -600,8 +601,12 @@ class TFDeeplab(MLBackend):
                 tf.import_graph_def(graph_def, name='')
             self.sess = tf.Session(graph=graph)
 
-        batch_seg_map = self.sess.run(
-            OUTPUT_TENSOR_NAME, feed_dict={INPUT_TENSOR_NAME: [chip]})
-        seg_map = batch_seg_map[0]
+        pairs = []
+        for i in range(len(windows)):
+            batch_seg_map = self.sess.run(
+                OUTPUT_TENSOR_NAME, feed_dict={INPUT_TENSOR_NAME: [chips[i]]})
+            seg_map = batch_seg_map[0]
+            pair = (windows[i], seg_map)
+            pairs.append(pair)
 
-        return (window, seg_map)
+        return pairs

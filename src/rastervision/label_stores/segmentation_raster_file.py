@@ -196,17 +196,17 @@ class SegmentationRasterFile(LabelStore):
         else:
             return None
 
-    def extend(self, labels: Tuple[Box, np.ndarray]) -> None:
+    def extend(self, labels: List[Tuple[Box, np.ndarray]]) -> None:
         """Add incoming labels to the list of labels.
 
         Args:
-             labels: A Box × np.ndarray pair.
+             labels: A list of Box × np.ndarray pairs.
 
         Returns:
              None.
 
         """
-        self.label_pairs.append(labels)
+        self.label_pairs.extend(labels)
 
     def save(self):
         """Save the labels to a GeoTiff raster at the location pointed-to by
