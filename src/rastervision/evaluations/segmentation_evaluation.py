@@ -18,13 +18,16 @@ class SegmentationEvaluation(Evaluation):
         # Construct new prediction label store.  This allows chips to
         # be read out of the prediction raster with the appropriate
         # transformations applied.
-        raster_source = ImageFile(None, _prediction_label_store.sink)
-        raster_class_map = ground_truth_label_store.raster_class_map
-        prediction_label_store = SegmentationRasterFile(
-            source=raster_source,
-            sink=None,
-            class_map=class_map,
-            raster_class_map=raster_class_map)
+        if _prediction_label_store.source is not None:
+            prediction_label_store = _prediction_label_store
+        else:
+            raster_source = ImageFile(None, _prediction_label_store.sink)
+            raster_class_map = ground_truth_label_store.raster_class_map
+            prediction_label_store = SegmentationRasterFile(
+                source=raster_source,
+                sink=None,
+                class_map=class_map,
+                raster_class_map=raster_class_map)
 
         # Compute the intersection of the extents of the ground truth
         # labels and predicted labels.

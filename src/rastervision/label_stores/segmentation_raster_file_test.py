@@ -11,6 +11,7 @@ class TestingRasterSource(RasterSource):
     def __init__(self, zeros=False, data=None):
         if data is not None:
             self.data = data
+            (self.height, self.width, self.channels) = data.shape
         elif zeros and data is None:
             self.width = 4
             self.height = 4
