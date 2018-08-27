@@ -493,23 +493,28 @@ def load_frozen_graph(inference_graph_path):
     return detection_graph
 
 
-def compute_prediction(image_np, window, detection_graph, session):
-    image_np_expanded = np.expand_dims(image_np, axis=0)
+def compute_prediction(image_nps, windows, detection_graph, session):
     image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
     boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
     scores = detection_graph.get_tensor_by_name('detection_scores:0')
     class_ids = detection_graph.get_tensor_by_name('detection_classes:0')
 
     (boxes, scores, class_ids) = session.run(
-        [boxes, scores, class_ids],
-        feed_dict={image_tensor: image_np_expanded})
-    npboxes = np.squeeze(boxes)
-    npboxes = ObjectDetectionLabels.normalized_to_local(npboxes, window)
-    npboxes = ObjectDetectionLabels.local_to_global(npboxes, window)
-    scores = np.squeeze(scores)
-    class_ids = np.squeeze(class_ids).astype(np.int32)
+        [boxes, scores, class_ids], feed_dict={image_tensor: image_nps})
 
-    return ObjectDetectionLabels(npboxes, class_ids, scores=scores)
+    labels = ObjectDetectionLabels.make_empty()
+    for chip_boxes, chip_scores, chip_class_ids, window in zip(
+            boxes, scores, class_ids, windows):
+        chip_boxes = ObjectDetectionLabels.normalized_to_local(
+            chip_boxes, window)
+        chip_boxes = ObjectDetectionLabels.local_to_global(chip_boxes, window)
+        chip_class_ids = chip_class_ids.astype(np.int32)
+        labels = ObjectDetectionLabels.concatenate(
+            labels,
+            ObjectDetectionLabels(
+                chip_boxes, chip_class_ids, scores=chip_scores))
+
+    return labels
 
 
 class TFObjectDetectionAPI(MLBackend):
@@ -621,7 +626,7 @@ class TFObjectDetectionAPI(MLBackend):
             if urlparse(options.output_uri).scheme == 's3':
                 sync_dir(output_dir, options.output_uri, delete=True)
 
-    def predict(self, chip, window, options):
+    def predict(self, chips, windows, options):
         # Load and memoize the detection graph and TF session.
         if self.detection_graph is None:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -629,8 +634,5 @@ class TFObjectDetectionAPI(MLBackend):
                 self.detection_graph = load_frozen_graph(model_path)
                 self.session = tf.Session(graph=self.detection_graph)
 
-        # If chip is blank, then return empty predictions.
-        if np.sum(np.ravel(chip)) == 0:
-            return ObjectDetectionLabels.make_empty()
-        return compute_prediction(chip, window, self.detection_graph,
+        return compute_prediction(chips, windows, self.detection_graph,
                                   self.session)

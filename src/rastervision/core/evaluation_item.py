@@ -36,7 +36,7 @@ class EvaluationItem(object):
 
             def weighted_avg(self_val, other_val):
                 if self_val is None and other_val is None:
-                    return None
+                    return 0.0
                 # Handle a single None value by setting them to zero.
                 return (self_ratio * (self_val or 0) +
                         other_ratio * (other_val or 0))

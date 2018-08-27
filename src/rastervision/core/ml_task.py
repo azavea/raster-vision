@@ -173,14 +173,29 @@ class MLTask(object):
 
             windows = self.get_predict_windows(raster_source.get_extent(),
                                                options)
+
+            def predict_batch(predict_chips, predict_windows):
+                labels = self.backend.predict(
+                    np.array(predict_chips), predict_windows, options)
+                label_store.extend(labels)
+                print('.' * len(predict_chips), end='', flush=True)
+
+            batch_chips, batch_windows = [], []
             for window in windows:
                 chip = raster_source.get_chip(window)
-
-                # Don't predict on empy chips
                 if np.any(chip):
-                    labels = self.backend.predict(chip, window, options)
-                    label_store.extend(labels)
-                    print('.', end='', flush=True)
+                    batch_chips.append(chip)
+                    batch_windows.append(window)
+
+                # Predict on batch
+                if len(batch_chips) >= options.batch_size:
+                    predict_batch(batch_chips, batch_windows)
+                    batch_chips, batch_windows = [], []
+
+            # Predict on remaining batch
+            if len(batch_chips) > 0:
+                predict_batch(batch_chips, batch_windows)
+
             print()
 
             labels = self.post_process_predictions(label_store.get_labels(),

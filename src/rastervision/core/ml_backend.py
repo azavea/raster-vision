@@ -48,12 +48,12 @@ class MLBackend(ABC):
         pass
 
     @abstractmethod
-    def predict(self, chip, options):
+    def predict(self, chips, windows, options):
         """Return predictions for a chip using model.
 
         Args:
-            chip: [height, width, channels] numpy array
+            chips: [[height, width, channels], ...] numpy array of chips
+            windows: List of boxes that are the windows aligned with the chips.
             options: PredictConfig.Options
         """
-        # TODO predict by the batch-load to make better use of the gpu
         pass
