@@ -89,9 +89,9 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
 
         avg_item = eval.avg_item
         self.assertEqual(avg_item.gt_count, 4)
-        self.assertEqual(avg_item.precision, None)
+        self.assertEqual(avg_item.precision, 0.0)
         self.assertEqual(avg_item.recall, 0.0)
-        self.assertEqual(avg_item.f1, None)
+        self.assertEqual(avg_item.f1, 0.0)
 
     def test_compute_no_ground_truth(self):
         eval = ObjectDetectionEvaluation()
