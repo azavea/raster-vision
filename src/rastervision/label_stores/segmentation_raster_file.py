@@ -280,4 +280,4 @@ class SegmentationRasterFile(LabelStore):
         if urlparse(self.sink).scheme == 's3':
             local_sink_dir = os.path.dirname(local_sink)
             remote_sink_dir = os.path.dirname(self.sink)  # sic
-            sync_dir(local_sink_dir, remote_sink_dir, delete=True)
+            sync_dir(local_sink_dir, remote_sink_dir, delete=False)
