@@ -45,21 +45,22 @@ class SegmentationEvaluation(Evaluation):
         # noqa Definitions of precision, recall, and f1 taken from http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
         evaluation_items = []
         for class_id in class_map.get_keys():
+            not_dont_care = (ground_truth != 0)  # By assumption
             gt = (ground_truth == class_id)
             pred = (predictions == class_id)
             not_gt = (ground_truth != class_id)
             not_pred = (predictions != class_id)
 
             true_positives = (gt * pred).sum()
-            false_positives = (not_gt * pred).sum()
-            false_negatives = (gt * not_pred).sum()
+            false_positives = (not_gt * pred * not_dont_care).sum()
+            false_negatives = (gt * not_pred * not_dont_care).sum()
 
             precision = float(true_positives) / (
                 true_positives + false_positives)
             recall = float(true_positives) / (true_positives + false_negatives)
             f1 = 2 * (precision * recall) / (precision + recall)
             count_error = int(false_positives + false_negatives)
-            gt_count = int(true_positives.sum())
+            gt_count = int(gt.sum())
             class_name = class_map.get_by_id(class_id).name
 
             if math.isnan(precision):
