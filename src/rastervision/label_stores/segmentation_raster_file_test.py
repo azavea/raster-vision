@@ -4,7 +4,7 @@ import numpy as np
 from rastervision.core.raster_source import RasterSource
 from rastervision.core.box import Box
 from rastervision.label_stores.segmentation_raster_file import (
-    SegmentationRasterFile)
+    SegmentationInputRasterFile)
 
 
 class TestingRasterSource(RasterSource):
@@ -48,34 +48,12 @@ class TestingRasterSource(RasterSource):
 
 
 class TestSegmentationRasterFile(unittest.TestCase):
-    def test_clear(self):
-        label_store = SegmentationRasterFile(TestingRasterSource(), None, None)
-        extent = label_store.source.get_extent()
-        label_store.clear()
-        data = label_store.get_labels(extent)
-        self.assertEqual(data.sum(), 0)
-
-    def test_set_labels(self):
-        raster_source = TestingRasterSource(zeros=True)
-        label_store = SegmentationRasterFile(
-            source=raster_source,
-            sink=None,
-            class_map=None,
-            raster_class_map={'#000001': 1})
-        label_store.set_labels(raster_source)
-        extent = label_store.source.get_extent()
-        rs_data = raster_source._get_chip(extent)
-        ls_data = (label_store.get_labels(extent) == 1)
-        self.assertEqual(rs_data.sum(), ls_data.sum())
-
-    def test_enough_target_pixels_true(self):
+    def test_window_predicate_true(self):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[4:, 4:, :] = [1, 1, 1]
         raster_source = TestingRasterSource(data=data)
-        label_store = SegmentationRasterFile(
+        label_store = SegmentationInputRasterFile(
             source=raster_source,
-            sink=None,
-            class_map=None,
             raster_class_map={'#010101': 1})
         extent = Box(0, 0, 10, 10)
         self.assertTrue(label_store.enough_target_pixels(extent, 30, [1]))
@@ -84,10 +62,8 @@ class TestSegmentationRasterFile(unittest.TestCase):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[7:, 7:, :] = [1, 1, 1]
         raster_source = TestingRasterSource(data=data)
-        label_store = SegmentationRasterFile(
+        label_store = SegmentationInputRasterFile(
             source=raster_source,
-            sink=None,
-            class_map=None,
             raster_class_map={'#010101': 1})
         extent = Box(0, 0, 10, 10)
         self.assertFalse(label_store.enough_target_pixels(extent, 30, [1]))

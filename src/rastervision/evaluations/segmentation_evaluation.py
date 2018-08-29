@@ -5,7 +5,7 @@ from rastervision.core.evaluation import Evaluation
 from rastervision.core.evaluation_item import EvaluationItem
 from rastervision.core.label_store import LabelStore
 from rastervision.label_stores.segmentation_raster_file import (
-    SegmentationRasterFile)
+    SegmentationInputRasterFile)
 from rastervision.raster_sources.image_file import ImageFile
 from rastervision.core.box import Box
 
@@ -18,16 +18,15 @@ class SegmentationEvaluation(Evaluation):
         # Construct new prediction label store.  This allows chips to
         # be read out of the prediction raster with the appropriate
         # transformations applied.
-        if _prediction_label_store.source is not None:
-            prediction_label_store = _prediction_label_store
-        else:
+        if hasattr(_prediction_label_store, 'source'):
+            raster_source = _prediction_label_store.source
+        elif hasattr(_prediction_label_store, 'sink'):
             raster_source = ImageFile(None, _prediction_label_store.sink)
-            raster_class_map = ground_truth_label_store.raster_class_map
-            prediction_label_store = SegmentationRasterFile(
-                source=raster_source,
-                sink=None,
-                class_map=class_map,
-                raster_class_map=raster_class_map)
+        else:
+            raise ValueError('Must have source or sink.')
+        raster_class_map = ground_truth_label_store.raster_class_map
+        prediction_label_store = SegmentationInputRasterFile(
+            source=raster_source, raster_class_map=raster_class_map)
 
         # Compute the intersection of the extents of the ground truth
         # labels and predicted labels.

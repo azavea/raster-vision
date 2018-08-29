@@ -6,7 +6,7 @@ from rastervision.core.class_map import (ClassItem, ClassMap)
 from rastervision.evaluations.segmentation_evaluation import (
     SegmentationEvaluation)
 from rastervision.label_stores.segmentation_raster_file import (
-    SegmentationRasterFile)
+    SegmentationInputRasterFile)
 from rastervision.label_stores.segmentation_raster_file_test import (
     TestingRasterSource)
 
@@ -23,20 +23,14 @@ class TestSegmentationEvaluation(unittest.TestCase):
         gt_array[0, 0, :] = 0
         gt_array[2, 2, :] = 2
         gt_raster = TestingRasterSource(data=gt_array)
-        gt_label_store = SegmentationRasterFile(
-            source=gt_raster,
-            sink=None,
-            class_map=class_map,
-            raster_class_map=raster_class_map)
+        gt_label_store = SegmentationInputRasterFile(
+            source=gt_raster, raster_class_map=raster_class_map)
 
         p_array = np.ones((4, 4, 3), dtype=np.uint8)
         p_array[1, 1, :] = 0
         p_raster = TestingRasterSource(data=p_array)
-        p_label_store = SegmentationRasterFile(
-            source=p_raster,
-            sink=None,
-            class_map=class_map,
-            raster_class_map=raster_class_map)
+        p_label_store = SegmentationInputRasterFile(
+            source=p_raster, raster_class_map=raster_class_map)
 
         seval = SegmentationEvaluation()
         seval.compute(class_map, gt_label_store, p_label_store)
