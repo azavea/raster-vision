@@ -42,7 +42,7 @@ class TestSegmentationEvaluation(unittest.TestCase):
         seval.compute(class_map, gt_label_store, p_label_store)
 
         tp1 = 16 - 3  # 4*4 - 3 true positives for class 1
-        fp1 = 2  # 2 false positives (0,0) and (2,2)
+        fp1 = 1  # 1 false positive (2,2) and one don't care at (0,0)
         fn1 = 1  # one false negative (1,1)
         precision1 = float(tp1) / (tp1 + fp1)
         recall1 = float(tp1) / (tp1 + fn1)
