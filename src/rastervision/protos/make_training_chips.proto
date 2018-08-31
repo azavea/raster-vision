@@ -55,7 +55,7 @@ message MakeTrainingChipsConfig {
 
     message SegmentationOptions {
         optional float debug_chip_probability = 1 [default=0.25];
-        optional float empty_survival_probability = 2 [default=0.25];
+        optional float off_target_survival_probability = 2 [default=0.25];
         optional int32 number_of_chips = 3 [default=100];
         optional int32 super_window_factor = 4 [default = 6];
         optional int32 minor_axis_backoff = 5 [default = 0];

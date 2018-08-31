@@ -68,12 +68,15 @@ def merge_tf_records(output_path: str, src_records: List[str]) -> None:
          None
 
     """
+    records = 0
     with tf.python_io.TFRecordWriter(output_path) as writer:
         print('Merging TFRecords', end='', flush=True)
         for src_record in src_records:
             for string_record in tf.python_io.tf_record_iterator(src_record):
                 writer.write(string_record)
+                records = records + 1
             print('.', end='', flush=True)
+        print('{} records'.format(records))
         print()
 
 

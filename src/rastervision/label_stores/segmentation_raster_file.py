@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import os
 import tempfile
@@ -146,8 +147,12 @@ class SegmentationRasterFile(LabelStore):
             translated = self.source_to_rv(packed)
             argmax = np.argmax(translated == 1)
 
-            if argmax == 0 and not translated[0, 0] == 1:
-                return None
+            if translated.sum() < (larger_size * math.sqrt(larger_size)):
+                return -2
+            elif argmax == 0 and not translated[0, 0] == 1:
+                return -1
+            elif size == larger_size:
+                return window
             else:
                 major = int(argmax / larger_size)
                 minor = argmax - (major * larger_size)

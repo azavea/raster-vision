@@ -30,23 +30,26 @@ class SemanticSegmentation(MLTask):
         extent = raster_source.get_extent()
         label_store = scene.ground_truth_label_store
         chip_size = options.chip_size
-        p = seg_options.empty_survival_probability
+        p = seg_options.off_target_survival_probability
         m = seg_options.super_window_factor
-        backoff = seg_options.minor_axis_backoff
 
         windows = []
-        while (len(windows) < seg_options.number_of_chips):
+        attempts = 0
+        while (attempts < seg_options.number_of_chips):
+            attempts = attempts + 1
             window = extent.make_random_square(chip_size * m)
             sub_window = label_store.interesting_subwindow(
-                window, chip_size, backoff)
-            if sub_window is not None:
-                windows.append(sub_window)
-            elif (p > 0) and (np.random.rand() <= p):
+                window, chip_size, 0)
+            if type(sub_window) is int and sub_window == -2:
+                pass
+            elif type(sub_window) is int and (np.random.rand() < p):
                 ymin = window.ymin
                 xmin = window.xmin
                 ymax = ymin + chip_size
                 xmax = xmin + chip_size
                 sub_window = Box(ymin=ymin, xmin=xmin, ymax=ymax, xmax=xmax)
+                windows.append(sub_window)
+            elif type(sub_window) is Box:
                 windows.append(sub_window)
 
         return windows
