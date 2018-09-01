@@ -21,7 +21,7 @@ message TrainingParameters {
         optional float weight_decay = 15 [default = 0.00004];
         optional int32 decoder_output_stride = 16 [default = 8];
         optional int32 learning_rate_decay_step = 17 [default= 2000];
-        optional int32 output_stride = 18 [default = 8];
+        optional int32 output_stride = 18 [default = 16];
         optional int32 save_interval_secs = 19 [default = 600];
         optional int32 save_summaries_secs = 20 [default = 5];
         optional int32 slow_start_step = 21 [default = 0];
