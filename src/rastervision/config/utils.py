@@ -17,7 +17,7 @@ from rastervision.protos.predict_pb2 import PredictConfig
 from rastervision.protos.eval_pb2 import EvalConfig
 from rastervision.utils.files import (
     file_to_str, str_to_file, save_json_config, load_json_config,
-    download_if_needed, upload_if_needed, file_exists, RV_TEMP_DIR)
+    download_if_needed, upload_or_copy, file_exists, RV_TEMP_DIR)
 
 OD = ModelConfig.Task.Value('OBJECT_DETECTION')
 CL = ModelConfig.Task.Value('CLASSIFICATION')
@@ -253,7 +253,7 @@ def get_cache_uri(model_uri):
         print('Updating cache...')
         with tempfile.TemporaryDirectory() as temp_dir:
             model_path = download_if_needed(model_uri, temp_dir)
-            upload_if_needed(model_path, cache_model_uri)
+            upload_or_copy(model_path, cache_model_uri)
     print('Using cached model URI: ' + cache_model_uri)
     return cache_model_uri
 

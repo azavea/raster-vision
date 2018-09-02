@@ -1,0 +1,34 @@
+[
+  {
+    "class_id": 1,
+    "recall": 1.0,
+    "class_name": "car",
+    "precision": 1.0,
+    "f1": 1.0,
+    "gt_count": 1.0
+  },
+  {
+    "class_id": 2,
+    "recall": 1.0,
+    "class_name": "building",
+    "precision": 1.0,
+    "f1": 1.0,
+    "gt_count": 1.0
+  },
+  {
+    "class_id": 3,
+    "recall": 1.0,
+    "class_name": "background",
+    "precision": 1.0,
+    "f1": 1.0,
+    "gt_count": 4.0
+  },
+  {
+    "class_id": null,
+    "recall": 1.0,
+    "class_name": "average",
+    "precision": 1.0,
+    "f1": 1.0,
+    "gt_count": 6.0
+  }
+]

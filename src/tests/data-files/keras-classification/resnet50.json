@@ -1,0 +1,24 @@
+{
+    "model": {
+        "input_size": 300,
+        "type": "RESNET50",
+        "load_weights_by_name": false,
+        "model_path": ""
+    },
+    "trainer": {
+        "optimizer": {
+            "type": "ADAM",
+            "init_lr": 0.0001
+        },
+        "options": {
+            "training_data_dir": "",
+            "validation_data_dir": "",
+            "nb_epochs": 1,
+            "batch_size": 1,
+            "input_size": 300,
+            "output_dir": "",
+            "class_names": ["TEMPLATE"],
+            "short_epoch": true
+        }
+    }
+}

@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 from rastervision.core.ml_task import MLTask
 from rastervision.evaluations.classification_evaluation import (
     ClassificationEvaluation)
-from rastervision.utils.files import (get_local_path, upload_if_needed,
+from rastervision.utils.files import (get_local_path, upload_or_copy,
                                       make_dir)
 
 
@@ -59,4 +59,4 @@ class Classification(MLTask):
             debug_image_path = get_local_path(debug_image_uri, temp_dir)
             make_dir(debug_image_path, use_dirname=True)
             img.save(debug_image_path)
-            upload_if_needed(debug_image_path, debug_image_uri)
+            upload_or_copy(debug_image_path, debug_image_uri)

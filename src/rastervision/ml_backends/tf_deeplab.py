@@ -25,7 +25,7 @@ from rastervision.ml_backends.tf_object_detection_api import (
 from rastervision.protos.deeplab import train_pb2
 from rastervision.utils.files import (download_if_needed, get_local_path,
                                       load_json_config, make_dir, start_sync,
-                                      sync_dir, upload_if_needed)
+                                      sync_dir, upload_or_copy)
 from rastervision.utils.misc import (color_to_integer, numpy_to_png,
                                      png_to_numpy)
 from rastervision.utils.misc import save_img
@@ -490,8 +490,8 @@ class TFDeeplab(MLBackend):
         make_dir(validation_record_path_local, use_dirname=True)  # sic
         merge_tf_records(training_record_path_local, training_results)
         merge_tf_records(validation_record_path_local, validation_results)
-        upload_if_needed(training_record_path_local, training_record_path)
-        upload_if_needed(validation_record_path_local, validation_record_path)
+        upload_or_copy(training_record_path_local, training_record_path)
+        upload_or_copy(validation_record_path_local, validation_record_path)
 
         if options.debug:
             training_zip_path = join(base_uri, '{}'.format(TRAIN))
@@ -512,9 +512,9 @@ class TFDeeplab(MLBackend):
                                   seg_options.debug_chip_probability)
                 shutil.make_archive(validation_zip_path_local, 'zip',
                                     debug_dir)
-            upload_if_needed('{}.zip'.format(training_zip_path_local),
+            upload_or_copy('{}.zip'.format(training_zip_path_local),
                              '{}.zip'.format(training_zip_path))
-            upload_if_needed('{}.zip'.format(validation_zip_path_local),
+            upload_or_copy('{}.zip'.format(validation_zip_path_local),
                              '{}.zip'.format(validation_zip_path))
 
     def train(self, class_map: ClassMap, options) -> None:

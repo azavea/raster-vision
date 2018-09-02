@@ -5,7 +5,7 @@ import copy
 
 from rastervision.utils.files import (download_if_needed, load_json_config,
                                       make_dir, save_json_config,
-                                      get_local_path, upload_if_needed)
+                                      get_local_path, upload_or_copy)
 from rastervision.protos.predict_pb2 import PredictConfig
 from rastervision.core.raster_stats import RasterStats
 from rastervision.raster_sources.geotiff_files import GeoTiffFiles
@@ -47,7 +47,7 @@ def save_predict_package(predict_config):
             package_zip.write(config_path, arcname=config_fn)
             package_zip.write(model_path, arcname=model_fn)
             package_zip.write(stats_path, arcname=stats_fn)
-        upload_if_needed(package_path, package_uri)
+        upload_or_copy(package_path, package_uri)
 
 
 def make_scene_config(scene_template,

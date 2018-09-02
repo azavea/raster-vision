@@ -14,7 +14,7 @@ from google.protobuf import json_format
 
 from rastervision.core.ml_backend import MLBackend
 from rastervision.utils.files import (make_dir, get_local_path,
-                                      upload_if_needed, download_if_needed,
+                                      upload_or_copy, download_if_needed,
                                       start_sync, sync_dir, load_json_config)
 from rastervision.utils.misc import save_img
 from rastervision.labels.classification_labels import ClassificationLabels
@@ -32,8 +32,8 @@ class FileGroup(object):
     def get_local_path(self, uri):
         return get_local_path(uri, self.temp_dir)
 
-    def upload_if_needed(self, uri):
-        upload_if_needed(self.get_local_path(uri), uri)
+    def upload_or_copy(self, uri):
+        upload_or_copy(self.get_local_path(uri), uri)
 
     def download_if_needed(self, uri):
         return download_if_needed(uri, self.temp_dir)
@@ -69,7 +69,7 @@ class DatasetFiles(FileGroup):
         def _upload(data_uri):
             data_dir = self.get_local_path(data_uri)
             shutil.make_archive(data_dir, 'zip', data_dir)
-            self.upload_if_needed(data_uri + '.zip')
+            self.upload_or_copy(data_uri + '.zip')
 
         _upload(self.training_uri)
         _upload(self.validation_uri)

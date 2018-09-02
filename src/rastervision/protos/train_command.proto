@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rastervision/protos/task.proto";
+import "rastervision/protos/backend.proto";
+
+message TrainCommandConfig {
+    required TaskConfig task = 1;
+    required BackendConfig backend = 2;
+}

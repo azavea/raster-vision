@@ -136,6 +136,9 @@ class MLTask(object):
             # Shuffle data so the first N samples which are displayed in
             # Tensorboard are more diverse.
             data.shuffle()
+
+            # TODO: Process data augmentation
+
             # TODO load and delete scene data as needed to avoid
             # running out of disk space
             return self.backend.process_scene_data(scene, data, self.class_map,

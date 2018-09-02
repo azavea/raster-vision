@@ -17,4 +17,5 @@ if [ "${1:-}" = "--help" ]; then
     usage
 else
     python -m unittest discover rastervision "*_test.py"
+    python -m unittest discover tests
 fi

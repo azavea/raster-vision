@@ -7,7 +7,7 @@ import boto3
 from moto import mock_s3
 
 from rastervision.utils.files import (
-    file_to_str, str_to_file, download_if_needed, upload_if_needed,
+    file_to_str, str_to_file, download_if_needed, upload_or_copy,
     NotReadableError, NotWritableError, load_json_config,
     ProtobufParseException, make_dir, get_local_path)
 from rastervision.protos.model_config_pb2 import ModelConfig
@@ -118,7 +118,7 @@ class TestFileToStr(unittest.TestCase):
 
 
 class TestDownloadIfNeeded(unittest.TestCase):
-    """Test download_if_needed and upload_if_needed and str_to_file."""
+    """Test download_if_needed and upload_or_copy and str_to_file."""
 
     def setUp(self):
         # Setup mock S3 bucket.
@@ -144,7 +144,7 @@ class TestDownloadIfNeeded(unittest.TestCase):
             download_if_needed(self.local_path, self.temp_dir.name)
 
         str_to_file(self.content_str, self.local_path)
-        upload_if_needed(self.local_path, self.local_path)
+        upload_or_copy(self.local_path, self.local_path)
         local_path = download_if_needed(self.local_path, self.temp_dir.name)
         self.assertEqual(local_path, self.local_path)
 
@@ -153,14 +153,14 @@ class TestDownloadIfNeeded(unittest.TestCase):
             download_if_needed(self.s3_path, self.temp_dir.name)
 
         str_to_file(self.content_str, self.local_path)
-        upload_if_needed(self.local_path, self.s3_path)
+        upload_or_copy(self.local_path, self.s3_path)
         local_path = download_if_needed(self.s3_path, self.temp_dir.name)
         content_str = file_to_str(local_path)
         self.assertEqual(self.content_str, content_str)
 
         wrong_path = 's3://wrongpath/x.txt'
         with self.assertRaises(NotWritableError):
-            upload_if_needed(local_path, wrong_path)
+            upload_or_copy(local_path, wrong_path)
 
 
 class TestLoadJsonConfig(unittest.TestCase):

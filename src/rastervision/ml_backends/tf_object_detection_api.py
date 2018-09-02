@@ -27,7 +27,7 @@ from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 from rastervision.core.ml_backend import MLBackend
 from rastervision.ml_tasks.object_detection import save_debug_image
 from rastervision.labels.object_detection_labels import (ObjectDetectionLabels)
-from rastervision.utils.files import (get_local_path, upload_if_needed,
+from rastervision.utils.files import (get_local_path, upload_or_copy,
                                       make_dir, download_if_needed,
                                       file_to_str, sync_dir, start_sync)
 
@@ -315,7 +315,7 @@ class TrainingPackage(object):
         """
         return get_local_path(uri, self.temp_dir)
 
-    def upload_if_needed(self, uri):
+    def upload_or_copy(self, uri):
         """Upload file if it's remote.
 
         This knows how to generate the path to the local copy of the file.
@@ -323,7 +323,7 @@ class TrainingPackage(object):
         Args:
             uri: (string) URI of file, possibly remote
         """
-        upload_if_needed(self.get_local_path(uri), uri)
+        upload_or_copy(self.get_local_path(uri), uri)
 
     def download_if_needed(self, uri):
         """Download file if it's remote.
@@ -376,12 +376,12 @@ class TrainingPackage(object):
             debug: (bool) if True, also upload the corresponding debug chip
                 zip files
         """
-        self.upload_if_needed(self.get_record_uri(TRAIN))
-        self.upload_if_needed(self.get_record_uri(VALIDATION))
-        self.upload_if_needed(self.get_class_map_uri())
+        self.upload_or_copy(self.get_record_uri(TRAIN))
+        self.upload_or_copy(self.get_record_uri(VALIDATION))
+        self.upload_or_copy(self.get_class_map_uri())
         if debug:
-            self.upload_if_needed(self.get_debug_chips_uri(TRAIN))
-            self.upload_if_needed(self.get_debug_chips_uri(VALIDATION))
+            self.upload_or_copy(self.get_debug_chips_uri(TRAIN))
+            self.upload_or_copy(self.get_debug_chips_uri(VALIDATION))
 
     def download_data(self):
         """Download training and validation data, and class map files."""

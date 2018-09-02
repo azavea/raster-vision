@@ -7,6 +7,14 @@ class ComputeStats(Command):
         self.raster_sources = raster_sources
         self.stats_uri = stats_uri
 
+    def get_inputs(self):
+        return [uri
+                for source in self.raster_sources
+                for uri in source.get_uris()]
+
+    def get_outputs(self):
+        return self.stats_uri
+
     def run(self):
         stats = RasterStats()
         stats.compute(self.raster_sources)

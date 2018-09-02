@@ -1,7 +1,7 @@
 class ClassItem(object):
     """A class id and associated data."""
 
-    def __init__(self, id, name, color=None):
+    def __init__(self, id: int, name: str, color=None):
         """Construct a new ClassItem.
 
         Color is picked randomly if it is a null value.
@@ -14,6 +14,19 @@ class ClassItem(object):
         self.id = id
         self.name = name
         self.color = color
+
+    def __eq__(self, other):
+        if isinstance(other, ClassItem):
+            return (self.id == other.id and \
+                    self.name == other.name and \
+                    self.color == other.color)
+        return False
+
+    def __repr__(self):
+        s = "CLASS ITEM: [{}] {}".format(self.id, self.name)
+        if self.color:
+            s += " ({})".format(self.color)
+        return s
 
 
 class ClassMap(object):
