@@ -371,7 +371,7 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
 
 
 def get_export_args(export_model_py: str, train_logdir_local: str,
-                    num_classes: int) -> str:
+                    num_classes: int, be_options) -> List[str]:
     """Generate the array of arguments needed to run the export script.
 
     Args:
@@ -379,18 +379,40 @@ def get_export_args(export_model_py: str, train_logdir_local: str,
          train_logdir_local: The directory in-which checkpoints will
               be placed.
          num_classes: The number of classes.
+         be_options: Options from the backend configuration file.
 
     Returns:
          A list of arguments suitable for starting the training
          script.
 
     """
+
+    fields = [
+        'decoder_output_stride',
+        'output_stride',
+        'model_variant',
+    ]
+
     args = ['python', export_model_py]
+
     args.append('--checkpoint_path={}'.format(
         get_latest_checkpoint(train_logdir_local)))
     args.append('--export_path={}'.format(
         join(train_logdir_local, FROZEN_INFERENCE_GRAPH)))
     args.append('--num_classes={}'.format(num_classes))
+
+    for field in fields:
+        args.append('--{}={}'.format(field,
+                                     be_options.__getattribute__(field)))
+
+    for item in be_options.__getattribute__('atrous_rates'):
+        args.append('--{}={}'.format('atrous_rates', item))
+
+    for item in be_options.__getattribute__('train_crop_size'):
+        args.append('--{}={}'.format('crop_size', item))
+
+    print('XXX')
+    print(args)
 
     return args
 
@@ -565,7 +587,7 @@ class TFDeeplab(MLBackend):
 
         # Export
         export_args = get_export_args(export_model_py, train_logdir_local,
-                                      num_classes)
+                                      num_classes, be_options)
         export_process = Popen(export_args)
         terminate_at_exit(export_process)
         export_process.wait()
