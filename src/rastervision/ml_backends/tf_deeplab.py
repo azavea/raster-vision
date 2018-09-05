@@ -403,17 +403,14 @@ def get_export_args(export_model_py: str, train_logdir_local: str,
     args.append('--num_classes={}'.format(num_classes))
 
     for field in fields:
-        args.append('--{}={}'.format(field,
-                                     be_options.__getattribute__(field)))
+        field_value = be_options.__getattribute__(field)
+        args.append('--{}={}'.format(field, field_value))
 
     for item in be_options.__getattribute__('atrous_rates'):
         args.append('--{}={}'.format('atrous_rates', item))
 
     for item in be_options.__getattribute__('train_crop_size'):
         args.append('--{}={}'.format('crop_size', item))
-
-    print('XXX')
-    print(args)
 
     return args
 
