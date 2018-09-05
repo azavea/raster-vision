@@ -4,36 +4,49 @@ package deeplab.protos;
 
 
 message TrainingParameters {
-        optional bool fine_tune_batch_norm = 1 [default = true];
-        optional bool initialize_last_layer = 2 [default = true];
-        optional bool last_layers_contain_logits_only = 3 [default = false];
-        optional bool save_summaries_images = 4 [default = true];
-        optional bool upsample_logits = 5 [default = true];
-        optional float base_learning_rate = 6 [default = 0.0001];
-        optional float last_layer_gradient_multiplier = 7 [default = 1.0];
-        optional float learning_power = 8 [default = 0.9];
-        optional float learning_rate_decay_factor = 9 [default = 0.1];
-        optional float max_scale_factor = 10 [default = 1.0];
-        optional float min_scale_factor = 11 [default = 1.0];
-        optional float momentum = 12 [default = 0.9];
-        optional float scale_factor_step_size = 13 [default = 0.25];
-        optional float slow_start_learning_rate = 14 [default = 0.0001];
-        optional float weight_decay = 15 [default = 0.00004];
-        optional int32 decoder_output_stride = 16 [default = 8];
-        optional int32 learning_rate_decay_step = 17 [default= 2000];
-        optional int32 output_stride = 18 [default = 16];
-        optional int32 save_interval_secs = 19 [default = 600];
-        optional int32 save_summaries_secs = 20 [default = 5];
-        optional int32 slow_start_step = 21 [default = 0];
-        optional int32 train_batch_size = 22 [default = 8];
-        optional int32 training_number_of_steps = 23 [default = 1];
-        optional string dataset = 25 [default = ""];
-        optional string learning_policy = 26 [default = "step"];
-        optional string model_variant = 27 [default = "custom"];
-        optional string train_split = 28 [default = "train"];
-        repeated int32 atrous_rates = 29;
-        repeated int32 train_crop_size = 30;
 
-        optional int32 dl_custom_train = 31 [default = 1333];
-        optional int32 dl_custom_validation = 32 [default = 1333];
+        // Transfer
+        optional string initialize_last_layer = 1;
+        optional string last_layers_contain_logits_only = 2;
+        optional string upsample_logits = 3;
+
+        // Learning
+        optional string fine_tune_batch_norm = 4;
+        optional string base_learning_rate = 5;
+        optional string last_layer_gradient_multiplier = 6;
+        optional string learning_power = 7;
+        optional string learning_rate_decay_factor = 8;
+        optional string momentum = 9;
+        optional string slow_start_learning_rate = 10;
+        optional string weight_decay = 11;
+        optional string learning_rate_decay_step = 12;
+        optional string slow_start_step = 13;
+        optional string learning_policy = 14;
+
+        // Augmentation
+        optional string max_scale_factor = 15;
+        optional string min_scale_factor = 16;
+        optional string scale_factor_step_size = 17;
+
+        // Structure
+        required int32 decoder_output_stride = 18;
+        required int32 output_stride = 19;
+        required string model_variant = 20;
+        repeated int32 atrous_rates = 21;
+
+        // Dataset (DeepLab)
+        optional string train_split = 22 [default = "train"];
+        optional string dataset = 23 [default = "custom"];
+        required int32 train_batch_size = 24;
+        required int32 training_number_of_steps = 25;
+        repeated int32 train_crop_size = 26;
+
+        // Dataset (RasterVision)
+        optional int32 dl_custom_train = 27 [default = 1333];
+        optional int32 dl_custom_validation = 28 [default = 1333];
+
+        // Tensorboard
+        optional bool save_summaries_images = 29 [default = true];
+        optional int32 save_interval_secs = 30 [default = 600];
+        optional int32 save_summaries_secs = 31 [default = 15];
 }

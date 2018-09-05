@@ -282,7 +282,7 @@ def get_latest_checkpoint(train_logdir_local: str) -> str:
     return latest[:len(latest) - len('.meta')]
 
 
-def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
+def get_training_args(train_py: str, train_logdir_local: str, tfic_ckpt: str,
                       dataset_dir_local: str, num_classes: int,
                       be_options) -> Tuple[List[str], Dict[str, str]]:
     """Generate the array of arguments needed to run the training script.
@@ -291,7 +291,7 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
          train_py: The URI of the training script.
          train_logdir_local: The directory in-which checkpoints will
               be placed.
-         tfic_index: URI of the .index file that came from the initial
+         tfic_ckpt: URI of the .ckpt "file" from the initial
               checkpoint tarball.
          dataset_dir_local: The directory in which the records are
               found.
@@ -310,27 +310,27 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
         'initialize_last_layer',
         'last_layers_contain_logits_only',
         'save_summaries_images',
-        'upsample_logits',
+        # 'upsample_logits',
         'base_learning_rate',
-        'last_layer_gradient_multiplier',
-        'learning_power',
-        'learning_rate_decay_factor',
-        'max_scale_factor',
-        'min_scale_factor',
-        'momentum',
-        'scale_factor_step_size',
-        'slow_start_learning_rate',
-        'weight_decay',
+        # 'last_layer_gradient_multiplier',
+        # 'learning_power',
+        # 'learning_rate_decay_factor',
+        # 'max_scale_factor',
+        # 'min_scale_factor',
+        # 'momentum',
+        # 'scale_factor_step_size',
+        # 'slow_start_learning_rate',
+        # 'weight_decay',
         'decoder_output_stride',
-        'learning_rate_decay_step',
+        # 'learning_rate_decay_step',
         'output_stride',
         'save_interval_secs',
         'save_summaries_secs',
-        'slow_start_step',
+        # 'slow_start_step',
         'train_batch_size',
         'training_number_of_steps',
         'dataset',
-        'learning_policy',
+        # 'learning_policy',
         'model_variant',
         'train_split',
     ]
@@ -348,7 +348,7 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
     args = ['python', train_py]
 
     args.append('--train_logdir={}'.format(train_logdir_local))
-    args.append('--tf_initial_checkpoint={}'.format(tfic_index))
+    args.append('--tf_initial_checkpoint={}'.format(tfic_ckpt))
     args.append('--dataset_dir={}'.format(dataset_dir_local))
 
     for field in multi_fields:
@@ -356,14 +356,15 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
             args.append('--{}={}'.format(field, item))
 
     for field in fields:
-        args.append('--{}={}'.format(field,
-                                     be_options.__getattribute__(field)))
+        field_value = be_options.__getattribute__(field)
+        if (not type(field_value) is str) or (not len(field_value) == 0):
+            args.append('--{}={}'.format(field, field_value))
 
     env = os.environ.copy()
     for field in env_fields:
-        print('{}={}'.format(field.upper(),
-                             be_options.__getattribute__(field)))
-        env[field.upper()] = str(be_options.__getattribute__(field))
+        field_value = be_options.__getattribute__(field)
+        print('{}={}'.format(field.upper(), field_value))
+        env[field.upper()] = str(field_value)
     print('DL_CUSTOM_CLASSES={}'.format(num_classes))
     env['DL_CUSTOM_CLASSES'] = str(num_classes)
 
@@ -562,7 +563,8 @@ class TFDeeplab(MLBackend):
         tfic_dir = os.path.dirname(tfic_tarball)
         with tarfile.open(tfic_tarball, 'r:gz') as tar:
             tar.extractall(tfic_dir)
-        tfic_index = glob.glob('{}/*/*.index'.format(tfic_dir))[0]
+        tfic_ckpt = glob.glob('{}/*/*.index'.format(tfic_dir))[0]
+        tfic_ckpt = tfic_ckpt[0:-len('.index')]
 
         # Periodically synchronize with remote
         start_sync(
@@ -575,7 +577,7 @@ class TFDeeplab(MLBackend):
         num_classes = len(class_map.get_items())
         num_classes = max(max_class, num_classes) + 1
         (train_args, train_env) = get_training_args(
-            train_py, train_logdir_local, tfic_index, dataset_dir_local,
+            train_py, train_logdir_local, tfic_ckpt, dataset_dir_local,
             num_classes, be_options)
         train_process = Popen(train_args, env=train_env)
         terminate_at_exit(train_process)
