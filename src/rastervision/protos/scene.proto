@@ -19,4 +19,7 @@ message Scene {
 
     // The id is used by the workflow runner to generate some output URIs.
     optional string id = 4;
+    // The aoi_uri points to a polygon geojson file that defines the
+    // boundaries of the area that chips should come from
+    optional string aoi_uri = 5;
 }

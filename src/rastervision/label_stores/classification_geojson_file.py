@@ -8,48 +8,11 @@ from rastervision.labels.classification_labels import (ClassificationLabels)
 from rastervision.label_stores.object_detection_geojson_file import (
     geojson_to_labels as geojson_to_object_detection_labels)
 from rastervision.label_stores.utils import (
-    add_classes_to_geojson, load_label_store_json, boxes_to_geojson)
+    add_classes_to_geojson, load_label_store_json, boxes_to_geojson,
+    geojson_to_shapely_polygons)
 from rastervision.utils.files import str_to_file
 from rastervision.label_stores.classification_label_store import (
     ClassificationLabelStore)
-
-
-def get_str_tree(geojson_dict, crs_transformer):
-    """Get shapely STRtree data structure for a set of polygons.
-
-    Args:
-        geojson_dict: dict in GeoJSON format with class_id property for each
-            polygon
-        crs_transformer: CRSTransformer used to convert from map to pixel
-            coords
-
-    Returns:
-        shapely.strtree.STRtree
-    """
-    features = geojson_dict['features']
-    json_polygons = []
-    class_ids = []
-
-    for feature in features:
-        # Convert polygon to pixel coords.
-        polygon = feature['geometry']['coordinates'][0]
-        polygon = [crs_transformer.map_to_pixel(p) for p in polygon]
-        json_polygons.append(polygon)
-
-        properties = feature.get('properties', {})
-        class_ids.append(properties.get('class_id', 1))
-
-    # Convert polygons to shapely
-    polygons = []
-    for json_polygon, class_id in zip(json_polygons, class_ids):
-        polygon = geometry.Polygon([(p[0], p[1]) for p in json_polygon])
-        # Trick to handle self-intersecting polygons which otherwise cause an
-        # error.
-        polygon = polygon.buffer(0)
-        polygon.class_id = class_id
-        polygons.append(polygon)
-
-    return STRtree(polygons)
 
 
 def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
@@ -132,7 +95,8 @@ def infer_labels(geojson_dict, crs_transformer, extent, options):
     Returns:
         ClassificationLabels
     """
-    str_tree = get_str_tree(geojson_dict, crs_transformer)
+    polygons = geojson_to_shapely_polygons(geojson_dict, crs_transformer)
+    str_tree = STRtree(polygons)
     labels = ClassificationLabels()
 
     cells = extent.get_windows(options.cell_size, options.cell_size)

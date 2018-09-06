@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 from rastervision.core.training_data import TrainingData
 from rastervision.core.predict_package import save_predict_package
+from rastervision.ml_tasks.utils import is_window_inside_aoi
 
 import numpy as np
 
@@ -121,7 +122,12 @@ class MLTask(object):
                 end='',
                 flush=True)
             windows = self.get_train_windows(scene, options)
-            for window in windows:
+            aoi_windows = [
+                window for window in windows
+                if is_window_inside_aoi(window, scene.aoi_polygons)
+            ]
+
+            for window in aoi_windows:
                 chip = scene.raster_source.get_chip(window)
                 labels = self.get_train_labels(window, scene, options)
                 data.append(chip, window, labels)
