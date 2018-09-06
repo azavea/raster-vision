@@ -22,6 +22,7 @@ class DoubleCRSTransformer(CRSTransformer):
 
 
 class TestLabelStoreUtils(unittest.TestCase):
+
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
         self.aoi_dict = {
@@ -54,11 +55,11 @@ class TestLabelStoreUtils(unittest.TestCase):
     def test_json_to_shapely(self):
         self.assertIsNone(json_to_shapely(None, self.crs_transformer))
 
-        aoi_polygon = json_to_shapely(self.aoi_file_path, self.crs_transformer)
+        aoi_polygon = json_to_shapely(self.aoi_dict, self.crs_transformer)
         aoi_box = Box.make_square(0, 0, 2)
 
         self.assertEqual(len(aoi_polygon), 1)
-        self.assertEqual(aoi_box.get_shapely(), aoi_polygon[0])
+        self.assertTrue(aoi_polygon[0].equals(aoi_box.get_shapely()))
 
 
 if __name__ == '__main__':

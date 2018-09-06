@@ -113,6 +113,9 @@ def geojson_to_shapely_polygons(geojson_dict, crs_transformer):
     Returns:
         list of shapely.geometry.Polygon
     """
+    if not geojson_dict:
+        return None
+
     features = geojson_dict['features']
     json_polygons = []
     class_ids = []
