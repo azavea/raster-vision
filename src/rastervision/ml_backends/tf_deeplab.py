@@ -531,29 +531,31 @@ class TFDeeplab(MLBackend):
 
         """
         seg_options = options.segmentation_options
-
-        make_dir(self.temp_dir)
-        download_if_needed(options.backend_config_uri, self.temp_dir)
-        backend_config_uri = get_local_path(options.backend_config_uri,
-                                            self.temp_dir)
-        be_options = load_json_config(backend_config_uri,
-                                      train_pb2.TrainingParameters())
-
         train_py = seg_options.train_py
         export_model_py = seg_options.export_model_py
 
+        # Restart support
+        train_restart_dir = seg_options.train_restart_dir
+        if type(train_restart_dir) is str and len(train_restart_dir) > 0:
+            self.temp_dir = train_restart_dir
+
         # Setup local input and output directories
+        print('Setting up local input and output directories')
         train_logdir = options.output_uri
         train_logdir_local = get_local_path(train_logdir, self.temp_dir)
         dataset_dir = options.training_data_uri
         dataset_dir_local = get_local_path(dataset_dir, self.temp_dir)
+        make_dir(self.temp_dir)
         make_dir(train_logdir_local)
         make_dir(dataset_dir_local)
+
+        # Download training data
+        print('Downloading training data')
         download_if_needed(get_record_uri(dataset_dir, TRAIN), self.temp_dir)
 
         # Download and untar initial checkpoint.
+        print('Downloading and untarring initial checkpoint')
         tf_initial_checkpoints_uri = options.pretrained_model_uri
-        make_dir(self.temp_dir)
         download_if_needed(tf_initial_checkpoints_uri, self.temp_dir)
         tfic_tarball = get_local_path(tf_initial_checkpoints_uri,
                                       self.temp_dir)
@@ -563,28 +565,54 @@ class TFDeeplab(MLBackend):
         tfic_ckpt = glob.glob('{}/*/*.index'.format(tfic_dir))[0]
         tfic_ckpt = tfic_ckpt[0:-len('.index')]
 
+        # sync from s3
+        if type(train_restart_dir) is str and len(train_restart_dir) > 0:
+            print('Syncing from s3')
+            if urlparse(train_logdir).scheme == 's3':
+                sync_dir(train_logdir, train_logdir_local, delete=False)
+
         # Periodically synchronize with remote
         start_sync(
             train_logdir_local,
             train_logdir,
             sync_interval=options.sync_interval)
 
-        # Train
+        # Download backend configuration
+        print('Downloading and applying backend configuration')
+        download_if_needed(options.backend_config_uri, self.temp_dir)
+        backend_config_uri = get_local_path(options.backend_config_uri,
+                                            self.temp_dir)
+        be_options = load_json_config(backend_config_uri,
+                                      train_pb2.TrainingParameters())
+        print('be_options={}'.format(be_options))
+        print('Training steps={}'.format(be_options.training_number_of_steps))
+
+        # Additional training options
         max_class = max(list(map(lambda c: c.id, class_map.get_items())))
         num_classes = len(class_map.get_items())
         num_classes = max(max_class, num_classes) + 1
         (train_args, train_env) = get_training_args(
             train_py, train_logdir_local, tfic_ckpt, dataset_dir_local,
             num_classes, be_options)
+
+        # Start training
+        print('Starting training process')
         train_process = Popen(train_args, env=train_env)
         terminate_at_exit(train_process)
+
+        # Start tensorboard
+        print('Starting tensorboard process')
         tensorboard_process = Popen(
             ['tensorboard', '--logdir={}'.format(train_logdir_local)])
         terminate_at_exit(tensorboard_process)
+
+        # Wait for training and tensorboard
+        print('Waiting for training and tensorboard processes')
         train_process.wait()
         tensorboard_process.terminate()
 
-        # Export
+        # Export frozen graph
+        print('Exporting frozen graph ({}/model)'.format(train_logdir_local))
         export_args = get_export_args(export_model_py, train_logdir_local,
                                       num_classes, be_options)
         export_process = Popen(export_args)
@@ -592,8 +620,9 @@ class TFDeeplab(MLBackend):
         export_process.wait()
 
         # sync to s3
+        print('Syncing to s3')
         if urlparse(train_logdir).scheme == 's3':
-            sync_dir(train_logdir_local, train_logdir, delete=True)
+            sync_dir(train_logdir_local, train_logdir, delete=False)
 
     def predict(self, chips: np.ndarray, windows: List[Box],
                 options) -> List[Tuple[Box, np.ndarray]]:
