@@ -38,8 +38,11 @@ class SemanticSegmentation(MLTask):
         while (attempts < seg_options.number_of_chips):
             attempts = attempts + 1
             window = extent.make_random_square(chip_size * m)
-            sub_window = label_store.interesting_subwindow(
-                window, chip_size, 0)
+            if (p >= 1.0 and m == 1):
+                sub_window = window
+            else:
+                sub_window = label_store.interesting_subwindow(
+                    window, chip_size, 0)
             if type(sub_window) is int and sub_window == -2:
                 pass
             elif type(sub_window) is int and (np.random.rand() < p):
