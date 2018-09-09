@@ -131,6 +131,22 @@ class Box():
 
         return Box.make_square(rand_y, rand_x, size)
 
+    def intersection(self, other):
+        """Return the intersection of this Box and the other.
+
+        Args:
+            other: The box to intersect with this one.
+
+        Returns:
+             The intersection of this box and the other one.
+
+        """
+        xmin = max(self.xmin, other.xmin)
+        ymin = max(self.ymin, other.ymin)
+        xmax = min(self.xmax, other.xmax)
+        ymax = min(self.ymax, other.ymax)
+        return Box(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
+
     @staticmethod
     def from_npbox(npbox):
         """Return new Box based on npbox format.
