@@ -116,28 +116,23 @@ class SegmentationRasterFile(LabelStore):
             raise ValueError('Unsure how to handle source={}'.format(
                 type(source)))
 
-    def interesting_subwindow(self, window: Box, size: int,
-                              shift: int) -> Union[Box, None]:
-        """Given a larger window, return a sub-window that contains interesting
-        pixels (pixels of class 1).
+    def window_predicate(self, window: Box, target_classes: List[int]) -> bool:
+        """Given a window, answer whether the window contains enough pixels in
+        the target classes.
 
         Args:
              window: The larger window from-which the sub-window will
                   be clipped.
-             size: The linear size (height and width) of the smaller
-                  window.
-             shift: How far to shift the returned window to the
-                  right.  This is useful because the returned window
-                  is constructed by finding the first pixel from the
-                  top-left, which can result in objects being cutoff.
+             target_classes: The classes of interest.  The given
+                  window is examined to make sure that it contains a
+                  sufficinet number of interesting pixels.
 
         Returns:
-             Either a sub-window containing interesting pixels or None
-             if no such window can be found.
+             True (the window does contain interesting pixels) or False.
 
         """
         if self.source is not None:
-            larger_size = window.xmax - window.xmin  # XXX assumed square
+            size = window.xmax - window.xmin  # Assumed square
 
             labels = self.source._get_chip(window)
             r = np.array(labels[:, :, 0], dtype=np.uint32) * (1 << 16)
@@ -145,30 +140,17 @@ class SegmentationRasterFile(LabelStore):
             b = np.array(labels[:, :, 2], dtype=np.uint32) * (1 << 0)
             packed = r + g + b
             translated = self.source_to_rv(packed)
-            argmax = np.argmax(translated == 1)
 
-            if translated.sum() < (larger_size * math.sqrt(larger_size)):
-                return -2
-            elif argmax == 0 and not translated[0, 0] == 1:
-                return -1
-            elif size == larger_size:
-                return window
+            target_count = 0
+            for i in target_classes:
+                target_count = target_count + (translated == i).sum()
+
+            if target_count < (size * math.sqrt(size)):
+                return False
             else:
-                major = int(argmax / larger_size)
-                minor = argmax - (major * larger_size)
-                old_ymax = window.ymax
-                old_xmax = window.xmax
-                new_ymin = window.ymin + major
-                new_xmin = window.xmin + minor - shift
-                ymin = new_ymin if (new_ymin + size <=
-                                    old_ymax) else old_ymax - size
-                xmin = new_xmin if (new_xmin + size <=
-                                    old_xmax) else old_ymax - size
-                retval = Box(
-                    ymin=ymin, xmin=xmin, ymax=ymin + size, xmax=xmin + size)
-                return retval
+                return True
         else:
-            return None
+            return False
 
     def get_labels(self,
                    window: Union[Box, None] = None) -> Union[np.ndarray, None]:

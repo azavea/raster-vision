@@ -67,22 +67,29 @@ class TestSegmentationRasterFile(unittest.TestCase):
         ls_data = (label_store.get_labels(extent) == 1)
         self.assertEqual(rs_data.sum(), ls_data.sum())
 
-    def test_interesting_subwindow(self):
-        zeros = np.zeros((11, 11, 3), dtype=np.uint8)
-        ones = np.ones((10, 10, 3), dtype=np.uint8)
-        zeros[1:, 1:, :] = ones
-        raster_source = TestingRasterSource(data=zeros)
+    def test_window_predicate_true(self):
+        data = np.zeros((10, 10, 3), dtype=np.uint8)
+        data[4:, 4:, :] = [1, 1, 1]
+        raster_source = TestingRasterSource(data=data)
         label_store = SegmentationRasterFile(
             source=raster_source,
             sink=None,
             class_map=None,
             raster_class_map={'#010101': 1})
         extent = Box(0, 0, 10, 10)
-        window = label_store.interesting_subwindow(extent, 2, 0)
-        self.assertEqual(window.xmin, 1)
-        self.assertEqual(window.ymin, 1)
-        self.assertEqual(window.xmax, 3)
-        self.assertEqual(window.ymax, 3)
+        self.assertTrue(label_store.window_predicate(extent, [1]))
+
+    def test_window_predicate_false(self):
+        data = np.zeros((10, 10, 3), dtype=np.uint8)
+        data[7:, 7:, :] = [1, 1, 1]
+        raster_source = TestingRasterSource(data=data)
+        label_store = SegmentationRasterFile(
+            source=raster_source,
+            sink=None,
+            class_map=None,
+            raster_class_map={'#010101': 1})
+        extent = Box(0, 0, 10, 10)
+        self.assertFalse(label_store.window_predicate(extent, [1]))
 
 
 if __name__ == '__main__':
