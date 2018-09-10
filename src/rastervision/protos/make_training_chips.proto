@@ -57,7 +57,8 @@ message MakeTrainingChipsConfig {
         optional float debug_chip_probability = 1 [default=0.25];
         optional float negative_survival_probability = 2 [default=1.00];
         optional int32 number_of_chips = 3 [default=1000];
-        repeated int32 target_classes = 4;
+	optional int32 ioa_threshold = 4 [default=2048];
+        repeated int32 target_classes = 5;
     }
 
     message Options {

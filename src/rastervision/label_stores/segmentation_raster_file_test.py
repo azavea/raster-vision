@@ -67,7 +67,7 @@ class TestSegmentationRasterFile(unittest.TestCase):
         ls_data = (label_store.get_labels(extent) == 1)
         self.assertEqual(rs_data.sum(), ls_data.sum())
 
-    def test_window_predicate_true(self):
+    def test_enough_target_pixels_true(self):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[4:, 4:, :] = [1, 1, 1]
         raster_source = TestingRasterSource(data=data)
@@ -77,9 +77,9 @@ class TestSegmentationRasterFile(unittest.TestCase):
             class_map=None,
             raster_class_map={'#010101': 1})
         extent = Box(0, 0, 10, 10)
-        self.assertTrue(label_store.window_predicate(extent, [1]))
+        self.assertTrue(label_store.enough_target_pixels(extent, 30, [1]))
 
-    def test_window_predicate_false(self):
+    def test_enough_target_pixels_false(self):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[7:, 7:, :] = [1, 1, 1]
         raster_source = TestingRasterSource(data=data)
@@ -89,7 +89,7 @@ class TestSegmentationRasterFile(unittest.TestCase):
             class_map=None,
             raster_class_map={'#010101': 1})
         extent = Box(0, 0, 10, 10)
-        self.assertFalse(label_store.window_predicate(extent, [1]))
+        self.assertFalse(label_store.enough_target_pixels(extent, 30, [1]))
 
 
 if __name__ == '__main__':

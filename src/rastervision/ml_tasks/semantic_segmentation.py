@@ -31,6 +31,7 @@ class SemanticSegmentation(MLTask):
         label_store = scene.ground_truth_label_store
         chip_size = options.chip_size
         prob = seg_options.negative_survival_probability
+        ioa_threshold = seg_options.ioa_threshold
         target_classes = seg_options.target_classes
         if len(target_classes) == 0:
             target_classes = [1]
@@ -43,8 +44,8 @@ class SemanticSegmentation(MLTask):
             if (prob >= 1.0):
                 windows.append(candidate_window)
             else:
-                good = label_store.window_predicate(candidate_window,
-                                                    target_classes)
+                good = label_store.enough_target_pixels(
+                    candidate_window, ioa_threshold, target_classes)
                 if good or (np.random.rand() < prob):
                     windows.append(candidate_window)
 

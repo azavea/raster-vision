@@ -1,4 +1,3 @@
-import math
 import numpy as np
 import os
 import tempfile
@@ -116,13 +115,15 @@ class SegmentationRasterFile(LabelStore):
             raise ValueError('Unsure how to handle source={}'.format(
                 type(source)))
 
-    def window_predicate(self, window: Box, target_classes: List[int]) -> bool:
+    def enough_target_pixels(self, window: Box, ioa_threshold: int,
+                             target_classes: List[int]) -> bool:
         """Given a window, answer whether the window contains enough pixels in
         the target classes.
 
         Args:
              window: The larger window from-which the sub-window will
                   be clipped.
+             ioa_threshold:  Minimum number of target pixels.
              target_classes: The classes of interest.  The given
                   window is examined to make sure that it contains a
                   sufficinet number of interesting pixels.
@@ -132,8 +133,6 @@ class SegmentationRasterFile(LabelStore):
 
         """
         if self.source is not None:
-            size = window.xmax - window.xmin  # Assumed square
-
             labels = self.source._get_chip(window)
             r = np.array(labels[:, :, 0], dtype=np.uint32) * (1 << 16)
             g = np.array(labels[:, :, 1], dtype=np.uint32) * (1 << 8)
@@ -145,7 +144,7 @@ class SegmentationRasterFile(LabelStore):
             for i in target_classes:
                 target_count = target_count + (translated == i).sum()
 
-            if target_count < (size * math.sqrt(size)):
+            if target_count < (ioa_threshold):
                 return False
             else:
                 return True
