@@ -35,11 +35,11 @@ class SegmentationEvaluation(Evaluation):
 
         ground_truth = ground_truth_label_store.get_labels(extent)
         predictions = prediction_label_store.get_labels(extent)
+        not_dont_care = (ground_truth != 0)  # By assumption
 
         # noqa Definitions of precision, recall, and f1 taken from http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
         evaluation_items = []
         for class_id in class_map.get_keys():
-            not_dont_care = (ground_truth != 0)  # By assumption
             gt = (ground_truth == class_id)
             pred = (predictions == class_id)
             not_gt = (ground_truth != class_id)
