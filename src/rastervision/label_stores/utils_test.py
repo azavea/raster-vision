@@ -22,7 +22,6 @@ class DoubleCRSTransformer(CRSTransformer):
 
 
 class TestLabelStoreUtils(unittest.TestCase):
-
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
         self.aoi_dict = {

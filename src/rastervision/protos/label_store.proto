@@ -45,13 +45,7 @@ message RasterClassMap {
 }
 
 message SegmentationRasterFile {
-
-    // If `source` is provided but `sink` is not, then the label store
-    // is read-only.
     optional RasterSource source = 1;
-
-    // If `sink` is provided but `source` is not, then the label store
-    // is write-only.
     optional string sink = 2;
 
     // A mapping between classes in the source raster(s) and classes

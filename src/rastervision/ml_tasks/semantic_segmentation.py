@@ -5,6 +5,8 @@ from typing import List
 from rastervision.core.box import Box
 from rastervision.core.ml_task import MLTask
 from rastervision.core.scene import Scene
+from rastervision.evaluations.segmentation_evaluation import (
+    SegmentationEvaluation)
 
 
 class SemanticSegmentation(MLTask):
@@ -33,15 +35,18 @@ class SemanticSegmentation(MLTask):
         prob = seg_options.negative_survival_probability
         ioa_threshold = seg_options.ioa_threshold
         target_classes = seg_options.target_classes
+        number_of_chips = seg_options.number_of_chips
         if len(target_classes) == 0:
             target_classes = [1]
 
         windows = []
         attempts = 0
-        while (attempts < seg_options.number_of_chips):
+        while (attempts < number_of_chips):
             attempts = attempts + 1
             candidate_window = extent.make_random_square(chip_size)
             if (prob >= 1.0):
+                windows.append(candidate_window)
+            elif attempts == number_of_chips and len(windows) == 0:
                 windows.append(candidate_window)
             else:
                 good = label_store.enough_target_pixels(
@@ -93,3 +98,7 @@ class SemanticSegmentation(MLTask):
         Is a nop for this backend.
         """
         return None
+
+    def get_evaluation(self) -> SegmentationEvaluation:
+        """Return a segmentation  evaulation object."""
+        return SegmentationEvaluation()

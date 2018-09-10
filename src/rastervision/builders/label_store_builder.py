@@ -3,7 +3,7 @@ from rastervision.label_stores.object_detection_geojson_file import (
 from rastervision.label_stores.classification_geojson_file import (
     ClassificationGeoJSONFile)
 from rastervision.label_stores.segmentation_raster_file import (
-    SegmentationRasterFile)
+    SegmentationInputRasterFile, SegmentationOutputRasterFile)
 
 
 def build(config,
@@ -32,13 +32,13 @@ def build(config,
             readable=readable,
             writable=writable)
     elif label_store_type == 'segmentation_raster_file':
-        raster_class_map = config.segmentation_raster_file.raster_class_map
-        return SegmentationRasterFile(
-            source=config.segmentation_raster_file.source,
-            sink=config.segmentation_raster_file.sink,
-            class_map=class_map,
-            raster_class_map=raster_class_map)
-        return None
+        srf = config.segmentation_raster_file
+        if not str(srf.source) == '':
+            return SegmentationInputRasterFile(
+                source=srf.source, raster_class_map=srf.raster_class_map)
+        else:
+            return SegmentationOutputRasterFile(
+                sink=srf.sink, class_map=class_map)
     else:
         raise ValueError('Not sure how to generate label store for type {}'
                          .format(label_store_type))

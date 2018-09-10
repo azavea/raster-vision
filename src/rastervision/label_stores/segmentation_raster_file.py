@@ -18,42 +18,34 @@ from rastervision.utils.misc import (color_to_integer, color_to_triple)
 RasterUnion = Union[RasterSource, RasterSourceProto, str, None]
 
 
-class SegmentationRasterFile(LabelStore):
-    """A label store for segmentation raster files.
+class SegmentationInputRasterFile(LabelStore):
+    """A read-only label store for segmentation raster files.
 
     """
 
     def __init__(self,
                  source: RasterUnion,
-                 sink: Union[str, None],
-                 class_map: Union[ClassMap, None],
                  raster_class_map: Dict[str, int] = {}):
         """Constructor.
 
         Args:
              source: A source of raster label data (either an object that
                   can provide it or a path).
-             sink: A destination for raster label data.
-             class_map: A class map object used for producing output
-                  rasters.
              raster_class_map: A mapping between the labels found in
                   the source (the given labels) and those desired in
                   the destination (those produced by the predictions).
 
         """
-        self.set_labels(source)
-        self.label_pairs = []
-        self.raster_class_map = raster_class_map
-        self.class_map = class_map
-
-        if sink is None or sink is '':
-            self.sink = None
-        elif isinstance(sink, str):
-            self.sink = sink
+        if isinstance(source, RasterSource):
+            self.source = source
+        elif isinstance(source, RasterSourceProto):
+            self.source = raster_source_builder.build(source)
+        elif source is None:
+            self.source = None
         else:
-            raise ValueError('Unsure how to handle sink={}'.format(type(sink)))
-
-        assert (self.source is None) ^ (self.sink is None)
+            raise ValueError('Unsure how to handle source={}'.format(
+                type(source)))
+        self.raster_class_map = raster_class_map
 
         if isinstance(raster_class_map, dict):
             source_classes = list(
@@ -91,29 +83,8 @@ class SegmentationRasterFile(LabelStore):
         """Clear all labels."""
         self.source = None
 
-    def set_labels(
-            self,
-            source: Union[RasterUnion, List[Tuple[Box, np.ndarray]]]) -> None:
-        """Set labels, overwriting any that existed prior to this call.
-
-        Args:
-             source: A source of raster label data (either an object that
-                  can provide it, a path, or a list of window × array
-                  pairs).
-
-        Returns:
-             None
-
-        """
-        if isinstance(source, RasterSource):
-            self.source = source
-        elif isinstance(source, RasterSourceProto):
-            self.source = raster_source_builder.build(source)
-        elif source is None:
-            self.source = None
-        else:
-            raise ValueError('Unsure how to handle source={}'.format(
-                type(source)))
+    def set_labels(self, source):
+        raise NotImplementedError("Method not applicable")
 
     def enough_target_pixels(self, window: Box, ioa_threshold: int,
                              target_classes: List[int]) -> bool:
@@ -151,8 +122,7 @@ class SegmentationRasterFile(LabelStore):
         else:
             return False
 
-    def get_labels(self,
-                   window: Union[Box, None] = None) -> Union[np.ndarray, None]:
+    def get_labels(self, window: Union[Box, None] = None) -> np.ndarray:
         """Get labels from a window.
 
         If self.source is not None then a label window is clipped from
@@ -160,27 +130,60 @@ class SegmentationRasterFile(LabelStore):
         np.ndarray of zeros.
 
         Args:
-             window: A window given as a Box object or None.
+             window: Either None or a window given as a Box object.
 
         Returns:
              np.ndarray
 
         """
-        if self.source is not None and window is not None:
+        if window is not None:
             labels = self.source._get_chip(window)
             r = np.array(labels[:, :, 0], dtype=np.uint32) * (1 << 16)
             g = np.array(labels[:, :, 1], dtype=np.uint32) * (1 << 8)
             b = np.array(labels[:, :, 2], dtype=np.uint32) * (1 << 0)
             packed = r + g + b
             return self.source_to_rv(packed)
-        elif window is not None:
-            ymin = window.ymin
-            xmin = window.xmin
-            ymax = window.ymax
-            xmax = window.xmax
-            return np.zeros((xmax - xmin, ymax - ymin), dtype=np.uint8)
+
+    def extend(self, labels):
+        raise NotImplementedError("Method not applicable")
+
+    def save(self):
+        raise NotImplementedError("Method not applicable")
+
+
+class SegmentationOutputRasterFile(LabelStore):
+    """A write-only label store for segmentation raster files.
+
+    """
+
+    def __init__(self, sink: Union[str, None],
+                 class_map: Union[ClassMap, None]):
+        """Constructor.
+
+        Args:
+             sink: A destination for raster label data.
+             class_map: A class map object used for producing output
+                  rasters.
+
+        """
+        self.label_pairs = []
+        self.class_map = class_map
+
+        if sink is None or sink is '':
+            self.sink = None
+        elif isinstance(sink, str):
+            self.sink = sink
         else:
-            return None
+            raise ValueError('Unsure how to handle sink={}'.format(type(sink)))
+
+    def clear(self):
+        pass
+
+    def set_labels(self, labels) -> None:
+        pass
+
+    def get_labels(self) -> None:
+        return None
 
     def extend(self, labels: List[Tuple[Box, np.ndarray]]) -> None:
         """Add incoming labels to the list of labels.
