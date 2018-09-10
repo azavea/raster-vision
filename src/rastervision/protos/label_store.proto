@@ -46,19 +46,17 @@ message RasterClassMap {
 
 message SegmentationRasterFile {
 
-    // An optional raster source from which the label data are to be
-    // drawn.  If `src` is provided but `dst` is not, then label store
-    // will be read-only.
-    optional RasterSource src = 1;
+    // If `source` is provided but `sink` is not, then the label store
+    // is read-only.
+    optional RasterSource source = 1;
 
-    // An optional uri pointing to where the label data should be
-    // stored.  If both `dst` is provided but `src` is not, then the
-    // label store will be write-only.
-    optional string dst = 2;
+    // If `sink` is provided but `source` is not, then the label store
+    // is write-only.
+    optional string sink = 2;
 
     // A mapping between classes in the source raster(s) and classes
     // used internally in raster vision.  The latter type are also
-    // used in output label rasters.
+    // used in sink rasters.
     repeated RasterClassMap raster_class_map = 3;
 }
 

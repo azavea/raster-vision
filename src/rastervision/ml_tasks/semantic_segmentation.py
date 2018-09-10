@@ -30,15 +30,24 @@ class SemanticSegmentation(MLTask):
         extent = raster_source.get_extent()
         label_store = scene.ground_truth_label_store
         chip_size = options.chip_size
-        p = seg_options.empty_survival_probability
+        prob = seg_options.negative_survival_probability
+        ioa_threshold = seg_options.ioa_threshold
+        target_classes = seg_options.target_classes
+        if len(target_classes) == 0:
+            target_classes = [1]
 
         windows = []
-        while (len(windows) < seg_options.number_of_chips):
-            window = extent.make_random_square(chip_size)
-            if label_store.has_labels(window):
-                windows.append(window)
-            elif (p > 0) and (np.random.rand() <= p):
-                windows.append(window)
+        attempts = 0
+        while (attempts < seg_options.number_of_chips):
+            attempts = attempts + 1
+            candidate_window = extent.make_random_square(chip_size)
+            if (prob >= 1.0):
+                windows.append(candidate_window)
+            else:
+                good = label_store.enough_target_pixels(
+                    candidate_window, ioa_threshold, target_classes)
+                if good or (np.random.rand() < prob):
+                    windows.append(candidate_window)
 
         return windows
 
@@ -62,3 +71,25 @@ class SemanticSegmentation(MLTask):
         """
         label_store = scene.ground_truth_label_store
         return label_store.get_labels(window)
+
+    def get_predict_windows(self, extent: Box, options) -> List[Box]:
+        """Get windows over-which predictions will be calculated.
+
+        Args:
+             extent: The overall extent of the area.
+             options: Options from the prediction section of the
+                  workflow configuration file.
+
+        Returns:
+             An sequence of windows.
+
+        """
+        chip_size = options.chip_size
+        return extent.get_windows(chip_size, chip_size)
+
+    def post_process_predictions(self, labels: None, options) -> None:
+        """Post-process predictions.
+
+        Is a nop for this backend.
+        """
+        return None

@@ -11,7 +11,7 @@ from os.path import join
 from PIL import ImageColor
 from subprocess import Popen
 from tensorflow.core.example.example_pb2 import Example
-from typing import (List, Tuple)
+from typing import (Dict, List, Tuple)
 from urllib.parse import urlparse
 
 from object_detection.utils import dataset_util
@@ -29,6 +29,8 @@ from rastervision.utils.files import (download_if_needed, get_local_path,
 from rastervision.utils.misc import (color_to_integer, numpy_to_png,
                                      png_to_numpy)
 from rastervision.utils.misc import save_img
+
+FROZEN_INFERENCE_GRAPH = 'model'
 
 
 def make_tf_examples(training_data: TrainingData,
@@ -55,7 +57,7 @@ def make_tf_examples(training_data: TrainingData,
 
 
 def merge_tf_records(output_path: str, src_records: List[str]) -> None:
-    """Merge mutiple TFRecord files into one.
+    """Merge multiple TFRecord files into one.
 
     Args:
          output_path: Where to write the merged TFRecord file.
@@ -66,17 +68,20 @@ def merge_tf_records(output_path: str, src_records: List[str]) -> None:
          None
 
     """
+    records = 0
     with tf.python_io.TFRecordWriter(output_path) as writer:
         print('Merging TFRecords', end='', flush=True)
         for src_record in src_records:
             for string_record in tf.python_io.tf_record_iterator(src_record):
                 writer.write(string_record)
+                records = records + 1
             print('.', end='', flush=True)
+        print('{} records'.format(records))
         print()
 
 
 def string_to_triple(color: str) -> np.ndarray:
-    """Turn a PIL colorstring into an RGB triple.
+    """Turn a PIL color string into an RGB triple.
 
     Args:
          color: A PIL color string
@@ -173,7 +178,7 @@ def parse_tf_example(example: Example) -> Tuple[np.ndarray, np.ndarray]:
          example: A TensorFlow Example object.
 
     Returns:
-         tuple(np.ndarray, np.ndarray)
+         A np.ndarray × np.ndarray pair.
 
     """
     ie = 'image/encoded'
@@ -195,15 +200,15 @@ def create_tf_example(image: np.ndarray,
     """Create a TensorFlow Example from an image, the labels, &c.
 
     Args:
-         image: An nd.array containing the image data.
+         image: An np.ndarray containing the image data.
          window: A Box object containing the bounding box for this example.
          labels: An nd.array containing the label data.
          class_map: A ClassMap object containing mappings between
-              numerial and textual labels.
+              numerical and textual labels.
          chip_id: The chip id as a string.
 
     Returns:
-         A Deeplab-compatible TensorFlow Example object containing the
+         A DeepLab-compatible TensorFlow Example object containing the
          given data.
 
     """
@@ -248,7 +253,7 @@ def get_record_uri(base_uri: str, split: str) -> str:
     """Given a base URI and a split, return a filename to use.
 
     Args:
-         base_uri: The directory underwhich the returned record uri
+         base_uri: The directory under-which the returned record uri
               will reside.
          split: The split ("train", "validate", et cetera).
 
@@ -277,87 +282,135 @@ def get_latest_checkpoint(train_logdir_local: str) -> str:
     return latest[:len(latest) - len('.meta')]
 
 
-def get_training_args(train_py: str, train_logdir_local: str, tfic_index: str,
-                      dataset_dir_local: str, be_options: dict) -> List[str]:
+def get_training_args(train_py: str, train_logdir_local: str, tfic_ckpt: str,
+                      dataset_dir_local: str, num_classes: int,
+                      be_options) -> Tuple[List[str], Dict[str, str]]:
     """Generate the array of arguments needed to run the training script.
 
     Args:
          train_py: The URI of the training script.
          train_logdir_local: The directory in-which checkpoints will
               be placed.
-         tfic_index: URI of the .index file that came from the initial
+         tfic_ckpt: URI of the .ckpt "file" from the initial
               checkpoint tarball.
          dataset_dir_local: The directory in which the records are
               found.
-         be_options: A dictionary of backend options.
+         num_classes: The number of classes.
+         be_options: Options from the backend configuration file.
 
     Returns:
-         A list of arguments suitable for starting the training
-         script.
+         A tuple of two things: (1) a list of arguments suitable for
+         starting the training script and (2) an environment in-which
+         to start the training script.
 
     """
+
+    fields = [
+        'fine_tune_batch_norm',
+        'initialize_last_layer',
+        'last_layers_contain_logits_only',
+        'save_summaries_images',
+        # 'upsample_logits',
+        'base_learning_rate',
+        # 'last_layer_gradient_multiplier',
+        # 'learning_power',
+        # 'learning_rate_decay_factor',
+        # 'max_scale_factor',
+        # 'min_scale_factor',
+        # 'momentum',
+        # 'scale_factor_step_size',
+        # 'slow_start_learning_rate',
+        # 'weight_decay',
+        'decoder_output_stride',
+        # 'learning_rate_decay_step',
+        'output_stride',
+        'save_interval_secs',
+        'save_summaries_secs',
+        # 'slow_start_step',
+        'train_batch_size',
+        'training_number_of_steps',
+        'dataset',
+        # 'learning_policy',
+        'model_variant',
+        'train_split',
+    ]
+
+    multi_fields = [
+        'atrous_rates',
+        'train_crop_size',
+    ]
+
+    env_fields = [
+        'dl_custom_train',
+        'dl_custom_validation',
+    ]
+
     args = ['python', train_py]
 
-    steps = be_options.training_number_of_steps
-    if steps > 0:
-        args.append('--training_number_of_steps={}'.format(steps))
-
-    for rate in be_options.atrous_rates:
-        args.append('--atrous_rates={}'.format(rate))
-
-    for size in be_options.train_crop_size:
-        args.append('--train_crop_size={}'.format(size))
-
-    if len(be_options.dataset) > 0:
-        args.append('--dataset={}'.format(be_options.dataset))
-
     args.append('--train_logdir={}'.format(train_logdir_local))
-    args.append('--tf_initial_checkpoint={}'.format(tfic_index))
+    args.append('--tf_initial_checkpoint={}'.format(tfic_ckpt))
     args.append('--dataset_dir={}'.format(dataset_dir_local))
-    args.append('--train_split={}'.format(be_options.train_split))
-    args.append('--model_variant={}'.format(be_options.model_variant))
-    args.append('--output_stride={}'.format(be_options.output_stride))
-    args.append('--decoder_output_stride={}'.format(
-        be_options.decoder_output_stride))
-    args.append('--train_batch_size={}'.format(be_options.train_batch_size))
-    args.append('--save_interval_secs={}'.format(
-        be_options.save_interval_secs))
-    args.append('--save_summaries_secs={}'.format(
-        be_options.save_summaries_secs))
-    args.append('--save_summaries_images={}'.format(
-        be_options.save_summaries_images))
-    args.append('--last_layer_gradient_multiplier={}'.format(
-        be_options.last_layer_gradient_multiplier))
-    args.append('--initialize_last_layer={}'.format(
-        be_options.initialize_last_layer))
-    args.append('--min_scale_factor={}'.format(be_options.min_scale_factor))
-    args.append('--max_scale_factor={}'.format(be_options.max_scale_factor))
-    args.append('--fine_tune_batch_norm={}'.format(
-        be_options.fine_tune_batch_norm))
-    args.append('--last_layers_contain_logits_only={}'.format(
-        be_options.last_layers_contain_logits_only))
 
-    return args
+    for field in multi_fields:
+        for item in be_options.__getattribute__(field):
+            args.append('--{}={}'.format(field, item))
+
+    for field in fields:
+        field_value = be_options.__getattribute__(field)
+        if (not type(field_value) is str) or (not len(field_value) == 0):
+            args.append('--{}={}'.format(field, field_value))
+
+    env = os.environ.copy()
+    for field in env_fields:
+        field_value = be_options.__getattribute__(field)
+        print('{}={}'.format(field.upper(), field_value))
+        env[field.upper()] = str(field_value)
+    print('DL_CUSTOM_CLASSES={}'.format(num_classes))
+    env['DL_CUSTOM_CLASSES'] = str(num_classes)
+
+    return (args, env)
 
 
-def get_export_args(export_model_py: str, train_logdir_local: str) -> str:
+def get_export_args(export_model_py: str, train_logdir_local: str,
+                    num_classes: int, be_options) -> List[str]:
     """Generate the array of arguments needed to run the export script.
 
     Args:
          export_model_py: The URI of the export script.
          train_logdir_local: The directory in-which checkpoints will
               be placed.
+         num_classes: The number of classes.
+         be_options: Options from the backend configuration file.
 
     Returns:
          A list of arguments suitable for starting the training
          script.
 
     """
+
+    fields = [
+        'decoder_output_stride',
+        'output_stride',
+        'model_variant',
+    ]
+
     args = ['python', export_model_py]
+
     args.append('--checkpoint_path={}'.format(
         get_latest_checkpoint(train_logdir_local)))
     args.append('--export_path={}'.format(
-        join(train_logdir_local, 'frozen_inference_graph.pb')))
+        join(train_logdir_local, FROZEN_INFERENCE_GRAPH)))
+    args.append('--num_classes={}'.format(num_classes))
+
+    for field in fields:
+        field_value = be_options.__getattribute__(field)
+        args.append('--{}={}'.format(field, field_value))
+
+    for item in be_options.__getattribute__('atrous_rates'):
+        args.append('--{}={}'.format('atrous_rates', item))
+
+    for item in be_options.__getattribute__('train_crop_size'):
+        args.append('--{}={}'.format('crop_size', item))
 
     return args
 
@@ -372,6 +425,7 @@ class TFDeeplab(MLBackend):
         """Constructor."""
         self.temp_dir_obj = tempfile.TemporaryDirectory()
         self.temp_dir = self.temp_dir_obj.name
+        self.sess = None
 
     def process_scene_data(self, scene: Scene, data: TrainingData,
                            class_map: ClassMap, options) -> str:
@@ -412,7 +466,7 @@ class TFDeeplab(MLBackend):
         Args:
              training_results: A list of paths to TFRecords containing
                   training data.
-             valiation_results: A list of paths to TFRecords
+             validation_results: A list of paths to TFRecords
                   containing validation data.
              class_map: A mapping from numerical classes to their
                   textual names.
@@ -469,44 +523,53 @@ class TFDeeplab(MLBackend):
 
         Args:
              class_map: A mapping between integral and textual classes.
-             options: Options provided in the `segmentation_options`
-                  section of the workflow configuration file.
+             options: Options provided in the training section of the
+                  workflow configuration file.
 
         Returns:
              None
 
         """
         seg_options = options.segmentation_options
-
-        make_dir(self.temp_dir)
-        download_if_needed(options.backend_config_uri, self.temp_dir)
-        backend_config_uri = get_local_path(options.backend_config_uri,
-                                            self.temp_dir)
-        be_options = load_json_config(backend_config_uri,
-                                      train_pb2.TrainingParameters())
-
         train_py = seg_options.train_py
         export_model_py = seg_options.export_model_py
 
+        # Restart support
+        train_restart_dir = seg_options.train_restart_dir
+        if type(train_restart_dir) is str and len(train_restart_dir) > 0:
+            self.temp_dir = train_restart_dir
+
         # Setup local input and output directories
+        print('Setting up local input and output directories')
         train_logdir = options.output_uri
         train_logdir_local = get_local_path(train_logdir, self.temp_dir)
         dataset_dir = options.training_data_uri
         dataset_dir_local = get_local_path(dataset_dir, self.temp_dir)
+        make_dir(self.temp_dir)
         make_dir(train_logdir_local)
         make_dir(dataset_dir_local)
+
+        # Download training data
+        print('Downloading training data')
         download_if_needed(get_record_uri(dataset_dir, TRAIN), self.temp_dir)
 
         # Download and untar initial checkpoint.
+        print('Downloading and untarring initial checkpoint')
         tf_initial_checkpoints_uri = options.pretrained_model_uri
-        make_dir(self.temp_dir)
         download_if_needed(tf_initial_checkpoints_uri, self.temp_dir)
         tfic_tarball = get_local_path(tf_initial_checkpoints_uri,
                                       self.temp_dir)
         tfic_dir = os.path.dirname(tfic_tarball)
         with tarfile.open(tfic_tarball, 'r:gz') as tar:
             tar.extractall(tfic_dir)
-        tfic_index = glob.glob('{}/*/*.index'.format(tfic_dir))[0]
+        tfic_ckpt = glob.glob('{}/*/*.index'.format(tfic_dir))[0]
+        tfic_ckpt = tfic_ckpt[0:-len('.index')]
+
+        # sync from s3
+        if type(train_restart_dir) is str and len(train_restart_dir) > 0:
+            print('Syncing from s3')
+            if urlparse(train_logdir).scheme == 's3':
+                sync_dir(train_logdir, train_logdir_local, delete=False)
 
         # Periodically synchronize with remote
         start_sync(
@@ -514,26 +577,89 @@ class TFDeeplab(MLBackend):
             train_logdir,
             sync_interval=options.sync_interval)
 
-        # Train
-        train_args = get_training_args(train_py, train_logdir_local,
-                                       tfic_index, dataset_dir_local,
-                                       be_options)
-        train_process = Popen(train_args)
+        # Download backend configuration
+        print('Downloading and applying backend configuration')
+        download_if_needed(options.backend_config_uri, self.temp_dir)
+        backend_config_uri = get_local_path(options.backend_config_uri,
+                                            self.temp_dir)
+        be_options = load_json_config(backend_config_uri,
+                                      train_pb2.TrainingParameters())
+        print('be_options={}'.format(be_options))
+        print('Training steps={}'.format(be_options.training_number_of_steps))
+
+        # Additional training options
+        max_class = max(list(map(lambda c: c.id, class_map.get_items())))
+        num_classes = len(class_map.get_items())
+        num_classes = max(max_class, num_classes) + 1
+        (train_args, train_env) = get_training_args(
+            train_py, train_logdir_local, tfic_ckpt, dataset_dir_local,
+            num_classes, be_options)
+
+        # Start training
+        print('Starting training process')
+        train_process = Popen(train_args, env=train_env)
         terminate_at_exit(train_process)
+
+        # Start tensorboard
+        print('Starting tensorboard process')
         tensorboard_process = Popen(
             ['tensorboard', '--logdir={}'.format(train_logdir_local)])
         terminate_at_exit(tensorboard_process)
+
+        # Wait for training and tensorboard
+        print('Waiting for training and tensorboard processes')
         train_process.wait()
         tensorboard_process.terminate()
 
-        # Export
-        export_args = get_export_args(export_model_py, train_logdir_local)
+        # Export frozen graph
+        print('Exporting frozen graph ({}/model)'.format(train_logdir_local))
+        export_args = get_export_args(export_model_py, train_logdir_local,
+                                      num_classes, be_options)
         export_process = Popen(export_args)
         terminate_at_exit(export_process)
         export_process.wait()
 
+        # sync to s3
+        print('Syncing to s3')
         if urlparse(train_logdir).scheme == 's3':
-            sync_dir(train_logdir_local, train_logdir, delete=True)
+            sync_dir(train_logdir_local, train_logdir, delete=False)
 
-    def predict(self, chips, windows, options):
-        return 1
+    def predict(self, chips: np.ndarray, windows: List[Box],
+                options) -> List[Tuple[Box, np.ndarray]]:
+        """Predict using an already-trained DeepLab model.
+
+        Args:
+            chips: An np.ndarray containing the image data.
+            windows: A list of windows corresponding to the respective
+                 training chips.
+            options: Options provided in the prediction section of the
+                 workflow configuration file.
+
+        Returns:
+             A list of Box × np.ndarray pairs.
+
+        """
+        make_dir(self.temp_dir)
+
+        # noqa Courtesy of https://github.com/tensorflow/models/blob/cbbb2ffcde66e646d4a47628ffe2ece2322b64e8/research/deeplab/deeplab_demo.ipynb
+        INPUT_TENSOR_NAME = 'ImageTensor:0'
+        OUTPUT_TENSOR_NAME = 'SemanticPredictions:0'
+        if self.sess is None:
+            FROZEN_GRAPH_NAME = download_if_needed(options.model_uri,
+                                                   self.temp_dir)
+            graph = tf.Graph()
+            with open(FROZEN_GRAPH_NAME, 'rb') as data:
+                graph_def = tf.GraphDef.FromString(data.read())
+            with graph.as_default():
+                tf.import_graph_def(graph_def, name='')
+            self.sess = tf.Session(graph=graph)
+
+        pairs = []
+        for i in range(len(windows)):
+            batch_seg_map = self.sess.run(
+                OUTPUT_TENSOR_NAME, feed_dict={INPUT_TENSOR_NAME: [chips[i]]})
+            seg_map = batch_seg_map[0]
+            pair = (windows[i], seg_map)
+            pairs.append(pair)
+
+        return pairs

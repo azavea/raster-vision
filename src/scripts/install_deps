@@ -33,7 +33,7 @@ cd /opt/tf-models/temp/
 git clone https://github.com/azavea/models.git
 cd models
 git checkout lf/fix-python3
-git checkout eef6bb
+git checkout f115b0551a05bb574d22f2e90825729867da4810
 cd ..
 mv models/research/object_detection/ ../object_detection
 mv models/research/deeplab/ ../deeplab

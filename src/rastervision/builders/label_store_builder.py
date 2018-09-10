@@ -34,8 +34,9 @@ def build(config,
     elif label_store_type == 'segmentation_raster_file':
         raster_class_map = config.segmentation_raster_file.raster_class_map
         return SegmentationRasterFile(
-            src=config.segmentation_raster_file.src,
-            dst=config.segmentation_raster_file.dst,
+            source=config.segmentation_raster_file.source,
+            sink=config.segmentation_raster_file.sink,
+            class_map=class_map,
             raster_class_map=raster_class_map)
         return None
     else:

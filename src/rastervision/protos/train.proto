@@ -20,6 +20,7 @@ message TrainConfig {
     message SegmentationOptions {
         optional string train_py = 1 [default="/opt/tf-models/deeplab/train.py"];
         optional string export_model_py = 2 [default="/opt/tf-models/deeplab/export_model.py"];
+        optional string train_restart_dir = 3;
     }
 
     message Options {

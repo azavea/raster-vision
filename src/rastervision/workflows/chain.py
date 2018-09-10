@@ -256,7 +256,7 @@ class ChainWorkflow(object):
             geojson_file = ClassificationGeoJSONFileConfig(uri=prediction_uri)
             return LabelStoreConfig(classification_geojson_file=geojson_file)
         elif label_store_type == 'segmentation_raster_file':
-            raster_file = SegmentationRasterFileConfig(dst=prediction_raster)
+            raster_file = SegmentationRasterFileConfig(sink=prediction_raster)
             return LabelStoreConfig(segmentation_raster_file=raster_file)
         else:
             raise ValueError(
