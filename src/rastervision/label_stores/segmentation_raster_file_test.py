@@ -53,8 +53,7 @@ class TestSegmentationRasterFile(unittest.TestCase):
         data[4:, 4:, :] = [1, 1, 1]
         raster_source = TestingRasterSource(data=data)
         label_store = SegmentationInputRasterFile(
-            source=raster_source,
-            raster_class_map={'#010101': 1})
+            source=raster_source, raster_class_map={'#010101': 1})
         extent = Box(0, 0, 10, 10)
         self.assertTrue(label_store.enough_target_pixels(extent, 30, [1]))
 
@@ -63,8 +62,7 @@ class TestSegmentationRasterFile(unittest.TestCase):
         data[7:, 7:, :] = [1, 1, 1]
         raster_source = TestingRasterSource(data=data)
         label_store = SegmentationInputRasterFile(
-            source=raster_source,
-            raster_class_map={'#010101': 1})
+            source=raster_source, raster_class_map={'#010101': 1})
         extent = Box(0, 0, 10, 10)
         self.assertFalse(label_store.enough_target_pixels(extent, 30, [1]))
 
