@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from rastervision.core.box import Box
+from rastervision.core.box import Box, BoxSizeError
 from shapely.geometry import box as ShapelyBox
 
 np.random.seed(1)
@@ -63,6 +63,11 @@ class TestBox(unittest.TestCase):
             self.assertEqual(container.get_width(), size)
             self.assertTrue(container.get_shapely().contains(
                 self.box.get_shapely()))
+
+    def test_make_random_square_container_too_big(self):
+        size = 1
+        with self.assertRaises(BoxSizeError):
+            self.box.make_random_square_container(size)
 
     def test_make_random_square(self):
         window = Box(5, 5, 15, 15)

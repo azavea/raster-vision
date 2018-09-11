@@ -7,6 +7,7 @@ from rastervision.evaluations.object_detection_evaluation import (
     ObjectDetectionEvaluation)
 from rastervision.labels.object_detection_labels import ObjectDetectionLabels
 from rastervision.utils.misc import save_img
+from rastervision.core.box import BoxSizeError
 
 
 def save_debug_image(im, labels, class_map, output_path):
@@ -38,16 +39,20 @@ def _make_chip_pos_windows(image_extent, label_store, options):
     # in a window, then it is skipped.
     for box in boxes:
         if box.tuple_format() not in done_boxes:
-            window = box.make_random_square_container(chip_size)
-            pos_windows.append(window)
+            try:
+                window = box.make_random_square_container(chip_size)
+                pos_windows.append(window)
 
-            # Get boxes that lie completely within window
-            window_boxes = label_store.get_labels(window=window)
-            window_boxes = ObjectDetectionLabels.get_overlapping(
-                window_boxes, window, ioa_thresh=1.0)
-            window_boxes = window_boxes.get_boxes()
-            window_boxes = [box.tuple_format() for box in window_boxes]
-            done_boxes.update(window_boxes)
+                # Get boxes that lie completely within window
+                window_boxes = label_store.get_labels(window=window)
+                window_boxes = ObjectDetectionLabels.get_overlapping(
+                    window_boxes, window, ioa_thresh=1.0)
+                window_boxes = window_boxes.get_boxes()
+                window_boxes = [box.tuple_format() for box in window_boxes]
+                done_boxes.update(window_boxes)
+            except BoxSizeError:
+                print(('\nSkipping box {} because chip_size is set too small' +
+                       ' for it.').format(box))
 
     return pos_windows
 

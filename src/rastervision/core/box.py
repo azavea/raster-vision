@@ -5,6 +5,10 @@ import numpy as np
 from shapely.geometry import box as ShapelyBox
 
 
+class BoxSizeError(ValueError):
+    pass
+
+
 class Box():
     """A multi-purpose box (ie. rectangle)."""
 
@@ -96,6 +100,12 @@ class Box():
         Args:
             size: the width and height of the new Box
         """
+        if size < self.get_width():
+            raise BoxSizeError('size of random container cannot be < width')
+
+        if size < self.get_height():
+            raise BoxSizeError('size of random container cannot be < height')
+
         lb = self.ymin - (size - self.get_height())
         ub = self.ymin
         rand_y = random.randint(lb, ub)
@@ -113,10 +123,10 @@ class Box():
             size: the height and width of the new Box
         """
         if size >= self.get_width():
-            raise ValueError('size of random square cannot be >= width')
+            raise BoxSizeError('size of random square cannot be >= width')
 
         if size >= self.get_height():
-            raise ValueError('size of random square cannot be >= height')
+            raise BoxSizeError('size of random square cannot be >= height')
 
         lb = self.ymin
         ub = self.ymax - size
