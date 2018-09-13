@@ -140,8 +140,9 @@ def run_test(test, temp_dir):
 def main(tests):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:
-        # tests = all_tests
-        tests = [rv.CHIP_CLASSIFICATION]
+        tests = all_tests
+
+    tests = list(map(lambda x: x.upper(), tests))
 
     with TemporaryDirectory() as temp_dir:
         errors = []
