@@ -3,8 +3,6 @@ from abc import abstractmethod
 import numpy as np
 
 from rastervision.core.training_data import TrainingData
-from rastervision.core.predict_package import save_predict_package
-from rastervision.data import ObjectDetectionLabels
 
 # TODO: DRY... same keys as in ml_backends/tf_object_detection_api.py
 TRAIN = 'train'
@@ -138,16 +136,13 @@ class Task(object):
             return [_process_scene(scene, type_, augment) for scene in scenes]
 
         # TODO: parallel processing!
-        processed_training_results = _process_scenes(train_scenes,
-                                                     TRAIN,
-                                                     augment=True)
-        processed_validation_results = _process_scenes(validation_scenes,
-                                                       VALIDATION,
-                                                       augment=False)
+        processed_training_results = _process_scenes(
+            train_scenes, TRAIN, augment=True)
+        processed_validation_results = _process_scenes(
+            validation_scenes, VALIDATION, augment=False)
 
-        self.backend.process_sceneset_results(processed_training_results,
-                                              processed_validation_results,
-                                              tmp_dir)
+        self.backend.process_sceneset_results(
+            processed_training_results, processed_validation_results, tmp_dir)
 
     def train(self, tmp_dir):
         """Train a model.
@@ -169,7 +164,6 @@ class Task(object):
             labels = self.predict_scene(scene, tmp_dir)
             label_store = scene.prediction_label_store
             label_store.save(labels)
-
 
             # TODO: need debug_uri
             # if (self.config.debug

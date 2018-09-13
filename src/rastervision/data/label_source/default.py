@@ -3,13 +3,13 @@ import os
 
 import rastervision as rv
 
+
 class DefaultLabelSourceProvider(ABC):
     @staticmethod
     @abstractmethod
     def handles(task_type, s):
         """Returns True of this provider is a default for this task_type and string"""
         pass
-
 
     @abstractmethod
     def construct(s):
@@ -32,7 +32,9 @@ class DefaultObjectDetectionGeoJSONSourceProvider(DefaultLabelSourceProvider):
                                    .with_uri(uri) \
                                    .build()
 
-class DefaultChipClassificationGeoJSONSourceProvider(DefaultLabelSourceProvider):
+
+class DefaultChipClassificationGeoJSONSourceProvider(
+        DefaultLabelSourceProvider):
     @staticmethod
     def handles(task_type, uri):
         if task_type == rv.CHIP_CLASSIFICATION:

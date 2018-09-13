@@ -1,5 +1,6 @@
 from rastervision.command import Command
 
+
 class PredictCommand(Command):
     def __init__(self, task, scenes):
         self.task = task

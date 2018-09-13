@@ -1,5 +1,5 @@
-import json
 from shapely import geometry
+
 
 def json_to_shapely(geojson_dict, crs_transformer):
     """Load geojson as shapely polygon

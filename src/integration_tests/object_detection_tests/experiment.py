@@ -2,10 +2,12 @@ import os
 
 import rastervision as rv
 
+
 class ObjectDetectionIntegrationTest(rv.ExperimentSuite):
     def exp_main(self, tmp_dir):
         def get_path(part):
             return os.path.join(os.path.dirname(__file__), part)
+
         img_path = get_path("scene/image.tif")
         label_path = get_path("scene/labels.json")
         backend_conf_path = get_path("configs/backend.config")
@@ -37,7 +39,7 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSuite):
         scene = rv.SceneConfig.builder() \
                               .with_task(task) \
                               .with_id("od_test") \
-                              .with_raster_source(img_path, channel_order=[0,1,2]) \
+                              .with_raster_source(img_path, channel_order=[0, 1, 2]) \
                               .with_label_source(label_path) \
                               .build()
 
@@ -56,6 +58,7 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSuite):
                                         .build()
 
         return experiment
+
 
 if __name__ == "__main__":
     rv.main()

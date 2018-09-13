@@ -1,3 +1,5 @@
+# flake8: noqa
+
 # Registry keyss
 
 AUGMENTOR = "AUGMENTOR"

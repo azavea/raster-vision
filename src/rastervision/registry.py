@@ -1,15 +1,20 @@
 import rastervision as rv
-from rastervision.data.raster_source.default import (DefaultGeoTiffSourceProvider,
-                                                     DefaultImageSourceProvider)
-from rastervision.data.label_source.default import (DefaultObjectDetectionGeoJSONSourceProvider,
-                                                    DefaultChipClassificationGeoJSONSourceProvider)
-from rastervision.data.label_store.default import (DefaultObjectDetectionGeoJSONStoreProvider,
-                                                   DefaultChipClassificationGeoJSONStoreProvider)
-from rastervision.evaluation.default import (DefaultObjectDetectioneEvaluatorProvider,
-                                             DefaultChipClassificationEvaluatorProvider)
+from rastervision.data.raster_source.default import (
+    DefaultGeoTiffSourceProvider, DefaultImageSourceProvider)
+from rastervision.data.label_source.default import (
+    DefaultObjectDetectionGeoJSONSourceProvider,
+    DefaultChipClassificationGeoJSONSourceProvider)
+from rastervision.data.label_store.default import (
+    DefaultObjectDetectionGeoJSONStoreProvider,
+    DefaultChipClassificationGeoJSONStoreProvider)
+from rastervision.evaluation.default import (
+    DefaultObjectDetectioneEvaluatorProvider,
+    DefaultChipClassificationEvaluatorProvider)
+
 
 class RegistryError(Exception):
     pass
+
 
 class Registry:
     """Singleton that holds instances of Raster Vision types,
@@ -17,47 +22,54 @@ class Registry:
     """
 
     def __init__(self):
-        self._internal_config_builders =  {
+        self._internal_config_builders = {
             # Tasks
-            (rv.TASK, rv.OBJECT_DETECTION): rv.task.ObjectDetectionConfigBuilder,
-            (rv.TASK, rv.CHIP_CLASSIFICATION): rv.task.ChipClassificationConfigBuilder,
+            (rv.TASK, rv.OBJECT_DETECTION):
+            rv.task.ObjectDetectionConfigBuilder,
+            (rv.TASK, rv.CHIP_CLASSIFICATION):
+            rv.task.ChipClassificationConfigBuilder,
 
             # Backends
-            (rv.BACKEND, rv.TF_OBJECT_DETECTION): rv.backend.TFObjectDetectionConfigBuilder,
-            (rv.BACKEND, rv.KERAS_CLASSIFICATION): rv.backend.KerasClassificationConfigBuilder,
+            (rv.BACKEND, rv.TF_OBJECT_DETECTION):
+            rv.backend.TFObjectDetectionConfigBuilder,
+            (rv.BACKEND, rv.KERAS_CLASSIFICATION):
+            rv.backend.KerasClassificationConfigBuilder,
 
             # Raster Transformers
-            (rv.RASTER_TRANSFORMER, rv.STATS_TRANSFORMER): rv.data.StatsTransformerConfigBuilder,
+            (rv.RASTER_TRANSFORMER, rv.STATS_TRANSFORMER):
+            rv.data.StatsTransformerConfigBuilder,
 
             # Raster Sources
-            (rv.RASTER_SOURCE, rv.GEOTIFF_SOURCE): rv.data.GeoTiffSourceConfigBuilder,
-            (rv.RASTER_SOURCE, rv.IMAGE_SOURCE): rv.data.ImageSourceConfigBuilder,
+            (rv.RASTER_SOURCE, rv.GEOTIFF_SOURCE):
+            rv.data.GeoTiffSourceConfigBuilder,
+            (rv.RASTER_SOURCE, rv.IMAGE_SOURCE):
+            rv.data.ImageSourceConfigBuilder,
 
             # Label Sources
-            (rv.LABEL_SOURCE,
-             rv.OBJECT_DETECTION_GEOJSON): rv.data.ObjectDetectionGeoJSONSourceConfigBuilder,
-            (rv.LABEL_SOURCE,
-             rv.CHIP_CLASSIFICATION_GEOJSON): rv.data.ChipClassificationGeoJSONSourceConfigBuilder,
+            (rv.LABEL_SOURCE, rv.OBJECT_DETECTION_GEOJSON):
+            rv.data.ObjectDetectionGeoJSONSourceConfigBuilder,
+            (rv.LABEL_SOURCE, rv.CHIP_CLASSIFICATION_GEOJSON):
+            rv.data.ChipClassificationGeoJSONSourceConfigBuilder,
 
             # Label Stores
-            (rv.LABEL_STORE,
-             rv.OBJECT_DETECTION_GEOJSON): rv.data.ObjectDetectionGeoJSONStoreConfigBuilder,
-            (rv.LABEL_STORE,
-             rv.CHIP_CLASSIFICATION_GEOJSON): rv.data.ChipClassificationGeoJSONStoreConfigBuilder,
+            (rv.LABEL_STORE, rv.OBJECT_DETECTION_GEOJSON):
+            rv.data.ObjectDetectionGeoJSONStoreConfigBuilder,
+            (rv.LABEL_STORE, rv.CHIP_CLASSIFICATION_GEOJSON):
+            rv.data.ChipClassificationGeoJSONStoreConfigBuilder,
 
             # Analyzers
-            (rv.ANALYZER,
-             rv.STATS_ANALYZER): rv.analyzer.StatsAnalyzerConfigBuilder,
+            (rv.ANALYZER, rv.STATS_ANALYZER):
+            rv.analyzer.StatsAnalyzerConfigBuilder,
 
             # Augmentors
-            (rv.AUGMENTOR,
-             rv.NODATA_AUGMENTOR): rv.augmentor.NodataAugmentorConfigBuilder,
+            (rv.AUGMENTOR, rv.NODATA_AUGMENTOR):
+            rv.augmentor.NodataAugmentorConfigBuilder,
 
             # Evaluators
-            (rv.EVALUATOR,
-             rv.CHIP_CLASSIFICATION_EVALUATOR): rv.evaluation.ChipClassificationEvaluatorConfigBuilder,
-            (rv.EVALUATOR,
-             rv.OBJECT_DETECTION_EVALUATOR): rv.evaluation.ObjectDetectionEvaluatorConfigBuilder,
+            (rv.EVALUATOR, rv.CHIP_CLASSIFICATION_EVALUATOR):
+            rv.evaluation.ChipClassificationEvaluatorConfigBuilder,
+            (rv.EVALUATOR, rv.OBJECT_DETECTION_EVALUATOR):
+            rv.evaluation.ObjectDetectionEvaluatorConfigBuilder,
         }
 
         self._internal_default_raster_sources = [
@@ -115,7 +127,8 @@ class Registry:
 
         # TODO: Search plugins
 
-        raise RegistryError("No DefaultRasterSourceProvider found for {}".format(s))
+        raise RegistryError(
+            "No DefaultRasterSourceProvider found for {}".format(s))
 
     def get_default_label_source_provider(self, task_type, s):
         """
@@ -128,7 +141,8 @@ class Registry:
         # TODO: Search plugins
 
         raise RegistryError("No DefaultLabelSourceProvider "
-                            "found for {} and task type {}".format(s, task_type))
+                            "found for {} and task type {}".format(
+                                s, task_type))
 
     def get_default_label_store_provider(self, task_type, s=None):
         """
@@ -147,7 +161,8 @@ class Registry:
 
         if s:
             raise RegistryError("No DefaultLabelStoreProvider "
-                                "found for {} and task type {}".format(s, task_type))
+                                "found for {} and task type {}".format(
+                                    s, task_type))
         else:
             raise RegistryError("No DefaultLabelStoreProvider "
                                 "found for task type {}".format(task_type))
@@ -169,13 +184,15 @@ class Registry:
     def get_command_config_builder(self, command_type):
         builder = self.command_config_builders.get(command_type)
         if not builder:
-            raise RegistryError("No command found for type {}".format(command_type))
+            raise RegistryError(
+                "No command found for type {}".format(command_type))
         return builder
 
     def get_experiment_runner(self, runner_type):
         runner = self.experiment_runners.get(runner_type)
         if not runner:
             # TODO: Search plugins
-            raise RegistryError("No experiment runner for type {}".format(runner_type))
+            raise RegistryError(
+                "No experiment runner for type {}".format(runner_type))
 
         return runner()

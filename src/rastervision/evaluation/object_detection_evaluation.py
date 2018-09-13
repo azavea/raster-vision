@@ -7,18 +7,18 @@ class ObjectDetectionEvaluation(ClassificationEvaluation):
 
     Requires TensorFlow Object Detection to be available.
     """
+
     def __init__(self, class_map):
         super().__init__()
         self.class_map = class_map
 
     def compute(self, ground_truth_labels, prediction_labels):
         nb_classes = len(self.class_map)
-        od_eval = ObjectDetectionEvaluation.compute_od_eval(ground_truth_labels,
-                                                           prediction_labels,
-                                                           nb_classes)
+        od_eval = ObjectDetectionEvaluation.compute_od_eval(
+            ground_truth_labels, prediction_labels, nb_classes)
 
-        self.class_to_eval_item = ObjectDetectionEvaluation.parse_od_eval(od_eval,
-                                                                          self.class_map)
+        self.class_to_eval_item = ObjectDetectionEvaluation.parse_od_eval(
+            od_eval, self.class_map)
         self.compute_avg()
 
     def compute_avg(self):
@@ -28,7 +28,7 @@ class ObjectDetectionEvaluation(ClassificationEvaluation):
 
     @staticmethod
     def compute_od_eval(ground_truth_labels, prediction_labels, nb_classes):
-        ## Lazy import of TFOD
+        # Lazy import of TFOD
         from object_detection.utils import object_detection_evaluation
 
         matching_iou_threshold = 0.5

@@ -1,18 +1,14 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.command import (AnalyzeCommand,
-                                  CommandConfig,
-                                  CommandConfigBuilder,
-                                  NoOpCommand)
+from rastervision.command import (AnalyzeCommand, CommandConfig,
+                                  CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 
+
 class AnalyzeCommandConfig(CommandConfig):
-    def __init__(self,
-                 task,
-                 scenes,
-                 analyzers):
+    def __init__(self, task, scenes, analyzers):
         super().__init__(rv.ANALYZE)
         self.task = task
         self.scenes = scenes
@@ -22,10 +18,9 @@ class AnalyzeCommandConfig(CommandConfig):
         if len(self.scenes) == 0 or len(self.analyzers) == 0:
             return NoOpCommand()
 
-        scenes = list(map(lambda s: s.create_scene(self.task, tmp_dir),
-                          self.scenes))
-        analyzers = list(map(lambda a: a.create_analyzer(),
-                             self.analyzers))
+        scenes = list(
+            map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
+        analyzers = list(map(lambda a: a.create_analyzer(), self.analyzers))
         return AnalyzeCommand(scenes, analyzers)
 
     def to_proto(self):
@@ -34,16 +29,17 @@ class AnalyzeCommandConfig(CommandConfig):
         scenes = list(map(lambda s: s.to_proto(), self.scenes))
         analyzers = list(map(lambda a: a.to_proto(), self.analyzers))
 
-        msg.MergeFrom(CommandConfigMsg(
-            analyze_config=CommandConfigMsg.AnalyzeConfig(task=task,
-                                                          scenes=scenes,
-                                                          analyzers=analyzers)))
+        msg.MergeFrom(
+            CommandConfigMsg(
+                analyze_config=CommandConfigMsg.AnalyzeConfig(
+                    task=task, scenes=scenes, analyzers=analyzers)))
 
         return msg
 
     @staticmethod
     def builder():
         return AnalyzeCommandConfigBuilder()
+
 
 class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self):
@@ -53,24 +49,22 @@ class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
 
     def build(self):
         if self.task is None:
-            raise rv.ConfigError("task not set. Use with_task or with_experiment")
+            raise rv.ConfigError(
+                "task not set. Use with_task or with_experiment")
         if self.scenes is None:
-            raise rv.ConfigError("scenes not set. Use with_scenes or with_experiment")
+            raise rv.ConfigError(
+                "scenes not set. Use with_scenes or with_experiment")
         if self.analyzers is None:
-            raise rv.ConfigError("analyzers not set. Use with_analyzers or with_experiment")
-        return AnalyzeCommandConfig(self.task,
-                                    self.scenes,
-                                    self.analyzers)
-
+            raise rv.ConfigError(
+                "analyzers not set. Use with_analyzers or with_experiment")
+        return AnalyzeCommandConfig(self.task, self.scenes, self.analyzers)
 
     def from_proto(self, msg):
         msg = msg.analyze_config
 
         task = rv.TaskConfig.from_proto(msg.task)
-        scenes = list(map(rv.SceneConfig.from_proto,
-                          msg.scenes))
-        analyzers = list(map(rv.AnalyzerConfig.from_proto,
-                             msg.analyzers))
+        scenes = list(map(rv.SceneConfig.from_proto, msg.scenes))
+        analyzers = list(map(rv.AnalyzerConfig.from_proto, msg.analyzers))
 
         b = self.with_task(task)
         b = b.with_scenes(scenes)
@@ -82,7 +76,7 @@ class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
         b = self.with_task(experiment_config.task)
         b = b.with_scenes(experiment_config.dataset.all_scenes())
         b = b.with_analyzers(experiment_config.analyzers)
-        return  b
+        return b
 
     def with_task(self, task):
         b = deepcopy(self)

@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from rastervision.evaluation.evaluation_item import *
 from rastervision.evaluation.class_evaluation_item import *
 from rastervision.evaluation.evaluator import *

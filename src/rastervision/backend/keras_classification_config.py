@@ -1,26 +1,21 @@
 import os
 from copy import deepcopy
-from tempfile import TemporaryDirectory
-from google.protobuf import (text_format, json_format)
-import json
+from google.protobuf import (json_format)
 
 import rastervision as rv
-from rastervision.backend import (BackendConfig,
-                                  BackendConfigBuilder,
+from rastervision.backend import (BackendConfig, BackendConfigBuilder,
                                   KerasClassification)
 from rastervision.core.config import set_nested_keys
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
 
 # Default location to Tensorflow Object Detection's scripts.
-CHIP_OUTPUT_FILES = ["training.zip",
-                     "validation.zip"]
+CHIP_OUTPUT_FILES = ["training.zip", "validation.zip"]
+
 
 class KerasClassificationConfig(BackendConfig):
     class TrainOptions:
-        def __init__(self,
-                     sync_interval=600,
-                     replace_model=True):
+        def __init__(self, sync_interval=600, replace_model=True):
             self.sync_interval = sync_interval
             self.replace_model = replace_model
 
@@ -50,22 +45,28 @@ class KerasClassificationConfig(BackendConfig):
         return KerasClassification(self, task_config)
 
     def to_proto(self):
-        d = { "sync_interval": self.train_options.sync_interval,
-              "replace_model": self.train_options.replace_model,
-              "kc_config": self.kc_config }
+        d = {
+            "sync_interval": self.train_options.sync_interval,
+            "replace_model": self.train_options.replace_model,
+            "kc_config": self.kc_config
+        }
 
-        conf = json_format.ParseDict(d, BackendConfigMsg.KerasClassificationConfig())
+        conf = json_format.ParseDict(
+            d, BackendConfigMsg.KerasClassificationConfig())
 
-        msg = BackendConfigMsg(backend_type = rv.KERAS_CLASSIFICATION,
-                               keras_classification_config = conf)
+        msg = BackendConfigMsg(
+            backend_type=rv.KERAS_CLASSIFICATION,
+            keras_classification_config=conf)
 
         if self.pretrained_model_uri:
-            msg.MergeFrom(BackendConfigMsg(
-                pretrained_model_uri=self.pretrained_model_uri))
+            msg.MergeFrom(
+                BackendConfigMsg(
+                    pretrained_model_uri=self.pretrained_model_uri))
 
         return msg
 
-    def preprocess_command(self, command_type, experiment_config, context=None):
+    def preprocess_command(self, command_type, experiment_config,
+                           context=None):
         conf = self
         io_def = rv.core.CommandIODefinition()
         if command_type == rv.CHIP:
@@ -93,16 +94,19 @@ class KerasClassificationConfig(BackendConfig):
 
 class KerasClassificationConfigBuilder(BackendConfigBuilder):
     def __init__(self, prev=None):
-        config = { }
+        config = {}
         if prev:
-            config = { "kc_config": prev.kc_config,
-                       "pretrained_model_uri": prev.pretrained_model_uri,
-                       "train_options": prev.train_options,
-                       "debug": prev.debug,
-                       "training_data_uri": prev.trainind_data_uri,
-                       "training_output_uri": prev.training_output_uri,
-                       "model_uri": prev.model_uri }
-        super().__init__(rv.KERAS_CLASSIFICATION, KerasClassificationConfig, config, prev)
+            config = {
+                "kc_config": prev.kc_config,
+                "pretrained_model_uri": prev.pretrained_model_uri,
+                "train_options": prev.train_options,
+                "debug": prev.debug,
+                "training_data_uri": prev.trainind_data_uri,
+                "training_output_uri": prev.training_output_uri,
+                "model_uri": prev.model_uri
+            }
+        super().__init__(rv.KERAS_CLASSIFICATION, KerasClassificationConfig,
+                         config, prev)
         self.config_mods = []
         self.require_task = True
 
@@ -115,8 +119,8 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         b.require_task = False
         if self.config.get('pretrained_model_uri'):
             b = b.with_pretrained_model_uri(self.config.pretrained_model_uri)
-        b = b.with_train_options(sync_interval=conf.sync_interval,
-                                 replace_model=conf.replace_model)
+        b = b.with_train_options(
+            sync_interval=conf.sync_interval, replace_model=conf.replace_model)
         # TODO: Debug
         # b = b.with_debug(conf.debug)
 
@@ -126,10 +130,10 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         super().validate()
         if not self.config.get('kc_config'):
             raise rv.ConfigError("You must specify a template for the backend "
-                                      "configuration - use 'with_template'.")
+                                 "configuration - use 'with_template'.")
         if self.require_task and not self.task:
             raise rv.ConfigError("You must specify the task this backend "
-                                     "is for - use 'with_task'.")
+                                 "is for - use 'with_task'.")
         return True
 
     def build(self):
@@ -141,10 +145,8 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         b = deepcopy(self)
 
         for config_mod, ignore_missing_keys, set_missing_keys in b.config_mods:
-            set_nested_keys(b.config['kc_config'],
-                            config_mod,
-                            ignore_missing_keys,
-                            set_missing_keys)
+            set_nested_keys(b.config['kc_config'], config_mod,
+                            ignore_missing_keys, set_missing_keys)
 
         return KerasClassificationConfig(**b.config)
 
@@ -152,13 +154,15 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         return [rv.CHIP_CLASSIFICATION]
 
     def _process_task(self):
-        return self.with_config({
-            "trainer": {
-                "options": {
-                    "classNames": self.task.class_map.get_class_names(),
+        return self.with_config(
+            {
+                "trainer": {
+                    "options": {
+                        "classNames": self.task.class_map.get_class_names(),
+                    }
                 }
-            }
-        }, set_missing_keys=True)
+            },
+            set_missing_keys=True)
 
     def _load_model_defaults(self, model_defaults):
         """Loads defaults. Expected keys are "pretrained_model_uri" and "pipeline_config_uri",
@@ -167,9 +171,9 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         expected_keys = ["pretrained_model_uri", "kc_config"]
         unknown_keys = set(model_defaults.keys()) - set(expected_keys)
         if unknown_keys:
-            raise rv.ConfigError(("Unexpected keys in model defaults:"
-                                  " {}. Expected keys: {}") \
-                                 .format(unknown_keys, expected_keys))
+            raise rv.ConfigError("Unexpected keys in model defaults:"
+                                 " {}. Expected keys: {}".format(
+                                     unknown_keys, expected_keys))
 
         b = self
         if "pretrained_model_uri" in model_defaults:
@@ -193,10 +197,11 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         else:
             # Try parsing the string as a message, on fail assume it's a URI
             msg = None
-            try :
+            try:
                 msg = json_format.Parse(template, PipelineConfig())
             except json_format.ParseError:
-                msg = json_format.Parse(file_to_str(template), PipelineConfig())
+                msg = json_format.Parse(
+                    file_to_str(template), PipelineConfig())
             template_json = json_format.MessageToDict(msg)
 
         b = deepcopy(self)
@@ -224,13 +229,14 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
     def with_config(self,
                     config_mod,
                     ignore_missing_keys=False,
-                    set_missing_keys=True):
+                    set_missing_keys=False):
         """Given a dict, modify the tensorflow pipeline configuration
            such that keys that are found recursively in the configuration
            are replaced with those values. TODO: better explination.
         """
         b = deepcopy(self)
-        b.config_mods.append((config_mod, ignore_missing_keys, set_missing_keys))
+        b.config_mods.append((config_mod, ignore_missing_keys,
+                              set_missing_keys))
         return b
 
     def with_debug(self, debug):
@@ -240,19 +246,18 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         b.config['debug'] = debug
         return b
 
-    def with_train_options(self,
-                           sync_interval=600,
-                           replace_model=False):
+    def with_train_options(self, sync_interval=600, replace_model=False):
         """Sets the train options for this backend.
 
            Args:
-              sync_interval: How often to sync output of training to the cloud (in seconds).
+              sync_interval: How often to sync output of training to
+                             the cloud (in seconds).
 
               replace_model: Replace the model checkpoint if exists.
-                             If false, this will continue training from checkpoing if exists,
-                             if the backend allows for this.
+                             If false, this will continue training from
+                             checkpoing if exists, if the backend allows for this.
         """
         b = deepcopy(self)
-        b.config['train_options'] = KerasClassificationConfig.TrainOptions(sync_interval,
-                                                                           replace_model)
+        b.config['train_options'] = KerasClassificationConfig.TrainOptions(
+            sync_interval, replace_model)
         return b

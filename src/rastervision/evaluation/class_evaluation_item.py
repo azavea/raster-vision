@@ -1,5 +1,6 @@
 from rastervision.evaluation import EvaluationItem
 
+
 class ClassEvaluationItem(EvaluationItem):
     """Evaluation metrics for a single class (or average over classes).
 

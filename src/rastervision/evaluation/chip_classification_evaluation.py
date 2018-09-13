@@ -10,9 +10,7 @@ class ChipClassificationEvaluation(ClassificationEvaluation):
         super().__init__()
         self.class_map = class_map
 
-    def compute(self,
-                ground_truth_labels,
-                prediction_labels):
+    def compute(self, ground_truth_labels, prediction_labels):
         self.class_to_eval_item = ChipClassificationEvaluation.compute_eval_items(
             ground_truth_labels, prediction_labels, self.class_map)
 

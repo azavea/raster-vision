@@ -3,13 +3,13 @@ import os
 
 import rastervision as rv
 
+
 class DefaultRasterSourceProvider(ABC):
     @staticmethod
     @abstractmethod
     def handles(s):
         """Returns True of this provider is a default for this string"""
         pass
-
 
     @abstractmethod
     def construct(s, channel_order=None):
@@ -32,10 +32,11 @@ class DefaultGeoTiffSourceProvider(DefaultRasterSourceProvider):
                                     .with_channel_order(channel_order) \
                                     .build()
 
+
 class DefaultImageSourceProvider(DefaultRasterSourceProvider):
     @staticmethod
     def handles(uri):
-        return True # This is the catch-all case.
+        return True  # This is the catch-all case.
 
     @staticmethod
     def construct(uri, channel_order=None):

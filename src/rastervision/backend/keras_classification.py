@@ -1,6 +1,5 @@
 from os.path import join
 import os
-import tempfile
 import shutil
 from urllib.parse import urlparse
 import uuid
@@ -13,9 +12,8 @@ from keras_classification.utils import predict
 from google.protobuf import json_format
 
 from rastervision.backend import Backend
-from rastervision.utils.files import (make_dir, get_local_path,
-                                      upload_or_copy, download_if_needed,
-                                      start_sync, sync_dir, load_json_config)
+from rastervision.utils.files import (make_dir, get_local_path, upload_or_copy,
+                                      download_if_needed, start_sync, sync_dir)
 from rastervision.utils.misc import save_img
 from rastervision.data import ChipClassificationLabels
 
@@ -154,7 +152,8 @@ class KerasClassification(Backend):
         scratch_dir = dataset_files.get_local_path(dataset_files.scratch_uri)
         # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
-        scene_dir = join(scratch_dir, '{}-{}'.format(scene.scene_id, uuid.uuid4()))
+        scene_dir = join(scratch_dir, '{}-{}'.format(scene.scene_id,
+                                                     uuid.uuid4()))
         class_dirs = {}
 
         for chip_idx, (chip, window, labels) in enumerate(data):
@@ -173,9 +172,7 @@ class KerasClassification(Backend):
 
         return class_dirs
 
-    def process_sceneset_results(self,
-                                 training_results,
-                                 validation_results,
+    def process_sceneset_results(self, training_results, validation_results,
                                  tmp_dir):
         """After all scenes have been processed, collect all the images of
         each class across all scenes
@@ -223,10 +220,8 @@ class KerasClassification(Backend):
             tmp_dir,
             replace_model=self.config.train_options.replace_model)
         model_paths = model_files.download_backend_config(
-            self.config.pretrained_model_uri,
-            self.config.kc_config,
-            dataset_files,
-            self.class_map)
+            self.config.pretrained_model_uri, self.config.kc_config,
+            dataset_files, self.class_map)
         backend_config_path, pretrained_model_path = model_paths
 
         # Get output from potential previous run so we can resume training.
@@ -240,7 +235,10 @@ class KerasClassification(Backend):
         _train(backend_config_path, pretrained_model_path)
 
         if urlparse(self.config.training_output_uri).scheme == 's3':
-            sync_dir(model_files.base_dir, self.config.training_output_uri, delete=True)
+            sync_dir(
+                model_files.base_dir,
+                self.config.training_output_uri,
+                delete=True)
 
     def load_model(self, tmp_dir):
         if self.model is None:

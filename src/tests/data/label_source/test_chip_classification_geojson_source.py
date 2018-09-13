@@ -5,14 +5,10 @@ import json
 
 from shapely import geometry
 
-from rastervision.data.label_source import (
-    ChipClassificationGeoJSONSource, get_str_tree, infer_cell, infer_labels,
-    read_labels)
-from rastervision.data import CRSTransformer
+from rastervision.data.label_source import (get_str_tree, infer_cell,
+                                            infer_labels, read_labels)
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.protos.label_store_pb2 import (
-    ClassificationGeoJSONFile as ClassificationGeoJSONFileConfig)
 
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
@@ -203,16 +199,16 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
 
     def test_infer_labels(self):
         extent = Box.make_square(0, 0, 4)
-        options = ClassificationGeoJSONFileConfig.Options()
-        options.ioa_thresh = 0.5
-        options.use_intersection_over_cell = False
-        options.background_class_id = self.background_class_id
-        options.pick_min_class_id = False
-        options.infer_cells = True
-        options.cell_size = 2
+        ioa_thresh = 0.5
+        use_intersection_over_cell = False
+        background_class_id = self.background_class_id
+        pick_min_class_id = False
+        cell_size = 2
 
         labels = infer_labels(self.geojson_dict, self.crs_transformer, extent,
-                              options)
+                              cell_size, ioa_thresh,
+                              use_intersection_over_cell, pick_min_class_id,
+                              background_class_id)
         cells = labels.get_cells()
 
         self.assertEqual(len(cells), 4)
@@ -248,6 +244,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         self.assertEqual(class_id, self.class_id1)
         class_id = labels.get_cell_class_id(self.box2)
         self.assertEqual(class_id, self.class_id2)
+
 
 if __name__ == '__main__':
     unittest.main()

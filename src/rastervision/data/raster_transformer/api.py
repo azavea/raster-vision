@@ -1,3 +1,5 @@
+# flake8: noqa
+
 # Registry Keys
 
 RASTER_TRANSFORMER = "RASTER_TRANSFORMER"

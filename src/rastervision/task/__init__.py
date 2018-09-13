@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from rastervision.task.task import *
 from rastervision.task.task_config import *
 from rastervision.task.object_detection import *

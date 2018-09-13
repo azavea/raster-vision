@@ -1,6 +1,4 @@
-"""
-Defines imports for the top-level packages.
-"""
+# flake8: noqa
 
 # Registry Keys
 RASTER_SOURCE = "RASTER_SOURCE"

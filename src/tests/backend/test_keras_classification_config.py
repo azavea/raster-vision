@@ -1,19 +1,17 @@
 import unittest
-from tempfile import TemporaryDirectory
+
 from google.protobuf import json_format
-import json
 
 import rastervision as rv
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
-from rastervision.utils.files import download_if_needed
 
 from tests import data_file_path
 
 CLASSES = ["car", "background"]
 
+
 class TestKerasClassificationConfig(unittest.TestCase):
     template_uri = data_file_path("keras-classification/resnet50.json")
-
 
     def generate_task(self, classes=CLASSES, chip_size=300):
         return rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \
@@ -78,23 +76,24 @@ class TestKerasClassificationConfig(unittest.TestCase):
                             .with_batch_size(100) \
                             .build()
 
-
         msg = t.to_proto()
 
         self.assertEqual(msg.backend_type, rv.KERAS_CLASSIFICATION)
-        self.assertEqual(msg.keras_classification_config.kc_config["model"]["type"], "RESNET50")
+        self.assertEqual(
+            msg.keras_classification_config.kc_config["model"]["type"],
+            "RESNET50")
 
     def test_requires_backend(self):
         with self.assertRaises(rv.ConfigError):
-            b = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                                .with_task(self.generate_task()) \
-                                .build()
+            rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
+                            .with_task(self.generate_task()) \
+                            .build()
 
     def test_copies_config_mods(self):
         bb1 = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                             .with_task(self.generate_task()) \
-                             .with_template(self.get_template_uri()) \
-                             .with_batch_size(100)
+                              .with_task(self.generate_task()) \
+                              .with_template(self.get_template_uri()) \
+                              .with_batch_size(100)
 
         bb2 = bb1.with_batch_size(200)
 
@@ -107,20 +106,20 @@ class TestKerasClassificationConfig(unittest.TestCase):
     def test_raise_error_on_no_backend_field(self):
         # Will raise since this backend template does not have num_steps
         with self.assertRaises(rv.ConfigError):
-            b = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                                .with_task(self.generate_task()) \
-                                .with_template(self.get_template_uri()) \
-                                .with_batch_size(100) \
-                                .with_num_epochs(100) \
-                                .build()
+            rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
+                            .with_task(self.generate_task()) \
+                            .with_template(self.get_template_uri()) \
+                            .with_batch_size(100) \
+                            .with_num_epochs(100) \
+                            .build()
 
     def test_with_config_fails_key_not_found(self):
         with self.assertRaises(rv.ConfigError):
-            b = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                                .with_task(self.generate_task()) \
-                                .with_template(self.get_template_uri()) \
-                                .with_config({ "key_does_not_exist": 3 }) \
-                                .build()
+            rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
+                            .with_task(self.generate_task()) \
+                            .with_template(self.get_template_uri()) \
+                            .with_config({"key_does_not_exist": 3}) \
+                            .build()
 
     def test_default_model_config(self):
         b = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \

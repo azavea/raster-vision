@@ -1,8 +1,8 @@
-
 class CommandIODefinition:
     """Class which contains a set of inputs and outputs for a command,
        based on the configuration.
     """
+
     def __init__(self,
                  input_uris=None,
                  output_uris=None,

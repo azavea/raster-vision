@@ -5,12 +5,10 @@ import json
 
 import rastervision as rv
 from rastervision.core import (Config, ConfigBuilder)
-from rastervision.utils.files import file_exists
+
 
 class BackendConfig(Config):
-    def __init__(self,
-                 backend_type,
-                 pretrained_model_uri=None):
+    def __init__(self, backend_type, pretrained_model_uri=None):
         self.backend_type = backend_type
         self.pretrained_model_uri = pretrained_model_uri
 
@@ -30,8 +28,7 @@ class BackendConfig(Config):
 
     @staticmethod
     def builder(backend_type):
-        return rv._registry.get_config_builder(rv.BACKEND,
-                                               backend_type)()
+        return rv._registry.get_config_builder(rv.BACKEND, backend_type)()
 
     @staticmethod
     def from_proto(msg):
@@ -40,6 +37,7 @@ class BackendConfig(Config):
         return rv._registry.get_config_builder(rv.BACKEND, msg.backend_type)() \
                            .from_proto(msg) \
                            .build()
+
 
 class BackendConfigBuilder(ConfigBuilder):
     def __init__(self, backend_type, config_class, config=None, prev=None):
@@ -67,14 +65,13 @@ class BackendConfigBuilder(ConfigBuilder):
     def from_proto(self, msg):
         return self.with_pretrained_model(msg.pretrained_model_uri)
 
-
     def with_task(self, task):
         """Sets the backend up for a specific task type, e.g. rv.OBJECT_DETECTION.
         """
-        if not task.task_type in self._applicable_tasks():
+        if task.task_type not in self._applicable_tasks():
             raise Exception(
-                "Backend of type {} cannot be applied to task type {}" \
-                .format(task.task_type, self.backend_type))
+                "Backend of type {} cannot be applied to task type {}".format(
+                    task.task_type, self.backend_type))
         b = deepcopy(self)
         b.task = task
         b = b._process_task()
@@ -96,20 +93,22 @@ class BackendConfigBuilder(ConfigBuilder):
            according to the model defaults configuraiton
           (see model_defaults.json in this package)
         """
-        model_defaults  = {}
-        model_defaults_path = os.path.join(os.path.dirname(__file__), "model_defaults.json")
+        model_defaults = {}
+        model_defaults_path = os.path.join(
+            os.path.dirname(__file__), "model_defaults.json")
         with open(model_defaults_path) as f:
             model_defaults = json.loads(f.read())
 
         if self.backend_type in model_defaults:
             backend_defaults = model_defaults[self.backend_type]
             if model_defaults_key in backend_defaults:
-                return self._load_model_defaults(backend_defaults[model_defaults_key])
+                return self._load_model_defaults(
+                    backend_defaults[model_defaults_key])
             else:
-                raise rv.ConfigError("No defaults found for model key {}" \
+                raise rv.ConfigError("No defaults found for model key {}"
                                      .format(model_defaults_key))
         else:
-            raise rv.ConfigError("No model defaults for backend {}" \
+            raise rv.ConfigError("No model defaults for backend {}"
                                  .format(self.backend_type))
         return self
 

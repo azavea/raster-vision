@@ -1,10 +1,8 @@
 import numpy as np
 
-from .task import Task
-from rastervision.evaluations.object_detection_evaluation import (
-    ObjectDetectionEvaluation)
-from rastervision.labels.object_detection_labels import ObjectDetectionLabels
-from rastervision.utils.misc import save_img
+from rastervision.task import Task
+from rastervision.data import ObjectDetectionLabels
+
 
 def _make_chip_pos_windows(image_extent, label_store, chip_size):
     chip_size = chip_size
@@ -39,10 +37,7 @@ def _make_label_pos_windows(image_extent, label_store, label_buffer):
     return pos_windows
 
 
-def make_pos_windows(image_extent,
-                     label_store,
-                     chip_size,
-                     window_method,
+def make_pos_windows(image_extent, label_store, chip_size, window_method,
                      label_buffer):
     if window_method == 'label':
         return _make_label_pos_windows(image_extent, label_store, label_buffer)
@@ -71,6 +66,7 @@ def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
 
     return neg_windows
 
+
 class ObjectDetection(Task):
     def get_train_windows(self, scene):
         raster_source = scene.raster_source
@@ -84,8 +80,7 @@ class ObjectDetection(Task):
                 chip_size, stride))
 
         # Make positive windows which contain labels.
-        pos_windows = make_pos_windows(raster_source.get_extent(),
-                                       label_store,
+        pos_windows = make_pos_windows(raster_source.get_extent(), label_store,
                                        self.config.chip_size,
                                        self.config.chip_options.window_method,
                                        self.config.chip_options.label_buffer)

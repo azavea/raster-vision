@@ -1,5 +1,6 @@
 from rastervision.data import CRSTransformer
 
+
 class DoubleCRSTransformer(CRSTransformer):
     """Mock CRSTransformer used for testing.
 

@@ -1,12 +1,12 @@
 import unittest
 
 from rastervision.core.box import Box
-from rastervision.labels.classification_labels import ClassificationLabels
+from rastervision.data.label.chip_classification_labels import ChipClassificationLabels
 
 
-class TestClassificationLabels(unittest.TestCase):
+class TestChipClassificationLabels(unittest.TestCase):
     def setUp(self):
-        self.labels = ClassificationLabels()
+        self.labels = ChipClassificationLabels()
 
         self.cell1 = Box.make_square(0, 0, 2)
         self.class_id1 = 1
@@ -53,7 +53,7 @@ class TestClassificationLabels(unittest.TestCase):
             self.assertListEqual(class_ids, [2, 1])
 
     def test_extend(self):
-        labels = ClassificationLabels()
+        labels = ChipClassificationLabels()
         cell3 = Box.make_square(0, 4, 2)
         class_id3 = 1
         labels.set_cell(cell3, class_id3)

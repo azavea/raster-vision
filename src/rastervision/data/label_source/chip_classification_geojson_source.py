@@ -1,5 +1,3 @@
-import json
-
 import numpy as np
 from shapely.strtree import STRtree
 from shapely import geometry
@@ -7,8 +5,8 @@ from shapely import geometry
 from rastervision.data import ChipClassificationLabels
 from rastervision.data.label_source import LabelSource
 from rastervision.data.label_source.utils import (
-    add_classes_to_geojson, load_label_store_json, geojson_to_object_detection_labels)
-from rastervision.utils.files import str_to_file
+    add_classes_to_geojson, load_label_store_json,
+    geojson_to_object_detection_labels)
 
 
 def get_str_tree(geojson_dict, crs_transformer):
@@ -113,13 +111,8 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
     return class_id
 
 
-def infer_labels(geojson_dict,
-                 crs_transformer,
-                 extent,
-                 cell_size,
-                 ioa_thresh,
-                 use_intersection_over_cell,
-                 pick_min_class_id,
+def infer_labels(geojson_dict, crs_transformer, extent, cell_size, ioa_thresh,
+                 use_intersection_over_cell, pick_min_class_id,
                  background_class_id):
     """Infer ChipClassificationLabels grid from GeoJSON containing polygons.
 
@@ -140,11 +133,8 @@ def infer_labels(geojson_dict,
 
     cells = extent.get_windows(cell_size, cell_size)
     for cell in cells:
-        class_id = infer_cell(str_tree,
-                              cell,
-                              ioa_thresh,
-                              use_intersection_over_cell,
-                              background_class_id,
+        class_id = infer_cell(str_tree, cell, ioa_thresh,
+                              use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         labels.set_cell(cell, class_id)
     return labels
@@ -168,8 +158,7 @@ def read_labels(geojson_dict, crs_transformer, extent=None):
     """
     # Load as ObjectDetectionLabels and convert to ChipClassificationLabels.
     od_labels = geojson_to_object_detection_labels(geojson_dict,
-                                                   crs_transformer,
-                                                   extent)
+                                                   crs_transformer, extent)
 
     labels = ChipClassificationLabels()
     boxes = od_labels.get_boxes()
@@ -180,14 +169,8 @@ def read_labels(geojson_dict, crs_transformer, extent=None):
     return labels
 
 
-def load_geojson(geojson_dict,
-                 crs_transformer,
-                 extent,
-                 infer_cells,
-                 cell_size,
-                 ioa_thresh,
-                 use_intersection_over_cell,
-                 pick_min_class_id,
+def load_geojson(geojson_dict, crs_transformer, extent, infer_cells, cell_size,
+                 ioa_thresh, use_intersection_over_cell, pick_min_class_id,
                  background_class_id):
     """Construct ChipClassificationLabels from GeoJSON.
 
@@ -203,14 +186,9 @@ def load_geojson(geojson_dict,
         ChipClassificationLabels
     """
     if infer_cells:
-        labels = infer_labels(geojson_dict,
-                              crs_transformer,
-                              extent,
-                              cell_size,
-                              ioa_thresh,
-                              use_intersection_over_cell,
-                              pick_min_class_id,
-                              background_class_id)
+        labels = infer_labels(geojson_dict, crs_transformer, extent, cell_size,
+                              ioa_thresh, use_intersection_over_cell,
+                              pick_min_class_id, background_class_id)
     else:
         labels = read_labels(geojson_dict, crs_transformer, extent)
 
@@ -255,15 +233,10 @@ class ChipClassificationGeoJSONSource(LabelSource):
         geojson_dict = load_label_store_json(uri)
         if geojson_dict:
             geojson_dict = add_classes_to_geojson(geojson_dict, class_map)
-            self.labels = load_geojson(geojson_dict,
-                                       crs_transformer,
-                                       extent,
-                                       infer_cells,
-                                       cell_size,
-                                       ioa_thresh,
+            self.labels = load_geojson(geojson_dict, crs_transformer, extent,
+                                       infer_cells, cell_size, ioa_thresh,
                                        use_intersection_over_cell,
-                                       pick_min_class_id,
-                                       background_class_id)
+                                       pick_min_class_id, background_class_id)
 
     def get_labels(self, window=None):
         if window is None:

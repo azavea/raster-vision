@@ -3,7 +3,6 @@ from abc import ABC
 
 class Labels(ABC):
     """A set of spatially referenced labels.
-
     A set of labels predicted by a model or provided by human labelers for the
     sake of training. Every label is associated with a spatial location and a
     class. For object detection, a label is a bounding box surrounding an

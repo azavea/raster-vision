@@ -1,5 +1,6 @@
 from rastervision.command import Command
 
+
 class EvalCommand(Command):
     def __init__(self, scenes, evaluators):
         self.scenes = scenes

@@ -1,5 +1,6 @@
 from abc import (ABC, abstractmethod)
 
+
 class EvaluationItem(ABC):
     @abstractmethod
     def merge(self, other):

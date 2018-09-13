@@ -3,13 +3,11 @@ import tempfile
 import os
 import json
 
-import numpy as np
 from moto import mock_s3
 
 from rastervision.data import ObjectDetectionGeoJSONStore, ObjectDetectionGeoJSONSource
-from rastervision.data import ObjectDetectionLabels
-from rastervision.data.label_source.utils import (add_classes_to_geojson,
-                                                  geojson_to_object_detection_labels)
+from rastervision.data.label_source.utils import (
+    add_classes_to_geojson, geojson_to_object_detection_labels)
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
 from rastervision.utils.files import NotWritableError
@@ -114,37 +112,29 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
     @mock_s3
     def test_write_invalid_uri(self):
         geojson = add_classes_to_geojson(self.geojson_dict, self.class_map)
-        labels = geojson_to_object_detection_labels(geojson, self.crs_transformer)
+        labels = geojson_to_object_detection_labels(geojson,
+                                                    self.crs_transformer)
 
         invalid_uri = 's3://invalid_path/invalid.json'
         label_store = ObjectDetectionGeoJSONStore(
-            invalid_uri,
-            self.crs_transformer,
-            self.class_map)
+            invalid_uri, self.crs_transformer, self.class_map)
         with self.assertRaises(NotWritableError):
             label_store.save(labels)
 
     def test_valid_uri(self):
         # Read it, write it using label_store, read it again, and compare.
         label_source = ObjectDetectionGeoJSONSource(
-            self.file_path,
-            self.crs_transformer,
-            self.class_map)
+            self.file_path, self.crs_transformer, self.class_map)
         labels1 = label_source.get_labels()
 
         new_path = os.path.join(self.temp_dir.name, "test_save_reload.json")
 
         label_store = ObjectDetectionGeoJSONStore(
-            new_path,
-            self.crs_transformer,
-            self.class_map)
+            new_path, self.crs_transformer, self.class_map)
         label_store.save(labels1)
 
-
         label_store = ObjectDetectionGeoJSONSource(
-            self.file_path,
-            self.crs_transformer,
-            self.class_map)
+            self.file_path, self.crs_transformer, self.class_map)
         labels2 = label_store.get_labels()
 
         labels1.assert_equal(labels2)

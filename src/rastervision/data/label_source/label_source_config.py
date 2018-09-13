@@ -1,13 +1,12 @@
 from abc import abstractmethod
-from copy import deepcopy
 
 import rastervision as rv
-from rastervision.core.config  import (Config, ConfigBuilder)
+from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
 
+
 class LabelSourceConfig(Config):
-    def __init__(self,
-                 source_type):
+    def __init__(self, source_type):
         self.source_type = source_type
 
     def to_proto(self):
@@ -35,8 +34,7 @@ class LabelSourceConfig(Config):
 
     @staticmethod
     def builder(source_type):
-        return rv._registry.get_config_builder(rv.LABEL_SOURCE,
-                                               source_type)()
+        return rv._registry.get_config_builder(rv.LABEL_SOURCE, source_type)()
 
     @staticmethod
     def from_proto(msg):

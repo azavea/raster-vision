@@ -7,8 +7,8 @@ import numpy as np
 from moto import mock_s3
 
 from rastervision.data.label_source import ObjectDetectionGeoJSONSource
-from rastervision.data.label_source.utils import (add_classes_to_geojson,
-                                                  geojson_to_object_detection_labels)
+from rastervision.data.label_source.utils import (
+    add_classes_to_geojson, geojson_to_object_detection_labels)
 from rastervision.data import ObjectDetectionLabels
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
@@ -118,7 +118,8 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
     def test_multipolygon_geojson_to_labels(self):
         geojson = add_classes_to_geojson(self.multipolygon_geojson_dict,
                                          self.class_map)
-        labels = geojson_to_object_detection_labels(geojson, self.crs_transformer)
+        labels = geojson_to_object_detection_labels(geojson,
+                                                    self.crs_transformer)
 
         # construct expected labels object
         expected_npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.],
@@ -132,7 +133,8 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
 
     def test_polygon_geojson_to_labels(self):
         geojson = add_classes_to_geojson(self.geojson_dict, self.class_map)
-        labels = geojson_to_object_detection_labels(geojson, self.crs_transformer)
+        labels = geojson_to_object_detection_labels(geojson,
+                                                    self.crs_transformer)
 
         # construct expected labels object
         expected_npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
@@ -147,7 +149,8 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
         with self.assertRaises(Exception):
             geojson = add_classes_to_geojson(self.linestring_geojson_dict,
                                              self.class_map)
-            geojson_to_object_detection_labels(geojson, self.crs_transformer, extent=None)
+            geojson_to_object_detection_labels(
+                geojson, self.crs_transformer, extent=None)
 
     def test_read_invalid_uri_readable_true(self):
         with self.assertRaises(NotReadableError):
@@ -160,10 +163,7 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
 
     def test_read_without_extent(self):
         store = ObjectDetectionGeoJSONSource(
-            self.file_path,
-            self.crs_transformer,
-            self.class_map,
-            extent=None)
+            self.file_path, self.crs_transformer, self.class_map, extent=None)
         labels = store.get_labels()
 
         npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
@@ -205,7 +205,6 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
         expected_labels = ObjectDetectionLabels(
             npboxes, class_ids, scores=scores)
         labels.assert_equal(expected_labels)
-
 
 
 if __name__ == '__main__':

@@ -4,13 +4,15 @@ import rastervision as rv
 
 from tests import data_file_path
 
+
 class TestExperimentConfig(unittest.TestCase):
     def test_object_detection_exp(self):
         root_uri = "/some/dummy/root"
         img_path = "/dummy.tif"
         label_path = "/dummy.json"
-        backend_conf_path = data_file_path("tf_object_detection/"
-                                           "embedded_ssd_mobilenet_v1_coco.config")
+        backend_conf_path = data_file_path(
+            "tf_object_detection/"
+            "embedded_ssd_mobilenet_v1_coco.config")
 
         pretrained_model = ("https://dummy.com/model.gz")
 
@@ -35,12 +37,17 @@ class TestExperimentConfig(unittest.TestCase):
                                                       do_monitoring=False) \
                                   .build()
 
+        raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                          .with_uri(img_path) \
+                          .with_channel_order([0, 1, 2]) \
+                          .with_stats_transformer() \
+                          .build()
+
         scene = rv.SceneConfig.builder() \
                               .with_task(task) \
                               .with_id("od_test") \
-                              .with_raster_source(img_path, channel_order=[0,1,2]) \
+                              .with_raster_source(raster_source) \
                               .with_label_source(label_path) \
-                              .with_stats_transformer() \
                               .build()
 
         dataset = rv.DatasetConfig.builder() \
@@ -72,9 +79,11 @@ class TestExperimentConfig(unittest.TestCase):
         self.assertEqual(e.predict_uri, e2.predict_uri)
         self.assertEqual(e.eval_uri, e2.eval_uri)
 
-        self.assertEqual(e2.dataset.train_scenes[0].label_source.uri, "/dummy.json")
-        self.assertEqual(e2.dataset.train_scenes[0].raster_source.channel_order,
-                         [0,1,2])
+        self.assertEqual(e2.dataset.train_scenes[0].label_source.uri,
+                         "/dummy.json")
+        self.assertEqual(
+            e2.dataset.train_scenes[0].raster_source.channel_order, [0, 1, 2])
+
 
 if __name__ == "__main__":
     unittest.main()

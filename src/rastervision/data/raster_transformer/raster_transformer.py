@@ -1,5 +1,6 @@
 from abc import (ABC, abstractmethod)
 
+
 class RasterTransformer(ABC):
     """Transforms raw chips to be input to a neural network."""
 

@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 
+import rastervision as rv
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
+
 
 class CommandConfig(ABC):
     def __init__(self, command_type):
@@ -15,7 +17,7 @@ class CommandConfig(ABC):
     def to_proto(self):
         """Returns the protobuf configuration for this config.
         """
-        return CommandConfigMsg(command_type = self.command_type)
+        return CommandConfigMsg(command_type=self.command_type)
 
     @staticmethod
     @abstractmethod
@@ -32,6 +34,7 @@ class CommandConfig(ABC):
         return rv._registry.get_command_config_builder(msg.command_type)() \
                            .from_proto(msg) \
                            .build()
+
 
 class CommandConfigBuilder(ABC):
     @abstractmethod

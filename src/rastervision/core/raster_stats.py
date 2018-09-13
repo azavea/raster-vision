@@ -20,7 +20,8 @@ class RasterStats():
                 windows = raster_source.get_extent().get_windows(
                     chip_size, stride)
                 for window in windows:
-                    chip = raster_source.get_raw_chip(window).astype(np.float32)
+                    chip = raster_source.get_raw_chip(window).astype(
+                        np.float32)
                     chip = chip[:, :, channel].ravel()
                     # Ignore NODATA values.
                     chip[chip == 0.0] = np.nan

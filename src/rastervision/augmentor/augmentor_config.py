@@ -1,8 +1,10 @@
 from abc import abstractmethod
 
+import rastervision as rv
 from rastervision.core import (Config, ConfigBuilder)
 
-class AugmentorConfig:
+
+class AugmentorConfig(Config):
     def __init__(self, augmentor_type):
         self.augmentor_type = augmentor_type
 
@@ -11,15 +13,13 @@ class AugmentorConfig:
         """Create the Augmentor that this configuration represents"""
         pass
 
-    @staticmethod
-    def builder(augmentor_type):
+    def to_builder(self, augmentor_type):
         return rv._registry.get_config_builder(rv.AUGMENTOR,
                                                self.augmentor_type)(self)
 
     @staticmethod
     def builder(augmentor_type):
-        return rv._registry.get_config_builder(rv.AUGMENTOR,
-                                               augmentor_type)()
+        return rv._registry.get_config_builder(rv.AUGMENTOR, augmentor_type)()
 
     @staticmethod
     def from_proto(msg):
@@ -29,12 +29,10 @@ class AugmentorConfig:
                            .from_proto(msg) \
                            .build()
 
-    def preprocess_command(self,
-                           command_type,
-                           experiment_config,
-                           context=[]):
+    def preprocess_command(self, command_type, experiment_config, context=[]):
         # Generally augmentors do not have an affect on the IO.
         return (self, rv.core.CommandIODefinition())
+
 
 class AugmentorConfigBuilder(ConfigBuilder):
     pass

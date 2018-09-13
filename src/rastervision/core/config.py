@@ -1,5 +1,5 @@
 from abc import (ABC, abstractmethod)
-from copy import deepcopy
+
 
 class ConfigError(Exception):
     pass
@@ -24,7 +24,8 @@ def set_nested_keys(target,
                     if type(_mods[key]) is dict:
                         f(_target[key], _mods[key])
                     else:
-                        raise ConfigError("Error: cannot modify dict with value")
+                        raise ConfigError(
+                            "Error: cannot modify dict with value")
                 else:
                     _target[key] = _mods[key]
             else:
@@ -42,7 +43,8 @@ def set_nested_keys(target,
     if not ignore_missing_keys:
         d = set(searched_keys) - set(found_keys)
         if d:
-            raise ConfigError("Mod keys not found in target dict: {}".format(d))
+            raise ConfigError(
+                "Mod keys not found in target dict: {}".format(d))
 
 
 class Config(ABC):
@@ -59,9 +61,7 @@ class Config(ABC):
         pass
 
     @abstractmethod
-    def preprocess_command(self,
-                           command_type,
-                           experiment_config,
+    def preprocess_command(self, command_type, experiment_config,
                            context=None):
         """Returns a copy of this config which may or may not have
            been modified based on the command needs and the experiment
@@ -92,7 +92,6 @@ class Config(ABC):
         """
         pass
 
-
     @staticmethod
     @abstractmethod
     def from_proto(msg):
@@ -100,6 +99,7 @@ class Config(ABC):
         TODO: Allow loading from file uri or dict
         """
         pass
+
 
 class ConfigBuilder(ABC):
     def __init__(self, config_class, config=None):

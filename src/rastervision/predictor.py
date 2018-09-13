@@ -1,13 +1,16 @@
+import os
 import zipfile
 
 from google.protobuf import json_format
 
-from rastervision.utils.files import (download_if_needed,
-                                      make_dir)
+import rastervision as rv
+from rastervision.utils.files import (download_if_needed, make_dir)
 from rastervision.protos.command_pb2 import CommandConfig as CommandConfigMsg
+
 
 class Predictor():
     """Class for making predictions based off of a prediction package"""
+
     def __init__(self,
                  prediction_package_uri,
                  tmp_dir,
@@ -26,7 +29,8 @@ class Predictor():
         # Read bundle command config
         with open(os.path.join(package_dir, "bundle.json")) as f:
             bundle_config_json = f.read()
-        bundle_config = json_format.ParseJson(bundle_config_json, CommandConfigMsg.BundleConfig())
+        bundle_config = json_format.ParseJson(bundle_config_json,
+                                              CommandConfigMsg.BundleConfig())
 
         self.task_config = rv.TaskConfig.from_proto(bundle_config.task) \
                                    .load_bundle_files(package_dir)
@@ -62,7 +66,7 @@ class Predictor():
         if not self.model_loaded:
             self.load_model()
         scene_config = self.scene_config.for_prediction(image_uri, label_uri) \
-                                        .create_local(tmp_dir)
+                                        .create_local(self.tmp_dir)
 
         scene = scene_config.create_scene(self.task_config, self.tmp_dir)
         # If we are analyzing per scene, run analyzers

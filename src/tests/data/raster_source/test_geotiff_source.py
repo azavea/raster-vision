@@ -3,21 +3,51 @@ import os
 from tempfile import TemporaryDirectory
 
 import numpy as np
+import rasterio
 
 import rastervision as rv
-from rastervision.core.raster_stats import RasterStats
+from rastervision.core import Box
 from rastervision.utils.misc import save_img
+from rastervision.data.raster_source.rasterio_source import load_window
 
 from tests import data_file_path
 
 # TODO: Test Proto methods
 
+
 class TestGeoTiffSource(unittest.TestCase):
+    def test_load_window(self):
+        with TemporaryDirectory() as temp_dir:
+            # make geotiff filled with ones and zeros with nodata == 1
+            image_path = os.path.join(temp_dir, 'temp.tif')
+            height = 100
+            width = 100
+            nb_channels = 3
+            image_dataset = rasterio.open(
+                image_path,
+                'w',
+                driver='GTiff',
+                height=height,
+                width=width,
+                count=nb_channels,
+                dtype=np.uint8,
+                nodata=1)
+            im = np.random.randint(0, 2, (height, width, nb_channels)).astype(
+                np.uint8)
+            for channel in range(nb_channels):
+                image_dataset.write(im[:, :, channel], channel + 1)
+
+            # Should be all zeros after converting nodata values to zero.
+            window = Box.make_square(0, 0, 100).rasterio_format()
+            chip = load_window(image_dataset, window=window)
+            np.testing.assert_equal(chip, np.zeros(chip.shape))
+
     def test_gets_raw_chip(self):
         img_path = data_file_path("small-rgb-tile.tif")
         channel_order = [0, 1]
 
-        source = rv.data.GeoTiffSourceConfig(uris=[img_path], channel_order=[0,1]) \
+        source = rv.data.GeoTiffSourceConfig(uris=[img_path],
+                                             channel_order=channel_order) \
                         .create_source(tmp_dir=None)
 
         out_chip = source.get_raw_image_array()
@@ -49,4 +79,5 @@ class TestGeoTiffSource(unittest.TestCase):
                                       .build()
 
         self.assertEqual(len(config.transformers), 1)
-        self.assertIsInstance(config.transformers[0], rv.data.StatsTransformerConfig)
+        self.assertIsInstance(config.transformers[0],
+                              rv.data.StatsTransformerConfig)

@@ -2,6 +2,7 @@ from typing import List
 
 import rastervision as rv
 
+
 class CommandDefinition:
     def __init__(self, experiment_id, command_config, io_def):
         self.experiment_id = experiment_id
@@ -40,10 +41,10 @@ class CommandDefinition:
         unique_commands = []
         seen_commands = set([])
         for command_def in command_definitions:
-            k = (command_def.command_config.command_type,
-                 '|'.join(sorted(command_def.io_def.input_uris)),
-                 '|'.join(sorted(command_def.io_def.output_uris)))
-            if not k in seen_commands:
+            k = (command_def.command_config.command_type, '|'.join(
+                sorted(command_def.io_def.input_uris)), '|'.join(
+                    sorted(command_def.io_def.output_uris)))
+            if k not in seen_commands:
                 seen_commands.add(k)
                 unique_commands.append(command_def)
 
@@ -72,7 +73,7 @@ class CommandDefinition:
         and clashing commands.
         """
         outputs_to_defs = {}
-        clashing_commands  = []
+        clashing_commands = []
         for command_def in command_definitions:
             command_type = command_def.command_config.command_type
             for output_uri in command_def.io_def.output_uris:

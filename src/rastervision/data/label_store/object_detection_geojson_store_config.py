@@ -2,10 +2,8 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.label_store import (LabelStoreConfig,
-                                           LabelStoreConfigBuilder,
-                                           ObjectDetectionGeoJSONStore)
-from rastervision.protos.label_store2_pb2 import LabelStoreConfig as LabelStoreConfigMsg
+from rastervision.data.label_store import (
+    LabelStoreConfig, LabelStoreConfigBuilder, ObjectDetectionGeoJSONStore)
 
 
 class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
@@ -19,7 +17,8 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
         return msg
 
     def create_store(self, task_config, crs_transformer, tmp_dir):
-        return ObjectDetectionGeoJSONStore(self.uri, crs_transformer, task_config.class_map)
+        return ObjectDetectionGeoJSONStore(self.uri, crs_transformer,
+                                           task_config.class_map)
 
     def preprocess_command(self, command_type, experiment_config, context=[]):
         conf = self
@@ -40,8 +39,9 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
                                .build()
                     io_def.add_output(uri)
                 else:
-                    raise rv.ConfigError("ObjectDetectionGeoJSONStoreConfig has no "
-                                         "URI set, and is not associated with a SceneConfig.")
+                    raise rv.ConfigError(
+                        "ObjectDetectionGeoJSONStoreConfig has no "
+                        "URI set, and is not associated with a SceneConfig.")
 
             io_def.add_output(conf.uri)
 
@@ -59,7 +59,7 @@ class ObjectDetectionGeoJSONStoreConfigBuilder(LabelStoreConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "uri": prev.uri }
+            config = {"uri": prev.uri}
 
         super().__init__(ObjectDetectionGeoJSONStoreConfig, config)
 

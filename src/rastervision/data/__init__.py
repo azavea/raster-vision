@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from rastervision.data.raster_transformer import *
 from rastervision.data.raster_source import *
 from rastervision.data.crs_transformer import *

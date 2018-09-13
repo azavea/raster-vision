@@ -5,9 +5,11 @@ import rastervision as rv
 from rastervision.task import ObjectDetection
 from rastervision.core.class_map import (ClassMap, ClassItem)
 from rastervision.task import (TaskConfig, TaskConfigBuilder)
-from rastervision.task.utils import (construct_class_map, classes_to_class_items)
+from rastervision.task.utils import (construct_class_map,
+                                     classes_to_class_items)
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
 from rastervision.protos.class_item_pb2 import ClassItem as ClassItemMsg
+
 
 class ObjectDetectionConfig(TaskConfig):
     class ChipOptions:
@@ -22,9 +24,7 @@ class ObjectDetectionConfig(TaskConfig):
             self.label_buffer = label_buffer
 
     class PredictOptions:
-        def __init__(self,
-                     merge_thresh=0.5,
-                     score_thresh=0.5):
+        def __init__(self, merge_thresh=0.5, score_thresh=0.5):
             self.merge_thresh = merge_thresh
             self.score_thresh = score_thresh
 
@@ -36,7 +36,8 @@ class ObjectDetectionConfig(TaskConfig):
                  chip_size=300,
                  chip_options=ChipOptions(),
                  predict_options=PredictOptions()):
-        super().__init__(rv.OBJECT_DETECTION, predict_batch_size, predict_package_uri, debug)
+        super().__init__(rv.OBJECT_DETECTION, predict_batch_size,
+                         predict_package_uri, debug)
         self.class_map = class_map
         self.chip_size = chip_size
         self.chip_options = chip_options
@@ -48,37 +49,42 @@ class ObjectDetectionConfig(TaskConfig):
     def to_proto(self):
         msg = super().to_proto()
         chip_options = TaskConfigMsg.ObjectDetectionConfig.ChipOptions(
-            neg_ratio = self.chip_options.neg_ratio,
-            ioa_thresh = self.chip_options.ioa_thresh,
-            window_method = self.chip_options.window_method,
-            label_buffer = self.chip_options.label_buffer)
+            neg_ratio=self.chip_options.neg_ratio,
+            ioa_thresh=self.chip_options.ioa_thresh,
+            window_method=self.chip_options.window_method,
+            label_buffer=self.chip_options.label_buffer)
 
         predict_options = TaskConfigMsg.ObjectDetectionConfig.PredictOptions(
-            merge_thresh = self.predict_options.merge_thresh,
-            score_thresh = self.predict_options.score_thresh)
+            merge_thresh=self.predict_options.merge_thresh,
+            score_thresh=self.predict_options.score_thresh)
 
-        conf = TaskConfigMsg.ObjectDetectionConfig(chip_size=self.chip_size,
-                                                   class_items=classes_to_class_items(self.class_map),
-                                                   chip_options=chip_options,
-                                                   predict_options=predict_options)
+        conf = TaskConfigMsg.ObjectDetectionConfig(
+            chip_size=self.chip_size,
+            class_items=classes_to_class_items(self.class_map),
+            chip_options=chip_options,
+            predict_options=predict_options)
         msg.MergeFrom(TaskConfigMsg(object_detection_config=conf))
 
         return msg
 
-    def preprocess_command(self, command_type, experiment_config, context=None):
+    def preprocess_command(self, command_type, experiment_config,
+                           context=None):
         return (self, rv.core.CommandIODefinition())
+
 
 class ObjectDetectionConfigBuilder(TaskConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "predict_batch_size": prev.predict_batch_size,
-                       "predict_package_uri": prev.predict_package_uri,
-                       "debug": prev.debug,
-                       "class_map": prev.class_map,
-                       "chip_size": prev.chip_size,
-                       "chip_options": prev.chip_options,
-                       "predict_options": prev.predict_options }
+            config = {
+                "predict_batch_size": prev.predict_batch_size,
+                "predict_package_uri": prev.predict_package_uri,
+                "debug": prev.debug,
+                "class_map": prev.class_map,
+                "chip_size": prev.chip_size,
+                "chip_options": prev.chip_options,
+                "predict_options": prev.predict_options
+            }
         super().__init__(ObjectDetectionConfig, config)
 
     def from_proto(self, msg):
@@ -97,12 +103,9 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
                 .with_predict_options(merge_thresh=conf.predict_options.merge_thresh,
                                       score_thresh=conf.predict_options.score_thresh)
 
-    def with_classes(self, classes: Union[ClassMap,
-                                          List[str],
-                                          List[ClassItemMsg],
-                                          List[ClassItem],
-                                          Dict[str, int],
-                                          Dict[str, Tuple[int, str]]]):
+    def with_classes(
+            self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
+                ClassItem], Dict[str, int], Dict[str, Tuple[int, str]]]):
         """Set the classes for this task.
 
             Args:
@@ -132,35 +135,35 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
                           label_buffer=0.0):
         """Sets object detection configurations for the Chip command
 
-           Args:
-              neg_ratio: The ratio of negative chips (those containing no bounding boxes) to
-                         positive chips. This can be useful if the statistics of the
-                         background is different in positive chips. For example, in car
-                         detection, the positive chips will always contain roads, but no
-                         examples of rooftops since cars tend to not be near rooftops.
-                         This option is not used when window_method is `sliding`.
+        Args:
+           neg_ratio: The ratio of negative chips (those containing no bounding boxes)
+                      to positive chips. This can be useful if the statistics of the
+                      background is different in positive chips. For example, in car
+                      detection, the positive chips will always contain roads, but no
+                      examples of rooftops since cars tend to not be near rooftops.
+                      This option is not used when window_method is `sliding`.
 
-              ioa_thresh: When a box is partially outside of a training chip, it is not
-                          clear if (a clipped version) of the box should be included in
-                          the chip. If the IOA (intersection over area) of the box with the
-                          chip is greater than ioa_thresh, it is included in the chip.
+           ioa_thresh: When a box is partially outside of a training chip, it is not
+                       clear if (a clipped version) of the box should be included in
+                       the chip. If the IOA (intersection over area) of the box with
+                       the chip is greater than ioa_thresh, it is included in the chip.
 
-              window_method: Different models in the Object Detection API have different inputs.
-                             Some models allow variable size inputs so several methods
-                             of building training data are required
+           window_method: Different models in the Object Detection API have different
+                          inputs. Some models allow variable size inputs so several
+                          methods of building training data are required
 
-                             Valid values are:
-                               - chip (default)
-                               - label
-                                  - each label's bounding box is the positive window
-                               - image
-                                  - each image is the positive window
-                               - sliding
-                                  - each image is from a sliding window with 50% overlap
+                          Valid values are:
+                            - chip (default)
+                            - label
+                               - each label's bounding box is the positive window
+                            - image
+                               - each image is the positive window
+                            - sliding
+                               - each image is from a sliding window with 50% overlap
 
-               label_buffer: If method is "label", the positive window can be buffered.
-                             If value is >= 0. and < 1., the value is treated as a percentage
-                             If value is >= 1., the value is treated in number of pixels
+            label_buffer: If method is "label", the positive window can be buffered.
+                          If value is >= 0. and < 1., the value is treated as a percentage
+                          If value is >= 1., the value is treated in number of pixels
         """
         b = deepcopy(self)
         b.config['chip_options'] = ObjectDetectionConfig.ChipOptions(
@@ -170,21 +173,19 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
             label_buffer=label_buffer)
         return b
 
-    def with_predict_options(self,
-                             merge_thresh=0.5,
-                             score_thresh=0.5):
+    def with_predict_options(self, merge_thresh=0.5, score_thresh=0.5):
         """Prediction options for this task.
 
-           Args:
-              merge_thresh: If predicted boxes have an IOA (intersection over area) greater than
-                            merge_thresh, then they are merged into a single box during
-                            postprocessing. This is needed since the sliding window approach
-                            results in some false duplicates.
+        Args:
+           merge_thresh: If predicted boxes have an IOA (intersection over area)
+                         greater than merge_thresh, then they are merged into a
+                         single box during postprocessing. This is needed since
+                         the sliding window approach results in some false duplicates.
 
-              score_thresh: Predicted boxes are only output if their score is above score_thresh.
+           score_thresh: Predicted boxes are only output if their
+                         score is above score_thresh.
         """
         b = deepcopy(self)
         b.config['predict_options'] = ObjectDetectionConfig.PredictOptions(
-            merge_thresh = merge_thresh,
-            score_thresh = score_thresh)
+            merge_thresh=merge_thresh, score_thresh=score_thresh)
         return b

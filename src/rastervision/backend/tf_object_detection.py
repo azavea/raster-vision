@@ -26,14 +26,14 @@ from object_detection.protos.string_int_label_map_pb2 import (
 from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 
 from rastervision.backend import Backend
-from rastervision.labels.object_detection_labels import (ObjectDetectionLabels)
-from rastervision.utils.files import (get_local_path, upload_or_copy,
-                                      make_dir, download_if_needed,
-                                      file_to_str, sync_dir, start_sync)
+from rastervision.data import ObjectDetectionLabels
+from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
+                                      download_if_needed, sync_dir, start_sync)
 from rastervision.utils.misc import save_img
 
 TRAIN = 'train'
 VALIDATION = 'validation'
+
 
 def save_debug_image(im, labels, class_map, output_path):
     npboxes = labels.get_npboxes()
@@ -463,6 +463,7 @@ class TrainingPackage(object):
                 a config file for the TF Object Detection API. Examples can be
                 found here https://github.com/tensorflow/models/tree/master/research/object_detection/samples/configs  # noqa
         """
+
         # Parse configuration
         # We must remove 'nulls' that appear due to translating empty
         # messages. These appear when translating between text and JSON based
@@ -477,8 +478,7 @@ class TrainingPackage(object):
             return _d
 
         config = json_format.ParseDict(
-            remove_nulls(self.config.tfod_config),
-            TrainEvalPipelineConfig())
+            remove_nulls(self.config.tfod_config), TrainEvalPipelineConfig())
 
         # Update config using local paths.
         if config.train_config.fine_tune_checkpoint:
@@ -571,7 +571,8 @@ class TFObjectDetection(Backend):
             the local path to the scene's TFRecord
         """
         # TODO: Check if uint8
-        training_package = TrainingPackage(self.config.training_data_uri, self.config, tmp_dir)
+        training_package = TrainingPackage(self.config.training_data_uri,
+                                           self.config, tmp_dir)
         self.scene_training_packages.append(training_package)
         tf_examples = make_tf_examples(data, self.class_map)
         # Ensure directory is unique since scene id's could be shared between
@@ -583,9 +584,7 @@ class TFObjectDetection(Backend):
 
         return record_path
 
-    def process_sceneset_results(self,
-                                 training_results,
-                                 validation_results,
+    def process_sceneset_results(self, training_results, validation_results,
                                  tmp_dir):
         """After all scenes have been processed, merge all TFRecords
 
@@ -593,7 +592,8 @@ class TFObjectDetection(Backend):
             training_results: list of training scenes' TFRecords
             validation_results: list of validation scenes' TFRecords
         """
-        training_package = TrainingPackage(self.config.training_data_uri, self.config, tmp_dir)
+        training_package = TrainingPackage(self.config.training_data_uri,
+                                           self.config, tmp_dir)
 
         def _merge_training_results(results, split):
 
@@ -606,8 +606,7 @@ class TFObjectDetection(Backend):
 
             # Save debug chips.
             # TODO
-            #if self.config.debug:
-            if True:
+            if self.config.debug:
                 debug_zip_path = training_package.get_local_path(
                     training_package.get_debug_chips_uri(split))
                 with tempfile.TemporaryDirectory() as debug_dir:
@@ -633,11 +632,9 @@ class TFObjectDetection(Backend):
     def train(self, tmp_dir):
         # Download training data and update config file.
         training_package = TrainingPackage(self.config.training_data_uri,
-                                           self.config,
-                                           tmp_dir)
+                                           self.config, tmp_dir)
         training_package.download_data()
         config_path = training_package.download_config()
-
 
         # Setup output dirs.
         output_dir = get_local_path(self.config.training_output_uri, tmp_dir)
