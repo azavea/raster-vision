@@ -11,6 +11,12 @@ from rastervision.evaluation.default import (
     DefaultObjectDetectioneEvaluatorProvider,
     DefaultChipClassificationEvaluatorProvider)
 
+from typing import Union
+from rastervision.filesystem import FileSystem
+from rastervision.local_filesystem import LocalFileSystem
+from rastervision.s3_filesystem import S3FileSystem
+from rastervision.http_filesystem import HttpFileSystem
+
 
 class RegistryError(Exception):
     pass
@@ -106,6 +112,18 @@ class Registry:
             rv.LOCAL: rv.runner.LocalExperimentRunner,
             rv.AWS_BATCH: rv.runner.LocalExperimentRunner
         }
+
+        self.filesystems = [
+            (1, HttpFileSystem),
+            (2, S3FileSystem),
+            (2**64, LocalFileSystem)
+        ]
+
+    def get_file_system(self, uri: str) -> Union[FileSystem, None]:
+        for (priority, filesystem) in sorted(self.filesystems):
+            if filesystem.matches_uri(uri):
+                return filesystem
+        return None
 
     def get_config_builder(self, group, key):
         internal_builder = self._internal_config_builders.get((group, key))

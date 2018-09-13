@@ -1,3 +1,4 @@
+import rastervision as rv
 import io
 import os
 import urllib
