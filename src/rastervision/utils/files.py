@@ -171,26 +171,8 @@ def download_if_needed(uri, download_dir):
 
 
 def file_exists(uri):
-    parsed_uri = urlparse(uri)
-    if parsed_uri.scheme == 's3':
-        s3 = boto3.client('s3')
-        bucket = s3.Bucket(parsed_uri.netloc)
-        key = parsed_uri.path[1:]
-        objs = list(bucket.objects.filter(Prefix=key))
-        if len(objs) > 0 and objs[0].key == key:
-            return True
-        return False
-    elif parsed_uri.scheme in ['http', 'https']:
-        try:
-            response = urllib.request.urlopen(uri)
-            if response.getcode() == 200:
-                return int(response.headers['content-length']) > 0
-            else:
-                return False
-        except urllib.error.URLError:
-            return False
-    else:
-        return os.path.isfile(uri)
+    fs = rv._registry.get_file_system(uri)
+    return fs.file_exists(uri)
 
 
 def upload_or_copy(src_path, dst_uri):
