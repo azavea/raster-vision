@@ -9,21 +9,81 @@ from moto import mock_s3
 from rastervision.utils.files import (
     file_to_str, str_to_file, download_if_needed, upload_or_copy,
     NotReadableError, NotWritableError, load_json_config,
-    ProtobufParseException, make_dir, get_local_path)
+    ProtobufParseException, make_dir, get_local_path, file_exists)
 from rastervision.protos.model_config_pb2 import ModelConfig
 
 
 class TestMakeDir(unittest.TestCase):
     def setUp(self):
+        self.lorem = """ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+        eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+        enim ad minim veniam, quis nostrud exercitation ullamco
+        laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+        irure dolor in reprehenderit in voluptate velit esse cillum
+        dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+        cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.  """
+
+        # Mock S3 bucket
+        self.mock_s3 = mock_s3()
+        self.mock_s3.start()
+        self.s3 = boto3.client('s3')
+        self.bucket_name = 'mock_bucket'
+        self.s3.create_bucket(Bucket=self.bucket_name)
+
+        # Temporary directory
         self.temp_dir = tempfile.TemporaryDirectory()
 
     def tearDown(self):
         self.temp_dir.cleanup()
+        self.mock_s3.stop()
 
     def test_default_args(self):
         dir = os.path.join(self.temp_dir.name, 'hello')
         make_dir(dir)
         self.assertTrue(os.path.isdir(dir))
+
+    def test_file_exists_local_true(self):
+        path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
+        directory = os.path.dirname(path)
+        make_dir(directory, check_empty=False)
+
+        with open(path, 'w+') as file:
+            file.write(self.lorem)
+
+        self.assertTrue(file_exists(path))
+
+    def test_file_exists_local_false(self):
+        path = os.path.join(self.temp_dir.name, 'hello', 'hello.txt')
+        directory = os.path.dirname(path)
+        make_dir(directory, check_empty=False)
+
+        self.assertFalse(file_exists(path))
+
+    def test_file_exists_s3_true(self):
+        path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
+        directory = os.path.dirname(path)
+        make_dir(directory, check_empty=False)
+
+        with open(path, 'w+') as file:
+            file.write(self.lorem)
+
+        s3_path = 's3://{}/lorem.txt'.format(self.bucket_name)
+        upload_or_copy(path, s3_path)
+
+        self.assertTrue(file_exists(s3_path))
+
+    def test_file_exists_s3_false(self):
+        s3_path = 's3://{}/hello.txt'.format(self.bucket_name)
+        self.assertFalse(file_exists(s3_path))
+
+    def test_file_exists_http_true(self):
+        http_path = 'https://raw.githubusercontent.com/tensorflow/models/17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/README.md'
+        self.assertTrue(file_exists(http_path))
+
+    def test_file_exists_http_false(self):
+        http_path = 'https://raw.githubusercontent.com/tensorflow/models/17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/XXX'
+        self.assertFalse(file_exists(http_path))
 
     def test_check_empty(self):
         path = os.path.join(self.temp_dir.name, 'hello', 'hello.txt')

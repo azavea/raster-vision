@@ -1,3 +1,5 @@
+import os
+
 from rastervision.filesystem import FileSystem
 from typing import Union
 
@@ -8,7 +10,7 @@ class LocalFileSystem(FileSystem):
         return True
 
     def file_exists(uri: str) -> bool:
-        return True
+        return os.path.isfile(uri)
 
     def open(uri: str) -> Union[FileSystem, None]:
         return None
