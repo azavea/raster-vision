@@ -257,7 +257,7 @@ def file_to_str(file_uri):
                     'Could not read {}'.format(file_uri)) from e
     elif parsed_uri.scheme in ['http', 'https']:
         with urllib.request.urlopen(file_uri) as req:
-            return req.read().decode("utf8")
+            return req.read().decode('utf8')
     else:
         if not os.path.isfile(file_uri):
             raise NotReadableError('Could not read {}'.format(file_uri))

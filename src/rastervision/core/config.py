@@ -25,7 +25,7 @@ def set_nested_keys(target,
                         f(_target[key], _mods[key])
                     else:
                         raise ConfigError(
-                            "Error: cannot modify dict with value")
+                            'Error: cannot modify dict with value')
                 else:
                     _target[key] = _mods[key]
             else:
@@ -44,7 +44,7 @@ def set_nested_keys(target,
         d = set(searched_keys) - set(found_keys)
         if d:
             raise ConfigError(
-                "Mod keys not found in target dict: {}".format(d))
+                'Mod keys not found in target dict: {}'.format(d))
 
 
 class Config(ABC):

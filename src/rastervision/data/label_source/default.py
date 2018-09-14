@@ -23,7 +23,7 @@ class DefaultObjectDetectionGeoJSONSourceProvider(DefaultLabelSourceProvider):
     def handles(task_type, uri):
         if task_type == rv.OBJECT_DETECTION:
             ext = os.path.splitext(uri)[1]
-            return ext.lower() in [".json", ".geojson"]
+            return ext.lower() in ['.json', '.geojson']
         return False
 
     @staticmethod
@@ -39,7 +39,7 @@ class DefaultChipClassificationGeoJSONSourceProvider(
     def handles(task_type, uri):
         if task_type == rv.CHIP_CLASSIFICATION:
             ext = os.path.splitext(uri)[1]
-            return ext.lower() in [".json", ".geojson"]
+            return ext.lower() in ['.json', '.geojson']
         return False
 
     @staticmethod

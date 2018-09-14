@@ -23,7 +23,7 @@ class DefaultGeoTiffSourceProvider(DefaultRasterSourceProvider):
     @staticmethod
     def handles(uri):
         ext = os.path.splitext(uri)[1]
-        return ext.lower() in [".tif", ".tiff"]
+        return ext.lower() in ['.tif', '.tiff']
 
     @staticmethod
     def construct(uri, channel_order=None):

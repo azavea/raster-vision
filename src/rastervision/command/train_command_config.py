@@ -45,11 +45,11 @@ class TrainCommandConfigBuilder(CommandConfigBuilder):
     def build(self):
         if self.task is None:
             raise rv.ConfigError(
-                "Task not set. Use with_task or with_experiment")
+                'Task not set. Use with_task or with_experiment')
 
         if self.backend is None:
             raise rv.ConfigError(
-                "Backend not set. Use with_task or with_experiment")
+                'Backend not set. Use with_task or with_experiment')
 
         return TrainCommandConfig(self.task, self.backend)
 

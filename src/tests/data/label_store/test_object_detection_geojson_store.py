@@ -84,17 +84,17 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
         }
 
         self.linestring_geojson_dict = {
-            "type":
-            "FeatureCollection",
-            "features": [{
-                "type": "Feature",
-                "properties": {
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'properties': {
                     'score': 0.9,
                     'class_name': 'house'
                 },
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [[0., 0.], [0., 1.]]
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [[0., 0.], [0., 1.]]
                 }
             }]
         }
@@ -127,7 +127,7 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
             self.file_path, self.crs_transformer, self.class_map)
         labels1 = label_source.get_labels()
 
-        new_path = os.path.join(self.temp_dir.name, "test_save_reload.json")
+        new_path = os.path.join(self.temp_dir.name, 'test_save_reload.json')
 
         label_store = ObjectDetectionGeoJSONStore(
             new_path, self.crs_transformer, self.class_map)

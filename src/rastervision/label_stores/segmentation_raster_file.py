@@ -84,7 +84,7 @@ class SegmentationInputRasterFile(LabelStore):
         self.source = None
 
     def set_labels(self, source):
-        raise NotImplementedError("Method not applicable")
+        raise NotImplementedError('Method not applicable')
 
     def enough_target_pixels(self, window: Box, ioa_threshold: int,
                              target_classes: List[int]) -> bool:
@@ -145,10 +145,10 @@ class SegmentationInputRasterFile(LabelStore):
             return self.source_to_rv(packed)
 
     def extend(self, labels):
-        raise NotImplementedError("Method not applicable")
+        raise NotImplementedError('Method not applicable')
 
     def save(self):
-        raise NotImplementedError("Method not applicable")
+        raise NotImplementedError('Method not applicable')
 
 
 class SegmentationOutputRasterFile(LabelStore):

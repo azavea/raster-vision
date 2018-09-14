@@ -115,7 +115,7 @@ class Registry:
             # TODO: Search plugins
             pass
 
-        raise RegistryError("Unknown type {} for {} ".format(key, group))
+        raise RegistryError('Unknown type {} for {} '.format(key, group))
 
     def get_default_raster_source_provider(self, s):
         """
@@ -128,7 +128,7 @@ class Registry:
         # TODO: Search plugins
 
         raise RegistryError(
-            "No DefaultRasterSourceProvider found for {}".format(s))
+            'No DefaultRasterSourceProvider found for {}'.format(s))
 
     def get_default_label_source_provider(self, task_type, s):
         """
@@ -140,8 +140,8 @@ class Registry:
 
         # TODO: Search plugins
 
-        raise RegistryError("No DefaultLabelSourceProvider "
-                            "found for {} and task type {}".format(
+        raise RegistryError('No DefaultLabelSourceProvider '
+                            'found for {} and task type {}'.format(
                                 s, task_type))
 
     def get_default_label_store_provider(self, task_type, s=None):
@@ -160,12 +160,12 @@ class Registry:
                     return provider
 
         if s:
-            raise RegistryError("No DefaultLabelStoreProvider "
-                                "found for {} and task type {}".format(
+            raise RegistryError('No DefaultLabelStoreProvider '
+                                'found for {} and task type {}'.format(
                                     s, task_type))
         else:
-            raise RegistryError("No DefaultLabelStoreProvider "
-                                "found for task type {}".format(task_type))
+            raise RegistryError('No DefaultLabelStoreProvider '
+                                'found for task type {}'.format(task_type))
 
     def get_default_evaluator_provider(self, task_type):
         """
@@ -178,14 +178,14 @@ class Registry:
             if provider.is_default_for(task_type):
                 return provider
 
-        raise RegistryError("No DefaultEvaluatorProvider "
-                            "found for task type {}".format(task_type))
+        raise RegistryError('No DefaultEvaluatorProvider '
+                            'found for task type {}'.format(task_type))
 
     def get_command_config_builder(self, command_type):
         builder = self.command_config_builders.get(command_type)
         if not builder:
             raise RegistryError(
-                "No command found for type {}".format(command_type))
+                'No command found for type {}'.format(command_type))
         return builder
 
     def get_experiment_runner(self, runner_type):
@@ -193,6 +193,6 @@ class Registry:
         if not runner:
             # TODO: Search plugins
             raise RegistryError(
-                "No experiment runner for type {}".format(runner_type))
+                'No experiment runner for type {}'.format(runner_type))
 
         return runner()

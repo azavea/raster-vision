@@ -25,7 +25,7 @@ class NodataAugmentorConfigBuilder(AugmentorConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = {"aug_prob": prev.aug_prob}
+            config = {'aug_prob': prev.aug_prob}
         super().__init__(NodataAugmentorConfig, config)
 
     @staticmethod

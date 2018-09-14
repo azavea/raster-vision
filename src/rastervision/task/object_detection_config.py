@@ -16,7 +16,7 @@ class ObjectDetectionConfig(TaskConfig):
         def __init__(self,
                      neg_ratio=1,
                      ioa_thresh=0.8,
-                     window_method="chip",
+                     window_method='chip',
                      label_buffer=0.0):
             self.neg_ratio = neg_ratio
             self.ioa_thresh = ioa_thresh
@@ -77,13 +77,13 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
         config = {}
         if prev:
             config = {
-                "predict_batch_size": prev.predict_batch_size,
-                "predict_package_uri": prev.predict_package_uri,
-                "debug": prev.debug,
-                "class_map": prev.class_map,
-                "chip_size": prev.chip_size,
-                "chip_options": prev.chip_options,
-                "predict_options": prev.predict_options
+                'predict_batch_size': prev.predict_batch_size,
+                'predict_package_uri': prev.predict_package_uri,
+                'debug': prev.debug,
+                'class_map': prev.class_map,
+                'chip_size': prev.chip_size,
+                'chip_options': prev.chip_options,
+                'predict_options': prev.predict_options
             }
         super().__init__(ObjectDetectionConfig, config)
 
@@ -131,7 +131,7 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
     def with_chip_options(self,
                           neg_ratio=1,
                           ioa_thresh=0.8,
-                          window_method="chip",
+                          window_method='chip',
                           label_buffer=0.0):
         """Sets object detection configurations for the Chip command
 

@@ -50,13 +50,13 @@ class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
     def build(self):
         if self.task is None:
             raise rv.ConfigError(
-                "task not set. Use with_task or with_experiment")
+                'task not set. Use with_task or with_experiment')
         if self.scenes is None:
             raise rv.ConfigError(
-                "scenes not set. Use with_scenes or with_experiment")
+                'scenes not set. Use with_scenes or with_experiment')
         if self.analyzers is None:
             raise rv.ConfigError(
-                "analyzers not set. Use with_analyzers or with_experiment")
+                'analyzers not set. Use with_analyzers or with_experiment')
         return AnalyzeCommandConfig(self.task, self.scenes, self.analyzers)
 
     def from_proto(self, msg):

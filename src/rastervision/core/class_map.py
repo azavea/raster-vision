@@ -22,9 +22,9 @@ class ClassItem(object):
         return False
 
     def __repr__(self):
-        s = "CLASS ITEM: [{}] {}".format(self.id, self.name)
+        s = 'CLASS ITEM: [{}] {}'.format(self.id, self.name)
         if self.color:
-            s += " ({})".format(self.color)
+            s += ' ({})'.format(self.color)
         return s
 
 

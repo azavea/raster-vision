@@ -122,27 +122,27 @@ class ExperimentConfigBuilder(ConfigBuilder):
         config = {}
         if prev:
             config = {
-                "id": prev.id,
-                "task": prev.task,
-                "backend": prev.backend,
-                "dataset": prev.dataset,
-                "analyzers": prev.analyzers,
-                "evaluators": prev.evaluators,
-                "analyze_uri": prev.analyze_uri,
-                "chip_uri": prev.chip_uri,
-                "train_uri": prev.train_uri,
-                "predict_uri": prev.predict_uri,
-                "eval_uri": prev.eval_uri,
-                "bundle_uri": prev.bundle_uri
+                'id': prev.id,
+                'task': prev.task,
+                'backend': prev.backend,
+                'dataset': prev.dataset,
+                'analyzers': prev.analyzers,
+                'evaluators': prev.evaluators,
+                'analyze_uri': prev.analyze_uri,
+                'chip_uri': prev.chip_uri,
+                'train_uri': prev.train_uri,
+                'predict_uri': prev.predict_uri,
+                'eval_uri': prev.eval_uri,
+                'bundle_uri': prev.bundle_uri
             }
         super().__init__(ExperimentConfig, config)
         self.root_uri = None  # TODO: Store with experiment config?
-        self.analyze_key = "default"
-        self.chip_key = "default"
-        self.train_key = "default"
-        self.predict_key = "default"
-        self.eval_key = "default"
-        self.bundle_key = "default"
+        self.analyze_key = 'default'
+        self.chip_key = 'default'
+        self.train_key = 'default'
+        self.predict_key = 'default'
+        self.eval_key = 'default'
+        self.bundle_key = 'default'
 
     def build(self):
         self.validate()

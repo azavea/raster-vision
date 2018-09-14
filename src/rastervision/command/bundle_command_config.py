@@ -49,15 +49,15 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
     def build(self):
         if self.task is None:
             raise rv.ConfigError(
-                "Task not set. Use with_task or with_experiment")
+                'Task not set. Use with_task or with_experiment')
 
         if self.backend is None:
             raise rv.ConfigError(
-                "Backend not set. Use with_backend or with_experiment")
+                'Backend not set. Use with_backend or with_experiment')
 
         if self.scene is None:
             raise rv.ConfigError(
-                "Template scene not set. Use with_scene or with_experiment")
+                'Template scene not set. Use with_scene or with_experiment')
 
         return PredictCommandConfig(self.task, self.backend, self.scene,
                                     self.analyzers)

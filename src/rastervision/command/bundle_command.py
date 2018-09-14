@@ -19,9 +19,9 @@ class BundleCommand(Command):
         self.analyzer_configs = analyzer_configs
 
     def run(self, tmp_dir):
-        bundle_dir = os.path.join(tmp_dir, "bundle")
+        bundle_dir = os.path.join(tmp_dir, 'bundle')
         make_dir(bundle_dir)
-        package_path = os.path.join(tmp_dir, "predict_package.zip")
+        package_path = os.path.join(tmp_dir, 'predict_package.zip')
         bundle_files = []
         bundle_files.extend(self.task_config.save_bundle_files(bundle_dir))
         bundle_files.extend(self.backend_config.save_bundle_files(bundle_dir))
@@ -30,7 +30,7 @@ class BundleCommand(Command):
             bundle_files.extend(analyzer.save_bundle_files(bundle_dir))
 
         # Save bundle command config
-        bundle_config_path = os.path.join(tmp_dir, "bundle_config.json")
+        bundle_config_path = os.path.join(tmp_dir, 'bundle_config.json')
         bundle_json = json_format.MessageToJson(self.bundle_config.to_proto())
         with open(bundle_config_path, 'w') as f:
             f.write(bundle_json)

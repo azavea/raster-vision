@@ -20,4 +20,4 @@ COPY scripts/run_rv /usr/local/bin/
 COPY ./ /opt/src/
 RUN /opt/src/scripts/compile
 
-CMD ["bash"]
+CMD ['bash']

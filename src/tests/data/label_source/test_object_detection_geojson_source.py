@@ -89,17 +89,17 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
         }
 
         self.linestring_geojson_dict = {
-            "type":
-            "FeatureCollection",
-            "features": [{
-                "type": "Feature",
-                "properties": {
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'properties': {
                     'score': 0.9,
                     'class_name': 'house'
                 },
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [[0., 0.], [0., 1.]]
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [[0., 0.], [0., 1.]]
                 }
             }]
         }

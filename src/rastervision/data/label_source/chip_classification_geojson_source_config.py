@@ -30,13 +30,13 @@ class ChipClassificationGeoJSONSourceConfig(LabelSourceConfig):
     def to_proto(self):
         msg = super().to_proto()
         d = {
-            "uri": self.uri,
-            "ioa_thresh": self.ioa_thresh,
-            "use_intersection_over_cell": self.use_intersection_over_cell,
-            "pick_min_class_id": self.pick_min_class_id,
-            "background_class_id": self.background_class_id,
-            "cell_size": self.cell_size,
-            "infer_cells": self.infer_cells
+            'uri': self.uri,
+            'ioa_thresh': self.ioa_thresh,
+            'use_intersection_over_cell': self.use_intersection_over_cell,
+            'pick_min_class_id': self.pick_min_class_id,
+            'background_class_id': self.background_class_id,
+            'cell_size': self.cell_size,
+            'infer_cells': self.infer_cells
         }
 
         opts = json_format.ParseDict(
@@ -69,13 +69,13 @@ class ChipClassificationGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
         config = {}
         if prev:
             config = {
-                "uri": prev.uri,
-                "ioa_thresh": prev.ioa_thresh,
-                "use_intersection_over_cell": prev.use_intersection_over_cell,
-                "pick_min_class_id": prev.pick_min_class_id,
-                "background_class_id": prev.background_class_id,
-                "cell_size": prev.cell_size,
-                "infer_cells": prev.infer_cells
+                'uri': prev.uri,
+                'ioa_thresh': prev.ioa_thresh,
+                'use_intersection_over_cell': prev.use_intersection_over_cell,
+                'pick_min_class_id': prev.pick_min_class_id,
+                'background_class_id': prev.background_class_id,
+                'cell_size': prev.cell_size,
+                'infer_cells': prev.infer_cells
             }
 
         super().__init__(ChipClassificationGeoJSONSourceConfig, config)
@@ -149,7 +149,7 @@ class ChipClassificationGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
         return b
 
     def with_cell_size(self, cell_size):
-        "Sets the cell size of the chips." ""
+        """Sets the cell size of the chips."""
         b = deepcopy(self)
         b.config['cell_size'] = cell_size
         return b

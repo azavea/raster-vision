@@ -17,5 +17,5 @@ def run(command_config_uri):
         command.run(tmp_dir)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run()

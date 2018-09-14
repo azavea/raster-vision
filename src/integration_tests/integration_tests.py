@@ -41,11 +41,11 @@ class TestError():
 
 
 def get_test_dir(test):
-    return os.path.join(TEST_ROOT_DIR, test.lower().replace("-", "_"))
+    return os.path.join(TEST_ROOT_DIR, test.lower().replace('-', '_'))
 
 
 def get_expected_eval_path(test):
-    return os.path.join("{}_tests".format(get_test_dir(test)),
+    return os.path.join('{}_tests'.format(get_test_dir(test)),
                         'expected-output/eval.json')
 
 
@@ -107,7 +107,7 @@ def get_experiment(test, tmp_dir):
         return ChipClassificationIntegrationTest().exp_main(
             os.path.join(tmp_dir, test.lower()))
 
-    raise Exception("Unknown test {}".format(test))
+    raise Exception('Unknown test {}'.format(test))
 
 
 def run_test(test, temp_dir):

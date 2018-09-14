@@ -32,7 +32,7 @@ class ObjectDetectionGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = {"uri": prev.uri}
+            config = {'uri': prev.uri}
 
         super().__init__(ObjectDetectionGeoJSONSourceConfig, config)
 

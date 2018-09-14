@@ -80,7 +80,7 @@ class TestChipClassificationGeoJSONStore(unittest.TestCase):
 
         labels1 = label_source.get_labels()
 
-        new_path = os.path.join(self.temp_dir.name, "test_save_reload.json")
+        new_path = os.path.join(self.temp_dir.name, 'test_save_reload.json')
 
         label_store = ChipClassificationGeoJSONStore(
             new_path, self.crs_transformer, self.class_map)

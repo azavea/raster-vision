@@ -9,9 +9,9 @@ from tests import data_file_path
 
 class TestTFObjectDetectionConfig(unittest.TestCase):
     template_uri = data_file_path(
-        "tf_object_detection/embedded_ssd_mobilenet_v1_coco.config")
+        'tf_object_detection/embedded_ssd_mobilenet_v1_coco.config')
 
-    def generate_task(self, classes=["one", "two"], chip_size=300):
+    def generate_task(self, classes=['one', 'two'], chip_size=300):
         return rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
                             .with_classes(classes) \
                             .with_chip_size(chip_size) \
@@ -27,28 +27,28 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
                             .with_batch_size(100) \
                             .build()
 
-        self.assertEqual(b.tfod_config["trainConfig"]["batchSize"], 100)
-        self.assertEqual(b.tfod_config["model"]["ssd"]["numClasses"], 2)
+        self.assertEqual(b.tfod_config['trainConfig']['batchSize'], 100)
+        self.assertEqual(b.tfod_config['model']['ssd']['numClasses'], 2)
 
     def test_build_task_from_proto(self):
         config = {
-            "backend_type": rv.TF_OBJECT_DETECTION,
-            "tf_object_detection_config": {
-                "tfod_config": {
-                    "model": {
-                        "dummy": {
-                            "numClasses": 5,
-                            "imageResizer": {
-                                "keepAspectRatioResizer": {
-                                    "minDimension": 300,
-                                    "maxDimension": 300
+            'backend_type': rv.TF_OBJECT_DETECTION,
+            'tf_object_detection_config': {
+                'tfod_config': {
+                    'model': {
+                        'dummy': {
+                            'numClasses': 5,
+                            'imageResizer': {
+                                'keepAspectRatioResizer': {
+                                    'minDimension': 300,
+                                    'maxDimension': 300
                                 }
                             }
                         }
                     },
-                    "trainConfig": {
-                        "batchSize": 1,
-                        "numSteps": 200
+                    'trainConfig': {
+                        'batchSize': 1,
+                        'numSteps': 200
                     }
                 }
             }
@@ -57,8 +57,8 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
         msg = json_format.ParseDict(config, BackendConfigMsg())
         b = rv.BackendConfig.from_proto(msg)
 
-        self.assertEqual(b.tfod_config["trainConfig"]["batchSize"], 1)
-        self.assertEqual(b.tfod_config["trainConfig"]["numSteps"], 200)
+        self.assertEqual(b.tfod_config['trainConfig']['batchSize'], 1)
+        self.assertEqual(b.tfod_config['trainConfig']['numSteps'], 200)
 
     def test_create_proto_from_backend(self):
         t = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
@@ -71,8 +71,8 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
 
         self.assertEqual(msg.backend_type, rv.TF_OBJECT_DETECTION)
         self.assertEqual(
-            msg.tf_object_detection_config.tfod_config["trainConfig"][
-                "batchSize"], 100)
+            msg.tf_object_detection_config.tfod_config['trainConfig'][
+                'batchSize'], 100)
 
     def test_requires_backend(self):
         with self.assertRaises(rv.ConfigError):
@@ -91,8 +91,8 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
         b1 = bb1.build()
         b2 = bb2.build()
 
-        self.assertEqual(b1.tfod_config["trainConfig"]["batchSize"], 100)
-        self.assertEqual(b2.tfod_config["trainConfig"]["batchSize"], 200)
+        self.assertEqual(b1.tfod_config['trainConfig']['batchSize'], 100)
+        self.assertEqual(b2.tfod_config['trainConfig']['batchSize'], 200)
 
     def test_raise_error_on_no_backend_field(self):
         # Will raise since this backend template does not have num_steps
@@ -109,13 +109,13 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
             rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                             .with_task(self.generate_task()) \
                             .with_template(self.get_template_uri()) \
-                            .with_config({"key_does_not_exist": 3}) \
+                            .with_config({'key_does_not_exist': 3}) \
                             .build()
 
     def test_sets_pretrained_model(self):
-        pretrained_model_uri = ("http://download.tensorflow.org/"
-                                "models/object_detection/"
-                                "ssd_mobilenet_v1_coco_2017_11_17.tar.gz")
+        pretrained_model_uri = ('http://download.tensorflow.org/'
+                                'models/object_detection/'
+                                'ssd_mobilenet_v1_coco_2017_11_17.tar.gz')
         b = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                             .with_task(self.generate_task()) \
                             .with_template(self.get_template_uri()) \
@@ -143,10 +143,10 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
                             .build()
 
         self.assertEqual(b.pretrained_model_uri,
-                         ("http://download.tensorflow.org/"
-                          "models/object_detection/"
-                          "ssd_mobilenet_v1_coco_2017_11_17.tar.gz"))
+                         ('http://download.tensorflow.org/'
+                          'models/object_detection/'
+                          'ssd_mobilenet_v1_coco_2017_11_17.tar.gz'))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

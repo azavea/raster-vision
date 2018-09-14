@@ -43,7 +43,7 @@ class TestGeoTiffSource(unittest.TestCase):
             np.testing.assert_equal(chip, np.zeros(chip.shape))
 
     def test_gets_raw_chip(self):
-        img_path = data_file_path("small-rgb-tile.tif")
+        img_path = data_file_path('small-rgb-tile.tif')
         channel_order = [0, 1]
 
         source = rv.data.GeoTiffSourceConfig(uris=[img_path],
@@ -55,7 +55,7 @@ class TestGeoTiffSource(unittest.TestCase):
 
     def test_uses_channel_order(self):
         with TemporaryDirectory() as tmp_dir:
-            img_path = os.path.join(tmp_dir, "img.tif")
+            img_path = os.path.join(tmp_dir, 'img.tif')
             chip = np.ones((2, 2, 4)).astype(np.uint8)
             chip[:, :, :] *= np.array([0, 1, 2, 3]).astype(np.uint8)
             save_img(chip, img_path)
@@ -74,7 +74,7 @@ class TestGeoTiffSource(unittest.TestCase):
 
     def test_with_stats_transformer(self):
         config = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                      .with_uri("dummy") \
+                                      .with_uri('dummy') \
                                       .with_stats_transformer() \
                                       .build()
 

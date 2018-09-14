@@ -51,7 +51,7 @@ def construct_class_map(
                 item_list = classes
         result = ClassMap(item_list)
     else:
-        raise Exception("Cannot convert type {} to ClassMap".format(
+        raise Exception('Cannot convert type {} to ClassMap'.format(
             type(classes)))
 
     return result

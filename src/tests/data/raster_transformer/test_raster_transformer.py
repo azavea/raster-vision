@@ -15,7 +15,7 @@ class TestRasterTransformer(unittest.TestCase):
         raster_stats.stds = list(np.ones((4, )) * 2)
 
         with TemporaryDirectory() as tmp_dir:
-            stats_uri = os.path.join(tmp_dir, "stats.json")
+            stats_uri = os.path.join(tmp_dir, 'stats.json')
             raster_stats.save(stats_uri)
 
             # All values have z-score of 1, which translates to

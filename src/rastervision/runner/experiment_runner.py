@@ -24,14 +24,14 @@ class ExperimentRunner(ABC):
             command_definitions)
         if missing_inputs:
             # TODO: Replace with logging?
-            s = ""
+            s = ''
             for exp_id in missing_inputs:
-                s += "In {}:\n\t{}\n".format(
+                s += 'In {}:\n\t{}\n'.format(
                     exp_id, '\t{}\n'.join(missing_inputs[exp_id]))
 
-            raise rv.ConfigError("There were missing input URIs "
-                                 "that are required, but were not "
-                                 "able to be derived: \n{}".format(s))
+            raise rv.ConfigError('There were missing input URIs '
+                                 'that are required, but were not '
+                                 'able to be derived: \n{}'.format(s))
 
         # Remove duplicate commands, defining equality for a command by
         # the tuple (command_type, input_uris, output_uris)
@@ -49,15 +49,15 @@ class ExperimentRunner(ABC):
                 command_type = c_defs[0].command_config.command_type
                 experiments = ', '.join(map(lambda c: c.experiment_id, c_defs))
                 clashing_msgs.append(
-                    "The {} command in the follwoing experiments "
-                    "output {}, but are not equal: {}".format(
+                    'The {} command in the follwoing experiments '
+                    'output {}, but are not equal: {}'.format(
                         command_type, output_uri, experiments))
             # TODO: Replace with logging?
-            s = "\t\n".join(clashing_msgs)
+            s = '\t\n'.join(clashing_msgs)
 
             raise rv.ConfigurationError(
-                "ERROR: Command outputs will"
-                "override each other: \n{}\n".format(s))
+                'ERROR: Command outputs will'
+                'override each other: \n{}\n'.format(s))
 
         command_dag = CommandDAG(unique_commands, rerun_commands)
 

@@ -24,7 +24,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
         for command_id in command_dag.get_sorted_command_ids():
             command_config = command_dag.get_command(command_id)
             command_root_uri = command_config.root_uri
-            command_uri = os.path.join(command_root_uri, "command-config.json")
+            command_uri = os.path.join(command_root_uri, 'command-config.json')
             save_json_config(command_config.to_proto(), command_uri)
 
             parent_job_ids = []
@@ -32,9 +32,9 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                     command_id):
                 if upstream_id not in ids_to_job:
                     raise Exception(
-                        "{} command has parent command of {}, "
-                        "but does not exist in previous batch submissions - "
-                        "topological sort on command_dag error.")
+                        '{} command has parent command of {}, '
+                        'but does not exist in previous batch submissions - '
+                        'topological sort on command_dag error.')
                 parent_job_ids.append(ids_to_job(upstream_id))
 
             batch_run_command = make_command(command_uri)

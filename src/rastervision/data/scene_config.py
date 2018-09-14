@@ -105,10 +105,10 @@ class SceneConfigBuilder(ConfigBuilder):
         config = {}
         if prev:
             config = {
-                "scene_id": prev.scene_id,
-                "raster_source": prev.raster_source,
-                "label_source": prev.label_source,
-                "label_store": prev.label_store
+                'scene_id': prev.scene_id,
+                'raster_source': prev.raster_source,
+                'label_source': prev.label_source,
+                'label_store': prev.label_store
             }
         super().__init__(SceneConfig, config)
         self.task = None
@@ -184,7 +184,7 @@ class SceneConfigBuilder(ConfigBuilder):
             if not self.task:
                 raise rv.ConfigError(
                     "You must set a task with '.with_task' before "
-                    "creating a default label store for {}".format(
+                    'creating a default label store for {}'.format(
                         label_source))
             provider = rv._registry.get_default_label_source_provider(
                 self.task.task_type, label_source)
@@ -215,7 +215,7 @@ class SceneConfigBuilder(ConfigBuilder):
             if not self.task:
                 raise rv.ConfigError(
                     "You must set a task with '.with_task' before "
-                    "creating a default label store for {}".format(
+                    'creating a default label store for {}'.format(
                         label_store))
             provider = rv._registry.get_default_label_store_provider(
                 self.task.task_type, label_store)
@@ -224,7 +224,7 @@ class SceneConfigBuilder(ConfigBuilder):
             if not self.task:
                 raise rv.ConfigError(
                     "You must set a task with '.with_task' before "
-                    "creating a default label store.")
+                    'creating a default label store.')
             provider = rv._registry.get_default_label_store_provider(
                 self.task.task_type)
             b.config['label_store'] = provider.construct()

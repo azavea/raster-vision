@@ -70,8 +70,8 @@ class BackendConfigBuilder(ConfigBuilder):
         """
         if task.task_type not in self._applicable_tasks():
             raise Exception(
-                "Backend of type {} cannot be applied to task type {}".format(
-                    task.task_type, self.backend_type))
+                'Backend of type {} cannot be applied to task type {}'
+                .format(task.task_type, self.backend_type))
         b = deepcopy(self)
         b.task = task
         b = b._process_task()
@@ -95,7 +95,7 @@ class BackendConfigBuilder(ConfigBuilder):
         """
         model_defaults = {}
         model_defaults_path = os.path.join(
-            os.path.dirname(__file__), "model_defaults.json")
+            os.path.dirname(__file__), 'model_defaults.json')
         with open(model_defaults_path) as f:
             model_defaults = json.loads(f.read())
 
@@ -105,10 +105,10 @@ class BackendConfigBuilder(ConfigBuilder):
                 return self._load_model_defaults(
                     backend_defaults[model_defaults_key])
             else:
-                raise rv.ConfigError("No defaults found for model key {}"
+                raise rv.ConfigError('No defaults found for model key {}'
                                      .format(model_defaults_key))
         else:
-            raise rv.ConfigError("No model defaults for backend {}"
+            raise rv.ConfigError('No model defaults for backend {}'
                                  .format(self.backend_type))
         return self
 

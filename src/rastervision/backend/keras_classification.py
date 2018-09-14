@@ -122,7 +122,7 @@ class ModelFiles(FileGroup):
                 pretrained_model_uri)
 
         # Save an updated copy of the config file.
-        config_path = os.path.join(self.tmp_dir, "kc_config.json")
+        config_path = os.path.join(self.tmp_dir, 'kc_config.json')
         config_str = json_format.MessageToJson(config)
         with open(config_path, 'w') as config_file:
             config_file.write(config_str)

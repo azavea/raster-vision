@@ -10,12 +10,12 @@ from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
 
 # Default location to Tensorflow Object Detection's scripts.
-DEFAULT_SCRIPT_TRAIN = "/opt/tf-models/object_detection/train.py"
-DEFAULT_SCRIPT_EVAL = "/opt/tf-models/object_detection/eval.py"
-DEFAULT_SCRIPT_EXPORT = "/opt/tf-models/object_detection/export_inference_graph.py"
+DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/object_detection/train.py'
+DEFAULT_SCRIPT_EVAL = '/opt/tf-models/object_detection/eval.py'
+DEFAULT_SCRIPT_EXPORT = '/opt/tf-models/object_detection/export_inference_graph.py'
 CHIP_OUTPUT_FILES = [
-    "label-map.pbtxt", "train-debug-chips.zip", "train.record",
-    "validation-debug-chips.zip", "validation.record"
+    'label-map.pbtxt', 'train-debug-chips.zip', 'train.record',
+    'validation-debug-chips.zip', 'validation.record'
 ]
 
 
@@ -65,12 +65,12 @@ class TFObjectDetectionConfig(BackendConfig):
 
     def to_proto(self):
         d = {
-            "sync_interval": self.train_options.sync_interval,
-            "do_monitoring": self.train_options.do_monitoring,
-            "train_py": self.script_locations.train_uri,
-            "eval_py": self.script_locations.eval_uri,
-            "export_py": self.script_locations.export_uri,
-            "tfod_config": self.tfod_config
+            'sync_interval': self.train_options.sync_interval,
+            'do_monitoring': self.train_options.do_monitoring,
+            'train_py': self.script_locations.train_uri,
+            'eval_py': self.script_locations.eval_uri,
+            'export_py': self.script_locations.export_uri,
+            'tfod_config': self.tfod_config
         }
 
         conf = json_format.ParseDict(
@@ -106,7 +106,7 @@ class TFObjectDetectionConfig(BackendConfig):
             io_def.add_inputs(inputs)
 
             # TODO: Change? Or make configurable?
-            conf.model_uri = os.path.join(conf.training_output_uri, "model")
+            conf.model_uri = os.path.join(conf.training_output_uri, 'model')
             io_def.add_output(conf.model_uri)
         if command_type == rv.PREDICT:
             io_def.add_input(conf.model_uri)
@@ -119,14 +119,14 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         config = {}
         if prev:
             config = {
-                "tfod_config": prev.tfod_config,
-                "pretrained_model_uri": prev.pretrained_model_uri,
-                "train_options": prev.train_options,
-                "script_locations": prev.script_locations,
-                "debug": prev.debug,
-                "training_data_uri": prev.trainind_data_uri,
-                "training_output_uri": prev.training_output_uri,
-                "model_uri": prev.model_uri
+                'tfod_config': prev.tfod_config,
+                'pretrained_model_uri': prev.pretrained_model_uri,
+                'train_options': prev.train_options,
+                'script_locations': prev.script_locations,
+                'debug': prev.debug,
+                'training_data_uri': prev.trainind_data_uri,
+                'training_output_uri': prev.training_output_uri,
+                'model_uri': prev.model_uri
             }
         super().__init__(rv.TF_OBJECT_DETECTION, TFObjectDetectionConfig,
                          config, prev)
@@ -156,10 +156,10 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
     def validate(self):
         super().validate()
         if not self.config.get('tfod_config'):
-            raise rv.ConfigError("You must specify a template for the backend "
+            raise rv.ConfigError('You must specify a template for the backend '
                                  "configuration - use 'with_template'.")
         if self.require_task and not self.task:
-            raise rv.ConfigError("You must specify the task this backend "
+            raise rv.ConfigError('You must specify the task this backend '
                                  "is for - use 'with_task'.")
         return True
 
@@ -174,7 +174,7 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         # Check if a pretrained model was assigned.
         pretrained_model = b.config.get('pretrained_model_uri')
         if pretrained_model:
-            b = b.with_config({"fineTuneCheckpoint": pretrained_model})
+            b = b.with_config({'fineTuneCheckpoint': pretrained_model})
 
         for config_mod, ignore_missing_keys in b.config_mods:
             set_nested_keys(b.config['tfod_config'], config_mod,
@@ -188,15 +188,15 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
     def _process_task(self):
         return self.with_config(
             {
-                "numClasses": len(self.task.class_map.get_items()),
-                "imageResizer": {
-                    "fixedShapeResizer": {
-                        "height": self.task.chip_size,
-                        "width": self.task.chip_size
+                'numClasses': len(self.task.class_map.get_items()),
+                'imageResizer': {
+                    'fixedShapeResizer': {
+                        'height': self.task.chip_size,
+                        'width': self.task.chip_size
                     },
-                    "keepAspectRatioResizer": {
-                        "minDimension": self.task.chip_size,
-                        "maxDimension": self.task.chip_size
+                    'keepAspectRatioResizer': {
+                        'minDimension': self.task.chip_size,
+                        'maxDimension': self.task.chip_size
                     }
                 }
             },
@@ -206,18 +206,18 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         """Loads defaults. Expected keys are "pretrained_model_uri" and "pipeline_config_uri",
            neither of which is required.
         """
-        expected_keys = ["pretrained_model_uri", "pipeline_config_uri"]
+        expected_keys = ['pretrained_model_uri', 'pipeline_config_uri']
         unknown_keys = set(model_defaults.keys()) - set(expected_keys)
         if unknown_keys:
-            raise rv.ConfigError("Unexpected keys in model defaults:"
-                                 " {}. Expected keys: {}".format(
+            raise rv.ConfigError('Unexpected keys in model defaults:'
+                                 ' {}. Expected keys: {}'.format(
                                      unknown_keys, expected_keys))
 
         b = self
-        if "pretrained_model_uri" in model_defaults:
-            b = b.with_pretrained_model(model_defaults["pretrained_model_uri"])
-        if "pipeline_config_uri" in model_defaults:
-            b = b.with_template(model_defaults["pipeline_config_uri"])
+        if 'pretrained_model_uri' in model_defaults:
+            b = b.with_pretrained_model(model_defaults['pretrained_model_uri'])
+        if 'pipeline_config_uri' in model_defaults:
+            b = b.with_template(model_defaults['pipeline_config_uri'])
         return b
 
     def with_template(self, template):
@@ -249,10 +249,10 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_batch_size(self, batch_size):
-        return self.with_config({"trainConfig": {"batchSize": batch_size}})
+        return self.with_config({'trainConfig': {'batchSize': batch_size}})
 
     def with_num_steps(self, num_steps):
-        return self.with_config({"trainConfig": {"numSteps": num_steps}})
+        return self.with_config({'trainConfig': {'numSteps': num_steps}})
 
     def with_config(self, config_mod, ignore_missing_keys=False):
         """Given a dict, modify the tensorflow pipeline configuration

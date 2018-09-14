@@ -39,9 +39,9 @@ class ImageSourceConfigBuilder(RasterSourceConfigBuilder):
         config = {}
         if prev:
             config = {
-                "uri": prev.uri,
-                "transformers": prev.transformers,
-                "channel_order": prev.channel_order
+                'uri': prev.uri,
+                'transformers': prev.transformers,
+                'channel_order': prev.channel_order
             }
 
         super().__init__(ImageSourceConfig, config)

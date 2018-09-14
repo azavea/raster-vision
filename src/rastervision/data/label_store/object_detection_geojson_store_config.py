@@ -32,7 +32,7 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
                 uri = None
                 for c in context:
                     if isinstance(c, rv.SceneConfig):
-                        uri = os.path.join(root, "{}.json".format(c.scene_id))
+                        uri = os.path.join(root, '{}.json'.format(c.scene_id))
                 if uri:
                     conf = conf.to_builder() \
                                .with_uri(uri) \
@@ -40,8 +40,8 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
                     io_def.add_output(uri)
                 else:
                     raise rv.ConfigError(
-                        "ObjectDetectionGeoJSONStoreConfig has no "
-                        "URI set, and is not associated with a SceneConfig.")
+                        'ObjectDetectionGeoJSONStoreConfig has no '
+                        'URI set, and is not associated with a SceneConfig.')
 
             io_def.add_output(conf.uri)
 
@@ -49,7 +49,7 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
             if self.uri:
                 io_def.add_input(self.uri)
             else:
-                msg = "No URI set for ObjectDetectionGeoJSONStoreConfig"
+                msg = 'No URI set for ObjectDetectionGeoJSONStoreConfig'
                 io_def.add_missing(msg)
 
         return (conf, io_def)
@@ -59,7 +59,7 @@ class ObjectDetectionGeoJSONStoreConfigBuilder(LabelStoreConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = {"uri": prev.uri}
+            config = {'uri': prev.uri}
 
         super().__init__(ObjectDetectionGeoJSONStoreConfig, config)
 

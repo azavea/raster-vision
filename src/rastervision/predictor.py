@@ -27,7 +27,7 @@ class Predictor():
             package_zip.extractall(path=package_dir)
 
         # Read bundle command config
-        with open(os.path.join(package_dir, "bundle.json")) as f:
+        with open(os.path.join(package_dir, 'bundle.json')) as f:
             bundle_config_json = f.read()
         bundle_config = json_format.ParseJson(bundle_config_json,
                                               CommandConfigMsg.BundleConfig())
@@ -39,7 +39,7 @@ class Predictor():
         scene_builder = rv.SceneConfig.from_proto(bundle_config.scene) \
                                       .load_bundle_files(package_dir) \
                                       .to_builder() \
-                                      .with_scene_id("PREDICTOR")
+                                      .with_scene_id('PREDICTOR')
 
         if channel_order:
             scene_builder = scene_builder.with_channel_order(channel_order)
@@ -84,5 +84,5 @@ class Predictor():
         return labels
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     pass

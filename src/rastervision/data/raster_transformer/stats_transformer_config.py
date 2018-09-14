@@ -40,10 +40,10 @@ class StatsTransformerConfig(RasterTransformerConfig):
             if not conf.stats_uri:
                 io_def.add_missing(
                     "StatsTransformerConfig is missing 'stats_uri' property "
-                    "in command {}. "
-                    "This must be set on the configuration, or a "
-                    "StatsAnalyzerConfig must be added to "
-                    "this experiment.".format(command_type))
+                    'in command {}. '
+                    'This must be set on the configuration, or a '
+                    'StatsAnalyzerConfig must be added to '
+                    'this experiment.'.format(command_type))
             else:
                 io_def.add_input(conf.stats_uri)
 
@@ -54,7 +54,7 @@ class StatsTransformerConfigBuilder(RasterTransformerConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = {"stats_uri": prev.stats_uri}
+            config = {'stats_uri': prev.stats_uri}
         super().__init__(StatsTransformerConfig, config)
 
     def from_proto(self, msg):

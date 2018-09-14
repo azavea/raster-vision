@@ -111,5 +111,5 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         self.assertEqual(avg_item.f1, None)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

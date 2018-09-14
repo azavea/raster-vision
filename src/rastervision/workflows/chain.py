@@ -100,7 +100,7 @@ def is_uri_valid(uri):
         try:
             s3.Object(parsed_uri.netloc, parsed_uri.path[1:]).load()
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == "404":
+            if e.response['Error']['Code'] == '404':
                 print('Error: URI cannot be found: {}'.format(uri))
                 print(e)
                 return False

@@ -55,7 +55,7 @@ class TaskConfig(Config):
         if command_type == rv.BUNDLE:
             if not conf.predict_package_uri:
                 conf.predict_package_uri = os.path.join(
-                    experiment_config.bundle_uri, "predict_package.zip")
+                    experiment_config.bundle_uri, 'predict_package.zip')
         return (conf, rv.core.CommandIODefinition())
 
 

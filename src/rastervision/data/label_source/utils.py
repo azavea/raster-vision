@@ -132,8 +132,8 @@ def geojson_to_object_detection_labels(geojson_dict,
             polygon_to_label(coordinates[0], crs_transformer)
         else:
             raise Exception(
-                "Geometries of type {} are not supported in object detection \
-                labels.".format(geom_type))
+                'Geometries of type {} are not supported in object detection \
+                labels.'.format(geom_type))
 
     if len(boxes):
         boxes = np.array([box.npbox_format() for box in boxes], dtype=float)

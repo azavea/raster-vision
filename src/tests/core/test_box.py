@@ -149,5 +149,5 @@ class TestBox(unittest.TestCase):
         self.assertSetEqual(windows, expected_windows)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

@@ -76,5 +76,5 @@ class TestChipClassificationEvaluation(unittest.TestCase):
         self.assert_eval_single_null(eval)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

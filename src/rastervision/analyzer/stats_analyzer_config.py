@@ -14,7 +14,7 @@ class StatsAnalyzerConfig(AnalyzerConfig):
 
     def create_analyzer(self):
         if not self.stats_uri:
-            raise rv.ConfigError("stat_uri is not set.")
+            raise rv.ConfigError('stat_uri is not set.')
         return StatsAnalyzer(self.stats_uri)
 
     def to_proto(self):
@@ -29,7 +29,7 @@ class StatsAnalyzerConfig(AnalyzerConfig):
         if command_type == rv.ANALYZE:
             if not self.stats_uri:
                 stats_uri = os.path.join(experiment_config.analyze_uri,
-                                         "stats.json")
+                                         'stats.json')
                 conf = self.to_builder() \
                            .with_stats_uri(stats_uri) \
                            .build()
@@ -41,7 +41,7 @@ class StatsAnalyzerConfigBuilder(AnalyzerConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = {"stats_uri": prev.stats_uri}
+            config = {'stats_uri': prev.stats_uri}
         super().__init__(StatsAnalyzerConfig, config)
 
     def from_proto(self, msg):

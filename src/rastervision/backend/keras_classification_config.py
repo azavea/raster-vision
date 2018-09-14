@@ -10,7 +10,7 @@ from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
 
 # Default location to Tensorflow Object Detection's scripts.
-CHIP_OUTPUT_FILES = ["training.zip", "validation.zip"]
+CHIP_OUTPUT_FILES = ['training.zip', 'validation.zip']
 
 
 class KerasClassificationConfig(BackendConfig):
@@ -46,9 +46,9 @@ class KerasClassificationConfig(BackendConfig):
 
     def to_proto(self):
         d = {
-            "sync_interval": self.train_options.sync_interval,
-            "replace_model": self.train_options.replace_model,
-            "kc_config": self.kc_config
+            'sync_interval': self.train_options.sync_interval,
+            'replace_model': self.train_options.replace_model,
+            'kc_config': self.kc_config
         }
 
         conf = json_format.ParseDict(
@@ -84,7 +84,7 @@ class KerasClassificationConfig(BackendConfig):
             io_def.add_inputs(inputs)
 
             # TODO: Change? Or make configurable?
-            conf.model_uri = os.path.join(conf.training_output_uri, "model")
+            conf.model_uri = os.path.join(conf.training_output_uri, 'model')
             io_def.add_output(conf.model_uri)
         if command_type == rv.PREDICT:
             io_def.add_input(conf.model_uri)
@@ -97,13 +97,13 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         config = {}
         if prev:
             config = {
-                "kc_config": prev.kc_config,
-                "pretrained_model_uri": prev.pretrained_model_uri,
-                "train_options": prev.train_options,
-                "debug": prev.debug,
-                "training_data_uri": prev.trainind_data_uri,
-                "training_output_uri": prev.training_output_uri,
-                "model_uri": prev.model_uri
+                'kc_config': prev.kc_config,
+                'pretrained_model_uri': prev.pretrained_model_uri,
+                'train_options': prev.train_options,
+                'debug': prev.debug,
+                'training_data_uri': prev.trainind_data_uri,
+                'training_output_uri': prev.training_output_uri,
+                'model_uri': prev.model_uri
             }
         super().__init__(rv.KERAS_CLASSIFICATION, KerasClassificationConfig,
                          config, prev)
@@ -129,11 +129,11 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
     def validate(self):
         super().validate()
         if not self.config.get('kc_config'):
-            raise rv.ConfigError("You must specify a template for the backend "
-                                 "configuration - use 'with_template'.")
+            raise rv.ConfigError('You must specify a template for the backend '
+                                 'configuration - use "with_template".')
         if self.require_task and not self.task:
-            raise rv.ConfigError("You must specify the task this backend "
-                                 "is for - use 'with_task'.")
+            raise rv.ConfigError('You must specify the task this backend '
+                                 'is for - use "with_task".')
         return True
 
     def build(self):
@@ -156,9 +156,9 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
     def _process_task(self):
         return self.with_config(
             {
-                "trainer": {
-                    "options": {
-                        "classNames": self.task.class_map.get_class_names(),
+                'trainer': {
+                    'options': {
+                        'classNames': self.task.class_map.get_class_names(),
                     }
                 }
             },
@@ -168,18 +168,18 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         """Loads defaults. Expected keys are "pretrained_model_uri" and "pipeline_config_uri",
            neither of which is required.
         """
-        expected_keys = ["pretrained_model_uri", "kc_config"]
+        expected_keys = ['pretrained_model_uri', 'kc_config']
         unknown_keys = set(model_defaults.keys()) - set(expected_keys)
         if unknown_keys:
-            raise rv.ConfigError("Unexpected keys in model defaults:"
-                                 " {}. Expected keys: {}".format(
-                                     unknown_keys, expected_keys))
+            raise rv.ConfigError('Unexpected keys in model defaults:'
+                                 ' {}. Expected keys: {}'
+                                 .format(unknown_keys, expected_keys))
 
         b = self
-        if "pretrained_model_uri" in model_defaults:
-            b = b.with_pretrained_model(model_defaults["pretrained_model_uri"])
-        if "kc_config" in model_defaults:
-            b = b.with_template(model_defaults["kc_config"])
+        if 'pretrained_model_uri' in model_defaults:
+            b = b.with_pretrained_model(model_defaults['pretrained_model_uri'])
+        if 'kc_config' in model_defaults:
+            b = b.with_template(model_defaults['kc_config'])
         return b
 
     def with_template(self, template):
@@ -210,18 +210,18 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
 
     def with_batch_size(self, batch_size):
         return self.with_config({
-            "trainer": {
-                "options": {
-                    "batchSize": batch_size
+            'trainer': {
+                'options': {
+                    'batchSize': batch_size
                 }
             }
         })
 
     def with_num_epochs(self, num_epochs):
         return self.with_config({
-            "trainer": {
-                "options": {
-                    "nb_epochs": num_epochs
+            'trainer': {
+                'options': {
+                    'nb_epochs': num_epochs
                 }
             }
         })

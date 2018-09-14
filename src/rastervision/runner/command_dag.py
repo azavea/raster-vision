@@ -41,8 +41,8 @@ class CommandDAG:
 
         if any(missing_files):
             raise rv.ConfigError(
-                "Files do not exist and are not supplied by commands:\n"
-                "\t{}\n".format(',\b\t'.join(missing_files)))
+                'Files do not exist and are not supplied by commands:\n'
+                '\t{}\n'.format(',\b\t'.join(missing_files)))
 
         # If we are not rerunning, remove commands that have existing outputs.
         # Do this only for ANALYZE and CHIP, as training can continue from

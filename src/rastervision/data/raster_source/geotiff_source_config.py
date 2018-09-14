@@ -42,9 +42,9 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
         config = {}
         if prev:
             config = {
-                "uris": prev.uris,
-                "transformers": prev.transformers,
-                "channel_order": prev.channel_order
+                'uris': prev.uris,
+                'transformers': prev.transformers,
+                'channel_order': prev.channel_order
             }
 
         super().__init__(GeoTiffSourceConfig, config)

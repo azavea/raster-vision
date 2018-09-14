@@ -34,7 +34,7 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
         if command_type == rv.EVAL:
             if not self.output_uri:
                 output_uri = os.path.join(experiment_config.eval_uri,
-                                          "eval.json")
+                                          'eval.json')
                 conf = conf.to_builder() \
                            .with_output_uri(output_uri) \
                            .build()
@@ -47,8 +47,8 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
         config = {}
         if prev:
             config = {
-                "output_uri": prev.output_uri,
-                "class_map": prev.class_map
+                'output_uri': prev.output_uri,
+                'class_map': prev.class_map
             }
         super().__init__(cls, config)
 
@@ -72,8 +72,8 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
 
     def with_task(self, task):
         if not hasattr(task, 'class_map'):
-            raise rv.ConfigError("This evaluator requires a task "
-                                 "that has a class_map property")
+            raise rv.ConfigError('This evaluator requires a task '
+                                 'that has a class_map property')
         return self.with_class_map(task.class_map)
 
     def with_class_map(self, class_map):
