@@ -1,4 +1,6 @@
 import rastervision as rv
+import rastervision.filesystems as rvfs
+
 from rastervision.data.raster_source.default import (
     DefaultGeoTiffSourceProvider, DefaultImageSourceProvider)
 from rastervision.data.label_source.default import (
@@ -10,12 +12,7 @@ from rastervision.data.label_store.default import (
 from rastervision.evaluation.default import (
     DefaultObjectDetectioneEvaluatorProvider,
     DefaultChipClassificationEvaluatorProvider)
-
 from typing import Union
-from rastervision.filesystem import FileSystem
-from rastervision.local_filesystem import LocalFileSystem
-from rastervision.s3_filesystem import S3FileSystem
-from rastervision.http_filesystem import HttpFileSystem
 
 
 class RegistryError(Exception):
@@ -114,12 +111,12 @@ class Registry:
         }
 
         self.filesystems = [
-            (1, HttpFileSystem),
-            (2, S3FileSystem),
-            (2**64, LocalFileSystem)
+            (1, rvfs.HttpFileSystem),
+            (2, rvfs.S3FileSystem),
+            (2**64-1, rvfs.LocalFileSystem)
         ]
 
-    def get_file_system(self, uri: str) -> Union[FileSystem, None]:
+    def get_file_system(self, uri: str) -> Union[rvfs.FileSystem, None]:
         for (priority, filesystem) in sorted(self.filesystems):
             if filesystem.matches_uri(uri):
                 return filesystem

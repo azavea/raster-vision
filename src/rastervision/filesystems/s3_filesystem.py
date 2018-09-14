@@ -1,14 +1,10 @@
-import os
 import boto3
-import botocore
 
-from rastervision.filesystem import FileSystem
-from typing import Union
+from rastervision.filesystems.filesystem import FileSystem
 from urllib.parse import urlparse
 
 
 class S3FileSystem(FileSystem):
-
     def matches_uri(uri: str) -> bool:
         parsed_uri = urlparse(uri)
         return parsed_uri.scheme == 's3'
@@ -24,20 +20,8 @@ class S3FileSystem(FileSystem):
         else:
             return False
 
-    def open(uri: str) -> Union[FileSystem, None]:
-        return None
-
-    def close(self) -> None:
+    def read(self, uri: str) -> bytearray:
         pass
 
-    def read(self) -> bytearray:
-        pass
-
-    def write(self, data: bytearray) -> int:
-        pass
-
-    def seek(self, offset: int, whence: int) -> int:
-        pass
-
-    def tell(self) -> int:
+    def write(self, uri: str, data: bytearray) -> int:
         pass
