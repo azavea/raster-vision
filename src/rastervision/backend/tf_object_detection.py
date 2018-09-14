@@ -623,8 +623,7 @@ class TFObjectDetection(Backend):
         tf_class_map = make_tf_class_map(self.class_map)
         save_tf_class_map(tf_class_map, class_map_path)
 
-        # TODO: Debug
-        training_package.upload(debug=True)
+        training_package.upload(debug=self.config.debug)
 
         # clear scene training packages
         del self.scene_training_packages[:]

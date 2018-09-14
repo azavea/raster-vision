@@ -70,8 +70,8 @@ class BackendConfigBuilder(ConfigBuilder):
         """
         if task.task_type not in self._applicable_tasks():
             raise Exception(
-                'Backend of type {} cannot be applied to task type {}'
-                .format(task.task_type, self.backend_type))
+                'Backend of type {} cannot be applied to task type {}'.format(
+                    task.task_type, self.backend_type))
         b = deepcopy(self)
         b.task = task
         b = b._process_task()

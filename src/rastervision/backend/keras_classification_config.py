@@ -172,8 +172,8 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         unknown_keys = set(model_defaults.keys()) - set(expected_keys)
         if unknown_keys:
             raise rv.ConfigError('Unexpected keys in model defaults:'
-                                 ' {}. Expected keys: {}'
-                                 .format(unknown_keys, expected_keys))
+                                 ' {}. Expected keys: {}'.format(
+                                     unknown_keys, expected_keys))
 
         b = self
         if 'pretrained_model_uri' in model_defaults:
