@@ -5,10 +5,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from rastervision.task import Task
-from rastervision.evaluations.classification_evaluation import (
-    ClassificationEvaluation)
-from rastervision.utils.files import (get_local_path, upload_or_copy,
-                                      make_dir)
+from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir)
 
 
 def draw_debug_predict_image(scene, class_map):

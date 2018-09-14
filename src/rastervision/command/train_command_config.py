@@ -1,12 +1,11 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.command import (TrainCommand,
-                                  CommandConfig,
-                                  CommandConfigBuilder,
-                                  NoOpCommand)
+from rastervision.command import (TrainCommand, CommandConfig,
+                                  CommandConfigBuilder)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
+
 
 class TrainCommandConfig(CommandConfig):
     def __init__(self, task, backend):
@@ -26,15 +25,17 @@ class TrainCommandConfig(CommandConfig):
         task = self.task.to_proto()
         backend = self.backend.to_proto()
 
-        msg.MergeFrom(CommandConfigMsg(
-            train_config=CommandConfigMsg.TrainConfig(task=task,
-                                                      backend=backend)))
+        msg.MergeFrom(
+            CommandConfigMsg(
+                train_config=CommandConfigMsg.TrainConfig(
+                    task=task, backend=backend)))
 
         return msg
 
     @staticmethod
     def builder():
         return TrainCommandConfigBuilder()
+
 
 class TrainCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self):
@@ -43,14 +44,14 @@ class TrainCommandConfigBuilder(CommandConfigBuilder):
 
     def build(self):
         if self.task is None:
-            raise rv.ConfigError("Task not set. Use with_task or with_experiment")
+            raise rv.ConfigError(
+                'Task not set. Use with_task or with_experiment')
 
         if self.backend is None:
-            raise rv.ConfigError("Backend not set. Use with_task or with_experiment")
+            raise rv.ConfigError(
+                'Backend not set. Use with_task or with_experiment')
 
-        return TrainCommandConfig(self.task,
-                                  self.backend)
-
+        return TrainCommandConfig(self.task, self.backend)
 
     def from_proto(self, msg):
         task = rv.TaskConfig.from_proto(msg.task)
@@ -64,7 +65,7 @@ class TrainCommandConfigBuilder(CommandConfigBuilder):
     def with_experiment(self, experiment_config):
         b = self.with_task(experiment_config.task)
         b = b.with_backend(experiment_config.backend)
-        return  b
+        return b
 
     def with_task(self, task):
         b = deepcopy(self)

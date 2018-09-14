@@ -2,10 +2,8 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.label_store import (LabelStoreConfig,
-                                           LabelStoreConfigBuilder,
-                                           ObjectDetectionGeoJSONStore)
-from rastervision.protos.label_store2_pb2 import LabelStoreConfig as LabelStoreConfigMsg
+from rastervision.data.label_store import (
+    LabelStoreConfig, LabelStoreConfigBuilder, ObjectDetectionGeoJSONStore)
 
 
 class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
@@ -19,7 +17,8 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
         return msg
 
     def create_store(self, task_config, crs_transformer, tmp_dir):
-        return ObjectDetectionGeoJSONStore(self.uri, crs_transformer, task_config.class_map)
+        return ObjectDetectionGeoJSONStore(self.uri, crs_transformer,
+                                           task_config.class_map)
 
     def preprocess_command(self, command_type, experiment_config, context=[]):
         conf = self
@@ -33,15 +32,16 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
                 uri = None
                 for c in context:
                     if isinstance(c, rv.SceneConfig):
-                        uri = os.path.join(root, "{}.json".format(c.scene_id))
+                        uri = os.path.join(root, '{}.json'.format(c.scene_id))
                 if uri:
                     conf = conf.to_builder() \
                                .with_uri(uri) \
                                .build()
                     io_def.add_output(uri)
                 else:
-                    raise rv.ConfigError("ObjectDetectionGeoJSONStoreConfig has no "
-                                         "URI set, and is not associated with a SceneConfig.")
+                    raise rv.ConfigError(
+                        'ObjectDetectionGeoJSONStoreConfig has no '
+                        'URI set, and is not associated with a SceneConfig.')
 
             io_def.add_output(conf.uri)
 
@@ -49,7 +49,7 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
             if self.uri:
                 io_def.add_input(self.uri)
             else:
-                msg = "No URI set for ObjectDetectionGeoJSONStoreConfig"
+                msg = 'No URI set for ObjectDetectionGeoJSONStoreConfig'
                 io_def.add_missing(msg)
 
         return (conf, io_def)
@@ -59,7 +59,7 @@ class ObjectDetectionGeoJSONStoreConfigBuilder(LabelStoreConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "uri": prev.uri }
+            config = {'uri': prev.uri}
 
         super().__init__(ObjectDetectionGeoJSONStoreConfig, config)
 

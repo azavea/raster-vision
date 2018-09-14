@@ -1,10 +1,8 @@
-from copy import deepcopy
-
 import rastervision as rv
 from rastervision.evaluation import ObjectDetectionEvaluator
 from rastervision.evaluation \
     import (ClassificationEvaluatorConfig, ClassificationEvaluatorConfigBuilder)
-from rastervision.protos.evaluator_pb2 import EvaluatorConfig as EvaluatorConfigMsg
+
 
 class ObjectDetectionEvaluatorConfig(ClassificationEvaluatorConfig):
     def __init__(self, class_map, output_uri=None):
@@ -13,6 +11,8 @@ class ObjectDetectionEvaluatorConfig(ClassificationEvaluatorConfig):
     def create_evaluator(self):
         return ObjectDetectionEvaluator(self.class_map, self.output_uri)
 
-class ObjectDetectionEvaluatorConfigBuilder(ClassificationEvaluatorConfigBuilder):
+
+class ObjectDetectionEvaluatorConfigBuilder(
+        ClassificationEvaluatorConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(ObjectDetectionEvaluatorConfig, prev)

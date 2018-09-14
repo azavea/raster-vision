@@ -3,8 +3,9 @@ from abc import abstractmethod
 import rastervision as rv
 from rastervision.core.config import (Config, ConfigBuilder)
 
+
 class RasterTransformerConfig(Config):
-    def  __init__(self, transformer_type):
+    def __init__(self, transformer_type):
         self.transformer_type = transformer_type
 
     @abstractmethod
@@ -26,7 +27,8 @@ class RasterTransformerConfig(Config):
     def from_proto(msg):
         """Creates a TaskConfig from the specificed protobuf message
         """
-        return rv._registry.get_config_builder(rv.RASTER_TRANSFORMER, msg.transformer_type)() \
+        return rv._registry.get_config_builder(rv.RASTER_TRANSFORMER,
+                                               msg.transformer_type)() \
                            .from_proto(msg) \
                            .build()
 

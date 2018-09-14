@@ -3,7 +3,8 @@ from abc import abstractmethod
 import rastervision as rv
 from rastervision.core import (Config, ConfigBuilder)
 
-class EvaluatorConfig:
+
+class EvaluatorConfig(Config):
     def __init__(self, evaluator_type):
         self.evaluator_type = evaluator_type
 
@@ -18,8 +19,7 @@ class EvaluatorConfig:
 
     @staticmethod
     def builder(evaluator_type):
-        return rv._registry.get_config_builder(rv.EVALUATOR,
-                                               evaluator_type)()
+        return rv._registry.get_config_builder(rv.EVALUATOR, evaluator_type)()
 
     @staticmethod
     def from_proto(msg):
@@ -28,6 +28,7 @@ class EvaluatorConfig:
         return rv._registry.get_config_builder(rv.EVALUATOR, msg.evaluator_type)() \
                            .from_proto(msg) \
                            .build()
+
 
 class EvaluatorConfigBuilder(ConfigBuilder):
     pass

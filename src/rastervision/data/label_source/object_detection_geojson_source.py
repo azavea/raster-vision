@@ -1,22 +1,12 @@
-import json
-
-import numpy as np
-
 from rastervision.data.label import ObjectDetectionLabels
 from rastervision.data.label_source import LabelSource
-from rastervision.data.label_source.utils import (add_classes_to_geojson,
-                                                  load_label_store_json,
-                                                  boxes_to_geojson,
-                                                  geojson_to_object_detection_labels)
-from rastervision.utils.files import str_to_file, NotWritableError
+from rastervision.data.label_source.utils import (
+    add_classes_to_geojson, load_label_store_json,
+    geojson_to_object_detection_labels)
 
 
 class ObjectDetectionGeoJSONSource(LabelSource):
-    def __init__(self,
-                 uri,
-                 crs_transformer,
-                 class_map,
-                 extent=None):
+    def __init__(self, uri, crs_transformer, class_map, extent=None):
         """Construct ObjectDetectionLabelStore backed by a GeoJSON file.
 
         Args:

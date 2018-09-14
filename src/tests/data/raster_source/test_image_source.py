@@ -12,8 +12,8 @@ from rastervision.utils.misc import save_img
 class TestImageSource(unittest.TestCase):
     def test_applies_transforms(self):
         with TemporaryDirectory() as tmp_dir:
-            stats_uri = os.path.join(tmp_dir, "stats.json")
-            img_path = os.path.join(tmp_dir, "img.tif")
+            stats_uri = os.path.join(tmp_dir, 'stats.json')
+            img_path = os.path.join(tmp_dir, 'img.tif')
 
             raster_stats = RasterStats()
             raster_stats.means = np.ones((4, ))

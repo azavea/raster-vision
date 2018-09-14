@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from rastervision.data.raster_source.raster_source import *
 from rastervision.data.raster_source.raster_source_config import *
 from rastervision.data.raster_source.geotiff_source import *

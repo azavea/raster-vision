@@ -2,16 +2,14 @@ from abc import abstractmethod
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.core.config  import (Config, ConfigBuilder)
-from rastervision.data import (RasterTransformerConfig,
-                               StatsTransformerConfig)
-from rastervision.protos.raster_source2_pb2 import RasterSourceConfig as RasterSourceConfigMsg
+from rastervision.core.config import (Config, ConfigBuilder)
+from rastervision.data import (RasterTransformerConfig, StatsTransformerConfig)
+from rastervision.protos.raster_source2_pb2 \
+    import RasterSourceConfig as RasterSourceConfigMsg
+
 
 class RasterSourceConfig(Config):
-    def __init__(self,
-                 source_type,
-                 transformers=None,
-                 channel_order=None):
+    def __init__(self, source_type, transformers=None, channel_order=None):
         if transformers is None:
             transformers = []
 
@@ -20,11 +18,11 @@ class RasterSourceConfig(Config):
         self.channel_order = channel_order
 
     def to_proto(self):
-        transformers = list(map(lambda c: c.to_proto(),
-                                    self.transformers))
-        msg = RasterSourceConfigMsg(source_type=self.source_type,
-                                    channel_order=self.channel_order,
-                                    transformers=transformers)
+        transformers = list(map(lambda c: c.to_proto(), self.transformers))
+        msg = RasterSourceConfigMsg(
+            source_type=self.source_type,
+            channel_order=self.channel_order,
+            transformers=transformers)
         return msg
 
     @abstractmethod
@@ -39,8 +37,7 @@ class RasterSourceConfig(Config):
 
     @staticmethod
     def builder(source_type):
-        return rv._registry.get_config_builder(rv.RASTER_SOURCE,
-                                               source_type)()
+        return rv._registry.get_config_builder(rv.RASTER_SOURCE, source_type)()
 
     @staticmethod
     def from_proto(msg):
@@ -53,11 +50,13 @@ class RasterSourceConfig(Config):
     def create_transformers(self):
         return list(map(lambda c: c.create_transformer(), self.transformers))
 
-    def preprocess_command(self, command_type, experiment_config, context=None):
+    def preprocess_command(self, command_type, experiment_config,
+                           context=None):
         io_def = rv.core.CommandIODefinition()
         new_transformers = []
         for transformer in self.transformers:
-            t, sub_io_def = transformer.preprocess_command(command_type, experiment_config, context)
+            t, sub_io_def = transformer.preprocess_command(
+                command_type, experiment_config, context)
             new_transformers.append(t)
             io_def.merge(sub_io_def)
 
@@ -70,8 +69,9 @@ class RasterSourceConfig(Config):
 
 class RasterSourceConfigBuilder(ConfigBuilder):
     def from_proto(self, msg):
-        transformers = list(map(lambda m: RasterTransformerConfig.from_proto(m),
-                                msg.transformers))
+        transformers = list(
+            map(lambda m: RasterTransformerConfig.from_proto(m),
+                msg.transformers))
 
         return self.with_channel_order(msg.channel_order) \
                    .with_transformers(transformers)
@@ -98,7 +98,8 @@ class RasterSourceConfigBuilder(ConfigBuilder):
         b = deepcopy(self)
         transformers = b.config.get('transformers')
         if transformers:
-            b.config['transformers'] = transformers.append(StatsTransformerConfig())
+            b.config['transformers'] = transformers.append(
+                StatsTransformerConfig())
         else:
             b.config['transformers'] = [StatsTransformerConfig()]
         return b

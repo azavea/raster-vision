@@ -1,7 +1,7 @@
 from abc import (ABC, abstractmethod)
-import os
 
 import rastervision as rv
+
 
 # TODO : DefaultProvider instead  of DefaultXProvider
 class DefaultEvaluatorProvider(ABC):
@@ -18,7 +18,6 @@ class DefaultEvaluatorProvider(ABC):
         pass
 
 
-
 class DefaultObjectDetectioneEvaluatorProvider(DefaultEvaluatorProvider):
     @staticmethod
     def is_default_for(task_type):
@@ -29,6 +28,7 @@ class DefaultObjectDetectioneEvaluatorProvider(DefaultEvaluatorProvider):
         return rv.EvaluatorConfig.builder(rv.OBJECT_DETECTION_EVALUATOR) \
                                  .with_task(task) \
                                  .build()
+
 
 class DefaultChipClassificationEvaluatorProvider(DefaultEvaluatorProvider):
     @staticmethod

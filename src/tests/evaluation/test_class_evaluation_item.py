@@ -52,5 +52,5 @@ class TestClassEvaluationItem(unittest.TestCase):
         self.assertEqual(a.gt_count, 3)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

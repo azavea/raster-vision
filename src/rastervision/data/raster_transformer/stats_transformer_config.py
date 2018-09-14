@@ -2,11 +2,12 @@ from copy import deepcopy
 
 import rastervision as rv
 from rastervision.core.raster_stats import RasterStats
-from rastervision.data.raster_transformer import (RasterTransformerConfig,
-                                                  RasterTransformerConfigBuilder,
-                                                  StatsTransformer,
-                                                  NoopTransformer)
-from rastervision.protos.raster_transformer2_pb2 import RasterTransformerConfig as RasterTransformerConfigMsg
+from rastervision.data.raster_transformer import (
+    RasterTransformerConfig, RasterTransformerConfigBuilder, StatsTransformer,
+    NoopTransformer)
+from rastervision.protos.raster_transformer2_pb2 \
+    import RasterTransformerConfig as RasterTransformerConfigMsg
+
 
 class StatsTransformerConfig(RasterTransformerConfig):
     def __init__(self, stats_uri=None):
@@ -14,8 +15,8 @@ class StatsTransformerConfig(RasterTransformerConfig):
         self.stats_uri = stats_uri
 
     def to_proto(self):
-        msg = RasterTransformerConfigMsg(transformer_type=self.transformer_type,
-                                         stats_uri=self.stats_uri)
+        msg = RasterTransformerConfigMsg(
+            transformer_type=self.transformer_type, stats_uri=self.stats_uri)
         return msg
 
     def create_transformer(self):
@@ -37,11 +38,12 @@ class StatsTransformerConfig(RasterTransformerConfig):
                                    .with_stats_uri(stats_uri) \
                                    .build()
             if not conf.stats_uri:
-                io_def.add_missing("StatsTransformerConfig is missing 'stats_uri' property "
-                                   "in command {}. "
-                                   "This must be set on the configuration, or a "
-                                   "StatsAnalyzerConfig must be added to "
-                                   "this experiment.".format(command_type))
+                io_def.add_missing(
+                    "StatsTransformerConfig is missing 'stats_uri' property "
+                    'in command {}. '
+                    'This must be set on the configuration, or a '
+                    'StatsAnalyzerConfig must be added to '
+                    'this experiment.'.format(command_type))
             else:
                 io_def.add_input(conf.stats_uri)
 
@@ -52,7 +54,7 @@ class StatsTransformerConfigBuilder(RasterTransformerConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "stats_uri": prev.stats_uri }
+            config = {'stats_uri': prev.stats_uri}
         super().__init__(StatsTransformerConfig, config)
 
     def from_proto(self, msg):

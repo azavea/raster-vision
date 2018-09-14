@@ -6,24 +6,26 @@ from rastervision.augmentor.augmentor_config \
     import (AugmentorConfig, AugmentorConfigBuilder)
 from rastervision.protos.augmentor_pb2 import AugmentorConfig as AugmentorConfigMsg
 
+
 class NodataAugmentorConfig(AugmentorConfig):
     def __init__(self, aug_prob=0.5):
         super().__init__(rv.NODATA_AUGMENTOR)
         self.aug_prob = aug_prob
 
     def to_proto(self):
-        msg = AugmentorConfigMsg(augmentor_type=self.augmentor_type,
-                                 aug_prob=self.aug_prob)
+        msg = AugmentorConfigMsg(
+            augmentor_type=self.augmentor_type, aug_prob=self.aug_prob)
         return msg
 
     def create_augmentor(self):
         return NodataAugmentor(self.aug_prob)
 
+
 class NodataAugmentorConfigBuilder(AugmentorConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "aug_prob": prev.aug_prob }
+            config = {'aug_prob': prev.aug_prob}
         super().__init__(NodataAugmentorConfig, config)
 
     @staticmethod

@@ -24,7 +24,8 @@ def download_and_build_vrt(image_uris, temp_dir):
 
 
 class GeoTiffSource(RasterioRasterSource):
-    def __init__(self, uris, raster_transformers, temp_dir, channel_order=None):
+    def __init__(self, uris, raster_transformers, temp_dir,
+                 channel_order=None):
         self.uris = uris
         super().__init__(raster_transformers, temp_dir, channel_order)
 

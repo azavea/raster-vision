@@ -1,7 +1,7 @@
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.core.labels import Labels
+from rastervision.data.label import Labels
 
 
 class ObjectDetectionLabels(Labels):
@@ -10,10 +10,7 @@ class ObjectDetectionLabels(Labels):
     Implemented using the Tensorflow Object Detection API's BoxList class.
     """
 
-    def __init__(self,
-                 npboxes,
-                 class_ids,
-                 scores=None):
+    def __init__(self, npboxes, class_ids, scores=None):
         """Construct a set of object detection labels.
 
         Args:

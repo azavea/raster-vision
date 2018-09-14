@@ -17,15 +17,14 @@ class ClassItem(object):
 
     def __eq__(self, other):
         if isinstance(other, ClassItem):
-            return (self.id == other.id and \
-                    self.name == other.name and \
-                    self.color == other.color)
+            return (self.id == other.id and self.name == other.name
+                    and self.color == other.color)
         return False
 
     def __repr__(self):
-        s = "CLASS ITEM: [{}] {}".format(self.id, self.name)
+        s = 'CLASS ITEM: [{}] {}'.format(self.id, self.name)
         if self.color:
-            s += " ({})".format(self.color)
+            s += ' ({})'.format(self.color)
         return s
 
 

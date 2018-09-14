@@ -2,9 +2,11 @@ from tempfile import TemporaryDirectory
 
 from rastervision.runner import ExperimentRunner
 
+
 class LocalExperimentRunner(ExperimentRunner):
     def __init__(self, tmp_dir=None):
         self.tmp_dir = tmp_dir
+
     def _run_experiment(self, command_dag):
         """Runs all commands on this machine."""
 

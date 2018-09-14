@@ -3,8 +3,9 @@ from abc import abstractmethod
 import rastervision as rv
 from rastervision.core.config import (Config, ConfigBuilder)
 
+
 class AnalyzerConfig(Config):
-    def  __init__(self, analyzer_type):
+    def __init__(self, analyzer_type):
         self.analyzer_type = analyzer_type
 
     @abstractmethod
@@ -19,8 +20,7 @@ class AnalyzerConfig(Config):
 
     @staticmethod
     def builder(analyzer_type):
-        return rv._registry.get_config_builder(rv.ANALYZER,
-                                               analyzer_type)()
+        return rv._registry.get_config_builder(rv.ANALYZER, analyzer_type)()
 
     @staticmethod
     def from_proto(msg):

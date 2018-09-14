@@ -4,6 +4,7 @@ import json
 
 from rastervision.utils.files import str_to_file
 
+
 class ClassificationEvaluation(ABC):
     """Evaluates predictions for a set of scenes.
 

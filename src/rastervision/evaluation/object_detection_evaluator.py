@@ -1,5 +1,3 @@
-from abc import abstractmethod
-
 from rastervision.evaluation import (ClassificationEvaluator,
                                      ObjectDetectionEvaluation)
 
@@ -7,6 +5,7 @@ from rastervision.evaluation import (ClassificationEvaluator,
 class ObjectDetectionEvaluator(ClassificationEvaluator):
     """Evaluates predictions for a set of scenes.
     """
+
     def __init__(self, class_map, output_uri):
         super().__init__(class_map, output_uri)
 

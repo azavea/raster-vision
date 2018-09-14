@@ -3,17 +3,13 @@ import json
 from rastervision.data.label import ObjectDetectionLabels
 from rastervision.data.label_store import LabelStore
 from rastervision.data.label_store.utils import boxes_to_geojson
-from rastervision.data.label_source.utils import (load_label_store_json,
-                                                  geojson_to_object_detection_labels)
+from rastervision.data.label_source.utils import (
+    load_label_store_json, geojson_to_object_detection_labels)
 from rastervision.utils.files import str_to_file
 
 
-
 class ObjectDetectionGeoJSONStore(LabelStore):
-    def __init__(self,
-                 uri,
-                 crs_transformer,
-                 class_map):
+    def __init__(self, uri, crs_transformer, class_map):
         """Construct LabelStore backed by a GeoJSON file for object detection labels.
 
         Args:

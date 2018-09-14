@@ -7,6 +7,7 @@ from rastervision.core.box import Box
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import file_to_str
 
+
 def boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
                      scores=None):
     """Convert boxes and associated data into a GeoJSON dict.
@@ -88,7 +89,10 @@ def load_label_store_json(uri):
     """
     return json.loads(file_to_str(uri))
 
-def geojson_to_object_detection_labels(geojson_dict, crs_transformer, extent=None):
+
+def geojson_to_object_detection_labels(geojson_dict,
+                                       crs_transformer,
+                                       extent=None):
     """Convert GeoJSON to ObjectDetectionLabels object.
 
     If extent is provided, filter out the boxes that lie "more than a little
@@ -128,8 +132,8 @@ def geojson_to_object_detection_labels(geojson_dict, crs_transformer, extent=Non
             polygon_to_label(coordinates[0], crs_transformer)
         else:
             raise Exception(
-                "Geometries of type {} are not supported in object detection \
-                labels.".format(geom_type))
+                'Geometries of type {} are not supported in object detection \
+                labels.'.format(geom_type))
 
     if len(boxes):
         boxes = np.array([box.npbox_format() for box in boxes], dtype=float)

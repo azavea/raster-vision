@@ -5,12 +5,11 @@ from rastervision.core.class_map import (ClassItem, ClassMap)
 
 # TODO: Unit test
 
-def construct_class_map(classes: Union[ClassMap,
-                                     List[str],
-                                     List[ClassItemMsg],
-                                     List[ClassItem],
-                                     Dict[str, int],
-                                     Dict[str, Tuple[int, str]]]) -> ClassMap:
+
+def construct_class_map(
+        classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
+            ClassItem], Dict[str, int], Dict[str, Tuple[int, str]]]
+) -> ClassMap:
     """Construct ClassMap from a number of different
        representations.
 
@@ -33,11 +32,11 @@ def construct_class_map(classes: Union[ClassMap,
             if type(list(classes.items())[0]) is tuple:
                 # This dict already has colors mapped to class ids
                 for name, (class_id, color) in classes.items():
-                   item_list.append(ClassItem(class_id, name, color))
+                    item_list.append(ClassItem(class_id, name, color))
             else:
                 # Map items to empty colors
                 for name, class_id in classes.items():
-                   item_list.append(ClassItem(class_id, name))
+                    item_list.append(ClassItem(class_id, name))
         result = ClassMap(item_list)
     elif type(classes) is list:
         item_list = []
@@ -52,13 +51,17 @@ def construct_class_map(classes: Union[ClassMap,
                 item_list = classes
         result = ClassMap(item_list)
     else:
-         raise Exception("Cannot convert type {} to ClassMap".format(type(classes)))
+        raise Exception('Cannot convert type {} to ClassMap'.format(
+            type(classes)))
 
     return result
+
 
 def classes_to_class_items(class_map):
     """Transform a ClassMap into
        a list of ClassItem protobuf messages
     """
-    return [ClassItemMsg(name=item.name, id=item.id, color=item.color)
-            for item in class_map.get_items()]
+    return [
+        ClassItemMsg(name=item.name, id=item.id, color=item.color)
+        for item in class_map.get_items()
+    ]

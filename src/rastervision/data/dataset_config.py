@@ -2,9 +2,10 @@ from copy import deepcopy
 
 import rastervision as rv
 from rastervision.augmentor import AugmentorConfig
-from rastervision.data import SceneConfig
-from rastervision.core.config  import (Config, ConfigBuilder)
+from rastervision.data import (SceneConfig, Dataset)
+from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.protos.dataset_pb2 import DatasetConfig as DatasetConfigMsg
+
 
 class DatasetConfig(Config):
     def __init__(self,
@@ -42,54 +43,54 @@ class DatasetConfig(Config):
                        include_test=True):
         train_scenes = []
         if include_train:
-            train_scenes = list(map(lambda x: x.create_scene(task_config, tmp_dir),
-                                    self.train_scenes))
+            train_scenes = list(
+                map(lambda x: x.create_scene(task_config, tmp_dir),
+                    self.train_scenes))
 
         val_scenes = []
         if include_val:
-            val_scenes = list(map(lambda x: x.create_scene(task_config, tmp_dir),
-                                  self.validation_scenes))
+            val_scenes = list(
+                map(lambda x: x.create_scene(task_config, tmp_dir),
+                    self.validation_scenes))
 
-        test_sceness = []
+        test_scenes = []
         if include_test:
-            test_scenes = list(map(lambda x: x.create_scene(task_config, tmp_dir),
-                                   self.test_scenes))
+            test_scenes = list(
+                map(lambda x: x.create_scene(task_config, tmp_dir),
+                    self.test_scenes))
 
-        augmentors = list(map(lambda x: x.create_augmentor(),
-                              self.augmentors))
+        augmentors = list(map(lambda x: x.create_augmentor(), self.augmentors))
 
-        return DataSet(train_scenes=train_scenes,
-                       validation_scenes=val_scenes,
-                       test_scenes=test_scenes,
-                       augmentors=augmentors)
+        return Dataset(
+            train_scenes=train_scenes,
+            validation_scenes=val_scenes,
+            test_scenes=test_scenes,
+            augmentors=augmentors)
 
     def to_proto(self):
         """Returns the protobuf configuration for this config.
         """
-        train_scenes = list(map(lambda x: x.to_proto(),
-                                self.train_scenes))
-        val_scenes = list(map(lambda x: x.to_proto(),
-                              self.validation_scenes))
-        test_scenes = list(map(lambda x: x.to_proto(),
-                               self.test_scenes))
+        train_scenes = list(map(lambda x: x.to_proto(), self.train_scenes))
+        val_scenes = list(map(lambda x: x.to_proto(), self.validation_scenes))
+        test_scenes = list(map(lambda x: x.to_proto(), self.test_scenes))
 
-        augmentors = list(map(lambda x: x.to_proto(),
-                              self.augmentors))
+        augmentors = list(map(lambda x: x.to_proto(), self.augmentors))
 
-        return DatasetConfigMsg(train_scenes=train_scenes,
-                                validation_scenes=val_scenes,
-                                test_scenes=test_scenes,
-                                augmentors = augmentors)
+        return DatasetConfigMsg(
+            train_scenes=train_scenes,
+            validation_scenes=val_scenes,
+            test_scenes=test_scenes,
+            augmentors=augmentors)
 
-    def preprocess_command(self, command_type, experiment_config, context=None):
+    def preprocess_command(self, command_type, experiment_config,
+                           context=None):
         io_def = rv.core.CommandIODefinition()
 
         if command_type in [rv.ANALYZE, rv.CHIP]:
             train_scenes = []
             for scene in self.train_scenes:
-                (new_config, scene_io_def) = scene.preprocess_command(command_type,
-                                                                      experiment_config,
-                                                                      context)
+                (new_config, scene_io_def) = scene.preprocess_command(
+                    command_type, experiment_config, context)
                 io_def.merge(scene_io_def)
                 train_scenes.append(new_config)
         else:
@@ -99,15 +100,15 @@ class DatasetConfig(Config):
             val_scenes = []
             for scene in self.validation_scenes:
                 if command_type == rv.PREDICT:
-                    # Ensure there is a label store associated with predict and validation scenes.
+                    # Ensure there is a label store associated with
+                    # predict and validation scenes.
                     if not scene.label_store:
                         scene = scene.to_builder() \
                                      .with_task(experiment_config.task) \
                                      .with_label_store() \
                                      .build()
-                (new_config, scene_io_def) = scene.preprocess_command(command_type,
-                                                                      experiment_config,
-                                                                      context)
+                (new_config, scene_io_def) = scene.preprocess_command(
+                    command_type, experiment_config, context)
                 io_def.merge(scene_io_def)
                 val_scenes.append(new_config)
         else:
@@ -117,15 +118,15 @@ class DatasetConfig(Config):
             test_scenes = []
             for scene in self.test_scenes:
                 if command_type == rv.PREDICT:
-                    # Ensure there is a label store associated with predict and validation scenes.
+                    # Ensure there is a label store associated with
+                    # predict and validation scenes.
                     if not scene.label_store:
                         scene = scene.to_builder() \
                                      .with_task(experiment_config.task) \
                                      .with_label_store() \
                                      .build()
-                (new_config, scene_io_def) = scene.preprocess_command(command_type,
-                                                                      experiment_config,
-                                                                      context)
+                (new_config, scene_io_def) = scene.preprocess_command(
+                    command_type, experiment_config, context)
                 io_def.merge(scene_io_def)
                 test_scenes.append(new_config)
         else:
@@ -134,9 +135,8 @@ class DatasetConfig(Config):
         if command_type == rv.CHIP:
             augmentors = []
             for augmentor in self.augmentors:
-                (new_config, aug_io_def) = augmentor.preprocess_command(command_type,
-                                                                        experiment_config,
-                                                                        context)
+                (new_config, aug_io_def) = augmentor.preprocess_command(
+                    command_type, experiment_config, context)
                 io_def.merge(aug_io_def)
                 augmentors.append(new_config)
         else:
@@ -160,6 +160,7 @@ class DatasetConfig(Config):
     def builder():
         return DatasetConfigBuilder()
 
+
 class DatasetConfigBuilder(ConfigBuilder):
     def __init__(self, prev=None):
         config = {
@@ -176,14 +177,14 @@ class DatasetConfigBuilder(ConfigBuilder):
         super().__init__(DatasetConfig, config)
 
     def from_proto(self, msg):
-        train_scenes = list(map(lambda x: SceneConfig.from_proto(x),
-                                   msg.train_scenes))
-        val_scenes = list(map(lambda x: SceneConfig.from_proto(x),
-                                   msg.validation_scenes))
-        test_scenes = list(map(lambda x: SceneConfig.from_proto(x),
-                                   msg.test_scenes))
-        augmentors = list(map(lambda x: AugmentorConfig.from_proto(x),
-                              msg.augmentors))
+        train_scenes = list(
+            map(lambda x: SceneConfig.from_proto(x), msg.train_scenes))
+        val_scenes = list(
+            map(lambda x: SceneConfig.from_proto(x), msg.validation_scenes))
+        test_scenes = list(
+            map(lambda x: SceneConfig.from_proto(x), msg.test_scenes))
+        augmentors = list(
+            map(lambda x: AugmentorConfig.from_proto(x), msg.augmentors))
         return DatasetConfigBuilder() \
             .with_train_scenes(train_scenes) \
             .with_validation_scenes(val_scenes) \
@@ -220,4 +221,4 @@ class DatasetConfigBuilder(ConfigBuilder):
         return b
 
     def with_augmentor(self, augmentor):
-        return with_augmentors([augmentor])
+        return self.with_augmentors([augmentor])

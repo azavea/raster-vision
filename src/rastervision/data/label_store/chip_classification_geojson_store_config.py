@@ -2,10 +2,8 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.label_store import (LabelStoreConfig,
-                                           LabelStoreConfigBuilder,
-                                           ChipClassificationGeoJSONStore)
-from rastervision.protos.label_store2_pb2 import LabelStoreConfig as LabelStoreConfigMsg
+from rastervision.data.label_store import (
+    LabelStoreConfig, LabelStoreConfigBuilder, ChipClassificationGeoJSONStore)
 
 
 class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
@@ -19,7 +17,8 @@ class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
         return msg
 
     def create_store(self, task_config, crs_transformer, tmp_dir):
-        return ChipClassificationGeoJSONStore(self.uri, crs_transformer, task_config.class_map)
+        return ChipClassificationGeoJSONStore(self.uri, crs_transformer,
+                                              task_config.class_map)
 
     def preprocess_command(self, command_type, experiment_config, context=[]):
         conf = self
@@ -33,15 +32,16 @@ class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
                 uri = None
                 for c in context:
                     if isinstance(c, rv.SceneConfig):
-                        uri = os.path.join(root, "{}.json".format(c.scene_id))
+                        uri = os.path.join(root, '{}.json'.format(c.scene_id))
                 if uri:
                     conf = conf.to_builder() \
                                .with_uri(uri) \
                                .build()
                     io_def.add_output(uri)
                 else:
-                    raise rv.ConfigError("ChipClassificationGeoJSONStoreConfig has no "
-                                         "URI set, and is not associated with a SceneConfig.")
+                    raise rv.ConfigError(
+                        'ChipClassificationGeoJSONStoreConfig has no '
+                        'URI set, and is not associated with a SceneConfig.')
 
             io_def.add_output(conf.uri)
 
@@ -49,7 +49,7 @@ class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
             if self.uri:
                 io_def.add_input(self.uri)
             else:
-                msg = "No URI set for ChipClassificationGeoJSONStoreConfig"
+                msg = 'No URI set for ChipClassificationGeoJSONStoreConfig'
                 io_def.add_missing(msg)
 
         return (conf, io_def)
@@ -59,7 +59,7 @@ class ChipClassificationGeoJSONStoreConfigBuilder(LabelStoreConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "uri": prev.uri }
+            config = {'uri': prev.uri}
 
         super().__init__(ChipClassificationGeoJSONStoreConfig, config)
 

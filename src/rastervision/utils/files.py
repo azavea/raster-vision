@@ -186,7 +186,7 @@ def file_exists(uri):
             if response.getcode() == 200:
                 return int(response.headers['content-length']) > 0
             else:
-                return  False
+                return False
         except urllib.error.URLError:
             return False
     else:
@@ -221,13 +221,15 @@ def upload_or_copy(src_path, dst_uri):
                 s3.upload_file(src_path, parsed_uri.netloc,
                                parsed_uri.path[1:])
             except Exception as e:
-                raise NotWritableError('Could not write {}'.format(dst_uri)) from e
+                raise NotWritableError(
+                    'Could not write {}'.format(dst_uri)) from e
         else:
             sync_dir(src_path, dst_uri, delete=True)
     else:
         if src_path != dst_uri:
             make_dir(dst_uri, use_dirname=True)
             shutil.copyfile(src_path, dst_uri)
+
 
 def file_to_str(file_uri):
     """Download contents of text file into a string.
@@ -251,10 +253,11 @@ def file_to_str(file_uri):
                                     file_buffer)
                 return file_buffer.getvalue().decode('utf-8')
             except botocore.exceptions.ClientError as e:
-                raise NotReadableError('Could not read {}'.format(file_uri)) from e
+                raise NotReadableError(
+                    'Could not read {}'.format(file_uri)) from e
     elif parsed_uri.scheme in ['http', 'https']:
         with urllib.request.urlopen(file_uri) as req:
-            return req.read().decode("utf8")
+            return req.read().decode('utf8')
     else:
         if not os.path.isfile(file_uri):
             raise NotReadableError('Could not read {}'.format(file_uri))
@@ -281,7 +284,8 @@ def str_to_file(content_str, file_uri):
                 s3 = boto3.client('s3')
                 s3.upload_fileobj(str_buffer, bucket, key)
             except Exception as e:
-                raise NotWritableError('Could not write {}'.format(file_uri)) from e
+                raise NotWritableError(
+                    'Could not write {}'.format(file_uri)) from e
     else:
         make_dir(file_uri, use_dirname=True)
         with open(file_uri, 'w') as content_file:

@@ -1,5 +1,5 @@
-from rastervision.core.labels import Labels
 from rastervision.core.box import Box
+from rastervision.data.label import Labels
 
 
 class ChipClassificationLabels(Labels):
@@ -19,7 +19,7 @@ class ChipClassificationLabels(Labels):
             class_id: int
             scores: 1d numpy array of probabilities for each class
         """
-        if not scores is None:
+        if scores is not None:
             scores = list(map(lambda x: float(x), list(scores)))
         self.cell_to_class_id[cell.tuple_format()] = (class_id, scores)
 
@@ -92,5 +92,5 @@ class ChipClassificationLabels(Labels):
             labels: ChipClassificationLabels
         """
         for cell in labels.get_cells():
-            class_id, scores= labels.get_cell_values(cell)
+            class_id, scores = labels.get_cell_values(cell)
             self.set_cell(cell, class_id, scores)

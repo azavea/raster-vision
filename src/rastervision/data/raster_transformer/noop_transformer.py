@@ -1,6 +1,7 @@
 from rastervision.data.raster_transformer.raster_transformer \
     import RasterTransformer
 
+
 class NoopTransformer(RasterTransformer):
     """No-op transformer
     """

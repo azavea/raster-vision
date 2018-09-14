@@ -3,7 +3,6 @@ from copy import deepcopy
 from google.protobuf import json_format
 
 import rastervision as rv
-from rastervision.core import Box
 from rastervision.data.label_source import (LabelSourceConfig,
                                             LabelSourceConfigBuilder,
                                             ChipClassificationGeoJSONSource)
@@ -30,30 +29,27 @@ class ChipClassificationGeoJSONSourceConfig(LabelSourceConfig):
 
     def to_proto(self):
         msg = super().to_proto()
-        d = { "uri": self.uri,
-              "ioa_thresh": self.ioa_thresh,
-              "use_intersection_over_cell": self.use_intersection_over_cell,
-              "pick_min_class_id": self.pick_min_class_id,
-              "background_class_id": self.background_class_id,
-              "cell_size": self.cell_size,
-              "infer_cells": self.infer_cells }
+        d = {
+            'uri': self.uri,
+            'ioa_thresh': self.ioa_thresh,
+            'use_intersection_over_cell': self.use_intersection_over_cell,
+            'pick_min_class_id': self.pick_min_class_id,
+            'background_class_id': self.background_class_id,
+            'cell_size': self.cell_size,
+            'infer_cells': self.infer_cells
+        }
 
-        opts = json_format.ParseDict(d,
-                                     LabelSourceConfigMsg.ChipClassificationGeoJSONSource())
+        opts = json_format.ParseDict(
+            d, LabelSourceConfigMsg.ChipClassificationGeoJSONSource())
         msg.chip_classification_geojson_source.CopyFrom(opts)
         return msg
 
     def create_source(self, task_config, extent, crs_transformer, tmp_dir):
-        return ChipClassificationGeoJSONSource(self.uri,
-                                               crs_transformer,
-                                               task_config.class_map,
-                                               extent,
-                                               self.ioa_thresh,
-                                               self.use_intersection_over_cell,
-                                               self.pick_min_class_id,
-                                               self.background_class_id,
-                                               self.cell_size,
-                                               self.infer_cells)
+        return ChipClassificationGeoJSONSource(
+            self.uri, crs_transformer, task_config.class_map, extent,
+            self.ioa_thresh, self.use_intersection_over_cell,
+            self.pick_min_class_id, self.background_class_id, self.cell_size,
+            self.infer_cells)
 
     def preprocess_command(self, command_type, experiment_config, context=[]):
         conf = self
@@ -72,13 +68,15 @@ class ChipClassificationGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "uri": prev.uri,
-                       "ioa_thresh": prev.ioa_thresh,
-                       "use_intersection_over_cell": prev.use_intersection_over_cell,
-                       "pick_min_class_id": prev.pick_min_class_id,
-                       "background_class_id": prev.background_class_id,
-                       "cell_size": prev.cell_size,
-                       "infer_cells": prev.infer_cells }
+            config = {
+                'uri': prev.uri,
+                'ioa_thresh': prev.ioa_thresh,
+                'use_intersection_over_cell': prev.use_intersection_over_cell,
+                'pick_min_class_id': prev.pick_min_class_id,
+                'background_class_id': prev.background_class_id,
+                'cell_size': prev.cell_size,
+                'infer_cells': prev.infer_cells
+            }
 
         super().__init__(ChipClassificationGeoJSONSourceConfig, config)
 
@@ -151,7 +149,7 @@ class ChipClassificationGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
         return b
 
     def with_cell_size(self, cell_size):
-        "Sets the cell size of the chips."""
+        """Sets the cell size of the chips."""
         b = deepcopy(self)
         b.config['cell_size'] = cell_size
         return b

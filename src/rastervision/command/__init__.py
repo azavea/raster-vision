@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from rastervision.command.command import *
 from rastervision.command.command_config import *
 from rastervision.command.analyze_command import *

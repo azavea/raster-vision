@@ -1,13 +1,12 @@
 from abc import abstractmethod
-from copy import deepcopy
 
 import rastervision as rv
-from rastervision.core.config  import (Config, ConfigBuilder)
+from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.protos.label_store2_pb2 import LabelStoreConfig as LabelStoreConfigMsg
 
+
 class LabelStoreConfig(Config):
-    def __init__(self,
-                 store_type):
+    def __init__(self, store_type):
         self.store_type = store_type
 
     def to_proto(self):
@@ -34,8 +33,7 @@ class LabelStoreConfig(Config):
 
     @staticmethod
     def builder(store_type):
-        return rv._registry.get_config_builder(rv.LABEL_STORE,
-                                               store_type)()
+        return rv._registry.get_config_builder(rv.LABEL_STORE, store_type)()
 
     @staticmethod
     def from_proto(msg):

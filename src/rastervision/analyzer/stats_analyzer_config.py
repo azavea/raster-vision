@@ -2,17 +2,19 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.analyzer import (AnalyzerConfig, AnalyzerConfigBuilder, StatsAnalyzer)
+from rastervision.analyzer import (AnalyzerConfig, AnalyzerConfigBuilder,
+                                   StatsAnalyzer)
 from rastervision.protos.analyzer_pb2 import AnalyzerConfig as AnalyzerConfigMsg
 
+
 class StatsAnalyzerConfig(AnalyzerConfig):
-    def  __init__(self, stats_uri=None):
+    def __init__(self, stats_uri=None):
         super().__init__(rv.STATS_ANALYZER)
         self.stats_uri = stats_uri
 
     def create_analyzer(self):
-        if not  self.stats_uri:
-            raise rv.ConfigError("stat_uri is not set.")
+        if not self.stats_uri:
+            raise rv.ConfigError('stat_uri is not set.')
         return StatsAnalyzer(self.stats_uri)
 
     def to_proto(self):
@@ -26,7 +28,8 @@ class StatsAnalyzerConfig(AnalyzerConfig):
         io_def = rv.core.CommandIODefinition()
         if command_type == rv.ANALYZE:
             if not self.stats_uri:
-                stats_uri = os.path.join(experiment_config.analyze_uri, "stats.json")
+                stats_uri = os.path.join(experiment_config.analyze_uri,
+                                         'stats.json')
                 conf = self.to_builder() \
                            .with_stats_uri(stats_uri) \
                            .build()
@@ -38,7 +41,7 @@ class StatsAnalyzerConfigBuilder(AnalyzerConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "stats_uri": prev.stats_uri }
+            config = {'stats_uri': prev.stats_uri}
         super().__init__(StatsAnalyzerConfig, config)
 
     def from_proto(self, msg):

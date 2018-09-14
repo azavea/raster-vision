@@ -1,5 +1,3 @@
-import tempfile
-
 import numpy as np
 
 from rastervision.data.raster_source import RasterSource
@@ -14,6 +12,12 @@ def load_window(image_dataset, window=None):
         ((y_min, y_max), (x_min, x_max))
     """
     im = image_dataset.read(window=window, boundless=True)
+
+    # Handle non-zero NODATA values by setting the data to 0.
+    for channel, nodata in enumerate(image_dataset.nodatavals):
+        if nodata is not None and nodata != 0:
+            im[channel, im[channel] == nodata] = 0
+
     im = np.transpose(im, axes=[1, 2, 0])
     return im
 

@@ -3,17 +3,15 @@ import tempfile
 import os
 import json
 
-from shapely import geometry
-
-from rastervision.data import ChipClassificationGeoJSONSource, ChipClassificationGeoJSONStore
+from rastervision.data import (ChipClassificationGeoJSONSource,
+                               ChipClassificationGeoJSONStore)
 from rastervision.data.label_source.chip_classification_geojson_source import read_labels
 from rastervision.data.label_store.utils import classification_labels_to_geojson
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.protos.label_store_pb2 import (
-    ClassificationGeoJSONFile as ClassificationGeoJSONFileConfig)
 
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
+
 
 class TestChipClassificationGeoJSONStore(unittest.TestCase):
     def setUp(self):
@@ -65,44 +63,34 @@ class TestChipClassificationGeoJSONStore(unittest.TestCase):
         self.maxDiff = None
         extent = Box.make_square(0, 0, 4)
         labels = read_labels(self.geojson_dict, self.crs_transformer, extent)
-        geojson_dict = classification_labels_to_geojson(labels,
-                                                        self.crs_transformer,
-                                                        self.class_map)
+        geojson_dict = classification_labels_to_geojson(
+            labels, self.crs_transformer, self.class_map)
         self.assertDictEqual(geojson_dict, self.geojson_dict)
 
     def test_constructor_save(self):
         # Read it, write it using label_store, read it again, and compare.
         extent = Box.make_square(0, 0, 10)
 
-        options = ClassificationGeoJSONFileConfig.Options()
-        options.infer_cells = False
-
         label_source = ChipClassificationGeoJSONSource(
             self.file_path,
             self.crs_transformer,
-            options,
             self.class_map,
-            extent)
+            extent,
+            infer_cells=False)
 
         labels1 = label_source.get_labels()
 
-        new_path = os.path.join(self.temp_dir.name, "test_save_reload.json")
+        new_path = os.path.join(self.temp_dir.name, 'test_save_reload.json')
 
         label_store = ChipClassificationGeoJSONStore(
-            new_path,
-            self.crs_transformer,
-            self.class_map)
+            new_path, self.crs_transformer, self.class_map)
         label_store.save(labels1)
 
-        label_store = ChipClassificationGeoJSONSource(
-            new_path,
-            self.crs_transformer,
-            options,
-            self.class_map)
         labels2 = label_store.get_labels()
 
         self.assertDictEqual(labels1.cell_to_class_id,
                              labels2.cell_to_class_id)
+
 
 if __name__ == '__main__':
     unittest.main()

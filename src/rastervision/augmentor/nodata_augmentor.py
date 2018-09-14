@@ -1,6 +1,10 @@
 import random
 
+import numpy as np
+
 from rastervision.augmentor import Augmentor
+from rastervision.core import (TrainingData, Box)
+
 
 class NodataAugmentor(Augmentor):
     """Randomly add NoData values to negative chips.
@@ -8,10 +12,11 @@ class NodataAugmentor(Augmentor):
     This is useful for training the model to negatively predict
     chips that are on boundaries or containing mostly NoData.
     """
+
     def __init__(self, aug_prob):
         self.aug_prob = aug_prob
 
-    def process(training_data, tmp_dir):
+    def process(self, training_data, tmp_dir):
         augmented = TrainingData()
         nodata_aug_prob = self.aug_prob
 

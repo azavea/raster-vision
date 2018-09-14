@@ -1,6 +1,7 @@
 from rastervision.analyzer import Analyzer
 from rastervision.core import RasterStats
 
+
 class StatsAnalyzer(Analyzer):
     """Computes RasterStats against the entire scene set.
     """

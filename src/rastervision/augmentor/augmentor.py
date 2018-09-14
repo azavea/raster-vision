@@ -1,8 +1,7 @@
 from abc import (ABC, abstractmethod)
 
-import rastervision as rv
 
-class Augmentor:
+class Augmentor(ABC):
     """Defines a method for augmenting training data.
     """
 

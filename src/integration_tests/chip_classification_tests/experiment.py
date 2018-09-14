@@ -2,24 +2,27 @@ import os
 
 import rastervision as rv
 
+
 class ChipClassificationIntegrationTest(rv.ExperimentSuite):
     def exp_main(self, tmp_dir):
         def get_path(part):
             return os.path.join(os.path.dirname(__file__), part)
-        img_path = get_path("scene/image.tif")
-        label_path = get_path("scene/labels.json")
-        backend_conf_path = get_path("configs/backend.config")
 
-        pretrained_model = ("https://github.com/fchollet/"
-                            "deep-learning-models/releases/download/v0.2/"
-                            "resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5")
+        img_path = get_path('scene/image.tif')
+        label_path = get_path('scene/labels.json')
+        backend_conf_path = get_path('configs/backend.config')
+
+        pretrained_model = (
+            'https://github.com/fchollet/'
+            'deep-learning-models/releases/download/v0.2/'
+            'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
         task = rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \
                             .with_chip_size(200) \
                             .with_classes({
-                                "car": (1, "red"),
-                                "building": (2, "blue"),
-                                "background": (3, "black")
+                                'car': (1, 'red'),
+                                'building': (2, 'blue'),
+                                'background': (3, 'black')
                             }) \
                             .build()
 
@@ -42,13 +45,13 @@ class ChipClassificationIntegrationTest(rv.ExperimentSuite):
 
         raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
                                              .with_uri(img_path) \
-                                             .with_channel_order([0,1,2]) \
+                                             .with_channel_order([0, 1, 2]) \
                                              .with_stats_transformer() \
                                              .build()
 
         scene = rv.SceneConfig.builder() \
                               .with_task(task) \
-                              .with_id("cc_test") \
+                              .with_id('cc_test') \
                               .with_raster_source(raster_source) \
                               .with_label_source(label_source) \
                               .build()
@@ -59,16 +62,17 @@ class ChipClassificationIntegrationTest(rv.ExperimentSuite):
                                   .build()
 
         experiment = rv.ExperimentConfig.builder() \
-                                        .with_id("chip-classification-test") \
+                                        .with_id('chip-classification-test') \
                                         .with_root_uri(tmp_dir) \
                                         .with_task(task) \
                                         .with_backend(backend) \
                                         .with_dataset(dataset) \
                                         .with_stats_analyzer() \
-                                        .with_analyze_key("chip-classification-test") \
+                                        .with_analyze_key('chip-classification-test') \
                                         .build()
 
         return experiment
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     rv.main()

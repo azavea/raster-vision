@@ -44,7 +44,7 @@ message CommandConfig {
     }
 
     message BundleConfig {
-        repeated AugmentorConfig augmentors = 1;
+        repeated AnalyzerConfig analyzers = 1;
         required TaskConfig task = 2;
         required BackendConfig backend = 3;
         required SceneConfig scene = 4;

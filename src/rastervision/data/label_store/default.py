@@ -3,6 +3,7 @@ import os
 
 import rastervision as rv
 
+
 class DefaultLabelStoreProvider(ABC):
     @staticmethod
     @abstractmethod
@@ -15,7 +16,6 @@ class DefaultLabelStoreProvider(ABC):
     def handles(task_type, s):
         """Returns True of this provider is a default for this task_type and string"""
         pass
-
 
     @abstractmethod
     def construct(s=None):
@@ -33,7 +33,7 @@ class DefaultObjectDetectionGeoJSONStoreProvider(DefaultLabelStoreProvider):
     def handles(task_type, uri):
         if task_type == rv.OBJECT_DETECTION:
             ext = os.path.splitext(uri)[1]
-            return ext.lower() in [".json", ".geojson"]
+            return ext.lower() in ['.json', '.geojson']
         return False
 
     @staticmethod
@@ -44,6 +44,7 @@ class DefaultObjectDetectionGeoJSONStoreProvider(DefaultLabelStoreProvider):
 
         return b.build()
 
+
 class DefaultChipClassificationGeoJSONStoreProvider(DefaultLabelStoreProvider):
     @staticmethod
     def is_default_for(task_type):
@@ -53,7 +54,7 @@ class DefaultChipClassificationGeoJSONStoreProvider(DefaultLabelStoreProvider):
     def handles(task_type, uri):
         if task_type == rv.CHIP_CLASSIFICATION:
             ext = os.path.splitext(uri)[1]
-            return ext.lower() in [".json", ".geojson"]
+            return ext.lower() in ['.json', '.geojson']
         return False
 
     @staticmethod

@@ -3,6 +3,7 @@ import numpy as np
 from rastervision.data.raster_transformer.raster_transformer \
     import RasterTransformer
 
+
 class StatsTransformer(RasterTransformer):
     """Transforms non-uint8 to uint8 values using raster_stats.
     """
@@ -57,7 +58,6 @@ class StatsTransformer(RasterTransformer):
 
                 chip[nodata] = 0
             else:
-                raise ValueError(
-                    'raster_stats not defined.')
+                raise ValueError('raster_stats not defined.')
 
         return chip

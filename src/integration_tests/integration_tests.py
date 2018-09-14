@@ -11,7 +11,6 @@ import numpy as np
 import tensorflow
 
 import rastervision as rv
-import rastervision.workflows.chain as chain_workflow
 
 from integration_tests.object_detection_tests.experiment \
     import ObjectDetectionIntegrationTest
@@ -42,17 +41,16 @@ class TestError():
 
 
 def get_test_dir(test):
-    return os.path.join(TEST_ROOT_DIR, test.lower().replace("-","_"))
+    return os.path.join(TEST_ROOT_DIR, test.lower().replace('-', '_'))
 
 
 def get_expected_eval_path(test):
-    return os.path.join("{}_tests".format(get_test_dir(test)),
+    return os.path.join('{}_tests'.format(get_test_dir(test)),
                         'expected-output/eval.json')
 
 
 def get_actual_eval_path(test, temp_dir):
-    return os.path.join(
-        temp_dir, test.lower(), 'eval/default/eval.json')
+    return os.path.join(temp_dir, test.lower(), 'eval/default/eval.json')
 
 
 def open_json(path):
@@ -103,15 +101,17 @@ def check_eval(test, temp_dir):
 
 def get_experiment(test, tmp_dir):
     if test == rv.OBJECT_DETECTION:
-        return ObjectDetectionIntegrationTest().exp_main(os.path.join(tmp_dir, test.lower()))
+        return ObjectDetectionIntegrationTest().exp_main(
+            os.path.join(tmp_dir, test.lower()))
     if test == rv.CHIP_CLASSIFICATION:
-        return ChipClassificationIntegrationTest().exp_main(os.path.join(tmp_dir, test.lower()))
+        return ChipClassificationIntegrationTest().exp_main(
+            os.path.join(tmp_dir, test.lower()))
 
-    raise Exception("Unknown test {}".format(test))
+    raise Exception('Unknown test {}'.format(test))
+
 
 def run_test(test, temp_dir):
     errors = []
-    tasks = []
     experiment = get_experiment(test, temp_dir)
 
     # Check serialization
@@ -120,7 +120,6 @@ def run_test(test, temp_dir):
 
     # Check that running doesn't raise any exceptions.
     try:
-        # chain_workflow._main(workflow_path, tasks, run=True)
         rv.runner.LocalExperimentRunner(os.path.join(temp_dir, test.lower())) \
                  .run(experiment, rerun_commands=True)
     except Exception as exc:
@@ -140,8 +139,9 @@ def run_test(test, temp_dir):
 def main(tests):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:
-        # tests = all_tests
-        tests = [rv.CHIP_CLASSIFICATION]
+        tests = all_tests
+
+    tests = list(map(lambda x: x.upper(), tests))
 
     with TemporaryDirectory() as temp_dir:
         errors = []
@@ -163,6 +163,7 @@ def main(tests):
 
         if errors:
             exit(1)
+
 
 if __name__ == '__main__':
     main()

@@ -5,7 +5,8 @@ from object_detection.utils.np_box_list import BoxList
 
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.data.label.object_detection_labels import (ObjectDetectionLabels)
+from rastervision.data.label.object_detection_labels import (
+    ObjectDetectionLabels)
 
 
 class ObjectDetectionLabelsTest(unittest.TestCase):

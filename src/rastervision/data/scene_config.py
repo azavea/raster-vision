@@ -4,13 +4,12 @@ from typing import Union
 import rastervision as rv
 from rastervision.core import (Config, ConfigBuilder)
 from rastervision.task import TaskConfig
-from rastervision.data import (Scene,
-                               RasterSourceConfig,
-                               LabelSourceConfig,
+from rastervision.data import (Scene, RasterSourceConfig, LabelSourceConfig,
                                LabelStoreConfig)
 from rastervision.protos.scene2_pb2 import SceneConfig as SceneConfigMsg
 
 # TODO: Set/save/load AOI
+
 
 class SceneConfig(Config):
     def __init__(self,
@@ -18,7 +17,7 @@ class SceneConfig(Config):
                  raster_source,
                  label_source=None,
                  label_store=None,
-                 aoi_polygons = None):
+                 aoi_polygons=None):
         self.scene_id = scene_id
         self.raster_source = raster_source
         self.label_source = label_source
@@ -35,27 +34,23 @@ class SceneConfig(Config):
         raster_source = self.raster_source.create_source(tmp_dir)
         label_source = None
         if self.label_source:
-            label_source = self.label_source.create_source(task_config,
-                                                           raster_source.get_extent(),
-                                                           raster_source.get_crs_transformer(),
-                                                           tmp_dir)
+            label_source = self.label_source.create_source(
+                task_config, raster_source.get_extent(),
+                raster_source.get_crs_transformer(), tmp_dir)
         label_store = None
         if self.label_store:
-            label_store = self.label_store.create_store(task_config,
-                                                        raster_source.get_crs_transformer(),
-                                                        tmp_dir)
-        return Scene(self.scene_id,
-                     raster_source,
-                     label_source,
-                     label_store,
+            label_store = self.label_store.create_store(
+                task_config, raster_source.get_crs_transformer(), tmp_dir)
+        return Scene(self.scene_id, raster_source, label_source, label_store,
                      self.aoi_polygons)
 
     def to_proto(self):
-        msg = SceneConfigMsg(id=self.scene_id,
-                             raster_source = self.raster_source.to_proto())
+        msg = SceneConfigMsg(
+            id=self.scene_id, raster_source=self.raster_source.to_proto())
 
         if self.label_source:
-            msg.ground_truth_label_source.CopyFrom(self.label_source.to_proto())
+            msg.ground_truth_label_source.CopyFrom(
+                self.label_source.to_proto())
         if self.label_store:
             msg.prediction_label_store.CopyFrom(self.label_store.to_proto())
         return msg
@@ -63,7 +58,8 @@ class SceneConfig(Config):
     def to_builder(self):
         return SceneConfigBuilder(self)
 
-    def preprocess_command(self, command_type, experiment_config, context=None):
+    def preprocess_command(self, command_type, experiment_config,
+                           context=None):
         if context is None:
             context = []
         context = context + [self]
@@ -72,25 +68,22 @@ class SceneConfig(Config):
         b = self.to_builder()
 
         (new_raster_source,
-         sub_io_def) = self.raster_source.preprocess_command(command_type,
-                                                             experiment_config,
-                                                             context)
+         sub_io_def) = self.raster_source.preprocess_command(
+             command_type, experiment_config, context)
         io_def.merge(sub_io_def)
         b = b.with_raster_source(new_raster_source)
 
         if self.label_source:
             (new_label_source,
-             sub_io_def) = self.label_source.preprocess_command(command_type,
-                                                                experiment_config,
-                                                                context)
+             sub_io_def) = self.label_source.preprocess_command(
+                 command_type, experiment_config, context)
             io_def.merge(sub_io_def)
             b = b.with_label_source(new_label_source)
 
         if self.label_store:
             (new_label_store,
-             sub_io_def) = self.label_store.preprocess_command(command_type,
-                                                               experiment_config,
-                                                               context)
+             sub_io_def) = self.label_store.preprocess_command(
+                 command_type, experiment_config, context)
             io_def.merge(sub_io_def)
             b = b.with_label_store(new_label_store)
 
@@ -106,14 +99,17 @@ class SceneConfig(Config):
         """
         return SceneConfigBuilder().from_proto(msg).build()
 
+
 class SceneConfigBuilder(ConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = { "scene_id": prev.scene_id,
-                       "raster_source": prev.raster_source,
-                       "label_source": prev.label_source,
-                       "label_store": prev.label_store }
+            config = {
+                'scene_id': prev.scene_id,
+                'raster_source': prev.raster_source,
+                'label_source': prev.label_source,
+                'label_store': prev.label_store
+            }
         super().__init__(SceneConfig, config)
         self.task = None
 
@@ -154,15 +150,17 @@ class SceneConfigBuilder(ConfigBuilder):
         b = deepcopy(self)
         if isinstance(raster_source, RasterSourceConfig):
             if channel_order is not None:
-                b.config['raster_source'] = raster_source.to_builder() \
-                                                         .with_channel_order(channel_order) \
-                                                         .build()
+                rs = raster_source.to_builder() \
+                                  .with_channel_order(channel_order) \
+                                  .build()
+                b.config['raster_source'] = rs
             else:
                 b.config['raster_source'] = raster_source
         else:
-            provider = rv._registry.get_default_raster_source_provider(raster_source)
-            b.config['raster_source'] = provider.construct(raster_source, channel_order)
-
+            provider = rv._registry.get_default_raster_source_provider(
+                raster_source)
+            b.config['raster_source'] = provider.construct(
+                raster_source, channel_order)
 
         return b
 
@@ -184,24 +182,27 @@ class SceneConfigBuilder(ConfigBuilder):
             b.config['label_source'] = label_source
         else:
             if not self.task:
-                raise rv.ConfigError("You must set a task with '.with_task' before "
-                                     "creating a default label store for {}".format(label_source))
-            provider = rv._registry.get_default_label_source_provider(self.task.task_type,
-                                                                      label_source)
+                raise rv.ConfigError(
+                    "You must set a task with '.with_task' before "
+                    'creating a default label store for {}'.format(
+                        label_source))
+            provider = rv._registry.get_default_label_source_provider(
+                self.task.task_type, label_source)
             b.config['label_source'] = provider.construct(label_source)
-
 
         return b
 
-    def with_label_store(self, label_store: Union[str, LabelStoreConfig, None]=None):
+    def with_label_store(
+            self, label_store: Union[str, LabelStoreConfig, None] = None):
         """
         Sets the raster store for this scene.
 
         Args:
            label_store: Can either be a label store configuration, or
-                        a string, or None. If a string, the registry will be queried
-                        to grab the default LabelStoreConfig for the string.
-                        If None, then the default for the task from the regsitry will be used.
+                        a string, or None. If a string, the registry will
+                        be queried to grab the default LabelStoreConfig for
+                        the string. If None, then the default for the task
+                        from the regsitry will be used.
 
         Note:
            A task must be set with `with_task` before calling this, if calling
@@ -212,15 +213,20 @@ class SceneConfigBuilder(ConfigBuilder):
             b.config['label_store'] = label_store
         elif isinstance(label_store, str):
             if not self.task:
-                raise rv.ConfigError("You must set a task with '.with_task' before "
-                                     "creating a default label store for {}".format(label_store))
-            provider = rv._registry.get_default_label_store_provider(self.task.task_type, label_store)
+                raise rv.ConfigError(
+                    "You must set a task with '.with_task' before "
+                    'creating a default label store for {}'.format(
+                        label_store))
+            provider = rv._registry.get_default_label_store_provider(
+                self.task.task_type, label_store)
             b.config['label_store'] = provider.construct(label_store)
         else:
             if not self.task:
-                raise rv.ConfigError("You must set a task with '.with_task' before "
-                                     "creating a default label store.")
-            provider = rv._registry.get_default_label_store_provider(self.task.task_type)
+                raise rv.ConfigError(
+                    "You must set a task with '.with_task' before "
+                    'creating a default label store.')
+            provider = rv._registry.get_default_label_store_provider(
+                self.task.task_type)
             b.config['label_store'] = provider.construct()
 
         return b
