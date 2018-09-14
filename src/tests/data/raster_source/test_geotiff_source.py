@@ -12,8 +12,6 @@ from rastervision.data.raster_source.rasterio_source import load_window
 
 from tests import data_file_path
 
-# TODO: Test Proto methods
-
 
 class TestGeoTiffSource(unittest.TestCase):
     def test_load_window(self):
@@ -57,6 +55,20 @@ class TestGeoTiffSource(unittest.TestCase):
         source = rv.data.GeoTiffSourceConfig(uris=[img_path],
                                              channel_order=channel_order) \
                         .create_source(tmp_dir=None)
+
+        out_chip = source.get_raw_image_array()
+        self.assertEqual(out_chip.shape[2], 3)
+
+    def test_gets_raw_chip_from_proto(self):
+        img_path = data_file_path('small-rgb-tile.tif')
+        channel_order = [0, 1]
+
+        msg = rv.data.GeoTiffSourceConfig(uris=[img_path],
+                                          channel_order=channel_order) \
+                     .to_proto()
+
+        source = rv.RasterSourceConfig.from_proto(msg) \
+                                      .create_source(tmp_dir=None)
 
         out_chip = source.get_raw_image_array()
         self.assertEqual(out_chip.shape[2], 3)

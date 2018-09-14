@@ -83,7 +83,6 @@ class KerasClassificationConfig(BackendConfig):
                     CHIP_OUTPUT_FILES))
             io_def.add_inputs(inputs)
 
-            # TODO: Change? Or make configurable?
             conf.model_uri = os.path.join(conf.training_output_uri, 'model')
             io_def.add_output(conf.model_uri)
         if command_type == rv.PREDICT:

@@ -76,8 +76,6 @@ class RasterSourceConfigBuilder(ConfigBuilder):
         return self.with_channel_order(msg.channel_order) \
                    .with_transformers(transformers)
 
-    # TODO: Standardize on deepcopy'ing the builder, not the config.
-    # This allows parent builders to return child builder types.
     def with_channel_order(self, channel_order):
         """Defines the channel order for this raster source.
 
