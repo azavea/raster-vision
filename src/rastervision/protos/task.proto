@@ -1,0 +1,42 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rastervision/protos/class_item.proto";
+import "google/protobuf/struct.proto";
+
+message TaskConfig {
+    message ObjectDetectionConfig {
+        message ChipOptions {
+            required float neg_ratio = 1;
+            optional float ioa_thresh = 2 [default=0.8];
+            optional string window_method = 3 [default="chip"];
+            optional float label_buffer = 4 [default=0.];
+        }
+
+        message PredictOptions {
+            optional float merge_thresh = 2 [default=0.5];
+            optional float score_thresh = 3 [default=0.5];
+        }
+
+        repeated ClassItem class_items = 1;
+        required int32 chip_size = 2;
+        required ChipOptions chip_options = 3;
+        required PredictOptions predict_options = 4;
+    }
+
+    message ChipClassificationConfig {
+        repeated ClassItem class_items = 1;
+        required int32 chip_size = 2;
+    }
+
+    required string task_type = 1;
+    optional int32 predict_batch_size = 2 [default=10];
+    optional string predict_package_uri = 3;
+    optional bool debug = 4 [default=true];
+    oneof config_type {
+        ObjectDetectionConfig object_detection_config = 5;
+        ChipClassificationConfig chip_classification_config = 6;
+        google.protobuf.Struct custom_config = 7;
+    }
+}

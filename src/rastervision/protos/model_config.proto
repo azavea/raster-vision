@@ -1,0 +1,36 @@
+syntax = "proto2";
+
+package rv.protos;
+
+message ModelConfig {
+    enum Task {
+        OBJECT_DETECTION = 1;
+        CLASSIFICATION = 2;
+        REGRESSION = 3;
+        SEMANTIC_SEGMENTATION = 4;
+    }
+
+    enum Backend {
+        TF_OBJECT_DETECTION_API = 1;
+        KERAS_CLASSIFICATION = 2;
+        TF_DEEPLAB = 3;
+    }
+
+    enum ModelType {
+        MOBILENET = 1;
+        RESNET50 = 2;
+    }
+
+    message ClassItem {
+        // Eg. car
+        required int32 id = 1;
+        required string name = 2;
+        optional string color = 3;
+    }
+
+    required Task task = 1;
+    required Backend backend = 2;
+    required ModelType model_type = 3;
+    repeated ClassItem class_items = 4;
+    required int32 chip_size = 5;
+}

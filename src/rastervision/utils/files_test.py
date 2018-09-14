@@ -7,10 +7,10 @@ import boto3
 from moto import mock_s3
 
 from rastervision.utils.files import (
-    file_to_str, str_to_file, download_if_needed, upload_if_needed,
+    file_to_str, str_to_file, download_if_needed, upload_or_copy,
     NotReadableError, NotWritableError, load_json_config,
     ProtobufParseException, make_dir, get_local_path)
-from rastervision.protos.machine_learning_pb2 import MachineLearning
+from rastervision.protos.model_config_pb2 import ModelConfig
 
 
 class TestMakeDir(unittest.TestCase):
@@ -118,7 +118,7 @@ class TestFileToStr(unittest.TestCase):
 
 
 class TestDownloadIfNeeded(unittest.TestCase):
-    """Test download_if_needed and upload_if_needed and str_to_file."""
+    """Test download_if_needed and upload_or_copy and str_to_file."""
 
     def setUp(self):
         # Setup mock S3 bucket.
@@ -144,7 +144,7 @@ class TestDownloadIfNeeded(unittest.TestCase):
             download_if_needed(self.local_path, self.temp_dir.name)
 
         str_to_file(self.content_str, self.local_path)
-        upload_if_needed(self.local_path, self.local_path)
+        upload_or_copy(self.local_path, self.local_path)
         local_path = download_if_needed(self.local_path, self.temp_dir.name)
         self.assertEqual(local_path, self.local_path)
 
@@ -153,14 +153,14 @@ class TestDownloadIfNeeded(unittest.TestCase):
             download_if_needed(self.s3_path, self.temp_dir.name)
 
         str_to_file(self.content_str, self.local_path)
-        upload_if_needed(self.local_path, self.s3_path)
+        upload_or_copy(self.local_path, self.s3_path)
         local_path = download_if_needed(self.s3_path, self.temp_dir.name)
         content_str = file_to_str(local_path)
         self.assertEqual(self.content_str, content_str)
 
         wrong_path = 's3://wrongpath/x.txt'
         with self.assertRaises(NotWritableError):
-            upload_if_needed(local_path, wrong_path)
+            upload_or_copy(local_path, wrong_path)
 
 
 class TestLoadJsonConfig(unittest.TestCase):
@@ -187,11 +187,11 @@ class TestLoadJsonConfig(unittest.TestCase):
             }]
         }
         self.write_config_file(config)
-        ml_config = load_json_config(self.file_path, MachineLearning())
+        ml_config = load_json_config(self.file_path, ModelConfig())
         self.assertEqual(ml_config.task,
-                         MachineLearning.Backend.Value('KERAS_CLASSIFICATION'))
+                         ModelConfig.Backend.Value('KERAS_CLASSIFICATION'))
         self.assertEqual(ml_config.backend,
-                         MachineLearning.Task.Value('CLASSIFICATION'))
+                         ModelConfig.Task.Value('CLASSIFICATION'))
         self.assertEqual(ml_config.class_items[0].id, 1)
         self.assertEqual(ml_config.class_items[0].name, 'car')
         self.assertEqual(len(ml_config.class_items), 1)
@@ -209,13 +209,13 @@ class TestLoadJsonConfig(unittest.TestCase):
 
         self.write_config_file(config)
         with self.assertRaises(ProtobufParseException):
-            load_json_config(self.file_path, MachineLearning())
+            load_json_config(self.file_path, ModelConfig())
 
     def test_bogus_value(self):
         config = {'task': 'bogus_value'}
         self.write_config_file(config)
         with self.assertRaises(ProtobufParseException):
-            load_json_config(self.file_path, MachineLearning())
+            load_json_config(self.file_path, ModelConfig())
 
     def test_invalid_json(self):
         invalid_json_str = '''
@@ -227,7 +227,7 @@ class TestLoadJsonConfig(unittest.TestCase):
             myfile.write(invalid_json_str)
 
         with self.assertRaises(ProtobufParseException):
-            load_json_config(self.file_path, MachineLearning())
+            load_json_config(self.file_path, ModelConfig())
 
 
 if __name__ == '__main__':

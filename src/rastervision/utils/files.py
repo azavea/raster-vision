@@ -1,17 +1,17 @@
 import io
 import os
 import urllib
-
-import boto3
-import botocore
+from urllib.parse import urlparse
+import urllib.request
 import shutil
 import subprocess
 import tempfile
-
-from google.protobuf import json_format
-from pathlib import Path
 from threading import Timer
-from urllib.parse import urlparse
+from pathlib import Path
+
+import boto3
+import botocore
+from google.protobuf import json_format
 
 
 class NotReadableError(Exception):
@@ -146,10 +146,11 @@ def download_if_needed(uri, download_dir):
     path = get_local_path(uri, download_dir)
     make_dir(path, use_dirname=True)
 
+    print('Downloading {} to {}'.format(uri, path))
+
     parsed_uri = urlparse(uri)
     if parsed_uri.scheme == 's3':
         try:
-            print('Downloading {} to {}'.format(uri, path))
             s3 = boto3.client('s3')
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError:
@@ -169,10 +170,33 @@ def download_if_needed(uri, download_dir):
     return path
 
 
-def upload_if_needed(src_path, dst_uri):
+def file_exists(uri):
+    parsed_uri = urlparse(uri)
+    if parsed_uri.scheme == 's3':
+        s3 = boto3.client('s3')
+        bucket = s3.Bucket(parsed_uri.netloc)
+        key = parsed_uri.path[1:]
+        objs = list(bucket.objects.filter(Prefix=key))
+        if len(objs) > 0 and objs[0].key == key:
+            return True
+        return False
+    elif parsed_uri.scheme in ['http', 'https']:
+        try:
+            response = urllib.request.urlopen(uri)
+            if response.getcode() == 200:
+                return int(response.headers['content-length']) > 0
+            else:
+                return False
+        except urllib.error.URLError:
+            return False
+    else:
+        return os.path.isfile(uri)
+
+
+def upload_or_copy(src_path, dst_uri):
     """Upload a file if the destination is remote.
 
-    If dst_uri is local, there is no need to upload.
+    If dst_uri is local, the file is copied.
 
     Args:
         src_path: (string) path to source file
@@ -196,10 +220,15 @@ def upload_if_needed(src_path, dst_uri):
                 s3 = boto3.client('s3')
                 s3.upload_file(src_path, parsed_uri.netloc,
                                parsed_uri.path[1:])
-            except Exception:
-                raise NotWritableError('Could not write {}'.format(dst_uri))
+            except Exception as e:
+                raise NotWritableError(
+                    'Could not write {}'.format(dst_uri)) from e
         else:
             sync_dir(src_path, dst_uri, delete=True)
+    else:
+        if src_path != dst_uri:
+            make_dir(dst_uri, use_dirname=True)
+            shutil.copyfile(src_path, dst_uri)
 
 
 def file_to_str(file_uri):
@@ -223,8 +252,12 @@ def file_to_str(file_uri):
                 s3.download_fileobj(parsed_uri.netloc, parsed_uri.path[1:],
                                     file_buffer)
                 return file_buffer.getvalue().decode('utf-8')
-            except botocore.exceptions.ClientError:
-                raise NotReadableError('Could not read {}'.format(file_uri))
+            except botocore.exceptions.ClientError as e:
+                raise NotReadableError(
+                    'Could not read {}'.format(file_uri)) from e
+    elif parsed_uri.scheme in ['http', 'https']:
+        with urllib.request.urlopen(file_uri) as req:
+            return req.read().decode("utf8")
     else:
         if not os.path.isfile(file_uri):
             raise NotReadableError('Could not read {}'.format(file_uri))
@@ -250,8 +283,9 @@ def str_to_file(content_str, file_uri):
             try:
                 s3 = boto3.client('s3')
                 s3.upload_fileobj(str_buffer, bucket, key)
-            except Exception:
-                raise NotWritableError('Could not write {}'.format(file_uri))
+            except Exception as e:
+                raise NotWritableError(
+                    'Could not write {}'.format(file_uri)) from e
     else:
         make_dir(file_uri, use_dirname=True)
         with open(file_uri, 'w') as content_file:
@@ -275,10 +309,10 @@ def load_json_config(uri, message):
     """
     try:
         return json_format.Parse(file_to_str(uri), message)
-    except json_format.ParseError:
+    except json_format.ParseError as e:
         error_msg = ('Problem parsing protobuf file {}. '.format(uri) +
                      'You might need to run scripts/compile')
-        raise ProtobufParseException(error_msg)
+        raise ProtobufParseException(error_msg) from e
 
 
 def save_json_config(message, uri):

@@ -6,6 +6,7 @@ from rastervision.label_stores.segmentation_raster_file import (
     SegmentationInputRasterFile, SegmentationOutputRasterFile)
 
 
+# TODO: Make this take a task config instead of a class map?
 def build(config,
           crs_transformer,
           extent,

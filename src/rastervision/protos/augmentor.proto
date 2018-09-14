@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "google/protobuf/struct.proto";
+
+message AugmentorConfig {
+    required string augmentor_type = 1;
+
+    oneof augmentor_config {
+        // The probability this augmentor will be applied.
+        // Used for simple augmentors that take no other configuration.
+        float aug_prob = 3;
+
+        // Configuration for custom augmentors
+        google.protobuf.Struct custom_config = 5;
+    }
+}

@@ -8,7 +8,7 @@ def build(config):
     if isinstance(config, str):
         config = files.load_json_config(config, PredictConfig())
 
-    ml_task = ml_task_builder.build(config.machine_learning)
+    ml_task = ml_task_builder.build(config.model_config)
     class_map = ml_task.get_class_map()
     scenes = [
         scene_builder.build(scene_config, class_map)
