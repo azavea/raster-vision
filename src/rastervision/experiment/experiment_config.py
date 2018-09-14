@@ -4,7 +4,8 @@ from copy import deepcopy
 import rastervision as rv
 from rastervision.core import CommandIODefinition
 from rastervision.core.config import (Config, ConfigBuilder)
-from rastervision.protos.experiment2_pb2 import ExperimentConfig2 as ExperimentConfigMsg
+from rastervision.protos.experiment_pb2 \
+    import ExperimentConfig as ExperimentConfigMsg
 
 
 class ExperimentConfig(Config):

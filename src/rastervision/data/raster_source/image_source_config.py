@@ -4,7 +4,7 @@ import rastervision as rv
 from rastervision.data.raster_source.image_source import ImageSource
 from rastervision.data.raster_source.raster_source_config \
     import (RasterSourceConfig, RasterSourceConfigBuilder)
-from rastervision.protos.raster_source2_pb2 \
+from rastervision.protos.raster_source_pb2 \
     import RasterSourceConfig as RasterSourceConfigMsg
 
 

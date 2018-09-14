@@ -41,6 +41,5 @@ class RasterioRasterSource(RasterSource):
         """Return the numpy.dtype of this scene"""
         return np.dtype(self.image_dataset.dtypes[0])
 
-
     def _get_chip(self, window):
         return load_window(self.image_dataset, window.rasterio_format())
