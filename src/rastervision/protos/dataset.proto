@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package rv.protos;
 
-import "rastervision/protos/scene2.proto";
+import "rastervision/protos/scene.proto";
 import "rastervision/protos/augmentor.proto";
 
 message DatasetConfig {

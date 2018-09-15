@@ -2,6 +2,7 @@ syntax = "proto2";
 
 package rv.protos;
 
+import "rastervision/protos/raster_class_map.proto";
 import "rastervision/protos/raster_source.proto";
 import "google/protobuf/struct.proto";
 
@@ -38,16 +39,11 @@ message LabelSourceConfig {
         optional bool infer_cells = 7 [default=false];
     }
 
-    message RasterClassMap {
-        required string source_class = 1;
-        required int32 raster_vision_class = 2;
-    }
-
     message SegmentationRasterSource {
 
         // Raster source from which the label data are to be
         // drawn.
-        required RasterSource src = 1;
+        required RasterSourceConfig src = 1;
 
         // A mapping between classes in the source raster(s) and classes
         // used internally in raster vision.  The latter type are also

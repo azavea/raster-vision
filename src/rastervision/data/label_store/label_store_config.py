@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 import rastervision as rv
 from rastervision.core.config import (Config, ConfigBuilder)
-from rastervision.protos.label_store2_pb2 import LabelStoreConfig as LabelStoreConfigMsg
+from rastervision.protos.label_store_pb2 import LabelStoreConfig as LabelStoreConfigMsg
 
 
 class LabelStoreConfig(Config):

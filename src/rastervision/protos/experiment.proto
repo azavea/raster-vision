@@ -2,40 +2,24 @@ syntax = "proto2";
 
 package rv.protos;
 
-import "rastervision/protos/model_config.proto";
-import "rastervision/protos/scene.proto";
-
-import "rastervision/protos/compute_stats.proto";
-import "rastervision/protos/make_chips.proto";
-import "rastervision/protos/train.proto";
-import "rastervision/protos/predict.proto";
-import "rastervision/protos/eval.proto";
+import "rastervision/protos/dataset.proto";
+import "rastervision/protos/task.proto";
+import "rastervision/protos/backend.proto";
+import "rastervision/protos/analyzer.proto";
+import "rastervision/protos/evaluator.proto";
 
 message ExperimentConfig {
-    required ModelConfig model_config = 1;
-    repeated Scene train_scenes = 3;
-    // Scenes to use for validation during training, and evaluation
-    repeated Scene validation_scenes = 4;
-    // Scenes to use for prediction without evaluation.
-    repeated Scene test_scenes = 15;
+    required string id = 1;
+    required DatasetConfig dataset = 2;
+    required TaskConfig task = 3;
+    required BackendConfig backend = 4;
+    repeated AnalyzerConfig analyzers = 5;
+    repeated EvaluatorConfig evaluators = 6;
 
-    // Output directories for commands
-    required string compute_stats_uri = 5;
-    required string make_chips_uri = 6;
-    required string train_uri = 7;
-    required string predict_uri = 8;
-    required string eval_uri = 9;
-
-    // URIs for config files for commands
-    required string compute_stats_config_uri = 16;
-    required string make_chips_config_uri = 17;
-    required string train_config_uri = 18;
-    required string predict_config_uri = 19;
-    required string eval_config_uri = 20;
-
-    required ComputeStatsConfig compute_stats = 10;
-    required MakeChipsConfig make_chips = 11;
-    required TrainConfig train = 12;
-    required PredictConfig predict = 13;
-    required EvalConfig eval = 14;
+    required string analyze_uri = 7;
+    required string chip_uri = 8;
+    required string train_uri = 9;
+    required string predict_uri = 10;
+    required string eval_uri = 11;
+    required string bundle_uri = 12;
 }

@@ -25,6 +25,7 @@ from object_detection.protos.string_int_label_map_pb2 import (
     StringIntLabelMap, StringIntLabelMapItem)
 from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 
+import rastervision as rv
 from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
@@ -570,7 +571,14 @@ class TFObjectDetection(Backend):
         Returns:
             the local path to the scene's TFRecord
         """
-        # TODO: Check if uint8
+        # Currently TF Object Detection can only handle uint8
+        if scene.raster_source.get_dtype() != np.uint8:
+            raise Exception('Cannot use {} backend for imagery that does '
+                            'not have data type uint8. '
+                            'Use the StatsAnalyzer and StatsTransformer '
+                            'to turn the raster data into uint8 data'.format(
+                                rv.TF_OBJECT_DETECTION))
+
         training_package = TrainingPackage(self.config.training_data_uri,
                                            self.config, tmp_dir)
         self.scene_training_packages.append(training_package)

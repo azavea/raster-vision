@@ -42,6 +42,14 @@ class TestGeoTiffSource(unittest.TestCase):
             chip = load_window(image_dataset, window=window)
             np.testing.assert_equal(chip, np.zeros(chip.shape))
 
+    def test_get_dtype(self):
+        img_path = data_file_path('small-rgb-tile.tif')
+        with TemporaryDirectory() as tmp_dir:
+            source = rv.data.GeoTiffSourceConfig(uris=[img_path]) \
+                            .create_source(tmp_dir)
+
+            self.assertEqual(source.get_dtype(), np.uint8)
+
     def test_gets_raw_chip(self):
         img_path = data_file_path('small-rgb-tile.tif')
         channel_order = [0, 1]

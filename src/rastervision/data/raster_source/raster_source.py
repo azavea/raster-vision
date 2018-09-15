@@ -32,6 +32,11 @@ class RasterSource(ABC):
         pass
 
     @abstractmethod
+    def get_dtype(self):
+        """Return the numpy.dtype of this scene"""
+        pass
+
+    @abstractmethod
     def _get_chip(self, window):
         """Return the chip located in the window.
 

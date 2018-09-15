@@ -5,7 +5,7 @@ from rastervision.core.raster_stats import RasterStats
 from rastervision.data.raster_transformer import (
     RasterTransformerConfig, RasterTransformerConfigBuilder, StatsTransformer,
     NoopTransformer)
-from rastervision.protos.raster_transformer2_pb2 \
+from rastervision.protos.raster_transformer_pb2 \
     import RasterTransformerConfig as RasterTransformerConfigMsg
 
 

@@ -4,7 +4,7 @@ from copy import deepcopy
 import rastervision as rv
 from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.data import (RasterTransformerConfig, StatsTransformerConfig)
-from rastervision.protos.raster_source2_pb2 \
+from rastervision.protos.raster_source_pb2 \
     import RasterSourceConfig as RasterSourceConfigMsg
 
 

@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 import numpy as np
 
 from rastervision.data.raster_source import RasterSource
@@ -28,11 +30,16 @@ class RasterioRasterSource(RasterSource):
         self.image_dataset = self.build_image_dataset(temp_dir)
         super().__init__(raster_transformers, channel_order)
 
+    @abstractmethod
     def build_image_dataset(self, temp_dir):
         pass
 
     def get_extent(self):
         return Box(0, 0, self.image_dataset.height, self.image_dataset.width)
+
+    def get_dtype(self):
+        """Return the numpy.dtype of this scene"""
+        return np.dtype(self.image_dataset.dtypes[0])
 
     def _get_chip(self, window):
         return load_window(self.image_dataset, window.rasterio_format())

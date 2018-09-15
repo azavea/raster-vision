@@ -6,7 +6,7 @@ import "rastervision/protos/analyzer.proto";
 import "rastervision/protos/augmentor.proto";
 import "rastervision/protos/task.proto";
 import "rastervision/protos/backend.proto";
-import "rastervision/protos/scene2.proto";
+import "rastervision/protos/scene.proto";
 import "rastervision/protos/evaluator.proto";
 
 message CommandConfig {

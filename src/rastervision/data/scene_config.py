@@ -6,7 +6,8 @@ from rastervision.core import (Config, ConfigBuilder)
 from rastervision.task import TaskConfig
 from rastervision.data import (Scene, RasterSourceConfig, LabelSourceConfig,
                                LabelStoreConfig)
-from rastervision.protos.scene2_pb2 import SceneConfig as SceneConfigMsg
+from rastervision.protos.scene_pb2 \
+    import SceneConfig as SceneConfigMsg
 
 # TODO: Set/save/load AOI
 
