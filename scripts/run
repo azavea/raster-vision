@@ -21,6 +21,8 @@ Run raster-vision image locally.
 --aws forwards AWS credentials.
 --tensorboard maps port 6006
 --gpu use the NVIDIA runtime and GPU image
+--name <name> gives the container a name
+--rv-config forwards RV config
 All arguments after above options are passed to 'docker run'.
 "
 }
@@ -36,6 +38,10 @@ do
     case $key in
         --aws)
         AWS="-e AWS_PROFILE=${AWS_PROFILE:-default} -v ${HOME}/.aws:/root/.aws:ro"
+        shift # past argument
+        ;;
+        --rv-config)
+        RV_CONFIG="-e RV_PROFILE=${RV_PROFILE} -v ${HOME}/.rastervision:/root/.rastervision:ro"
         shift # past argument
         ;;
         --tensorboard)
@@ -62,7 +68,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    docker run ${RUNTIME} ${NAME} --rm -it ${TENSORBOARD} ${AWS} \
+    docker run ${RUNTIME} ${NAME} --rm -it ${TENSORBOARD} ${RV_CONFIG} ${AWS} \
         -v "$SRC":/opt/src \
         -v ${RASTER_VISION_DATA_DIR}:/opt/data \
         ${IMAGE} "${@:1}"
