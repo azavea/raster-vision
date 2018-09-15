@@ -20,8 +20,7 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
 
     def to_proto(self):
         sub_msg = EvaluatorConfigMsg.ClassificationEvaluatorConfig(
-            class_items=self.class_map.to_proto(),
-            output_uri=self.output_uri)
+            class_items=self.class_map.to_proto(), output_uri=self.output_uri)
         msg = EvaluatorConfigMsg(
             evaluator_type=self.evaluator_type, classification_config=sub_msg)
 

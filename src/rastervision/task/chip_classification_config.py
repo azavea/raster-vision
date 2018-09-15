@@ -20,8 +20,7 @@ class ChipClassificationConfig(TaskConfig):
 
     def to_proto(self):
         conf = TaskConfigMsg.ChipClassificationConfig(
-            chip_size=self.chip_size,
-            class_items=self.class_map.to_proto())
+            chip_size=self.chip_size, class_items=self.class_map.to_proto())
         return TaskConfigMsg(
             task_type=rv.CHIP_CLASSIFICATION, chip_classification_config=conf)
 

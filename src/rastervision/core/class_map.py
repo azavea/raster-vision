@@ -1,7 +1,6 @@
-from typing import (List, Dict, Tuple, Union)
-
 from rastervision.protos.class_item_pb2 \
     import ClassItem as ClassItemMsg
+
 
 class ClassItem(object):
     """A class id and associated data."""
@@ -33,15 +32,11 @@ class ClassItem(object):
         return s
 
     def to_proto(self):
-        return ClassItemMsg(id=self.id,
-                            name=self.name,
-                            color=self.color)
+        return ClassItemMsg(id=self.id, name=self.name, color=self.color)
 
     @staticmethod
     def from_proto(msg):
-        return ClassItem(id=msg.id,
-                         name=msg.name,
-                         color=msg.color)
+        return ClassItem(id=msg.id, name=msg.name, color=msg.color)
 
 
 class ClassMap(object):
@@ -107,10 +102,7 @@ class ClassMap(object):
         """Transform a ClassMap into
         a list of ClassItem protobuf messages
         """
-        return [
-            item.to_proto()
-            for item in self.get_items()
-        ]
+        return [item.to_proto() for item in self.get_items()]
 
     @staticmethod
     def construct_from(classes):
@@ -147,7 +139,8 @@ class ClassMap(object):
             if not len(classes) == 0:
                 if type(classes[0]) is ClassItemMsg:
                     for item in classes:
-                        item_list.append(ClassItem(item.id, item.name, item.color))
+                        item_list.append(
+                            ClassItem(item.id, item.name, item.color))
                 elif type(classes[0]) is str:
                     for i, name in enumerate(classes):
                         item_list.append(ClassItem(i + 1, name))
