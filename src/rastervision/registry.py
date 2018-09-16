@@ -262,3 +262,8 @@ class Registry:
 
         raise RegistryError(
             'No experiment runner for type {}'.format(runner_type))
+
+    def get_experiment_runner_keys(self):
+        self._ensure_plugins_loaded()
+        return (list(self.experiment_runners.keys()) + list(
+            self._plugin_registry.experiment_runners.keys()))
