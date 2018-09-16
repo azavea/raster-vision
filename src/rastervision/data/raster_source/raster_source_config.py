@@ -92,6 +92,9 @@ class RasterSourceConfigBuilder(ConfigBuilder):
         b.config['transformers'] = transformers
         return b
 
+    def with_transformer(self, transformer):
+        return self.with_transformers([transformer])
+
     def with_stats_transformer(self):
         b = deepcopy(self)
         transformers = b.config.get('transformers')

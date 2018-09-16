@@ -43,9 +43,8 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
 
     def from_proto(self, msg):
         conf = msg.chip_classification_config
-        b = ChipClassificationConfigBuilder()
-        return b.with_classes(list(conf.class_items)) \
-                .with_chip_size(conf.chip_size)
+        return self.with_classes(list(conf.class_items)) \
+                   .with_chip_size(conf.chip_size)
 
     def with_classes(
             self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[

@@ -77,6 +77,7 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
                                  self.train_scenes, self.val_scenes)
 
     def from_proto(self, msg):
+        self.process_plugins(msg)
         msg = msg.chip_config
 
         task = rv.TaskConfig.from_proto(msg.task)
@@ -89,7 +90,7 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
         b = b.with_backend(backend)
         b = b.with_augmentors(augmentors)
         b = b.with_train_scenes(train_scenes)
-        b = b.with_val_sceness(val_scenes)
+        b = b.with_val_scenes(val_scenes)
 
         return b
 

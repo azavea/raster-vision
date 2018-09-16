@@ -28,10 +28,8 @@ class NodataAugmentorConfigBuilder(AugmentorConfigBuilder):
             config = {'aug_prob': prev.aug_prob}
         super().__init__(NodataAugmentorConfig, config)
 
-    @staticmethod
     def from_proto(self, msg):
-        b = NodataAugmentorConfigBuilder()
-        return b.with_probablity(msg.aug_prob)
+        return self.with_probablity(msg.aug_prob)
 
     def with_probability(self, aug_prob):
         """Sets the probability for this augmentation.

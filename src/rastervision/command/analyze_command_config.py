@@ -60,6 +60,7 @@ class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
         return AnalyzeCommandConfig(self.task, self.scenes, self.analyzers)
 
     def from_proto(self, msg):
+        self.process_plugins(msg)
         msg = msg.analyze_config
 
         task = rv.TaskConfig.from_proto(msg.task)

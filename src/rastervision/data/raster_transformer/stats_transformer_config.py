@@ -58,8 +58,7 @@ class StatsTransformerConfigBuilder(RasterTransformerConfigBuilder):
         super().__init__(StatsTransformerConfig, config)
 
     def from_proto(self, msg):
-        b = StatsTransformerConfigBuilder()
-        return b.with_stats_uri(msg.stats_uri)
+        return self.with_stats_uri(msg.stats_uri)
 
     def with_stats_uri(self, stats_uri):
         """Set the stats_uri.

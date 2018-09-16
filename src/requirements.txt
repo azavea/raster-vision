@@ -1,1 +1,3 @@
 networkx==2.1
+everett==0.9
+pluginbase==0.7

@@ -22,6 +22,7 @@ class CommandDAG:
         uri_dag = nx.DiGraph()
 
         for idx, command_def in enumerate(command_definitions):
+            uri_dag.add_node(idx)
             for input_uri in command_def.io_def.input_uris:
                 uri_dag.add_edge(input_uri, idx)
 
@@ -75,7 +76,6 @@ class CommandDAG:
                 command_id_dag.add_edge(upstream_idx, idx)
 
         # Feed this digraph of commands to the child runner.
-
         self.command_definitions = command_definitions
         self.command_id_dag = command_id_dag
 

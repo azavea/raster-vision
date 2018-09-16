@@ -60,6 +60,7 @@ class EvalCommandConfigBuilder(CommandConfigBuilder):
         return EvalCommandConfig(self.task, self.scenes, self.evaluators)
 
     def from_proto(self, msg):
+        self.process_plugins(msg)
         msg = msg.eval_config
 
         task = rv.TaskConfig.from_proto(msg.task)

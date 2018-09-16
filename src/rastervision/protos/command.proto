@@ -8,6 +8,7 @@ import "rastervision/protos/task.proto";
 import "rastervision/protos/backend.proto";
 import "rastervision/protos/scene.proto";
 import "rastervision/protos/evaluator.proto";
+import "rastervision/protos/plugin.proto";
 
 message CommandConfig {
     message AnalyzeConfig {
@@ -60,4 +61,6 @@ message CommandConfig {
         EvalConfig eval_config = 6;
         BundleConfig bundle_config = 7;
     }
+
+    optional PluginConfig plugins = 8;
 }

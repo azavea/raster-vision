@@ -63,6 +63,7 @@ class PredictCommandConfigBuilder(CommandConfigBuilder):
         return PredictCommandConfig(self.task, self.backend, self.scenes)
 
     def from_proto(self, msg):
+        self.process_plugins(msg)
         msg = msg.predict_config
 
         task = rv.TaskConfig.from_proto(msg.task)
