@@ -37,6 +37,13 @@ class BackendConfig(Config):
                            .from_proto(msg) \
                            .build()
 
+    def preprocess_command(self, command_type, experiment_config,
+                           context=None):
+        io_def = CommandIODefinition()
+        if self.pretrained_model_uri:
+            io_def.add_input(self.pretrained_model_uri)
+        return (self, io_def)
+
 
 class BackendConfigBuilder(ConfigBuilder):
     def __init__(self, backend_type, config_class, config=None, prev=None):
