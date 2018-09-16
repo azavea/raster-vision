@@ -132,6 +132,23 @@ class TestKerasClassificationConfig(unittest.TestCase):
                     'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
         self.assertEqual(b.pretrained_model_uri, expected)
 
+    def test_custom_default_model_config(self):
+        model_defaults_path = data_file_path('custom-model-defaults.json')
+        overrides = {'RV_model_defaults_uri': model_defaults_path}
+        rv._registry.initialize_config(config_overrides=overrides)
+
+        try:
+            b = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
+                                .with_task(self.generate_task()) \
+                                .with_model_defaults('CUSTOM_MODEL') \
+                                .build()
+
+            expected = 'https://www.azavea.com'
+            self.assertEqual(b.pretrained_model_uri, expected)
+        finally:
+            # Reset the config.
+            rv._registry.initialize_config()
+
 
 if __name__ == '__main__':
     unittest.main()

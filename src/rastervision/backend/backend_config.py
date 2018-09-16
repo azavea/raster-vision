@@ -1,10 +1,9 @@
 from abc import abstractmethod
 from copy import deepcopy
-import os
-import json
 
 import rastervision as rv
-from rastervision.core import (Config, ConfigBuilder)
+from rastervision.rv_config import RVConfig
+from rastervision.core import (Config, ConfigBuilder, CommandIODefinition)
 
 
 class BackendConfig(Config):
@@ -85,19 +84,11 @@ class BackendConfigBuilder(ConfigBuilder):
         b.config['pretrained_model_uri'] = uri
         return b
 
-    # TODO: Allow client configuration of model defaults.
-    # This should be purely client side. Allow for this to be set
-    # in ~/.rastervision configuration.
     def with_model_defaults(self, model_defaults_key):
         """Sets the backend configuration and pretrained model defaults
-           according to the model defaults configuraiton
-          (see model_defaults.json in this package)
+           according to the model defaults configuration.
         """
-        model_defaults = {}
-        model_defaults_path = os.path.join(
-            os.path.dirname(__file__), 'model_defaults.json')
-        with open(model_defaults_path) as f:
-            model_defaults = json.loads(f.read())
+        model_defaults = RVConfig.get_instance().get_model_defaults()
 
         if self.backend_type in model_defaults:
             backend_defaults = model_defaults[self.backend_type]

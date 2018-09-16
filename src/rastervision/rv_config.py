@@ -1,9 +1,11 @@
 import os
+import json
 
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
                              ConfigIniEnv, ConfigOSEnv)
 
 import rastervision as rv
+from rastervision.utils.files import file_to_str
 
 
 class RVConfig:
@@ -86,3 +88,25 @@ class RVConfig:
 
     def get_subconfig(self, namespace):
         return self.config.with_namespace(namespace)
+
+    def get_model_defaults(self):
+        """Return the "model defaults"
+
+        The model defaults is a json file that lists a set of default
+        configurations for models, per backend and model key.
+        There are defaults that are installed with Raster Vision, but
+        users can override these defaults with their own by setting
+        the "model_defaults_uri" in the [RV] section of
+        thier configuration file, or by setting the RV_MODEL_DEFAULT_URI
+        environment variable.
+        """
+        # import pdb; pdb.set_trace()
+        subconfig = self.get_subconfig('RV')
+        default_path = os.path.join(
+            os.path.dirname(rv.backend.__file__), 'model_defaults.json')
+        model_default_uri = subconfig(
+            'model_defaults_uri', default=default_path)
+
+        model_defaults = json.loads(file_to_str(model_default_uri))
+
+        return model_defaults
