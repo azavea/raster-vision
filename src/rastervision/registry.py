@@ -259,7 +259,6 @@ class Registry:
                 runner_type)
             if plugin_runner:
                 return plugin_runner()
-
         raise RegistryError(
             'No experiment runner for type {}'.format(runner_type))
 
