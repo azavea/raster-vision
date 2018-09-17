@@ -111,15 +111,15 @@ class Registry:
         }
 
         self.filesystems = [
-            (1, rvfs.HttpFileSystem),
-            (2, rvfs.S3FileSystem),
-            (2**64-1, rvfs.LocalFileSystem)
+            rvfs.HttpFileSystem,
+            rvfs.S3FileSystem,
+            rvfs.LocalFileSystem
         ]
 
-    def get_file_system(self, uri: str) -> Union[rvfs.FileSystem, None]:
-        for (priority, filesystem) in sorted(self.filesystems):
-            if filesystem.matches_uri(uri):
-                return filesystem
+    def get_file_system(self, uri: str) -> rvfs.FileSystem:
+        for fs in self.filesystems:
+            if fs.matches_uri(uri):
+                return fs
         return None
 
     def get_config_builder(self, group, key):
