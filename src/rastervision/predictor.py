@@ -47,7 +47,11 @@ class Predictor():
                                          .with_label_store()
 
         if channel_order:
-            scene_builder = scene_builder.with_channel_order(channel_order)
+            raster_source = scene_builder.config['raster_source'] \
+                                         .to_builder() \
+                                         .with_channel_order(channel_order) \
+                                         .build()
+            scene_builder = scene_builder.with_raster_source(raster_source)
 
         self.scene_config = scene_builder.build()
 
@@ -78,7 +82,7 @@ class Predictor():
         # Analyzers should overwrite files in the tmp_dir
         if self.update_stats:
             for analyzer in self.analyzers:
-                analyzer.process([scene])
+                analyzer.process([scene], self.tmp_dir)
 
             # Reload scene to refresh any new analyzer config
             scene = scene_config.create_scene(self.task_config, self.tmp_dir)
@@ -87,7 +91,3 @@ class Predictor():
         if label_uri:
             scene.prediction_label_store.save(labels)
         return labels
-
-
-if __name__ == '__main__':
-    pass

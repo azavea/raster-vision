@@ -32,16 +32,6 @@ class ImageSourceConfig(RasterSourceConfig):
                          .build()
         return (new_config, files)
 
-    def load_bundle_files(self, bundle_dir):
-        new_transformers = []
-        for transformer in self.transformers:
-            new_transformer, t_files = transformer.load_bundle_files(
-                bundle_dir)
-            new_transformers.append(new_transformer)
-        return self.to_builder() \
-                   .with_transformers(new_transformers) \
-                   .build()
-
     def for_prediction(self, image_uri):
         return self.to_builder() \
                    .with_uri(image_uri) \
