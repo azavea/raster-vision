@@ -46,16 +46,8 @@ class CommandDAG:
                 '\t{}\n'.format(',\b\t'.join(missing_files)))
 
         # If we are not rerunning, remove commands that have existing outputs.
-        # Do this only for ANALYZE and CHIP, as training can continue from
-        # checkpoints and affect all downstream processes.
-        # TODO: Solidify this logic.
         if not rerun_commands:
-            commands_to_not_rerun = [rv.ANALYZE, rv.CHIP]
-            for idx in [
-                    idx for idx in uri_dag.nodes
-                    if (type(idx) == int and command_definitions[idx]
-                        .command_config.command_type in commands_to_not_rerun)
-            ]:
+            for idx in [idx for idx in uri_dag.nodes if type(idx) == int]:
                 for output_uri in [
                         edge[1] for edge in uri_dag.out_edges(idx)
                         if file_exists(edge[1])

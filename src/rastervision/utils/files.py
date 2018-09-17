@@ -106,6 +106,18 @@ def download_if_needed(uri, download_dir):
     return path
 
 
+def download_or_copy(uri, target_dir):
+    """Downloads or copies a file to a directory
+
+    Args:
+       uri: (string) URI of file
+       target_dir: (string) local directory to copy file to
+    """
+    local_path = download_if_needed(uri, target_dir)
+    shutil.copy(local_path, target_dir)
+    return local_path
+
+
 def file_exists(uri):
     fs = FileSystem.get_file_system(uri)
     return fs.file_exists(uri)

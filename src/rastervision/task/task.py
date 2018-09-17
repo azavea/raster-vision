@@ -183,7 +183,7 @@ class Task(object):
             nonlocal labels
             new_labels = self.backend.predict(
                 np.array(predict_chips), predict_windows, tmp_dir)
-            labels = label_store.concatenate(labels, new_labels)
+            labels += new_labels
             print('.' * len(predict_chips), end='', flush=True)
 
         batch_chips, batch_windows = [], []

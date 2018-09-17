@@ -15,6 +15,14 @@ class LabelStoreConfig(Config):
         return msg
 
     @abstractmethod
+    def for_prediction(self, label_uri):
+        """Build a copy of this config with a label_uri set.
+
+        This is used in the Predictor to save labels to a specific path.
+        """
+        pass
+
+    @abstractmethod
     def create_store(self, task_config, crs_transformer, tmp_dir):
         """Create the Label Store for this configuration.
 

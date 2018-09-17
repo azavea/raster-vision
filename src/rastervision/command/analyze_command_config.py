@@ -42,10 +42,15 @@ class AnalyzeCommandConfig(CommandConfig):
 
 
 class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self):
-        self.task = None
-        self.scenes = None
-        self.analyzers = None
+    def __init__(self, prev=None):
+        if prev is None:
+            self.task = None
+            self.scenes = None
+            self.analyzers = None
+        else:
+            self.task = prev.task
+            self.scenes = prev.scenes
+            self.analyzers = prev.analyzers
 
     def build(self):
         if self.task is None:

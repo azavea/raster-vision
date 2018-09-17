@@ -1,12 +1,52 @@
 import json
 
+import numpy as np
+
+from rastervision.core import Box
 from rastervision.data.label import ChipClassificationLabels
-from rastervision.data.label_source.chip_classification_geojson_source \
-    import read_labels
 from rastervision.data.label_source.utils import load_label_store_json
 from rastervision.data.label_store import LabelStore
 from rastervision.data.label_store.utils import classification_labels_to_geojson
 from rastervision.utils.files import str_to_file
+
+
+def geojson_to_labels(geojson_dict, crs_transformer, extent=None):
+    """Convert GeoJSON to ChipClassificationLabels from predictions.
+
+    Args:
+        geojson_dict: dict in GeoJSON format
+        crs_transformer: used to convert map coords in geojson to pixel coords
+            in labels object
+
+    Returns:
+       ChipClassificationLabels
+    """
+    features = geojson_dict['features']
+
+    labels = ChipClassificationLabels()
+
+    def polygon_to_label(polygon, crs_transformer):
+        polygon = [crs_transformer.map_to_pixel(p) for p in polygon]
+        xmin, ymin = np.min(polygon, axis=0)
+        xmax, ymax = np.max(polygon, axis=0)
+        cell = Box(ymin, xmin, ymax, xmax)
+
+        properties = feature['properties']
+        class_id = properties['class_id']
+        scores = properties.get('scores')
+
+        labels.set_cell(cell, class_id, scores)
+
+    for feature in features:
+        geom_type = feature['geometry']['type']
+        coordinates = feature['geometry']['coordinates']
+        if geom_type == 'Polygon':
+            polygon_to_label(coordinates[0], crs_transformer)
+        else:
+            raise Exception(
+                'Geometries of type {} are not supported in chip classification \
+                labels.'.format(geom_type))
+    return labels
 
 
 class ChipClassificationGeoJSONStore(LabelStore):
@@ -45,20 +85,14 @@ class ChipClassificationGeoJSONStore(LabelStore):
         """
         geojson_dict = classification_labels_to_geojson(
             labels, self.crs_transformer, self.class_map)
-        # import pdb; pdb.set_trace()
+
         geojson_str = json.dumps(geojson_dict)
 
         str_to_file(geojson_str, self.uri)
 
     def get_labels(self):
-        self.labels = ChipClassificationLabels()
-
         json_dict = load_label_store_json(self.uri)
-        return read_labels(json_dict, self.crs_transformer)
+        return geojson_to_labels(json_dict, self.crs_transformer)
 
     def empty_labels(self):
         return ChipClassificationLabels()
-
-    def concatenate(self, labels1, labels2):
-        labels1.extend(labels2)
-        return labels1

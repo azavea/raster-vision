@@ -1,4 +1,7 @@
 from abc import (ABC, abstractmethod)
+import os
+
+from rastervision.utils.files import download_or_copy
 
 
 class ConfigError(Exception):
@@ -134,4 +137,30 @@ class ConfigBuilder(ABC):
         """Return a builder that takes the configuration from the proto message
            as its starting point.
         """
+        pass
+
+
+class BundledConfigMixin(ABC):
+    """Mixing for configurations that participate in the bundling of a
+    prediction package"""
+
+    @abstractmethod
+    def save_bundle_files(self, bundle_dir):
+        """Place files into a bundle directory for bundling into
+        a prediction package.
+
+        Returns: A tuple of (config, uris) of the modified configuration
+                 with the basenames of URIs in place of the original URIs,
+                 and a list of URIs that are to be bundled.
+        """
+        pass
+
+    def bundle_file(self, uri, bundle_dir):
+        local_path = download_or_copy(uri, bundle_dir)
+        base_name = os.path.basename(local_path)
+        return (local_path, base_name)
+
+    @abstractmethod
+    def load_bundle_files(self, bundle_dir):
+        """Load files from a prediction package bundle directory."""
         pass

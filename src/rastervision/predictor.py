@@ -1,10 +1,9 @@
 import os
 import zipfile
 
-from google.protobuf import json_format
-
 import rastervision as rv
-from rastervision.utils.files import (download_if_needed, make_dir)
+from rastervision.utils.files import (download_if_needed, make_dir,
+                                      load_json_config)
 from rastervision.protos.command_pb2 import CommandConfig as CommandConfigMsg
 
 
@@ -27,19 +26,25 @@ class Predictor():
             package_zip.extractall(path=package_dir)
 
         # Read bundle command config
-        with open(os.path.join(package_dir, 'bundle.json')) as f:
-            bundle_config_json = f.read()
-        bundle_config = json_format.ParseJson(bundle_config_json,
-                                              CommandConfigMsg.BundleConfig())
+        bundle_config_path = os.path.join(package_dir, 'bundle_config.json')
+        msg = load_json_config(bundle_config_path, CommandConfigMsg())
+        bundle_config = msg.bundle_config
 
         self.task_config = rv.TaskConfig.from_proto(bundle_config.task) \
-                                   .load_bundle_files(package_dir)
+                                        .load_bundle_files(package_dir)
+
         self.backend_config = rv.BackendConfig.from_proto(bundle_config.backend) \
-                                         .load_bundle_files(package_dir)
-        scene_builder = rv.SceneConfig.from_proto(bundle_config.scene) \
-                                      .load_bundle_files(package_dir) \
-                                      .to_builder() \
-                                      .with_scene_id('PREDICTOR')
+                                              .load_bundle_files(package_dir)
+
+        scene_config = rv.SceneConfig.from_proto(bundle_config.scene)
+        scene_builder = scene_config.load_bundle_files(package_dir) \
+                                    .to_builder() \
+                                    .with_id('PREDICTOR')
+
+        # If the scene does not have a label store, generate a default one.
+        if not scene_config.label_store:
+            scene_builder = scene_builder.with_task(self.task_config) \
+                                         .with_label_store()
 
         if channel_order:
             scene_builder = scene_builder.with_channel_order(channel_order)
@@ -75,11 +80,11 @@ class Predictor():
             for analyzer in self.analyzers:
                 analyzer.process([scene])
 
-            # Reload scene to refresh any new stats
+            # Reload scene to refresh any new analyzer config
             scene = scene_config.create_scene(self.task_config, self.tmp_dir)
 
         labels = self.task.predict_scene(scene, self.tmp_dir)
-        if scene.prediction_label_store:
+        if label_uri:
             scene.prediction_label_store.save(labels)
         return labels
 

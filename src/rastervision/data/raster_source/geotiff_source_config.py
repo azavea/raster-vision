@@ -6,6 +6,7 @@ from rastervision.data.raster_source.raster_source_config \
     import (RasterSourceConfig, RasterSourceConfigBuilder)
 from rastervision.protos.raster_source_pb2 \
     import RasterSourceConfig as RasterSourceConfigMsg
+from rastervision.utils.files import download_if_needed
 
 
 class GeoTiffSourceConfig(RasterSourceConfig):
@@ -21,6 +22,35 @@ class GeoTiffSourceConfig(RasterSourceConfig):
         msg.geotiff_files.CopyFrom(
             RasterSourceConfigMsg.GeoTiffFiles(uris=self.uris))
         return msg
+
+    def save_bundle_files(self, bundle_dir):
+        (conf, files) = super().save_bundle_files(bundle_dir)
+
+        # Replace the URI with a template value.
+        new_config = conf.to_builder() \
+                         .with_uri('BUNDLE') \
+                         .build()
+        return (new_config, files)
+
+    def load_bundle_files(self, bundle_dir):
+        new_transformers = []
+        for transformer in self.transformers:
+            new_transformer = transformer.load_bundle_files(bundle_dir)
+            new_transformers.append(new_transformer)
+        return self.to_builder() \
+                   .with_transformers(new_transformers) \
+                   .build()
+
+    def for_prediction(self, image_uri):
+        return self.to_builder() \
+                   .with_uri(image_uri) \
+                   .build()
+
+    def create_local(self, tmp_dir):
+        new_uris = [download_if_needed(uri, tmp_dir) for uri in self.uris]
+        return self.to_builder() \
+                   .with_uris(new_uris) \
+                   .build()
 
     def create_source(self, tmp_dir):
         transformers = self.create_transformers()

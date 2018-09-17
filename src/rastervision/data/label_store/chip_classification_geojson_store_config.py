@@ -16,6 +16,11 @@ class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
         msg.uri = self.uri
         return msg
 
+    def for_prediction(self, label_uri):
+        return self.to_builder() \
+                   .with_uri(label_uri) \
+                   .build()
+
     def create_store(self, task_config, crs_transformer, tmp_dir):
         return ChipClassificationGeoJSONStore(self.uri, crs_transformer,
                                               task_config.class_map)

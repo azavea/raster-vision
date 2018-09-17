@@ -42,10 +42,15 @@ class EvalCommandConfig(CommandConfig):
 
 
 class EvalCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self):
-        self.task = None
-        self.scenes = None
-        self.evaluators = None
+    def __init__(self, prev=None):
+        if prev is None:
+            self.task = None
+            self.scenes = None
+            self.evaluators = None
+        else:
+            self.task = prev.task
+            self.scenes = prev.scenes
+            self.evaluators = prev.evaluators
 
     def build(self):
         if self.task is None:

@@ -3,11 +3,11 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.core import (Config, ConfigBuilder)
+from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin)
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
 
 
-class TaskConfig(Config):
+class TaskConfig(BundledConfigMixin, Config):
     def __init__(self,
                  task_type,
                  predict_batch_size=10,
@@ -52,11 +52,13 @@ class TaskConfig(Config):
     def preprocess_command(self, command_type, experiment_config,
                            context=None):
         conf = self
+        io_def = rv.core.CommandIODefinition()
         if command_type == rv.BUNDLE:
             if not conf.predict_package_uri:
                 conf.predict_package_uri = os.path.join(
                     experiment_config.bundle_uri, 'predict_package.zip')
-        return (conf, rv.core.CommandIODefinition())
+            io_def.add_output(conf.predict_package_uri)
+        return (conf, io_def)
 
 
 class TaskConfigBuilder(ConfigBuilder):

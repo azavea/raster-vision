@@ -46,6 +46,3 @@ class ObjectDetectionGeoJSONStore(LabelStore):
 
     def empty_labels(self):
         return ObjectDetectionLabels.make_empty()
-
-    def concatenate(self, labels1, labels2):
-        return ObjectDetectionLabels.concatenate(labels1, labels2)

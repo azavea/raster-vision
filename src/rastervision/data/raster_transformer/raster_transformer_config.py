@@ -1,10 +1,11 @@
 from abc import abstractmethod
 
 import rastervision as rv
-from rastervision.core.config import (Config, ConfigBuilder)
+from rastervision.core.config import (Config, ConfigBuilder,
+                                      BundledConfigMixin)
 
 
-class RasterTransformerConfig(Config):
+class RasterTransformerConfig(BundledConfigMixin, Config):
     def __init__(self, transformer_type):
         self.transformer_type = transformer_type
 

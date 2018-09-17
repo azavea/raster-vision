@@ -544,10 +544,8 @@ def compute_prediction(image_nps, windows, detection_graph, session):
             chip_boxes, window)
         chip_boxes = ObjectDetectionLabels.local_to_global(chip_boxes, window)
         chip_class_ids = chip_class_ids.astype(np.int32)
-        labels = ObjectDetectionLabels.concatenate(
-            labels,
-            ObjectDetectionLabels(
-                chip_boxes, chip_class_ids, scores=chip_scores))
+        labels = (labels + ObjectDetectionLabels(
+            chip_boxes, chip_class_ids, scores=chip_scores))
 
     return labels
 

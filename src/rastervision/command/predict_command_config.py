@@ -46,10 +46,15 @@ class PredictCommandConfig(CommandConfig):
 
 
 class PredictCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self):
-        self.task = None
-        self.backend = None
-        self.scenes = []
+    def __init__(self, prev=None):
+        if prev is None:
+            self.task = None
+            self.backend = None
+            self.scenes = []
+        else:
+            self.task = prev.task
+            self.backend = prev.backend
+            self.scenes = prev.scenes
 
     def build(self):
         if self.task is None:

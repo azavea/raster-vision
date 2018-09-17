@@ -2,13 +2,14 @@ from abc import abstractmethod
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.core.config import (Config, ConfigBuilder)
+from rastervision.core.config import (Config, ConfigBuilder,
+                                      BundledConfigMixin)
 from rastervision.data import (RasterTransformerConfig, StatsTransformerConfig)
 from rastervision.protos.raster_source_pb2 \
     import RasterSourceConfig as RasterSourceConfigMsg
 
 
-class RasterSourceConfig(Config):
+class RasterSourceConfig(BundledConfigMixin, Config):
     def __init__(self, source_type, transformers=None, channel_order=None):
         if transformers is None:
             transformers = []
@@ -24,6 +25,20 @@ class RasterSourceConfig(Config):
             channel_order=self.channel_order,
             transformers=transformers)
         return msg
+
+    def save_bundle_files(self, bundle_dir):
+        new_transformers = []
+        files = []
+        for transformer in self.transformers:
+            new_transformer, t_files = transformer.save_bundle_files(
+                bundle_dir)
+            new_transformers.append(new_transformer)
+            files.extend(t_files)
+
+        new_config = self.to_builder() \
+                         .with_transformers(new_transformers) \
+                         .build()
+        return (new_config, files)
 
     @abstractmethod
     def create_source(self, tmp_dir):
@@ -46,6 +61,18 @@ class RasterSourceConfig(Config):
         return rv._registry.get_config_builder(rv.RASTER_SOURCE, msg.source_type)() \
                            .from_proto(msg) \
                            .build()
+
+    @abstractmethod
+    def for_prediction(self, image_uri):
+        """Creates a new config with the image_uri."""
+        pass
+
+    @abstractmethod
+    def create_local(self, tmp_dir):
+        """Returns a new config with a local copy of the image data
+        if this image is remote.
+        """
+        pass
 
     def create_transformers(self):
         return list(map(lambda c: c.create_transformer(), self.transformers))

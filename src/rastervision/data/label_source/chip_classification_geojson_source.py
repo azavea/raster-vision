@@ -163,8 +163,9 @@ def read_labels(geojson_dict, crs_transformer, extent=None):
     labels = ChipClassificationLabels()
     boxes = od_labels.get_boxes()
     class_ids = od_labels.get_class_ids()
-    for box, class_id in zip(boxes, class_ids):
-        labels.set_cell(box, class_id)
+    scores = od_labels.get_scores()
+    for box, class_id, _ in zip(boxes, class_ids, scores):
+        labels.set_cell(box, class_id, None)
 
     return labels
 

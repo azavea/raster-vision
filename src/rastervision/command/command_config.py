@@ -22,6 +22,9 @@ class CommandConfig(ABC):
         return CommandConfigMsg(
             command_type=self.command_type, plugins=plugin_config)
 
+    def to_builder(self):
+        return rv._registry.get_command_config_builder(self.command_type)(self)
+
     @staticmethod
     @abstractmethod
     def builder():
@@ -41,7 +44,7 @@ class CommandConfig(ABC):
 
 class CommandConfigBuilder(ABC):
     @abstractmethod
-    def build(self):
+    def build(self, prev=None):
         """Returns the configuration that is built by this builder.
         """
         pass

@@ -10,8 +10,14 @@ from rastervision.protos.class_item_pb2 import ClassItem as ClassItemMsg
 
 
 class ChipClassificationConfig(TaskConfig):
-    def __init__(self, class_map, chip_size=300):
-        super().__init__(rv.CHIP_CLASSIFICATION)
+    def __init__(self,
+                 class_map,
+                 predict_batch_size=10,
+                 predict_package_uri=None,
+                 debug=True,
+                 chip_size=300):
+        super().__init__(rv.CHIP_CLASSIFICATION, predict_batch_size,
+                         predict_package_uri, debug)
         self.class_map = class_map
         self.chip_size = chip_size
 
@@ -24,9 +30,11 @@ class ChipClassificationConfig(TaskConfig):
         return TaskConfigMsg(
             task_type=rv.CHIP_CLASSIFICATION, chip_classification_config=conf)
 
-    def preprocess_command(self, command_type, experiment_config,
-                           context=None):
-        return (self, rv.core.CommandIODefinition())
+    def save_bundle_files(self, bundle_dir):
+        return (self, [])
+
+    def load_bundle_files(self, bundle_dir):
+        return self
 
 
 class ChipClassificationConfigBuilder(TaskConfigBuilder):

@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import (ABC, abstractmethod)
 
 
 class Labels(ABC):
@@ -10,4 +10,11 @@ class Labels(ABC):
     box representing a cell/chip within a spatial grid and its class.
     For segmentation, a label is a pixel and its class.
     """
-    pass
+
+    @abstractmethod
+    def __add__(self, other):
+        """Add labels to these labels.
+
+        Returns a concatenation of this and the other labels.
+        """
+        pass
