@@ -1,3 +1,5 @@
+import rastervision as rv
+
 from abc import (ABC, abstractmethod)
 from typing import Union
 
@@ -13,7 +15,12 @@ class NotWritableError(Exception):
 class ProtobufParseException(Exception):
     pass
 
+
 class FileSystem(ABC):
+    @staticmethod
+    def get_file_system(uri):
+        return rv._registry.get_file_system(uri)
+
     @staticmethod
     @abstractmethod
     def matches_uri(uri: str) -> bool:

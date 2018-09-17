@@ -120,7 +120,7 @@ class Registry:
         for fs in self.filesystems:
             if fs.matches_uri(uri):
                 return fs
-        return None
+        raise RegistryError('No matching filesystem to handle uri {}'.format(uri))
 
     def get_config_builder(self, group, key):
         internal_builder = self._internal_config_builders.get((group, key))

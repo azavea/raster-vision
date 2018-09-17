@@ -12,6 +12,7 @@ from pathlib import Path
 from google.protobuf import json_format
 
 from rastervision.filesystem.filesystem import (NotReadableError, NotWritableError, ProtobufParseException)
+from rastervision.filesystem.filesystem import FileSystem
 from rastervision.filesystem.local_filesystem import make_dir
 
 
@@ -32,7 +33,7 @@ def get_local_path(uri, download_dir):
     if uri is None:
         return None
 
-    fs = rv._registry.get_file_system(uri)
+    fs = FileSystem.get_file_system(uri)
     path = fs.local_path(uri, download_dir)
 
     return path
@@ -99,14 +100,14 @@ def download_if_needed(uri, download_dir):
 
     print('Downloading {} to {}'.format(uri, path))
 
-    fs = rv._registry.get_file_system(uri)
+    fs = FileSystem.get_file_system(uri)
     fs.copy_from(uri, path)
 
     return path
 
 
 def file_exists(uri):
-    fs = rv._registry.get_file_system(uri)
+    fs = FileSystem.get_file_system(uri)
     return fs.file_exists(uri)
 
 
@@ -130,7 +131,7 @@ def upload_or_copy(src_path, dst_uri):
 
     print('Uploading {} to {}'.format(src_path, dst_uri))
 
-    fs = rv._registry.get_file_system(dst_uri)
+    fs = FileSystem.get_file_system(dst_uri)
     fs.copy_to(src_path, dst_uri)
 
 def file_to_str(uri):
@@ -145,7 +146,7 @@ def file_to_str(uri):
     Raises:
         NotReadableError if URI cannot be read from
     """
-    fs = rv._registry.get_file_system(uri)
+    fs = FileSystem.get_file_system(uri)
     return fs.read_str(uri)
 
 
@@ -159,7 +160,7 @@ def str_to_file(content_str, uri):
     Raise:
         NotWritableError if file_uri cannot be written
     """
-    fs = rv._registry.get_file_system(uri)
+    fs = FileSystem.get_file_system(uri)
     return fs.write_str(uri, content_str)
 
 
