@@ -2,7 +2,7 @@ import os
 import urllib
 import urllib.request
 
-from rastervision.filesystems.filesystem import FileSystem
+from rastervision.filesystem.filesystem import FileSystem
 from urllib.parse import urlparse
 
 

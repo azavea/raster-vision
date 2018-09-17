@@ -11,8 +11,8 @@ from pathlib import Path
 
 from google.protobuf import json_format
 
-from rastervision.filesystems.filesystem import (NotReadableError, NotWritableError, ProtobufParseException)
-from rastervision.filesystems.local_filesystem import make_dir
+from rastervision.filesystem.filesystem import (NotReadableError, NotWritableError, ProtobufParseException)
+from rastervision.filesystem.local_filesystem import make_dir
 
 
 def get_local_path(uri, download_dir):

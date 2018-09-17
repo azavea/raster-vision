@@ -3,7 +3,7 @@ import os
 import boto3
 import botocore
 
-from rastervision.filesystems.filesystem import *
+from rastervision.filesystem.filesystem import *
 from urllib.parse import urlparse
 
 

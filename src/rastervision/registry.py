@@ -1,5 +1,5 @@
 import rastervision as rv
-import rastervision.filesystems as rvfs
+import rastervision.filesystem as rvfs
 
 from rastervision.data.raster_source.default import (
     DefaultGeoTiffSourceProvider, DefaultImageSourceProvider)

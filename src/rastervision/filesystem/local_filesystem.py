@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from rastervision.filesystems.filesystem import *
+from rastervision.filesystem.filesystem import *
 from typing import Union
 
 
