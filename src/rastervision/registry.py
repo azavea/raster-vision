@@ -1,4 +1,6 @@
 import rastervision as rv
+import rastervision.filesystem as rvfs
+
 from rastervision.data.raster_source.default import (
     DefaultGeoTiffSourceProvider, DefaultImageSourceProvider)
 from rastervision.data.label_source.default import (
@@ -10,6 +12,7 @@ from rastervision.data.label_store.default import (
 from rastervision.evaluation.default import (
     DefaultObjectDetectioneEvaluatorProvider,
     DefaultChipClassificationEvaluatorProvider)
+from typing import Union
 
 
 class RegistryError(Exception):
@@ -106,6 +109,18 @@ class Registry:
             rv.LOCAL: rv.runner.LocalExperimentRunner,
             rv.AWS_BATCH: rv.runner.LocalExperimentRunner
         }
+
+        self.filesystems = [
+            rvfs.HttpFileSystem,
+            rvfs.S3FileSystem,
+            rvfs.LocalFileSystem
+        ]
+
+    def get_file_system(self, uri: str) -> rvfs.FileSystem:
+        for fs in self.filesystems:
+            if fs.matches_uri(uri):
+                return fs
+        raise RegistryError('No matching filesystem to handle uri {}'.format(uri))
 
     def get_config_builder(self, group, key):
         internal_builder = self._internal_config_builders.get((group, key))
