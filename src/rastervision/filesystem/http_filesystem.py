@@ -7,10 +7,12 @@ from urllib.parse import urlparse
 
 
 class HttpFileSystem(FileSystem):
+    @staticmethod
     def matches_uri(uri: str) -> bool:
         parsed_uri = urlparse(uri)
         return parsed_uri.scheme in ['http', 'https']
 
+    @staticmethod
     def file_exists(uri: str) -> bool:
         try:
             response = urllib.request.urlopen(uri)
@@ -21,25 +23,32 @@ class HttpFileSystem(FileSystem):
         except urllib.error.URLError:
             return False
 
+    @staticmethod
     def read_str(uri: str) -> str:
-        read_bytes(uri).decode("utf8")
+        return HttpFileSystem.read_bytes(uri).decode("utf8")
 
+    @staticmethod
     def read_bytes(uri: str) -> bytes:
-        with urllib.request.urlopen(file_uri) as req:
+        with urllib.request.urlopen(uri) as req:
             return req.read()
 
+    @staticmethod
     def write_str(uri: str, data: str) -> None:
         raise NotWritableError('Could not write {}'.format(uri))
 
+    @staticmethod
     def write_bytes(uri: str, data: bytes) -> None:
         raise NotWritableError('Could not write {}'.format(uri))
 
+    @staticmethod
     def sync_dir(src_dir_uri: str, dest_dir_uri: str, delete: bool=False) -> None:
         raise NotWritableError('Could not write {}'.format(dest_dir_uri))
 
+    @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
         raise NotWritableError('Could not write {}'.format(dst_uri))
 
+    @staticmethod
     def copy_from(uri: str, path: str) -> None:
         with urllib.request.urlopen(uri) as response:
             with open(path, 'wb') as out_file:
@@ -48,6 +57,7 @@ class HttpFileSystem(FileSystem):
                 except Exception:
                     raise NotReadableError('Could not read {}'.format(uri))
 
+    @staticmethod
     def local_path(uri: str, download_dir: str) -> None:
         parsed_uri = urlparse(uri)
         path = os.path.join(download_dir, 'http', parsed_uri.netloc,

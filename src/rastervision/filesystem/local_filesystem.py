@@ -33,47 +33,57 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
             '{} needs to be an empty directory!'.format(directory))
 
 class LocalFileSystem(FileSystem):
+    @staticmethod
     def matches_uri(uri: str) -> bool:
         return True
 
+    @staticmethod
     def file_exists(uri: str) -> bool:
         return os.path.isfile(uri)
 
+    @staticmethod
     def read_str(file_uri: str) -> str:
         if not os.path.isfile(file_uri):
             raise NotReadableError('Could not read {}'.format(file_uri))
         with open(file_uri, 'r') as file_buffer:
             return file_buffer.read()
 
+    @staticmethod
     def read_bytes(file_uri: str) -> bytes:
         if not os.path.isfile(file_uri):
             raise NotReadableError('Could not read {}'.format(file_uri))
         with open(file_uri, 'rb') as file_buffer:
             return file_buffer.read()
 
+    @staticmethod
     def write_str(file_uri: str, data: str) -> None:
         make_dir(file_uri, use_dirname=True)
         with open(file_uri, 'w') as content_file:
             content_file.write(data)
 
+    @staticmethod
     def write_bytes(file_uri: str, data: bytes) -> None:
         make_dir(file_uri, use_dirname=True)
         with open(file_uri, 'wb') as content_file:
             content_file.write(data)
 
+    @staticmethod
     def sync_dir(src_dir_uri: str, dest_dir_uri: str, delete: bool=False) -> None:
-        pass # XXX
+        shutil.copytree(src_dir_uri, des_dir_uri)
 
+    @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
         if src_path != dst_uri:
             make_dir(dst_uri, use_dirname=True)
             shutil.copyfile(src_path, dst_uri)
 
+    @staticmethod
     def copy_from(uri: str, path: str) -> None:
         not_found = not os.path.isfile(path)
         if not_found:
             raise NotReadableError('Could not read {}'.format(uri))
 
+    @staticmethod
     def local_path(uri: str, download_dir: str) -> None:
         path = uri
         return path
