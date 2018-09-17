@@ -22,10 +22,10 @@ class HttpFileSystem(FileSystem):
             return False
 
     def read_str(uri: str) -> str:
-        read_bytes(uri).decode("utf8")
+        HttpFileSystem.read_bytes(uri).decode("utf8")
 
     def read_bytes(uri: str) -> bytes:
-        with urllib.request.urlopen(file_uri) as req:
+        with urllib.request.urlopen(uri) as req:
             return req.read()
 
     def write_str(uri: str, data: str) -> None:
