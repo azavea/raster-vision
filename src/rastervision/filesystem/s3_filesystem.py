@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 class S3FileSystem(FileSystem):
     @staticmethod
-    def matches_uri(uri: str) -> bool:
+    def matches_uri(uri: str, mode: str) -> bool:
         parsed_uri = urlparse(uri)
         return parsed_uri.scheme == 's3'
 

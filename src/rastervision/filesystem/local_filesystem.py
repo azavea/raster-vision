@@ -34,7 +34,7 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
 
 class LocalFileSystem(FileSystem):
     @staticmethod
-    def matches_uri(uri: str) -> bool:
+    def matches_uri(uri: str, mode: str) -> bool:
         return True
 
     @staticmethod

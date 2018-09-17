@@ -8,9 +8,12 @@ from urllib.parse import urlparse
 
 class HttpFileSystem(FileSystem):
     @staticmethod
-    def matches_uri(uri: str) -> bool:
-        parsed_uri = urlparse(uri)
-        return parsed_uri.scheme in ['http', 'https']
+    def matches_uri(uri: str, mode: str) -> bool:
+        if mode == 'r':
+            parsed_uri = urlparse(uri)
+            return parsed_uri.scheme in ['http', 'https']
+        else:
+            return False
 
     @staticmethod
     def file_exists(uri: str) -> bool:

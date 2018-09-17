@@ -18,12 +18,17 @@ class ProtobufParseException(Exception):
 
 class FileSystem(ABC):
     @staticmethod
-    def get_file_system(uri):
-        return rv._registry.get_file_system(uri)
+    def get_file_system(uri, mode='r'):
+        return rv._registry.get_file_system(uri, mode)
 
     @staticmethod
     @abstractmethod
-    def matches_uri(uri: str) -> bool:
+    def matches_uri(uri: str, mode: str) -> bool:
+        """Returns True if this FileSystem should be used
+        for the given URI under the given mode.
+
+        Mode can be 'r' or 'w'
+        """
         pass
 
     @staticmethod
@@ -70,4 +75,3 @@ class FileSystem(ABC):
     @abstractmethod
     def local_path(uri: str, download_dir: str) -> None:
         pass
-

@@ -35,6 +35,7 @@ class PluginRegistry:
         self.default_label_stores = []
         self.default_evaluators = []
         self.experiment_runners = {}
+        self.filesystems = []
 
         plugin_files = json.loads(plugin_config('files', default='[]'))
         self._load_from_files(plugin_files)
@@ -69,7 +70,8 @@ class PluginRegistry:
         for uri in plugin_paths:
             plugin_name = os.path.splitext(os.path.basename(uri))[0]
             plugin_path = os.path.join(self.plugin_root_dir, plugin_name)
-            local_path = download_if_needed(uri, plugin_path)
+            fs = rv._registry.get_file_system(uri, search_plugins=False)
+            local_path = download_if_needed(uri, plugin_path, fs=fs)
             local_dir = os.path.dirname(local_path)
 
             plugin_source = plugin_base.make_plugin_source(
@@ -131,3 +133,6 @@ class PluginRegistry:
             raise PluginError('ExperimentRunner already registered for '
                               'key {}'.format(runner_key))
         self.experiment_runners[runner_key] = runner_class
+
+    def register_filesystem(self, filesystem_class):
+        self.filesystems.append(filesystem_class)
