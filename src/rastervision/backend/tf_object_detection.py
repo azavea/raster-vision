@@ -1,3 +1,6 @@
+import rastervision as rv
+from rastervision.lazy import lazy_load
+
 import io
 import tempfile
 import os
@@ -12,20 +15,13 @@ import re
 import uuid
 
 from PIL import Image
-import tensorflow as tf
 import numpy as np
 from google.protobuf import text_format, json_format
 
-from tensorflow.core.example.example_pb2 import Example
-from typing import List
-
-from object_detection.utils import dataset_util
-from object_detection.utils import visualization_utils as vis_util
 from object_detection.protos.string_int_label_map_pb2 import (
     StringIntLabelMap, StringIntLabelMapItem)
 from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 
-import rastervision as rv
 from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
@@ -35,8 +31,12 @@ from rastervision.utils.misc import save_img
 TRAIN = 'train'
 VALIDATION = 'validation'
 
+tf = lazy_load('tensorflow')
+
 
 def save_debug_image(im, labels, class_map, output_path):
+    from object_detection.utils import visualization_utils as vis_util
+
     npboxes = labels.get_npboxes()
     class_ids = labels.get_class_ids()
     scores = labels.get_scores()
@@ -56,6 +56,8 @@ def save_debug_image(im, labels, class_map, output_path):
 
 
 def create_tf_example(image, window, labels, class_map, chip_id=''):
+    from object_detection.utils import dataset_util
+
     image = Image.fromarray(image)
     image_format = 'png'
     encoded_image = io.BytesIO()
@@ -107,7 +109,7 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
     return tf_example
 
 
-def write_tf_record(tf_examples: List[Example], output_path: str) -> None:
+def write_tf_record(tf_examples, output_path: str) -> None:
     """Write an array of TFRecords to the given output path.
 
     Args:
