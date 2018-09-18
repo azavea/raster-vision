@@ -259,11 +259,26 @@ class SegmentationOutputRasterFile(LabelStore):
                 width=xmax,
                 count=3,
                 dtype=np.uint8) as dataset:
+
             for (box, data) in self.label_pairs:
-                window = (box.ymin, box.ymax), (box.xmin, box.xmax)
+                width = box.xmax - box.xmin
+                height = box.ymax - box.ymin
+                if box.xmin <= 0 or box.ymin <= 0 or box.xmax >= xmax or box.ymax >= ymax:
+                    y_tuple = (box.ymin, box.ymax)
+                    x_tuple = (box.xmin, box.xmax)
+                    inner_window = y_tuple, x_tuple
+                    inner_data = data
+                else:
+                    qwidth = width // 4
+                    qheight = height // 4
+                    y_tuple = (box.ymin + qheight, box.ymax - qheight)
+                    x_tuple = (box.xmin + qwidth, box.xmax - qwidth)
+                    inner_window = y_tuple, x_tuple
+                    inner_data = data[qheight:-qheight, qwidth:-qwidth]
+
                 for chan in range(3):
-                    pixels = class_to[chan](data)
-                    dataset.write_band(chan + 1, pixels, window=window)
+                    pixels = class_to[chan](inner_data)
+                    dataset.write_band(chan + 1, pixels, window=inner_window)
 
         # sync to s3
         if urlparse(self.sink).scheme == 's3':

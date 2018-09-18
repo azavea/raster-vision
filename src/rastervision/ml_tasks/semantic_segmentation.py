@@ -90,7 +90,8 @@ class SemanticSegmentation(MLTask):
 
         """
         chip_size = options.chip_size
-        return extent.get_windows(chip_size, chip_size)
+        stride = chip_size // 2
+        return extent.get_windows(chip_size, stride)
 
     def post_process_predictions(self, labels: None, options) -> None:
         """Post-process predictions.
