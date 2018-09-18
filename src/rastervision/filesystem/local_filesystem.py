@@ -1,8 +1,7 @@
 import os
 import shutil
 
-from rastervision.filesystem.filesystem import *
-from typing import Union
+from rastervision.filesystem.filesystem import (FileSystem, NotReadableError)
 
 
 def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
@@ -31,6 +30,7 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
     if check_empty and not is_empty:
         raise ValueError(
             '{} needs to be an empty directory!'.format(directory))
+
 
 class LocalFileSystem(FileSystem):
     @staticmethod
@@ -68,8 +68,9 @@ class LocalFileSystem(FileSystem):
             content_file.write(data)
 
     @staticmethod
-    def sync_dir(src_dir_uri: str, dest_dir_uri: str, delete: bool=False) -> None:
-        shutil.copytree(src_dir_uri, des_dir_uri)
+    def sync_dir(src_dir_uri: str, dest_dir_uri: str,
+                 delete: bool = False) -> None:
+        shutil.copytree(src_dir_uri, dest_dir_uri)
 
     @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:

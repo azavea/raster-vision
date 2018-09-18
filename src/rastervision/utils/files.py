@@ -1,17 +1,13 @@
-import rastervision as rv
-import io
 import os
-import urllib
+import shutil
 from urllib.parse import urlparse
-import urllib.request
-import subprocess
 import tempfile
 from threading import Timer
 from pathlib import Path
 
 from google.protobuf import json_format
 
-from rastervision.filesystem.filesystem import (NotReadableError, NotWritableError, ProtobufParseException)
+from rastervision.filesystem.filesystem import ProtobufParseException
 from rastervision.filesystem.filesystem import FileSystem
 from rastervision.filesystem.local_filesystem import make_dir
 
@@ -57,6 +53,7 @@ def sync_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
     if not fs:
         fs = FileSystem.get_file_system(dest_dir_uri, 'w')
     fs.sync_dir(src_dir_uri, dest_dir_uri, delete=delete)
+
 
 def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600, fs=None):
     """Start syncing a directory on a schedule.
@@ -156,6 +153,7 @@ def upload_or_copy(src_path, dst_uri, fs=None):
     if not fs:
         fs = FileSystem.get_file_system(dst_uri, 'w')
     fs.copy_to(src_path, dst_uri)
+
 
 def file_to_str(uri, fs=None):
     """Download contents of text file into a string.

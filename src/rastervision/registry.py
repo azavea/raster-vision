@@ -13,7 +13,6 @@ from rastervision.data.label_store.default import (
 from rastervision.evaluation.default import (
     DefaultObjectDetectioneEvaluatorProvider,
     DefaultChipClassificationEvaluatorProvider)
-from typing import Union
 
 
 class RegistryError(Exception):
@@ -165,23 +164,21 @@ class Registry:
 
         raise RegistryError('Unknown type {} for {} '.format(key, group))
 
-    def get_file_system(self,
-                        uri: str,
-                        mode: str = 'r',
+    def get_file_system(self, uri: str, mode: str = 'r',
                         search_plugins=True) -> rvfs.FileSystem:
         # If we are currently loading plugins, don't search for
         # plugin filesystems.
         if search_plugins:
             self._ensure_plugins_loaded()
-            filesystems = (self._plugin_registry.filesystems +
-                           self.filesystems)
+            filesystems = (
+                self._plugin_registry.filesystems + self.filesystems)
         else:
-            filesystems =  self.filesystems
+            filesystems = self.filesystems
 
         for fs in filesystems:
             if fs.matches_uri(uri, mode):
                 return fs
-        if mode  == 'w':
+        if mode == 'w':
             raise RegistryError('No matching filesystem to handle '
                                 'writing to uri {}'.format(uri))
         else:

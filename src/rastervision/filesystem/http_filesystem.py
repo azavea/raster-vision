@@ -1,8 +1,10 @@
 import os
+import shutil
 import urllib
 import urllib.request
 
-from rastervision.filesystem.filesystem import FileSystem
+from rastervision.filesystem.filesystem import (FileSystem, NotReadableError,
+                                                NotWritableError)
 from urllib.parse import urlparse
 
 
@@ -28,7 +30,7 @@ class HttpFileSystem(FileSystem):
 
     @staticmethod
     def read_str(uri: str) -> str:
-        return HttpFileSystem.read_bytes(uri).decode("utf8")
+        return HttpFileSystem.read_bytes(uri).decode('utf8')
 
     @staticmethod
     def read_bytes(uri: str) -> bytes:
@@ -44,7 +46,8 @@ class HttpFileSystem(FileSystem):
         raise NotWritableError('Could not write {}'.format(uri))
 
     @staticmethod
-    def sync_dir(src_dir_uri: str, dest_dir_uri: str, delete: bool=False) -> None:
+    def sync_dir(src_dir_uri: str, dest_dir_uri: str,
+                 delete: bool = False) -> None:
         raise NotWritableError('Could not write {}'.format(dest_dir_uri))
 
     @staticmethod

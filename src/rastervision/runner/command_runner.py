@@ -1,7 +1,5 @@
 from tempfile import TemporaryDirectory
 
-import click
-
 import rastervision as rv
 from rastervision.plugin import PluginRegistry
 from rastervision.utils.files import load_json_config

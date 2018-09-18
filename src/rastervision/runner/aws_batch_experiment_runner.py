@@ -10,8 +10,7 @@ from rastervision.utils.files import save_json_config
 
 
 def make_command(command_config_uri):
-    return 'python -m rastervision run_command {}'.format(
-        command_config_uri)
+    return 'python -m rastervision run_command {}'.format(command_config_uri)
 
 
 def batch_submit(command_type,
