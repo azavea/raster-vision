@@ -1,0 +1,371 @@
+{
+    "train_scenes": [
+        {
+            "id": "013022223123",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022223123.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022223123.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "013022223133",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022223133.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022223133.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "013022223131",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022223131.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022223131.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "013022223132",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022223132.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022223132.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "013022223020",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022232020.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022232020.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "013022223021",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022232021.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022232021.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "013022223022",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022232022.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022232022.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "013022223023",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022232023.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022232023.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "test_scenes": [
+        {
+            "id": "013022223130",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022223130.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022223130.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "0130222232200",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{raw}/srcData/rasterData/3-Band/013022232200.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "segmentation_raster_file": {
+                    "source": {
+                        "geotiff_files": {
+                            "uris": [
+                                "{raw}/Labels/label-013022232200.tif"
+                            ]
+                        }
+                    },
+                    "raster_class_map": [
+                        {
+                            "source_class": "#0000ff",
+                            "raster_vision_class": 1
+                        },
+                        {
+                            "source_class": "#00ff00",
+                            "raster_vision_class": 2
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "machine_learning": {
+        "task": "SEMANTIC_SEGMENTATION",
+        "backend": "TF_DEEPLAB",
+        "class_items": [
+            {
+                "id": 1,
+                "name": "building",
+                "color": "#0000ff"
+            },
+            {
+                "id": 2,
+                "name": "~building",
+                "color": "#00ff00"
+            }
+        ]
+    },
+    "make_training_chips_options": {
+        "segmentation_options": {
+            "negative_survival_probability": 0.0,
+            "number_of_chips": 5929,
+            "debug_chip_probability": 0.0016866251
+        }
+    },
+    "train_options": {
+        "backend_config_uri": "{rv_root}/rio.config",
+        "pretrained_model_uri": "{rv_root}/deeplabv3_xception_2018_01_04.tar.gz",
+        "sync_interval": 600,
+        "segmentation_options": {
+            "train_restart_dir": "/opt/data/tmp/tmppn67cz_8/tmpbwt9yycy"
+        }
+    },
+    "predict_options": {
+        "segmentation_options": {
+        }
+    },
+    "eval_options": {
+    },
+    "debug": true,
+    "chip_size": 256,
+    "raster_transformer": {
+        "channel_order": [0, 1, 2]
+    },
+    "local_uri_map": {
+        "rv_root": "/opt/data/rio",
+        "raw": "/opt/data/rio"
+    },
+    "remote_uri_map": {
+        "rv_root": "s3://raster-vision-mcclain/rio",
+        "raw": "s3://raster-vision-spacenet/AOI_1_Rio"
+    },
+    "raw_dataset_key": "rio",
+    "dataset_key": "full",
+    "model_key": "deeplab",
+    "prediction_key": "default",
+    "eval_key": "default"
+}
