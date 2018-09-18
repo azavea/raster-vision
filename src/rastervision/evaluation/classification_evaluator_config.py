@@ -2,11 +2,10 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
+from rastervision.core import ClassMap
 from rastervision.evaluation \
     import (EvaluatorConfig, EvaluatorConfigBuilder)
 from rastervision.protos.evaluator_pb2 import EvaluatorConfig as EvaluatorConfigMsg
-from rastervision.task.utils import (construct_class_map,
-                                     classes_to_class_items)
 
 
 class ClassificationEvaluatorConfig(EvaluatorConfig):
@@ -21,8 +20,7 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
 
     def to_proto(self):
         sub_msg = EvaluatorConfigMsg.ClassificationEvaluatorConfig(
-            class_items=classes_to_class_items(self.class_map),
-            output_uri=self.output_uri)
+            class_items=self.class_map.to_proto(), output_uri=self.output_uri)
         msg = EvaluatorConfigMsg(
             evaluator_type=self.evaluator_type, classification_config=sub_msg)
 
@@ -55,7 +53,7 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
     @classmethod
     def from_proto(cls, msg):
         b = cls()
-        class_map = construct_class_map(
+        class_map = ClassMap.construct_from(
             list(msg.classification_config.class_items))
         return b.with_output_uri(msg.classification_config.output_uri) \
                 .with_class_map(class_map)

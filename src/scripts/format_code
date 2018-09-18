@@ -21,5 +21,13 @@ Reformat Python code inline using yapf.
 if [ "${1:-}" = "--help" ]; then
         usage
 else
+    echo "Ensuring single quote usage..."
+    unify --in-place --quote \' --recursive \
+          rastervision/* \
+          tests/* \
+          keras_classification/* \
+          integration_tests/*
+
+    echo "Running yapf..."
     yapf -ipr -e "*_pb2.py" "$SRC_DIR"
 fi

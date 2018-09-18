@@ -5,8 +5,6 @@ import rastervision as rv
 from rastervision.task import ObjectDetection
 from rastervision.core.class_map import (ClassMap, ClassItem)
 from rastervision.task import (TaskConfig, TaskConfigBuilder)
-from rastervision.task.utils import (construct_class_map,
-                                     classes_to_class_items)
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
 from rastervision.protos.class_item_pb2 import ClassItem as ClassItemMsg
 
@@ -60,7 +58,7 @@ class ObjectDetectionConfig(TaskConfig):
 
         conf = TaskConfigMsg.ObjectDetectionConfig(
             chip_size=self.chip_size,
-            class_items=classes_to_class_items(self.class_map),
+            class_items=self.class_map.to_proto(),
             chip_options=chip_options,
             predict_options=predict_options)
         msg.MergeFrom(TaskConfigMsg(object_detection_config=conf))
@@ -115,7 +113,7 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
                          where color is a PIL color string.
         """
         b = deepcopy(self)
-        b.config['class_map'] = construct_class_map(classes)
+        b.config['class_map'] = ClassMap.construct_from(classes)
         return b
 
     def with_chip_size(self, chip_size):

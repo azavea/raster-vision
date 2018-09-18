@@ -613,7 +613,6 @@ class TFObjectDetection(Backend):
             merge_tf_records(record_path, results)
 
             # Save debug chips.
-            # TODO
             if self.config.debug:
                 debug_zip_path = training_package.get_local_path(
                     training_package.get_debug_chips_uri(split))

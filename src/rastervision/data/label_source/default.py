@@ -44,7 +44,6 @@ class DefaultChipClassificationGeoJSONSourceProvider(
 
     @staticmethod
     def construct(uri):
-        # TODO: Finish once implemented
         return rv.RasterSourceConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
                                     .with_uri(uri) \
                                     .build()
