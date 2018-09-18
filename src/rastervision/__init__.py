@@ -11,7 +11,9 @@ from rastervision.experiment.api import *
 from rastervision.runner.api import *
 from rastervision.task.api import *
 
-from .registry import Registry
+from rastervision.cli.main import main
+
+from rastervision.registry import Registry
 
 _registry = None
 

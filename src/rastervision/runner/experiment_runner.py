@@ -69,4 +69,11 @@ class ExperimentRunner(ABC):
 
     @staticmethod
     def get_runner(runner_type):
-        return rv._registry.get_experiment_runner(runner_type)
+        """Gets the runner associated with this runner type."""
+        # Runner keys are upper cased.
+        return rv._registry.get_experiment_runner(runner_type.upper())
+
+    @staticmethod
+    def list_runners():
+        """Returns a list of valid runner keys."""
+        return rv._registry.get_experiment_runner_keys()

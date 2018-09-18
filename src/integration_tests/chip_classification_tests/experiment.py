@@ -3,7 +3,7 @@ import os
 import rastervision as rv
 
 
-class ChipClassificationIntegrationTest(rv.ExperimentSuite):
+class ChipClassificationIntegrationTest(rv.ExperimentSet):
     def exp_main(self, tmp_dir):
         def get_path(part):
             return os.path.join(os.path.dirname(__file__), part)
