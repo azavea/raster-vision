@@ -96,7 +96,9 @@ class DatasetConfig(Config):
         else:
             train_scenes = self.train_scenes
 
-        if command_type in [rv.ANALYZE, rv.CHIP, rv.PREDICT, rv.EVAL]:
+        if command_type in [
+                rv.ANALYZE, rv.CHIP, rv.PREDICT, rv.EVAL, rv.BUNDLE
+        ]:
             val_scenes = []
             for scene in self.validation_scenes:
                 if command_type == rv.PREDICT:
@@ -111,10 +113,7 @@ class DatasetConfig(Config):
                     command_type, experiment_config, context)
                 io_def.merge(scene_io_def)
                 val_scenes.append(new_config)
-        else:
-            val_scenes = self.validation_scenes
 
-        if command_type in [rv.PREDICT, rv.EVAL]:
             test_scenes = []
             for scene in self.test_scenes:
                 if command_type == rv.PREDICT:
@@ -131,6 +130,7 @@ class DatasetConfig(Config):
                 test_scenes.append(new_config)
         else:
             test_scenes = self.test_scenes
+            val_scenes = self.validation_scenes
 
         if command_type == rv.CHIP:
             augmentors = []

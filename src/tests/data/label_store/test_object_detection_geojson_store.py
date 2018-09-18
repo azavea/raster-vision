@@ -10,7 +10,7 @@ from rastervision.data.label_source.utils import (
     add_classes_to_geojson, geojson_to_object_detection_labels)
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.utils.files import NotWritableError
+from rastervision.filesystem import NotWritableError
 
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 

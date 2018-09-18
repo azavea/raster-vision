@@ -126,16 +126,6 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
         self.assertEqual(b.tfod_config['trainConfig']['fineTuneCheckpoint'],
                          pretrained_model_uri)
 
-    # def test_no_raise_error_on_no_uri_pretrained_model_with_validate_uris_false(self):
-    #     false_uri = "http://does/not/exist/I/hope.txt"
-    #     b = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
-    #                         .with_task(self.generate_task()) \
-    #                         .with_template(self.get_template_uri()) \
-    #                         .with_batch_size(100) \
-    #                         .with_pretrained_model(false_uri) \
-    #                         .build(validate_uris=False)
-    #     self.assertEqual(b.pretrained_model_uri, false_uri)
-
     def test_default_model_config(self):
         b = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                             .with_task(self.generate_task()) \

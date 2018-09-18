@@ -18,10 +18,6 @@ class NoopLabelStore(LabelStore):
     def empty_labels(self):
         return ChipClassificationLabels()
 
-    def concatenate(self, labels1, labels2):
-        labels1.extend(labels2)
-        return labels1
-
 
 class NoopLabelStoreConfig(LabelStoreConfig):
     def __init__(self):
@@ -37,6 +33,9 @@ class NoopLabelStoreConfig(LabelStoreConfig):
 
     def preprocess_command(self, command_type, experiment_config, context=[]):
         return (self, rv.core.CommandIODefinition())
+
+    def for_prediction(self, label_store_uri):
+        return self
 
 
 class NoopLabelStoreConfigBuilder(LabelStoreConfigBuilder):

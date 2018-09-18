@@ -40,6 +40,12 @@ class NoopBackendConfig(BackendConfig):
     def preprocess_command(self, command_type, experiment_config, context=[]):
         return (self, rv.core.CommandIODefinition())
 
+    def save_bundle_files(self, bundle_dir):
+        return (self, [])
+
+    def load_bundle_files(self, bundle_dir):
+        return self
+
 
 class NoopBackendConfigBuilder(BackendConfigBuilder):
     def __init__(self, prev=None):

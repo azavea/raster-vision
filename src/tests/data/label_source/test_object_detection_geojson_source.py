@@ -12,7 +12,7 @@ from rastervision.data.label_source.utils import (
 from rastervision.data import ObjectDetectionLabels
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.utils.files import NotReadableError
+from rastervision.filesystem import NotReadableError
 
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 

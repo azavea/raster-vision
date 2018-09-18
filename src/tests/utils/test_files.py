@@ -78,11 +78,13 @@ class TestMakeDir(unittest.TestCase):
         self.assertFalse(file_exists(s3_path))
 
     def test_file_exists_http_true(self):
-        http_path = 'https://raw.githubusercontent.com/tensorflow/models/17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/README.md'
+        http_path = ('https://raw.githubusercontent.com/tensorflow/models/'
+                     '17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/README.md')
         self.assertTrue(file_exists(http_path))
 
     def test_file_exists_http_false(self):
-        http_path = 'https://raw.githubusercontent.com/tensorflow/models/17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/XXX'
+        http_path = ('https://raw.githubusercontent.com/tensorflow/models/'
+                     '17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/XXX')
         self.assertFalse(file_exists(http_path))
 
     def test_check_empty(self):

@@ -33,6 +33,13 @@ class ObjectDetectionLabels(Labels):
             scores = np.ones(class_ids.shape)
         self.boxlist.add_field('scores', scores)
 
+    def __add__(self, other):
+        return ObjectDetectionLabels.concatenate(self, other)
+
+    def __eq__(self, other):
+        return (isinstance(other, ObjectDetectionLabels)
+                and self.to_dict() == other.to_dict())
+
     def assert_equal(self, expected_labels):
         np.testing.assert_array_equal(self.get_npboxes(),
                                       expected_labels.get_npboxes())
@@ -79,6 +86,20 @@ class ObjectDetectionLabels(Labels):
 
     def to_boxlist(self):
         return self.boxlist
+
+    def to_dict(self):
+        """Returns a dict version of these labels.
+
+        The Dict has a Box as a key, and a tuple of (class_id, score)
+        as the values.
+        """
+        d = {}
+        boxes = list(map(Box.from_npbox, self.get_npboxes()))
+        classes = list(self.get_class_ids())
+        scores = list(self.get_scores())
+        for box, class_id, score in zip(boxes, classes, scores):
+            d[box.tuple_format()] = (class_id, score)
+        return d
 
     @staticmethod
     def local_to_global(npboxes, window):

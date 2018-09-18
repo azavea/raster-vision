@@ -38,9 +38,13 @@ class TrainCommandConfig(CommandConfig):
 
 
 class TrainCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self):
-        self.task = None
-        self.backend = None
+    def __init__(self, prev=None):
+        if prev is None:
+            self.task = None
+            self.backend = None
+        else:
+            self.task = prev.task
+            self.backend = prev.backend
 
     def build(self):
         if self.task is None:

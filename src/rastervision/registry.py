@@ -13,7 +13,6 @@ from rastervision.data.label_store.default import (
 from rastervision.evaluation.default import (
     DefaultObjectDetectioneEvaluatorProvider,
     DefaultChipClassificationEvaluatorProvider)
-from typing import Union
 
 
 class RegistryError(Exception):
@@ -117,6 +116,7 @@ class Registry:
         self.filesystems = [
             rvfs.HttpFileSystem,
             rvfs.S3FileSystem,
+            # This is the catch-all case, ensure it's on the bottom of the search stack.
             rvfs.LocalFileSystem
         ]
 
@@ -164,11 +164,26 @@ class Registry:
 
         raise RegistryError('Unknown type {} for {} '.format(key, group))
 
-    def get_file_system(self, uri: str) -> rvfs.FileSystem:
-        for fs in self.filesystems:
-            if fs.matches_uri(uri):
+    def get_file_system(self, uri: str, mode: str = 'r',
+                        search_plugins=True) -> rvfs.FileSystem:
+        # If we are currently loading plugins, don't search for
+        # plugin filesystems.
+        if search_plugins:
+            self._ensure_plugins_loaded()
+            filesystems = (
+                self._plugin_registry.filesystems + self.filesystems)
+        else:
+            filesystems = self.filesystems
+
+        for fs in filesystems:
+            if fs.matches_uri(uri, mode):
                 return fs
-        raise RegistryError('No matching filesystem to handle uri {}'.format(uri))
+        if mode == 'w':
+            raise RegistryError('No matching filesystem to handle '
+                                'writing to uri {}'.format(uri))
+        else:
+            raise RegistryError('No matching filesystem to handle '
+                                'reading from uri {}'.format(uri))
 
     def get_default_raster_source_provider(self, s):
         """
@@ -259,7 +274,6 @@ class Registry:
                 runner_type)
             if plugin_runner:
                 return plugin_runner()
-
         raise RegistryError(
             'No experiment runner for type {}'.format(runner_type))
 

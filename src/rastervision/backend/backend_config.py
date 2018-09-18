@@ -3,10 +3,11 @@ from copy import deepcopy
 
 import rastervision as rv
 from rastervision.rv_config import RVConfig
-from rastervision.core import (Config, ConfigBuilder, CommandIODefinition)
+from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin,
+                               CommandIODefinition)
 
 
-class BackendConfig(Config):
+class BackendConfig(BundledConfigMixin, Config):
     def __init__(self, backend_type, pretrained_model_uri=None):
         self.backend_type = backend_type
         self.pretrained_model_uri = pretrained_model_uri

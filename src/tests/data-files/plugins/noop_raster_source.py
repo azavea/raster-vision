@@ -41,6 +41,18 @@ class NoopRasterSourceConfig(RasterSourceConfig):
     def preprocess_command(self, command_type, experiment_config, context=[]):
         return (self, rv.core.CommandIODefinition())
 
+    def save_bundle_files(self, bundle_dir):
+        return (self, [])
+
+    def load_bundle_files(self, bundle_dir):
+        return self
+
+    def for_prediction(self, image_uri):
+        return self
+
+    def create_local(self, tmp_dir):
+        return self
+
 
 class NoopRasterSourceConfigBuilder(RasterSourceConfigBuilder):
     def __init__(self, prev=None):

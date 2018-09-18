@@ -100,7 +100,6 @@ class RVConfig:
         thier configuration file, or by setting the RV_MODEL_DEFAULT_URI
         environment variable.
         """
-        # import pdb; pdb.set_trace()
         subconfig = self.get_subconfig('RV')
         default_path = os.path.join(
             os.path.dirname(rv.backend.__file__), 'model_defaults.json')

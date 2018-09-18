@@ -42,6 +42,12 @@ class NoopTaskConfig(TaskConfig):
     def create_task(self, backend):
         return NoopTask(self, backend)
 
+    def save_bundle_files(self, bundle_dir):
+        return (self, [])
+
+    def load_bundle_files(self, bundle_dir):
+        return self
+
 
 class NoopTaskConfigBuilder(TaskConfigBuilder):
     def __init__(self, prev=None):

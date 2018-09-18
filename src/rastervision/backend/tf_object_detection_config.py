@@ -13,9 +13,9 @@ from rastervision.utils.files import file_to_str
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/object_detection/train.py'
 DEFAULT_SCRIPT_EVAL = '/opt/tf-models/object_detection/eval.py'
 DEFAULT_SCRIPT_EXPORT = '/opt/tf-models/object_detection/export_inference_graph.py'
-CHIP_OUTPUT_FILES = [
-    'label-map.pbtxt', 'train-debug-chips.zip', 'train.record',
-    'validation-debug-chips.zip', 'validation.record'
+CHIP_OUTPUT_FILES = ['label-map.pbtxt', 'train.record', 'validation.record']
+DEBUG_CHIP_OUTPUT_FILES = [
+    'train-debug-chips.zip', 'validation-debug-chips.zip'
 ]
 
 
@@ -70,6 +70,9 @@ class TFObjectDetectionConfig(BackendConfig):
             'train_py': self.script_locations.train_uri,
             'eval_py': self.script_locations.eval_uri,
             'export_py': self.script_locations.export_uri,
+            'training_data_uri': self.training_data_uri,
+            'training_output_uri': self.training_output_uri,
+            'model_uri': self.model_uri,
             'tfod_config': self.tfod_config
         }
 
@@ -87,28 +90,64 @@ class TFObjectDetectionConfig(BackendConfig):
 
         return msg
 
+    def save_bundle_files(self, bundle_dir):
+        if not self.model_uri:
+            raise rv.ConfigError('model_uri is not set.')
+        local_path, base_name = self.bundle_file(self.model_uri, bundle_dir)
+        new_config = self.to_builder() \
+                         .with_model_uri(base_name) \
+                         .build()
+        return (new_config, [local_path])
+
+    def load_bundle_files(self, bundle_dir):
+        if not self.model_uri:
+            raise rv.ConfigError('model_uri is not set.')
+        local_model_uri = os.path.join(bundle_dir, self.model_uri)
+        return self.to_builder() \
+                   .with_model_uri(local_model_uri) \
+                   .build()
+
     def preprocess_command(self, command_type, experiment_config,
                            context=None):
         conf, io_def = super().preprocess_command(command_type,
                                                   experiment_config, context)
         if command_type == rv.CHIP:
-            conf.training_data_uri = experiment_config.chip_uri
+            if not conf.training_data_uri:
+                conf.training_data_uri = experiment_config.chip_uri
 
             outputs = list(
                 map(lambda x: os.path.join(conf.training_data_uri, x),
                     CHIP_OUTPUT_FILES))
+
+            if self.debug:
+                outputs.extend(
+                    list(
+                        map(lambda x: os.path.join(conf.training_data_uri, x),
+                            DEBUG_CHIP_OUTPUT_FILES)))
+
             io_def.add_outputs(outputs)
         if command_type == rv.TRAIN:
-            conf.training_output_uri = experiment_config.train_uri
-            inputs = list(
-                map(lambda x: os.path.join(experiment_config.chip_uri, x),
-                    CHIP_OUTPUT_FILES))
-            io_def.add_inputs(inputs)
+            if not conf.training_data_uri:
+                io_def.add_missing('Missing training_data_uri.')
+            else:
+                inputs = list(
+                    map(lambda x: os.path.join(conf.training_data_uri, x),
+                        CHIP_OUTPUT_FILES))
+                io_def.add_inputs(inputs)
 
-            conf.model_uri = os.path.join(conf.training_output_uri, 'model')
+            if not conf.training_output_uri:
+                conf.training_output_uri = experiment_config.train_uri
+
+            if not conf.model_uri:
+                conf.model_uri = os.path.join(conf.training_output_uri,
+                                              'model')
             io_def.add_output(conf.model_uri)
-        if command_type == rv.PREDICT:
-            io_def.add_input(conf.model_uri)
+
+        if command_type in [rv.PREDICT, rv.BUNDLE]:
+            if not conf.model_uri:
+                io_def.add_missing('Missing model_uri.')
+            else:
+                io_def.add_input(conf.model_uri)
 
         return (conf, io_def)
 
@@ -123,14 +162,14 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
                 'train_options': prev.train_options,
                 'script_locations': prev.script_locations,
                 'debug': prev.debug,
-                'training_data_uri': prev.trainind_data_uri,
+                'training_data_uri': prev.training_data_uri,
                 'training_output_uri': prev.training_output_uri,
                 'model_uri': prev.model_uri
             }
         super().__init__(rv.TF_OBJECT_DETECTION, TFObjectDetectionConfig,
                          config, prev)
         self.config_mods = []
-        self.require_task = True
+        self.require_task = prev is None
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
@@ -147,6 +186,10 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
             train_uri=conf.train_py,
             eval_uri=conf.eval_py,
             export_uri=conf.export_py)
+        b = b.with_training_data_uri(conf.training_data_uri)
+        b = b.with_training_output_uri(conf.training_output_uri)
+        b = b.with_model_uri(conf.model_uri)
+
         # TODO: Debug
         # b = b.with_debug(conf.debug)
 
@@ -267,6 +310,21 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         """
         b = deepcopy(self)
         b.config['debug'] = debug
+        return b
+
+    def with_training_data_uri(self, training_data_uri):
+        b = deepcopy(self)
+        b.config['training_data_uri'] = training_data_uri
+        return b
+
+    def with_training_output_uri(self, training_output_uri):
+        b = deepcopy(self)
+        b.config['training_output_uri'] = training_output_uri
+        return b
+
+    def with_model_uri(self, model_uri):
+        b = deepcopy(self)
+        b.config['model_uri'] = model_uri
         return b
 
     def with_train_options(self, sync_interval=600, do_monitoring=True):

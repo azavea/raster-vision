@@ -178,6 +178,12 @@ class NoopAnalyzerConfig(AnalyzerConfig):
     def preprocess_command(self, command_type, experiment_config, context=[]):
         return (self, rv.core.CommandIODefinition())
 
+    def save_bundle_files(self, bundle_dir):
+        return (self, [])
+
+    def load_bundle_files(self, bundle_dir):
+        return self
+
 
 class NoopAnalyzerConfigBuilder(AnalyzerConfigBuilder):
     def __init__(self, prev=None):

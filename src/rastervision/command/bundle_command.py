@@ -1,6 +1,7 @@
 import os
 import zipfile
 
+import click
 from google.protobuf import json_format
 
 from rastervision.command import Command
@@ -19,19 +20,44 @@ class BundleCommand(Command):
         self.analyzer_configs = analyzer_configs
 
     def run(self, tmp_dir):
+        if not self.task_config.predict_package_uri:
+            msg = 'Skipping bundling of prediction package, no URI is set...'.format(
+                self.task_config.predict_package_uri)
+            click.echo(click.style(msg, fg='yellow'))
+            return
+
+        msg = 'Bundling prediction package to {}...'.format(
+            self.task_config.predict_package_uri)
+        click.echo(click.style(msg, fg='green'))
         bundle_dir = os.path.join(tmp_dir, 'bundle')
         make_dir(bundle_dir)
         package_path = os.path.join(tmp_dir, 'predict_package.zip')
         bundle_files = []
-        bundle_files.extend(self.task_config.save_bundle_files(bundle_dir))
-        bundle_files.extend(self.backend_config.save_bundle_files(bundle_dir))
-        bundle_files.extend(self.scene_config.save_bundle_files(bundle_dir))
+        new_task, task_files = self.task_config.save_bundle_files(bundle_dir)
+        bundle_files.extend(task_files)
+        new_backend, backend_files = self.backend_config.save_bundle_files(
+            bundle_dir)
+        bundle_files.extend(backend_files)
+        new_scene, scene_files = self.scene_config.save_bundle_files(
+            bundle_dir)
+        bundle_files.extend(scene_files)
+        new_analyzers = []
         for analyzer in self.analyzer_configs:
-            bundle_files.extend(analyzer.save_bundle_files(bundle_dir))
+            new_analyzer, analyzer_files = analyzer.save_bundle_files(
+                bundle_dir)
+            new_analyzers.append(new_analyzer)
+            bundle_files.extend(analyzer_files)
+
+        new_bundle_config = self.bundle_config.to_builder() \
+                                              .with_task(new_task) \
+                                              .with_backend(new_backend) \
+                                              .with_scene(new_scene) \
+                                              .with_analyzers(new_analyzers) \
+                                              .build()
 
         # Save bundle command config
         bundle_config_path = os.path.join(tmp_dir, 'bundle_config.json')
-        bundle_json = json_format.MessageToJson(self.bundle_config.to_proto())
+        bundle_json = json_format.MessageToJson(new_bundle_config.to_proto())
         with open(bundle_config_path, 'w') as f:
             f.write(bundle_json)
 

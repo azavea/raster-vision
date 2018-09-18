@@ -6,6 +6,7 @@ from rastervision.data.raster_source.raster_source_config \
     import (RasterSourceConfig, RasterSourceConfigBuilder)
 from rastervision.protos.raster_source_pb2 \
     import RasterSourceConfig as RasterSourceConfigMsg
+from rastervision.utils.files import download_if_needed
 
 
 class ImageSourceConfig(RasterSourceConfig):
@@ -18,8 +19,29 @@ class ImageSourceConfig(RasterSourceConfig):
 
     def to_proto(self):
         msg = super().to_proto()
-        msg.image_file = RasterSourceConfigMsg.ImageFile(uri=self.uri)
+        msg.MergeFrom(
+            RasterSourceConfigMsg(
+                image_file=RasterSourceConfigMsg.ImageFile(uri=self.uri)))
         return msg
+
+    def save_bundle_files(self, bundle_dir):
+        (conf, files) = super().save_bundle_files(bundle_dir)
+        # Replace the URI with a template value.
+        new_config = conf.to_builder() \
+                         .with_uri('BUNDLE') \
+                         .build()
+        return (new_config, files)
+
+    def for_prediction(self, image_uri):
+        return self.to_builder() \
+                   .with_uri(image_uri) \
+                   .build()
+
+    def create_local(self, tmp_dir):
+        new_uri = download_if_needed(self.uri, tmp_dir)
+        return self.to_builder() \
+                   .with_uri(new_uri) \
+                   .build()
 
     def create_source(self, tmp_dir):
         transformers = self.create_transformers()

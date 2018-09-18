@@ -57,12 +57,19 @@ class ChipCommandConfig(CommandConfig):
 
 
 class ChipCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self):
-        self.task = None
-        self.backend = None
-        self.augmentors = []
-        self.train_scenes = []
-        self.val_scenes = []
+    def __init__(self, prev=None):
+        if prev is None:
+            self.task = None
+            self.backend = None
+            self.augmentors = []
+            self.train_scenes = []
+            self.val_scenes = []
+        else:
+            self.task = prev.task
+            self.backend = prev.backend
+            self.augmentors = prev.augmentors
+            self.train_scenes = prev.train_scenes
+            self.val_scenes = prev.val_scenes
 
     def build(self):
         if self.task is None:

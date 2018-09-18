@@ -1,22 +1,18 @@
-import rastervision as rv
-import io
 import os
-import urllib
+import shutil
 from urllib.parse import urlparse
-import urllib.request
-import subprocess
 import tempfile
 from threading import Timer
 from pathlib import Path
 
 from google.protobuf import json_format
 
-from rastervision.filesystem.filesystem import (NotReadableError, NotWritableError, ProtobufParseException)
+from rastervision.filesystem.filesystem import ProtobufParseException
 from rastervision.filesystem.filesystem import FileSystem
 from rastervision.filesystem.local_filesystem import make_dir
 
 
-def get_local_path(uri, download_dir):
+def get_local_path(uri, download_dir, fs=None):
     """Convert a URI into a corresponding local path.
 
     If a uri is local, return it. If it's remote, we generate a path for it
@@ -26,6 +22,7 @@ def get_local_path(uri, download_dir):
     Args:
         uri: (string) URI of file
         download_dir: (string) path to directory
+        fs: Optional FileSystem to use
 
     Returns:
         (string) a local path
@@ -33,13 +30,14 @@ def get_local_path(uri, download_dir):
     if uri is None:
         return None
 
-    fs = FileSystem.get_file_system(uri)
+    if not fs:
+        fs = FileSystem.get_file_system(uri, 'r')
     path = fs.local_path(uri, download_dir)
 
     return path
 
 
-def sync_dir(src_dir_uri, dest_dir_uri, delete=False):
+def sync_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
     """Synchronize a local and remote directory.
 
     Transfers files from source to destination directories so that the
@@ -50,11 +48,14 @@ def sync_dir(src_dir_uri, dest_dir_uri, delete=False):
         src_dir_uri: (string) URI of source directory
         dest_dir_uri: (string) URI of destination directory
         delete: (bool)
+        fs: Optional FileSystem to use
     """
-    fs = rv._registry.get_file(dest_dir_uri)
+    if not fs:
+        fs = FileSystem.get_file_system(dest_dir_uri, 'w')
     fs.sync_dir(src_dir_uri, dest_dir_uri, delete=delete)
 
-def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600):
+
+def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600, fs=None):
     """Start syncing a directory on a schedule.
 
     Calls sync_dir on a schedule.
@@ -63,10 +64,11 @@ def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600):
         src_dir_uri: (string) URI of source directory
         dest_dir_uri: (string) URI of destination directory
         sync_interval: (int) period in seconds for syncing
+        fs:  Optional FileSystem to use
     """
 
     def _sync_dir(delete=True):
-        sync_dir(src_dir_uri, dest_dir_uri, delete=delete)
+        sync_dir(src_dir_uri, dest_dir_uri, delete=delete, fs=fs)
         thread = Timer(sync_interval, _sync_dir)
         thread.daemon = True
         thread.start()
@@ -77,7 +79,7 @@ def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600):
         _sync_dir(delete=False)
 
 
-def download_if_needed(uri, download_dir):
+def download_if_needed(uri, download_dir, fs=None):
     """Download a file into a directory if it's remote.
 
     If uri is local, there is no need to download the file.
@@ -85,6 +87,7 @@ def download_if_needed(uri, download_dir):
     Args:
         uri: (string) URI of file
         download_dir: (string) local directory to download file into
+        fs: Optional FileSystem to use.
 
     Returns:
         (string) path to local file
@@ -95,23 +98,39 @@ def download_if_needed(uri, download_dir):
     if uri is None:
         return None
 
-    path = get_local_path(uri, download_dir)
+    if not fs:
+        fs = FileSystem.get_file_system(uri, 'r')
+
+    path = get_local_path(uri, download_dir, fs=fs)
     make_dir(path, use_dirname=True)
 
     print('Downloading {} to {}'.format(uri, path))
 
-    fs = FileSystem.get_file_system(uri)
     fs.copy_from(uri, path)
 
     return path
 
 
-def file_exists(uri):
-    fs = FileSystem.get_file_system(uri)
+def download_or_copy(uri, target_dir, fs=None):
+    """Downloads or copies a file to a directory
+
+    Args:
+       uri: (string) URI of file
+       target_dir: (string) local directory to copy file to
+       fs: Optional FileSystem to use
+    """
+    local_path = download_if_needed(uri, target_dir, fs=fs)
+    shutil.copy(local_path, target_dir)
+    return local_path
+
+
+def file_exists(uri, fs=None):
+    if not fs:
+        fs = FileSystem.get_file_system(uri, 'r')
     return fs.file_exists(uri)
 
 
-def upload_or_copy(src_path, dst_uri):
+def upload_or_copy(src_path, dst_uri, fs=None):
     """Upload a file if the destination is remote.
 
     If dst_uri is local, the file is copied.
@@ -119,7 +138,7 @@ def upload_or_copy(src_path, dst_uri):
     Args:
         src_path: (string) path to source file
         dst_uri: (string) URI of destination for file
-
+        fs: Optional FileSystem to use
     Raises:
         NotWritableError if URI cannot be written to
     """
@@ -131,14 +150,17 @@ def upload_or_copy(src_path, dst_uri):
 
     print('Uploading {} to {}'.format(src_path, dst_uri))
 
-    fs = FileSystem.get_file_system(dst_uri)
+    if not fs:
+        fs = FileSystem.get_file_system(dst_uri, 'w')
     fs.copy_to(src_path, dst_uri)
 
-def file_to_str(uri):
+
+def file_to_str(uri, fs=None):
     """Download contents of text file into a string.
 
     Args:
         uri: (string) URI of file
+        fs: Optional FileSystem to use
 
     Returns:
         (string) with contents of text file
@@ -146,25 +168,28 @@ def file_to_str(uri):
     Raises:
         NotReadableError if URI cannot be read from
     """
-    fs = FileSystem.get_file_system(uri)
+    if not fs:
+        fs = FileSystem.get_file_system(uri, 'r')
     return fs.read_str(uri)
 
 
-def str_to_file(content_str, uri):
+def str_to_file(content_str, uri, fs=None):
     """Writes string to text file.
 
     Args:
         content_str: string to write
         uri: (string) URI of file to write
+        fs: Optional FileSystem to use
 
     Raise:
         NotWritableError if file_uri cannot be written
     """
-    fs = FileSystem.get_file_system(uri)
+    if not fs:
+        fs = FileSystem.get_file_system(uri, 'r')
     return fs.write_str(uri, content_str)
 
 
-def load_json_config(uri, message):
+def load_json_config(uri, message, fs=None):
     """Load a JSON-formatted protobuf config file.
 
     Args:
@@ -172,6 +197,7 @@ def load_json_config(uri, message):
         message: (google.protobuf.message.Message) empty protobuf message of
             to load the config into. The type needs to match the content of
             uri.
+        fs: Optional FileSystem to use.
 
     Returns:
         the same message passed as input with fields filled in from uri
@@ -180,25 +206,26 @@ def load_json_config(uri, message):
         ProtobufParseException if uri cannot be parsed
     """
     try:
-        return json_format.Parse(file_to_str(uri), message)
+        return json_format.Parse(file_to_str(uri, fs=fs), message)
     except json_format.ParseError as e:
         error_msg = ('Problem parsing protobuf file {}. '.format(uri) +
                      'You might need to run scripts/compile')
         raise ProtobufParseException(error_msg) from e
 
 
-def save_json_config(message, uri):
+def save_json_config(message, uri, fs=None):
     """Save a protobuf object to a JSON file.
 
     Args:
         message: (google.protobuf.message.Message) protobuf message
         uri: (string) URI of JSON file to write message to
+        fs: Optional FileSystem to use
 
     Raises:
         NotWritableError if uri cannot be written
     """
     json_str = json_format.MessageToJson(message)
-    str_to_file(json_str, uri)
+    str_to_file(json_str, uri, fs=fs)
 
 
 # Ensure that RV temp directory exists. We need to use a custom location for

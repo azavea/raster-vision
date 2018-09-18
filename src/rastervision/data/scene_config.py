@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import Union
 
 import rastervision as rv
-from rastervision.core import (Config, ConfigBuilder)
+from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin)
 from rastervision.task import TaskConfig
 from rastervision.data import (Scene, RasterSourceConfig, LabelSourceConfig,
                                LabelStoreConfig)
@@ -12,7 +12,7 @@ from rastervision.protos.scene_pb2 \
 # TODO: Set/save/load AOI
 
 
-class SceneConfig(Config):
+class SceneConfig(BundledConfigMixin, Config):
     def __init__(self,
                  scene_id,
                  raster_source,
@@ -55,6 +55,43 @@ class SceneConfig(Config):
         if self.label_store:
             msg.prediction_label_store.CopyFrom(self.label_store.to_proto())
         return msg
+
+    def save_bundle_files(self, bundle_dir):
+        new_source, files = self.raster_source.save_bundle_files(bundle_dir)
+        new_config = self.to_builder() \
+                         .with_raster_source(new_source) \
+                         .build()
+        return (new_config, files)
+
+    def load_bundle_files(self, bundle_dir):
+        new_source = self.raster_source.load_bundle_files(bundle_dir)
+        return self.to_builder() \
+                   .with_raster_source(new_source) \
+                   .build()
+
+    def for_prediction(self, image_uri, label_uri=None):
+        """Creates a version of this scene that is set to
+        predict against the image_uri. If label_uri is set,
+        the scene must already have a label_store.
+        """
+        new_source = self.raster_source.for_prediction(image_uri)
+        b = self.to_builder().with_raster_source(new_source)
+
+        if label_uri:
+            if not self.label_store:
+                raise rv.ConfigError('Cannot call for_prediciton on  a '
+                                     'scene that does not have a label '
+                                     'store set.')
+            new_store = self.label_store.for_prediction(label_uri)
+            b = b.with_label_store(new_store)
+
+        return b.build()
+
+    def create_local(self, tmp_dir):
+        new_source = self.raster_source.create_local(tmp_dir)
+        return self.to_builder() \
+                   .with_raster_source(new_source) \
+                   .build()
 
     def to_builder(self):
         return SceneConfigBuilder(self)

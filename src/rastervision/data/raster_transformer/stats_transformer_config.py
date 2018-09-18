@@ -1,3 +1,4 @@
+import os
 from copy import deepcopy
 
 import rastervision as rv
@@ -18,6 +19,23 @@ class StatsTransformerConfig(RasterTransformerConfig):
         msg = RasterTransformerConfigMsg(
             transformer_type=self.transformer_type, stats_uri=self.stats_uri)
         return msg
+
+    def save_bundle_files(self, bundle_dir):
+        if not self.stats_uri:
+            raise rv.ConfigError('stat_uri is not set.')
+        local_path, base_name = self.bundle_file(self.stats_uri, bundle_dir)
+        new_config = self.to_builder() \
+                         .with_stats_uri(base_name) \
+                         .build()
+        return (new_config, [local_path])
+
+    def load_bundle_files(self, bundle_dir):
+        if not self.stats_uri:
+            raise rv.ConfigError('stat_uri is not set.')
+        local_stats_uri = os.path.join(bundle_dir, self.stats_uri)
+        return self.to_builder() \
+                   .with_stats_uri(local_stats_uri) \
+                   .build()
 
     def create_transformer(self):
         if not self.stats_uri:

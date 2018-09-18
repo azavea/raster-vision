@@ -85,6 +85,17 @@ class ExperimentConfig(Config):
                            .with_experiment(self) \
                            .build()
 
+    def fully_resolve(self):
+        """Returns a fully resolved version of this  experiment.
+
+        A fully resolved experiment has all implicit paths put into place,
+        and is constructed by calling preprocess_command for each command.
+        """
+        e = self
+        for command_type in rv.ALL_COMMANDS:
+            e, _ = e.preprocess_command(command_type, e)
+        return e
+
     def to_proto(self):
         analyzers = list(map(lambda a: a.to_proto(), self.analyzers))
         evaluators = list(map(lambda e: e.to_proto(), self.evaluators))

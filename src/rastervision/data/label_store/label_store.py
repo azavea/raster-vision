@@ -24,8 +24,3 @@ class LabelStore(ABC):
     def empty_labels(self):
         """Produces an empty Labels"""
         pass
-
-    @abstractmethod
-    def concatenate(self, labels1, labels2):
-        """Returns the concatenation of the labels"""
-        pass

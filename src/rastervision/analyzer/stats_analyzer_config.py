@@ -23,6 +23,27 @@ class StatsAnalyzerConfig(AnalyzerConfig):
             msg.MergeFrom(AnalyzerConfigMsg(stats_uri=self.stats_uri))
         return msg
 
+    def save_bundle_files(self, bundle_dir):
+        if not self.stats_uri:
+            raise rv.ConfigError('stat_uri is not set.')
+        # Only set the basename, do not contribute file
+        # as it is not and input and only an output of
+        # this analyzer. The StatsTransformer will save
+        # its input separately.
+        base_name = os.path.basename(self.stats_uri)
+        new_config = self.to_builder() \
+                         .with_stats_uri(base_name) \
+                         .build()
+        return (new_config, [])
+
+    def load_bundle_files(self, bundle_dir):
+        if not self.stats_uri:
+            raise rv.ConfigError('stat_uri is not set.')
+        local_stats_uri = os.path.join(bundle_dir, self.stats_uri)
+        return self.to_builder() \
+                   .with_stats_uri(local_stats_uri) \
+                   .build()
+
     def preprocess_command(self, command_type, experiment_config, context=[]):
         conf = self
         io_def = rv.core.CommandIODefinition()

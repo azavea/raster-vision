@@ -1,13 +1,13 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.command import (BundleCommand, CommandConfig,
-                                  CommandConfigBuilder)
+from rastervision.command import (CommandConfig, CommandConfigBuilder,
+                                  BundleCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 
 
-class PredictCommandConfig(CommandConfig):
+class BundleCommandConfig(CommandConfig):
     def __init__(self, task, backend, scene, analyzers):
         super().__init__(rv.BUNDLE)
         self.task = task
@@ -40,11 +40,17 @@ class PredictCommandConfig(CommandConfig):
 
 
 class BundleCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self):
-        self.task = None
-        self.backend = None
-        self.scene = None
-        self.analyzers = []
+    def __init__(self, prev=None):
+        if prev is None:
+            self.task = None
+            self.backend = None
+            self.scene = None
+            self.analyzers = []
+        else:
+            self.task = prev.task
+            self.backend = prev.backend
+            self.scene = prev.scene
+            self.analyzers = prev.analyzers
 
     def build(self):
         if self.task is None:
@@ -59,11 +65,11 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
             raise rv.ConfigError(
                 'Template scene not set. Use with_scene or with_experiment')
 
-        return PredictCommandConfig(self.task, self.backend, self.scene,
-                                    self.analyzers)
+        return BundleCommandConfig(self.task, self.backend, self.scene,
+                                   self.analyzers)
 
     def from_proto(self, msg):
-        msg = msg.predict_config
+        msg = msg.bundle_config
 
         task = rv.TaskConfig.from_proto(msg.task)
         backend = rv.BackendConfig.from_proto(msg.backend)

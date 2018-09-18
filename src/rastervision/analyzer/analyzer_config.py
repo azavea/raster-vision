@@ -1,10 +1,11 @@
 from abc import abstractmethod
 
 import rastervision as rv
-from rastervision.core.config import (Config, ConfigBuilder)
+from rastervision.core.config import (Config, ConfigBuilder,
+                                      BundledConfigMixin)
 
 
-class AnalyzerConfig(Config):
+class AnalyzerConfig(BundledConfigMixin, Config):
     def __init__(self, analyzer_type):
         self.analyzer_type = analyzer_type
 

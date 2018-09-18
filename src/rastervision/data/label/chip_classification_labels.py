@@ -11,6 +11,16 @@ class ChipClassificationLabels(Labels):
     def __len__(self):
         return len(self.cell_to_class_id)
 
+    def __eq__(self, other):
+        return (isinstance(other, ChipClassificationLabels)
+                and self.cell_to_class_id == other.cell_to_class_id)
+
+    def __add__(self, other):
+        result = ChipClassificationLabels()
+        result.extend(self)
+        result.extend(other)
+        return result
+
     def set_cell(self, cell, class_id, scores=None):
         """Set cell and its class_id.
 
