@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from rastervision.filesystem.filesystem import (FileSystem, NotReadableError)
+from rastervision.filesystem import (FileSystem, NotReadableError)
 
 
 def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):

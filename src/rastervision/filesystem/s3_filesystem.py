@@ -3,8 +3,8 @@ import os
 import subprocess
 from urllib.parse import urlparse
 
-from rastervision.filesystem.filesystem import (FileSystem, NotReadableError,
-                                                NotWritableError)
+from rastervision.filesystem import (FileSystem, NotReadableError,
+                                     NotWritableError)
 
 
 class S3FileSystem(FileSystem):

@@ -3,8 +3,8 @@ import shutil
 import urllib
 import urllib.request
 
-from rastervision.filesystem.filesystem import (FileSystem, NotReadableError,
-                                                NotWritableError)
+from rastervision.filesystem import (FileSystem, NotReadableError,
+                                     NotWritableError)
 from urllib.parse import urlparse
 
 
