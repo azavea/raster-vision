@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import rastervision as rv
+from rastervision.plugin import PluginRegistry
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 
@@ -17,7 +18,9 @@ class CommandConfig(ABC):
     def to_proto(self):
         """Returns the protobuf configuration for this config.
         """
-        return CommandConfigMsg(command_type=self.command_type)
+        plugin_config = PluginRegistry.get_instance().to_proto()
+        return CommandConfigMsg(
+            command_type=self.command_type, plugins=plugin_config)
 
     @staticmethod
     @abstractmethod
@@ -49,6 +52,12 @@ class CommandConfigBuilder(ABC):
            as its starting point.
         """
         pass
+
+    def process_plugins(self, msg):
+        """Process plugins from a command config protobuf message."""
+        if msg.HasField('plugins'):
+            PluginRegistry.get_instance().add_plugins_from_proto(msg.plugins)
+        return self
 
     @abstractmethod
     def with_experiment(self, experiment):

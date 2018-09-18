@@ -54,11 +54,13 @@ class TrainCommandConfigBuilder(CommandConfigBuilder):
         return TrainCommandConfig(self.task, self.backend)
 
     def from_proto(self, msg):
+        self.process_plugins(msg)
+        msg = msg.train_config
         task = rv.TaskConfig.from_proto(msg.task)
-        backend = rv.TaskConfig.from_proto(msg.backend)
+        backend = rv.BackendConfig.from_proto(msg.backend)
 
         b = self.with_task(task)
-        b = self.with_backend(backend)
+        b = b.with_backend(backend)
 
         return b
 

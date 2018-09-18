@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+package rv.protos;
+
+message PluginConfig {
+    repeated string plugin_uris = 1;
+    repeated string plugin_modules = 2;
+}

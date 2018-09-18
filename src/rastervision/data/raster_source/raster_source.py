@@ -37,6 +37,11 @@ class RasterSource(ABC):
         pass
 
     @abstractmethod
+    def get_crs_transformer(self):
+        """Return the associated CRSTransformer."""
+        pass
+
+    @abstractmethod
     def _get_chip(self, window):
         """Return the chip located in the window.
 
@@ -77,11 +82,6 @@ class RasterSource(ABC):
             [height, width, channels] numpy array
         """
         return self._get_chip(window)
-
-    @abstractmethod
-    def get_crs_transformer(self):
-        """Return the associated CRSTransformer."""
-        pass
 
     def get_image_array(self):
         """Return entire transformed image array.

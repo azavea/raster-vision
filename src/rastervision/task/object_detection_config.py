@@ -87,19 +87,18 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
 
     def from_proto(self, msg):
         conf = msg.object_detection_config
-        b = ObjectDetectionConfigBuilder()
 
-        return b.with_classes(list(conf.class_items)) \
-                .with_predict_batch_size(msg.predict_batch_size) \
-                .with_predict_package_uri(msg.predict_package_uri) \
-                .with_debug(msg.debug) \
-                .with_chip_size(conf.chip_size) \
-                .with_chip_options(neg_ratio=conf.chip_options.neg_ratio,
-                                   ioa_thresh=conf.chip_options.ioa_thresh,
-                                   window_method=conf.chip_options.window_method,
-                                   label_buffer=conf.chip_options.label_buffer) \
-                .with_predict_options(merge_thresh=conf.predict_options.merge_thresh,
-                                      score_thresh=conf.predict_options.score_thresh)
+        return self.with_classes(list(conf.class_items)) \
+                   .with_predict_batch_size(msg.predict_batch_size) \
+                   .with_predict_package_uri(msg.predict_package_uri) \
+                   .with_debug(msg.debug) \
+                   .with_chip_size(conf.chip_size) \
+                   .with_chip_options(neg_ratio=conf.chip_options.neg_ratio,
+                                      ioa_thresh=conf.chip_options.ioa_thresh,
+                                      window_method=conf.chip_options.window_method,
+                                      label_buffer=conf.chip_options.label_buffer) \
+                   .with_predict_options(merge_thresh=conf.predict_options.merge_thresh,
+                                         score_thresh=conf.predict_options.score_thresh)
 
     def with_classes(
             self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[

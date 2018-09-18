@@ -1,0 +1,2 @@
+[PLUGINS]
+modules = [ "tests.test_plugin" ]
