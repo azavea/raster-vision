@@ -39,6 +39,11 @@ def main(profile):
           'about the commands to be run, but will not actually '
           'run the commands'))
 @click.option(
+    '--skip-file-check',
+    '-x',
+    is_flag=True,
+    help=('Skip the step that verifies that file exist.'))
+@click.option(
     '--arg',
     '-a',
     type=(str, str),
@@ -58,7 +63,8 @@ def main(profile):
     '--rv-branch',
     help=('Specifies the branch of the raster vision repo '
           'to use for executing commands remotely'))
-def run(runner, commands, experiment_module, dry_run, arg, rerun, rv_branch):
+def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
+        rerun, rv_branch):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
     # Validate runner
@@ -100,7 +106,11 @@ def run(runner, commands, experiment_module, dry_run, arg, rerun, rv_branch):
         else:
             print_error('No experiments found.')
 
-    runner.run(experiments, commands_to_run=commands, rerun_commands=rerun)
+    runner.run(
+        experiments,
+        commands_to_run=commands,
+        rerun_commands=rerun,
+        skip_file_check=skip_file_check)
 
 
 @main.command()
