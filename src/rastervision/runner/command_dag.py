@@ -106,4 +106,5 @@ class CommandDAG:
         """Returns the command ids for upstream commands for the command
         with the given id.
         """
-        return self.command_dag.in_edges(command_id)
+        return list(
+            map(lambda x: x[0], self.command_id_dag.in_edges(command_id)))

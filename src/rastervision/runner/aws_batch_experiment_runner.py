@@ -20,7 +20,7 @@ def batch_submit(command_type,
                  command,
                  attempts=3,
                  gpu=False,
-                 parent_job_ids=[],
+                 parent_job_ids=None,
                  array_size=None):
     """
         Submit a job to run on Batch.
@@ -29,6 +29,9 @@ def batch_submit(command_type,
             branch_name: Branch with code to run on Batch
             command: Command in quotes to run on Batch
     """
+    if parent_job_ids is None:
+        parent_job_ids = []
+
     full_command = ['run_rv', branch_name]
     full_command.extend(command.split())
 
@@ -68,8 +71,8 @@ class AwsBatchExperimentRunner(ExperimentRunner):
         batch_config = rv_config.get_subconfig('AWS_BATCH')
 
         self.branch = batch_config('branch', default='develop')
-        self.attempts = batch_config('attempts', parser=int, default=1)
-        self.gpu = batch_config('gpu', parser=bool, default=True)
+        self.attempts = batch_config('attempts', parser=int, default='1')
+        self.gpu = batch_config('gpu', parser=bool, default='true')
 
         job_queue = batch_config('job_queue', default='')
         if not job_queue:
@@ -95,21 +98,28 @@ class AwsBatchExperimentRunner(ExperimentRunner):
             command_config = command_dag.get_command(command_id)
             command_root_uri = command_config.root_uri
             command_uri = os.path.join(command_root_uri, 'command-config.json')
+            print('Saving command configuration to {}...'.format(command_uri))
             save_json_config(command_config.to_proto(), command_uri)
 
             parent_job_ids = []
             for upstream_id in command_dag.get_upstream_command_ids(
                     command_id):
                 if upstream_id not in ids_to_job:
+                    cur_command = (command_config.command_type, command_id)
+                    u = command_dag.get_command(upstream_id)
+                    upstream_command = (u.command_type, upstream_id)
                     raise Exception(
                         '{} command has parent command of {}, '
                         'but does not exist in previous batch submissions - '
-                        'topological sort on command_dag error.')
-                parent_job_ids.append(ids_to_job(upstream_id))
+                        'topological sort on command_dag error.'.format(
+                            cur_command, upstream_command))
+                parent_job_ids.append(ids_to_job[upstream_id])
 
             batch_run_command = make_command(command_uri)
             job_id = batch_submit(
                 command_config.command_type,
+                self.job_queue,
+                self.job_definition,
                 self.branch,
                 batch_run_command,
                 attempts=self.attempts,
