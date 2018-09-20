@@ -8,8 +8,8 @@ from rastervision.protos.command_pb2 \
 
 
 class BundleCommandConfig(CommandConfig):
-    def __init__(self, task, backend, scene, analyzers):
-        super().__init__(rv.BUNDLE)
+    def __init__(self, root_uri, task, backend, scene, analyzers):
+        super().__init__(rv.BUNDLE, root_uri)
         self.task = task
         self.backend = backend
         self.scene = scene
@@ -41,6 +41,7 @@ class BundleCommandConfig(CommandConfig):
 
 class BundleCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):
+        super().__init__(prev)
         if prev is None:
             self.task = None
             self.backend = None
@@ -52,7 +53,8 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
             self.scene = prev.scene
             self.analyzers = prev.analyzers
 
-    def build(self):
+    def validate(self):
+        super().validate()
         if self.task is None:
             raise rv.ConfigError(
                 'Task not set. Use with_task or with_experiment')
@@ -65,18 +67,22 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
             raise rv.ConfigError(
                 'Template scene not set. Use with_scene or with_experiment')
 
-        return BundleCommandConfig(self.task, self.backend, self.scene,
-                                   self.analyzers)
+    def build(self):
+        self.validate()
+        return BundleCommandConfig(self.root_uri, self.task, self.backend,
+                                   self.scene, self.analyzers)
 
     def from_proto(self, msg):
-        msg = msg.bundle_config
+        b = super().from_proto(msg)
 
-        task = rv.TaskConfig.from_proto(msg.task)
-        backend = rv.BackendConfig.from_proto(msg.backend)
-        scene = rv.SceneConfig.from_proto(msg.scene)
-        analyzers = list(map(rv.AnalyzerConfig.from_proto, msg.analyzers))
+        conf = msg.bundle_config
 
-        b = self.with_task(task)
+        task = rv.TaskConfig.from_proto(conf.task)
+        backend = rv.BackendConfig.from_proto(conf.backend)
+        scene = rv.SceneConfig.from_proto(conf.scene)
+        analyzers = list(map(rv.AnalyzerConfig.from_proto, conf.analyzers))
+
+        b = b.with_task(task)
         b = b.with_backend(backend)
         b = b.with_scene(scene)
         b = b.with_analyzers(analyzers)
@@ -84,7 +90,8 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
         return b
 
     def with_experiment(self, experiment_config):
-        b = self.with_task(experiment_config.task)
+        b = super().with_experiment(experiment_config)
+        b = b.with_task(experiment_config.task)
         b = b.with_backend(experiment_config.backend)
         b = b.with_scene(experiment_config.dataset.all_scenes()[0])
         b = b.with_analyzers(experiment_config.analyzers)

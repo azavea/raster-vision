@@ -8,8 +8,8 @@ from rastervision.protos.command_pb2 \
 
 
 class TrainCommandConfig(CommandConfig):
-    def __init__(self, task, backend):
-        super().__init__(rv.TRAIN)
+    def __init__(self, root_uri, task, backend):
+        super().__init__(rv.TRAIN, root_uri)
         self.task = task
         self.backend = backend
 
@@ -39,6 +39,7 @@ class TrainCommandConfig(CommandConfig):
 
 class TrainCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):
+        super().__init__(prev)
         if prev is None:
             self.task = None
             self.backend = None
@@ -46,7 +47,8 @@ class TrainCommandConfigBuilder(CommandConfigBuilder):
             self.task = prev.task
             self.backend = prev.backend
 
-    def build(self):
+    def validate(self):
+        super().validate()
         if self.task is None:
             raise rv.ConfigError(
                 'Task not set. Use with_task or with_experiment')
@@ -55,21 +57,26 @@ class TrainCommandConfigBuilder(CommandConfigBuilder):
             raise rv.ConfigError(
                 'Backend not set. Use with_task or with_experiment')
 
-        return TrainCommandConfig(self.task, self.backend)
+    def build(self):
+        self.validate()
+        return TrainCommandConfig(self.root_uri, self.task, self.backend)
 
     def from_proto(self, msg):
-        self.process_plugins(msg)
-        msg = msg.train_config
-        task = rv.TaskConfig.from_proto(msg.task)
-        backend = rv.BackendConfig.from_proto(msg.backend)
+        b = super().from_proto(msg)
 
-        b = self.with_task(task)
+        conf = msg.train_config
+
+        task = rv.TaskConfig.from_proto(conf.task)
+        backend = rv.BackendConfig.from_proto(conf.backend)
+
+        b = b.with_task(task)
         b = b.with_backend(backend)
 
         return b
 
     def with_experiment(self, experiment_config):
-        b = self.with_task(experiment_config.task)
+        b = super().with_experiment(experiment_config)
+        b = b.with_task(experiment_config.task)
         b = b.with_backend(experiment_config.backend)
         return b
 

@@ -52,15 +52,16 @@ message CommandConfig {
     }
 
     required string command_type = 1;
+    required string root_uri = 2;
 
     oneof command_config {
-        AnalyzeConfig analyze_config = 2;
-        ChipConfig chip_config = 3;
-        TrainConfig train_config = 4;
-        PredictConfig predict_config = 5;
-        EvalConfig eval_config = 6;
-        BundleConfig bundle_config = 7;
+        AnalyzeConfig analyze_config = 3;
+        ChipConfig chip_config = 4;
+        TrainConfig train_config = 5;
+        PredictConfig predict_config = 6;
+        EvalConfig eval_config = 7;
+        BundleConfig bundle_config = 8;
     }
 
-    optional PluginConfig plugins = 8;
+    optional PluginConfig plugins = 9;
 }
