@@ -6,8 +6,6 @@ from PIL import Image
 import numpy as np
 import click
 
-from object_detection.utils.np_box_list import BoxList
-
 from rv.utils import save_geojson, make_empty_dir
 
 
@@ -18,6 +16,8 @@ def png_to_geojson(geotiff_path, label_png_path, output_path, object_half_len):
     non-zero pixels in PNG files that are aligned with the GeoTIFFs.
     This script converts the PNG file to a GeoJSON representation.
     """
+    from object_detection.utils.np_box_list import BoxList
+
     image_dataset = rasterio.open(geotiff_path)
     label_im = np.array(Image.open(label_png_path))
 

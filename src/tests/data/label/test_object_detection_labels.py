@@ -1,7 +1,6 @@
 import unittest
 
 import numpy as np
-from object_detection.utils.np_box_list import BoxList
 
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
@@ -23,6 +22,8 @@ class ObjectDetectionLabelsTest(unittest.TestCase):
             self.npboxes, self.class_ids, scores=self.scores)
 
     def test_from_boxlist(self):
+        from object_detection.utils.np_box_list import BoxList
+
         boxlist = BoxList(self.npboxes)
         boxlist.add_field('classes', self.class_ids)
         boxlist.add_field('scores', self.scores)

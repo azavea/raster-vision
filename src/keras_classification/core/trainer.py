@@ -1,11 +1,6 @@
 import os
 from pathlib import Path
 
-import keras
-from keras.preprocessing.image import ImageDataGenerator
-
-from keras_classification.utils import make_dir
-
 
 def get_nb_images(image_dir):
     count = 0
@@ -23,6 +18,8 @@ def get_nb_images(image_dir):
 
 class Trainer(object):
     def __init__(self, model, optimizer, options):
+        from keras_classification.utils import make_dir
+
         self.model = model
         self.optimizer = optimizer
         self.options = options
@@ -43,6 +40,8 @@ class Trainer(object):
         self.nb_validation_samples = get_nb_images(options.validation_data_dir)
 
     def make_callbacks(self):
+        import keras
+
         model_checkpoint = keras.callbacks.ModelCheckpoint(
             filepath=self.model_path,
             save_best_only=self.options.save_best,
@@ -87,6 +86,8 @@ class Trainer(object):
         return initial_epoch
 
     def make_data_generator(self, image_folder_dir, validation_mode=False):
+        from keras.preprocessing.image import ImageDataGenerator
+
         # Don't apply randomized data transforms if in validation mode.
         # This will make the validation scores more comparable between epochs.
         if validation_mode:

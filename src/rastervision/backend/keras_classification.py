@@ -5,10 +5,6 @@ from urllib.parse import urlparse
 import uuid
 
 import numpy as np
-from keras_classification.commands.train import _train
-from keras_classification.protos.pipeline_pb2 import PipelineConfig
-from keras_classification.builders import model_builder
-from keras_classification.utils import predict
 from google.protobuf import json_format
 
 from rastervision.backend import Backend
@@ -100,6 +96,8 @@ class ModelFiles(FileGroup):
 
     def download_backend_config(self, pretrained_model_uri, kc_config,
                                 dataset_files, class_map):
+        from keras_classification.protos.pipeline_pb2 import PipelineConfig
+
         config = json_format.ParseDict(kc_config, PipelineConfig())
 
         # Update config using local paths.
@@ -212,6 +210,8 @@ class KerasClassification(Backend):
         dataset_files.upload()
 
     def train(self, tmp_dir):
+        from keras_classification.commands.train import _train
+
         dataset_files = DatasetFiles(self.config.training_data_uri, tmp_dir)
         dataset_files.download()
 
@@ -241,12 +241,16 @@ class KerasClassification(Backend):
                 delete=True)
 
     def load_model(self, tmp_dir):
+        from keras_classification.builders import model_builder
+
         if self.model is None:
             model_path = download_if_needed(self.config.model_uri, tmp_dir)
             self.model = model_builder.build_from_path(model_path)
             self.model._make_predict_function()
 
     def predict(self, chips, windows, tmp_dir):
+        from keras_classification.utils import predict
+
         # Ensure model is loaded
         self.load_model(tmp_dir)
 

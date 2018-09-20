@@ -1,3 +1,5 @@
+import rastervision as rv
+
 import io
 import tempfile
 import os
@@ -12,20 +14,9 @@ import re
 import uuid
 
 from PIL import Image
-import tensorflow as tf
 import numpy as np
 from google.protobuf import text_format, json_format
 
-from tensorflow.core.example.example_pb2 import Example
-from typing import List
-
-from object_detection.utils import dataset_util
-from object_detection.utils import visualization_utils as vis_util
-from object_detection.protos.string_int_label_map_pb2 import (
-    StringIntLabelMap, StringIntLabelMapItem)
-from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
-
-import rastervision as rv
 from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
@@ -37,6 +28,8 @@ VALIDATION = 'validation'
 
 
 def save_debug_image(im, labels, class_map, output_path):
+    from object_detection.utils import visualization_utils as vis_util
+
     npboxes = labels.get_npboxes()
     class_ids = labels.get_class_ids()
     scores = labels.get_scores()
@@ -56,6 +49,9 @@ def save_debug_image(im, labels, class_map, output_path):
 
 
 def create_tf_example(image, window, labels, class_map, chip_id=''):
+    import tensorflow as tf
+    from object_detection.utils import dataset_util
+
     image = Image.fromarray(image)
     image_format = 'png'
     encoded_image = io.BytesIO()
@@ -107,7 +103,7 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
     return tf_example
 
 
-def write_tf_record(tf_examples: List[Example], output_path: str) -> None:
+def write_tf_record(tf_examples, output_path: str) -> None:
     """Write an array of TFRecords to the given output path.
 
     Args:
@@ -119,12 +115,16 @@ def write_tf_record(tf_examples: List[Example], output_path: str) -> None:
          None
 
     """
+    import tensorflow as tf
+
     with tf.python_io.TFRecordWriter(output_path) as writer:
         for tf_example in tf_examples:
             writer.write(tf_example.SerializeToString())
 
 
 def merge_tf_records(output_path, src_records):
+    import tensorflow as tf
+
     with tf.python_io.TFRecordWriter(output_path) as writer:
         print('Merging TFRecords', end='', flush=True)
         for src_record in src_records:
@@ -135,6 +135,9 @@ def merge_tf_records(output_path, src_records):
 
 
 def make_tf_class_map(class_map):
+    from object_detection.protos.string_int_label_map_pb2 import (
+        StringIntLabelMap, StringIntLabelMapItem)
+
     tf_class_map = StringIntLabelMap()
     tf_items = []
     for class_item in class_map.get_items():
@@ -189,6 +192,8 @@ def parse_tfexample(example):
 
 
 def make_debug_images(record_path, class_map, output_dir):
+    import tensorflow as tf
+
     make_dir(output_dir, check_empty=True)
 
     print('Generating debug chips', end='', flush=True)
@@ -448,6 +453,8 @@ class TrainingPackage(object):
         return pretrained_model_path
 
     def download_config(self):
+        from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
+
         """Download a model and backend config and update its fields.
 
         This is used before training a model. This downloads and unzips a bunch
@@ -518,6 +525,8 @@ class TrainingPackage(object):
 
 
 def load_frozen_graph(inference_graph_path):
+    import tensorflow as tf
+
     detection_graph = tf.Graph()
     with detection_graph.as_default():
         od_graph_def = tf.GraphDef()
@@ -667,6 +676,8 @@ class TFObjectDetection(Backend):
             sync_dir(output_dir, self.config.training_output_uri, delete=True)
 
     def load_model(self, tmp_dir):
+        import tensorflow as tf
+
         # Load and memoize the detection graph and TF session.
         if self.detection_graph is None:
             model_path = download_if_needed(self.config.model_uri, tmp_dir)
