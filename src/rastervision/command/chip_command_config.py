@@ -92,7 +92,7 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
     def from_proto(self, msg):
         b = super().from_proto(msg)
 
-        conf = conf.chip_config
+        conf = msg.chip_config
 
         task = rv.TaskConfig.from_proto(conf.task)
         backend = rv.BackendConfig.from_proto(conf.backend)

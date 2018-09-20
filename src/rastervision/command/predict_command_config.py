@@ -73,7 +73,7 @@ class PredictCommandConfigBuilder(CommandConfigBuilder):
                                     self.scenes)
 
     def from_proto(self, msg):
-        b = b.from_proto(msg)
+        b = super().from_proto(msg)
 
         conf = msg.predict_config
 

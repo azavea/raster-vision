@@ -19,7 +19,7 @@ pip install keras==2.1.* flake8==3.5.* awscli==1.15.* boto3==1.6.* \
 
 # Install Rasterio
 add-apt-repository ppa:ubuntugis/ppa
-apt-gget update
+apt-get update
 apt-get install -y python-numpy=1:1.11.* gdal-bin=2.1.* \
     libgdal-dev=2.1.*
 pip install rasterio==0.36.*
