@@ -6,11 +6,20 @@ from rastervision.runner import (CommandDefinition, CommandDAG)
 
 
 class ExperimentRunner(ABC):
+    class RunOptions:
+        def __init__(self, rv_repo=None, rv_branch=None):
+            self.rv_repo = rv_repo
+            self.rv_branch = rv_branch
+
     def run(self,
             experiments: Union[List[rv.ExperimentConfig], rv.ExperimentConfig],
             commands_to_run=rv.ALL_COMMANDS,
             rerun_commands=False,
-            skip_file_check=False):
+            skip_file_check=False,
+            run_options=None):
+        if run_options is None:
+            run_options = ExperimentRunner.RunOptions()
+
         if not isinstance(experiments, list):
             experiments = [experiments]
 
@@ -63,10 +72,10 @@ class ExperimentRunner(ABC):
         command_dag = CommandDAG(
             unique_commands, rerun_commands, skip_file_check=skip_file_check)
 
-        self._run_experiment(command_dag)
+        self._run_experiment(command_dag, run_options)
 
     @abstractmethod
-    def _run_experiment(self, command_list, command_dag):
+    def _run_experiment(self, command_dag, run_options=None):
         pass
 
     @staticmethod

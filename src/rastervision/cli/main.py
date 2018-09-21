@@ -60,11 +60,15 @@ def main(profile):
     help=('Rerun commands, regardless if '
           'their output files already exist.'))
 @click.option(
+    '--rv-repo',
+    help=('Specifies the raster vision repository '
+          'to use for executing commands remotely'))
+@click.option(
     '--rv-branch',
     help=('Specifies the branch of the raster vision repo '
           'to use for executing commands remotely'))
 def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
-        rerun, rv_branch):
+        rerun, rv_repo, rv_branch):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
     # Validate runner
@@ -110,7 +114,9 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         experiments,
         commands_to_run=commands,
         rerun_commands=rerun,
-        skip_file_check=skip_file_check)
+        skip_file_check=skip_file_check,
+        rv_repo=rv_repo,
+        rv_branch=rv_branch)
 
 
 @main.command()

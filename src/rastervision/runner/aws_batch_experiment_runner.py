@@ -9,8 +9,23 @@ from rastervision.runner import ExperimentRunner
 from rastervision.utils.files import save_json_config
 
 
-def make_command(command_config_uri):
-    return 'python -m rastervision run_command {}'.format(command_config_uri)
+def make_command(command_config_uri, run_options=None):
+    command = 'python -m rastervision run_command {}'.format(
+        command_config_uri)
+    if run_options is None:
+        return command
+    else:
+        if run_options.rv_repo is None:
+            rv_repo = 'https://github.com/azavea/raster-vision'
+        else:
+            rv_repo = run_options.rv_repo
+
+        if run_options.rv_branch is None:
+            rv_branch = 'develop'
+        else:
+            rv_branch = rv_options.rv_branch
+
+        return 'scripts/run_rv {} {} {}'.format(rv_repo, rv_branch, command)
 
 
 def batch_submit(command_type,
@@ -90,7 +105,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                 job_definition = 'raster-vision-cpu'
         self.job_definition = job_definition
 
-    def _run_experiment(self, command_dag):
+    def _run_experiment(self, command_dag, run_options=None):
         """Runs all commands on AWS Batch."""
 
         ids_to_job = {}
@@ -115,7 +130,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                             cur_command, upstream_command))
                 parent_job_ids.append(ids_to_job[upstream_id])
 
-            batch_run_command = make_command(command_uri)
+            batch_run_command = make_command(command_uri, run_options)
             job_id = batch_submit(
                 command_config.command_type,
                 self.job_queue,
