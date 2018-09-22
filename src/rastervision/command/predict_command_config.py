@@ -87,6 +87,9 @@ class PredictCommandConfigBuilder(CommandConfigBuilder):
 
         return b
 
+    def get_root_uri(self, experiment_config):
+        return experiment_config.predict_uri
+
     def with_experiment(self, experiment_config):
         b = super().with_experiment(experiment_config)
         b = b.with_task(experiment_config.task)

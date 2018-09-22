@@ -59,6 +59,11 @@ class CommandConfigBuilder(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_root_uri(self, experiment_config):
+        """Return the root URI for this command for a given experiment"""
+        pass
+
     def from_proto(self, msg):
         """Return a builder that takes the configuration from the proto message
            as its starting point.
@@ -80,7 +85,7 @@ class CommandConfigBuilder(ABC):
            It is sufficient to only call 'with_experiment' before
            calling .build()
         """
-        return self.with_root_uri(experiment_config.analyze_uri)
+        return self.with_root_uri(self.get_root_uri(experiment_config))
 
     def with_root_uri(self, root_uri):
         b = deepcopy(self)
