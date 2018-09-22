@@ -6,6 +6,7 @@ import click
 
 import rastervision as rv
 from rastervision.experiment import (ExperimentLoader, LoaderError)
+from rastervision.runner import (ExperimentRunner)
 
 
 def print_error(msg):
@@ -80,7 +81,7 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
                                                   '", "'.join(valid_runners)))
         sys.exit(1)
 
-    runner = rv.ExperimentRunner.get_runner(runner)
+    runner = ExperimentRunner.get_runner(runner)
 
     if experiment_module:
         module_to_load = experiment_module
@@ -114,9 +115,7 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         experiments,
         commands_to_run=commands,
         rerun_commands=rerun,
-        skip_file_check=skip_file_check,
-        rv_repo=rv_repo,
-        rv_branch=rv_branch)
+        skip_file_check=skip_file_check)
 
 
 @main.command()

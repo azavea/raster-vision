@@ -9,23 +9,10 @@ from rastervision.runner import ExperimentRunner
 from rastervision.utils.files import save_json_config
 
 
-def make_command(command_config_uri, run_options=None):
+def make_command(command_config_uri):
     command = 'python -m rastervision run_command {}'.format(
         command_config_uri)
-    if run_options is None:
-        return command
-    else:
-        if run_options.rv_repo is None:
-            rv_repo = 'https://github.com/azavea/raster-vision'
-        else:
-            rv_repo = run_options.rv_repo
-
-        if run_options.rv_branch is None:
-            rv_branch = 'develop'
-        else:
-            rv_branch = rv_options.rv_branch
-
-        return 'scripts/run_rv {} {} {}'.format(rv_repo, rv_branch, command)
+    return command
 
 
 def batch_submit(command_type,
@@ -47,8 +34,7 @@ def batch_submit(command_type,
     if parent_job_ids is None:
         parent_job_ids = []
 
-    full_command = ['run_rv', branch_name]
-    full_command.extend(command.split())
+    full_command = command.split()
 
     client = boto3.client('batch')
 
@@ -73,8 +59,9 @@ def batch_submit(command_type,
 
     job_id = client.submit_job(**kwargs)['jobId']
 
-    click.echo('Submitted job with jobName={} and jobId={}'.format(
-        job_name, job_id))
+    msg = '{} command submitted job with jobName={} and jobId={}'.format(
+        command_type, job_name, job_id)
+    click.echo(click.style(msg, fg='green'))
 
     return job_id
 
@@ -105,7 +92,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                 job_definition = 'raster-vision-cpu'
         self.job_definition = job_definition
 
-    def _run_experiment(self, command_dag, run_options=None):
+    def _run_experiment(self, command_dag):
         """Runs all commands on AWS Batch."""
 
         ids_to_job = {}
@@ -130,7 +117,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                             cur_command, upstream_command))
                 parent_job_ids.append(ids_to_job[upstream_id])
 
-            batch_run_command = make_command(command_uri, run_options)
+            batch_run_command = make_command(command_uri)
             job_id = batch_submit(
                 command_config.command_type,
                 self.job_queue,

@@ -7,7 +7,7 @@ class LocalExperimentRunner(ExperimentRunner):
     def __init__(self, tmp_dir=None):
         self.tmp_dir = tmp_dir
 
-    def _run_experiment(self, command_dag, run_options=None):
+    def _run_experiment(self, command_dag):
         """Runs all commands on this machine."""
 
         def run_commands(tmp_dir):
