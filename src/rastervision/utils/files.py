@@ -1,6 +1,5 @@
 import os
 import shutil
-from urllib.parse import urlparse
 import tempfile
 from threading import Timer
 from pathlib import Path
@@ -84,6 +83,7 @@ def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600, fs=None):
         sync_interval: (int) period in seconds for syncing
         fs:  Optional FileSystem to use
     """
+
     def _sync_dir():
         print('Syncing {} to {}...'.format(src_dir_uri, dest_dir_uri))
         sync_to_dir(src_dir_uri, dest_dir_uri, delete=False, fs=fs)

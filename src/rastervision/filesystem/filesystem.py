@@ -70,7 +70,8 @@ class FileSystem(ABC):
 
     @staticmethod
     @abstractmethod
-    def sync_from_dir(src_dir_uri: str, dest_dir_uri: str,
+    def sync_from_dir(src_dir_uri: str,
+                      dest_dir_uri: str,
                       delete: bool = False) -> None:
         """Syncs a local directory to a destination.
 

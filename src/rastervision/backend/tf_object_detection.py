@@ -6,7 +6,6 @@ import os
 import shutil
 import tarfile
 from os.path import join
-from urllib.parse import urlparse
 from subprocess import Popen
 import atexit
 import glob
@@ -20,7 +19,8 @@ from google.protobuf import text_format, json_format
 from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
-                                      download_if_needed, sync_to_dir, start_sync)
+                                      download_if_needed, sync_to_dir,
+                                      start_sync)
 from rastervision.utils.misc import save_img
 
 TRAIN = 'train'
@@ -454,7 +454,6 @@ class TrainingPackage(object):
 
     def download_config(self):
         from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
-
         """Download a model and backend config and update its fields.
 
         This is used before training a model. This downloads and unzips a bunch
@@ -658,10 +657,11 @@ class TFObjectDetection(Backend):
         export_py = self.config.script_locations.export_uri
 
         # Train model and sync output periodically.
-        sync = start_sync(output_dir,
-                          self.config.training_output_uri,
-                          sync_interval=self.config.train_options.sync_interval)
-        with sync as s:
+        sync = start_sync(
+            output_dir,
+            self.config.training_output_uri,
+            sync_interval=self.config.train_options.sync_interval)
+        with sync:
             train(
                 config_path,
                 output_dir,

@@ -70,7 +70,8 @@ class S3FileSystem(FileSystem):
                 raise NotWritableError('Could not write {}'.format(uri)) from e
 
     @staticmethod
-    def sync_from_dir(src_dir_uri: str, dest_dir_uri: str,
+    def sync_from_dir(src_dir_uri: str,
+                      dest_dir_uri: str,
                       delete: bool = False) -> None:
         command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
         if delete:

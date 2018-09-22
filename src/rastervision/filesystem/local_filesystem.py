@@ -68,8 +68,9 @@ class LocalFileSystem(FileSystem):
             content_file.write(data)
 
     @staticmethod
-    def sync_from_dir(src_dir_uri: str, dest_dir_uri: str,
-                 delete: bool = False) -> None:
+    def sync_from_dir(src_dir_uri: str,
+                      dest_dir_uri: str,
+                      delete: bool = False) -> None:
         if src_dir_uri == dest_dir_uri:
             return
 
@@ -88,9 +89,9 @@ class LocalFileSystem(FileSystem):
                         ignored = set()
                         for f in files:
                             if f not in ignored:
-                                recursive_overwrite(os.path.join(src, f),
-                                                    os.path.join(dest, f),
-                                                    ignore)
+                                recursive_overwrite(
+                                    os.path.join(src, f), os.path.join(
+                                        dest, f), ignore)
             else:
                 shutil.copyfile(src, dest)
 
@@ -98,7 +99,7 @@ class LocalFileSystem(FileSystem):
 
     @staticmethod
     def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
-                 delete: bool = False) -> None:
+                    delete: bool = False) -> None:
         LocalFileSystem.sync_from_dir(src_dir_uri, dest_dir_uri, delete)
 
     @staticmethod
