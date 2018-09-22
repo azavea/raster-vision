@@ -197,7 +197,7 @@ def predict(predict_package, image_uri, output_uri, update_stats,
 
 @main.command(
     'run_command', short_help='Run a command from configuration file.')
-@click.argument('command_config_uri', type=click.Path(exists=True))
+@click.argument('command_config_uri')
 def run_command(command_config_uri):
     """Run a command from a serialized command configuration
     at COMMAND_CONFIG_URI.
