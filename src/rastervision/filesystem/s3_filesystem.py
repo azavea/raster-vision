@@ -70,8 +70,16 @@ class S3FileSystem(FileSystem):
                 raise NotWritableError('Could not write {}'.format(uri)) from e
 
     @staticmethod
-    def sync_dir(src_dir_uri: str, dest_dir_uri: str,
-                 delete: bool = False) -> None:
+    def sync_from_dir(src_dir_uri: str, dest_dir_uri: str,
+                      delete: bool = False) -> None:
+        command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
+        if delete:
+            command.append('--delete')
+        subprocess.run(command)
+
+    @staticmethod
+    def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
+                    delete: bool = False) -> None:
         command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
         if delete:
             command.append('--delete')
@@ -92,7 +100,7 @@ class S3FileSystem(FileSystem):
                 raise NotWritableError(
                     'Could not write {}'.format(dst_uri)) from e
         else:
-            S3FileSystem.sync_dir(src_path, dst_uri, delete=True)
+            S3FileSystem.sync_to_dir(src_path, dst_uri, delete=True)
 
     @staticmethod
     def copy_from(uri: str, path: str) -> None:

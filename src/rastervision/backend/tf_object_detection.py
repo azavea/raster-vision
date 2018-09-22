@@ -20,7 +20,7 @@ from google.protobuf import text_format, json_format
 from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
-                                      download_if_needed, sync_dir, start_sync)
+                                      download_if_needed, sync_to_dir, start_sync)
 from rastervision.utils.misc import save_img
 
 TRAIN = 'train'
@@ -658,22 +658,22 @@ class TFObjectDetection(Backend):
         export_py = self.config.script_locations.export_uri
 
         # Train model and sync output periodically.
-        start_sync(
-            output_dir,
-            self.config.training_output_uri,
-            sync_interval=self.config.train_options.sync_interval)
-        train(
-            config_path,
-            output_dir,
-            train_py=train_py,
-            eval_py=eval_py,
-            do_monitoring=self.config.train_options.do_monitoring)
+        sync = start_sync(output_dir,
+                          self.config.training_output_uri,
+                          sync_interval=self.config.train_options.sync_interval)
+        with sync as s:
+            train(
+                config_path,
+                output_dir,
+                train_py=train_py,
+                eval_py=eval_py,
+                do_monitoring=self.config.train_options.do_monitoring)
 
         export_inference_graph(
             output_dir, config_path, output_dir, export_py=export_py)
 
-        if urlparse(self.config.training_output_uri).scheme == 's3':
-            sync_dir(output_dir, self.config.training_output_uri, delete=True)
+        # Perform final sync
+        sync_to_dir(output_dir, self.config.training_output_uri, delete=True)
 
     def load_model(self, tmp_dir):
         import tensorflow as tf

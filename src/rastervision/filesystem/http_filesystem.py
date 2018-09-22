@@ -46,9 +46,14 @@ class HttpFileSystem(FileSystem):
         raise NotWritableError('Could not write {}'.format(uri))
 
     @staticmethod
-    def sync_dir(src_dir_uri: str, dest_dir_uri: str,
-                 delete: bool = False) -> None:
+    def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
+                    delete: bool = False) -> None:
         raise NotWritableError('Could not write {}'.format(dest_dir_uri))
+
+    @staticmethod
+    def sync_from_dir(src_dir_uri: str, dest_dir_uri: str,
+                      delete: bool = False) -> None:
+        raise NotReadbleError('Cannot read directory from HTTP {}'.format(source_dir_uri))
 
     @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
