@@ -74,9 +74,8 @@ class DummyExperimentSet(rv.ExperimentSet):
     def exp_experiment_2(self, required_param):
         es = []
         for i in range(0, 2):
-            es.append(self.get_base() \
-                      .with_id('experiment_{}_{}'.format(i+1, required_param)) \
-                      .build())
+            es.append(self.get_base().with_id('experiment_{}_{}'.format(
+                i + 1, required_param)).build())
         return es
 
 
