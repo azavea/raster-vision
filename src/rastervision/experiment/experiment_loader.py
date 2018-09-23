@@ -10,12 +10,16 @@ class LoaderError(Exception):
 
 
 class ExperimentLoader:
-    def __init__(self, experiment_args=None):
+    def __init__(self, experiment_args=None,
+                 experiment_method_prefix='exp',
+                 experiment_method_patterns=None,
+                 experiment_name_patterns=None):
         if experiment_args is None:
             experiment_args = {}
-        self.experiment_method_prefix = 'exp'
-        self.exp_name_patterns = None
         self.exp_args = experiment_args
+        self.exp_method_prefix = experiment_method_prefix
+        self.exp_method_patterns= experiment_method_patterns
+        self.exp_name_patterns = experiment_name_patterns
 
     def load_from_module(self, name):
         result = []
@@ -34,7 +38,7 @@ class ExperimentLoader:
         for experiment_set in experiment_sets:
             for attrname in dir(experiment_set):
                 include_method = True
-                if not attrname.startswith(self.experiment_method_prefix):
+                if not attrname.startswith(self.exp_method_prefix):
                     include_method = False
                 exp_func = getattr(experiment_set, attrname)
                 if not callable(exp_func):
@@ -44,15 +48,21 @@ class ExperimentLoader:
                     full_name = '%s.%s' % (experiment_set.__module__,
                                            exp_func.__qualname__)
 
-                    if self.exp_name_patterns:
+                    if self.exp_method_patterns:
                         include_method = any(
                             fnmatchcase(full_name, pattern)
-                            for pattern in self.exp_name_patterns)
+                            for pattern in self.exp_method_patterns)
 
                     if include_method:
                         es = self.load_from_experiment(exp_func, full_name)
                         results.extend(es)
 
+        if self.exp_name_patterns:
+            def include(e):
+                return any(
+                    fnmatchcase(e.id, pattern)
+                    for pattern in self.exp_name_patterns)
+            results = list(filter(include, results))
         return results
 
     def load_from_experiment(self, exp_func, full_name):
@@ -75,7 +85,7 @@ class ExperimentLoader:
 
         exp = exp_func(**kwargs)
         if isinstance(exp, list):
-            results.extent(exp)
+            results.extend(exp)
         else:
             results.append(exp)
         return results
