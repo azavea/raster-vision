@@ -56,7 +56,7 @@ def main(profile):
 @click.option(
     '--prefix',
     metavar='PREFIX',
-    default="exp_",
+    default='exp_',
     help=('Prefix for methods containing experiments. (default: "exp_")'))
 @click.option(
     '--method',
@@ -108,10 +108,11 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
     for k, v in arg:
         experiment_args[k] = v
 
-    loader = ExperimentLoader(experiment_args=experiment_args,
-                              experiment_method_prefix=prefix,
-                              experiment_method_patterns=methods,
-                              experiment_name_patterns=filters)
+    loader = ExperimentLoader(
+        experiment_args=experiment_args,
+        experiment_method_prefix=prefix,
+        experiment_method_patterns=methods,
+        experiment_name_patterns=filters)
     try:
         experiments = loader.load_from_module(module_to_load)
     except LoaderError as e:

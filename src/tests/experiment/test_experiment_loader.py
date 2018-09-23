@@ -87,22 +87,24 @@ class TestExperimentConfig(unittest.TestCase):
         experiments = loader.load_from_module(__name__)
         self.assertEqual(len(experiments), 3)
         e_names = set(map(lambda e: e.id, experiments))
-        self.assertEqual(e_names, set(['experiment_1', 'experiment_1_yes', 'experiment_2_yes']))
+        self.assertEqual(
+            e_names,
+            set(['experiment_1', 'experiment_1_yes', 'experiment_2_yes']))
 
     def test_filter_module_by_method(self):
-        name = "*2"
-        args = {'required_param': 'x' }
-        loader = ExperimentLoader(experiment_args=args,
-                                  experiment_method_patterns=[name])
+        name = '*2'
+        args = {'required_param': 'x'}
+        loader = ExperimentLoader(
+            experiment_args=args, experiment_method_patterns=[name])
         experiments = loader.load_from_module(__name__)
         e_names = set(map(lambda e: e.id, experiments))
         self.assertEqual(e_names, set(['experiment_1_x', 'experiment_2_x']))
 
     def test_filter_module_by_name(self):
-        name = "*2*y*"
-        args = {'required_param': 'yes' }
-        loader = ExperimentLoader(experiment_args=args,
-                                  experiment_name_patterns=[name])
+        name = '*2*y*'
+        args = {'required_param': 'yes'}
+        loader = ExperimentLoader(
+            experiment_args=args, experiment_name_patterns=[name])
         experiments = loader.load_from_module(__name__)
         e_names = set(map(lambda e: e.id, experiments))
         self.assertEqual(e_names, set(['experiment_2_yes']))

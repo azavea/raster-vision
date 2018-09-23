@@ -10,7 +10,8 @@ class LoaderError(Exception):
 
 
 class ExperimentLoader:
-    def __init__(self, experiment_args=None,
+    def __init__(self,
+                 experiment_args=None,
                  experiment_method_prefix='exp',
                  experiment_method_patterns=None,
                  experiment_name_patterns=None):
@@ -18,7 +19,7 @@ class ExperimentLoader:
             experiment_args = {}
         self.exp_args = experiment_args
         self.exp_method_prefix = experiment_method_prefix
-        self.exp_method_patterns= experiment_method_patterns
+        self.exp_method_patterns = experiment_method_patterns
         self.exp_name_patterns = experiment_name_patterns
 
     def load_from_module(self, name):
@@ -58,10 +59,12 @@ class ExperimentLoader:
                         results.extend(es)
 
         if self.exp_name_patterns:
+
             def include(e):
                 return any(
                     fnmatchcase(e.id, pattern)
                     for pattern in self.exp_name_patterns)
+
             results = list(filter(include, results))
         return results
 
