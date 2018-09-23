@@ -106,7 +106,7 @@ class Task(object):
         def _process_scene(scene, type_, augment):
             data = TrainingData()
             print(
-                'Making {} chips for scene: {}'.format(type_, scene.scene_id),
+                'Making {} chips for scene: {}'.format(type_, scene.id),
                 end='',
                 flush=True)
             windows = self.get_train_windows(scene)

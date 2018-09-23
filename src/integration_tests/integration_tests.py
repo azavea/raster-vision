@@ -157,13 +157,13 @@ def run_test(test, temp_dir):
         for scene in scenes:
             rs = scene.raster_source
             if hasattr(rs, 'uri'):
-                scenes_to_uris[scene.scene_id] = rs.uri
+                scenes_to_uris[scene.id] = rs.uri
             elif hasattr(rs, 'uris'):
                 uris = rs.uris
                 if len(uris) > 1:
                     skip = True
                 else:
-                    scenes_to_uris[scene.scene_id] = uris[0]
+                    scenes_to_uris[scene.id] = uris[0]
             else:
                 skip = True
 
@@ -184,8 +184,8 @@ def run_test(test, temp_dir):
                 # via pyproj logic (in the case of rasterio crs transformer.
                 predictor_label_store_uri = os.path.join(
                     temp_dir, test.lower(),
-                    'predictor/{}'.format(scene_config.scene_id))
-                uri = scenes_to_uris[scene_config.scene_id]
+                    'predictor/{}'.format(scene_config.id))
+                uri = scenes_to_uris[scene_config.id]
                 predict(uri, predictor_label_store_uri)
                 scene = scene_config.create_scene(experiment.task, temp_dir)
                 scene_labels = scene.prediction_label_store.get_labels()
@@ -205,7 +205,7 @@ def run_test(test, temp_dir):
                         test, ('Predictor did not produce the same labels '
                                'as the Predict command'),
                         'for scene {} in experiment {}'.format(
-                            scene_config.scene_id, experiment.id))
+                            scene_config.id, experiment.id))
                     errors.append(e)
 
     return errors

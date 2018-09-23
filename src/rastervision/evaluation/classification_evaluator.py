@@ -18,8 +18,7 @@ class ClassificationEvaluator(Evaluator):
     def process(self, scenes, tmp_dir):
         evaluation = self.create_evaluation()
         for scene in scenes:
-            print('Computing evaluation for scene {}...'.format(
-                scene.scene_id))
+            print('Computing evaluation for scene {}...'.format(scene.id))
             ground_truth = scene.ground_truth_label_source.get_labels()
             predictions = scene.prediction_label_store.get_labels()
 

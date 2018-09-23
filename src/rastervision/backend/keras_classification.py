@@ -150,8 +150,7 @@ class KerasClassification(Backend):
         scratch_dir = dataset_files.get_local_path(dataset_files.scratch_uri)
         # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
-        scene_dir = join(scratch_dir, '{}-{}'.format(scene.scene_id,
-                                                     uuid.uuid4()))
+        scene_dir = join(scratch_dir, '{}-{}'.format(scene.id, uuid.uuid4()))
         class_dirs = {}
 
         for chip_idx, (chip, window, labels) in enumerate(data):

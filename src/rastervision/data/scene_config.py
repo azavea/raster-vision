@@ -14,12 +14,12 @@ from rastervision.protos.scene_pb2 \
 
 class SceneConfig(BundledConfigMixin, Config):
     def __init__(self,
-                 scene_id,
+                 id,
                  raster_source,
                  label_source=None,
                  label_store=None,
                  aoi_polygons=None):
-        self.scene_id = scene_id
+        self.id = id
         self.raster_source = raster_source
         self.label_source = label_source
         self.label_store = label_store
@@ -42,12 +42,12 @@ class SceneConfig(BundledConfigMixin, Config):
         if self.label_store:
             label_store = self.label_store.create_store(
                 task_config, raster_source.get_crs_transformer(), tmp_dir)
-        return Scene(self.scene_id, raster_source, label_source, label_store,
+        return Scene(self.id, raster_source, label_source, label_store,
                      self.aoi_polygons)
 
     def to_proto(self):
         msg = SceneConfigMsg(
-            id=self.scene_id, raster_source=self.raster_source.to_proto())
+            id=self.id, raster_source=self.raster_source.to_proto())
 
         if self.label_source:
             msg.ground_truth_label_source.CopyFrom(
@@ -143,7 +143,7 @@ class SceneConfigBuilder(ConfigBuilder):
         config = {}
         if prev:
             config = {
-                'scene_id': prev.scene_id,
+                'id': prev.id,
                 'raster_source': prev.raster_source,
                 'label_source': prev.label_source,
                 'label_store': prev.label_store
@@ -168,9 +168,9 @@ class SceneConfigBuilder(ConfigBuilder):
         b.task = task
         return b
 
-    def with_id(self, scene_id):
+    def with_id(self, id):
         b = deepcopy(self)
-        b.config['scene_id'] = scene_id
+        b.config['id'] = id
         return b
 
     def with_raster_source(self,
