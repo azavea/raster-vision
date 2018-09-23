@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Run the rastervision cli
+python -m rastervision $@

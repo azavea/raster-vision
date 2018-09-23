@@ -20,7 +20,7 @@ ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
 COPY ./requirements.txt /opt/src/requirements.txt
 RUN pip install -r requirements.txt
 
-COPY scripts/run_rv /usr/local/bin/
+COPY scripts/rastervision /usr/local/bin/
 COPY ./ /opt/src/
 RUN /opt/src/scripts/compile
 
