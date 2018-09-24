@@ -223,7 +223,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
 
     def test_read_labels1(self):
         # Extent only has enough of first box in it.
-        extent = Box.make_square(0, 0, 2.5)
+        extent = Box.make_square(0, 0, 0.5)
         labels = read_labels(self.geojson_dict, self.crs_transformer, extent)
 
         cells = labels.get_cells()

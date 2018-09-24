@@ -2,6 +2,7 @@ import numpy as np
 
 from rastervision.task import Task
 from rastervision.data import ObjectDetectionLabels
+from rastervision.core import Box
 
 
 def _make_chip_pos_windows(image_extent, label_store, chip_size):
@@ -48,11 +49,14 @@ def make_pos_windows(image_extent, label_store, chip_size, window_method,
 
 
 def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
-                     max_attempts):
+                     max_attempts, filter_windows):
     extent = raster_source.get_extent()
     neg_windows = []
     for _ in range(max_attempts):
-        window = extent.make_random_square(chip_size)
+        for _ in range(max_attempts):
+            window = extent.make_random_square(chip_size)
+            if any(filter_windows([window])):
+                break
         chip = raster_source.get_chip(window)
         labels = ObjectDetectionLabels.get_overlapping(
             label_store.get_labels(), window, ioa_thresh=0.2)
@@ -64,7 +68,7 @@ def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
         if len(neg_windows) == nb_windows:
             break
 
-    return neg_windows
+    return list(neg_windows)
 
 
 class ObjectDetection(Task):
@@ -72,18 +76,25 @@ class ObjectDetection(Task):
         raster_source = scene.raster_source
         label_store = scene.ground_truth_label_source
 
+        def filter_windows(windows):
+            if scene.aoi_polygons:
+                windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
+            return windows
+
         window_method = self.config.chip_options.window_method
         if window_method == 'sliding':
             chip_size = self.config.chip_size
             stride = chip_size
-            return list(raster_source.get_extent().get_windows(
-                chip_size, stride))
+            return list(
+                filter_windows((raster_source.get_extent().get_windows(
+                    chip_size, stride))))
 
         # Make positive windows which contain labels.
-        pos_windows = make_pos_windows(raster_source.get_extent(), label_store,
-                                       self.config.chip_size,
-                                       self.config.chip_options.window_method,
-                                       self.config.chip_options.label_buffer)
+        pos_windows = filter_windows(
+            make_pos_windows(raster_source.get_extent(), label_store,
+                             self.config.chip_size,
+                             self.config.chip_options.window_method,
+                             self.config.chip_options.label_buffer))
         nb_pos_windows = len(pos_windows)
 
         # Make negative windows which do not contain labels.
@@ -99,7 +110,7 @@ class ObjectDetection(Task):
         max_attempts = 100 * nb_neg_windows
         neg_windows = make_neg_windows(raster_source, label_store,
                                        self.config.chip_size, nb_neg_windows,
-                                       max_attempts)
+                                       max_attempts, filter_windows)
 
         return pos_windows + neg_windows
 

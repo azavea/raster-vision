@@ -191,13 +191,13 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
     def _process_task(self):
         return self.with_config(
             {
-                "model": {
-                    "inputSize": self.task.chip_size
+                'model': {
+                    'inputSize': self.task.chip_size
                 },
                 'trainer': {
                     'options': {
                         'classNames': self.task.class_map.get_class_names(),
-                        "inputSize": self.task.chip_size
+                        'inputSize': self.task.chip_size
                     }
                 }
             },

@@ -6,7 +6,7 @@ from rastervision.data import ChipClassificationLabels
 from rastervision.data.label_source import LabelSource
 from rastervision.data.label_source.utils import (
     add_classes_to_geojson, load_label_store_json,
-    geojson_to_object_detection_labels)
+    geojson_to_chip_classification_labels)
 
 
 def get_str_tree(geojson_dict, crs_transformer):
@@ -168,18 +168,8 @@ def read_labels(geojson_dict, crs_transformer, extent=None):
     Returns:
         ChipClassificationLabels
     """
-    # Load as ObjectDetectionLabels and convert to ChipClassificationLabels.
-    od_labels = geojson_to_object_detection_labels(geojson_dict,
-                                                   crs_transformer, extent)
-
-    labels = ChipClassificationLabels()
-    boxes = od_labels.get_boxes()
-    class_ids = od_labels.get_class_ids()
-    scores = od_labels.get_scores()
-    for box, class_id, _ in zip(boxes, class_ids, scores):
-        labels.set_cell(box, class_id, None)
-
-    return labels
+    return geojson_to_chip_classification_labels(geojson_dict, crs_transformer,
+                                                 extent)
 
 
 def load_geojson(geojson_dict, crs_transformer, extent, infer_cells, cell_size,

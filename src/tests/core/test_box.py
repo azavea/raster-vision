@@ -61,8 +61,8 @@ class TestBox(unittest.TestCase):
             container = self.box.make_random_square_container(size)
             self.assertEqual(container.get_width(), container.get_height())
             self.assertEqual(container.get_width(), size)
-            self.assertTrue(container.get_shapely().contains(
-                self.box.get_shapely()))
+            self.assertTrue(container.to_shapely().contains(
+                self.box.to_shapely()))
 
     def test_make_random_square_container_too_big(self):
         size = 1
@@ -77,7 +77,7 @@ class TestBox(unittest.TestCase):
             box = window.make_random_square(size)
             self.assertEqual(box.get_width(), box.get_height())
             self.assertEqual(box.get_width(), size)
-            self.assertTrue(window.get_shapely().contains(box.get_shapely()))
+            self.assertTrue(window.to_shapely().contains(box.to_shapely()))
 
     def test_from_npbox(self):
         npbox = np.array([self.ymin, self.xmin, self.ymax, self.xmax])
@@ -89,8 +89,8 @@ class TestBox(unittest.TestCase):
         output_box = Box.from_shapely(shape)
         self.assertEqual(output_box, self.box)
 
-    def test_get_shapely(self):
-        bounds = self.box.get_shapely().bounds
+    def test_to_shapely(self):
+        bounds = self.box.to_shapely().bounds
         self.assertEqual((bounds[1], bounds[0], bounds[3], bounds[2]),
                          self.box.tuple_format())
 

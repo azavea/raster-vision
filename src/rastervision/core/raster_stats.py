@@ -28,8 +28,8 @@ class RasterStats():
                     yield chip
 
         # Sniff the number of channels.
-        window = next(raster_sources[0].get_extent().get_windows(
-            chip_size, stride))
+        window = raster_sources[0].get_extent().get_windows(chip_size,
+                                                            stride)[0]
         nb_channels = raster_sources[0].get_raw_chip(window).shape[2]
 
         self.means = []

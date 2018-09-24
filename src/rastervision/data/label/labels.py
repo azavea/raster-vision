@@ -18,3 +18,12 @@ class Labels(ABC):
         Returns a concatenation of this and the other labels.
         """
         pass
+
+    @abstractmethod
+    def filter_by_aoi(self, aoi_polygons):
+        """Returns a copy of these labels filtered by a given set of AOI polygons
+
+        Args:
+          aoi_polygons - A list of AOI polygons to filter by, in pixel coordinates.
+        """
+        pass

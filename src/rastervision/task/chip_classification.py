@@ -4,6 +4,7 @@ import tempfile
 import numpy as np
 from PIL import Image, ImageDraw
 
+from rastervision.core import Box
 from rastervision.task import Task
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir)
 
@@ -24,15 +25,18 @@ def draw_debug_predict_image(scene, class_map):
 
 class ChipClassification(Task):
     def get_train_windows(self, scene):
+        result = []
         extent = scene.raster_source.get_extent()
         chip_size = self.config.chip_size
         stride = chip_size
-        windows = []
-        for window in extent.get_windows(chip_size, stride):
+        windows = extent.get_windows(chip_size, stride)
+        if scene.aoi_polygons:
+            windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
+        for window in windows:
             chip = scene.raster_source.get_chip(window)
             if np.sum(chip.ravel()) > 0:
-                windows.append(window)
-        return windows
+                result.append(window)
+        return result
 
     def get_train_labels(self, window, scene):
         return scene.ground_truth_label_source.get_labels(window=window)

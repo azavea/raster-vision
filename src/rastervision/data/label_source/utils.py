@@ -4,7 +4,7 @@ import json
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.data import ObjectDetectionLabels
+from rastervision.data import (ChipClassificationLabels, ObjectDetectionLabels)
 from rastervision.utils.files import file_to_str
 
 
@@ -146,4 +146,55 @@ def geojson_to_object_detection_labels(geojson_dict,
     if extent is not None:
         labels = ObjectDetectionLabels.get_overlapping(
             labels, extent, ioa_thresh=0.8, clip=True)
+    return labels
+
+
+def geojson_to_chip_classification_labels(geojson_dict,
+                                          crs_transformer,
+                                          extent=None):
+    """Convert GeoJSON to ChipClassificationLabels.
+
+    If extent is given, only labels that intersect with the extent are returned.
+
+    Args:
+        geojson_dict: dict in GeoJSON format
+        crs_transformer: used to convert map coords in geojson to pixel coords
+            in labels object
+        extent: Box in pixel coords
+
+    Returns:
+       ChipClassificationLabels
+    """
+    features = geojson_dict['features']
+
+    labels = ChipClassificationLabels()
+
+    extent_shape = None
+    if extent:
+        extent_shape = extent.to_shapely()
+
+    def polygon_to_label(polygon, crs_transformer):
+        polygon = [crs_transformer.map_to_pixel(p) for p in polygon]
+        xmin, ymin = np.min(polygon, axis=0)
+        xmax, ymax = np.max(polygon, axis=0)
+        cell = Box(ymin, xmin, ymax, xmax)
+
+        if extent_shape and not cell.to_shapely().intersects(extent_shape):
+            return
+
+        properties = feature['properties']
+        class_id = properties['class_id']
+        scores = properties.get('scores')
+
+        labels.set_cell(cell, class_id, scores)
+
+    for feature in features:
+        geom_type = feature['geometry']['type']
+        coordinates = feature['geometry']['coordinates']
+        if geom_type == 'Polygon':
+            polygon_to_label(coordinates[0], crs_transformer)
+        else:
+            raise Exception(
+                'Geometries of type {} are not supported in chip classification \
+                labels.'.format(geom_type))
     return labels
