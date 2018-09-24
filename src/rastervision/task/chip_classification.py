@@ -15,10 +15,15 @@ def draw_debug_predict_image(scene, class_map):
     draw = ImageDraw.Draw(img, 'RGB')
     labels = scene.prediction_label_store.get_labels()
     line_width = 4
+    default_colors = [
+        'red', 'orange', 'yellow', 'green', 'brown', 'pink', 'purple'
+    ]
     for cell, class_id in zip(labels.get_cells(), labels.get_class_ids()):
         cell = cell.make_eroded(line_width // 2)
         coords = cell.geojson_coordinates()
         color = class_map.get_by_id(class_id).color
+        if color is None:
+            color = default_colors[(class_id - 1) % len(default_colors)]
         draw.line(coords, fill=color, width=line_width)
     return img
 
@@ -50,7 +55,7 @@ class ChipClassification(Task):
         return extent.get_windows(chip_size, stride)
 
     def save_debug_predict_image(self, scene, debug_dir_uri):
-        img = draw_debug_predict_image(scene, self.class_map)
+        img = draw_debug_predict_image(scene, self.config.class_map)
         # Saving to a jpg leads to segfault for unknown reasons.
         debug_image_uri = join(debug_dir_uri, scene.id + '.png')
         with tempfile.TemporaryDirectory() as temp_dir:

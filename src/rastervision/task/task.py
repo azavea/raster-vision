@@ -153,10 +153,9 @@ class Task(object):
             label_store = scene.prediction_label_store
             label_store.save(labels)
 
-            # TODO: need debug_uri
-            # if (self.config.debug
-            #         and self.class_map.has_all_colors()):
-            #     self.save_debug_predict_image(scene, options.debug_uri)
+            if self.config.debug and self.config.predict_debug_uri:
+                self.save_debug_predict_image(scene,
+                                              self.config.predict_debug_uri)
 
     def predict_scene(self, scene, tmp_dir):
         """Predict on a single scene, and return the labels."""

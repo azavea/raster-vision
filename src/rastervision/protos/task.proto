@@ -34,9 +34,10 @@ message TaskConfig {
     optional int32 predict_batch_size = 2 [default=10];
     optional string predict_package_uri = 3;
     optional bool debug = 4 [default=true];
+    optional bool predict_debug_uri = 5;
     oneof config_type {
-        ObjectDetectionConfig object_detection_config = 5;
-        ChipClassificationConfig chip_classification_config = 6;
-        google.protobuf.Struct custom_config = 7;
+        ObjectDetectionConfig object_detection_config = 6;
+        ChipClassificationConfig chip_classification_config = 7;
+        google.protobuf.Struct custom_config = 8;
     }
 }
