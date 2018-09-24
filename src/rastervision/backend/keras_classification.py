@@ -224,7 +224,8 @@ class KerasClassification(Backend):
         backend_config_path, pretrained_model_path = model_paths
 
         # Get output from potential previous run so we can resume training.
-        sync_from_dir(self.config.training_output_uri, model_files.base_dir)
+        if not self.config.train_options.replace_model:
+            sync_from_dir(self.config.training_output_uri, model_files.base_dir)
 
         sync = start_sync(
             model_files.base_dir,
