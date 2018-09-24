@@ -27,9 +27,21 @@ def get_str_tree(geojson_dict, crs_transformer):
 
     for feature in features:
         # Convert polygon to pixel coords.
-        polygon = feature['geometry']['coordinates'][0]
-        polygon = [crs_transformer.map_to_pixel(p) for p in polygon]
-        json_polygons.append(polygon)
+        geom_type = feature['geometry']['type']
+        coordinates = feature['geometry']['coordinates']
+        if geom_type == 'MultiPolygon':
+            for polygon in coordinates:
+                shell = polygon[0]
+                polygon = [crs_transformer.map_to_pixel(p) for p in shell]
+                json_polygons.append(polygon)
+        elif geom_type == 'Polygon':
+            shell = coordinates[0]
+            polygon = [crs_transformer.map_to_pixel(p) for p in shell]
+            json_polygons.append(polygon)
+        else:
+            raise Exception(
+                'Geometries of type {} are not supported in chip classification \
+                labels.'.format(geom_type))
 
         properties = feature.get('properties', {})
         class_ids.append(properties.get('class_id', 1))
