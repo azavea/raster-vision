@@ -1,6 +1,6 @@
 import click
 
-from rastervision.command import Command
+from rastervision.command import (Command, NoOpCommand)
 
 
 class ChipCommand(Command):
@@ -16,3 +16,15 @@ class ChipCommand(Command):
 
         self.task.make_chips(self.train_scenes, self.val_scenes,
                              self.augmentors, tmp_dir)
+
+class NoOpChipCommand(NoOpCommand):
+    def __init__(self, task, augmentors, train_scenes, val_scenes):
+        self.task = task
+        self.augmentors = augmentors
+        self.train_scenes = train_scenes
+        self.val_scenes = val_scenes
+
+    def run(self, tmp_dir):
+        self.announce()
+        msg = 'Making training chips...'
+        click.echo(click.style(msg, fg='green'))

@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.command import (ChipCommand, CommandConfig,
+from rastervision.command import (ChipCommand, NoOpChipCommand, CommandConfig,
                                   CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
@@ -16,6 +16,10 @@ class ChipCommandConfig(CommandConfig):
         self.augmentors = augmentors
         self.train_scenes = train_scenes
         self.val_scenes = val_scenes
+
+    def create_noop_command(self, tmp_dir):
+        command = self.create_command(tmp_dir)
+        return NoOpChipCommand(command.task, command.augmentors, command.train_scenes, command.val_scenes)
 
     def create_command(self, tmp_dir):
         if len(self.train_scenes) == 0 and len(self.val_scenes) == 0:
