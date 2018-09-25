@@ -74,7 +74,7 @@ class ExperimentRunner(ABC):
             if command_def.experiment_id not in seen_ids:
                 seen_ids.add(command_def.experiment_id)
                 experiment = experiments_by_id[command_def.experiment_id]
-                experiment.save_config()
+                experiment.fully_resolve().save_config()
 
         self._run_experiment(command_dag)
 
