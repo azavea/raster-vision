@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.command import (EvalCommand, CommandConfig,
+from rastervision.command import (EvalCommand, NoOpEvalCommand, CommandConfig,
                                   CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
@@ -13,6 +13,10 @@ class EvalCommandConfig(CommandConfig):
         self.task = task
         self.scenes = scenes
         self.evaluators = evaluators
+
+    def create_noop_command(self, tmp_dir):
+        command = self.create_command(tmp_dir)
+        return NoOpEvalCommand(command.scenes, command.evaluators)
 
     def create_command(self, tmp_dir):
         if len(self.scenes) == 0 or len(self.evaluators) == 0:
