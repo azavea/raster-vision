@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.command import (AnalyzeCommand, CommandConfig,
+from rastervision.command import (AnalyzeCommand, NoOpAnalyzeCommand, CommandConfig,
                                   CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
@@ -22,6 +22,10 @@ class AnalyzeCommandConfig(CommandConfig):
             map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
         analyzers = list(map(lambda a: a.create_analyzer(), self.analyzers))
         return AnalyzeCommand(scenes, analyzers)
+
+    def create_noop_command(self, tmp_dir):
+        command = self.create_command(tmp_dir)
+        return NoOpAnalyzeCommand(command.scenes, command.analyzers)
 
     def to_proto(self):
         msg = super().to_proto()
