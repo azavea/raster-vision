@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.command import (TrainCommand, CommandConfig,
+from rastervision.command import (TrainCommand, NoOpTrainCommand, CommandConfig,
                                   CommandConfigBuilder)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
@@ -12,6 +12,10 @@ class TrainCommandConfig(CommandConfig):
         super().__init__(rv.TRAIN, root_uri)
         self.task = task
         self.backend = backend
+
+    def create_noop_command(self, tmp_dir):
+        command = self.create_command(tmp_dir)
+        return NoOpTrainCommand(command.task)
 
     def create_command(self, tmp_dir):
         backend = self.backend.create_backend(self.task)
