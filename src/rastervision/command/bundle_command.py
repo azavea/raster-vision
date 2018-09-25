@@ -4,7 +4,7 @@ import zipfile
 import click
 from google.protobuf import json_format
 
-from rastervision.command import Command
+from rastervision.command import (Command, NoOpCommand)
 from rastervision.utils.files import (upload_or_copy, make_dir)
 
 
@@ -69,3 +69,34 @@ class BundleCommand(Command):
                 arcname=os.path.basename(bundle_config_path))
 
         upload_or_copy(package_path, self.task_config.predict_package_uri)
+
+class NoOpBundleCommand(NoOpCommand):
+    """Pretends to bundle all the necessary files together into a prediction package."""
+
+    def __init__(self, bundle_config, task_config, backend_config,
+                 scene_config, analyzer_configs):
+        self.bundle_config = bundle_config
+        self.task_config = task_config
+        self.backend_config = backend_config
+        self.scene_config = scene_config
+        self.analyzer_configs = analyzer_configs
+
+    def run(self, tmp_dir):
+        if not self.task_config.predict_package_uri:
+            msg = 'Skipping bundling of prediction package, no URI is set...'.format(
+                self.task_config.predict_package_uri)
+            self.announce()
+            click.echo(click.style(msg, fg='yellow'))
+            return
+
+        msg = 'Bundling prediction package to {}...'.format(
+            self.task_config.predict_package_uri)
+        self.announce()
+        click.echo(click.style(msg, fg='green'))
+
+        bundle_dir = os.path.join(tmp_dir, 'bundle')
+        self.echo_variable('bundle_dir', bundle_dir)
+        package_path = os.path.join(tmp_dir, 'predict_package.zip')
+        self.echo_variable('package_path', package_path)
+        bundle_config_path = os.path.join(tmp_dir, 'bundle_config.json')
+        self.echo_variable('bundle_config_path', bundle_config_path)
