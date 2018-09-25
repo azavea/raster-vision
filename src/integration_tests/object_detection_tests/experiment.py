@@ -54,7 +54,7 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSet):
                                         .with_task(task) \
                                         .with_backend(backend) \
                                         .with_dataset(dataset) \
-                                        .with_analyze_key('object-detection-test') \
+                                        .with_eval_key('default') \
                                         .build()
 
         return experiment

@@ -70,7 +70,7 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                                         .with_backend(backend) \
                                         .with_dataset(dataset) \
                                         .with_stats_analyzer() \
-                                        .with_analyze_key('chip-classification-test') \
+                                        .with_eval_key('default') \
                                         .build()
 
         return experiment

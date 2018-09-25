@@ -71,7 +71,8 @@ class TestExperimentConfig(unittest.TestCase):
         e2 = rv.ExperimentConfig.from_proto(msg)
 
         self.assertEqual(e.train_uri, '/some/dummy/root/train/model_name')
-        self.assertEqual(e.analyze_uri, '/some/dummy/root/analyze/default')
+        self.assertEqual(e.analyze_uri,
+                         '/some/dummy/root/analyze/object-detection-test')
 
         self.assertEqual(e.analyze_uri, e2.analyze_uri)
         self.assertEqual(e.chip_uri, e2.chip_uri)

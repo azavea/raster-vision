@@ -16,10 +16,11 @@ message ExperimentConfig {
     repeated AnalyzerConfig analyzers = 5;
     repeated EvaluatorConfig evaluators = 6;
 
-    required string analyze_uri = 7;
-    required string chip_uri = 8;
-    required string train_uri = 9;
-    required string predict_uri = 10;
-    required string eval_uri = 11;
-    required string bundle_uri = 12;
+    required string root_uri = 7;
+    required string analyze_uri = 8;
+    required string chip_uri = 9;
+    required string train_uri = 10;
+    required string predict_uri = 11;
+    required string eval_uri = 12;
+    required string bundle_uri = 13;
 }

@@ -4,6 +4,7 @@ from copy import deepcopy
 import rastervision as rv
 from rastervision.core import CommandIODefinition
 from rastervision.core.config import (Config, ConfigBuilder)
+from rastervision.utils.files import save_json_config
 from rastervision.protos.experiment_pb2 \
     import ExperimentConfig as ExperimentConfigMsg
 
@@ -15,6 +16,7 @@ class ExperimentConfig(Config):
                  backend,
                  dataset,
                  evaluators,
+                 root_uri,
                  analyze_uri,
                  chip_uri,
                  train_uri,
@@ -31,6 +33,7 @@ class ExperimentConfig(Config):
         self.dataset = dataset
         self.analyzers = analyzers
         self.evaluators = evaluators
+        self.root_uri = root_uri
         self.analyze_uri = analyze_uri
         self.chip_uri = chip_uri
         self.train_uri = train_uri
@@ -96,6 +99,12 @@ class ExperimentConfig(Config):
             e, _ = e.preprocess_command(command_type, e)
         return e
 
+    def save_config(self):
+        msg = self.to_proto()
+        uri = os.path.join(self.root_uri, 'experiments',
+                           '{}.json'.format(self.id))
+        save_json_config(msg, uri)
+
     def to_proto(self):
         analyzers = list(map(lambda a: a.to_proto(), self.analyzers))
         evaluators = list(map(lambda e: e.to_proto(), self.evaluators))
@@ -107,6 +116,7 @@ class ExperimentConfig(Config):
             dataset=self.dataset.to_proto(),
             analyzers=analyzers,
             evaluators=evaluators)
+        msg.root_uri = self.root_uri
         msg.analyze_uri = self.analyze_uri
         msg.chip_uri = self.chip_uri
         msg.train_uri = self.train_uri
@@ -140,6 +150,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
                 'dataset': prev.dataset,
                 'analyzers': prev.analyzers,
                 'evaluators': prev.evaluators,
+                'root_uri': prev.root_uri,
                 'analyze_uri': prev.analyze_uri,
                 'chip_uri': prev.chip_uri,
                 'train_uri': prev.train_uri,
@@ -148,61 +159,58 @@ class ExperimentConfigBuilder(ConfigBuilder):
                 'bundle_uri': prev.bundle_uri
             }
         super().__init__(ExperimentConfig, config)
-        self.root_uri = None  # TODO: Store with experiment config?
-        self.analyze_key = 'default'
-        self.chip_key = 'default'
-        self.train_key = 'default'
-        self.predict_key = 'default'
-        self.eval_key = 'default'
-        self.bundle_key = 'default'
+        self.analyze_key = None
+        self.chip_key = None
+        self.train_key = None
+        self.predict_key = None
+        self.eval_key = None
+        self.bundle_key = None
 
     def build(self):
         self.validate()
         # Build any missing paths through
         b = self
+
+        if not self.config.get('root_uri'):
+            raise rv.ConfigError('root_uri must be set. Use "with_root_uri"')
+
+        if not self.config.get('id'):
+            raise rv.ConfigError('Experiment ID must be set. Use "with_id"')
+
         if not self.config.get('analyze_uri'):
-            if not self.root_uri:
-                raise rv.ConfigError(
-                    "Need to set root_uri if command uri's not explicitly set."
-                )
-            uri = os.path.join(self.root_uri, rv.ANALYZE.lower(),
+            if not self.analyze_key:
+                self.analyze_key = self.config['id']
+            uri = os.path.join(self.config['root_uri'], rv.ANALYZE.lower(),
                                self.analyze_key)
             b = b.with_analyze_uri(uri)
         if not self.config.get('chip_uri'):
-            if not self.root_uri:
-                raise rv.ConfigError(
-                    "Need to set root_uri if command uri's not explicitly set."
-                )
-            uri = os.path.join(self.root_uri, rv.CHIP.lower(), self.chip_key)
+            if not self.chip_key:
+                self.chip_key = self.config['id']
+            uri = os.path.join(self.config['root_uri'], rv.CHIP.lower(),
+                               self.chip_key)
             b = b.with_chip_uri(uri)
         if not self.config.get('train_uri'):
-            if not self.root_uri:
-                raise rv.ConfigError(
-                    "Need to set root_uri if command uri's not explicitly set."
-                )
-            uri = os.path.join(self.root_uri, rv.TRAIN.lower(), self.train_key)
+            if not self.train_key:
+                self.train_key = self.config['id']
+            uri = os.path.join(self.config['root_uri'], rv.TRAIN.lower(),
+                               self.train_key)
             b = b.with_train_uri(uri)
         if not self.config.get('predict_uri'):
-            if not self.root_uri:
-                raise rv.ConfigError(
-                    "Need to set root_uri if command uri's not explicitly set."
-                )
-            uri = os.path.join(self.root_uri, rv.PREDICT.lower(),
+            if not self.predict_key:
+                self.predict_key = self.config['id']
+            uri = os.path.join(self.config['root_uri'], rv.PREDICT.lower(),
                                self.predict_key)
             b = b.with_predict_uri(uri)
         if not self.config.get('eval_uri'):
-            if not self.root_uri:
-                raise rv.ConfigError(
-                    "Need to set root_uri if command uri's not explicitly set."
-                )
-            uri = os.path.join(self.root_uri, rv.EVAL.lower(), self.eval_key)
+            if not self.eval_key:
+                self.eval_key = self.config['id']
+            uri = os.path.join(self.config['root_uri'], rv.EVAL.lower(),
+                               self.eval_key)
             b = b.with_eval_uri(uri)
         if not self.config.get('bundle_uri'):
-            if not self.root_uri:
-                raise rv.ConfigError(
-                    "Need to set root_uri if command uri's not explicitly set."
-                )
-            uri = os.path.join(self.root_uri, rv.BUNDLE.lower(),
+            if not self.bundle_key:
+                self.bundle_key = self.config['id']
+            uri = os.path.join(self.config['root_uri'], rv.BUNDLE.lower(),
                                self.bundle_key)
             b = b.with_bundle_uri(uri)
 
@@ -238,6 +246,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
                 .with_dataset(rv.DatasetConfig.from_proto(msg.dataset)) \
                 .with_analyzers(analyzers) \
                 .with_evaluators(evaluators) \
+                .with_root_uri(msg.root_uri) \
                 .with_analyze_uri(msg.analyze_uri) \
                 .with_chip_uri(msg.chip_uri) \
                 .with_train_uri(msg.train_uri) \
@@ -285,6 +294,11 @@ class ExperimentConfigBuilder(ConfigBuilder):
     def with_evaluator(self, evaluator):
         return self.with_evaluators([evaluator])
 
+    def with_root_uri(self, uri):
+        b = deepcopy(self)
+        b.config['root_uri'] = uri
+        return b
+
     def with_analyze_uri(self, uri):
         b = deepcopy(self)
         b.config['analyze_uri'] = uri
@@ -313,11 +327,6 @@ class ExperimentConfigBuilder(ConfigBuilder):
     def with_bundle_uri(self, uri):
         b = deepcopy(self)
         b.config['bundle_uri'] = uri
-        return b
-
-    def with_root_uri(self, uri):
-        b = deepcopy(self)
-        b.root_uri = uri
         return b
 
     def with_analyze_key(self, key):
