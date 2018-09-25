@@ -1,6 +1,5 @@
 import os
 import shutil
-from urllib.parse import urlparse
 import tempfile
 from threading import Timer
 from pathlib import Path
@@ -37,8 +36,26 @@ def get_local_path(uri, download_dir, fs=None):
     return path
 
 
-def sync_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
-    """Synchronize a local and remote directory.
+def sync_to_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
+    """Synchronize a local to a local or remote directory.
+
+    Transfers files from source to destination directories so that the
+    destination has all the source files. If delete is True, also delete
+    files in the destination to match those in the source directory.
+
+    Args:
+        src_dir_uri: (string) URI of local source directory
+        dest_dir_uri: (string) URI of destination directory
+        delete: (bool)
+        fs: Optional FileSystem to use for destination
+    """
+    if not fs:
+        fs = FileSystem.get_file_system(dest_dir_uri, 'w')
+    fs.sync_to_dir(src_dir_uri, dest_dir_uri, delete=delete)
+
+
+def sync_from_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
+    """Synchronize a local or remote directory to a local directory.
 
     Transfers files from source to destination directories so that the
     destination has all the source files. If delete is True, also delete
@@ -46,37 +63,45 @@ def sync_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
 
     Args:
         src_dir_uri: (string) URI of source directory
-        dest_dir_uri: (string) URI of destination directory
+        dest_dir_uri: (string) URI of local destination directory
         delete: (bool)
         fs: Optional FileSystem to use
     """
     if not fs:
-        fs = FileSystem.get_file_system(dest_dir_uri, 'w')
-    fs.sync_dir(src_dir_uri, dest_dir_uri, delete=delete)
+        fs = FileSystem.get_file_system(src_dir_uri, 'r')
+    fs.sync_from_dir(src_dir_uri, dest_dir_uri, delete=delete)
 
 
 def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600, fs=None):
     """Start syncing a directory on a schedule.
 
-    Calls sync_dir on a schedule.
+    Calls sync_to_dir on a schedule.
 
     Args:
-        src_dir_uri: (string) URI of source directory
+        src_dir_uri: (string) Path of the local source directory
         dest_dir_uri: (string) URI of destination directory
         sync_interval: (int) period in seconds for syncing
         fs:  Optional FileSystem to use
     """
 
-    def _sync_dir(delete=True):
-        sync_dir(src_dir_uri, dest_dir_uri, delete=delete, fs=fs)
-        thread = Timer(sync_interval, _sync_dir)
-        thread.daemon = True
-        thread.start()
+    def _sync_dir():
+        print('Syncing {} to {}...'.format(src_dir_uri, dest_dir_uri))
+        sync_to_dir(src_dir_uri, dest_dir_uri, delete=False, fs=fs)
 
-    if urlparse(dest_dir_uri).scheme == 's3':
-        # On first sync, we don't want to delete files on S3 to match
-        # the contents of output_dir since there's nothing there yet.
-        _sync_dir(delete=False)
+    class SyncThread:
+        def __init__(self):
+            thread = Timer(sync_interval, _sync_dir)
+            thread.daemon = True
+            thread.start()
+            self.thread = thread
+
+        def __enter__(self):
+            return self.thread
+
+        def __exit__(self, type, value, traceback):
+            self.thread.cancel()
+
+    return SyncThread()
 
 
 def download_if_needed(uri, download_dir, fs=None):

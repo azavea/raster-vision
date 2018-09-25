@@ -6,6 +6,7 @@ import click
 
 import rastervision as rv
 from rastervision.experiment import (ExperimentLoader, LoaderError)
+from rastervision.runner import (ExperimentRunner)
 
 
 def print_error(msg):
@@ -39,6 +40,11 @@ def main(profile):
           'about the commands to be run, but will not actually '
           'run the commands'))
 @click.option(
+    '--skip-file-check',
+    '-x',
+    is_flag=True,
+    help=('Skip the step that verifies that file exist.'))
+@click.option(
     '--arg',
     '-a',
     type=(str, str),
@@ -55,10 +61,15 @@ def main(profile):
     help=('Rerun commands, regardless if '
           'their output files already exist.'))
 @click.option(
+    '--rv-repo',
+    help=('Specifies the raster vision repository '
+          'to use for executing commands remotely'))
+@click.option(
     '--rv-branch',
     help=('Specifies the branch of the raster vision repo '
           'to use for executing commands remotely'))
-def run(runner, commands, experiment_module, dry_run, arg, rerun, rv_branch):
+def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
+        rerun, rv_repo, rv_branch):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
     # Validate runner
@@ -70,7 +81,7 @@ def run(runner, commands, experiment_module, dry_run, arg, rerun, rv_branch):
                                                   '", "'.join(valid_runners)))
         sys.exit(1)
 
-    runner = rv.ExperimentRunner.get_runner(runner)
+    runner = ExperimentRunner.get_runner(runner)
 
     if experiment_module:
         module_to_load = experiment_module
@@ -100,7 +111,11 @@ def run(runner, commands, experiment_module, dry_run, arg, rerun, rv_branch):
         else:
             print_error('No experiments found.')
 
-    runner.run(experiments, commands_to_run=commands, rerun_commands=rerun)
+    runner.run(
+        experiments,
+        commands_to_run=commands,
+        rerun_commands=rerun,
+        skip_file_check=skip_file_check)
 
 
 @main.command()
@@ -181,7 +196,7 @@ def predict(predict_package, image_uri, output_uri, update_stats,
 
 @main.command(
     'run_command', short_help='Run a command from configuration file.')
-@click.argument('command_config_uri', type=click.Path(exists=True))
+@click.argument('command_config_uri')
 def run_command(command_config_uri):
     """Run a command from a serialized command configuration
     at COMMAND_CONFIG_URI.

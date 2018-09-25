@@ -1,7 +1,6 @@
 from os.path import join
 import os
 import shutil
-from urllib.parse import urlparse
 import uuid
 
 import numpy as np
@@ -9,7 +8,8 @@ from google.protobuf import json_format
 
 from rastervision.backend import Backend
 from rastervision.utils.files import (make_dir, get_local_path, upload_or_copy,
-                                      download_if_needed, start_sync, sync_dir)
+                                      download_if_needed, start_sync,
+                                      sync_to_dir, sync_from_dir)
 from rastervision.utils.misc import save_img
 from rastervision.data import ChipClassificationLabels
 
@@ -225,20 +225,18 @@ class KerasClassification(Backend):
         backend_config_path, pretrained_model_path = model_paths
 
         # Get output from potential previous run so we can resume training.
-        if urlparse(self.config.training_output_uri).scheme == 's3':
-            sync_dir(self.config.training_output_uri, model_files.base_dir)
+        sync_from_dir(self.config.training_output_uri, model_files.base_dir)
 
-        start_sync(
+        sync = start_sync(
             model_files.base_dir,
             self.config.training_output_uri,
             sync_interval=self.config.train_options.sync_interval)
-        _train(backend_config_path, pretrained_model_path)
+        with sync:
+            _train(backend_config_path, pretrained_model_path)
 
-        if urlparse(self.config.training_output_uri).scheme == 's3':
-            sync_dir(
-                model_files.base_dir,
-                self.config.training_output_uri,
-                delete=True)
+        # Perform final sync
+        sync_to_dir(
+            model_files.base_dir, self.config.training_output_uri, delete=True)
 
     def load_model(self, tmp_dir):
         from keras_classification.builders import model_builder

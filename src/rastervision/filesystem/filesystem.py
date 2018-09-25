@@ -57,8 +57,29 @@ class FileSystem(ABC):
 
     @staticmethod
     @abstractmethod
-    def sync_dir(src_dir_uri: str, dest_dir_uri: str,
-                 delete: bool = False) -> None:
+    def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
+                    delete: bool = False) -> None:
+        """Syncs a local directory to a destination.
+
+        Arguments:
+           - src_dir_uri: Source directory to sync from. Must be a local directoy.
+           - dest_dir_uri: A destination that can be sync to by this FileSystem.
+           - delete: True if the destination should be deleted first. Defaults to False.
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def sync_from_dir(src_dir_uri: str,
+                      dest_dir_uri: str,
+                      delete: bool = False) -> None:
+        """Syncs a local directory to a destination.
+
+        Arguments:
+           - src_dir_uri: Source directory to sync from. Must be a local directoy.
+           - dest_dir_uri: A destination that can be sync to by this FileSystem.
+           - delete: True if the destination should be deleted first. Defaults to False.
+        """
         pass
 
     @staticmethod

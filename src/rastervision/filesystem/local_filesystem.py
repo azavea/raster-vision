@@ -68,9 +68,39 @@ class LocalFileSystem(FileSystem):
             content_file.write(data)
 
     @staticmethod
-    def sync_dir(src_dir_uri: str, dest_dir_uri: str,
-                 delete: bool = False) -> None:
-        shutil.copytree(src_dir_uri, dest_dir_uri)
+    def sync_from_dir(src_dir_uri: str,
+                      dest_dir_uri: str,
+                      delete: bool = False) -> None:
+        if src_dir_uri == dest_dir_uri:
+            return
+
+        if delete:
+            shutil.rmtree(dest_dir_uri)
+
+        # https://stackoverflow.com/a/15824216/841563
+        def recursive_overwrite(src, dest, ignore=None):
+            if os.path.isdir(src):
+                if not os.path.isdir(dest):
+                    os.makedirs(dest)
+                    files = os.listdir(src)
+                    if ignore is not None:
+                        ignored = ignore(src, files)
+                    else:
+                        ignored = set()
+                        for f in files:
+                            if f not in ignored:
+                                recursive_overwrite(
+                                    os.path.join(src, f), os.path.join(
+                                        dest, f), ignore)
+            else:
+                shutil.copyfile(src, dest)
+
+        recursive_overwrite(src_dir_uri, dest_dir_uri)
+
+    @staticmethod
+    def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
+                    delete: bool = False) -> None:
+        LocalFileSystem.sync_from_dir(src_dir_uri, dest_dir_uri, delete)
 
     @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:

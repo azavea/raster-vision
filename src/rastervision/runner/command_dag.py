@@ -8,7 +8,10 @@ class CommandDAG:
     """ A directed acyclic graph of command definitions.
     """
 
-    def __init__(self, command_definitions, rerun_commands=False):
+    def __init__(self,
+                 command_definitions,
+                 rerun_commands=False,
+                 skip_file_check=False):
         """Generates a CommandDAG from a list of CommandDefinitions
 
         This logic checks if there are any non-exsiting URIs that are
@@ -30,20 +33,22 @@ class CommandDAG:
                 uri_dag.add_edge(idx, output_uri)
 
         # Find all source input_uris, and ensure they exist.
+        if not skip_file_check:
+            unsolved_sources = [
+                uri for uri in uri_dag.nodes
+                if (type(uri) == str and len(uri_dag.in_edges(uri)) == 0)
+            ]
 
-        unsolved_sources = [
-            uri for uri in uri_dag.nodes
-            if (type(uri) == str and len(uri_dag.in_edges(uri)) == 0)
-        ]
+            missing_files = []
+            for uri in unsolved_sources:
+                print('Ensuring file exists: {}'.format(uri))
+                if not file_exists(uri):
+                    missing_files.append(uri)
 
-        missing_files = [
-            uri for uri in unsolved_sources if not file_exists(uri)
-        ]
-
-        if any(missing_files):
-            raise rv.ConfigError(
-                'Files do not exist and are not supplied by commands:\n'
-                '\t{}\n'.format(',\b\t'.join(missing_files)))
+            if any(missing_files):
+                raise rv.ConfigError(
+                    'Files do not exist and are not supplied by commands:\n'
+                    '\t{}\n'.format(',\b\t'.join(missing_files)))
 
         # If we are not rerunning, remove commands that have existing outputs.
         if not rerun_commands:
@@ -101,4 +106,5 @@ class CommandDAG:
         """Returns the command ids for upstream commands for the command
         with the given id.
         """
-        return self.command_dag.in_edges(command_id)
+        return list(
+            map(lambda x: x[0], self.command_id_dag.in_edges(command_id)))

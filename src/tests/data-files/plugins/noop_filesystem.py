@@ -27,8 +27,14 @@ class NoopFileSystem(FileSystem):
         pass
 
     @staticmethod
-    def sync_dir(src_dir_uri: str, dest_dir_uri: str,
-                 delete: bool = False) -> None:
+    def sync_from_dir(src_dir_uri: str,
+                      dest_dir_uri: str,
+                      delete: bool = False) -> None:
+        pass
+
+    @staticmethod
+    def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
+                    delete: bool = False) -> None:
         pass
 
     @staticmethod

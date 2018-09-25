@@ -8,8 +8,9 @@ from rastervision.protos.command_pb2 \
 
 
 class ChipCommandConfig(CommandConfig):
-    def __init__(self, task, backend, augmentors, train_scenes, val_scenes):
-        super().__init__(rv.CHIP)
+    def __init__(self, root_uri, task, backend, augmentors, train_scenes,
+                 val_scenes):
+        super().__init__(rv.CHIP, root_uri)
         self.task = task
         self.backend = backend
         self.augmentors = augmentors
@@ -58,6 +59,7 @@ class ChipCommandConfig(CommandConfig):
 
 class ChipCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):
+        super().__init__(prev)
         if prev is None:
             self.task = None
             self.backend = None
@@ -71,7 +73,8 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
             self.train_scenes = prev.train_scenes
             self.val_scenes = prev.val_scenes
 
-    def build(self):
+    def validate(self):
+        super().validate()
         if self.task is None:
             raise rv.ConfigError(
                 'Task not set. Use with_task or with_experiment')
@@ -80,20 +83,24 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
             raise rv.ConfigError(
                 'Backend not set. Use with_backend or with_experiment')
 
-        return ChipCommandConfig(self.task, self.backend, self.augmentors,
-                                 self.train_scenes, self.val_scenes)
+    def build(self):
+        self.validate()
+        return ChipCommandConfig(self.root_uri, self.task, self.backend,
+                                 self.augmentors, self.train_scenes,
+                                 self.val_scenes)
 
     def from_proto(self, msg):
-        self.process_plugins(msg)
-        msg = msg.chip_config
+        b = super().from_proto(msg)
 
-        task = rv.TaskConfig.from_proto(msg.task)
-        backend = rv.BackendConfig.from_proto(msg.backend)
-        augmentors = list(map(rv.AugmentorConfig.from_proto, msg.augmentors))
-        train_scenes = list(map(rv.SceneConfig.from_proto, msg.train_scenes))
-        val_scenes = list(map(rv.SceneConfig.from_proto, msg.train_scenes))
+        conf = msg.chip_config
 
-        b = self.with_task(task)
+        task = rv.TaskConfig.from_proto(conf.task)
+        backend = rv.BackendConfig.from_proto(conf.backend)
+        augmentors = list(map(rv.AugmentorConfig.from_proto, conf.augmentors))
+        train_scenes = list(map(rv.SceneConfig.from_proto, conf.train_scenes))
+        val_scenes = list(map(rv.SceneConfig.from_proto, conf.train_scenes))
+
+        b = b.with_task(task)
         b = b.with_backend(backend)
         b = b.with_augmentors(augmentors)
         b = b.with_train_scenes(train_scenes)
@@ -101,8 +108,12 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
 
         return b
 
+    def get_root_uri(self, experiment_config):
+        return experiment_config.chip_uri
+
     def with_experiment(self, experiment_config):
-        b = self.with_task(experiment_config.task)
+        b = super().with_experiment(experiment_config)
+        b = b.with_task(experiment_config.task)
         b = b.with_backend(experiment_config.backend)
         b = b.with_augmentors(experiment_config.dataset.augmentors)
         b = b.with_train_scenes(experiment_config.dataset.train_scenes)

@@ -8,8 +8,8 @@ from rastervision.protos.command_pb2 \
 
 
 class EvalCommandConfig(CommandConfig):
-    def __init__(self, task, scenes, evaluators):
-        super().__init__(rv.EVAL)
+    def __init__(self, root_uri, task, scenes, evaluators):
+        super().__init__(rv.EVAL, root_uri)
         self.task = task
         self.scenes = scenes
         self.evaluators = evaluators
@@ -43,6 +43,7 @@ class EvalCommandConfig(CommandConfig):
 
 class EvalCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):
+        super().__init__(prev)
         if prev is None:
             self.task = None
             self.scenes = None
@@ -52,7 +53,8 @@ class EvalCommandConfigBuilder(CommandConfigBuilder):
             self.scenes = prev.scenes
             self.evaluators = prev.evaluators
 
-    def build(self):
+    def validate(self):
+        super().validate()
         if self.task is None:
             raise rv.ConfigError(
                 'task not set. Use with_task or with_experiment')
@@ -62,24 +64,33 @@ class EvalCommandConfigBuilder(CommandConfigBuilder):
         if self.evaluators is None:
             raise rv.ConfigError(
                 'evaluators not set. Use with_evaluators or with_experiment')
-        return EvalCommandConfig(self.task, self.scenes, self.evaluators)
+
+    def build(self):
+        self.validate()
+        return EvalCommandConfig(self.root_uri, self.task, self.scenes,
+                                 self.evaluators)
 
     def from_proto(self, msg):
-        self.process_plugins(msg)
-        msg = msg.eval_config
+        b = super().from_proto(msg)
 
-        task = rv.TaskConfig.from_proto(msg.task)
-        scenes = list(map(rv.SceneConfig.from_proto, msg.scenes))
-        evaluators = list(map(rv.EvaluatorConfig.from_proto, msg.evaluators))
+        conf = msg.eval_config
 
-        b = self.with_task(task)
+        task = rv.TaskConfig.from_proto(conf.task)
+        scenes = list(map(rv.SceneConfig.from_proto, conf.scenes))
+        evaluators = list(map(rv.EvaluatorConfig.from_proto, conf.evaluators))
+
+        b = b.with_task(task)
         b = b.with_scenes(scenes)
         b = b.with_evaluators(evaluators)
 
         return b
 
+    def get_root_uri(self, experiment_config):
+        return experiment_config.eval_uri
+
     def with_experiment(self, experiment_config):
-        b = self.with_task(experiment_config.task)
+        b = super().with_experiment(experiment_config)
+        b = b.with_task(experiment_config.task)
         b = b.with_scenes(experiment_config.dataset.validation_scenes)
         b = b.with_evaluators(experiment_config.evaluators)
         return b

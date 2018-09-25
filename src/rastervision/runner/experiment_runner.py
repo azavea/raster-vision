@@ -9,7 +9,8 @@ class ExperimentRunner(ABC):
     def run(self,
             experiments: Union[List[rv.ExperimentConfig], rv.ExperimentConfig],
             commands_to_run=rv.ALL_COMMANDS,
-            rerun_commands=False):
+            rerun_commands=False,
+            skip_file_check=False):
         if not isinstance(experiments, list):
             experiments = [experiments]
 
@@ -59,12 +60,13 @@ class ExperimentRunner(ABC):
                 'ERROR: Command outputs will'
                 'override each other: \n{}\n'.format(s))
 
-        command_dag = CommandDAG(unique_commands, rerun_commands)
+        command_dag = CommandDAG(
+            unique_commands, rerun_commands, skip_file_check=skip_file_check)
 
         self._run_experiment(command_dag)
 
     @abstractmethod
-    def _run_experiment(self, command_list, command_dag):
+    def _run_experiment(self, command_dag):
         pass
 
     @staticmethod

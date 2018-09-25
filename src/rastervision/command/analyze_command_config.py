@@ -8,8 +8,8 @@ from rastervision.protos.command_pb2 \
 
 
 class AnalyzeCommandConfig(CommandConfig):
-    def __init__(self, task, scenes, analyzers):
-        super().__init__(rv.ANALYZE)
+    def __init__(self, root_uri, task, scenes, analyzers):
+        super().__init__(rv.ANALYZE, root_uri)
         self.task = task
         self.scenes = scenes
         self.analyzers = analyzers
@@ -43,6 +43,7 @@ class AnalyzeCommandConfig(CommandConfig):
 
 class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):
+        super().__init__(prev)
         if prev is None:
             self.task = None
             self.scenes = None
@@ -52,34 +53,41 @@ class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
             self.scenes = prev.scenes
             self.analyzers = prev.analyzers
 
-    def build(self):
-        if self.task is None:
-            raise rv.ConfigError(
-                'task not set. Use with_task or with_experiment')
+    def validate(self):
+        super().validate()
         if self.scenes is None:
             raise rv.ConfigError(
                 'scenes not set. Use with_scenes or with_experiment')
         if self.analyzers is None:
             raise rv.ConfigError(
                 'analyzers not set. Use with_analyzers or with_experiment')
-        return AnalyzeCommandConfig(self.task, self.scenes, self.analyzers)
+
+    def build(self):
+        self.validate()
+        return AnalyzeCommandConfig(self.root_uri, self.task, self.scenes,
+                                    self.analyzers)
 
     def from_proto(self, msg):
-        self.process_plugins(msg)
-        msg = msg.analyze_config
+        b = super().from_proto(msg)
 
-        task = rv.TaskConfig.from_proto(msg.task)
-        scenes = list(map(rv.SceneConfig.from_proto, msg.scenes))
-        analyzers = list(map(rv.AnalyzerConfig.from_proto, msg.analyzers))
+        conf = msg.analyze_config
 
-        b = self.with_task(task)
+        task = rv.TaskConfig.from_proto(conf.task)
+        scenes = list(map(rv.SceneConfig.from_proto, conf.scenes))
+        analyzers = list(map(rv.AnalyzerConfig.from_proto, conf.analyzers))
+
+        b = b.with_task(task)
         b = b.with_scenes(scenes)
         b = b.with_analyzers(analyzers)
 
         return b
 
+    def get_root_uri(self, experiment_config):
+        return experiment_config.analyze_uri
+
     def with_experiment(self, experiment_config):
-        b = self.with_task(experiment_config.task)
+        b = super().with_experiment(experiment_config)
+        b = b.with_task(experiment_config.task)
         b = b.with_scenes(experiment_config.dataset.all_scenes())
         b = b.with_analyzers(experiment_config.analyzers)
         return b
