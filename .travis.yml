@@ -13,9 +13,7 @@ env:
 
 script:
    - .travis/build
-   - docker run --rm -it raster-vision-cpu /opt/src/scripts/unit_tests
-   - docker run --rm -it raster-vision-cpu /opt/src/scripts/integration_tests
-   - docker run --rm -it raster-vision-cpu /opt/src/scripts/style_tests
+   - .travis/test
 
 deploy:
    - provider: script

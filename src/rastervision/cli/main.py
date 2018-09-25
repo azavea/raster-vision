@@ -54,22 +54,33 @@ def main(profile):
           'parameter list takes in a parameter with that key. '
           'Multiple args can be supplied'))
 @click.option(
+    '--prefix',
+    metavar='PREFIX',
+    default='exp_',
+    help=('Prefix for methods containing experiments. (default: "exp_")'))
+@click.option(
+    '--method',
+    '-m',
+    'methods',
+    multiple=True,
+    metavar='PATTERN',
+    help=('Pattern to match method names to run.'))
+@click.option(
+    '--filter',
+    '-f',
+    'filters',
+    multiple=True,
+    metavar='PATTERN',
+    help=('Pattern to match experiment names to run.'))
+@click.option(
     '--rerun',
     '-r',
     is_flag=True,
     default=False,
     help=('Rerun commands, regardless if '
           'their output files already exist.'))
-@click.option(
-    '--rv-repo',
-    help=('Specifies the raster vision repository '
-          'to use for executing commands remotely'))
-@click.option(
-    '--rv-branch',
-    help=('Specifies the branch of the raster vision repo '
-          'to use for executing commands remotely'))
 def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
-        rerun, rv_repo, rv_branch):
+        prefix, methods, filters, rerun):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
     # Validate runner
@@ -97,7 +108,11 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
     for k, v in arg:
         experiment_args[k] = v
 
-    loader = ExperimentLoader(experiment_args=experiment_args)
+    loader = ExperimentLoader(
+        experiment_args=experiment_args,
+        experiment_method_prefix=prefix,
+        experiment_method_patterns=methods,
+        experiment_name_patterns=filters)
     try:
         experiments = loader.load_from_module(module_to_load)
     except LoaderError as e:

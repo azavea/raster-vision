@@ -72,9 +72,11 @@ class DummyExperimentSet(rv.ExperimentSet):
                    .build()
 
     def exp_experiment_2(self, required_param):
-        return self.get_base() \
-                   .with_id('experiment_2_{}'.format(required_param)) \
-                   .build()
+        es = []
+        for i in range(0, 2):
+            es.append(self.get_base().with_id('experiment_{}_{}'.format(
+                i + 1, required_param)).build())
+        return es
 
 
 class TestExperimentConfig(unittest.TestCase):
@@ -82,9 +84,29 @@ class TestExperimentConfig(unittest.TestCase):
         args = {'required_param': 'yes', 'dummy': 1}
         loader = ExperimentLoader(experiment_args=args)
         experiments = loader.load_from_module(__name__)
-        self.assertEqual(len(experiments), 2)
+        self.assertEqual(len(experiments), 3)
         e_names = set(map(lambda e: e.id, experiments))
-        self.assertEqual(e_names, set(['experiment_1', 'experiment_2_yes']))
+        self.assertEqual(
+            e_names,
+            set(['experiment_1', 'experiment_1_yes', 'experiment_2_yes']))
+
+    def test_filter_module_by_method(self):
+        name = '*2'
+        args = {'required_param': 'x'}
+        loader = ExperimentLoader(
+            experiment_args=args, experiment_method_patterns=[name])
+        experiments = loader.load_from_module(__name__)
+        e_names = set(map(lambda e: e.id, experiments))
+        self.assertEqual(e_names, set(['experiment_1_x', 'experiment_2_x']))
+
+    def test_filter_module_by_name(self):
+        name = '*2*y*'
+        args = {'required_param': 'yes'}
+        loader = ExperimentLoader(
+            experiment_args=args, experiment_name_patterns=[name])
+        experiments = loader.load_from_module(__name__)
+        e_names = set(map(lambda e: e.id, experiments))
+        self.assertEqual(e_names, set(['experiment_2_yes']))
 
 
 if __name__ == '__main__':
