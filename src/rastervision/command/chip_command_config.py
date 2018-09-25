@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.command import (ChipCommand, NoOpChipCommand, CommandConfig,
+from rastervision.command import (ChipCommand, CommandConfig,
                                   CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
@@ -17,11 +17,7 @@ class ChipCommandConfig(CommandConfig):
         self.train_scenes = train_scenes
         self.val_scenes = val_scenes
 
-    def create_noop_command(self, tmp_dir):
-        command = self.create_command(tmp_dir)
-        return NoOpChipCommand(command.task, command.augmentors, command.train_scenes, command.val_scenes)
-
-    def create_command(self, tmp_dir):
+    def create_command(self, tmp_dir, dry_run:bool=False):
         if len(self.train_scenes) == 0 and len(self.val_scenes) == 0:
             return NoOpCommand()
 
@@ -30,13 +26,15 @@ class ChipCommandConfig(CommandConfig):
 
         augmentors = list(map(lambda a: a.create_augmentor(), self.augmentors))
 
-        train_scenes = list(
-            map(lambda s: s.create_scene(self.task, tmp_dir),
-                self.train_scenes))
-        val_scenes = list(
-            map(lambda s: s.create_scene(self.task, tmp_dir), self.val_scenes))
-
-        return ChipCommand(task, augmentors, train_scenes, val_scenes)
+        if not dry_run:
+            train_scenes = list(
+                map(lambda s: s.create_scene(self.task, tmp_dir),
+                    self.train_scenes))
+            val_scenes = list(
+                map(lambda s: s.create_scene(self.task, tmp_dir), self.val_scenes))
+            return ChipCommand(task, augmentors, train_scenes, val_scenes)
+        else:
+            return ChipCommand(task, augmentors, None, None)
 
     def to_proto(self):
         msg = super().to_proto()

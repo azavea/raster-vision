@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import rastervision as rv
 from rastervision.command import (CommandConfig, CommandConfigBuilder,
-                                  BundleCommand, NoOpBundleCommand)
+                                  BundleCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 
@@ -15,13 +15,9 @@ class BundleCommandConfig(CommandConfig):
         self.scene = scene
         self.analyzers = analyzers
 
-    def create_command(self, tmp_dir):
+    def create_command(self, tmp_dir, dry_run:bool=False):
         return BundleCommand(self, self.task, self.backend, self.scene,
                              self.analyzers)
-
-    def create_noop_command(self, tmp_dir):
-        return NoOpBundleCommand(self, self.task, self.backend, self.scene,
-                                 self.analyzers)
 
     def to_proto(self):
         msg = super().to_proto()
