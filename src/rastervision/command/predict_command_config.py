@@ -14,7 +14,7 @@ class PredictCommandConfig(CommandConfig):
         self.backend = backend
         self.scenes = scenes
 
-    def create_command(self, tmp_dir, dry_run:bool=False):
+    def create_command(self, tmp_dir, dry_run: bool = False):
         if len(self.scenes) == 0:
             return NoOpCommand()
 

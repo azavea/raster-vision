@@ -8,7 +8,7 @@ class PredictCommand(Command):
         self.task = task
         self.scenes = scenes
 
-    def run(self, tmp_dir, dry_run:bool=False):
+    def run(self, tmp_dir, dry_run: bool = False):
         msg = 'Making predictions...'
         if dry_run:
             self.announce_dry_run()

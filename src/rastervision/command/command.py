@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 class Command(ABC):
     @abstractmethod
-    def run(self, tmp_dir: str, dry_run:bool=False):
+    def run(self, tmp_dir: str, dry_run: bool = False):
         """Run the command."""
         pass
 
@@ -18,5 +18,5 @@ class NoOpCommand(Command):
     """Defines a command that does nothing.
     """
 
-    def run(self, tmp_dir: str, dry_run: bool=False):
+    def run(self, tmp_dir: str, dry_run: bool = False):
         pass

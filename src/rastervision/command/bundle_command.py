@@ -19,7 +19,7 @@ class BundleCommand(Command):
         self.scene_config = scene_config
         self.analyzer_configs = analyzer_configs
 
-    def run(self, tmp_dir, dry_run:bool=False):
+    def run(self, tmp_dir, dry_run: bool = False):
         if not self.task_config.predict_package_uri:
             msg = 'Skipping bundling of prediction package, no URI is set...'.format(
                 self.task_config.predict_package_uri)
@@ -42,7 +42,8 @@ class BundleCommand(Command):
         bundle_files = []
 
         if not dry_run:
-            new_task, task_files = self.task_config.save_bundle_files(bundle_dir)
+            new_task, task_files = self.task_config.save_bundle_files(
+                bundle_dir)
             bundle_files.extend(task_files)
 
         if not dry_run:
@@ -73,7 +74,8 @@ class BundleCommand(Command):
 
             # Save bundle command config
             bundle_config_path = os.path.join(tmp_dir, 'bundle_config.json')
-            bundle_json = json_format.MessageToJson(new_bundle_config.to_proto())
+            bundle_json = json_format.MessageToJson(
+                new_bundle_config.to_proto())
             with open(bundle_config_path, 'w') as f:
                 f.write(bundle_json)
 

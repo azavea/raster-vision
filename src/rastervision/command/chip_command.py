@@ -1,6 +1,6 @@
 import click
 
-from rastervision.command import (Command, NoOpCommand)
+from rastervision.command import Command
 
 
 class ChipCommand(Command):
@@ -10,7 +10,7 @@ class ChipCommand(Command):
         self.train_scenes = train_scenes
         self.val_scenes = val_scenes
 
-    def run(self, tmp_dir, dry_run:bool=False):
+    def run(self, tmp_dir, dry_run: bool = False):
         msg = 'Making training chips...'
         if dry_run:
             self.announce_dry_run()

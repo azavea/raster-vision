@@ -15,7 +15,7 @@ class BundleCommandConfig(CommandConfig):
         self.scene = scene
         self.analyzers = analyzers
 
-    def create_command(self, tmp_dir, dry_run:bool=False):
+    def create_command(self, tmp_dir, dry_run: bool = False):
         return BundleCommand(self, self.task, self.backend, self.scene,
                              self.analyzers)
 

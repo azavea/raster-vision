@@ -8,7 +8,7 @@ class EvalCommand(Command):
         self.scenes = scenes
         self.evaluators = evaluators
 
-    def run(self, tmp_dir, dry_run:bool=False):
+    def run(self, tmp_dir, dry_run: bool = False):
         for evaluator in self.evaluators:
             msg = 'Running evaluator: {}...'.format(type(evaluator).__name__)
             if dry_run:

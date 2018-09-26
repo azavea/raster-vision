@@ -14,7 +14,7 @@ class AnalyzeCommandConfig(CommandConfig):
         self.scenes = scenes
         self.analyzers = analyzers
 
-    def create_command(self, tmp_dir, dry_run:bool=False):
+    def create_command(self, tmp_dir, dry_run: bool = False):
         if len(self.scenes) == 0 or len(self.analyzers) == 0:
             return NoOpCommand()
 

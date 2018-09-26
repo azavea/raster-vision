@@ -17,7 +17,7 @@ class ChipCommandConfig(CommandConfig):
         self.train_scenes = train_scenes
         self.val_scenes = val_scenes
 
-    def create_command(self, tmp_dir, dry_run:bool=False):
+    def create_command(self, tmp_dir, dry_run: bool = False):
         if len(self.train_scenes) == 0 and len(self.val_scenes) == 0:
             return NoOpCommand()
 
@@ -31,7 +31,8 @@ class ChipCommandConfig(CommandConfig):
                 map(lambda s: s.create_scene(self.task, tmp_dir),
                     self.train_scenes))
             val_scenes = list(
-                map(lambda s: s.create_scene(self.task, tmp_dir), self.val_scenes))
+                map(lambda s: s.create_scene(self.task, tmp_dir),
+                    self.val_scenes))
             return ChipCommand(task, augmentors, train_scenes, val_scenes)
         else:
             return ChipCommand(task, augmentors, None, None)

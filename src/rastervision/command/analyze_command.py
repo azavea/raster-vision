@@ -8,7 +8,7 @@ class AnalyzeCommand(Command):
         self.scenes = scenes
         self.analyzers = analyzers
 
-    def run(self, tmp_dir: str, dry_run:bool=False):
+    def run(self, tmp_dir: str, dry_run: bool = False):
         for analyzer in self.analyzers:
             msg = 'Running analyzer: {}...'.format(type(analyzer).__name__)
             if dry_run:

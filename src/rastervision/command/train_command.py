@@ -7,7 +7,7 @@ class TrainCommand(Command):
     def __init__(self, task):
         self.task = task
 
-    def run(self, tmp_dir, dry_run:bool=False):
+    def run(self, tmp_dir, dry_run: bool = False):
         msg = 'Training model...'
         if dry_run:
             self.announce_dry_run()

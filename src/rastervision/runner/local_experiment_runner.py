@@ -24,7 +24,8 @@ class LocalExperimentRunner(ExperimentRunner):
                 if not dry_run:
                     save_json_config(command_config.to_proto(), command_uri)
 
-                command = command_config.create_command(tmp_dir, dry_run=dry_run)
+                command = command_config.create_command(
+                    tmp_dir, dry_run=dry_run)
 
                 command.run(tmp_dir, dry_run=dry_run)
 

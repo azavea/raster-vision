@@ -25,7 +25,8 @@ class ExperimentRunner(ABC):
 
         if dry_run:
             for command in set(_command_definitions) - set(command_definitions):
-                msg = '{} not requested, so not running.'.format(str(command.command_config.command_type))
+                msg = '{} not requested, so not running.'.format(
+                    str(command.command_config.command_type))
                 styled_msg = click.style(msg, fg='blue')
                 click.echo(styled_msg)
 
@@ -51,7 +52,8 @@ class ExperimentRunner(ABC):
         if skipped_commands:
             if dry_run:
                 for command in skipped_commands:
-                    msg = '{} ({}) is a duplicate.'.format(str(command.command_config.command_type), command)
+                    msg = '{} ({}) is a duplicate.'.format(
+                        str(command.command_config.command_type), command)
                     styled_msg = click.style(msg, fg='blue')
                     click.echo(styled_msg)
 
@@ -82,7 +84,8 @@ class ExperimentRunner(ABC):
         if command_dag.skipped_commands:
             if dry_run:
                 for command in command_dag.skipped_commands:
-                    msg = '{} ({}) is a duplicate.'.format(str(command.command_config.command_type), command)
+                    msg = '{} ({}) is a duplicate.'.format(
+                        str(command.command_config.command_type), command)
                     styled_msg = click.style(msg, fg='blue')
                     click.echo(styled_msg)
 
