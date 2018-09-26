@@ -1,6 +1,7 @@
 import io
 import os
 import subprocess
+from datetime import datetime
 from urllib.parse import urlparse
 
 from rastervision.filesystem import (FileSystem, NotReadableError,
@@ -133,3 +134,11 @@ class S3FileSystem(FileSystem):
         path = os.path.join(download_dir, 's3', parsed_uri.netloc,
                             parsed_uri.path[1:])
         return path
+
+    @staticmethod
+    def last_modified(uri: str) -> datetime:
+        parsed_uri = urlparse(uri)
+        bucket, key = parsed_uri.netloc, parsed_uri.path[1:]
+        s3 = S3FileSystem.get_session().client('s3')
+        head_data = s3.head_object(Bucket=bucket, Key=key)
+        return head_data['LastModified']
