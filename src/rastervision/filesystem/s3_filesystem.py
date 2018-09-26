@@ -8,6 +8,23 @@ from rastervision.filesystem import (FileSystem, NotReadableError,
 
 
 class S3FileSystem(FileSystem):
+    profile = None
+
+    @staticmethod
+    def set_profile(profile):
+        """Sets a system wide profile to use for S3."""
+        S3FileSystem.profile = profile
+
+    @staticmethod
+    def get_session():
+        # Lazily load boto
+        import boto3
+
+        if not S3FileSystem.profile:
+            return boto3.Session()
+        else:
+            return boto3.Session(profile_name=S3FileSystem.profile)
+
     @staticmethod
     def matches_uri(uri: str, mode: str) -> bool:
         parsed_uri = urlparse(uri)
@@ -19,7 +36,7 @@ class S3FileSystem(FileSystem):
         import boto3
         import botocore
 
-        s3 = boto3.resource('s3')
+        s3 = S3FileSystem.get_session().resource('s3')
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         key = parsed_uri.path[1:]
@@ -35,14 +52,13 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def read_bytes(uri: str) -> bytes:
-        # Lazily load boto
-        import boto3
         import botocore
+
+        s3 = S3FileSystem.get_session().client('s3')
 
         parsed_uri = urlparse(uri)
         with io.BytesIO() as file_buffer:
             try:
-                s3 = boto3.client('s3')
                 s3.download_fileobj(parsed_uri.netloc, parsed_uri.path[1:],
                                     file_buffer)
                 return file_buffer.getvalue()
@@ -56,15 +72,13 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def write_bytes(uri: str, data: bytes) -> None:
-        # Lazily load boto
-        import boto3
+        s3 = S3FileSystem.get_session().client('s3')
 
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         key = parsed_uri.path[1:]
         with io.BytesIO(data) as str_buffer:
             try:
-                s3 = boto3.client('s3')
                 s3.upload_fileobj(str_buffer, bucket, key)
             except Exception as e:
                 raise NotWritableError('Could not write {}'.format(uri)) from e
@@ -88,13 +102,11 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
-        # Lazily load boto
-        import boto3
+        s3 = S3FileSystem.get_session().client('s3')
 
         parsed_uri = urlparse(dst_uri)
         if os.path.isfile(src_path):
             try:
-                s3 = boto3.client('s3')
                 s3.upload_file(src_path, parsed_uri.netloc,
                                parsed_uri.path[1:])
             except Exception as e:
@@ -105,13 +117,12 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def copy_from(uri: str, path: str) -> None:
-        # Lazily load boto
-        import boto3
         import botocore
+
+        s3 = S3FileSystem.get_session().client('s3')
 
         parsed_uri = urlparse(uri)
         try:
-            s3 = boto3.client('s3')
             s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
         except botocore.exceptions.ClientError:
             raise NotReadableError('Could not read {}'.format(uri))
