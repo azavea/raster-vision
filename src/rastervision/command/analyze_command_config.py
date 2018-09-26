@@ -56,8 +56,8 @@ class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
     def validate(self):
         super().validate()
         if self.scenes is None:
-            raise rv.ConfigError(
-                'scenes not set. Use with_scenes or with_experiment')
+            raise rv.ConfigError('scenes not set for AnalyzeCommandConfig. Use'
+                                 ' with_scenes or with_experiment')
         if self.analyzers is None:
             raise rv.ConfigError(
                 'analyzers not set. Use with_analyzers or with_experiment')

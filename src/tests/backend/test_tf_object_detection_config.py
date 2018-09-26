@@ -112,6 +112,11 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
                             .with_config({'key_does_not_exist': 3}) \
                             .build()
 
+    def test_config_missing_tfod_config(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+                            .build()
+
     def test_sets_pretrained_model(self):
         pretrained_model_uri = ('http://download.tensorflow.org/'
                                 'models/object_detection/'

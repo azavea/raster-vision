@@ -55,7 +55,7 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
     def validate(self):
         if 'class_map' not in self.config:
             raise rv.ConfigError('Class map required for this task. '
-                                 "Use 'with_classes'")
+                                 'Use "with_classes"')
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

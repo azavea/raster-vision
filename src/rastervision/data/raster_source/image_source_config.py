@@ -68,6 +68,13 @@ class ImageSourceConfigBuilder(RasterSourceConfigBuilder):
 
         super().__init__(ImageSourceConfig, config)
 
+    def validate(self):
+        super().validate()
+        if self.config.get('uri') is None:
+            raise rv.ConfigError(
+                'You must specify a uri for the ImageSourceConfig. Use "with_uri"'
+            )
+
     def from_proto(self, msg):
         b = super().from_proto(msg)
 

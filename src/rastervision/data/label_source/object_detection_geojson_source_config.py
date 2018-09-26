@@ -36,6 +36,12 @@ class ObjectDetectionGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
 
         super().__init__(ObjectDetectionGeoJSONSourceConfig, config)
 
+    def validate(self):
+        if self.config.get('uri') is None:
+            raise rv.ConfigError(
+                'You must set the uri for ObjectDetectionGeoJSONSourceConfig'
+                ' Use "with_uri".')
+
     def from_proto(self, msg):
         b = ObjectDetectionGeoJSONSourceConfigBuilder()
 

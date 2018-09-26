@@ -101,3 +101,18 @@ class TestGeoTiffSource(unittest.TestCase):
         self.assertEqual(len(config.transformers), 1)
         self.assertIsInstance(config.transformers[0],
                               rv.data.StatsTransformerConfig)
+
+    def test_missing_config_uri(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.data.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE).build()
+
+    def test_no_missing_config(self):
+        try:
+            rv.data.RasterSourceConfig.builder(
+                rv.GEOTIFF_SOURCE).with_uri('').build()
+        except rv.ConfigError:
+            self.fail('ConfigError raised unexpectedly')
+
+
+if __name__ == '__main__':
+    unittest.main()

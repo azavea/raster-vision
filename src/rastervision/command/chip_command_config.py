@@ -41,7 +41,6 @@ class ChipCommandConfig(CommandConfig):
         backend = self.backend.to_proto()
         train_scenes = list(map(lambda s: s.to_proto(), self.train_scenes))
         val_scenes = list(map(lambda s: s.to_proto(), self.val_scenes))
-
         msg.MergeFrom(
             CommandConfigMsg(
                 chip_config=CommandConfigMsg.ChipConfig(
@@ -76,12 +75,19 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
     def validate(self):
         super().validate()
         if self.task is None:
-            raise rv.ConfigError(
-                'Task not set. Use with_task or with_experiment')
-
+            raise rv.ConfigError('Task not set for ChipCommandConfig. Use '
+                                 'with_task or with_experiment')
         if self.backend is None:
+            raise rv.ConfigError('Backend not set for ChipCommandConfig. Use '
+                                 'with_backend or with_experiment')
+        if self.train_scenes == []:
             raise rv.ConfigError(
-                'Backend not set. Use with_backend or with_experiment')
+                'Train scenes not set for ChipCommandConfig. Use '
+                'with_train_scenes or with_experiment')
+        if self.val_scenes == []:
+            raise rv.ConfigError(
+                'Val scenes not set for ChipCommandConfig. Use '
+                'with_val_scenes or with_experiment')
 
     def build(self):
         self.validate()

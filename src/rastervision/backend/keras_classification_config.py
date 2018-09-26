@@ -169,7 +169,6 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         if self.require_task and not self.task:
             raise rv.ConfigError('You must specify the task this backend '
                                  'is for - use "with_task".')
-        return True
 
     def build(self):
         """Build this configuration, setting any values into the

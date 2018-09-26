@@ -42,13 +42,19 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
 
 class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
     def __init__(self, cls, prev=None):
-        config = {}
+        self.config = {}
         if prev:
-            config = {
+            self.config = {
                 'output_uri': prev.output_uri,
                 'class_map': prev.class_map
             }
-        super().__init__(cls, config)
+        super().__init__(cls, self.config)
+
+    def validate(self):
+        if self.config.get('class_map') is None:
+            raise rv.ConfigError(
+                'class_map not set for ClassificationEvaluatorConfig. '
+                'Use "with_class_map".')
 
     @classmethod
     def from_proto(cls, msg):

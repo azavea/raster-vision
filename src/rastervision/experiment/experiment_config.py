@@ -15,7 +15,6 @@ class ExperimentConfig(Config):
                  task,
                  backend,
                  dataset,
-                 evaluators,
                  root_uri,
                  analyze_uri,
                  chip_uri,
@@ -23,6 +22,7 @@ class ExperimentConfig(Config):
                  predict_uri,
                  eval_uri,
                  bundle_uri,
+                 evaluators=None,
                  analyzers=None):
         if analyzers is None:
             analyzers = []
@@ -166,16 +166,20 @@ class ExperimentConfigBuilder(ConfigBuilder):
         self.eval_key = None
         self.bundle_key = None
 
-    def build(self):
-        self.validate()
-        # Build any missing paths through
-        b = self
+    def validate(self):
 
         if not self.config.get('root_uri'):
             raise rv.ConfigError('root_uri must be set. Use "with_root_uri"')
 
-        if not self.config.get('id'):
-            raise rv.ConfigError('Experiment ID must be set. Use "with_id"')
+        for key in ['task', 'backend', 'dataset', 'id']:
+            if self.config.get(key) is None:
+                raise rv.ConfigError(
+                    'Experiment %s must be set. Use "with_%s".' % (key, key))
+
+    def build(self):
+        self.validate()
+        # Build any missing paths through
+        b = self
 
         if not self.config.get('analyze_uri'):
             if not self.analyze_key:
@@ -213,17 +217,6 @@ class ExperimentConfigBuilder(ConfigBuilder):
             uri = os.path.join(self.config['root_uri'], rv.BUNDLE.lower(),
                                self.bundle_key)
             b = b.with_bundle_uri(uri)
-
-        if not self.config.get('task'):
-            raise rv.ConfigError("Task needs to be set. Use 'with_task'.")
-
-        if not self.config.get('backend'):
-            raise rv.ConfigError(
-                "Backend needs to be set. Use 'with_backend'.")
-
-        if not self.config.get('dataset'):
-            raise rv.ConfigError(
-                "Dataset needs to be set. Use 'with_dataset'.")
 
         evaluators = self.config.get('evaluators')
         if not evaluators:

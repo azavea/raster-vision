@@ -121,6 +121,11 @@ class TestKerasClassificationConfig(unittest.TestCase):
                             .with_config({'key_does_not_exist': 3}) \
                             .build()
 
+    def test_config_missing_template(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
+                            .build()
+
     def test_default_model_config(self):
         b = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
                             .with_task(self.generate_task()) \

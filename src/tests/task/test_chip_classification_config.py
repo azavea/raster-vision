@@ -70,6 +70,17 @@ class TestChipClassificationConfig(unittest.TestCase):
 
         self.assertDictEqual(actual_class_items, expected_class_items)
 
+    def test_missing_config_class_map(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION).build()
+
+    def test_no_missing_config(self):
+        try:
+            rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION).with_classes(
+                ['car']).build()
+        except rv.ConfigError:
+            self.fail('ConfigError raised unexpectedly')
+
 
 if __name__ == '__main__':
     unittest.main()

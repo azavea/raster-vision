@@ -57,10 +57,12 @@ class EvalCommandConfigBuilder(CommandConfigBuilder):
         super().validate()
         if self.task is None:
             raise rv.ConfigError(
-                'task not set. Use with_task or with_experiment')
+                'task not set for EvalCommandConfig. Use with_task or '
+                'with_experiment')
         if self.scenes is None:
             raise rv.ConfigError(
-                'scenes not set. Use with_scenes or with_experiment')
+                'scenes not set for EvalCommandConfig. Use with_scenes or '
+                'with_experiment')
         if self.evaluators is None:
             raise rv.ConfigError(
                 'evaluators not set. Use with_evaluators or with_experiment')

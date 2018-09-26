@@ -145,3 +145,39 @@ class TestBundleCommand(unittest.TestCase):
             expected = set(['stats.json', 'model', 'bundle_config.json'])
 
             self.assertEqual(actual, expected)
+
+    def test_missing_config_task(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.command.BundleCommandConfig.builder() \
+                                          .with_scene('') \
+                                          .with_backend('') \
+                                          .with_analyzers([]) \
+                                          .build()
+
+    def test_missing_config_backendf(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.command.BundleCommandConfig.builder() \
+                                          .with_task('') \
+                                          .with_scene('') \
+                                          .with_analyzers([]) \
+                                          .build()
+
+    def test_missing_config_scene(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.command.BundleCommandConfig.builder() \
+                                          .with_task('') \
+                                          .with_backend('') \
+                                          .with_analyzers([]) \
+                                          .build()
+
+    def test_missing_config_analyzers(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.command.BundleCommandConfig.builder() \
+                                          .with_task('') \
+                                          .with_scene('') \
+                                          .with_backend('') \
+                                          .build()
+
+
+if __name__ == '__main__':
+    unittest.main()

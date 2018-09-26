@@ -80,6 +80,12 @@ class ChipClassificationGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
 
         super().__init__(ChipClassificationGeoJSONSourceConfig, config)
 
+    def validate(self):
+        if self.config.get('uri') is None:
+            raise rv.ConfigError(
+                'You must set the uri for ChipClassificationGeoJSONSourceConfig'
+                ' Use "with_uri".')
+
     def from_proto(self, msg):
         b = ChipClassificationGeoJSONSourceConfigBuilder()
         conf = msg.chip_classification_geojson_source
