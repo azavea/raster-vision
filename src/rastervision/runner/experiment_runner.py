@@ -17,15 +17,15 @@ class ExperimentRunner(ABC):
         if not isinstance(experiments, list):
             experiments = [experiments]
 
-        command_definitions = CommandDefinition.from_experiments(experiments)
+        _command_definitions = CommandDefinition.from_experiments(experiments)
 
         # Filter  out commands we aren't running.
         command_definitions = CommandDefinition.filter_commands(
-            command_definitions, commands_to_run)
+            _command_definitions, commands_to_run)
 
         if dry_run:
-            for command in set(command_definitions) - set(commands_to_run):
-                msg = '{} ({}) not requested, so not running.'.format(str(command.command_config.command_type), command)
+            for command in set(_command_definitions) - set(command_definitions):
+                msg = '{} not requested, so not running.'.format(str(command.command_config.command_type))
                 styled_msg = click.style(msg, fg='blue')
                 click.echo(styled_msg)
 
