@@ -1,5 +1,6 @@
 """Raster Vision main program"""
 import sys
+import os
 from tempfile import TemporaryDirectory
 
 import click
@@ -17,6 +18,10 @@ def print_error(msg):
 @click.option(
     '--profile', '-p', help='Sets the configuration profile name to use.')
 def main(profile):
+    # Make sure current directory is on PYTHON_PATH
+    # so that we can run against modules in current dir.
+    sys.path.append(os.curdir)
+
     # Initialize configuration
     if profile:
         rv._registry.initialize_config(profile=profile)
