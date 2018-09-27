@@ -130,7 +130,8 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         experiments,
         commands_to_run=commands,
         rerun_commands=rerun,
-        skip_file_check=skip_file_check)
+        skip_file_check=skip_file_check,
+        dry_run=dry_run)
 
 
 @main.command()
