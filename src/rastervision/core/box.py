@@ -225,3 +225,15 @@ class Box():
         for row_start in range(0, height, stride):
             for col_start in range(0, width, stride):
                 yield Box.make_square(row_start, col_start, chip_size)
+
+    def to_dict(self):
+        return {
+            'xmin': self.xmin,
+            'ymin': self.ymin,
+            'xmax': self.xmax,
+            'ymax': self.ymax
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d['ymin'], d['xmin'], d['ymax'], d['xmax'])
