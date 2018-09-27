@@ -9,6 +9,17 @@ class CommandDefinition:
         self.command_config = command_config
         self.io_def = io_def
 
+    def _key(self):
+        return (self.command_config.command_type, '|'.join(
+            sorted(self.io_def.input_uris)), '|'.join(
+                sorted(self.io_def.output_uris)))
+
+    def __eq__(self, other):
+        return self._key == other._key
+
+    def __hash__(self):
+        return hash(self._key())
+
     @classmethod
     def from_experiments(cls, experiments: List[rv.ExperimentConfig]):
         command_definitions = []
@@ -39,16 +50,16 @@ class CommandDefinition:
         """
 
         unique_commands = []
+        skipped_commands = []
         seen_commands = set([])
         for command_def in command_definitions:
-            k = (command_def.command_config.command_type, '|'.join(
-                sorted(command_def.io_def.input_uris)), '|'.join(
-                    sorted(command_def.io_def.output_uris)))
-            if k not in seen_commands:
-                seen_commands.add(k)
+            if command_def not in seen_commands:
+                seen_commands.add(command_def)
                 unique_commands.append(command_def)
+            else:
+                skipped_commands.append(command_def)
 
-        return unique_commands
+        return (unique_commands, skipped_commands)
 
     @staticmethod
     def get_missing_inputs(command_definitions):

@@ -51,6 +51,7 @@ class CommandDAG:
                     '\t{}\n'.format(',\b\t'.join(missing_files)))
 
         # If we are not rerunning, remove commands that have existing outputs.
+        self.skipped_commands = []
         if not rerun_commands:
             for idx in [idx for idx in uri_dag.nodes if type(idx) == int]:
                 for output_uri in [
@@ -59,6 +60,7 @@ class CommandDAG:
                 ]:
                     uri_dag.remove_edge(idx, output_uri)
                 if len(uri_dag.out_edges(idx)) == 0:
+                    self.skipped_commands.append(command_definitions[idx])
                     uri_dag.remove_node(idx)
 
         # Collapse the graph to create edges from command to command.
@@ -108,3 +110,9 @@ class CommandDAG:
         """
         return list(
             map(lambda x: x[0], self.command_id_dag.in_edges(command_id)))
+
+    def get_command_definitions(self):
+        """Returns the command definitions that will be run in this DAG."""
+        return [
+            self.command_definitions[idx] for idx in self.command_id_dag.nodes
+        ]

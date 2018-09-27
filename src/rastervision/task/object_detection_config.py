@@ -31,11 +31,12 @@ class ObjectDetectionConfig(TaskConfig):
                  predict_batch_size=10,
                  predict_package_uri=None,
                  debug=True,
+                 predict_debug_uri=None,
                  chip_size=300,
                  chip_options=ChipOptions(),
                  predict_options=PredictOptions()):
         super().__init__(rv.OBJECT_DETECTION, predict_batch_size,
-                         predict_package_uri, debug)
+                         predict_package_uri, debug, predict_debug_uri)
         self.class_map = class_map
         self.chip_size = chip_size
         self.chip_options = chip_options
@@ -80,6 +81,7 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
                 'predict_batch_size': prev.predict_batch_size,
                 'predict_package_uri': prev.predict_package_uri,
                 'debug': prev.debug,
+                'predict_debug_uri': prev.predict_debug_uri,
                 'class_map': prev.class_map,
                 'chip_size': prev.chip_size,
                 'chip_options': prev.chip_options,
@@ -87,20 +89,23 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
             }
         super().__init__(ObjectDetectionConfig, config)
 
+    def validate(self):
+        if 'class_map' not in self.config:
+            raise rv.ConfigError('Class map required for this task. '
+                                 'Use "with_classes"')
+
     def from_proto(self, msg):
+        b = super().from_proto(msg)
         conf = msg.object_detection_config
 
-        return self.with_classes(list(conf.class_items)) \
-                   .with_predict_batch_size(msg.predict_batch_size) \
-                   .with_predict_package_uri(msg.predict_package_uri) \
-                   .with_debug(msg.debug) \
-                   .with_chip_size(conf.chip_size) \
-                   .with_chip_options(neg_ratio=conf.chip_options.neg_ratio,
-                                      ioa_thresh=conf.chip_options.ioa_thresh,
-                                      window_method=conf.chip_options.window_method,
-                                      label_buffer=conf.chip_options.label_buffer) \
-                   .with_predict_options(merge_thresh=conf.predict_options.merge_thresh,
-                                         score_thresh=conf.predict_options.score_thresh)
+        return b.with_classes(list(conf.class_items)) \
+                .with_chip_size(conf.chip_size) \
+                .with_chip_options(neg_ratio=conf.chip_options.neg_ratio,
+                                   ioa_thresh=conf.chip_options.ioa_thresh,
+                                   window_method=conf.chip_options.window_method,
+                                   label_buffer=conf.chip_options.label_buffer) \
+                .with_predict_options(merge_thresh=conf.predict_options.merge_thresh,
+                                      score_thresh=conf.predict_options.score_thresh)
 
     def with_classes(
             self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[

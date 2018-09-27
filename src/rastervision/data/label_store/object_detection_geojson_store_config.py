@@ -37,7 +37,7 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
                 uri = None
                 for c in context:
                     if isinstance(c, rv.SceneConfig):
-                        uri = os.path.join(root, '{}.json'.format(c.scene_id))
+                        uri = os.path.join(root, '{}.json'.format(c.id))
                 if uri:
                     conf = conf.to_builder() \
                                .with_uri(uri) \

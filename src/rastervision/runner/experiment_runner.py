@@ -36,8 +36,8 @@ class ExperimentRunner(ABC):
 
         # Remove duplicate commands, defining equality for a command by
         # the tuple (command_type, input_uris, output_uris)
-        unique_commands = CommandDefinition.remove_duplicates(
-            command_definitions)
+        (unique_commands, skipped_commands
+         ) = CommandDefinition.remove_duplicates(command_definitions)
 
         # Ensure that for each type of command, there are none that clobber
         # each other's output.
@@ -62,6 +62,19 @@ class ExperimentRunner(ABC):
 
         command_dag = CommandDAG(
             unique_commands, rerun_commands, skip_file_check=skip_file_check)
+
+        if skipped_commands or command_dag.skipped_commands:
+            # TODO: Report skipped commands, either in the dry run or elsewhere.
+            pass
+
+        # Save experiment configs
+        experiments_by_id = dict(map(lambda e: (e.id, e), experiments))
+        seen_ids = set([])
+        for command_def in command_dag.get_command_definitions():
+            if command_def.experiment_id not in seen_ids:
+                seen_ids.add(command_def.experiment_id)
+                experiment = experiments_by_id[command_def.experiment_id]
+                experiment.fully_resolve().save_config()
 
         self._run_experiment(command_dag)
 

@@ -6,7 +6,7 @@ from rastervision.data import ChipClassificationLabels
 from rastervision.data.label_source import LabelSource
 from rastervision.data.label_source.utils import (
     add_classes_to_geojson, load_label_store_json,
-    geojson_to_object_detection_labels)
+    geojson_to_chip_classification_labels)
 
 
 def get_str_tree(geojson_dict, crs_transformer):
@@ -27,9 +27,21 @@ def get_str_tree(geojson_dict, crs_transformer):
 
     for feature in features:
         # Convert polygon to pixel coords.
-        polygon = feature['geometry']['coordinates'][0]
-        polygon = [crs_transformer.map_to_pixel(p) for p in polygon]
-        json_polygons.append(polygon)
+        geom_type = feature['geometry']['type']
+        coordinates = feature['geometry']['coordinates']
+        if geom_type == 'MultiPolygon':
+            for polygon in coordinates:
+                shell = polygon[0]
+                polygon = [crs_transformer.map_to_pixel(p) for p in shell]
+                json_polygons.append(polygon)
+        elif geom_type == 'Polygon':
+            shell = coordinates[0]
+            polygon = [crs_transformer.map_to_pixel(p) for p in shell]
+            json_polygons.append(polygon)
+        else:
+            raise Exception(
+                'Geometries of type {} are not supported in chip classification \
+                labels.'.format(geom_type))
 
         properties = feature.get('properties', {})
         class_ids.append(properties.get('class_id', 1))
@@ -156,18 +168,8 @@ def read_labels(geojson_dict, crs_transformer, extent=None):
     Returns:
         ChipClassificationLabels
     """
-    # Load as ObjectDetectionLabels and convert to ChipClassificationLabels.
-    od_labels = geojson_to_object_detection_labels(geojson_dict,
-                                                   crs_transformer, extent)
-
-    labels = ChipClassificationLabels()
-    boxes = od_labels.get_boxes()
-    class_ids = od_labels.get_class_ids()
-    scores = od_labels.get_scores()
-    for box, class_id, _ in zip(boxes, class_ids, scores):
-        labels.set_cell(box, class_id, None)
-
-    return labels
+    return geojson_to_chip_classification_labels(geojson_dict, crs_transformer,
+                                                 extent)
 
 
 def load_geojson(geojson_dict, crs_transformer, extent, infer_cells, cell_size,

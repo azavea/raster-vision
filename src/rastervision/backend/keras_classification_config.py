@@ -169,7 +169,6 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         if self.require_task and not self.task:
             raise rv.ConfigError('You must specify the task this backend '
                                  'is for - use "with_task".')
-        return True
 
     def build(self):
         """Build this configuration, setting any values into the
@@ -191,9 +190,13 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
     def _process_task(self):
         return self.with_config(
             {
+                'model': {
+                    'inputSize': self.task.chip_size
+                },
                 'trainer': {
                     'options': {
                         'classNames': self.task.class_map.get_class_names(),
+                        'inputSize': self.task.chip_size
                     }
                 }
             },
@@ -255,7 +258,7 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         return self.with_config({
             'trainer': {
                 'options': {
-                    'nb_epochs': num_epochs
+                    'nbEpochs': num_epochs
                 }
             }
         })

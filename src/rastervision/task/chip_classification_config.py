@@ -14,10 +14,11 @@ class ChipClassificationConfig(TaskConfig):
                  class_map,
                  predict_batch_size=10,
                  predict_package_uri=None,
-                 debug=True,
+                 debug=False,
+                 predict_debug_uri=None,
                  chip_size=300):
         super().__init__(rv.CHIP_CLASSIFICATION, predict_batch_size,
-                         predict_package_uri, debug)
+                         predict_package_uri, debug, predict_debug_uri)
         self.class_map = class_map
         self.chip_size = chip_size
 
@@ -41,18 +42,26 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = {'class_map': prev.class_map, 'chip_size': prev.chip_size}
+            config = {
+                'class_map': prev.class_map,
+                'chip_size': prev.chip_size,
+                'predict_batch_size': prev.predict_batch_size,
+                'predict_package_uri': prev.predict_package_uri,
+                'debug': prev.debug,
+                'predict_debug_uri': prev.predict_debug_uri
+            }
         super().__init__(ChipClassificationConfig, config)
 
     def validate(self):
         if 'class_map' not in self.config:
             raise rv.ConfigError('Class map required for this task. '
-                                 "Use 'with_classes'")
+                                 'Use "with_classes"')
 
     def from_proto(self, msg):
+        b = super().from_proto(msg)
         conf = msg.chip_classification_config
-        return self.with_classes(list(conf.class_items)) \
-                   .with_chip_size(conf.chip_size)
+        return b.with_classes(list(conf.class_items)) \
+                .with_chip_size(conf.chip_size)
 
     def with_classes(
             self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[

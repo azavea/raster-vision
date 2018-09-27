@@ -104,13 +104,13 @@ class TestKerasClassificationConfig(unittest.TestCase):
         self.assertEqual(b2.kc_config['trainer']['options']['batchSize'], 200)
 
     def test_raise_error_on_no_backend_field(self):
-        # Will raise since this backend template does not have num_steps
+        # Will raise since this backend template does not have numSteps
         with self.assertRaises(rv.ConfigError):
             rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
                             .with_task(self.generate_task()) \
                             .with_template(self.get_template_uri()) \
                             .with_batch_size(100) \
-                            .with_num_epochs(100) \
+                            .with_config({'numSteps': 100}) \
                             .build()
 
     def test_with_config_fails_key_not_found(self):
@@ -119,6 +119,11 @@ class TestKerasClassificationConfig(unittest.TestCase):
                             .with_task(self.generate_task()) \
                             .with_template(self.get_template_uri()) \
                             .with_config({'key_does_not_exist': 3}) \
+                            .build()
+
+    def test_config_missing_template(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
                             .build()
 
     def test_default_model_config(self):

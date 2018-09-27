@@ -5,6 +5,8 @@ import json
 
 from shapely import geometry
 
+import rastervision as rv
+
 from rastervision.data.label_source import (get_str_tree, infer_cell,
                                             infer_labels, read_labels)
 from rastervision.core.box import Box
@@ -223,7 +225,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
 
     def test_read_labels1(self):
         # Extent only has enough of first box in it.
-        extent = Box.make_square(0, 0, 2.5)
+        extent = Box.make_square(0, 0, 0.5)
         labels = read_labels(self.geojson_dict, self.crs_transformer, extent)
 
         cells = labels.get_cells()
@@ -244,6 +246,18 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         self.assertEqual(class_id, self.class_id1)
         class_id = labels.get_cell_class_id(self.box2)
         self.assertEqual(class_id, self.class_id2)
+
+    def test_missing_config_uri(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.data.ChipClassificationGeoJSONSourceConfig.builder(
+                rv.CHIP_CLASSIFICATION_GEOJSON).build()
+
+    def test_no_missing_config(self):
+        try:
+            rv.data.ChipClassificationGeoJSONSourceConfig.builder(
+                rv.CHIP_CLASSIFICATION_GEOJSON).with_uri('').build()
+        except rv.ConfigError:
+            self.fail('ConfigError raised unexpectedly')
 
 
 if __name__ == '__main__':

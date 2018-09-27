@@ -70,6 +70,13 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
 
         super().__init__(GeoTiffSourceConfig, config)
 
+    def validate(self):
+        super().validate()
+        if self.config.get('uris') is None:
+            raise rv.ConfigError(
+                'You must specify uris for the GeoTiffSourceConfig. Use '
+                '"with_uris".')
+
     def from_proto(self, msg):
         b = super().from_proto(msg)
 

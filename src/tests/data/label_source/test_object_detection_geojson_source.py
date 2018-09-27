@@ -6,6 +6,8 @@ import json
 import numpy as np
 from moto import mock_s3
 
+import rastervision as rv
+
 from rastervision.data.label_source import ObjectDetectionGeoJSONSource
 from rastervision.data.label_source.utils import (
     add_classes_to_geojson, geojson_to_object_detection_labels)
@@ -205,6 +207,18 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
         expected_labels = ObjectDetectionLabels(
             npboxes, class_ids, scores=scores)
         labels.assert_equal(expected_labels)
+
+    def test_missing_config_uri(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.data.ObjectDetectionGeoJSONSourceConfig.builder(
+                rv.OBJECT_DETECTION_GEOJSON).build()
+
+    def test_no_missing_config(self):
+        try:
+            rv.data.ObjectDetectionGeoJSONSourceConfig.builder(
+                rv.OBJECT_DETECTION_GEOJSON).with_uri('').build()
+        except rv.ConfigError:
+            self.fail('ConfigError raised unexpectedly')
 
 
 if __name__ == '__main__':

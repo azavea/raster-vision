@@ -18,11 +18,14 @@ class ClassificationEvaluator(Evaluator):
     def process(self, scenes, tmp_dir):
         evaluation = self.create_evaluation()
         for scene in scenes:
-            print('Computing evaluation for scene {}...'.format(
-                scene.scene_id))
+            print('Computing evaluation for scene {}...'.format(scene.id))
             ground_truth = scene.ground_truth_label_source.get_labels()
             predictions = scene.prediction_label_store.get_labels()
 
+            if scene.aoi_polygons:
+                # Filter labels based on AOI.
+                ground_truth = ground_truth.filter_by_aoi(scene.aoi_polygons)
+                predictions = predictions.filter_by_aoi(scene.aoi_polygons)
             scene_evaluation = self.create_evaluation()
             scene_evaluation.compute(ground_truth, predictions)
             evaluation.merge(scene_evaluation)

@@ -46,7 +46,7 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
             self.task = None
             self.backend = None
             self.scene = None
-            self.analyzers = []
+            self.analyzers = None
         else:
             self.task = prev.task
             self.backend = prev.backend
@@ -56,16 +56,18 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
     def validate(self):
         super().validate()
         if self.task is None:
-            raise rv.ConfigError(
-                'Task not set. Use with_task or with_experiment')
-
+            raise rv.ConfigError('Task not set for BundleCommandConfig. '
+                                 'Use with_task or with_experiment')
         if self.backend is None:
-            raise rv.ConfigError(
-                'Backend not set. Use with_backend or with_experiment')
-
+            raise rv.ConfigError('Backend not set for BundleCommandConfig. '
+                                 'Use with_backend or with_experiment')
         if self.scene is None:
             raise rv.ConfigError(
-                'Template scene not set. Use with_scene or with_experiment')
+                'Template scene not set for BundleCommandConfig. '
+                'Use with_scene or with_experiment')
+        if self.analyzers is None:
+            raise rv.ConfigError('Analyzers not set for BundleCommandConfig. '
+                                 'Use with_analyzers or with_experiment')
 
     def build(self):
         self.validate()

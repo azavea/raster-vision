@@ -593,7 +593,7 @@ class TFObjectDetection(Backend):
         # training and test sets.
         record_path = training_package.get_local_path(
             training_package.get_record_uri('{}-{}'.format(
-                scene.scene_id, uuid.uuid4())))
+                scene.id, uuid.uuid4())))
         write_tf_record(tf_examples, record_path)
 
         return record_path

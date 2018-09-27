@@ -21,6 +21,17 @@ class ChipClassificationLabels(Labels):
         result.extend(other)
         return result
 
+    def filter_by_aoi(self, aoi_polygons):
+        result = ChipClassificationLabels()
+        for cell in self.cell_to_class_id:
+            cell_box = Box.from_tuple(cell)
+            cell_poly = cell_box.to_shapely()
+            for aoi in aoi_polygons:
+                if cell_poly.within(aoi):
+                    (class_id, scores) = self.cell_to_class_id[cell]
+                    result.set_cell(cell_box, class_id, scores)
+        return result
+
     def set_cell(self, cell, class_id, scores=None):
         """Set cell and its class_id.
 

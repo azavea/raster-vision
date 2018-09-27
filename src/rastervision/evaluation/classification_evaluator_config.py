@@ -42,21 +42,25 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
 
 class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
     def __init__(self, cls, prev=None):
-        config = {}
+        self.config = {}
         if prev:
-            config = {
+            self.config = {
                 'output_uri': prev.output_uri,
                 'class_map': prev.class_map
             }
-        super().__init__(cls, config)
+        super().__init__(cls, self.config)
+
+    def validate(self):
+        if self.config.get('class_map') is None:
+            raise rv.ConfigError(
+                'class_map not set for ClassificationEvaluatorConfig. '
+                'Use "with_class_map".')
 
     @classmethod
     def from_proto(cls, msg):
         b = cls()
-        class_map = ClassMap.construct_from(
-            list(msg.classification_config.class_items))
         return b.with_output_uri(msg.classification_config.output_uri) \
-                .with_class_map(class_map)
+                .with_class_map(list(msg.classification_config.class_items))
 
     def with_output_uri(self, output_uri):
         """Set the output_uri.
@@ -76,5 +80,5 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
 
     def with_class_map(self, class_map):
         b = deepcopy(self)
-        b.config['class_map'] = class_map
+        b.config['class_map'] = ClassMap.construct_from(class_map)
         return b

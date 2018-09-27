@@ -12,11 +12,13 @@ class TaskConfig(BundledConfigMixin, Config):
                  task_type,
                  predict_batch_size=10,
                  predict_package_uri=None,
-                 debug=True):
+                 debug=True,
+                 predict_debug_uri=None):
         self.task_type = task_type
         self.predict_batch_size = predict_batch_size
         self.predict_package_uri = predict_package_uri
         self.debug = debug
+        self.predict_debug_uri = predict_debug_uri
 
     @abstractmethod
     def create_task(self, backend):
@@ -35,7 +37,8 @@ class TaskConfig(BundledConfigMixin, Config):
             task_type=self.task_type,
             predict_batch_size=self.predict_batch_size,
             predict_package_uri=self.predict_package_uri,
-            debug=self.debug)
+            debug=self.debug,
+            predict_debug_uri=self.predict_debug_uri)
 
     @staticmethod
     def builder(task_type):
@@ -53,6 +56,12 @@ class TaskConfig(BundledConfigMixin, Config):
                            context=None):
         conf = self
         io_def = rv.core.CommandIODefinition()
+        if command_type == rv.PREDICT:
+            if conf.debug:
+                if not conf.predict_debug_uri:
+                    conf.predict_debug_uri = os.path.join(
+                        experiment_config.predict_uri, 'debug')
+                io_def.add_output(conf.predict_debug_uri)
         if command_type == rv.BUNDLE:
             if not conf.predict_package_uri:
                 conf.predict_package_uri = os.path.join(
@@ -62,6 +71,13 @@ class TaskConfig(BundledConfigMixin, Config):
 
 
 class TaskConfigBuilder(ConfigBuilder):
+    def from_proto(self, msg):
+        b = self.with_predict_batch_size(msg.predict_batch_size)
+        b = b.with_predict_package_uri(msg.predict_package_uri)
+        b = b.with_debug(msg.debug)
+        b = b.with_predict_debug_uri(msg.predict_debug_uri)
+        return b
+
     def with_predict_batch_size(self, predict_batch_size):
         """Sets the batch size to use during prediction."""
         b = deepcopy(self)
@@ -78,4 +94,10 @@ class TaskConfigBuilder(ConfigBuilder):
         """Flag for producing debug products."""
         b = deepcopy(self)
         b.config['debug'] = debug
+        return b
+
+    def with_predict_debug_uri(self, predict_debug_uri):
+        """Set the directory to place prediction debug images"""
+        b = deepcopy(self)
+        b.config['predict_debug_uri'] = predict_debug_uri
         return b

@@ -1,29 +1,30 @@
 from copy import deepcopy
 from typing import Union
+import json
 
 import rastervision as rv
 from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin)
 from rastervision.task import TaskConfig
 from rastervision.data import (Scene, RasterSourceConfig, LabelSourceConfig,
                                LabelStoreConfig)
+from rastervision.utils.files import file_to_str
+from rastervision.utils.geojson import aoi_json_to_shapely
 from rastervision.protos.scene_pb2 \
     import SceneConfig as SceneConfigMsg
-
-# TODO: Set/save/load AOI
 
 
 class SceneConfig(BundledConfigMixin, Config):
     def __init__(self,
-                 scene_id,
+                 id,
                  raster_source,
                  label_source=None,
                  label_store=None,
-                 aoi_polygons=None):
-        self.scene_id = scene_id
+                 aoi_uri=None):
+        self.id = id
         self.raster_source = raster_source
         self.label_source = label_source
         self.label_store = label_store
-        self.aoi_polygons = aoi_polygons
+        self.aoi_uri = aoi_uri
 
     def create_scene(self, task_config: TaskConfig, tmp_dir: str) -> Scene:
         """Create this scene.
@@ -42,12 +43,20 @@ class SceneConfig(BundledConfigMixin, Config):
         if self.label_store:
             label_store = self.label_store.create_store(
                 task_config, raster_source.get_crs_transformer(), tmp_dir)
-        return Scene(self.scene_id, raster_source, label_source, label_store,
-                     self.aoi_polygons)
+        aoi_polygons = None
+        if self.aoi_uri:
+            aoi_js = json.loads(file_to_str(self.aoi_uri))
+            aoi_polygons = aoi_json_to_shapely(
+                aoi_js, raster_source.get_crs_transformer())
+
+        return Scene(self.id, raster_source, label_source, label_store,
+                     aoi_polygons)
 
     def to_proto(self):
         msg = SceneConfigMsg(
-            id=self.scene_id, raster_source=self.raster_source.to_proto())
+            id=self.id,
+            raster_source=self.raster_source.to_proto(),
+            aoi_uri=self.aoi_uri)
 
         if self.label_source:
             msg.ground_truth_label_source.CopyFrom(
@@ -125,6 +134,9 @@ class SceneConfig(BundledConfigMixin, Config):
             io_def.merge(sub_io_def)
             b = b.with_label_store(new_label_store)
 
+        if self.aoi_uri:
+            io_def.add_input(self.aoi_uri)
+
         return (b.build(), io_def)
 
     @staticmethod
@@ -143,10 +155,11 @@ class SceneConfigBuilder(ConfigBuilder):
         config = {}
         if prev:
             config = {
-                'scene_id': prev.scene_id,
+                'id': prev.id,
                 'raster_source': prev.raster_source,
                 'label_source': prev.label_source,
-                'label_store': prev.label_store
+                'label_store': prev.label_store,
+                'aoi_uri': prev.aoi_uri
             }
         super().__init__(SceneConfig, config)
         self.task = None
@@ -160,6 +173,8 @@ class SceneConfigBuilder(ConfigBuilder):
         if msg.HasField('prediction_label_store'):
             b = b.with_label_store(
                 LabelStoreConfig.from_proto(msg.prediction_label_store))
+        if msg.HasField('aoi_uri'):
+            b = b.with_aoi_uri(msg.aoi_uri)
 
         return b
 
@@ -168,9 +183,9 @@ class SceneConfigBuilder(ConfigBuilder):
         b.task = task
         return b
 
-    def with_id(self, scene_id):
+    def with_id(self, id):
         b = deepcopy(self)
-        b.config['scene_id'] = scene_id
+        b.config['id'] = id
         return b
 
     def with_raster_source(self,
@@ -267,4 +282,9 @@ class SceneConfigBuilder(ConfigBuilder):
                 self.task.task_type)
             b.config['label_store'] = provider.construct()
 
+        return b
+
+    def with_aoi_uri(self, uri):
+        b = deepcopy(self)
+        b.config['aoi_uri'] = uri
         return b

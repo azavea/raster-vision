@@ -24,10 +24,12 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                                 'building': (2, 'blue'),
                                 'background': (3, 'black')
                             }) \
+                            .with_debug(True) \
                             .build()
 
         backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
                                   .with_task(task) \
+                                  .with_debug(True) \
                                   .with_template(backend_conf_path) \
                                   .with_pretrained_model(pretrained_model) \
                                   .with_train_options(sync_interval=None,
@@ -68,7 +70,7 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                                         .with_backend(backend) \
                                         .with_dataset(dataset) \
                                         .with_stats_analyzer() \
-                                        .with_analyze_key('chip-classification-test') \
+                                        .with_eval_key('default') \
                                         .build()
 
         return experiment

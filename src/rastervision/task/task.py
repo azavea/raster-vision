@@ -96,25 +96,13 @@ class Task(object):
             augmentors: Augmentors used to augment training data
         """
 
-        def is_window_inside_aoi(window, aoi_polygons):
-            window_shapely = window.get_shapely()
-            for polygon in aoi_polygons:
-                if window_shapely.within(polygon):
-                    return True
-            return False
-
         def _process_scene(scene, type_, augment):
             data = TrainingData()
             print(
-                'Making {} chips for scene: {}'.format(type_, scene.scene_id),
+                'Making {} chips for scene: {}'.format(type_, scene.id),
                 end='',
                 flush=True)
             windows = self.get_train_windows(scene)
-            if scene.aoi_polygons:
-                windows = [
-                    window for window in windows
-                    if is_window_inside_aoi(window, scene.aoi_polygons)
-                ]
             for window in windows:
                 chip = scene.raster_source.get_chip(window)
                 labels = self.get_train_labels(window, scene)
@@ -165,10 +153,9 @@ class Task(object):
             label_store = scene.prediction_label_store
             label_store.save(labels)
 
-            # TODO: need debug_uri
-            # if (self.config.debug
-            #         and self.class_map.has_all_colors()):
-            #     self.save_debug_predict_image(scene, options.debug_uri)
+            if self.config.debug and self.config.predict_debug_uri:
+                self.save_debug_predict_image(scene,
+                                              self.config.predict_debug_uri)
 
     def predict_scene(self, scene, tmp_dir):
         """Predict on a single scene, and return the labels."""
