@@ -104,7 +104,7 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
         backend = rv.BackendConfig.from_proto(conf.backend)
         augmentors = list(map(rv.AugmentorConfig.from_proto, conf.augmentors))
         train_scenes = list(map(rv.SceneConfig.from_proto, conf.train_scenes))
-        val_scenes = list(map(rv.SceneConfig.from_proto, conf.train_scenes))
+        val_scenes = list(map(rv.SceneConfig.from_proto, conf.val_scenes))
 
         b = b.with_task(task)
         b = b.with_backend(backend)
