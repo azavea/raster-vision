@@ -13,7 +13,7 @@ class TrainCommandConfig(CommandConfig):
         self.task = task
         self.backend = backend
 
-    def create_command(self, tmp_dir, dry_run: bool = False):
+    def create_command(self, tmp_dir):
         backend = self.backend.create_backend(self.task)
         task = self.task.create_task(backend)
 

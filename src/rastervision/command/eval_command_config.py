@@ -14,18 +14,14 @@ class EvalCommandConfig(CommandConfig):
         self.scenes = scenes
         self.evaluators = evaluators
 
-    def create_command(self, tmp_dir, dry_run: bool = False):
+    def create_command(self, tmp_dir):
         if len(self.scenes) == 0 or len(self.evaluators) == 0:
             return NoOpCommand()
 
+        scenes = list(
+            map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
         evaluators = list(map(lambda a: a.create_evaluator(), self.evaluators))
-
-        if not dry_run:
-            scenes = list(
-                map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
-            return EvalCommand(scenes, evaluators)
-        else:
-            return EvalCommand(None, evaluators)
+        return EvalCommand(scenes, evaluators)
 
     def to_proto(self):
         msg = super().to_proto()

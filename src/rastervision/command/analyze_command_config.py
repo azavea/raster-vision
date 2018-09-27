@@ -14,18 +14,14 @@ class AnalyzeCommandConfig(CommandConfig):
         self.scenes = scenes
         self.analyzers = analyzers
 
-    def create_command(self, tmp_dir, dry_run: bool = False):
+    def create_command(self, tmp_dir):
         if len(self.scenes) == 0 or len(self.analyzers) == 0:
             return NoOpCommand()
 
+        scenes = list(
+            map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
         analyzers = list(map(lambda a: a.create_analyzer(), self.analyzers))
-
-        if not dry_run:
-            scenes = list(
-                map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
-            return AnalyzeCommand(scenes, analyzers)
-        else:
-            return AnalyzeCommand(None, analyzers)
+        return AnalyzeCommand(scenes, analyzers)
 
     def to_proto(self):
         msg = super().to_proto()

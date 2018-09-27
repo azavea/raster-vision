@@ -8,11 +8,9 @@ class AnalyzeCommand(Command):
         self.scenes = scenes
         self.analyzers = analyzers
 
-    def run(self, tmp_dir: str, dry_run: bool = False):
+    def run(self, tmp_dir):
         for analyzer in self.analyzers:
             msg = 'Running analyzer: {}...'.format(type(analyzer).__name__)
-            if dry_run:
-                self.announce_dry_run()
             click.echo(click.style(msg, fg='green'))
-            if not dry_run:
-                analyzer.process(self.scenes, tmp_dir)
+
+            analyzer.process(self.scenes, tmp_dir)

@@ -1,9 +1,7 @@
-import click
-import rastervision as rv
-
 from abc import (ABC, abstractmethod)
 from typing import (List, Union)
 
+import rastervision as rv
 from rastervision.runner import (CommandDefinition, CommandDAG)
 
 
@@ -12,23 +10,15 @@ class ExperimentRunner(ABC):
             experiments: Union[List[rv.ExperimentConfig], rv.ExperimentConfig],
             commands_to_run=rv.ALL_COMMANDS,
             rerun_commands=False,
-            skip_file_check=False,
-            dry_run=False):
+            skip_file_check=False):
         if not isinstance(experiments, list):
             experiments = [experiments]
 
-        _command_definitions = CommandDefinition.from_experiments(experiments)
+        command_definitions = CommandDefinition.from_experiments(experiments)
 
         # Filter  out commands we aren't running.
         command_definitions = CommandDefinition.filter_commands(
-            _command_definitions, commands_to_run)
-
-        if dry_run:
-            for command in set(_command_definitions) - set(command_definitions):
-                msg = '{} not requested, so not running.'.format(
-                    str(command.command_config.command_type))
-                styled_msg = click.style(msg, fg='blue')
-                click.echo(styled_msg)
+            command_definitions, commands_to_run)
 
         # Check if there are any unsatisfied inputs.
         missing_inputs = CommandDefinition.get_missing_inputs(
@@ -48,14 +38,6 @@ class ExperimentRunner(ABC):
         # the tuple (command_type, input_uris, output_uris)
         (unique_commands, skipped_commands
          ) = CommandDefinition.remove_duplicates(command_definitions)
-
-        if skipped_commands:
-            if dry_run:
-                for command in skipped_commands:
-                    msg = '{} ({}) is a duplicate.'.format(
-                        str(command.command_config.command_type), command)
-                    styled_msg = click.style(msg, fg='blue')
-                    click.echo(styled_msg)
 
         # Ensure that for each type of command, there are none that clobber
         # each other's output.
@@ -81,13 +63,9 @@ class ExperimentRunner(ABC):
         command_dag = CommandDAG(
             unique_commands, rerun_commands, skip_file_check=skip_file_check)
 
-        if command_dag.skipped_commands:
-            if dry_run:
-                for command in command_dag.skipped_commands:
-                    msg = '{} ({}) is a duplicate.'.format(
-                        str(command.command_config.command_type), command)
-                    styled_msg = click.style(msg, fg='blue')
-                    click.echo(styled_msg)
+        if skipped_commands or command_dag.skipped_commands:
+            # TODO: Report skipped commands, either in the dry run or elsewhere.
+            pass
 
         # Save experiment configs
         experiments_by_id = dict(map(lambda e: (e.id, e), experiments))
@@ -98,10 +76,10 @@ class ExperimentRunner(ABC):
                 experiment = experiments_by_id[command_def.experiment_id]
                 experiment.fully_resolve().save_config()
 
-        self._run_experiment(command_dag, dry_run=dry_run)
+        self._run_experiment(command_dag)
 
     @abstractmethod
-    def _run_experiment(self, command_dag, dry_run: bool):
+    def _run_experiment(self, command_dag):
         pass
 
     @staticmethod
@@ -114,7 +92,3 @@ class ExperimentRunner(ABC):
     def list_runners():
         """Returns a list of valid runner keys."""
         return rv._registry.get_experiment_runner_keys()
-
-    @staticmethod
-    def announce_dry_run():
-        click.echo(click.style('dryrun: ', fg='blue'), nl=False)

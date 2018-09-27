@@ -14,19 +14,17 @@ class PredictCommandConfig(CommandConfig):
         self.backend = backend
         self.scenes = scenes
 
-    def create_command(self, tmp_dir, dry_run: bool = False):
+    def create_command(self, tmp_dir):
         if len(self.scenes) == 0:
             return NoOpCommand()
 
         backend = self.backend.create_backend(self.task)
         task = self.task.create_task(backend)
 
-        if not dry_run:
-            scenes = list(
-                map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
-            return PredictCommand(task, scenes)
-        else:
-            return PredictCommand(task, None)
+        scenes = list(
+            map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
+
+        return PredictCommand(task, scenes)
 
     def to_proto(self):
         msg = super().to_proto()
