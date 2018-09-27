@@ -1,0 +1,45 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "google/protobuf/struct.proto";
+
+message BackendConfig {
+    message TFObjectDetectionConfig {
+        optional int32 sync_interval = 1 [default=600];
+        optional bool do_monitoring = 2 [default=true];
+        // path to Object Detection's train.py script
+        optional string train_py = 3 [default="/opt/tf-models/object_detection/train.py"];
+
+        // path to Object Detection's eval.py script
+        optional string eval_py = 4 [default="/opt/tf-models/object_detection/eval.py"];
+
+        // path to Object Detection's export_inference_graph.py script
+        optional string export_py = 5 [default="/opt/tf-models/object_detection/export_inference_graph.py"];
+
+        optional string training_data_uri = 6;
+        optional string training_output_uri = 7;
+        optional string model_uri = 8;
+
+        required google.protobuf.Struct tfod_config = 9;
+    }
+
+    message KerasClassificationConfig {
+        optional int32 sync_interval = 1 [default=600];
+        optional bool replace_model = 2 [default=false];
+
+        optional string training_data_uri = 3;
+        optional string training_output_uri = 4;
+        optional string model_uri = 5;
+
+        required google.protobuf.Struct kc_config = 6;
+    }
+
+    required string backend_type = 1;
+    optional string pretrained_model_uri = 3;
+    oneof backend_config {
+        TFObjectDetectionConfig tf_object_detection_config = 4;
+        KerasClassificationConfig keras_classification_config = 5;
+        google.protobuf.Struct custom_config = 6;
+    }
+}

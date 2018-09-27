@@ -16,7 +16,11 @@ RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 WORKDIR /opt/src/
 ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
 
-COPY scripts/run_rv /usr/local/bin/
+# Install requirements.txt
+COPY ./requirements.txt /opt/src/requirements.txt
+RUN pip install -r requirements.txt
+
+COPY scripts/rastervision /usr/local/bin/
 COPY ./ /opt/src/
 RUN /opt/src/scripts/compile
 

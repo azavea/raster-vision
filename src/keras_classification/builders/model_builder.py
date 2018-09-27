@@ -1,16 +1,16 @@
 import os
 
-import keras
-
-from keras_classification.models.resnet50 import ResNet50
-from keras_classification.protos.model_pb2 import Model
-
 
 def build_from_path(model_path):
+    import keras
+
     return keras.models.load_model(model_path)
 
 
 def build(model_options, pretrained_model_path):
+    from keras_classification.models.resnet50 import ResNet50
+    from keras_classification.protos.model_pb2 import Model
+
     if os.path.isfile(model_options.model_path):
         return build_from_path(model_options.model_path)
 

@@ -1,0 +1,37 @@
+{
+    "TF_OBJECT_DETECTION": {
+        "SSD_MOBILENET_V1_COCO": {
+            "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2017_11_17.tar.gz",
+            "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/ssd_mobilenet_v1_coco.config"
+        }
+    },
+    "KERAS_CLASSIFICATION": {
+        "RESNET50_IMAGENET" : {
+            "pretrained_model_uri": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5",
+            "kc_config": {
+                "model": {
+                    "input_size": 300,
+                    "type": "RESNET50",
+                    "load_weights_by_name": true,
+                    "model_path": ""
+                },
+                "trainer": {
+                    "optimizer": {
+                        "type": "ADAM",
+                        "init_lr": 0.0001
+                    },
+                    "options": {
+                        "training_data_dir": "",
+                        "validation_data_dir": "",
+                        "nb_epochs": 40,
+                        "batch_size": 16,
+                        "input_size": 300,
+                        "output_dir": "",
+                        "class_names": ["TEMPLATE"],
+                        "short_epoch": false
+                    }
+                }
+            }
+        }
+    }
+}

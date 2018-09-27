@@ -1,0 +1,67 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rastervision/protos/analyzer.proto";
+import "rastervision/protos/augmentor.proto";
+import "rastervision/protos/task.proto";
+import "rastervision/protos/backend.proto";
+import "rastervision/protos/scene.proto";
+import "rastervision/protos/evaluator.proto";
+import "rastervision/protos/plugin.proto";
+
+message CommandConfig {
+    message AnalyzeConfig {
+        required TaskConfig task = 1;
+        repeated SceneConfig scenes = 2;
+        repeated AnalyzerConfig analyzers = 3;
+    }
+
+    message ChipConfig {
+        required TaskConfig task = 1;
+        required BackendConfig backend = 2;
+        repeated AugmentorConfig augmentors = 3;
+        repeated SceneConfig train_scenes = 4;
+        repeated SceneConfig val_scenes = 5;
+    }
+
+
+    message TrainConfig {
+        required TaskConfig task = 1;
+        required BackendConfig backend = 2;
+    }
+
+    message PredictConfig {
+        required TaskConfig task = 1;
+        required BackendConfig backend = 2;
+        repeated SceneConfig scenes = 3;
+    }
+
+    message EvalConfig {
+        required TaskConfig task = 1;
+        required BackendConfig backend = 2;
+        repeated SceneConfig scenes = 3;
+        repeated EvaluatorConfig evaluators = 4;
+    }
+
+    message BundleConfig {
+        repeated AnalyzerConfig analyzers = 1;
+        required TaskConfig task = 2;
+        required BackendConfig backend = 3;
+        required SceneConfig scene = 4;
+    }
+
+    required string command_type = 1;
+    required string root_uri = 2;
+
+    oneof command_config {
+        AnalyzeConfig analyze_config = 3;
+        ChipConfig chip_config = 4;
+        TrainConfig train_config = 5;
+        PredictConfig predict_config = 6;
+        EvalConfig eval_config = 7;
+        BundleConfig bundle_config = 8;
+    }
+
+    optional PluginConfig plugins = 9;
+}
