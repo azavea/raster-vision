@@ -16,5 +16,9 @@ Run all unit tests.
 if [ "${1:-}" = "--help" ]; then
     usage
 else
-    python -m unittest discover tests
+    if ! [ -x "$(command -v coverage)" ]; then
+	python -m unittest discover tests
+    else
+	coverage run --append --source=rastervision --omit=rastervision/protos -m unittest discover tests
+    fi
 fi
