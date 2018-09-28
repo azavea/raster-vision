@@ -37,6 +37,8 @@ class Registry:
             rv.task.ObjectDetectionConfigBuilder,
             (rv.TASK, rv.CHIP_CLASSIFICATION):
             rv.task.ChipClassificationConfigBuilder,
+            (rv.TASK, rv.SEMANTIC_SEGMENTATION):
+            rv.task.SemanticSegmentationConfigBuilder,
 
             # Backends
             (rv.BACKEND, rv.TF_OBJECT_DETECTION):
