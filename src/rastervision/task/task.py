@@ -54,7 +54,7 @@ class Task(object):
         pass
 
     @abstractmethod
-    def post_process_predictions(self, labels):
+    def post_process_predictions(self, labels, scene):
         """Runs a post-processing step on labels at end of prediction.
 
         Returns:
@@ -191,4 +191,4 @@ class Task(object):
 
         print()
 
-        return self.post_process_predictions(labels)
+        return self.post_process_predictions(labels, scene)

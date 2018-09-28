@@ -46,7 +46,7 @@ class ChipClassification(Task):
     def get_train_labels(self, window, scene):
         return scene.ground_truth_label_source.get_labels(window=window)
 
-    def post_process_predictions(self, labels):
+    def post_process_predictions(self, labels, scene):
         return labels
 
     def get_predict_windows(self, extent):
