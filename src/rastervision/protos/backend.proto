@@ -35,11 +35,29 @@ message BackendConfig {
         required google.protobuf.Struct kc_config = 6;
     }
 
+    message TFDeeplabConfig {
+        optional string train_py = 1 [default="/opt/tf-models/deeplab/train.py"];
+        optional string export_py = 2 [default="/opt/tf-models/deeplab/export_model.py"];
+
+        optional string train_restart_dir = 3;
+        optional int32 sync_interval = 4 [default=600];
+
+        optional string training_data_uri = 5;
+        optional string training_output_uri = 6;
+        optional string model_uri = 7;
+
+        required google.protobuf.Struct tfdl_config = 8;
+
+        optional bool debug = 9 [default=false];        
+    }
+
     required string backend_type = 1;
     optional string pretrained_model_uri = 3;
+
     oneof backend_config {
         TFObjectDetectionConfig tf_object_detection_config = 4;
         KerasClassificationConfig keras_classification_config = 5;
+        TFDeeplabConfig tf_deeplab_config = 7;
         google.protobuf.Struct custom_config = 6;
     }
 }

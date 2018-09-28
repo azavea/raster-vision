@@ -41,8 +41,8 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def load_model(self, chips, windows, tmp_dir):
-        """Load the model in preperation for one or more prediction calls."""
+    def load_model(self, tmp_dir):
+        """Load the model in preparation for one or more prediction calls."""
         pass
 
     @abstractmethod

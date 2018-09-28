@@ -33,5 +33,48 @@
                 }
             }
         }
+    },
+    "TF_DEEPLAB": {
+        "XCEPTION_65" : {
+            "pretrained_model_uri": "http://download.tensorflow.org/models/deeplabv3_xception_2018_01_04.tar.gz",
+            "tfdl_config": {
+                "decoderOutputStride": 4,
+                "modelVariant": "xception_65",
+                "outputStride": 16,
+                "atrousRates": [6, 12, 18],
+                "trainBatchSize": 24,
+                "trainCropSize": [257, 257],
+                "trainingNumberOfSteps": 35410,
+                "dataset": "custom",
+                "trainSplit": "train",
+                "dlCustomTrain": 11520,
+                "dlCustomValidation": 1728,
+                "fineTuneBatchNorm": "true",
+                "baseLearningRate": "0.001",
+                "saveIntervalSecs": 600,
+                "saveSummariesSecs": 60
+            }
+        },
+        "MOBILENET_V2": {
+            "pretrained_model_uri": "http://download.tensorflow.org/models/deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz",
+            "tfdl_config": {
+                "initializeLastLayer": "false",
+                "lastLayersContainLogitsOnly": "false",
+                "decoderOutputStride": 1,
+                "modelVariant": "mobilenet_v2",
+                "outputStride": 16,
+                "trainBatchSize": 24,
+                "trainCropSize": [257, 257],
+                "trainingNumberOfSteps": 150000,
+                "dataset": "custom",
+                "trainSplit": "train",
+                "dlCustomTrain": 11520,
+                "dlCustomValidation": 1728,
+                "fineTuneBatchNorm": "true",
+                "baseLearningRate": "0.001",
+                "saveIntervalSecs": 600,
+                "saveSummariesSecs": 60
+            }
+        }
     }
 }

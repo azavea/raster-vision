@@ -1,0 +1,18 @@
+{
+    "initializeLastLayer": "false",
+    "lastLayersContainLogitsOnly": "false",
+    "decoderOutputStride": 1,
+    "modelVariant": "mobilenet_v2",
+    "outputStride": 16,
+    "trainBatchSize": 24,
+    "trainCropSize": [257, 257],
+    "trainingNumberOfSteps": 150000,
+    "dataset": "custom",
+    "trainSplit": "train",
+    "dlCustomTrain": 11520,
+    "dlCustomValidation": 1728,
+    "fineTuneBatchNorm": "true",
+    "baseLearningRate": "0.001",
+    "saveIntervalSecs": 600,
+    "saveSummariesSecs": 60
+}

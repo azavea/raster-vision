@@ -45,6 +45,8 @@ class Registry:
             rv.backend.TFObjectDetectionConfigBuilder,
             (rv.BACKEND, rv.KERAS_CLASSIFICATION):
             rv.backend.KerasClassificationConfigBuilder,
+            (rv.BACKEND, rv.TF_DEEPLAB):
+            rv.backend.TFDeeplabConfigBuilder,
 
             # Raster Transformers
             (rv.RASTER_TRANSFORMER, rv.STATS_TRANSFORMER):
