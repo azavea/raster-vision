@@ -14,7 +14,8 @@ from rastervision.data.label_store.default import (
     DefaultSemanticSegmentationRasterStoreProvider)
 from rastervision.evaluation.default import (
     DefaultObjectDetectioneEvaluatorProvider,
-    DefaultChipClassificationEvaluatorProvider)
+    DefaultChipClassificationEvaluatorProvider,
+    DefaultSemanticSegmentationEvaluatorProvider)
 
 
 class RegistryError(Exception):
@@ -82,6 +83,8 @@ class Registry:
             rv.evaluation.ChipClassificationEvaluatorConfigBuilder,
             (rv.EVALUATOR, rv.OBJECT_DETECTION_EVALUATOR):
             rv.evaluation.ObjectDetectionEvaluatorConfigBuilder,
+            (rv.EVALUATOR, rv.SEMANTIC_SEGMENTATION_EVALUATOR):
+            rv.evaluation.SemanticSegmentationEvaluatorConfigBuilder,
         }
 
         self._internal_default_raster_sources = [
@@ -104,7 +107,8 @@ class Registry:
 
         self._internal_default_evaluators = [
             DefaultObjectDetectioneEvaluatorProvider,
-            DefaultChipClassificationEvaluatorProvider
+            DefaultChipClassificationEvaluatorProvider,
+            DefaultSemanticSegmentationEvaluatorProvider
         ]
 
         self.command_config_builders = {

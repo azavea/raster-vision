@@ -40,3 +40,15 @@ class DefaultChipClassificationEvaluatorProvider(DefaultEvaluatorProvider):
         return rv.EvaluatorConfig.builder(rv.CHIP_CLASSIFICATION_EVALUATOR) \
                                  .with_task(task) \
                                  .build()
+
+
+class DefaultSemanticSegmentationEvaluatorProvider(DefaultEvaluatorProvider):
+    @staticmethod
+    def is_default_for(task_type):
+        return task_type == rv.SEMANTIC_SEGMENTATION
+
+    @staticmethod
+    def construct(task):
+        return rv.EvaluatorConfig.builder(rv.SEMANTIC_SEGMENTATION_EVALUATOR) \
+                                 .with_task(task) \
+                                 .build()
