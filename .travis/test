@@ -1,5 +1,5 @@
 #!/bin/bash
 
 docker run --rm raster-vision-cpu /opt/src/scripts/unit_tests && \
-       docker run --rm raster-vision-cpu /opt/src/scripts/style_tests && \
-       docker run --rm raster-vision-cpu /opt/src/scripts/integration_tests
+docker run --rm raster-vision-cpu /opt/src/scripts/style_tests && \
+docker run --rm raster-vision-cpu /opt/src/scripts/integration_tests
