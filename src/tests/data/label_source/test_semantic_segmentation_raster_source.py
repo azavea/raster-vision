@@ -1,34 +1,19 @@
 import unittest
+
 import numpy as np
 
-from rastervision.core.raster_source import RasterSource
+import rastervision as rv
 from rastervision.core.box import Box
-from rastervision.label_stores.segmentation_raster_file import (
-    SegmentationInputRasterFile)
+from rastervision.core.class_map import ClassMap, ClassItem
+from rastervision.data.label_source.semantic_segmentation_raster_source import (
+    SemanticSegmentationRasterSource)
+from rastervision.data.raster_source.raster_source import RasterSource
 
 
-class TestingRasterSource(RasterSource):
-    def __init__(self, zeros=False, data=None):
-        if data is not None:
-            self.data = data
-            (self.height, self.width, self.channels) = data.shape
-        elif zeros and data is None:
-            self.width = 4
-            self.height = 4
-            self.channels = 3
-            self.data = np.zeros(
-                (self.height, self.width, self.channels), dtype=np.uint8)
-        elif not zeros and data is None:
-            self.width = 4
-            self.height = 4
-            self.channels = 3
-            self.data = np.random.randint(
-                0,
-                2,
-                size=(self.width, self.height, self.channels),
-                dtype=np.uint8)
-            self.data[:, :, 0:(self.channels - 1)] = np.zeros(
-                (self.height, self.width, self.channels - 1), dtype=np.uint8)
+class MockRasterSource(RasterSource):
+    def __init__(self, data):
+        self.data = data
+        (self.height, self.width, self.channels) = data.shape
 
     def get_extent(self):
         return Box(0, 0, self.height, self.width)
@@ -46,25 +31,61 @@ class TestingRasterSource(RasterSource):
     def get_crs_transformer(self, window):
         return None
 
+    def get_dtype(self):
+        return np.uint8
 
-class TestSegmentationRasterFile(unittest.TestCase):
-    def test_window_predicate_true(self):
+
+class TestSemanticSegmentationRasterSource(unittest.TestCase):
+    def test_enough_target_pixels_true(self):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[4:, 4:, :] = [1, 1, 1]
-        raster_source = TestingRasterSource(data=data)
-        label_store = SegmentationInputRasterFile(
-            source=raster_source, raster_class_map={'#010101': 1})
+        raster_source = MockRasterSource(data)
+        source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
+        label_source = SemanticSegmentationRasterSource(
+            source=raster_source, source_class_map=source_class_map)
         extent = Box(0, 0, 10, 10)
-        self.assertTrue(label_store.enough_target_pixels(extent, 30, [1]))
+        self.assertTrue(label_source.enough_target_pixels(extent, 30, [1]))
 
     def test_enough_target_pixels_false(self):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[7:, 7:, :] = [1, 1, 1]
-        raster_source = TestingRasterSource(data=data)
-        label_store = SegmentationInputRasterFile(
-            source=raster_source, raster_class_map={'#010101': 1})
+        raster_source = MockRasterSource(data)
+        source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
+        label_source = SemanticSegmentationRasterSource(
+            source=raster_source, source_class_map=source_class_map)
         extent = Box(0, 0, 10, 10)
-        self.assertFalse(label_store.enough_target_pixels(extent, 30, [1]))
+        self.assertFalse(label_source.enough_target_pixels(extent, 30, [1]))
+
+    def test_get_labels(self):
+        data = np.zeros((10, 10, 3), dtype=np.uint8)
+        data[7:, 7:, :] = [1, 1, 1]
+        raster_source = MockRasterSource(data)
+        source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
+        label_source = SemanticSegmentationRasterSource(
+            source=raster_source, source_class_map=source_class_map)
+        labels = label_source.get_labels()
+        expected_labels = np.zeros((10, 10))
+        expected_labels[7:, 7:] = 1
+        np.testing.assert_array_equal(labels, expected_labels)
+
+        window = Box.make_square(7, 7, 3)
+        labels = label_source.get_labels(window=window)
+        expected_labels = np.ones((3, 3))
+        np.testing.assert_array_equal(labels, expected_labels)
+
+    def test_build_missing(self):
+        with self.assertRaises(rv.ConfigError):
+            rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+              .build()
+
+    def test_build(self):
+        try:
+            rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+              .with_raster_source('') \
+              .with_source_class_map([]) \
+              .build()
+        except rv.ConfigError:
+            self.fail('ConfigError raised unexpectedly')
 
 
 if __name__ == '__main__':

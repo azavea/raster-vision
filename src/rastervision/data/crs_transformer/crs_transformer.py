@@ -3,6 +3,10 @@ class CRSTransformer(object):
 
     Each transformer is associated with a particular RasterSource."""
 
+    def __init__(self, image_crs=None, map_crs=None):
+        self.image_crs = image_crs
+        self.map_crs = map_crs
+
     def map_to_pixel(self, map_point):
         """Transform point from map to pixel-based coordinates.
 
@@ -24,3 +28,9 @@ class CRSTransformer(object):
             (x, y) tuple in map coordinates (eg. lon/lat)
         """
         pass
+
+    def get_image_crs(self):
+        return self.image_crs
+
+    def get_map_crs(self):
+        return self.map_crs

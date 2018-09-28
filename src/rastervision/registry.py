@@ -6,10 +6,12 @@ from rastervision.data.raster_source.default import (
     DefaultGeoTiffSourceProvider, DefaultImageSourceProvider)
 from rastervision.data.label_source.default import (
     DefaultObjectDetectionGeoJSONSourceProvider,
-    DefaultChipClassificationGeoJSONSourceProvider)
+    DefaultChipClassificationGeoJSONSourceProvider,
+    DefaultSemanticSegmentationRasterSourceProvider)
 from rastervision.data.label_store.default import (
     DefaultObjectDetectionGeoJSONStoreProvider,
-    DefaultChipClassificationGeoJSONStoreProvider)
+    DefaultChipClassificationGeoJSONStoreProvider,
+    DefaultSemanticSegmentationRasterStoreProvider)
 from rastervision.evaluation.default import (
     DefaultObjectDetectioneEvaluatorProvider,
     DefaultChipClassificationEvaluatorProvider)
@@ -56,12 +58,16 @@ class Registry:
             rv.data.ObjectDetectionGeoJSONSourceConfigBuilder,
             (rv.LABEL_SOURCE, rv.CHIP_CLASSIFICATION_GEOJSON):
             rv.data.ChipClassificationGeoJSONSourceConfigBuilder,
+            (rv.LABEL_SOURCE, rv.SEMANTIC_SEGMENTATION_RASTER):
+            rv.data.SemanticSegmentationRasterSourceConfigBuilder,
 
             # Label Stores
             (rv.LABEL_STORE, rv.OBJECT_DETECTION_GEOJSON):
             rv.data.ObjectDetectionGeoJSONStoreConfigBuilder,
             (rv.LABEL_STORE, rv.CHIP_CLASSIFICATION_GEOJSON):
             rv.data.ChipClassificationGeoJSONStoreConfigBuilder,
+            (rv.LABEL_STORE, rv.SEMANTIC_SEGMENTATION_RASTER):
+            rv.data.SemanticSegmentationRasterStoreConfigBuilder,
 
             # Analyzers
             (rv.ANALYZER, rv.STATS_ANALYZER):
@@ -86,12 +92,14 @@ class Registry:
 
         self._internal_default_label_sources = [
             DefaultObjectDetectionGeoJSONSourceProvider,
-            DefaultChipClassificationGeoJSONSourceProvider
+            DefaultChipClassificationGeoJSONSourceProvider,
+            DefaultSemanticSegmentationRasterSourceProvider
         ]
 
         self._internal_default_label_stores = [
             DefaultObjectDetectionGeoJSONStoreProvider,
-            DefaultChipClassificationGeoJSONStoreProvider
+            DefaultChipClassificationGeoJSONStoreProvider,
+            DefaultSemanticSegmentationRasterStoreProvider
         ]
 
         self._internal_default_evaluators = [

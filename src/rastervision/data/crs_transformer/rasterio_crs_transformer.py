@@ -18,6 +18,8 @@ class RasterioCRSTransformer(CRSTransformer):
         image_crs = image_dataset.crs['init']
         self.image_proj = pyproj.Proj(init=image_crs)
 
+        super().__init__(image_crs, map_crs)
+
     def map_to_pixel(self, map_point):
         """Transform point from map to pixel-based coordinates.
 

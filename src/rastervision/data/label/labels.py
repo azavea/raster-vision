@@ -14,7 +14,6 @@ class Labels(ABC):
     @abstractmethod
     def __add__(self, other):
         """Add labels to these labels.
-
         Returns a concatenation of this and the other labels.
         """
         pass

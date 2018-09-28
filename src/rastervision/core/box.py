@@ -61,6 +61,10 @@ class Box():
     def shapely_format(self):
         return (self.xmin, self.ymin, self.xmax, self.ymax)
 
+    def to_int(self):
+        return Box(
+            int(self.ymin), int(self.xmin), int(self.ymax), int(self.xmax))
+
     def npbox_format(self):
         """Return Box in npbox format used by TF Object Detection API.
 

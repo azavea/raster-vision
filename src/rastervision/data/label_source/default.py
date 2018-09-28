@@ -44,6 +44,22 @@ class DefaultChipClassificationGeoJSONSourceProvider(
 
     @staticmethod
     def construct(uri):
-        return rv.RasterSourceConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
-                                    .with_uri(uri) \
-                                    .build()
+        return rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
+                                   .with_uri(uri) \
+                                   .build()
+
+
+class DefaultSemanticSegmentationRasterSourceProvider(
+        DefaultLabelSourceProvider):
+    @staticmethod
+    def handles(task_type, uri):
+        if task_type == rv.SEMANTIC_SEGMENTATION:
+            ext = os.path.splitext(uri)[1]
+            return ext.lower() in ['.tif', '.tiff']
+        return False
+
+    @staticmethod
+    def construct(uri):
+        return rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+                                   .with_raster_source(uri) \
+                                   .build()
