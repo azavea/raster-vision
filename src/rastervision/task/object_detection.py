@@ -128,7 +128,7 @@ class ObjectDetection(Task):
         stride = chip_size // 2
         return extent.get_windows(chip_size, stride)
 
-    def post_process_predictions(self, labels):
+    def post_process_predictions(self, labels, scene):
         return ObjectDetectionLabels.prune_duplicates(
             labels,
             score_thresh=self.config.predict_options.score_thresh,

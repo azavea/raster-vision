@@ -141,7 +141,7 @@ class ConfigBuilder(ABC):
 
 
 class BundledConfigMixin(ABC):
-    """Mixing for configurations that participate in the bundling of a
+    """Mixin for configurations that participate in the bundling of a
     prediction package"""
 
     @abstractmethod

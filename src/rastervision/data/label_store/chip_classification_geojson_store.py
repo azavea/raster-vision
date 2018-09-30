@@ -11,16 +11,6 @@ from rastervision.utils.files import str_to_file
 
 class ChipClassificationGeoJSONStore(LabelStore):
     """A GeoJSON file with classification labels in it.
-
-    Ideally the GeoJSON file contains a square for each cell in the grid. But
-    in reality, it can be difficult to label imagery in such an exhaustive way.
-    So, this can also handle GeoJSON files with non-overlapping polygons that
-    do not necessarily cover the entire extent. It infers the grid of cells
-    and associated class_ids using the extent and options if infer_cells is
-    set to True.
-
-    Args:
-        options: ClassificationGeoJSONFile.Options
     """
 
     def __init__(self, uri, crs_transformer, class_map):
@@ -45,7 +35,6 @@ class ChipClassificationGeoJSONStore(LabelStore):
         """
         geojson_dict = classification_labels_to_geojson(
             labels, self.crs_transformer, self.class_map)
-
         geojson_str = json.dumps(geojson_dict)
 
         str_to_file(geojson_str, self.uri)

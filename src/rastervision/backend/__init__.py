@@ -8,3 +8,6 @@ from rastervision.backend.tf_object_detection_config import (
 from rastervision.backend.keras_classification import KerasClassification
 from rastervision.backend.keras_classification_config import (
     KerasClassificationConfig, KerasClassificationConfigBuilder)
+from rastervision.backend.tf_deeplab import TFDeeplab
+from rastervision.backend.tf_deeplab_config import (TFDeeplabConfig,
+                                                    TFDeeplabConfigBuilder)

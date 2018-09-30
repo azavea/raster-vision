@@ -1,8 +1,0 @@
-syntax = "proto2";
-
-package rv.protos;
-
-message RasterClassMap {
-    required string source_class = 1;
-    required int32 raster_vision_class = 2;
-}

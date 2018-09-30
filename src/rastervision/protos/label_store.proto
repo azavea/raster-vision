@@ -2,26 +2,12 @@ syntax = "proto2";
 
 package rv.protos;
 
-import "rastervision/protos/raster_class_map.proto";
 import "google/protobuf/struct.proto";
 
 message LabelStoreConfig {
-    message SegmentationRasterSource {
-
-        // Uri pointing to where the label data should be
-        // stored.
-        optional string dst = 2;
-
-        // A mapping between classes in the source raster(s) and classes
-        // used internally in raster vision.  The latter type are also
-        // used in output label rasters.
-        repeated RasterClassMap raster_class_map = 3;
-    }
-
     required string store_type = 1;
     oneof label_store_config {
         string uri = 2;
-        SegmentationRasterSource segmentation_raster_store = 4;
         google.protobuf.Struct custom_config = 5;
     }
 }

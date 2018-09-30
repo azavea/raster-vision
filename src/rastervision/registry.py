@@ -6,13 +6,16 @@ from rastervision.data.raster_source.default import (
     DefaultGeoTiffSourceProvider, DefaultImageSourceProvider)
 from rastervision.data.label_source.default import (
     DefaultObjectDetectionGeoJSONSourceProvider,
-    DefaultChipClassificationGeoJSONSourceProvider)
+    DefaultChipClassificationGeoJSONSourceProvider,
+    DefaultSemanticSegmentationRasterSourceProvider)
 from rastervision.data.label_store.default import (
     DefaultObjectDetectionGeoJSONStoreProvider,
-    DefaultChipClassificationGeoJSONStoreProvider)
+    DefaultChipClassificationGeoJSONStoreProvider,
+    DefaultSemanticSegmentationRasterStoreProvider)
 from rastervision.evaluation.default import (
     DefaultObjectDetectioneEvaluatorProvider,
-    DefaultChipClassificationEvaluatorProvider)
+    DefaultChipClassificationEvaluatorProvider,
+    DefaultSemanticSegmentationEvaluatorProvider)
 
 
 class RegistryError(Exception):
@@ -34,12 +37,16 @@ class Registry:
             rv.task.ObjectDetectionConfigBuilder,
             (rv.TASK, rv.CHIP_CLASSIFICATION):
             rv.task.ChipClassificationConfigBuilder,
+            (rv.TASK, rv.SEMANTIC_SEGMENTATION):
+            rv.task.SemanticSegmentationConfigBuilder,
 
             # Backends
             (rv.BACKEND, rv.TF_OBJECT_DETECTION):
             rv.backend.TFObjectDetectionConfigBuilder,
             (rv.BACKEND, rv.KERAS_CLASSIFICATION):
             rv.backend.KerasClassificationConfigBuilder,
+            (rv.BACKEND, rv.TF_DEEPLAB):
+            rv.backend.TFDeeplabConfigBuilder,
 
             # Raster Transformers
             (rv.RASTER_TRANSFORMER, rv.STATS_TRANSFORMER):
@@ -56,12 +63,16 @@ class Registry:
             rv.data.ObjectDetectionGeoJSONSourceConfigBuilder,
             (rv.LABEL_SOURCE, rv.CHIP_CLASSIFICATION_GEOJSON):
             rv.data.ChipClassificationGeoJSONSourceConfigBuilder,
+            (rv.LABEL_SOURCE, rv.SEMANTIC_SEGMENTATION_RASTER):
+            rv.data.SemanticSegmentationRasterSourceConfigBuilder,
 
             # Label Stores
             (rv.LABEL_STORE, rv.OBJECT_DETECTION_GEOJSON):
             rv.data.ObjectDetectionGeoJSONStoreConfigBuilder,
             (rv.LABEL_STORE, rv.CHIP_CLASSIFICATION_GEOJSON):
             rv.data.ChipClassificationGeoJSONStoreConfigBuilder,
+            (rv.LABEL_STORE, rv.SEMANTIC_SEGMENTATION_RASTER):
+            rv.data.SemanticSegmentationRasterStoreConfigBuilder,
 
             # Analyzers
             (rv.ANALYZER, rv.STATS_ANALYZER):
@@ -76,6 +87,8 @@ class Registry:
             rv.evaluation.ChipClassificationEvaluatorConfigBuilder,
             (rv.EVALUATOR, rv.OBJECT_DETECTION_EVALUATOR):
             rv.evaluation.ObjectDetectionEvaluatorConfigBuilder,
+            (rv.EVALUATOR, rv.SEMANTIC_SEGMENTATION_EVALUATOR):
+            rv.evaluation.SemanticSegmentationEvaluatorConfigBuilder,
         }
 
         self._internal_default_raster_sources = [
@@ -86,17 +99,20 @@ class Registry:
 
         self._internal_default_label_sources = [
             DefaultObjectDetectionGeoJSONSourceProvider,
-            DefaultChipClassificationGeoJSONSourceProvider
+            DefaultChipClassificationGeoJSONSourceProvider,
+            DefaultSemanticSegmentationRasterSourceProvider
         ]
 
         self._internal_default_label_stores = [
             DefaultObjectDetectionGeoJSONStoreProvider,
-            DefaultChipClassificationGeoJSONStoreProvider
+            DefaultChipClassificationGeoJSONStoreProvider,
+            DefaultSemanticSegmentationRasterStoreProvider
         ]
 
         self._internal_default_evaluators = [
             DefaultObjectDetectioneEvaluatorProvider,
-            DefaultChipClassificationEvaluatorProvider
+            DefaultChipClassificationEvaluatorProvider,
+            DefaultSemanticSegmentationEvaluatorProvider
         ]
 
         self.command_config_builders = {

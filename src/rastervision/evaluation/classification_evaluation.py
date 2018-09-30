@@ -2,14 +2,14 @@ from abc import (ABC, abstractmethod)
 
 import json
 
+from rastervision.evaluation import ClassEvaluationItem
 from rastervision.utils.files import str_to_file
 
 
 class ClassificationEvaluation(ABC):
-    """Evaluates predictions for a set of scenes.
+    """Base class for evaluating predictions for tasks that have classes.
 
-    Evaluations can be keyed, for instance, if evaluations
-    happen per class.
+    Evaluations can be keyed, for instance, if evaluations happen per class.
     """
 
     def __init__(self):
@@ -58,6 +58,12 @@ class ClassificationEvaluation(ABC):
 
         self.compute_avg()
 
+    def compute_avg(self):
+        """Compute average metrics over all keys."""
+        self.avg_item = ClassEvaluationItem(class_name='average')
+        for eval_item in self.class_to_eval_item.values():
+            self.avg_item.merge(eval_item)
+
     @abstractmethod
     def compute(self, ground_truth_labels, prediction_labels):
         """Compute metrics for a single scene.
@@ -66,9 +72,4 @@ class ClassificationEvaluation(ABC):
             ground_truth_labels: Ground Truth labels to evaluate against.
             prediction_labels: The predicted labels to evaluate.
         """
-        pass
-
-    @abstractmethod
-    def compute_avg(self):
-        """Compute average metrics over all keys."""
         pass

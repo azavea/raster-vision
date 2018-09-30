@@ -1,53 +1,12 @@
 import io
 
+from PIL import Image
 import numpy as np
 import imageio
-
-from PIL import Image, ImageColor
-from typing import Tuple
 
 
 def save_img(im_array, output_path):
     imageio.imwrite(output_path, im_array)
-
-
-def color_to_triple(color: str) -> Tuple[int, int, int]:
-    """Given a PIL ImageColor string, return a triple of integers
-    representing the red, green, and blue values.
-
-    Args:
-         color: A PIL ImageColor string
-
-    Returns:
-         An triple of integers
-
-    """
-    try:
-        triple = ImageColor.getrgb(color)
-    except ValueError:
-        r = np.random.randint(0, 0x100)
-        g = np.random.randint(0, 0x100)
-        b = np.random.randint(0, 0x100)
-        triple = (r, g, b)
-    return triple
-
-
-def color_to_integer(color: str) -> int:
-    """Given a PIL ImageColor string, return a packed integer.
-
-    Args:
-         color: A PIL ImageColor string
-
-    Returns:
-         An integer containing the packed RGB values.
-
-    """
-    triple = color_to_triple(color)
-    r = triple[0] * (1 << 16)
-    g = triple[1] * (1 << 8)
-    b = triple[2] * (1 << 0)
-    integer = r + g + b
-    return integer
 
 
 def numpy_to_png(array: np.ndarray) -> str:

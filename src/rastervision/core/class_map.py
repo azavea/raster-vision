@@ -5,7 +5,7 @@ from rastervision.protos.class_item_pb2 \
 class ClassItem(object):
     """A class id and associated data."""
 
-    def __init__(self, id: int, name: str, color=None):
+    def __init__(self, id: int, name: str = None, color=None):
         """Construct a new ClassItem.
 
         Color is picked randomly if it is a null value.

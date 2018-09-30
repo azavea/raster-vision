@@ -63,3 +63,24 @@ class DefaultChipClassificationGeoJSONStoreProvider(DefaultLabelStoreProvider):
         if uri:
             b = b.with_uri(uri)
         return b.build()
+
+
+class DefaultSemanticSegmentationRasterStoreProvider(
+        DefaultLabelStoreProvider):
+    @staticmethod
+    def is_default_for(task_type):
+        return task_type == rv.SEMANTIC_SEGMENTATION
+
+    @staticmethod
+    def handles(task_type, uri):
+        if task_type == rv.SEMANTIC_SEGMENTATION:
+            ext = os.path.splitext(uri)[1]
+            return ext.lower() in ['.tiff', '.tif']
+        return False
+
+    @staticmethod
+    def construct(uri=None):
+        b = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER)
+        if uri:
+            b = b.with_uri(uri)
+        return b.build()

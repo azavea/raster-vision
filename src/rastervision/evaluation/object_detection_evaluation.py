@@ -1,11 +1,12 @@
-from rastervision.evaluation import ClassificationEvaluation
 from rastervision.evaluation import ClassEvaluationItem
+from rastervision.evaluation import ClassificationEvaluation
 
 
 class ObjectDetectionEvaluation(ClassificationEvaluation):
     """Evaluation for object detection.
 
-    Requires TensorFlow Object Detection to be available.
+    Requires TensorFlow Object Detection to be available as it utilizes
+    some of its evalution utility functions.
     """
 
     def __init__(self, class_map):
@@ -20,11 +21,6 @@ class ObjectDetectionEvaluation(ClassificationEvaluation):
         self.class_to_eval_item = ObjectDetectionEvaluation.parse_od_eval(
             od_eval, self.class_map)
         self.compute_avg()
-
-    def compute_avg(self):
-        self.avg_item = ClassEvaluationItem(class_name='average')
-        for eval_item in self.class_to_eval_item.values():
-            self.avg_item.merge(eval_item)
 
     @staticmethod
     def compute_od_eval(ground_truth_labels, prediction_labels, nb_classes):

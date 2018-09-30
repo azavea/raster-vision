@@ -30,6 +30,20 @@ message TaskConfig {
         required int32 chip_size = 2;
     }
 
+    message SemanticSegmentationConfig {
+        message ChipOptions {
+            optional float debug_chip_probability = 1 [default=0.25];
+            optional float negative_survival_probability = 2 [default=1.00];
+            optional int32 number_of_chips = 3 [default=1000];
+            optional int32 target_count_threshold = 4 [default=2048];
+            repeated int32 target_classes = 5;
+        }
+
+        repeated ClassItem class_items = 1;
+        required int32 chip_size = 2;
+        required ChipOptions chip_options = 3;
+    }
+
     required string task_type = 1;
     optional int32 predict_batch_size = 2 [default=10];
     optional string predict_package_uri = 3;
@@ -38,6 +52,7 @@ message TaskConfig {
     oneof config_type {
         ObjectDetectionConfig object_detection_config = 6;
         ChipClassificationConfig chip_classification_config = 7;
-        google.protobuf.Struct custom_config = 8;
+        SemanticSegmentationConfig semantic_segmentation_config = 8;
+        google.protobuf.Struct custom_config = 9;
     }
 }
