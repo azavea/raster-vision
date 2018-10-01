@@ -30,10 +30,12 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSet):
 
         backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                                   .with_task(task) \
+                                  .with_num_steps(350) \
                                   .with_template(backend_conf_path) \
                                   .with_pretrained_model(pretrained_model) \
                                   .with_train_options(sync_interval=None,
-                                                      do_monitoring=False) \
+                                                      do_monitoring=False,
+                                                      replace_model=True) \
                                   .build()
 
         scene = rv.SceneConfig.builder() \
