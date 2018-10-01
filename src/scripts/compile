@@ -10,6 +10,6 @@ set -e
 cd $DIR/..
 
 # Compile protobuf files into python files
-protoc --python_out=. keras_classification/protos/*.proto
+protoc --python_out=. rastervision/protos/keras_classification/*.proto
 protoc --python_out=. rastervision/protos/deeplab/*.proto
 protoc --python_out=. rastervision/protos/*.proto
