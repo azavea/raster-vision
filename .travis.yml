@@ -16,8 +16,7 @@ script:
    - .travis/test
 
 after_success:
-   - pip install coveralls
-   - (cd src/ ; coveralls)
+   - .travis/codecov
 
 deploy:
    - provider: script
