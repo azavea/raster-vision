@@ -141,7 +141,7 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
 
 @main.command()
 @click.option(
-    '--experiment_module',
+    '--experiment-module',
     '-e',
     help=('Name of an importable module to look for experiment sets '
           'in. If not supplied, experiments will be loaded '
@@ -186,11 +186,11 @@ def ls(experiment_module, arg):
 
 @main.command(
     'predict', short_help='Make predictions using a predict package.')
-@click.argument('predict_package', type=click.Path(exists=True))
-@click.argument('image_uri', type=click.Path(exists=True))
-@click.argument('output_uri', type=click.Path(exists=False))
+@click.argument('predict_package')
+@click.argument('image_uri')
+@click.argument('output_uri')
 @click.option(
-    '--update_stats',
+    '--update-stats',
     '-a',
     is_flag=True,
     help=('Run an analysis on this individual image, as '
@@ -198,9 +198,13 @@ def ls(experiment_module, arg):
           'that exist in the prediction package'))
 @click.option(
     '--channel-order',
-    help='String containing channel_order.' + ' Example: \"2 1 0\"')
+    help='String containing channel_order. Example: \"2 1 0\"')
+@click.option(
+    '--export-config',
+    type=click.Path(exists=False),
+    help='Exports the configuration to the given output file.')
 def predict(predict_package, image_uri, output_uri, update_stats,
-            channel_order):
+            channel_order, export_config):
     """Make predictions on the image at IMAGE_URI
     using PREDICT_PACKAGE and store the
     prediciton output at OUTPUT_URI.
@@ -210,9 +214,9 @@ def predict(predict_package, image_uri, output_uri, update_stats,
             int(channel_ind) for channel_ind in channel_order.split(' ')
         ]
     with TemporaryDirectory() as tmp_dir:
-        predict = rv.Predictor(predict_package, tmp_dir, update_stats,
-                               channel_order).predict
-        predict(image_uri, output_uri)
+        predictor = rv.Predictor(predict_package, tmp_dir, update_stats,
+                                 channel_order)
+        predictor.predict(image_uri, output_uri, export_config)
 
 
 @main.command(
