@@ -3,11 +3,11 @@ from copy import deepcopy
 from google.protobuf import (json_format)
 
 import rastervision as rv
-from rastervision.backend import (BackendConfig, BackendConfigBuilder,
-                                  KerasClassification)
+from rastervision.backend import (BackendConfig, BackendConfigBuilder)
 from rastervision.core.config import set_nested_keys
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
+from rastervision.protos.keras_classification.pipeline_pb2 import PipelineConfig
 
 # Default location to Tensorflow Object Detection's scripts.
 CHIP_OUTPUT_FILES = ['training.zip', 'validation.zip']
@@ -15,7 +15,7 @@ CHIP_OUTPUT_FILES = ['training.zip', 'validation.zip']
 
 class KerasClassificationConfig(BackendConfig):
     class TrainOptions:
-        def __init__(self, sync_interval=600, replace_model=True):
+        def __init__(self, sync_interval=600, replace_model=False):
             self.sync_interval = sync_interval
             self.replace_model = replace_model
 
@@ -42,6 +42,7 @@ class KerasClassificationConfig(BackendConfig):
         self.model_uri = model_uri
 
     def create_backend(self, task_config):
+        from rastervision.backend.keras_classification import KerasClassification
         return KerasClassification(self, task_config)
 
     def to_proto(self):
@@ -224,8 +225,6 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         """Use a template from the dict, string or uri as the base for the
         Keras Classification API.
         """
-        from keras_classification.protos.pipeline_pb2 import PipelineConfig
-
         template_json = None
         if type(template) is dict:
             msg = json_format.ParseDict(template, PipelineConfig())

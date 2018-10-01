@@ -2,8 +2,8 @@ syntax = "proto2";
 
 package keras_classification.protos;
 
-import "keras_classification/protos/model.proto";
-import "keras_classification/protos/trainer.proto";
+import "rastervision/protos/keras_classification/model.proto";
+import "rastervision/protos/keras_classification/trainer.proto";
 
 message PipelineConfig {
     required Model model = 1;

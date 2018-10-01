@@ -1,8 +1,11 @@
 import click
 
-from keras_classification.utils import load_json_config
-from keras_classification.builders import trainer_builder, model_builder
-from keras_classification.protos.pipeline_pb2 import PipelineConfig
+from rastervision.backend.keras_classification.utils \
+    import load_json_config
+from rastervision.backend.keras_classification.builders \
+    import trainer_builder, model_builder
+from rastervision.protos.keras_classification.pipeline_pb2 \
+    import PipelineConfig
 
 
 def _train(config_path, pretrained_model_path):

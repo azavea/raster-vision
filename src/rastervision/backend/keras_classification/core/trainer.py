@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from rastervision.backend.keras_classification.utils import make_dir
+
 
 def get_nb_images(image_dir):
     count = 0
@@ -18,8 +20,6 @@ def get_nb_images(image_dir):
 
 class Trainer(object):
     def __init__(self, model, optimizer, options):
-        from keras_classification.utils import make_dir
-
         self.model = model
         self.optimizer = optimizer
         self.options = options
