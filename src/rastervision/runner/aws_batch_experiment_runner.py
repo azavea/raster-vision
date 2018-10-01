@@ -2,8 +2,6 @@ import os
 import uuid
 import click
 
-import boto3
-
 from rastervision.rv_config import RVConfig
 from rastervision.runner import ExperimentRunner
 from rastervision.utils.files import save_json_config
@@ -31,6 +29,8 @@ def batch_submit(command_type,
             branch_name: Branch with code to run on Batch
             command: Command in quotes to run on Batch
     """
+    import boto3
+
     if parent_job_ids is None:
         parent_job_ids = []
 
