@@ -16,7 +16,8 @@ script:
    - .travis/test
 
 after_success:
-   - cat src/.coverage
+   - pip install coveralls
+   - (cd src/ ; coveralls)
 
 deploy:
    - provider: script
