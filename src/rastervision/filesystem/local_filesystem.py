@@ -122,5 +122,5 @@ class LocalFileSystem(FileSystem):
 
     @staticmethod
     def last_modified(uri: str) -> datetime:
-        local_last_modified = datetime.utcfromtimestamp(os.path.getmtime(path))
+        local_last_modified = datetime.utcfromtimestamp(os.path.getmtime(uri))
         return local_last_modified.replace(tzinfo=timezone.utc)
