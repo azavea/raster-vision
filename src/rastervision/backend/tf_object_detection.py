@@ -660,7 +660,7 @@ class TFObjectDetection(Backend):
                 shutil.rmtree(output_dir)
             make_dir(output_dir)
 
-        local_config_path  = os.path.join(output_dir, 'pipeline.config')
+        local_config_path = os.path.join(output_dir, 'pipeline.config')
         shutil.copy(config_path, local_config_path)
 
         model_main_py = self.config.script_locations.model_main_uri

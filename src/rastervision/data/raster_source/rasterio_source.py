@@ -28,7 +28,7 @@ def load_window(image_dataset, window=None, channels=None, is_masked=False):
             im[channel, im[channel] == nodata] = 0
 
     if channels:
-        im = im[channels,:]
+        im = im[channels, :]
     im = np.transpose(im, axes=[1, 2, 0])
     return im
 
@@ -39,14 +39,15 @@ class RasterioRasterSource(RasterSource):
         self.image_dataset = self.build_image_dataset(temp_dir)
         super().__init__(raster_transformers, channel_order)
 
-        colorinterp  = self.image_dataset.colorinterp
-        self.channels = [i for i, color_interp in enumerate(colorinterp)
-                         if color_interp != ColorInterp.alpha]
+        colorinterp = self.image_dataset.colorinterp
+        self.channels = [
+            i for i, color_interp in enumerate(colorinterp)
+            if color_interp != ColorInterp.alpha
+        ]
 
         mask_flags = self.image_dataset.mask_flag_enums
-        self.is_masked = any([m for m in mask_flags
-                              if m != MaskFlags.all_valid])
-
+        self.is_masked = any(
+            [m for m in mask_flags if m != MaskFlags.all_valid])
 
     @abstractmethod
     def build_image_dataset(self, temp_dir):
@@ -60,4 +61,5 @@ class RasterioRasterSource(RasterSource):
         return np.dtype(self.image_dataset.dtypes[0])
 
     def _get_chip(self, window):
-        return load_window(self.image_dataset, window.rasterio_format(), self.channels)
+        return load_window(self.image_dataset, window.rasterio_format(),
+                           self.channels)
