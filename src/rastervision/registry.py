@@ -1,5 +1,6 @@
 import rastervision as rv
 import rastervision.filesystem as rvfs
+from rastervision.cli import Verbosity
 from rastervision.rv_config import RVConfig
 from rastervision.plugin import PluginRegistry
 from rastervision.data.raster_source.default import (
@@ -139,11 +140,13 @@ class Registry:
     def initialize_config(self,
                           profile=None,
                           rv_home=None,
-                          config_overrides=None):
+                          config_overrides=None,
+                          verbosity=Verbosity.NORMAL):
         self._rv_config = RVConfig(
             profile=profile,
             rv_home=rv_home,
-            config_overrides=config_overrides)
+            config_overrides=config_overrides,
+            verbosity=verbosity)
         # Reset the plugins in case this is a re-initialization,
         self._plugin_registry = None
 

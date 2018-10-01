@@ -16,22 +16,32 @@ class ExperimentRunner(ABC):
         if not isinstance(experiments, list):
             experiments = [experiments]
 
-        _command_definitions = CommandDefinition.from_experiments(experiments)
+        command_definitions = CommandDefinition.from_experiments(experiments)
 
         # Filter  out commands we aren't running.
-        command_definitions = CommandDefinition.filter_commands(
-            _command_definitions, commands_to_run)
+        command_definitions, not_requested = CommandDefinition.filter_to_target_commands(
+            command_definitions, commands_to_run)
 
         # Print unrequested commands
         if dry_run:
-            not_requested = set(_command_definitions) - set(command_definitions)
             if not_requested:
                 print()
-                print('Not requsted:')
+                print('Commands not requsted:')
                 for command in not_requested:
-                    command_type = command.command_config.command_type
-                    experiment_id = command.experiment_id
-                    print('{} from {}'.format(command_type, experiment_id))
+                    print(command.to_string())
+                print()
+
+        # Filter  out commands that don't have any output.
+        (command_definitions,
+         no_output) = CommandDefinition.filter_no_output(command_definitions)
+
+        # Print commands that have no output
+        if dry_run:
+            if no_output:
+                print()
+                print('Commands not run because they have no output:')
+                for command in no_output:
+                    print(command.to_string())
                 print()
 
         # Check if there are any unsatisfied inputs.
@@ -50,8 +60,18 @@ class ExperimentRunner(ABC):
 
         # Remove duplicate commands, defining equality for a command by
         # the tuple (command_type, input_uris, output_uris)
-        (unique_commands, skipped_commands
+        (unique_commands, skipped_duplicate_commands
          ) = CommandDefinition.remove_duplicates(command_definitions)
+
+        if dry_run:
+            if skipped_duplicate_commands:
+                print()
+                print(
+                    'Commands skipped because they are duplicates of commands to be run:'
+                )
+                for command in skipped_duplicate_commands:
+                    print(command.to_string())
+                print()
 
         # Ensure that for each type of command, there are none that clobber
         # each other's output.
@@ -79,14 +99,12 @@ class ExperimentRunner(ABC):
 
         # Print conflicating or alread fulfilled commands
         if dry_run:
-            skipped_commands.extend(command_dag.skipped_commands)
+            skipped_commands = command_dag.skipped_commands
             if skipped_commands:
                 print()
-                print('Skipped due to output conflicts:')
+                print('Skipped because output already exists:')
                 for command in skipped_commands:
-                    command_type = command.command_config.command_type
-                    experiment_id = command.experiment_id
-                    print('{} from {}'.format(command_type, experiment_id))
+                    print(command.to_string())
                 print()
 
         # Save experiment configs
@@ -101,11 +119,10 @@ class ExperimentRunner(ABC):
 
         if dry_run:
             print()
-            print('To be run:')
-            for command in command_dag.get_sorted_commands():
-                command_type = command.command_type
-                root_uri = command.root_uri
-                print('{} in {}'.format(command_type, root_uri))
+            print('Commands to be run in this order:')
+            for command_id in command_dag.get_sorted_command_ids():
+                command_def = command_dag.get_command_definition(command_id)
+                print(command_def.to_string())
             print()
         else:
             self._run_experiment(command_dag)

@@ -1,6 +1,9 @@
 from typing import List
 
+from google.protobuf import json_format
+
 import rastervision as rv
+from rastervision.cli import Verbosity
 
 
 class CommandDefinition:
@@ -20,6 +23,27 @@ class CommandDefinition:
     def __hash__(self):
         return hash(self._key())
 
+    def to_string(self):
+        verbosity = Verbosity.get()
+        command_type = self.command_config.command_type
+        experiment_id = self.experiment_id
+        s = '{} from {}'.format(command_type, experiment_id)
+
+        if verbosity in [Verbosity.VERBOSE, Verbosity.VERY_VERBOSE]:
+            s += '\n  INPUTS:\n'
+            for input_uri in self.io_def.input_uris:
+                s += '    {}\n'.format(input_uri)
+            s += '  OUTPUTS:\n'
+            for output_uri in self.io_def.output_uris:
+                s += '    {}\n'.format(output_uri)
+        if verbosity == Verbosity.VERY_VERBOSE:
+            s += '  COMMAND CONFIGURATION\n'
+            s += '  ---------------------\n'
+            s += '{}'.format(
+                json_format.MessageToJson(self.command_config.to_proto()))
+
+        return s
+
     @classmethod
     def from_experiments(cls, experiments: List[rv.ExperimentConfig]):
         command_definitions = []
@@ -35,11 +59,30 @@ class CommandDefinition:
         return command_definitions
 
     @staticmethod
-    def filter_commands(command_definitions, target_commands):
+    def filter_to_target_commands(command_definitions, target_commands):
         """Filters commands by the target command type."""
-        return list(
-            filter(lambda c: c.command_config.command_type in target_commands,
-                   command_definitions))
+        result = []
+        skipped = []
+        for command_def in command_definitions:
+            if command_def.command_config.command_type in target_commands:
+                result.append(command_def)
+            else:
+                skipped.append(command_def)
+
+        return (result, skipped)
+
+    @staticmethod
+    def filter_no_output(command_definitions):
+        """Filters commands that have no output."""
+        result = []
+        skipped = []
+        for command_def in command_definitions:
+            if any(command_def.io_def.output_uris):
+                result.append(command_def)
+            else:
+                skipped.append(command_def)
+
+        return (result, skipped)
 
     @staticmethod
     def remove_duplicates(command_definitions):
