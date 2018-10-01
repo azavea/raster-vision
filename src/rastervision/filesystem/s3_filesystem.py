@@ -9,22 +9,11 @@ from rastervision.filesystem import (FileSystem, NotReadableError,
 
 
 class S3FileSystem(FileSystem):
-    profile = None
-
-    @staticmethod
-    def set_profile(profile):
-        """Sets a system wide profile to use for S3."""
-        S3FileSystem.profile = profile
-
     @staticmethod
     def get_session():
         # Lazily load boto
         import boto3
-
-        if not S3FileSystem.profile:
-            return boto3.Session()
-        else:
-            return boto3.Session(profile_name=S3FileSystem.profile)
+        return boto3.Session()
 
     @staticmethod
     def matches_uri(uri: str, mode: str) -> bool:
@@ -34,7 +23,6 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def file_exists(uri: str) -> bool:
         # Lazily load boto
-        import boto3
         import botocore
 
         s3 = S3FileSystem.get_session().resource('s3')
