@@ -110,3 +110,7 @@ src/keras_classification/protos/*_pb2.py
 
 # Vim
 .*.sw*
+
+# GDAL files
+
+*.aux.xml
