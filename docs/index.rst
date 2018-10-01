@@ -30,7 +30,6 @@ TKTK
    :hidden:
 
    Raster Vision Setup <setup.rst>
-   Vagrant/AMI Packer Instructions  <ami.rst>
 
 .. toctree::
    :maxdepth: 2
