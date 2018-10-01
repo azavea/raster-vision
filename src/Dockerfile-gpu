@@ -9,6 +9,9 @@ ENV LANG C.UTF-8
 COPY scripts/install_deps /tmp/install_deps
 RUN /tmp/install_deps && rm /tmp/install_deps
 
+# Setup GDAL_DATA directory, rasterio needs it.
+ENV GDAL_DATA=/usr/share/gdal/2.1/
+
 # Make Python3 default Python
 RUN rm -f /usr/bin/pip && ln -s /usr/bin/pip3 /usr/bin/pip
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
@@ -19,6 +22,14 @@ ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
 # Install requirements.txt
 COPY ./requirements.txt /opt/src/requirements.txt
 RUN pip install -r requirements.txt
+
+# Install extras_requirements.json
+COPY ./extras_requirements.json /opt/src/extras_requirements.json
+RUN cat extras_requirements.json | jq  '.[][]' | xargs pip install
+
+# Install requirements-dev.txt
+COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
+RUN pip install -r requirements-dev.txt
 
 COPY scripts/rastervision /usr/local/bin/
 COPY ./ /opt/src/
