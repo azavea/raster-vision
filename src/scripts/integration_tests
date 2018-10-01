@@ -16,9 +16,5 @@ Run integration tests.
 if [ "${1:-}" = "--help" ]; then
     usage
 else
-    if ! [ -x "$(command -v coverage)" ]; then
-	python -m integration_tests ${@:1}
-    else
-	coverage run --append --source=rastervision --omit=rastervision/protos -a -m integration_tests ${@:1}
-    fi
+    python -m integration_tests ${@:1}
 fi
