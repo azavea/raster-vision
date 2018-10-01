@@ -1,0 +1,10 @@
+{
+    "tensorflow": [
+        "keras>=2.2.2",
+        "tensorflow>=1.10.1"
+    ],
+    "aws": [
+        "boto3>=1.9.13",
+        "awscli>=1.16.0"
+    ]
+}

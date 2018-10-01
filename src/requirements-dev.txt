@@ -1,0 +1,5 @@
+flake8==3.5.*
+moto==1.3.*
+coverage==4.5.*
+yapf==0.22.*
+unify==0.4

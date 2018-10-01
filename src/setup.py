@@ -1,13 +1,38 @@
-import setuptools
+# flake8: noqa
 
-setuptools.setup(
-    name="rastervision",
-    version="0.8.0",
-    description='An open source framework for deep learning'
+from os import path as op
+import json
+import io
+from setuptools import (setup, find_packages)
+from imp import load_source
+
+__version__ = load_source('rastervision.version',
+                          'rastervision/version.py').__version__
+
+here = op.abspath(op.dirname(__file__))
+
+# get the dependencies and installs
+with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
+    all_reqs = f.read().split('\n')
+
+install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
+dependency_links = [
+    x.strip().replace('git+', '') for x in all_reqs if 'git+' not in x
+]
+
+# Dependencies for extras, which pertain to installing specific backends.
+with io.open(op.join(here, 'extras_requirements.json'), encoding='utf-8') as f:
+    extras_require = json.loads(f.read())
+
+setup(
+    name='rastervision',
+    version=__version__,
+    description='An open source framework for deep learning '
     'on satellite and aerial imagery',
     long_description=open('../README.md').read(),
+    long_description_content_type='text/markdown',
     url='https://github.com/azavea/raster-vision',
-    author='Raster Vision',
+    author='Azavea',
     author_email='info@azavea.com',
     license='Apache License 2.0',
     classifiers=[
@@ -16,26 +41,13 @@ setuptools.setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
     ],
-    keywords='raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
-    packages=setuptools.find_packages(exclude=['tests', 'tests.*', 'integration_tests', 'integration_tests.*']),
-    package_data={'rastervision.backend': ['*.json']},
-    install_requires=[
-        'networkx >= 2.1',
-        'everett >= 0.9',
-        'pluginbase >= 0.7',
-        'npstreams >= 1.4.*',
-        'lxml >= 4.2.*',
-        'shapely >= 1.6.*',
-        'pyproj >= 1.9.5.*',
-        'imageio >= 2.3.*',
-        'scikit-learn >= 0.19.*',
-        'six >= 1.11.*',
-        'h5py >= 2.7.*',
-        'matplotlib >= 2.1.*',
-        'pillow >= 5.0.*',
-        'click >= 6.*'
-    ],
-    tests_require=[],
+    keywords=
+    'raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
+    packages=find_packages(exclude=['integration_tests*', 'tests*']),
+    include_package_data=True,
+    install_requires=install_requires,
+    extras_require=extras_require,
+    dependency_links=dependency_links,
     entry_points='''
         [console_scripts]
         rastervision=rastervision.cli.main:main
