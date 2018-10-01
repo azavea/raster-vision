@@ -6,7 +6,7 @@ import os
 import shutil
 import tarfile
 from os.path import join
-from subprocess import Popen
+from subprocess import (Popen, PIPE)
 import atexit
 import glob
 import re
@@ -20,7 +20,7 @@ from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
                                       download_if_needed, sync_to_dir,
-                                      start_sync)
+                                      sync_from_dir, start_sync)
 from rastervision.utils.misc import save_img
 
 TRAIN = 'train'
@@ -217,38 +217,34 @@ def terminate_at_exit(process):
 
 def train(config_path,
           output_dir,
-          train_py=None,
-          eval_py=None,
+          num_steps,
+          model_main_py=None,
           do_monitoring=True):
     output_train_dir = join(output_dir, 'train')
-    output_eval_dir = join(output_dir, 'eval')
 
-    train_py = train_py or '/opt/tf-models/object_detection/train.py'
-    eval_py = eval_py or '/opt/tf-models/object_detection/eval.py'
+    model_main_py = model_main_py or '/opt/tf-models/object_detection/model_main.py'
 
-    train_process = Popen([
-        'python', train_py, '--logtostderr',
-        '--pipeline_config_path={}'.format(config_path),
-        '--train_dir={}'.format(output_train_dir)
-    ])
+    train_process = Popen(
+        [
+            'python', model_main_py, '--alsologtostderr',
+            '--pipeline_config_path={}'.format(config_path),
+            '--num_train_steps={}'.format(num_steps),
+            '--num_eval_steps={}'.format(int(max(
+                1, num_steps / 10))), '--model_dir={}'.format(output_train_dir)
+        ],
+        stdout=PIPE)
     terminate_at_exit(train_process)
 
     if do_monitoring:
-        eval_process = Popen([
-            'python', eval_py, '--logtostderr',
-            '--pipeline_config_path={}'.format(config_path),
-            '--checkpoint_dir={}'.format(output_train_dir),
-            '--eval_dir={}'.format(output_eval_dir)
-        ])
-        terminate_at_exit(eval_process)
-
         tensorboard_process = Popen(
-            ['tensorboard', '--logdir={}'.format(output_dir)])
+            ['tensorboard', '--logdir={}'.format(output_train_dir)])
         terminate_at_exit(tensorboard_process)
 
-    train_process.wait()
+    for line in iter(train_process.stdout.readline, b''):
+        print(line, end='')
+
+    train_process.communicate()
     if do_monitoring:
-        eval_process.terminate()
         tensorboard_process.terminate()
 
 
@@ -327,6 +323,7 @@ class TrainingPackage(object):
 
         self.base_uri = base_uri
         self.base_dir = self.get_local_path(base_uri)
+
         make_dir(self.base_dir)
 
         self.config = config
@@ -594,6 +591,9 @@ class TFObjectDetection(Backend):
         record_path = training_package.get_local_path(
             training_package.get_record_uri('{}-{}'.format(
                 scene.id, uuid.uuid4())))
+        record_path = training_package.get_local_path(
+            training_package.get_record_uri('{}-{}'.format(
+                scene.id, uuid.uuid4())))
         write_tf_record(tf_examples, record_path)
 
         return record_path
@@ -650,10 +650,20 @@ class TFObjectDetection(Backend):
 
         # Setup output dirs.
         output_dir = get_local_path(self.config.training_output_uri, tmp_dir)
-        make_dir(output_dir)
 
-        train_py = self.config.script_locations.train_uri
-        eval_py = self.config.script_locations.eval_uri
+        # Get output from potential previous run so we can resume training.
+        if not self.config.train_options.replace_model:
+            make_dir(output_dir)
+            sync_from_dir(self.config.training_output_uri, output_dir)
+        else:
+            if os.path.exists(output_dir):
+                shutil.rmtree(output_dir)
+            make_dir(output_dir)
+
+        local_config_path  = os.path.join(output_dir, 'pipeline.config')
+        shutil.copy(config_path, local_config_path)
+
+        model_main_py = self.config.script_locations.model_main_uri
         export_py = self.config.script_locations.export_uri
 
         # Train model and sync output periodically.
@@ -663,14 +673,14 @@ class TFObjectDetection(Backend):
             sync_interval=self.config.train_options.sync_interval)
         with sync:
             train(
-                config_path,
+                local_config_path,
                 output_dir,
-                train_py=train_py,
-                eval_py=eval_py,
+                self.config.get_num_steps(),
+                model_main_py=model_main_py,
                 do_monitoring=self.config.train_options.do_monitoring)
 
         export_inference_graph(
-            output_dir, config_path, output_dir, export_py=export_py)
+            output_dir, local_config_path, output_dir, export_py=export_py)
 
         # Perform final sync
         sync_to_dir(output_dir, self.config.training_output_uri, delete=True)

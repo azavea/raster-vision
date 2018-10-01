@@ -21,23 +21,24 @@ class TestGeoTiffSource(unittest.TestCase):
             height = 100
             width = 100
             nb_channels = 3
-            image_dataset = rasterio.open(
-                image_path,
-                'w',
-                driver='GTiff',
-                height=height,
-                width=width,
-                count=nb_channels,
-                dtype=np.uint8,
-                nodata=1)
-            im = np.random.randint(0, 2, (height, width, nb_channels)).astype(
-                np.uint8)
-            for channel in range(nb_channels):
-                image_dataset.write(im[:, :, channel], channel + 1)
+            with rasterio.open(
+                    image_path,
+                    'w',
+                    driver='GTiff',
+                    height=height,
+                    width=width,
+                    count=nb_channels,
+                    dtype=np.uint8,
+                    nodata=1) as image_dataset:
+                im = np.random.randint(
+                    0, 2, (height, width, nb_channels)).astype(np.uint8)
+                for channel in range(nb_channels):
+                    image_dataset.write(im[:, :, channel], channel + 1)
 
             # Should be all zeros after converting nodata values to zero.
             window = Box.make_square(0, 0, 100).rasterio_format()
-            chip = load_window(image_dataset, window=window)
+            with rasterio.open(image_path) as image_dataset:
+                chip = load_window(image_dataset, window=window)
             np.testing.assert_equal(chip, np.zeros(chip.shape))
 
     def test_get_dtype(self):
@@ -85,12 +86,12 @@ class TestGeoTiffSource(unittest.TestCase):
                                           .with_uri(img_path) \
                                           .with_channel_order(channel_order) \
                                           .build() \
-                                          .create_source(tmp_dir=None)
+                                          .create_source(tmp_dir=tmp_dir)
 
-        out_chip = source.get_image_array()
-        expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
-        expected_out_chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
-        np.testing.assert_equal(out_chip, expected_out_chip)
+            out_chip = source.get_image_array()
+            expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
+            expected_out_chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
+            np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_with_stats_transformer(self):
         config = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \

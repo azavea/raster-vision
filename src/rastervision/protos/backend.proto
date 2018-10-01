@@ -8,11 +8,10 @@ message BackendConfig {
     message TFObjectDetectionConfig {
         optional int32 sync_interval = 1 [default=600];
         optional bool do_monitoring = 2 [default=true];
-        // path to Object Detection's train.py script
-        optional string train_py = 3 [default="/opt/tf-models/object_detection/train.py"];
+        optional bool replace_model = 3 [default=false];
 
-        // path to Object Detection's eval.py script
-        optional string eval_py = 4 [default="/opt/tf-models/object_detection/eval.py"];
+        // path to Object Detection's model_main.py script
+        optional string model_main_py = 4 [default="/opt/tf-models/object_detection/model_main.py"];
 
         // path to Object Detection's export_inference_graph.py script
         optional string export_py = 5 [default="/opt/tf-models/object_detection/export_inference_graph.py"];

@@ -21,6 +21,10 @@ from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
 class TestObjectDetectionGeoJSONSource(unittest.TestCase):
     def setUp(self):
+        self.prev_keys = (os.environ.get('AWS_ACCESS_KEY_ID'),
+                          os.environ.get('AWS_SECRET_ACCESS_KEY'))
+        os.environ['AWS_ACCESS_KEY_ID'] = 'DUMMY'
+        os.environ['AWS_SECRET_ACCESS_KEY'] = 'DUMMY'
         self.mock_s3 = mock_s3()
         self.mock_s3.start()
 
@@ -114,6 +118,16 @@ class TestObjectDetectionGeoJSONSource(unittest.TestCase):
             label_file.write(self.geojson_str)
 
     def tearDown(self):
+        access, secret = self.prev_keys
+        if access:
+            os.environ['AWS_ACCESS_KEY_ID'] = access
+        else:
+            del os.environ['AWS_ACCESS_KEY_ID']
+        if secret:
+            os.environ['AWS_SECRET_ACCESS_KEY'] = secret
+        else:
+            del os.environ['AWS_SECRET_ACCESS_KEY']
+
         self.mock_s3.stop()
         self.temp_dir.cleanup()
 

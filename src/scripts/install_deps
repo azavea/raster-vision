@@ -13,25 +13,19 @@ mv /tmp/protoc3/include/* /usr/local/include/
 rm -R /tmp/protoc3
 rm /tmp/protoc3.zip
 
-# Install Python deps
-pip install keras==2.1.* flake8==3.5.* awscli==1.15.* boto3==1.6.* \
-    moto==1.3.* coverage==4.5.1 codecov==2.0.15 yapf==0.22.* unify==0.4
-
-# Install Rasterio
+# Install GDAL
 add-apt-repository ppa:ubuntugis/ppa
 apt-get update
-apt-get install -y python-numpy=1:1.11.* gdal-bin=2.1.* \
-    libgdal-dev=2.1.*
-pip install rasterio==0.36.*
+apt-get install -y gdal-bin=2.1.*
+
+# Install jq for parsing extras-requirements.json
+apt-get install jq -y
 
 # Install TF Object Detection API in /opt/tf-models
 mkdir -p /opt/tf-models/temp/
 cd /opt/tf-models/temp/
-git clone https://github.com/azavea/models.git
-cd models
-git checkout lf/fix-python3
-git checkout f115b0551a05bb574d22f2e90825729867da4810
-cd ..
+# git clone --single-branch -b lf/fix-python3 https://github.com/azavea/models.git
+git clone --single-branch -b upgrade-sept-2018 https://github.com/azavea/models.git
 mv models/research/object_detection/ ../object_detection
 mv models/research/deeplab/ ../deeplab
 mv models/research/slim/ ../slim

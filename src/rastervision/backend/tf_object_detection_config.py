@@ -10,8 +10,7 @@ from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
 
 # Default location to Tensorflow Object Detection's scripts.
-DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/object_detection/train.py'
-DEFAULT_SCRIPT_EVAL = '/opt/tf-models/object_detection/eval.py'
+DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/object_detection/model_main.py'
 DEFAULT_SCRIPT_EXPORT = '/opt/tf-models/object_detection/export_inference_graph.py'
 CHIP_OUTPUT_FILES = ['label-map.pbtxt', 'train.record', 'validation.record']
 DEBUG_CHIP_OUTPUT_FILES = [
@@ -21,17 +20,19 @@ DEBUG_CHIP_OUTPUT_FILES = [
 
 class TFObjectDetectionConfig(BackendConfig):
     class TrainOptions:
-        def __init__(self, sync_interval=600, do_monitoring=True):
+        def __init__(self,
+                     sync_interval=600,
+                     do_monitoring=True,
+                     replace_model=False):
             self.sync_interval = sync_interval
             self.do_monitoring = do_monitoring
+            self.replace_model = replace_model
 
     class ScriptLocations:
         def __init__(self,
-                     train_uri=DEFAULT_SCRIPT_TRAIN,
-                     eval_uri=DEFAULT_SCRIPT_EVAL,
+                     model_main_uri=DEFAULT_SCRIPT_TRAIN,
                      export_uri=DEFAULT_SCRIPT_EXPORT):
-            self.train_uri = train_uri
-            self.eval_uri = eval_uri
+            self.model_main_uri = model_main_uri
             self.export_uri = export_uri
 
     def __init__(self,
@@ -63,12 +64,18 @@ class TFObjectDetectionConfig(BackendConfig):
     def create_backend(self, task_config):
         return TFObjectDetection(self, task_config)
 
+    def get_num_steps(self):
+        return int(self.tfod_config['trainConfig']['numSteps'])
+
+    def get_batch_size(self, batch_size):
+        return int(self.tfod_config.train_config['trainConfig']['batchSize'])
+
     def to_proto(self):
         d = {
             'sync_interval': self.train_options.sync_interval,
             'do_monitoring': self.train_options.do_monitoring,
-            'train_py': self.script_locations.train_uri,
-            'eval_py': self.script_locations.eval_uri,
+            'replace_model': self.train_options.replace_model,
+            'model_main_py': self.script_locations.model_main_uri,
             'export_py': self.script_locations.export_uri,
             'training_data_uri': self.training_data_uri,
             'training_output_uri': self.training_output_uri,
@@ -181,11 +188,11 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         if self.config.get('pretrained_model_uri'):
             b = b.with_pretrained_model_uri(self.config.pretrained_model_uri)
         b = b.with_train_options(
-            sync_interval=conf.sync_interval, do_monitoring=conf.do_monitoring)
+            sync_interval=conf.sync_interval,
+            do_monitoring=conf.do_monitoring,
+            replace_model=conf.replace_model)
         b = b.with_script_locations(
-            train_uri=conf.train_py,
-            eval_uri=conf.eval_py,
-            export_uri=conf.export_py)
+            model_main_uri=conf.model_main_py, export_uri=conf.export_py)
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
         b = b.with_model_uri(conf.model_uri)
@@ -327,7 +334,10 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         b.config['model_uri'] = model_uri
         return b
 
-    def with_train_options(self, sync_interval=600, do_monitoring=True):
+    def with_train_options(self,
+                           sync_interval=600,
+                           do_monitoring=True,
+                           replace_model=False):
         """Sets the train options for this backend.
 
            Args:
@@ -335,17 +345,20 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
                              to the cloud (in seconds).
 
               do_monitoring: Run process to monitor training (eg. Tensorboard)
+
+              replace_model: Replace the model checkpoint if exists.
+                             If false, this will continue training from
+                             checkpoing if exists, if the backend allows for this.
         """
         b = deepcopy(self)
         b.config['train_options'] = TFObjectDetectionConfig.TrainOptions(
-            sync_interval, do_monitoring)
+            sync_interval, do_monitoring, replace_model)
         return b
 
     def with_script_locations(self,
-                              train_uri=DEFAULT_SCRIPT_TRAIN,
-                              eval_uri=DEFAULT_SCRIPT_EVAL,
+                              model_main_uri=DEFAULT_SCRIPT_TRAIN,
                               export_uri=DEFAULT_SCRIPT_EXPORT):
-        sl = TFObjectDetectionConfig.ScriptLocations(train_uri, eval_uri,
+        sl = TFObjectDetectionConfig.ScriptLocations(model_main_uri,
                                                      export_uri)
         b = deepcopy(self)
         b.config['script_locations'] = sl
