@@ -84,6 +84,10 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         prefix, methods, filters, rerun):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
+    darg = dict(arg)
+    if 'tmp_dir' in darg:
+        RVConfig.set_tempdir(darg['tmp_dir'])
+
     # Validate runner
     valid_runners = list(
         map(lambda x: x.lower(), rv.ExperimentRunner.list_runners()))
