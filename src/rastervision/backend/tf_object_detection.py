@@ -6,11 +6,11 @@ import os
 import shutil
 import tarfile
 from os.path import join
-from subprocess import (Popen, PIPE)
-import atexit
+from subprocess import (Popen, PIPE, STDOUT)
 import glob
 import re
 import uuid
+from copy import deepcopy
 
 from PIL import Image
 import numpy as np
@@ -696,7 +696,7 @@ class TFObjectDetection(Backend):
             output_dir, local_config_path, output_dir, export_py=export_py)
 
         # Perform final sync
-        sync_to_dir(output_dir, self.config.training_output_uri, delete=True)
+        sync_to_dir(output_dir, self.config.training_output_uri)
 
     def load_model(self, tmp_dir):
         import tensorflow as tf
