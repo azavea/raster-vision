@@ -110,8 +110,8 @@ class ExperimentRunner(ABC):
         if dry_run:
             if skipped_duplicate_commands:
                 print()
-                msg = ('Commands skipped because they are '
-                       'duplicates of commands to be run:')
+                msg = ('Commands determined to be '
+                       'duplicates based on input and output:')
                 click.echo(
                     click.style(msg, fg='yellow', bold=True, underline=True))
                 for command in skipped_duplicate_commands:
@@ -129,13 +129,13 @@ class ExperimentRunner(ABC):
                 command_type = c_defs[0].command_config.command_type
                 experiments = ', '.join(map(lambda c: c.experiment_id, c_defs))
                 clashing_msgs.append(
-                    'The {} command in the follwoing experiments '
+                    'The {} command in the following experiments '
                     'output {}, but are not equal: {}'.format(
                         command_type, output_uri, experiments))
             # TODO: Replace with logging?
             s = '\t\n'.join(clashing_msgs)
 
-            raise rv.ConfigurationError(
+            raise rv.ConfigError(
                 'ERROR: Command outputs will'
                 'override each other: \n{}\n'.format(s))
 

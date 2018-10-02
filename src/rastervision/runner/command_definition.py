@@ -15,7 +15,7 @@ class CommandDefinition:
                 sorted(self.io_def.output_uris)))
 
     def __eq__(self, other):
-        return self._key == other._key
+        return self._key() == other._key()
 
     def __hash__(self):
         return hash(self._key())
