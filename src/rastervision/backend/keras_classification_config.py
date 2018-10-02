@@ -180,8 +180,12 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         b = deepcopy(self)
 
         for config_mod, ignore_missing_keys, set_missing_keys in b.config_mods:
-            set_nested_keys(b.config['kc_config'], config_mod,
-                            ignore_missing_keys, set_missing_keys)
+            try:
+                set_nested_keys(b.config['kc_config'], config_mod,
+                                ignore_missing_keys, set_missing_keys)
+            except Exception as e:
+                raise rv.ConfigError(
+                    'Error setting configuration {}'.format(config_mod)) from e
 
         return KerasClassificationConfig(**b.config)
 

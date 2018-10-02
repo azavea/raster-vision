@@ -224,10 +224,19 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         pretrained_model = b.config.get('pretrained_model_uri')
         if pretrained_model:
             b = b.with_config({'fineTuneCheckpoint': pretrained_model})
+        else:
+            b = b.with_config(
+                {
+                    'fineTuneCheckpoint': ''
+                }, ignore_missing_keys=True)
 
-        for config_mod, ignore_missing_keys in b.config_mods:
-            set_nested_keys(b.config['tfod_config'], config_mod,
-                            ignore_missing_keys)
+        for config_mod, ignore_missing_keys, set_missing_keys in b.config_mods:
+            try:
+                set_nested_keys(b.config['tfod_config'], config_mod,
+                                ignore_missing_keys, set_missing_keys)
+            except Exception as e:
+                raise rv.ConfigError(
+                    'Error setting configuration {}'.format(config_mod)) from e
 
         return TFObjectDetectionConfig(**b.config)
 
@@ -298,18 +307,32 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_batch_size(self, batch_size):
-        return self.with_config({'trainConfig': {'batchSize': batch_size}})
+        return self.with_config(
+            {
+                'trainConfig': {
+                    'batchSize': batch_size
+                }
+            }, set_missing_keys=True)
 
     def with_num_steps(self, num_steps):
-        return self.with_config({'trainConfig': {'numSteps': num_steps}})
+        return self.with_config(
+            {
+                'trainConfig': {
+                    'numSteps': num_steps
+                }
+            }, set_missing_keys=True)
 
-    def with_config(self, config_mod, ignore_missing_keys=False):
+    def with_config(self,
+                    config_mod,
+                    ignore_missing_keys=False,
+                    set_missing_keys=False):
         """Given a dict, modify the tensorflow pipeline configuration
            such that keys that are found recursively in the configuration
            are replaced with those values. TODO: better explination.
         """
         b = deepcopy(self)
-        b.config_mods.append((config_mod, ignore_missing_keys))
+        b.config_mods.append((config_mod, ignore_missing_keys,
+                              set_missing_keys))
         return b
 
     def with_debug(self, debug):

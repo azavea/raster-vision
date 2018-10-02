@@ -21,7 +21,8 @@ from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
                                       download_if_needed, sync_to_dir,
                                       sync_from_dir, start_sync)
-from rastervision.utils.misc import save_img
+from rastervision.utils.misc import (save_img, replace_nones_in_dict,
+                                     terminate_at_exit)
 
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -473,16 +474,9 @@ class TrainingPackage(object):
         # messages. These appear when translating between text and JSON based
         # protobuf messages, and using the google.protobuf.Struct type to store
         # the JSON. This appears when TFOD uses empty message types as an enum.
-        def remove_nulls(_d):
-            for k in _d:
-                if _d[k] is None:
-                    _d[k] = {}
-                if type(_d[k]) is dict:
-                    remove_nulls(_d[k])
-            return _d
-
         config = json_format.ParseDict(
-            remove_nulls(self.config.tfod_config), TrainEvalPipelineConfig())
+            replace_nones_in_dict(self.config.tfod_config, {}),
+            TrainEvalPipelineConfig())
 
         # Update config using local paths.
         if config.train_config.fine_tune_checkpoint:
