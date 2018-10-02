@@ -23,11 +23,13 @@ class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
         msg.semantic_segmentation_raster_source.CopyFrom(opts)
         return msg
 
+    # TODO: Use extent?
     def create_source(self, task_config, extent, crs_transformer, tmp_dir):
         return SemanticSegmentationRasterSource(
             self.source.create_source(tmp_dir), self.source_class_map)
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def preprocess_command(self, command_type, experiment_config,
+                           context=None):
         if context is None:
             context = []
         context = context + [self]
