@@ -24,7 +24,6 @@ apt-get install jq -y
 # Install TF Object Detection API in /opt/tf-models
 mkdir -p /opt/tf-models/temp/
 cd /opt/tf-models/temp/
-# git clone --single-branch -b lf/fix-python3 https://github.com/azavea/models.git
 git clone --single-branch -b upgrade-sept-2018 https://github.com/azavea/models.git
 mv models/research/object_detection/ ../object_detection
 mv models/research/deeplab/ ../deeplab
