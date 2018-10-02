@@ -7,6 +7,7 @@ import click
 import rastervision as rv
 from rastervision.experiment import (ExperimentLoader, LoaderError)
 from rastervision.runner import (ExperimentRunner)
+from rastervision.rv_config import RVConfig
 
 
 def print_error(msg):
