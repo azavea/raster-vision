@@ -14,6 +14,7 @@ def make_command(command_config_uri):
 
 
 def batch_submit(command_type,
+                 experiment_id,
                  job_queue,
                  job_definition,
                  branch_name,
@@ -38,7 +39,9 @@ def batch_submit(command_type,
 
     client = boto3.client('batch')
 
-    job_name = '{}_{}'.format(command_type, uuid.uuid4())
+    uuid_part = str(uuid.uuid4()).split('-')[0]
+    exp = ''.join(e for e in experiment_id if e.isalnum())
+    job_name = '{}_{}_{}'.format(command_type, exp, uuid_part)
     depends_on = [{'jobId': job_id} for job_id in parent_job_ids]
 
     kwargs = {
@@ -97,7 +100,8 @@ class AwsBatchExperimentRunner(ExperimentRunner):
 
         ids_to_job = {}
         for command_id in command_dag.get_sorted_command_ids():
-            command_config = command_dag.get_command(command_id)
+            command_def = command_dag.get_command_definition(command_id)
+            command_config = command_def.command_config
             command_root_uri = command_config.root_uri
             command_uri = os.path.join(command_root_uri, 'command-config.json')
             print('Saving command configuration to {}...'.format(command_uri))
@@ -120,6 +124,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
             batch_run_command = make_command(command_uri)
             job_id = batch_submit(
                 command_config.command_type,
+                command_def.experiment_id,
                 self.job_queue,
                 self.job_definition,
                 self.branch,
