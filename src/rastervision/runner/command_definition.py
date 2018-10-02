@@ -1,9 +1,6 @@
 from typing import List
 
-from google.protobuf import json_format
-
 import rastervision as rv
-from rastervision.cli import Verbosity
 
 
 class CommandDefinition:
@@ -22,27 +19,6 @@ class CommandDefinition:
 
     def __hash__(self):
         return hash(self._key())
-
-    def to_string(self):
-        verbosity = Verbosity.get()
-        command_type = self.command_config.command_type
-        experiment_id = self.experiment_id
-        s = '{} from {}'.format(command_type, experiment_id)
-
-        if verbosity in [Verbosity.VERBOSE, Verbosity.VERY_VERBOSE]:
-            s += '\n  INPUTS:\n'
-            for input_uri in self.io_def.input_uris:
-                s += '    {}\n'.format(input_uri)
-            s += '  OUTPUTS:\n'
-            for output_uri in self.io_def.output_uris:
-                s += '    {}\n'.format(output_uri)
-        if verbosity == Verbosity.VERY_VERBOSE:
-            s += '  COMMAND CONFIGURATION\n'
-            s += '  ---------------------\n'
-            s += '{}'.format(
-                json_format.MessageToJson(self.command_config.to_proto()))
-
-        return s
 
     @classmethod
     def from_experiments(cls, experiments: List[rv.ExperimentConfig]):
