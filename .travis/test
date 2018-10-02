@@ -1,5 +1,7 @@
 #!/bin/bash
 
-docker run --rm raster-vision-cpu /opt/src/scripts/unit_tests && \
-       docker run --rm raster-vision-cpu /opt/src/scripts/style_tests && \
-       docker run --rm raster-vision-cpu /opt/src/scripts/integration_tests
+docker run -v $(pwd):$(pwd) --rm raster-vision-cpu rm -f $(pwd)/src/.coverage $(pwd)/src/coverage.xml
+docker run --rm raster-vision-cpu /opt/src/scripts/style_tests && \
+docker run -w $(pwd)/src -v $(pwd):$(pwd) --rm raster-vision-cpu $(pwd)/src/scripts/compile && \
+docker run -w $(pwd)/src -v $(pwd):$(pwd) --rm raster-vision-cpu $(pwd)/src/scripts/unit_tests && \
+docker run -v $(pwd):$(pwd) --rm raster-vision-cpu $(pwd)/src/scripts/integration_tests

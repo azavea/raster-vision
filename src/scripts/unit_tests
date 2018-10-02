@@ -16,5 +16,12 @@ Run all unit tests.
 if [ "${1:-}" = "--help" ]; then
     usage
 else
-    python -m unittest discover tests
+    # If the command `coverage` exists (provided by coverage.py), then
+    # use it to run the unit tests.  Otherwise, use the normal Python
+    # executable.
+    if ! [ -x "$(command -v coverage)" ]; then
+	python -m unittest discover tests
+    else
+	coverage run --append --source=rastervision --omit=rastervision/protos -m unittest discover tests
+    fi
 fi

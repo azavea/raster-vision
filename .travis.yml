@@ -15,6 +15,9 @@ script:
    - .travis/build
    - .travis/test
 
+after_success:
+   - .travis/codecov
+
 deploy:
    - provider: script
      script: .travis/deploy
