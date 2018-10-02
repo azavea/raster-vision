@@ -16,36 +16,58 @@ class RVConfig:
 
     @staticmethod
     def set_tempdir(path=None):
+        """Set tempfile.tempdir to well-known value.
+
+        This static method sets the value of tempfile.tempdir to some
+        well-known value.  The value is chosen from one of the
+        following (in order of preference): an explicit value
+        (presumably from the command line) is considered first, then
+        values from the environment are considered, then the current
+        value of tempfile.tempdir is considered, then the default
+        value (given by DEFAULT_DIR) is considered.
+
+        Args:
+            path: Either a string or None.
+
+        """
         # Ensure that RV temp directory exists. We need to use a custom location for
         # the temporary directory so it will be mirrored on the host file system which
         # is needed for running in a Docker container with limited space on EC2.
-        RV_TEMP_DIR = '/opt/data/tmp/'
+        DEFAULT_DIR = '/opt/data/tmp/'
 
-        # find explicitly set tempdir
-        explicit_temp_dir = next(
-            iter([
-                os.environ.get(k) for k in ['TMPDIR', 'TEMP', 'TMP']
-                if k in os.environ
-            ] + [path, tempfile.tempdir]))
+        # Check the various possibilities in order of priority.
+        path_array = [path]
+        env_array = [
+            os.environ.get(k) for k in ['TMPDIR', 'TEMP', 'TMP']
+            if k in os.environ
+        ]
+        current_array = [tempfile.tempdir]
+        it = iter(path_array + env_array + current_array)
+        explicit_temp_dir = next(filter(lambda p: p is not None, it))
+
         try:
-            # try to create directory
+            # Try to create directory
             if not os.path.exists(explicit_temp_dir):
                 os.makedirs(explicit_temp_dir, exist_ok=True)
-            # can we interact with directory?
-            explicit_temp_dir_valid = (
-                os.path.isdir(explicit_temp_dir) and Path.touch(
-                    Path(os.path.join(explicit_temp_dir, '.can_touch'))))
+            # Check that it is actually a directory
+            if not os.path.isdir(explicit_temp_dir):
+                raise Exception(
+                    '{} is not a directory.'.format(explicit_temp_dir))
+            # Can we interact with directory?
+            Path.touch(Path(os.path.join(explicit_temp_dir, '.can_touch')))
+            # All checks have passed by this point
+            tempfile.tempdir = explicit_temp_dir
+
+        # If directory cannot be made and/or cannot be interacted
+        # with, fall back to default.
         except Exception:
             print(
                 'Root temporary directory cannot be used: {}. Using root: {}'.
-                format(explicit_temp_dir, RV_TEMP_DIR))
-            tempfile.tempdir = RV_TEMP_DIR  # no guarantee this will work
-            make_dir(RV_TEMP_DIR)
+                format(explicit_temp_dir, DEFAULT_DIR))
+            tempfile.tempdir = DEFAULT_DIR  # no guarantee this will work
+
         finally:
-            # now, ensure uniqueness for this process
-            # the host may be running more than one rastervision process
-            RV_TEMP_DIR = tempfile.mkdtemp()
-            tempfile.tempdir = RV_TEMP_DIR
+            make_dir(tempfile.tempdir)
             print('Temporary directory is: {}'.format(tempfile.tempdir))
 
     @staticmethod
