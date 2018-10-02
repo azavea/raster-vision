@@ -34,6 +34,7 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                                   .with_num_epochs(8) \
                                   .with_pretrained_model(pretrained_model) \
                                   .with_train_options(sync_interval=None,
+                                                      do_monitoring=False,
                                                       replace_model=True) \
                                   .build()
 

@@ -235,7 +235,8 @@ class KerasClassification(Backend):
             self.config.training_output_uri,
             sync_interval=self.config.train_options.sync_interval)
         with sync:
-            _train(backend_config_path, pretrained_model_path)
+            do_monitoring = self.config.train_options.do_monitoring
+            _train(backend_config_path, pretrained_model_path, do_monitoring)
 
         # Perform final sync
         sync_to_dir(

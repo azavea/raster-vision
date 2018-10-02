@@ -5,9 +5,9 @@ from google.protobuf import (json_format)
 import rastervision as rv
 from rastervision.backend import (BackendConfig, BackendConfigBuilder,
                                   TFDeeplab)
-from rastervision.core.config import set_nested_keys
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
+from rastervision.utils.misc import set_nested_keys
 
 # Default location to Tensorflow Deeplab's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/deeplab/train.py'

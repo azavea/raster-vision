@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
+from subprocess import Popen
 
+from rastervision.utils.misc import terminate_at_exit
 from rastervision.backend.keras_classification.utils import make_dir
 
 
@@ -39,7 +41,9 @@ class Trainer(object):
         self.nb_training_samples = get_nb_images(options.training_data_dir)
         self.nb_validation_samples = get_nb_images(options.validation_data_dir)
 
-    def make_callbacks(self):
+        self.tf_logs_path = os.path.join(options.output_dir, 'logs')
+
+    def make_callbacks(self, do_monitoring):
         import keras
 
         model_checkpoint = keras.callbacks.ModelCheckpoint(
@@ -70,6 +74,12 @@ class Trainer(object):
             lr_scheduler = keras.callbacks.LearningRateScheduler(schedule)
 
             callbacks.append(lr_scheduler)
+
+        if do_monitoring:
+            tensorboard = keras.callbacks.TensorBoard(
+                log_dir=self.tf_logs_path, write_images=True)
+
+            callbacks.append(tensorboard)
 
         return callbacks
 
@@ -105,7 +115,7 @@ class Trainer(object):
 
         return generator
 
-    def train(self):
+    def train(self, do_monitoring):
         loss_function = 'categorical_crossentropy'
         metrics = ['accuracy']
         initial_epoch = self.get_initial_epoch()
@@ -119,9 +129,14 @@ class Trainer(object):
             steps_per_epoch = 1
             validation_steps = 1
 
-        callbacks = self.make_callbacks()
+        callbacks = self.make_callbacks(do_monitoring)
 
         self.model.compile(self.optimizer, loss_function, metrics=metrics)
+
+        if do_monitoring:
+            tensorboard_process = Popen(
+                ['tensorboard', '--logdir={}'.format(self.tf_logs_path)])
+            terminate_at_exit(tensorboard_process)
 
         self.model.fit_generator(
             self.training_gen,
@@ -131,3 +146,6 @@ class Trainer(object):
             validation_data=self.validation_gen,
             validation_steps=validation_steps,
             callbacks=callbacks)
+
+        if do_monitoring:
+            tensorboard_process.terminate()
