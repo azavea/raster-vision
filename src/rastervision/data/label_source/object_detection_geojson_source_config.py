@@ -19,7 +19,7 @@ class ObjectDetectionGeoJSONSourceConfig(LabelSourceConfig):
 
     def create_source(self, task_config, extent, crs_transformer, tmp_dir):
         return ObjectDetectionGeoJSONSource(self.uri, crs_transformer,
-                                            task_config.class_map)
+                                            task_config.class_map, extent)
 
     def preprocess_command(self, command_type, experiment_config, context=[]):
         io_def = rv.core.CommandIODefinition()
