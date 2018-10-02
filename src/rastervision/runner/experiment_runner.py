@@ -135,9 +135,8 @@ class ExperimentRunner(ABC):
             # TODO: Replace with logging?
             s = '\t\n'.join(clashing_msgs)
 
-            raise rv.ConfigError(
-                'ERROR: Command outputs will'
-                'override each other: \n{}\n'.format(s))
+            raise rv.ConfigError('ERROR: Command outputs will'
+                                 'override each other: \n{}\n'.format(s))
 
         command_dag = CommandDAG(
             unique_commands, rerun_commands, skip_file_check=skip_file_check)
