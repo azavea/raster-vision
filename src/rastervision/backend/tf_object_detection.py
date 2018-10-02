@@ -202,18 +202,16 @@ def make_debug_images(record_path, class_map, output_dir):
     for ind, example in enumerate(tfrecord_iter):
         example = tf.train.Example.FromString(example)
         im, labels = parse_tfexample(example)
+        # Can't create debug images for non-3band images
+        if im.shape[2] != 3:
+            print(
+                'WARNING: Skipping debug images - Images are not 3 band rasters.'
+            )
+            return
         output_path = join(output_dir, '{}.png'.format(ind))
         save_debug_image(im, labels, class_map, output_path)
         print('.', end='', flush=True)
     print()
-
-
-def terminate_at_exit(process):
-    def terminate():
-        print('Terminating {}...'.format(process.pid))
-        process.terminate()
-
-    atexit.register(terminate)
 
 
 def train(config_path,
@@ -222,30 +220,49 @@ def train(config_path,
           model_main_py=None,
           do_monitoring=True):
     output_train_dir = join(output_dir, 'train')
+    output_eval_dir = join(output_dir, 'eval')
 
     model_main_py = model_main_py or '/opt/tf-models/object_detection/model_main.py'
 
-    train_process = Popen(
-        [
-            'python', model_main_py, '--alsologtostderr',
-            '--pipeline_config_path={}'.format(config_path),
-            '--num_train_steps={}'.format(num_steps),
-            '--num_eval_steps={}'.format(int(max(
-                1, num_steps / 10))), '--model_dir={}'.format(output_train_dir)
-        ],
-        stdout=PIPE)
+    train_cmd = [
+        'python', model_main_py, '--alsologtostderr',
+        '--pipeline_config_path={}'.format(config_path),
+        '--model_dir={}'.format(output_train_dir),
+        '--num_train_steps={}'.format(num_steps),
+        '--sample_1_of_n_eval_examples={}'.format(1)
+    ]
+
+    print('Running train command: {}'.format(' '.join(train_cmd)))
+
+    train_process = Popen(train_cmd, stdout=PIPE, stderr=STDOUT)
     terminate_at_exit(train_process)
 
     if do_monitoring:
+        eval_cmd = [
+            'python', model_main_py, '--alsologtostderr',
+            '--pipeline_config_path={}'.format(config_path),
+            '--checkpoint_dir={}'.format(output_train_dir),
+            '--model_dir={}'.format(output_eval_dir)
+        ]
+        print('Running eval command: {}'.format(' '.join(eval_cmd)))
+
+        # Don't let the eval process take up GPU space
+        env = deepcopy(os.environ)
+        env['CUDA_VISIBLE_DEVICES'] = '-1'
+        eval_process = Popen(eval_cmd, env=env)
+
         tensorboard_process = Popen(
-            ['tensorboard', '--logdir={}'.format(output_train_dir)])
+            ['tensorboard', '--logdir={}'.format(output_dir)])
+        terminate_at_exit(eval_process)
         terminate_at_exit(tensorboard_process)
 
-    for line in iter(train_process.stdout.readline, b''):
-        print(line, end='')
+    with train_process:
+        for line in train_process.stdout:
+            print(line.decode('utf-8'), end='', flush=True)
 
-    train_process.communicate()
+    print('-----DONE TRAINING----')
     if do_monitoring:
+        eval_process.terminate()
         tensorboard_process.terminate()
 
 
