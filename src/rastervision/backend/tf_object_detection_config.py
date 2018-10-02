@@ -5,9 +5,9 @@ from google.protobuf import (text_format, json_format)
 import rastervision as rv
 from rastervision.backend import (BackendConfig, BackendConfigBuilder,
                                   TFObjectDetection)
-from rastervision.core.config import set_nested_keys
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
+from rastervision.utils.misc import set_nested_keys
 
 # Default location to Tensorflow Object Detection's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/object_detection/model_main.py'
@@ -80,6 +80,7 @@ class TFObjectDetectionConfig(BackendConfig):
             'training_data_uri': self.training_data_uri,
             'training_output_uri': self.training_output_uri,
             'model_uri': self.model_uri,
+            'debug': self.debug,
             'tfod_config': self.tfod_config
         }
 
@@ -196,9 +197,7 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
         b = b.with_model_uri(conf.model_uri)
-
-        # TODO: Debug
-        # b = b.with_debug(conf.debug)
+        b = b.with_debug(conf.debug)
 
         return b.with_template(json_format.MessageToDict(conf.tfod_config))
 
