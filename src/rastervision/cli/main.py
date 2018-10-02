@@ -86,7 +86,7 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
     experiment runner named RUNNER."""
     darg = dict(arg)
     if 'tmp_dir' in darg:
-        RVConfig.set_tempdir(darg['tmp_dir'])
+        RVConfig.set_tmp_dir(darg['tmp_dir'])
 
     # Validate runner
     valid_runners = list(

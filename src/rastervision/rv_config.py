@@ -14,8 +14,17 @@ from rastervision.filesystem.local_filesystem import make_dir
 class RVConfig:
     DEFAULT_PROFILE = 'default'
 
+    # We need to use a custom location for the temporary directory so
+    # it will be mirrored on the host file system which is needed for
+    # running in a Docker container with limited space on EC2.
+    DEFAULT_DIR = '/opt/data/tmp/'
+
     @staticmethod
-    def set_tempdir(path=None):
+    def get_tmp_dir():
+        return tempfile.tempdir
+
+    @staticmethod
+    def set_tmp_dir(tmp_dir=None):
         """Set tempfile.tempdir to well-known value.
 
         This static method sets the value of tempfile.tempdir to some
@@ -24,25 +33,20 @@ class RVConfig:
         (presumably from the command line) is considered first, then
         values from the environment are considered, then the current
         value of tempfile.tempdir is considered, then the default
-        value (given by DEFAULT_DIR) is considered.
+        value (given by RVConfig.DEFAULT_DIR) is considered.
 
         Args:
-            path: Either a string or None.
+            tmp_dir: Either a string or None.
 
         """
-        # Ensure that RV temp directory exists. We need to use a custom location for
-        # the temporary directory so it will be mirrored on the host file system which
-        # is needed for running in a Docker container with limited space on EC2.
-        DEFAULT_DIR = '/opt/data/tmp/'
-
         # Check the various possibilities in order of priority.
-        path_array = [path]
+        tmp_dir_array = [tmp_dir]
         env_array = [
             os.environ.get(k) for k in ['TMPDIR', 'TEMP', 'TMP']
             if k in os.environ
         ]
         current_array = [tempfile.tempdir]
-        it = iter(path_array + env_array + current_array)
+        it = iter(tmp_dir_array + env_array + current_array)
         explicit_temp_dir = next(filter(lambda p: p is not None, it))
 
         try:
@@ -63,8 +67,8 @@ class RVConfig:
         except Exception:
             print(
                 'Root temporary directory cannot be used: {}. Using root: {}'.
-                format(explicit_temp_dir, DEFAULT_DIR))
-            tempfile.tempdir = DEFAULT_DIR  # no guarantee this will work
+                format(explicit_temp_dir, RVConfig.DEFAULT_DIR))
+            tempfile.tempdir = RVConfig.DEFAULT_DIR  # no guarantee this will work
 
         finally:
             make_dir(tempfile.tempdir)
@@ -74,7 +78,14 @@ class RVConfig:
     def get_instance():
         return rv._registry._get_rv_config()
 
-    def __init__(self, profile=None, rv_home=None, config_overrides=None):
+    def __init__(self,
+                 profile=None,
+                 rv_home=None,
+                 config_overrides=None,
+                 tmp_dir=None):
+        if tmp_dir is not None:
+            self.set_tmp_dir(tmp_dir)
+
         if profile is None:
             if os.environ.get('RV_PROFILE'):
                 profile = os.environ.get('RV_PROFILE')
