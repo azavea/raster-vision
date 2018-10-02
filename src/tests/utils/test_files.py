@@ -6,11 +6,13 @@ import json
 import boto3
 from moto import mock_s3
 
-from rastervision.utils.files import (
-    file_to_str, str_to_file, download_if_needed, upload_or_copy,
-    NotReadableError, NotWritableError, load_json_config,
-    ProtobufParseException, make_dir, get_local_path, file_exists)
-from rastervision.protos.model_config_pb2 import ModelConfig
+import rastervision as rv
+from rastervision.utils.files import (file_to_str, str_to_file,
+                                      download_if_needed, upload_or_copy,
+                                      load_json_config, ProtobufParseException,
+                                      make_dir, get_local_path, file_exists)
+from rastervision.filesystem import (NotReadableError, NotWritableError)
+from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
 
 
 class TestMakeDir(unittest.TestCase):
@@ -241,55 +243,55 @@ class TestLoadJsonConfig(unittest.TestCase):
 
     def test_valid(self):
         config = {
-            'task': 'CLASSIFICATION',
-            'backend': 'KERAS_CLASSIFICATION',
-            'class_items': [{
-                'id': 1,
-                'name': 'car'
-            }]
+            'taskType': 'CHIP_CLASSIFICATION',
+            'chipClassificationConfig': {
+                'classItems': [{
+                    'id': 1,
+                    'name': 'car'
+                }]
+            }
         }
         self.write_config_file(config)
-        ml_config = load_json_config(self.file_path, ModelConfig())
-        self.assertEqual(ml_config.task,
-                         ModelConfig.Backend.Value('KERAS_CLASSIFICATION'))
-        self.assertEqual(ml_config.backend,
-                         ModelConfig.Task.Value('CLASSIFICATION'))
-        self.assertEqual(ml_config.class_items[0].id, 1)
-        self.assertEqual(ml_config.class_items[0].name, 'car')
-        self.assertEqual(len(ml_config.class_items), 1)
+        task = load_json_config(self.file_path, TaskConfigMsg())
+        self.assertEqual(task.task_type, rv.CHIP_CLASSIFICATION)
+        self.assertEqual(task.chip_classification_config.class_items[0].id, 1)
+        self.assertEqual(task.chip_classification_config.class_items[0].name,
+                         'car')
+        self.assertEqual(len(task.chip_classification_config.class_items), 1)
 
     def test_bogus_field(self):
         config = {
-            'task': 'CLASSIFICATION',
-            'backend': 'KERAS_CLASSIFICATION',
-            'class_items': [{
-                'id': 1,
-                'name': 'car'
-            }],
+            'taskType': 'CHIP_CLASSIFICATION',
+            'chipClassificationConfig': {
+                'classItems': [{
+                    'id': 1,
+                    'name': 'car'
+                }]
+            },
             'bogus_field': 0
         }
 
         self.write_config_file(config)
         with self.assertRaises(ProtobufParseException):
-            load_json_config(self.file_path, ModelConfig())
+            load_json_config(self.file_path, TaskConfigMsg())
 
     def test_bogus_value(self):
         config = {'task': 'bogus_value'}
         self.write_config_file(config)
         with self.assertRaises(ProtobufParseException):
-            load_json_config(self.file_path, ModelConfig())
+            load_json_config(self.file_path, TaskConfigMsg())
 
     def test_invalid_json(self):
         invalid_json_str = '''
             {
-                "task": "CLASSIFICATION
+                "taskType": "CHIP_CLASSIFICATION
             }
         '''
         with open(self.file_path, 'w') as myfile:
             myfile.write(invalid_json_str)
 
         with self.assertRaises(ProtobufParseException):
-            load_json_config(self.file_path, ModelConfig())
+            load_json_config(self.file_path, TaskConfigMsg())
 
 
 if __name__ == '__main__':
