@@ -12,6 +12,9 @@ RUN /tmp/install_deps && rm /tmp/install_deps
 # Setup GDAL_DATA directory, rasterio needs it.
 ENV GDAL_DATA=/usr/share/gdal/2.1/
 
+# See https://github.com/mapbox/rasterio/issues/1289
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
 # Make Python3 default Python
 RUN rm -f /usr/bin/pip && ln -s /usr/bin/pip3 /usr/bin/pip
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
