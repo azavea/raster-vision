@@ -514,14 +514,16 @@ class TrainingPackage(object):
         config.train_input_reader.label_map_path = class_map_path
 
         eval_path = self.get_local_path(self.get_record_uri(VALIDATION))
-        if hasattr(config.eval_input_reader.tf_record_input_reader.input_path,
-                   'append'):
-            config.eval_input_reader.tf_record_input_reader.input_path[:] = \
+
+        if hasattr(
+                config.eval_input_reader[0].tf_record_input_reader.input_path,
+                'append'):
+            config.eval_input_reader[0].tf_record_input_reader.input_path[:] = \
                 [eval_path]
         else:
-            config.eval_input_reader.tf_record_input_reader.input_path = \
+            config.eval_input_reader[0].tf_record_input_reader.input_path = \
                 eval_path
-        config.eval_input_reader.label_map_path = class_map_path
+        config.eval_input_reader[0].label_map_path = class_map_path
 
         # Save an updated copy of the config file.
         config_path = join(self.temp_dir, 'ml.config')
