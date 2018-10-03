@@ -40,11 +40,6 @@ def main(profile):
           'about the commands to be run, but will not actually '
           'run the commands'))
 @click.option(
-    '--rm-tmp-dir',
-    is_flag=True,
-    help=('Remove the top-level temporary directory.'
-          'Use with great caution'))
-@click.option(
     '--skip-file-check',
     '-x',
     is_flag=True,
@@ -84,13 +79,13 @@ def main(profile):
     default=False,
     help=('Rerun commands, regardless if '
           'their output files already exist.'))
-def run(runner, commands, experiment_module, dry_run, rm_tmp_dir,
-        skip_file_check, arg, prefix, methods, filters, rerun):
+def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
+        prefix, methods, filters, rerun):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
     darg = dict(arg)
     if 'tmp_dir' in darg:
-        RVConfig.set_tmp_dir(darg['tmp_dir'], rm_tmp_dir)
+        RVConfig.set_tmp_dir(darg['tmp_dir'])
 
     # Validate runner
     valid_runners = list(

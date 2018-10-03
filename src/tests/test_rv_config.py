@@ -1,6 +1,7 @@
 import os
 import platform
 import unittest
+import shutil
 
 from rastervision.rv_config import RVConfig
 
@@ -8,13 +9,14 @@ from rastervision.rv_config import RVConfig
 class TestRVConfig(unittest.TestCase):
     def test_set_tmp_dir(self):
         if platform.system() == 'Linux':
-            directory = '/tmp/xxx/yyy'
+            directory = '/tmp/xxx/'
             while os.path.exists(directory):
-                directory = directory + 'yyy'
+                directory = directory + 'xxx/'
             self.assertFalse(os.path.exists(directory))
-            RVConfig.set_tmp_dir(directory, rm_tmp_dir=True)
+            RVConfig.set_tmp_dir(directory)
             self.assertTrue(os.path.exists(directory))
             self.assertTrue(os.path.isdir(directory))
+            shutil.rmtree(directory)
 
 
 # import os
