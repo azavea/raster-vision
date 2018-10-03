@@ -5,28 +5,31 @@ import rastervision as rv
 from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy)
 from rastervision.data.label import SemanticSegmentationLabels
 from rastervision.data.label_store import LabelStore
-from rastervision.data.utils import SegmentationClassTransformer
+from rastervision.data.label_source import SegmentationClassTransformer
 
 
 class SemanticSegmentationRasterStore(LabelStore):
     """A prediction label store for segmentation raster files.
     """
 
-    def __init__(self, uri, crs_transformer, class_map, tmp_dir):
+    def __init__(self, uri, crs_transformer, tmp_dir, class_map=None):
         """Constructor.
 
         Args:
             uri: (str) URI of GeoTIFF file used for storing predictions as RGB values
             crs_transformer: (CRSTransformer)
+            tmp_dir: (str) temp directory to use
             class_map: (ClassMap) with color values used to convert class ids to
                 RGB values
-            tmp_dir: (str) temp directory to use
         """
         self.uri = uri
         self.crs_transformer = crs_transformer
-        # Note: can't name this class_transformer due to Python using that attribute
-        self.class_trans = SegmentationClassTransformer(class_map)
         self.tmp_dir = tmp_dir
+        # Note: can't name this class_transformer due to Python using that attribute
+        if class_map:
+            self.class_trans = SegmentationClassTransformer(class_map)
+        else:
+            self.class_trans = None
 
     def get_labels(self):
         """Get all labels.

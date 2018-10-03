@@ -24,7 +24,7 @@ from rastervision.utils.files import (download_if_needed, get_local_path,
                                       make_dir, start_sync, upload_or_copy,
                                       sync_to_dir, sync_from_dir)
 from rastervision.utils.misc import (numpy_to_png, png_to_numpy, save_img)
-from rastervision.data.utils import color_to_integer
+from rastervision.data.label_source.utils import color_to_integer
 
 FROZEN_INFERENCE_GRAPH = 'model'
 INPUT_TENSOR_NAME = 'ImageTensor:0'
