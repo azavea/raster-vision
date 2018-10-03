@@ -1,11 +1,11 @@
 import unittest
 import os
-from tempfile import TemporaryDirectory
 
 import numpy as np
 
-from rastervision.core.raster_stats import RasterStats
 import rastervision as rv
+from rastervision.core.raster_stats import RasterStats
+from rastervision.rv_config import RVConfig
 
 
 class TestRasterTransformer(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestRasterTransformer(unittest.TestCase):
         raster_stats.means = list(np.ones((4, )))
         raster_stats.stds = list(np.ones((4, )) * 2)
 
-        with TemporaryDirectory() as tmp_dir:
+        with RVConfig.get_tmp_dir() as tmp_dir:
             stats_uri = os.path.join(tmp_dir, 'stats.json')
             raster_stats.save(stats_uri)
 

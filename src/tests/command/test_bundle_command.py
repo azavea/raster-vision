@@ -1,12 +1,12 @@
 import os
 import unittest
 import zipfile
-from tempfile import TemporaryDirectory
 
 import rastervision as rv
 from rastervision.command import BundleCommandConfig
 from rastervision.protos.command_pb2 import CommandConfig as CommandConfigMsg
 from rastervision.utils.files import (make_dir, load_json_config)
+from rastervision.rv_config import RVConfig
 
 from tests import data_file_path
 
@@ -60,7 +60,7 @@ class TestBundleCommand(unittest.TestCase):
                                 .build()
             return b
 
-        with TemporaryDirectory() as tmp_dir:
+        with RVConfig.get_tmp_dir() as tmp_dir:
             task = get_task(tmp_dir)
             backend = get_backend(task, tmp_dir)
             analyzer = self.get_analyzer(tmp_dir)
@@ -114,7 +114,7 @@ class TestBundleCommand(unittest.TestCase):
                                 .build()
             return b
 
-        with TemporaryDirectory() as tmp_dir:
+        with RVConfig.get_tmp_dir() as tmp_dir:
             task = get_task(tmp_dir)
             backend = get_backend(task, tmp_dir)
             analyzer = self.get_analyzer(tmp_dir)

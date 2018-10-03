@@ -1,9 +1,9 @@
 from os.path import join
-import tempfile
 
 import numpy as np
 from PIL import Image, ImageDraw
 
+from rastervision.rv_config import RVConfig
 from rastervision.core import Box
 from rastervision.task import Task
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir)
@@ -58,7 +58,7 @@ class ChipClassification(Task):
         img = draw_debug_predict_image(scene, self.config.class_map)
         # Saving to a jpg leads to segfault for unknown reasons.
         debug_image_uri = join(debug_dir_uri, scene.id + '.png')
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with RVConfig.get_tmp_dir() as temp_dir:
             debug_image_path = get_local_path(debug_image_uri, temp_dir)
             make_dir(debug_image_path, use_dirname=True)
             img.save(debug_image_path)

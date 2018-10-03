@@ -1,8 +1,8 @@
 import os
-from tempfile import TemporaryDirectory
 
 from rastervision.runner import ExperimentRunner
 from rastervision.utils.files import save_json_config
+from rastervision.rv_config import RVConfig
 
 
 class LocalExperimentRunner(ExperimentRunner):
@@ -28,5 +28,5 @@ class LocalExperimentRunner(ExperimentRunner):
         if self.tmp_dir:
             run_commands(self.tmp_dir)
         else:
-            with TemporaryDirectory() as tmp_dir:
+            with RVConfig.get_tmp_dir() as tmp_dir:
                 run_commands(tmp_dir)

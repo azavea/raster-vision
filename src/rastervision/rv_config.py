@@ -19,20 +19,23 @@ class RVConfig:
     # running in a Docker container with limited space on EC2.
     DEFAULT_DIR = '/opt/data/tmp/'
 
+    tmp_dir = None
+
     @staticmethod
     def get_tmp_dir():
-        return tempfile.tempdir
+        tempfile.tempdir = RVConfig.tmp_dir
+        return tempfile.TemporaryDirectory()
 
     @staticmethod
-    def set_tmp_dir(tmp_dir=None):
-        """Set tempfile.tempdir to well-known value.
+    def set_tmp_dir(tmp_dir=None, delete_tmp_dir_atexit=False):
+        """Set RVConfig.tmp_dir to well-known value.
 
-        This static method sets the value of tempfile.tempdir to some
+        This static method sets the value of RVConfig.tmp_dir to some
         well-known value.  The value is chosen from one of the
         following (in order of preference): an explicit value
         (presumably from the command line) is considered first, then
         values from the environment are considered, then the current
-        value of tempfile.tempdir is considered, then the default
+        value of RVConfig.tmp_dir is considered, then the default
         value (given by RVConfig.DEFAULT_DIR) is considered.
 
         Args:
@@ -45,34 +48,34 @@ class RVConfig:
             os.environ.get(k) for k in ['TMPDIR', 'TEMP', 'TMP']
             if k in os.environ
         ]
-        current_array = [tempfile.tempdir]
+        current_array = [RVConfig.tmp_dir]
         it = iter(tmp_dir_array + env_array + current_array)
-        explicit_temp_dir = next(filter(lambda p: p is not None, it))
+        explicit_tmp_dir = next(filter(lambda p: p is not None, it))
 
         try:
             # Try to create directory
-            if not os.path.exists(explicit_temp_dir):
-                os.makedirs(explicit_temp_dir, exist_ok=True)
+            if not os.path.exists(explicit_tmp_dir):
+                os.makedirs(explicit_tmp_dir, exist_ok=True)
             # Check that it is actually a directory
-            if not os.path.isdir(explicit_temp_dir):
+            if not os.path.isdir(explicit_tmp_dir):
                 raise Exception(
-                    '{} is not a directory.'.format(explicit_temp_dir))
+                    '{} is not a directory.'.format(explicit_tmp_dir))
             # Can we interact with directory?
-            Path.touch(Path(os.path.join(explicit_temp_dir, '.can_touch')))
+            Path.touch(Path(os.path.join(explicit_tmp_dir, '.can_touch')))
             # All checks have passed by this point
-            tempfile.tempdir = explicit_temp_dir
+            RVConfig.tmp_dir = explicit_tmp_dir
 
         # If directory cannot be made and/or cannot be interacted
         # with, fall back to default.
         except Exception:
             print(
                 'Root temporary directory cannot be used: {}. Using root: {}'.
-                format(explicit_temp_dir, RVConfig.DEFAULT_DIR))
-            tempfile.tempdir = RVConfig.DEFAULT_DIR  # no guarantee this will work
+                format(explicit_tmp_dir, RVConfig.DEFAULT_DIR))
+            RVConfig.tmp_dir = RVConfig.DEFAULT_DIR
 
         finally:
-            make_dir(tempfile.tempdir)
-            print('Temporary directory is: {}'.format(tempfile.tempdir))
+            make_dir(RVConfig.tmp_dir)
+            print('Temporary directory is: {}'.format(RVConfig.tmp_dir))
 
     @staticmethod
     def get_instance():
@@ -82,9 +85,11 @@ class RVConfig:
                  profile=None,
                  rv_home=None,
                  config_overrides=None,
-                 tmp_dir=None):
+                 tmp_dir=None,
+                 delete_tmp_dir_atexit=False):
+
         if tmp_dir is not None:
-            self.set_tmp_dir(tmp_dir)
+            self.set_tmp_dir(tmp_dir, delete_tmp_dir_atexit)
 
         if profile is None:
             if os.environ.get('RV_PROFILE'):

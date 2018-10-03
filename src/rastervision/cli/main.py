@@ -1,6 +1,5 @@
 """Raster Vision main program"""
 import sys
-from tempfile import TemporaryDirectory
 
 import click
 
@@ -209,7 +208,7 @@ def predict(predict_package, image_uri, output_uri, update_stats,
         channel_order = [
             int(channel_ind) for channel_ind in channel_order.split(' ')
         ]
-    with TemporaryDirectory() as tmp_dir:
+    with RVConfig.get_tmp_dir() as tmp_dir:
         predict = rv.Predictor(predict_package, tmp_dir, update_stats,
                                channel_order).predict
         predict(image_uri, output_uri)

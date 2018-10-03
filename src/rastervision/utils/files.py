@@ -4,8 +4,8 @@ from threading import Timer
 
 from google.protobuf import json_format
 
-from rastervision.filesystem.filesystem import ProtobufParseException
 from rastervision.filesystem.filesystem import FileSystem
+from rastervision.filesystem.filesystem import ProtobufParseException
 from rastervision.filesystem.local_filesystem import make_dir
 
 
