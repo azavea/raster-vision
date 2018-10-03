@@ -57,12 +57,29 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         self.assertFalse(label_source.enough_target_pixels(extent, 30, [1]))
 
     def test_get_labels(self):
+        data = np.zeros((10, 10, 1), dtype=np.uint8)
+        data[7:, 7:, 0] = 1
+        raster_source = MockRasterSource(data)
+        source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
+        label_source = SemanticSegmentationRasterSource(
+            source=raster_source, source_class_map=source_class_map)
+        labels = label_source.get_labels()
+        expected_labels = np.zeros((10, 10))
+        expected_labels[7:, 7:] = 1
+        np.testing.assert_array_equal(labels, expected_labels)
+
+        window = Box.make_square(7, 7, 3)
+        labels = label_source.get_labels(window=window)
+        expected_labels = np.ones((3, 3))
+        np.testing.assert_array_equal(labels, expected_labels)
+
+    def test_get_labels_rgb(self):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[7:, 7:, :] = [1, 1, 1]
         raster_source = MockRasterSource(data)
         source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
         label_source = SemanticSegmentationRasterSource(
-            source=raster_source, source_class_map=source_class_map)
+            source=raster_source, source_class_map=source_class_map, rgb=True)
         labels = label_source.get_labels()
         expected_labels = np.zeros((10, 10))
         expected_labels[7:, 7:] = 1

@@ -49,6 +49,11 @@ message LabelSourceConfig {
         // since we may want to use a different color scheme for generating prediction
         // rasters.
         repeated ClassItem source_class_items = 2;
+
+        // Flag that determines whether or not the values in this
+        // raster are RGB values. If so, the RGB values will be
+        // translated into class IDs based on the class map.
+        optional bool rgb = 3 [default=false];
     }
 
     required string source_type = 1;

@@ -10,23 +10,25 @@ from rastervision.data.raster_source import RasterSourceConfig
 
 
 class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
-    def __init__(self, source, source_class_map):
+    def __init__(self, source, source_class_map, rgb=False):
         super().__init__(source_type=rv.SEMANTIC_SEGMENTATION_RASTER)
         self.source = source
         self.source_class_map = source_class_map
+        self.rgb = rgb
 
     def to_proto(self):
         msg = super().to_proto()
         opts = LabelSourceConfigMsg.SemanticSegmentationRasterSource(
             source=self.source.to_proto(),
-            source_class_items=self.source_class_map.to_proto())
+            source_class_items=self.source_class_map.to_proto(),
+            rgb=self.rgb)
         msg.semantic_segmentation_raster_source.CopyFrom(opts)
         return msg
 
-    # TODO: Use extent?
     def create_source(self, task_config, extent, crs_transformer, tmp_dir):
         return SemanticSegmentationRasterSource(
-            self.source.create_source(tmp_dir), self.source_class_map)
+            self.source.create_source(tmp_dir), self.source_class_map,
+            self.rgb)
 
     def preprocess_command(self, command_type, experiment_config,
                            context=None):
@@ -51,7 +53,8 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
         if prev:
             config = {
                 'source': prev.source,
-                'source_class_map': prev.source_class_map
+                'source_class_map': prev.source_class_map,
+                'rgb': prev.rgb
             }
 
         super().__init__(SemanticSegmentationRasterSourceConfig, config)
@@ -66,7 +69,8 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
             .with_raster_source(raster_source_config) \
             .with_source_class_map(
                 ClassMap.construct_from(
-                    list(msg.semantic_segmentation_raster_source.source_class_items)))
+                    list(msg.semantic_segmentation_raster_source.source_class_items))) \
+            .with_rgb(msg.semantic_segmentation_raster_source.rgb)
 
     def with_raster_source(self, source, channel_order=None):
         """Set raster_source.
@@ -107,6 +111,16 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
             source_class_map)
         return b
 
+    def with_rgb(self, rgb):
+        """Set flag for reading RGB data using the class map.
+
+        Otherwise this method will read the class ID from the first band
+        of the source raster.
+        """
+        b = deepcopy(self)
+        b.config['rgb'] = rgb
+        return b
+
     def validate(self):
         if self.config.get('source') is None:
             raise rv.ConfigError(
@@ -118,3 +132,10 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
                 'You must set the source_class_map for '
                 'SemanticSegmentationRasterSourceConfig. Use "with_source_class_map".'
             )
+
+        if self.config.get('rgb'):
+            if not self.config.get('source_class_map').has_all_colors():
+                raise rv.ConfigError(
+                    'The source_class_map for '
+                    'SemanticSegmentationRasterSourceConfig must have '
+                    'all colors assigned if rgb=True')
