@@ -8,50 +8,6 @@ from rastervision.data import (ChipClassificationLabels, ObjectDetectionLabels)
 from rastervision.utils.files import file_to_str
 
 
-def boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
-                     scores=None):
-    """Convert boxes and associated data into a GeoJSON dict.
-
-    Args:
-        boxes: list of Box in pixel row/col format.
-        class_ids: list of int (one for each box)
-        crs_transformer: CRSTransformer used to convert pixel coords to map
-            coords in the GeoJSON
-        class_map: ClassMap used to infer class_name from class_id
-        scores: optional list of floats (one for each box)
-
-
-    Returns:
-        dict in GeoJSON format
-    """
-    features = []
-    for box_ind, box in enumerate(boxes):
-        polygon = box.geojson_coordinates()
-        polygon = [list(crs_transformer.pixel_to_map(p)) for p in polygon]
-
-        class_id = int(class_ids[box_ind])
-        class_name = class_map.get_by_id(class_id).name
-        score = 0.0
-        if scores is not None:
-            score = scores[box_ind]
-
-        feature = {
-            'type': 'Feature',
-            'geometry': {
-                'type': 'Polygon',
-                'coordinates': [polygon]
-            },
-            'properties': {
-                'class_id': class_id,
-                'class_name': class_name,
-                'score': score
-            }
-        }
-        features.append(feature)
-
-    return {'type': 'FeatureCollection', 'features': features}
-
-
 def add_classes_to_geojson(geojson, class_map):
     """Add missing class_names and class_ids from label GeoJSON."""
     geojson = copy.deepcopy(geojson)
