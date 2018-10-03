@@ -1,6 +1,9 @@
 import os
 import json
 import tempfile
+import shutil
+import atexit
+
 from pathlib import Path
 
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
@@ -27,7 +30,7 @@ class RVConfig:
         return tempfile.TemporaryDirectory()
 
     @staticmethod
-    def set_tmp_dir(tmp_dir=None, delete_tmp_dir_atexit=False):
+    def set_tmp_dir(tmp_dir=None, rm_tmp_dir=False):
         """Set RVConfig.tmp_dir to well-known value.
 
         This static method sets the value of RVConfig.tmp_dir to some
@@ -75,6 +78,11 @@ class RVConfig:
 
         finally:
             make_dir(RVConfig.tmp_dir)
+            tmp_dir = RVConfig.tmp_dir
+            if rm_tmp_dir:
+                atexit.register(lambda: shutil.rmtree(tmp_dir))
+                print('{} directory will be removed upon nominal exit.'.format(
+                    tmp_dir))
             print('Temporary directory is: {}'.format(RVConfig.tmp_dir))
 
     @staticmethod
@@ -86,10 +94,10 @@ class RVConfig:
                  rv_home=None,
                  config_overrides=None,
                  tmp_dir=None,
-                 delete_tmp_dir_atexit=False):
+                 rm_tmp_dir=False):
 
         if tmp_dir is not None:
-            self.set_tmp_dir(tmp_dir, delete_tmp_dir_atexit)
+            self.set_tmp_dir(tmp_dir, rm_tmp_dir)
 
         if profile is None:
             if os.environ.get('RV_PROFILE'):
