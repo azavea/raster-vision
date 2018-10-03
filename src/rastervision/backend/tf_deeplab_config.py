@@ -18,9 +18,15 @@ DEBUG_CHIP_OUTPUT_FILES = ['train.zip', 'validation.zip']
 
 class TFDeeplabConfig(BackendConfig):
     class TrainOptions:
-        def __init__(self, train_restart_dir=None, sync_interval=600):
+        def __init__(self,
+                     train_restart_dir=None,
+                     sync_interval=600,
+                     do_monitoring=True,
+                     replace_model=False):
             self.train_restart_dir = train_restart_dir
             self.sync_interval = sync_interval
+            self.do_monitoring = do_monitoring
+            self.replace_model = replace_model
 
     class ScriptLocations:
         def __init__(self,
@@ -64,6 +70,8 @@ class TFDeeplabConfig(BackendConfig):
             'export_py': self.script_locations.export_py,
             'train_restart_dir': self.train_options.train_restart_dir,
             'sync_interval': self.train_options.sync_interval,
+            'do_monitoring': self.train_options.do_monitoring,
+            'replace_model': self.train_options.replace_model,
             'debug': self.debug,
             'training_data_uri': self.training_data_uri,
             'training_output_uri': self.training_output_uri,
@@ -157,7 +165,9 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             b = b.with_pretrained_model_uri(self.config.pretrained_model_uri)
         b = b.with_train_options(
             train_restart_dir=conf.train_restart_dir,
-            sync_interval=conf.sync_interval)
+            sync_interval=conf.sync_interval,
+            do_monitoring=conf.do_monitoring,
+            replace_model=conf.replace_model)
         b = b.with_script_locations(
             train_py=conf.train_py, export_py=conf.export_py)
         b = b.with_training_data_uri(conf.training_data_uri)
@@ -269,17 +279,29 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         b.config['debug'] = debug
         return b
 
-    def with_train_options(self, train_restart_dir=None, sync_interval=600):
+    def with_train_options(self,
+                           train_restart_dir=None,
+                           sync_interval=600,
+                           do_monitoring=True,
+                           replace_model=False):
         """Sets the train options for this backend.
 
            Args:
               sync_interval: How often to sync output of training to the cloud
                 (in seconds).
+
               do_monitoring: Run process to monitor training (eg. Tensorboard)
+
+              replace_model: Replace the model checkpoint if exists.
+                             If false, this will continue training from
+                             checkpoing if exists, if the backend allows for this.
         """
         b = deepcopy(self)
         b.config['train_options'] = TFDeeplabConfig.TrainOptions(
-            train_restart_dir=train_restart_dir, sync_interval=sync_interval)
+            train_restart_dir=train_restart_dir,
+            sync_interval=sync_interval,
+            do_monitoring=do_monitoring,
+            replace_model=replace_model)
 
         return b.with_config(
             {

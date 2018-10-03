@@ -541,8 +541,15 @@ class TFDeeplab(Backend):
         tfic_ckpt = tfic_ckpt[0:-len('.index')]
 
         # Get output from potential previous run so we can resume training.
-        if type(train_restart_dir) is str and len(train_restart_dir) > 0:
+        if type(train_restart_dir) is str and len(
+                train_restart_dir
+        ) > 0 and not self.backend_config.train_options.replace_model:
             sync_from_dir(train_logdir, train_logdir_local)
+        else:
+            if self.backend_config.train_options.replace_model:
+                if os.path.exists(train_logdir_local):
+                    shutil.rmtree(train_logdir_local)
+                make_dir(train_logdir_local)
 
         # Periodically synchronize with remote
         sync = start_sync(
@@ -572,16 +579,18 @@ class TFDeeplab(Backend):
             train_process = Popen(train_args, env=train_env)
             terminate_at_exit(train_process)
 
-            # Start tensorboard
-            print('Starting tensorboard process')
-            tensorboard_process = Popen(
-                ['tensorboard', '--logdir={}'.format(train_logdir_local)])
-            terminate_at_exit(tensorboard_process)
+            if self.backend_config.train_options.do_monitoring:
+                # Start tensorboard
+                print('Starting tensorboard process')
+                tensorboard_process = Popen(
+                    ['tensorboard', '--logdir={}'.format(train_logdir_local)])
+                terminate_at_exit(tensorboard_process)
 
             # Wait for training and tensorboard
-            print('Waiting for training and tensorboard processes')
+            print('Waiting for training process')
             train_process.wait()
-            tensorboard_process.terminate()
+            if self.backend_config.train_options.do_monitoring:
+                tensorboard_process.terminate()
 
             # Export frozen graph
             print(

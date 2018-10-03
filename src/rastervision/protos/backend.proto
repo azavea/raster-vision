@@ -45,14 +45,16 @@ message BackendConfig {
 
         optional string train_restart_dir = 3;
         optional int32 sync_interval = 4 [default=600];
+        optional bool do_monitoring = 5 [default=true];
+        optional bool replace_model = 6 [default=false];
 
-        optional string training_data_uri = 5;
-        optional string training_output_uri = 6;
-        optional string model_uri = 7;
+        optional string training_data_uri = 7;
+        optional string training_output_uri = 8;
+        optional string model_uri = 9;
 
-        required google.protobuf.Struct tfdl_config = 8;
+        required google.protobuf.Struct tfdl_config = 10;
 
-        optional bool debug = 9 [default=false];
+        optional bool debug = 11 [default=false];
     }
 
     required string backend_type = 1;
