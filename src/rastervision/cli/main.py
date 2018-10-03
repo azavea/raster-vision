@@ -1,12 +1,12 @@
 """Raster Vision main program"""
 import sys
-from tempfile import TemporaryDirectory
 
 import click
 
 import rastervision as rv
 from rastervision.experiment import (ExperimentLoader, LoaderError)
 from rastervision.runner import (ExperimentRunner)
+from rastervision.rv_config import RVConfig
 
 
 def print_error(msg):
@@ -83,6 +83,10 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         prefix, methods, filters, rerun):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
+    darg = dict(arg)
+    if 'tmp_dir' in darg:
+        RVConfig.set_tmp_dir(darg['tmp_dir'])
+
     # Validate runner
     valid_runners = list(
         map(lambda x: x.lower(), rv.ExperimentRunner.list_runners()))
@@ -204,7 +208,7 @@ def predict(predict_package, image_uri, output_uri, update_stats,
         channel_order = [
             int(channel_ind) for channel_ind in channel_order.split(' ')
         ]
-    with TemporaryDirectory() as tmp_dir:
+    with RVConfig.get_tmp_dir() as tmp_dir:
         predict = rv.Predictor(predict_package, tmp_dir, update_stats,
                                channel_order).predict
         predict(image_uri, output_uri)

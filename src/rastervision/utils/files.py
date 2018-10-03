@@ -1,13 +1,11 @@
 import os
 import shutil
-import tempfile
 from threading import Timer
-from pathlib import Path
 
 from google.protobuf import json_format
 
-from rastervision.filesystem.filesystem import ProtobufParseException
 from rastervision.filesystem.filesystem import FileSystem
+from rastervision.filesystem.filesystem import ProtobufParseException
 from rastervision.filesystem.local_filesystem import make_dir
 
 
@@ -251,34 +249,3 @@ def save_json_config(message, uri, fs=None):
     """
     json_str = json_format.MessageToJson(message)
     str_to_file(json_str, uri, fs=fs)
-
-
-# Ensure that RV temp directory exists. We need to use a custom location for
-# the temporary directory so it will be mirrored on the host file system which
-# is needed for running in a Docker container with limited space on EC2.
-RV_TEMP_DIR = '/opt/data/tmp/'
-
-# find explicitly set tempdir
-explicit_temp_dir = next(
-    iter([
-        os.environ.get(k) for k in ['TMPDIR', 'TEMP', 'TMP'] if k in os.environ
-    ] + [tempfile.tempdir]))
-
-try:
-    # try to create directory
-    if not os.path.exists(explicit_temp_dir):
-        os.makedirs(explicit_temp_dir, exist_ok=True)
-    # can we interact with directory?
-    explicit_temp_dir_valid = (os.path.isdir(explicit_temp_dir) and Path.touch(
-        Path(os.path.join(explicit_temp_dir, '.can_touch'))))
-except Exception:
-    print('Root temporary directory cannot be used: {}. Using root: {}'.format(
-        explicit_temp_dir, RV_TEMP_DIR))
-    tempfile.tempdir = RV_TEMP_DIR  # no guarantee this will work
-    make_dir(RV_TEMP_DIR)
-finally:
-    # now, ensure uniqueness for this process
-    # the host may be running more than one rastervision process
-    RV_TEMP_DIR = tempfile.mkdtemp()
-    tempfile.tempdir = RV_TEMP_DIR
-    print('Temporary directory is: {}'.format(tempfile.tempdir))

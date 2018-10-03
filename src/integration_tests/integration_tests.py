@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from tempfile import TemporaryDirectory
 import json
 import os
 import math
@@ -16,6 +15,7 @@ from integration_tests.object_detection_tests.experiment \
     import ObjectDetectionIntegrationTest
 from integration_tests.chip_classification_tests.experiment \
     import ChipClassificationIntegrationTest
+from rastervision.rv_config import RVConfig
 
 all_tests = [rv.CHIP_CLASSIFICATION, rv.OBJECT_DETECTION]
 
@@ -220,7 +220,7 @@ def main(tests):
 
     tests = list(map(lambda x: x.upper(), tests))
 
-    with TemporaryDirectory() as temp_dir:
+    with RVConfig.get_tmp_dir() as temp_dir:
         errors = []
         for test in tests:
             if test not in all_tests:

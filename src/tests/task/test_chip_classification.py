@@ -1,7 +1,7 @@
 import unittest
-from tempfile import TemporaryDirectory
 
 import rastervision as rv
+from rastervision.rv_config import RVConfig
 
 from tests import data_file_path
 
@@ -42,7 +42,7 @@ class TestChipClassification(unittest.TestCase):
                           .with_aoi_uri(aoi_uri) \
                           .build()
 
-        with TemporaryDirectory() as tmp_dir:
+        with RVConfig.get_tmp_dir() as tmp_dir:
             scene = s.create_scene(task_config, tmp_dir)
             backend = backend_config.create_backend(task_config)
             task = task_config.create_task(backend)

@@ -22,6 +22,6 @@ else
     if ! [ -x "$(command -v coverage)" ]; then
 	python -m unittest discover tests
     else
-	coverage run --append --source=rastervision --omit=rastervision/protos -m unittest discover tests
+	coverage run --source=rastervision --omit=rastervision/protos -m unittest discover tests
     fi
 fi

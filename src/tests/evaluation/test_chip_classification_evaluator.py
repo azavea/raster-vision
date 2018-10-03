@@ -1,9 +1,9 @@
 import unittest
 import os
 import json
-from tempfile import TemporaryDirectory
 
 import rastervision as rv
+from rastervision.rv_config import RVConfig
 
 from tests import data_file_path
 
@@ -38,7 +38,7 @@ class TestChipClassificationEvaluator(unittest.TestCase):
                           .with_aoi_uri(aoi_uri) \
                           .build()
 
-        with TemporaryDirectory() as tmp_dir:
+        with RVConfig.get_tmp_dir() as tmp_dir:
             scene = s.create_scene(task, tmp_dir)
 
             output_uri = os.path.join(tmp_dir, 'eval.json')
