@@ -5,6 +5,7 @@ from rastervision.command import (AnalyzeCommand, CommandConfig,
                                   CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
+from rastervision.rv_config import RVConfig
 
 
 class AnalyzeCommandConfig(CommandConfig):
@@ -14,14 +15,17 @@ class AnalyzeCommandConfig(CommandConfig):
         self.scenes = scenes
         self.analyzers = analyzers
 
-    def create_command(self, tmp_dir):
+    def create_command(self):
         if len(self.scenes) == 0 or len(self.analyzers) == 0:
             return NoOpCommand()
 
+        tmp_dir = RVConfig.get_tmp_dir()
         scenes = list(
             map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
         analyzers = list(map(lambda a: a.create_analyzer(), self.analyzers))
-        return AnalyzeCommand(scenes, analyzers)
+        retval = AnalyzeCommand(scenes, analyzers)
+        retval.set_tmp_dir(tmp_dir)
+        return retval
 
     def to_proto(self):
         msg = super().to_proto()

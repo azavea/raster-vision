@@ -12,8 +12,7 @@ class CommandRunner:
         CommandRunner.run_from_proto(msg)
 
     def run_from_proto(msg):
-        with RVConfig.get_tmp_dir() as tmp_dir:
-            PluginRegistry.get_instance().add_plugins_from_proto(msg.plugins)
-            command_config = rv.command.CommandConfig.from_proto(msg)
-            command = command_config.create_command(tmp_dir)
-            command.run(tmp_dir)
+        PluginRegistry.get_instance().add_plugins_from_proto(msg.plugins)
+        command_config = rv.command.CommandConfig.from_proto(msg)
+        command = command_config.create_command()
+        command.run()

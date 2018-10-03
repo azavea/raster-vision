@@ -13,7 +13,7 @@ class CommandConfig(ABC):
         self.root_uri = root_uri
 
     @abstractmethod
-    def create_command(self, tmp_dir):
+    def create_command(self):
         """Run the command."""
         pass
 

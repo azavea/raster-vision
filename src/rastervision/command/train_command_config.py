@@ -5,6 +5,7 @@ from rastervision.command import (TrainCommand, CommandConfig,
                                   CommandConfigBuilder)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
+from rastervision.rv_config import RVConfig
 
 
 class TrainCommandConfig(CommandConfig):
@@ -13,11 +14,12 @@ class TrainCommandConfig(CommandConfig):
         self.task = task
         self.backend = backend
 
-    def create_command(self, tmp_dir):
+    def create_command(self):
         backend = self.backend.create_backend(self.task)
         task = self.task.create_task(backend)
-
-        return TrainCommand(task)
+        retval = TrainCommand(task)
+        retval.set_tmp_dir(RVConfig.get_tmp_dir())
+        return retval
 
     def to_proto(self):
         msg = super().to_proto()

@@ -21,9 +21,8 @@ class LocalExperimentRunner(ExperimentRunner):
                     command_uri))
                 save_json_config(command_config.to_proto(), command_uri)
 
-                command = command_config.create_command(tmp_dir)
-
-                command.run(tmp_dir)
+                command = command_config.create_command()
+                command.run()
 
         if self.tmp_dir:
             run_commands(self.tmp_dir)

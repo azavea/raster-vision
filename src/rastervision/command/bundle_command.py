@@ -19,7 +19,9 @@ class BundleCommand(Command):
         self.scene_config = scene_config
         self.analyzer_configs = analyzer_configs
 
-    def run(self, tmp_dir):
+    def run(self, tmp_dir=None):
+        if not tmp_dir:
+            tmp_dir = self.get_tmp_dir()
         if not self.task_config.predict_package_uri:
             msg = 'Skipping bundling of prediction package, no URI is set...'.format(
                 self.task_config.predict_package_uri)
@@ -29,9 +31,9 @@ class BundleCommand(Command):
         msg = 'Bundling prediction package to {}...'.format(
             self.task_config.predict_package_uri)
         click.echo(click.style(msg, fg='green'))
-        bundle_dir = os.path.join(tmp_dir, 'bundle')
+        bundle_dir = os.path.join(tmp_dir.name, 'bundle')
         make_dir(bundle_dir)
-        package_path = os.path.join(tmp_dir, 'predict_package.zip')
+        package_path = os.path.join(tmp_dir.name, 'predict_package.zip')
         bundle_files = []
         new_task, task_files = self.task_config.save_bundle_files(bundle_dir)
         bundle_files.extend(task_files)
@@ -56,7 +58,7 @@ class BundleCommand(Command):
                                               .build()
 
         # Save bundle command config
-        bundle_config_path = os.path.join(tmp_dir, 'bundle_config.json')
+        bundle_config_path = os.path.join(tmp_dir.name, 'bundle_config.json')
         bundle_json = json_format.MessageToJson(new_bundle_config.to_proto())
         with open(bundle_config_path, 'w') as f:
             f.write(bundle_json)
