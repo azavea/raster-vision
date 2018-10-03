@@ -1,3 +1,22 @@
+import os
+import platform
+import unittest
+
+from rastervision.rv_config import RVConfig
+
+
+class TestRVConfig(unittest.TestCase):
+    def test_set_tmp_dir(self):
+        if platform.system() == 'Linux':
+            directory = '/tmp/xxx/yyy'
+            while os.path.exists(directory):
+                directory = directory + 'yyy'
+            self.assertFalse(os.path.exists(directory))
+            RVConfig.set_tmp_dir(directory, rm_tmp_dir=True)
+            self.assertTrue(os.path.exists(directory))
+            self.assertTrue(os.path.isdir(directory))
+
+
 # import os
 # import json
 # import unittest
