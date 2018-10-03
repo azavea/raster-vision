@@ -58,7 +58,9 @@ class RasterioRasterSource(RasterSource):
 
     def get_dtype(self):
         """Return the numpy.dtype of this scene"""
-        return np.dtype(self.image_dataset.dtypes[0])
+        # Get 1x1 chip (after applying raster transformers) to test dtype.
+        chip = self.get_chip(window=Box.make_square(0, 0, 1))
+        return chip.dtype
 
     def _get_chip(self, window):
         return load_window(self.image_dataset, window.rasterio_format(),
