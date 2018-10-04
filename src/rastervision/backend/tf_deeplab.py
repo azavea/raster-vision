@@ -9,7 +9,6 @@ from subprocess import Popen
 
 import numpy as np
 from google.protobuf import (json_format)
-from object_detection.utils import dataset_util
 
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap
@@ -192,6 +191,8 @@ def create_tf_example(image: np.ndarray,
 
     """
     import tensorflow as tf
+    from object_detection.utils import dataset_util
+
     class_keys = set(class_map.get_keys())
 
     def _clean(n):

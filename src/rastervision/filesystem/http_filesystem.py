@@ -2,6 +2,7 @@ import os
 import shutil
 import urllib
 import urllib.request
+from datetime import datetime
 
 from rastervision.filesystem import (FileSystem, NotReadableError,
                                      NotWritableError)
@@ -76,3 +77,7 @@ class HttpFileSystem(FileSystem):
         path = os.path.join(download_dir, 'http', parsed_uri.netloc,
                             parsed_uri.path[1:])
         return path
+
+    @staticmethod
+    def last_modified(uri: str) -> datetime:
+        return None

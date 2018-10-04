@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:1.8.0-gpu-py3
+FROM tensorflow/tensorflow:1.10.1-gpu-py3
 
 # Everything below this line is common between CPU and GPU images.
 
@@ -9,12 +9,27 @@ ENV LANG C.UTF-8
 COPY scripts/install_deps /tmp/install_deps
 RUN /tmp/install_deps && rm /tmp/install_deps
 
+# Setup GDAL_DATA directory, rasterio needs it.
+ENV GDAL_DATA=/usr/share/gdal/2.1/
+
+# See https://github.com/mapbox/rasterio/issues/1289
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
 # Make Python3 default Python
 RUN rm -f /usr/bin/pip && ln -s /usr/bin/pip3 /usr/bin/pip
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 
 WORKDIR /opt/src/
 ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
+
+# Install requirements-dev.txt
+COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
+RUN pip install -r requirements-dev.txt
+
+# Install extras_requirements.json
+# Don't install tensorflow
+COPY ./extras_requirements.json /opt/src/extras_requirements.json
+RUN cat extras_requirements.json | jq  '.[][]' | grep -v 'tensorflow' | sort -u | xargs pip install
 
 # Install requirements.txt
 COPY ./requirements.txt /opt/src/requirements.txt

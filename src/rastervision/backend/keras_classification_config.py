@@ -3,11 +3,11 @@ from copy import deepcopy
 from google.protobuf import (json_format)
 
 import rastervision as rv
-from rastervision.backend import (BackendConfig, BackendConfigBuilder,
-                                  KerasClassification)
-from rastervision.core.config import set_nested_keys
+from rastervision.backend import (BackendConfig, BackendConfigBuilder)
+from rastervision.utils.misc import set_nested_keys
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
+from rastervision.protos.keras_classification.pipeline_pb2 import PipelineConfig
 
 # Default location to Tensorflow Object Detection's scripts.
 CHIP_OUTPUT_FILES = ['training.zip', 'validation.zip']
@@ -15,8 +15,12 @@ CHIP_OUTPUT_FILES = ['training.zip', 'validation.zip']
 
 class KerasClassificationConfig(BackendConfig):
     class TrainOptions:
-        def __init__(self, sync_interval=600, replace_model=True):
+        def __init__(self,
+                     sync_interval=600,
+                     do_monitoring=True,
+                     replace_model=False):
             self.sync_interval = sync_interval
+            self.do_monitoring = do_monitoring
             self.replace_model = replace_model
 
     def __init__(self,
@@ -42,15 +46,18 @@ class KerasClassificationConfig(BackendConfig):
         self.model_uri = model_uri
 
     def create_backend(self, task_config):
+        from rastervision.backend.keras_classification import KerasClassification
         return KerasClassification(self, task_config)
 
     def to_proto(self):
         d = {
             'sync_interval': self.train_options.sync_interval,
+            'do_monitoring': self.train_options.do_monitoring,
             'replace_model': self.train_options.replace_model,
             'training_data_uri': self.training_data_uri,
             'training_output_uri': self.training_output_uri,
             'model_uri': self.model_uri,
+            'debug': self.debug,
             'kc_config': self.kc_config
         }
 
@@ -151,9 +158,11 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         if self.config.get('pretrained_model_uri'):
             b = b.with_pretrained_model_uri(self.config.pretrained_model_uri)
         b = b.with_train_options(
-            sync_interval=conf.sync_interval, replace_model=conf.replace_model)
-        # TODO: Debug
-        # b = b.with_debug(conf.debug)
+            sync_interval=conf.sync_interval,
+            do_monitoring=conf.do_monitoring,
+            replace_model=conf.replace_model,
+        )
+        b = b.with_debug(conf.debug)
 
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
@@ -179,8 +188,12 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         b = deepcopy(self)
 
         for config_mod, ignore_missing_keys, set_missing_keys in b.config_mods:
-            set_nested_keys(b.config['kc_config'], config_mod,
-                            ignore_missing_keys, set_missing_keys)
+            try:
+                set_nested_keys(b.config['kc_config'], config_mod,
+                                ignore_missing_keys, set_missing_keys)
+            except Exception as e:
+                raise rv.ConfigError(
+                    'Error setting configuration {}'.format(config_mod)) from e
 
         return KerasClassificationConfig(**b.config)
 
@@ -224,8 +237,6 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         """Use a template from the dict, string or uri as the base for the
         Keras Classification API.
         """
-        from keras_classification.protos.pipeline_pb2 import PipelineConfig
-
         template_json = None
         if type(template) is dict:
             msg = json_format.ParseDict(template, PipelineConfig())
@@ -298,12 +309,17 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         b.config['model_uri'] = model_uri
         return b
 
-    def with_train_options(self, sync_interval=600, replace_model=False):
+    def with_train_options(self,
+                           sync_interval=600,
+                           do_monitoring=True,
+                           replace_model=False):
         """Sets the train options for this backend.
 
            Args:
               sync_interval: How often to sync output of training to
                              the cloud (in seconds).
+
+              do_monitoring: Run process to monitor training (eg. Tensorboard)
 
               replace_model: Replace the model checkpoint if exists.
                              If false, this will continue training from
@@ -311,5 +327,6 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         """
         b = deepcopy(self)
         b.config['train_options'] = KerasClassificationConfig.TrainOptions(
-            sync_interval, replace_model)
+            sync_interval, do_monitoring, replace_model)
+
         return b

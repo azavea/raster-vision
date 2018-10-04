@@ -102,7 +102,11 @@ class CommandDAG:
 
     def get_command(self, command_id):
         """Retrieves a command configuration for the given ID"""
-        return self.command_definitions[command_id].command_config
+        return self.get_command_definition(command_id).command_config
+
+    def get_command_definition(self, command_id):
+        """Retrieves a command definition for the given ID"""
+        return self.command_definitions[command_id]
 
     def get_upstream_command_ids(self, command_id):
         """Returns the command ids for upstream commands for the command

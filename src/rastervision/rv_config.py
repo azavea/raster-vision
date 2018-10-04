@@ -6,6 +6,7 @@ from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
 
 import rastervision as rv
 from rastervision.utils.files import file_to_str
+from rastervision.cli import Verbosity
 
 
 class RVConfig:
@@ -15,7 +16,13 @@ class RVConfig:
     def get_instance():
         return rv._registry._get_rv_config()
 
-    def __init__(self, profile=None, rv_home=None, config_overrides=None):
+    def __init__(self,
+                 profile=None,
+                 rv_home=None,
+                 config_overrides=None,
+                 verbosity=Verbosity.NORMAL):
+        self.verbosity = verbosity
+
         if profile is None:
             if os.environ.get('RV_PROFILE'):
                 profile = os.environ.get('RV_PROFILE')
@@ -109,3 +116,6 @@ class RVConfig:
         model_defaults = json.loads(file_to_str(model_default_uri))
 
         return model_defaults
+
+    def get_verbosity(self):
+        return self.verbosity

@@ -1,5 +1,5 @@
-from keras_classification.builders import optimizer_builder
-from keras_classification.core.trainer import Trainer
+from rastervision.backend.keras_classification.builders import optimizer_builder
+from rastervision.backend.keras_classification.core.trainer import Trainer
 
 
 def build(trainer_config, model):

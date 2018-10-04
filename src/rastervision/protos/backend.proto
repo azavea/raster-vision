@@ -8,11 +8,10 @@ message BackendConfig {
     message TFObjectDetectionConfig {
         optional int32 sync_interval = 1 [default=600];
         optional bool do_monitoring = 2 [default=true];
-        // path to Object Detection's train.py script
-        optional string train_py = 3 [default="/opt/tf-models/object_detection/train.py"];
+        optional bool replace_model = 3 [default=false];
 
-        // path to Object Detection's eval.py script
-        optional string eval_py = 4 [default="/opt/tf-models/object_detection/eval.py"];
+        // path to Object Detection's model_main.py script
+        optional string model_main_py = 4 [default="/opt/tf-models/object_detection/model_main.py"];
 
         // path to Object Detection's export_inference_graph.py script
         optional string export_py = 5 [default="/opt/tf-models/object_detection/export_inference_graph.py"];
@@ -21,18 +20,23 @@ message BackendConfig {
         optional string training_output_uri = 7;
         optional string model_uri = 8;
 
-        required google.protobuf.Struct tfod_config = 9;
+        optional bool debug = 9 [default=false];
+
+        required google.protobuf.Struct tfod_config = 10;
     }
 
     message KerasClassificationConfig {
         optional int32 sync_interval = 1 [default=600];
-        optional bool replace_model = 2 [default=false];
+        optional bool do_monitoring = 2 [default=true];
+        optional bool replace_model = 3 [default=false];
 
-        optional string training_data_uri = 3;
-        optional string training_output_uri = 4;
-        optional string model_uri = 5;
+        optional string training_data_uri = 4;
+        optional string training_output_uri = 5;
+        optional string model_uri = 6;
 
-        required google.protobuf.Struct kc_config = 6;
+        optional bool debug = 7 [default=false];
+
+        required google.protobuf.Struct kc_config = 8;
     }
 
     message TFDeeplabConfig {
@@ -48,7 +52,7 @@ message BackendConfig {
 
         required google.protobuf.Struct tfdl_config = 8;
 
-        optional bool debug = 9 [default=false];        
+        optional bool debug = 9 [default=false];
     }
 
     required string backend_type = 1;

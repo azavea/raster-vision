@@ -15,6 +15,13 @@ def _make_chip_pos_windows(image_extent, label_store, chip_size):
     # in a window, then it is skipped.
     for box in boxes:
         if box.tuple_format() not in done_boxes:
+            # If this  object is bigger than the chip,
+            # don't use this box.
+            if chip_size < box.get_width() or chip_size < box.get_height():
+                print('WARNING: Label is larger than chip size: {} '
+                      'Skipping this label'.format(box.tuple_format()))
+                continue
+
             window = box.make_random_square_container(chip_size)
             pos_windows.append(window)
 

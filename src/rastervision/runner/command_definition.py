@@ -15,7 +15,7 @@ class CommandDefinition:
                 sorted(self.io_def.output_uris)))
 
     def __eq__(self, other):
-        return self._key == other._key
+        return self._key() == other._key()
 
     def __hash__(self):
         return hash(self._key())
@@ -35,11 +35,30 @@ class CommandDefinition:
         return command_definitions
 
     @staticmethod
-    def filter_commands(command_definitions, target_commands):
+    def filter_to_target_commands(command_definitions, target_commands):
         """Filters commands by the target command type."""
-        return list(
-            filter(lambda c: c.command_config.command_type in target_commands,
-                   command_definitions))
+        result = []
+        skipped = []
+        for command_def in command_definitions:
+            if command_def.command_config.command_type in target_commands:
+                result.append(command_def)
+            else:
+                skipped.append(command_def)
+
+        return (result, skipped)
+
+    @staticmethod
+    def filter_no_output(command_definitions):
+        """Filters commands that have no output."""
+        result = []
+        skipped = []
+        for command_def in command_definitions:
+            if any(command_def.io_def.output_uris):
+                result.append(command_def)
+            else:
+                skipped.append(command_def)
+
+        return (result, skipped)
 
     @staticmethod
     def remove_duplicates(command_definitions):

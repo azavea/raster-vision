@@ -96,7 +96,8 @@ class ModelFiles(FileGroup):
 
     def download_backend_config(self, pretrained_model_uri, kc_config,
                                 dataset_files, class_map):
-        from keras_classification.protos.pipeline_pb2 import PipelineConfig
+        from rastervision.protos.keras_classification.pipeline_pb2 \
+            import PipelineConfig
 
         config = json_format.ParseDict(kc_config, PipelineConfig())
 
@@ -209,7 +210,8 @@ class KerasClassification(Backend):
         dataset_files.upload()
 
     def train(self, tmp_dir):
-        from keras_classification.commands.train import _train
+        from rastervision.backend.keras_classification.commands.train \
+            import _train
 
         dataset_files = DatasetFiles(self.config.training_data_uri, tmp_dir)
         dataset_files.download()
@@ -233,14 +235,16 @@ class KerasClassification(Backend):
             self.config.training_output_uri,
             sync_interval=self.config.train_options.sync_interval)
         with sync:
-            _train(backend_config_path, pretrained_model_path)
+            do_monitoring = self.config.train_options.do_monitoring
+            _train(backend_config_path, pretrained_model_path, do_monitoring)
 
         # Perform final sync
         sync_to_dir(
             model_files.base_dir, self.config.training_output_uri, delete=True)
 
     def load_model(self, tmp_dir):
-        from keras_classification.builders import model_builder
+        from rastervision.backend.keras_classification.builders \
+            import model_builder
 
         if self.model is None:
             model_path = download_if_needed(self.config.model_uri, tmp_dir)
@@ -248,7 +252,8 @@ class KerasClassification(Backend):
             self.model._make_predict_function()
 
     def predict(self, chips, windows, tmp_dir):
-        from keras_classification.utils import predict
+        from rastervision.backend.keras_classification.utils \
+            import predict
 
         # Ensure model is loaded
         self.load_model(tmp_dir)

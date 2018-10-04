@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package keras_classification.protos;
 
-import "keras_classification/protos/optimizer.proto";
+import "rastervision/protos/keras_classification/optimizer.proto";
 
 message Trainer {
     message LRScheduleItem {

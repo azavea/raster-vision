@@ -3,7 +3,7 @@ import zipfile
 
 import rastervision as rv
 from rastervision.utils.files import (download_if_needed, make_dir,
-                                      load_json_config)
+                                      load_json_config, save_json_config)
 from rastervision.protos.command_pb2 import CommandConfig as CommandConfigMsg
 
 
@@ -39,6 +39,7 @@ class Predictor():
         scene_config = rv.SceneConfig.from_proto(bundle_config.scene)
         scene_builder = scene_config.load_bundle_files(package_dir) \
                                     .to_builder() \
+                                    .clear_label_source() \
                                     .with_id('PREDICTOR')
 
         # If the scene does not have a label store, generate a default one.
@@ -62,6 +63,15 @@ class Predictor():
                                      .load_bundle_files(package_dir)
                 self.analyzer_configs.append(a)
 
+        self.bundle_config = rv.command.CommandConfig \
+                                       .from_proto(msg) \
+                                       .to_builder() \
+                                       .with_task(self.task_config) \
+                                       .with_backend(self.backend_config) \
+                                       .with_scene(self.scene_config) \
+                                       .with_analyzers(self.analyzer_configs) \
+                                       .build()
+
     def load_model(self):
         self.backend = self.backend_config.create_backend(self.task_config)
         self.backend.load_model(self.tmp_dir)
@@ -71,7 +81,7 @@ class Predictor():
             self.analyzers.append(analyzer_config.create_analyzer())
         self.model_loaded = True
 
-    def predict(self, image_uri, label_uri=None):
+    def predict(self, image_uri, label_uri=None, config_uri=None):
         if not self.model_loaded:
             self.load_model()
         scene_config = self.scene_config.for_prediction(image_uri, label_uri) \
@@ -90,4 +100,12 @@ class Predictor():
         labels = self.task.predict_scene(scene, self.tmp_dir)
         if label_uri:
             scene.prediction_label_store.save(labels)
+
+        if config_uri:
+            msg = self.bundle_config.to_builder() \
+                                    .with_scene(scene_config) \
+                                    .build() \
+                                    .to_proto()
+            save_json_config(msg, config_uri)
+
         return labels

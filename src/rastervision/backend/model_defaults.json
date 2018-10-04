@@ -2,59 +2,59 @@
     "TF_OBJECT_DETECTION": {
         "SSD_MOBILENET_V1_COCO": {
             "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2017_11_17.tar.gz",
-            "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/ssd_mobilenet_v1_coco.config"
+            "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/ssd_mobilenet_v1_coco.config"
         },
         "SSD_MOBILENET_V2_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/ssd_mobilenet_v2_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/ssd_mobilenet_v2_coco.config"
         },
         "SSDLITE_MOBILENET_V2_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/ssdlite_mobilenet_v2_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/ssdlite_mobilenet_v2_coco.config"
         },
         "SSD_INCEPTION_V2_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2017_11_17.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/ssd_inception_v2_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/ssd_inception_v2_coco.config"
         },
         "FASTER_RCNN_INCEPTION_V2_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/faster_rcnn_inception_v2_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_inception_v2_coco.config"
         },
         "FASTER_RCNN_RESNET50_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/faster_rcnn_resnet50_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_resnet50_coco.config"
         },
         "RFCN_RESNET101_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/rfcn_resnet101_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/rfcn_resnet101_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/rfcn_resnet101_coco.config"
         },
         "FASTER_RCNN_RESNET101_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/faster_rcnn_resnet101_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_resnet101_coco.config"
         },
         "FASTER_RCNN_INCEPTION_RESNET_V2_ATROUS_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/faster_rcnn_inception_resnet_v2_atrous_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_inception_resnet_v2_atrous_coco.config"
         },
         "FASTER_RCNN_NAS": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_nas_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/faster_rcnn_nas_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_nas_coco.config"
         },
         "MASK_RCNN_INCEPTION_RESNET_V2_ATROUS_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/mask_rcnn_inception_resnet_v2_atrous_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/mask_rcnn_inception_resnet_v2_atrous_coco.config"
         },
         "MASK_RCNN_INCEPTION_V2_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/mask_rcnn_inception_v2_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/mask_rcnn_inception_v2_coco.config"
         },
         "MASK_RCNN_RESNET101_ATROUS_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet101_atrous_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/mask_rcnn_resnet101_atrous_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/mask_rcnn_resnet101_atrous_coco.config"
         },
         "MASK_RCNN_RESNET50_ATROUS_COCO": {
           "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet50_atrous_coco_2018_01_28.tar.gz",
-          "pipeline_config_uri": "https://raw.githubusercontent.com/tensorflow/models/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs/mask_rcnn_resnet50_atrous_coco.config"
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/mask_rcnn_resnet50_atrous_coco.config"
         }
     },
     "KERAS_CLASSIFICATION": {

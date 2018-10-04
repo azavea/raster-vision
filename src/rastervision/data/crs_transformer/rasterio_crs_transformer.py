@@ -44,7 +44,7 @@ class RasterioCRSTransformer(CRSTransformer):
         Returns:
             (x, y) tuple in map coordinates
         """
-        image_point = self.image_dataset.ul(
+        image_point = self.image_dataset.xy(
             int(pixel_point[1]), int(pixel_point[0]))
         map_point = pyproj.transform(self.image_proj, self.map_proj,
                                      image_point[0], image_point[1])

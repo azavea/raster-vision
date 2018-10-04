@@ -8,48 +8,6 @@ class ConfigError(Exception):
     pass
 
 
-def set_nested_keys(target,
-                    mods,
-                    ignore_missing_keys=False,
-                    set_missing_keys=False):
-    """Sets dictionary keys based on modifications stated
-       in a dictionary. TODO: Explain.
-       Only overrides values, does not replace dicts.
-       TODO: Errors will be user facing, so provide good feedback.
-    """
-    searched_keys, found_keys = [], []
-
-    def f(_target, _mods):
-        for key in _target:
-            if key in _mods.keys():
-                found_keys.append(key)
-                if type(_target[key]) is dict:
-                    if type(_mods[key]) is dict:
-                        f(_target[key], _mods[key])
-                    else:
-                        raise ConfigError(
-                            'Error: cannot modify dict with value')
-                else:
-                    _target[key] = _mods[key]
-            else:
-                if type(_target[key]) is dict:
-                    f(_target[key], _mods)
-        searched_keys.extend(list(_mods.keys()))
-
-        if set_missing_keys:
-            for key in set(_mods.keys()) - set(found_keys):
-                if not type(_mods[key]) is dict:
-                    _target[key] = _mods[key]
-                    found_keys.append(key)
-
-    f(target, mods)
-    if not ignore_missing_keys:
-        d = set(searched_keys) - set(found_keys)
-        if d:
-            raise ConfigError(
-                'Mod keys not found in target dict: {}'.format(d))
-
-
 class Config(ABC):
     @abstractmethod
     def to_builder(self):

@@ -5,9 +5,9 @@ from google.protobuf import (json_format)
 import rastervision as rv
 from rastervision.backend import (BackendConfig, BackendConfigBuilder,
                                   TFDeeplab)
-from rastervision.core.config import set_nested_keys
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
+from rastervision.utils.misc import set_nested_keys
 
 # Default location to Tensorflow Deeplab's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/deeplab/train.py'
@@ -184,9 +184,13 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         self.validate()
         b = deepcopy(self)
 
-        for config_mod, ignore_missing_keys in b.config_mods:
-            set_nested_keys(b.config['tfdl_config'], config_mod,
-                            ignore_missing_keys)
+        for config_mod, ignore_missing_keys, set_missing_keys in b.config_mods:
+            try:
+                set_nested_keys(b.config['tfdl_config'], config_mod,
+                                ignore_missing_keys, set_missing_keys)
+            except Exception as e:
+                raise rv.ConfigError(
+                    'Error setting configuration {}'.format(config_mod)) from e
 
         return TFDeeplabConfig(**b.config)
 
@@ -245,13 +249,17 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
     def with_num_steps(self, num_steps):
         return self.with_config({'trainingNumberOfSteps': num_steps})
 
-    def with_config(self, config_mod, ignore_missing_keys=False):
+    def with_config(self,
+                    config_mod,
+                    ignore_missing_keys=False,
+                    set_missing_keys=False):
         """Given a dict, modify the tensorflow pipeline configuration
            such that keys that are found recursively in the configuration
            are replaced with those values.
         """
         b = deepcopy(self)
-        b.config_mods.append((config_mod, ignore_missing_keys))
+        b.config_mods.append((config_mod, ignore_missing_keys,
+                              set_missing_keys))
         return b
 
     def with_debug(self, debug):

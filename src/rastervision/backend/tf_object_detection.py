@@ -6,11 +6,11 @@ import os
 import shutil
 import tarfile
 from os.path import join
-from subprocess import Popen
-import atexit
+from subprocess import (Popen, PIPE, STDOUT)
 import glob
 import re
 import uuid
+from copy import deepcopy
 
 from PIL import Image
 import numpy as np
@@ -20,8 +20,9 @@ from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
                                       download_if_needed, sync_to_dir,
-                                      start_sync)
-from rastervision.utils.misc import save_img
+                                      sync_from_dir, start_sync)
+from rastervision.utils.misc import (save_img, replace_nones_in_dict,
+                                     terminate_at_exit)
 
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -201,52 +202,65 @@ def make_debug_images(record_path, class_map, output_dir):
     for ind, example in enumerate(tfrecord_iter):
         example = tf.train.Example.FromString(example)
         im, labels = parse_tfexample(example)
+        # Can't create debug images for non-3band images
+        if im.shape[2] != 3:
+            print(
+                'WARNING: Skipping debug images - Images are not 3 band rasters.'
+            )
+            return
         output_path = join(output_dir, '{}.png'.format(ind))
         save_debug_image(im, labels, class_map, output_path)
         print('.', end='', flush=True)
     print()
 
 
-def terminate_at_exit(process):
-    def terminate():
-        print('Terminating {}...'.format(process.pid))
-        process.terminate()
-
-    atexit.register(terminate)
-
-
 def train(config_path,
           output_dir,
-          train_py=None,
-          eval_py=None,
+          num_steps,
+          model_main_py=None,
           do_monitoring=True):
     output_train_dir = join(output_dir, 'train')
     output_eval_dir = join(output_dir, 'eval')
 
-    train_py = train_py or '/opt/tf-models/object_detection/train.py'
-    eval_py = eval_py or '/opt/tf-models/object_detection/eval.py'
+    model_main_py = model_main_py or '/opt/tf-models/object_detection/model_main.py'
 
-    train_process = Popen([
-        'python', train_py, '--logtostderr',
+    train_cmd = [
+        'python', model_main_py, '--alsologtostderr',
         '--pipeline_config_path={}'.format(config_path),
-        '--train_dir={}'.format(output_train_dir)
-    ])
+        '--model_dir={}'.format(output_train_dir),
+        '--num_train_steps={}'.format(num_steps),
+        '--sample_1_of_n_eval_examples={}'.format(1)
+    ]
+
+    print('Running train command: {}'.format(' '.join(train_cmd)))
+
+    train_process = Popen(train_cmd, stdout=PIPE, stderr=STDOUT)
     terminate_at_exit(train_process)
 
     if do_monitoring:
-        eval_process = Popen([
-            'python', eval_py, '--logtostderr',
+        eval_cmd = [
+            'python', model_main_py, '--alsologtostderr',
             '--pipeline_config_path={}'.format(config_path),
             '--checkpoint_dir={}'.format(output_train_dir),
-            '--eval_dir={}'.format(output_eval_dir)
-        ])
-        terminate_at_exit(eval_process)
+            '--model_dir={}'.format(output_eval_dir)
+        ]
+        print('Running eval command: {}'.format(' '.join(eval_cmd)))
+
+        # Don't let the eval process take up GPU space
+        env = deepcopy(os.environ)
+        env['CUDA_VISIBLE_DEVICES'] = '-1'
+        eval_process = Popen(eval_cmd, env=env)
 
         tensorboard_process = Popen(
             ['tensorboard', '--logdir={}'.format(output_dir)])
+        terminate_at_exit(eval_process)
         terminate_at_exit(tensorboard_process)
 
-    train_process.wait()
+    with train_process:
+        for line in train_process.stdout:
+            print(line.decode('utf-8'), end='', flush=True)
+
+    print('-----DONE TRAINING----')
     if do_monitoring:
         eval_process.terminate()
         tensorboard_process.terminate()
@@ -327,6 +341,7 @@ class TrainingPackage(object):
 
         self.base_uri = base_uri
         self.base_dir = self.get_local_path(base_uri)
+
         make_dir(self.base_dir)
 
         self.config = config
@@ -476,16 +491,9 @@ class TrainingPackage(object):
         # messages. These appear when translating between text and JSON based
         # protobuf messages, and using the google.protobuf.Struct type to store
         # the JSON. This appears when TFOD uses empty message types as an enum.
-        def remove_nulls(_d):
-            for k in _d:
-                if _d[k] is None:
-                    _d[k] = {}
-                if type(_d[k]) is dict:
-                    remove_nulls(_d[k])
-            return _d
-
         config = json_format.ParseDict(
-            remove_nulls(self.config.tfod_config), TrainEvalPipelineConfig())
+            replace_nones_in_dict(self.config.tfod_config, {}),
+            TrainEvalPipelineConfig())
 
         # Update config using local paths.
         if config.train_config.fine_tune_checkpoint:
@@ -506,14 +514,16 @@ class TrainingPackage(object):
         config.train_input_reader.label_map_path = class_map_path
 
         eval_path = self.get_local_path(self.get_record_uri(VALIDATION))
-        if hasattr(config.eval_input_reader.tf_record_input_reader.input_path,
-                   'append'):
-            config.eval_input_reader.tf_record_input_reader.input_path[:] = \
+
+        if hasattr(
+                config.eval_input_reader[0].tf_record_input_reader.input_path,
+                'append'):
+            config.eval_input_reader[0].tf_record_input_reader.input_path[:] = \
                 [eval_path]
         else:
-            config.eval_input_reader.tf_record_input_reader.input_path = \
+            config.eval_input_reader[0].tf_record_input_reader.input_path = \
                 eval_path
-        config.eval_input_reader.label_map_path = class_map_path
+        config.eval_input_reader[0].label_map_path = class_map_path
 
         # Save an updated copy of the config file.
         config_path = join(self.temp_dir, 'ml.config')
@@ -594,6 +604,9 @@ class TFObjectDetection(Backend):
         record_path = training_package.get_local_path(
             training_package.get_record_uri('{}-{}'.format(
                 scene.id, uuid.uuid4())))
+        record_path = training_package.get_local_path(
+            training_package.get_record_uri('{}-{}'.format(
+                scene.id, uuid.uuid4())))
         write_tf_record(tf_examples, record_path)
 
         return record_path
@@ -650,10 +663,20 @@ class TFObjectDetection(Backend):
 
         # Setup output dirs.
         output_dir = get_local_path(self.config.training_output_uri, tmp_dir)
-        make_dir(output_dir)
 
-        train_py = self.config.script_locations.train_uri
-        eval_py = self.config.script_locations.eval_uri
+        # Get output from potential previous run so we can resume training.
+        if not self.config.train_options.replace_model:
+            make_dir(output_dir)
+            sync_from_dir(self.config.training_output_uri, output_dir)
+        else:
+            if os.path.exists(output_dir):
+                shutil.rmtree(output_dir)
+            make_dir(output_dir)
+
+        local_config_path = os.path.join(output_dir, 'pipeline.config')
+        shutil.copy(config_path, local_config_path)
+
+        model_main_py = self.config.script_locations.model_main_uri
         export_py = self.config.script_locations.export_uri
 
         # Train model and sync output periodically.
@@ -663,17 +686,17 @@ class TFObjectDetection(Backend):
             sync_interval=self.config.train_options.sync_interval)
         with sync:
             train(
-                config_path,
+                local_config_path,
                 output_dir,
-                train_py=train_py,
-                eval_py=eval_py,
+                self.config.get_num_steps(),
+                model_main_py=model_main_py,
                 do_monitoring=self.config.train_options.do_monitoring)
 
         export_inference_graph(
-            output_dir, config_path, output_dir, export_py=export_py)
+            output_dir, local_config_path, output_dir, export_py=export_py)
 
         # Perform final sync
-        sync_to_dir(output_dir, self.config.training_output_uri, delete=True)
+        sync_to_dir(output_dir, self.config.training_output_uri)
 
     def load_model(self, tmp_dir):
         import tensorflow as tf

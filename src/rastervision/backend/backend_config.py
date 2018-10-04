@@ -41,8 +41,9 @@ class BackendConfig(BundledConfigMixin, Config):
     def preprocess_command(self, command_type, experiment_config,
                            context=None):
         io_def = CommandIODefinition()
-        if self.pretrained_model_uri:
-            io_def.add_input(self.pretrained_model_uri)
+        if command_type == rv.TRAIN:
+            if self.pretrained_model_uri:
+                io_def.add_input(self.pretrained_model_uri)
         return (self, io_def)
 
 

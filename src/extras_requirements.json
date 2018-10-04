@@ -1,0 +1,14 @@
+{
+    "tensorflow": [
+        "keras==2.2.2",
+        "tensorflow>=1.10.1"
+    ],
+    "tensorflow-gpu": [
+        "keras==2.2.2",
+        "tensorflow-gpu>=1.10.1"
+    ],
+    "aws": [
+        "boto3==1.7.*",
+        "awscli==1.15.*"
+    ]
+}

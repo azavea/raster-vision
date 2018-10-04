@@ -129,7 +129,8 @@ def download_if_needed(uri, download_dir, fs=None):
     path = get_local_path(uri, download_dir, fs=fs)
     make_dir(path, use_dirname=True)
 
-    print('Downloading {} to {}'.format(uri, path))
+    if path != uri:
+        print('Downloading {} to {}'.format(uri, path))
 
     fs.copy_from(uri, path)
 

@@ -95,13 +95,12 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
         self.assertEqual(b2.tfod_config['trainConfig']['batchSize'], 200)
 
     def test_raise_error_on_no_backend_field(self):
-        # Will raise since this backend template does not have num_steps
         with self.assertRaises(rv.ConfigError):
             rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                             .with_task(self.generate_task()) \
                             .with_template(self.get_template_uri()) \
                             .with_batch_size(100) \
-                            .with_num_steps(200) \
+                            .with_config({'bogusField': 1}) \
                             .build()
 
     def test_with_config_fails_key_not_found(self):

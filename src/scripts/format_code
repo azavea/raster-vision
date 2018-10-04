@@ -25,8 +25,8 @@ else
     unify --in-place --quote \' --recursive \
           rastervision/* \
           tests/* \
-          keras_classification/* \
-          integration_tests/*
+          integration_tests/* \
+          setup.py
 
     echo "Running yapf..."
     yapf -ipr -e "*_pb2.py" "$SRC_DIR"

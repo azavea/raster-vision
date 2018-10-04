@@ -1,5 +1,6 @@
 import os
 import shutil
+from datetime import datetime, timezone
 
 from rastervision.filesystem import (FileSystem, NotReadableError)
 
@@ -118,3 +119,8 @@ class LocalFileSystem(FileSystem):
     def local_path(uri: str, download_dir: str) -> None:
         path = uri
         return path
+
+    @staticmethod
+    def last_modified(uri: str) -> datetime:
+        local_last_modified = datetime.utcfromtimestamp(os.path.getmtime(uri))
+        return local_last_modified.replace(tzinfo=timezone.utc)

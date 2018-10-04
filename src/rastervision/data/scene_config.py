@@ -245,6 +245,12 @@ class SceneConfigBuilder(ConfigBuilder):
 
         return b
 
+    def clear_label_source(self):
+        """Clears the label source for this scene"""
+        b = deepcopy(self)
+        b.config['label_source'] = None
+        return b
+
     def with_label_store(
             self, label_store: Union[str, LabelStoreConfig, None] = None):
         """
@@ -282,6 +288,12 @@ class SceneConfigBuilder(ConfigBuilder):
                 self.task.task_type)
             b.config['label_store'] = provider.construct()
 
+        return b
+
+    def clear_label_store(self):
+        """Clears the label store for this scene"""
+        b = deepcopy(self)
+        b.config['label_store'] = None
         return b
 
     def with_aoi_uri(self, uri):

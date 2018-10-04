@@ -1,3 +1,4 @@
+import os
 import unittest
 from tempfile import TemporaryDirectory
 
@@ -54,7 +55,7 @@ class TestChipClassification(unittest.TestCase):
             for w in windows:
                 labels.set_cell(w, 1)
             store = ChipClassificationGeoJSONStore(
-                '/opt/src/tmp/test.json',
+                os.path.join(tmp_dir, 'test.json'),
                 scene.raster_source.get_crs_transformer(),
                 task_config.class_map)
             store.save(labels)

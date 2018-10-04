@@ -1,4 +1,5 @@
 from abc import (ABC, abstractmethod)
+from datetime import datetime
 
 import rastervision as rv
 
@@ -95,4 +96,12 @@ class FileSystem(ABC):
     @staticmethod
     @abstractmethod
     def local_path(uri: str, download_dir: str) -> None:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def last_modified(uri: str) -> datetime:
+        """Returns the last modified  date in UTC of this URI,
+        or None if this FileSystem does not support this operation.
+        """
         pass
