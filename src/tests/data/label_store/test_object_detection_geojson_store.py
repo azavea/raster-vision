@@ -1,5 +1,4 @@
 import unittest
-import tempfile
 import os
 import json
 
@@ -11,6 +10,7 @@ from rastervision.data.label_source.utils import (
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
 from rastervision.filesystem import NotWritableError
+from rastervision.rv_config import RVConfig
 
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
@@ -18,7 +18,7 @@ from tests.data.mock_crs_transformer import DoubleCRSTransformer
 class TestObjectDetectionGeoJSONSource(unittest.TestCase):
     def setUp(self):
         self.file_name = 'labels.json'
-        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir = RVConfig.get_tmp_dir()
         self.file_path = os.path.join(self.temp_dir.name, self.file_name)
 
         self.crs_transformer = DoubleCRSTransformer()

@@ -1,17 +1,17 @@
 import unittest
 import os
-from tempfile import TemporaryDirectory
 
 import numpy as np
 
 import rastervision as rv
 from rastervision.core.raster_stats import RasterStats
 from rastervision.utils.misc import save_img
+from rastervision.rv_config import RVConfig
 
 
 class TestImageSource(unittest.TestCase):
     def test_applies_transforms(self):
-        with TemporaryDirectory() as tmp_dir:
+        with RVConfig.get_tmp_dir() as tmp_dir:
             stats_uri = os.path.join(tmp_dir, 'stats.json')
             img_path = os.path.join(tmp_dir, 'img.tif')
 

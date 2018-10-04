@@ -1,6 +1,5 @@
 import unittest
 import os
-from tempfile import TemporaryDirectory
 
 import numpy as np
 import rasterio
@@ -9,13 +8,14 @@ import rastervision as rv
 from rastervision.core import Box
 from rastervision.utils.misc import save_img
 from rastervision.data.raster_source.rasterio_source import load_window
+from rastervision.rv_config import RVConfig
 
 from tests import data_file_path
 
 
 class TestGeoTiffSource(unittest.TestCase):
     def test_load_window(self):
-        with TemporaryDirectory() as temp_dir:
+        with RVConfig.get_tmp_dir() as temp_dir:
             # make geotiff filled with ones and zeros with nodata == 1
             image_path = os.path.join(temp_dir, 'temp.tif')
             height = 100
@@ -43,7 +43,7 @@ class TestGeoTiffSource(unittest.TestCase):
 
     def test_get_dtype(self):
         img_path = data_file_path('small-rgb-tile.tif')
-        with TemporaryDirectory() as tmp_dir:
+        with RVConfig.get_tmp_dir() as tmp_dir:
             source = rv.data.GeoTiffSourceConfig(uris=[img_path]) \
                             .create_source(tmp_dir)
 
@@ -75,7 +75,7 @@ class TestGeoTiffSource(unittest.TestCase):
         self.assertEqual(out_chip.shape[2], 3)
 
     def test_uses_channel_order(self):
-        with TemporaryDirectory() as tmp_dir:
+        with RVConfig.get_tmp_dir() as tmp_dir:
             img_path = os.path.join(tmp_dir, 'img.tif')
             chip = np.ones((2, 2, 4)).astype(np.uint8)
             chip[:, :, :] *= np.array([0, 1, 2, 3]).astype(np.uint8)
