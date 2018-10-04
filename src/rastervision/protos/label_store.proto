@@ -2,62 +2,22 @@ syntax = "proto2";
 
 package rv.protos;
 
-import "rastervision/protos/raster_source.proto";
+import "google/protobuf/struct.proto";
 
-message ObjectDetectionGeoJSONFile {
-    required string uri = 1;
-}
+message LabelStoreConfig {
+    message SemanticSegmentationRasterStore {
+        optional string uri = 1;
 
-message ClassificationGeoJSONFile {
-    message Options {
-        // The minimum IOA of a polygon and cell.
-        optional float ioa_thresh = 1;
-
-        // If use_intersection_over_cell is true, then use the area of the
-        // cell as the denominator in the IOA. Otherwise, use the area of the
-        // polygon.
-        optional bool use_intersection_over_cell = 6;
-
-        // If true, the class_id for a cell is the minimum class_id of the
-        // boxes in that cell. Otherwise, pick the class_id of the box
-        // covering the greatest area.
-        optional bool pick_min_class_id = 2;
-
-        // Optional class_id to use as the background class; ie. the one that
-        // is used when a window contains no boxes. If not set, empty windows
-        // have None set as their class_id.
-        optional int32 background_class_id = 3;
-
-        // Height and width of each cell (in pixels) in the spatial grid that
-        // is laid over the raster.
-        optional int32 cell_size = 4;
-
-        optional bool infer_cells = 5 [default=false];
+        // Flag that determines whether or not the values in this
+        // raster are RGB values. If so, the RGB values will be
+        // translated into class IDs based on the class map.
+        optional bool rgb = 2 [default=false];
     }
 
-    required string uri = 1;
-    optional Options options = 2;
-}
-
-message RasterClassMap {
-    required string source_class = 1;
-    required int32 raster_vision_class = 2;
-}
-
-message SegmentationRasterFile {
-    optional RasterSource source = 1;
-    optional string sink = 2;
-
-    // A mapping between classes in the source raster(s) and classes
-    // used internally in raster vision.  The latter type are also
-    // used in sink rasters.
-    repeated RasterClassMap raster_class_map = 3;
-}
-
-message LabelStore {
-    oneof label_store_type {
-        ObjectDetectionGeoJSONFile object_detection_geojson_file = 1;
-        ClassificationGeoJSONFile classification_geojson_file = 2;
-        SegmentationRasterFile segmentation_raster_file = 3;
+    required string store_type = 1;
+    oneof label_store_config {
+        string uri = 2;
+        SemanticSegmentationRasterStore semantic_segmentation_raster_store = 3;
+        google.protobuf.Struct custom_config = 4;
     }
 }

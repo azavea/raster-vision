@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package keras_classification.protos;
+
+import "rastervision/protos/keras_classification/model.proto";
+import "rastervision/protos/keras_classification/trainer.proto";
+
+message PipelineConfig {
+    required Model model = 1;
+    required Trainer trainer = 2;
+}

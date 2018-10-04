@@ -61,6 +61,10 @@ class Box():
     def shapely_format(self):
         return (self.xmin, self.ymin, self.xmax, self.ymax)
 
+    def to_int(self):
+        return Box(
+            int(self.ymin), int(self.xmin), int(self.ymax), int(self.xmax))
+
     def npbox_format(self):
         """Return Box in npbox format used by TF Object Detection API.
 
@@ -172,8 +176,30 @@ class Box():
         bounds = shape.bounds
         return Box(bounds[1], bounds[0], bounds[3], bounds[2])
 
-    def get_shapely(self):
+    @staticmethod
+    def from_tuple(tup):
+        """Return new Box based on tuple format.
+
+        Args:
+           tup: Tuple format box (ymin, xmin, ymax, xmax)
+        """
+        return Box(tup[0], tup[1], tup[2], tup[3])
+
+    def to_shapely(self):
         return ShapelyBox(*(self.shapely_format()))
+
+    def reproject(self, transform_fn):
+        """Reprojects this box based on a transform function.
+
+        Args:
+          transform_fn - A function that takes in a tuple (x, y)
+                         and reprojects that point to the target
+                         coordinate reference system.
+        """
+        (xmin, ymin) = transform_fn((self.xmin, self.ymin))
+        (xmax, ymax) = transform_fn((self.xmax, self.ymax))
+
+        return Box(ymin, xmin, ymax, xmax)
 
     @staticmethod
     def make_square(ymin, xmin, size):
@@ -212,7 +238,7 @@ class Box():
         return Box(*(self.tuple_format()))
 
     def get_windows(self, chip_size, stride):
-        """Return iterable grid of boxes within this box.
+        """Return list of grid of boxes within this box.
 
         Args:
             chip_size: (int) the length of each square-shaped window
@@ -222,6 +248,33 @@ class Box():
         height = self.get_height()
         width = self.get_width()
 
+        result = []
         for row_start in range(0, height, stride):
             for col_start in range(0, width, stride):
-                yield Box.make_square(row_start, col_start, chip_size)
+                result.append(Box.make_square(row_start, col_start, chip_size))
+        return result
+
+    def to_dict(self):
+        return {
+            'xmin': self.xmin,
+            'ymin': self.ymin,
+            'xmax': self.xmax,
+            'ymax': self.ymax
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d['ymin'], d['xmin'], d['ymax'], d['xmax'])
+
+    @staticmethod
+    def filter_by_aoi(windows, aoi_polygons):
+        """Filters windows by a list of AOI polygons"""
+        result = []
+        for window in windows:
+            w = window.to_shapely()
+            for polygon in aoi_polygons:
+                if w.within(polygon):
+                    result.append(window)
+                    break
+
+        return result

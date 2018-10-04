@@ -48,5 +48,5 @@ message TrainingParameters {
         // Tensorboard
         optional bool save_summaries_images = 29 [default = true];
         optional int32 save_interval_secs = 30 [default = 600];
-        optional int32 save_summaries_secs = 31 [default = 15];
+        optional int32 save_summaries_secs = 31 [default = 60];
 }

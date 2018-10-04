@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rastervision/protos/class_item.proto";
+import "google/protobuf/struct.proto";
+
+message EvaluatorConfig {
+    message ClassificationEvaluatorConfig {
+        required string output_uri = 1;
+        repeated ClassItem class_items = 2;
+    }
+
+    required string evaluator_type = 1;
+
+    oneof evaluator_config {
+        ClassificationEvaluatorConfig classification_config = 2;
+
+        // Configuration for custom evaluators
+        google.protobuf.Struct custom_config = 3;
+    }
+}

@@ -1,0 +1,102 @@
+{
+    "train_scenes": [
+        {
+            "id": "cl-test",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{test_dir}/scene/image.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "classification_geojson_file": {
+                    "uri": "{test_dir}/scene/labels.json",
+                    "options": {
+                        "ioa_thresh": 0.5,
+                        "use_intersection_over_cell": false,
+                        "pick_min_class_id": true,
+                        "background_class_id": 3,
+                        "cell_size": 200,
+                        "infer_cells": true
+                    }
+                }
+            }
+        }
+    ],
+    "test_scenes": [
+        {
+            "id": "cl-test",
+            "raster_source": {
+                "geotiff_files": {
+                    "uris": [
+                        "{test_dir}/scene/image.tif"
+                    ]
+                }
+            },
+            "ground_truth_label_store": {
+                "classification_geojson_file": {
+                    "uri": "{test_dir}/scene/labels.json",
+                    "options": {
+                        "ioa_thresh": 0.5,
+                        "use_intersection_over_cell": false,
+                        "pick_min_class_id": true,
+                        "background_class_id": 3,
+                        "cell_size": 200,
+                        "infer_cells": true
+                    }
+                }
+            }
+        }
+    ],
+    "model_config": {
+        "task": "CLASSIFICATION",
+        "backend": "KERAS_CLASSIFICATION",
+        "class_items": [
+            {
+                "id": 1,
+                "name": "car",
+                "color": "red"
+            },
+            {
+                "id": 2,
+                "name": "building",
+                "color": "blue"
+            },
+            {
+                "id": 3,
+                "name": "background",
+                "color": "black"
+            }
+        ]
+    },
+    "make_training_chips_options": {
+        "classification_options": {
+        }
+    },
+    "train_options": {
+        "backend_config_uri": "{test_dir}/configs/backend.config",
+        "pretrained_model_uri": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5",
+        "sync_interval": 999999
+    },
+    "predict_options": {
+        "classification_options": {
+        }
+    },
+    "eval_options": {
+    },
+    "debug": true,
+    "chip_size": 200,
+    "raster_transformer": {
+        "channel_order": [0, 1, 2]
+    },
+    "local_uri_map": {
+        "test_dir": "",
+        "rv_root": ""
+    },
+    "raw_dataset_key": "classification-test",
+    "dataset_key": "default",
+    "model_key": "default",
+    "prediction_key": "default",
+    "eval_key": "default"
+}

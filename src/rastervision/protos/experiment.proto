@@ -1,0 +1,26 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rastervision/protos/dataset.proto";
+import "rastervision/protos/task.proto";
+import "rastervision/protos/backend.proto";
+import "rastervision/protos/analyzer.proto";
+import "rastervision/protos/evaluator.proto";
+
+message ExperimentConfig {
+    required string id = 1;
+    required DatasetConfig dataset = 2;
+    required TaskConfig task = 3;
+    required BackendConfig backend = 4;
+    repeated AnalyzerConfig analyzers = 5;
+    repeated EvaluatorConfig evaluators = 6;
+
+    required string root_uri = 7;
+    required string analyze_uri = 8;
+    required string chip_uri = 9;
+    required string train_uri = 10;
+    required string predict_uri = 11;
+    required string eval_uri = 12;
+    required string bundle_uri = 13;
+}

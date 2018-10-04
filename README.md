@@ -3,6 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Join the chat at https://gitter.im/azavea/raster-vision](https://badges.gitter.im/azavea/raster-vision.svg)](https://gitter.im/azavea/raster-vision?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Docker Repository on Quay](https://quay.io/repository/azavea/raster-vision/status "Docker Repository on Quay")](https://quay.io/repository/azavea/raster-vision)
+[![codecov](https://codecov.io/gh/azavea/raster-vision/branch/feature%2Fapi-refactor/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
 
 ![Release Coming October 2018](/release-notice.png "RELEASE COMING OCTOBER 2018")
 &nbsp;
@@ -11,7 +12,7 @@
 
 The overall goal of Raster Vision is to make it easy to train and run machine learning models over imagery, including aerial and satellite imagery. It includes functionality for making training data, training models, making predictions, and evaluating models for the tasks of object detection (implemented via the Tensorflow Object Detection API), chip classificaiton (implemented via Keras), and semantic segmentation (implemented via Deep Lab).  It also supports running experimental workflows using AWS Batch. The library is designed to be easy to extend to new data sources, machine learning tasks, and machine learning implementation.
 
-The API is currently changing; see PR [#381](https://github.com/azavea/raster-vision/pull/381) for more details.
+__Note: This README is out of date, and will be updated in the next week.__
 
 The upcoming release will include:
 * A flexible API for specifying experiments
@@ -23,11 +24,6 @@ The upcoming release will include:
 * A QGIS Plugin:  https://github.com/azavea/raster-vision-qgis
 
 Why do we need yet another deep learning library? In traditional object detection, each image is a small PNG file and contains a few objects. In contrast, when working with satellite and aerial imagery, each image is a set of very large GeoTIFF files and contains hundreds of objects that are sparsely distributed. In addition, annotations and predictions are represented in geospatial coordinates using GeoJSON files.
-
-### Documentation
-* [Setup](docs/setup.md)
-* [Object Detection Tutorial](docs/object-detection.md)
-* [Update AMI](docs/vagrant-ami.md)
 
 ### Contact and Support
 

@@ -1,0 +1,69 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "google/protobuf/struct.proto";
+
+message BackendConfig {
+    message TFObjectDetectionConfig {
+        optional int32 sync_interval = 1 [default=600];
+        optional bool do_monitoring = 2 [default=true];
+        optional bool replace_model = 3 [default=false];
+
+        // path to Object Detection's model_main.py script
+        optional string model_main_py = 4 [default="/opt/tf-models/object_detection/model_main.py"];
+
+        // path to Object Detection's export_inference_graph.py script
+        optional string export_py = 5 [default="/opt/tf-models/object_detection/export_inference_graph.py"];
+
+        optional string training_data_uri = 6;
+        optional string training_output_uri = 7;
+        optional string model_uri = 8;
+
+        optional bool debug = 9 [default=false];
+
+        required google.protobuf.Struct tfod_config = 10;
+    }
+
+    message KerasClassificationConfig {
+        optional int32 sync_interval = 1 [default=600];
+        optional bool do_monitoring = 2 [default=true];
+        optional bool replace_model = 3 [default=false];
+
+        optional string training_data_uri = 4;
+        optional string training_output_uri = 5;
+        optional string model_uri = 6;
+
+        optional bool debug = 7 [default=false];
+
+        required google.protobuf.Struct kc_config = 8;
+    }
+
+    message TFDeeplabConfig {
+        optional string train_py = 1 [default="/opt/tf-models/deeplab/train.py"];
+        optional string export_py = 2 [default="/opt/tf-models/deeplab/export_model.py"];
+
+        optional string train_restart_dir = 3;
+        optional int32 sync_interval = 4 [default=600];
+        optional bool do_monitoring = 5 [default=true];
+        optional bool replace_model = 6 [default=false];
+
+        optional string training_data_uri = 7;
+        optional string training_output_uri = 8;
+        optional string model_uri = 9;
+
+        required google.protobuf.Struct tfdl_config = 10;
+
+        optional bool debug = 11 [default=false];
+    }
+
+    required string backend_type = 1;
+    optional string pretrained_model_uri = 3;
+
+    oneof backend_config {
+        TFObjectDetectionConfig tf_object_detection_config = 4;
+        KerasClassificationConfig keras_classification_config = 5;
+        TFDeeplabConfig tf_deeplab_config = 7;
+        google.protobuf.Struct custom_config = 6;
+    }
+}

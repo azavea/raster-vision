@@ -1,0 +1,132 @@
+{
+    "TF_OBJECT_DETECTION": {
+        "SSD_MOBILENET_V1_COCO": {
+            "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2017_11_17.tar.gz",
+            "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/ssd_mobilenet_v1_coco.config"
+        },
+        "SSD_MOBILENET_V2_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/ssd_mobilenet_v2_coco.config"
+        },
+        "SSDLITE_MOBILENET_V2_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssdlite_mobilenet_v2_coco_2018_05_09.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/ssdlite_mobilenet_v2_coco.config"
+        },
+        "SSD_INCEPTION_V2_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2017_11_17.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/ssd_inception_v2_coco.config"
+        },
+        "FASTER_RCNN_INCEPTION_V2_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_inception_v2_coco.config"
+        },
+        "FASTER_RCNN_RESNET50_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_resnet50_coco.config"
+        },
+        "RFCN_RESNET101_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/rfcn_resnet101_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/rfcn_resnet101_coco.config"
+        },
+        "FASTER_RCNN_RESNET101_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_resnet101_coco.config"
+        },
+        "FASTER_RCNN_INCEPTION_RESNET_V2_ATROUS_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_inception_resnet_v2_atrous_coco.config"
+        },
+        "FASTER_RCNN_NAS": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/faster_rcnn_nas_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/faster_rcnn_nas_coco.config"
+        },
+        "MASK_RCNN_INCEPTION_RESNET_V2_ATROUS_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_resnet_v2_atrous_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/mask_rcnn_inception_resnet_v2_atrous_coco.config"
+        },
+        "MASK_RCNN_INCEPTION_V2_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/mask_rcnn_inception_v2_coco.config"
+        },
+        "MASK_RCNN_RESNET101_ATROUS_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet101_atrous_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/mask_rcnn_resnet101_atrous_coco.config"
+        },
+        "MASK_RCNN_RESNET50_ATROUS_COCO": {
+          "pretrained_model_uri": "http://download.tensorflow.org/models/object_detection/mask_rcnn_resnet50_atrous_coco_2018_01_28.tar.gz",
+          "pipeline_config_uri": "https://raw.githubusercontent.com/azavea/models/02a9969e94feb51966f9bacddc1836d811f8ce69/research/object_detection/samples/configs/mask_rcnn_resnet50_atrous_coco.config"
+        }
+    },
+    "KERAS_CLASSIFICATION": {
+        "RESNET50_IMAGENET" : {
+            "pretrained_model_uri": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5",
+            "kc_config": {
+                "model": {
+                    "input_size": 300,
+                    "type": "RESNET50",
+                    "load_weights_by_name": true,
+                    "model_path": ""
+                },
+                "trainer": {
+                    "optimizer": {
+                        "type": "ADAM",
+                        "init_lr": 0.0001
+                    },
+                    "options": {
+                        "training_data_dir": "",
+                        "validation_data_dir": "",
+                        "nb_epochs": 40,
+                        "batch_size": 16,
+                        "input_size": 300,
+                        "output_dir": "",
+                        "class_names": ["TEMPLATE"],
+                        "short_epoch": false
+                    }
+                }
+            }
+        }
+    },
+    "TF_DEEPLAB": {
+        "XCEPTION_65" : {
+            "pretrained_model_uri": "http://download.tensorflow.org/models/deeplabv3_xception_2018_01_04.tar.gz",
+            "tfdl_config": {
+                "decoderOutputStride": 4,
+                "modelVariant": "xception_65",
+                "outputStride": 16,
+                "atrousRates": [6, 12, 18],
+                "trainBatchSize": 24,
+                "trainCropSize": [257, 257],
+                "trainingNumberOfSteps": 35410,
+                "dataset": "custom",
+                "trainSplit": "train",
+                "dlCustomTrain": 11520,
+                "dlCustomValidation": 1728,
+                "fineTuneBatchNorm": "true",
+                "baseLearningRate": "0.001",
+                "saveIntervalSecs": 600,
+                "saveSummariesSecs": 60
+            }
+        },
+        "MOBILENET_V2": {
+            "pretrained_model_uri": "http://download.tensorflow.org/models/deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz",
+            "tfdl_config": {
+                "initializeLastLayer": "false",
+                "lastLayersContainLogitsOnly": "false",
+                "decoderOutputStride": 1,
+                "modelVariant": "mobilenet_v2",
+                "outputStride": 16,
+                "trainBatchSize": 24,
+                "trainCropSize": [257, 257],
+                "trainingNumberOfSteps": 150000,
+                "dataset": "custom",
+                "trainSplit": "train",
+                "dlCustomTrain": 11520,
+                "dlCustomValidation": 1728,
+                "fineTuneBatchNorm": "true",
+                "baseLearningRate": "0.001",
+                "saveIntervalSecs": 600,
+                "saveSummariesSecs": 60
+            }
+        }
+    }
+}

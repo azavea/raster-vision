@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "rastervision/protos/scene.proto";
+import "rastervision/protos/augmentor.proto";
+
+message DatasetConfig {
+    repeated SceneConfig train_scenes = 3;
+    // Scenes to use for validation during training, and evaluation
+    repeated SceneConfig validation_scenes = 4;
+    // Scenes to use for prediction without evaluation.
+    repeated SceneConfig test_scenes = 5;
+    // Augmentors to use for training data
+    repeated AugmentorConfig augmentors = 6;
+}
