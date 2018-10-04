@@ -20,7 +20,8 @@ from integration_tests.semantic_segmentation_tests.experiment \
     import SemanticSegmentationIntegrationTest
 
 all_tests = [
-    rv.CHIP_CLASSIFICATION, rv.OBJECT_DETECTION, rv.SEMANTIC_SEGMENTATION
+    rv.CHIP_CLASSIFICATION,
+    rv.OBJECT_DETECTION  # , rv.SEMANTIC_SEGMENTATION
 ]
 
 np.random.seed(1234)
