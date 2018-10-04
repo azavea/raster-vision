@@ -94,7 +94,7 @@ def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
 
     """
     import tensorflow as tf
-    make_dir(output_dir, check_empty=True)
+    make_dir(output_dir)
 
     ids = class_map.get_keys()
     color_strs = list(map(lambda c: c.color, class_map.get_items()))

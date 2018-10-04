@@ -165,16 +165,23 @@ class ExperimentRunner(ABC):
 
         if dry_run:
             print()
-            click.echo(
-                click.style(
-                    'Commands to be run in this order:',
-                    fg='green',
-                    bold=True,
-                    underline=True))
-            for command_id in command_dag.get_sorted_command_ids():
-                command_def = command_dag.get_command_definition(command_id)
-                self.print_command(command_def, command_id, command_dag)
+            sorted_command_ids = command_dag.get_sorted_command_ids()
+            if not any(sorted_command_ids):
+                click.echo(
+                    click.style('No commands to run!', fg='red', bold=True))
                 print()
+            else:
+                click.echo(
+                    click.style(
+                        'Commands to be run in this order:',
+                        fg='green',
+                        bold=True,
+                        underline=True))
+                for command_id in command_dag.get_sorted_command_ids():
+                    command_def = command_dag.get_command_definition(
+                        command_id)
+                    self.print_command(command_def, command_id, command_dag)
+                    print()
         else:
             self._run_experiment(command_dag)
 

@@ -12,12 +12,16 @@ import tensorflow
 
 import rastervision as rv
 
-from integration_tests.object_detection_tests.experiment \
-    import ObjectDetectionIntegrationTest
 from integration_tests.chip_classification_tests.experiment \
     import ChipClassificationIntegrationTest
+from integration_tests.object_detection_tests.experiment \
+    import ObjectDetectionIntegrationTest
+from integration_tests.semantic_segmentation_tests.experiment \
+    import SemanticSegmentationIntegrationTest
 
-all_tests = [rv.CHIP_CLASSIFICATION, rv.OBJECT_DETECTION]
+all_tests = [
+    rv.CHIP_CLASSIFICATION, rv.OBJECT_DETECTION, rv.SEMANTIC_SEGMENTATION
+]
 
 np.random.seed(1234)
 tensorflow.set_random_seed(5678)
@@ -117,6 +121,9 @@ def get_experiment(test, tmp_dir):
             os.path.join(tmp_dir, test.lower()))
     if test == rv.CHIP_CLASSIFICATION:
         return ChipClassificationIntegrationTest().exp_main(
+            os.path.join(tmp_dir, test.lower()))
+    if test == rv.SEMANTIC_SEGMENTATION:
+        return SemanticSegmentationIntegrationTest().exp_main(
             os.path.join(tmp_dir, test.lower()))
 
     raise Exception('Unknown test {}'.format(test))
@@ -221,6 +228,7 @@ def main(tests):
     tests = list(map(lambda x: x.upper(), tests))
 
     with TemporaryDirectory() as temp_dir:
+        temp_dir = 'tmp'
         errors = []
         for test in tests:
             if test not in all_tests:

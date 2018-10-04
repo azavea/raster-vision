@@ -20,7 +20,7 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
     """
     directory = path
     if use_dirname:
-        directory = os.path.dirname(path)
+        directory = os.path.abspath(os.path.dirname(path))
 
     if force_empty and os.path.isdir(directory):
         shutil.rmtree(directory)

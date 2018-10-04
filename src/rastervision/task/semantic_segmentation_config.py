@@ -12,16 +12,20 @@ from rastervision.protos.class_item_pb2 import ClassItem as ClassItemMsg
 class SemanticSegmentationConfig(TaskConfig):
     class ChipOptions:
         def __init__(self,
+                     window_method='random_sample',
                      target_classes=None,
                      debug_chip_probability=0.25,
                      negative_survival_probability=1.0,
                      number_of_chips=1000,
-                     target_count_threshold=1000):
+                     target_count_threshold=1000,
+                     stride=None):
+            self.window_method = window_method
             self.target_classes = target_classes
             self.debug_chip_probability = debug_chip_probability
             self.negative_survival_probability = negative_survival_probability
             self.number_of_chips = number_of_chips
             self.target_count_threshold = target_count_threshold
+            self.stride = stride
 
     def __init__(self,
                  class_map,
@@ -50,12 +54,14 @@ class SemanticSegmentationConfig(TaskConfig):
     def to_proto(self):
         msg = super().to_proto()
         chip_options = TaskConfigMsg.SemanticSegmentationConfig.ChipOptions(
+            window_method=self.chip_options.window_method,
+            target_classes=self.chip_options.target_classes,
             debug_chip_probability=self.chip_options.debug_chip_probability,
             negative_survival_probability=self.chip_options.
             negative_survival_probability,
             number_of_chips=self.chip_options.number_of_chips,
             target_count_threshold=self.chip_options.target_count_threshold,
-            target_classes=self.chip_options.target_classes)
+            stride=self.chip_options.stride)
 
         conf = TaskConfigMsg.SemanticSegmentationConfig(
             chip_size=self.chip_size,
@@ -92,11 +98,13 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                 .with_debug(msg.debug) \
                 .with_chip_size(conf.chip_size) \
                 .with_chip_options(
+                    window_method=conf.chip_options.window_method,
                     target_classes=conf.chip_options.target_classes,
                     debug_chip_probability=conf.chip_options.debug_chip_probability,
                     negative_survival_probability=negative_survival_probability,
                     number_of_chips=conf.chip_options.number_of_chips,
-                    target_count_threshold=conf.chip_options.target_count_threshold)
+                    target_count_threshold=conf.chip_options.target_count_threshold,
+                    stride=conf.chip_options.stride)
 
     def with_classes(
             self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
@@ -124,20 +132,32 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
         return b
 
     def with_chip_options(self,
+                          window_method = 'random_sample',
                           target_classes=None,
                           debug_chip_probability=0.25,
                           negative_survival_probability=1.0,
                           number_of_chips=1000,
-                          target_count_threshold=1000):
+                          target_count_threshold=1000,
+                          stride=None):
         """Sets semantic segmentation configurations for the Chip command
 
            Args:
+            window_method: Window method to use for chipping.
+                           Options are: random_sample, sliding
             target_classes: list of class ids to train model on
-            debug_chip_probability: probability of generating a debug chip
-            negative_survival_probability: ?
-            number_of_chips: number of chips to generate per scene
+            debug_chip_probability: probability of generating a debug chip.
+                                    Applies to the 'random_sample' window method.
+            negative_survival_probability: probability that a sampled negative
+                                           chip will be utilized if it does not
+                                           contain more pixels than target_count_threshold.
+                                           Applies to the 'random_sample' window method.
+            number_of_chips: number of chips to generate per scene.
+                             Applies to the 'random_sample' window method.
             target_count_threshold: minimum number of pixels covering target_classes
-                that a chip must have
+                                    that a chip must have.
+                                    Applies to the 'random_sample' window method.
+            stride: Stride of windows across image. Defaults to half the chip size.
+                    Applies to the 'sliding_window' method.
 
         Returns:
             SemanticSegmentationConfigBuilder
@@ -145,9 +165,11 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
         b = deepcopy(self)
 
         b.config['chip_options'] = SemanticSegmentationConfig.ChipOptions(
+            window_method=window_method,
             target_classes=target_classes,
             debug_chip_probability=debug_chip_probability,
             negative_survival_probability=negative_survival_probability,
             number_of_chips=number_of_chips,
-            target_count_threshold=target_count_threshold)
+            target_count_threshold=target_count_threshold,
+            stride=stride)
         return b
