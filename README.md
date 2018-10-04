@@ -12,7 +12,7 @@
 
 The overall goal of Raster Vision is to make it easy to train and run machine learning models over imagery, including aerial and satellite imagery. It includes functionality for making training data, training models, making predictions, and evaluating models for the tasks of object detection (implemented via the Tensorflow Object Detection API), chip classificaiton (implemented via Keras), and semantic segmentation (implemented via Deep Lab).  It also supports running experimental workflows using AWS Batch. The library is designed to be easy to extend to new data sources, machine learning tasks, and machine learning implementation.
 
-The API is currently changing; see PR [#381](https://github.com/azavea/raster-vision/pull/381) for more details.
+__Note: This README is out of date, and will be updated in the next week.__
 
 The upcoming release will include:
 * A flexible API for specifying experiments
