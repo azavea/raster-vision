@@ -11,13 +11,12 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
         # img_path = get_path('scene/image.tif')
         # label_path = get_path('scene/labels.tif')
 
-        img_path = "s3://raster-vision-rob-dev/integration-tests/semantic_segmentation_tests/scene/image.tif"
-        label_path = "s3://raster-vision-rob-dev/integration-tests/semantic_segmentation_tests/scene/labels.tif"
+        img_path = ('s3://raster-vision-rob-dev/integration-tests/'
+                    'semantic_segmentation_tests/scene/image.tif')
+        label_path = ('s3://raster-vision-rob-dev/integration-tests/'
+                      'semantic_segmentation_tests/scene/labels.tif')
 
-        class_map = {
-            'car': (1, 'red'),
-            'building': (2, 'green')
-        }
+        class_map = {'car': (1, 'red'), 'building': (2, 'green')}
 
         task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
                             .with_chip_size(256) \
@@ -34,8 +33,8 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                                   .with_num_steps(30000) \
                                   .with_batch_size(8) \
                                   .with_debug(True) \
-                                  .with_config({'saveIntervalSecs':5}) \
-                                  .with_config({'saveSummariesSecs':5}) \
+                                  .with_config({'saveIntervalSecs': 5}) \
+                                  .with_config({'saveSummariesSecs': 5}) \
                                   .build()
 
         label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \

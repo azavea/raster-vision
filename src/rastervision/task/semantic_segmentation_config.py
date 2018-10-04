@@ -90,7 +90,8 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
         conf = msg.semantic_segmentation_config
         b = SemanticSegmentationConfigBuilder()
 
-        negative_survival_probability = conf.chip_options.negative_survival_probability
+        negative_survival_probability = conf.chip_options \
+                                            .negative_survival_probability
 
         return b.with_classes(list(conf.class_items)) \
                 .with_predict_batch_size(msg.predict_batch_size) \
@@ -132,7 +133,7 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
         return b
 
     def with_chip_options(self,
-                          window_method = 'random_sample',
+                          window_method='random_sample',
                           target_classes=None,
                           debug_chip_probability=0.25,
                           negative_survival_probability=1.0,
@@ -149,7 +150,8 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                                     Applies to the 'random_sample' window method.
             negative_survival_probability: probability that a sampled negative
                                            chip will be utilized if it does not
-                                           contain more pixels than target_count_threshold.
+                                           contain more pixels than
+                                           target_count_threshold.
                                            Applies to the 'random_sample' window method.
             number_of_chips: number of chips to generate per scene.
                              Applies to the 'random_sample' window method.

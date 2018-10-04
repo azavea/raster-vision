@@ -17,19 +17,12 @@ from rastervision.core.class_map import (ClassItem, ClassMap)
     '-t',
     type=click.Choice(['object_detection', 'semantic_segmentation']),
     required=True)
-@click.option(
-    '--chip_size',
-    '-c',
-    default=300,
-    type=int)
-@click.option(
-    '--chips_per_dimension',
-    '-s',
-    default=3,
-    type=int)
+@click.option('--chip_size', '-c', default=300, type=int)
+@click.option('--chips_per_dimension', '-s', default=3, type=int)
 @click.argument('tiff_path')
 @click.argument('labels_path')
-def generate_scene(task, tiff_path, labels_path, chip_size, chips_per_dimension):
+def generate_scene(task, tiff_path, labels_path, chip_size,
+                   chips_per_dimension):
     """Generate a synthetic object detection scene.
 
     Randomly generates a GeoTIFF with red and greed boxes denoting two
