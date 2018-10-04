@@ -1,5 +1,4 @@
 import rastervision as rv
-from rastervision.rv_config import RVConfig
 from rastervision.plugin import PluginRegistry
 from rastervision.protos.command_pb2 import CommandConfig as CommandConfigMsg
 from rastervision.utils.files import load_json_config

@@ -13,4 +13,4 @@ class TrainCommand(Command):
         msg = 'Training model...'
         click.echo(click.style(msg, fg='green'))
 
-        self.task.train(tmp_dir.name)
+        self.task.train(tmp_dir)

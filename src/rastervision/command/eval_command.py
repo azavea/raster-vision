@@ -15,4 +15,4 @@ class EvalCommand(Command):
             msg = 'Running evaluator: {}...'.format(type(evaluator).__name__)
             click.echo(click.style(msg, fg='green'))
 
-            evaluator.process(self.scenes, tmp_dir.name)
+            evaluator.process(self.scenes, tmp_dir)

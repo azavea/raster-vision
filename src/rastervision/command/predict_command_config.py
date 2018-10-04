@@ -15,18 +15,23 @@ class PredictCommandConfig(CommandConfig):
         self.backend = backend
         self.scenes = scenes
 
-    def create_command(self):
+    def create_command(self, tmp_dir=None):
         if len(self.scenes) == 0:
             return NoOpCommand()
+
+        if not tmp_dir:
+            _tmp_dir = RVConfig.get_tmp_dir()
+            tmp_dir = _tmp_dir.name
+        else:
+            _tmp_dir = tmp_dir
 
         backend = self.backend.create_backend(self.task)
         task = self.task.create_task(backend)
 
-        tmp_dir = RVConfig.get_tmp_dir()
         scenes = list(
             map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
         retval = PredictCommand(task, scenes)
-        retval.set_tmp_dir(tmp_dir)
+        retval.set_tmp_dir(_tmp_dir)
         return retval
 
     def to_proto(self):

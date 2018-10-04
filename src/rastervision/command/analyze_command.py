@@ -1,4 +1,3 @@
-
 import click
 
 from rastervision.command import Command
@@ -16,4 +15,4 @@ class AnalyzeCommand(Command):
             msg = 'Running analyzer: {}...'.format(type(analyzer).__name__)
             click.echo(click.style(msg, fg='green'))
 
-            analyzer.process(self.scenes, tmp_dir.name)
+            analyzer.process(self.scenes, tmp_dir)

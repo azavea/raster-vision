@@ -18,7 +18,7 @@ class ChipCommandConfig(CommandConfig):
         self.train_scenes = train_scenes
         self.val_scenes = val_scenes
 
-    def create_command(self):
+    def create_command(self, tmp_dir=None):
         if len(self.train_scenes) == 0 and len(self.val_scenes) == 0:
             return NoOpCommand()
 
@@ -27,7 +27,12 @@ class ChipCommandConfig(CommandConfig):
 
         augmentors = list(map(lambda a: a.create_augmentor(), self.augmentors))
 
-        tmp_dir = RVConfig.get_tmp_dir()
+        if not tmp_dir:
+            _tmp_dir = RVConfig.get_tmp_dir()
+            tmp_dir = _tmp_dir.name
+        else:
+            _tmp_dir = tmp_dir
+
         train_scenes = list(
             map(lambda s: s.create_scene(self.task, tmp_dir),
                 self.train_scenes))
@@ -35,7 +40,7 @@ class ChipCommandConfig(CommandConfig):
             map(lambda s: s.create_scene(self.task, tmp_dir), self.val_scenes))
 
         retval = ChipCommand(task, augmentors, train_scenes, val_scenes)
-        retval.set_tmp_dir(tmp_dir)
+        retval.set_tmp_dir(_tmp_dir)
         return retval
 
     def to_proto(self):

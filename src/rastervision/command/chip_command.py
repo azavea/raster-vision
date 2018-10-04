@@ -17,4 +17,4 @@ class ChipCommand(Command):
         click.echo(click.style(msg, fg='green'))
 
         self.task.make_chips(self.train_scenes, self.val_scenes,
-                             self.augmentors, tmp_dir.name)
+                             self.augmentors, tmp_dir)

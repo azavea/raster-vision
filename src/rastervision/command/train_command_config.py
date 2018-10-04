@@ -14,11 +14,17 @@ class TrainCommandConfig(CommandConfig):
         self.task = task
         self.backend = backend
 
-    def create_command(self):
+    def create_command(self, tmp_dir=None):
+        if not tmp_dir:
+            _tmp_dir = RVConfig.get_tmp_dir()
+            tmp_dir = _tmp_dir.name
+        else:
+            _tmp_dir = tmp_dir
+
         backend = self.backend.create_backend(self.task)
         task = self.task.create_task(backend)
         retval = TrainCommand(task)
-        retval.set_tmp_dir(RVConfig.get_tmp_dir())
+        retval.set_tmp_dir(_tmp_dir)
         return retval
 
     def to_proto(self):

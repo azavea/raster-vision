@@ -11,7 +11,10 @@ class Command(ABC):
         self._tmp_dir = tmp_dir
 
     def get_tmp_dir(self):
-        return self._tmp_dir
+        if isinstance(self._tmp_dir, str):
+            return self._tmp_dir
+        else:
+            return self._tmp_dir.name
 
 
 class NoOpCommand(Command):

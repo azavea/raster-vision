@@ -13,4 +13,4 @@ class PredictCommand(Command):
             tmp_dir = self.get_tmp_dir()
         msg = 'Making predictions...'
         click.echo(click.style(msg, fg='green'))
-        self.task.predict(self.scenes, tmp_dir.name)
+        self.task.predict(self.scenes, tmp_dir)

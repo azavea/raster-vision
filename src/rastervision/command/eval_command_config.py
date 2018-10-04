@@ -15,16 +15,21 @@ class EvalCommandConfig(CommandConfig):
         self.scenes = scenes
         self.evaluators = evaluators
 
-    def create_command(self):
+    def create_command(self, tmp_dir=None):
         if len(self.scenes) == 0 or len(self.evaluators) == 0:
             return NoOpCommand()
 
-        tmp_dir = RVConfig.get_tmp_dir()
+        if not tmp_dir:
+            _tmp_dir = RVConfig.get_tmp_dir()
+            tmp_dir = _tmp_dir.name
+        else:
+            _tmp_dir = tmp_dir
+
         scenes = list(
             map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
         evaluators = list(map(lambda a: a.create_evaluator(), self.evaluators))
         retval = EvalCommand(scenes, evaluators)
-        retval.set_tmp_dir(tmp_dir)
+        retval.set_tmp_dir(_tmp_dir)
         return retval
 
     def to_proto(self):
