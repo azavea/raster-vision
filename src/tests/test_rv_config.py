@@ -19,7 +19,6 @@ class TestRVConfig(unittest.TestCase):
             while os.path.exists(directory):
                 directory = directory + 'xxx/'
             self.assertFalse(os.path.exists(directory))
-            prev = RVConfig
             RVConfig.set_tmp_dir(directory)
             self.assertTrue(os.path.exists(directory))
             self.assertTrue(os.path.isdir(directory))
