@@ -1,7 +1,6 @@
 import rastervision as rv
 
 import io
-import tempfile
 import os
 import shutil
 import tarfile
@@ -23,6 +22,7 @@ from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
                                       sync_from_dir, start_sync)
 from rastervision.utils.misc import (save_img, replace_nones_in_dict,
                                      terminate_at_exit)
+from rastervision.rv_config import RVConfig
 
 TRAIN = 'train'
 VALIDATION = 'validation'
@@ -635,7 +635,7 @@ class TFObjectDetection(Backend):
             if self.config.debug:
                 debug_zip_path = training_package.get_local_path(
                     training_package.get_debug_chips_uri(split))
-                with tempfile.TemporaryDirectory() as debug_dir:
+                with RVConfig.get_tmp_dir() as debug_dir:
                     make_debug_images(record_path, self.class_map, debug_dir)
                     shutil.make_archive(
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)

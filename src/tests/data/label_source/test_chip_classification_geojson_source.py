@@ -1,5 +1,4 @@
 import unittest
-import tempfile
 import os
 import json
 
@@ -11,6 +10,7 @@ from rastervision.data.label_source import (get_str_tree, infer_cell,
                                             infer_labels, read_labels)
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
+from rastervision.rv_config import RVConfig
 
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
@@ -61,7 +61,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         self.str_tree = get_str_tree(self.geojson_dict, self.crs_transformer)
 
         self.file_name = 'labels.json'
-        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir = RVConfig.get_tmp_dir()
         self.file_path = os.path.join(self.temp_dir.name, self.file_name)
 
         with open(self.file_path, 'w') as label_file:

@@ -5,9 +5,19 @@ package rv.protos;
 import "google/protobuf/struct.proto";
 
 message LabelStoreConfig {
+    message SemanticSegmentationRasterStore {
+        optional string uri = 1;
+
+        // Flag that determines whether or not the values in this
+        // raster are RGB values. If so, the RGB values will be
+        // translated into class IDs based on the class map.
+        optional bool rgb = 2 [default=false];
+    }
+
     required string store_type = 1;
     oneof label_store_config {
         string uri = 2;
-        google.protobuf.Struct custom_config = 5;
+        SemanticSegmentationRasterStore semantic_segmentation_raster_store = 3;
+        google.protobuf.Struct custom_config = 4;
     }
 }

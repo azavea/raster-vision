@@ -56,12 +56,6 @@ class TaskConfig(BundledConfigMixin, Config):
                            context=None):
         conf = self
         io_def = rv.core.CommandIODefinition()
-        if command_type == rv.PREDICT:
-            if conf.debug:
-                if not conf.predict_debug_uri:
-                    conf.predict_debug_uri = os.path.join(
-                        experiment_config.predict_uri, 'debug')
-                io_def.add_output(conf.predict_debug_uri)
         if command_type == rv.BUNDLE:
             if not conf.predict_package_uri:
                 conf.predict_package_uri = os.path.join(

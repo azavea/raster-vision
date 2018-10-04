@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 
-from rastervision.data.utils import (SegmentationClassTransformer,
-                                     color_to_triple)
+from rastervision.data.label_source.segmentation_class_transformer \
+    import (SegmentationClassTransformer, color_to_triple)
 from rastervision.core.class_map import ClassMap, ClassItem
 
 

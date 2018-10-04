@@ -1,31 +1,25 @@
-# import os
-# import json
-# import unittest
+import os
+import platform
+import unittest
+import shutil
 
-# from rastervision.rv_config import RVConfig
+from rastervision.rv_config import RVConfig
 
-# class TestRVConfig(unittest.TestCase):
 
-#     def test_config(self):
-#         rv_conf = RVConfig.get_instance()
-#         print(rv_conf.config('batch_job_queue', namespace='AWS_BATCH'))
+class TestRVConfig(unittest.TestCase):
+    def setUp(self):
+        self.prev_tmp = RVConfig.tmp_dir
 
-#         n = rv_conf.get_subconfig("nonexist")
-#         print(n('files', default=''))
+    def tearDown(self):
+        RVConfig.tmp_dir = self.prev_tmp
 
-#         plugin_files = json.loads(rv_conf.config('files', namespace='PLUGINS'))
-
-#         print(plugin_files)
-
-#         from pluginbase import PluginBase
-#         plugin_base = PluginBase(package='tests.plugins')
-
-#         plugin_source = plugin_base.make_plugin_source(
-#             searchpath=plugin_files)
-
-#         for plugin_name in plugin_source.list_plugins():
-#             plugin = plugin_source.load_plugin(plugin_name)
-#             print("{}: {}".format(plugin_name, plugin.what(10)))
-
-# if __name__ == '__main__':
-#     unittest.main()
+    def test_set_tmp_dir(self):
+        if platform.system() == 'Linux':
+            directory = '/tmp/xxx/'
+            while os.path.exists(directory):
+                directory = directory + 'xxx/'
+            self.assertFalse(os.path.exists(directory))
+            RVConfig.set_tmp_dir(directory)
+            self.assertTrue(os.path.exists(directory))
+            self.assertTrue(os.path.isdir(directory))
+            shutil.rmtree(directory)

@@ -13,7 +13,8 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
 
     def to_proto(self):
         msg = super().to_proto()
-        msg.uri = self.uri
+        if self.uri:
+            msg.uri = self.uri
         return msg
 
     def for_prediction(self, label_uri):

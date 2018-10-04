@@ -1,4 +1,3 @@
-import tempfile
 import os
 import unittest
 import json
@@ -13,6 +12,7 @@ from rastervision.utils.files import (file_to_str, str_to_file,
                                       make_dir, get_local_path, file_exists)
 from rastervision.filesystem import (NotReadableError, NotWritableError)
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
+from rastervision.rv_config import RVConfig
 
 
 class TestMakeDir(unittest.TestCase):
@@ -34,7 +34,7 @@ class TestMakeDir(unittest.TestCase):
         self.s3.create_bucket(Bucket=self.bucket_name)
 
         # Temporary directory
-        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir = RVConfig.get_tmp_dir()
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -151,7 +151,7 @@ class TestFileToStr(unittest.TestCase):
         self.file_name = 'hello.txt'
         self.s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
 
-        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir = RVConfig.get_tmp_dir()
         self.local_path = os.path.join(self.temp_dir.name, self.file_name)
 
     def tearDown(self):
@@ -196,7 +196,7 @@ class TestDownloadIfNeeded(unittest.TestCase):
         self.file_name = 'hello.txt'
         self.s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
 
-        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir = RVConfig.get_tmp_dir()
         self.local_path = os.path.join(self.temp_dir.name, self.file_name)
 
     def tearDown(self):
@@ -230,7 +230,7 @@ class TestDownloadIfNeeded(unittest.TestCase):
 class TestLoadJsonConfig(unittest.TestCase):
     def setUp(self):
         self.file_name = 'config.json'
-        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir = RVConfig.get_tmp_dir()
         self.file_path = os.path.join(self.temp_dir.name, self.file_name)
 
     def tearDown(self):
