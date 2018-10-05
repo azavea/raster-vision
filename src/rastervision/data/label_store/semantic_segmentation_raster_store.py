@@ -12,7 +12,7 @@ class SemanticSegmentationRasterStore(LabelStore):
     """A prediction label store for segmentation raster files.
     """
 
-    def __init__(self, uri, crs_transformer, tmp_dir, class_map=None):
+    def __init__(self, uri, extent, crs_transformer, tmp_dir, class_map=None):
         """Constructor.
 
         Args:
@@ -23,6 +23,7 @@ class SemanticSegmentationRasterStore(LabelStore):
                 RGB values
         """
         self.uri = uri
+        self.extent = extent
         self.crs_transformer = crs_transformer
         self.tmp_dir = tmp_dir
         # Note: can't name this class_transformer due to Python using that attribute
@@ -60,8 +61,8 @@ class SemanticSegmentationRasterStore(LabelStore):
         # TODO: this only works if crs_transformer is RasterioCRSTransformer.
         # Need more general way of computing transform for the more general case.
         transform = self.crs_transformer.image_dataset.transform
-        extent = labels.get_extent()
         crs = self.crs_transformer.get_image_crs()
+        clipped_labels = labels.get_clipped_labels(self.extent)
 
         if self.class_trans:
             band_count = 3
@@ -79,13 +80,13 @@ class SemanticSegmentationRasterStore(LabelStore):
                 local_path,
                 'w',
                 driver='GTiff',
-                height=extent.ymax,
-                width=extent.xmax,
+                height=self.extent.ymax,
+                width=self.extent.xmax,
                 count=band_count,
                 dtype=dtype,
                 transform=transform,
                 crs=crs) as dataset:
-            for (window, class_labels) in labels.get_label_pairs():
+            for (window, class_labels) in clipped_labels.get_label_pairs():
                 window = (window.ymin, window.ymax), (window.xmin, window.xmax)
                 if self.class_trans:
                     rgb_labels = self.class_trans.class_to_rgb(class_labels)

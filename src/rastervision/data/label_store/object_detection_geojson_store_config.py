@@ -22,7 +22,7 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
                    .with_uri(label_uri) \
                    .build()
 
-    def create_store(self, task_config, crs_transformer, tmp_dir):
+    def create_store(self, task_config, extent, crs_transformer, tmp_dir):
         return ObjectDetectionGeoJSONStore(self.uri, crs_transformer,
                                            task_config.class_map)
 

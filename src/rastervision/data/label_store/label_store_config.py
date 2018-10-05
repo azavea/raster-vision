@@ -23,7 +23,7 @@ class LabelStoreConfig(Config):
         pass
 
     @abstractmethod
-    def create_store(self, task_config, crs_transformer, tmp_dir):
+    def create_store(self, task_config, extent, crs_transformer, tmp_dir):
         """Create the Label Store for this configuration.
 
            Args:
