@@ -1,11 +1,11 @@
 coverage:
+  threshold: 0.618    
   status:
     project:
       default:
         # basic
         target: auto
-        threshold: 0.618
-        base: auto 
+        base: auto
         # advanced
         branches: null
         if_no_uploads: error
