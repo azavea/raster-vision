@@ -47,13 +47,9 @@ message LabelSourceConfig {
         // A mapping used to translate RGB pixel values in ground truth segmentation
         // rasters into RV class_ids. This is distinct from the class_items in TaskConfig
         // since we may want to use a different color scheme for generating prediction
-        // rasters.
-        repeated ClassItem source_class_items = 2;
-
-        // Flag that determines whether or not the values in this
-        // raster are RGB values. If so, the RGB values will be
-        // translated into class IDs based on the class map.
-        optional bool rgb = 3 [default=false];
+        // rasters. This is optional -- the default is to assume that the raster source
+        // contains class ids.
+        repeated ClassItem rgb_class_items = 2;
     }
 
     required string source_type = 1;

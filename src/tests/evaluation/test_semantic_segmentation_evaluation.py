@@ -73,13 +73,13 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         gt_array[2, 2, :] = 2
         gt_raster = MockRasterSource(data=gt_array)
         gt_label_source = SemanticSegmentationRasterSource(
-            source=gt_raster, source_class_map=class_map)
+            source=gt_raster, rgb_class_map=class_map)
 
         p_array = np.ones((4, 4, 3), dtype=np.uint8)
         p_array[1, 1, :] = 0
         p_raster = MockRasterSource(data=p_array)
         p_label_source = SemanticSegmentationRasterSource(
-            source=p_raster, source_class_map=class_map)
+            source=p_raster, rgb_class_map=class_map)
 
         eval = SemanticSegmentationEvaluation(class_map)
         eval.compute(gt_label_source.get_labels(), p_label_source.get_labels())
