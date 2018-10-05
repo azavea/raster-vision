@@ -108,14 +108,7 @@ class SemanticSegmentation(Task):
         return extent.get_windows(chip_size, chip_size)
 
     def post_process_predictions(self, labels, scene):
-        """Post-process predictions.
-
-        Cut off "junk" predictions made off the edge of scene.raster_source
-
-        Returns: SemanticSegmentationLabels
-        """
-        extent = scene.raster_source.get_extent()
-        return labels.get_clipped_labels(extent)
+        return labels
 
     def save_debug_predict_image(self, scene, debug_dir_uri):
         # TODO implement this

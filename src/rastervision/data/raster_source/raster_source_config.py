@@ -50,7 +50,7 @@ class RasterSourceConfig(BundledConfigMixin, Config):
                    .build()
 
     @abstractmethod
-    def create_source(self, tmp_dir):
+    def create_source(self, tmp_dir, extent, crs_transformer):
         """Create the Raster Source for this configuration.
         """
         pass

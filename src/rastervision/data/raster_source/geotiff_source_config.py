@@ -43,7 +43,7 @@ class GeoTiffSourceConfig(RasterSourceConfig):
                    .with_uris(new_uris) \
                    .build()
 
-    def create_source(self, tmp_dir):
+    def create_source(self, tmp_dir, extent=None, crs_transformer=None):
         transformers = self.create_transformers()
         return GeoTiffSource(self.uris, transformers, tmp_dir,
                              self.channel_order)
