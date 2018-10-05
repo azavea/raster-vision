@@ -1,16 +1,4 @@
 coverage:
-  threshold: 0.618    
   status:
-    project:
-      default:
-        # basic
-        target: auto
-        base: auto
-        # advanced
-        branches: null
-        if_no_uploads: error
-        if_not_found: success
-        if_ci_failed: error
-        only_pulls: false
-        flags: null
-        paths: null
+    project: off
+    patch: off
