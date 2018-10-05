@@ -105,3 +105,8 @@ class FileSystem(ABC):
         or None if this FileSystem does not support this operation.
         """
         pass
+
+    @staticmethod
+    @abstractmethod
+    def list_paths(uri, ext=None):
+        pass
