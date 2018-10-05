@@ -10,6 +10,7 @@ from subprocess import Popen
 import numpy as np
 from google.protobuf import (json_format)
 
+import rastervision as rv
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap
 from rastervision.backend import Backend
@@ -427,6 +428,14 @@ class TFDeeplab(Backend):
         Returns:
             The local path to the generated file.
         """
+        # Currently TF Object Detection can only handle uint8
+        if scene.raster_source.get_dtype() != np.uint8:
+            raise Exception('Cannot use {} backend for imagery that does '
+                            'not have data type uint8. '
+                            'Use the StatsAnalyzer and StatsTransformer '
+                            'to turn the raster data into uint8 data'.format(
+                                rv.TF_DEEPLAB))
+
         tf_examples = make_tf_examples(data, self.class_map)
 
         base_uri = self.backend_config.training_data_uri
