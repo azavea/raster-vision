@@ -14,6 +14,11 @@ message RasterSourceConfig {
         required string uri = 1;
     }
 
+    // Used to read a GeoJSON file as a raster useful for semantic segmentation.
+    message GeoJSONFile {
+        required string uri = 1;
+    }
+
     required string source_type = 1;
     repeated RasterTransformerConfig transformers = 2;
     // The channel indices and order to use when extracting chips from a
@@ -24,6 +29,7 @@ message RasterSourceConfig {
     oneof raster_source_config {
         GeoTiffFiles geotiff_files = 4;
         ImageFile image_file = 5;
-        google.protobuf.Struct custom_config = 6;
+        GeoJSONFile geojson_file = 6;
+        google.protobuf.Struct custom_config = 7;
     }
 }
