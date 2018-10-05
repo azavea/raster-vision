@@ -94,7 +94,8 @@ def infer_labels(geojson, crs_transformer, extent, cell_size, ioa_thresh,
     shapes = geojson_to_shapes(geojson, crs_transformer)
     for shape in shapes:
         if type(shape) != geometry.Polygon:
-            raise ValueError('Chip classification can only handle geoms of type Polygon')
+            raise ValueError(
+                'Chip classification can only handle geoms of type Polygon')
     str_tree = STRtree(shapes)
     labels = ChipClassificationLabels()
 

@@ -12,7 +12,7 @@ class SemanticSegmentationRasterSource(LabelSource):
     """A read-only label source for segmentation raster files.
     """
 
-    def __init__(self, source: RasterSource, rgb_class_map: ClassMap=None):
+    def __init__(self, source: RasterSource, rgb_class_map: ClassMap = None):
         """Constructor.
 
         Args:
@@ -24,7 +24,8 @@ class SemanticSegmentationRasterSource(LabelSource):
         self.source = source
         self.class_transformer = None
         if rgb_class_map is not None:
-            self.class_transformer = SegmentationClassTransformer(rgb_class_map)
+            self.class_transformer = SegmentationClassTransformer(
+                rgb_class_map)
 
     def enough_target_pixels(self, window: Box, target_count_threshold: int,
                              target_classes: List[int]) -> bool:

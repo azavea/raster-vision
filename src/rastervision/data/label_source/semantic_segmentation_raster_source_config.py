@@ -22,8 +22,7 @@ class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
         if self.rgb_class_map is not None:
             rgb_class_items = self.rgb_class_map.to_proto()
         opts = LabelSourceConfigMsg.SemanticSegmentationRasterSource(
-            source=self.source.to_proto(),
-            rgb_class_items=rgb_class_items)
+            source=self.source.to_proto(), rgb_class_items=rgb_class_items)
         msg.semantic_segmentation_raster_source.CopyFrom(opts)
         return msg
 
@@ -109,8 +108,7 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
             SemanticSegmentationRasterSourceConfigBuilder
         """
         b = deepcopy(self)
-        b.config['rgb_class_map'] = ClassMap.construct_from(
-            rgb_class_map)
+        b.config['rgb_class_map'] = ClassMap.construct_from(rgb_class_map)
         return b
 
     def validate(self):
