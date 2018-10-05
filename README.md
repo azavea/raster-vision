@@ -1,9 +1,10 @@
 # Raster Vision
 
+[![Build Status](https://api.travis-ci.org/azavea/raster-vision.svg?branch=develop)](http://travis-ci.org/azavea/raster-vision)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Join the chat at https://gitter.im/azavea/raster-vision](https://badges.gitter.im/azavea/raster-vision.svg)](https://gitter.im/azavea/raster-vision?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Docker Repository on Quay](https://quay.io/repository/azavea/raster-vision/status "Docker Repository on Quay")](https://quay.io/repository/azavea/raster-vision)
-[![codecov](https://codecov.io/gh/azavea/raster-vision/branch/feature%2Fapi-refactor/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
+[![codecov](https://codecov.io/gh/azavea/raster-vision/branch/develop/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
 
 ![Release Coming October 2018](/release-notice.png "RELEASE COMING OCTOBER 2018")
 &nbsp;
