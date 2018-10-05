@@ -1,37 +1,38 @@
 from abc import (ABC, abstractmethod)
 from typing import (List, Union)
+import logging
 
-import click
 from google.protobuf import json_format
 
 import rastervision as rv
 from rastervision.runner import (CommandDefinition, CommandDAG)
 from rastervision.cli import Verbosity
 
+log = logging.getLogger(__name__)
+
 
 class ExperimentRunner(ABC):
-    def print_command(self, command_def, command_id=None, command_dag=None):
+    def log_command(self, command_def, command_id=None, command_dag=None):
         verbosity = Verbosity.get()
         command_type = command_def.command_config.command_type
         experiment_id = command_def.experiment_id
-        click.echo(
-            click.style('{} '.format(command_type), bold=True), nl=False)
-        click.echo('from {}'.format(experiment_id))
+        log.info('{} '.format(command_type))
+        log.info('from {}\n'.format(experiment_id))
 
         if verbosity >= Verbosity.VERBOSE:
-            click.echo('  INPUTS:')
+            log.info('  INPUTS:')
             for input_uri in command_def.io_def.input_uris:
-                click.echo('    {}'.format(input_uri))
+                log.info('    {}'.format(input_uri))
             if not command_def.io_def.output_uris:
-                click.echo('  NO OUTPUTS!')
+                log.info('  NO OUTPUTS!')
             else:
-                click.echo('  OUTPUTS:')
+                log.info('  OUTPUTS:')
                 for output_uri in command_def.io_def.output_uris:
-                    click.echo('    {}'.format(output_uri))
+                    log.info('    {}'.format(output_uri))
         if verbosity >= Verbosity.VERY_VERBOSE:
-            click.echo(click.style('  COMMAND CONFIGURATION', bold=True))
-            click.echo('  ---------------------\n')
-            click.echo('{}'.format(
+            log.debug('  COMMAND CONFIGURATION')
+            log.debug('  ---------------------\n')
+            log.debug('{}'.format(
                 json_format.MessageToJson(
                     command_def.command_config.to_proto())))
 
@@ -42,7 +43,7 @@ class ExperimentRunner(ABC):
                     cdef = command_dag.get_command_definition(upstream_id)
                     msg = '  DEPENDS ON: {} from {}'.format(
                         cdef.command_config.command_type, cdef.experiment_id)
-                    click.echo(click.style(msg, fg='cyan'))
+                    log.info(msg)
 
     def run(self,
             experiments: Union[List[rv.ExperimentConfig], rv.ExperimentConfig],
@@ -59,34 +60,23 @@ class ExperimentRunner(ABC):
         command_definitions, not_requested = CommandDefinition.filter_to_target_commands(
             command_definitions, commands_to_run)
 
-        # Print unrequested commands
+        # Log unrequested commands
         if dry_run:
             if not_requested:
-                print()
-                click.echo(
-                    click.style(
-                        'Commands not requsted:', fg='yellow', underline=True))
+                log.warning('Commands not requsted:')
                 for command in not_requested:
-                    self.print_command(command)
-                    print()
+                    self.log_command(command)
 
         # Filter  out commands that don't have any output.
         (command_definitions,
          no_output) = CommandDefinition.filter_no_output(command_definitions)
 
-        # Print commands that have no output
+        # Log commands that have no output
         if dry_run:
             if no_output:
-                print()
-                click.echo(
-                    click.style(
-                        'Commands not run because they have no output:',
-                        fg='yellow',
-                        bold=True,
-                        underline=True))
+                log.info('Commands not run because they have no output:')
                 for command in no_output:
-                    self.print_command(command)
-                print()
+                    self.log_command(command)
 
         # Check if there are any unsatisfied inputs.
         missing_inputs = CommandDefinition.get_missing_inputs(
@@ -109,14 +99,11 @@ class ExperimentRunner(ABC):
 
         if dry_run:
             if skipped_duplicate_commands:
-                print()
                 msg = ('Commands determined to be '
                        'duplicates based on input and output:')
-                click.echo(
-                    click.style(msg, fg='yellow', bold=True, underline=True))
+                log.warning(msg)
                 for command in skipped_duplicate_commands:
-                    self.print_command(command)
-                print()
+                    self.log_command(command)
 
         # Ensure that for each type of command, there are none that clobber
         # each other's output.
@@ -141,17 +128,14 @@ class ExperimentRunner(ABC):
         command_dag = CommandDAG(
             unique_commands, rerun_commands, skip_file_check=skip_file_check)
 
-        # Print conflicating or alread fulfilled commands
+        # Log conflicating or alread fulfilled commands
         if dry_run:
             skipped_commands = command_dag.skipped_commands
             if skipped_commands:
-                print()
                 msg = 'Commands skipped because output already exists:'
-                click.echo(
-                    click.style(msg, fg='yellow', bold=True, underline=True))
+                log.info(msg)
                 for command in skipped_commands:
-                    self.print_command(command)
-                print()
+                    self.log_command(command)
 
         # Save experiment configs
         experiments_by_id = dict(map(lambda e: (e.id, e), experiments))
@@ -164,24 +148,15 @@ class ExperimentRunner(ABC):
                     experiment.fully_resolve().save_config()
 
         if dry_run:
-            print()
             sorted_command_ids = command_dag.get_sorted_command_ids()
             if not any(sorted_command_ids):
-                click.echo(
-                    click.style('No commands to run!', fg='red', bold=True))
-                print()
+                log.error('No commands to run!')
             else:
-                click.echo(
-                    click.style(
-                        'Commands to be run in this order:',
-                        fg='green',
-                        bold=True,
-                        underline=True))
+                log.info('Commands to be run in this order:')
                 for command_id in command_dag.get_sorted_command_ids():
                     command_def = command_dag.get_command_definition(
                         command_id)
-                    self.print_command(command_def, command_id, command_dag)
-                    print()
+                    self.log_command(command_def, command_id, command_dag)
         else:
             self._run_experiment(command_dag)
 

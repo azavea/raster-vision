@@ -1,11 +1,14 @@
 import os
 import zipfile
+import logging
 
 import click
 from google.protobuf import json_format
 
 from rastervision.command import Command
 from rastervision.utils.files import (upload_or_copy, make_dir)
+
+log = logging.getLogger(__name__)
 
 
 class BundleCommand(Command):
@@ -28,7 +31,7 @@ class BundleCommand(Command):
 
         msg = 'Bundling prediction package to {}...'.format(
             self.task_config.predict_package_uri)
-        click.echo(click.style(msg, fg='green'))
+        log.info(msg)
         bundle_dir = os.path.join(tmp_dir, 'bundle')
         make_dir(bundle_dir)
         package_path = os.path.join(tmp_dir, 'predict_package.zip')

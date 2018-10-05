@@ -1,7 +1,10 @@
 import networkx as nx
+import logging
 
 import rastervision as rv
 from rastervision.utils.files import file_exists
+
+log = logging.getLogger(__name__)
 
 
 class CommandDAG:
@@ -41,7 +44,7 @@ class CommandDAG:
 
             missing_files = []
             for uri in unsolved_sources:
-                print('Ensuring file exists: {}'.format(uri))
+                log.info('Ensuring file exists: {}'.format(uri))
                 if not file_exists(uri):
                     missing_files.append(uri)
 

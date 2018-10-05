@@ -4,6 +4,9 @@ from PIL import Image
 import numpy as np
 import imageio
 import atexit
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def save_img(im_array, output_path):
@@ -124,7 +127,7 @@ def set_nested_keys(target,
 
 def terminate_at_exit(process):
     def terminate():
-        print('Terminating {}...'.format(process.pid))
+        log.debug('Terminating {}...'.format(process.pid))
         process.terminate()
 
     atexit.register(terminate)

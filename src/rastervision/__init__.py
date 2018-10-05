@@ -1,4 +1,5 @@
 # flake8: noqa
+import logging
 
 from rastervision.core import ConfigError
 from rastervision.analyzer.api import *
@@ -16,6 +17,9 @@ from rastervision.predictor import Predictor
 from rastervision.cli.main import main
 
 from rastervision.registry import Registry
+
+root_logger = logging.getLogger('rastervision')
+logging.basicConfig(level=logging.WARNING)
 
 _registry = None
 
