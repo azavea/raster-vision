@@ -39,6 +39,11 @@ def main(profile, verbose):
           'in. If not supplied, experiments will be loaded '
           'from __main__'))
 @click.option(
+    '--path',
+    '-p',
+    metavar='PATTERN',
+    help=('Path of file containing ExprimentSet to run.'))
+@click.option(
     '--dry-run',
     '-n',
     is_flag=True,
@@ -107,10 +112,9 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
 
     runner = ExperimentRunner.get_runner(runner)
 
-    if experiment_module:
-        module_to_load = experiment_module
-    else:
-        module_to_load = '__main__'
+    if experiment_module and path:
+        print_error('Must specify only one of experiment_module or path')
+        sys.exit(1)
 
     if not commands:
         commands = rv.ALL_COMMANDS
@@ -127,7 +131,12 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         experiment_method_patterns=methods,
         experiment_name_patterns=filters)
     try:
-        experiments = loader.load_from_module(module_to_load)
+        if experiment_module:
+            experiments = loader.load_from_module(experiment_module)
+        elif path:
+            experiments = loader.load_from_file(path)
+        else:
+            experiments = loader.load_from_module('__main__')
     except LoaderError as e:
         print_error(str(e))
         sys.exit(1)
@@ -136,6 +145,9 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         if experiment_module:
             print_error(
                 'No experiments found in {}.'.format(experiment_module))
+        elif path:
+            print_error(
+                'No experiments found in {}.'.format(path))
         else:
             print_error('No experiments found.')
 
