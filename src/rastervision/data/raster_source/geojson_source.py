@@ -9,9 +9,9 @@ from rastervision.utils.files import file_to_str
 from rastervision.data.utils import geojson_to_shapes
 
 
-def geojson_to_raster(geojson, extent, crs_transformer):
-    # TODO: make this configurable
-    line_buffer = 15
+def geojson_to_raster(geojson, rasterizer_options, extent, crs_transformer):
+    line_buffer = rasterizer_options.line_buffer
+    background_class_id = rasterizer_options.background_class_id
 
     # Crop shapes against extent and remove empty shapes.
     shapes = geojson_to_shapes(geojson, crs_transformer)
@@ -23,7 +23,8 @@ def geojson_to_raster(geojson, extent, crs_transformer):
 
     out_shape = (extent.get_height(), extent.get_width())
     if shapes:
-        raster = rasterize(shape_vals, out_shape=out_shape, fill=1)
+        raster = rasterize(
+            shapes, out_shape=out_shape, fill=background_class_id)
     else:
         raster = np.ones(out_shape)
 
@@ -31,12 +32,25 @@ def geojson_to_raster(geojson, extent, crs_transformer):
 
 
 class GeoJSONSource(RasterSource):
-    def __init__(self, uri, extent, crs_transformer):
+    """A RasterSource based on the rasterization of a GeoJSON file."""
+
+    def __init__(self, uri, rasterizer_options, extent, crs_transformer):
+        """Constructor.
+
+        Args:
+            uri: URI of GeoJSON file
+            rasterizer_options:
+                rastervision.data.raster_source.GeoJSONSourceConfig.RasterizerOptions
+            extent: (Box) extent of corresponding imagery RasterSource
+            crs_transformer: (CRSTransformer)
+        """
         self.uri = uri
+        self.rasterizer_options = rasterizer_options
         self.extent = extent
         self.crs_transformer = crs_transformer
-        geojson_dict = json.loads(file_to_str(self.uri))
-        self.raster = geojson_to_raster(geojson_dict, extent, crs_transformer)
+        geojson = json.loads(file_to_str(self.uri))
+        self.raster = geojson_to_raster(geojson, rasterizer_options, extent,
+                                        crs_transformer)
         # Add third singleton dim since rasters must have >=1 channel.
         self.raster = np.expand_dims(self.raster, 2)
         super().__init__()
