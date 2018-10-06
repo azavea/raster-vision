@@ -1,59 +1,28 @@
-Raster Vision Setup
-===================
+Setup
+=====
 
-Requirements
-------------
+.. _docker containers:
 
-*  Docker 18+
-*  awscli 1.15+
+Docker Containers
+-----------------
 
-Scripts
--------
+Using the docker containers published for Raster Vision allows
+you to use a fully set up environment.
 
-+---------------------+------------------------------------------+
-| Name                | Description                              |
-+=====================+==========================================+
-| ``update``          | Build Docker containers                  |
-+---------------------+------------------------------------------+
-| ``run``             | Run container locally                    |
-+---------------------+------------------------------------------+
-| ``jupyter``         | Run Jupyter notebook in container with   |
-|                     | mounted and notebook directory from      |
-|                     | ``RASTER_VISION_NOTEBOOK_DIR``           |
-+---------------------+------------------------------------------+
-| ``clean``           | Remove dangling containers               |
-+---------------------+------------------------------------------+
+.. _aws batch setup:
 
+Setting up AWS Batch
+--------------------
 
-Initial setup
--------------
+If you want to run code against AWS, you'll have to have a Raster Vision AWS Batch setup on your account, which you can accomplish through the instructions at the  `Raster Vision AWS repository <https://github.com/azavea/raster-vision-aws>`_.
 
-First, set the ``RASTER_VISION_DATA_DIR`` environment variable on your host machine. All data including datasets and results should be stored in a single directory outside of the repo. Also set the ``AWS_PfROFILE`` if you want to use AWS. Then build the CPU container using
+Make sure to set the appropriate configuration in your ``$HOME/.rastervision/default`` configuration, e.g.
 
-.. code-block:: console
+.. code:: ini
 
-                ./scripts/update --cpu
+   [AWS_BATCH]
+   job_queue=rasterVisionQueue
+   job_definition=raster-vision-gpu
 
-
-Running locally on CPUs
------------------------
-
-Running the Docker container
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can build the Docker container and then get into the Bash console for it using ``/scripts/run`` or ``./scripts/run --aws`` if you would like to forward AWS credentials.
-
-Running an object detection workflow
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-See the [object detection tutorial](object-detection.md).
-
-Running a Jupyter notebook
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can run a Juptyer notebook that has the data from ``RASTER_VISION_DATA_DIR`` mounted to ``/opt/data``
-and ``RASTER_VISION_NOTEBOOK_DIR`` mounted to ``/opt/notebooks`` and set as the Juptyer notebook directory using
-
-.. code-block:: console
-
-                ./scripts/jupyter
+.. seealso::
+   For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws batch`.

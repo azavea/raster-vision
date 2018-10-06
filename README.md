@@ -8,7 +8,7 @@
 
 ![Release Coming October 2018](/release-notice.png "RELEASE COMING OCTOBER 2018")
 &nbsp;
-![Raster Vision Logo](/logo_dark.png)
+![Raster Vision Logo](/docs/_static/logo_dark.png)
 &nbsp;
 
 The overall goal of Raster Vision is to make it easy to train and run machine learning models over imagery, including aerial and satellite imagery. It includes functionality for making training data, training models, making predictions, and evaluating models for the tasks of object detection (implemented via the Tensorflow Object Detection API), chip classificaiton (implemented via Keras), and semantic segmentation (implemented via Deep Lab).  It also supports running experimental workflows using AWS Batch. The library is designed to be easy to extend to new data sources, machine learning tasks, and machine learning implementation.
