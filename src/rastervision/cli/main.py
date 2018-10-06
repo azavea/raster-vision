@@ -85,13 +85,16 @@ def main(profile, verbose):
     default=False,
     help=('Rerun commands, regardless if '
           'their output files already exist.'))
+@click.option(
+    '--tempdir',
+    help=('Temporary directory to use for this run.'))
 def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
-        prefix, methods, filters, rerun):
+        prefix, methods, path, filters, rerun, tempdir):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
-    darg = dict(arg)
-    if 'tmp_dir' in darg:
-        RVConfig.set_tmp_dir(darg['tmp_dir'])
+
+    if tempdir:
+        RVConfig.set_tmp_dir(tempdir)
 
     # Validate runner
     valid_runners = list(
