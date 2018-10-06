@@ -1,4 +1,5 @@
 import unittest
+import os
 
 import rastervision as rv
 from rastervision.experiment import ExperimentLoader
@@ -84,6 +85,17 @@ class TestExperimentConfig(unittest.TestCase):
         args = {'required_param': 'yes', 'dummy': 1}
         loader = ExperimentLoader(experiment_args=args)
         experiments = loader.load_from_module(__name__)
+        self.assertEqual(len(experiments), 3)
+        e_names = set(map(lambda e: e.id, experiments))
+        self.assertEqual(
+            e_names,
+            set(['experiment_1', 'experiment_1_yes', 'experiment_2_yes']))
+
+    def test_load_file(self):
+        path = os.path.abspath(__file__)
+        args = {'required_param': 'yes', 'dummy': 1}
+        loader = ExperimentLoader(experiment_args=args)
+        experiments = loader.load_from_file(path)
         self.assertEqual(len(experiments), 3)
         e_names = set(map(lambda e: e.id, experiments))
         self.assertEqual(
