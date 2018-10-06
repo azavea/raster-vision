@@ -10,7 +10,7 @@ from rastervision.data.label_source.utils import (
 from rastervision.data.utils import geojson_to_shapes
 
 
-def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
+def infer_cell(shapes, cell, ioa_thresh, use_intersection_over_cell,
                background_class_id, pick_min_class_id):
     """Infer the class_id of a cell given a set of polygons.
 
@@ -22,7 +22,7 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
     considered null or background. See args for more details.
 
     Args:
-        str_tree: shapely.strtree.STRtree of shapely geometry with class_id attributes
+        shapes: List of (shapely.geometry, class_id) tuples
         cell: Box
         ioa_thresh: (float) the minimum IOA of a polygon and cell for that
             polygon to be a candidate for setting the class_id
@@ -37,6 +37,14 @@ def infer_cell(str_tree, cell, ioa_thresh, use_intersection_over_cell,
             class_id of the boxes in that cell. Otherwise, pick the class_id of
             the box covering the greatest area.
     """
+    str_tree = STRtree([shape for shape, class_id in shapes])
+    # Monkey-patching class_id onto shapely.geom is not a good idea because
+    # if you transform it, the class_id will be lost, but this works here. I wanted to
+    # use a dictionary to associate shape with class_id, but couldn't because they are
+    # mutable.
+    for shape, class_id in shapes:
+        shape.class_id = class_id
+
     cell_geom = geometry.Polygon(
         [(p[0], p[1]) for p in cell.geojson_coordinates()])
     intersecting_polygons = str_tree.query(cell_geom)
@@ -92,16 +100,16 @@ def infer_labels(geojson, crs_transformer, extent, cell_size, ioa_thresh,
         ChipClassificationLabels
     """
     shapes = geojson_to_shapes(geojson, crs_transformer)
-    for shape in shapes:
+    # TODO: handle linestrings
+    for shape, class_id in shapes:
         if type(shape) != geometry.Polygon:
             raise ValueError(
                 'Chip classification can only handle geoms of type Polygon')
-    str_tree = STRtree(shapes)
     labels = ChipClassificationLabels()
 
     cells = extent.get_windows(cell_size, cell_size)
     for cell in cells:
-        class_id = infer_cell(str_tree, cell, ioa_thresh,
+        class_id = infer_cell(shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         labels.set_cell(cell, class_id)

@@ -15,16 +15,12 @@ def geojson_to_raster(geojson, extent, crs_transformer):
 
     # Crop shapes against extent and remove empty shapes.
     shapes = geojson_to_shapes(geojson, crs_transformer)
-    shapes = [s.intersection(extent.to_shapely()) for s in shapes]
-    shapes = [s for s in shapes if not s.is_empty]
-    shapes = [
-        s.buffer(line_buffer) if type(s) is shapely.geometry.LineString else s
-        for s in shapes
-    ]
+    shapes = [(s.intersection(extent.to_shapely()), c) for s, c in shapes]
+    shapes = [(s, c) for s, c in shapes if not s.is_empty]
+    shapes = [(s.buffer(line_buffer), c)
+              if type(s) is shapely.geometry.LineString else (s, c)
+              for s, c in shapes]
 
-    # TODO: make this configurable
-    # Map background to class 1 and shapes to class 2.
-    shape_vals = [(shape, 2) for shape in shapes]
     out_shape = (extent.get_height(), extent.get_width())
     if shapes:
         raster = rasterize(shape_vals, out_shape=out_shape, fill=1)
