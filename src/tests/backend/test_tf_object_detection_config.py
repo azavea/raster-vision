@@ -25,10 +25,12 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
                             .with_task(self.generate_task()) \
                             .with_template(self.get_template_uri()) \
                             .with_batch_size(100) \
+                            .with_fine_tune_checkpoint_name('foo') \
                             .build()
 
         self.assertEqual(b.tfod_config['trainConfig']['batchSize'], 100)
         self.assertEqual(b.tfod_config['model']['ssd']['numClasses'], 2)
+        self.assertEqual(b.fine_tune_checkpoint_name, 'foo')
 
     def test_build_task_from_proto(self):
         config = {

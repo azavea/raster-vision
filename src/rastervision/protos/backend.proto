@@ -19,10 +19,11 @@ message BackendConfig {
         optional string training_data_uri = 6;
         optional string training_output_uri = 7;
         optional string model_uri = 8;
+        optional string fine_tune_checkpoint_name = 9;
 
-        optional bool debug = 9 [default=false];
+        optional bool debug = 10 [default=false];
 
-        required google.protobuf.Struct tfod_config = 10;
+        required google.protobuf.Struct tfod_config = 11;
     }
 
     message KerasClassificationConfig {
@@ -51,10 +52,11 @@ message BackendConfig {
         optional string training_data_uri = 7;
         optional string training_output_uri = 8;
         optional string model_uri = 9;
+        optional string fine_tune_checkpoint_name = 10;
 
-        required google.protobuf.Struct tfdl_config = 10;
+        required google.protobuf.Struct tfdl_config = 11;
 
-        optional bool debug = 11 [default=false];
+        optional bool debug = 12 [default=false];
     }
 
     required string backend_type = 1;

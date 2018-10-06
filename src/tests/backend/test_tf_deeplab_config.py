@@ -26,11 +26,13 @@ class TestTFDeeplabConfig(unittest.TestCase):
                             .with_template(self.get_template_uri()) \
                             .with_batch_size(100) \
                             .with_model_uri(model_uri) \
+                            .with_fine_tune_checkpoint_name('foo') \
                             .build()
 
         self.assertEqual(b.tfdl_config['trainBatchSize'], 100)
         self.assertEqual(b.tfdl_config['modelVariant'], 'mobilenet_v2')
         self.assertEqual(b.model_uri, model_uri)
+        self.assertEqual(b.fine_tune_checkpoint_name, 'foo')
 
     def test_build_backend_from_proto(self):
         config = {
