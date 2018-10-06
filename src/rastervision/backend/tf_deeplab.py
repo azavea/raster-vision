@@ -428,7 +428,7 @@ class TFDeeplab(Backend):
         Returns:
             The local path to the generated file.
         """
-        # Currently TF Object Detection can only handle uint8
+        # Currently TF Deeplab can only handle uint8
         if scene.raster_source.get_dtype() != np.uint8:
             raise Exception('Cannot use {} backend for imagery that does '
                             'not have data type uint8. '
