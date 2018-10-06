@@ -198,12 +198,14 @@ def run_test(test, temp_dir):
                 scene = scene_config.create_scene(experiment.task, temp_dir)
                 scene_labels = scene.prediction_label_store.get_labels()
 
+                extent = scene.raster_source.get_extent()
                 crs_transformer = scene.raster_source.get_crs_transformer()
                 predictor_labels = scene_config.label_store \
                                                .for_prediction(
                                                    predictor_label_store_uri) \
                                                .create_store(
                                                    experiment.task,
+                                                   extent,
                                                    crs_transformer,
                                                    temp_dir) \
                                                .get_labels()

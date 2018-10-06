@@ -81,3 +81,7 @@ class HttpFileSystem(FileSystem):
     @staticmethod
     def last_modified(uri: str) -> datetime:
         return None
+
+    @staticmethod
+    def list_paths(uri, suffix=None):
+        raise NotImplementedError()

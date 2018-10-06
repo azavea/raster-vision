@@ -34,20 +34,22 @@ class SceneConfig(BundledConfigMixin, Config):
               tmp_dir - Temporary directory to use
         """
         raster_source = self.raster_source.create_source(tmp_dir)
+
+        extent = raster_source.get_extent()
+        crs_transformer = raster_source.get_crs_transformer()
+
         label_source = None
         if self.label_source:
             label_source = self.label_source.create_source(
-                task_config, raster_source.get_extent(),
-                raster_source.get_crs_transformer(), tmp_dir)
+                task_config, extent, crs_transformer, tmp_dir)
         label_store = None
         if self.label_store:
             label_store = self.label_store.create_store(
-                task_config, raster_source.get_crs_transformer(), tmp_dir)
+                task_config, extent, crs_transformer, tmp_dir)
         aoi_polygons = None
         if self.aoi_uri:
             aoi_js = json.loads(file_to_str(self.aoi_uri))
-            aoi_polygons = aoi_json_to_shapely(
-                aoi_js, raster_source.get_crs_transformer())
+            aoi_polygons = aoi_json_to_shapely(aoi_js, crs_transformer)
 
         return Scene(self.id, raster_source, label_source, label_store,
                      aoi_polygons)

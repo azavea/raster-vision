@@ -33,6 +33,19 @@ class DefaultGeoTiffSourceProvider(DefaultRasterSourceProvider):
                                     .build()
 
 
+class DefaultGeoJSONSourceProvider(DefaultRasterSourceProvider):
+    @staticmethod
+    def handles(uri):
+        ext = os.path.splitext(uri)[1]
+        return ext.lower() in ['.geojson', '.json']
+
+    @staticmethod
+    def construct(uri, channel_order=None):
+        return rv.RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
+                                    .with_uri(uri) \
+                                    .build()
+
+
 class DefaultImageSourceProvider(DefaultRasterSourceProvider):
     @staticmethod
     def handles(uri):

@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.raster_source.image_source import ImageSource
+from rastervision.data.raster_source.geojson_source import GeoJSONSource
 from rastervision.data.raster_source.raster_source_config \
     import (RasterSourceConfig, RasterSourceConfigBuilder)
 from rastervision.protos.raster_source_pb2 \
@@ -9,19 +9,16 @@ from rastervision.protos.raster_source_pb2 \
 from rastervision.utils.files import download_if_needed
 
 
-class ImageSourceConfig(RasterSourceConfig):
+class GeoJSONSourceConfig(RasterSourceConfig):
     def __init__(self, uri, transformers=None, channel_order=None):
-        super().__init__(
-            source_type=rv.IMAGE_SOURCE,
-            transformers=transformers,
-            channel_order=channel_order)
+        super().__init__(source_type=rv.GEOJSON_SOURCE)
         self.uri = uri
 
     def to_proto(self):
         msg = super().to_proto()
         msg.MergeFrom(
             RasterSourceConfigMsg(
-                image_file=RasterSourceConfigMsg.ImageFile(uri=self.uri)))
+                geojson_file=RasterSourceConfigMsg.GeoJSONFile(uri=self.uri)))
         return msg
 
     def save_bundle_files(self, bundle_dir):
@@ -43,9 +40,8 @@ class ImageSourceConfig(RasterSourceConfig):
                    .with_uri(new_uri) \
                    .build()
 
-    def create_source(self, tmp_dir, extent=None, crs_transformer=None):
-        transformers = self.create_transformers()
-        return ImageSource(self.uri, transformers, tmp_dir, self.channel_order)
+    def create_source(self, tmp_dir, extent, crs_transformer):
+        return GeoJSONSource(self.uri, extent, crs_transformer)
 
     def preprocess_command(self, command_type, experiment_config,
                            context=None):
@@ -56,30 +52,26 @@ class ImageSourceConfig(RasterSourceConfig):
         return (conf, io_def)
 
 
-class ImageSourceConfigBuilder(RasterSourceConfigBuilder):
+class GeoJSONSourceConfigBuilder(RasterSourceConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
-            config = {
-                'uri': prev.uri,
-                'transformers': prev.transformers,
-                'channel_order': prev.channel_order
-            }
+            config = {'uri': prev.uri}
 
-        super().__init__(ImageSourceConfig, config)
+        super().__init__(GeoJSONSourceConfig, config)
 
     def validate(self):
         super().validate()
         if self.config.get('uri') is None:
             raise rv.ConfigError(
-                'You must specify a uri for the ImageSourceConfig. Use "with_uri"'
+                'You must specify a uri for the GeoJSONSourceConfig. Use "with_uri"'
             )
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
 
         return b \
-            .with_uri(msg.image_file.uri)
+            .with_uri(msg.geojson_file.uri)
 
     def with_uri(self, uri):
         b = deepcopy(self)

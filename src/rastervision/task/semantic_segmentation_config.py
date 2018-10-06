@@ -16,14 +16,14 @@ class SemanticSegmentationConfig(TaskConfig):
                      target_classes=None,
                      debug_chip_probability=0.25,
                      negative_survival_probability=1.0,
-                     number_of_chips=1000,
+                     chips_per_scene=1000,
                      target_count_threshold=1000,
                      stride=None):
             self.window_method = window_method
             self.target_classes = target_classes
             self.debug_chip_probability = debug_chip_probability
             self.negative_survival_probability = negative_survival_probability
-            self.number_of_chips = number_of_chips
+            self.chips_per_scene = chips_per_scene
             self.target_count_threshold = target_count_threshold
             self.stride = stride
 
@@ -59,7 +59,7 @@ class SemanticSegmentationConfig(TaskConfig):
             debug_chip_probability=self.chip_options.debug_chip_probability,
             negative_survival_probability=self.chip_options.
             negative_survival_probability,
-            number_of_chips=self.chip_options.number_of_chips,
+            chips_per_scene=self.chip_options.chips_per_scene,
             target_count_threshold=self.chip_options.target_count_threshold,
             stride=self.chip_options.stride)
 
@@ -103,7 +103,7 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                     target_classes=conf.chip_options.target_classes,
                     debug_chip_probability=conf.chip_options.debug_chip_probability,
                     negative_survival_probability=negative_survival_probability,
-                    number_of_chips=conf.chip_options.number_of_chips,
+                    chips_per_scene=conf.chip_options.chips_per_scene,
                     target_count_threshold=conf.chip_options.target_count_threshold,
                     stride=conf.chip_options.stride)
 
@@ -137,7 +137,7 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                           target_classes=None,
                           debug_chip_probability=0.25,
                           negative_survival_probability=1.0,
-                          number_of_chips=1000,
+                          chips_per_scene=1000,
                           target_count_threshold=1000,
                           stride=None):
         """Sets semantic segmentation configurations for the Chip command
@@ -153,7 +153,7 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                                            contain more pixels than
                                            target_count_threshold.
                                            Applies to the 'random_sample' window method.
-            number_of_chips: number of chips to generate per scene.
+            chips_per_scene: number of chips to generate per scene.
                              Applies to the 'random_sample' window method.
             target_count_threshold: minimum number of pixels covering target_classes
                                     that a chip must have.
@@ -171,7 +171,7 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
             target_classes=target_classes,
             debug_chip_probability=debug_chip_probability,
             negative_survival_probability=negative_survival_probability,
-            number_of_chips=number_of_chips,
+            chips_per_scene=chips_per_scene,
             target_count_threshold=target_count_threshold,
             stride=stride)
         return b

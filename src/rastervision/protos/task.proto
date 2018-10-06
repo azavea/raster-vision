@@ -36,10 +36,9 @@ message TaskConfig {
             repeated int32 target_classes = 2;
             optional float debug_chip_probability = 3 [default=0.25];
             optional float negative_survival_probability = 4 [default=1.00];
-            optional int32 number_of_chips = 5 [default=1000];
+            optional int32 chips_per_scene = 5 [default=1000];
             optional int32 target_count_threshold = 6 [default=2048];
             optional int32 stride = 7;
-
         }
 
         repeated ClassItem class_items = 1;

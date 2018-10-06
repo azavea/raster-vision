@@ -40,9 +40,9 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[4:, 4:, :] = [1, 1, 1]
         raster_source = MockRasterSource(data)
-        source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
+        rgb_class_map = ClassMap([ClassItem(id=1, color='#010101')])
         label_source = SemanticSegmentationRasterSource(
-            source=raster_source, source_class_map=source_class_map)
+            source=raster_source, rgb_class_map=rgb_class_map)
         extent = Box(0, 0, 10, 10)
         self.assertTrue(label_source.enough_target_pixels(extent, 30, [1]))
 
@@ -50,9 +50,9 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[7:, 7:, :] = [1, 1, 1]
         raster_source = MockRasterSource(data)
-        source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
+        rgb_class_map = ClassMap([ClassItem(id=1, color='#010101')])
         label_source = SemanticSegmentationRasterSource(
-            source=raster_source, source_class_map=source_class_map)
+            source=raster_source, rgb_class_map=rgb_class_map)
         extent = Box(0, 0, 10, 10)
         self.assertFalse(label_source.enough_target_pixels(extent, 30, [1]))
 
@@ -60,9 +60,7 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         data = np.zeros((10, 10, 1), dtype=np.uint8)
         data[7:, 7:, 0] = 1
         raster_source = MockRasterSource(data)
-        source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
-        label_source = SemanticSegmentationRasterSource(
-            source=raster_source, source_class_map=source_class_map)
+        label_source = SemanticSegmentationRasterSource(source=raster_source)
         labels = label_source.get_labels()
         expected_labels = np.zeros((10, 10))
         expected_labels[7:, 7:] = 1
@@ -77,9 +75,9 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[7:, 7:, :] = [1, 1, 1]
         raster_source = MockRasterSource(data)
-        source_class_map = ClassMap([ClassItem(id=1, color='#010101')])
+        rgb_class_map = ClassMap([ClassItem(id=1, color='#010101')])
         label_source = SemanticSegmentationRasterSource(
-            source=raster_source, source_class_map=source_class_map, rgb=True)
+            source=raster_source, rgb_class_map=rgb_class_map)
         labels = label_source.get_labels()
         expected_labels = np.zeros((10, 10))
         expected_labels[7:, 7:] = 1
@@ -99,7 +97,7 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         try:
             rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
               .with_raster_source('') \
-              .with_source_class_map([]) \
+              .with_rgb_class_map([]) \
               .build()
         except rv.ConfigError:
             self.fail('ConfigError raised unexpectedly')

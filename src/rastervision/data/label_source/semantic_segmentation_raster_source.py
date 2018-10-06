@@ -4,8 +4,7 @@ import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap
-from rastervision.data.label_source import SegmentationClassTransformer
-from rastervision.data.label_source import LabelSource
+from rastervision.data.label_source import LabelSource, SegmentationClassTransformer
 from rastervision.data.raster_source import RasterSource
 
 
@@ -13,22 +12,20 @@ class SemanticSegmentationRasterSource(LabelSource):
     """A read-only label source for segmentation raster files.
     """
 
-    def __init__(self,
-                 source: RasterSource,
-                 source_class_map: ClassMap,
-                 rgb: bool = False):
+    def __init__(self, source: RasterSource, rgb_class_map: ClassMap = None):
         """Constructor.
 
         Args:
             source: (RasterSource) assumed to have RGB values that are mapped to
-                class_ids using the source_class_map
-            source_class_map: (ClassMap) of class_ids to names.
-                              Must have color values filled in
-                              for usage  with rgb=True
+                class_ids using the rgb_class_map
+            rgb_class_map: (ClassMap) with color values filled in. Optional and used to
+                transform RGB values to class ids.
         """
         self.source = source
-        self.class_transformer = SegmentationClassTransformer(source_class_map)
-        self.rgb = rgb
+        self.class_transformer = None
+        if rgb_class_map is not None:
+            self.class_transformer = SegmentationClassTransformer(
+                rgb_class_map)
 
     def enough_target_pixels(self, window: Box, target_count_threshold: int,
                              target_classes: List[int]) -> bool:
@@ -45,11 +42,11 @@ class SemanticSegmentationRasterSource(LabelSource):
         Returns:
              True (the window does contain interesting pixels) or False.
         """
-        img = self.source.get_raw_chip(window)
-        if self.rgb:
-            labels = self.class_transformer.rgb_to_class(img)
+        raw_labels = self.source.get_raw_chip(window)
+        if self.class_transformer is not None:
+            labels = self.class_transformer.rgb_to_class(raw_labels)
         else:
-            labels = img[:, :, 0].reshape(img.shape[0], img.shape[1])
+            labels = np.squeeze(raw_labels)
 
         target_count = 0
         for class_id in target_classes:
@@ -69,12 +66,13 @@ class SemanticSegmentationRasterSource(LabelSource):
              np.ndarray of shape [height, width] where values are class ids
         """
         if window is None:
-            img = self.source.get_raw_image_array()
+            raw_labels = self.source.get_raw_image_array()
         else:
-            img = self.source.get_raw_chip(window)
+            raw_labels = self.source.get_raw_chip(window)
 
-        if self.rgb:
-            return self.class_transformer.rgb_to_class(img)
+        if self.class_transformer is not None:
+            labels = self.class_transformer.rgb_to_class(raw_labels)
         else:
-            labels = img[:, :, 0].reshape(img.shape[0], img.shape[1])
-            return labels
+            labels = np.squeeze(raw_labels)
+
+        return labels

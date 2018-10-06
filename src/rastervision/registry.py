@@ -4,7 +4,8 @@ from rastervision.cli import Verbosity
 from rastervision.rv_config import RVConfig
 from rastervision.plugin import PluginRegistry
 from rastervision.data.raster_source.default import (
-    DefaultGeoTiffSourceProvider, DefaultImageSourceProvider)
+    DefaultGeoTiffSourceProvider, DefaultImageSourceProvider,
+    DefaultGeoJSONSourceProvider)
 from rastervision.data.label_source.default import (
     DefaultObjectDetectionGeoJSONSourceProvider,
     DefaultChipClassificationGeoJSONSourceProvider,
@@ -56,6 +57,8 @@ class Registry:
             # Raster Sources
             (rv.RASTER_SOURCE, rv.GEOTIFF_SOURCE):
             rv.data.GeoTiffSourceConfigBuilder,
+            (rv.RASTER_SOURCE, rv.GEOJSON_SOURCE):
+            rv.data.GeoJSONSourceConfigBuilder,
             (rv.RASTER_SOURCE, rv.IMAGE_SOURCE):
             rv.data.ImageSourceConfigBuilder,
 
@@ -94,6 +97,7 @@ class Registry:
 
         self._internal_default_raster_sources = [
             DefaultGeoTiffSourceProvider,
+            DefaultGeoJSONSourceProvider,
             # This is the catch-all case, ensure it's on the bottom of the search stack.
             DefaultImageSourceProvider
         ]

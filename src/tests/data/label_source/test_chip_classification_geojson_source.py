@@ -3,14 +3,15 @@ import os
 import json
 
 from shapely import geometry
+from shapely.strtree import STRtree
 
 import rastervision as rv
-
-from rastervision.data.label_source import (get_str_tree, infer_cell,
-                                            infer_labels, read_labels)
+from rastervision.data.label_source import (infer_cell, infer_labels,
+                                            read_labels)
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
 from rastervision.rv_config import RVConfig
+from rastervision.data.utils import geojson_to_shapes
 
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
@@ -58,7 +59,8 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         self.class_id2 = 2
         self.background_class_id = 3
 
-        self.str_tree = get_str_tree(self.geojson_dict, self.crs_transformer)
+        self.str_tree = STRtree(
+            geojson_to_shapes(self.geojson_dict, self.crs_transformer))
 
         self.file_name = 'labels.json'
         self.temp_dir = RVConfig.get_tmp_dir()

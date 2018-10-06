@@ -1,6 +1,7 @@
 import os
 import shutil
 from datetime import datetime, timezone
+import glob
 
 from rastervision.filesystem import (FileSystem, NotReadableError)
 
@@ -124,3 +125,9 @@ class LocalFileSystem(FileSystem):
     def last_modified(uri: str) -> datetime:
         local_last_modified = datetime.utcfromtimestamp(os.path.getmtime(uri))
         return local_last_modified.replace(tzinfo=timezone.utc)
+
+    @staticmethod
+    def list_paths(uri, ext=None):
+        if ext is None:
+            ext = ''
+        return glob.glob(os.path.join(uri, '*' + ext))

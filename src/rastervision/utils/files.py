@@ -154,6 +154,16 @@ def file_exists(uri, fs=None):
     return fs.file_exists(uri)
 
 
+def list_paths(uri, ext=None, fs=None):
+    if uri is None:
+        return None
+
+    if not fs:
+        fs = FileSystem.get_file_system(uri, 'r')
+
+    return fs.list_paths(uri, ext=ext)
+
+
 def upload_or_copy(src_path, dst_uri, fs=None):
     """Upload a file if the destination is remote.
 
