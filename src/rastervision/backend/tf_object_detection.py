@@ -10,6 +10,7 @@ import glob
 import re
 import uuid
 from copy import deepcopy
+import tarfile
 
 from PIL import Image
 import numpy as np
@@ -302,8 +303,25 @@ def export_inference_graph(train_root_dir,
         ])
         train_process.wait()
 
-        # Move frozen inference graph and clean up generated files.
         inference_graph_path = join(output_dir, 'frozen_inference_graph.pb')
+
+        # Package up the model files for usage as fine tuning checkpoints
+        model_checkpoint_files = [
+            os.path.join(output_dir, fname) for fname in os.listdir(output_dir)
+            if fname.startswith('model.ckpt')
+        ]
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            model_dir = os.path.join(tmp_dir, 'fine-tune-checkpoint')
+            make_dir(model_dir)
+            model_tar = os.path.join(output_dir, 'fine-tune-checkpoint.tar.gz')
+            shutil.copy(inference_graph_path, model_dir)
+            for path in model_checkpoint_files:
+                shutil.copy(path, model_dir)
+            with tarfile.open(model_tar, "w:gz") as tar:
+                tar.add(model_dir, arcname=os.path.basename(model_dir))
+
+        # Move frozen inference graph and clean up generated files.
+
         output_path = join(output_dir, 'model')
         shutil.move(inference_graph_path, output_path)
         saved_model_dir = join(output_dir, 'saved_model')
