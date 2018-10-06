@@ -35,15 +35,15 @@ class ExperimentLoader:
         path = os.path.splitext(os.path.normpath(path))[0]
 
         _relpath = os.path.relpath(path, self._top_level_dir)
-        assert not os.path.isabs(_relpath), "Path must be within the project"
-        assert not _relpath.startswith('..'), "Path must be within the project"
+        assert not os.path.isabs(_relpath), 'Path must be within the project'
+        assert not _relpath.startswith('..'), 'Path must be within the project'
 
         name = _relpath.replace(os.path.sep, '.')
         return name
 
     def load_from_file(self, path):
         name = self._get_name_from_path(path)
-        return  self.load_from_module(name)
+        return self.load_from_module(name)
 
     def load_from_module(self, name):
         result = []

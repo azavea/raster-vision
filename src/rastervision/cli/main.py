@@ -90,9 +90,7 @@ def main(profile, verbose):
     default=False,
     help=('Rerun commands, regardless if '
           'their output files already exist.'))
-@click.option(
-    '--tempdir',
-    help=('Temporary directory to use for this run.'))
+@click.option('--tempdir', help=('Temporary directory to use for this run.'))
 def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         prefix, methods, path, filters, rerun, tempdir):
     """Run Raster Vision commands from experiments, using the
@@ -146,8 +144,7 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
             print_error(
                 'No experiments found in {}.'.format(experiment_module))
         elif path:
-            print_error(
-                'No experiments found in {}.'.format(path))
+            print_error('No experiments found in {}.'.format(path))
         else:
             print_error('No experiments found.')
 
