@@ -29,7 +29,7 @@ setup(
     version=__version__,
     description='An open source framework for deep learning '
     'on satellite and aerial imagery',
-    long_description=open('../README.md').read(),
+    long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/azavea/raster-vision',
     author='Azavea',
