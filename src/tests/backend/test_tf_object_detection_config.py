@@ -67,6 +67,7 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
                             .with_task(self.generate_task()) \
                             .with_template(self.get_template_uri()) \
                             .with_batch_size(100) \
+                            .with_fine_tune_checkpoint_name('foo') \
                             .build()
 
         msg = t.to_proto()
@@ -75,6 +76,30 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
         self.assertEqual(
             msg.tf_object_detection_config.tfod_config['trainConfig'][
                 'batchSize'], 100)
+        self.assertEqual(
+            msg.tf_object_detection_config.fine_tune_checkpoint_name, 'foo')
+
+    def test_sets_fine_tune_checkpoint_to_experiment_name(self):
+        task = self.generate_task()
+        backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+                                  .with_task(task) \
+                                  .with_template(self.get_template_uri()) \
+                                  .with_batch_size(100) \
+                                  .build()
+        dataset = rv.DatasetConfig.builder().build()
+
+        e = rv.ExperimentConfig.builder() \
+                               .with_task(task) \
+                               .with_backend(backend) \
+                               .with_dataset(dataset) \
+                               .with_id('foo-exp') \
+                               .with_root_uri('.') \
+                               .build()
+
+        resolved_e = e.fully_resolve()
+
+        self.assertEqual(resolved_e.backend.fine_tune_checkpoint_name,
+                         'foo-exp')
 
     def test_requires_backend(self):
         with self.assertRaises(rv.ConfigError):
