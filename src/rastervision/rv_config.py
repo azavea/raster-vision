@@ -98,10 +98,13 @@ class RVConfig:
         self.verbosity = verbosity
 
         # Set logging level
-        log = logging.getLogger('rastervision')
-        if self.verbosity >= Verbosity.NORMAL:
-            log.setLevel(logging.INFO)
-        log = logging.getLogger(__name__)
+        root_log = logging.getLogger('rastervision')
+        if self.verbosity >= Verbosity.VERY_VERBOSE:
+            root_log.setLevel(logging.DEBUG)
+        elif self.verbosity >= Verbosity.NORMAL:
+            root_log.setLevel(logging.INFO)
+        else:
+            root_log.setLevel(logging.WARN)
 
         if tmp_dir is not None:
             self.set_tmp_dir(tmp_dir)
