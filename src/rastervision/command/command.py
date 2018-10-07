@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from rastervision.rv_config import RVConfig
+
 
 class Command(ABC):
     @abstractmethod
@@ -11,10 +13,13 @@ class Command(ABC):
         self._tmp_dir = tmp_dir
 
     def get_tmp_dir(self):
-        if isinstance(self._tmp_dir, str):
-            return self._tmp_dir
+        if hasattr(self, '_tmp_dir') and self._tmp_dir:
+            if isinstance(self._tmp_dir, str):
+                return self._tmp_dir
+            else:
+                return self._tmp_dir.name
         else:
-            return self._tmp_dir.name
+            return RVConfig.get_tmp_dir().name
 
 
 class NoOpCommand(Command):
