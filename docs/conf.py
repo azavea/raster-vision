@@ -88,10 +88,12 @@ html_context = {
         ProjectLink("Examples Repository", "https://github.com/azavea/raster-vision-examples"),
         ProjectLink("QGIS Plugin", "https://github.com/azavea/raster-vision-qgis"),
         ProjectLink("Issue Tracker", "https://github.com/azavea/raster-vision/issues/"),
+        ProjectLink("Documentation Downloads", "https://readthedocs.org/projects/raster-vision/downloads/"),
         ProjectLink("Azavea", "https://www.azavea.com/"),
     ],
     'css_files': [
         '_static/theme_overrides.css',  # override wide tables in RTD theme
+        'https://media.readthedocs.org/css/badge_only.css'
     ]
 }
 html_sidebars = {
