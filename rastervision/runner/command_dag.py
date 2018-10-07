@@ -45,7 +45,7 @@ class CommandDAG:
 
             with click.progressbar(
                     unsolved_sources,
-                    label='Ensuring input files exists ') as uris:
+                    label='Ensuring input files exist  ') as uris:
                 for uri in uris:
                     if not file_exists(uri):
                         missing_files.append(uri)
