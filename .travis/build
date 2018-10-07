@@ -3,8 +3,8 @@ set -e
 
 source .travis/env
 
-docker build -t ${CPU_IMAGE} -f src/Dockerfile-cpu src;
+docker build -t ${CPU_IMAGE} -f Dockerfile-cpu .;
 
 if [ "${1}" == "BUILD_ALL" ]; then
-   docker build -t ${GPU_IMAGE} -f src/Dockerfile-gpu src;
+   docker build -t ${GPU_IMAGE} -f Dockerfile-gpu .;
 fi

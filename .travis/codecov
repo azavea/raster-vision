@@ -1,4 +1,4 @@
 #!/bin/bash
 
-docker run -w $(pwd)/src -v $(pwd):$(pwd) --rm raster-vision-cpu coverage xml
-docker run -e CODECOV_TOKEN=$CODECOV_TOKEN -v $(pwd):$(pwd) --rm raster-vision-cpu codecov --root=$(pwd)/src --commit=$TRAVIS_COMMIT
+docker run -w $(pwd) -v $(pwd):$(pwd) --rm raster-vision-cpu coverage xml
+docker run -e CODECOV_TOKEN=$CODECOV_TOKEN -v $(pwd):$(pwd) --rm raster-vision-cpu codecov --root=$(pwd) --commit=$TRAVIS_COMMIT
