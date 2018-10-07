@@ -134,3 +134,18 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                 parent_job_ids=parent_job_ids)
 
             ids_to_job[command_id] = job_id
+
+    def _dry_run(self, command_dag):
+        """Runs all commands on AWS Batch."""
+        click.echo(click.style(
+            '\nBatch commands to be issued:',
+            fg='green',
+            bold=True,
+            underline=True))
+        for command_id in command_dag.get_sorted_command_ids():
+            command_def = command_dag.get_command_definition(command_id)
+            command_config = command_def.command_config
+            command_root_uri = command_config.root_uri
+            command_uri = os.path.join(command_root_uri, 'command-config.json')
+            batch_run_command = make_command(command_uri)
+            click.echo("  {}".format(batch_run_command))
