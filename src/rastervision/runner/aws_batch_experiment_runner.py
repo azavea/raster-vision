@@ -1,10 +1,12 @@
 import os
 import uuid
-import click
+import logging
 
 from rastervision.rv_config import RVConfig
 from rastervision.runner import ExperimentRunner
 from rastervision.utils.files import save_json_config
+
+log = logging.getLogger(__name__)
 
 
 def make_command(command_config_uri):
@@ -64,7 +66,7 @@ def batch_submit(command_type,
 
     msg = '{} command submitted job with jobName={} and jobId={}'.format(
         command_type, job_name, job_id)
-    click.echo(click.style(msg, fg='green'))
+    log.info(msg)
 
     return job_id
 
@@ -104,7 +106,8 @@ class AwsBatchExperimentRunner(ExperimentRunner):
             command_config = command_def.command_config
             command_root_uri = command_config.root_uri
             command_uri = os.path.join(command_root_uri, 'command-config.json')
-            print('Saving command configuration to {}...'.format(command_uri))
+            log.info(
+                'Saving command configuration to {}...'.format(command_uri))
             save_json_config(command_config.to_proto(), command_uri)
 
             parent_job_ids = []
