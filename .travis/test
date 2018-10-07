@@ -1,7 +1,14 @@
 #!/bin/bash
 
+# Check no uncompiled protobufs
+docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it raster-vision-cpu $(pwd)/scripts/compile
+
+if [ ! -z "$(git status --porcelain)" ]; then
+    echo "Protobuf files need  to be compiled. Run scripts/compile."
+    exit 1
+fi
+
 docker run -v $(pwd):$(pwd) --rm -it raster-vision-cpu rm -f $(pwd)/.coverage $(pwd)/coverage.xml
 docker run --rm -it raster-vision-cpu /opt/src/scripts/style_tests && \
-docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it raster-vision-cpu $(pwd)/scripts/compile && \
 docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it raster-vision-cpu $(pwd)/scripts/unit_tests && \
 docker run -v $(pwd):$(pwd) --rm -it raster-vision-cpu $(pwd)/scripts/integration_tests
