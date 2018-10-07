@@ -3,8 +3,7 @@ from abc import (ABC, abstractmethod)
 import rastervision as rv
 
 
-# TODO : DefaultProvider instead  of DefaultXProvider
-class DefaultEvaluatorProvider(ABC):
+class EvaluatorDefaultProvider(ABC):
     @staticmethod
     @abstractmethod
     def is_default_for(task_type):
@@ -18,7 +17,7 @@ class DefaultEvaluatorProvider(ABC):
         pass
 
 
-class DefaultObjectDetectioneEvaluatorProvider(DefaultEvaluatorProvider):
+class ObjectDetectioneEvaluatorDefaultProvider(EvaluatorDefaultProvider):
     @staticmethod
     def is_default_for(task_type):
         return task_type == rv.OBJECT_DETECTION
@@ -30,7 +29,7 @@ class DefaultObjectDetectioneEvaluatorProvider(DefaultEvaluatorProvider):
                                  .build()
 
 
-class DefaultChipClassificationEvaluatorProvider(DefaultEvaluatorProvider):
+class ChipClassificationEvaluatorDefaultProvider(EvaluatorDefaultProvider):
     @staticmethod
     def is_default_for(task_type):
         return task_type == rv.CHIP_CLASSIFICATION
@@ -42,7 +41,7 @@ class DefaultChipClassificationEvaluatorProvider(DefaultEvaluatorProvider):
                                  .build()
 
 
-class DefaultSemanticSegmentationEvaluatorProvider(DefaultEvaluatorProvider):
+class SemanticSegmentationEvaluatorDefaultProvider(EvaluatorDefaultProvider):
     @staticmethod
     def is_default_for(task_type):
         return task_type == rv.SEMANTIC_SEGMENTATION

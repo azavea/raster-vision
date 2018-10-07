@@ -212,7 +212,7 @@ class SceneConfigBuilder(ConfigBuilder):
             else:
                 b.config['raster_source'] = raster_source
         else:
-            provider = rv._registry.get_default_raster_source_provider(
+            provider = rv._registry.get_raster_source_default_provider(
                 raster_source)
             b.config['raster_source'] = provider.construct(
                 raster_source, channel_order)
@@ -241,7 +241,7 @@ class SceneConfigBuilder(ConfigBuilder):
                     "You must set a task with '.with_task' before "
                     'creating a default label store for {}'.format(
                         label_source))
-            provider = rv._registry.get_default_label_source_provider(
+            provider = rv._registry.get_label_source_default_provider(
                 self.task.task_type, label_source)
             b.config['label_source'] = provider.construct(label_source)
 
@@ -278,7 +278,7 @@ class SceneConfigBuilder(ConfigBuilder):
                     "You must set a task with '.with_task' before "
                     'creating a default label store for {}'.format(
                         label_store))
-            provider = rv._registry.get_default_label_store_provider(
+            provider = rv._registry.get_label_store_default_provider(
                 self.task.task_type, label_store)
             b.config['label_store'] = provider.construct(label_store)
         else:
@@ -286,7 +286,7 @@ class SceneConfigBuilder(ConfigBuilder):
                 raise rv.ConfigError(
                     "You must set a task with '.with_task' before "
                     'creating a default label store.')
-            provider = rv._registry.get_default_label_store_provider(
+            provider = rv._registry.get_label_store_default_provider(
                 self.task.task_type)
             b.config['label_store'] = provider.construct()
 

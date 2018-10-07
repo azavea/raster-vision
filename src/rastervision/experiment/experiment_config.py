@@ -221,7 +221,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
         evaluators = self.config.get('evaluators')
         if not evaluators:
             task_type = self.config['task'].task_type
-            e = rv._registry.get_default_evaluator_provider(task_type) \
+            e = rv._registry.get_evaluator_default_provider(task_type) \
                             .construct(self.config['task'])
             b = b.with_evaluator(e)
 

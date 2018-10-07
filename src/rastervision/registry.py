@@ -4,20 +4,20 @@ from rastervision.cli import Verbosity
 from rastervision.rv_config import RVConfig
 from rastervision.plugin import PluginRegistry
 from rastervision.data.raster_source.default import (
-    DefaultGeoTiffSourceProvider, DefaultImageSourceProvider,
-    DefaultGeoJSONSourceProvider)
+    GeoTiffSourceDefaultProvider, ImageSourceDefaultProvider,
+    GeoJSONSourceDefaultProvider)
 from rastervision.data.label_source.default import (
-    DefaultObjectDetectionGeoJSONSourceProvider,
-    DefaultChipClassificationGeoJSONSourceProvider,
-    DefaultSemanticSegmentationRasterSourceProvider)
+    ObjectDetectionGeoJSONSourceDefaultProvider,
+    ChipClassificationGeoJSONSourceDefaultProvider,
+    SemanticSegmentationRasterSourceDefaultProvider)
 from rastervision.data.label_store.default import (
-    DefaultObjectDetectionGeoJSONStoreProvider,
-    DefaultChipClassificationGeoJSONStoreProvider,
-    DefaultSemanticSegmentationRasterStoreProvider)
+    ObjectDetectionGeoJSONStoreDefaultProvider,
+    ChipClassificationGeoJSONStoreDefaultProvider,
+    SemanticSegmentationRasterStoreDefaultProvider)
 from rastervision.evaluation.default import (
-    DefaultObjectDetectioneEvaluatorProvider,
-    DefaultChipClassificationEvaluatorProvider,
-    DefaultSemanticSegmentationEvaluatorProvider)
+    ObjectDetectioneEvaluatorDefaultProvider,
+    ChipClassificationEvaluatorDefaultProvider,
+    SemanticSegmentationEvaluatorDefaultProvider)
 
 
 class RegistryError(Exception):
@@ -96,28 +96,28 @@ class Registry:
         }
 
         self._internal_default_raster_sources = [
-            DefaultGeoTiffSourceProvider,
-            DefaultGeoJSONSourceProvider,
+            GeoTiffSourceDefaultProvider,
+            GeoJSONSourceDefaultProvider,
             # This is the catch-all case, ensure it's on the bottom of the search stack.
-            DefaultImageSourceProvider
+            ImageSourceDefaultProvider
         ]
 
         self._internal_default_label_sources = [
-            DefaultObjectDetectionGeoJSONSourceProvider,
-            DefaultChipClassificationGeoJSONSourceProvider,
-            DefaultSemanticSegmentationRasterSourceProvider
+            ObjectDetectionGeoJSONSourceDefaultProvider,
+            ChipClassificationGeoJSONSourceDefaultProvider,
+            SemanticSegmentationRasterSourceDefaultProvider
         ]
 
         self._internal_default_label_stores = [
-            DefaultObjectDetectionGeoJSONStoreProvider,
-            DefaultChipClassificationGeoJSONStoreProvider,
-            DefaultSemanticSegmentationRasterStoreProvider
+            ObjectDetectionGeoJSONStoreDefaultProvider,
+            ChipClassificationGeoJSONStoreDefaultProvider,
+            SemanticSegmentationRasterStoreDefaultProvider
         ]
 
         self._internal_default_evaluators = [
-            DefaultObjectDetectioneEvaluatorProvider,
-            DefaultChipClassificationEvaluatorProvider,
-            DefaultSemanticSegmentationEvaluatorProvider
+            ObjectDetectioneEvaluatorDefaultProvider,
+            ChipClassificationEvaluatorDefaultProvider,
+            SemanticSegmentationEvaluatorDefaultProvider
         ]
 
         self.command_config_builders = {
@@ -208,9 +208,9 @@ class Registry:
             raise RegistryError('No matching filesystem to handle '
                                 'reading from uri {}'.format(uri))
 
-    def get_default_raster_source_provider(self, s):
+    def get_raster_source_default_provider(self, s):
         """
-        Gets the DefaultRasterSourceProvider for a given input string.
+        Gets the RasterSourceDefaultProvider for a given input string.
         """
         self._ensure_plugins_loaded()
         providers = (self._plugin_registry.default_raster_sources +
@@ -221,11 +221,11 @@ class Registry:
                 return provider
 
         raise RegistryError(
-            'No DefaultRasterSourceProvider found for {}'.format(s))
+            'No RasterSourceDefaultProvider found for {}'.format(s))
 
-    def get_default_label_source_provider(self, task_type, s):
+    def get_label_source_default_provider(self, task_type, s):
         """
-        Gets the DefaultRasterSourceProvider for a given input string.
+        Gets the RasterSourceDefaultProvider for a given input string.
         """
         self._ensure_plugins_loaded()
         providers = (self._plugin_registry.default_label_sources +
@@ -235,13 +235,13 @@ class Registry:
             if provider.handles(task_type, s):
                 return provider
 
-        raise RegistryError('No DefaultLabelSourceProvider '
+        raise RegistryError('No LabelSourceDefaultProvider '
                             'found for {} and task type {}'.format(
                                 s, task_type))
 
-    def get_default_label_store_provider(self, task_type, s=None):
+    def get_label_store_default_provider(self, task_type, s=None):
         """
-        Gets the DefaultRasterSourceProvider for a given input string.
+        Gets the RasterSourceDefaultProvider for a given input string.
         """
 
         self._ensure_plugins_loaded()
@@ -257,16 +257,16 @@ class Registry:
                     return provider
 
         if s:
-            raise RegistryError('No DefaultLabelStoreProvider '
+            raise RegistryError('No LabelStoreDefaultProvider '
                                 'found for {} and task type {}'.format(
                                     s, task_type))
         else:
-            raise RegistryError('No DefaultLabelStoreProvider '
+            raise RegistryError('No LabelStoreDefaultProvider '
                                 'found for task type {}'.format(task_type))
 
-    def get_default_evaluator_provider(self, task_type):
+    def get_evaluator_default_provider(self, task_type):
         """
-        Gets the DefaultEvaluatorProvider for a given task
+        Gets the EvaluatorDefaultProvider for a given task
         """
 
         self._ensure_plugins_loaded()
@@ -277,7 +277,7 @@ class Registry:
             if provider.is_default_for(task_type):
                 return provider
 
-        raise RegistryError('No DefaultEvaluatorProvider '
+        raise RegistryError('No EvaluatorDefaultProvider '
                             'found for task type {}'.format(task_type))
 
     def get_command_config_builder(self, command_type):

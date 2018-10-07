@@ -4,7 +4,7 @@ import os
 import rastervision as rv
 
 
-class DefaultLabelStoreProvider(ABC):
+class LabelStoreDefaultProvider(ABC):
     @staticmethod
     @abstractmethod
     def is_default_for(task_type):
@@ -24,7 +24,7 @@ class DefaultLabelStoreProvider(ABC):
         pass
 
 
-class DefaultObjectDetectionGeoJSONStoreProvider(DefaultLabelStoreProvider):
+class ObjectDetectionGeoJSONStoreDefaultProvider(LabelStoreDefaultProvider):
     @staticmethod
     def is_default_for(task_type):
         return task_type == rv.OBJECT_DETECTION
@@ -45,7 +45,7 @@ class DefaultObjectDetectionGeoJSONStoreProvider(DefaultLabelStoreProvider):
         return b.build()
 
 
-class DefaultChipClassificationGeoJSONStoreProvider(DefaultLabelStoreProvider):
+class ChipClassificationGeoJSONStoreDefaultProvider(LabelStoreDefaultProvider):
     @staticmethod
     def is_default_for(task_type):
         return task_type == rv.CHIP_CLASSIFICATION
@@ -65,8 +65,8 @@ class DefaultChipClassificationGeoJSONStoreProvider(DefaultLabelStoreProvider):
         return b.build()
 
 
-class DefaultSemanticSegmentationRasterStoreProvider(
-        DefaultLabelStoreProvider):
+class SemanticSegmentationRasterStoreDefaultProvider(
+        LabelStoreDefaultProvider):
     @staticmethod
     def is_default_for(task_type):
         return task_type == rv.SEMANTIC_SEGMENTATION

@@ -87,7 +87,7 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
         if isinstance(source, RasterSourceConfig):
             b.config['source'] = source
         elif isinstance(source, str):
-            provider = rv._registry.get_default_raster_source_provider(source)
+            provider = rv._registry.get_raster_source_default_provider(source)
             source = provider.construct(source, channel_order=channel_order)
             b.config['source'] = source
         else:

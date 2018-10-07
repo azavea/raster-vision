@@ -4,7 +4,7 @@ import os
 import rastervision as rv
 
 
-class DefaultRasterSourceProvider(ABC):
+class RasterSourceDefaultProvider(ABC):
     @staticmethod
     @abstractmethod
     def handles(s):
@@ -19,7 +19,7 @@ class DefaultRasterSourceProvider(ABC):
         pass
 
 
-class DefaultGeoTiffSourceProvider(DefaultRasterSourceProvider):
+class GeoTiffSourceDefaultProvider(RasterSourceDefaultProvider):
     @staticmethod
     def handles(uri):
         ext = os.path.splitext(uri)[1]
@@ -33,7 +33,7 @@ class DefaultGeoTiffSourceProvider(DefaultRasterSourceProvider):
                                     .build()
 
 
-class DefaultGeoJSONSourceProvider(DefaultRasterSourceProvider):
+class GeoJSONSourceDefaultProvider(RasterSourceDefaultProvider):
     @staticmethod
     def handles(uri):
         ext = os.path.splitext(uri)[1]
@@ -46,7 +46,7 @@ class DefaultGeoJSONSourceProvider(DefaultRasterSourceProvider):
                                     .build()
 
 
-class DefaultImageSourceProvider(DefaultRasterSourceProvider):
+class ImageSourceDefaultProvider(RasterSourceDefaultProvider):
     @staticmethod
     def handles(uri):
         return True  # This is the catch-all case.
