@@ -83,7 +83,7 @@ class RVConfig:
             RVConfig.tmp_dir = RVConfig.DEFAULT_DIR
         finally:
             make_dir(RVConfig.tmp_dir)
-            log.info('Temporary directory is: {}'.format(RVConfig.tmp_dir))
+            log.debug('Temporary directory is: {}'.format(RVConfig.tmp_dir))
 
     @staticmethod
     def get_instance():
