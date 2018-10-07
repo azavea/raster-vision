@@ -28,7 +28,9 @@ else
     # Exit code of 1 if yapf has a non-empty diff
     # (ie. scripts/format_code needs to be run)
     echo "Checking that code is consistent with yapf..."
-    if !(yapf -dpr -e "*_pb2.py" -e "build/*" "$SRC_DIR" > /dev/null); then
+    if !(yapf -dpr -e "*_pb2.py" "$SRC_DIR/rastervision" > /dev/null &&
+             yapf -dpr -e "*_pb2.py" "$SRC_DIR/tests" > /dev/null &&
+             yapf -dpr -e "*_pb2.py" "$SRC_DIR/integration_tests" > /dev/null); then
         echo "Code has not been formatted by yapf. Need to run ./scripts/format_code."
         exit 1
     fi

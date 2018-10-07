@@ -26,8 +26,11 @@ else
           rastervision/* \
           tests/* \
           integration_tests/* \
+          docs/conf.py \
           setup.py
 
     echo "Running yapf..."
-    yapf -ipr -e "*_pb2.py" "$SRC_DIR"
+    yapf -ipr -e "*_pb2.py" "$SRC_DIR/rastervision"
+    yapf -ipr -e "*_pb2.py" "$SRC_DIR/tests"
+    yapf -ipr -e "*_pb2.py" "$SRC_DIR/integration_tests"
 fi
