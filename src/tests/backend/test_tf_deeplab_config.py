@@ -26,11 +26,13 @@ class TestTFDeeplabConfig(unittest.TestCase):
                             .with_template(self.get_template_uri()) \
                             .with_batch_size(100) \
                             .with_model_uri(model_uri) \
+                            .with_fine_tune_checkpoint_name('foo') \
                             .build()
 
         self.assertEqual(b.tfdl_config['trainBatchSize'], 100)
         self.assertEqual(b.tfdl_config['modelVariant'], 'mobilenet_v2')
         self.assertEqual(b.model_uri, model_uri)
+        self.assertEqual(b.fine_tune_checkpoint_name, 'foo')
 
     def test_build_backend_from_proto(self):
         config = {
@@ -54,6 +56,7 @@ class TestTFDeeplabConfig(unittest.TestCase):
                             .with_task(self.generate_task()) \
                             .with_template(self.get_template_uri()) \
                             .with_batch_size(100) \
+                            .with_fine_tune_checkpoint_name('foo') \
                             .build()
 
         msg = t.to_proto()
@@ -61,6 +64,30 @@ class TestTFDeeplabConfig(unittest.TestCase):
         self.assertEqual(msg.backend_type, rv.TF_DEEPLAB)
         self.assertEqual(msg.tf_deeplab_config.tfdl_config['trainBatchSize'],
                          100)
+        self.assertEqual(msg.tf_deeplab_config.fine_tune_checkpoint_name,
+                         'foo')
+
+    def test_sets_fine_tune_checkpoint_to_experiment_name(self):
+        task = self.generate_task()
+        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+                                  .with_task(task) \
+                                  .with_template(self.get_template_uri()) \
+                                  .with_batch_size(100) \
+                                  .build()
+        dataset = rv.DatasetConfig.builder().build()
+
+        e = rv.ExperimentConfig.builder() \
+                               .with_task(task) \
+                               .with_backend(backend) \
+                               .with_dataset(dataset) \
+                               .with_id('foo-exp') \
+                               .with_root_uri('.') \
+                               .build()
+
+        resolved_e = e.fully_resolve()
+
+        self.assertEqual(resolved_e.backend.fine_tune_checkpoint_name,
+                         'foo-exp')
 
     def test_requires_backend(self):
         with self.assertRaises(rv.ConfigError):

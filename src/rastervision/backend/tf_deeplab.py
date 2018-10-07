@@ -26,6 +26,7 @@ from rastervision.utils.files import (download_if_needed, get_local_path,
                                       sync_to_dir, sync_from_dir)
 from rastervision.utils.misc import (numpy_to_png, png_to_numpy, save_img)
 from rastervision.data.label_source.utils import color_to_integer
+from rastervision.rv_config import RVConfig
 
 FROZEN_INFERENCE_GRAPH = 'model'
 INPUT_TENSOR_NAME = 'ImageTensor:0'
@@ -609,6 +610,26 @@ class TFDeeplab(Backend):
             export_process = Popen(export_args)
             terminate_at_exit(export_process)
             export_process.wait()
+
+            # Package up the model files for usage as fine tuning checkpoints
+            fine_tune_checkpoint_name = self.backend_config.fine_tune_checkpoint_name
+            latest_checkpoints = get_latest_checkpoint(train_logdir_local)
+            model_checkpoint_files = glob.glob(
+                '{}*'.format(latest_checkpoints))
+            inference_graph_path = os.path.join(train_logdir_local, 'model')
+
+            with RVConfig.get_tmp_dir() as tmp_dir:
+                model_dir = os.path.join(tmp_dir, fine_tune_checkpoint_name)
+                make_dir(model_dir)
+                model_tar = os.path.join(
+                    train_logdir_local,
+                    '{}.tar.gz'.format(fine_tune_checkpoint_name))
+                shutil.copy(inference_graph_path,
+                            '{}/frozen_inference_graph.pb'.format(model_dir))
+                for path in model_checkpoint_files:
+                    shutil.copy(path, model_dir)
+                with tarfile.open(model_tar, 'w:gz') as tar:
+                    tar.add(model_dir, arcname=os.path.basename(model_dir))
 
         # Perform final sync
         sync_to_dir(train_logdir_local, train_logdir, delete=False)

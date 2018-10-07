@@ -285,6 +285,7 @@ def get_last_checkpoint_path(train_root_dir):
 def export_inference_graph(train_root_dir,
                            config_path,
                            output_dir,
+                           fine_tune_checkpoint_name,
                            export_py=None):
     export_py = (export_py or
                  '/opt/tf-models/object_detection/export_inference_graph.py')
@@ -302,8 +303,26 @@ def export_inference_graph(train_root_dir,
         ])
         train_process.wait()
 
-        # Move frozen inference graph and clean up generated files.
         inference_graph_path = join(output_dir, 'frozen_inference_graph.pb')
+
+        # Package up the model files for usage as fine tuning checkpoints
+        model_checkpoint_files = [
+            os.path.join(output_dir, fname) for fname in os.listdir(output_dir)
+            if fname.startswith('model.ckpt')
+        ]
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            model_dir = os.path.join(tmp_dir, fine_tune_checkpoint_name)
+            make_dir(model_dir)
+            model_tar = os.path.join(
+                output_dir, '{}.tar.gz'.format(fine_tune_checkpoint_name))
+            shutil.copy(inference_graph_path, model_dir)
+            for path in model_checkpoint_files:
+                shutil.copy(path, model_dir)
+            with tarfile.open(model_tar, 'w:gz') as tar:
+                tar.add(model_dir, arcname=os.path.basename(model_dir))
+
+        # Move frozen inference graph and clean up generated files.
+
         output_path = join(output_dir, 'model')
         shutil.move(inference_graph_path, output_path)
         saved_model_dir = join(output_dir, 'saved_model')
@@ -693,7 +712,11 @@ class TFObjectDetection(Backend):
                 do_monitoring=self.config.train_options.do_monitoring)
 
         export_inference_graph(
-            output_dir, local_config_path, output_dir, export_py=export_py)
+            output_dir,
+            local_config_path,
+            output_dir,
+            fine_tune_checkpoint_name=self.config.fine_tune_checkpoint_name,
+            export_py=export_py)
 
         # Perform final sync
         sync_to_dir(output_dir, self.config.training_output_uri)

@@ -43,7 +43,8 @@ class TFDeeplabConfig(BackendConfig):
                  debug=False,
                  training_data_uri=None,
                  training_output_uri=None,
-                 model_uri=None):
+                 model_uri=None,
+                 fine_tune_checkpoint_name=None):
         if train_options is None:
             train_options = TFDeeplabConfig.TrainOptions()
         if script_locations is None:
@@ -60,6 +61,7 @@ class TFDeeplabConfig(BackendConfig):
         self.training_data_uri = training_data_uri
         self.training_output_uri = training_output_uri
         self.model_uri = model_uri
+        self.fine_tune_checkpoint_name = fine_tune_checkpoint_name
 
     def create_backend(self, task_config):
         return TFDeeplab(self, task_config)
@@ -76,6 +78,7 @@ class TFDeeplabConfig(BackendConfig):
             'training_data_uri': self.training_data_uri,
             'training_output_uri': self.training_output_uri,
             'model_uri': self.model_uri,
+            'fine_tune_checkpoint_name': self.fine_tune_checkpoint_name,
             'tfdl_config': self.tfdl_config
         }
 
@@ -110,6 +113,11 @@ class TFDeeplabConfig(BackendConfig):
 
             conf.model_uri = os.path.join(conf.training_output_uri, 'model')
             io_def.add_output(conf.model_uri)
+
+            # Set the fine tune checkpoint name to the experiment id
+            if not conf.fine_tune_checkpoint_name:
+                conf.fine_tune_checkpoint_name = experiment_config.id
+            io_def.add_output(conf.fine_tune_checkpoint_name)
         if command_type in [rv.PREDICT, rv.BUNDLE]:
             if not conf.model_uri:
                 io_def.add_missing('Missing model_uri.')
@@ -148,7 +156,8 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
                 'debug': prev.debug,
                 'training_data_uri': prev.training_data_uri,
                 'training_output_uri': prev.training_output_uri,
-                'model_uri': prev.model_uri
+                'model_uri': prev.model_uri,
+                'fine_tune_checkpoint_name': prev.fine_tune_checkpoint_name
             }
         super().__init__(rv.TF_DEEPLAB, TFDeeplabConfig, config, prev)
         self.config_mods = []
@@ -161,8 +170,6 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         # assume the task has already been set and do not
         # require it during validation.
         b.require_task = False
-        if self.config.get('pretrained_model_uri'):
-            b = b.with_pretrained_model_uri(self.config.pretrained_model_uri)
         b = b.with_train_options(
             train_restart_dir=conf.train_restart_dir,
             sync_interval=conf.sync_interval,
@@ -173,6 +180,7 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
         b = b.with_model_uri(conf.model_uri)
+        b = b.with_fine_tune_checkpoint_name(conf.fine_tune_checkpoint_name)
         b = b.with_debug(conf.debug)
         b = b.with_template(json_format.MessageToDict(conf.tfdl_config))
         return b
@@ -313,6 +321,13 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
     def with_model_uri(self, model_uri):
         b = deepcopy(self)
         b.config['model_uri'] = model_uri
+        return b
+
+    def with_fine_tune_checkpoint_name(self, fine_tune_checkpoint_name):
+        """Defines the name of the fine tune checkpoint that will
+        be created for this model after training."""
+        b = deepcopy(self)
+        b.config['fine_tune_checkpoint_name'] = fine_tune_checkpoint_name
         return b
 
     def with_training_data_uri(self, training_data_uri):
