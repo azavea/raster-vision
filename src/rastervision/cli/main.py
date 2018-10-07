@@ -3,11 +3,14 @@ import sys
 import os
 
 import click
+import logging
 
 import rastervision as rv
 from rastervision.experiment import (ExperimentLoader, LoaderError)
 from rastervision.runner import (ExperimentRunner)
 from rastervision.rv_config import RVConfig
+
+log = logging.getLogger(__name__)
 
 
 def print_error(msg):

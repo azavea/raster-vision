@@ -9,6 +9,7 @@ from subprocess import (Popen, PIPE, STDOUT)
 import glob
 import re
 import uuid
+import logging
 from copy import deepcopy
 
 from PIL import Image
@@ -26,6 +27,8 @@ from rastervision.rv_config import RVConfig
 
 TRAIN = 'train'
 VALIDATION = 'validation'
+
+log = logging.getLogger(__name__)
 
 
 def save_debug_image(im, labels, class_map, output_path):
@@ -127,12 +130,10 @@ def merge_tf_records(output_path, src_records):
     import tensorflow as tf
 
     with tf.python_io.TFRecordWriter(output_path) as writer:
-        print('Merging TFRecords', end='', flush=True)
+        log.info('Merging TFRecords')
         for src_record in src_records:
             for string_record in tf.python_io.tf_record_iterator(src_record):
                 writer.write(string_record)
-            print('.', end='', flush=True)
-        print()
 
 
 def make_tf_class_map(class_map):
@@ -156,12 +157,10 @@ def save_tf_class_map(tf_class_map, class_map_path):
 
 def make_tf_examples(training_data, class_map):
     tf_examples = []
-    print('Creating TFRecord', end='', flush=True)
+    log.info('Creating TFRecord')
     for chip, window, labels in training_data:
         tf_example = create_tf_example(chip, window, labels, class_map)
         tf_examples.append(tf_example)
-        print('.', end='', flush=True)
-    print()
     return tf_examples
 
 
@@ -197,21 +196,19 @@ def make_debug_images(record_path, class_map, output_dir):
 
     make_dir(output_dir, check_empty=True)
 
-    print('Generating debug chips', end='', flush=True)
+    log.info('Generating debug chips')
     tfrecord_iter = tf.python_io.tf_record_iterator(record_path)
     for ind, example in enumerate(tfrecord_iter):
         example = tf.train.Example.FromString(example)
         im, labels = parse_tfexample(example)
         # Can't create debug images for non-3band images
         if im.shape[2] != 3:
-            print(
+            log.warning(
                 'WARNING: Skipping debug images - Images are not 3 band rasters.'
             )
             return
         output_path = join(output_dir, '{}.png'.format(ind))
         save_debug_image(im, labels, class_map, output_path)
-        print('.', end='', flush=True)
-    print()
 
 
 def train(config_path,
@@ -232,7 +229,7 @@ def train(config_path,
         '--sample_1_of_n_eval_examples={}'.format(1)
     ]
 
-    print('Running train command: {}'.format(' '.join(train_cmd)))
+    log.info('Running train command: {}'.format(' '.join(train_cmd)))
 
     train_process = Popen(train_cmd, stdout=PIPE, stderr=STDOUT)
     terminate_at_exit(train_process)
@@ -244,7 +241,7 @@ def train(config_path,
             '--checkpoint_dir={}'.format(output_train_dir),
             '--model_dir={}'.format(output_eval_dir)
         ]
-        print('Running eval command: {}'.format(' '.join(eval_cmd)))
+        log.info('Running eval command: {}'.format(' '.join(eval_cmd)))
 
         # Don't let the eval process take up GPU space
         env = deepcopy(os.environ)
@@ -258,9 +255,9 @@ def train(config_path,
 
     with train_process:
         for line in train_process.stdout:
-            print(line.decode('utf-8'), end='', flush=True)
+            log.info(line.decode('utf-8'))
 
-    print('-----DONE TRAINING----')
+    log.info('-----DONE TRAINING----')
     if do_monitoring:
         eval_process.terminate()
         tensorboard_process.terminate()
@@ -291,9 +288,9 @@ def export_inference_graph(train_root_dir,
                  '/opt/tf-models/object_detection/export_inference_graph.py')
     checkpoint_path = get_last_checkpoint_path(train_root_dir)
     if checkpoint_path is None:
-        print('No checkpoints could be found.')
+        log.warning('No checkpoints could be found.')
     else:
-        print('Exporting checkpoint {}...'.format(checkpoint_path))
+        log.info('Exporting checkpoint {}...'.format(checkpoint_path))
 
         train_process = Popen([
             'python', export_py, '--input_type', 'image_tensor',

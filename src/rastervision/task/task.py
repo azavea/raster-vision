@@ -1,12 +1,15 @@
 from abc import abstractmethod
 
 import numpy as np
+import logging
 
 from rastervision.core.training_data import TrainingData
 
 # TODO: DRY... same keys as in ml_backends/tf_object_detection_api.py
 TRAIN = 'train'
 VALIDATION = 'validation'
+
+log = logging.getLogger(__name__)
 
 
 class Task(object):
@@ -98,17 +101,12 @@ class Task(object):
 
         def _process_scene(scene, type_, augment):
             data = TrainingData()
-            print(
-                'Making {} chips for scene: {}'.format(type_, scene.id),
-                end='',
-                flush=True)
+            log.info('Making {} chips for scene: {}'.format(type_, scene.id))
             windows = self.get_train_windows(scene)
             for window in windows:
                 chip = scene.raster_source.get_chip(window)
                 labels = self.get_train_labels(window, scene)
                 data.append(chip, window, labels)
-                print('.', end='', flush=True)
-            print()
             # Shuffle data so the first N samples which are displayed in
             # Tensorboard are more diverse.
             data.shuffle()
@@ -159,7 +157,7 @@ class Task(object):
 
     def predict_scene(self, scene, tmp_dir):
         """Predict on a single scene, and return the labels."""
-        print('Making predictions for scene', end='', flush=True)
+        log.info('Making predictions for scene')
         raster_source = scene.raster_source
         label_store = scene.prediction_label_store
         labels = label_store.empty_labels()
@@ -184,11 +182,10 @@ class Task(object):
             if len(batch_chips) >= self.config.predict_batch_size:
                 predict_batch(batch_chips, batch_windows)
                 batch_chips, batch_windows = [], []
+        print()
 
         # Predict on remaining batch
         if len(batch_chips) > 0:
             predict_batch(batch_chips, batch_windows)
-
-        print()
 
         return self.post_process_predictions(labels, scene)

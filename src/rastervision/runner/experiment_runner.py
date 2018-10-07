@@ -166,7 +166,7 @@ class ExperimentRunner(ABC):
         if dry_run:
             print()
             sorted_command_ids = command_dag.get_sorted_command_ids()
-            if not any(sorted_command_ids):
+            if len(sorted_command_ids) == 0:
                 click.echo(
                     click.style('No commands to run!', fg='red', bold=True))
                 print()
@@ -182,11 +182,17 @@ class ExperimentRunner(ABC):
                         command_id)
                     self.print_command(command_def, command_id, command_dag)
                     print()
+            self._dry_run(command_dag)
         else:
             self._run_experiment(command_dag)
 
     @abstractmethod
     def _run_experiment(self, command_dag):
+        pass
+
+    def _dry_run(self, command_dag):
+        """Overridden by subclasses if they contribute dry run information.
+        """
         pass
 
     @staticmethod

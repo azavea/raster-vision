@@ -2,6 +2,7 @@ import os
 import json
 import tempfile
 from pathlib import Path
+import logging
 
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
                              ConfigIniEnv, ConfigOSEnv)
@@ -10,6 +11,8 @@ import rastervision as rv
 from rastervision.utils.files import file_to_str
 from rastervision.cli import Verbosity
 from rastervision.filesystem.local_filesystem import make_dir
+
+log = logging.getLogger(__name__)
 
 
 class RVConfig:
@@ -56,7 +59,7 @@ class RVConfig:
         if it:
             explicit_tmp_dir = it[0]
         else:
-            explicit_tmp_dir = tempfile.tempdir
+            explicit_tmp_dir = tempfile.TemporaryDirectory().name
 
         try:
             # Try to create directory
@@ -74,13 +77,13 @@ class RVConfig:
         # If directory cannot be made and/or cannot be interacted
         # with, fall back to default.
         except Exception as e:
-            print(
+            log.warning(
                 'Root temporary directory cannot be used: {}. Using root: {}'.
                 format(explicit_tmp_dir, RVConfig.DEFAULT_DIR))
             RVConfig.tmp_dir = RVConfig.DEFAULT_DIR
         finally:
             make_dir(RVConfig.tmp_dir)
-            print('Temporary directory is: {}'.format(RVConfig.tmp_dir))
+            log.debug('Temporary directory is: {}'.format(RVConfig.tmp_dir))
 
     @staticmethod
     def get_instance():
@@ -93,6 +96,15 @@ class RVConfig:
                  tmp_dir=None,
                  verbosity=Verbosity.NORMAL):
         self.verbosity = verbosity
+
+        # Set logging level
+        root_log = logging.getLogger('rastervision')
+        if self.verbosity >= Verbosity.VERY_VERBOSE:
+            root_log.setLevel(logging.DEBUG)
+        elif self.verbosity >= Verbosity.NORMAL:
+            root_log.setLevel(logging.INFO)
+        else:
+            root_log.setLevel(logging.WARN)
 
         if tmp_dir is not None:
             self.set_tmp_dir(tmp_dir)

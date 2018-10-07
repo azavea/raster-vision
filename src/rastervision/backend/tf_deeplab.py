@@ -6,6 +6,7 @@ import uuid
 from typing import (Dict, List, Tuple)
 from os.path import join
 from subprocess import Popen
+import logging
 
 import numpy as np
 from google.protobuf import (json_format)
@@ -32,6 +33,8 @@ FROZEN_INFERENCE_GRAPH = 'model'
 INPUT_TENSOR_NAME = 'ImageTensor:0'
 OUTPUT_TENSOR_NAME = 'SemanticPredictions:0'
 
+log = logging.getLogger(__name__)
+
 
 def make_tf_examples(training_data: TrainingData, class_map: ClassMap) -> List:
     """Take training data and a class map and return a list of TFRecords.
@@ -46,12 +49,10 @@ def make_tf_examples(training_data: TrainingData, class_map: ClassMap) -> List:
 
     """
     tf_examples = []
-    print('Creating TFRecord', end='', flush=True)
+    log.info('Creating TFRecord', end='', flush=True)
     for chip, window, labels in training_data:
         tf_example = create_tf_example(chip, window, labels, class_map)
         tf_examples.append(tf_example)
-        print('.', end='', flush=True)
-    print()
     return tf_examples
 
 
@@ -71,14 +72,12 @@ def merge_tf_records(output_path: str, src_records: List[str]) -> None:
 
     records = 0
     with tf.python_io.TFRecordWriter(output_path) as writer:
-        print('Merging TFRecords', end='', flush=True)
+        log.info('Merging TFRecords', end='', flush=True)
         for src_record in src_records:
             for string_record in tf.python_io.tf_record_iterator(src_record):
                 writer.write(string_record)
                 records = records + 1
-            print('.', end='', flush=True)
-        print('{} records'.format(records))
-        print()
+        log.info('{} records'.format(records))
 
 
 def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
@@ -122,7 +121,7 @@ def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
 
     image_fn = np.vectorize(_image_fn, otypes=[np.uint64])
 
-    print('Generating debug chips', end='', flush=True)
+    log.info('Generating debug chips', end='', flush=True)
     tfrecord_iter = tf.python_io.tf_record_iterator(record_path)
     for ind, example in enumerate(tfrecord_iter):
         if np.random.rand() <= p:
@@ -147,8 +146,6 @@ def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
 
             output_path = join(output_dir, '{}.png'.format(ind))
             save_img(im_unpacked, output_path)
-        print('.', end='', flush=True)
-    print()
 
 
 def parse_tf_example(example) -> Tuple[np.ndarray, np.ndarray]:
@@ -346,9 +343,9 @@ def get_training_args(train_py: str, train_logdir_local: str, tfic_ckpt: str,
     env = os.environ.copy()
     for field in env_fields:
         field_value = tfdl_config.__getattribute__(field)
-        print('{}={}'.format(field.upper(), field_value))
+        log.info('{}={}'.format(field.upper(), field_value))
         env[field.upper()] = str(field_value)
-    print('DL_CUSTOM_CLASSES={}'.format(num_classes))
+    log.info('DL_CUSTOM_CLASSES={}'.format(num_classes))
     env['DL_CUSTOM_CLASSES'] = str(num_classes)
 
     return (args, env)
@@ -526,7 +523,7 @@ class TFDeeplab(Backend):
             tmp_dir = train_restart_dir
 
         # Setup local input and output directories
-        print('Setting up local input and output directories')
+        log.info('Setting up local input and output directories')
         train_logdir = self.backend_config.training_output_uri
         train_logdir_local = get_local_path(train_logdir, tmp_dir)
         dataset_dir = self.backend_config.training_data_uri
@@ -536,11 +533,11 @@ class TFDeeplab(Backend):
         make_dir(dataset_dir_local)
 
         # Download training data
-        print('Downloading training data')
+        log.info('Downloading training data')
         download_if_needed(get_record_uri(dataset_dir, TRAIN), tmp_dir)
 
         # Download and untar initial checkpoint.
-        print('Downloading and untarring initial checkpoint')
+        log.info('Downloading and untarring initial checkpoint')
         tf_initial_checkpoints_uri = self.backend_config.pretrained_model_uri
         download_if_needed(tf_initial_checkpoints_uri, tmp_dir)
         tfic_tarball = get_local_path(tf_initial_checkpoints_uri, tmp_dir)
@@ -571,8 +568,8 @@ class TFDeeplab(Backend):
             # Setup TFDL config
             tfdl_config = json_format.ParseDict(
                 self.backend_config.tfdl_config, TrainingParametersMsg())
-            print('tfdl_config={}'.format(tfdl_config))
-            print('Training steps={}'.format(
+            log.info('tfdl_config={}'.format(tfdl_config))
+            log.info('Training steps={}'.format(
                 tfdl_config.training_number_of_steps))
 
             # Additional training options
@@ -585,25 +582,25 @@ class TFDeeplab(Backend):
                 num_classes, tfdl_config)
 
             # Start training
-            print('Starting training process')
+            log.info('Starting training process')
             train_process = Popen(train_args, env=train_env)
             terminate_at_exit(train_process)
 
             if self.backend_config.train_options.do_monitoring:
                 # Start tensorboard
-                print('Starting tensorboard process')
+                log.info('Starting tensorboard process')
                 tensorboard_process = Popen(
                     ['tensorboard', '--logdir={}'.format(train_logdir_local)])
                 terminate_at_exit(tensorboard_process)
 
             # Wait for training and tensorboard
-            print('Waiting for training process')
+            log.info('Waiting for training and tensorboard processes')
             train_process.wait()
             if self.backend_config.train_options.do_monitoring:
                 tensorboard_process.terminate()
 
             # Export frozen graph
-            print(
+            log.info(
                 'Exporting frozen graph ({}/model)'.format(train_logdir_local))
             export_args = get_export_args(export_py, train_logdir_local,
                                           num_classes, tfdl_config)

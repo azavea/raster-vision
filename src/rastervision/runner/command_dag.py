@@ -3,6 +3,8 @@ import networkx as nx
 import rastervision as rv
 from rastervision.utils.files import file_exists
 
+import click
+
 
 class CommandDAG:
     """ A directed acyclic graph of command definitions.
@@ -40,10 +42,13 @@ class CommandDAG:
             ]
 
             missing_files = []
-            for uri in unsolved_sources:
-                print('Ensuring file exists: {}'.format(uri))
-                if not file_exists(uri):
-                    missing_files.append(uri)
+
+            with click.progressbar(
+                    unsolved_sources,
+                    label='Ensuring input files exists ') as uris:
+                for uri in uris:
+                    if not file_exists(uri):
+                        missing_files.append(uri)
 
             if any(missing_files):
                 raise rv.ConfigError(
@@ -53,12 +58,17 @@ class CommandDAG:
         # If we are not rerunning, remove commands that have existing outputs.
         self.skipped_commands = []
         if not rerun_commands:
-            for idx in [idx for idx in uri_dag.nodes if type(idx) == int]:
-                for output_uri in [
-                        edge[1] for edge in uri_dag.out_edges(idx)
-                        if file_exists(edge[1])
-                ]:
-                    uri_dag.remove_edge(idx, output_uri)
+            commands_to_outputs = [(idx, edge[1]) for idx in uri_dag.nodes
+                                   if type(idx) == int
+                                   for edge in uri_dag.out_edges(idx)]
+            with click.progressbar(
+                    commands_to_outputs,
+                    label='Checking for existing output') as lst:
+                for idx, output_uri in lst:
+                    if file_exists(output_uri):
+                        uri_dag.remove_edge(idx, output_uri)
+
+            for idx in set(map(lambda x: x[0], commands_to_outputs)):
                 if len(uri_dag.out_edges(idx)) == 0:
                     self.skipped_commands.append(command_definitions[idx])
                     uri_dag.remove_node(idx)

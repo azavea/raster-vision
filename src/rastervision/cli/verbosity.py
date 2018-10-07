@@ -2,7 +2,7 @@ import rastervision as rv
 
 
 class Verbosity:
-    QUITE = 0
+    QUIET = 0
     NORMAL = 1
     VERBOSE = 2
     VERY_VERBOSE = 3

@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
 from subprocess import Popen
+import logging
 
 from rastervision.utils.misc import terminate_at_exit
 from rastervision.backend.keras_classification.utils import make_dir
+log = logging.getLogger(__name__)
 
 
 def get_nb_images(image_dir):
@@ -68,7 +70,7 @@ class Trainer(object):
                 for lr_schedule_item in lr_schedule:
                     if curr_epoch >= lr_schedule_item.epoch:
                         if self.options.debug:
-                            print('New lr: {}'.format(lr_schedule_item.lr))
+                            log.info('New lr: {}'.format(lr_schedule_item.lr))
                         return lr_schedule_item.lr
 
             lr_scheduler = keras.callbacks.LearningRateScheduler(schedule)

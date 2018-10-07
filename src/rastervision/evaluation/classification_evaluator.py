@@ -1,6 +1,9 @@
 from abc import (abstractmethod)
+import logging
 
 from rastervision.evaluation import Evaluator
+
+log = logging.getLogger(__name__)
 
 
 class ClassificationEvaluator(Evaluator):
@@ -18,7 +21,7 @@ class ClassificationEvaluator(Evaluator):
     def process(self, scenes, tmp_dir):
         evaluation = self.create_evaluation()
         for scene in scenes:
-            print('Computing evaluation for scene {}...'.format(scene.id))
+            log.info('Computing evaluation for scene {}...'.format(scene.id))
             ground_truth = scene.ground_truth_label_source.get_labels()
             predictions = scene.prediction_label_store.get_labels()
 

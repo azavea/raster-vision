@@ -1,12 +1,15 @@
 import os
 import shutil
 from threading import Timer
+import logging
 
 from google.protobuf import json_format
 
 from rastervision.filesystem.filesystem import FileSystem
 from rastervision.filesystem.filesystem import ProtobufParseException
 from rastervision.filesystem.local_filesystem import make_dir
+
+log = logging.getLogger(__name__)
 
 
 def get_local_path(uri, download_dir, fs=None):
@@ -83,7 +86,7 @@ def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600, fs=None):
     """
 
     def _sync_dir():
-        print('Syncing {} to {}...'.format(src_dir_uri, dest_dir_uri))
+        log.info('Syncing {} to {}...'.format(src_dir_uri, dest_dir_uri))
         sync_to_dir(src_dir_uri, dest_dir_uri, delete=False, fs=fs)
 
     class SyncThread:
@@ -128,7 +131,7 @@ def download_if_needed(uri, download_dir, fs=None):
     make_dir(path, use_dirname=True)
 
     if path != uri:
-        print('Downloading {} to {}'.format(uri, path))
+        log.info('Downloading {} to {}'.format(uri, path))
 
     fs.copy_from(uri, path)
 
@@ -182,7 +185,8 @@ def upload_or_copy(src_path, dst_uri, fs=None):
     if not (os.path.isfile(src_path) or os.path.isdir(src_path)):
         raise Exception('{} does not exist.'.format(src_path))
 
-    print('Uploading {} to {}'.format(src_path, dst_uri))
+    if not src_path == dst_uri:
+        log.info('Uploading {} to {}'.format(src_path, dst_uri))
 
     if not fs:
         fs = FileSystem.get_file_system(dst_uri, 'w')

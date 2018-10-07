@@ -5,11 +5,16 @@ import click
 from rastervision.rv_config import RVConfig
 from rastervision.runner import ExperimentRunner
 from rastervision.utils.files import save_json_config
+from rastervision.cli import Verbosity
 
 
 def make_command(command_config_uri):
-    command = 'python -m rastervision run_command {}'.format(
-        command_config_uri)
+    verbosity = Verbosity.get()
+    v_flag = 'v' * max(0, verbosity - 1)
+    if v_flag:
+        v_flag = '-{}'.format(v_flag)
+    command = 'python -m rastervision {} run_command {}'.format(
+        v_flag, command_config_uri)
     return command
 
 
@@ -134,3 +139,19 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                 parent_job_ids=parent_job_ids)
 
             ids_to_job[command_id] = job_id
+
+    def _dry_run(self, command_dag):
+        """Runs all commands on AWS Batch."""
+        click.echo(
+            click.style(
+                '\nBatch commands to be issued:',
+                fg='green',
+                bold=True,
+                underline=True))
+        for command_id in command_dag.get_sorted_command_ids():
+            command_def = command_dag.get_command_definition(command_id)
+            command_config = command_def.command_config
+            command_root_uri = command_config.root_uri
+            command_uri = os.path.join(command_root_uri, 'command-config.json')
+            batch_run_command = make_command(command_uri)
+            click.echo('  {}'.format(batch_run_command))
