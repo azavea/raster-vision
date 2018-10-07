@@ -5,11 +5,16 @@ import click
 from rastervision.rv_config import RVConfig
 from rastervision.runner import ExperimentRunner
 from rastervision.utils.files import save_json_config
+from rastervision.cli import Verbosity
 
 
 def make_command(command_config_uri):
-    command = 'python -m rastervision run_command {}'.format(
-        command_config_uri)
+    verbosity = Verbosity.get()
+    v_flag = 'v' * max(0, verbosity - 1)
+    if v_flag:
+        v_flag = '-{}'.format(v_flag)
+    command = 'python -m rastervision {} run_command {}'.format(
+        v_flag, command_config_uri)
     return command
 
 
