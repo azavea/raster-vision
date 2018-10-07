@@ -19,7 +19,9 @@ class BundleCommand(Command):
         self.scene_config = scene_config
         self.analyzer_configs = analyzer_configs
 
-    def run(self, tmp_dir):
+    def run(self, tmp_dir=None):
+        if not tmp_dir:
+            tmp_dir = self.get_tmp_dir()
         if not self.task_config.predict_package_uri:
             msg = 'Skipping bundling of prediction package, no URI is set...'.format(
                 self.task_config.predict_package_uri)

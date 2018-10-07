@@ -10,7 +10,9 @@ class ChipCommand(Command):
         self.train_scenes = train_scenes
         self.val_scenes = val_scenes
 
-    def run(self, tmp_dir):
+    def run(self, tmp_dir=None):
+        if not tmp_dir:
+            tmp_dir = self.get_tmp_dir()
         msg = 'Making training chips...'
         click.echo(click.style(msg, fg='green'))
 

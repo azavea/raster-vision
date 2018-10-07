@@ -125,7 +125,7 @@ class TestBundleCommand(unittest.TestCase):
                                      .with_analyzers([analyzer]) \
                                      .with_scene(scene) \
                                      .build() \
-                                     .create_command(tmp_dir)
+                                     .create_command()
 
             cmd.run(tmp_dir)
 

@@ -5,6 +5,7 @@ from rastervision.command import (CommandConfig, CommandConfigBuilder,
                                   BundleCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
+from rastervision.rv_config import RVConfig
 
 
 class BundleCommandConfig(CommandConfig):
@@ -15,9 +16,17 @@ class BundleCommandConfig(CommandConfig):
         self.scene = scene
         self.analyzers = analyzers
 
-    def create_command(self, tmp_dir):
-        return BundleCommand(self, self.task, self.backend, self.scene,
-                             self.analyzers)
+    def create_command(self, tmp_dir=None):
+        if not tmp_dir:
+            _tmp_dir = RVConfig.get_tmp_dir()
+            tmp_dir = _tmp_dir.name
+        else:
+            _tmp_dir = tmp_dir
+
+        retval = BundleCommand(self, self.task, self.backend, self.scene,
+                               self.analyzers)
+        retval.set_tmp_dir(_tmp_dir)
+        return retval
 
     def to_proto(self):
         msg = super().to_proto()

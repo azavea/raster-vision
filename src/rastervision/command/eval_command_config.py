@@ -5,6 +5,7 @@ from rastervision.command import (EvalCommand, CommandConfig,
                                   CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
+from rastervision.rv_config import RVConfig
 
 
 class EvalCommandConfig(CommandConfig):
@@ -14,14 +15,22 @@ class EvalCommandConfig(CommandConfig):
         self.scenes = scenes
         self.evaluators = evaluators
 
-    def create_command(self, tmp_dir):
+    def create_command(self, tmp_dir=None):
         if len(self.scenes) == 0 or len(self.evaluators) == 0:
             return NoOpCommand()
+
+        if not tmp_dir:
+            _tmp_dir = RVConfig.get_tmp_dir()
+            tmp_dir = _tmp_dir.name
+        else:
+            _tmp_dir = tmp_dir
 
         scenes = list(
             map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
         evaluators = list(map(lambda a: a.create_evaluator(), self.evaluators))
-        return EvalCommand(scenes, evaluators)
+        retval = EvalCommand(scenes, evaluators)
+        retval.set_tmp_dir(_tmp_dir)
+        return retval
 
     def to_proto(self):
         msg = super().to_proto()
