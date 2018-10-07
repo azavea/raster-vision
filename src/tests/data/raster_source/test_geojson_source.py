@@ -1,33 +1,68 @@
 import unittest
 import os
-from tempfile import TemporaryDirectory
 import json
 
 import numpy as np
 
-from rastervision.core import Box, ClassMap
-from rastervision.data.raster_source import GeoJSONSource
+import rastervision as rv
+from rastervision.core import Box
+from rastervision.data.raster_source import RasterSourceConfig
 from rastervision.data.crs_transformer import IdentityCRSTransformer
-from rastervision.data.utils import boxes_to_geojson
 from rastervision.utils.files import str_to_file
+from rastervision.rv_config import RVConfig
 
 
 class TestGeoJSONSource(unittest.TestCase):
     def setUp(self):
         self.crs_transformer = IdentityCRSTransformer()
-        self.extent = Box.make_square(0, 0, 20)
-        class_map = ClassMap.construct_from(['car'])
-        self.tmp_dir = TemporaryDirectory()
+        self.extent = Box.make_square(0, 0, 10)
+        self.tmp_dir = RVConfig.get_tmp_dir()
 
-        self.uri = os.path.join(self.tmp_dir.name, 'geo.json')
-        boxes = [Box.make_square(5, 5, 10)]
-        class_ids = [1]
-        geojson = boxes_to_geojson(boxes, class_ids, self.crs_transformer,
-                                   class_map)
+        self.class_id = 2
+        geojson = {
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'Polygon',
+                    'coordinates': [[[0., 0.], [0., 5.], [5., 5.], [5., 0.],
+                                     [0., 0.]]]
+                },
+                'properties': {
+                    'class_id': self.class_id,
+                }
+            }, {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [[7., 0.], [7., 9.]]
+                },
+                'properties': {
+                    'class_id': self.class_id
+                }
+            }]
+        }
+
+        self.uri = os.path.join(self.tmp_dir.name, 'temp.json')
         str_to_file(json.dumps(geojson), self.uri)
 
-        self.source = GeoJSONSource(self.uri, self.extent,
-                                    self.crs_transformer)
+        self.background_class_id = 3
+        self.line_buffer = 1
+
+        config = RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
+            .with_uri(self.uri) \
+            .with_rasterizer_options(self.background_class_id, self.line_buffer) \
+            .build()
+
+        # Convert to proto and back as a test.
+        config = RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
+            .from_proto(config.to_proto()) \
+            .build()
+
+        self.source = config.create_source(self.uri, self.extent,
+                                           self.crs_transformer)
 
     def tearDown(self):
         self.tmp_dir.cleanup()
@@ -37,11 +72,11 @@ class TestGeoJSONSource(unittest.TestCase):
 
     def test_get_chip(self):
         chip = self.source.get_image_array()
-        self.assertEqual(chip.shape, (20, 20, 1))
+        self.assertEqual(chip.shape, (10, 10, 1))
 
-        expected_chip = 1 * np.ones((20, 20, 1))
-        expected_chip[5:15, 5:15, 0] = 2
-
+        expected_chip = self.background_class_id * np.ones((10, 10, 1))
+        expected_chip[0:5, 0:5, 0] = self.class_id
+        expected_chip[0:10, 6:8] = self.class_id
         np.testing.assert_array_equal(chip, expected_chip)
 
 

@@ -1,19 +1,19 @@
 import shapely
 
 
-def geojson_to_shapes(geojson_dict, crs_transformer):
+def geojson_to_shapes(geojson, crs_transformer):
     """Convert GeoJSON into list of shapely.geometry shape.
 
     Args:
-        geojson_dict: dict in GeoJSON format with class_id property for each
+        geojson: dict in GeoJSON format with class_id property for each
             feature (class_id defaults to 1 if missing)
         crs_transformer: CRSTransformer used to convert from map to pixel
             coords
 
     Returns:
-        List of shapely.geometry with .class_id attributes
+        List of (shapely.geometry, class_id) tuples
     """
-    features = geojson_dict['features']
+    features = geojson['features']
     shapes = []
 
     for feature in features:
@@ -28,20 +28,17 @@ def geojson_to_shapes(geojson_dict, crs_transformer):
                 shape = [crs_transformer.map_to_pixel(p) for p in shell]
                 # Trick to handle self-intersecting polygons using buffer(0)
                 shape = shapely.geometry.Polygon(shape).buffer(0)
-                shape.class_id = class_id
-                shapes.append(shape)
+                shapes.append((shape, class_id))
         elif geom_type == 'Polygon':
             shell = coordinates[0]
             shape = [crs_transformer.map_to_pixel(p) for p in shell]
             # Trick to handle self-intersecting polygons using buffer(0)
             shape = shapely.geometry.Polygon(shape).buffer(0)
-            shape.class_id = class_id
-            shapes.append(shape)
+            shapes.append((shape, class_id))
         elif geom_type == 'LineString':
             shape = [crs_transformer.map_to_pixel(p) for p in coordinates]
             shape = shapely.geometry.LineString(shape)
-            shape.class_id = class_id
-            shapes.append(shape)
+            shapes.append((shape, class_id))
         else:
             # TODO: logging warning that this type can't be parsed.
             pass

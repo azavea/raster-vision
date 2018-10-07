@@ -2,8 +2,7 @@ import unittest
 import os
 import json
 
-from shapely import geometry
-from shapely.strtree import STRtree
+import shapely
 
 import rastervision as rv
 from rastervision.data.label_source import (infer_cell, infer_labels,
@@ -59,8 +58,8 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         self.class_id2 = 2
         self.background_class_id = 3
 
-        self.str_tree = STRtree(
-            geojson_to_shapes(self.geojson_dict, self.crs_transformer))
+        self.shapes = geojson_to_shapes(self.geojson_dict,
+                                        self.crs_transformer)
 
         self.file_name = 'labels.json'
         self.temp_dir = RVConfig.get_tmp_dir()
@@ -74,11 +73,20 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_get_str_tree(self):
+        str_tree = shapely.strtree.STRtree(
+            [shape for shape, class_id in self.shapes])
+        # Monkey-patching class_id onto shapely.geom is not a good idea because
+        # if you transform it, the class_id will be lost, but this works here. I wanted to
+        # use a dictionary to associate shape with class_id, but couldn't because they are
+        # mutable.
+        for shape, class_id in self.shapes:
+            shape.class_id = class_id
+
         # Check first box.
         query_box = Box.make_square(0, 0, 1)
-        query_geom = geometry.Polygon(
+        query_geom = shapely.geometry.Polygon(
             [(p[0], p[1]) for p in query_box.geojson_coordinates()])
-        polygons = self.str_tree.query(query_geom)
+        polygons = str_tree.query(query_geom)
 
         self.assertEqual(len(polygons), 1)
         self.assertEqual(Box.from_shapely(polygons[0]), self.box1)
@@ -86,9 +94,9 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
 
         # Check second box.
         query_box = Box.make_square(3, 3, 1)
-        query_geom = geometry.Polygon(
+        query_geom = shapely.geometry.Polygon(
             [(p[0], p[1]) for p in query_box.geojson_coordinates()])
-        polygons = self.str_tree.query(query_geom)
+        polygons = str_tree.query(query_geom)
 
         self.assertEqual(len(polygons), 1)
         self.assertEqual(Box.from_shapely(polygons[0]), self.box2)
@@ -102,7 +110,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+        class_id = infer_cell(self.shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id1)
@@ -115,7 +123,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+        class_id = infer_cell(self.shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id2)
@@ -128,7 +136,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+        class_id = infer_cell(self.shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, None)
@@ -142,7 +150,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+        class_id = infer_cell(self.shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, None)
@@ -156,7 +164,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+        class_id = infer_cell(self.shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id1)
@@ -169,7 +177,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+        class_id = infer_cell(self.shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.background_class_id)
@@ -182,7 +190,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+        class_id = infer_cell(self.shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, None)
@@ -196,7 +204,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = True
 
-        class_id = infer_cell(self.str_tree, cell, ioa_thresh,
+        class_id = infer_cell(self.shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id2)
