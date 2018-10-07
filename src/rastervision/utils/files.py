@@ -175,7 +175,8 @@ def upload_or_copy(src_path, dst_uri, fs=None):
     if not (os.path.isfile(src_path) or os.path.isdir(src_path)):
         raise Exception('{} does not exist.'.format(src_path))
 
-    log.info('Uploading {} to {}'.format(src_path, dst_uri))
+    if not src_path == dst_uri:
+        log.info('Uploading {} to {}'.format(src_path, dst_uri))
 
     if not fs:
         fs = FileSystem.get_file_system(dst_uri, 'w')
