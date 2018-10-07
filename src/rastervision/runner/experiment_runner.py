@@ -166,7 +166,7 @@ class ExperimentRunner(ABC):
         if dry_run:
             print()
             sorted_command_ids = command_dag.get_sorted_command_ids()
-            if not any(sorted_command_ids):
+            if len(sorted_command_ids) == 0:
                 click.echo(
                     click.style('No commands to run!', fg='red', bold=True))
                 print()
