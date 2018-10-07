@@ -105,7 +105,7 @@ deployment/ansible/*.retry
 .#*
 
 # Generated pb2 files
-src/rastervision/protos/**/*_pb2.py
+rastervision/protos/**/*_pb2.py
 
 # Vim
 .*.sw*

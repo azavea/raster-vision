@@ -10,7 +10,6 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 PROJECT_ROOT="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
-SRC="$PROJECT_ROOT/src"
 
 function usage() {
     echo -n \
@@ -25,7 +24,7 @@ then
         docker run --rm -it \
                -e "AWS_PROFILE=$AWS_PROFILE" \
                -v "$HOME/.aws":/root/.aws:ro \
-               -v "$SRC":/opt/src \
+               -v "$PROJECT_ROOT":/opt/src \
                -v ${RASTER_VISION_DATA_DIR}:/opt/data \
                -v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks \
                -p 8888:8888 \
@@ -40,7 +39,7 @@ then
         docker run --rm -it \
                -e "AWS_PROFILE=$AWS_PROFILE" \
                -v "$HOME/.aws":/root/.aws:ro \
-               -v "$SRC":/opt/src \
+               -v "$PROJECT_ROOT":/opt/src \
                -v ${RASTER_VISION_DATA_DIR}:/opt/data \
                -p 8888:8888 \
                raster-vision-cpu \

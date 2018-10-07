@@ -24,10 +24,10 @@ then
 
     if [ $# -eq 0 -o "${1:-}" = "--cpu" ]
     then
-        docker build -t raster-vision-cpu -f src/Dockerfile-cpu src
+        docker build -t raster-vision-cpu -f Dockerfile-cpu .
     fi
     if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
     then
-        docker build -t raster-vision-gpu -f src/Dockerfile-gpu src
+        docker build -t raster-vision-gpu -f Dockerfile-gpu .
     fi
 fi

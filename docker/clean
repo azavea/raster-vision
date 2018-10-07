@@ -17,6 +17,6 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ "${1:-}" = "--help" ]; then
         usage
     else
-        docker images -qf dangling=true | xargs -r docker rmi
+        docker images -qf dangling=true | xargs docker rmi
     fi
 fi
