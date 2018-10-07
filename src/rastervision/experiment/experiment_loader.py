@@ -1,4 +1,5 @@
 import inspect
+import os
 from importlib import import_module
 from fnmatch import fnmatchcase
 
@@ -21,6 +22,28 @@ class ExperimentLoader:
         self.exp_method_prefix = experiment_method_prefix
         self.exp_method_patterns = experiment_method_patterns
         self.exp_name_patterns = experiment_name_patterns
+
+        self._top_level_dir = os.path.abspath(os.curdir)
+
+    def _get_name_from_path(self, path):
+        """Gets an importable  name from a path.
+
+        Note: This code is from the python unittest library
+        """
+        if path == self._top_level_dir:
+            return '.'
+        path = os.path.splitext(os.path.normpath(path))[0]
+
+        _relpath = os.path.relpath(path, self._top_level_dir)
+        assert not os.path.isabs(_relpath), 'Path must be within the project'
+        assert not _relpath.startswith('..'), 'Path must be within the project'
+
+        name = _relpath.replace(os.path.sep, '.')
+        return name
+
+    def load_from_file(self, path):
+        name = self._get_name_from_path(path)
+        return self.load_from_module(name)
 
     def load_from_module(self, name):
         result = []
