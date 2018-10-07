@@ -59,7 +59,7 @@ class RVConfig:
         if it:
             explicit_tmp_dir = it[0]
         else:
-            explicit_tmp_dir = tempfile.tempdir
+            explicit_tmp_dir = tempfile.TemporaryDirectory().name
 
         try:
             # Try to create directory
