@@ -26,7 +26,7 @@ class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
         return ChipClassificationGeoJSONStore(self.uri, crs_transformer,
                                               task_config.class_map)
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         conf = self
         io_def = rv.core.CommandIODefinition()
 

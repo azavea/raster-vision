@@ -82,14 +82,14 @@ class DatasetConfig(Config):
             test_scenes=test_scenes,
             augmentors=augmentors)
 
-    def preprocess_command(self, command_type, experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         io_def = rv.core.CommandIODefinition()
 
         if command_type in [rv.ANALYZE, rv.CHIP]:
             train_scenes = []
             for scene in self.train_scenes:
-                (new_config, scene_io_def) = scene.preprocess_command(
+                (new_config, scene_io_def) = scene.update_for_command(
                     command_type, experiment_config, context)
                 io_def.merge(scene_io_def)
                 train_scenes.append(new_config)
@@ -109,7 +109,7 @@ class DatasetConfig(Config):
                                      .with_task(experiment_config.task) \
                                      .with_label_store() \
                                      .build()
-                (new_config, scene_io_def) = scene.preprocess_command(
+                (new_config, scene_io_def) = scene.update_for_command(
                     command_type, experiment_config, context)
                 io_def.merge(scene_io_def)
                 val_scenes.append(new_config)
@@ -124,7 +124,7 @@ class DatasetConfig(Config):
                                      .with_task(experiment_config.task) \
                                      .with_label_store() \
                                      .build()
-                (new_config, scene_io_def) = scene.preprocess_command(
+                (new_config, scene_io_def) = scene.update_for_command(
                     command_type, experiment_config, context)
                 io_def.merge(scene_io_def)
                 test_scenes.append(new_config)
@@ -135,7 +135,7 @@ class DatasetConfig(Config):
         if command_type == rv.CHIP:
             augmentors = []
             for augmentor in self.augmentors:
-                (new_config, aug_io_def) = augmentor.preprocess_command(
+                (new_config, aug_io_def) = augmentor.update_for_command(
                     command_type, experiment_config, context)
                 io_def.merge(aug_io_def)
                 augmentors.append(new_config)

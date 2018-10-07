@@ -94,9 +94,9 @@ class TFDeeplabConfig(BackendConfig):
 
         return msg
 
-    def preprocess_command(self, command_type, experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
-        conf, io_def = super().preprocess_command(command_type,
+        conf, io_def = super().update_for_command(command_type,
                                                   experiment_config, context)
         if command_type == rv.CHIP:
             conf.training_data_uri = experiment_config.chip_uri

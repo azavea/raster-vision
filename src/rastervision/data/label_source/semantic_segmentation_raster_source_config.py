@@ -31,7 +31,7 @@ class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
             self.source.create_source(tmp_dir, extent, crs_transformer),
             self.rgb_class_map)
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         if context is None:
             context = []
         context = context + [self]
@@ -39,7 +39,7 @@ class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
 
         b = self.to_builder()
 
-        (new_raster_source, sub_io_def) = self.source.preprocess_command(
+        (new_raster_source, sub_io_def) = self.source.update_for_command(
             command_type, experiment_config, context)
 
         io_def.merge(sub_io_def)

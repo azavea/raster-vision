@@ -86,12 +86,12 @@ class RasterSourceConfig(BundledConfigMixin, Config):
     def create_transformers(self):
         return list(map(lambda c: c.create_transformer(), self.transformers))
 
-    def preprocess_command(self, command_type, experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         io_def = rv.core.CommandIODefinition()
         new_transformers = []
         for transformer in self.transformers:
-            t, sub_io_def = transformer.preprocess_command(
+            t, sub_io_def = transformer.update_for_command(
                 command_type, experiment_config, context)
             new_transformers.append(t)
             io_def.merge(sub_io_def)

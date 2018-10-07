@@ -52,7 +52,7 @@ class TaskConfig(BundledConfigMixin, Config):
                            .from_proto(msg) \
                            .build()
 
-    def preprocess_command(self, command_type, experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         conf = self
         io_def = rv.core.CommandIODefinition()

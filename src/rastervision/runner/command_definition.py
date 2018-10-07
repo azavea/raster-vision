@@ -27,7 +27,7 @@ class CommandDefinition:
         for experiment in experiments:
             e = experiment
             for command_type in rv.ALL_COMMANDS:
-                (e, io_def) = e.preprocess_command(command_type, e)
+                (e, io_def) = e.update_for_command(command_type, e)
                 command_config = e.make_command_config(command_type)
                 command_def = cls(e.id, command_config, io_def)
                 command_definitions.append(command_def)

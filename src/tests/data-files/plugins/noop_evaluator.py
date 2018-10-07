@@ -25,7 +25,7 @@ class NoopEvaluatorConfig(EvaluatorConfig):
     def create_evaluator(self):
         return NoopEvaluator()
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         return (self, rv.core.CommandIODefinition())
 
 

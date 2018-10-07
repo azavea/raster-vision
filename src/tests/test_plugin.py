@@ -175,7 +175,7 @@ class NoopAnalyzerConfig(AnalyzerConfig):
     def create_analyzer(self):
         return NoopAnalyzer()
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         return (self, rv.core.CommandIODefinition())
 
     def save_bundle_files(self, bundle_dir):

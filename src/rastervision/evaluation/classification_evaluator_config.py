@@ -26,7 +26,7 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
 
         return msg
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         conf = self
         io_def = rv.core.CommandIODefinition()
         if command_type == rv.EVAL:

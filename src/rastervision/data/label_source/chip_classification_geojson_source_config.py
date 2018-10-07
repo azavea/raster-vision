@@ -51,7 +51,7 @@ class ChipClassificationGeoJSONSourceConfig(LabelSourceConfig):
             self.pick_min_class_id, self.background_class_id, self.cell_size,
             self.infer_cells)
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         conf = self
         io_def = rv.core.CommandIODefinition()
         io_def.add_input(self.uri)

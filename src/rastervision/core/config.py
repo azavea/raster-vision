@@ -22,7 +22,7 @@ class Config(ABC):
         pass
 
     @abstractmethod
-    def preprocess_command(self, command_type, experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         """Returns a copy of this config which may or may not have
            been modified based on the command needs and the experiment

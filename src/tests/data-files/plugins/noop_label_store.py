@@ -31,7 +31,7 @@ class NoopLabelStoreConfig(LabelStoreConfig):
     def create_store(self, task_config, crs_transformer, tmp_dir):
         return NoopLabelStore()
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         return (self, rv.core.CommandIODefinition())
 
     def for_prediction(self, label_store_uri):

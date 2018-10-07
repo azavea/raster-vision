@@ -29,7 +29,7 @@ class AugmentorConfig(Config):
                            .from_proto(msg) \
                            .build()
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         # Generally augmentors do not have an affect on the IO.
         return (self, rv.core.CommandIODefinition())
 

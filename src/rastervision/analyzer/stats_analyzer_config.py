@@ -44,7 +44,7 @@ class StatsAnalyzerConfig(AnalyzerConfig):
                    .with_stats_uri(local_stats_uri) \
                    .build()
 
-    def preprocess_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self, command_type, experiment_config, context=[]):
         conf = self
         io_def = rv.core.CommandIODefinition()
         if command_type == rv.ANALYZE:

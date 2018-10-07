@@ -48,9 +48,9 @@ class GeoTiffSourceConfig(RasterSourceConfig):
         return GeoTiffSource(self.uris, transformers, tmp_dir,
                              self.channel_order)
 
-    def preprocess_command(self, command_type, experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
-        (conf, io_def) = super().preprocess_command(command_type,
+        (conf, io_def) = super().update_for_command(command_type,
                                                     experiment_config, context)
         for uri in self.uris:
             io_def.add_input(uri)

@@ -41,34 +41,34 @@ class ExperimentConfig(Config):
         self.eval_uri = eval_uri
         self.bundle_uri = bundle_uri
 
-    def preprocess_command(self, command_type, experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         """
         Returns a tuple (config, dependencies) with the
         """
         io_def = CommandIODefinition()
-        new_task, sub_io_def = self.task.preprocess_command(
+        new_task, sub_io_def = self.task.update_for_command(
             command_type, experiment_config, context)
         io_def.merge(sub_io_def)
 
-        new_backend, sub_io_def = self.backend.preprocess_command(
+        new_backend, sub_io_def = self.backend.update_for_command(
             command_type, experiment_config, context)
         io_def.merge(sub_io_def)
 
-        new_dataset, sub_io_def = self.dataset.preprocess_command(
+        new_dataset, sub_io_def = self.dataset.update_for_command(
             command_type, experiment_config, context)
         io_def.merge(sub_io_def)
 
         new_analyzers = []
         for analyzer in self.analyzers:
-            new_analyzer, sub_io_def = analyzer.preprocess_command(
+            new_analyzer, sub_io_def = analyzer.update_for_command(
                 command_type, experiment_config, context)
             io_def.merge(sub_io_def)
             new_analyzers.append(new_analyzer)
 
         new_evaluators = []
         for evaluator in self.evaluators:
-            new_evaluator, sub_io_def = evaluator.preprocess_command(
+            new_evaluator, sub_io_def = evaluator.update_for_command(
                 command_type, experiment_config, context)
             io_def.merge(sub_io_def)
             new_evaluators.append(new_evaluator)
@@ -92,11 +92,11 @@ class ExperimentConfig(Config):
         """Returns a fully resolved version of this  experiment.
 
         A fully resolved experiment has all implicit paths put into place,
-        and is constructed by calling preprocess_command for each command.
+        and is constructed by calling update_for_command for each command.
         """
         e = self
         for command_type in rv.ALL_COMMANDS:
-            e, _ = e.preprocess_command(command_type, e)
+            e, _ = e.update_for_command(command_type, e)
         return e
 
     def save_config(self):
