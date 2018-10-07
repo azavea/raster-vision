@@ -169,6 +169,7 @@ class Task(object):
             new_labels = self.backend.predict(
                 np.array(predict_chips), predict_windows, tmp_dir)
             labels += new_labels
+            print('.' * len(predict_chips), end='', flush=True)
 
         batch_chips, batch_windows = [], []
         for window in windows:
@@ -181,6 +182,7 @@ class Task(object):
             if len(batch_chips) >= self.config.predict_batch_size:
                 predict_batch(batch_chips, batch_windows)
                 batch_chips, batch_windows = [], []
+        print()
 
         # Predict on remaining batch
         if len(batch_chips) > 0:

@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def print_error(msg):
-    log.error(msg)
+    click.echo(click.style(msg, fg='red'), err=True)
 
 
 @click.group()
