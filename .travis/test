@@ -4,7 +4,7 @@
 docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it raster-vision-cpu $(pwd)/scripts/compile
 
 if [ ! -z "$(git status --porcelain)" ]; then
-    echo "Protobuf files need  to be compiled. Run scripts/compile."
+    echo "Protobuf files need to be compiled. Run scripts/compile."
     exit 1
 fi
 

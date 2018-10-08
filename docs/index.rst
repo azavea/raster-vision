@@ -1,15 +1,15 @@
-.. rst-class:: hide-header
-
-.. currentmodule:: rastervision
 
 Welcome to Raster Vision
 ========================
 
+.. rst-class:: hide-header
+
+.. currentmodule:: rastervision
+
 |
 
-.. image:: _static/raster-vision-logo.png
+.. image:: _static/raster-vision-logo-index.png
     :align: center
-    :scale: 50%
     :target: https://rastervision.io
 
 |
@@ -31,17 +31,18 @@ or models to deploy.
 
 .. image:: _static/overview-raster-vision-workflow.png
     :align: center
-    :scale: 80%
 
 The process of running experiments includes executing workflows that perform the following
 commands
 
 .. click:example::
 
+  # experiment.py
+
   import rastervision as rv
 
-  class FooExperimentSet(rv.ExperimentSet):
-      def exp_main(self, tmp_dir):
+  class ExampleExperimentSet(rv.ExperimentSet):
+      def exp_main(self):
           task = rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \
                               .with_chip_size(200) \
                               .with_classes({
@@ -90,7 +91,7 @@ commands
                                     .build()
 
           experiment = rv.ExperimentConfig.builder() \
-                                          .with_id('foo-experiment') \
+                                          .with_id('example-experiment') \
                                           .with_root_uri(root_uri) \
                                           .with_task(task) \
                                           .with_backend(backend) \
@@ -105,11 +106,12 @@ commands
       rv.main()
 
 Raster Vision uses a ``unittest``-like method for executing experiments. For instance, if the
-above was defined in `foo.py`, you could run the experiment locally by running:
+above was defined in `experiment.py`, with the proper setup you could run the experiment
+on AWS Batch by running:
 
 .. code:: shell
 
-   > rastervision run -p foo.py
+   > rastervision run aws_batch -p experiment.py
 
 
 .. _documentation:
@@ -132,6 +134,7 @@ usage patterns.
    runners
    predictor
    cli
+   misc
    codebase
    extending
    qgis
@@ -144,6 +147,6 @@ If you are looking for information on a specific function, class, or
 method, this part of the documentation is for you.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 10
 
    api

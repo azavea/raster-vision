@@ -3,17 +3,20 @@ Experiment Configuration
 
 TKTK
 
+.. _experiment set:
+
 Experiment Set
-----------------
+--------------
 
-
+.. _experiment:
 
 Experiment
 ----------
 
-.. image:: _static/concepts-experiment.png
+.. image:: _static/experiments-experiment.png
     :align: center
-    :scale: 80%
+
+.. _task:
 
 Task
 ----
@@ -38,6 +41,8 @@ Future Tasks
 
 TKTK
 
+.. _backend:
+
 Backend
 -------
 
@@ -58,6 +63,11 @@ TensorFlow DeepLab
 
 TKTK
 
+Model Defaults
+^^^^^^^^^^^^^^
+
+See  :ref:`model defaults` for a list of model defaults provided for use as part of Raster Vision.
+
 
 Dataset
 -------
@@ -68,9 +78,8 @@ TKTK
 Scene
 -----
 
-.. image:: _static/concepts-scene.png
+.. image:: _static/experiments-scene.png
     :align: center
-    :scale: 80%
 
 
 Raster Source
@@ -98,3 +107,8 @@ Augmentors
 
 TKTK
 (Differentiate between RV Augmentation and Backend Augmentation)
+
+Default Providers
+-----------------
+
+TKTK

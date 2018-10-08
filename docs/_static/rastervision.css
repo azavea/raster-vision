@@ -1,3 +1,7 @@
+.underline {
+  text-decoration: underline;
+}
+
 body, pre, code {
   font-family: "Menlo", "Ubuntu Mono", "Consolas", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", monospace;
   font-size: 16px;

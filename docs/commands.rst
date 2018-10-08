@@ -1,9 +1,10 @@
+.. _commands:
+
 Commands
 ========
 
 .. image:: _static/commands-chain-workflow.png
     :align: center
-    :scale: 70%
 
 Command Types
 -------------
@@ -40,4 +41,3 @@ Command Execution
 
 .. image:: _static/commands-tree-workflow.png
     :align: center
-    :scale: 90%

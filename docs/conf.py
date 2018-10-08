@@ -82,17 +82,17 @@ html_theme_options = {"index_sidebar_logo": False}
 html_context = {
     "project_links": [
         ProjectLink("Documentation TOC", "index.html#documentation"),
+        ProjectLink("API Reference TOC", "index.html#api-reference"),
         ProjectLink("Project Website", "https://rastervision.io/"),
         ProjectLink("PyPI releases", "https://pypi.org/project/raster-vision/"),
         ProjectLink("GitHub", "https://github.com/azavea/raster-vision"),
         ProjectLink("Examples Repository", "https://github.com/azavea/raster-vision-examples"),
         ProjectLink("QGIS Plugin", "https://github.com/azavea/raster-vision-qgis"),
         ProjectLink("Issue Tracker", "https://github.com/azavea/raster-vision/issues/"),
-        ProjectLink("Documentation Downloads", "https://readthedocs.org/projects/raster-vision/downloads/"),
         ProjectLink("Azavea", "https://www.azavea.com/"),
     ],
     'css_files': [
-        '_static/theme_overrides.css',  # override wide tables in RTD theme
+        '_static/rastervision.css',
         'https://media.readthedocs.org/css/badge_only.css'
     ]
 }
