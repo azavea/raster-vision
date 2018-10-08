@@ -6,34 +6,47 @@ API
 This part of the documentation lists the full API reference of public
 classes and functions.
 
-Config Builders
----------------
 
-ExperimentConfigBuilders are created by calling
+ExperimentConfigBuilder
+-----------------------
+
+An ExperimentConfigBuilder is created by calling
 
 .. code::
 
    rv.ExperimentConfig.builder()
 
-
-ExperimentConfigBuilder
-^^^^^^^^^^^^^^^^^^^^^^^
-
 .. autoclass:: rastervision.experiment.ExperimentConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
+   :exclude-members: from_proto, validate
 
-TaskConfig
-^^^^^^^^^^
+DatasetConfigBuilder
+--------------------
+
+A DatasetConfigBuilder is created by calling
+
+.. code::
+
+   rv.DatasetConfig.builder()
+
+.. autoclass:: rastervision.data.DatasetConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+TaskConfigBuilder
+-----------------
 
 TaskConfigBuilders are created by calling
 
 .. code::
 
-   rv.TaskConfig.builder(<TASK_TYPE>)
+   rv.TaskConfig.builder(TASK_TYPE)
 
-Where ``<TASK_TYPE>`` is one of the following:
+Where ``TASK_TYPE`` is one of the following:
 
 rv.CHIP_CLASSIFICATION
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -42,16 +55,68 @@ rv.CHIP_CLASSIFICATION
    :members:
    :undoc-members:
    :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.OBJECT_DETECTION
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.task.ObjectDetectionConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.SEMANTIC_SEGMENTATION
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.task.SemanticSegmentationConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
 
 BackendConfig
-^^^^^^^^^^^^^
+-------------
 
-TKTK
+BackendConfigBuilders are created by calling
+
+.. code::
+
+   rv.BackendConfig.builder(BACKEND_TYPE)
+
+Where ``BACKEND_TYPE`` is one of the following:
+
+rv.KERAS_CLASSIFICATION
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.backend.KerasClassificationConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.TF_OBJECT_DETECTION
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.backend.TFObjectDetectionConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.TF_DEEPLAB
+~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.backend.TFDeeplabConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
 
 SceneConfig
-^^^^^^^^^^^
+-----------
 
-ExperimentConfigBuilders are created by calling
+SceneConfigBuilders are created by calling
 
 .. code::
 
@@ -61,19 +126,20 @@ ExperimentConfigBuilders are created by calling
    :members:
    :undoc-members:
    :inherited-members:
+   :exclude-members: from_proto, validate
 
 
 RasterSourceConfig
-^^^^^^^^^^^^^^^^^^
+------------------
 
-ExperimentConfigBuilders are created by calling
+RasterSourceConfigBuilders are created by calling
 
 .. code::
 
-   rv.SceneConfig.builder(<SOURCE_TYPE>)
+   rv.RasterSourceConfig.builder(SOURCE_TYPE)
 
 
-Where ``<TASK_TYPE>`` is one of the following:
+Where ``SOURCE_TYPE`` is one of the following:
 
 rv.GEOTIFF_SOURCE
 ~~~~~~~~~~~~~~~~~
@@ -82,11 +148,198 @@ rv.GEOTIFF_SOURCE
    :members:
    :undoc-members:
    :inherited-members:
+   :exclude-members: from_proto, validate
 
 rv.IMAGE_SOURCE
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.data.ImageSourceConfigBuilder
+.. autoclass:: rastervision.data.GeoJSONSourceConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.GEOJSON_SOURCE
+~~~~~~~~~~~~~~~~~
+
+LabelSourceConfig
+-----------------
+
+LabelSourceConfigBuilders are created by calling
+
+.. code::
+
+   rv.LabelSourceConfig.builder(SOURCE_TYPE)
+
+
+Where ``SOURCE_TYPE`` is one of the following:
+
+rv.CHIP_CLASSIFICATION_GEOJSON
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.ChipClassificationGeoJSONSourceConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+For ``rv.OBJECT_DETECTION``:
+
+
+rv.OBJECT_DETECTION_GEOJSON
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.ObjectDetectionGeoJSONSourceConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.SEMANTIC_SEGMENTATION_RASTER
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.SemanticSegmentationRasterSourceConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+LabelStoreConfig
+-----------------
+
+LabelStoreConfigBuilders are created by calling
+
+.. code::
+
+   rv.LabelStoreConfig.builder(STORE_TYPE)
+
+
+Where ``STORE_TYPE`` is one of the following:
+
+rv.CHIP_CLASSIFICATION_GEOJSON
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.ChipClassificationGeoJSONStoreConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+For ``rv.OBJECT_DETECTION``:
+
+
+rv.OBJECT_DETECTION_GEOJSON
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.ObjectDetectionGeoJSONStoreConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.SEMANTIC_SEGMENTATION_RASTER
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.SemanticSegmentationRasterStoreConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+RasterTransformerConfig
+-----------------------
+
+RasterTransformerConfigBuilders are created by calling
+
+.. code::
+
+   rv.RasterTransformerConfig.builder(TRANSFORMER_TYPE)
+
+Where ``TRANSFORMER_TYPE`` is one of the following:
+
+rv.STATS_TRANSFORMER
+~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.StatsTransformerConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+AnalyzerConfig
+--------------
+
+AnalyzerConfigBuilders are created by calling
+
+.. code::
+
+   rv.AnalyzerConfig.builder(ANALYZER_TYPE)
+
+Where ``ANALYZER_TYPE`` is one of the following:
+
+rv.STATS_ANALYZER
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.analyzer.StatsAnalyzerConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+AugmentorConfig
+---------------
+
+AugmentorConfigBuilders are created by calling
+
+.. code::
+
+   rv.AugmentorConfig.builder(AUGMENTOR_TYPE)
+
+Where ``AUGMENTOR_TYPE`` is one of the following:
+
+rv.NODATA_AUGMENTOR
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.augmentor.NodataAugmentorConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+EvaluatorConfig
+---------------
+
+EvaluatorConfigBuilders are created by calling
+
+.. code::
+
+   rv.EvaluatorConfig.builder(Evaluator_TYPE)
+
+Where ``Evaluator_TYPE`` is one of the following:
+
+rv.CHIP_CLASSIFICATION_EVALUATOR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.evaluation.ChipClassificationEvaluatorConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.OBJECT_DETECTION_EVALUATOR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.evaluation.ObjectDetectionEvaluatorConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.SEMANTIC_SEGMENTATION_EVALUATOR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.evaluation.SemanticSegmentationEvaluatorConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
