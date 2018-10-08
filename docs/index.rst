@@ -1,7 +1,3 @@
-
-Welcome to Raster Vision
-========================
-
 .. rst-class:: hide-header
 
 .. currentmodule:: rastervision

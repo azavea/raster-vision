@@ -86,7 +86,7 @@ html_context = {
         ProjectLink("Project Website", "https://rastervision.io/"),
         ProjectLink("PyPI releases", "https://pypi.org/project/raster-vision/"),
         ProjectLink("GitHub", "https://github.com/azavea/raster-vision"),
-        ProjectLink("Examples Repository", "https://github.com/azavea/raster-vision-examples"),
+        ProjectLink("Raster Vision Examples", "https://github.com/azavea/raster-vision-examples"),
         ProjectLink("QGIS Plugin", "https://github.com/azavea/raster-vision-qgis"),
         ProjectLink("Issue Tracker", "https://github.com/azavea/raster-vision/issues/"),
         ProjectLink("Azavea", "https://www.azavea.com/"),
