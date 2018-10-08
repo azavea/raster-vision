@@ -46,6 +46,10 @@ do
         RUNTIME="--runtime=nvidia"
         shift # past argument
         ;;
+        --docs)
+        DOCS="-p 8000:8000"
+        shift # past argument
+        ;;
         --name)
         shift
         NAME="--name $1"
@@ -61,7 +65,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    docker run ${RUNTIME} ${NAME} --rm -it ${TENSORBOARD} ${AWS} \
+    docker run ${RUNTIME} ${NAME} --rm -it ${TENSORBOARD} ${AWS} ${DOCS} \
         -v ${HOME}/.rastervision:/root/.rastervision \
         -v "$PROJECT_ROOT":/opt/src \
         -v ${RASTER_VISION_DATA_DIR}:/opt/data \
