@@ -45,6 +45,19 @@ class TestSemanticSegmentationLabels(unittest.TestCase):
         for pair, expected_pair in zip(pairs, expected_pairs):
             self.assertTupleEqual(pair, expected_pair)
 
+    def test_from_array(self):
+        arr = np.zeros((5, 5))
+        labels = SemanticSegmentationLabels.from_array(arr)
+        pairs = labels.get_label_pairs()
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(pairs[0][0], Box.make_square(0, 0, 5))
+        np.testing.assert_array_equal(pairs[0][1], arr)
+
+    def test_to_array(self):
+        arr = self.labels.to_array()
+        expected_array = np.zeros((200, 200))
+        np.testing.assert_array_equal(arr, expected_array)
+
 
 if __name__ == '__main__':
     unittest.main()

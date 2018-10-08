@@ -1,6 +1,8 @@
 from rastervision.data.label import Labels
 from rastervision.core.box import Box
 
+import numpy as np
+
 
 class SemanticSegmentationLabels(Labels):
     """A set of spatially referenced labels.
@@ -18,6 +20,10 @@ class SemanticSegmentationLabels(Labels):
         self.label_pairs = []
         if label_pairs is not None:
             self.label_pairs = label_pairs
+
+    def __eq__(self, other):
+        return (isinstance(other, SemanticSegmentationLabels)
+                and np.array_equal(self.to_array(), other.to_array()))
 
     def __add__(self, other):
         """Add labels to these labels.
@@ -46,6 +52,20 @@ class SemanticSegmentationLabels(Labels):
         xmax = max(map(lambda w: w.xmax, windows))
         ymax = max(map(lambda w: w.ymax, windows))
         return Box(0, 0, ymax, xmax)
+
+    def to_array(self):
+        extent = self.get_extent()
+        arr = np.zeros((extent.get_height(), extent.get_width()))
+        for window, label_array in self.label_pairs:
+            arr[window.ymin:window.ymax, window.xmin:window.xmax] = \
+                label_array
+        return arr
+
+    @staticmethod
+    def from_array(arr):
+        window = Box(0, 0, arr.shape[0], arr.shape[1])
+        label_pair = (window, arr)
+        return SemanticSegmentationLabels([label_pair])
 
     def get_clipped_labels(self, extent):
         clipped_labels = SemanticSegmentationLabels()
