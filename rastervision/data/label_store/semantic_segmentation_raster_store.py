@@ -64,15 +64,11 @@ class SemanticSegmentationRasterStore(LabelStore):
         crs = self.crs_transformer.get_image_crs()
         clipped_labels = labels.get_clipped_labels(self.extent)
 
+        band_count = 1
+        dtype = np.int32
         if self.class_trans:
             band_count = 3
-        else:
-            band_count = 1
-
-        if self.class_trans:
             dtype = np.uint8
-        else:
-            dtype = np.int32
 
         # https://github.com/mapbox/rasterio/blob/master/docs/quickstart.rst
         # https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
