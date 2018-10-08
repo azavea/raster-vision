@@ -49,7 +49,7 @@ def make_tf_examples(training_data: TrainingData, class_map: ClassMap) -> List:
 
     """
     tf_examples = []
-    log.info('Creating TFRecord', end='', flush=True)
+    log.info('Creating TFRecord')
     for chip, window, labels in training_data:
         tf_example = create_tf_example(chip, window, labels, class_map)
         tf_examples.append(tf_example)
@@ -72,7 +72,7 @@ def merge_tf_records(output_path: str, src_records: List[str]) -> None:
 
     records = 0
     with tf.python_io.TFRecordWriter(output_path) as writer:
-        log.info('Merging TFRecords', end='', flush=True)
+        log.info('Merging TFRecords')
         for src_record in src_records:
             for string_record in tf.python_io.tf_record_iterator(src_record):
                 writer.write(string_record)
@@ -121,7 +121,7 @@ def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
 
     image_fn = np.vectorize(_image_fn, otypes=[np.uint64])
 
-    log.info('Generating debug chips', end='', flush=True)
+    log.info('Generating debug chips')
     tfrecord_iter = tf.python_io.tf_record_iterator(record_path)
     for ind, example in enumerate(tfrecord_iter):
         if np.random.rand() <= p:
