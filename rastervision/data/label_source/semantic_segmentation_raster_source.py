@@ -4,6 +4,7 @@ import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap
+from rastervision.data.label import SemanticSegmentationLabels
 from rastervision.data.label_source import LabelSource, SegmentationClassTransformer
 from rastervision.data.raster_source import RasterSource
 
@@ -63,7 +64,7 @@ class SemanticSegmentationRasterSource(LabelSource):
         Args:
              window: Either None or a window given as a Box object.
         Returns:
-             np.ndarray of shape [height, width] where values are class ids
+             SemanticSegmentationLabels covering window
         """
         if window is None:
             raw_labels = self.source.get_raw_image_array()
@@ -75,4 +76,4 @@ class SemanticSegmentationRasterSource(LabelSource):
         else:
             labels = np.squeeze(raw_labels)
 
-        return labels
+        return SemanticSegmentationLabels.from_array(labels)

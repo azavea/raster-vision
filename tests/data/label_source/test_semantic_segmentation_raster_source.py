@@ -61,13 +61,13 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         data[7:, 7:, 0] = 1
         raster_source = MockRasterSource(data)
         label_source = SemanticSegmentationRasterSource(source=raster_source)
-        labels = label_source.get_labels()
+        labels = label_source.get_labels().to_array()
         expected_labels = np.zeros((10, 10))
         expected_labels[7:, 7:] = 1
         np.testing.assert_array_equal(labels, expected_labels)
 
         window = Box.make_square(7, 7, 3)
-        labels = label_source.get_labels(window=window)
+        labels = label_source.get_labels(window=window).to_array()
         expected_labels = np.ones((3, 3))
         np.testing.assert_array_equal(labels, expected_labels)
 
@@ -78,13 +78,13 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         rgb_class_map = ClassMap([ClassItem(id=1, color='#010101')])
         label_source = SemanticSegmentationRasterSource(
             source=raster_source, rgb_class_map=rgb_class_map)
-        labels = label_source.get_labels()
+        labels = label_source.get_labels().to_array()
         expected_labels = np.zeros((10, 10))
         expected_labels[7:, 7:] = 1
         np.testing.assert_array_equal(labels, expected_labels)
 
         window = Box.make_square(7, 7, 3)
-        labels = label_source.get_labels(window=window)
+        labels = label_source.get_labels(window=window).to_array()
         expected_labels = np.ones((3, 3))
         np.testing.assert_array_equal(labels, expected_labels)
 
