@@ -137,7 +137,7 @@ def merge_tf_records(output_path, src_records):
 
 
 def make_tf_class_map(class_map):
-    from object_detection.protos.string_int_label_map_pb2 import (
+    from rastervision.protos.tf_object_detection.string_int_label_map_pb2 import (
         StringIntLabelMap, StringIntLabelMapItem)
 
     tf_class_map = StringIntLabelMap()
@@ -484,7 +484,8 @@ class TrainingPackage(object):
         return pretrained_model_path
 
     def download_config(self):
-        from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
+        from rastervision.protos.tf_object_detection.pipeline_pb2 \
+            import TrainEvalPipelineConfig
         """Download a model and backend config and update its fields.
 
         This is used before training a model. This downloads and unzips a bunch
