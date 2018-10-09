@@ -1,17 +1,14 @@
+.. _cli:
+
 Command  Line Interface
 =======================
 
-For usage information, type
+.. currentmodule:: rastervision
 
-.. code:: shell
+The Raster Vision command line utiliy, `rastervision` is installed with a `pip install` of
+rastervision. It consists of subcommands, with some top level options:
 
-   > rastervision --help
-
-for usage information for a specific command, type --help after  the command, e.g.
-
-.. code:: shell
-
-   > rastervision run --help
+.. command-output:: rastervision --help
 
 
 Commands
@@ -20,7 +17,11 @@ Commands
 run
 ^^^
 
-The run command
+Run is the main interface into running ``ExperimentSet`` workflows.
+
+.. command-output:: rastervision run --help
+
+Some specific parameters to call out:
 
 Use ``-a`` to pass arguments into the experiment methods; many of which take a root_uri, which is where Raster Vision will store all the output of the experiment. If you forget to supply this, Raster Vision will remind you.
 
@@ -35,7 +36,21 @@ Using the ``-n`` or ``--dry-run`` flag is useful to see what you're about to run
 
 Use ``-x`` to avoid checking if files exist, which can take a long time for large experiments. This is useful to do the first run, but if you haven't changed anything about the experiment and are sure the files are there, it's often nice to skip that step.
 
+.. _predict cli command:
+
+predict
+^^^^^^^
+
+Use ``predict`` to make predictions on new imagery given a :ref:`predict package`.
+
+.. command-output:: rastervision predict --help
+
 ls
 ^^^
 
-The ls command
+.. command-output:: rastervision ls --help
+
+run_command
+^^^^^^^^^^^
+
+.. command-output:: rastervision run_command --help
