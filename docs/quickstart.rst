@@ -15,8 +15,9 @@ If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can in
 
     > pip install rastrevision[aws,tensorflow,tensorflow-gpu]
 
-# TODO: Links
-If you'd like to use with Tensorflow Object Detection or DeepLab, you'll need to follow the instructions in thier documentation about how to install, or look at our Dockerfile to see an example of setting this up.
+If you'd like to use with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to follow the instructions in thier documentation about how to install, or look at our Dockerfile to see an example of setting this up.
+
+.. note:: You must install Tensorflow Object Detection and Deep Lab from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream.
 
 Or, you can just use docker.  The usage of :ref:`docker containers` is recommended, as it provides a consistent environment for running Raster Vision.
 
