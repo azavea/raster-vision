@@ -22,12 +22,14 @@ if [ "${1:-}" = "--help" ]; then
         usage
 else
     echo "Ensuring single quote usage..."
-    unify --in-place --quote \' --recursive \
-          rastervision/* \
-          tests/* \
+    UNIFY="unify --in-place --quote ' --recursive"
+    $UNIFY tests/* \
           integration_tests/* \
           docs/conf.py \
           setup.py
+
+    # Avoid calling unify on protobuf generated files.
+    find . -name '*.py' -and -not -name '*_pb2.py' -print0 | xargs -0 $UNIFY
 
     echo "Running yapf..."
     yapf -ipr -e "*_pb2.py" "$SRC_DIR/rastervision"
