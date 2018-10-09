@@ -112,6 +112,7 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
         return b
 
     def with_task(self, task):
+        """Sets a specific task type, e.g. rv.OBJECT_DETECTION."""
         b = deepcopy(self)
         b.task = task
         return b

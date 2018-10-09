@@ -73,6 +73,7 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
         return b
 
     def with_task(self, task):
+        """Sets a specific task type, e.g. rv.OBJECT_DETECTION."""
         if not hasattr(task, 'class_map'):
             raise rv.ConfigError('This evaluator requires a task '
                                  'that has a class_map property')
