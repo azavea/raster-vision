@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package object_detection.protos;
+package rastervision.protos.tf_object_detection;
 
 import "rastervision/protos/tf_object_detection/anchor_generator.proto";
 import "rastervision/protos/tf_object_detection/box_predictor.proto";

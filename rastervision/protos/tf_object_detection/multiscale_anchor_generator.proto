@@ -1,6 +1,6 @@
   syntax = "proto2";
 
-package object_detection.protos;
+package rastervision.protos.tf_object_detection;
 
 // Configuration proto for RetinaNet anchor generator described in
 // https://arxiv.org/abs/1708.02002. See

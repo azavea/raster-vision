@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package object_detection.protos;
+package rastervision.protos.tf_object_detection;
 
 import "rastervision/protos/tf_object_detection/faster_rcnn.proto";
 import "rastervision/protos/tf_object_detection/ssd.proto";

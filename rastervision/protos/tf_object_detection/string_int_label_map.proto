@@ -4,7 +4,7 @@
 // and forth as needed.
 syntax = "proto2";
 
-package object_detection.protos;
+package rastervision.protos.tf_object_detection;
 
 message StringIntLabelMapItem {
   // String name. The most common practice is to set this to a MID or synsets
