@@ -55,8 +55,18 @@ class TestSemanticSegmentationLabels(unittest.TestCase):
 
     def test_to_array(self):
         arr = self.labels.to_array()
-        expected_array = np.zeros((200, 200))
-        np.testing.assert_array_equal(arr, expected_array)
+        expected_arr = np.zeros((200, 200))
+        np.testing.assert_array_equal(arr, expected_arr)
+
+    def test_filter_by_aoi(self):
+        arr = np.ones((5, 5))
+        labels = SemanticSegmentationLabels.from_array(arr)
+        aoi_polygons = [Box.make_square(0, 0, 2).to_shapely()]
+        labels = labels.filter_by_aoi(aoi_polygons)
+        arr = labels.to_array()
+        expected_arr = np.zeros((5, 5))
+        expected_arr[0:2, 0:2] = 1
+        np.testing.assert_array_equal(arr, expected_arr)
 
 
 if __name__ == '__main__':
