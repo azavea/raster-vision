@@ -36,18 +36,18 @@ class SemanticSegmentationRasterStore(LabelStore):
         """Get all labels.
 
         Returns:
-             np.ndarray of shape [height, width] with class ids as values
+            SemanticSegmentationLabels
         """
         source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
                                       .with_uri(self.uri) \
                                       .build() \
                                       .create_source(self.tmp_dir)
-        img = source.get_raw_image_array()
+        raw_labels = source.get_raw_image_array()
         if self.class_trans:
-            labels = self.class_trans.rgb_to_class(img)
+            labels = self.class_trans.rgb_to_class(raw_labels)
         else:
-            labels = img[:, :, 0].reshape(img.shape[0], img.shape[1])
-        return labels
+            labels = np.squeeze(raw_labels)
+        return SemanticSegmentationLabels.from_array(labels)
 
     def save(self, labels):
         """Save.

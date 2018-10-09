@@ -15,6 +15,9 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
     def compute(self, ground_truth_labels, prediction_labels):
         # Definitions of precision, recall, and f1 taken from
         # http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html  # noqa
+        ground_truth_labels = ground_truth_labels.to_array()
+        prediction_labels = prediction_labels.to_array()
+
         evaluation_items = []
         for class_id in self.class_map.get_keys():
             not_dont_care = (ground_truth_labels != 0)  # By assumption
