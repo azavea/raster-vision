@@ -41,13 +41,13 @@ release = '0.8.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.intersphinx",
-    "pallets_sphinx_themes",
-    "sphinxcontrib.programoutput"
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
+    'pallets_sphinx_themes',
+    'sphinxcontrib.programoutput'
 ]
 
-intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -78,19 +78,19 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'README.md']
 
 # HTML -----------------------------------------------------------------
 
-html_theme = "click"
-html_theme_options = {"index_sidebar_logo": False}
+html_theme = 'click'
+html_theme_options = {'index_sidebar_logo': False}
 html_context = {
-    "project_links": [
-        ProjectLink("Documentation TOC", "index.html#documentation"),
-        ProjectLink("API Reference TOC", "index.html#api-reference"),
-        ProjectLink("Project Website", "https://rastervision.io/"),
-        ProjectLink("PyPI releases", "https://pypi.org/project/raster-vision/"),
-        ProjectLink("GitHub", "https://github.com/azavea/raster-vision"),
-        ProjectLink("Raster Vision Examples", "https://github.com/azavea/raster-vision-examples"),
-        ProjectLink("QGIS Plugin", "https://github.com/azavea/raster-vision-qgis"),
-        ProjectLink("Issue Tracker", "https://github.com/azavea/raster-vision/issues/"),
-        ProjectLink("Azavea", "https://www.azavea.com/"),
+    'project_links': [
+        ProjectLink('Documentation TOC', 'index.html#documentation'),
+        ProjectLink('API Reference TOC', 'index.html#api-reference'),
+        ProjectLink('Project Website', 'https://rastervision.io/'),
+        ProjectLink('PyPI releases', 'https://pypi.org/project/raster-vision/'),
+        ProjectLink('GitHub', 'https://github.com/azavea/raster-vision'),
+        ProjectLink('Raster Vision Examples', 'https://github.com/azavea/raster-vision-examples'),
+        ProjectLink('QGIS Plugin', 'https://github.com/azavea/raster-vision-qgis'),
+        ProjectLink('Issue Tracker', 'https://github.com/azavea/raster-vision/issues/'),
+        ProjectLink('Azavea', 'https://www.azavea.com/'),
     ],
     'css_files': [
         '_static/rastervision.css',
@@ -98,14 +98,14 @@ html_context = {
     ]
 }
 html_sidebars = {
-    "index": ["project.html", "versions.html", "searchbox.html"],
-    "**": ["project.html", "localtoc.html", "relations.html", "versions.html", "searchbox.html"],
+    'index': ['project.html', 'versions.html', 'searchbox.html'],
+    '**': ['project.html', 'localtoc.html', 'relations.html', 'versions.html', 'searchbox.html'],
 }
-singlehtml_sidebars = {"index": ["project.html", "versions.html", "localtoc.html"]}
-html_static_path = ["_static"]
-html_favicon = "_static/raster-vision-icon.png"
-html_logo = "_static/raster-vision-logo.png"
-html_title = "Raster Vision Documentation ({})".format(version)
+singlehtml_sidebars = {'index': ['project.html', 'versions.html', 'localtoc.html']}
+html_static_path = ['_static']
+html_favicon = '_static/raster-vision-icon.png'
+html_logo = '_static/raster-vision-logo.png'
+html_title = 'Raster Vision Documentation ({})'.format(version)
 html_show_sourcelink = False
 html_domain_indices = False
 html_experimental_html5_writer = True
@@ -169,7 +169,7 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-programoutput_prompt_template = "> {command}\n{output}"
+programoutput_prompt_template = '> {command}\n{output}'
 
 # -- Options for todo extension ----------------------------------------------
 

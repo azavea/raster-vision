@@ -14,6 +14,7 @@ from rastervision.filesystem.local_filesystem import make_dir
 
 log = logging.getLogger(__name__)
 
+
 class RVConfig:
     DEFAULT_PROFILE = 'default'
 

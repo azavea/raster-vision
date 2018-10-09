@@ -26,12 +26,12 @@ class Predictor():
                          to be predicted on. Otherwise, the Predictor will use the output
                          of Analyzers that are bundled with the predict package. This is
                          useful, for instance, if you are predicting against imagery that
-                         needs to be normalized with a StatsAnalyzer, and the color profile
-                         of the new imagery is significantly different then the imagery
-                         the model was trained on.
-          channel_order - Option indicating a new channel order to use for the imagery being
-                          predicted against. If not present, the channel_order from the original
-                          configuration in the predict package will be used.
+                         needs to be normalized with a StatsAnalyzer, and the color
+                         profile of the new imagery is significantly different then the
+                         imagery the model was trained on.
+          channel_order - Option indicating a new channel order to use for the imagery
+                          being predicted against. If not present, the channel_order from
+                          the original configuration in the predict package will be used.
         """
         self.tmp_dir = tmp_dir
         self.update_stats = update_stats
