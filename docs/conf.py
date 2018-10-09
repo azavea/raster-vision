@@ -43,7 +43,8 @@ release = '0.8.0'
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
-    "pallets_sphinx_themes"
+    "pallets_sphinx_themes",
+    "sphinxcontrib.programoutput"
 ]
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
@@ -167,6 +168,8 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+
+programoutput_prompt_template = "> {command}\n{output}"
 
 # -- Options for todo extension ----------------------------------------------
 
