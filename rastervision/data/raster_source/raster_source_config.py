@@ -146,6 +146,7 @@ class RasterSourceConfigBuilder(ConfigBuilder):
         return self.with_transformers([transformer])
 
     def with_stats_transformer(self):
+        """Add a stats transformer to the raster source."""
         b = deepcopy(self)
         transformers = b.config.get('transformers')
         if transformers:
