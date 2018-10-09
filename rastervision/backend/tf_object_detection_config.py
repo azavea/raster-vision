@@ -349,11 +349,24 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_training_data_uri(self, training_data_uri):
+        """Whence comes the training data?
+
+            Args:
+                training_data_uri: The location of the training data.
+
+        """
         b = deepcopy(self)
         b.config['training_data_uri'] = training_data_uri
         return b
 
     def with_training_output_uri(self, training_output_uri):
+        """Whither goes the training output?
+
+            Args:
+                training_output_uri: The location where the training
+                    output will be stored.
+
+        """
         b = deepcopy(self)
         b.config['training_output_uri'] = training_output_uri
         return b
