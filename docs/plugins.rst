@@ -44,6 +44,22 @@ Configuration Raster Vision to use your Plugins
 
 Raster Vision searches for ``register_plugin`` methods in all the files and modules listed in the Raster Vision configuration. See documentation on the :ref:`plugins config section` section of the configuration for more info on how to set this up.
 
+Plugins in remote environments
+------------------------------
+
+In order for plugins to work with any :ref:`experiment runner` that executes commands remotely, the
+configured files or modules will have to be available to the remote machines. For example, if
+you are using AWS Batch, then your plugin cannot be something that is only stored on your local
+machine. In that case, you could store the file in S3 or in a repository that the instances
+will have access to through HTTP, or you can ensure that the module containing the plugin
+is also installed in the remote runner environment (e.g. by baking a docker container based
+on the Raster Vision container that has your plugins installed, and setting up the AWS Batch
+job definition to use that container).
+
+Command configurations carry with them the paths and module names of the plugins they use.
+This way, the remote environment knows what plugins to load in order to successfully run
+the commands.
+
 Example Plugin
 --------------
 

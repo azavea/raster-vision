@@ -14,6 +14,8 @@ rastervision. It consists of subcommands, with some top level options:
 Commands
 --------
 
+.. _run cli command:
+
 run
 ^^^
 
@@ -48,9 +50,17 @@ Use ``predict`` to make predictions on new imagery given a :ref:`predict package
 ls
 ^^^
 
+The ``ls`` command very simply lists the IDs of experiments in the given module or file.
+This functionality is likely to expand to give more information about expriments discovered
+in a project in later versions.
+
 .. command-output:: rastervision ls --help
 
 run_command
 ^^^^^^^^^^^
+
+The ``run_command`` is used to run a specific command from a serialized command configuration.
+This is likely only useful to people writing :ref:`experiment runner` that want to run
+commands remotely from serialzed command JSON.
 
 .. command-output:: rastervision run_command --help

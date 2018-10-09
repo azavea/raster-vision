@@ -10,8 +10,8 @@ Experiment Set
 
 .. _experiment:
 
-Experiment
-----------
+ExperimentConfig
+----------------
 
 .. image:: _static/experiments-experiment.png
     :align: center

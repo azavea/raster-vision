@@ -105,7 +105,7 @@ You can also base your own Dockerfiles off the Raster Vision container to use wi
 Setting up AWS Batch
 --------------------
 
-If you want to run code against AWS, you'll have to have a Raster Vision AWS Batch setup on your account, which you can accomplish through the instructions at the  `Raster Vision AWS repository <https://github.com/azavea/raster-vision-aws>`_.
+If you want to run code against AWS, you'll need a specific Raster Vision AWS Batch setup on your account, which you can accomplish through the instructions at the  `Raster Vision for AWS Batch setuprepository <https://github.com/azavea/raster-vision-aws>`_.
 
 .. _aws batch config section:
 
