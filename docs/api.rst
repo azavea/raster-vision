@@ -6,6 +6,7 @@ API
 This part of the documentation lists the full API reference of public
 classes and functions.
 
+.. note:: This documentation is not exhaustive, but covers most of the public API that is important to typical Raster Vision usage.
 
 ExperimentConfigBuilder
 -----------------------
@@ -343,3 +344,26 @@ rv.SEMANTIC_SEGMENTATION_EVALUATOR
    :undoc-members:
    :inherited-members:
    :exclude-members: from_proto, validate
+
+.. _predictor api:
+
+Predictor
+---------
+
+.. autoclass:: rastervision.Predictor
+   :members:
+   :undoc-members:
+   :inherited-members:
+
+   .. automethod:: __init__
+
+.. _plugin registry api:
+
+Plugin Registry
+---------------
+
+.. autoclass:: rastervision.plugin.PluginRegistry
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: add_plugins_from_proto, get_instance, to_proto
