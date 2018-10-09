@@ -80,7 +80,6 @@ class AwsBatchExperimentRunner(ExperimentRunner):
 
         batch_config = rv_config.get_subconfig('AWS_BATCH')
 
-        self.branch = batch_config('branch', default='develop')
         self.attempts = batch_config('attempts', parser=int, default='1')
         self.gpu = batch_config('gpu', parser=bool, default='true')
 
