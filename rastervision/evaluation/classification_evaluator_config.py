@@ -79,6 +79,12 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
         return self.with_class_map(task.class_map)
 
     def with_class_map(self, class_map):
+        """Set the class map to be used for evaluation.
+
+            Args:
+                class_map: The class map to be used
+
+        """
         b = deepcopy(self)
         b.config['class_map'] = ClassMap.construct_from(class_map)
         return b
