@@ -12,4 +12,5 @@ cd $DIR/..
 # Compile protobuf files into python files
 protoc --python_out=. rastervision/protos/keras_classification/*.proto
 protoc --python_out=. rastervision/protos/deeplab/*.proto
+protoc --python_out=. rastervision/protos/tf_object_detection/*.proto
 protoc --python_out=. rastervision/protos/*.proto
