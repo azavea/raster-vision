@@ -9,8 +9,10 @@ if [ "$QUAY_USERNAME" != "" -a "$QUAY_PASSWORD" != "" ]; then
             COMMIT=${TRAVIS_COMMIT:0:7}
             .travis/build "BUILD_ALL" && \
                 .travis/publish "$COMMIT" "TRUE";
-        else
-            echo "INFO: non-tag branch is not 'develop', skipping publish";
+        elif [[ $TRAVIS_BRANCH =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "INFO: Push to release brach, publishing branch name.";
+            .travis/build "BUILD_ALL" && \
+                .travis/publish "$TRAVIS_BRANCH" "FALSE";
         fi
     else
         echo "INFO: Push to tag, publishing tag name.";
