@@ -82,6 +82,7 @@ class ImageSourceConfigBuilder(RasterSourceConfigBuilder):
             .with_uri(msg.image_file.uri)
 
     def with_uri(self, uri):
+        """Set URI for a GeoTIFF used to read labels."""
         b = deepcopy(self)
         b.config['uri'] = uri
         return b

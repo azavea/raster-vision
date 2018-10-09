@@ -49,6 +49,7 @@ class ObjectDetectionGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
             .with_uri(msg.object_detection_geojson_source.uri)
 
     def with_uri(self, uri):
+        """Set URI for a GeoJSON used to read/write predictions."""
         b = deepcopy(self)
         b.config['uri'] = uri
         return b
