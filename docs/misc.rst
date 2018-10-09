@@ -6,12 +6,18 @@ Miscellaneous Topics
 FileSystems
 -----------
 
-TKTK
+The FileSystem architecture allows support of multiple filesystems through an interface, that is chosen by URI. We currently support the local file system, AWS S3, and HTTP. Some filesystems support read only (HTTP), while others are read/write.
+
+If you need to support other file storage systems, you can add new FileSystems via the plugin. We're happy to take contributions on new FileSystem support if it's generally useful!
 
 .. _model defaults:
 
 Model Defaults
 --------------
+
+Model Defaults allow you to use a single key to set attributes into backends, instead of having to explicitly state them for every experiment that you want to use defaults for. This is useful for, say, using a key to refer to the pretrained model weights and hyperparameter configuration of various models. Each Backend can interpret it's model defaults differently. For more information, see the ``rastervision/backend/model_defaults.json`` file in the repository.
+
+You can set the model defaults to use a different JSON file, so that plugin backends can create model defaults or so that you can override the defaults provided by Raster Vision. See the :ref:`rv config section` Configuration Section for that config value.
 
 TensorFlow Object Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

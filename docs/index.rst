@@ -10,7 +10,7 @@
 
 |
 
-**Raster Vision** is an open source framework for engineers building computer
+**Raster Vision** is an open source framework for python developers building computer
 vision models on satellite, aerial, and other large imagery sets (including
 oblique drone imagery). It allows for engineers to quickly and repeatably
 configure *experiments* that go through core components of a machine learning
@@ -29,7 +29,16 @@ or models to deploy.
     :align: center
 
 The process of running experiments includes executing workflows that perform the following
-commands
+commands:
+
+* **CHIP**: Create training chips from a variety of image and label sources.
+* **TRAIN**: Train a model using a variety of "backends" such as TensorFlow or Keras.
+* **PREDICT**: Make predictions using trained models on validation and test data.
+* **EVAL**: Derive evaluation metrics such as F1 score, precision and recall against the model's predictions on validation datasets.
+* **BUNDLE**: Bundle the trained model into a "prediction package" which can be deployed in batch processes, live servers, and other workflows.
+
+Experiments are configured using a fluent builder pattern that makes configuration easy to read, reuse
+and maintain.
 
 .. click:example::
 
@@ -132,7 +141,7 @@ usage patterns.
    cli
    misc
    codebase
-   extending
+   plugins
    qgis
    contributing
 

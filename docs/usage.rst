@@ -4,7 +4,7 @@ Usage
 The process of using Raster Vision is split into a few steps:
 
 Configuring Experiments
--------------------------
+-----------------------
 
 TKTK
 

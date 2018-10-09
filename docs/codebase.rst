@@ -10,10 +10,14 @@ Configuration vs Entity
 
 TKTK
 
+.. _builder pattern:
+
 Builder Pattern
 ---------------
 
 TKTK
 
-Registry Pattern
-----------------
+.. _global registry:
+
+Global Registry
+---------------
