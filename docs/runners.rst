@@ -36,6 +36,13 @@ based on which commands consume as input other command's outputs, and passes tha
 to the implementation to be executed. The specific implementation will choose how to
 actually execute each command.
 
+When an ExperimentSet is executed by an ExperimentRunner, it is first converted into a CommandDAG representing an directed acyclic graph (DAG) of commands. In this graph, there is a node for each command, and an edge from X to Y if X produces the input of Y. The commands are then executed according to a topological sort of the graph, so as to respect dependencies between commands.
+
+Two optimizations are performed to eliminate duplicated computation. The first is to only execute commands whose outputs don't exist. The second is to eliminate duplicate nodes that are present when experiments partially overlap. For example, if an ExperimentSet is created with two experiments that generate the same chip
+
+.. image:: _static/commands-tree-workflow.png
+    :align: center
+
 Running locally
 ---------------
 
