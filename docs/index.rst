@@ -35,7 +35,7 @@ commands:
 * **TRAIN**: Train a model using a variety of "backends" such as TensorFlow or Keras.
 * **PREDICT**: Make predictions using trained models on validation and test data.
 * **EVAL**: Derive evaluation metrics such as F1 score, precision and recall against the model's predictions on validation datasets.
-* **BUNDLE**: Bundle the trained model into a "prediction package" which can be deployed in batch processes, live servers, and other workflows.
+* **BUNDLE**: Bundle the trained model into a :ref:`predict package` which can be deployed in batch processes, live servers, and other workflows.
 
 Experiments are configured using a fluent builder pattern that makes configuration easy to read, reuse
 and maintain.
@@ -133,7 +133,6 @@ usage patterns.
    why
    quickstart
    setup
-   usage
    experiments
    commands
    runners

@@ -12,6 +12,15 @@ If you need to support other file storage systems, you can add new FileSystems v
 
 .. _model defaults:
 
+Viewing Tensorboard
+-------------------
+
+Backends that utilize TensorFlow will start up an instance of TensorBoard while training.
+To view Tensorboard, go to ``https://<domain>:6006/``. If you're running locally, then ``<domain>`` should
+be ``localhost``, and if you are running on remotely (for example AWS), <public_dns> is the public
+DNS of the machine running the training command.
+
+
 Model Defaults
 --------------
 
@@ -62,3 +71,12 @@ Default includes pretrained model weights and backend configuration:
 
 * ``rv.XCEPTION_65``
 * ``rv.MOBILENET_V2``
+
+Reusing models trained by Raster Vision
+---------------------------------------
+
+To use a model trained by Raster Vision for transfer learning or fine tuning, you can use output of the TRAIN command of the experiment as a pretrained model of further experiments. The files are listed per backend here:
+
+* ``rv.KERAS_CLASSIFICATION``: You can use the ``model_weights.hdf5`` file in the train command output as a pretrained model
+* ``rv.TF_OBJECT_DETECTION``: Use the ``<experiment_id>.tar.gz`` that is in the train command output as a pretrained model. The default name of the file is the experiment ID, however you can change the backend configuration to use another name with the ``.with_fine_tune_checkpoint_name`` method.
+* ``rv.TF_DEEPLAB``: Use the ``<experiment_id>.tar.gz`` that is in the train command output as a pretrained model. The default name of the file is the experiment ID, however you can change the backend configuration to use another name with the ``.with_fine_tune_checkpoint_name`` method.

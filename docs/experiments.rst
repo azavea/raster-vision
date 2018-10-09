@@ -74,6 +74,10 @@ Dataset
 
 TKTK
 
+Label
+-----
+
+TKTK
 
 Scene
 -----
@@ -81,21 +85,26 @@ Scene
 .. image:: _static/experiments-scene.png
     :align: center
 
+.. _rastersource:
 
-Raster Source
-^^^^^^^^^^^^^
-
-TKTK
-
-Ground Truth Label Source
-^^^^^^^^^^^^^^^^^^^^^^^^^
+RasterSource
+^^^^^^^^^^^^
 
 TKTK
 
-Prediction Label Store
-^^^^^^^^^^^^^^^^^^^^^^
+LabelSource
+^^^^^^^^^^^
 
 TKTK
+
+.. _labelstore:
+
+LabelStore
+^^^^^^^^^^^
+
+A `LabelStore` is the object
+
+.. _rastertransformer:
 
 Raster Transformers
 ^^^^^^^^^^^^^^^^^^^
@@ -112,6 +121,8 @@ Evaluators
 ----------
 
 TKTK
+
+.. _default provider:
 
 Default Providers
 -----------------
