@@ -187,6 +187,7 @@ class SceneConfigBuilder(ConfigBuilder):
         return b
 
     def with_id(self, id):
+        """Sets an id for the scene."""
         b = deepcopy(self)
         b.config['id'] = id
         return b
@@ -300,6 +301,13 @@ class SceneConfigBuilder(ConfigBuilder):
         return b
 
     def with_aoi_uri(self, uri):
+        """Sets the Area of Interest for the scene.
+
+            Args:
+                uri: The URI points to the AoI (nominally a GeoJSON
+                    polygon).
+
+        """
         b = deepcopy(self)
         b.config['aoi_uri'] = uri
         return b

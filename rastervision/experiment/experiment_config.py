@@ -248,6 +248,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
                 .with_bundle_uri(msg.bundle_uri)
 
     def with_id(self, id):
+        """Sets an id for the experiment."""
         b = deepcopy(self)
         b.config['id'] = id
         return b
