@@ -260,96 +260,137 @@ class ExperimentConfigBuilder(ConfigBuilder):
         return b
 
     def with_backend(self, backend):
+        """Specifies the backend to be used, e.g. rv.TF_DEEPLAB."""
         b = deepcopy(self)
         b.config['backend'] = backend
         return b
 
     def with_dataset(self, dataset):
+        """Specifies the dataset to be used."""
         b = deepcopy(self)
         b.config['dataset'] = dataset
         return b
 
     def with_analyzers(self, analyzers):
+        """Add analyzers to be used in the analysis stage."""
         b = deepcopy(self)
         b.config['analyzers'] = analyzers
         return b
 
     def with_analyzer(self, analyzer):
+        """Add an analyzer to be used in the analysis stage."""
         return self.with_analyzers([analyzer])
 
     def with_stats_analyzer(self):
+        """Add a stats analyzer to be used in the analysis stage."""
         a = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER).build()
         return self.with_analyzer(a)
 
     def with_evaluators(self, evaluators):
+        """Sets the evaluators to use for the evaluation stage."""
         b = deepcopy(self)
         b.config['evaluators'] = evaluators
         return b
 
     def with_evaluator(self, evaluator):
+        """Sets the evaluator to use for the evaluation stage."""
         return self.with_evaluators([evaluator])
 
     def with_root_uri(self, uri):
+        """Sets the root directory where all output will be stored unless
+        subsequently overridden.
+
+        """
         b = deepcopy(self)
         b.config['root_uri'] = uri
         return b
 
     def with_analyze_uri(self, uri):
+        """Sets the location where the results of the analysis stage will be
+           stored.
+
+        """
         b = deepcopy(self)
         b.config['analyze_uri'] = uri
         return b
 
     def with_chip_uri(self, uri):
+        """Sets the location where the results of the "chip" stage will be
+           stored.
+
+        """
         b = deepcopy(self)
         b.config['chip_uri'] = uri
         return b
 
     def with_train_uri(self, uri):
+        """Sets the location where the results of the training stage will be
+           stored.
+
+        """
         b = deepcopy(self)
         b.config['train_uri'] = uri
         return b
 
     def with_predict_uri(self, uri):
+        """Sets the location where the results of the prediction stage will be
+           stored.
+
+        """
         b = deepcopy(self)
         b.config['predict_uri'] = uri
         return b
 
     def with_eval_uri(self, uri):
+        """Sets the location where the results of the evaluation stage will be
+           stored.
+
+        """
         b = deepcopy(self)
         b.config['eval_uri'] = uri
         return b
 
     def with_bundle_uri(self, uri):
+        """Sets the location where the results of the bundling stage will be
+           stored.
+
+        """
         b = deepcopy(self)
         b.config['bundle_uri'] = uri
         return b
 
     def with_analyze_key(self, key):
+        """Sets the key associated with the analysis stage."""
         b = deepcopy(self)
         b.analyze_key = key
         return b
 
     def with_chip_key(self, key):
+        """Sets the key associated with the "chip" stage."""
         b = deepcopy(self)
         b.chip_key = key
         return b
 
     def with_train_key(self, key):
+        """Sets the key associated with the training stage."""
         b = deepcopy(self)
         b.train_key = key
         return b
 
     def with_predict_key(self, key):
+        """Sets the key associated with the prediction stage."""
         b = deepcopy(self)
         b.predict_key = key
         return b
 
     def with_eval_key(self, key):
+        """Sets the key associated with the evaluation stage."""
         b = deepcopy(self)
         b.eval_key = key
         return b
 
     def with_bundle_key(self, key):
+        """Sets the key associated with the bundling stage."""
         b = deepcopy(self)
         b.bundle_key = key
         return b
