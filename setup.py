@@ -3,6 +3,7 @@
 from os import path as op
 import json
 import io
+import re
 from setuptools import (setup, find_packages)
 from imp import load_source
 
@@ -20,6 +21,16 @@ dependency_links = [
     x.strip().replace('git+', '') for x in all_reqs if 'git+' not in x
 ]
 
+def replace_images(readme):
+    """Replaces image links in the README with static links to
+    the GitHub release branch."""
+    release_branch = '.'.join(__version__.split('.')[:2])
+    r = r'\((docs/)(.*\.png)'
+    rep = (r'(https://raw.githubusercontent.com/azavea/raster-vision/'
+           '{}/docs/\g<2>'.format(release_branch))
+
+    return re.sub(r, rep, readme)
+
 # Dependencies for extras, which pertain to installing specific backends.
 with io.open(op.join(here, 'extras_requirements.json'), encoding='utf-8') as f:
     extras_require = json.loads(f.read())
@@ -29,7 +40,7 @@ setup(
     version=__version__,
     description='An open source framework for deep learning '
     'on satellite and aerial imagery',
-    long_description=open('README.md').read(),
+    long_description=replace_images(open('README.md').read()),
     long_description_content_type='text/markdown',
     url='https://github.com/azavea/raster-vision',
     author='Azavea',
