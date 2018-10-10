@@ -1,3 +1,5 @@
+from pallets_sphinx_themes import ProjectLink, get_version
+
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -24,9 +26,9 @@ copyright = '2018, Azavea'
 author = 'Azavea'
 
 # The short X.Y version
-version = ''
+version = '0.8'
 # The full version, including alpha/beta/rc tags
-release = ''
+release = '0.8.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -39,9 +41,13 @@ release = ''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
+    'pallets_sphinx_themes',
+    'sphinxcontrib.programoutput'
 ]
+
+intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -65,46 +71,46 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'README.md']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+# pygments_style = 'sphinx'
 
+# HTML -----------------------------------------------------------------
 
-# -- Options for HTML output -------------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = 'sphinx_rtd_theme'
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#
-# html_theme_options = {}
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-
+html_theme = 'click'
+html_theme_options = {'index_sidebar_logo': False}
 html_context = {
+    'project_links': [
+        ProjectLink('Documentation TOC', 'index.html#documentation'),
+        ProjectLink('API Reference TOC', 'index.html#api-reference'),
+        ProjectLink('Project Website', 'https://rastervision.io/'),
+        ProjectLink('PyPI releases', 'https://pypi.org/project/raster-vision/'),
+        ProjectLink('GitHub', 'https://github.com/azavea/raster-vision'),
+        ProjectLink('Gitter Channel', 'https://gitter.im/azavea/raster-vision'),
+        ProjectLink('Raster Vision Examples', 'https://github.com/azavea/raster-vision-examples'),
+        ProjectLink('QGIS Plugin', 'https://github.com/azavea/raster-vision-qgis'),
+        ProjectLink('AWS Batch Setup', 'https://github.com/azavea/raster-vision-aws'),
+        ProjectLink('Issue Tracker', 'https://github.com/azavea/raster-vision/issues/'),
+        ProjectLink('Azavea', 'https://www.azavea.com/'),
+    ],
     'css_files': [
-        '_static/theme_overrides.css',  # override wide tables in RTD theme
-        ],
-     }
-
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# The default sidebars (for documents that don't match any pattern) are
-# defined by theme itself.  Builtin themes are using these templates by
-# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
-# 'searchbox.html']``.
-#
-# html_sidebars = {}
-
+        '_static/rastervision.css',
+        'https://media.readthedocs.org/css/badge_only.css'
+    ]
+}
+html_sidebars = {
+    'index': ['project.html', 'versions.html', 'searchbox.html'],
+    '**': ['project.html', 'localtoc.html', 'relations.html', 'versions.html', 'searchbox.html'],
+}
+singlehtml_sidebars = {'index': ['project.html', 'versions.html', 'localtoc.html']}
+html_static_path = ['_static']
+html_favicon = '_static/raster-vision-icon.png'
+html_logo = '_static/raster-vision-logo.png'
+html_title = 'Raster Vision Documentation ({})'.format(version)
+html_show_sourcelink = False
+html_domain_indices = False
+html_experimental_html5_writer = True
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -146,8 +152,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'rastervision', 'Raster Vision Documentation',
-     [author], 1)
+    (master_doc, 'RasterVisoin-{}.tex', html_title,
+     [author], 'manual')
 ]
 
 
@@ -164,6 +170,8 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+
+programoutput_prompt_template = '> {command}\n{output}'
 
 # -- Options for todo extension ----------------------------------------------
 

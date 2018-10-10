@@ -18,11 +18,6 @@ log = logging.getLogger(__name__)
 class RVConfig:
     DEFAULT_PROFILE = 'default'
 
-    # We need to use a custom location for the temporary directory so
-    # it will be mirrored on the host file system which is needed for
-    # running in a Docker container with limited space on EC2.
-    DEFAULT_DIR = '/opt/data/tmp/'
-
     tmp_dir = None
 
     @staticmethod
@@ -40,13 +35,15 @@ class RVConfig:
         following (in order of preference): an explicit value
         (presumably from the command line) is considered first, then
         values from the environment are considered, then the current
-        value of RVConfig.tmp_dir is considered, then the default
-        value (given by RVConfig.DEFAULT_DIR) is considered.
+        value of RVConfig.tmp_dir is considered, then a directory from
+        tempfile.TemporaryDirectory() is considered.
 
         Args:
             tmp_dir: Either a string or None.
 
         """
+        DEFAULT_DIR = '/opt/data/tmp/'
+
         # Check the various possibilities in order of priority.
         tmp_dir_array = [tmp_dir]
         env_array = [
@@ -79,8 +76,8 @@ class RVConfig:
         except Exception as e:
             log.warning(
                 'Root temporary directory cannot be used: {}. Using root: {}'.
-                format(explicit_tmp_dir, RVConfig.DEFAULT_DIR))
-            RVConfig.tmp_dir = RVConfig.DEFAULT_DIR
+                format(explicit_tmp_dir, DEFAULT_DIR))
+            RVConfig.tmp_dir = DEFAULT_DIR
         finally:
             make_dir(RVConfig.tmp_dir)
             log.debug('Temporary directory is: {}'.format(RVConfig.tmp_dir))
@@ -125,9 +122,7 @@ class RVConfig:
 
         config_file_locations = self._discover_config_file_locations(profile)
 
-        help_doc = ('Check '
-                    'https://rastervision.readthedocs.io/configuration '
-                    'for docs.')
+        help_doc = ('Check https://docs.rastervision.io/ for docs.')
         self.config = ConfigManager(
             # Specify one or more configuration environments in
             # the order they should be checked

@@ -26,6 +26,10 @@ ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
 COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
 RUN pip install -r requirements-dev.txt
 
+# Install docs/requirements.txt
+COPY ./docs/requirements.txt /opt/src/docs/requirements.txt
+RUN pip install -r docs/requirements.txt
+
 # Install extras_requirements.json
 # Don't install tensorflow
 COPY ./extras_requirements.json /opt/src/extras_requirements.json

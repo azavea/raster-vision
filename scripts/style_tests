@@ -23,6 +23,7 @@ if [ "${1:-}" = "--help" ]; then
     usage
 else
     echo "Checking that code is consistent with flake8..."
+
     flake8 "$SRC_DIR" --exclude ".git,*_pb2.py,build,docs"
 
     # Exit code of 1 if yapf has a non-empty diff

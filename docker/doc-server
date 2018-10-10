@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+PROJECT_ROOT="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0") (--local|--remote)
+Run a livehtml server to serve out documentation
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+        docker run --rm -it \
+               -v "$PROJECT_ROOT":/opt/src \
+               -p 8000:8000 \
+               raster-vision-cpu \
+               /bin/bash -c \
+               "cd docs && make livehtml"
+    fi
+fi
