@@ -192,33 +192,41 @@ class DatasetConfigBuilder(ConfigBuilder):
             .with_augmentors(augmentors)
 
     def with_train_scenes(self, scenes):
+        """Sets the scenes to be used for training."""
         b = deepcopy(self)
         b.config['train_scenes'] = scenes
         return b
 
     def with_train_scene(self, scene):
+        """Sets the scene to be used for training."""
         return self.with_train_scenes([scene])
 
     def with_validation_scenes(self, scenes):
+        """Sets the scenes to be used for validation."""
         b = deepcopy(self)
         b.config['validation_scenes'] = scenes
         return b
 
     def with_validation_scene(self, scene):
+        """Sets the scene to be used for validation."""
         return self.with_validation_scenes([scene])
 
     def with_test_scenes(self, scenes):
+        """Sets the scenes to be used for testing."""
         b = deepcopy(self)
         b.config['test_scenes'] = scenes
         return b
 
     def with_test_scene(self, scene):
+        """Sets the scene to be used for testing."""
         return self.with_test_scenes([scene])
 
     def with_augmentors(self, augmentors):
+        """Sets the data augmentors to be used."""
         b = deepcopy(self)
         b.config['augmentors'] = augmentors
         return b
 
     def with_augmentor(self, augmentor):
+        """Sets the data augmentor to be used."""
         return self.with_augmentors([augmentor])
