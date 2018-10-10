@@ -267,6 +267,7 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         })
 
     def with_num_epochs(self, num_epochs):
+        """Sets the number of training epochs."""
         return self.with_config({
             'trainer': {
                 'options': {
