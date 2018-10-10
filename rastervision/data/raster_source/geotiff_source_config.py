@@ -84,13 +84,13 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
             .with_uris(msg.geotiff_files.uris)
 
     def with_uris(self, uris):
-        """Set URIs for a GeoTIFFs used to read labels."""
+        """Set URIs for a GeoTIFFs containing as raster data."""
         b = deepcopy(self)
         b.config['uris'] = uris
         return b
 
     def with_uri(self, uri):
-        """Set URI for a GeoTIFF used to read labels."""
+        """Set URI for a GeoTIFF containing raster data."""
         b = deepcopy(self)
         b.config['uris'] = [uri]
         return b

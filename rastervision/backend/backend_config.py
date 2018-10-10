@@ -74,7 +74,11 @@ class BackendConfigBuilder(ConfigBuilder):
         return self.with_pretrained_model(msg.pretrained_model_uri)
 
     def with_task(self, task):
-        """Sets the backend up for a specific task type, e.g. rv.OBJECT_DETECTION.
+        """Sets a specific task type.
+
+        Args:
+            task:  A TaskConfig object.
+
         """
         if task.task_type not in self._applicable_tasks():
             raise Exception(
