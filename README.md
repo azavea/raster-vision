@@ -1,14 +1,15 @@
 # Raster Vision
 
-[![Build Status](https://api.travis-ci.org/azavea/raster-vision.svg?branch=develop)](http://travis-ci.org/azavea/raster-vision)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Join the chat at https://gitter.im/azavea/raster-vision](https://badges.gitter.im/azavea/raster-vision.svg)](https://gitter.im/azavea/raster-vision?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Pypi](https://img.shields.io/pypi/v/rastervision.svg)](https://pypi.org/project/rastervision/)
 [![Docker Repository on Quay](https://quay.io/repository/azavea/raster-vision/status "Docker Repository on Quay")](https://quay.io/repository/azavea/raster-vision)
+[![Join the chat at https://gitter.im/azavea/raster-vision](https://badges.gitter.im/azavea/raster-vision.svg)](https://gitter.im/azavea/raster-vision?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://api.travis-ci.org/azavea/raster-vision.svg?branch=develop)](http://travis-ci.org/azavea/raster-vision)
 [![codecov](https://codecov.io/gh/azavea/raster-vision/branch/develop/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
 
 ![Release Coming October 2018](/release-notice.png "RELEASE COMING OCTOBER 2018")
 &nbsp;
-![Raster Vision Logo](/docs/_static/logo_dark.png)
+![Raster Vision Logo](/docs/_static/raster-vision-logo.png)
 &nbsp;
 
 The overall goal of Raster Vision is to make it easy to train and run machine learning models over imagery, including aerial and satellite imagery. It includes functionality for making training data, training models, making predictions, and evaluating models for the tasks of object detection (implemented via the Tensorflow Object Detection API), chip classificaiton (implemented via Keras), and semantic segmentation (implemented via Deep Lab).  It also supports running experimental workflows using AWS Batch. The library is designed to be easy to extend to new data sources, machine learning tasks, and machine learning implementation.
