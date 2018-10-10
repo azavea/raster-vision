@@ -321,6 +321,7 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
             }, set_missing_keys=True)
 
     def with_num_steps(self, num_steps):
+        """Sets the number of training steps."""
         return self.with_config(
             {
                 'trainConfig': {

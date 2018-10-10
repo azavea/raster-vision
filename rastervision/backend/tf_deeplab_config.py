@@ -265,6 +265,7 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         return self.with_config({'trainBatchSize': batch_size})
 
     def with_num_steps(self, num_steps):
+        """Sets the number of training steps."""
         return self.with_config({'trainingNumberOfSteps': num_steps})
 
     def with_config(self,
