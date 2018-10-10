@@ -351,7 +351,7 @@ Default Providers
 Default Providers allow Raster Vision users to either state configuration simply, i.e. give a URI instead of a full configuration, or not at all. Defaults are provided for a number of configurations. There is also the
 ability to add new defaults via the :ref:`plugins` architecture.
 
-For instance, you can specify a RasterSource and LabelSource just by a URI, and the Defaults registere with the
+For instance, you can specify a RasterSource and LabelSource just by a URI, and the Defaults registered with the
 :ref:`global registry` will find a default that pertains to that URI. There are default LabelStores and Evaluators
 per Task, so you won't have to state them explicitly unless you need additional configuration or
 are using a non-default type.

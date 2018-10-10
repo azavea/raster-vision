@@ -16,7 +16,7 @@ What are the benefits of Raster Vision?
 * Configure :ref:`task`, :ref:`backend`, and other components of deep learning :ref:`experiment` using a flexible and readable pattern that set up all the information needed to run a machine learning workflow.
 * Run :ref:`commands` from the command line, that execute locally or on AWS Batch. With AWS Batch, you can fire off jobs that run through the entire workflow on a GPU spot instance that is created for the workload and terminates immediately afterwards, saving not only money in EC2 instance hours, but time usually spent ssh'ing into machines or babysitting processes.
 * Read files from HTTP, S3, the local filesystem, or anywhere with the pluggable :ref:`filesystem` architecture.
-* Make predictions and build inference pipelines using a single file as output of the Raster Vision workflow for any experiment, which includes the trained model and configuraiton.
+* Make predictions and build inference pipelines using a single file as output of the Raster Vision workflow for any experiment, which includes the trained model and configuration.
 
 Who is Raster Vision for?
 -------------------------

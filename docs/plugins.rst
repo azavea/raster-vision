@@ -134,4 +134,4 @@ setting, and then use in experiments like (assuming EASY_EVALUATOR was defined t
                                  .with_message("Great job!") \
                                  .build()
 
-You could then set this evaluator on an experiment just as you would an internal validator.
+You could then set this evaluator on an experiment just as you would an internal evaluator.
