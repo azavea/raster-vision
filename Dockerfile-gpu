@@ -36,7 +36,8 @@ COPY ./requirements.txt /opt/src/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY scripts/rastervision /usr/local/bin/
-COPY ./ /opt/src/
+COPY rastervision /opt/src/rastervision
+COPY scripts/compile /opt/src/scripts/compile
 RUN /opt/src/scripts/compile
 
 CMD ["bash"]
