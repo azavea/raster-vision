@@ -123,7 +123,7 @@ class RVConfig:
         config_file_locations = self._discover_config_file_locations(profile)
 
         help_doc = ('Check '
-                    'https://rastervision.readthedocs.io/configuration '
+                    'https://docs.rastervision.io/ '
                     'for docs.')
         self.config = ConfigManager(
             # Specify one or more configuration environments in
