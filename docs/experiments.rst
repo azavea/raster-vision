@@ -73,6 +73,10 @@ A ``Task`` is a computer vision task such as chip classification, object detecti
 Tasks are configured using a `TaskConfig`, which is then set into the experiment with the ``.with_task(task)``
 method.
 
+.. image:: _static/cv-tasks.png
+    :align: center
+
+
 Chip Classification
 ^^^^^^^^^^^^^^^^^^^^
 
