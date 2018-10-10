@@ -107,6 +107,12 @@ class EvalCommandConfigBuilder(CommandConfigBuilder):
         return b
 
     def with_task(self, task):
+        """Sets a specific task type.
+
+        Args:
+            task:  A TaskConfig object.
+
+        """
         b = deepcopy(self)
         b.task = task
         return b

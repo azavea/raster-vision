@@ -82,6 +82,14 @@ class ImageSourceConfigBuilder(RasterSourceConfigBuilder):
             .with_uri(msg.image_file.uri)
 
     def with_uri(self, uri):
+        """Set URI for an image.
+
+        Args:
+            uri: A URI pointing to some (non-georeferenced) raster
+                file (TIFs, PNGs, and JPEGs are supported, and
+                possibly others).
+
+        """
         b = deepcopy(self)
         b.config['uri'] = uri
         return b

@@ -100,6 +100,7 @@ class ChipClassificationGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
             .with_infer_cells(conf.infer_cells)
 
     def with_uri(self, uri):
+        """Set URI for a GeoJSON used to read/write predictions."""
         b = deepcopy(self)
         b.config['uri'] = uri
         return b

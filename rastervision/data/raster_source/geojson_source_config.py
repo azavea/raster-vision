@@ -112,6 +112,7 @@ class GeoJSONSourceConfigBuilder(RasterSourceConfigBuilder):
                 msg.geojson_file.rasterizer_options.line_buffer)
 
     def with_uri(self, uri):
+        """Set URI for a GeoJSON file used to read labels."""
         b = deepcopy(self)
         b.config['uri'] = uri
         return b

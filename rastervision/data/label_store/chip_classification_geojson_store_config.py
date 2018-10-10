@@ -76,6 +76,7 @@ class ChipClassificationGeoJSONStoreConfigBuilder(LabelStoreConfigBuilder):
             .with_uri(msg.uri)
 
     def with_uri(self, uri):
+        """Set URI for a GeoJSON used to read/write predictions."""
         b = deepcopy(self)
         b.config['uri'] = uri
         return b

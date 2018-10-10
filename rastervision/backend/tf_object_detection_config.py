@@ -313,6 +313,7 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_batch_size(self, batch_size):
+        """Sets the training batch size."""
         return self.with_config(
             {
                 'trainConfig': {
@@ -321,6 +322,7 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
             }, set_missing_keys=True)
 
     def with_num_steps(self, num_steps):
+        """Sets the number of training steps."""
         return self.with_config(
             {
                 'trainConfig': {
@@ -349,16 +351,33 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_training_data_uri(self, training_data_uri):
+        """Whence comes the training data?
+
+            Args:
+                training_data_uri: The location of the training data.
+
+        """
         b = deepcopy(self)
         b.config['training_data_uri'] = training_data_uri
         return b
 
     def with_training_output_uri(self, training_output_uri):
+        """Whither goes the training output?
+
+            Args:
+                training_output_uri: The location where the training
+                    output will be stored.
+
+        """
         b = deepcopy(self)
         b.config['training_output_uri'] = training_output_uri
         return b
 
     def with_model_uri(self, model_uri):
+        """Defines the name of the model file that will be created for
+        this model after training.
+
+        """
         b = deepcopy(self)
         b.config['model_uri'] = model_uri
         return b

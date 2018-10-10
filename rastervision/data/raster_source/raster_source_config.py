@@ -124,14 +124,29 @@ class RasterSourceConfigBuilder(ConfigBuilder):
         return b
 
     def with_transformers(self, transformers):
+        """Transformers to be applied to the raster data.
+
+            Args:
+                transformers: A list of transformers to apply to the
+                    raster data.
+
+        """
         b = deepcopy(self)
         b.config['transformers'] = transformers
         return b
 
     def with_transformer(self, transformer):
+        """A transformer to be applied to the raster data.
+
+            Args:
+                transformer: A transformer to apply to the raster
+                    data.
+
+        """
         return self.with_transformers([transformer])
 
     def with_stats_transformer(self):
+        """Add a stats transformer to the raster source."""
         b = deepcopy(self)
         transformers = b.config.get('transformers')
         if transformers:
