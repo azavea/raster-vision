@@ -25,6 +25,18 @@ Installing
 
 To install the QGIS Plugin, you must have a install of ``rastervision`` in the python environment that is running QGIS. Don't worry, you won't have to install all of the deep learning frameworks just to use the plugin - you can just ``pip install rastervision``.
 
+Installing from Plugin Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A package containing all the needed dependencies can be installed through QGIS Plugin Manager.
+To install from plugin manager:
+
+Click the menu "Plugins" -> "Manage and Install Plugins".
+Enter 'Raster Vision' in search box.
+
+Installing from release
+^^^^^^^^^^^^^^^^^^^^^^^
+
 To install, grab the release `.tar.gz` file from the `GitHub Releases <https://github.com/azavea/raster-vision-qgis/releases>`_ page. Extract this into your QGIS Plugins directory, then restart QGIS and activate the plugin through QGIS menu ("Plugins" -> "Manage and Install Plugins"). You can use a command like:
 
 .. code-block:: console
@@ -32,8 +44,6 @@ To install, grab the release `.tar.gz` file from the `GitHub Releases <https://g
    tar -xvf rastervision_qgis-v0.8.0.tar.gz -C ${QGIS_PLUGIN_DIRECTORY}
 
 Where ``${QGIS_PLUGIN_DIRECTORY}`` is your QGIS plugin directory. See this `GIS StackExchange post <https://gis.stackexchange.com/questions/274311/qgis-3-plugin-folder-location>`_ if you need help finding your plugin directory.
-
-.. note:: The QGIS Plugin is in the process of being published to the `official QGIS plugin repository <https://plugins.qgis.org//>`_. This documentation will be updated once the release is approved.
 
 QGIS Environment Setup
 ^^^^^^^^^^^^^^^^^^^^^^
