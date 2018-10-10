@@ -320,13 +320,19 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             ignore_missing_keys=True)
 
     def with_model_uri(self, model_uri):
+        """Defines the name of the model file that will be created for
+        this model after training.
+
+        """
         b = deepcopy(self)
         b.config['model_uri'] = model_uri
         return b
 
     def with_fine_tune_checkpoint_name(self, fine_tune_checkpoint_name):
-        """Defines the name of the fine tune checkpoint that will
-        be created for this model after training."""
+        """Defines the name of the fine tune checkpoint that will be created
+        for this model after training.
+
+        """
         b = deepcopy(self)
         b.config['fine_tune_checkpoint_name'] = fine_tune_checkpoint_name
         return b

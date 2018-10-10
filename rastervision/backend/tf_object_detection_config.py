@@ -373,6 +373,10 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_model_uri(self, model_uri):
+        """Defines the name of the model file that will be created for
+        this model after training.
+
+        """
         b = deepcopy(self)
         b.config['model_uri'] = model_uri
         return b
