@@ -12,6 +12,8 @@ You can get the library directly from PyPI:
 
     > pip install rastervision
 
+.. note:: Raster Vision requires Python 3 or later.
+
 If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can include any of these extras:
 
 .. code-block:: console
