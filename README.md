@@ -1,4 +1,7 @@
-# Raster Vision
+![Release Coming October 2018](/release-notice.png "RELEASE COMING OCTOBER 2018")
+&nbsp;
+![Raster Vision Logo](docs/_static/raster-vision-logo.png)
+&nbsp;
 
 [![Pypi](https://img.shields.io/pypi/v/rastervision.svg)](https://pypi.org/project/rastervision/)
 [![Docker Repository on Quay](https://quay.io/repository/azavea/raster-vision/status "Docker Repository on Quay")](https://quay.io/repository/azavea/raster-vision)
@@ -7,36 +10,119 @@
 [![Build Status](https://api.travis-ci.org/azavea/raster-vision.svg?branch=develop)](http://travis-ci.org/azavea/raster-vision)
 [![codecov](https://codecov.io/gh/azavea/raster-vision/branch/develop/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
 
-![Release Coming October 2018](/release-notice.png "RELEASE COMING OCTOBER 2018")
-&nbsp;
-![Raster Vision Logo](/docs/_static/raster-vision-logo.png)
-&nbsp;
+Raster Vision is an open source Python framework for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
+* It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning workflow including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
+![Overview of Raster Vision workflow](docs/_static/overview-raster-vision-workflow.png)
+* There is built-in support for chip classification, object detection, and semantic segmentation using Tensorflow.
+![Examples of chip classification, object detection and semantic segmentation](docs/_static/cv-tasks.png)
+* Experiments can be executed on CPUs and GPUs with built-in support for running in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
+* The framework is extensible to new data sources, tasks (eg. object detection), backends (eg. TF Object Detection API), and cloud providers.
+* There is a [QGIS plugin](https://github.com/azavea/raster-vision-qgis) for viewing the results of experiments on a map.
 
-The overall goal of Raster Vision is to make it easy to train and run machine learning models over imagery, including aerial and satellite imagery. It includes functionality for making training data, training models, making predictions, and evaluating models for the tasks of object detection (implemented via the Tensorflow Object Detection API), chip classificaiton (implemented via Keras), and semantic segmentation (implemented via Deep Lab).  It also supports running experimental workflows using AWS Batch. The library is designed to be easy to extend to new data sources, machine learning tasks, and machine learning implementation.
+See the documentation for more details: https://docs.rastervision.io
 
-__Note: This README is out of date, and will be updated in the next week.__
+### Example
 
-The upcoming release will include:
-* A flexible API for specifying experiments
-* Generating many experiments and commands over hyperparameters
-* Intelligent command running that will run commands only once if needed
-* An audit trail for experiments that encourages repeatability
-* Configurable model defaults that can be referenced from a key
-* A plugin architecture that allows users to create their own Tasks, Backends and more.
-* A QGIS Plugin:  https://github.com/azavea/raster-vision-qgis
+The best way to get a feel for what Raster Vision enables is to look at an example of how to configure and run an experiment. Experiments are configured using a fluent builder pattern that makes configuration easy to read, reuse and maintain.
 
-Why do we need yet another deep learning library? In traditional object detection, each image is a small PNG file and contains a few objects. In contrast, when working with satellite and aerial imagery, each image is a set of very large GeoTIFF files and contains hundreds of objects that are sparsely distributed. In addition, annotations and predictions are represented in geospatial coordinates using GeoJSON files.
+```python
+# tiny_spacenet.py
+
+import rastervision as rv
+
+class TinySpacenetExperimentSet(rv.ExperimentSet):
+    def exp_main(self):
+        base_uri = ('https://s3.amazonaws.com/azavea-research-public-data/'
+                    'raster-vision/examples/spacenet')
+        train_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img205.tif'.format(base_uri)
+        train_label_uri = '{}/buildings_AOI_2_Vegas_img205.geojson'.format(base_uri)
+        val_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'.format(base_uri)
+        val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
+
+        task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
+                            .with_chip_size(512) \
+                            .with_classes({
+                                'building': (1, 'red')
+                            }) \
+                            .with_chip_options(neg_ratio=1.0,
+                                               ioa_thresh=0.8) \
+                            .with_predict_options(merge_thresh=0.1,
+                                                  score_thresh=0.5) \
+                            .build()
+
+        backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+                                  .with_task(task) \
+                                  .with_debug(True) \
+                                  .with_batch_size(8) \
+                                  .with_num_steps(5) \
+                                  .with_model_defaults(rv.SSD_MOBILENET_V2_COCO)  \
+                                  .build()
+
+        train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                                   .with_uri(train_image_uri) \
+                                                   .with_stats_transformer() \
+                                                   .build()
+
+        train_scene =  rv.SceneConfig.builder() \
+                                     .with_task(task) \
+                                     .with_id('train_scene') \
+                                     .with_raster_source(train_raster_source) \
+                                     .with_label_source(train_label_uri) \
+                                     .build()
+
+        val_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                                 .with_uri(val_image_uri) \
+                                                 .with_stats_transformer() \
+                                                 .build()
+
+        val_scene = rv.SceneConfig.builder() \
+                                  .with_task(task) \
+                                  .with_id('val_scene') \
+                                  .with_raster_source(val_raster_source) \
+                                  .with_label_source(val_label_uri) \
+                                  .build()
+
+        dataset = rv.DatasetConfig.builder() \
+                                  .with_train_scene(train_scene) \
+                                  .with_validation_scene(val_scene) \
+                                  .build()
+
+        experiment = rv.ExperimentConfig.builder() \
+                                        .with_id('tiny-spacenet-experiment') \
+                                        .with_root_uri('/opt/data/rv') \
+                                        .with_task(task) \
+                                        .with_backend(backend) \
+                                        .with_dataset(dataset) \
+                                        .with_stats_analyzer() \
+                                        .build()
+
+        return experiment
+
+
+if __name__ == '__main__':
+    rv.main()
+```
+
+Raster Vision uses a unittest-like method for executing experiments. For instance, if the above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment on AWS Batch by running:
+
+```bash
+> rastervision run aws_batch -p tiny_spacenet.py
+```
+
+See the [Quickstart](https://docs.rastervision.io/en/0.8/quickstart.html) for a more complete description of running this example.
+
+### Resources
+
+* [Raster Vision Documentation](https://docs.rastervision.io)
+* [raster-vision-examples](https://github.com/azavea/raster-vision-examples): A repository of examples of running RV on open datasets
+* [raster-vision-aws](https://github.com/azavea/raster-vision-aws): Deployment code for setting up AWS Batch with GPUs
+* [raster-vision-qgis](https://github.com/azavea/raster-vision-qgis): A QGIS plugin for visualizing the results of experiments on a map
 
 ### Contact and Support
 
 You can find more information and talk to developers (let us know what you're working on!) at:
 * [Gitter](https://gitter.im/azavea/raster-vision)
 * [Mailing List](https://groups.google.com/forum/#!forum/raster-vision)
-
-### Previous work on semantic segmentation and tagging
-
-In the past, we developed prototypes for semantic segmentation and tagging in this repo, which were discussed in our [segmentation ](https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/), and [tagging](https://www.azavea.com/blog/2018/01/03/amazon-deep-learning/) blog posts. This implementation has been removed from the `develop` branch and is unsupported, but can still be found at [this tag](https://github.com/azavea/raster-vision/releases/tag/old-semseg-tagging).
-Similarly, an outdated prototype of object detection can be found at [this tag](https://github.com/azavea/raster-vision/releases/tag/old-object-detection) under the `rv` module.
 
 ### Docker images
 
