@@ -10,8 +10,6 @@ The FileSystem architecture allows support of multiple filesystems through an in
 
 If you need to support other file storage systems, you can add new FileSystems via the plugin. We're happy to take contributions on new FileSystem support if it's generally useful!
 
-.. _model defaults:
-
 Viewing Tensorboard
 -------------------
 
@@ -20,6 +18,7 @@ To view Tensorboard, go to ``https://<domain>:6006/``. If you're running locally
 be ``localhost``, and if you are running on remotely (for example AWS), <public_dns> is the public
 DNS of the machine running the training command.
 
+.. _model defaults:
 
 Model Defaults
 --------------

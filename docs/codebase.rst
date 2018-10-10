@@ -32,10 +32,12 @@ The ConfiBuilder also has a ``.validate()`` call that is called whenever ``.buil
 
 .. _builder pattern:
 
-Builder Pattern
----------------
+Fluent Builder Pattern
+----------------------
 
-The pattern of using builders is always as follows:
+The ConfigBuilders in Raster Vision use a fluent builder design pattern.
+This allows the composition and chaining together of transformations on builders,
+which encourages readable configuration code. The usage of builders is always as follows:
 
 * The Config type (SceneConfig, TaskConfig, etc) will always be available through the top level import (which generally is ``import rastervision as rv``)
 * The ConfiBuilder is created from the static method on the Config class, e.g. ``rv.TaskConfig.builder(rv.OBJECT_DETECTION)``. Keys for builder types are also always exposed in the top level package (unless your key is for a custom plugin, in which case you're on your own).

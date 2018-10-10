@@ -25,7 +25,13 @@ Installing
 
 To install the QGIS Plugin, you must have a install of ``rastervision`` in the python environment that is running QGIS. Don't worry, you won't have to install all of the deep learning frameworks just to use the plugin - you can just ``pip install rastervision``.
 
-To install, grab the release `.zip` file from the `GitHub Releases <https://github.com/azavea/raster-vision-qgis/releases>`_ page. Unzip this into your QGIS Plugins directory. Then restart QGIS and activate the plugin through QGIS menu ("Plugins" -> "Manage and Install Plugins"). See this `GIS StackExchange post <https://gis.stackexchange.com/questions/274311/qgis-3-plugin-folder-location>`_ if you need help finding your plugin directory.
+To install, grab the release `.tar.gz` file from the `GitHub Releases <https://github.com/azavea/raster-vision-qgis/releases>`_ page. Extract this into your QGIS Plugins directory, then restart QGIS and activate the plugin through QGIS menu ("Plugins" -> "Manage and Install Plugins"). You can use a command like:
+
+.. code-block:: console
+
+   tar -xvf rastervision_qgis-v0.8.0.tar.gz -C ${QGIS_PLUGIN_DIRECTORY}
+
+Where ``${QGIS_PLUGIN_DIRECTORY}`` is your QGIS plugin directory. See this `GIS StackExchange post <https://gis.stackexchange.com/questions/274311/qgis-3-plugin-folder-location>`_ if you need help finding your plugin directory.
 
 .. note:: The QGIS Plugin is in the process of being published to the `official QGIS plugin repository <https://plugins.qgis.org//>`_. This documentation will be updated once the release is approved.
 
@@ -88,6 +94,7 @@ To use do the following:
 * input the predict package URI
 * select a layer from the "Input Layer" dropdown, which is populated from the raster layers of the current QGIS project
 * Optionally choose a Style Profile
+* Select whether or not to update any stats used by the model with the given image
 * Give the path where the prediction labels should be saved to
 
 You can use Docker or a local installation of Raster Vision to run the prediction. If using docker, you'll have to give the name of the image from which to run the container.
@@ -103,9 +110,9 @@ This runs a similar process as the :ref:`predict cli command` CLI command, and w
    :align: center
 
 Set up style profiles so that when you load an experiment or make predictions,
-layers are automatically styled with given SLDs.
+layers are automatically styled with given SLDs or QML files.
 
-The best way to do this is to styl each of the types of layers you want after first loading an experiment. Export an SLD of style for each layer by using the `Style` -> `Save Style` command in the `Symbology` section of the layer properties. Then, create a style profile for that experiment group, and point it to the appropriate SLD files. Now you'll be able to select the style profile when loading new experiments and making predictions.
+The best way to do this is to styl each of the types of layers you want after first loading an experiment. Export an SLD or QML of the style for each layer by using the `Style` -> `Save Style` command in the `Symbology` section of the layer properties. Then, create a style profile for that experiment group, and point it to the appropriate QML or SLD files. Now you'll be able to select the style profile when loading new experiments and making predictions.
 
 |configure icon| Configure
 --------------------------

@@ -1,41 +1,46 @@
+.. _quickstart:
+
 Quickstart
 ==========
 
 .. currentmodule:: rastervision
 
-You can get the library directly from PyPI:
+To install Raster Vision using pip, you can get thelibrary directly from PyPI:
 
 .. code-block:: console
 
     > pip install rastervision
 
-If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can include any of these extras:
+However, for this quickstart we are going to be using one of the published  :ref:`docker containers`
+as it has an environment with all necessary dependencies already installed.
+
+.. note:: This quickstart requires a Docker installation. See `Get Started with Docker <https://www.docker.com/get-started>`_ for installation instructions.
+
+You'll need to choose two directories, one for keeping your source file and another for
+holding experiment output. Make sure these directories exist:
 
 .. code-block:: console
 
-    > pip install rastrevision[aws,tensorflow,tensorflow-gpu]
+   > export RV_QUICKSTART_CODE_DIR=`pwd`/code
+   > export RV_QUICKSTART_EXP_DIR=`pwd`/rv_root
+   > makedirs -p ${RV_QUICKSTART_CODE_DIR} ${RV_QUICKSTART_EXP_DIR}
 
-If you'd like to use with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to follow the instructions in thier documentation about how to install, or look at our Dockerfile to see an example of setting this up.
+Now we can run a console in the the docker container by doing
 
-.. note:: You must install Tensorflow Object Detection and Deep Lab from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream.
+.. code-block:: terminal
 
-Or, you can just use docker.  The usage of :ref:`docker containers` is recommended, as it provides a consistent environment for running Raster Vision.
+   > docker run --rm -it -p 6006:6006 \
+        -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
+        -v ${RV_QUICKSTART_EXP_DIR}:/opt/data \
+        quay.io/azavea/raster-vision:cpu-0.8 /bin/bash
 
-If you have Docker installed, simply run the published container:
-
-.. code::console
-
-    > docker run --rm -it -v `pwd`:/opt/data  quay.io/azavea/rastervision:cpu-0.8 /bin/bash
-
-.. seealso:: See :ref:`docker containers` for more information about available docker containers.
+.. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision use with
+             docker containers.
 
 Creating an ExperimentSet
 -------------------------
 
-Create a python file named ``tiny_spacenet.py``. Inside, you're going to create an :ref:`experiment set`.
-You can think of an ExperimentSet a lot like the ``unittest.TestSuite``: It's a class that contains
-specially-named methods that are run via reflection by the ``rastervision`` command line tool.
-
+Create a python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to create an :ref:`experiment set`. You can think of an ExperimentSet a lot like the ``unittest.TestSuite``: It's a class that contains specially-named methods that are run via reflection by the ``rastervision`` command line tool.
 
 .. click:example::
 
@@ -132,11 +137,6 @@ the scene based on the extension of the URI. We also set a ``StatsTransformer`` 
 for the ``RasterSource`` represented by this configuration by calling ``with_stats_transformer()``,
 which sets a default ``StatsTransformerConfig`` onto the ``RasterSourceConfig`` transformers.
 
-..  note:: The root_uri listed above is '/opt/data/rv', which is fine if you are running in a docker
-           container. The root_uri is where all the experiment output will be stored.
-           If you've set up your own environment to run this experiment, you might have
-           to change this.
-
 Running an experiment
 ---------------------
 
@@ -195,7 +195,7 @@ take a few minutes.
 Seeing  Results
 ---------------
 
-If you go to the ``root_uri`` (defined with ``with_rv_root()`` above in the ExperimentConfig, ``/opt/data/rv`` by default), you should see a folder structure like this:
+If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like this:
 
 .. code-block:: console
 
@@ -256,5 +256,8 @@ Don't get too excited to look at the evaluation results in ``eval/tiny-spacenet-
 trained a model for 5 steps, and the model is likely a no-op at this point. We would need to
 train on a lot more data for a lot longer for the model to become good at this task.
 
-.. seealso:: For more complete examples of running Raster Vision workflows with models that
-             produce decent results on openly licensed imagery and label data, see the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.
+Next Steps
+----------
+
+This is just a quick example of a Raster Vision workflow. For a more complete example of how to train
+a model on SpaceNet and view the results in QGIS, see the SpaceNet examples in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.

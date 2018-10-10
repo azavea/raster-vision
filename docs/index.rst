@@ -42,81 +42,91 @@ and maintain.
 
 .. click:example::
 
-  # experiment.py
+   # tiny_spacenet.py
 
-  import rastervision as rv
+   import rastervision as rv
 
-  class ExampleExperimentSet(rv.ExperimentSet):
-      def exp_main(self):
-          task = rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \
-                              .with_chip_size(200) \
-                              .with_classes({
-                                  'car': (1, 'red'),
-                                  'building': (2, 'blue'),
-                                  'background': (3, 'black')
-                              }) \
-                              .build()
+   class TinySpacenetExperimentSet(rv.ExperimentSet):
+       def exp_main(self):
+           base_uri = ('https://s3.amazonaws.com/azavea-research-public-data/'
+                       'raster-vision/examples/spacenet')
+           train_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img205.tif'.format(base_uri)
+           train_label_uri = '{}/buildings_AOI_2_Vegas_img205.geojson'.format(base_uri)
+           val_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'.format(base_uri)
+           val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
 
-          backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                                    .with_task(task) \
-                                    .with_model_defaults(rv.RESNET50_IMAGENET) \
-                                    .with_num_epochs(40) \
-                                    .build()
+           task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
+                               .with_chip_size(512) \
+                               .with_classes({
+                                   'building': (1, 'red')
+                               }) \
+                               .with_chip_options(neg_ratio=1.0,
+                                                  ioa_thresh=0.8) \
+                               .with_predict_options(merge_thresh=0.1,
+                                                     score_thresh=0.5) \
+                               .build()
 
-          label_source = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
-                                             .with_uri(training_label_uri) \
-                                             .with_ioa_thresh(0.5) \
-                                             .with_pick_min_class_id(True) \
-                                             .with_background_class_id(3) \
-                                             .with_infer_cells(True) \
-                                             .build()
+           backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+                                     .with_task(task) \
+                                     .with_debug(True) \
+                                     .with_batch_size(8) \
+                                     .with_num_steps(5) \
+                                     .with_model_defaults(rv.SSD_MOBILENET_V2_COCO)  \
+                                     .build()
 
-          raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                               .with_uri(train_img_uri) \
-                                               .with_channel_order([0, 1, 2]) \
-                                               .with_stats_transformer() \
-                                               .build()
+           train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                                      .with_uri(train_image_uri) \
+                                                      .with_stats_transformer() \
+                                                      .build()
 
-          train_scene = rv.SceneConfig.builder() \
-                                      .with_task(task) \
-                                      .with_id('training_scene') \
-                                      .with_raster_source(raster_source) \
-                                      .with_label_source(label_source) \
-                                      .build()
+           train_scene =  rv.SceneConfig.builder() \
+                                        .with_task(task) \
+                                        .with_id('train_scene') \
+                                        .with_raster_source(train_raster_source) \
+                                        .with_label_source(train_label_uri) \
+                                        .build()
 
-          val_scene = rv.SceneConfig.builder() \
-                                    .with_task(task) \
-                                    .with_id('val_scene') \
-                                    .with_raster_source(val_image_uri) \
-                                    .build()
+           val_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                                    .with_uri(val_image_uri) \
+                                                    .with_stats_transformer() \
+                                                    .build()
 
-          dataset = rv.DatasetConfig.builder() \
-                                    .with_train_scene(train_scene) \
-                                    .with_validation_scene(val_scene) \
-                                    .build()
+           val_scene = rv.SceneConfig.builder() \
+                                     .with_task(task) \
+                                     .with_id('val_scene') \
+                                     .with_raster_source(val_raster_source) \
+                                     .with_label_source(val_label_uri) \
+                                     .build()
 
-          experiment = rv.ExperimentConfig.builder() \
-                                          .with_id('example-experiment') \
-                                          .with_root_uri(root_uri) \
-                                          .with_task(task) \
-                                          .with_backend(backend) \
-                                          .with_dataset(dataset) \
-                                          .with_stats_analyzer() \
-                                          .build()
+           dataset = rv.DatasetConfig.builder() \
+                                     .with_train_scene(train_scene) \
+                                     .with_validation_scene(val_scene) \
+                                     .build()
 
-          return experiment
+           experiment = rv.ExperimentConfig.builder() \
+                                           .with_id('tiny-spacenet-experiment') \
+                                           .with_root_uri('/opt/data/rv') \
+                                           .with_task(task) \
+                                           .with_backend(backend) \
+                                           .with_dataset(dataset) \
+                                           .with_stats_analyzer() \
+                                           .build()
+
+           return experiment
 
 
-  if __name__ == '__main__':
-      rv.main()
+   if __name__ == '__main__':
+       rv.main()
 
 Raster Vision uses a ``unittest``-like method for executing experiments. For instance, if the
-above was defined in `experiment.py`, with the proper setup you could run the experiment
+above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment
 on AWS Batch by running:
 
 .. code:: shell
 
-   > rastervision run aws_batch -p experiment.py
+   > rastervision run aws_batch -p tiny_spacenet.py
+
+See the :ref:`quickstart` for a more complete description of using this example.
 
 
 .. _documentation:

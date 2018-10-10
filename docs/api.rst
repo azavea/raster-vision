@@ -38,6 +38,8 @@ A DatasetConfigBuilder is created by calling
    :inherited-members:
    :exclude-members: from_proto, validate
 
+.. _task api reference:
+
 TaskConfigBuilder
 -----------------
 
@@ -75,6 +77,8 @@ rv.SEMANTIC_SEGMENTATION
    :undoc-members:
    :inherited-members:
    :exclude-members: from_proto, validate
+
+.. _backend api reference:
 
 BackendConfig
 -------------
@@ -129,6 +133,7 @@ SceneConfigBuilders are created by calling
    :inherited-members:
    :exclude-members: from_proto, validate
 
+.. _raster source api reference:
 
 RasterSourceConfig
 ------------------
@@ -154,7 +159,7 @@ rv.GEOTIFF_SOURCE
 rv.IMAGE_SOURCE
 ~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.data.GeoJSONSourceConfigBuilder
+.. autoclass:: rastervision.data.ImageSourceConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
@@ -162,6 +167,14 @@ rv.IMAGE_SOURCE
 
 rv.GEOJSON_SOURCE
 ~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.GeoJSONSourceConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+.. _label source api reference:
 
 LabelSourceConfig
 -----------------
@@ -205,6 +218,8 @@ rv.SEMANTIC_SEGMENTATION_RASTER
    :inherited-members:
    :exclude-members: from_proto, validate
 
+.. _label store api reference:
+
 LabelStoreConfig
 -----------------
 
@@ -247,6 +262,8 @@ rv.SEMANTIC_SEGMENTATION_RASTER
    :inherited-members:
    :exclude-members: from_proto, validate
 
+.. _raster transformer api reference:
+
 RasterTransformerConfig
 -----------------------
 
@@ -266,6 +283,30 @@ rv.STATS_TRANSFORMER
    :undoc-members:
    :inherited-members:
    :exclude-members: from_proto, validate
+
+.. _augmentor api reference:
+
+AugmentorConfig
+---------------
+
+AugmentorConfigBuilders are created by calling
+
+.. code::
+
+   rv.AugmentorConfig.builder(AUGMENTOR_TYPE)
+
+Where ``AUGMENTOR_TYPE`` is one of the following:
+
+rv.NODATA_AUGMENTOR
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.augmentor.NodataAugmentorConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+.. _analyzer api reference:
 
 AnalyzerConfig
 --------------
@@ -287,25 +328,7 @@ rv.STATS_ANALYZER
    :inherited-members:
    :exclude-members: from_proto, validate
 
-AugmentorConfig
----------------
-
-AugmentorConfigBuilders are created by calling
-
-.. code::
-
-   rv.AugmentorConfig.builder(AUGMENTOR_TYPE)
-
-Where ``AUGMENTOR_TYPE`` is one of the following:
-
-rv.NODATA_AUGMENTOR
-~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.augmentor.NodataAugmentorConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
+.. _evaluator api reference:
 
 EvaluatorConfig
 ---------------

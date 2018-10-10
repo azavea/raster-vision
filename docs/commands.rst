@@ -14,7 +14,7 @@ A Raster Vision experiment is a sequence of commands that each run a component o
 ANALYZE
 ^^^^^^^
 
-The ANALYZE command is used to analyze scenes that are part of an experiment and produce some output that can be consumed by later commands. Geospatial raster sources such as GeoTIFFs often contain 16- and 32-bit pixel color values, but many deep learning libraries expect 8-bit values. In order to perform this transformation, we need to know the distribution of pixel values. We use the ANALYZE command to compute statistics of the raster sources and save them to a JSON file which is later used by the StatsTransformer (a type of RasterTransformer) to do the conversion.
+The ANALYZE command is used to analyze scenes that are part of an experiment and produce some output that can be consumed by later commands. Geospatial raster sources such as GeoTIFFs often contain 16- and 32-bit pixel color values, but many deep learning libraries expect 8-bit values. In order to perform this transformation, we need to know the distribution of pixel values. So one usage of the ANALYZE command is to compute statistics of the raster sources and save them to a JSON file which is later used by the StatsTransformer (one of the available :ref:`raster transformer`) to do the conversion.
 
 CHIP
 ^^^^
