@@ -11,6 +11,13 @@ div.body {
     padding: 0px 75px;
 }
 
+@media only screen and (max-width: 767px) {
+    div.body {
+        min-height: 0px;
+        padding: 0px;
+    }
+}
+
 div.admonition, div.topic {
   padding: 15px;
   font-size: 14px;
