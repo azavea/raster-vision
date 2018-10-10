@@ -23,7 +23,8 @@ deploy:
      script: .travis/deploy
      skip_cleanup: true
      on:
-        branch: develop
+        all_branches: true
+        condition: $TRAVIS_BRANCH =~ ^develop|[0-9]+(\.[0-9]+)*$
    - provider: script
      script: .travis/deploy
      skip_cleanup: true

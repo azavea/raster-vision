@@ -2,6 +2,7 @@ from rastervision.data.label import Labels
 from rastervision.core.box import Box
 
 import numpy as np
+from rasterio.features import rasterize
 
 
 class SemanticSegmentationLabels(Labels):
@@ -35,11 +36,16 @@ class SemanticSegmentationLabels(Labels):
     def filter_by_aoi(self, aoi_polygons):
         """Returns a copy of these labels filtered by a given set of AOI polygons
 
+        Converts values that lie outside of aoi_polygons to 0 (ie. don't care class)
+
         Args:
           aoi_polygons - A list of AOI polygons to filter by, in pixel coordinates.
         """
-        # TODO implement this
-        pass
+        arr = self.to_array()
+        mask = rasterize(
+            [(p, 1) for p in aoi_polygons], out_shape=arr.shape, fill=0)
+        arr = arr * mask
+        return SemanticSegmentationLabels.from_array(arr)
 
     def add_label_pair(self, window, label_array):
         self.label_pairs.append((window, label_array))
@@ -55,10 +61,9 @@ class SemanticSegmentationLabels(Labels):
 
     def to_array(self):
         extent = self.get_extent()
-        arr = np.zeros((extent.get_height(), extent.get_width()))
+        arr = np.zeros((extent.ymax, extent.ymax))
         for window, label_array in self.label_pairs:
-            arr[window.ymin:window.ymax, window.xmin:window.xmax] = \
-                label_array
+            arr[window.ymin:window.ymax, window.xmin:window.xmax] = label_array
         return arr
 
     @staticmethod

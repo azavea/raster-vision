@@ -6,6 +6,7 @@ import rastervision as rv
 from rastervision.backend import (BackendConfig, BackendConfigBuilder,
                                   TFObjectDetection)
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
+from rastervision.protos.tf_object_detection.pipeline_pb2 import TrainEvalPipelineConfig
 from rastervision.utils.files import file_to_str
 from rastervision.utils.misc import set_nested_keys
 
@@ -293,7 +294,6 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
                      here:
                      https://github.com/tensorflow/models/tree/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs # noqa
         """
-        from object_detection.protos.pipeline_pb2 import TrainEvalPipelineConfig
 
         template_json = None
         if type(template) is dict:

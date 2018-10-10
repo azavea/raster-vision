@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+package rastervision.protos.tf_object_detection;
+
+import "rastervision/protos/tf_object_detection/faster_rcnn.proto";
+import "rastervision/protos/tf_object_detection/ssd.proto";
+
+// Top level configuration for DetectionModels.
+message DetectionModel {
+  oneof model {
+    FasterRcnn faster_rcnn = 1;
+    Ssd ssd = 2;
+  }
+}

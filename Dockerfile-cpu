@@ -33,14 +33,15 @@ RUN pip install -r docs/requirements.txt
 # Install extras_requirements.json
 # Don't install tensorflow
 COPY ./extras_requirements.json /opt/src/extras_requirements.json
-RUN cat extras_requirements.json | jq  '.[][]' | grep -v 'tensorflow' | sort -u  | xargs pip install
+RUN cat extras_requirements.json | jq  '.[][]' | grep -v 'tensorflow' | sort -u | xargs pip install
 
 # Install requirements.txt
 COPY ./requirements.txt /opt/src/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY scripts/rastervision /usr/local/bin/
-COPY ./ /opt/src/
+COPY rastervision /opt/src/rastervision
+COPY scripts/compile /opt/src/scripts/compile
 RUN /opt/src/scripts/compile
 
 CMD ["bash"]

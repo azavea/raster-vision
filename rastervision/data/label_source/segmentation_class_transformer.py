@@ -15,6 +15,7 @@ class SegmentationClassTransformer():
                 color_to_class.values()))
 
         def color_int_to_class_fn(color: int) -> int:
+            # Convert unspecified colors to class 0 which is "don't care"
             return color_int_to_class.get(color, 0x00)
 
         self.transform_color_int_to_class = \

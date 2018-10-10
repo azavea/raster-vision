@@ -17,6 +17,11 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
         # http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html  # noqa
         ground_truth_labels = ground_truth_labels.to_array()
         prediction_labels = prediction_labels.to_array()
+        # This shouldn't happen, but just in case...
+        if ground_truth_labels.shape != prediction_labels.shape:
+            raise ValueError(
+                'ground_truth_labels and prediction_labels need to '
+                'have the same shape.')
 
         evaluation_items = []
         for class_id in self.class_map.get_keys():

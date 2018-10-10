@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package rastervision.protos.tf_object_detection;
+
+import "rastervision/protos/tf_object_detection/faster_rcnn_box_coder.proto";
+import "rastervision/protos/tf_object_detection/keypoint_box_coder.proto";
+import "rastervision/protos/tf_object_detection/mean_stddev_box_coder.proto";
+import "rastervision/protos/tf_object_detection/square_box_coder.proto";
+
+// Configuration proto for the box coder to be used in the object detection
+// pipeline. See core/box_coder.py for details.
+message BoxCoder {
+  oneof box_coder_oneof {
+    FasterRcnnBoxCoder faster_rcnn_box_coder = 1;
+    MeanStddevBoxCoder mean_stddev_box_coder = 2;
+    SquareBoxCoder square_box_coder = 3;
+    KeypointBoxCoder keypoint_box_coder = 4;
+  }
+}
