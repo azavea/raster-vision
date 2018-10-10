@@ -1,5 +1,3 @@
-![Release Coming October 2018](/release-notice.png "RELEASE COMING OCTOBER 2018")
-&nbsp;
 ![Raster Vision Logo](docs/_static/raster-vision-logo.png)
 &nbsp;
 
