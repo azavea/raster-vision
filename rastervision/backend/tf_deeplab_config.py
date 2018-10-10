@@ -262,6 +262,7 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_batch_size(self, batch_size):
+        """Sets the training batch size."""
         return self.with_config({'trainBatchSize': batch_size})
 
     def with_num_steps(self, num_steps):

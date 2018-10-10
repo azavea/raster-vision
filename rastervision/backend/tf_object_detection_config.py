@@ -313,6 +313,7 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_batch_size(self, batch_size):
+        """Sets the training batch size."""
         return self.with_config(
             {
                 'trainConfig': {
