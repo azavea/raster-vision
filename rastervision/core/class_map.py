@@ -23,9 +23,9 @@ class ClassItem(object):
         if isinstance(other, ClassItem):
             return (self.id == other.id and self.name == other.name
                     and self.color == other.color)
-        return False
+        return False  # pragma: no cover
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         s = 'CLASS ITEM: [{}] {}'.format(self.id, self.name)
         if self.color:
             s += ' ({})'.format(self.color)
