@@ -16,6 +16,40 @@ class TestBox(unittest.TestCase):
         self.xmax = 3
         self.box = Box(self.ymin, self.xmin, self.ymax, self.xmax)
 
+    def test_reproject(self):
+        def transform(point):
+            (y, x) = point
+            return ((y + 1) // 2, x // 2)
+
+        reproj = self.box.reproject(transform)
+        self.assertTrue(reproj.xmin == 0)
+        self.assertTrue(reproj.ymin == 0)
+        self.assertTrue(reproj.ymax == 1)
+        self.assertTrue(reproj.xmax == 2)
+
+    def test_dict(self):
+        dictionary = self.box.to_dict()
+        other = Box.from_dict(dictionary)
+        self.assertTrue(self.box == other)
+
+    def test_bad_square(self):
+        self.assertRaises(BoxSizeError,
+                          lambda: self.box.make_random_square(10))
+
+    def test_bad_conatiner(self):
+        self.assertRaises(BoxSizeError,
+                          lambda: self.box.make_random_square_container(1))
+
+    def test_neq(self):
+        other = Box(self.ymin + 1, self.xmin, self.ymax, self.xmax)
+        self.assertTrue(self.box != other)
+
+    def test_int(self):
+        other = Box(
+            float(self.ymin) + 0.01, float(self.xmin), float(self.ymax),
+            float(self.xmax))
+        self.assertTrue(other.to_int() == self.box)
+
     def test_get_height(self):
         height = self.ymax - self.ymin
         self.assertEqual(self.box.get_height(), height)
