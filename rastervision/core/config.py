@@ -13,13 +13,13 @@ class Config(ABC):
     def to_builder(self):
         """Return a builder based on this config.
         """
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def to_proto(self):
         """Returns the protobuf configuration for this config.
         """
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def update_for_command(self, command_type, experiment_config,
@@ -43,7 +43,7 @@ class Config(ABC):
 
            Returns: (config, io_def)
         """
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
@@ -51,7 +51,7 @@ class Config(ABC):
         """Returns a new builder that takes this configuration
            as its starting point.
         """
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
@@ -59,7 +59,7 @@ class Config(ABC):
         """Creates a Config from the specificed protobuf message
         TODO: Allow loading from file uri or dict
         """
-        pass
+        pass  # pragma: no cover
 
 
 class ConfigBuilder(ABC):
@@ -72,7 +72,7 @@ class ConfigBuilder(ABC):
                      into the __init__ method of config_class to build the configuration.
                      This config is modified with the fluent builder methods.
         """
-        if config is None:
+        if config is None:  # pragma: no cover
             config = {}
 
         self.config_class = config_class
@@ -88,14 +88,14 @@ class ConfigBuilder(ABC):
         """Validate this config, if there is validation on the builder that
            is not captured by the required arguments of the config.
         """
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def from_proto(self, msg):
         """Return a builder that takes the configuration from the proto message
            as its starting point.
         """
-        pass
+        pass  # pragma: no cover
 
 
 class BundledConfigMixin(ABC):
@@ -111,7 +111,7 @@ class BundledConfigMixin(ABC):
                  with the basenames of URIs in place of the original URIs,
                  and a list of URIs that are to be bundled.
         """
-        pass
+        pass  # pragma: no cover
 
     def bundle_file(self, uri, bundle_dir):
         local_path = download_or_copy(uri, bundle_dir)
@@ -121,4 +121,4 @@ class BundledConfigMixin(ABC):
     @abstractmethod
     def load_bundle_files(self, bundle_dir):
         """Load files from a prediction package bundle directory."""
-        pass
+        pass  # pragma: no cover

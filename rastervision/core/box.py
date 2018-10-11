@@ -84,10 +84,10 @@ class Box():
             npboxes[boxind, :] = box.npbox_format()
         return npboxes
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return str(self.npbox_format())
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return str(self)
 
     def geojson_coordinates(self):
@@ -109,7 +109,7 @@ class Box():
         if size < self.get_width():
             raise BoxSizeError('size of random container cannot be < width')
 
-        if size < self.get_height():
+        if size < self.get_height():  # pragma: no cover
             raise BoxSizeError('size of random container cannot be < height')
 
         lb = self.ymin - (size - self.get_height())
@@ -132,7 +132,7 @@ class Box():
         if size >= self.get_width():
             raise BoxSizeError('size of random square cannot be >= width')
 
-        if size >= self.get_height():
+        if size >= self.get_height():  # pragma: no cover
             raise BoxSizeError('size of random square cannot be >= height')
 
         lb = self.ymin
