@@ -46,6 +46,15 @@ class TestClassMap(unittest.TestCase):
         index = cm.get_category_index()
         self.assertEqual(index[1], {'id': 1, 'name': 'one'})
 
+    def test_get_by_name_negative(self):
+        source = [
+            ClassItemMsg(id=1, name='one', color='red'),
+            ClassItemMsg(id=2, name='two', color='green'),
+            ClassItemMsg(id=3, name='three', color='blue')
+        ]
+        cm = ClassMap.construct_from(source)
+        self.assertRaises(ValueError, lambda: cm.get_by_name('four'))
+
     def test_construct_from_protos(self):
         source = [
             ClassItemMsg(id=1, name='one', color='red'),
