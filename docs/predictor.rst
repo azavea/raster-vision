@@ -18,10 +18,10 @@ With the command line, you are loading the model and saving the label output in 
 If you need to call this for a large number of files, consider using the ``Predictor`` in
 python code, as this will allow you to load the model once and use it many times. This can
 matter a lot if you want the time-to-prediction to be as fast as possible - the model
-load time can be orders of magnitudes slower than the prediction of a loaded model.
+load time can be orders of magnitudes slower than the prediction time of a loaded model.
 
-The ``Predictor`` class is most flexible way to integrate Raster Vision  models
-into other systems, whether it be in large PySpark batch jobs or in web servers running
+The ``Predictor`` class is the most flexible way to integrate Raster Vision  models
+into other systems, whether in large PySpark batch jobs or in web servers running
 on GPU systems.
 
 .. _predict package:
@@ -29,7 +29,7 @@ on GPU systems.
 Predict Package
 ---------------
 
-The predict package is a zip file containing the model file( and the configuration necessary for
+The predict package is a zip file containing the model file and the configuration necessary for
 Raster Vision to use the model. The model file or files are specific to the backend: for
 Keras, there's a single serialized Keras model file, and for TensorFlow there is the protobuf
 serialized inference graph. But this is not all that is needed to create predictions. The
@@ -43,5 +43,5 @@ classifications or other predictions.
 
 The predict package holds all of this necessary information, so that a prediction call only needs
 to know what imagery it is predicting against. This works generically over all models produced
-by Raster Vision, without additional client considerations, and so abstracts away the specifics
+by Raster Vision, without additional client considerations, and therefore abstracts away the specifics
 of every model when considering how to deploy prediction software.
