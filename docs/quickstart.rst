@@ -52,7 +52,7 @@ Create a python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
            val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
 
            task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
-                               .with_chip_size(512) \
+                               .with_chip_size(300) \
                                .with_classes({
                                    'building': (1, 'red')
                                }) \
@@ -65,8 +65,8 @@ Create a python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
            backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                                      .with_task(task) \
                                      .with_debug(True) \
-                                     .with_batch_size(8) \
-                                     .with_num_steps(5) \
+                                     .with_batch_size(1) \
+                                     .with_num_steps(2) \
                                      .with_model_defaults(rv.SSD_MOBILENET_V2_COCO)  \
                                      .build()
 
@@ -183,10 +183,7 @@ When we're ready to run, we just remove the ``-n`` flag:
 
    > rastervision run local -p tiny_spacenet.py
 
-Even though this is a small example, since we're running locally and not on a GPU, the training might
-take a few minutes.
-
-Seeing  Results
+Seeing Results
 ---------------
 
 If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like this:
@@ -247,7 +244,7 @@ once for many train commands from various experiments. The experiment configurat
 saved off in the ``experiments`` directory.
 
 Don't get too excited to look at the evaluation results in ``eval/tiny-spacenet-experiment/`` - we
-trained a model for 5 steps, and the model is likely a no-op at this point. We would need to
+trained a model for 2 steps, and the model is likely making random predictions at this point. We would need to
 train on a lot more data for a lot longer for the model to become good at this task.
 
 Next Steps
