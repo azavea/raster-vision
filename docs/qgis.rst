@@ -53,10 +53,10 @@ Using with AWS
 
 You'll need to set your ``AWS_PROFILE`` in the QGIS environment if you're not using the default AWS profile.
 
-Using with docker
+Using with Docker
 ~~~~~~~~~~~~~~~~~
 
-To run predict through docker, make sure that the docker command is on the ``PATH`` environment variable used by QGIS.
+To run predict through Docker, make sure that the Docker command is on the ``PATH`` environment variable used by QGIS.
 
 |experiment icon| Load Experiment
 ---------------------------------
@@ -107,7 +107,7 @@ To use do the following:
 * Select whether or not to update any stats used by the model with the given image
 * Give the path where the prediction labels should be saved to
 
-You can use Docker or a local installation of Raster Vision to run the prediction. If using docker, you'll have to give the name of the image from which to run the container.
+You can use Docker or a local installation of Raster Vision to run the prediction. If using Docker, you'll have to give the name of the image from which to run the container.
 
 This runs a similar process as the :ref:`predict cli command` CLI command, and will load the prediciton layer after prediction completes.
 

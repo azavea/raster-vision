@@ -19,7 +19,7 @@ holding experiment output. Make sure these directories exist:
    > export RV_QUICKSTART_EXP_DIR=`pwd`/rv_root
    > mkdir -p ${RV_QUICKSTART_CODE_DIR} ${RV_QUICKSTART_EXP_DIR}
 
-Now we can run a console in the the docker container by doing
+Now we can run a console in the the Docker container by doing
 
 .. code-block:: terminal
 
