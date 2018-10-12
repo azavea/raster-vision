@@ -140,6 +140,7 @@ full workflow will look like:
 
 .. code-block:: console
 
+   > cd /opt/src/code
    > rastervision run local -p tiny_spacenet.py -n
 
    Ensuring input files exist    [####################################]  100%
