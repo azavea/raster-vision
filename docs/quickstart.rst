@@ -3,18 +3,12 @@
 Quickstart
 ==========
 
-.. currentmodule:: rastervision
-
-To install Raster Vision using pip, you can get the library directly from PyPI:
-
-.. code-block:: console
-
-    > pip install rastervision
-
-However, for this quickstart we are going to be using one of the published  :ref:`docker containers`
+For this Quickstart we are going to be using one of the published  :ref:`docker containers`
 as it has an environment with all necessary dependencies already installed.
 
-.. note:: This quickstart requires a Docker installation. See `Get Started with Docker <https://www.docker.com/get-started>`_ for installation instructions.
+.. seealso:: It is also possible to install Raster Vision using ``pip``, but it can be time-consuming to install all the necessary dependencies. See :ref:`install raster vision` for more details.
+
+.. note:: This Quickstart requires a Docker installation. We have tested this with Docker 18, although you may be able to use a lower version. See `Get Started with Docker <https://www.docker.com/get-started>`_ for installation instructions.
 
 You'll need to choose two directories, one for keeping your source file and another for
 holding experiment output. Make sure these directories exist:
@@ -35,7 +29,7 @@ Now we can run a console in the the docker container by doing
         quay.io/azavea/raster-vision:cpu-0.8 /bin/bash
 
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with
-             docker containers.
+             Docker containers.
 
 Creating an ExperimentSet
 -------------------------

@@ -1,6 +1,8 @@
 Setup
 =====
 
+.. _install raster vision:
+
 Installing Raster Vision
 ------------------------
 
@@ -26,7 +28,7 @@ If you'd like to use Raster Vision with `Tensorflow Object Detection <https://gi
 
 .. note:: The usage of :ref:`docker containers` is recommended, as it provides a consistent environment for running Raster Vision.
 
-If you have Docker installed, simply run the published container.
+If you have Docker installed, simply run the published container according to the instructions in :ref:`docker containers`
 
 .. _raster vision config:
 
@@ -112,8 +114,8 @@ In addition to those environment variables that match the INI file values, there
 Docker Containers
 -----------------
 
-Using the docker containers published for Raster Vision allows
-you to use a fully set up environment.
+Using the Docker containers published for Raster Vision allows
+you to use a fully set up environment. We have tested this with Docker 18, although you may be able to use a lower version.
 
 Docker containers are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_. To run the raster vision container for the latest release, run:
 
