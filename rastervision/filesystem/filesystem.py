@@ -29,32 +29,32 @@ class FileSystem(ABC):
 
         Mode can be 'r' or 'w'
         """
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def file_exists(uri: str) -> bool:
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def read_str(uri: str) -> str:
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def read_bytes(uri: str) -> bytes:
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def write_str(uri: str, data: str) -> None:
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def write_bytes(uri: str, data: bytes) -> None:
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
@@ -67,7 +67,7 @@ class FileSystem(ABC):
            - dest_dir_uri: A destination that can be sync to by this FileSystem.
            - delete: True if the destination should be deleted first. Defaults to False.
         """
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
@@ -81,22 +81,22 @@ class FileSystem(ABC):
            - dest_dir_uri: A destination that can be sync to by this FileSystem.
            - delete: True if the destination should be deleted first. Defaults to False.
         """
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def copy_from(uri: str, path: str) -> None:
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def local_path(uri: str, download_dir: str) -> None:
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
@@ -104,9 +104,9 @@ class FileSystem(ABC):
         """Returns the last modified  date in UTC of this URI,
         or None if this FileSystem does not support this operation.
         """
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     @abstractmethod
     def list_paths(uri, ext=None):
-        pass
+        pass  # pragma: no cover
