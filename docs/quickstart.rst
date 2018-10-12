@@ -119,13 +119,14 @@ The ``exp_main`` method has a special name: any method starting with ``exp_`` is
 will look for experiments in. Raster Vision does this by calling the method and processing any experiments
 that are returned - you can either return a single experiment or a list of experiments.
 
-Notice we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
+Notice that we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
 object detection on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
-actually training the model - it's using TensorFlow Object Detection for that. Raster Vision
+actually training the model - it's using the
+`TensorFlow Object Detection API <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ for that. Raster Vision
 just provides a configuration wrapper that sets up all of the options and data for the experiment
 workflow that utilizes that library.
 
-You also see we set up a ``SceneConfig``, which points to a ``RasterSourceConfig``, and calls
+You also can see we set up a ``SceneConfig``, which points to a ``RasterSourceConfig``, and calls
 ``with_label_source`` with a GeoJSON URI, which sets a default ``LabelSourceConfig`` type into
 the scene based on the extension of the URI. We also set a ``StatsTransformer`` to be used
 for the ``RasterSource`` represented by this configuration by calling ``with_stats_transformer()``,
