@@ -19,7 +19,7 @@ holding experiment output. Make sure these directories exist:
    > export RV_QUICKSTART_EXP_DIR=`pwd`/rv_root
    > mkdir -p ${RV_QUICKSTART_CODE_DIR} ${RV_QUICKSTART_EXP_DIR}
 
-Now we can run a console in the the docker container by doing
+Now we can run a console in the the Docker container by doing
 
 .. code-block:: terminal
 
@@ -34,7 +34,7 @@ Now we can run a console in the the docker container by doing
 Creating an ExperimentSet
 -------------------------
 
-Create a python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to create an :ref:`experiment set`. You can think of an ExperimentSet a lot like the ``unittest.TestSuite``: It's a class that contains specially-named methods that are run via reflection by the ``rastervision`` command line tool.
+Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to create an :ref:`experiment set`. You can think of an ExperimentSet a lot like the ``unittest.TestSuite``: It's a class that contains specially-named methods that are run via reflection by the ``rastervision`` command line tool.
 
 .. click:example::
 
@@ -255,4 +255,4 @@ Next Steps
 ----------
 
 This is just a quick example of a Raster Vision workflow. For a more complete example of how to train
-a model on SpaceNet (optionally using GPUs on AWS Batch) and view the results in QGIS, see the SpaceNet examples in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository. 
+a model on SpaceNet (optionally using GPUs on AWS Batch) and view the results in QGIS, see the SpaceNet examples in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.

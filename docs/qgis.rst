@@ -23,7 +23,7 @@ models.
 Installing
 ----------
 
-To install the QGIS Plugin, you must have a install of ``rastervision`` in the python environment that is running QGIS. Don't worry, you won't have to install all of the deep learning frameworks just to use the plugin - you can just ``pip install rastervision``.
+To install the QGIS Plugin, you must have ``rastervision`` installed in the Python 3 environment that is running QGIS. Don't worry, you won't have to install all of the deep learning frameworks just to use the plugin - you can just ``pip install rastervision`` (or ``pip3 install rastervision`` if Python 3 is not the default on your system). This has been tested with Python 3.6 and QGIS 3.2.
 
 Installing from Plugin Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -32,7 +32,7 @@ A package containing all the needed dependencies can be installed through QGIS P
 To install from plugin manager:
 
 Click the menu "Plugins" -> "Manage and Install Plugins".
-Enter 'Raster Vision' in search box.
+Enter 'Raster Vision' in search box. After installation is complete, there should be a "Raster Vision" submenu under the "Plugins" menu.
 
 Installing from release
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -48,15 +48,17 @@ Where ``${QGIS_PLUGIN_DIRECTORY}`` is your QGIS plugin directory. See this `GIS 
 QGIS Environment Setup
 ^^^^^^^^^^^^^^^^^^^^^^
 
+.. note:: QGIS environment variables are distinct from Bash environment variables, and can be set by going to "QGIS3" -> "Preferences" -> "System" -> "Environment" in the menu and then restarting QGIS.
+
 Using with AWS
 ~~~~~~~~~~~~~~
 
-You'll need to set your ``AWS_PROFILE`` in the QGIS environment if you're not using the default AWS profile.
+To use the plugin with files stored on AWS S3, you will need to have ``boto3`` installed, which can be done with ``pip install boto3``. You'll also need to set an ``AWS_PROFILE`` environment variable in QGIS if you're not using the default AWS profile.
 
-Using with docker
+Using with Docker
 ~~~~~~~~~~~~~~~~~
 
-To run predict through docker, make sure that the docker command is on the ``PATH`` environment variable used by QGIS.
+To run predict through Docker, make sure that the Docker command is on the ``PATH`` environment variable used by QGIS.
 
 |experiment icon| Load Experiment
 ---------------------------------
@@ -107,7 +109,7 @@ To use do the following:
 * Select whether or not to update any stats used by the model with the given image
 * Give the path where the prediction labels should be saved to
 
-You can use Docker or a local installation of Raster Vision to run the prediction. If using docker, you'll have to give the name of the image from which to run the container.
+You can use Docker or a local installation of Raster Vision to run the prediction. If using Docker, you'll have to give the name of the image from which to run the container.
 
 This runs a similar process as the :ref:`predict cli command` CLI command, and will load the prediciton layer after prediction completes.
 

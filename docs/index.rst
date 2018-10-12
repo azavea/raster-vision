@@ -10,7 +10,7 @@
 
 |
 
-**Raster Vision** is an open source framework for python developers building computer
+**Raster Vision** is an open source framework for Python developers building computer
 vision models on satellite, aerial, and other large imagery sets (including
 oblique drone imagery). It allows for engineers to quickly and repeatably
 configure *experiments* that go through core components of a machine learning

@@ -16,7 +16,7 @@ predictions from a predict package directly from Python code.
 
 With the command line, you are loading the model and saving the label output in a single call.
 If you need to call this for a large number of files, consider using the ``Predictor`` in
-python code, as this will allow you to load the model once and use it many times. This can
+Python code, as this will allow you to load the model once and use it many times. This can
 matter a lot if you want the time-to-prediction to be as fast as possible - the model
 load time can be orders of magnitudes slower than the prediction time of a loaded model.
 

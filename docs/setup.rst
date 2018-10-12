@@ -86,7 +86,7 @@ PLUGINS
    files=[]
    modules=[]
 
-* ``files`` - Optional list of python file URIs to gather plugins from. Must be a JSON-parsable array of values, e.g. ``["analyzers.py","backends.py"]``.
+* ``files`` - Optional list of Python file URIs to gather plugins from. Must be a JSON-parsable array of values, e.g. ``["analyzers.py","backends.py"]``.
 * ``modules`` - Optional list of modules to load plugins from. Must be a JSON-parsable array of values, e.g. ``["rvplugins.analyzer","rvplugins.backend"]``.
 
 See :ref:`plugins` for more information about the Plugin architecture.
