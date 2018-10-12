@@ -23,7 +23,7 @@ models.
 Installing
 ----------
 
-To install the QGIS Plugin, you must have a install of ``rastervision`` in the Python environment that is running QGIS. Don't worry, you won't have to install all of the deep learning frameworks just to use the plugin - you can just ``pip install rastervision``.
+To install the QGIS Plugin, you must have ``rastervision`` installed in the Python 3 environment that is running QGIS. Don't worry, you won't have to install all of the deep learning frameworks just to use the plugin - you can just ``pip install rastervision`` (or ``pip3 install rastervision`` if Python 3 is not the default on your system). This has been tested with Python 3.6 and QGIS 3.2.
 
 Installing from Plugin Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
