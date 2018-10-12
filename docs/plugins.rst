@@ -52,7 +52,7 @@ configured files or modules will have to be available to the remote machines. Fo
 you are using AWS Batch, then your plugin cannot be something that is only stored on your local
 machine. In that case, you could store the file in S3 or in a repository that the instances
 will have access to through HTTP, or you can ensure that the module containing the plugin
-is also installed in the remote runner environment (e.g. by baking a docker container based
+is also installed in the remote runner environment (e.g. by baking a Docker container based
 on the Raster Vision container that has your plugins installed, and setting up the AWS Batch
 job definition to use that container).
 

@@ -64,7 +64,7 @@ the workload with low-cost spot instances, and terminate the instances when the 
 of commands is finished.
 
 The ``AWSBatchExperimentRunner`` executes each command as a call to ``rastervision run_command``
-inside of the docker image configured in the job definition that is sent to AWS Batch.
+inside of the Docker image configured in the job definition that is sent to AWS Batch.
 Commands that are dependent on an upstream command are submitted as a job after the upstream
 command's job, with the jobId of the upstream command job as the parent jobId. This way
 AWS Batch knows to wait to execute each command until all upstream commands are finished
