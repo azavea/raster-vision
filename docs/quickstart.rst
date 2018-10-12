@@ -5,7 +5,7 @@ Quickstart
 
 .. currentmodule:: rastervision
 
-To install Raster Vision using pip, you can get thelibrary directly from PyPI:
+To install Raster Vision using pip, you can get the library directly from PyPI:
 
 .. code-block:: console
 
@@ -34,7 +34,7 @@ Now we can run a console in the the docker container by doing
         -v ${RV_QUICKSTART_EXP_DIR}:/opt/data \
         quay.io/azavea/raster-vision:cpu-0.8 /bin/bash
 
-.. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision use with
+.. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with
              docker containers.
 
 Creating an ExperimentSet
@@ -123,7 +123,7 @@ Create a python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
 
 The ``exp_main`` method has a special name: any method starting with ``exp_`` is one that Raster Vision
 will look for experiments in. Raster Vision does this by calling the method and processing any experiments
-that are return - you can either return a single experiment or a list of experiments.
+that are returned - you can either return a single experiment or a list of experiments.
 
 Notice we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
 object detection on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
@@ -243,7 +243,7 @@ If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like
            ├── tiny-spacenet-experiment.tar.gz
            └── train
 
-Each directory with a command name contains output for that command type, across experiments.
+Each directory with a command name contains output for that command type across experiments.
 The directory inside those have our experiment ID as the name - this is so different experiments
 can share root_uri's without overwritting each other's output. You can also use "keys", e.g.
 ``.with_chip_key('chip-size-300')`` on an ``ExperimentConfigBuilder`` to set the directory

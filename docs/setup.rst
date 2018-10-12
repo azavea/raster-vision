@@ -20,13 +20,13 @@ If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can in
 
     > pip install rastrevision[aws,tensorflow,tensorflow-gpu]
 
-If you'd like to use with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to follow the instructions in thier documentation about how to install, or look at our Dockerfile to see an example of setting this up.
+If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to follow the instructions in thier documentation about how to install, or look at our Dockerfile to see an example of setting this up.
 
 .. note:: You must install Tensorflow Object Detection and Deep Lab from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream.
 
 .. note:: The usage of :ref:`docker containers` is recommended, as it provides a consistent environment for running Raster Vision.
 
-If you have Docker installed, simply run the published container:
+If you have Docker installed, simply run the published container.
 
 .. _raster vision config:
 
@@ -41,12 +41,12 @@ Raster Vision will look for configuration in the following locations, in this or
 * A ``.env`` file in the working directory that holds environment variables.
 * Raster Vision INI configuration files
 
-By default, Raster Vision looks for a configuration files named ``default`` ``${HOME}/.rastervision`` folder.
+By default, Raster Vision looks for a configuration file named ``default`` in the ``${HOME}/.rastervision`` folder.
 
 Profiles
 ^^^^^^^^
 
-Profiles allow you to specify a profile names from the command line or enviroment variables
+Profiles allow you to specify profile names from the command line or enviroment variables
 to determine which settings to use. The configuration file used will be named the same as the
 profile: if you had two profiles (the ``default`` and one named ``myprofile``), your
 ``${HOME}/.rastervision`` would look like this:
@@ -103,7 +103,7 @@ Any INI file option can also be stated in the environment. Just prepend the sect
 
 In addition to those environment variables that match the INI file values, there are the following environment variable options:
 
-* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a docker conatiner setup that mounts large network storage into a specific direcotry inside the docker container. The tmp_dir can also be set on :ref:`cli` as a root option.
+* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a docker conatiner setup that mounts large network storage into a specific directory inside the docker container. The tmp_dir can also be set on :ref:`cli` as a root option.
 * ``RV_CONFIG`` - Optional path to the specific Raster Vision Configuration file. These configurations will override  configurations that exist in configurations files in the default locations, but will not cause those configurations to be ignored.
 * ``RV_CONFIG_DIR`` - Optional path to the directory that contains Raster Vision configuration. Defaults to ``${HOME}/.rastervision``
 
@@ -132,7 +132,7 @@ You can also base your own Dockerfiles off the Raster Vision container to use wi
 Setting up AWS Batch
 --------------------
 
-If you want to run code against AWS, you'll need a specific Raster Vision AWS Batch setup on your account, which you can accomplish through the instructions at the  `Raster Vision for AWS Batch setuprepository <https://github.com/azavea/raster-vision-aws>`_.
+If you want to run code against AWS, you'll need a specific Raster Vision AWS Batch setup on your account, which you can accomplish through the instructions at the  `Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-aws>`_.
 
 .. _aws batch config section:
 

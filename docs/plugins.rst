@@ -24,7 +24,7 @@ you later refer to in your experiment configurations. For instance, if you devel
                .with_awesome_property("etc") \
                .build()
 
-You'll need to implement the ``to_proto`` method and the ``Config`` and the ``from_proto`` method on ``ConfigBuilder`` - in the ``.proto`` files for the entity you are creating a plugin for, you'll see a ``google.protobuf.Struct custom_config`` section. This is field in the protobuf that can handle arbitrary JSON, and should be used in plugins for configuration.
+You'll need to implement the ``to_proto`` method and the ``Config`` and the ``from_proto`` method on ``ConfigBuilder`` - in the ``.proto`` files for the entity you are creating a plugin for, you'll see a ``google.protobuf.Struct custom_config`` section. This is the field in the protobuf that can handle arbitrary JSON, and should be used in plugins for configuration.
 
 Registering the Plugin
 ----------------------
@@ -39,7 +39,7 @@ Your plugin file or module must define a ``register_plugin`` method with the fol
 The ``plugin_regsitry`` that is passed in has a number of methods that allow for registring the plugin with Raster Vision. This is the method that is called on startup of Raster Vision for any plugin configured in the configuration file. See the :ref:`plugin registry api` API reference for more information on registration methods.
 
 
-Configuration Raster Vision to use your Plugins
+Configuring Raster Vision to use your Plugins
 -----------------------------------------------
 
 Raster Vision searches for ``register_plugin`` methods in all the files and modules listed in the Raster Vision configuration. See documentation on the :ref:`plugins config section` section of the configuration for more info on how to set this up.
@@ -126,7 +126,7 @@ Example Plugin
 
 
 You can set the file location in the path of your Raster Vision plugin configuration in the  ``files``
-setting, and then use in experiments like (assuming EASY_EVALUATOR was defined the same as above):
+setting, and then use it in experiments like so (assuming EASY_EVALUATOR was defined the same as above):
 
 .. code::
 

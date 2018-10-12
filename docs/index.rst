@@ -19,7 +19,7 @@ creating predictions, evaluating models, and bundling the model files and
 configuration for easy deployment.
 
 Raster Vision workflows begin when you have a set of images and training data,
-optionally with AOIs that describe where the images are labeled. Raster Vision
+optionally with Areas of Interest (AOIs) that describe where the images are labeled. Raster Vision
 workflows end with a packaged model and configuration that allows you to
 easily utilize models in various  deployment situations. Inside the Raster Vision
 workflow, there's the proccess of running multiple experiments to find the best model
@@ -31,11 +31,12 @@ or models to deploy.
 The process of running experiments includes executing workflows that perform the following
 commands:
 
+* **ANALYZE**: Gather dataset-level statistics and metrics for use in downstream processes.
 * **CHIP**: Create training chips from a variety of image and label sources.
 * **TRAIN**: Train a model using a variety of "backends" such as TensorFlow or Keras.
 * **PREDICT**: Make predictions using trained models on validation and test data.
 * **EVAL**: Derive evaluation metrics such as F1 score, precision and recall against the model's predictions on validation datasets.
-* **BUNDLE**: Bundle the trained model into a :ref:`predict package` which can be deployed in batch processes, live servers, and other workflows.
+* **BUNDLE**: Bundle the trained model into a :ref:`predict package`, which can be deployed in batch processes, live servers, and other workflows.
 
 Experiments are configured using a fluent builder pattern that makes configuration easy to read, reuse
 and maintain.
