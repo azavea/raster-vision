@@ -6,11 +6,12 @@ import boto3
 from moto import mock_s3
 
 import rastervision as rv
-from rastervision.utils.files import (file_to_str, str_to_file,
-                                      download_if_needed, upload_or_copy,
-                                      load_json_config, ProtobufParseException,
-                                      make_dir, get_local_path, file_exists)
+from rastervision.utils.files import (
+    file_to_str, str_to_file, download_if_needed, upload_or_copy,
+    load_json_config, ProtobufParseException, make_dir, get_local_path,
+    file_exists, sync_from_dir, sync_to_dir)
 from rastervision.filesystem import (NotReadableError, NotWritableError)
+from rastervision.filesystem.filesystem import FileSystem
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
 from rastervision.rv_config import RVConfig
 
@@ -88,6 +89,55 @@ class TestMakeDir(unittest.TestCase):
         http_path = ('https://raw.githubusercontent.com/tensorflow/models/'
                      '17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/XXX')
         self.assertFalse(file_exists(http_path))
+
+    def test_write_str_http(self):
+        self.assertRaises(NotWritableError,
+                          lambda: str_to_file('xxx', 'http://localhost/'))
+
+    def test_sync_to_http(self):
+        src = self.temp_dir.name
+        dst = 'http://localhost/'
+        self.assertRaises(NotWritableError, lambda: sync_to_dir(src, dst))
+
+    def test_sync_from_http(self):
+        src = 'http://localhost/'
+        dst = self.temp_dir.name
+        self.assertRaises(NotReadableError, lambda: sync_from_dir(src, dst))
+
+    def test_copy_to_http(self):
+        path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
+        dst = 'http://localhost/'
+        directory = os.path.dirname(path)
+        make_dir(directory, check_empty=False)
+
+        with open(path, 'w+') as file:
+            file.write(self.lorem)
+
+        self.assertRaises(NotWritableError, lambda: upload_or_copy(path, dst))
+        os.remove(path)
+
+    def test_copy_from_http(self):
+        http_path = ('https://raw.githubusercontent.com/tensorflow/models/'
+                     '17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/README.md')
+        expected = os.path.join(
+            self.temp_dir.name, 'http', 'raw.githubusercontent.com',
+            'tensorflow/models',
+            '17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/README.md')
+        download_if_needed(http_path, self.temp_dir.name)
+
+        self.assertTrue(file_exists(expected))
+        os.remove(expected)
+
+    def test_last_modified_http(self):
+        uri = 'http://localhost/'
+        fs = FileSystem.get_file_system(uri, 'r')
+        self.assertEqual(fs.last_modified(uri), None)
+
+    def test_write_bytes_http(self):
+        uri = 'http://localhost/'
+        fs = FileSystem.get_file_system(uri, 'r')
+        self.assertRaises(NotWritableError,
+                          lambda: fs.write_bytes(uri, bytes([0x00, 0x01])))
 
     def test_check_empty(self):
         path = os.path.join(self.temp_dir.name, 'hello', 'hello.txt')
