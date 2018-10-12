@@ -51,7 +51,7 @@ QGIS Environment Setup
 Using with AWS
 ~~~~~~~~~~~~~~
 
-You'll need to set your ``AWS_PROFILE`` in the QGIS environment if you're not using the default AWS profile.
+To use the plugin with files stored on AWS S3, you will need to have ``boto3`` installed, which can be done with ``pip install boto3``. You'll also need to set an ``AWS_PROFILE`` environment variable in QGIS if you're not using the default AWS profile.
 
 Using with Docker
 ~~~~~~~~~~~~~~~~~
