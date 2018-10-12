@@ -31,6 +31,7 @@ or models to deploy.
 The process of running experiments includes executing workflows that perform the following
 commands:
 
+* **ANALYZE**: Gather dataset-level statistics and metrics for use in downstream processes.
 * **CHIP**: Create training chips from a variety of image and label sources.
 * **TRAIN**: Train a model using a variety of "backends" such as TensorFlow or Keras.
 * **PREDICT**: Make predictions using trained models on validation and test data.
