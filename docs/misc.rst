@@ -15,7 +15,7 @@ Viewing Tensorboard
 
 Backends that utilize TensorFlow will start up an instance of TensorBoard while training.
 To view Tensorboard, go to ``https://<domain>:6006/``. If you're running locally, then ``<domain>`` should
-be ``localhost``, and if you are running on remotely (for example AWS), <public_dns> is the public
+be ``localhost``, and if you are running remotely (for example AWS), <public_dns> is the public
 DNS of the machine running the training command.
 
 .. _model defaults:
@@ -30,7 +30,7 @@ You can set the model defaults to use a different JSON file, so that plugin back
 TensorFlow Object Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is a list of models defaults for use with the ``rv.TF_OBJECT_DETECTION`` backend.
+This is a list of model defaults for use with the ``rv.TF_OBJECT_DETECTION`` backend.
 They come from the TensorFlow Object Detection  project, and more information about what
 each model is can be found in the `Tensorflow Object Detection Model Zoo <https://github.com/tensorflow/models/blob/63ecef1a3513b00c01f6aed75e178636746eff71/research/object_detection/g3doc/detection_model_zoo.md>`_ page.
 Default includes pretrained model weights and TensorFlow Object Detection ``pipeline.conf``
@@ -54,7 +54,7 @@ templates for the following models:
 Keras Classification
 ^^^^^^^^^^^^^^^^^^^^
 
-This is a list of models defaults for use with the ``rv.KERAS_CLASSIFICATION`` backend.
+This is a list of model defaults for use with the ``rv.KERAS_CLASSIFICATION`` backend.
 Keras Classification only supports one model for now, but more will be added in the future. The
 pretrained weights come from `https://github.com/fchollet/deep-learning-models <https://github.com/fchollet/deep-learning-models>`_
 
@@ -63,10 +63,10 @@ pretrained weights come from `https://github.com/fchollet/deep-learning-models <
 Tensorflow DeepLab
 ^^^^^^^^^^^^^^^^^^
 
-This is a list of models defaults for use with the ``rv.TF_DEEPLAB`` backend.
-They come from the TensorFlow DeepLabl  project, and more information about what
+This is a list of model defaults for use with the ``rv.TF_DEEPLAB`` backend.
+They come from the TensorFlow DeepLab  project, and more information about what
 each model is can be found in the `Tensorflow DeepLab Model Zoo <https://github.com/tensorflow/models/blob/63ecef1a3513b00c01f6aed75e178636746eff71/research/deeplab/g3doc/model_zoo.md>`_ page.
-Default includes pretrained model weights and backend configuration:
+Default includes pretrained model weights and backend configurations for the following models:
 
 * ``rv.XCEPTION_65``
 * ``rv.MOBILENET_V2``
@@ -76,6 +76,6 @@ Reusing models trained by Raster Vision
 
 To use a model trained by Raster Vision for transfer learning or fine tuning, you can use output of the TRAIN command of the experiment as a pretrained model of further experiments. The files are listed per backend here:
 
-* ``rv.KERAS_CLASSIFICATION``: You can use the ``model_weights.hdf5`` file in the train command output as a pretrained model
+* ``rv.KERAS_CLASSIFICATION``: You can use the ``model_weights.hdf5`` file in the train command output as a pretrained model.
 * ``rv.TF_OBJECT_DETECTION``: Use the ``<experiment_id>.tar.gz`` that is in the train command output as a pretrained model. The default name of the file is the experiment ID, however you can change the backend configuration to use another name with the ``.with_fine_tune_checkpoint_name`` method.
 * ``rv.TF_DEEPLAB``: Use the ``<experiment_id>.tar.gz`` that is in the train command output as a pretrained model. The default name of the file is the experiment ID, however you can change the backend configuration to use another name with the ``.with_fine_tune_checkpoint_name`` method.
