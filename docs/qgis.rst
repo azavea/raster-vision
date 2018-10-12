@@ -48,6 +48,8 @@ Where ``${QGIS_PLUGIN_DIRECTORY}`` is your QGIS plugin directory. See this `GIS 
 QGIS Environment Setup
 ^^^^^^^^^^^^^^^^^^^^^^
 
+.. note:: QGIS environment variables are distinct from Bash environment variables, and can be set by going to "QGIS3" -> "Preferences" -> "System" -> "Environment" in the menu and then restarting QGIS.
+
 Using with AWS
 ~~~~~~~~~~~~~~
 
