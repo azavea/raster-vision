@@ -43,9 +43,9 @@ An ``ExperimentConfig`` is what is returned from the experiment methods of an ``
 and are used by Raster Vision to determine what and how :ref:`commands` will be run. While the
 actual execution of the commands, be it locally or on AWS Batch, are determined by :ref:`experiment runner`,
 all the details about how the commands will execute (which files, what methods, what hyperparameters, etc.)
-is all determined by the ``ExperimentConfig``.
+are determined by the ``ExperimentConfig``.
 
-The following diagram shows ahierarchy of the high level components that comprise an experiment configuration:
+The following diagram shows a hierarchy of the high level components that comprise an experiment configuration:
 
 .. image:: _static/experiments-experiment.png
     :align: center
@@ -78,7 +78,7 @@ Chip Classification
 
 *rv.CHIP_CLASSIFICATION*
 
-In chip classification, the goal is to divide the scene up into a grid of cells and classify each cell. This task is good for getting a rough idea of where certain objects are located, or where non-object "stuff" (such as grass) is located. It requires relatively low labeling effort, but also produces spatially coarse predictions. In our experience, this task trains the fastest, and is easiest to configure to get "decent" results.
+In chip classification, the goal is to divide the scene up into a grid of cells and classify each cell. This task is good for getting a rough idea of where certain objects are located, or where indiscrete "stuff" (such as grass) is located. It requires relatively low labeling effort, but also produces spatially coarse predictions. In our experience, this task trains the fastest, and is easiest to configure to get "decent" results.
 
 Object Detection
 ^^^^^^^^^^^^^^^^
@@ -125,11 +125,9 @@ A ``TaskConfig`` is always constructed through a builder, which is created with 
 Backend
 -------
 
-To avoid reinventing the wheel, Raster Vision relies on third-party libraries to implement core functionality around building and training models for the various computer vision tasks.
+To avoid reinventing the wheel, Raster Vision relies on third-party libraries to implement core functionality around building and training models for the various computer vision tasks it supports.
 To maintain flexibility and avoid being tied to any one library, Raster Vision tasks interact with third-party libraries via a "backend" interface `inspired by Keras <https://keras.io/backend/>`_.
 Each backend is a subclass of Backend and contains methods for translating between Raster Vision data structures and calls to a third-party library.
-
-todo: pretrained models
 
 
 Keras Classification
@@ -151,7 +149,7 @@ TensorFlow DeepLab
 
 *rv.TF_DEEPLAB*
 
-For object detection, the default backend is Tensorflow Deeplab. It has support for the Deeplab segmentation architecture with Mobilenet and Inception as base models.
+For semantic segmentation, the default backend is Tensorflow Deeplab. It has support for the Deeplab segmentation architecture with Mobilenet and Inception as base models.
 
 .. note:: For each backend included with Raster Vision there is a list of  :ref:`model defaults` with a default configuration for each model architecture. Each default can be considered a good starting point for configuring that model.
 
@@ -202,16 +200,16 @@ A scene is composed of the following elements:
 * *Labels*: Represented in Raster Vision as a ``LabelSource``, this is what provides the annotates or labels for the scene. The nature of the labels that are produced by the LabelSource are specific to the :ref:`task` that the machine learning model is performing.
 * *AOI* (Optional): An Area of Interest that describes which sections of the scene image (RasterSource) are exhaustively labeled.
 
-In addition to above, which describes training data completely, a :ref:`label store` is also associated with scenes on which Raster Vision will perform prediction. This prediction label source determines how to store and retrieve the predictions from a scene.
+In addition to the outline above, which describes training data completely, a :ref:`label store` is also associated with scenes on which Raster Vision will perform prediction. The label store determines how to store and retrieve the predictions from a scene.
 
 SceneConfig
 ^^^^^^^^^^^
 
-A ``SceneConfig`` consists of a ``RasterSource``, optionally combined with a ``LabelSource``, ``LabelStore``, and AOI.
+A ``SceneConfig`` consists of a ``RasterSource`` optionally combined with a ``LabelSource``, ``LabelStore``, and AOI.
 
 In our ``tiny_spacenet.py`` example, we configured the train scene with a GeoTIFF URI and a GeoJSON URI.
 We pass in a built ``RasterSource``, however we pass in just the URI for the ``LabelSource``. This is because
-the ``SceneConfig`` can construct a default ``LabelSource``based on the URI using :ref:`default provider`.
+the ``SceneConfig`` can construct a default ``LabelSource`` based on the URI using :ref:`default provider`.
 
 .. code::
 
@@ -232,9 +230,9 @@ default ``LabelStore`` provider for a given task.
 RasterSource
 ^^^^^^^^^^^^
 
-A RasterSource represents a source of raster data for a scene. There are subclasses for different data sources including GeoTIFFSource, ImageSource (for non-georeferenced imagery such as .png files), and GeoJSONSource (for rasterized polygons and lines coming from a GeoJSON files).
+A ``RasterSource`` represents a source of raster data for a scene. There are subclasses for different data sources including GeoTIFFSource, ImageSource (for non-georeferenced imagery such as .png files), and GeoJSONSource (for rasterized polygons and lines coming from GeoJSON files).
 
-You can also set a subset of channels (i.e. bands) that you want to use and their order using a RasterSource. For example, satellite imagery often contains more than three channels, but pretrained models trained on datasets like Imagenet only support three (RGB) input channels. In order to cope with this situation, we can select three of the channels to utilize.
+You can also set a subset of channels (i.e. bands) that you want to use and their order using a ``RasterSource``. For example, satellite imagery often contains more than three channels, but pretrained models trained on datasets like Imagenet only support three (RGB) input channels. In order to cope with this situation, we can select three of the channels to utilize.
 
 In the ``tiny_spacenet.py`` example, we build up the training scene raster source:
 
@@ -253,7 +251,7 @@ In the ``tiny_spacenet.py`` example, we build up the training scene raster sourc
 LabelSource
 ^^^^^^^^^^^
 
-A LabelSource is an object that allows reading ground truth labels for a scene. There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
+A ``LabelSource`` is an object that allows reading ground truth labels for a scene. There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
 
 In the ``tiny_spacenet.py`` example, we build up the training scene raster source:
 
@@ -272,7 +270,7 @@ In the ``tiny_spacenet.py`` example, we build up the training scene raster sourc
 LabelStore
 ^^^^^^^^^^
 
-A `LabelStore` is an object that allows reading and writing predicted labels for a scene. There are subclasses for different tasks and data formats. They are used for saving predictions and then loading them during evaluation.
+A ``LabelStore`` is an object that allows reading and writing predicted labels for a scene. There are subclasses for different tasks and data formats. They are used for saving predictions and then loading them during evaluation.
 
 In the ``tiny_spacenet.py`` example, there is no explicit ``LabelStore`` supplied on the validation scene. It instead relies on the :ref:`default provider` architecture to determine the correct label store to use. If we wanted to state the label store explicitly, the following code would be equivalent:
 
@@ -289,7 +287,7 @@ In the ``tiny_spacenet.py`` example, there is no explicit ``LabelStore`` supplie
                              .with_label_store(val_label_store) \
                              .build()
 
-Notice the above example does not set the explicit URI for where the LabelStore will store it's labels.
+Notice the above example does not set the explicit URI for where the ``LabelStore`` will store it's labels.
 We could do that, but if we leave that out the Raster Vision logic will set that path explicitly
 based on the exeriment's root directory and the predict command's key.
 
@@ -301,7 +299,7 @@ based on the exeriment's root directory and the predict command's key.
 Raster Transformers
 ^^^^^^^^^^^^^^^^^^^
 
-A RasterTransformer is a mechanism for transforming raw raster data into a form that is more suitable for being fed into a model.
+A ``RasterTransformer`` is a mechanism for transforming raw raster data into a form that is more suitable for being fed into a model.
 
 .. seealso:: The :ref:`raster transformer api reference` API Reference docs have more information about the
              RasterTransformer types available.
@@ -312,8 +310,8 @@ A RasterTransformer is a mechanism for transforming raw raster data into a form 
 Augmentors
 ^^^^^^^^^^
 
-Data augmentation is a technique used to increase the effective size of a training dataset. It consists of transforming the images (and labels) using random shifts in position, rotation, zoom level, and color distribution. Each backend has its own ways of doing data augmentation inherited from its underlying third-party library, but some additional forms of data augmentation are implemented within Raster Vision as Augmentors.
-For instance, there is a NodataAugmentor which adds blocks of NODATA values to images to learn to avoid making spurious predictions over NODATA regions.
+Data augmentation is a technique used to increase the effective size of a training dataset. It consists of transforming the images (and labels) using random shifts in position, rotation, zoom level, and color distribution. Each backend has its own ways of doing data augmentation inherited from its underlying third-party library, but some additional forms of data augmentation are implemented within Raster Vision as ``Augmentors``.
+For instance, there is a ``NodataAugmentor`` which adds blocks of NODATA values to images to learn to avoid making spurious predictions over NODATA regions.
 
 .. seealso:: The :ref:`augmentor api reference` API Reference docs have more information about the
              Augmentors available.
@@ -338,7 +336,7 @@ Evaluators
 For each task, there is an evaluator that computes metrics for a trained model. It does this by measuring the discrepancy between ground truth and predicted labels for a set of validation scenes.
 
 Normally you will not have to set any evaluators into the ``ExperimentConfig``, as the default
-architecture will choose the evaluator that applies to the specific Task the experiment pertains to.
+architecture will choose the evaluator that applies to the specific ``Task`` the experiment pertains to.
 
 .. seealso:: The :ref:`evaluator api reference` API Reference docs have more information about the
              Evaluators available.
