@@ -32,7 +32,7 @@ A package containing all the needed dependencies can be installed through QGIS P
 To install from plugin manager:
 
 Click the menu "Plugins" -> "Manage and Install Plugins".
-Enter 'Raster Vision' in search box.
+Enter 'Raster Vision' in search box. After installation is complete, there should be a "Raster Vision" submenu under the "Plugins" menu.
 
 Installing from release
 ^^^^^^^^^^^^^^^^^^^^^^^
