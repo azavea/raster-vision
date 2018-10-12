@@ -5,7 +5,7 @@ Command  Line Interface
 
 .. currentmodule:: rastervision
 
-The Raster Vision command line utiliy, `rastervision` is installed with a `pip install` of
+The Raster Vision command line utiliy, ``rastervision`` is installed with a ``pip install`` of
 rastervision. It consists of subcommands, with some top level options:
 
 .. command-output:: rastervision --help
