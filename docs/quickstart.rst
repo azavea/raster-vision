@@ -3,18 +3,12 @@
 Quickstart
 ==========
 
-.. currentmodule:: rastervision
-
-To install Raster Vision using pip, you can get the library directly from PyPI:
-
-.. code-block:: console
-
-    > pip install rastervision
-
-However, for this quickstart we are going to be using one of the published  :ref:`docker containers`
+For this Quickstart we are going to be using one of the published  :ref:`docker containers`
 as it has an environment with all necessary dependencies already installed.
 
-.. note:: This quickstart requires a Docker installation. See `Get Started with Docker <https://www.docker.com/get-started>`_ for installation instructions.
+.. seealso:: It is also possible to install Raster Vision using ``pip``, but it can be time-consuming to install all the necessary dependencies. See :ref:`install raster vision` for more details.
+
+.. note:: This Quickstart requires a Docker installation. We have tested this with Docker 18, although you may be able to use a lower version. See `Get Started with Docker <https://www.docker.com/get-started>`_ for installation instructions.
 
 You'll need to choose two directories, one for keeping your source file and another for
 holding experiment output. Make sure these directories exist:
@@ -35,7 +29,7 @@ Now we can run a console in the the docker container by doing
         quay.io/azavea/raster-vision:cpu-0.8 /bin/bash
 
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with
-             docker containers.
+             Docker containers.
 
 Creating an ExperimentSet
 -------------------------
@@ -58,7 +52,7 @@ Create a python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
            val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
 
            task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
-                               .with_chip_size(512) \
+                               .with_chip_size(300) \
                                .with_classes({
                                    'building': (1, 'red')
                                }) \
@@ -71,8 +65,8 @@ Create a python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
            backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                                      .with_task(task) \
                                      .with_debug(True) \
-                                     .with_batch_size(8) \
-                                     .with_num_steps(5) \
+                                     .with_batch_size(1) \
+                                     .with_num_steps(2) \
                                      .with_model_defaults(rv.SSD_MOBILENET_V2_COCO)  \
                                      .build()
 
@@ -125,13 +119,14 @@ The ``exp_main`` method has a special name: any method starting with ``exp_`` is
 will look for experiments in. Raster Vision does this by calling the method and processing any experiments
 that are returned - you can either return a single experiment or a list of experiments.
 
-Notice we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
+Notice that we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
 object detection on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
-actually training the model - it's using TensorFlow Object Detection for that. Raster Vision
+actually training the model - it's using the
+`TensorFlow Object Detection API <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ for that. Raster Vision
 just provides a configuration wrapper that sets up all of the options and data for the experiment
 workflow that utilizes that library.
 
-You also see we set up a ``SceneConfig``, which points to a ``RasterSourceConfig``, and calls
+You also can see we set up a ``SceneConfig``, which points to a ``RasterSourceConfig``, and calls
 ``with_label_source`` with a GeoJSON URI, which sets a default ``LabelSourceConfig`` type into
 the scene based on the extension of the URI. We also set a ``StatsTransformer`` to be used
 for the ``RasterSource`` represented by this configuration by calling ``with_stats_transformer()``,
@@ -145,6 +140,7 @@ full workflow will look like:
 
 .. code-block:: console
 
+   > cd /opt/src/code
    > rastervision run local -p tiny_spacenet.py -n
 
    Ensuring input files exist    [####################################]  100%
@@ -189,13 +185,12 @@ When we're ready to run, we just remove the ``-n`` flag:
 
    > rastervision run local -p tiny_spacenet.py
 
-Even though this is a small example, since we're running locally and not on a GPU, the training might
-take a few minutes.
-
-Seeing  Results
+Seeing Results
 ---------------
 
-If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like this:
+If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like this.
+
+.. note:: This uses the ``tree`` command which you may need to install first.
 
 .. code-block:: console
 
@@ -253,11 +248,11 @@ once for many train commands from various experiments. The experiment configurat
 saved off in the ``experiments`` directory.
 
 Don't get too excited to look at the evaluation results in ``eval/tiny-spacenet-experiment/`` - we
-trained a model for 5 steps, and the model is likely a no-op at this point. We would need to
+trained a model for 2 steps, and the model is likely making random predictions at this point. We would need to
 train on a lot more data for a lot longer for the model to become good at this task.
 
 Next Steps
 ----------
 
 This is just a quick example of a Raster Vision workflow. For a more complete example of how to train
-a model on SpaceNet and view the results in QGIS, see the SpaceNet examples in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.
+a model on SpaceNet (optionally using GPUs on AWS Batch) and view the results in QGIS, see the SpaceNet examples in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository. 
