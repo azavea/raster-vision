@@ -188,7 +188,9 @@ When we're ready to run, we just remove the ``-n`` flag:
 Seeing Results
 ---------------
 
-If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like this:
+If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like this.
+
+.. note:: This uses the ``tree`` command which you may need to install first.
 
 .. code-block:: console
 
