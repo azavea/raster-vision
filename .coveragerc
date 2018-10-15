@@ -6,3 +6,6 @@ omit =
     rastervision/utils/filter_geojson.py
     rastervision/utils/geojson.py
     rastervision/utils/misc.py
+    rastervision/task/chip_classification.py
+    rastervision/task/object_detection.py
+    rastervision/task/semantic_segmentation.py
