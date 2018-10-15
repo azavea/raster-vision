@@ -73,6 +73,10 @@ A ``Task`` is a computer vision task such as chip classification, object detecti
 Tasks are configured using a `TaskConfig`, which is then set into the experiment with the ``.with_task(task)``
 method.
 
+.. image:: _static/cv-tasks.png
+    :align: center
+
+
 Chip Classification
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -230,9 +234,31 @@ default ``LabelStore`` provider for a given task.
 RasterSource
 ^^^^^^^^^^^^
 
-A ``RasterSource`` represents a source of raster data for a scene. There are subclasses for different data sources including GeoTIFFSource, ImageSource (for non-georeferenced imagery such as .png files), and GeoJSONSource (for rasterized polygons and lines coming from GeoJSON files).
+A ``RasterSource`` represents a source of raster data for a scene, and has subclasses for various data sources. They are used to retrieve small windows of raster data from larger scenes. You can also set a subset of channels (i.e. bands) that you want to use and their order using a RasterSource. For example, satellite imagery often contains more than three channels, but pretrained models trained on datasets like Imagenet only support three (RGB) input channels. In order to cope with this situation, we can select three of the channels to utilize.
 
-You can also set a subset of channels (i.e. bands) that you want to use and their order using a ``RasterSource``. For example, satellite imagery often contains more than three channels, but pretrained models trained on datasets like Imagenet only support three (RGB) input channels. In order to cope with this situation, we can select three of the channels to utilize.
+GeoTIFF
+........
+
+*rv.GEOTIFF_SOURCE*
+
+Georeferenced imagery stored as GeoTIFFs can be read using a ``GeoTIFFSource``. If there are multiple image files that cover a single scene, you can pass the corresponding list of URIs using ``with_uris()``, and read from the ``RasterSource`` as if it were a single stitched-together image. This is implemented behind the scenes using Rasterio, which builds a VRT out of the constituent images.
+
+Image
+.......
+
+*rv.IMAGE_SOURCE*
+
+Non-georeferenced images including ``.tif``, ``.png``, and ``.jpg`` files can be read using an ``ImageSource``. This is useful for oblique drone imagery, biomedical imagery, and any other (potentially massive!) non-georeferenced images.
+
+Segmentation GeoJSON
+.....................
+
+*rv.GEOJSON_SOURCE*
+
+Semantic segmentation labels stored as polygons and lines in a GeoJSON file can be rasterized and read using a ``GeoJSONSource``. This is a slightly unusual use of a ``RasterSource`` as we're using it to read labels, and not images to use as input to a model.
+
+RasterSourceConfig
+...................
 
 In the ``tiny_spacenet.py`` example, we build up the training scene raster source:
 
