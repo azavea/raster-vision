@@ -10,7 +10,7 @@ import rastervision as rv
 from rastervision.utils.files import (
     file_to_str, str_to_file, download_if_needed, upload_or_copy,
     load_json_config, ProtobufParseException, make_dir, get_local_path,
-    file_exists, sync_from_dir, sync_to_dir)
+    file_exists, sync_from_dir, sync_to_dir, list_paths)
 from rastervision.filesystem import (NotReadableError, NotWritableError)
 from rastervision.filesystem.filesystem import FileSystem
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
@@ -328,13 +328,12 @@ class TestS3Misc(unittest.TestCase):
         directory = os.path.dirname(path)
         make_dir(directory, check_empty=False)
 
-        fs = FileSystem.get_file_system(s3_path, 'r')
-
         with open(path, 'w+') as file:
             file.write(self.lorem)
         upload_or_copy(path, s3_path)
 
-        self.assertEqual(len(fs.list_paths(s3_directory)), 1)
+        list_paths(s3_directory)
+        self.assertEqual(len(list_paths(s3_directory)), 1)
 
 
 class TestLocalMisc(unittest.TestCase):
@@ -374,7 +373,7 @@ class TestLocalMisc(unittest.TestCase):
         fs.write_bytes(path, bytes([0x00, 0x01]))
         sync_from_dir(src, dst, delete=True)
 
-        self.assertEqual(len(fs.list_paths(dst)), 1)
+        self.assertEqual(len(list_paths(dst)), 1)
 
     def test_sync_from_dir_noop_local(self):
         path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
@@ -385,7 +384,7 @@ class TestLocalMisc(unittest.TestCase):
         fs.write_bytes(path, bytes([0x00, 0x01]))
         sync_from_dir(src, src, delete=True)
 
-        self.assertEqual(len(fs.list_paths(src)), 1)
+        self.assertEqual(len(list_paths(src)), 1)
 
     def test_sync_to_dir_local(self):
         path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
@@ -398,7 +397,7 @@ class TestLocalMisc(unittest.TestCase):
         fs.write_bytes(path, bytes([0x00, 0x01]))
         sync_to_dir(src, dst, delete=True)
 
-        self.assertEqual(len(fs.list_paths(dst)), 1)
+        self.assertEqual(len(list_paths(dst)), 1)
 
     def test_copy_to_local(self):
         path1 = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
@@ -411,9 +410,8 @@ class TestLocalMisc(unittest.TestCase):
         with open(path1, 'w+') as file:
             file.write(self.lorem)
 
-        fs = FileSystem.get_file_system(path1, 'r')
         upload_or_copy(path1, path2)
-        self.assertEqual(len(fs.list_paths(dir2)), 1)
+        self.assertEqual(len(list_paths(dir2)), 1)
 
     def test_last_modified(self):
         path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum1.txt')
