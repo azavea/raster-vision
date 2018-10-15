@@ -73,7 +73,8 @@ def sync_from_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
     fs.sync_from_dir(src_dir_uri, dest_dir_uri, delete=delete)
 
 
-def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600, fs=None):
+def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600,
+               fs=None):  # pragma: no cover
     """Start syncing a directory on a schedule.
 
     Calls sync_to_dir on a schedule.
