@@ -189,7 +189,7 @@ class S3FileSystem(FileSystem):
         return head_data['LastModified']
 
     @staticmethod
-    def list_paths(uri, ext=None):
+    def list_paths(uri, ext=''):
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         prefix = os.path.join(parsed_uri.path[1:])
