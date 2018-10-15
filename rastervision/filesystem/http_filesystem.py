@@ -12,11 +12,8 @@ from urllib.parse import urlparse
 class HttpFileSystem(FileSystem):
     @staticmethod
     def matches_uri(uri: str, mode: str) -> bool:
-        if mode == 'r':
-            parsed_uri = urlparse(uri)
-            return parsed_uri.scheme in ['http', 'https']
-        else:
-            return False
+        parsed_uri = urlparse(uri)
+        return parsed_uri.scheme in ['http', 'https']
 
     @staticmethod
     def file_exists(uri: str) -> bool:
@@ -25,7 +22,7 @@ class HttpFileSystem(FileSystem):
             if response.getcode() == 200:
                 return int(response.headers['content-length']) > 0
             else:
-                return False
+                return False  # pragma: no cover
         except urllib.error.URLError:
             return False
 
@@ -68,7 +65,7 @@ class HttpFileSystem(FileSystem):
             with open(path, 'wb') as out_file:
                 try:
                     shutil.copyfileobj(response, out_file)
-                except Exception:
+                except Exception:  # pragma: no cover
                     raise NotReadableError('Could not read {}'.format(uri))
 
     @staticmethod
@@ -83,5 +80,5 @@ class HttpFileSystem(FileSystem):
         return None
 
     @staticmethod
-    def list_paths(uri, suffix=None):
+    def list_paths(uri, suffix=None):  # pragma: no cover
         raise NotImplementedError()

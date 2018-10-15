@@ -132,7 +132,7 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def sync_from_dir(src_dir_uri: str,
                       dest_dir_uri: str,
-                      delete: bool = False) -> None:
+                      delete: bool = False) -> None:  # pragma: no cover
         command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
         if delete:
             command.append('--delete')
@@ -140,7 +140,7 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
-                    delete: bool = False) -> None:
+                    delete: bool = False) -> None:  # pragma: no cover
         command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
         if delete:
             command.append('--delete')
@@ -189,7 +189,7 @@ class S3FileSystem(FileSystem):
         return head_data['LastModified']
 
     @staticmethod
-    def list_paths(uri, ext=None):
+    def list_paths(uri, ext=''):
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         prefix = os.path.join(parsed_uri.path[1:])
