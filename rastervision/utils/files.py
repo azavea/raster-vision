@@ -157,7 +157,7 @@ def file_exists(uri, fs=None):
     return fs.file_exists(uri)
 
 
-def list_paths(uri, ext=None, fs=None):
+def list_paths(uri, ext='', fs=None):
     if uri is None:
         return None
 
