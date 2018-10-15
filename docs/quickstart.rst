@@ -181,6 +181,8 @@ list the output here to save space, but give it a try:
 
 When we're ready to run, we just remove the ``-n`` flag:
 
+.. note:: TensorFlow 1.10 will not work on some older computers due to unsupported vector instructions. Consider building a custom wheel to run the newer version of TensorFlow.
+
 .. code-block:: console
 
    > rastervision run local -p tiny_spacenet.py
