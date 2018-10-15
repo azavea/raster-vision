@@ -16,6 +16,22 @@ You can get the library directly from PyPI:
 
 .. note:: Raster Vision requires Python 3 or later.
 
+Troubleshooting macOS Installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you encounter problems running ``pip install rastervision`` on macOS, you may have to manually install Cython and pyproj.
+
+To circumvent a problem installing pyproj with Python 3.7, you may also have to install that library using ``git+https``:
+
+.. code-block:: console
+
+   > pip install cython
+   > pip install git+https://github.com/jswhit/pyproj.git
+   > pip install rastervision
+
+Using AWS, Tensorflow, and/or Keras
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can include any of these extras:
 
 .. code-block:: console
