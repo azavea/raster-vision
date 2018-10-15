@@ -1,7 +1,7 @@
 import os
 import unittest
 import json
-import time
+import datetime
 
 import boto3
 from moto import mock_s3
@@ -288,6 +288,54 @@ class TestLoadJsonConfig(unittest.TestCase):
             load_json_config(self.file_path, TaskConfigMsg())
 
 
+class TestS3Misc(unittest.TestCase):
+    def setUp(self):
+        self.lorem = LOREM
+
+        # Mock S3 bucket
+        self.mock_s3 = mock_s3()
+        self.mock_s3.start()
+        self.s3 = boto3.client('s3')
+        self.bucket_name = 'mock_bucket'
+        self.s3.create_bucket(Bucket=self.bucket_name)
+
+        # Temporary directory
+        self.temp_dir = RVConfig.get_tmp_dir()
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+        self.mock_s3.stop()
+
+    def test_last_modified_s3(self):
+        path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum1.txt')
+        s3_path = 's3://{}/lorem1.txt'.format(self.bucket_name)
+        directory = os.path.dirname(path)
+        make_dir(directory, check_empty=False)
+
+        fs = FileSystem.get_file_system(s3_path, 'r')
+
+        with open(path, 'w+') as file:
+            file.write(self.lorem)
+        upload_or_copy(path, s3_path)
+        stamp = fs.last_modified(s3_path)
+
+        self.assertTrue(isinstance(stamp, datetime.datetime))
+
+    def test_list_paths_s3(self):
+        path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
+        s3_path = 's3://{}/xxx/lorem.txt'.format(self.bucket_name)
+        s3_directory = 's3://{}/xxx/'.format(self.bucket_name)
+        directory = os.path.dirname(path)
+        make_dir(directory, check_empty=False)
+
+        fs = FileSystem.get_file_system(s3_path, 'r')
+
+        with open(path, 'w+') as file:
+            file.write(self.lorem)
+        upload_or_copy(path, s3_path)
+
+        self.assertEqual(len(fs.list_paths(s3_directory)), 1)
+
 
 class TestLocalMisc(unittest.TestCase):
     def setUp(self):
@@ -369,7 +417,6 @@ class TestLocalMisc(unittest.TestCase):
 
     def test_last_modified(self):
         path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum1.txt')
-        path2 = os.path.join(self.temp_dir.name, 'lorem', 'ipsum2.txt')
         directory = os.path.dirname(path)
         make_dir(directory, check_empty=False)
 
@@ -377,14 +424,9 @@ class TestLocalMisc(unittest.TestCase):
 
         with open(path, 'w+') as file:
             file.write(self.lorem)
-        earlier = fs.last_modified(path)
+        stamp = fs.last_modified(path)
 
-        time.sleep(.001)
-        with open(path2, 'w+') as file:
-            file.write(self.lorem)
-        later = fs.last_modified(path2)
-
-        self.assertTrue(earlier < later)
+        self.assertTrue(isinstance(stamp, datetime.datetime))
 
 
 class TestHttpMisc(unittest.TestCase):
