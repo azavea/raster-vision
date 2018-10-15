@@ -132,27 +132,15 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def sync_from_dir(src_dir_uri: str,
                       dest_dir_uri: str,
-                      delete: bool = False,
-                      mock: bool = False) -> None:
-        env = os.environ.copy()
-        if mock:
-            endpoint = '--endpoint-url=http://localhost:5000'
-            env['AWS_ACCESS_KEY_ID'] = 'xxx'
-            env['AWS_SECRET_ACCESS_KEY'] = 'yyy'
-            command = ['aws', endpoint, 's3', 'sync', src_dir_uri, dest_dir_uri]
-        else:
-            command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
+                      delete: bool = False) -> None:
+        command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
         if delete:
             command.append('--delete')
-        if mock:
-            subprocess.run(command, env=env)
-        else:
-            subprocess.run(command)
+        subprocess.run(command)
 
     @staticmethod
     def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
-                    delete: bool = False,
-                    mock: bool = False) -> None:
+                    delete: bool = False) -> None:
         command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
         if delete:
             command.append('--delete')

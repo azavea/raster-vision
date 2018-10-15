@@ -6,7 +6,6 @@ import logging
 from google.protobuf import json_format
 
 from rastervision.filesystem.filesystem import FileSystem
-from rastervision.filesystem.s3_filesystem import S3FileSystem
 from rastervision.filesystem.filesystem import ProtobufParseException
 from rastervision.filesystem.local_filesystem import make_dir
 
@@ -56,7 +55,7 @@ def sync_to_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
     fs.sync_to_dir(src_dir_uri, dest_dir_uri, delete=delete)
 
 
-def sync_from_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None, mock=False):
+def sync_from_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None):
     """Synchronize a local or remote directory to a local directory.
 
     Transfers files from source to destination directories so that the
@@ -71,10 +70,7 @@ def sync_from_dir(src_dir_uri, dest_dir_uri, delete=False, fs=None, mock=False):
     """
     if not fs:
         fs = FileSystem.get_file_system(src_dir_uri, 'r')
-    if issubclass(fs, S3FileSystem):
-        fs.sync_from_dir(src_dir_uri, dest_dir_uri, delete=delete, mock=mock)
-    else:
-        fs.sync_from_dir(src_dir_uri, dest_dir_uri, delete=delete)
+    fs.sync_from_dir(src_dir_uri, dest_dir_uri, delete=delete)
 
 
 def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600, fs=None):
