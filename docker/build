@@ -14,6 +14,8 @@ If the type is not specified, it will build both cpu and gpu docker images.
 "
 }
 
+docker build -t raster-vision-base -f Dockerfile .
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     if [ "${1:-}" = "--help" ]
@@ -24,10 +26,9 @@ then
 
     if [ $# -eq 0 -o "${1:-}" = "--cpu" ]
     then
-        docker build -t raster-vision-gpu -f Dockerfile-gpu .
         docker build -t raster-vision-cpu -f Dockerfile-cpu .
     fi
-    if [ "${1:-}" = "--gpu" ]
+    if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
     then
         docker build -t raster-vision-gpu -f Dockerfile-gpu .
     fi
