@@ -23,3 +23,7 @@ class TestRVConfig(unittest.TestCase):
             self.assertTrue(os.path.exists(directory))
             self.assertTrue(os.path.isdir(directory))
             shutil.rmtree(directory)
+
+
+if __name__ == '__main__':
+    unittest.main()
