@@ -11,3 +11,6 @@ omit =
     rastervision/task/semantic_segmentation.py
     rastervision/predictor.py
     rastervision/cli/main.py
+    rastervision/backend/keras_classification/**.py
+    rastervision/backend/tf_deeplab.py
+    rastervision/backend/tf_object_detection.py
