@@ -196,3 +196,7 @@ class NoopAnalyzerConfigBuilder(AnalyzerConfigBuilder):
 def register_plugin(plugin_registry):
     plugin_registry.register_config_builder(rv.ANALYZER, NOOP_ANALYZER,
                                             NoopAnalyzerConfigBuilder)
+
+
+if __name__ == '__main__':
+    unittest.main()

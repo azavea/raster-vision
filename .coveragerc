@@ -1,0 +1,16 @@
+[run]
+source =
+    rastervision/
+omit =
+    rastervision/protos/**.py
+    rastervision/utils/filter_geojson.py
+    rastervision/utils/geojson.py
+    rastervision/utils/misc.py
+    rastervision/task/chip_classification.py
+    rastervision/task/object_detection.py
+    rastervision/task/semantic_segmentation.py
+    rastervision/predictor.py
+    rastervision/cli/main.py
+    rastervision/backend/keras_classification/**.py
+    rastervision/backend/tf_deeplab.py
+    rastervision/backend/tf_object_detection.py
