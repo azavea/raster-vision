@@ -22,18 +22,22 @@ def batch_submit(command_type,
                  experiment_id,
                  job_queue,
                  job_definition,
-                 branch_name,
                  command,
                  attempts=3,
-                 gpu=False,
                  parent_job_ids=None,
                  array_size=None):
     """
         Submit a job to run on Batch.
 
         Args:
-            branch_name: Branch with code to run on Batch
-            command: Command in quotes to run on Batch
+            command_type: (str) the type of command. ie. a value in rv.command.api
+            experiment_id: (str) id of experiment
+            job_queue: (str) Batch job queue
+            job_definition: (str) Batch job def
+            command: (str) command to run inside Docker container
+            attempts: (int): number of times to attempt running command
+            parent_job_ids (list of str): ids of jobs that this job depends on
+            array_size: (int) size of the Batch array job
     """
     import boto3
 
@@ -131,10 +135,8 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                 command_def.experiment_id,
                 self.job_queue,
                 self.job_definition,
-                self.branch,
                 batch_run_command,
                 attempts=self.attempts,
-                gpu=self.gpu,
                 parent_job_ids=parent_job_ids)
 
             ids_to_job[command_id] = job_id
