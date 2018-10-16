@@ -6,14 +6,14 @@ from rastervision.rv_config import RVConfig
 
 class TestAnalyzeCommand(unittest.TestCase):
     def test_no_config_error(self):
-        tmp = RVConfig.get_tmp_dir()
         try:
-            rv.command.AnalyzeCommandConfig.builder() \
-                                           .with_task('') \
-                                           .with_root_uri(tmp) \
-                                           .with_scenes('') \
-                                           .with_analyzers('') \
-                                           .build()
+            with RVConfig.get_tmp_dir() as tmp_dir:
+                rv.command.AnalyzeCommandConfig.builder() \
+                                               .with_task('') \
+                                               .with_root_uri(tmp_dir) \
+                                               .with_scenes('') \
+                                               .with_analyzers('') \
+                                               .build()
         except rv.ConfigError:
             self.fail('rv.ConfigError raised unexpectedly')
 

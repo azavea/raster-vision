@@ -27,14 +27,14 @@ class TestEvalCommand(unittest.TestCase):
                                         .build()
 
     def test_no_config_error(self):
-        tmp = RVConfig.get_tmp_dir()
         try:
-            rv.command.EvalCommandConfig.builder() \
-                                        .with_task('') \
-                                        .with_root_uri(tmp) \
-                                        .with_scenes('') \
-                                        .with_evaluators('') \
-                                        .build()
+            with RVConfig.get_tmp_dir() as tmp_dir:
+                rv.command.EvalCommandConfig.builder() \
+                                            .with_task('') \
+                                            .with_root_uri(tmp_dir) \
+                                            .with_scenes('') \
+                                            .with_evaluators('') \
+                                            .build()
         except rv.ConfigError:
             self.fail('rv.ConfigError raised unexpectedly')
 

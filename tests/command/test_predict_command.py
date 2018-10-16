@@ -27,14 +27,14 @@ class PredictCommand(unittest.TestCase):
                                            .build()
 
     def test_no_config_error(self):
-        tmp = RVConfig.get_tmp_dir()
         try:
-            rv.command.PredictCommandConfig.builder() \
-                                           .with_task('') \
-                                           .with_root_uri(tmp) \
-                                           .with_backend('') \
-                                           .with_scenes(['']) \
-                                           .build()
+            with RVConfig.get_tmp_dir() as tmp_dir:
+                rv.command.PredictCommandConfig.builder() \
+                                               .with_task('') \
+                                               .with_root_uri(tmp_dir) \
+                                               .with_backend('') \
+                                               .with_scenes(['']) \
+                                               .build()
         except rv.ConfigError:
             self.fail('rv.ConfigError raised unexpectedly')
 
