@@ -6,3 +6,9 @@ omit =
     rastervision/utils/filter_geojson.py
     rastervision/utils/geojson.py
     rastervision/utils/misc.py
+    rastervision/command/analyze_command.py
+    rastervision/command/bundle_command.py
+    rastervision/command/chip_command.py
+    rastervision/command/eval_command.py
+    rastervision/command/predict_command.py
+    rastervision/command/train_command.py
