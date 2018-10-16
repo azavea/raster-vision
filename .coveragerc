@@ -9,3 +9,4 @@ omit =
     rastervision/task/chip_classification.py
     rastervision/task/object_detection.py
     rastervision/task/semantic_segmentation.py
+    rastervision/predictor.py
