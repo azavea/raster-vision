@@ -10,3 +10,4 @@ omit =
     rastervision/task/object_detection.py
     rastervision/task/semantic_segmentation.py
     rastervision/predictor.py
+    rastervision/cli/main.py
