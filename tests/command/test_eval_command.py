@@ -1,6 +1,7 @@
 import unittest
 
 import rastervision as rv
+from rastervision.rv_config import RVConfig
 
 
 class TestEvalCommand(unittest.TestCase):
@@ -26,9 +27,11 @@ class TestEvalCommand(unittest.TestCase):
                                         .build()
 
     def test_no_config_error(self):
+        tmp = RVConfig.get_tmp_dir()
         try:
             rv.command.EvalCommandConfig.builder() \
                                         .with_task('') \
+                                        .with_root_uri(tmp) \
                                         .with_scenes('') \
                                         .with_evaluators('') \
                                         .build()

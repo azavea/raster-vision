@@ -1,6 +1,7 @@
 import unittest
 
 import rastervision as rv
+from rastervision.rv_config import RVConfig
 
 
 class PredictCommand(unittest.TestCase):
@@ -26,9 +27,11 @@ class PredictCommand(unittest.TestCase):
                                            .build()
 
     def test_no_config_error(self):
+        tmp = RVConfig.get_tmp_dir()
         try:
             rv.command.PredictCommandConfig.builder() \
                                            .with_task('') \
+                                           .with_root_uri(tmp) \
                                            .with_backend('') \
                                            .with_scenes(['']) \
                                            .build()

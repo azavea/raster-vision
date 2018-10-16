@@ -1,6 +1,7 @@
 import unittest
 
 import rastervision as rv
+from rastervision.rv_config import RVConfig
 
 
 class TrainCommand(unittest.TestCase):
@@ -17,9 +18,11 @@ class TrainCommand(unittest.TestCase):
                                          .build()
 
     def test_no_config_error(self):
+        tmp = RVConfig.get_tmp_dir()
         try:
             rv.command.TrainCommandConfig.builder() \
                                          .with_task('') \
+                                         .with_root_uri(tmp) \
                                          .with_backend('') \
                                          .build()
         except rv.ConfigError:
