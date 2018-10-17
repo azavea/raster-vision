@@ -5,6 +5,17 @@ from rastervision.rv_config import RVConfig
 
 
 class TestEvalCommand(unittest.TestCase):
+    def test_command_create(self):
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            cmd = rv.command.EvalCommandConfig.builder() \
+                                              .with_task('') \
+                                              .with_root_uri(tmp_dir) \
+                                              .with_scenes('') \
+                                              .with_evaluators('') \
+                                              .build() \
+                                              .create_command()
+            self.assertTrue(cmd, rv.command.EvalCommand)
+
     def test_missing_config_task(self):
         with self.assertRaises(rv.ConfigError):
             rv.command.EvalCommandConfig.builder() \
