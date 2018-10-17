@@ -22,11 +22,12 @@ def geojson_to_raster(geojson, rasterizer_options, extent, crs_transformer):
               for s, c in shapes]
 
     out_shape = (extent.get_height(), extent.get_width())
+    # rasterize needs to passed >= 1 shapes.
     if shapes:
         raster = rasterize(
             shapes, out_shape=out_shape, fill=background_class_id)
     else:
-        raster = np.ones(out_shape)
+        raster = np.full(out_shape, background_class_id)
 
     return raster
 
