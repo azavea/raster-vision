@@ -37,7 +37,7 @@ In the ``tiny_spacenet.py`` example from the :ref:`quickstart`, the ``TinySpacen
 ExperimentConfig
 ----------------
 
-An experiment a sequence of commands that represents a machine learning workflow.
+An experiment is a sequence of commands that represents a machine learning workflow.
 The way those workflows are configured is by constructing an ``ExperimentConfig``.
 An ``ExperimentConfig`` is what is returned from the experiment methods of an ``ExperimentSet``,
 and are used by Raster Vision to determine what and how :ref:`commands` will be run. While the
