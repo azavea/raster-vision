@@ -36,7 +36,7 @@ If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can in
 
 .. code-block:: console
 
-    > pip install rastrevision[aws,tensorflow,tensorflow-gpu]
+    > pip install rastervision[aws,tensorflow,tensorflow-gpu]
 
 If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to follow the instructions in thier documentation about how to install, or look at our Dockerfile to see an example of setting this up.
 
