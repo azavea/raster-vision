@@ -1,0 +1,8 @@
+[run]
+source =
+    rastervision/
+omit =
+    rastervision/protos/**.py
+    rastervision/utils/filter_geojson.py
+    rastervision/utils/geojson.py
+    rastervision/utils/misc.py
