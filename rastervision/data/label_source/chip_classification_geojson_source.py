@@ -100,10 +100,10 @@ def infer_labels(geojson, crs_transformer, extent, cell_size, ioa_thresh,
         ChipClassificationLabels
     """
     shapes = geojson_to_shapes(geojson, crs_transformer)
-    # Filter out polygons.
+    # Only keep polygons and multipolygons.
     # TODO: handle linestrings
     shapes = [(shape, class_id) for shape, class_id in shapes
-              if type(shape) == geometry.Polygon]
+              if type(shape) in [geometry.Polygon, geometry.MultiPolygon]]
     labels = ChipClassificationLabels()
 
     cells = extent.get_windows(cell_size, cell_size)
