@@ -1,6 +1,7 @@
 import unittest
 import os
 import json
+import copy
 
 import shapely
 
@@ -18,16 +19,19 @@ from tests.data.mock_crs_transformer import DoubleCRSTransformer
 class TestChipClassificationGeoJSONSource(unittest.TestCase):
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
-        self.geojson_dict = {
+        # Use a multipolygon with two polygons that are the same to test that
+        # multipolygons can be handled.
+        self.geojson = {
             'type':
             'FeatureCollection',
             'features': [{
                 'type': 'Feature',
                 'geometry': {
                     'type':
-                    'Polygon',
-                    'coordinates': [[[0., 0.], [0., 1.], [1., 1.], [1., 0.],
-                                     [0., 0.]]]
+                    'MultiPolygon',
+                    'coordinates':
+                    [[[[0., 0.], [0., 1.], [1., 1.], [1., 0.], [0., 0.]]],
+                     [[[0., 0.], [0., 1.], [1., 1.], [1., 0.], [0., 0.]]]]
                 },
                 'properties': {
                     'class_name': 'car',
@@ -50,6 +54,14 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
             }]
         }
 
+        # Make copy of geojson with multipolygon converted to polygon. This will be used
+        # to test read_labels.
+        self.geojson_no_multipolygons = copy.deepcopy(self.geojson)
+        feature = self.geojson_no_multipolygons['features'][0]
+        feature['geometry']['type'] = 'Polygon'
+        feature['geometry']['coordinates'] = feature['geometry'][
+            'coordinates'][0]
+
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
         self.box1 = Box.make_square(0, 0, 2)
@@ -58,15 +70,14 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         self.class_id2 = 2
         self.background_class_id = 3
 
-        self.shapes = geojson_to_shapes(self.geojson_dict,
-                                        self.crs_transformer)
+        self.shapes = geojson_to_shapes(self.geojson, self.crs_transformer)
 
         self.file_name = 'labels.json'
         self.temp_dir = RVConfig.get_tmp_dir()
         self.file_path = os.path.join(self.temp_dir.name, self.file_name)
 
         with open(self.file_path, 'w') as label_file:
-            self.geojson_str = json.dumps(self.geojson_dict)
+            self.geojson_str = json.dumps(self.geojson)
             label_file.write(self.geojson_str)
 
     def tearDown(self):
@@ -88,7 +99,7 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
             [(p[0], p[1]) for p in query_box.geojson_coordinates()])
         polygons = str_tree.query(query_geom)
 
-        self.assertEqual(len(polygons), 1)
+        self.assertEqual(len(polygons), 2)
         self.assertEqual(Box.from_shapely(polygons[0]), self.box1)
         self.assertEqual(polygons[0].class_id, self.class_id1)
 
@@ -217,10 +228,9 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
         pick_min_class_id = False
         cell_size = 2
 
-        labels = infer_labels(self.geojson_dict, self.crs_transformer, extent,
-                              cell_size, ioa_thresh,
-                              use_intersection_over_cell, pick_min_class_id,
-                              background_class_id)
+        labels = infer_labels(
+            self.geojson, self.crs_transformer, extent, cell_size, ioa_thresh,
+            use_intersection_over_cell, pick_min_class_id, background_class_id)
         cells = labels.get_cells()
 
         self.assertEqual(len(cells), 4)
@@ -236,7 +246,8 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
     def test_read_labels1(self):
         # Extent only has enough of first box in it.
         extent = Box.make_square(0, 0, 0.5)
-        labels = read_labels(self.geojson_dict, self.crs_transformer, extent)
+        labels = read_labels(self.geojson_no_multipolygons,
+                             self.crs_transformer, extent)
 
         cells = labels.get_cells()
         self.assertEqual(len(cells), 1)
@@ -248,7 +259,8 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
     def test_read_labels2(self):
         # Extent contains both boxes.
         extent = Box.make_square(0, 0, 4)
-        labels = read_labels(self.geojson_dict, self.crs_transformer, extent)
+        labels = read_labels(self.geojson_no_multipolygons,
+                             self.crs_transformer, extent)
 
         cells = labels.get_cells()
         self.assertEqual(len(cells), 2)
