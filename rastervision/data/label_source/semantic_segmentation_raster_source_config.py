@@ -6,7 +6,7 @@ from rastervision.data.label_source import (LabelSourceConfig,
                                             LabelSourceConfigBuilder,
                                             SemanticSegmentationRasterSource)
 from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
-from rastervision.data.raster_source import RasterSourceConfig, GeoJSONSourceConfig
+from rastervision.data.raster_source import RasterSourceConfig
 
 
 class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
@@ -113,15 +113,8 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
 
     def validate(self):
         source = self.config.get('source')
-        rgb_class_map = self.config.get('rgb_class_map')
 
         if source is None:
             raise rv.ConfigError(
                 'You must set the source for SemanticSegmentationRasterSourceConfig'
                 ' Use "with_raster_source".')
-
-        if type(source) != GeoJSONSourceConfig and rgb_class_map is None:
-            raise rv.ConfigError(
-                'You must set the rgb_class_map for '
-                'SemanticSegmentationRasterSourceConfig. Use "with_rgb_class_map".'
-            )
