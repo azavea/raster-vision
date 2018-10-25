@@ -25,8 +25,12 @@ class NoopAugmentorConfig(AugmentorConfig):
     def create_augmentor(self):
         return NoopAugmentor()
 
-    def update_for_command(self, command_type, experiment_config, context=[]):
-        return (self, rv.core.CommandIODefinition())
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        return io_def or rv.core.CommandIODefinition()
 
 
 class NoopAugmentorConfigBuilder(AugmentorConfigBuilder):

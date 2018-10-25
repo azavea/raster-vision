@@ -107,39 +107,31 @@ class SceneConfig(BundledConfigMixin, Config):
     def to_builder(self):
         return SceneConfigBuilder(self)
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
         if context is None:
             context = []
         context = context + [self]
-        io_def = rv.core.CommandIODefinition()
+        io_def = io_def or rv.core.CommandIODefinition()
 
-        b = self.to_builder()
-
-        (new_raster_source,
-         sub_io_def) = self.raster_source.update_for_command(
-             command_type, experiment_config, context)
-        io_def.merge(sub_io_def)
-        b = b.with_raster_source(new_raster_source)
+        self.raster_source.update_for_command(command_type, experiment_config,
+                                              context, io_def)
 
         if self.label_source:
-            (new_label_source,
-             sub_io_def) = self.label_source.update_for_command(
-                 command_type, experiment_config, context)
-            io_def.merge(sub_io_def)
-            b = b.with_label_source(new_label_source)
+            self.label_source.update_for_command(
+                command_type, experiment_config, context, io_def)
 
         if self.label_store:
-            (new_label_store,
-             sub_io_def) = self.label_store.update_for_command(
-                 command_type, experiment_config, context)
-            io_def.merge(sub_io_def)
-            b = b.with_label_store(new_label_store)
+            self.label_store.update_for_command(
+                command_type, experiment_config, context, io_def)
 
         if self.aoi_uri:
             io_def.add_input(self.aoi_uri)
 
-        return (b.build(), io_def)
+        return io_def
 
     @staticmethod
     def builder():

@@ -1,6 +1,10 @@
 from typing import List
+import logging
+from copy import deepcopy
 
 import rastervision as rv
+
+log = logging.getLogger(__name__)
 
 
 class CommandDefinition:
@@ -25,9 +29,16 @@ class CommandDefinition:
         command_definitions = []
 
         for experiment in experiments:
-            e = experiment
+            e = deepcopy(experiment)
+            log.debug(
+                'Generating command definitions for experiment {}...'.format(
+                    e.id))
             for command_type in rv.ALL_COMMANDS:
-                (e, io_def) = e.update_for_command(command_type, e)
+                log.debug(
+                    'Updating config for command {}...'.format(command_type))
+                io_def = e.update_for_command(command_type, e)
+                log.debug('Creating experiment configuration...'.format(
+                    command_type))
                 command_config = e.make_command_config(command_type)
                 command_def = cls(e.id, command_config, io_def)
                 command_definitions.append(command_def)

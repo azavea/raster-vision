@@ -92,42 +92,45 @@ class KerasClassificationConfig(BackendConfig):
                    .with_model_uri(local_model_uri) \
                    .build()
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
-        conf, io_def = super().update_for_command(command_type,
-                                                  experiment_config, context)
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = super().update_for_command(command_type, experiment_config,
+                                            context, io_def)
         if command_type == rv.CHIP:
-            if not conf.training_data_uri:
-                conf.training_data_uri = experiment_config.chip_uri
+            if not self.training_data_uri:
+                self.training_data_uri = experiment_config.chip_uri
 
             outputs = list(
-                map(lambda x: os.path.join(conf.training_data_uri, x),
+                map(lambda x: os.path.join(self.training_data_uri, x),
                     CHIP_OUTPUT_FILES))
 
             io_def.add_outputs(outputs)
         if command_type == rv.TRAIN:
-            if not conf.training_data_uri:
+            if not self.training_data_uri:
                 io_def.add_missing('Missing training_data_uri.')
             else:
                 inputs = list(
-                    map(lambda x: os.path.join(conf.training_data_uri, x),
+                    map(lambda x: os.path.join(self.training_data_uri, x),
                         CHIP_OUTPUT_FILES))
                 io_def.add_inputs(inputs)
 
-            if not conf.training_output_uri:
-                conf.training_output_uri = experiment_config.train_uri
-            if not conf.model_uri:
-                conf.model_uri = os.path.join(conf.training_output_uri,
+            if not self.training_output_uri:
+                self.training_output_uri = experiment_config.train_uri
+            if not self.model_uri:
+                self.model_uri = os.path.join(self.training_output_uri,
                                               'model')
-            io_def.add_output(conf.model_uri)
+            io_def.add_output(self.model_uri)
 
         if command_type in [rv.PREDICT, rv.BUNDLE]:
-            if not conf.model_uri:
+            if not self.model_uri:
                 io_def.add_missing('Missing model_uri.')
             else:
-                io_def.add_input(conf.model_uri)
+                io_def.add_input(self.model_uri)
 
-        return (conf, io_def)
+        return io_def
 
 
 class KerasClassificationConfigBuilder(BackendConfigBuilder):

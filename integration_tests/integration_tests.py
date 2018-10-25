@@ -40,7 +40,8 @@ class IntegrationTestExperimentRunner(rv.runner.LocalExperimentRunner):
     def _run_experiment(self, command_dag):
         """Check serialization of all commands."""
         for command_config in command_dag.get_sorted_commands():
-            deepcopy(rv.command.CommandConfig.from_proto(command_config.to_proto()))
+            deepcopy(
+                rv.command.CommandConfig.from_proto(command_config.to_proto()))
 
         super()._run_experiment(command_dag)
 

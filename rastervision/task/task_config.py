@@ -52,16 +52,18 @@ class TaskConfig(BundledConfigMixin, Config):
                            .from_proto(msg) \
                            .build()
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
-        conf = self
-        io_def = rv.core.CommandIODefinition()
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = io_def or rv.core.CommandIODefinition()
         if command_type == rv.BUNDLE:
-            if not conf.predict_package_uri:
-                conf.predict_package_uri = os.path.join(
+            if not self.predict_package_uri:
+                self.predict_package_uri = os.path.join(
                     experiment_config.bundle_uri, 'predict_package.zip')
-            io_def.add_output(conf.predict_package_uri)
-        return (conf, io_def)
+            io_def.add_output(self.predict_package_uri)
+        return io_def
 
 
 class TaskConfigBuilder(ConfigBuilder):

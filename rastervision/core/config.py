@@ -1,5 +1,6 @@
 from abc import (ABC, abstractmethod)
 import os
+import pickle
 
 from rastervision.utils.files import download_or_copy
 
@@ -22,12 +23,14 @@ class Config(ABC):
         pass  # pragma: no cover
 
     @abstractmethod
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
-        """Returns a copy of this config which may or may not have
-           been modified based on the command needs and the experiment
-           configuration, as well as the IO definitions this configuration
-           contributes to the command. [TODO: Reword]
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        """Updates this configuration for the given command, and
+        returns a CommandIODefinition that includes the inputs, outputs,
+        and missing files for this configuration at this command.x
 
            Args:
               command_type: The command type that is currently being preprocessed.
@@ -36,12 +39,18 @@ class Config(ABC):
               context: Optional list of parent configurations, to allow
                        for child configurations contained in collections
                        to understand their context in the experiment configuration.
+              io_def: The CommandIODefinition that this call should modify.
+                      If not provided, update_for_command will use a new, empty instance.
 
-           Note: While configuration aims to be immutable for client
+           Returns:
+              The updated CommandIODefinition with any input and ouput
+              files for this config under this command, as well as any
+              missing inputs to communication. If io_def is passed in,
+              the return value will be equal to the io_def parameter.
+
+           Note: While configuration is immutable for client
                  facing operations, this is an internal operation and
-                 mutating the coniguration is acceptable.
-
-           Returns: (config, io_def)
+                 mutates the configuration.
         """
         pass  # pragma: no cover
 
@@ -97,6 +106,11 @@ class ConfigBuilder(ABC):
         """
         pass  # pragma: no cover
 
+    def __deepcopy__(self, memodict={}):
+        """Custom deep copy that uses pickle instead of default behavior,
+        since default behavior can be extremely slow for large lists and objects"""
+        return pickle.loads(pickle.dumps(self, -1))
+
 
 class BundledConfigMixin(ABC):
     """Mixin for configurations that participate in the bundling of a
@@ -122,3 +136,8 @@ class BundledConfigMixin(ABC):
     def load_bundle_files(self, bundle_dir):
         """Load files from a prediction package bundle directory."""
         pass  # pragma: no cover
+
+    def __deepcopy__(self, memodict={}):
+        """Custom deep copy that uses pickle instead of default behavior,
+        since default behavior can be extremely slow for large lists and objects"""
+        return pickle.loads(pickle.dumps(self, -1))

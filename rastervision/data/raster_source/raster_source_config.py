@@ -86,21 +86,17 @@ class RasterSourceConfig(BundledConfigMixin, Config):
     def create_transformers(self):
         return list(map(lambda c: c.create_transformer(), self.transformers))
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
-        io_def = rv.core.CommandIODefinition()
-        new_transformers = []
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = io_def or rv.core.CommandIODefinition()
         for transformer in self.transformers:
-            t, sub_io_def = transformer.update_for_command(
-                command_type, experiment_config, context)
-            new_transformers.append(t)
-            io_def.merge(sub_io_def)
+            transformer.update_for_command(command_type, experiment_config,
+                                           context, io_def)
 
-        conf = self.to_builder() \
-                   .with_transformers(new_transformers) \
-                   .build()
-
-        return (conf, io_def)
+        return io_def
 
 
 class RasterSourceConfigBuilder(ConfigBuilder):
@@ -109,7 +105,7 @@ class RasterSourceConfigBuilder(ConfigBuilder):
             map(lambda m: RasterTransformerConfig.from_proto(m),
                 msg.transformers))
 
-        return self.with_channel_order(msg.channel_order) \
+        return self.with_channel_order(list(msg.channel_order)) \
                    .with_transformers(transformers)
 
     def with_channel_order(self, channel_order):
@@ -132,7 +128,7 @@ class RasterSourceConfigBuilder(ConfigBuilder):
 
         """
         b = deepcopy(self)
-        b.config['transformers'] = transformers
+        b.config['transformers'] = list(transformers)
         return b
 
     def with_transformer(self, transformer):

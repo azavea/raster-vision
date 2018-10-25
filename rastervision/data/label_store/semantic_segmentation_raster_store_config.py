@@ -31,9 +31,12 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
         return SemanticSegmentationRasterStore(
             self.uri, extent, crs_transformer, tmp_dir, class_map=class_map)
 
-    def update_for_command(self, command_type, experiment_config, context=[]):
-        conf = self
-        io_def = rv.core.CommandIODefinition()
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = io_def or rv.core.CommandIODefinition()
 
         if command_type == rv.PREDICT:
             if not self.uri:
@@ -45,16 +48,14 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
                     if isinstance(c, rv.SceneConfig):
                         uri = os.path.join(root, '{}.tif'.format(c.id))
                 if uri:
-                    conf = conf.to_builder() \
-                               .with_uri(uri) \
-                               .build()
+                    self.uri = uri
                     io_def.add_output(uri)
                 else:
                     raise rv.ConfigError(
                         'SemanticSegmentationRasterStoreConfig has no '
                         'URI set, and is not associated with a SceneConfig.')
 
-            io_def.add_output(conf.uri)
+            io_def.add_output(self.uri)
 
         if command_type == rv.EVAL:
             if self.uri:
@@ -63,7 +64,7 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
                 msg = 'No URI set for SemanticSegmentationRasterStoreConfig'
                 io_def.add_missing(msg)
 
-        return (conf, io_def)
+        return io_def
 
 
 class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):

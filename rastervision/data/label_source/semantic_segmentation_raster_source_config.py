@@ -31,21 +31,20 @@ class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
             self.source.create_source(tmp_dir, extent, crs_transformer),
             self.rgb_class_map)
 
-    def update_for_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
         if context is None:
             context = []
         context = context + [self]
-        io_def = rv.core.CommandIODefinition()
+        io_def = io_def or rv.core.CommandIODefinition()
 
-        b = self.to_builder()
+        self.source.update_for_command(command_type, experiment_config,
+                                       context, io_def)
 
-        (new_raster_source, sub_io_def) = self.source.update_for_command(
-            command_type, experiment_config, context)
-
-        io_def.merge(sub_io_def)
-        b = b.with_raster_source(new_raster_source)
-
-        return (b.build(), io_def)
+        return io_def
 
 
 class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
