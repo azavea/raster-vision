@@ -96,7 +96,7 @@ class RVConfig:
 
         # Set logging level
         root_log = logging.getLogger('rastervision')
-        if self.verbosity >= Verbosity.VERY_VERBOSE:
+        if self.verbosity >= Verbosity.VERBOSE:
             root_log.setLevel(logging.DEBUG)
         elif self.verbosity >= Verbosity.NORMAL:
             root_log.setLevel(logging.INFO)
