@@ -28,8 +28,7 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
 
     os.makedirs(directory, exist_ok=True)
 
-    is_empty = len(os.listdir(directory)) == 0
-    if check_empty and not is_empty:
+    if check_empty and any(os.scandir(directory)):
         raise ValueError(
             '{} needs to be an empty directory!'.format(directory))
 
@@ -80,20 +79,13 @@ class LocalFileSystem(FileSystem):
             shutil.rmtree(dest_dir_uri)
 
         # https://stackoverflow.com/a/15824216/841563
-        def recursive_overwrite(src, dest, ignore=None):
+        def recursive_overwrite(src, dest):
             if os.path.isdir(src):
                 if not os.path.isdir(dest):
                     os.makedirs(dest)
-                    files = os.listdir(src)
-                    if ignore is not None:
-                        ignored = ignore(src, files)
-                    else:
-                        ignored = set()
-                        for f in files:
-                            if f not in ignored:
-                                recursive_overwrite(
-                                    os.path.join(src, f), os.path.join(
-                                        dest, f), ignore)
+                    for entry in os.scandir(src):
+                        recursive_overwrite(entry.path,
+                                            os.path.join(dest, entry.name))
             else:
                 shutil.copyfile(src, dest)
 
