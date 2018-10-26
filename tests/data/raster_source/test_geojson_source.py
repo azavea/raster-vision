@@ -70,25 +70,27 @@ class TestGeoJSONSource(unittest.TestCase):
         }
 
         source = self.build_source(geojson)
-        self.assertEqual(source.get_extent(), self.extent)
-        chip = source.get_image_array()
-        self.assertEqual(chip.shape, (10, 10, 1))
+        with source.activate():
+            self.assertEqual(source.get_extent(), self.extent)
+            chip = source.get_image_array()
+            self.assertEqual(chip.shape, (10, 10, 1))
 
-        expected_chip = self.background_class_id * np.ones((10, 10, 1))
-        expected_chip[0:5, 0:5, 0] = self.class_id
-        expected_chip[0:10, 6:8] = self.class_id
-        np.testing.assert_array_equal(chip, expected_chip)
+            expected_chip = self.background_class_id * np.ones((10, 10, 1))
+            expected_chip[0:5, 0:5, 0] = self.class_id
+            expected_chip[0:10, 6:8] = self.class_id
+            np.testing.assert_array_equal(chip, expected_chip)
 
     def test_get_chip_no_polygons(self):
         geojson = {'type': 'FeatureCollection', 'features': []}
 
         source = self.build_source(geojson)
-        self.assertEqual(source.get_extent(), self.extent)
-        chip = source.get_image_array()
-        self.assertEqual(chip.shape, (10, 10, 1))
+        with source.activate():
+            self.assertEqual(source.get_extent(), self.extent)
+            chip = source.get_image_array()
+            self.assertEqual(chip.shape, (10, 10, 1))
 
-        expected_chip = self.background_class_id * np.ones((10, 10, 1))
-        np.testing.assert_array_equal(chip, expected_chip)
+            expected_chip = self.background_class_id * np.ones((10, 10, 1))
+            np.testing.assert_array_equal(chip, expected_chip)
 
 
 if __name__ == '__main__':

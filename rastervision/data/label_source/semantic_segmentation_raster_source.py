@@ -4,12 +4,13 @@ import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap
+from rastervision.data import ActivateMixin
 from rastervision.data.label import SemanticSegmentationLabels
 from rastervision.data.label_source import LabelSource, SegmentationClassTransformer
 from rastervision.data.raster_source import RasterSource
 
 
-class SemanticSegmentationRasterSource(LabelSource):
+class SemanticSegmentationRasterSource(ActivateMixin, LabelSource):
     """A read-only label source for segmentation raster files.
     """
 
@@ -17,10 +18,12 @@ class SemanticSegmentationRasterSource(LabelSource):
         """Constructor.
 
         Args:
-            source: (RasterSource) assumed to have RGB values that are mapped to
-                class_ids using the rgb_class_map
+            source: (RasterSource) A raster source that returns a single channel
+                raster with class_ids as values, or a 3 channel raster with
+                RGB values that are mapped to class_ids using the rgb_class_map
             rgb_class_map: (ClassMap) with color values filled in. Optional and used to
-                transform RGB values to class ids.
+                transform RGB values to class ids. Only use if the raster source
+                is RGB.
         """
         self.source = source
         self.class_transformer = None
@@ -77,3 +80,12 @@ class SemanticSegmentationRasterSource(LabelSource):
             labels = np.squeeze(raw_labels)
 
         return SemanticSegmentationLabels.from_array(labels)
+
+    def _subcomponents_to_activate(self):
+        return [self.source]
+
+    def _activate(self):
+        pass
+
+    def _deactivate(self):
+        pass
