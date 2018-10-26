@@ -47,7 +47,9 @@ class TestChipClassification(unittest.TestCase):
             scene = s.create_scene(task_config, tmp_dir)
             backend = backend_config.create_backend(task_config)
             task = task_config.create_task(backend)
-            windows = task.get_train_windows(scene)
+
+            with scene.activate():
+                windows = task.get_train_windows(scene)
 
             from rastervision.data import (ChipClassificationLabels,
                                            ChipClassificationGeoJSONStore)

@@ -38,9 +38,10 @@ class TestImageSource(unittest.TestCase):
                                           .build() \
                                           .create_source(tmp_dir)
 
-            out_chip = source.get_image_array()
-            expected_out_chip = np.ones((2, 2, 3)) * 170
-            np.testing.assert_equal(out_chip, expected_out_chip)
+            with source.activate():
+                out_chip = source.get_image_array()
+                expected_out_chip = np.ones((2, 2, 3)) * 170
+                np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_missing_config_uri(self):
         with self.assertRaises(rv.ConfigError):

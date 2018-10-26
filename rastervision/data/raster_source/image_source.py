@@ -1,5 +1,3 @@
-import rasterio
-
 from rastervision.data.raster_source.rasterio_source import (
     RasterioRasterSource)
 from rastervision.data.crs_transformer.identity_crs_transformer import (
@@ -12,9 +10,8 @@ class ImageSource(RasterioRasterSource):
         self.uri = uri
         super().__init__(raster_transformers, temp_dir, channel_order)
 
-    def build_image_dataset(self, temp_dir):
-        imagery_path = download_if_needed(self.uri, self.temp_dir)
-        return rasterio.open(imagery_path)
+    def _download_data(self, temp_dir):
+        return download_if_needed(self.uri, self.temp_dir)
 
-    def get_crs_transformer(self):
-        return IdentityCRSTransformer()
+    def _set_crs_transformer(self):
+        self.crs_transformer = IdentityCRSTransformer()

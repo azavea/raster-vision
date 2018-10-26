@@ -1,4 +1,7 @@
-class Scene():
+from rastervision.data import ActivateMixin
+
+
+class Scene(ActivateMixin):
     """The raster data and labels associated with an area of interest."""
 
     def __init__(self,
@@ -24,3 +27,15 @@ class Scene():
             self.aoi_polygons = []
         else:
             self.aoi_polygons = aoi_polygons
+
+    def _subcomponents_to_activate(self):
+        return [
+            self.raster_source, self.ground_truth_label_source,
+            self.prediction_label_store
+        ]
+
+    def _activate(self):
+        pass
+
+    def _deactivate(self):
+        pass

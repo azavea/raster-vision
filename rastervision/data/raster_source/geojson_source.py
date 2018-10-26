@@ -4,6 +4,7 @@ from rasterio.features import rasterize
 import numpy as np
 import shapely
 
+from rastervision.data import (ActivateMixin, ActivationError)
 from rastervision.data.raster_source import RasterSource
 from rastervision.utils.files import file_to_str
 from rastervision.data.utils import geojson_to_shapes
@@ -32,7 +33,7 @@ def geojson_to_raster(geojson, rasterizer_options, extent, crs_transformer):
     return raster
 
 
-class GeoJSONSource(RasterSource):
+class GeoJSONSource(ActivateMixin, RasterSource):
     """A RasterSource based on the rasterization of a GeoJSON file."""
 
     def __init__(self, uri, rasterizer_options, extent, crs_transformer):
@@ -49,12 +50,9 @@ class GeoJSONSource(RasterSource):
         self.rasterizer_options = rasterizer_options
         self.extent = extent
         self.crs_transformer = crs_transformer
-        geojson = json.loads(file_to_str(self.uri))
-        self.raster = geojson_to_raster(geojson, rasterizer_options, extent,
-                                        crs_transformer)
-        # Add third singleton dim since rasters must have >=1 channel.
-        self.raster = np.expand_dims(self.raster, 2)
-        super().__init__()
+        self.activated = False
+
+        super().__init__(channel_order=[0])
 
     def get_extent(self):
         """Return the extent of the RasterSource.
@@ -81,4 +79,18 @@ class GeoJSONSource(RasterSource):
         Returns:
             [height, width, channels] numpy array
         """
+        if not self.activated:
+            raise ActivationError('GeoJSONSource must be activated before use')
         return self.raster[window.ymin:window.ymax, window.xmin:window.xmax, :]
+
+    def _activate(self):
+        geojson = json.loads(file_to_str(self.uri))
+        self.raster = geojson_to_raster(geojson, self.rasterizer_options,
+                                        self.extent, self.crs_transformer)
+        # Add third singleton dim since rasters must have >=1 channel.
+        self.raster = np.expand_dims(self.raster, 2)
+        self.activated = True
+
+    def _deactivate(self):
+        self.raster = None
+        self.activated = False
