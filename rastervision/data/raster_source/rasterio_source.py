@@ -37,10 +37,10 @@ def load_window(image_dataset, window=None, channels=None, is_masked=False):
 
 class RasterioRasterSource(ActivateMixin, RasterSource):
     def __init__(self, raster_transformers, temp_dir, channel_order=None):
-        super().__init__(channel_order, raster_transformers)
-
         self.temp_dir = temp_dir
         self.imagery_path = self._download_data(temp_dir)
+
+        num_channels = None
 
         # Activate in order to get information out of the raster
         with self.activate():
@@ -58,13 +58,21 @@ class RasterioRasterSource(ActivateMixin, RasterSource):
             self.width = self.image_dataset.width
             # Get 1x1 chip (after applying raster transformers) to test dtype
             # and channel order if needed
-            test_chip = self.get_chip(Box.make_square(0, 0, 1))
+            test_chip = self.get_raw_chip(Box.make_square(0, 0, 1))
+
+            raw_channels = list(range(0, test_chip.shape[2]))
+            self.channel_order = channel_order or raw_channels
+            num_channels = len(raw_channels)
+
+            # Transform the chip to get the final dtype
+            for transformer in raster_transformers:
+                test_chip = transformer.transform(test_chip, channel_order)
+
             self.dtype = test_chip.dtype
 
-            self.channel_order = self.channel_order or list(
-                range(0, test_chip.shape[2]))
-
             self._set_crs_transformer()
+
+        super().__init__(channel_order, num_channels, raster_transformers)
 
     @abstractmethod
     def _download_data(self, tmp_dir):

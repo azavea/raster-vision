@@ -52,7 +52,7 @@ class GeoJSONSource(ActivateMixin, RasterSource):
         self.crs_transformer = crs_transformer
         self.activated = False
 
-        super().__init__(channel_order=[0])
+        super().__init__(channel_order=[0], num_channels=1)
 
     def get_extent(self):
         """Return the extent of the RasterSource.
