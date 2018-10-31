@@ -48,14 +48,17 @@ class GeoTiffSourceConfig(RasterSourceConfig):
         return GeoTiffSource(self.uris, transformers, tmp_dir,
                              self.channel_order)
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
-        (conf, io_def) = super().update_for_command(command_type,
-                                                    experiment_config, context)
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = super().update_for_command(command_type, experiment_config,
+                                            context, io_def)
         for uri in self.uris:
             io_def.add_input(uri)
 
-        return (conf, io_def)
+        return io_def
 
 
 class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
@@ -86,7 +89,7 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
     def with_uris(self, uris):
         """Set URIs for a GeoTIFFs containing as raster data."""
         b = deepcopy(self)
-        b.config['uris'] = uris
+        b.config['uris'] = list(uris)
         return b
 
     def with_uri(self, uri):

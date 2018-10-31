@@ -1,5 +1,6 @@
 import os
 from copy import deepcopy
+import logging
 
 import rastervision as rv
 from rastervision.core import CommandIODefinition
@@ -7,6 +8,8 @@ from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.utils.files import save_json_config
 from rastervision.protos.experiment_pb2 \
     import ExperimentConfig as ExperimentConfigMsg
+
+log = logging.getLogger(__name__)
 
 
 class ExperimentConfig(Config):
@@ -41,47 +44,39 @@ class ExperimentConfig(Config):
         self.eval_uri = eval_uri
         self.bundle_uri = bundle_uri
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
         """
         Returns a tuple (config, dependencies) with the
         """
-        io_def = CommandIODefinition()
-        new_task, sub_io_def = self.task.update_for_command(
-            command_type, experiment_config, context)
-        io_def.merge(sub_io_def)
+        io_def = io_def or CommandIODefinition()
 
-        new_backend, sub_io_def = self.backend.update_for_command(
-            command_type, experiment_config, context)
-        io_def.merge(sub_io_def)
+        log.debug('Updating task for command {}'.format(command_type))
+        self.task.update_for_command(command_type, experiment_config, context,
+                                     io_def)
 
-        new_dataset, sub_io_def = self.dataset.update_for_command(
-            command_type, experiment_config, context)
-        io_def.merge(sub_io_def)
+        log.debug('Updating backend for command {}'.format(command_type))
+        self.backend.update_for_command(command_type, experiment_config,
+                                        context, io_def)
 
-        new_analyzers = []
+        log.debug('Updating dataset for command {}'.format(command_type))
+        self.dataset.update_for_command(command_type, experiment_config,
+                                        context, io_def)
+
+        log.debug('Updating analyzers for command {}'.format(command_type))
         for analyzer in self.analyzers:
-            new_analyzer, sub_io_def = analyzer.update_for_command(
-                command_type, experiment_config, context)
-            io_def.merge(sub_io_def)
-            new_analyzers.append(new_analyzer)
+            analyzer.update_for_command(command_type, experiment_config,
+                                        context, io_def)
 
-        new_evaluators = []
+        log.debug('Updating evaluators for command {}'.format(command_type))
         for evaluator in self.evaluators:
-            new_evaluator, sub_io_def = evaluator.update_for_command(
-                command_type, experiment_config, context)
-            io_def.merge(sub_io_def)
-            new_evaluators.append(new_evaluator)
+            evaluator.update_for_command(command_type, experiment_config,
+                                         context, io_def)
 
-        new_config = self.to_builder() \
-                         .with_task(new_task) \
-                         .with_backend(new_backend) \
-                         .with_dataset(new_dataset) \
-                         .with_analyzers(new_analyzers) \
-                         .with_evaluators(new_evaluators) \
-                         .build()
-
-        return (new_config, io_def)
+        return io_def
 
     def make_command_config(self, command_type):
         return rv._registry.get_command_config_builder(command_type)() \
@@ -89,14 +84,14 @@ class ExperimentConfig(Config):
                            .build()
 
     def fully_resolve(self):
-        """Returns a fully resolved version of this  experiment.
+        """Returns a fully resolved copy of this  experiment.
 
         A fully resolved experiment has all implicit paths put into place,
         and is constructed by calling update_for_command for each command.
         """
-        e = self
+        e = deepcopy(self)
         for command_type in rv.ALL_COMMANDS:
-            e, _ = e.update_for_command(command_type, e)
+            e.update_for_command(command_type, e)
         return e
 
     def save_config(self):
@@ -247,9 +242,29 @@ class ExperimentConfigBuilder(ConfigBuilder):
                 .with_eval_uri(msg.eval_uri) \
                 .with_bundle_uri(msg.bundle_uri)
 
+    def _copy(self):
+        """Create a copy; avoid using deepcopy on the dataset
+        as it can have performance implicitions.
+        """
+        e = ExperimentConfigBuilder()
+        e.config['id'] = self.config.get('id')
+        e.config['task'] = deepcopy(self.config.get('task'))
+        e.config['backend'] = deepcopy(self.config.get('backend'))
+        e.config['dataset'] = self.config.get('dataset')
+        e.config['analyzers'] = self.config.get('analyzers')
+        e.config['evaluators'] = self.config.get('evaluators')
+        e.config['root_uri'] = self.config.get('root_uri')
+        e.config['analyze_uri'] = self.config.get('analyze_uri')
+        e.config['chip_uri'] = self.config.get('chip_uri')
+        e.config['train_uri'] = self.config.get('train_uri')
+        e.config['predict_uri'] = self.config.get('predict_uri')
+        e.config['eval_uri'] = self.config.get('eval_uri')
+        e.config['bundle_uri'] = self.config.get('bundle_uri')
+        return e
+
     def with_id(self, id):
         """Sets an id for the experiment."""
-        b = deepcopy(self)
+        b = self._copy()
         b.config['id'] = id
         return b
 
@@ -260,25 +275,25 @@ class ExperimentConfigBuilder(ConfigBuilder):
             task:  A TaskConfig object.
 
         """
-        b = deepcopy(self)
+        b = self._copy()
         b.config['task'] = task
         return b
 
     def with_backend(self, backend):
         """Specifies the backend to be used, e.g. rv.TF_DEEPLAB."""
-        b = deepcopy(self)
+        b = self._copy()
         b.config['backend'] = backend
         return b
 
     def with_dataset(self, dataset):
         """Specifies the dataset to be used."""
-        b = deepcopy(self)
+        b = self._copy()
         b.config['dataset'] = dataset
         return b
 
     def with_analyzers(self, analyzers):
         """Add analyzers to be used in the analysis stage."""
-        b = deepcopy(self)
+        b = self._copy()
         b.config['analyzers'] = analyzers
         return b
 
@@ -293,7 +308,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
 
     def with_evaluators(self, evaluators):
         """Sets the evaluators to use for the evaluation stage."""
-        b = deepcopy(self)
+        b = self._copy()
         b.config['evaluators'] = evaluators
         return b
 
@@ -306,7 +321,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
         subsequently overridden.
 
         """
-        b = deepcopy(self)
+        b = self._copy()
         b.config['root_uri'] = uri
         return b
 
@@ -315,7 +330,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
            stored.
 
         """
-        b = deepcopy(self)
+        b = self._copy()
         b.config['analyze_uri'] = uri
         return b
 
@@ -324,7 +339,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
            stored.
 
         """
-        b = deepcopy(self)
+        b = self._copy()
         b.config['chip_uri'] = uri
         return b
 
@@ -333,7 +348,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
            stored.
 
         """
-        b = deepcopy(self)
+        b = self._copy()
         b.config['train_uri'] = uri
         return b
 
@@ -342,7 +357,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
            stored.
 
         """
-        b = deepcopy(self)
+        b = self._copy()
         b.config['predict_uri'] = uri
         return b
 
@@ -351,7 +366,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
            stored.
 
         """
-        b = deepcopy(self)
+        b = self._copy()
         b.config['eval_uri'] = uri
         return b
 
@@ -360,42 +375,42 @@ class ExperimentConfigBuilder(ConfigBuilder):
            stored.
 
         """
-        b = deepcopy(self)
+        b = self._copy()
         b.config['bundle_uri'] = uri
         return b
 
     def with_analyze_key(self, key):
         """Sets the key associated with the analysis stage."""
-        b = deepcopy(self)
+        b = self._copy()
         b.analyze_key = key
         return b
 
     def with_chip_key(self, key):
         """Sets the key associated with the "chip" stage."""
-        b = deepcopy(self)
+        b = self._copy()
         b.chip_key = key
         return b
 
     def with_train_key(self, key):
         """Sets the key associated with the training stage."""
-        b = deepcopy(self)
+        b = self._copy()
         b.train_key = key
         return b
 
     def with_predict_key(self, key):
         """Sets the key associated with the prediction stage."""
-        b = deepcopy(self)
+        b = self._copy()
         b.predict_key = key
         return b
 
     def with_eval_key(self, key):
         """Sets the key associated with the evaluation stage."""
-        b = deepcopy(self)
+        b = self._copy()
         b.eval_key = key
         return b
 
     def with_bundle_key(self, key):
         """Sets the key associated with the bundling stage."""
-        b = deepcopy(self)
+        b = self._copy()
         b.bundle_key = key
         return b

@@ -94,37 +94,40 @@ class TFDeeplabConfig(BackendConfig):
 
         return msg
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
-        conf, io_def = super().update_for_command(command_type,
-                                                  experiment_config, context)
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = super().update_for_command(command_type, experiment_config,
+                                            context, io_def)
         if command_type == rv.CHIP:
-            conf.training_data_uri = experiment_config.chip_uri
+            self.training_data_uri = experiment_config.chip_uri
             outputs = list(
-                map(lambda x: os.path.join(conf.training_data_uri, x),
+                map(lambda x: os.path.join(self.training_data_uri, x),
                     CHIP_OUTPUT_FILES))
             io_def.add_outputs(outputs)
         if command_type == rv.TRAIN:
-            conf.training_output_uri = experiment_config.train_uri
+            self.training_output_uri = experiment_config.train_uri
             inputs = list(
                 map(lambda x: os.path.join(experiment_config.chip_uri, x),
                     CHIP_OUTPUT_FILES))
             io_def.add_inputs(inputs)
 
-            conf.model_uri = os.path.join(conf.training_output_uri, 'model')
-            io_def.add_output(conf.model_uri)
+            self.model_uri = os.path.join(self.training_output_uri, 'model')
+            io_def.add_output(self.model_uri)
 
             # Set the fine tune checkpoint name to the experiment id
-            if not conf.fine_tune_checkpoint_name:
-                conf.fine_tune_checkpoint_name = experiment_config.id
-            io_def.add_output(conf.fine_tune_checkpoint_name)
+            if not self.fine_tune_checkpoint_name:
+                self.fine_tune_checkpoint_name = experiment_config.id
+            io_def.add_output(self.fine_tune_checkpoint_name)
         if command_type in [rv.PREDICT, rv.BUNDLE]:
-            if not conf.model_uri:
+            if not self.model_uri:
                 io_def.add_missing('Missing model_uri.')
             else:
-                io_def.add_input(conf.model_uri)
+                io_def.add_input(self.model_uri)
 
-        return (conf, io_def)
+        return io_def
 
     def save_bundle_files(self, bundle_dir):
         if not self.model_uri:

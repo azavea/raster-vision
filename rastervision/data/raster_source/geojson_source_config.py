@@ -71,13 +71,16 @@ class GeoJSONSourceConfig(RasterSourceConfig):
         return GeoJSONSource(self.uri, self.rasterizer_options, extent,
                              crs_transformer)
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
-        (conf, io_def) = super().update_for_command(command_type,
-                                                    experiment_config)
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = super().update_for_command(command_type, experiment_config,
+                                            context, io_def)
         io_def.add_input(self.uri)
 
-        return (conf, io_def)
+        return io_def
 
 
 class GeoJSONSourceConfigBuilder(RasterSourceConfigBuilder):

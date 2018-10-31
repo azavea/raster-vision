@@ -1,9 +1,12 @@
 import networkx as nx
+import logging
 
 import rastervision as rv
 from rastervision.utils.files import file_exists
 
 import click
+
+log = logging.getLogger(__name__)
 
 
 class CommandDAG:
@@ -26,6 +29,7 @@ class CommandDAG:
 
         uri_dag = nx.DiGraph()
 
+        log.debug('Creating command and URI DAG from command definitions...')
         for idx, command_def in enumerate(command_definitions):
             uri_dag.add_node(idx)
             for input_uri in command_def.io_def.input_uris:
@@ -36,6 +40,7 @@ class CommandDAG:
 
         # Find all source input_uris, and ensure they exist.
         if not skip_file_check:
+            log.debug('Ensuring input files exist...')
             unsolved_sources = [
                 uri for uri in uri_dag.nodes
                 if (type(uri) == str and len(uri_dag.in_edges(uri)) == 0)
@@ -58,6 +63,7 @@ class CommandDAG:
         # If we are not rerunning, remove commands that have existing outputs.
         self.skipped_commands = []
         if not rerun_commands:
+            log.debug('Checking for existing output...')
             commands_to_outputs = [(idx, edge[1]) for idx in uri_dag.nodes
                                    if type(idx) == int
                                    for edge in uri_dag.out_edges(idx)]
@@ -76,6 +82,7 @@ class CommandDAG:
         # Collapse the graph to create edges from command to command.
         command_id_dag = nx.DiGraph()
 
+        log.debug('Creating DAG of commands...')
         for idx in [idx for idx in uri_dag.nodes if (type(idx) == int)]:
             command_id_dag.add_node(idx)
             for upstream_idx in [

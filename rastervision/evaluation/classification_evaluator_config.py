@@ -26,18 +26,18 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
 
         return msg
 
-    def update_for_command(self, command_type, experiment_config, context=[]):
-        conf = self
-        io_def = rv.core.CommandIODefinition()
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = io_def or rv.core.CommandIODefinition()
         if command_type == rv.EVAL:
             if not self.output_uri:
-                output_uri = os.path.join(experiment_config.eval_uri,
-                                          'eval.json')
-                conf = conf.to_builder() \
-                           .with_output_uri(output_uri) \
-                           .build()
-            io_def.add_output(conf.output_uri)
-        return (conf, io_def)
+                self.output_uri = os.path.join(experiment_config.eval_uri,
+                                               'eval.json')
+            io_def.add_output(self.output_uri)
+        return io_def
 
 
 class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):

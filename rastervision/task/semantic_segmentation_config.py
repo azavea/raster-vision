@@ -100,7 +100,7 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                 .with_chip_size(conf.chip_size) \
                 .with_chip_options(
                     window_method=conf.chip_options.window_method,
-                    target_classes=conf.chip_options.target_classes,
+                    target_classes=list(conf.chip_options.target_classes),
                     debug_chip_probability=conf.chip_options.debug_chip_probability,
                     negative_survival_probability=negative_survival_probability,
                     chips_per_scene=conf.chip_options.chips_per_scene,

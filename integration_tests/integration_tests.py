@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from copy import deepcopy
 import json
 import os
 import math
@@ -30,6 +31,19 @@ tensorflow.set_random_seed(5678)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 TEST_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+class IntegrationTestExperimentRunner(rv.runner.LocalExperimentRunner):
+    def __init__(self, tmp_dir=None):
+        super().__init__(tmp_dir)
+
+    def _run_experiment(self, command_dag):
+        """Check serialization of all commands."""
+        for command_config in command_dag.get_sorted_commands():
+            deepcopy(
+                rv.command.CommandConfig.from_proto(command_config.to_proto()))
+
+        super()._run_experiment(command_dag)
 
 
 def console_info(msg):
@@ -139,8 +153,8 @@ def run_test(test, temp_dir):
 
     # Check that running doesn't raise any exceptions.
     try:
-        rv.runner.LocalExperimentRunner(os.path.join(temp_dir, test.lower())) \
-                 .run(experiment, rerun_commands=True)
+        IntegrationTestExperimentRunner(os.path.join(temp_dir, test.lower())) \
+            .run(experiment, rerun_commands=True)
 
     except Exception as exc:
         errors.append(

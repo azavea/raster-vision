@@ -1,5 +1,6 @@
 from abc import (ABC, abstractmethod)
 from typing import (List, Union)
+import logging
 
 import click
 from google.protobuf import json_format
@@ -7,6 +8,8 @@ from google.protobuf import json_format
 import rastervision as rv
 from rastervision.runner import (CommandDefinition, CommandDAG)
 from rastervision.cli import Verbosity
+
+log = logging.getLogger(__name__)
 
 
 class ExperimentRunner(ABC):
@@ -53,9 +56,12 @@ class ExperimentRunner(ABC):
         if not isinstance(experiments, list):
             experiments = [experiments]
 
+        log.debug('Generating command definitions from experiments...')
         command_definitions = CommandDefinition.from_experiments(experiments)
 
         # Filter  out commands we aren't running.
+
+        log.debug('Filtering commands not in target command list...')
         command_definitions, not_requested = CommandDefinition.filter_to_target_commands(
             command_definitions, commands_to_run)
 
@@ -71,6 +77,7 @@ class ExperimentRunner(ABC):
                     print()
 
         # Filter  out commands that don't have any output.
+        log.debug('Filtering commands that do not have any output...')
         (command_definitions,
          no_output) = CommandDefinition.filter_no_output(command_definitions)
 
@@ -89,10 +96,11 @@ class ExperimentRunner(ABC):
                 print()
 
         # Check if there are any unsatisfied inputs.
+        log.debug('Checking for missing input from configuration...')
         missing_inputs = CommandDefinition.get_missing_inputs(
             command_definitions)
         if missing_inputs:
-            # TODO: Replace with logging?
+            # TODO: Replace exception with logging?
             s = ''
             for exp_id in missing_inputs:
                 s += 'In {}:\n\t{}\n'.format(
@@ -104,6 +112,7 @@ class ExperimentRunner(ABC):
 
         # Remove duplicate commands, defining equality for a command by
         # the tuple (command_type, input_uris, output_uris)
+        log.debug('Removing duplicate commands...')
         (unique_commands, skipped_duplicate_commands
          ) = CommandDefinition.remove_duplicates(command_definitions)
 
@@ -120,6 +129,7 @@ class ExperimentRunner(ABC):
 
         # Ensure that for each type of command, there are none that clobber
         # each other's output.
+        log.debug("Ensuring commands do not overwrite each other's outputs...")
         clashing_commands = CommandDefinition.get_clashing_commands(
             unique_commands)
 
@@ -138,6 +148,7 @@ class ExperimentRunner(ABC):
             raise rv.ConfigError('ERROR: Command outputs will'
                                  'override each other: \n{}\n'.format(s))
 
+        log.debug('Constructing command DAG...')
         command_dag = CommandDAG(
             unique_commands, rerun_commands, skip_file_check=skip_file_check)
 
@@ -161,6 +172,9 @@ class ExperimentRunner(ABC):
                 seen_ids.add(command_def.experiment_id)
                 experiment = experiments_by_id[command_def.experiment_id]
                 if not dry_run:
+                    log.debug(
+                        'Saving experiment configuration for experiment {}'.
+                        format(experiment.id))
                     experiment.fully_resolve().save_config()
 
         if dry_run:
@@ -184,6 +198,7 @@ class ExperimentRunner(ABC):
                     print()
             self._dry_run(command_dag)
         else:
+            log.debug('Running experiment...')
             self._run_experiment(command_dag)
 
     @abstractmethod
