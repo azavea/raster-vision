@@ -1,10 +1,15 @@
-from copy import deepcopy
+import logging
+
+import click
 
 import rastervision as rv
 from rastervision.augmentor import AugmentorConfig
 from rastervision.data import (SceneConfig, Dataset)
 from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.protos.dataset_pb2 import DatasetConfig as DatasetConfigMsg
+from rastervision.cli import Verbosity
+
+log = logging.getLogger(__name__)
 
 
 class DatasetConfig(Config):
@@ -82,73 +87,78 @@ class DatasetConfig(Config):
             test_scenes=test_scenes,
             augmentors=augmentors)
 
-    def update_for_command(self, command_type, experiment_config,
-                           context=None):
-        io_def = rv.core.CommandIODefinition()
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        verbosity = Verbosity.get()
+
+        io_def = io_def or rv.core.CommandIODefinition()
+
+        def update_scenes(scenes_to_update, io_def, ensure_label_store):
+            for scene in scenes_to_update:
+                if ensure_label_store:
+                    # Ensure there is a label store associated with
+                    # validation and test scenes on PREDICT command.
+                    if not scene.label_store:
+                        scene.label_store = scene.to_builder() \
+                                                 .with_task(experiment_config.task) \
+                                                 .with_label_store() \
+                                                 .build() \
+                                                 .label_store
+                scene.update_for_command(command_type, experiment_config,
+                                         context, io_def)
 
         if command_type in [rv.ANALYZE, rv.CHIP]:
-            train_scenes = []
-            for scene in self.train_scenes:
-                (new_config, scene_io_def) = scene.update_for_command(
-                    command_type, experiment_config, context)
-                io_def.merge(scene_io_def)
-                train_scenes.append(new_config)
-        else:
-            train_scenes = self.train_scenes
+            log.debug(
+                'Updating train scenes for command {}'.format(command_type))
+            if verbosity >= Verbosity.VERBOSE:
+                with click.progressbar(
+                        self.train_scenes,
+                        label='Updating train scenes') as scenes_to_update:
+                    update_scenes(scenes_to_update, io_def, False)
+            else:
+                update_scenes(self.train_scenes, io_def, False)
 
         if command_type in [
                 rv.ANALYZE, rv.CHIP, rv.PREDICT, rv.EVAL, rv.BUNDLE
         ]:
-            val_scenes = []
-            for scene in self.validation_scenes:
-                if command_type == rv.PREDICT:
-                    # Ensure there is a label store associated with
-                    # predict and validation scenes.
-                    if not scene.label_store:
-                        scene = scene.to_builder() \
-                                     .with_task(experiment_config.task) \
-                                     .with_label_store() \
-                                     .build()
-                (new_config, scene_io_def) = scene.update_for_command(
-                    command_type, experiment_config, context)
-                io_def.merge(scene_io_def)
-                val_scenes.append(new_config)
+            log.debug('Updating validation scenes for command {}'.format(
+                command_type))
+            if Verbosity.get() >= Verbosity.VERBOSE:
+                with click.progressbar(
+                        self.validation_scenes,
+                        label='Updating validation scenes...  '
+                ) as scenes_to_update:
+                    update_scenes(scenes_to_update, io_def,
+                                  command_type == rv.PREDICT)
+            else:
+                update_scenes(self.validation_scenes, io_def,
+                              command_type == rv.PREDICT)
 
-            test_scenes = []
-            for scene in self.test_scenes:
-                if command_type == rv.PREDICT:
-                    # Ensure there is a label store associated with
-                    # predict and validation scenes.
-                    if not scene.label_store:
-                        scene = scene.to_builder() \
-                                     .with_task(experiment_config.task) \
-                                     .with_label_store() \
-                                     .build()
-                (new_config, scene_io_def) = scene.update_for_command(
-                    command_type, experiment_config, context)
-                io_def.merge(scene_io_def)
-                test_scenes.append(new_config)
-        else:
-            test_scenes = self.test_scenes
-            val_scenes = self.validation_scenes
+        if command_type in [rv.ANALYZE, rv.PREDICT, rv.EVAL, rv.BUNDLE]:
+
+            log.debug(
+                'Updating test scenes for command {}'.format(command_type))
+            if Verbosity.get() >= Verbosity.VERBOSE:
+                with click.progressbar(
+                        self.test_scenes,
+                        label='Updating test scenes...  ') as scenes_to_update:
+                    update_scenes(scenes_to_update, io_def,
+                                  command_type == rv.PREDICT)
+            else:
+                update_scenes(self.test_scenes, io_def,
+                              command_type == rv.PREDICT)
 
         if command_type == rv.CHIP:
-            augmentors = []
+            log.debug(
+                'Updating augmentors for command {}'.format(command_type))
             for augmentor in self.augmentors:
-                (new_config, aug_io_def) = augmentor.update_for_command(
-                    command_type, experiment_config, context)
-                io_def.merge(aug_io_def)
-                augmentors.append(new_config)
-        else:
-            augmentors = self.augmentors
+                augmentor.update_for_command(command_type, experiment_config,
+                                             context, io_def)
 
-        conf = self.to_builder().with_train_scenes(train_scenes) \
-                                .with_validation_scenes(val_scenes) \
-                                .with_test_scenes(test_scenes) \
-                                .with_augmentors(augmentors) \
-                                .build()
-
-        return (conf, io_def)
+        return io_def
 
     @staticmethod
     def from_proto(msg):
@@ -176,6 +186,17 @@ class DatasetConfigBuilder(ConfigBuilder):
             config['augmentors'] = prev.augmentors
         super().__init__(DatasetConfig, config)
 
+    def _copy(self):
+        """Create a copy; avoid using deepcopy as it can have
+        performance implications with many scenes
+        """
+        ds = DatasetConfigBuilder()
+        ds.config['train_scenes'] = self.config['train_scenes']
+        ds.config['validation_scenes'] = self.config['validation_scenes']
+        ds.config['test_scenes'] = self.config['test_scenes']
+        ds.config['augmentors'] = self.config['augmentors']
+        return ds
+
     def from_proto(self, msg):
         train_scenes = list(
             map(lambda x: SceneConfig.from_proto(x), msg.train_scenes))
@@ -193,8 +214,8 @@ class DatasetConfigBuilder(ConfigBuilder):
 
     def with_train_scenes(self, scenes):
         """Sets the scenes to be used for training."""
-        b = deepcopy(self)
-        b.config['train_scenes'] = scenes
+        b = self._copy()
+        b.config['train_scenes'] = list(scenes)
         return b
 
     def with_train_scene(self, scene):
@@ -203,8 +224,8 @@ class DatasetConfigBuilder(ConfigBuilder):
 
     def with_validation_scenes(self, scenes):
         """Sets the scenes to be used for validation."""
-        b = deepcopy(self)
-        b.config['validation_scenes'] = scenes
+        b = self._copy()
+        b.config['validation_scenes'] = list(scenes)
         return b
 
     def with_validation_scene(self, scene):
@@ -213,8 +234,8 @@ class DatasetConfigBuilder(ConfigBuilder):
 
     def with_test_scenes(self, scenes):
         """Sets the scenes to be used for testing."""
-        b = deepcopy(self)
-        b.config['test_scenes'] = scenes
+        b = self._copy()
+        b.config['test_scenes'] = list(scenes)
         return b
 
     def with_test_scene(self, scene):
@@ -223,8 +244,8 @@ class DatasetConfigBuilder(ConfigBuilder):
 
     def with_augmentors(self, augmentors):
         """Sets the data augmentors to be used."""
-        b = deepcopy(self)
-        b.config['augmentors'] = augmentors
+        b = self._copy()
+        b.config['augmentors'] = list(augmentors)
         return b
 
     def with_augmentor(self, augmentor):

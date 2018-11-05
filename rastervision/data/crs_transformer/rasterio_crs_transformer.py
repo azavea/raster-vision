@@ -1,21 +1,23 @@
 import pyproj
 
-from rastervision.data.crs_transformer import CRSTransformer
+from rasterio.transform import (rowcol, xy)
+
+from rastervision.data.crs_transformer import (CRSTransformer,
+                                               IdentityCRSTransformer)
 
 
 class RasterioCRSTransformer(CRSTransformer):
     """Transformer for a RasterioRasterSource."""
 
-    def __init__(self, image_dataset, map_crs='epsg:4326'):
+    def __init__(self, transform, image_crs, map_crs='epsg:4326'):
         """Construct transformer.
 
         Args:
             image_dataset: Rasterio DatasetReader
             map_crs: CRS code
         """
-        self.image_dataset = image_dataset
+        self.transform = transform
         self.map_proj = pyproj.Proj(init=map_crs)
-        image_crs = image_dataset.crs['init']
         self.image_proj = pyproj.Proj(init=image_crs)
 
         super().__init__(image_crs, map_crs)
@@ -31,7 +33,7 @@ class RasterioCRSTransformer(CRSTransformer):
         """
         image_point = pyproj.transform(self.map_proj, self.image_proj,
                                        map_point[0], map_point[1])
-        pixel_point = self.image_dataset.index(image_point[0], image_point[1])
+        pixel_point = rowcol(self.transform, image_point[0], image_point[1])
         pixel_point = (pixel_point[1], pixel_point[0])
         return pixel_point
 
@@ -44,8 +46,16 @@ class RasterioCRSTransformer(CRSTransformer):
         Returns:
             (x, y) tuple in map coordinates
         """
-        image_point = self.image_dataset.xy(
-            int(pixel_point[1]), int(pixel_point[0]))
+        image_point = xy(self.transform, int(pixel_point[1]),
+                         int(pixel_point[0]))
         map_point = pyproj.transform(self.image_proj, self.map_proj,
                                      image_point[0], image_point[1])
         return map_point
+
+    @classmethod
+    def from_dataset(cls, dataset, map_crs='epsg:4326'):
+        if dataset.crs is None:
+            return IdentityCRSTransformer()
+        transform = dataset.transform
+        image_crs = dataset.crs['init']
+        return cls(transform, image_crs, map_crs)

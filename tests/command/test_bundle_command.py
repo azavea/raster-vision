@@ -67,6 +67,7 @@ class TestBundleCommand(unittest.TestCase):
             scene = self.get_scene(tmp_dir)
             cmd = BundleCommandConfig.builder() \
                                      .with_task(task) \
+                                     .with_root_uri(tmp_dir) \
                                      .with_backend(backend) \
                                      .with_analyzers([analyzer]) \
                                      .with_scene(scene) \
@@ -121,6 +122,7 @@ class TestBundleCommand(unittest.TestCase):
             scene = self.get_scene(tmp_dir)
             cmd = BundleCommandConfig.builder() \
                                      .with_task(task) \
+                                     .with_root_uri(tmp_dir) \
                                      .with_backend(backend) \
                                      .with_analyzers([analyzer]) \
                                      .with_scene(scene) \

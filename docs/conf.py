@@ -85,7 +85,7 @@ html_context = {
         ProjectLink('Documentation TOC', 'index.html#documentation'),
         ProjectLink('API Reference TOC', 'index.html#api-reference'),
         ProjectLink('Project Website', 'https://rastervision.io/'),
-        ProjectLink('PyPI releases', 'https://pypi.org/project/raster-vision/'),
+        ProjectLink('PyPI releases', 'https://pypi.org/project/rastervision/'),
         ProjectLink('GitHub', 'https://github.com/azavea/raster-vision'),
         ProjectLink('Gitter Channel', 'https://gitter.im/azavea/raster-vision'),
         ProjectLink('Raster Vision Examples', 'https://github.com/azavea/raster-vision-examples'),

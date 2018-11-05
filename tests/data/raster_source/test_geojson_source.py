@@ -17,8 +17,32 @@ class TestGeoJSONSource(unittest.TestCase):
         self.crs_transformer = IdentityCRSTransformer()
         self.extent = Box.make_square(0, 0, 10)
         self.tmp_dir = RVConfig.get_tmp_dir()
-
         self.class_id = 2
+        self.background_class_id = 3
+        self.line_buffer = 1
+        self.uri = os.path.join(self.tmp_dir.name, 'temp.json')
+
+    def build_source(self, geojson):
+        str_to_file(json.dumps(geojson), self.uri)
+
+        config = RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
+            .with_uri(self.uri) \
+            .with_rasterizer_options(self.background_class_id, self.line_buffer) \
+            .build()
+
+        # Convert to proto and back as a test.
+        config = RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
+            .from_proto(config.to_proto()) \
+            .build()
+
+        source = config.create_source(self.uri, self.extent,
+                                      self.crs_transformer)
+        return source
+
+    def tearDown(self):
+        self.tmp_dir.cleanup()
+
+    def test_get_chip(self):
         geojson = {
             'type':
             'FeatureCollection',
@@ -45,39 +69,28 @@ class TestGeoJSONSource(unittest.TestCase):
             }]
         }
 
-        self.uri = os.path.join(self.tmp_dir.name, 'temp.json')
-        str_to_file(json.dumps(geojson), self.uri)
+        source = self.build_source(geojson)
+        with source.activate():
+            self.assertEqual(source.get_extent(), self.extent)
+            chip = source.get_image_array()
+            self.assertEqual(chip.shape, (10, 10, 1))
 
-        self.background_class_id = 3
-        self.line_buffer = 1
+            expected_chip = self.background_class_id * np.ones((10, 10, 1))
+            expected_chip[0:5, 0:5, 0] = self.class_id
+            expected_chip[0:10, 6:8] = self.class_id
+            np.testing.assert_array_equal(chip, expected_chip)
 
-        config = RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
-            .with_uri(self.uri) \
-            .with_rasterizer_options(self.background_class_id, self.line_buffer) \
-            .build()
+    def test_get_chip_no_polygons(self):
+        geojson = {'type': 'FeatureCollection', 'features': []}
 
-        # Convert to proto and back as a test.
-        config = RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
-            .from_proto(config.to_proto()) \
-            .build()
+        source = self.build_source(geojson)
+        with source.activate():
+            self.assertEqual(source.get_extent(), self.extent)
+            chip = source.get_image_array()
+            self.assertEqual(chip.shape, (10, 10, 1))
 
-        self.source = config.create_source(self.uri, self.extent,
-                                           self.crs_transformer)
-
-    def tearDown(self):
-        self.tmp_dir.cleanup()
-
-    def test_get_extent(self):
-        self.assertEqual(self.source.get_extent(), self.extent)
-
-    def test_get_chip(self):
-        chip = self.source.get_image_array()
-        self.assertEqual(chip.shape, (10, 10, 1))
-
-        expected_chip = self.background_class_id * np.ones((10, 10, 1))
-        expected_chip[0:5, 0:5, 0] = self.class_id
-        expected_chip[0:10, 6:8] = self.class_id
-        np.testing.assert_array_equal(chip, expected_chip)
+            expected_chip = self.background_class_id * np.ones((10, 10, 1))
+            np.testing.assert_array_equal(chip, expected_chip)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,5 @@
 import subprocess
 import os
-import rasterio
 import logging
 
 from rastervision.data.raster_source.rasterio_source \
@@ -19,7 +18,7 @@ def build_vrt(vrt_path, image_paths):
 
 
 def download_and_build_vrt(image_uris, temp_dir):
-    log.info('Downloading and building VRT...')
+    log.info('Building VRT...')
     image_paths = [download_if_needed(uri, temp_dir) for uri in image_uris]
     image_path = os.path.join(temp_dir, 'index.vrt')
     build_vrt(image_path, image_paths)
@@ -32,13 +31,12 @@ class GeoTiffSource(RasterioRasterSource):
         self.uris = uris
         super().__init__(raster_transformers, temp_dir, channel_order)
 
-    def build_image_dataset(self, temp_dir):
-        log.info('Loading GeoTiff files...')
+    def _download_data(self, temp_dir):
         if len(self.uris) == 1:
-            imagery_path = download_if_needed(self.uris[0], temp_dir)
+            return download_if_needed(self.uris[0], temp_dir)
         else:
-            imagery_path = download_and_build_vrt(self.uris, temp_dir)
-        return rasterio.open(imagery_path)
+            return download_and_build_vrt(self.uris, temp_dir)
 
-    def get_crs_transformer(self):
-        return RasterioCRSTransformer(self.image_dataset)
+    def _set_crs_transformer(self):
+        self.crs_transformer = RasterioCRSTransformer.from_dataset(
+            self.image_dataset)

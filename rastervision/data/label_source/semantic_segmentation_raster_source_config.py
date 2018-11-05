@@ -6,7 +6,7 @@ from rastervision.data.label_source import (LabelSourceConfig,
                                             LabelSourceConfigBuilder,
                                             SemanticSegmentationRasterSource)
 from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
-from rastervision.data.raster_source import RasterSourceConfig, GeoJSONSourceConfig
+from rastervision.data.raster_source import RasterSourceConfig
 
 
 class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
@@ -31,21 +31,20 @@ class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
             self.source.create_source(tmp_dir, extent, crs_transformer),
             self.rgb_class_map)
 
-    def update_for_command(self, command_type, experiment_config, context=[]):
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
         if context is None:
             context = []
         context = context + [self]
-        io_def = rv.core.CommandIODefinition()
+        io_def = io_def or rv.core.CommandIODefinition()
 
-        b = self.to_builder()
+        self.source.update_for_command(command_type, experiment_config,
+                                       context, io_def)
 
-        (new_raster_source, sub_io_def) = self.source.update_for_command(
-            command_type, experiment_config, context)
-
-        io_def.merge(sub_io_def)
-        b = b.with_raster_source(new_raster_source)
-
-        return (b.build(), io_def)
+        return io_def
 
 
 class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
@@ -113,15 +112,8 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
 
     def validate(self):
         source = self.config.get('source')
-        rgb_class_map = self.config.get('rgb_class_map')
 
         if source is None:
             raise rv.ConfigError(
                 'You must set the source for SemanticSegmentationRasterSourceConfig'
                 ' Use "with_raster_source".')
-
-        if type(source) != GeoJSONSourceConfig and rgb_class_map is None:
-            raise rv.ConfigError(
-                'You must set the rgb_class_map for '
-                'SemanticSegmentationRasterSourceConfig. Use "with_rgb_class_map".'
-            )

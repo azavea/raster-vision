@@ -22,7 +22,7 @@ Raster Vision workflows begin when you have a set of images and training data,
 optionally with Areas of Interest (AOIs) that describe where the images are labeled. Raster Vision
 workflows end with a packaged model and configuration that allows you to
 easily utilize models in various  deployment situations. Inside the Raster Vision
-workflow, there's the proccess of running multiple experiments to find the best model
+workflow, there's the process of running multiple experiments to find the best model
 or models to deploy.
 
 .. image:: _static/overview-raster-vision-workflow.png

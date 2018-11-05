@@ -42,12 +42,13 @@ class SemanticSegmentationRasterStore(LabelStore):
                                       .with_uri(self.uri) \
                                       .build() \
                                       .create_source(self.tmp_dir)
-        raw_labels = source.get_raw_image_array()
-        if self.class_trans:
-            labels = self.class_trans.rgb_to_class(raw_labels)
-        else:
-            labels = np.squeeze(raw_labels)
-        return SemanticSegmentationLabels.from_array(labels)
+        with source.activate():
+            raw_labels = source.get_raw_image_array()
+            if self.class_trans:
+                labels = self.class_trans.rgb_to_class(raw_labels)
+            else:
+                labels = np.squeeze(raw_labels)
+            return SemanticSegmentationLabels.from_array(labels)
 
     def save(self, labels):
         """Save.
@@ -60,7 +61,7 @@ class SemanticSegmentationRasterStore(LabelStore):
 
         # TODO: this only works if crs_transformer is RasterioCRSTransformer.
         # Need more general way of computing transform for the more general case.
-        transform = self.crs_transformer.image_dataset.transform
+        transform = self.crs_transformer.transform
         crs = self.crs_transformer.get_image_crs()
         clipped_labels = labels.get_clipped_labels(self.extent)
 

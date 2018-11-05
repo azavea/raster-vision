@@ -51,17 +51,18 @@ class ChipClassificationGeoJSONSourceConfig(LabelSourceConfig):
             self.pick_min_class_id, self.background_class_id, self.cell_size,
             self.infer_cells)
 
-    def update_for_command(self, command_type, experiment_config, context=[]):
-        conf = self
-        io_def = rv.core.CommandIODefinition()
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        io_def = io_def or rv.core.CommandIODefinition()
         io_def.add_input(self.uri)
 
         if not self.cell_size:
-            conf = conf.to_builder() \
-                       .with_cell_size(experiment_config.task.chip_size) \
-                       .build()
+            self.cell_size = experiment_config.task.chip_size
 
-        return (conf, io_def)
+        return io_def
 
 
 class ChipClassificationGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):

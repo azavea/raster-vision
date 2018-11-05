@@ -38,8 +38,12 @@ class NoopRasterSourceConfig(RasterSourceConfig):
         transformers = self.create_transformers()
         return NoopRasterSource(transformers, tmp_dir)
 
-    def update_for_command(self, command_type, experiment_config, context=[]):
-        return (self, rv.core.CommandIODefinition())
+    def update_for_command(self,
+                           command_type,
+                           experiment_config,
+                           context=None,
+                           io_def=None):
+        return io_def or rv.core.CommandIODefinition()
 
     def save_bundle_files(self, bundle_dir):
         return (self, [])

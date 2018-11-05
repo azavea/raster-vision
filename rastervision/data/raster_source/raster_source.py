@@ -8,7 +8,7 @@ class RasterSource(ABC):
     a set of files, an API, a TMS URI schema, etc.
     """
 
-    def __init__(self, raster_transformers=[], channel_order=None):
+    def __init__(self, channel_order, raster_transformers=[]):
         """Construct a new RasterSource.
 
         Args:
@@ -16,8 +16,6 @@ class RasterSource(ABC):
                 whenever they are retrieved.
             channel_order: numpy array of length n where n is the number of
                 channels to use and the values are channel indices.
-                Default: None, which will take all the raster's bands as is.
-
         """
         self.raster_transformers = raster_transformers
         self.channel_order = channel_order

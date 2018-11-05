@@ -57,8 +57,9 @@ class TestGeoTiffSource(unittest.TestCase):
                                              channel_order=channel_order) \
                         .create_source(tmp_dir=None)
 
-        out_chip = source.get_raw_image_array()
-        self.assertEqual(out_chip.shape[2], 3)
+        with source.activate():
+            out_chip = source.get_raw_image_array()
+            self.assertEqual(out_chip.shape[2], 3)
 
     def test_gets_raw_chip_from_proto(self):
         img_path = data_file_path('small-rgb-tile.tif')
@@ -71,8 +72,9 @@ class TestGeoTiffSource(unittest.TestCase):
         source = rv.RasterSourceConfig.from_proto(msg) \
                                       .create_source(tmp_dir=None)
 
-        out_chip = source.get_raw_image_array()
-        self.assertEqual(out_chip.shape[2], 3)
+        with source.activate():
+            out_chip = source.get_raw_image_array()
+            self.assertEqual(out_chip.shape[2], 3)
 
     def test_uses_channel_order(self):
         with RVConfig.get_tmp_dir() as tmp_dir:
@@ -87,11 +89,12 @@ class TestGeoTiffSource(unittest.TestCase):
                                           .with_channel_order(channel_order) \
                                           .build() \
                                           .create_source(tmp_dir=tmp_dir)
-
-            out_chip = source.get_image_array()
-            expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
-            expected_out_chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
-            np.testing.assert_equal(out_chip, expected_out_chip)
+            with source.activate():
+                out_chip = source.get_image_array()
+                expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
+                expected_out_chip[:, :, :] *= np.array([0, 1,
+                                                        2]).astype(np.uint8)
+                np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_with_stats_transformer(self):
         config = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \

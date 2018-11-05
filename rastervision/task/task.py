@@ -100,23 +100,25 @@ class Task(object):
         """
 
         def _process_scene(scene, type_, augment):
-            data = TrainingData()
-            log.info('Making {} chips for scene: {}'.format(type_, scene.id))
-            windows = self.get_train_windows(scene)
-            for window in windows:
-                chip = scene.raster_source.get_chip(window)
-                labels = self.get_train_labels(window, scene)
-                data.append(chip, window, labels)
-            # Shuffle data so the first N samples which are displayed in
-            # Tensorboard are more diverse.
-            data.shuffle()
+            with scene.activate():
+                data = TrainingData()
+                log.info('Making {} chips for scene: {}'.format(
+                    type_, scene.id))
+                windows = self.get_train_windows(scene)
+                for window in windows:
+                    chip = scene.raster_source.get_chip(window)
+                    labels = self.get_train_labels(window, scene)
+                    data.append(chip, window, labels)
+                # Shuffle data so the first N samples which are displayed in
+                # Tensorboard are more diverse.
+                data.shuffle()
 
-            # Process augmentation
-            if augment:
-                for augmentor in augmentors:
-                    data = augmentor.process(data, tmp_dir)
+                # Process augmentation
+                if augment:
+                    for augmentor in augmentors:
+                        data = augmentor.process(data, tmp_dir)
 
-            return self.backend.process_scene_data(scene, data, tmp_dir)
+                return self.backend.process_scene_data(scene, data, tmp_dir)
 
         def _process_scenes(scenes, type_, augment):
             return [_process_scene(scene, type_, augment) for scene in scenes]
@@ -162,30 +164,31 @@ class Task(object):
         label_store = scene.prediction_label_store
         labels = label_store.empty_labels()
 
-        windows = self.get_predict_windows(raster_source.get_extent())
+        with scene.activate():
+            windows = self.get_predict_windows(raster_source.get_extent())
 
-        def predict_batch(predict_chips, predict_windows):
-            nonlocal labels
-            new_labels = self.backend.predict(
-                np.array(predict_chips), predict_windows, tmp_dir)
-            labels += new_labels
-            print('.' * len(predict_chips), end='', flush=True)
+            def predict_batch(predict_chips, predict_windows):
+                nonlocal labels
+                new_labels = self.backend.predict(
+                    np.array(predict_chips), predict_windows, tmp_dir)
+                labels += new_labels
+                print('.' * len(predict_chips), end='', flush=True)
 
-        batch_chips, batch_windows = [], []
-        for window in windows:
-            chip = raster_source.get_chip(window)
-            if np.any(chip):
-                batch_chips.append(chip)
-                batch_windows.append(window)
+            batch_chips, batch_windows = [], []
+            for window in windows:
+                chip = raster_source.get_chip(window)
+                if np.any(chip):
+                    batch_chips.append(chip)
+                    batch_windows.append(window)
 
-            # Predict on batch
-            if len(batch_chips) >= self.config.predict_batch_size:
+                # Predict on batch
+                if len(batch_chips) >= self.config.predict_batch_size:
+                    predict_batch(batch_chips, batch_windows)
+                    batch_chips, batch_windows = [], []
+            print()
+
+            # Predict on remaining batch
+            if len(batch_chips) > 0:
                 predict_batch(batch_chips, batch_windows)
-                batch_chips, batch_windows = [], []
-        print()
 
-        # Predict on remaining batch
-        if len(batch_chips) > 0:
-            predict_batch(batch_chips, batch_windows)
-
-        return self.post_process_predictions(labels, scene)
+            return self.post_process_predictions(labels, scene)

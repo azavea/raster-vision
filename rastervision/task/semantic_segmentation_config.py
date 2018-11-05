@@ -98,13 +98,13 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
             .with_debug(msg.debug) \
             .with_chip_size(conf.chip_size) \
             .with_chip_options(
-            window_method=conf.chip_options.window_method,
-            target_classes=conf.chip_options.target_classes,
-            debug_chip_probability=conf.chip_options.debug_chip_probability,
-            negative_survival_probability=negative_survival_probability,
-            chips_per_scene=conf.chip_options.chips_per_scene,
-            target_count_threshold=conf.chip_options.target_count_threshold,
-            stride=conf.chip_options.stride)
+              window_method=conf.chip_options.window_method,
+              target_classes=conf.chip_options.target_classes,
+              debug_chip_probability=conf.chip_options.debug_chip_probability,
+              negative_survival_probability=negative_survival_probability,
+              chips_per_scene=conf.chip_options.chips_per_scene,
+              target_count_threshold=conf.chip_options.target_count_threshold,
+              stride=conf.chip_options.stride)
 
     def with_classes(
             self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
