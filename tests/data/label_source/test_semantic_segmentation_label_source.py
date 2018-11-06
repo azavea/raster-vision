@@ -6,8 +6,8 @@ import rastervision as rv
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
 from rastervision.data import (ActivateMixin, ActivationError)
-from rastervision.data.label_source.semantic_segmentation_raster_source import (
-    SemanticSegmentationRasterSource)
+from rastervision.data.label_source.semantic_segmentation_label_source import (
+    SemanticSegmentationLabelSource)
 from rastervision.data.raster_source.raster_source import RasterSource
 
 
@@ -46,13 +46,13 @@ class MockRasterSource(ActivateMixin, RasterSource):
         self.activated = False
 
 
-class TestSemanticSegmentationRasterSource(unittest.TestCase):
+class TestSemanticSegmentationLabelSource(unittest.TestCase):
     def test_enough_target_pixels_true(self):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[4:, 4:, :] = [1, 1, 1]
         raster_source = MockRasterSource(data)
         rgb_class_map = ClassMap([ClassItem(id=1, color='#010101')])
-        label_source = SemanticSegmentationRasterSource(
+        label_source = SemanticSegmentationLabelSource(
             source=raster_source, rgb_class_map=rgb_class_map)
         with label_source.activate():
             extent = Box(0, 0, 10, 10)
@@ -63,7 +63,7 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         data[7:, 7:, :] = [1, 1, 1]
         raster_source = MockRasterSource(data)
         rgb_class_map = ClassMap([ClassItem(id=1, color='#010101')])
-        label_source = SemanticSegmentationRasterSource(
+        label_source = SemanticSegmentationLabelSource(
             source=raster_source, rgb_class_map=rgb_class_map)
         with label_source.activate():
             extent = Box(0, 0, 10, 10)
@@ -74,7 +74,7 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         data = np.zeros((10, 10, 1), dtype=np.uint8)
         data[7:, 7:, 0] = 1
         raster_source = MockRasterSource(data)
-        label_source = SemanticSegmentationRasterSource(source=raster_source)
+        label_source = SemanticSegmentationLabelSource(source=raster_source)
         with label_source.activate():
             labels = label_source.get_labels().to_array()
             expected_labels = np.zeros((10, 10))
@@ -91,7 +91,7 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
         data[7:, 7:, :] = [1, 1, 1]
         raster_source = MockRasterSource(data)
         rgb_class_map = ClassMap([ClassItem(id=1, color='#010101')])
-        label_source = SemanticSegmentationRasterSource(
+        label_source = SemanticSegmentationLabelSource(
             source=raster_source, rgb_class_map=rgb_class_map)
         with label_source.activate():
             labels = label_source.get_labels().to_array()
@@ -106,13 +106,22 @@ class TestSemanticSegmentationRasterSource(unittest.TestCase):
 
     def test_build_missing(self):
         with self.assertRaises(rv.ConfigError):
-            rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+            rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
               .build()
 
     def test_build(self):
         try:
+            rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+              .with_raster_source('x.geojson') \
+              .with_rgb_class_map([]) \
+              .build()
+        except rv.ConfigError:
+            self.fail('ConfigError raised unexpectedly')
+
+    def test_build_deprecated(self):
+        try:
             rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
-              .with_raster_source('') \
+              .with_raster_source('x.geojson') \
               .with_rgb_class_map([]) \
               .build()
         except rv.ConfigError:

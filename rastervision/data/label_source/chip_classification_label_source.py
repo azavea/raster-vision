@@ -2,10 +2,10 @@ import numpy as np
 from shapely.strtree import STRtree
 from shapely import geometry
 
+import rastervision as rv
 from rastervision.data import ChipClassificationLabels
 from rastervision.data.label_source import LabelSource
 from rastervision.data.label_source.utils import (
-    add_classes_to_geojson, load_label_store_json,
     geojson_to_chip_classification_labels)
 from rastervision.data.utils import geojson_to_shapes
 
@@ -161,20 +161,19 @@ def load_geojson(geojson, crs_transformer, extent, infer_cells, cell_size,
     return labels
 
 
-class ChipClassificationGeoJSONSource(LabelSource):
-    """A GeoJSON file with chip classification labels in it.
+class ChipClassificationLabelSource(LabelSource):
+    """A source of chip classification labels.
 
-    Ideally the GeoJSON file contains a square for each cell in the grid. But
+    Ideally the vector_source contains a square for each cell in the grid. But
     in reality, it can be difficult to label imagery in such an exhaustive way.
-    So, this can also handle GeoJSON files with non-overlapping polygons that
+    So, this can also handle sources with non-overlapping polygons that
     do not necessarily cover the entire extent. It infers the grid of cells
     and associated class_ids using the extent and options if infer_cells is
     set to True.
-
     """
 
     def __init__(self,
-                 uri,
+                 vector_source,
                  crs_transformer,
                  class_map,
                  extent,
@@ -187,22 +186,26 @@ class ChipClassificationGeoJSONSource(LabelSource):
         """Constructs a LabelSource for ChipClassificaiton backed by a GeoJSON file.
 
         Args:
-            uri: uri of GeoJSON file containing labels
+            vector_source: (VectorSource or str)
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
             class_map: ClassMap used to infer class_ids from class_name
                 (or label) field
             extent: Box used to filter the labels by extent or compute grid
         """
-        self.labels = ChipClassificationLabels()
+        if isinstance(vector_source, str):
+            provider = rv._registry.get_vector_source_default_provider(
+                vector_source)
+            vector_source = provider.construct(vector_source) \
+                .create_source(
+                    crs_transformer=crs_transformer, extent=extent, class_map=class_map)
 
-        geojson = load_label_store_json(uri)
-        if geojson:
-            geojson = add_classes_to_geojson(geojson, class_map)
-            self.labels = load_geojson(geojson, crs_transformer, extent,
-                                       infer_cells, cell_size, ioa_thresh,
-                                       use_intersection_over_cell,
-                                       pick_min_class_id, background_class_id)
+        self.labels = ChipClassificationLabels()
+        geojson = vector_source.get_geojson()
+        self.labels = load_geojson(geojson, crs_transformer, extent,
+                                   infer_cells, cell_size, ioa_thresh,
+                                   use_intersection_over_cell,
+                                   pick_min_class_id, background_class_id)
 
     def get_labels(self, window=None):
         if window is None:

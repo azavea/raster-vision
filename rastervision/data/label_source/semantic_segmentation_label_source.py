@@ -10,9 +10,8 @@ from rastervision.data.label_source import LabelSource, SegmentationClassTransfo
 from rastervision.data.raster_source import RasterSource
 
 
-class SemanticSegmentationRasterSource(ActivateMixin, LabelSource):
-    """A read-only label source for segmentation raster files.
-    """
+class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
+    """A read-only label source for semantic segmentation."""
 
     def __init__(self, source: RasterSource, rgb_class_map: ClassMap = None):
         """Constructor.

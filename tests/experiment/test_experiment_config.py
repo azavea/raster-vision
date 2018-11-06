@@ -85,8 +85,9 @@ class TestExperimentConfig(unittest.TestCase):
         self.assertEqual(e.predict_uri, e2.predict_uri)
         self.assertEqual(e.eval_uri, e2.eval_uri)
 
-        self.assertEqual(e2.dataset.train_scenes[0].label_source.uri,
-                         '/dummy.json')
+        self.assertEqual(
+            e2.dataset.train_scenes[0].label_source.vector_source.uri,
+            '/dummy.json')
         self.assertEqual(
             e2.dataset.train_scenes[0].raster_source.channel_order, [0, 1, 2])
 

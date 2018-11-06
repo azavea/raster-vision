@@ -2,11 +2,11 @@ import unittest
 import os
 import json
 
-from rastervision.data import (ChipClassificationGeoJSONSource,
+from rastervision.data import (ChipClassificationLabelSource,
                                ChipClassificationGeoJSONStore)
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.data.label_source.chip_classification_geojson_source import read_labels
+from rastervision.data.label_source.chip_classification_label_source import read_labels
 from rastervision.data.label_store.utils import classification_labels_to_geojson
 from rastervision.rv_config import RVConfig
 
@@ -71,7 +71,7 @@ class TestChipClassificationGeoJSONStore(unittest.TestCase):
         # Read it, write it using label_store, read it again, and compare.
         extent = Box.make_square(0, 0, 10)
 
-        label_source = ChipClassificationGeoJSONSource(
+        label_source = ChipClassificationLabelSource(
             self.file_path,
             self.crs_transformer,
             self.class_map,
