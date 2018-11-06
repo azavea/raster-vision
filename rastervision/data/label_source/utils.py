@@ -50,6 +50,11 @@ def geojson_to_object_detection_labels(geojson_dict,
         scores.append(properties.get('score', 1.0))
 
     for feature in features:
+        # This was added to handle empty GeometryCollections which appear when using
+        # OSM vector tiles.
+        if feature['geometry'].get('coordinates') is None:
+            continue
+
         geom_type = feature['geometry']['type']
         coordinates = feature['geometry']['coordinates']
         if geom_type == 'MultiPolygon':
@@ -116,6 +121,11 @@ def geojson_to_chip_classification_labels(geojson_dict,
         labels.set_cell(cell, class_id, scores)
 
     for feature in features:
+        # This was added to handle empty GeometryCollections which appear when using
+        # OSM vector tiles.
+        if feature['geometry'].get('coordinates') is None:
+            continue
+
         geom_type = feature['geometry']['type']
         coordinates = feature['geometry']['coordinates']
         if geom_type == 'Polygon':

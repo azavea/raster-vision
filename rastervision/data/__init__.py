@@ -5,6 +5,7 @@ from rastervision.data.raster_transformer import *
 from rastervision.data.raster_source import *
 from rastervision.data.crs_transformer import *
 from rastervision.data.label import *
+from rastervision.data.vector_source import *
 from rastervision.data.label_source import *
 from rastervision.data.label_store import *
 from rastervision.data.scene import *
