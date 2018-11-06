@@ -1,0 +1,26 @@
+syntax = "proto2";
+
+package rv.protos;
+
+import "google/protobuf/struct.proto";
+
+message VectorSourceConfig {
+    message MBTiles {
+        required string uri = 1;
+        required int32 zoom = 2;
+    }
+
+    message GeoJSON {
+        required string uri = 1;
+    }
+
+    oneof vector_source_config {
+        MBTiles mbtiles = 1;
+        GeoJSON geojson = 2;
+        google.protobuf.Struct custom_config = 3;
+    }
+
+    required string source_type = 4;
+    optional google.protobuf.Struct class_id_to_filter = 5;
+    optional int32 default_class_id = 6;
+}
