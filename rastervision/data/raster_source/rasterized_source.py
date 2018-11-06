@@ -1,12 +1,9 @@
-import json
-
 from rasterio.features import rasterize
 import numpy as np
 import shapely
 
 from rastervision.data import (ActivateMixin, ActivationError)
 from rastervision.data.raster_source import RasterSource
-from rastervision.utils.files import file_to_str
 from rastervision.data.utils import geojson_to_shapes
 
 
@@ -33,20 +30,21 @@ def geojson_to_raster(geojson, rasterizer_options, extent, crs_transformer):
     return raster
 
 
-class GeoJSONSource(ActivateMixin, RasterSource):
-    """A RasterSource based on the rasterization of a GeoJSON file."""
+class RasterizedSource(ActivateMixin, RasterSource):
+    """A RasterSource based on the rasterization of a VectorSource."""
 
-    def __init__(self, uri, rasterizer_options, extent, crs_transformer):
+    def __init__(self, vector_source, rasterizer_options, extent,
+                 crs_transformer):
         """Constructor.
 
         Args:
-            uri: URI of GeoJSON file
+            vector_source: (VectorSource)
             rasterizer_options:
                 rastervision.data.raster_source.GeoJSONSourceConfig.RasterizerOptions
             extent: (Box) extent of corresponding imagery RasterSource
             crs_transformer: (CRSTransformer)
         """
-        self.uri = uri
+        self.vector_source = vector_source
         self.rasterizer_options = rasterizer_options
         self.extent = extent
         self.crs_transformer = crs_transformer
@@ -84,7 +82,7 @@ class GeoJSONSource(ActivateMixin, RasterSource):
         return self.raster[window.ymin:window.ymax, window.xmin:window.xmax, :]
 
     def _activate(self):
-        geojson = json.loads(file_to_str(self.uri))
+        geojson = self.vector_source.get_geojson()
         self.raster = geojson_to_raster(geojson, self.rasterizer_options,
                                         self.extent, self.crs_transformer)
         # Add third singleton dim since rasters must have >=1 channel.
