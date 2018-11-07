@@ -67,8 +67,7 @@ class StatsAnalyzerConfigBuilder(AnalyzerConfigBuilder):
         super().__init__(StatsAnalyzerConfig, config)
 
     def from_proto(self, msg):
-        b = StatsAnalyzerConfigBuilder()
-        return b.with_stats_uri(msg.stats_uri)
+        return self.with_stats_uri(msg.stats_uri)
 
     def with_stats_uri(self, stats_uri):
         """Set the stats_uri.

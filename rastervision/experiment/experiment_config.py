@@ -223,12 +223,11 @@ class ExperimentConfigBuilder(ConfigBuilder):
         return ExperimentConfig(**b.config)
 
     def from_proto(self, msg):
-        b = ExperimentConfigBuilder()
         analyzers = list(
             map(lambda a: rv.AnalyzerConfig.from_proto(a), msg.analyzers))
         evaluators = list(
             map(lambda e: rv.EvaluatorConfig.from_proto(e), msg.evaluators))
-        return b.with_id(msg.id) \
+        return self.with_id(msg.id) \
                 .with_task(rv.TaskConfig.from_proto(msg.task)) \
                 .with_backend(rv.BackendConfig.from_proto(msg.backend)) \
                 .with_dataset(rv.DatasetConfig.from_proto(msg.dataset)) \

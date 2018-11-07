@@ -47,9 +47,7 @@ class ObjectDetectionGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
                 ' Use "with_uri".')
 
     def from_proto(self, msg):
-        b = ObjectDetectionGeoJSONSourceConfigBuilder()
-
-        return b \
+        return self \
             .with_uri(msg.object_detection_geojson_source.uri)
 
     def with_uri(self, uri):

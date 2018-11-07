@@ -88,10 +88,9 @@ class ChipClassificationGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
                 ' Use "with_uri".')
 
     def from_proto(self, msg):
-        b = ChipClassificationGeoJSONSourceConfigBuilder()
         conf = msg.chip_classification_geojson_source
 
-        return b \
+        return self \
             .with_uri(conf.uri) \
             .with_ioa_thresh(conf.ioa_thresh) \
             .with_use_intersection_over_cell(conf.use_intersection_over_cell) \
