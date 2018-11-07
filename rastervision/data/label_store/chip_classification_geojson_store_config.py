@@ -71,9 +71,7 @@ class ChipClassificationGeoJSONStoreConfigBuilder(LabelStoreConfigBuilder):
         super().__init__(ChipClassificationGeoJSONStoreConfig, config)
 
     def from_proto(self, msg):
-        b = ChipClassificationGeoJSONStoreConfigBuilder()
-
-        return b \
+        return self \
             .with_uri(msg.uri)
 
     def with_uri(self, uri):
