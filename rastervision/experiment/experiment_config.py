@@ -259,6 +259,13 @@ class ExperimentConfigBuilder(ConfigBuilder):
         e.config['predict_uri'] = self.config.get('predict_uri')
         e.config['eval_uri'] = self.config.get('eval_uri')
         e.config['bundle_uri'] = self.config.get('bundle_uri')
+        e.analyze_key = self.analyze_key
+        e.chip_key = self.chip_key
+        e.train_key = self.train_key
+        e.predict_key = self.predict_key
+        e.eval_key = self.eval_key
+        e.bundle_key = self.bundle_key
+
         return e
 
     def with_id(self, id):
