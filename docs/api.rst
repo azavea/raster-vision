@@ -165,10 +165,10 @@ rv.IMAGE_SOURCE
    :inherited-members:
    :exclude-members: from_proto, validate
 
-rv.GEOJSON_SOURCE
-~~~~~~~~~~~~~~~~~
+rv.RASTERIZED_SOURCE
+~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.data.GeoJSONSourceConfigBuilder
+.. autoclass:: rastervision.data.RasterizedSourceConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
@@ -188,35 +188,64 @@ LabelSourceConfigBuilders are created by calling
 
 Where ``SOURCE_TYPE`` is one of the following:
 
-rv.CHIP_CLASSIFICATION_GEOJSON
+rv.CHIP_CLASSIFICATION
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.data.ChipClassificationGeoJSONSourceConfigBuilder
+.. autoclass:: rastervision.data.ChipClassificationLabelSourceConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
    :exclude-members: from_proto, validate
 
-For ``rv.OBJECT_DETECTION``:
-
-
-rv.OBJECT_DETECTION_GEOJSON
+rv.OBJECT_DETECTION
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.data.ObjectDetectionGeoJSONSourceConfigBuilder
+.. autoclass:: rastervision.data.ObjectDetectionLabelSourceConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
    :exclude-members: from_proto, validate
 
-rv.SEMANTIC_SEGMENTATION_RASTER
+rv.SEMANTIC_SEGMENTATION
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.data.SemanticSegmentationRasterSourceConfigBuilder
+.. autoclass:: rastervision.data.SemanticSegmentationLabelSourceConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
    :exclude-members: from_proto, validate
+
+.. _vector source api reference:
+
+VectorSourceConfig
+--------------------
+
+VectorSourceConfigBuilders are created by calling
+
+.. code::
+
+  rv.VectorSourceConfig.builder(SOURCE_TYPE)
+
+
+Where ``SOURCE_TYPE`` is one of the following:
+
+rv.GEOJSON_SOURCE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.GeoJSONVectorSourceConfigBuilder
+  :members:
+  :undoc-members:
+  :inherited-members:
+  :exclude-members: from_proto, validate
+
+rv.MBTILES_SOURCE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.MBTilesVectorSourceConfigBuilder
+  :members:
+  :undoc-members:
+  :inherited-members:
+  :exclude-members: from_proto, validate
 
 .. _label store api reference:
 
