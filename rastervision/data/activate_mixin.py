@@ -31,7 +31,7 @@ class ActivateMixin:
 
             return cls(noop, noop)
 
-    class CompositContextManager:
+    class CompositeContextManager:
         def __init__(self, *managers):
             self.managers = managers
 
@@ -60,7 +60,7 @@ class ActivateMixin:
         a = ActivateMixin.ActivateContextManager(do_activate, do_deactivate)
         subcomponents = self._subcomponents_to_activate()
         if subcomponents:
-            return ActivateMixin.CompositContextManager(
+            return ActivateMixin.CompositeContextManager(
                 a, ActivateMixin.compose(*subcomponents))
         else:
             return a
@@ -95,4 +95,4 @@ class ActivateMixin:
             obj.activate() for obj in objs
             if obj is not None and isinstance(obj, ActivateMixin)
         ]
-        return ActivateMixin.CompositContextManager(*managers)
+        return ActivateMixin.CompositeContextManager(*managers)

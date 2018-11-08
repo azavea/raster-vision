@@ -28,7 +28,7 @@ class RasterStats():
                         chip[chip == 0.0] = np.nan
                         yield chip
 
-        nb_channels = len(raster_sources[0].channel_order)
+        nb_channels = raster_sources[0].num_channels
 
         self.means = []
         self.stds = []

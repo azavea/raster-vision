@@ -8,17 +8,20 @@ class RasterSource(ABC):
     a set of files, an API, a TMS URI schema, etc.
     """
 
-    def __init__(self, channel_order, raster_transformers=[]):
+    def __init__(self, channel_order, num_channels, raster_transformers=[]):
         """Construct a new RasterSource.
 
         Args:
-            raster_transformers: RasterTransformers used to transform chips
-                whenever they are retrieved.
             channel_order: numpy array of length n where n is the number of
                 channels to use and the values are channel indices.
+            num_channels: Number of channels in the raster data, before applying
+                channel_order.
+            raster_transformers: RasterTransformers used to transform chips
+                whenever they are retrieved.
         """
         self.raster_transformers = raster_transformers
         self.channel_order = channel_order
+        self.num_channels = num_channels
 
     @abstractmethod
     def get_extent(self):
