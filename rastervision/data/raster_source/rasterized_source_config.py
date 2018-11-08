@@ -114,13 +114,21 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
-        vector_source = VectorSourceConfig.from_proto(
-            msg.rasterized_source.vector_source)
+
+        # Added for backwards compatibility.
+        if msg.HasField('geojson_file'):
+            vector_source = msg.geojson_file.uri
+            rasterizer_options = msg.geojson_file.rasterizer_options
+        else:
+            vector_source = VectorSourceConfig.from_proto(
+                msg.rasterized_source.vector_source)
+            rasterizer_options = msg.rasterized_source.rasterizer_options
+
         return b \
             .with_vector_source(vector_source) \
             .with_rasterizer_options(
-                msg.rasterized_source.rasterizer_options.background_class_id,
-                msg.rasterized_source.rasterizer_options.line_buffer)
+                rasterizer_options.background_class_id,
+                rasterizer_options.line_buffer)
 
     def with_vector_source(self, vector_source):
         """Set the vector_source.

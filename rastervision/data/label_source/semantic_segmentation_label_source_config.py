@@ -62,11 +62,16 @@ class SemanticSegmentationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
     def from_proto(self, msg):
         b = SemanticSegmentationLabelSourceConfigBuilder()
 
+        label_source_msg = msg.semantic_segmentation_label_source
+        # Add for backwards compatibility.
+        if msg.HasField('semantic_segmentation_raster_source'):
+            label_source_msg = msg.semantic_segmentation_raster_source
+
         raster_source_config = rv.RasterSourceConfig.from_proto(
-            msg.semantic_segmentation_label_source.source)
+            label_source_msg.source)
 
         b = b.with_raster_source(raster_source_config)
-        rgb_class_items = msg.semantic_segmentation_label_source.rgb_class_items
+        rgb_class_items = label_source_msg.rgb_class_items
         if rgb_class_items:
             b = b.with_rgb_class_map(
                 ClassMap.construct_from(list(rgb_class_items)))

@@ -54,8 +54,14 @@ class ObjectDetectionLabelSourceConfigBuilder(LabelSourceConfigBuilder):
 
     def from_proto(self, msg):
         b = ObjectDetectionLabelSourceConfigBuilder()
-        vector_source = rv.VectorSourceConfig.from_proto(
-            msg.object_detection_label_source.vector_source)
+
+        # Added for backwards compatibility.
+        if msg.HasField('object_detection_geojson_source'):
+            vector_source = msg.object_detection_geojson_source.uri
+        else:
+            vector_source = rv.VectorSourceConfig.from_proto(
+                msg.object_detection_label_source.vector_source)
+
         return b.with_vector_source(vector_source)
 
     def with_vector_source(self, vector_source):

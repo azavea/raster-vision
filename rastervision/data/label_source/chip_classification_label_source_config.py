@@ -4,7 +4,8 @@ import rastervision as rv
 from rastervision.data.label_source import (
     LabelSourceConfig, LabelSourceConfigBuilder, ChipClassificationLabelSource)
 from rastervision.data.vector_source import VectorSourceConfig
-from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
+from rastervision.protos.label_source_pb2 import (LabelSourceConfig as
+                                                  LabelSourceConfigMsg)
 
 
 class ChipClassificationLabelSourceConfig(LabelSourceConfig):
@@ -88,10 +89,18 @@ class ChipClassificationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
 
     def from_proto(self, msg):
         b = ChipClassificationLabelSourceConfigBuilder()
-        conf = msg.chip_classification_label_source
+
+        # Added for backwards compatibility.
+        if msg.HasField('chip_classification_geojson_source'):
+            conf = msg.chip_classification_geojson_source
+            vector_source = conf.uri
+        else:
+            conf = msg.chip_classification_label_source
+            vector_source = rv.VectorSourceConfig.from_proto(
+                conf.vector_source)
 
         return b \
-            .with_vector_source(rv.VectorSourceConfig.from_proto(conf.vector_source)) \
+            .with_vector_source(vector_source) \
             .with_ioa_thresh(conf.ioa_thresh) \
             .with_use_intersection_over_cell(conf.use_intersection_over_cell) \
             .with_pick_min_class_id(conf.pick_min_class_id) \
