@@ -1,9 +1,8 @@
 import os
 import shutil
+from threading import Timer
 import time
 import logging
-
-from threading import Timer
 
 from google.protobuf import json_format
 
