@@ -154,6 +154,7 @@ usage patterns.
    plugins
    qgis
    contributing
+   release
 
 API Reference
 -------------
