@@ -1,6 +1,7 @@
 import os
 import shutil
 from threading import Timer
+import time
 import logging
 
 from google.protobuf import json_format
@@ -87,12 +88,14 @@ def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600,
     """
 
     def _sync_dir():
-        log.info('Syncing {} to {}...'.format(src_dir_uri, dest_dir_uri))
-        sync_to_dir(src_dir_uri, dest_dir_uri, delete=False, fs=fs)
+        while True:
+            time.sleep(sync_interval)
+            log.info('Syncing {} to {}...'.format(src_dir_uri, dest_dir_uri))
+            sync_to_dir(src_dir_uri, dest_dir_uri, delete=False, fs=fs)
 
     class SyncThread:
         def __init__(self):
-            thread = Timer(sync_interval, _sync_dir)
+            thread = Timer(0.68, _sync_dir)
             thread.daemon = True
             thread.start()
             self.thread = thread
