@@ -166,3 +166,11 @@ method, this part of the documentation is for you.
    :maxdepth: 10
 
    api
+
+CHANGELOG
+---------
+
+.. toctree::
+   :maxdepth: 3
+
+   changelog

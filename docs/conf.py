@@ -92,6 +92,7 @@ html_context = {
         ProjectLink('QGIS Plugin', 'https://github.com/azavea/raster-vision-qgis'),
         ProjectLink('AWS Batch Setup', 'https://github.com/azavea/raster-vision-aws'),
         ProjectLink('Issue Tracker', 'https://github.com/azavea/raster-vision/issues/'),
+        ProjectLink('CHANGELOG', 'changelog.html'),
         ProjectLink('Azavea', 'https://www.azavea.com/'),
     ],
     'css_files': [
