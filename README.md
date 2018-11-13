@@ -143,9 +143,9 @@ Everyone who contributes code to Raster Vision will be asked to sign the
 Azavea CLA, which is based off of the Apache CLA.
 
 1. Download a copy of the [Raster Vision Individual Contributor License
-   Agreement](docs/cla/2018_04_17-Raster-Vision-Open-Source-Contributor-Agreement-Individual.pdf)
+   Agreement](docs/_static/cla/2018_04_17-Raster-Vision-Open-Source-Contributor-Agreement-Individual.pdf)
    or the [Raster Vision Corporate Contributor License
-   Agreement](docs/cla/2018_04_18-Raster-Vision-Open-Source-Contributor-Agreement-Corporate.pdf)
+   Agreement](docs/_static/cla/2018_04_18-Raster-Vision-Open-Source-Contributor-Agreement-Corporate.pdf)
 
 2. Print out the CLAs and sign them, or use PDF software that allows placement of a signature image.
 
