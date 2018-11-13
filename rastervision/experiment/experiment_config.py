@@ -8,6 +8,7 @@ from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.utils.files import save_json_config
 from rastervision.protos.experiment_pb2 \
     import ExperimentConfig as ExperimentConfigMsg
+from rastervision.backend import BackendConfig
 
 log = logging.getLogger(__name__)
 
@@ -162,6 +163,10 @@ class ExperimentConfigBuilder(ConfigBuilder):
         self.bundle_key = None
 
     def validate(self):
+
+        backend = self.config.get('backend')
+        if not issubclass(type(backend), BackendConfig):
+            raise rv.ConfigError('Call "build()" on the backend.')
 
         if not self.config.get('root_uri'):
             raise rv.ConfigError('root_uri must be set. Use "with_root_uri"')

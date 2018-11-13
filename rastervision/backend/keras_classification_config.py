@@ -174,10 +174,15 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         return b.with_template(json_format.MessageToDict(conf.kc_config))
 
     def validate(self):
+
         super().validate()
         if not self.config.get('kc_config'):
             raise rv.ConfigError('You must specify a template for the backend '
                                  'configuration - use "with_template".')
+
+        if not isinstance(self.config.get('kc_config'), dict):
+            raise rv.ConfigError('kc_config must be of type dict')
+
         if self.require_task and not self.task:
             raise rv.ConfigError('You must specify the task this backend '
                                  'is for - use "with_task".')
