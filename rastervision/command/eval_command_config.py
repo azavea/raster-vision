@@ -6,7 +6,7 @@ from rastervision.command import (EvalCommand, CommandConfig,
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 from rastervision.rv_config import RVConfig
-
+from rastervision.command.utils import (check_scenes_type, check_task_type)
 
 class EvalCommandConfig(CommandConfig):
     def __init__(self, root_uri, task, scenes, evaluators):
@@ -65,13 +65,19 @@ class EvalCommandConfigBuilder(CommandConfigBuilder):
             raise rv.ConfigError(
                 'task not set for EvalCommandConfig. Use with_task or '
                 'with_experiment')
+        check_task_type(self.task)
         if self.scenes is None:
             raise rv.ConfigError(
                 'scenes not set for EvalCommandConfig. Use with_scenes or '
                 'with_experiment')
+        check_scenes_type(self.scenes)
         if self.evaluators is None:
             raise rv.ConfigError(
                 'evaluators not set. Use with_evaluators or with_experiment')
+        if not isinstance(self.evaluators, list):
+            raise rv.ConfigError(
+                'evaluators must be a list of EvaluatorConfig objects, got {}'.
+                format(type(self.evaluators)))
 
     def build(self):
         self.validate()

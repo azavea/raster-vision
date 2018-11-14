@@ -6,6 +6,8 @@ from rastervision.command import (ChipCommand, CommandConfig,
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 from rastervision.rv_config import RVConfig
+from rastervision.data import SceneConfig
+from rastervision.command.utils import (check_task_type, check_backend_type)
 
 
 class ChipCommandConfig(CommandConfig):
@@ -75,17 +77,28 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
         if self.task is None:
             raise rv.ConfigError('Task not set for ChipCommandConfig. Use '
                                  'with_task or with_experiment')
+        check_task_type(self.task)
         if self.backend is None:
             raise rv.ConfigError('Backend not set for ChipCommandConfig. Use '
                                  'with_backend or with_experiment')
+        check_backend_type(self.backend)
         if self.train_scenes == []:
             raise rv.ConfigError(
                 'Train scenes not set for ChipCommandConfig. Use '
                 'with_train_scenes or with_experiment')
+        if len(self.train_scenes) > 0:
+            if not isinstance(self.train_scenes[0], SceneConfig):
+                raise rv.ConfigError('train_scenes must be a list of class SceneConfig, got a list of {}'.
+                    format(type(self.train_scenes[0])))
         if self.val_scenes == []:
             raise rv.ConfigError(
                 'Val scenes not set for ChipCommandConfig. Use '
                 'with_val_scenes or with_experiment')
+        if len(self.val_scenes) > 0:
+            if not isinstance(self.val_scenes[0], SceneConfig):
+                raise rv.ConfigError('val_scenes must be a list of class SceneConfig, got a list of {}'.
+                    format(type(self.val_scenes[0])))
+
 
     def build(self):
         self.validate()

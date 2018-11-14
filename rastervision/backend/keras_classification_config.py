@@ -8,6 +8,7 @@ from rastervision.utils.misc import set_nested_keys
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
 from rastervision.protos.keras_classification.pipeline_pb2 import PipelineConfig
+from rastervision.task.chip_classification_config import ChipClassificationConfig
 
 # Default location to Tensorflow Object Detection's scripts.
 CHIP_OUTPUT_FILES = ['training.zip', 'validation.zip']
@@ -179,13 +180,19 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         if not self.config.get('kc_config'):
             raise rv.ConfigError('You must specify a template for the backend '
                                  'configuration - use "with_template".')
-
+        
         if not isinstance(self.config.get('kc_config'), dict):
-            raise rv.ConfigError('kc_config must be of type dict')
+            raise rv.ConfigError('kc_config must be of type dict, got {}'.
+                format(type(self.config.get('kc_config'))))
 
         if self.require_task and not self.task:
             raise rv.ConfigError('You must specify the task this backend '
                                  'is for - use "with_task".')
+            
+        if self.require_task and not isinstance(self.task, ChipClassificationConfig):
+            raise rv.ConfigError(
+                'Task set with with_task must be of type ChipClassificationConfig, got {}.'.
+                format(type(self.task)))
 
     def build(self):
         """Build this configuration, setting any values into the

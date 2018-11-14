@@ -6,7 +6,9 @@ from rastervision.command import (CommandConfig, CommandConfigBuilder,
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 from rastervision.rv_config import RVConfig
-
+from rastervision.data import SceneConfig
+from rastervision.command.utils import (check_task_type, check_analyzers_type, 
+    check_backend_type)
 
 class BundleCommandConfig(CommandConfig):
     def __init__(self, root_uri, task, backend, scene, analyzers):
@@ -66,16 +68,21 @@ class BundleCommandConfigBuilder(CommandConfigBuilder):
         if self.task is None:
             raise rv.ConfigError('Task not set for BundleCommandConfig. '
                                  'Use with_task or with_experiment')
+        check_task_type(self.task)
         if self.backend is None:
             raise rv.ConfigError('Backend not set for BundleCommandConfig. '
                                  'Use with_backend or with_experiment')
+        check_backend_type(self.backend)
         if self.scene is None:
             raise rv.ConfigError(
                 'Template scene not set for BundleCommandConfig. '
                 'Use with_scene or with_experiment')
+        if not isinstance(self.scene, SceneConfig):
+            raise rv.ConfigError('Template scene must be of class SceneConfig, got {}'.format(type(self.scene)))
         if self.analyzers is None:
             raise rv.ConfigError('Analyzers not set for BundleCommandConfig. '
                                  'Use with_analyzers or with_experiment')
+        check_analyzers_type(self.analyzers)
 
     def build(self):
         self.validate()

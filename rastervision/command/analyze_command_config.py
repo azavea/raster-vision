@@ -5,6 +5,10 @@ from rastervision.command import (AnalyzeCommand, CommandConfig,
                                   CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
+from rastervision.rv_config import RVConfig
+from rastervision.data.scene_config import SceneConfig
+from rastervision.analyzer.stats_analyzer_config import StatsAnalyzerConfig
+from rastervision.command.utils import (check_scenes_type, check_analyzers_type)
 
 
 class AnalyzeCommandConfig(CommandConfig):
@@ -57,9 +61,11 @@ class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
         if self.scenes is None:
             raise rv.ConfigError('scenes not set for AnalyzeCommandConfig. Use'
                                  ' with_scenes or with_experiment')
+        check_scenes_type(self.scenes)
         if self.analyzers is None:
             raise rv.ConfigError(
                 'analyzers not set. Use with_analyzers or with_experiment')
+        check_analyzers_type(self.analyzers)
 
     def build(self):
         self.validate()

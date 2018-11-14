@@ -8,6 +8,7 @@ from rastervision.backend import (BackendConfig, BackendConfigBuilder,
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
 from rastervision.utils.misc import set_nested_keys
+from rastervision.task import SemanticSegmentationConfig
 
 # Default location to Tensorflow Deeplab's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/deeplab/train.py'
@@ -193,9 +194,19 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         if not self.config.get('tfdl_config'):
             raise rv.ConfigError('You must specify a template for the backend '
                                  "configuration - use 'with_template'.")
+
+        if not isinstance(self.config.get('tfdl_config'), dict):
+            raise rv.ConfigError('tfdl_config must be of type dict, got {}'.
+                format(type(self.config.get('tfdl_config'))))
+        
         if self.require_task and not self.task:
             raise rv.ConfigError('You must specify the task this backend '
                                  "is for - use 'with_task'.")
+
+        if self.require_task and not isinstance(self.task, SemanticSegmentationConfig):
+            raise rv.ConfigError(
+                'Task set with with_task must be of type SemanticSegmentationConfig, got {}.'.
+                format(type(self.task)))
         return True
 
     def build(self):

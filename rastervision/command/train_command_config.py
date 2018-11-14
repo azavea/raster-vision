@@ -6,7 +6,7 @@ from rastervision.command import (TrainCommand, CommandConfig,
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 from rastervision.rv_config import RVConfig
-
+from rastervision.command.utils import (check_task_type, check_backend_type)
 
 class TrainCommandConfig(CommandConfig):
     def __init__(self, root_uri, task, backend):
@@ -58,10 +58,12 @@ class TrainCommandConfigBuilder(CommandConfigBuilder):
         if self.task is None:
             raise rv.ConfigError('Task not set for TrainCommandConfig. Use '
                                  'with_task or with_experiment')
+        check_task_type(self.task)
 
         if self.backend is None:
             raise rv.ConfigError('Backend not set for TrainCommandConfig. Use '
                                  'with_task or with_experiment')
+        check_backend_type(self.backend)
 
     def build(self):
         self.validate()
