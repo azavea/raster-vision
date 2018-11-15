@@ -20,6 +20,12 @@ def geojson_to_shapes(geojson, crs_transformer):
         properties = feature.get('properties', {})
         class_id = properties.get('class_id', 1)
         geom_type = feature['geometry']['type']
+
+        # This was added to handle empty GeometryCollections which appear when using
+        # OSM vector tiles.
+        if feature['geometry'].get('coordinates') is None:
+            continue
+
         coordinates = feature['geometry']['coordinates']
 
         if geom_type == 'MultiPolygon':

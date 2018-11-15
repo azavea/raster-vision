@@ -31,6 +31,7 @@ class PluginRegistry:
         self.plugin_root_dir = os.path.join(rv_home, 'plugins')
         self.config_builders = {}
         self.default_raster_sources = []
+        self.default_vector_sources = []
         self.default_label_sources = []
         self.default_label_stores = []
         self.default_evaluators = []
@@ -129,6 +130,10 @@ class PluginRegistry:
         """Registers a RasterSourceDefaultProvider for use as a plugin."""
 
         self.default_raster_sources.append(provider_class)
+
+    def register_default_vector_source(self, provider_class):
+        """Registers a VectorSourceDefaultProvider for use as a plugin."""
+        self.default_vector_sources.append(provider_class)
 
     def register_default_label_source(self, provider_class):
         """Registers a LabelSourceDefaultProvider for use as a plugin."""

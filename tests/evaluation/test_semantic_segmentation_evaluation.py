@@ -5,16 +5,16 @@ import numpy as np
 from rastervision.core.class_map import (ClassItem, ClassMap)
 from rastervision.evaluation.semantic_segmentation_evaluation import (
     SemanticSegmentationEvaluation)
-from rastervision.data.label_source.semantic_segmentation_raster_source import (
-    SemanticSegmentationRasterSource)
+from rastervision.data.label_source.semantic_segmentation_label_source import (
+    SemanticSegmentationLabelSource)
 from rastervision.data.raster_source.raster_source import RasterSource
 from rastervision.core.box import Box
 
-# from ..data.label_source.test_semantic_segmentation_raster_source import (
+# from ..data.label_source.test_semantic_segmentation_label_source import (
 #    MockRasterSource)
 
 
-# This class was copied from test_semantic_segmentation_raster_source
+# This class was copied from test_semantic_segmentation_label_source
 # because it can't be imported because
 # SystemError: Parent module '' not loaded, cannot perform relative import
 # TODO: solve this problem
@@ -72,13 +72,13 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         gt_array[0, 0, :] = 0
         gt_array[2, 2, :] = 2
         gt_raster = MockRasterSource(data=gt_array)
-        gt_label_source = SemanticSegmentationRasterSource(
+        gt_label_source = SemanticSegmentationLabelSource(
             source=gt_raster, rgb_class_map=class_map)
 
         p_array = np.ones((4, 4, 3), dtype=np.uint8)
         p_array[1, 1, :] = 0
         p_raster = MockRasterSource(data=p_array)
-        p_label_source = SemanticSegmentationRasterSource(
+        p_label_source = SemanticSegmentationLabelSource(
             source=p_raster, rgb_class_map=class_map)
 
         eval = SemanticSegmentationEvaluation(class_map)

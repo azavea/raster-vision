@@ -12,7 +12,7 @@ from rastervision.utils.files import str_to_file
 from rastervision.rv_config import RVConfig
 
 
-class TestGeoJSONSource(unittest.TestCase):
+class TestRasterizedSource(unittest.TestCase):
     def setUp(self):
         self.crs_transformer = IdentityCRSTransformer()
         self.extent = Box.make_square(0, 0, 10)
@@ -25,18 +25,19 @@ class TestGeoJSONSource(unittest.TestCase):
     def build_source(self, geojson):
         str_to_file(json.dumps(geojson), self.uri)
 
-        config = RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
+        config = RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
             .with_uri(self.uri) \
             .with_rasterizer_options(self.background_class_id, self.line_buffer) \
             .build()
 
         # Convert to proto and back as a test.
-        config = RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
+        config = RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
             .from_proto(config.to_proto()) \
             .build()
 
-        source = config.create_source(self.uri, self.extent,
-                                      self.crs_transformer)
+        source = config.create_source(self.uri, self.crs_transformer,
+                                      self.extent)
+
         return source
 
     def tearDown(self):

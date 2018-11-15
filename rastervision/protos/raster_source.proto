@@ -4,6 +4,7 @@ package rv.protos;
 
 import "google/protobuf/struct.proto";
 import "rastervision/protos/raster_transformer.proto";
+import "rastervision/protos/vector_source.proto";
 
 message RasterSourceConfig {
     message GeoTiffFiles {
@@ -14,7 +15,21 @@ message RasterSourceConfig {
         required string uri = 1;
     }
 
-    // Used to read a GeoJSON file as a raster useful for semantic segmentation.
+    // Used to read a VectorSource as a raster useful for semantic segmentation.
+    message RasterizedSource {
+        message RasterizerOptions {
+            // The class_id to use for background pixels that don't overlap with any
+            // shapes in the GeoJSON file.
+            required int32 background_class_id = 2;
+
+            // Number of pixels to add to each side of line when rasterized.
+            optional int32 line_buffer = 3 [default=15];
+        }
+        required VectorSourceConfig vector_source = 1;
+        required RasterizerOptions rasterizer_options = 2;
+    }
+
+    // Needed to be backwards compatible.
     message GeoJSONFile {
         message RasterizerOptions {
             // The class_id to use for background pixels that don't overlap with any
@@ -40,5 +55,6 @@ message RasterSourceConfig {
         ImageFile image_file = 5;
         GeoJSONFile geojson_file = 6;
         google.protobuf.Struct custom_config = 7;
+        RasterizedSource rasterized_source = 8;
     }
 }

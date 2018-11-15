@@ -4,18 +4,19 @@ from rastervision.cli import Verbosity
 from rastervision.rv_config import RVConfig
 from rastervision.plugin import PluginRegistry
 from rastervision.data.raster_source.default import (
-    GeoTiffSourceDefaultProvider, ImageSourceDefaultProvider,
-    GeoJSONSourceDefaultProvider)
+    GeoTiffSourceDefaultProvider, ImageSourceDefaultProvider)
+from rastervision.data.vector_source.default import (
+    GeoJSONVectorSourceDefaultProvider, MBTilesVectorSourceDefaultProvider)
 from rastervision.data.label_source.default import (
-    ObjectDetectionGeoJSONSourceDefaultProvider,
-    ChipClassificationGeoJSONSourceDefaultProvider,
-    SemanticSegmentationRasterSourceDefaultProvider)
+    ObjectDetectionLabelSourceDefaultProvider,
+    ChipClassificationLabelSourceDefaultProvider,
+    SemanticSegmentationLabelSourceDefaultProvider)
 from rastervision.data.label_store.default import (
     ObjectDetectionGeoJSONStoreDefaultProvider,
     ChipClassificationGeoJSONStoreDefaultProvider,
     SemanticSegmentationRasterStoreDefaultProvider)
 from rastervision.evaluation.default import (
-    ObjectDetectioneEvaluatorDefaultProvider,
+    ObjectDetectionEvaluatorDefaultProvider,
     ChipClassificationEvaluatorDefaultProvider,
     SemanticSegmentationEvaluatorDefaultProvider)
 
@@ -57,18 +58,36 @@ class Registry:
             # Raster Sources
             (rv.RASTER_SOURCE, rv.GEOTIFF_SOURCE):
             rv.data.GeoTiffSourceConfigBuilder,
-            (rv.RASTER_SOURCE, rv.GEOJSON_SOURCE):
-            rv.data.GeoJSONSourceConfigBuilder,
+            (rv.RASTER_SOURCE, rv.RASTERIZED_SOURCE):
+            rv.data.RasterizedSourceConfigBuilder,
             (rv.RASTER_SOURCE, rv.IMAGE_SOURCE):
             rv.data.ImageSourceConfigBuilder,
 
+            # Alias provided for backwards compatibility.
+            (rv.RASTER_SOURCE, rv.GEOJSON_SOURCE):
+            rv.data.RasterizedSourceConfigBuilder,
+
+            # Vector Sources
+            (rv.VECTOR_SOURCE, rv.MBTILES_SOURCE):
+            rv.data.MBTilesVectorSourceConfigBuilder,
+            (rv.VECTOR_SOURCE, rv.GEOJSON_SOURCE):
+            rv.data.GeoJSONVectorSourceConfigBuilder,
+
             # Label Sources
+            (rv.LABEL_SOURCE, rv.CHIP_CLASSIFICATION):
+            rv.data.ChipClassificationLabelSourceConfigBuilder,
+            (rv.LABEL_SOURCE, rv.OBJECT_DETECTION):
+            rv.data.ObjectDetectionLabelSourceConfigBuilder,
+            (rv.LABEL_SOURCE, rv.SEMANTIC_SEGMENTATION):
+            rv.data.SemanticSegmentationLabelSourceConfigBuilder,
+
+            # Label Source aliases provided for backward-compatibility
             (rv.LABEL_SOURCE, rv.OBJECT_DETECTION_GEOJSON):
-            rv.data.ObjectDetectionGeoJSONSourceConfigBuilder,
+            rv.data.ObjectDetectionLabelSourceConfigBuilder,
             (rv.LABEL_SOURCE, rv.CHIP_CLASSIFICATION_GEOJSON):
-            rv.data.ChipClassificationGeoJSONSourceConfigBuilder,
+            rv.data.ChipClassificationLabelSourceConfigBuilder,
             (rv.LABEL_SOURCE, rv.SEMANTIC_SEGMENTATION_RASTER):
-            rv.data.SemanticSegmentationRasterSourceConfigBuilder,
+            rv.data.SemanticSegmentationLabelSourceConfigBuilder,
 
             # Label Stores
             (rv.LABEL_STORE, rv.OBJECT_DETECTION_GEOJSON):
@@ -97,15 +116,19 @@ class Registry:
 
         self._internal_default_raster_sources = [
             GeoTiffSourceDefaultProvider,
-            GeoJSONSourceDefaultProvider,
             # This is the catch-all case, ensure it's on the bottom of the search stack.
             ImageSourceDefaultProvider
         ]
 
+        self._internal_default_vector_sources = [
+            GeoJSONVectorSourceDefaultProvider,
+            MBTilesVectorSourceDefaultProvider
+        ]
+
         self._internal_default_label_sources = [
-            ObjectDetectionGeoJSONSourceDefaultProvider,
-            ChipClassificationGeoJSONSourceDefaultProvider,
-            SemanticSegmentationRasterSourceDefaultProvider
+            ObjectDetectionLabelSourceDefaultProvider,
+            ChipClassificationLabelSourceDefaultProvider,
+            SemanticSegmentationLabelSourceDefaultProvider
         ]
 
         self._internal_default_label_stores = [
@@ -115,7 +138,7 @@ class Registry:
         ]
 
         self._internal_default_evaluators = [
-            ObjectDetectioneEvaluatorDefaultProvider,
+            ObjectDetectionEvaluatorDefaultProvider,
             ChipClassificationEvaluatorDefaultProvider,
             SemanticSegmentationEvaluatorDefaultProvider
         ]
@@ -222,6 +245,21 @@ class Registry:
 
         raise RegistryError(
             'No RasterSourceDefaultProvider found for {}'.format(s))
+
+    def get_vector_source_default_provider(self, s):
+        """
+        Gets the VectorSourceDefaultProvider for a given input string.
+        """
+        self._ensure_plugins_loaded()
+        providers = (self._plugin_registry.default_vector_sources +
+                     self._internal_default_vector_sources)
+
+        for provider in providers:
+            if provider.handles(s):
+                return provider
+
+        raise RegistryError(
+            'No VectorSourceDefaultProvider found for {}'.format(s))
 
     def get_label_source_default_provider(self, task_type, s):
         """

@@ -81,10 +81,10 @@ class TestBox(unittest.TestCase):
         self.assertEqual(self.box.npbox_format().dtype, np.float)
 
     def test_geojson_coordinates(self):
-        nw = (self.xmin, self.ymin)
-        ne = (self.xmin, self.ymax)
-        se = (self.xmax, self.ymax)
-        sw = (self.xmax, self.ymin)
+        nw = [self.xmin, self.ymin]
+        ne = [self.xmin, self.ymax]
+        se = [self.xmax, self.ymax]
+        sw = [self.xmax, self.ymin]
         geojson_coords = [nw, ne, se, sw, nw]
         self.assertEqual(self.box.geojson_coordinates(), geojson_coords)
 

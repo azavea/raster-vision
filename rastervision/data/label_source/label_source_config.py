@@ -1,11 +1,16 @@
 from abc import abstractmethod
+import logging
 
 import rastervision as rv
 from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
 
+log = logging.getLogger(__name__)
+
 
 class LabelSourceConfig(Config):
+    deprecation_warnings = []
+
     def __init__(self, source_type):
         self.source_type = source_type
 
@@ -33,7 +38,19 @@ class LabelSourceConfig(Config):
                                                self.source_type)(self)
 
     @staticmethod
+    def check_deprecation(source_type):
+        # If source_type is deprecated and warning hasn't been shown yet, then warn.
+        if (source_type in rv.label_source_deprecated_map
+                and source_type not in LabelSourceConfig.deprecation_warnings):
+            LabelSourceConfig.deprecation_warnings.append(source_type)
+            new_source_type = rv.label_source_deprecated_map[source_type]
+            log.warn(
+                'LabelSource {} is deprecated. Please use {} instead.'.format(
+                    source_type, new_source_type))
+
+    @staticmethod
     def builder(source_type):
+        LabelSourceConfig.check_deprecation(source_type)
         return rv._registry.get_config_builder(rv.LABEL_SOURCE, source_type)()
 
     @staticmethod

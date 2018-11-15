@@ -49,6 +49,17 @@ ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 RUN rm -f /usr/bin/pip && ln -s /usr/bin/pip3 /usr/bin/pip
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 
+# Install tippecanoe
+RUN apt-get -y upgrade \
+  && apt-get -y install build-essential libsqlite3-dev zlib1g-dev
+
+RUN cd /tmp && \
+    git clone https://github.com/mapbox/tippecanoe.git && \
+    cd tippecanoe && \
+    make && \
+    make install
+
+# Set WORKDIR and PYTHONPATH
 WORKDIR /opt/src/
 ENV PYTHONPATH=/opt/src:/opt/tf-models:/opt/tf-models/slim:$PYTHONPATH
 
