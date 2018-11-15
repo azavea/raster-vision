@@ -1,6 +1,5 @@
 from abc import (ABC, abstractmethod)
 import os
-import pickle
 
 from rastervision.utils.files import download_or_copy
 
@@ -106,11 +105,6 @@ class ConfigBuilder(ABC):
         """
         pass  # pragma: no cover
 
-    def __deepcopy__(self, memodict={}):
-        """Custom deep copy that uses pickle instead of default behavior,
-        since default behavior can be extremely slow for large lists and objects"""
-        return pickle.loads(pickle.dumps(self, -1))
-
 
 class BundledConfigMixin(ABC):
     """Mixin for configurations that participate in the bundling of a
@@ -136,8 +130,3 @@ class BundledConfigMixin(ABC):
     def load_bundle_files(self, bundle_dir):
         """Load files from a prediction package bundle directory."""
         pass  # pragma: no cover
-
-    def __deepcopy__(self, memodict={}):
-        """Custom deep copy that uses pickle instead of default behavior,
-        since default behavior can be extremely slow for large lists and objects"""
-        return pickle.loads(pickle.dumps(self, -1))
