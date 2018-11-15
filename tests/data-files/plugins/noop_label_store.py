@@ -28,7 +28,7 @@ class NoopLabelStoreConfig(LabelStoreConfig):
         msg.MergeFrom(LabelStoreConfigMsg(custom_config={}))
         return msg
 
-    def create_store(self, task_config, crs_transformer, tmp_dir):
+    def create_store(self, task_config, extent, crs_transformer, tmp_dir):
         return NoopLabelStore()
 
     def update_for_command(self,
