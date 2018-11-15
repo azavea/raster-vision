@@ -82,8 +82,9 @@ class ImageSourceConfigBuilder(RasterSourceConfigBuilder):
                 'You must specify a uri for the ImageSourceConfig. Use "with_uri"'
             )
         if not isinstance(self.config.get('uri'), str):
-            raise rv.ConfigError('uri set with "with_uri" method must be a string, got {}'.
-                format(type(self.config.get('uri'))))   
+            raise rv.ConfigError(
+                'uri set with "with_uri" method must be a string, got {}'.
+                format(type(self.config.get('uri'))))
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

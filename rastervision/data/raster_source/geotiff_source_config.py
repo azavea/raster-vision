@@ -103,8 +103,9 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
                 'You must specify uris for the GeoTiffSourceConfig. Use '
                 '"with_uris".')
         if not isinstance(self.config.get('uris'), list):
-            raise rv.ConfigError('uris set with "with_uris" must be a list, got {}'.
-                format(type(self.config.get('uris'))))
+            raise rv.ConfigError(
+                'uris set with "with_uris" must be a list, got {}'.format(
+                    type(self.config.get('uris'))))
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

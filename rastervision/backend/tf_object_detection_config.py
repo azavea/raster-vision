@@ -219,12 +219,14 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
             raise rv.ConfigError('You must specify a template for the backend '
                                  "configuration - use 'with_template'.")
         if not isinstance(self.config.get('tfod_config'), dict):
-            raise rv.ConfigError('tfod_config must be of type dict, got {}'.
-                format(type(self.config.get('tfod_config'))))
+            raise rv.ConfigError(
+                'tfod_config must be of type dict, got {}'.format(
+                    type(self.config.get('tfod_config'))))
         if self.require_task and not self.task:
             raise rv.ConfigError('You must specify the task this backend '
                                  "is for - use 'with_task'.")
-        if self.require_task and not isinstance(self.task, ObjectDetectionConfig):
+        if self.require_task and not isinstance(self.task,
+                                                ObjectDetectionConfig):
             raise rv.ConfigError(
                 'Task set with with_task must be of type ObjectDetectionConfig, got {}.'.
                 format(type(self.task)))

@@ -56,7 +56,8 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
                 'class_map not set for ClassificationEvaluatorConfig. '
                 'Use "with_class_map".')
         if not isinstance(self.config.get('class_map'), ClassMap):
-            raise rv.ConfigError('class_map set with "with_class_map" must be of type ClassMap, got {}'.
+            raise rv.ConfigError(
+                'class_map set with "with_class_map" must be of type ClassMap, got {}'.
                 format(type(self.config.get('class_map'))))
 
     @classmethod

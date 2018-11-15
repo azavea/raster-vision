@@ -180,16 +180,18 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         if not self.config.get('kc_config'):
             raise rv.ConfigError('You must specify a template for the backend '
                                  'configuration - use "with_template".')
-        
+
         if not isinstance(self.config.get('kc_config'), dict):
-            raise rv.ConfigError('kc_config must be of type dict, got {}'.
-                format(type(self.config.get('kc_config'))))
+            raise rv.ConfigError(
+                'kc_config must be of type dict, got {}'.format(
+                    type(self.config.get('kc_config'))))
 
         if self.require_task and not self.task:
             raise rv.ConfigError('You must specify the task this backend '
                                  'is for - use "with_task".')
-            
-        if self.require_task and not isinstance(self.task, ChipClassificationConfig):
+
+        if self.require_task and not isinstance(self.task,
+                                                ChipClassificationConfig):
             raise rv.ConfigError(
                 'Task set with with_task must be of type ChipClassificationConfig, got {}.'.
                 format(type(self.task)))

@@ -8,6 +8,7 @@ from rastervision.protos.command_pb2 \
 from rastervision.rv_config import RVConfig
 from rastervision.command.utils import (check_task_type, check_backend_type)
 
+
 class TrainCommandConfig(CommandConfig):
     def __init__(self, root_uri, task, backend):
         super().__init__(rv.TRAIN, root_uri)

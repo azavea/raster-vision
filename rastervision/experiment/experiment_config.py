@@ -170,7 +170,9 @@ class ExperimentConfigBuilder(ConfigBuilder):
         if not root_uri:
             raise rv.ConfigError('root_uri must be set. Use "with_root_uri"')
         if not isinstance(root_uri, str):
-            raise rv.ConfigError('root_uri needs to be of type str, got {}'.format(type(root_uri)))
+            raise rv.ConfigError(
+                'root_uri needs to be of type str, got {}'.format(
+                    type(root_uri)))
 
         for key in ['task', 'backend', 'dataset', 'id']:
             if self.config.get(key) is None:
@@ -182,13 +184,13 @@ class ExperimentConfigBuilder(ConfigBuilder):
             raise rv.ConfigError(
                 'Experiment task set with "with_task" must be of class TaskConfig, got {}'.
                 format(type(task)))
-        
+
         backend = self.config.get('backend')
         if not issubclass(type(backend), BackendConfig):
             raise rv.ConfigError(
                 'Backend set with "with_backend" needs to be of type BackendConfig, got {}'.
                 format(type(backend)))
-        
+
         dataset = self.config.get('dataset')
         if not isinstance(dataset, DatasetConfig):
             raise rv.ConfigError(
@@ -197,8 +199,8 @@ class ExperimentConfigBuilder(ConfigBuilder):
 
         if not isinstance(self.config.get('id'), str):
             raise rv.ConfigError(
-                'ID set with "with_id" needs to be of type str, got {}'.
-                format(type(self.config.get('id'))))
+                'ID set with "with_id" needs to be of type str, got {}'.format(
+                    type(self.config.get('id'))))
 
     def build(self):
         self.validate()

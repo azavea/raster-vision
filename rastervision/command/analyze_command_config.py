@@ -8,7 +8,9 @@ from rastervision.protos.command_pb2 \
 from rastervision.rv_config import RVConfig
 from rastervision.data.scene_config import SceneConfig
 from rastervision.analyzer.stats_analyzer_config import StatsAnalyzerConfig
-from rastervision.command.utils import (check_scenes_type, check_analyzers_type)
+from rastervision.command.utils import (check_scenes_type,
+                                        check_analyzers_type)
+
 
 
 class AnalyzeCommandConfig(CommandConfig):

@@ -129,7 +129,6 @@ class SemanticSegmentationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
                 ' Use "with_raster_source".')
 
         if not isinstance(source, (str, GeoTiffSourceConfig)):
-            raise rv.ConfigError('Raster source must be of type str or GeoTiffSourceConfig, got {}'.
+            raise rv.ConfigError(
+                'Raster source must be of type str or GeoTiffSourceConfig, got {}'.
                 format(type(source)))
-
-

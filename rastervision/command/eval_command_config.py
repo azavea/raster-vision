@@ -8,6 +8,7 @@ from rastervision.protos.command_pb2 \
 from rastervision.rv_config import RVConfig
 from rastervision.command.utils import (check_scenes_type, check_task_type)
 
+
 class EvalCommandConfig(CommandConfig):
     def __init__(self, root_uri, task, scenes, evaluators):
         super().__init__(rv.EVAL, root_uri)

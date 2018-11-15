@@ -88,7 +88,8 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
                 'with_train_scenes or with_experiment')
         if len(self.train_scenes) > 0:
             if not isinstance(self.train_scenes[0], SceneConfig):
-                raise rv.ConfigError('train_scenes must be a list of class SceneConfig, got a list of {}'.
+                raise rv.ConfigError(
+                    'train_scenes must be a list of class SceneConfig, got a list of {}'.
                     format(type(self.train_scenes[0])))
         if self.val_scenes == []:
             raise rv.ConfigError(
@@ -96,9 +97,9 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
                 'with_val_scenes or with_experiment')
         if len(self.val_scenes) > 0:
             if not isinstance(self.val_scenes[0], SceneConfig):
-                raise rv.ConfigError('val_scenes must be a list of class SceneConfig, got a list of {}'.
+                raise rv.ConfigError(
+                    'val_scenes must be a list of class SceneConfig, got a list of {}'.
                     format(type(self.val_scenes[0])))
-
 
     def build(self):
         self.validate()

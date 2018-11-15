@@ -8,6 +8,7 @@ from rastervision.protos.command_pb2 \
 from rastervision.rv_config import RVConfig
 from rastervision.command.utils import (check_backend_type, check_task_type)
 
+
 class PredictCommandConfig(CommandConfig):
     def __init__(self, root_uri, task, backend, scenes):
         super().__init__(rv.PREDICT, root_uri)
