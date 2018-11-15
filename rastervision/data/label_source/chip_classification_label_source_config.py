@@ -1,11 +1,13 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.label_source import (
-    LabelSourceConfig, LabelSourceConfigBuilder, ChipClassificationLabelSource)
+from rastervision.data.label_source import (LabelSourceConfig,
+                                            LabelSourceConfigBuilder,
+                                            ChipClassificationGeoJSONSource)
 from rastervision.data.vector_source import VectorSourceConfig
 from rastervision.protos.label_source_pb2 import (LabelSourceConfig as
                                                   LabelSourceConfigMsg)
+from rastervision.data.label_source.utils import check_uri_type
 
 
 class ChipClassificationLabelSourceConfig(LabelSourceConfig):
@@ -86,6 +88,7 @@ class ChipClassificationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
             raise rv.ConfigError(
                 'You must set the vector_source for ChipClassificationLabelSourceConfig'
                 ' Use "with_vector_source".')
+        check_uri_type(self.config.get('uri'))
 
     def from_proto(self, msg):
 
