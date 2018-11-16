@@ -30,7 +30,8 @@ class TrainingData(object):
 
         This maintains the correspondence between chips and labels.
         """
-        chip_windows_labels = list(self)
-        random.shuffle(chip_windows_labels)
-        # Unzip the list.
-        self.chips, self.windows, self.labels = zip(*chip_windows_labels)
+        if len(self.chips) > 0:
+            chip_windows_labels = list(self)
+            random.shuffle(chip_windows_labels)
+            # Unzip the list.
+            self.chips, self.windows, self.labels = zip(*chip_windows_labels)
