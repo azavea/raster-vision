@@ -43,7 +43,11 @@ class ImageSourceConfig(RasterSourceConfig):
                    .with_uri(new_uri) \
                    .build()
 
-    def create_source(self, tmp_dir, extent=None, crs_transformer=None):
+    def create_source(self,
+                      tmp_dir,
+                      crs_transformer=None,
+                      extent=None,
+                      class_map=None):
         transformers = self.create_transformers()
         return ImageSource(self.uri, transformers, tmp_dir, self.channel_order)
 

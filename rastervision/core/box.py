@@ -93,10 +93,10 @@ class Box():
     def geojson_coordinates(self):
         """Return Box as GeoJSON coordinates."""
         # Compass directions:
-        nw = (self.xmin, self.ymin)
-        ne = (self.xmin, self.ymax)
-        se = (self.xmax, self.ymax)
-        sw = (self.xmax, self.ymin)
+        nw = [self.xmin, self.ymin]
+        ne = [self.xmin, self.ymax]
+        se = [self.xmax, self.ymax]
+        sw = [self.xmax, self.ymin]
         return [nw, ne, se, sw, nw]
 
     def make_random_square_container(self, size):

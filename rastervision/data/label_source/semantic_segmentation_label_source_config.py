@@ -4,12 +4,12 @@ import rastervision as rv
 from rastervision.core.class_map import ClassMap
 from rastervision.data.label_source import (LabelSourceConfig,
                                             LabelSourceConfigBuilder,
-                                            SemanticSegmentationRasterSource)
+                                            SemanticSegmentationLabelSource)
 from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
 from rastervision.data.raster_source import RasterSourceConfig
 
 
-class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
+class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
     def __init__(self, source, rgb_class_map=None):
         super().__init__(source_type=rv.SEMANTIC_SEGMENTATION_RASTER)
         self.source = source
@@ -21,15 +21,16 @@ class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
         rgb_class_items = None
         if self.rgb_class_map is not None:
             rgb_class_items = self.rgb_class_map.to_proto()
-        opts = LabelSourceConfigMsg.SemanticSegmentationRasterSource(
+        opts = LabelSourceConfigMsg.SemanticSegmentationLabelSource(
             source=self.source.to_proto(), rgb_class_items=rgb_class_items)
-        msg.semantic_segmentation_raster_source.CopyFrom(opts)
+        msg.semantic_segmentation_label_source.CopyFrom(opts)
         return msg
 
     def create_source(self, task_config, extent, crs_transformer, tmp_dir):
-        return SemanticSegmentationRasterSource(
-            self.source.create_source(tmp_dir, extent, crs_transformer),
-            self.rgb_class_map)
+        raster_source = self.source.create_source(
+            tmp_dir, crs_transformer, extent, task_config.class_map)
+        return SemanticSegmentationLabelSource(raster_source,
+                                               self.rgb_class_map)
 
     def update_for_command(self,
                            command_type,
@@ -47,7 +48,7 @@ class SemanticSegmentationRasterSourceConfig(LabelSourceConfig):
         return io_def
 
 
-class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
+class SemanticSegmentationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
@@ -56,14 +57,25 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
                 'rgb_class_map': prev.rgb_class_map
             }
 
-        super().__init__(SemanticSegmentationRasterSourceConfig, config)
+        super().__init__(SemanticSegmentationLabelSourceConfig, config)
 
     def from_proto(self, msg):
+        b = SemanticSegmentationLabelSourceConfigBuilder()
+
+        label_source_msg = msg.semantic_segmentation_label_source
+        # Add for backwards compatibility.
+        if msg.HasField('semantic_segmentation_raster_source'):
+            label_source_msg = msg.semantic_segmentation_raster_source
+
         raster_source_config = rv.RasterSourceConfig.from_proto(
-            msg.semantic_segmentation_raster_source.source)
+            label_source_msg.source)
 
         b = self.with_raster_source(raster_source_config)
         rgb_class_items = msg.semantic_segmentation_raster_source.rgb_class_items
+
+        b = b.with_raster_source(raster_source_config)
+        rgb_class_items = label_source_msg.rgb_class_items
+
         if rgb_class_items:
             b = b.with_rgb_class_map(
                 ClassMap.construct_from(list(rgb_class_items)))
@@ -78,7 +90,7 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
                 are mapped to class_ids using the rgb_class_map.
 
         Returns:
-            SemanticSegmentationRasterSourceConfigBuilder
+            SemanticSegmentationLabelSourceConfigBuilder
         """
         b = deepcopy(self)
         if isinstance(source, RasterSourceConfig):
@@ -102,7 +114,7 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
                 map with color values used to map RGB values to class ids
 
         Returns:
-            SemanticSegmentationRasterSourceConfigBuilder
+            SemanticSegmentationLabelSourceConfigBuilder
         """
         b = deepcopy(self)
         b.config['rgb_class_map'] = ClassMap.construct_from(rgb_class_map)
@@ -113,5 +125,5 @@ class SemanticSegmentationRasterSourceConfigBuilder(LabelSourceConfigBuilder):
 
         if source is None:
             raise rv.ConfigError(
-                'You must set the source for SemanticSegmentationRasterSourceConfig'
+                'You must set the source for SemanticSegmentationLabelSourceConfig'
                 ' Use "with_raster_source".')

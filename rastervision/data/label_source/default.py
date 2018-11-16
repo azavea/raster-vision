@@ -18,38 +18,35 @@ class LabelSourceDefaultProvider(ABC):
         pass
 
 
-class ObjectDetectionGeoJSONSourceDefaultProvider(LabelSourceDefaultProvider):
+class ObjectDetectionLabelSourceDefaultProvider(LabelSourceDefaultProvider):
     @staticmethod
     def handles(task_type, uri):
         if task_type == rv.OBJECT_DETECTION:
             ext = os.path.splitext(uri)[1]
-            return ext.lower() in ['.json', '.geojson']
-        return False
+            return ext.lower() in ['.geojson', '.json', '.mbtiles']
 
     @staticmethod
     def construct(uri):
-        return rv.LabelSourceConfig.builder(rv.OBJECT_DETECTION_GEOJSON) \
+        return rv.LabelSourceConfig.builder(rv.OBJECT_DETECTION) \
                                    .with_uri(uri) \
                                    .build()
 
 
-class ChipClassificationGeoJSONSourceDefaultProvider(
-        LabelSourceDefaultProvider):
+class ChipClassificationLabelSourceDefaultProvider(LabelSourceDefaultProvider):
     @staticmethod
     def handles(task_type, uri):
         if task_type == rv.CHIP_CLASSIFICATION:
             ext = os.path.splitext(uri)[1]
-            return ext.lower() in ['.json', '.geojson']
-        return False
+            return ext.lower() in ['.geojson', '.json', '.mbtiles']
 
     @staticmethod
     def construct(uri):
-        return rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
+        return rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
                                    .with_uri(uri) \
                                    .build()
 
 
-class SemanticSegmentationRasterSourceDefaultProvider(
+class SemanticSegmentationLabelSourceDefaultProvider(
         LabelSourceDefaultProvider):
     @staticmethod
     def handles(task_type, uri):
@@ -60,6 +57,6 @@ class SemanticSegmentationRasterSourceDefaultProvider(
 
     @staticmethod
     def construct(uri):
-        return rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+        return rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
                                    .with_raster_source(uri) \
                                    .build()

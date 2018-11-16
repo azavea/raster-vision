@@ -250,12 +250,12 @@ Image
 
 Non-georeferenced images including ``.tif``, ``.png``, and ``.jpg`` files can be read using an ``ImageSource``. This is useful for oblique drone imagery, biomedical imagery, and any other (potentially massive!) non-georeferenced images.
 
-Segmentation GeoJSON
-.....................
+Rasterized Vectors
+...................
 
-*rv.GEOJSON_SOURCE*
+*rv.RASTERIZED_SOURCE*
 
-Semantic segmentation labels stored as polygons and lines in a GeoJSON file can be rasterized and read using a ``GeoJSONSource``. This is a slightly unusual use of a ``RasterSource`` as we're using it to read labels, and not images to use as input to a model.
+Semantic segmentation labels stored as polygons and lines in a ``VectorSource`` can be rasterized and read using a ``RasterizedSource``. This is a slightly unusual use of a ``RasterSource`` as we're using it to read labels, and not images to use as input to a model.
 
 RasterSourceConfig
 ...................
@@ -269,8 +269,34 @@ In the ``tiny_spacenet.py`` example, we build up the training scene raster sourc
                                               .with_stats_transformer() \
                                               .build()
 
-.. seealso:: The :ref:`raster source api reference` API Reference docs have more information about the
-             RasterSource types available.
+.. seealso:: The :ref:`raster source api reference` API Reference docs have more information about the RasterSource types available.
+
+.. _vector source:
+
+VectorSource
+^^^^^^^^^^^^
+
+A ``VectorSource`` is an object that supports reading vector data like polygons and lines from various places. It is used by ``ObjectDetectionLabelSource`` and ``ChipClassificationLabelSource``, as well as the ``RasterizerSource`` (a type of ``RasterSource``).
+
+VectorSourceConfig
+...................
+
+Here is an example of configuring an ``MBTilesVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/master/spacenet/vegas.py>`_.
+
+
+.. code::
+
+    uri = 'http://foo.com/{z}/{x}/{y}.mvt'
+    class_id_to_filter = {1: ['has', 'building']}
+
+    b = MBTilesVectorSourceConfigBuilder() \
+        .with_class_inference(class_id_to_filter=class_id_to_filter,
+                              default_class_id=None) \
+        .with_uri(uri) \
+        .with_zoom(14) \
+        .build()
+
+.. seealso:: The :ref:`vector source api reference` API Reference docs have more information about the ``VectorSource`` types available.
 
 .. _label source:
 
@@ -279,17 +305,20 @@ LabelSource
 
 A ``LabelSource`` is an object that allows reading ground truth labels for a scene. There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
 
-In the ``tiny_spacenet.py`` example, we build up the training scene raster source:
+Here is an example of configuring a ``SemanticSegmentationLabelSource`` using rasterized vector data.  A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/master/spacenet/vegas.py>`_.
 
 .. code::
 
-   train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                              .with_uri(train_image_uri) \
-                                              .with_stats_transformer() \
-                                              .build()
+    label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
+        .with_vector_source(vector_source) \
+        .with_rasterizer_options(background_class_id, line_buffer=line_buffer) \
+        .build()
 
-.. seealso:: The :ref:`label source api reference` API Reference docs have more information about the
-             LabelSource types available.
+    label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+        .with_raster_source(label_raster_source) \
+        .build()
+
+.. seealso:: The :ref:`label source api reference` API Reference docs have more information about the LabelSource types available.
 
 .. _label store:
 

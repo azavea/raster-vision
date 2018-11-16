@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from copy import deepcopy
+import logging
 
 import rastervision as rv
 from rastervision.core.config import (Config, ConfigBuilder,
@@ -8,8 +9,12 @@ from rastervision.data import (RasterTransformerConfig, StatsTransformerConfig)
 from rastervision.protos.raster_source_pb2 \
     import RasterSourceConfig as RasterSourceConfigMsg
 
+log = logging.getLogger(__name__)
+
 
 class RasterSourceConfig(BundledConfigMixin, Config):
+    deprecation_warnings = []
+
     def __init__(self, source_type, transformers=None, channel_order=None):
         if transformers is None:
             transformers = []
@@ -50,7 +55,7 @@ class RasterSourceConfig(BundledConfigMixin, Config):
                    .build()
 
     @abstractmethod
-    def create_source(self, tmp_dir, extent, crs_transformer):
+    def create_source(self, tmp_dir, crs_transformer, extent, class_map):
         """Create the Raster Source for this configuration.
         """
         pass
@@ -60,7 +65,18 @@ class RasterSourceConfig(BundledConfigMixin, Config):
                                                self.source_type)(self)
 
     @staticmethod
+    def check_deprecation(source_type):
+        # If source_type is deprecated and warning hasn't been shown yet, then warn.
+        if (source_type in rv.raster_source_deprecated_map and
+                source_type not in RasterSourceConfig.deprecation_warnings):
+            RasterSourceConfig.deprecation_warnings.append(source_type)
+            new_source_type = rv.raster_source_deprecated_map[source_type]
+            log.warn(
+                'RasterSource {} is deprecated. Please use {} instead.'.format(
+                    source_type, new_source_type))
+
     def builder(source_type):
+        RasterSourceConfig.check_deprecation(source_type)
         return rv._registry.get_config_builder(rv.RASTER_SOURCE, source_type)()
 
     @staticmethod

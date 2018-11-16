@@ -5,8 +5,57 @@ package rv.protos;
 import "rastervision/protos/raster_source.proto";
 import "google/protobuf/struct.proto";
 import "rastervision/protos/class_item.proto";
+import "rastervision/protos/vector_source.proto";
+
 
 message LabelSourceConfig {
+    message ObjectDetectionLabelSource {
+        required VectorSourceConfig vector_source = 1;
+    }
+
+    message ChipClassificationLabelSource {
+        required VectorSourceConfig vector_source = 1;
+
+        // The minimum IOA of a polygon and cell.
+        optional float ioa_thresh = 2;
+
+        // If use_intersection_over_cell is true, then use the area of the
+        // cell as the denominator in the IOA. Otherwise, use the area of the
+        // polygon.
+        optional bool use_intersection_over_cell = 3;
+
+        // If true, the class_id for a cell is the minimum class_id of the
+        // boxes in that cell. Otherwise, pick the class_id of the box
+        // covering the greatest area.
+        optional bool pick_min_class_id = 4;
+
+        // Optional class_id to use as the background class; ie. the one that
+        // is used when a window contains no boxes. If not set, empty windows
+        // have None set as their class_id.
+        optional int32 background_class_id = 5;
+
+        // Height and width of each cell (in pixels) in the spatial grid that
+        // is laid over the raster.
+        optional int32 cell_size = 6;
+
+        optional bool infer_cells = 7 [default=false];
+    }
+
+    message SemanticSegmentationLabelSource {
+        // Raster source from which the label data are to be
+        // drawn.
+        required RasterSourceConfig source = 1;
+
+        // A mapping used to translate RGB pixel values in ground truth segmentation
+        // rasters into RV class_ids. This is distinct from the class_items in TaskConfig
+        // since we may want to use a different color scheme for generating prediction
+        // rasters. This is optional -- the default is to assume that the raster source
+        // contains class ids.
+        repeated ClassItem rgb_class_items = 2;
+    }
+
+    // Required for backwards compatibility :(
+
     message ObjectDetectionGeoJSONSource {
         required string uri = 1;
     }
@@ -54,9 +103,14 @@ message LabelSourceConfig {
 
     required string source_type = 1;
     oneof label_source_config {
+        // required for backwards compatibility
         ObjectDetectionGeoJSONSource object_detection_geojson_source = 2;
         ChipClassificationGeoJSONSource chip_classification_geojson_source = 3;
         SemanticSegmentationRasterSource semantic_segmentation_raster_source = 4;
+        //
         google.protobuf.Struct custom_config = 5;
+        ObjectDetectionLabelSource object_detection_label_source = 6;
+        ChipClassificationLabelSource chip_classification_label_source = 7;
+        SemanticSegmentationLabelSource semantic_segmentation_label_source = 8;
     }
 }

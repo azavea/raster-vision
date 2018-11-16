@@ -17,7 +17,7 @@ class EvaluatorDefaultProvider(ABC):
         pass
 
 
-class ObjectDetectioneEvaluatorDefaultProvider(EvaluatorDefaultProvider):
+class ObjectDetectionEvaluatorDefaultProvider(EvaluatorDefaultProvider):
     @staticmethod
     def is_default_for(task_type):
         return task_type == rv.OBJECT_DETECTION

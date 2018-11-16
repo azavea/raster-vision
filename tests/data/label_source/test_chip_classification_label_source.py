@@ -6,17 +6,18 @@ import copy
 import shapely
 
 import rastervision as rv
+from rastervision.rv_config import RVConfig
 from rastervision.data.label_source import (infer_cell, infer_labels,
                                             read_labels)
+from rastervision.data.crs_transformer import IdentityCRSTransformer
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.rv_config import RVConfig
 from rastervision.data.utils import geojson_to_shapes
-
+from tests import data_file_path
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
 
-class TestChipClassificationGeoJSONSource(unittest.TestCase):
+class TestChipClassificationLabelSource(unittest.TestCase):
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
         # Use a multipolygon with two polygons that are the same to test that
@@ -271,15 +272,41 @@ class TestChipClassificationGeoJSONSource(unittest.TestCase):
 
     def test_missing_config_uri(self):
         with self.assertRaises(rv.ConfigError):
-            rv.data.ChipClassificationGeoJSONSourceConfig.builder(
-                rv.CHIP_CLASSIFICATION_GEOJSON).build()
+            rv.data.ChipClassificationLabelSourceConfig.builder(
+                rv.CHIP_CLASSIFICATION).build()
 
     def test_no_missing_config(self):
         try:
-            rv.data.ChipClassificationGeoJSONSourceConfig.builder(
-                rv.CHIP_CLASSIFICATION_GEOJSON).with_uri('').build()
+            rv.data.ChipClassificationLabelSourceConfig.builder(
+                rv.CHIP_CLASSIFICATION).with_uri('x.geojson').build()
         except rv.ConfigError:
             self.fail('ConfigError raised unexpectedly')
+
+    def test_deprecated_builder(self):
+        try:
+            rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
+              .with_uri('x.geojson') \
+              .build()
+        except rv.ConfigError:
+            self.fail('ConfigError raised unexpectedly')
+
+    def test_builder(self):
+        uri = data_file_path('polygon-labels.geojson')
+        msg = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                .with_uri(uri) \
+                .build().to_proto()
+        config = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                   .from_proto(msg).build()
+        self.assertEqual(config.vector_source.uri, uri)
+
+        classes = ['one', 'two']
+        extent = Box.make_square(0, 0, 10)
+        crs_transformer = IdentityCRSTransformer()
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            task_config = rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \
+                            .with_classes(classes) \
+                            .build()
+            config.create_source(task_config, extent, crs_transformer, tmp_dir)
 
 
 if __name__ == '__main__':
