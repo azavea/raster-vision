@@ -2,9 +2,12 @@ import unittest
 
 import rastervision as rv
 from rastervision.rv_config import RVConfig
+from rastervision.core import Box
+
+import tests.mock as mk
 
 
-class PredictCommand(unittest.TestCase):
+class PredictCommand(mk.MockMixin, unittest.TestCase):
     def test_command_create(self):
         with RVConfig.get_tmp_dir() as tmp_dir:
             cmd = rv.command.PredictCommandConfig.builder() \
@@ -48,6 +51,28 @@ class PredictCommand(unittest.TestCase):
                                                .build()
         except rv.ConfigError:
             self.fail('rv.ConfigError raised unexpectedly')
+
+    def test_command_run_with_mocks(self):
+        task_config = rv.TaskConfig.builder(mk.MOCK_TASK).build()
+        backend_config = rv.BackendConfig.builder(mk.MOCK_BACKEND).build()
+        backend = backend_config.create_backend(task_config)
+        backend_config.mock.create_backend.return_value = backend
+        task = task_config.create_task(backend)
+        task_config.mock.create_task.return_value = task
+        scene = mk.create_mock_scene()
+
+        task.mock.get_predict_windows.return_value = [Box(0, 0, 1, 1)]
+
+        cmd = rv.command.PredictCommandConfig.builder() \
+                                             .with_task(task_config) \
+                                             .with_backend(backend_config) \
+                                             .with_scenes([scene]) \
+                                             .with_root_uri('.') \
+                                             .build() \
+                                             .create_command()
+        cmd.run()
+
+        self.assertTrue(backend.mock.predict.called)
 
 
 if __name__ == '__main__':

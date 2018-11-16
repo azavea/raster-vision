@@ -23,8 +23,7 @@ class BundleCommandConfig(CommandConfig):
         else:
             _tmp_dir = tmp_dir
 
-        retval = BundleCommand(self, self.task, self.backend, self.scene,
-                               self.analyzers)
+        retval = BundleCommand(self)
         retval.set_tmp_dir(_tmp_dir)
         return retval
 

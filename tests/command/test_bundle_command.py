@@ -8,10 +8,11 @@ from rastervision.protos.command_pb2 import CommandConfig as CommandConfigMsg
 from rastervision.utils.files import (make_dir, load_json_config)
 from rastervision.rv_config import RVConfig
 
+import tests.mock as mk
 from tests import data_file_path
 
 
-class TestBundleCommand(unittest.TestCase):
+class TestBundleCommand(mk.MockMixin, unittest.TestCase):
     def get_analyzer(self, tmp_dir):
         stats_uri = os.path.join(tmp_dir, 'stats.json')
         a = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
@@ -179,6 +180,29 @@ class TestBundleCommand(unittest.TestCase):
                                           .with_scene('') \
                                           .with_backend('') \
                                           .build()
+
+    def test_command_run_with_mocks(self):
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            task_config = rv.TaskConfig.builder(mk.MOCK_TASK).build()
+            task_config.predict_package_uri = os.path.join(
+                tmp_dir, 'predict_package.zip')
+            backend_config = rv.BackendConfig.builder(mk.MOCK_BACKEND).build()
+            scene = mk.create_mock_scene()
+            analyzer_config = rv.AnalyzerConfig.builder(
+                mk.MOCK_ANALYZER).build()
+
+            cmd = rv.command.BundleCommandConfig.builder() \
+                                              .with_task(task_config) \
+                                              .with_backend(backend_config) \
+                                              .with_scene(scene) \
+                                              .with_analyzers([analyzer_config]) \
+                                              .with_root_uri('.') \
+                                              .build() \
+                                              .create_command()
+            cmd.run()
+
+            self.assertTrue(os.path.exists(task_config.predict_package_uri))
+            self.assertTrue(analyzer_config.mock.save_bundle_files.called)
 
 
 if __name__ == '__main__':

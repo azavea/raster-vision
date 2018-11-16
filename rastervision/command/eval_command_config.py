@@ -25,10 +25,7 @@ class EvalCommandConfig(CommandConfig):
         else:
             _tmp_dir = tmp_dir
 
-        scenes = list(
-            map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
-        evaluators = list(map(lambda a: a.create_evaluator(), self.evaluators))
-        retval = EvalCommand(scenes, evaluators)
+        retval = EvalCommand(self)
         retval.set_tmp_dir(_tmp_dir)
         return retval
 
