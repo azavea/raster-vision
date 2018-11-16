@@ -7,6 +7,7 @@ from rastervision.data import (LabelSource, LabelSourceConfig,
 from rastervision.protos.label_source_pb2 \
     import LabelSourceConfig as LabelSourceConfigMsg
 
+from tests.mock import SupressDeepCopyMixin
 from tests.mock.raster_source import MOCK_SOURCE
 
 
@@ -24,7 +25,7 @@ class MockLabelSource(LabelSource):
             return result
 
 
-class MockLabelSourceConfig(LabelSourceConfig):
+class MockLabelSourceConfig(SupressDeepCopyMixin, LabelSourceConfig):
     def __init__(self):
         super().__init__(MOCK_SOURCE)
         self.mock = Mock()
@@ -43,7 +44,8 @@ class MockLabelSourceConfig(LabelSourceConfig):
             return result
 
     def create_source(self, task_config, extent, crs_transformer, tmp_dir):
-        result = self.mock.create_source(task_config, extent, crs_transformer, tmp_dir)
+        result = self.mock.create_source(task_config, extent, crs_transformer,
+                                         tmp_dir)
         if result is None:
             return MockLabelSource()
         else:
@@ -54,14 +56,16 @@ class MockLabelSourceConfig(LabelSourceConfig):
                            experiment_config,
                            context=None,
                            io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config,  context, io_def)
+        result = self.mock.update_for_command(command_type, experiment_config,
+                                              context, io_def)
         if result is None:
             return io_def or rv.core.CommandIODefinition()
         else:
             return result
 
 
-class MockLabelSourceConfigBuilder(LabelSourceConfigBuilder):
+class MockLabelSourceConfigBuilder(SupressDeepCopyMixin,
+                                   LabelSourceConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(MockLabelSourceConfig, {})
         self.mock = Mock()

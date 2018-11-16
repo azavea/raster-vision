@@ -1,10 +1,12 @@
 from unittest.mock import Mock
 
-import rastervision as rv
 from rastervision.task import (Task, TaskConfig, TaskConfigBuilder)
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
 
+from tests.mock import SupressDeepCopyMixin
+
 MOCK_TASK = 'MOCK_TASK'
+
 
 class MockTask(Task):
     def __init__(self, task_config, backend):
@@ -43,7 +45,8 @@ class MockTask(Task):
     def save_debug_predict_image(self, scene, debug_dir_uri):
         return self.mock.save_debug_predict_image(scene, debug_dir_uri)
 
-class MockTaskConfig(TaskConfig):
+
+class MockTaskConfig(SupressDeepCopyMixin, TaskConfig):
     def __init__(self):
         super().__init__(MOCK_TASK)
         self.mock = Mock()
@@ -79,28 +82,29 @@ class MockTaskConfig(TaskConfig):
                            experiment_config,
                            context=None,
                            io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config, context, io_def)
+        result = self.mock.update_for_command(command_type, experiment_config,
+                                              context, io_def)
         if result is None:
             # Have input always be this file, and output be a non-existant file,
             # so commands always run
 
-            io_def = super().update_for_command(command_type, experiment_config, context, io_def)
+            io_def = super().update_for_command(
+                command_type, experiment_config, context, io_def)
             io_def.add_input(__file__)
-            io_def.add_output("{}{}".format(__file__, 'xxxx'))
+            io_def.add_output('{}{}'.format(__file__, 'xxxx'))
             return io_def
         else:
             return result
 
 
-class MockTaskConfigBuilder(TaskConfigBuilder):
+class MockTaskConfigBuilder(SupressDeepCopyMixin, TaskConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(MockTaskConfig, {})
         self.mock = Mock()
 
         self.mock.from_proto.return_value = None
 
-    @staticmethod
-    def from_proto(msg):
+    def from_proto(self, msg):
         result = self.mock.from_proto(msg)
         if result is None:
             return MockTaskConfigBuilder()

@@ -7,6 +7,8 @@ from rastervision.data import (LabelStore, LabelStoreConfig,
 from rastervision.protos.label_store_pb2 \
     import LabelStoreConfig as LabelStoreConfigMsg
 
+from tests.mock import SupressDeepCopyMixin
+
 MOCK_STORE = 'MOCK_STORE'
 
 
@@ -35,13 +37,13 @@ class MockLabelStore(LabelStore):
             return result
 
 
-class MockLabelStoreConfig(LabelStoreConfig):
+class MockLabelStoreConfig(SupressDeepCopyMixin, LabelStoreConfig):
     def __init__(self):
         super().__init__(MOCK_STORE)
         self.mock = Mock()
 
         self.mock.to_proto.return_value = None
-        self.mock.create_store.return_value  = None
+        self.mock.create_store.return_value = None
         self.mock.update_for_command.return_value = None
         self.mock.for_prediction.return_value = None
 
@@ -55,7 +57,8 @@ class MockLabelStoreConfig(LabelStoreConfig):
             return result
 
     def create_store(self, task_config, extent, crs_transformer, tmp_dir):
-        result = self.mock.create_store(task_config, extent, crs_transformer, tmp_dir)
+        result = self.mock.create_store(task_config, extent, crs_transformer,
+                                        tmp_dir)
         if result is None:
             return MockLabelStore()
         else:
@@ -66,7 +69,8 @@ class MockLabelStoreConfig(LabelStoreConfig):
                            experiment_config,
                            context=None,
                            io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config, context, io_def)
+        result = self.mock.update_for_command(command_type, experiment_config,
+                                              context, io_def)
         if result is None:
             return io_def or rv.core.CommandIODefinition()
         else:
@@ -80,7 +84,8 @@ class MockLabelStoreConfig(LabelStoreConfig):
             return result
 
 
-class MockLabelStoreConfigBuilder(LabelStoreConfigBuilder):
+class MockLabelStoreConfigBuilder(SupressDeepCopyMixin,
+                                  LabelStoreConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(MockLabelStoreConfig, {})
         self.mock = Mock()

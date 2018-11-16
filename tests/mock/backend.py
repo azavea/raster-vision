@@ -4,8 +4,8 @@ import rastervision as rv
 from rastervision.backend import (Backend, BackendConfig, BackendConfigBuilder)
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 
+from tests.mock import SupressDeepCopyMixin
 from .task import MOCK_TASK
-
 
 MOCK_BACKEND = 'MOCK_BACKEND'
 
@@ -21,7 +21,8 @@ class MockBackend(Backend):
 
     def process_sceneset_results(self, training_results, validation_results,
                                  tmp_dir):
-        return self.mock.process_sceneset_results(training_results, validation_results, tmp_dir)
+        return self.mock.process_sceneset_results(training_results,
+                                                  validation_results, tmp_dir)
 
     def train(self, tmp_dir):
         return self.mock.train(tmp_dir)
@@ -37,7 +38,7 @@ class MockBackend(Backend):
             return result
 
 
-class MockBackendConfig(BackendConfig):
+class MockBackendConfig(SupressDeepCopyMixin, BackendConfig):
     def __init__(self):
         super().__init__(MOCK_BACKEND)
         self.mock = Mock()
@@ -51,7 +52,8 @@ class MockBackendConfig(BackendConfig):
     def to_proto(self):
         result = self.mock.to_proto()
         if result is None:
-            return BackendConfigMsg(backend_type=self.backend_type, custom_config={})
+            return BackendConfigMsg(
+                backend_type=self.backend_type, custom_config={})
         else:
             return result
 
@@ -67,7 +69,8 @@ class MockBackendConfig(BackendConfig):
                            experiment_config,
                            context=None,
                            io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config, context, io_def)
+        result = self.mock.update_for_command(command_type, experiment_config,
+                                              context, io_def)
         if result is None:
             return io_def or rv.core.CommandIODefinition()
         else:
@@ -80,7 +83,7 @@ class MockBackendConfig(BackendConfig):
         return self.mock.load_bundle_files(bundle_dir)
 
 
-class MockBackendConfigBuilder(BackendConfigBuilder):
+class MockBackendConfigBuilder(SupressDeepCopyMixin, BackendConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(MOCK_BACKEND, MockBackendConfig, {})
         self.mock = Mock()
@@ -88,11 +91,10 @@ class MockBackendConfigBuilder(BackendConfigBuilder):
         self.mock.from_proto.return_value = None
         self.mock._applicable_tasks.return_value = None
 
-    @staticmethod
-    def from_proto(msg):
+    def from_proto(self, msg):
         result = self.mock.from_proto(msg)
         if result is None:
-            return NoopBackendConfigBuilder()
+            return MockBackendConfigBuilder()
         else:
             return result
 

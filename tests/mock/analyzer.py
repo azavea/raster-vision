@@ -1,9 +1,12 @@
 from unittest.mock import Mock
 
+import rastervision as rv
 from rastervision.analyzer import (Analyzer, AnalyzerConfig,
                                    AnalyzerConfigBuilder)  # noqa
 from rastervision.protos.analyzer_pb2 \
     import AnalyzerConfig as AnalyzerConfigMsg # noqa
+
+from tests.mock import SupressDeepCopyMixin
 
 MOCK_ANALYZER = 'MOCK_ANALYZER'
 
@@ -16,7 +19,7 @@ class MockAnalyzer(Analyzer):
         self.mock.process(training_data, tmp_dir)
 
 
-class MockAnalyzerConfig(AnalyzerConfig):
+class MockAnalyzerConfig(SupressDeepCopyMixin, AnalyzerConfig):
     def __init__(self):
         super().__init__(MOCK_ANALYZER)
         self.mock = Mock()
@@ -46,7 +49,8 @@ class MockAnalyzerConfig(AnalyzerConfig):
                            experiment_config,
                            context=None,
                            io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config, context, io_def)
+        result = self.mock.update_for_command(command_type, experiment_config,
+                                              context, io_def)
         if result is None:
             return io_def or rv.core.CommandIODefinition()
         else:
@@ -59,7 +63,7 @@ class MockAnalyzerConfig(AnalyzerConfig):
         return self.mock.load_bundle_files(bundle_dir)
 
 
-class MockAnalyzerConfigBuilder(AnalyzerConfigBuilder):
+class MockAnalyzerConfigBuilder(SupressDeepCopyMixin, AnalyzerConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(MockAnalyzerConfig, {})
         self.mock = Mock()

@@ -2,12 +2,14 @@ from unittest.mock import Mock
 
 import rastervision as rv
 from rastervision.data import (
-    RasterTransformerConfig, RasterTransformerConfigBuilder,
-    RasterTransformer)
+    RasterTransformerConfig, RasterTransformerConfigBuilder, RasterTransformer)
 from rastervision.protos.raster_transformer_pb2 \
     import RasterTransformerConfig as RasterTransformerConfigMsg
 
+from tests.mock import SupressDeepCopyMixin
+
 MOCK_TRANSFORMER = 'MOCK_TRANSFORMER'
+
 
 class MockRasterTransformer(RasterTransformer):
     def __init__(self):
@@ -23,19 +25,19 @@ class MockRasterTransformer(RasterTransformer):
             return result
 
 
-class MockRasterTransformerConfig(RasterTransformerConfig):
+class MockRasterTransformerConfig(SupressDeepCopyMixin,
+                                  RasterTransformerConfig):
     def __init__(self):
         super().__init__(MOCK_TRANSFORMER)
         self.mock = Mock()
 
         self.mock.to_proto.return_value = None
-        self.mock.create_transformer.return_value  = None
+        self.mock.create_transformer.return_value = None
         self.mock.update_for_command.return_value = None
         self.mock.save_bundle_files.return_value = (self, [])
         self.mock.load_bundle_files.return_value = self
         self.mock.for_prediction.return_value = self
         self.mock.create_local.return_value = self
-
 
     def to_proto(self):
         result = self.mock.to_proto()
@@ -58,7 +60,8 @@ class MockRasterTransformerConfig(RasterTransformerConfig):
                            experiment_config,
                            context=None,
                            io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config, context, io_def)
+        result = self.mock.update_for_command(command_type, experiment_config,
+                                              context, io_def)
         if result is None:
             return io_def or rv.core.CommandIODefinition()
         else:
@@ -77,7 +80,8 @@ class MockRasterTransformerConfig(RasterTransformerConfig):
         return self.mock.create_local(tmp_dir)
 
 
-class MockRasterTransformerConfigBuilder(RasterTransformerConfigBuilder):
+class MockRasterTransformerConfigBuilder(SupressDeepCopyMixin,
+                                         RasterTransformerConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(MockRasterTransformerConfig, {})
         self.mock = Mock()

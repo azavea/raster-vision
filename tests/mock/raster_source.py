@@ -9,6 +9,8 @@ from rastervision.data import (RasterSource, RasterSourceConfig,
 from rastervision.protos.raster_source_pb2 \
     import RasterSourceConfig as RasterSourceConfigMsg
 
+from tests.mock import SupressDeepCopyMixin
+
 MOCK_SOURCE = 'MOCK_SOURCE'
 
 
@@ -36,7 +38,7 @@ class MockRasterSource(RasterSource):
         return self.mock._get_chip(window)
 
 
-class MockRasterSourceConfig(RasterSourceConfig):
+class MockRasterSourceConfig(SupressDeepCopyMixin, RasterSourceConfig):
     def __init__(self, transformers=None, channel_order=None):
         super().__init__(MOCK_SOURCE, transformers, channel_order)
         self.mock = Mock()
@@ -58,7 +60,7 @@ class MockRasterSourceConfig(RasterSourceConfig):
             return result
 
     def create_source(self, tmp_dir):
-        result =  self.mock.create_source(tmp_dir)
+        result = self.mock.create_source(tmp_dir)
         if result is None:
             self.mock.create_source(tmp_dir)
             transformers = self.create_transformers()
@@ -71,7 +73,8 @@ class MockRasterSourceConfig(RasterSourceConfig):
                            experiment_config,
                            context=None,
                            io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config, context, io_def)
+        result = self.mock.update_for_command(command_type, experiment_config,
+                                              context, io_def)
         if result is None:
             return io_def or rv.core.CommandIODefinition()
         else:
@@ -90,7 +93,8 @@ class MockRasterSourceConfig(RasterSourceConfig):
         return self.mock.create_local(tmp_dir)
 
 
-class MockRasterSourceConfigBuilder(RasterSourceConfigBuilder):
+class MockRasterSourceConfigBuilder(SupressDeepCopyMixin,
+                                    RasterSourceConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(MockRasterSourceConfig, {})
         self.mock = Mock()

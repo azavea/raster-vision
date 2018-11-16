@@ -1,9 +1,12 @@
 from unittest.mock import Mock
 
+import rastervision as rv
 from rastervision.evaluation import (Evaluator, EvaluatorConfig,
-                                   EvaluatorConfigBuilder)
+                                     EvaluatorConfigBuilder)
 from rastervision.protos.evaluator_pb2 \
     import EvaluatorConfig as EvaluatorConfigMsg
+
+from tests.mock import SupressDeepCopyMixin
 
 MOCK_EVALUATOR = 'MOCK_EVALUATOR'
 
@@ -16,7 +19,7 @@ class MockEvaluator(Evaluator):
         self.mock.process(scenes, tmp_dir)
 
 
-class MockEvaluatorConfig(EvaluatorConfig):
+class MockEvaluatorConfig(SupressDeepCopyMixin, EvaluatorConfig):
     def __init__(self):
         super().__init__(MOCK_EVALUATOR)
         self.mock = Mock()
@@ -44,14 +47,15 @@ class MockEvaluatorConfig(EvaluatorConfig):
                            experiment_config,
                            context=None,
                            io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config, context, io_def)
+        result = self.mock.update_for_command(command_type, experiment_config,
+                                              context, io_def)
         if result is None:
             return io_def or rv.core.CommandIODefinition()
         else:
             return result
 
 
-class MockEvaluatorConfigBuilder(EvaluatorConfigBuilder):
+class MockEvaluatorConfigBuilder(SupressDeepCopyMixin, EvaluatorConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(MockEvaluatorConfig, {})
         self.mock = Mock()
