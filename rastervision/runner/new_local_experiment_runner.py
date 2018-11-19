@@ -26,3 +26,4 @@ class NewLocalExperimentRunner(AwsBatchExperimentRunner):
         super().__init__()
         self.submit = shellout
         self.execution_environment = 'Shell'
+        self.tmp_dir = tmp_dir

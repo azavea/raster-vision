@@ -243,10 +243,13 @@ def predict(predict_package, image_uri, output_uri, update_stats,
 @main.command(
     'run_command', short_help='Run a command from configuration file.')
 @click.argument('command_config_uri')
-def run_command(command_config_uri):
+@click.option('--tempdir')
+def run_command(command_config_uri, tempdir):
     """Run a command from a serialized command configuration
     at COMMAND_CONFIG_URI.
     """
+    if tempdir is not None:
+        RVConfig.set_tmp_dir(tempdir)
     rv.runner.CommandRunner.run(command_config_uri)
 
 

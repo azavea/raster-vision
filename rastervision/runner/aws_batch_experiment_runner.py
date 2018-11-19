@@ -8,13 +8,17 @@ from rastervision.utils.files import save_json_config
 from rastervision.cli import Verbosity
 
 
-def make_command(command_config_uri):
+def make_command(command_config_uri, tmp_dir=None):
     verbosity = Verbosity.get()
     v_flag = 'v' * max(0, verbosity - 1)
     if v_flag:
         v_flag = '-{}'.format(v_flag)
-    command = 'python -m rastervision {} run_command {}'.format(
-        v_flag, command_config_uri)
+    if tmp_dir is None:
+        command = 'python -m rastervision {} run_command {}'.format(
+            v_flag, command_config_uri)
+    else:
+        command = 'python -m rastervision {} run_command {} --tempdir {}'.format(
+            v_flag, command_config_uri, tmp_dir)
     return command
 
 
@@ -104,6 +108,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
         self.job_definition = job_definition
         self.submit = batch_submit
         self.execution_environment = 'Batch'
+        self.tmp_dir = None
 
     def _run_experiment(self, command_dag):
         """Runs all commands on AWS Batch."""
@@ -131,7 +136,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                             cur_command, upstream_command))
                 parent_job_ids.append(ids_to_job[upstream_id])
 
-            batch_run_command = make_command(command_uri)
+            batch_run_command = make_command(command_uri, self.tmp_dir)
             job_id = self.submit(
                 command_config.command_type,
                 command_def.experiment_id,
@@ -156,5 +161,5 @@ class AwsBatchExperimentRunner(ExperimentRunner):
             command_config = command_def.command_config
             command_root_uri = command_config.root_uri
             command_uri = os.path.join(command_root_uri, 'command-config.json')
-            batch_run_command = make_command(command_uri)
+            batch_run_command = make_command(command_uri, self.tmp_dir)
             click.echo('  {}'.format(batch_run_command))
