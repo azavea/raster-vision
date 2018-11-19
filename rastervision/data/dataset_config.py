@@ -206,7 +206,7 @@ class DatasetConfigBuilder(ConfigBuilder):
             map(lambda x: SceneConfig.from_proto(x), msg.test_scenes))
         augmentors = list(
             map(lambda x: AugmentorConfig.from_proto(x), msg.augmentors))
-        return DatasetConfigBuilder() \
+        return self \
             .with_train_scenes(train_scenes) \
             .with_validation_scenes(val_scenes) \
             .with_test_scenes(test_scenes) \

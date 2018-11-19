@@ -88,7 +88,6 @@ class ChipClassificationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
                 ' Use "with_vector_source".')
 
     def from_proto(self, msg):
-        b = ChipClassificationLabelSourceConfigBuilder()
 
         # Added for backwards compatibility.
         if msg.HasField('chip_classification_geojson_source'):
@@ -99,7 +98,7 @@ class ChipClassificationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
             vector_source = rv.VectorSourceConfig.from_proto(
                 conf.vector_source)
 
-        return b \
+        return self \
             .with_vector_source(vector_source) \
             .with_ioa_thresh(conf.ioa_thresh) \
             .with_use_intersection_over_cell(conf.use_intersection_over_cell) \

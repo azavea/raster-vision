@@ -71,9 +71,7 @@ class ObjectDetectionGeoJSONStoreConfigBuilder(LabelStoreConfigBuilder):
         super().__init__(ObjectDetectionGeoJSONStoreConfig, config)
 
     def from_proto(self, msg):
-        b = ObjectDetectionGeoJSONStoreConfigBuilder()
-
-        return b \
+        return self \
             .with_uri(msg.uri)
 
     def with_uri(self, uri):
