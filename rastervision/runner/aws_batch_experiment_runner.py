@@ -102,6 +102,8 @@ class AwsBatchExperimentRunner(ExperimentRunner):
             else:
                 job_definition = 'raster-vision-cpu'
         self.job_definition = job_definition
+        self.submit = batch_submit
+        self.execution_environment = 'Batch'
 
     def _run_experiment(self, command_dag):
         """Runs all commands on AWS Batch."""
@@ -130,7 +132,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
                 parent_job_ids.append(ids_to_job[upstream_id])
 
             batch_run_command = make_command(command_uri)
-            job_id = batch_submit(
+            job_id = self.submit(
                 command_config.command_type,
                 command_def.experiment_id,
                 self.job_queue,
@@ -145,7 +147,7 @@ class AwsBatchExperimentRunner(ExperimentRunner):
         """Runs all commands on AWS Batch."""
         click.echo(
             click.style(
-                '\nBatch commands to be issued:',
+                '\n{} commands to be issued:'.format(self.execution_environment),
                 fg='green',
                 bold=True,
                 underline=True))
