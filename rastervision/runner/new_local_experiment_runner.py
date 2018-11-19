@@ -1,11 +1,8 @@
-import os
 import subprocess
 
 import logging
 
 from rastervision.runner import AwsBatchExperimentRunner
-from rastervision.utils.files import save_json_config
-from rastervision.rv_config import RVConfig
 
 log = logging.getLogger(__name__)
 

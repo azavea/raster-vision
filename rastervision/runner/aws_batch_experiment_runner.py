@@ -152,7 +152,8 @@ class AwsBatchExperimentRunner(ExperimentRunner):
         """Runs all commands on AWS Batch."""
         click.echo(
             click.style(
-                '\n{} commands to be issued:'.format(self.execution_environment),
+                '\n{} commands to be issued:'.format(
+                    self.execution_environment),
                 fg='green',
                 bold=True,
                 underline=True))
