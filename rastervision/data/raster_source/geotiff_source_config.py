@@ -10,17 +10,27 @@ from rastervision.utils.files import download_if_needed
 
 
 class GeoTiffSourceConfig(RasterSourceConfig):
-    def __init__(self, uris, transformers=None, channel_order=None):
+    def __init__(self,
+                 uris,
+                 x_shift_meters=0.0,
+                 y_shift_meters=0.0,
+                 transformers=None,
+                 channel_order=None):
         super().__init__(
             source_type=rv.GEOTIFF_SOURCE,
             transformers=transformers,
             channel_order=channel_order)
         self.uris = uris
+        self.x_shift_meters = x_shift_meters
+        self.y_shift_meters = y_shift_meters
 
     def to_proto(self):
         msg = super().to_proto()
         msg.geotiff_files.CopyFrom(
-            RasterSourceConfigMsg.GeoTiffFiles(uris=self.uris))
+            RasterSourceConfigMsg.GeoTiffFiles(
+                uris=self.uris,
+                x_shift_meters=self.x_shift_meters,
+                y_shift_meters=self.y_shift_meters))
         return msg
 
     def save_bundle_files(self, bundle_dir):
@@ -49,8 +59,14 @@ class GeoTiffSourceConfig(RasterSourceConfig):
                       extent=None,
                       class_map=None):
         transformers = self.create_transformers()
-        return GeoTiffSource(self.uris, transformers, tmp_dir,
-                             self.channel_order)
+        x_shift_meters = self.x_shift_meters
+        y_shift_meters = self.y_shift_meters
+        return GeoTiffSource(uris=self.uris,
+                             raster_transformers=transformers,
+                             temp_dir=tmp_dir,
+                             channel_order=self.channel_order,
+                             x_shift_meters=x_shift_meters,
+                             y_shift_meters=y_shift_meters)
 
     def update_for_command(self,
                            command_type,
@@ -72,7 +88,9 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
             config = {
                 'uris': prev.uris,
                 'transformers': prev.transformers,
-                'channel_order': prev.channel_order
+                'channel_order': prev.channel_order,
+                'x_shift_meters': prev.x_shift_meters,
+                'y_shift_meters': prev.y_shift_meters,
             }
 
         super().__init__(GeoTiffSourceConfig, config)
@@ -87,8 +105,11 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
     def from_proto(self, msg):
         b = super().from_proto(msg)
 
+        x = msg.geotiff_files.x_shift_meters
+        y = msg.geotiff_files.y_shift_meters
         return b \
-            .with_uris(msg.geotiff_files.uris)
+            .with_uris(msg.geotiff_files.uris) \
+            .with_shifts(x, y)
 
     def with_uris(self, uris):
         """Set URIs for a GeoTIFFs containing as raster data."""
@@ -100,4 +121,10 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
         """Set URI for a GeoTIFF containing raster data."""
         b = deepcopy(self)
         b.config['uris'] = [uri]
+        return b
+
+    def with_shifts(self, x, y):
+        b = deepcopy(self)
+        b.config['x_shift_meters'] = x
+        b.config['y_shift_meters'] = y
         return b

@@ -24,15 +24,33 @@ def download_and_build_vrt(image_uris, temp_dir):
     build_vrt(image_path, image_paths)
     return image_path
 
+def modify_geotransform_for_shift(vrt_path):
+    import pdb ; pdb.set_trace()
+    pass
+
 
 class GeoTiffSource(RasterioRasterSource):
-    def __init__(self, uris, raster_transformers, temp_dir,
-                 channel_order=None):
+    def __init__(self,
+                 uris,
+                 raster_transformers,
+                 temp_dir,
+                 channel_order=None,
+                 x_shift_meters=0.0,
+                 y_shift_meters=0.0):
         self.uris = uris
         super().__init__(raster_transformers, temp_dir, channel_order)
+        self.x_shift_meters = x_shift_meters
+        self.y_shift_meters = y_shift_meters
 
     def _download_data(self, temp_dir):
-        if len(self.uris) == 1:
+        if 'x_shift_meters' in self.__dict__:
+            import pdb ; pdb.set_trace()
+            no_shift = self.x_shift_meters == 0.0 and self.y_shift_meters == 0.0
+        else:
+            no_shift = True
+        no_shift = True
+
+        if len(self.uris) == 1 and no_shift:
             return download_if_needed(self.uris[0], temp_dir)
         else:
             return download_and_build_vrt(self.uris, temp_dir)
