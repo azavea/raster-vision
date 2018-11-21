@@ -9,6 +9,8 @@ from rastervision.core import (Box, RasterStats)
 from rastervision.utils.misc import save_img
 from rastervision.data.raster_source.rasterio_source import load_window
 from rastervision.rv_config import RVConfig
+from rastervision.utils.files import make_dir
+from rastervision.utils.misc import save_img
 
 from tests import data_file_path
 
@@ -60,6 +62,54 @@ class TestGeoTiffSource(unittest.TestCase):
         with source.activate():
             out_chip = source.get_raw_image_array()
             self.assertEqual(out_chip.shape[2], 3)
+
+    def test_shift_x(self):
+        # Specially-engineered image w/ one meter per pixel resolution
+        # in the x direction.
+        img_path = data_file_path('ones.tif')
+        channel_order = [0]
+
+        msg = rv.data.GeoTiffSourceConfig(uris=[img_path],
+                                          x_shift_meters=1.0,
+                                          y_shift_meters=0.0,
+                                          channel_order=channel_order) \
+                     .to_proto()
+
+        tmp_dir = RVConfig.get_tmp_dir().name
+        make_dir(tmp_dir)
+        source = rv.RasterSourceConfig.from_proto(msg) \
+                                      .create_source(tmp_dir=tmp_dir)
+
+        with source.activate():
+            extent = source.get_extent()
+            data = source.get_chip(extent)
+            self.assertEqual(data.sum(), 2**16 - 256)
+            column = data[:, 255, 0]
+            self.assertEqual(column.sum(), 0)
+
+    def test_shift_y(self):
+        # Specially-engineered image w/ one meter per pixel resolution
+        # in the y direction.
+        img_path = data_file_path('ones.tif')
+        channel_order = [0]
+
+        msg = rv.data.GeoTiffSourceConfig(uris=[img_path],
+                                          x_shift_meters=0.0,
+                                          y_shift_meters=1.0,
+                                          channel_order=channel_order) \
+                     .to_proto()
+
+        tmp_dir = RVConfig.get_tmp_dir().name
+        make_dir(tmp_dir)
+        source = rv.RasterSourceConfig.from_proto(msg) \
+                                      .create_source(tmp_dir=tmp_dir)
+
+        with source.activate():
+            extent = source.get_extent()
+            data = source.get_chip(extent)
+            self.assertEqual(data.sum(), 2**16 - 256)
+            row = data[0, :, 0]
+            self.assertEqual(row.sum(), 0)
 
     def test_gets_raw_chip_from_proto(self):
         img_path = data_file_path('small-rgb-tile.tif')
