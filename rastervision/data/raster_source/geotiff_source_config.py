@@ -61,12 +61,13 @@ class GeoTiffSourceConfig(RasterSourceConfig):
         transformers = self.create_transformers()
         x_shift_meters = self.x_shift_meters
         y_shift_meters = self.y_shift_meters
-        return GeoTiffSource(uris=self.uris,
-                             raster_transformers=transformers,
-                             temp_dir=tmp_dir,
-                             channel_order=self.channel_order,
-                             x_shift_meters=x_shift_meters,
-                             y_shift_meters=y_shift_meters)
+        return GeoTiffSource(
+            uris=self.uris,
+            raster_transformers=transformers,
+            temp_dir=tmp_dir,
+            channel_order=self.channel_order,
+            x_shift_meters=x_shift_meters,
+            y_shift_meters=y_shift_meters)
 
     def update_for_command(self,
                            command_type,
