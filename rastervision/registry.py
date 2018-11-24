@@ -153,8 +153,9 @@ class Registry:
         }
 
         self.experiment_runners = {
-            rv.LOCAL: rv.runner.LocalExperimentRunner,
-            rv.AWS_BATCH: rv.runner.AwsBatchExperimentRunner
+            rv.OLD_LOCAL: rv.runner.OldLocalExperimentRunner,
+            rv.AWS_BATCH: rv.runner.AwsBatchExperimentRunner,
+            rv.LOCAL: rv.runner.LocalExperimentRunner
         }
 
         self.filesystems = [

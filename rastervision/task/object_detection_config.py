@@ -62,7 +62,10 @@ class ObjectDetectionConfig(TaskConfig):
             class_items=self.class_map.to_proto(),
             chip_options=chip_options,
             predict_options=predict_options)
-        msg.MergeFrom(TaskConfigMsg(object_detection_config=conf))
+        msg.MergeFrom(
+            TaskConfigMsg(
+                object_detection_config=conf,
+                predict_package_uri=self.predict_package_uri))
 
         return msg
 
@@ -99,6 +102,7 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
         conf = msg.object_detection_config
 
         return b.with_classes(list(conf.class_items)) \
+                .with_predict_package_uri(msg.predict_package_uri) \
                 .with_chip_size(conf.chip_size) \
                 .with_chip_options(neg_ratio=conf.chip_options.neg_ratio,
                                    ioa_thresh=conf.chip_options.ioa_thresh,

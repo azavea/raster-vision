@@ -29,7 +29,9 @@ class ChipClassificationConfig(TaskConfig):
         conf = TaskConfigMsg.ChipClassificationConfig(
             chip_size=self.chip_size, class_items=self.class_map.to_proto())
         return TaskConfigMsg(
-            task_type=rv.CHIP_CLASSIFICATION, chip_classification_config=conf)
+            task_type=rv.CHIP_CLASSIFICATION,
+            chip_classification_config=conf,
+            predict_package_uri=self.predict_package_uri)
 
     def save_bundle_files(self, bundle_dir):
         return (self, [])
@@ -61,6 +63,7 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
         b = super().from_proto(msg)
         conf = msg.chip_classification_config
         return b.with_classes(list(conf.class_items)) \
+                .with_predict_package_uri(msg.predict_package_uri) \
                 .with_chip_size(conf.chip_size)
 
     def with_classes(

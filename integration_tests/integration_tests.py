@@ -148,6 +148,8 @@ def run_test(test, temp_dir):
     experiment = get_experiment(test, temp_dir)
 
     # Check serialization
+    pp_uri = os.path.join(experiment.bundle_uri, 'predict_package.zip')
+    experiment.task.predict_package_uri = pp_uri
     msg = experiment.to_proto()
     experiment = rv.ExperimentConfig.from_proto(msg)
 
