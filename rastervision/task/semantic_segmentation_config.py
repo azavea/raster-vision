@@ -67,7 +67,10 @@ class SemanticSegmentationConfig(TaskConfig):
             chip_size=self.chip_size,
             class_items=self.class_map.to_proto(),
             chip_options=chip_options)
-        msg.MergeFrom(TaskConfigMsg(semantic_segmentation_config=conf))
+        msg.MergeFrom(
+            TaskConfigMsg(
+                semantic_segmentation_config=conf,
+                predict_package_uri=self.predict_package_uri))
 
         return msg
 
