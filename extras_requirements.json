@@ -10,5 +10,8 @@
     "aws": [
         "boto3==1.7.*",
         "awscli==1.15.*"
+    ],
+    "feature-extraction": [
+        "https://github.com/jamesmcclain/mask-to-polygons/archive/5446751caeaa7f99368d264184be3926ffdd6a4e.zip"
     ]
 }
