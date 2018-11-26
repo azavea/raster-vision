@@ -4,8 +4,6 @@ import rastervision as rv
 from rastervision.data.label_source import (
     LabelSourceConfig, LabelSourceConfigBuilder, ObjectDetectionGeoJSONSource)
 from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
-from rastervision.data.label_source.utils import check_uri_type
-
 
 class ObjectDetectionGeoJSONSourceConfig(LabelSourceConfig):
     def __init__(self, uri):
@@ -46,7 +44,6 @@ class ObjectDetectionGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):
             raise rv.ConfigError(
                 'You must set the uri for ObjectDetectionGeoJSONSourceConfig'
                 ' Use "with_uri".')
-        check_uri_type(self.config.get('uri'))
 
     def from_proto(self, msg):
         return self \
