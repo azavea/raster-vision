@@ -108,3 +108,8 @@ class GeoTiffSource(RasterioRasterSource):
         else:
             self.proj = None
         self.crs = str(self.crs)
+
+    def get_affine_transform(self):
+        with self.activate():
+            transform = self.image_dataset.transform
+        return transform

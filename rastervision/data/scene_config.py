@@ -36,6 +36,7 @@ class SceneConfig(BundledConfigMixin, Config):
         raster_source = self.raster_source.create_source(tmp_dir)
 
         extent = raster_source.get_extent()
+        affine_transform = raster_source.get_affine_transform()  # XXX
         crs_transformer = raster_source.get_crs_transformer()
 
         label_source = None
@@ -46,7 +47,6 @@ class SceneConfig(BundledConfigMixin, Config):
         if self.label_store:
             label_store = self.label_store.create_store(
                 task_config, extent, crs_transformer, tmp_dir)
-
         aoi_polygons = None
         if self.aoi_uris:
             aoi_polygons = []

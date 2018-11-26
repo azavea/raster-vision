@@ -12,11 +12,14 @@ class SemanticSegmentationRasterStore(LabelStore):
     """A prediction label store for segmentation raster files.
     """
 
-    def __init__(self, uri, extent, crs_transformer, tmp_dir, class_map=None):
+    def __init__(self, uri, geojson_uri, extent, affine_tranform, crs_transformer, tmp_dir, class_map=None):
         """Constructor.
 
         Args:
             uri: (str) URI of GeoTIFF file used for storing predictions as RGB values
+            geojson_uri: (str or None) URI of GeoJSON polygons derived from the mask
+            extent: (Box) The extent of the scene
+            affine_tranform: (affine.Affine) The mapping from mask coordintes to world coordinates
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
             class_map: (ClassMap) with color values used to convert class ids to

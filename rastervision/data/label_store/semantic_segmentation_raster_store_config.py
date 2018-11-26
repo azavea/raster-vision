@@ -24,12 +24,12 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
                    .with_uri(label_uri) \
                    .build()
 
-    def create_store(self, task_config, extent, crs_transformer, tmp_dir):
+    def create_store(self, task_config, extent, affine_transform, crs_transformer, tmp_dir):
         class_map = None
         if self.rgb:
             class_map = task_config.class_map
         return SemanticSegmentationRasterStore(
-            self.uri, extent, crs_transformer, tmp_dir, class_map=class_map)
+            self.uri, self.geojson_uri, extent, affine_transform, crs_transformer, tmp_dir, class_map=class_map)
 
     def update_for_command(self,
                            command_type,
