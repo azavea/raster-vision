@@ -73,3 +73,7 @@ RUN cat extras_requirements.json | jq  '.[][]' | grep -v 'tensorflow' | sort -u 
 # Install requirements.txt
 COPY ./requirements.txt /opt/src/requirements.txt
 RUN pip install -r requirements.txt
+
+# Install optional-requirements.txt
+COPY ./optional-requirements.txt /opt/src/optional-requirements.txt
+RUN pip install -r optional-requirements.txt
