@@ -6,9 +6,14 @@ FROM tensorflow/tensorflow:1.10.1-gpu-py3
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-# Packages
-RUN apt-get update && \
-    apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.*
+# Install misc. packages, GDAL, jq (for parsing extra-requirements.json), and Tippecanoe
+RUN add-apt-repository ppa:ubuntugis/ppa && \
+    apt-get update && \
+    apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
+            gdal-bin=2.1.* \
+            jq \
+            build-essential libsqlite3-dev zlib1g-dev && \
+    apt-get autoremove && apt-get autoclean && apt-get clean
 
 # Install protoc
 RUN wget -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip && \
@@ -17,14 +22,6 @@ RUN wget -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/downloa
     mv /tmp/protoc3/include/* /usr/local/include/ && \
     rm -R /tmp/protoc3 && \
     rm /tmp/protoc3.zip
-
-# Install GDAL
-RUN add-apt-repository ppa:ubuntugis/ppa && \
-    apt-get update && \
-    apt-get install -y gdal-bin=2.1.*
-
-# Install jq for parsing extras-requirements.json
-RUN apt-get install jq -y
 
 # Install TF Object Detection API in /opt/tf-models
 RUN mkdir -p /opt/tf-models/temp/ && \
@@ -48,10 +45,6 @@ ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 # Make Python3 default Python
 RUN rm -f /usr/bin/pip && ln -s /usr/bin/pip3 /usr/bin/pip
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
-
-# Install tippecanoe
-RUN apt-get -y upgrade \
-  && apt-get -y install build-essential libsqlite3-dev zlib1g-dev
 
 RUN cd /tmp && \
     git clone https://github.com/mapbox/tippecanoe.git && \
