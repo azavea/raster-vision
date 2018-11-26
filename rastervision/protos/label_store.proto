@@ -6,12 +6,19 @@ import "google/protobuf/struct.proto";
 
 message LabelStoreConfig {
     message SemanticSegmentationRasterStore {
+        message VectorOutput {
+            required string uri = 1;
+            required string mode = 2;
+        }
+
         optional string uri = 1;
 
         // Flag that determines whether or not the values in this
         // raster are RGB values. If so, the RGB values will be
         // translated into class IDs based on the class map.
         optional bool rgb = 2 [default=false];
+
+        repeated VectorOutput vector_output = 3;
     }
 
     required string store_type = 1;
