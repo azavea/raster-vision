@@ -5,6 +5,7 @@ from rastervision.data.label_source import (
     LabelSourceConfig, LabelSourceConfigBuilder, ObjectDetectionGeoJSONSource)
 from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
 
+
 class ObjectDetectionGeoJSONSourceConfig(LabelSourceConfig):
     def __init__(self, uri):
         super().__init__(source_type=rv.OBJECT_DETECTION_GEOJSON)
