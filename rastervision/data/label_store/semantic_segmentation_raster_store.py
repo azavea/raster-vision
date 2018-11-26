@@ -12,21 +12,32 @@ class SemanticSegmentationRasterStore(LabelStore):
     """A prediction label store for segmentation raster files.
     """
 
-    def __init__(self, uri, geojson_uri, extent, affine_tranform, crs_transformer, tmp_dir, class_map=None):
+    def __init__(self,
+                 uri,
+                 geojson_uri,
+                 extent,
+                 affine_tranform,
+                 crs_transformer,
+                 tmp_dir,
+                 class_map=None):
         """Constructor.
 
         Args:
             uri: (str) URI of GeoTIFF file used for storing predictions as RGB values
             geojson_uri: (str or None) URI of GeoJSON polygons derived from the mask
             extent: (Box) The extent of the scene
-            affine_tranform: (affine.Affine) The mapping from mask coordintes to world coordinates
+            affine_tranform: (affine.Affine) The mapping from mask
+                 image coordintes to world coordinates
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
             class_map: (ClassMap) with color values used to convert class ids to
                 RGB values
+
         """
         self.uri = uri
+        self.geojson_uri = geojson_uri
         self.extent = extent
+        self.affine_transform = affine_tranform
         self.crs_transformer = crs_transformer
         self.tmp_dir = tmp_dir
         # Note: can't name this class_transformer due to Python using that attribute
@@ -59,7 +70,10 @@ class SemanticSegmentationRasterStore(LabelStore):
         Args:
             labels - (SemanticSegmentationLabels) labels to be saved
         """
+        import pdb
+        pdb.set_trace()
         local_path = get_local_path(self.uri, self.tmp_dir)
+        # local_geojson_path = get_local_path(self.geojson_uri, self.tmp_dir)
         make_dir(local_path, use_dirname=True)
 
         # TODO: this only works if crs_transformer is RasterioCRSTransformer.
@@ -98,6 +112,9 @@ class SemanticSegmentationRasterStore(LabelStore):
                     dataset.write_band(1, img, window=window)
 
         upload_or_copy(local_path, self.uri)
+
+        if self.geojson_uri:
+            pass  # XXX
 
     def empty_labels(self):
         """Returns an empty SemanticSegmentationLabels object."""

@@ -36,7 +36,10 @@ class SceneConfig(BundledConfigMixin, Config):
         raster_source = self.raster_source.create_source(tmp_dir)
 
         extent = raster_source.get_extent()
-        affine_transform = raster_source.get_affine_transform()  # XXX
+        if False:  # self.geojson_uri:
+            task_config.affine_transform = raster_source.get_affine_transform()
+        else:
+            task_config.affine_transform = None
         crs_transformer = raster_source.get_crs_transformer()
 
         label_source = None
