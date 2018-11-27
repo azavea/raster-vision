@@ -86,10 +86,8 @@ class TestGeoTiffSource(unittest.TestCase):
             stats_uri = os.path.join(temp_dir, 'temp.tif')
             stats = RasterStats()
             stats.compute([
-                rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                .with_uri(img_path) \
-                .build() \
-                .create_source(temp_dir)
+                rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE)
+                .with_uri(img_path).build().create_source(temp_dir)
             ])
             stats.save(stats_uri)
 
@@ -110,7 +108,6 @@ class TestGeoTiffSource(unittest.TestCase):
             with source.activate():
                 out_chip = source.get_raw_image_array()
                 self.assertEqual(out_chip.shape[2], 3)
-
 
     def test_uses_channel_order(self):
         with RVConfig.get_tmp_dir() as tmp_dir:

@@ -187,7 +187,7 @@ class TestExperimentConfig(unittest.TestCase):
              .with_predict_key('d') \
              .with_eval_key('e') \
              .with_bundle_key('f') \
-             .with_id("something")
+             .with_id('something')
 
         e = e._copy()
 
@@ -197,6 +197,7 @@ class TestExperimentConfig(unittest.TestCase):
         self.assertEqual(e.predict_key, 'd')
         self.assertEqual(e.eval_key, 'e')
         self.assertEqual(e.bundle_key, 'f')
+
 
 if __name__ == '__main__':
     unittest.main()
