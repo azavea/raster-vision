@@ -55,7 +55,9 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                                            .with_raster_source(label_path) \
                                            .build()
 
+        vector_output = {'uri': '*', 'mode': 'buildings'}
         label_store = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+                                         .with_vector_output([vector_output]) \
                                          .with_rgb(True) \
                                          .build()
 
