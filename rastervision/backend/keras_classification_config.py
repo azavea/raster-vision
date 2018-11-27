@@ -192,9 +192,9 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
 
         if self.require_task and not isinstance(self.task,
                                                 ChipClassificationConfig):
-            raise rv.ConfigError(
-                'Task set with with_task must be of type ChipClassificationConfig, got {}.'.
-                format(type(self.task)))
+            raise rv.ConfigError('Task set with with_task must be of type '
+                                 'ChipClassificationConfig, got {}.'.format(
+                                     type(self.task)))
 
     def build(self):
         """Build this configuration, setting any values into the

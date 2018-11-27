@@ -206,9 +206,9 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
 
         if self.require_task and not isinstance(self.task,
                                                 SemanticSegmentationConfig):
-            raise rv.ConfigError(
-                'Task set with with_task must be of type SemanticSegmentationConfig, got {}.'.
-                format(type(self.task)))
+            raise rv.ConfigError('Task set with with_task must be of type'
+                                 ' SemanticSegmentationConfig, got {}.'.format(
+                                     type(self.task)))
         return True
 
     def build(self):

@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 from PIL import ImageColor
 
+import rastervision as rv
 from rastervision.core.box import Box
 from rastervision.data import (ChipClassificationLabels, ObjectDetectionLabels)
 from rastervision.utils.files import file_to_str

@@ -182,20 +182,20 @@ class ExperimentConfigBuilder(ConfigBuilder):
         task = self.config.get('task')
         if not issubclass(type(task), TaskConfig):
             raise rv.ConfigError(
-                'Experiment task set with "with_task" must be of class TaskConfig, got {}'.
-                format(type(task)))
+                'Experiment task set with "with_task" must be of class'
+                ' TaskConfig, got {}'.format(type(task)))
 
         backend = self.config.get('backend')
         if not issubclass(type(backend), BackendConfig):
             raise rv.ConfigError(
-                'Backend set with "with_backend" needs to be of type BackendConfig, got {}'.
-                format(type(backend)))
+                'Backend set with "with_backend" needs to be of type '
+                'BackendConfig, got {}'.format(type(backend)))
 
         dataset = self.config.get('dataset')
         if not isinstance(dataset, DatasetConfig):
             raise rv.ConfigError(
-                'Dataset set with "with_dataset" needs to be of type DatasetConfig, got {}'.
-                format(type(dataset)))
+                'Dataset set with "with_dataset" needs to be of type'
+                'DatasetConfig, got {}'.format(type(dataset)))
 
         if not isinstance(self.config.get('id'), str):
             raise rv.ConfigError(

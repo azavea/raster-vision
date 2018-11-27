@@ -117,10 +117,11 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
                 'Use "with_rasterizer_options"')
         if not isinstance(
                 self.config.get('rasterizer_options'),
-                GeoJSONSourceConfig.RasterizerOptions):
+                RasterizedSourceConfig.RasterizerOptions):
             raise rv.ConfigError(
-                'rasterizer_options must be of type GeoJSONSourceConfig.RasterizerOptions, got'.
-                format(type(self.config.get('rasterizer_options'))))
+                'rasterizer_options must be of type '
+                'GeoJSONSourceConfig.RasterizerOptions, got'.format(
+                    type(self.config.get('rasterizer_options'))))
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
