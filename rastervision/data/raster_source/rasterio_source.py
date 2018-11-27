@@ -65,6 +65,7 @@ class RasterioRasterSource(ActivateMixin, RasterSource):
             num_channels = len(raw_channels)
 
             # Transform the chip to get the final dtype
+            test_chip = test_chip[:, :, self.channel_order]
             for transformer in raster_transformers:
                 test_chip = transformer.transform(test_chip, channel_order)
 
