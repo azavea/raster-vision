@@ -651,7 +651,7 @@ class TFDeeplab(Backend):
             self.sess = tf.Session(graph=graph)
 
     def predict(self, chips: np.ndarray, windows: List[Box],
-                tmp_dir: str) -> List[Tuple[Box, np.ndarray]]:
+                tmp_dir: str) -> SemanticSegmentationLabels:
         """Predict using an already-trained DeepLab model.
 
         Args:

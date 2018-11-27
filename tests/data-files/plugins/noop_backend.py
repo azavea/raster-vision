@@ -55,9 +55,8 @@ class NoopBackendConfigBuilder(BackendConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(NOOP_BACKEND, NoopBackendConfig, {})
 
-    @staticmethod
-    def from_proto(msg):
-        return NoopBackendConfigBuilder()
+    def from_proto(self, msg):
+        return self
 
     def _applicable_tasks(self):
         return [NOOP_TASK]

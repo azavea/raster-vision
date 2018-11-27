@@ -25,12 +25,7 @@ class PredictCommandConfig(CommandConfig):
         else:
             _tmp_dir = tmp_dir
 
-        backend = self.backend.create_backend(self.task)
-        task = self.task.create_task(backend)
-
-        scenes = list(
-            map(lambda s: s.create_scene(self.task, tmp_dir), self.scenes))
-        retval = PredictCommand(task, scenes)
+        retval = PredictCommand(self)
         retval.set_tmp_dir(_tmp_dir)
         return retval
 

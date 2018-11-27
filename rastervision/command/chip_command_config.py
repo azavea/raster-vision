@@ -22,24 +22,13 @@ class ChipCommandConfig(CommandConfig):
         if len(self.train_scenes) == 0 and len(self.val_scenes) == 0:
             return NoOpCommand()
 
-        backend = self.backend.create_backend(self.task)
-        task = self.task.create_task(backend)
-
-        augmentors = list(map(lambda a: a.create_augmentor(), self.augmentors))
-
         if not tmp_dir:
             _tmp_dir = RVConfig.get_tmp_dir()
             tmp_dir = _tmp_dir.name
         else:
             _tmp_dir = tmp_dir
 
-        train_scenes = list(
-            map(lambda s: s.create_scene(self.task, tmp_dir),
-                self.train_scenes))
-        val_scenes = list(
-            map(lambda s: s.create_scene(self.task, tmp_dir), self.val_scenes))
-
-        retval = ChipCommand(task, augmentors, train_scenes, val_scenes)
+        retval = ChipCommand(self)
         retval.set_tmp_dir(_tmp_dir)
         return retval
 

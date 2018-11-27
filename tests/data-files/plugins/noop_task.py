@@ -53,9 +53,8 @@ class NoopTaskConfigBuilder(TaskConfigBuilder):
     def __init__(self, prev=None):
         super().__init__(NoopTaskConfig, {})
 
-    @staticmethod
-    def from_proto(msg):
-        return NoopTaskConfigBuilder()
+    def from_proto(self, msg):
+        return self
 
 
 def register_plugin(plugin_registry):

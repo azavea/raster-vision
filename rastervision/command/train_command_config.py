@@ -21,9 +21,7 @@ class TrainCommandConfig(CommandConfig):
         else:
             _tmp_dir = tmp_dir
 
-        backend = self.backend.create_backend(self.task)
-        task = self.task.create_task(backend)
-        retval = TrainCommand(task)
+        retval = TrainCommand(self)
         retval.set_tmp_dir(_tmp_dir)
         return retval
 

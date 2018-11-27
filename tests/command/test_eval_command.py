@@ -3,8 +3,10 @@ import unittest
 import rastervision as rv
 from rastervision.rv_config import RVConfig
 
+import tests.mock as mk
 
-class TestEvalCommand(unittest.TestCase):
+
+class TestEvalCommand(mk.MockMixin, unittest.TestCase):
     def test_command_create(self):
         with RVConfig.get_tmp_dir() as tmp_dir:
             cmd = rv.command.EvalCommandConfig.builder() \
@@ -48,6 +50,25 @@ class TestEvalCommand(unittest.TestCase):
                                             .build()
         except rv.ConfigError:
             self.fail('rv.ConfigError raised unexpectedly')
+
+    def test_command_run_with_mocks(self):
+        task_config = rv.TaskConfig.builder(mk.MOCK_TASK).build()
+        scene = mk.create_mock_scene()
+        evaluator_config = rv.EvaluatorConfig.builder(
+            mk.MOCK_EVALUATOR).build()
+        evaluator = evaluator_config.create_evaluator()
+        evaluator_config.mock.create_evaluator.return_value = evaluator
+
+        cmd = rv.command.EvalCommandConfig.builder() \
+                                          .with_task(task_config) \
+                                          .with_scenes([scene]) \
+                                          .with_evaluators([evaluator_config]) \
+                                          .with_root_uri('.') \
+                                          .build() \
+                                          .create_command()
+        cmd.run()
+
+        self.assertTrue(evaluator.mock.process.called)
 
 
 if __name__ == '__main__':
