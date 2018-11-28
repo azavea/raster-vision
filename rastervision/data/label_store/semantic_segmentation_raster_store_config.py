@@ -126,7 +126,20 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
         return b
 
     def with_vector_output(self, msg):
-        """Vector output for predictions."""
+        """Configure vector output for predictions.
+
+            Args:
+                msg: Either a list of dictionaries or a protobuf
+                    object.  The dictionary or the object contain
+                    (respectively) key (attributes) called 'uri' and
+                    'mode.  The 'uri' key is either a file where the
+                    GeoJSON prediction will be written, or "*"
+                    indicating that the filename should be
+                    auto-generated.  The 'mode' key currently must be
+                    set to 'buildings', indicating that the
+                    building-specific feature extractor is to be used.
+
+        """
         b = deepcopy(self)
         ar = []
 
