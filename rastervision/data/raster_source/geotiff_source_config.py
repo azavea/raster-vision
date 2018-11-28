@@ -125,6 +125,16 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
         return b
 
     def with_shifts(self, x, y):
+        """Set the x- and y-shifts in meters.
+
+            Args:
+                x: A number of meters to shift along the x-axis.  A
+                    positive shift moves the "camera" to the right.
+
+                y: A number of meters to shift along the y-axis.  A
+                    positive shift moves the "camera" down.
+
+        """
         b = deepcopy(self)
         b.config['x_shift_meters'] = x
         b.config['y_shift_meters'] = y

@@ -10,7 +10,6 @@ from rastervision.utils.misc import save_img
 from rastervision.data.raster_source.rasterio_source import load_window
 from rastervision.rv_config import RVConfig
 from rastervision.utils.files import make_dir
-from rastervision.utils.misc import save_img
 
 from tests import data_file_path
 

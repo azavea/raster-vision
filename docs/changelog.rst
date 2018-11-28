@@ -8,7 +8,7 @@ Raster Vision 0.9.0
 ~~~~~~~~~~~~~~~~~~~
 
 - Remove custom ``__deepcopy__`` implementation from ``ConfiBuilder``s. `#567 <https://github.com/azavea/raster-vision/pull/567>`_
-
+- Add ability to shift raster images by given numbers of meters.  `#573 <https://github.com/azavea/raster-vision/pull/573>`_
 
 Raster Vision 0.8
 -----------------
