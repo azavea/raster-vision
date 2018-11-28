@@ -139,11 +139,11 @@ Docker containers are published to `quay.io/azavea/raster-vision <https://quay.i
 
    > docker run --rm -it quay.io/azavea/raster-vision:cpu-0.8 /bin/bash
 
-You'll likely need to load up volumes and expose ports to make this container fully useful; see the `docker/console <https://github.com/azavea/rastervision/tree/0.8/docker/console>`_ script for an example usage.
+You'll likely need to load up volumes and expose ports to make this container fully useful; see the `docker/console <https://github.com/azavea/raster-vision/tree/0.8/docker/console>`_ script for an example usage.
 
 We publish containers set up for both CPU-only running and GPU-running, and tag each container as appropriate. So you can also pull down the ``quay.io/azavea/raster-vision:gpu-0.8`` image, as well as ``quay.io/azavea/raster-vision:cpu-latest`` and ``quay.io/azavea/raster-vision:gpu-latest``.
 
-You can also base your own Dockerfiles off the Raster Vision container to use with your own codebase. See the Dockerfiles in the `Raster Vision Examples <https://github.com/azavea/raster-vision/examples>`_ repository.
+You can also base your own Dockerfiles off the Raster Vision container to use with your own codebase. See the Dockerfiles in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.
 
 .. _aws batch setup:
 
