@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/raster_source.proto',
   package='rv.protos',
   syntax='proto2',
-  serialized_pb=_b('\n\'rastervision/protos/raster_source.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\x1a,rastervision/protos/raster_transformer.proto\x1a\'rastervision/protos/vector_source.proto\"\xc5\x07\n\x12RasterSourceConfig\x12\x13\n\x0bsource_type\x18\x01 \x02(\t\x12\x38\n\x0ctransformers\x18\x02 \x03(\x0b\x32\".rv.protos.RasterTransformerConfig\x12\x15\n\rchannel_order\x18\x03 \x03(\x05\x12\x43\n\rgeotiff_files\x18\x04 \x01(\x0b\x32*.rv.protos.RasterSourceConfig.GeoTiffFilesH\x00\x12=\n\nimage_file\x18\x05 \x01(\x0b\x32\'.rv.protos.RasterSourceConfig.ImageFileH\x00\x12\x41\n\x0cgeojson_file\x18\x06 \x01(\x0b\x32).rv.protos.RasterSourceConfig.GeoJSONFileH\x00\x12\x30\n\rcustom_config\x18\x07 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x12K\n\x11rasterized_source\x18\x08 \x01(\x0b\x32..rv.protos.RasterSourceConfig.RasterizedSourceH\x00\x1a\x1c\n\x0cGeoTiffFiles\x12\x0c\n\x04uris\x18\x01 \x03(\t\x1a\x18\n\tImageFile\x12\x0b\n\x03uri\x18\x01 \x02(\t\x1a\xf1\x01\n\x10RasterizedSource\x12\x34\n\rvector_source\x18\x01 \x02(\x0b\x32\x1d.rv.protos.VectorSourceConfig\x12\\\n\x12rasterizer_options\x18\x02 \x02(\x0b\x32@.rv.protos.RasterSourceConfig.RasterizedSource.RasterizerOptions\x1aI\n\x11RasterizerOptions\x12\x1b\n\x13\x62\x61\x63kground_class_id\x18\x02 \x02(\x05\x12\x17\n\x0bline_buffer\x18\x03 \x01(\x05:\x02\x31\x35\x1a\xbe\x01\n\x0bGeoJSONFile\x12\x0b\n\x03uri\x18\x01 \x02(\t\x12W\n\x12rasterizer_options\x18\x02 \x02(\x0b\x32;.rv.protos.RasterSourceConfig.GeoJSONFile.RasterizerOptions\x1aI\n\x11RasterizerOptions\x12\x1b\n\x13\x62\x61\x63kground_class_id\x18\x02 \x02(\x05\x12\x17\n\x0bline_buffer\x18\x03 \x01(\x05:\x02\x31\x35\x42\x16\n\x14raster_source_config')
+  serialized_pb=_b('\n\'rastervision/protos/raster_source.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\x1a,rastervision/protos/raster_transformer.proto\x1a\'rastervision/protos/vector_source.proto\"\xf5\x07\n\x12RasterSourceConfig\x12\x13\n\x0bsource_type\x18\x01 \x02(\t\x12\x38\n\x0ctransformers\x18\x02 \x03(\x0b\x32\".rv.protos.RasterTransformerConfig\x12\x15\n\rchannel_order\x18\x03 \x03(\x05\x12\x43\n\rgeotiff_files\x18\x04 \x01(\x0b\x32*.rv.protos.RasterSourceConfig.GeoTiffFilesH\x00\x12=\n\nimage_file\x18\x05 \x01(\x0b\x32\'.rv.protos.RasterSourceConfig.ImageFileH\x00\x12\x41\n\x0cgeojson_file\x18\x06 \x01(\x0b\x32).rv.protos.RasterSourceConfig.GeoJSONFileH\x00\x12\x30\n\rcustom_config\x18\x07 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x12K\n\x11rasterized_source\x18\x08 \x01(\x0b\x32..rv.protos.RasterSourceConfig.RasterizedSourceH\x00\x1aL\n\x0cGeoTiffFiles\x12\x0c\n\x04uris\x18\x01 \x03(\t\x12\x16\n\x0ex_shift_meters\x18\x02 \x01(\x02\x12\x16\n\x0ey_shift_meters\x18\x03 \x01(\x02\x1a\x18\n\tImageFile\x12\x0b\n\x03uri\x18\x01 \x02(\t\x1a\xf1\x01\n\x10RasterizedSource\x12\x34\n\rvector_source\x18\x01 \x02(\x0b\x32\x1d.rv.protos.VectorSourceConfig\x12\\\n\x12rasterizer_options\x18\x02 \x02(\x0b\x32@.rv.protos.RasterSourceConfig.RasterizedSource.RasterizerOptions\x1aI\n\x11RasterizerOptions\x12\x1b\n\x13\x62\x61\x63kground_class_id\x18\x02 \x02(\x05\x12\x17\n\x0bline_buffer\x18\x03 \x01(\x05:\x02\x31\x35\x1a\xbe\x01\n\x0bGeoJSONFile\x12\x0b\n\x03uri\x18\x01 \x02(\t\x12W\n\x12rasterizer_options\x18\x02 \x02(\x0b\x32;.rv.protos.RasterSourceConfig.GeoJSONFile.RasterizerOptions\x1aI\n\x11RasterizerOptions\x12\x1b\n\x13\x62\x61\x63kground_class_id\x18\x02 \x02(\x05\x12\x17\n\x0bline_buffer\x18\x03 \x01(\x05:\x02\x31\x35\x42\x16\n\x14raster_source_config')
   ,
   dependencies=[google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,rastervision_dot_protos_dot_raster__transformer__pb2.DESCRIPTOR,rastervision_dot_protos_dot_vector__source__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -44,6 +44,20 @@ _RASTERSOURCECONFIG_GEOTIFFFILES = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='x_shift_meters', full_name='rv.protos.RasterSourceConfig.GeoTiffFiles.x_shift_meters', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='y_shift_meters', full_name='rv.protos.RasterSourceConfig.GeoTiffFiles.y_shift_meters', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -57,7 +71,7 @@ _RASTERSOURCECONFIG_GEOTIFFFILES = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=622,
-  serialized_end=650,
+  serialized_end=698,
 )
 
 _RASTERSOURCECONFIG_IMAGEFILE = _descriptor.Descriptor(
@@ -86,8 +100,8 @@ _RASTERSOURCECONFIG_IMAGEFILE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=652,
-  serialized_end=676,
+  serialized_start=700,
+  serialized_end=724,
 )
 
 _RASTERSOURCECONFIG_RASTERIZEDSOURCE_RASTERIZEROPTIONS = _descriptor.Descriptor(
@@ -123,8 +137,8 @@ _RASTERSOURCECONFIG_RASTERIZEDSOURCE_RASTERIZEROPTIONS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=847,
-  serialized_end=920,
+  serialized_start=895,
+  serialized_end=968,
 )
 
 _RASTERSOURCECONFIG_RASTERIZEDSOURCE = _descriptor.Descriptor(
@@ -160,8 +174,8 @@ _RASTERSOURCECONFIG_RASTERIZEDSOURCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=679,
-  serialized_end=920,
+  serialized_start=727,
+  serialized_end=968,
 )
 
 _RASTERSOURCECONFIG_GEOJSONFILE_RASTERIZEROPTIONS = _descriptor.Descriptor(
@@ -197,8 +211,8 @@ _RASTERSOURCECONFIG_GEOJSONFILE_RASTERIZEROPTIONS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=847,
-  serialized_end=920,
+  serialized_start=895,
+  serialized_end=968,
 )
 
 _RASTERSOURCECONFIG_GEOJSONFILE = _descriptor.Descriptor(
@@ -234,8 +248,8 @@ _RASTERSOURCECONFIG_GEOJSONFILE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=923,
-  serialized_end=1113,
+  serialized_start=971,
+  serialized_end=1161,
 )
 
 _RASTERSOURCECONFIG = _descriptor.Descriptor(
@@ -317,7 +331,7 @@ _RASTERSOURCECONFIG = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=172,
-  serialized_end=1137,
+  serialized_end=1185,
 )
 
 _RASTERSOURCECONFIG_GEOTIFFFILES.containing_type = _RASTERSOURCECONFIG

@@ -9,6 +9,8 @@ import "rastervision/protos/vector_source.proto";
 message RasterSourceConfig {
     message GeoTiffFiles {
         repeated string uris = 1;
+        optional float x_shift_meters = 2;
+        optional float y_shift_meters = 3;
     }
 
     message ImageFile {
