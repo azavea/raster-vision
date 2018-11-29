@@ -253,6 +253,30 @@ Don't get too excited to look at the evaluation results in ``eval/tiny-spacenet-
 trained a model for 2 steps, and the model is likely making random predictions at this point. We would need to
 train on a lot more data for a lot longer for the model to become good at this task.
 
+Predict Packages
+----------------
+
+To immediately use Raster Vision with a fully trained model, one can make use of the pretrained models in our `Model Zoo <https://github.com/azavea/raster-vision-examples#model-zoo>`_.
+
+For example, to perform semantic segmentation using a MobileNet-based DeepLab model that has been pretrained for Las Vegas, one can type:
+
+.. code-block:: console
+
+   > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/predict_package.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif predictions.tif
+
+This will perform a prediction on the image ``1929.tif`` using the provided prediction package, and will produce a file called ``predictions.tif`` that contains the predictions.
+Notice that the prediction package and the input raster are transparently downloaded via HTTP.
+The input image (false color) and predictions are reproduced below.
+
+.. image:: img/vegas/1929.png
+  :width: 333
+  :alt: The input image
+
+.. image:: img/vegas/predictions.png
+  :width: 333
+  :alt: The predictions
+
+
 Next Steps
 ----------
 
