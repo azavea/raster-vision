@@ -1,5 +1,5 @@
 import subprocess
-
+import sys
 import logging
 
 from rastervision.runner import OutOfProcessExperimentRunner
@@ -15,7 +15,11 @@ def shellout(command_type,
              attempts=None,
              parent_job_ids=None,
              array_size=None):
-    return subprocess.call(command, shell=True)
+    exitcode = subprocess.call(command, shell=True)
+    if exitcode != 0:
+        sys.exit(exitcode)
+    else:
+        return 0
 
 
 class LocalExperimentRunner(OutOfProcessExperimentRunner):
