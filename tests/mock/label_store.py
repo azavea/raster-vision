@@ -1,3 +1,4 @@
+import unittest
 from unittest.mock import Mock
 
 import rastervision as rv
@@ -98,3 +99,7 @@ class MockLabelStoreConfigBuilder(SupressDeepCopyMixin,
             return self
         else:
             return result
+
+
+if __name__ == '__main__':
+    unittest.main()

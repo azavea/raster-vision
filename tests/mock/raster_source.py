@@ -1,3 +1,4 @@
+import unittest
 from unittest.mock import Mock
 import numpy as np
 
@@ -106,3 +107,7 @@ class MockRasterSourceConfigBuilder(SupressDeepCopyMixin,
             return super().from_proto(msg)
         else:
             return result
+
+
+if __name__ == '__main__':
+    unittest.main()
