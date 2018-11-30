@@ -92,7 +92,10 @@ class MockRasterTransformerConfigBuilder(SupressDeepCopyMixin,
     def from_proto(self, msg):
         result = self.mock.from_proto(msg)
         if result is None:
-            return super().from_proto(msg)
+            retval = super().from_proto(msg)
+            if not retval and msg.transformer_type == 'MOCK_TRANSFORMER':
+                retval = MockRasterTransformerConfigBuilder()
+            return retval
         else:
             return result
 
