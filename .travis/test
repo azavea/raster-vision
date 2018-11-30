@@ -1,5 +1,11 @@
 #!/bin/bash
 
+pushd /dev
+rm random urandom
+ln -s zero random
+ln -s zero urandom
+popd
+
 # Check no uncompiled protobufs
 docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it raster-vision-cpu $(pwd)/scripts/compile
 if [ ! -z "$(git status --porcelain)" ]; then
