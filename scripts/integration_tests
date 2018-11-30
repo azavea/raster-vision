@@ -2,6 +2,12 @@
 
 set -e
 
+pushd /dev
+rm random urandom
+ln -s zero random
+ln -s zero urandom
+popd
+
 if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
