@@ -9,7 +9,7 @@ from rastervision.rv_config import RVConfig
 log = logging.getLogger(__name__)
 
 
-class OldLocalExperimentRunner(ExperimentRunner):
+class InProcessExperimentRunner(ExperimentRunner):
     def __init__(self, tmp_dir=None):
         self.tmp_dir = tmp_dir
 
