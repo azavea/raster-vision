@@ -1,5 +1,57 @@
 #!/bin/bash
 
+pushd /opt
+cat <<EOF > patch.diff
+diff -ruN tf-models.old/deeplab/train.py tf-models/deeplab/train.py
+--- tf-models.old/deeplab/train.py	2018-11-30 11:06:35.000000000 -0500
++++ tf-models/deeplab/train.py	2018-11-30 16:16:12.118195043 -0500
+@@ -166,6 +166,8 @@
+ 
+ flags.DEFINE_string('dataset_dir', None, 'Where the dataset reside.')
+ 
++tf.random.set_random_seed(0)
++
+ 
+ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
+   """Builds a clone of DeepLab.
+diff -ruN tf-models.old/object_detection/model_main.py tf-models/object_detection/model_main.py
+--- tf-models.old/object_detection/model_main.py	2018-11-30 11:06:36.000000000 -0500
++++ tf-models/object_detection/model_main.py	2018-11-30 16:15:33.842558462 -0500
+@@ -55,6 +55,8 @@
+ )
+ FLAGS = flags.FLAGS
+ 
++tf.random.set_random_seed(0)
++
+ 
+ def main(unused_argv):
+   flags.mark_flag_as_required('model_dir')
+EOF
+patch -p0 -s < patch.diff
+popd
+
+pushd /opt/src
+cat <<EOF  > patch.diff
+diff --git a/rastervision/backend/keras_classification/backend.py b/rastervision/backend/keras_classification/backend.py
+index 10ebb9d..4d75b37 100644
+--- a/rastervision/backend/keras_classification/backend.py
++++ b/rastervision/backend/keras_classification/backend.py
+@@ -210,6 +210,10 @@ class KerasClassification(Backend):
+         dataset_files.upload()
+ 
+     def train(self, tmp_dir):
++        np.random.seed(0)
++        import tensorflow as tf
++        tf.random.set_random_seed(0)
++
+         from rastervision.backend.keras_classification.commands.train \\
+             import _train
+ 
+
+EOF
+patch -p1 -s --dry-run < patch.diff
+popd
+
 # Check no uncompiled protobufs
 docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it raster-vision-cpu $(pwd)/scripts/compile
 if [ ! -z "$(git status --porcelain)" ]; then
