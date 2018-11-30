@@ -49,4 +49,7 @@ message TrainingParameters {
         optional bool save_summaries_images = 29 [default = true];
         optional int32 save_interval_secs = 30 [default = 600];
         optional int32 save_summaries_secs = 31 [default = 60];
+
+        // System
+        optional int32 num_clones = 32 [default = 1];
 }
