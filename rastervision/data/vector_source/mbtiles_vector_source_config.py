@@ -62,11 +62,6 @@ class MBTilesVectorSourceConfigBuilder(VectorSourceConfigBuilder):
                 'MBTilesVectorSourceConfigBuilder requires uri which '
                 'can be set using "with_uri".')
 
-        if '{z}/{x}/{y}' not in self.config.get('uri'):
-            raise rv.ConfigError(
-                'MBTilesVectorSourceConfigBuilder requires uri containing '
-                '{z}/{x}/{y}.')
-
         if self.config.get('zoom') is None:
             raise rv.ConfigError(
                 'MBTilesVectorSourceConfigBuilder requires zoom which '

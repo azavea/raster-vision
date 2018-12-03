@@ -72,6 +72,7 @@ def mbtiles_to_geojson(uri, zoom, crs_transformer, extent):
     features = []
     for xyz in xyzs:
         x, y, z = xyz
+        # If this isn't a zxy schema, this is a no-op.
         tile_uri = uri.format(x=x, y=y, z=z)
 
         with RVConfig.get_tmp_dir() as tmp_dir:
