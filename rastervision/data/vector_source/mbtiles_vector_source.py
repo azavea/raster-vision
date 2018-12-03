@@ -2,13 +2,14 @@ import json
 import logging
 import copy
 from subprocess import check_output
+import os
 
 from supermercado.burntiles import burn
 from shapely.geometry import shape, mapping
 from shapely.ops import cascaded_union
 
 from rastervision.data.vector_source.vector_source import VectorSource
-from rastervision.utils.files import download_if_needed
+from rastervision.utils.files import download_if_needed, get_local_path
 from rastervision.rv_config import RVConfig
 
 log = logging.getLogger(__name__)
@@ -75,23 +76,28 @@ def mbtiles_to_geojson(uri, zoom, crs_transformer, extent):
         # If this isn't a zxy schema, this is a no-op.
         tile_uri = uri.format(x=x, y=y, z=z)
 
-        with RVConfig.get_tmp_dir() as tmp_dir:
-            # TODO some opportunities for improving efficiency:
-            # * LRU in memory cache
-            # * Filter out features that have None as class_id before calling
-            # process_features
-            tile_path = download_if_needed(tile_uri, tmp_dir)
-            cmd = [
-                'tippecanoe-decode', '-f', '-c', tile_path,
-                str(z),
-                str(x),
-                str(y)
-            ]
-            tile_geojson_str = check_output(cmd).decode('utf-8')
-            tile_features = [
-                json.loads(ts) for ts in tile_geojson_str.split('\n')
-            ]
-            features.extend(tile_features)
+        # TODO some opportunities for improving efficiency:
+        # * LRU in memory cache
+        # * Filter out features that have None as class_id before calling
+        # process_features
+
+        # Only download if it isn't in the cache.
+        cache_dir = os.path.join(RVConfig.get_tmp_dir_root(), 'vector-tiles')
+        tile_path = get_local_path(tile_uri, cache_dir)
+        if not os.path.isfile(tile_path):
+            download_if_needed(tile_uri, cache_dir)
+
+        cmd = [
+            'tippecanoe-decode', '-f', '-c', tile_path,
+            str(z),
+            str(x),
+            str(y)
+        ]
+        tile_geojson_str = check_output(cmd).decode('utf-8')
+        tile_features = [
+            json.loads(ts) for ts in tile_geojson_str.split('\n')
+        ]
+        features.extend(tile_features)
 
     proc_features = process_features(features, map_extent)
     geojson = {'type': 'FeatureCollection', 'features': proc_features}
