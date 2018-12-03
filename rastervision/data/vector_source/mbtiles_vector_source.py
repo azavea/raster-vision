@@ -15,18 +15,21 @@ from rastervision.rv_config import RVConfig
 log = logging.getLogger(__name__)
 
 
-def process_features(features, map_extent):
+def process_features(features, map_extent, id_field):
     """Merge features that share an id and crop them against the extent.
 
     Args:
-        features: (list) GeoJSON feature that have a __id property used to merge
+        features: (list) GeoJSON feature that have an id property used to merge
             features that are split across multiple tiles.
         map_extent: (Box) in map coordinates
+        id_field: (str) name of field in feature['properties'] that contains the
+            feature's unique id. Used for merging features that are split across
+            tile boundaries.
     """
     extent_geom = map_extent.to_shapely()
     id_to_features = {}
     for f in features:
-        id = f['properties']['__id']
+        id = f['properties'][id_field]
         id_features = id_to_features.get(id, [])
         id_features.append(f)
         id_to_features[id] = id_features
@@ -49,7 +52,7 @@ def process_features(features, map_extent):
     return proc_features
 
 
-def mbtiles_to_geojson(uri, zoom, crs_transformer, extent):
+def mbtiles_to_geojson(uri, zoom, id_field, crs_transformer, extent):
     """Get GeoJSON covering an extent from a vector tile endpoint.
 
     Merges features that are split across tiles and crops against the extentself.
@@ -99,29 +102,34 @@ def mbtiles_to_geojson(uri, zoom, crs_transformer, extent):
         ]
         features.extend(tile_features)
 
-    proc_features = process_features(features, map_extent)
+    proc_features = process_features(features, map_extent, id_field)
     geojson = {'type': 'FeatureCollection', 'features': proc_features}
     return geojson
 
 
 class MBTilesVectorSource(VectorSource):
-    def __init__(self, uri, zoom, crs_transformer, extent,
+    def __init__(self, uri, zoom, id_field, crs_transformer, extent,
                  class_inf_opts=None):
         """Constructor.
 
         Args:
-            uri: (str) URI of Mapbox vector tiles endpoint. Should contain {z}/{x}/{y}
+            uri: (str) URI of vector tile endpoint. Should either contain {z}/{x}/{y} or
+                point to MBTiles file.
             zoom: (int) valid zoom level to use when fetching tiles from endpoint
+            id_field: (str) name of field in feature['properties'] that contains the
+                feature's unique id. Used for merging features that are split across
+                tile boundaries.
             crs_transformer: (CRSTransformer)
             extent: (Box) extent of scene which determines which features to return
             class_inf_opts: (ClassInferenceOptions)
         """
         self.uri = uri
         self.zoom = zoom
+        self.id_field = id_field
         self.crs_transformer = crs_transformer
         self.extent = extent
         super().__init__(class_inf_opts)
 
     def _get_geojson(self):
-        return mbtiles_to_geojson(self.uri, self.zoom, self.crs_transformer,
-                                  self.extent)
+        return mbtiles_to_geojson(self.uri, self.zoom, self.id_field,
+                                  self.crs_transformer, self.extent)

@@ -8,6 +8,7 @@ message VectorSourceConfig {
     message MBTiles {
         required string uri = 1;
         required int32 zoom = 2;
+        required string id_field = 3;
     }
 
     message GeoJSON {
