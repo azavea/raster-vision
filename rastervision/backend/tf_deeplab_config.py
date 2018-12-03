@@ -264,6 +264,10 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         b.config['tfdl_config'] = template_json
         return b
 
+    def with_num_clones(self, num_clones):
+        """Sets the number of clones (useful for multi-GPU training)."""
+        return self.with_config({'numClones': num_clones})
+
     def with_batch_size(self, batch_size):
         """Sets the training batch size."""
         return self.with_config({'trainBatchSize': batch_size})
