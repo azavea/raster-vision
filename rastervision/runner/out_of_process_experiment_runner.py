@@ -21,6 +21,21 @@ def make_command(command_config_uri, tmp_dir=None):
 
 
 class OutOfProcessExperimentRunner(ExperimentRunner):
+    """A class implementing functionality for out-of-process running of experiments.
+
+    The term "out-of-process" refers to the fact that experiments are
+    not run within this process, but instead separate processes are
+    forked for each stage.
+
+    In the case of `AwsBatchExperimentRunner`, which derives from this
+    class, those processes are run remotely on AWS.  In case of
+    `LocalExperimentRunner`, which also derives from this class, the
+    processes run locally.  This behavior can be contrasted with
+    `InProcessExperimentRunner` wherein experiment stages are run
+    within the calling process.
+
+    """
+
     def __init__(self):
         self.tmp_dir = None
 
@@ -45,20 +60,15 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
                     upstream_command = (u.command_type, upstream_id)
                     raise Exception(
                         '{} command has parent command of {}, '
-                        'but does not exist in previous batch submissions - '
+                        'but does not exist in previous submissions - '
                         'topological sort on command_dag error.'.format(
                             cur_command, upstream_command))
                 parent_job_ids.append(ids_to_job[upstream_id])
 
-            batch_run_command = make_command(command_uri, self.tmp_dir)
-            job_id = self.submit(
-                command_config.command_type,
-                command_def.experiment_id,
-                self.job_queue,
-                self.job_definition,
-                batch_run_command,
-                attempts=self.attempts,
-                parent_job_ids=parent_job_ids)
+            run_command = make_command(command_uri, self.tmp_dir)
+            job_id = self.submit(command_config.command_type,
+                                 command_def.experiment_id, run_command,
+                                 parent_job_ids)
 
             ids_to_job[command_id] = job_id
 
@@ -76,5 +86,5 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
             command_config = command_def.command_config
             command_root_uri = command_config.root_uri
             command_uri = os.path.join(command_root_uri, 'command-config.json')
-            batch_run_command = make_command(command_uri, self.tmp_dir)
-            click.echo('  {}'.format(batch_run_command))
+            run_command = make_command(command_uri, self.tmp_dir)
+            click.echo('  {}'.format(run_command))

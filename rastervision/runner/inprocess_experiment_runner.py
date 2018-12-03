@@ -10,6 +10,18 @@ log = logging.getLogger(__name__)
 
 
 class InProcessExperimentRunner(ExperimentRunner):
+    """A class implementing functionality for running experiments within
+    the present process.
+
+    Note that the bulk of some stages still run in different process,
+    as for example when a separate training script is run as a shell
+    command.  The contrast between this behavior and the
+    out-of-process runners (those derived from
+    `OutOfProcessExperimentRunner`) is that in the latter, those shell
+    commands are run from stage-specific processes.
+
+    """
+
     def __init__(self, tmp_dir=None):
         self.tmp_dir = tmp_dir
 
