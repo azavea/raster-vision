@@ -24,7 +24,7 @@ class TestRasterizedSource(unittest.TestCase):
 
     def build_source(self, geojson):
         str_to_file(json.dumps(geojson), self.uri)
-        
+
         config = RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
             .with_uri(self.uri) \
             .with_rasterizer_options(self.background_class_id, self.line_buffer) \

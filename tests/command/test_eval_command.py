@@ -19,7 +19,6 @@ class TestEvalCommand(mk.MockMixin, unittest.TestCase):
             chip[:, :, :] *= np.array([0, 1, 2, 3]).astype(np.uint8)
             save_img(chip, img_path)
 
-            channel_order = [0, 1, 2]
             source = rv.data.ImageSourceConfig(img_path)
 
             scenes = [rv.data.SceneConfig('', source)]

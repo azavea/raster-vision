@@ -106,11 +106,12 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
             raise rv.ConfigError(
                 'You must specify a vector_source for the RasterizedSourceConfig. '
                 'Use "with_vector_source"')
-
-        if not isinstance(self.config.get('uri'), str):
+        if not isinstance(
+                self.config.get('vector_source'), VectorSourceConfig):
             raise rv.ConfigError(
-                'uri set with "with_uri" method must be a string, got {}'.
-                format(type(self.config.get('uri'))))
+                'vector source must be a child of class VectorSourceConfig, got {}'.
+                format(type(self.config.get('vector_source'))))
+
         if self.config.get('rasterizer_options') is None:
             raise rv.ConfigError(
                 'You must configure the rasterizer for the RasterizedSourceConfig. '
