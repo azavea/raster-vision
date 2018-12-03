@@ -3,6 +3,8 @@ import logging
 import copy
 from subprocess import check_output
 import os
+import gzip
+import shutil
 
 from supermercado.burntiles import burn
 from shapely.geometry import shape, mapping
@@ -89,6 +91,15 @@ def mbtiles_to_geojson(uri, zoom, id_field, crs_transformer, extent):
         tile_path = get_local_path(tile_uri, cache_dir)
         if not os.path.isfile(tile_path):
             download_if_needed(tile_uri, cache_dir)
+
+        # Unzip if .gz file
+        if tile_path.endswith('.gz'):
+            ungz_tile_path = tile_path[:-3]
+            if not os.path.isfile(ungz_tile_path):
+                with gzip.open(tile_path, 'rb') as f_in:
+                    with open(ungz_tile_path, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+            tile_path = ungz_tile_path
 
         cmd = [
             'tippecanoe-decode', '-f', '-c', tile_path,
