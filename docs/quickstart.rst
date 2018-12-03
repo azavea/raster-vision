@@ -51,6 +51,7 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
            val_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'.format(base_uri)
            val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
            channel_order = [0, 1, 2]
+           background_color = 2
 
            # ------------- TASK -------------
 
@@ -59,12 +60,6 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
                                .with_classes({
                                    'building': (1, 'red')
                                }) \
-                               .with_chip_options(
-                                   chips_per_scene=9,
-                                   debug_chip_probability=1.0,
-                                   negative_survival_probability=0.25,
-                                   target_classes=[1],
-                                   target_count_threshold=1000) \
                                .build()
 
            # ------------- BACKEND -------------
@@ -72,8 +67,8 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
            backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
                                      .with_task(task) \
                                      .with_debug(True) \
-                                     .with_batch_size(8) \
-                                     .with_num_steps(5) \
+                                     .with_batch_size(1) \
+                                     .with_num_steps(1) \
                                      .with_model_defaults(rv.MOBILENET_V2)  \
                                      .build()
 
@@ -85,10 +80,9 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
                                                 .with_stats_transformer() \
                                                 .build()
 
-           vector_source = train_label_uri
            train_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
-                                                            .with_vector_source(vector_source) \
-                                                            .with_rasterizer_options(2) \
+                                                            .with_vector_source(train_label_uri) \
+                                                            .with_rasterizer_options(background_color) \
                                                             .build()
            train_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
                                                     .with_raster_source(train_label_raster_source) \
@@ -109,10 +103,9 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
                                                     .with_stats_transformer() \
                                                     .build()
 
-           vector_source = val_label_uri
            val_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
-                                                          .with_vector_source(vector_source) \
-                                                          .with_rasterizer_options(2) \
+                                                          .with_vector_source(val_label_uri) \
+                                                          .with_rasterizer_options(background_color) \
                                                           .build()
            val_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
                                                   .with_raster_source(val_label_raster_source) \
@@ -154,9 +147,9 @@ will look for experiments in. Raster Vision does this by calling the method and 
 that are returned - you can either return a single experiment or a list of experiments.
 
 Notice that we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
-object detection on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
+semantic segmentation on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
 actually training the model - it's using the
-`TensorFlow Object Detection API <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ for that. Raster Vision
+`TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_ for that. Raster Vision
 just provides a configuration wrapper that sets up all of the options and data for the experiment
 workflow that utilizes that library.
 
