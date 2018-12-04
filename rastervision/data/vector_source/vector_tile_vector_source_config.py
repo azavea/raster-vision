@@ -3,12 +3,18 @@ from copy import deepcopy
 import rastervision as rv
 from rastervision.data.vector_source.vector_source_config import (
     VectorSourceConfig, VectorSourceConfigBuilder)
-from rastervision.data.vector_source.vector_tile_vector_source import VectorTileVectorSource
+from rastervision.data.vector_source.vector_tile_vector_source import (
+    VectorTileVectorSource)
 from rastervision.data.vector_source.class_inference import ClassInferenceOptions
 
 
 class VectorTileVectorSourceConfig(VectorSourceConfig):
-    def __init__(self, uri, zoom, id_field, class_id_to_filter=None, default_class_id=1):
+    def __init__(self,
+                 uri,
+                 zoom,
+                 id_field,
+                 class_id_to_filter=None,
+                 default_class_id=1):
         self.uri = uri
         self.zoom = zoom
         self.id_field = id_field

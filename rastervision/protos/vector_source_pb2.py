@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/vector_source.proto',
   package='rv.protos',
   syntax='proto2',
-  serialized_pb=_b('\n\'rastervision/protos/vector_source.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\"\x86\x03\n\x12VectorSourceConfig\x12\x38\n\x07mbtiles\x18\x01 \x01(\x0b\x32%.rv.protos.VectorSourceConfig.VectorTileH\x00\x12\x38\n\x07geojson\x18\x02 \x01(\x0b\x32%.rv.protos.VectorSourceConfig.GeoJSONH\x00\x12\x30\n\rcustom_config\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x12\x13\n\x0bsource_type\x18\x04 \x02(\t\x12\x33\n\x12\x63lass_id_to_filter\x18\x05 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x18\n\x10\x64\x65\x66\x61ult_class_id\x18\x06 \x01(\x05\x1a\x36\n\x07VectorTile\x12\x0b\n\x03uri\x18\x01 \x02(\t\x12\x0c\n\x04zoom\x18\x02 \x02(\x05\x12\x10\n\x08id_field\x18\x03 \x02(\t\x1a\x16\n\x07GeoJSON\x12\x0b\n\x03uri\x18\x01 \x02(\tB\x16\n\x14vector_source_config')
+  serialized_pb=_b('\n\'rastervision/protos/vector_source.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\"\x8c\x03\n\x12VectorSourceConfig\x12;\n\x07mbtiles\x18\x01 \x01(\x0b\x32(.rv.protos.VectorSourceConfig.VectorTileH\x00\x12\x38\n\x07geojson\x18\x02 \x01(\x0b\x32%.rv.protos.VectorSourceConfig.GeoJSONH\x00\x12\x30\n\rcustom_config\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x12\x13\n\x0bsource_type\x18\x04 \x02(\t\x12\x33\n\x12\x63lass_id_to_filter\x18\x05 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x18\n\x10\x64\x65\x66\x61ult_class_id\x18\x06 \x01(\x05\x1a\x39\n\nVectorTile\x12\x0b\n\x03uri\x18\x01 \x02(\t\x12\x0c\n\x04zoom\x18\x02 \x02(\x05\x12\x10\n\x08id_field\x18\x03 \x02(\t\x1a\x16\n\x07GeoJSON\x12\x0b\n\x03uri\x18\x01 \x02(\tB\x16\n\x14vector_source_config')
   ,
   dependencies=[google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -28,7 +28,7 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
-_VECTORSOURCECONFIG_MBTILES = _descriptor.Descriptor(
+_VECTORSOURCECONFIG_VECTORTILE = _descriptor.Descriptor(
   name='VectorTile',
   full_name='rv.protos.VectorSourceConfig.VectorTile',
   filename=None,
@@ -68,8 +68,8 @@ _VECTORSOURCECONFIG_MBTILES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=373,
-  serialized_end=427,
+  serialized_start=376,
+  serialized_end=433,
 )
 
 _VECTORSOURCECONFIG_GEOJSON = _descriptor.Descriptor(
@@ -98,8 +98,8 @@ _VECTORSOURCECONFIG_GEOJSON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=429,
-  serialized_end=451,
+  serialized_start=435,
+  serialized_end=457,
 )
 
 _VECTORSOURCECONFIG = _descriptor.Descriptor(
@@ -154,7 +154,7 @@ _VECTORSOURCECONFIG = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[_VECTORSOURCECONFIG_MBTILES, _VECTORSOURCECONFIG_GEOJSON, ],
+  nested_types=[_VECTORSOURCECONFIG_VECTORTILE, _VECTORSOURCECONFIG_GEOJSON, ],
   enum_types=[
   ],
   options=None,
@@ -167,12 +167,12 @@ _VECTORSOURCECONFIG = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=85,
-  serialized_end=475,
+  serialized_end=481,
 )
 
-_VECTORSOURCECONFIG_MBTILES.containing_type = _VECTORSOURCECONFIG
+_VECTORSOURCECONFIG_VECTORTILE.containing_type = _VECTORSOURCECONFIG
 _VECTORSOURCECONFIG_GEOJSON.containing_type = _VECTORSOURCECONFIG
-_VECTORSOURCECONFIG.fields_by_name['mbtiles'].message_type = _VECTORSOURCECONFIG_MBTILES
+_VECTORSOURCECONFIG.fields_by_name['mbtiles'].message_type = _VECTORSOURCECONFIG_VECTORTILE
 _VECTORSOURCECONFIG.fields_by_name['geojson'].message_type = _VECTORSOURCECONFIG_GEOJSON
 _VECTORSOURCECONFIG.fields_by_name['custom_config'].message_type = google_dot_protobuf_dot_struct__pb2._STRUCT
 _VECTORSOURCECONFIG.fields_by_name['class_id_to_filter'].message_type = google_dot_protobuf_dot_struct__pb2._STRUCT
@@ -190,7 +190,7 @@ DESCRIPTOR.message_types_by_name['VectorSourceConfig'] = _VECTORSOURCECONFIG
 VectorSourceConfig = _reflection.GeneratedProtocolMessageType('VectorSourceConfig', (_message.Message,), dict(
 
   VectorTile = _reflection.GeneratedProtocolMessageType('VectorTile', (_message.Message,), dict(
-    DESCRIPTOR = _VECTORSOURCECONFIG_MBTILES,
+    DESCRIPTOR = _VECTORSOURCECONFIG_VECTORTILE,
     __module__ = 'rastervision.protos.vector_source_pb2'
     # @@protoc_insertion_point(class_scope:rv.protos.VectorSourceConfig.VectorTile)
     ))

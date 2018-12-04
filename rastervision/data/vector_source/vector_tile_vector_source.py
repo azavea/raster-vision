@@ -108,9 +108,7 @@ def vector_tile_to_geojson(uri, zoom, id_field, crs_transformer, extent):
             str(y)
         ]
         tile_geojson_str = check_output(cmd).decode('utf-8')
-        tile_features = [
-            json.loads(ts) for ts in tile_geojson_str.split('\n')
-        ]
+        tile_features = [json.loads(ts) for ts in tile_geojson_str.split('\n')]
         features.extend(tile_features)
 
     proc_features = process_features(features, map_extent, id_field)
@@ -119,7 +117,12 @@ def vector_tile_to_geojson(uri, zoom, id_field, crs_transformer, extent):
 
 
 class VectorTileVectorSource(VectorSource):
-    def __init__(self, uri, zoom, id_field, crs_transformer, extent,
+    def __init__(self,
+                 uri,
+                 zoom,
+                 id_field,
+                 crs_transformer,
+                 extent,
                  class_inf_opts=None):
         """Constructor.
 
@@ -143,4 +146,4 @@ class VectorTileVectorSource(VectorSource):
 
     def _get_geojson(self):
         return vector_tile_to_geojson(self.uri, self.zoom, self.id_field,
-                                  self.crs_transformer, self.extent)
+                                      self.crs_transformer, self.extent)
