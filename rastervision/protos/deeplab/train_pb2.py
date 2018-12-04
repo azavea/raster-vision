@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/deeplab/train.proto',
   package='deeplab.protos',
   syntax='proto2',
-  serialized_pb=_b('\n\'rastervision/protos/deeplab/train.proto\x12\x0e\x64\x65\x65plab.protos\"\x9c\x07\n\x12TrainingParameters\x12\x1d\n\x15initialize_last_layer\x18\x01 \x01(\t\x12\'\n\x1flast_layers_contain_logits_only\x18\x02 \x01(\t\x12\x17\n\x0fupsample_logits\x18\x03 \x01(\t\x12\x1c\n\x14\x66ine_tune_batch_norm\x18\x04 \x01(\t\x12\x1a\n\x12\x62\x61se_learning_rate\x18\x05 \x01(\t\x12&\n\x1elast_layer_gradient_multiplier\x18\x06 \x01(\t\x12\x16\n\x0elearning_power\x18\x07 \x01(\t\x12\"\n\x1alearning_rate_decay_factor\x18\x08 \x01(\t\x12\x10\n\x08momentum\x18\t \x01(\t\x12 \n\x18slow_start_learning_rate\x18\n \x01(\t\x12\x14\n\x0cweight_decay\x18\x0b \x01(\t\x12 \n\x18learning_rate_decay_step\x18\x0c \x01(\t\x12\x17\n\x0fslow_start_step\x18\r \x01(\t\x12\x17\n\x0flearning_policy\x18\x0e \x01(\t\x12\x18\n\x10max_scale_factor\x18\x0f \x01(\t\x12\x18\n\x10min_scale_factor\x18\x10 \x01(\t\x12\x1e\n\x16scale_factor_step_size\x18\x11 \x01(\t\x12\x1d\n\x15\x64\x65\x63oder_output_stride\x18\x12 \x02(\x05\x12\x15\n\routput_stride\x18\x13 \x02(\x05\x12\x15\n\rmodel_variant\x18\x14 \x02(\t\x12\x14\n\x0c\x61trous_rates\x18\x15 \x03(\x05\x12\x1a\n\x0btrain_split\x18\x16 \x01(\t:\x05train\x12\x17\n\x07\x64\x61taset\x18\x17 \x01(\t:\x06\x63ustom\x12\x18\n\x10train_batch_size\x18\x18 \x02(\x05\x12 \n\x18training_number_of_steps\x18\x19 \x02(\x05\x12\x17\n\x0ftrain_crop_size\x18\x1a \x03(\x05\x12\x1d\n\x0f\x64l_custom_train\x18\x1b \x01(\x05:\x04\x31\x33\x33\x33\x12\"\n\x14\x64l_custom_validation\x18\x1c \x01(\x05:\x04\x31\x33\x33\x33\x12#\n\x15save_summaries_images\x18\x1d \x01(\x08:\x04true\x12\x1f\n\x12save_interval_secs\x18\x1e \x01(\x05:\x03\x36\x30\x30\x12\x1f\n\x13save_summaries_secs\x18\x1f \x01(\x05:\x02\x36\x30')
+  serialized_pb=_b('\n\'rastervision/protos/deeplab/train.proto\x12\x0e\x64\x65\x65plab.protos\"\xb3\x07\n\x12TrainingParameters\x12\x1d\n\x15initialize_last_layer\x18\x01 \x01(\t\x12\'\n\x1flast_layers_contain_logits_only\x18\x02 \x01(\t\x12\x17\n\x0fupsample_logits\x18\x03 \x01(\t\x12\x1c\n\x14\x66ine_tune_batch_norm\x18\x04 \x01(\t\x12\x1a\n\x12\x62\x61se_learning_rate\x18\x05 \x01(\t\x12&\n\x1elast_layer_gradient_multiplier\x18\x06 \x01(\t\x12\x16\n\x0elearning_power\x18\x07 \x01(\t\x12\"\n\x1alearning_rate_decay_factor\x18\x08 \x01(\t\x12\x10\n\x08momentum\x18\t \x01(\t\x12 \n\x18slow_start_learning_rate\x18\n \x01(\t\x12\x14\n\x0cweight_decay\x18\x0b \x01(\t\x12 \n\x18learning_rate_decay_step\x18\x0c \x01(\t\x12\x17\n\x0fslow_start_step\x18\r \x01(\t\x12\x17\n\x0flearning_policy\x18\x0e \x01(\t\x12\x18\n\x10max_scale_factor\x18\x0f \x01(\t\x12\x18\n\x10min_scale_factor\x18\x10 \x01(\t\x12\x1e\n\x16scale_factor_step_size\x18\x11 \x01(\t\x12\x1d\n\x15\x64\x65\x63oder_output_stride\x18\x12 \x02(\x05\x12\x15\n\routput_stride\x18\x13 \x02(\x05\x12\x15\n\rmodel_variant\x18\x14 \x02(\t\x12\x14\n\x0c\x61trous_rates\x18\x15 \x03(\x05\x12\x1a\n\x0btrain_split\x18\x16 \x01(\t:\x05train\x12\x17\n\x07\x64\x61taset\x18\x17 \x01(\t:\x06\x63ustom\x12\x18\n\x10train_batch_size\x18\x18 \x02(\x05\x12 \n\x18training_number_of_steps\x18\x19 \x02(\x05\x12\x17\n\x0ftrain_crop_size\x18\x1a \x03(\x05\x12\x1d\n\x0f\x64l_custom_train\x18\x1b \x01(\x05:\x04\x31\x33\x33\x33\x12\"\n\x14\x64l_custom_validation\x18\x1c \x01(\x05:\x04\x31\x33\x33\x33\x12#\n\x15save_summaries_images\x18\x1d \x01(\x08:\x04true\x12\x1f\n\x12save_interval_secs\x18\x1e \x01(\x05:\x03\x36\x30\x30\x12\x1f\n\x13save_summaries_secs\x18\x1f \x01(\x05:\x02\x36\x30\x12\x15\n\nnum_clones\x18  \x01(\x05:\x01\x31')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -250,6 +250,13 @@ _TRAININGPARAMETERS = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='num_clones', full_name='deeplab.protos.TrainingParameters.num_clones', index=31,
+      number=32, type=5, cpp_type=1, label=1,
+      has_default_value=True, default_value=1,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -263,7 +270,7 @@ _TRAININGPARAMETERS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=60,
-  serialized_end=984,
+  serialized_end=1007,
 )
 
 DESCRIPTOR.message_types_by_name['TrainingParameters'] = _TRAININGPARAMETERS
