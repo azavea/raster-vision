@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/label_store.proto',
   package='rv.protos',
   syntax='proto2',
-  serialized_pb=_b('\n%rastervision/protos/label_store.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\"\xb9\x03\n\x10LabelStoreConfig\x12\x12\n\nstore_type\x18\x01 \x02(\t\x12\r\n\x03uri\x18\x02 \x01(\tH\x00\x12i\n\"semantic_segmentation_raster_store\x18\x03 \x01(\x0b\x32;.rv.protos.LabelStoreConfig.SemanticSegmentationRasterStoreH\x00\x12\x30\n\rcustom_config\x18\x04 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x1a\xce\x01\n\x1fSemanticSegmentationRasterStore\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x12\n\x03rgb\x18\x02 \x01(\x08:\x05\x66\x61lse\x12_\n\rvector_output\x18\x03 \x03(\x0b\x32H.rv.protos.LabelStoreConfig.SemanticSegmentationRasterStore.VectorOutput\x1a)\n\x0cVectorOutput\x12\x0b\n\x03uri\x18\x01 \x02(\t\x12\x0c\n\x04mode\x18\x02 \x02(\tB\x14\n\x12label_store_config')
+  serialized_pb=_b('\n%rastervision/protos/label_store.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\"\xcd\x03\n\x10LabelStoreConfig\x12\x12\n\nstore_type\x18\x01 \x02(\t\x12\r\n\x03uri\x18\x02 \x01(\tH\x00\x12i\n\"semantic_segmentation_raster_store\x18\x03 \x01(\x0b\x32;.rv.protos.LabelStoreConfig.SemanticSegmentationRasterStoreH\x00\x12\x30\n\rcustom_config\x18\x04 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x1a\xe2\x01\n\x1fSemanticSegmentationRasterStore\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x12\n\x03rgb\x18\x02 \x01(\x08:\x05\x66\x61lse\x12_\n\rvector_output\x18\x03 \x03(\x0b\x32H.rv.protos.LabelStoreConfig.SemanticSegmentationRasterStore.VectorOutput\x1a=\n\x0cVectorOutput\x12\r\n\x03uri\x18\x01 \x01(\t:\x00\x12\x0c\n\x04mode\x18\x02 \x02(\t\x12\x10\n\x08\x63lass_id\x18\x03 \x02(\x05\x42\x14\n\x12label_store_config')
   ,
   dependencies=[google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -37,8 +37,8 @@ _LABELSTORECONFIG_SEMANTICSEGMENTATIONRASTERSTORE_VECTOROUTPUT = _descriptor.Des
   fields=[
     _descriptor.FieldDescriptor(
       name='uri', full_name='rv.protos.LabelStoreConfig.SemanticSegmentationRasterStore.VectorOutput.uri', index=0,
-      number=1, type=9, cpp_type=9, label=2,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -46,6 +46,13 @@ _LABELSTORECONFIG_SEMANTICSEGMENTATIONRASTERSTORE_VECTOROUTPUT = _descriptor.Des
       name='mode', full_name='rv.protos.LabelStoreConfig.SemanticSegmentationRasterStore.VectorOutput.mode', index=1,
       number=2, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='class_id', full_name='rv.protos.LabelStoreConfig.SemanticSegmentationRasterStore.VectorOutput.class_id', index=2,
+      number=3, type=5, cpp_type=1, label=2,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -62,7 +69,7 @@ _LABELSTORECONFIG_SEMANTICSEGMENTATIONRASTERSTORE_VECTOROUTPUT = _descriptor.Des
   oneofs=[
   ],
   serialized_start=461,
-  serialized_end=502,
+  serialized_end=522,
 )
 
 _LABELSTORECONFIG_SEMANTICSEGMENTATIONRASTERSTORE = _descriptor.Descriptor(
@@ -106,7 +113,7 @@ _LABELSTORECONFIG_SEMANTICSEGMENTATIONRASTERSTORE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=296,
-  serialized_end=502,
+  serialized_end=522,
 )
 
 _LABELSTORECONFIG = _descriptor.Descriptor(
@@ -160,7 +167,7 @@ _LABELSTORECONFIG = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=83,
-  serialized_end=524,
+  serialized_end=544,
 )
 
 _LABELSTORECONFIG_SEMANTICSEGMENTATIONRASTERSTORE_VECTOROUTPUT.containing_type = _LABELSTORECONFIG_SEMANTICSEGMENTATIONRASTERSTORE

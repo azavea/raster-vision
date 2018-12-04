@@ -34,14 +34,7 @@ class SceneConfig(BundledConfigMixin, Config):
               tmp_dir - Temporary directory to use
         """
         raster_source = self.raster_source.create_source(tmp_dir)
-
         extent = raster_source.get_extent()
-        if self.label_store and hasattr(
-                self.label_store,
-                'vector_output') and self.label_store.vector_output:
-            task_config.affine_transform = raster_source.get_affine_transform()
-        else:
-            task_config.affine_transform = None
         crs_transformer = raster_source.get_crs_transformer()
 
         label_source = None

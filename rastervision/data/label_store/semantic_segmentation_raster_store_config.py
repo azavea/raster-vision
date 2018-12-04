@@ -23,8 +23,9 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
             for vo in self.vector_output:
                 msg2 = LabelStoreConfigMsg.SemanticSegmentationRasterStore.VectorOutput(
                 )
-                msg2.uri = vo['uri']
+                msg2.uri = vo['uri'] if 'uri' in vo.keys() else ''
                 msg2.mode = vo['mode']
+                msg2.class_id = vo['class_id']
                 ar.append(msg2)
             msg.semantic_segmentation_raster_store.vector_output.extend(ar)
         msg.semantic_segmentation_raster_store.rgb = self.rgb
@@ -39,15 +40,13 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
         class_map = None
         if self.rgb:
             class_map = task_config.class_map
-        affine_transform = task_config.affine_transform
 
         return SemanticSegmentationRasterStore(
             self.uri,
-            self.vector_output,
             extent,
-            affine_transform,
             crs_transformer,
             tmp_dir,
+            vector_output=self.vector_output,
             class_map=class_map)
 
     def update_for_command(self,
@@ -77,10 +76,15 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
             # Construct URIs for vector predictions
             for vo in self.vector_output:
                 for c in context:
-                    if isinstance(c, rv.SceneConfig) and vo['uri'] == '*':
+                    if isinstance(c,
+                                  rv.SceneConfig) and ('uri' not in vo.keys()
+                                                       or not vo['uri']):
                         root = experiment_config.predict_uri
+                        mode = vo['mode']
+                        class_id = vo['class_id']
                         vo['uri'] = os.path.join(
-                            root, '{}-{}.geojson'.format(c.id, vo['mode']))
+                            root, '{}-{}-{}.geojson'.format(
+                                c.id, class_id, mode))
                 io_def.add_output(vo['uri'])
 
             io_def.add_output(self.uri)
@@ -125,30 +129,34 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
         b.config['uri'] = uri
         return b
 
-    def with_vector_output(self, msg):
+    def with_vector_output(self, vector_output):
         """Configure vector output for predictions.
 
             Args:
-                msg: Either a list of dictionaries or a protobuf
-                    object.  The dictionary or the object contain
-                    (respectively) key (attributes) called 'uri' and
-                    'mode.  The 'uri' key is either a file where the
-                    GeoJSON prediction will be written, or "*"
-                    indicating that the filename should be
-                    auto-generated.  The 'mode' key currently must be
-                    set to 'buildings', indicating that the
-                    building-specific feature extractor is to be used.
+                vector_output: Either a list of dictionaries or a
+                    protobuf object.  The dictionary or the object
+                    contain (respectively) keys (attributes) called
+                    'uri', 'class_id', and 'mode.  The 'uri' key is
+                    either a file where the GeoJSON prediction will be
+                    written, or "" indicating that the filename should
+                    be auto-generated.  'class_id' is the integer
+                    prediction class that is of interest.  The 'mode'
+                    key must be set to 'buildings' or 'polygons'.
 
         """
         b = deepcopy(self)
         ar = []
 
-        if isinstance(msg, list):
-            for vo in msg:
+        if isinstance(vector_output, list):
+            for vo in vector_output:
                 ar.append(vo.copy())
         else:
-            for vo in msg:
-                ar.append({'uri': vo.uri, 'mode': vo.mode})
+            for vo in vector_output:
+                ar.append({
+                    'uri': vo.uri,
+                    'mode': vo.mode,
+                    'class_id': vo.class_id
+                })
 
         b.config['vector_output'] = ar
         return b

@@ -11,9 +11,9 @@ RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get update && \
     apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
                        gdal-bin=2.1.* \
-                       jq \
-                       build-essential libsqlite3-dev zlib1g-dev \
-                       libopencv-dev python-opencv && \
+                       jq=1.5* \
+                       build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
+                       libopencv-dev=2.4.* python-opencv=2.4.* && \
     apt-get autoremove && apt-get autoclean && apt-get clean
 
 # Install protoc

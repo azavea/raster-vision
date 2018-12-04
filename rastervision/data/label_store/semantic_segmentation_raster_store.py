@@ -6,6 +6,8 @@ from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy)
 from rastervision.data.label import SemanticSegmentationLabels
 from rastervision.data.label_store import LabelStore
 from rastervision.data.label_source import SegmentationClassTransformer
+from rastervision.data.crs_transformer.rasterio_crs_transformer import (
+    RasterioCRSTransformer)
 
 
 class SemanticSegmentationRasterStore(LabelStore):
@@ -14,22 +16,19 @@ class SemanticSegmentationRasterStore(LabelStore):
 
     def __init__(self,
                  uri,
-                 vector_output,
                  extent,
-                 affine_transform,
                  crs_transformer,
                  tmp_dir,
+                 vector_output=None,
                  class_map=None):
         """Constructor.
 
         Args:
             uri: (str) URI of GeoTIFF file used for storing predictions as RGB values
-            geojson_uri: (str or None) URI of GeoJSON polygons derived from the mask
             extent: (Box) The extent of the scene
-            affine_transform: (affine.Affine) The mapping from mask
-                 image coordintes to world coordinates
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
+            vector_output: (str or None) URI of GeoJSON polygons derived from the mask
             class_map: (ClassMap) with color values used to convert class ids to
                 RGB values
 
@@ -37,7 +36,6 @@ class SemanticSegmentationRasterStore(LabelStore):
         self.uri = uri
         self.vector_output = vector_output
         self.extent = extent
-        self.affine_transform = affine_transform
         self.crs_transformer = crs_transformer
         self.tmp_dir = tmp_dir
         # Note: can't name this class_transformer due to Python using that attribute
@@ -85,6 +83,12 @@ class SemanticSegmentationRasterStore(LabelStore):
             band_count = 3
             dtype = np.uint8
 
+        if self.vector_output:
+            mask = np.zeros(
+                (self.extent.ymax, self.extent.xmax), dtype=np.uint8)
+        else:
+            mask = None
+
         # https://github.com/mapbox/rasterio/blob/master/docs/quickstart.rst
         # https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
         with rasterio.open(
@@ -99,6 +103,9 @@ class SemanticSegmentationRasterStore(LabelStore):
                 crs=crs) as dataset:
             for (window, class_labels) in clipped_labels.get_label_pairs():
                 window = (window.ymin, window.ymax), (window.xmin, window.xmax)
+                if mask is not None:
+                    mask[window[0][0]:window[0][1], window[1][0]:window[1][
+                        1]] = class_labels
                 if self.class_trans:
                     rgb_labels = self.class_trans.class_to_rgb(class_labels)
                     for chan in range(3):
@@ -110,19 +117,29 @@ class SemanticSegmentationRasterStore(LabelStore):
 
         upload_or_copy(local_path, self.uri)
 
-        for vo in self.vector_output:
-            uri = vo['uri']
-            mode = vo['mode']
-            local_geojson_path = get_local_path(uri, self.tmp_dir)
-            if mode == 'buildings':
-                import mask_to_polygons.vectorification as m2p
+        if self.vector_output:
+            import mask_to_polygons.vectorification as m2p
+            from affine import Affine
 
-                with rasterio.open(local_path, 'r') as dataset:
-                    mask = dataset.read(1)
-                geojson = m2p.geojson_from_mask(mask, self.affine_transform)
-                with open(local_geojson_path, 'w') as file_out:
-                    file_out.write(geojson)
-                upload_or_copy(local_geojson_path, uri)
+            for vo in self.vector_output:
+                uri = vo['uri']
+                mode = vo['mode']
+                class_id = vo['class_id']
+                class_mask = np.array(mask == class_id, dtype=np.uint8)
+                local_geojson_path = get_local_path(uri, self.tmp_dir)
+
+                if isinstance(self.crs_transformer, RasterioCRSTransformer):
+                    transform = self.crs_transformer.transform
+                else:
+                    transform = Affine.identity()
+
+                if uri and mode == 'buildings':
+                    geojson = m2p.geojson_from_mask(class_mask, transform)
+
+                if local_geojson_path:
+                    with open(local_geojson_path, 'w') as file_out:
+                        file_out.write(geojson)
+                        upload_or_copy(local_geojson_path, uri)
 
     def empty_labels(self):
         """Returns an empty SemanticSegmentationLabels object."""

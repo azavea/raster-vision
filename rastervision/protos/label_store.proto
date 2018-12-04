@@ -7,8 +7,9 @@ import "google/protobuf/struct.proto";
 message LabelStoreConfig {
     message SemanticSegmentationRasterStore {
         message VectorOutput {
-            required string uri = 1;
+            optional string uri = 1 [default=""];
             required string mode = 2;
+            required int32 class_id = 3;
         }
 
         optional string uri = 1;
