@@ -6,7 +6,7 @@ from rastervision.plugin import PluginRegistry
 from rastervision.data.raster_source.default import (
     GeoTiffSourceDefaultProvider, ImageSourceDefaultProvider)
 from rastervision.data.vector_source.default import (
-    GeoJSONVectorSourceDefaultProvider, MBTilesVectorSourceDefaultProvider)
+    GeoJSONVectorSourceDefaultProvider, VectorTileVectorSourceDefaultProvider)
 from rastervision.data.label_source.default import (
     ObjectDetectionLabelSourceDefaultProvider,
     ChipClassificationLabelSourceDefaultProvider,
@@ -68,8 +68,8 @@ class Registry:
             rv.data.RasterizedSourceConfigBuilder,
 
             # Vector Sources
-            (rv.VECTOR_SOURCE, rv.MBTILES_SOURCE):
-            rv.data.MBTilesVectorSourceConfigBuilder,
+            (rv.VECTOR_SOURCE, rv.VECTOR_TILE_SOURCE):
+            rv.data.VectorTileVectorSourceConfigBuilder,
             (rv.VECTOR_SOURCE, rv.GEOJSON_SOURCE):
             rv.data.GeoJSONVectorSourceConfigBuilder,
 
@@ -122,7 +122,7 @@ class Registry:
 
         self._internal_default_vector_sources = [
             GeoJSONVectorSourceDefaultProvider,
-            MBTilesVectorSourceDefaultProvider
+            VectorTileVectorSourceDefaultProvider
         ]
 
         self._internal_default_label_sources = [

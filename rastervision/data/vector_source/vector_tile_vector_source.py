@@ -54,7 +54,7 @@ def process_features(features, map_extent, id_field):
     return proc_features
 
 
-def mbtiles_to_geojson(uri, zoom, id_field, crs_transformer, extent):
+def vector_tile_to_geojson(uri, zoom, id_field, crs_transformer, extent):
     """Get GeoJSON covering an extent from a vector tile endpoint.
 
     Merges features that are split across tiles and crops against the extentself.
@@ -118,14 +118,14 @@ def mbtiles_to_geojson(uri, zoom, id_field, crs_transformer, extent):
     return geojson
 
 
-class MBTilesVectorSource(VectorSource):
+class VectorTileVectorSource(VectorSource):
     def __init__(self, uri, zoom, id_field, crs_transformer, extent,
                  class_inf_opts=None):
         """Constructor.
 
         Args:
             uri: (str) URI of vector tile endpoint. Should either contain {z}/{x}/{y} or
-                point to MBTiles file.
+                point to VectorTile file.
             zoom: (int) valid zoom level to use when fetching tiles from endpoint
             id_field: (str) name of field in feature['properties'] that contains the
                 feature's unique id. Used for merging features that are split across
@@ -142,5 +142,5 @@ class MBTilesVectorSource(VectorSource):
         super().__init__(class_inf_opts)
 
     def _get_geojson(self):
-        return mbtiles_to_geojson(self.uri, self.zoom, self.id_field,
+        return vector_tile_to_geojson(self.uri, self.zoom, self.id_field,
                                   self.crs_transformer, self.extent)

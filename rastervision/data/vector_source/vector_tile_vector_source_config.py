@@ -3,17 +3,17 @@ from copy import deepcopy
 import rastervision as rv
 from rastervision.data.vector_source.vector_source_config import (
     VectorSourceConfig, VectorSourceConfigBuilder)
-from rastervision.data.vector_source.mbtiles_vector_source import MBTilesVectorSource
+from rastervision.data.vector_source.vector_tile_vector_source import VectorTileVectorSource
 from rastervision.data.vector_source.class_inference import ClassInferenceOptions
 
 
-class MBTilesVectorSourceConfig(VectorSourceConfig):
+class VectorTileVectorSourceConfig(VectorSourceConfig):
     def __init__(self, uri, zoom, id_field, class_id_to_filter=None, default_class_id=1):
         self.uri = uri
         self.zoom = zoom
         self.id_field = id_field
         super().__init__(
-            rv.MBTILES_SOURCE,
+            rv.VECTOR_TILE_SOURCE,
             class_id_to_filter=class_id_to_filter,
             default_class_id=default_class_id)
 
@@ -25,7 +25,7 @@ class MBTilesVectorSourceConfig(VectorSourceConfig):
         return msg
 
     def create_source(self, crs_transformer=None, extent=None, class_map=None):
-        return MBTilesVectorSource(
+        return VectorTileVectorSource(
             self.uri,
             self.zoom,
             self.id_field,
@@ -46,7 +46,7 @@ class MBTilesVectorSourceConfig(VectorSourceConfig):
         pass
 
 
-class MBTilesVectorSourceConfigBuilder(VectorSourceConfigBuilder):
+class VectorTileVectorSourceConfigBuilder(VectorSourceConfigBuilder):
     def __init__(self, prev=None):
         config = {}
         if prev:
@@ -58,17 +58,17 @@ class MBTilesVectorSourceConfigBuilder(VectorSourceConfigBuilder):
                 'default_class_id': prev.default_class_id
             }
 
-        super().__init__(MBTilesVectorSourceConfig, config)
+        super().__init__(VectorTileVectorSourceConfig, config)
 
     def validate(self):
         if self.config.get('uri') is None:
             raise rv.ConfigError(
-                'MBTilesVectorSourceConfigBuilder requires uri which '
+                'VectorTileVectorSourceConfigBuilder requires uri which '
                 'can be set using "with_uri".')
 
         if self.config.get('zoom') is None:
             raise rv.ConfigError(
-                'MBTilesVectorSourceConfigBuilder requires zoom which '
+                'VectorTileVectorSourceConfigBuilder requires zoom which '
                 'can be set using "with_zoom".')
 
         # If not set explicitly, set it using default value.

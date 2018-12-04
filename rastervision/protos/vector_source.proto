@@ -5,7 +5,7 @@ package rv.protos;
 import "google/protobuf/struct.proto";
 
 message VectorSourceConfig {
-    message MBTiles {
+    message VectorTile {
         required string uri = 1;
         required int32 zoom = 2;
         required string id_field = 3;
@@ -16,7 +16,7 @@ message VectorSourceConfig {
     }
 
     oneof vector_source_config {
-        MBTiles mbtiles = 1;
+        VectorTile mbtiles = 1;
         GeoJSON geojson = 2;
         google.protobuf.Struct custom_config = 3;
     }
