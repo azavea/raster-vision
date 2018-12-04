@@ -1,3 +1,4 @@
+import unittest
 from unittest.mock import Mock
 
 import rastervision as rv
@@ -107,3 +108,7 @@ class MockBackendConfigBuilder(SupressDeepCopyMixin, BackendConfigBuilder):
 
     def _process_task(self, task):
         self.mock._process_task(task)
+
+
+if __name__ == '__main__':
+    unittest.main()

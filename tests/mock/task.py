@@ -1,3 +1,4 @@
+import unittest
 from unittest.mock import Mock
 
 from rastervision.task import (Task, TaskConfig, TaskConfigBuilder)
@@ -110,3 +111,7 @@ class MockTaskConfigBuilder(SupressDeepCopyMixin, TaskConfigBuilder):
             return MockTaskConfigBuilder()
         else:
             return result
+
+
+if __name__ == '__main__':
+    unittest.main()

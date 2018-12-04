@@ -82,3 +82,7 @@ class TestPlugin(mk.MockMixin, unittest.TestCase):
                                    .build()
 
             rv.ExperimentRunner.get_runner(rv.LOCAL).run(e)
+
+
+if __name__ == '__main__':
+    unittest.main()

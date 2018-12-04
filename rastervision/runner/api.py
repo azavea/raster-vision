@@ -2,7 +2,7 @@
 
 # Registry keys
 
-OLD_LOCAL = 'OLD_LOCAL'
+INPROCESS = 'INPROCESS'
 AWS_BATCH = 'AWS_BATCH'
 LOCAL = 'LOCAL'
 

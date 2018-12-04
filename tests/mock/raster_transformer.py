@@ -1,3 +1,4 @@
+import unittest
 from unittest.mock import Mock
 
 import rastervision as rv
@@ -91,6 +92,13 @@ class MockRasterTransformerConfigBuilder(SupressDeepCopyMixin,
     def from_proto(self, msg):
         result = self.mock.from_proto(msg)
         if result is None:
-            return super().from_proto(msg)
+            mock_config_builder = super().from_proto(msg)
+            if not mock_config_builder and msg.transformer_type == 'MOCK_TRANSFORMER':
+                mock_config_builder = MockRasterTransformerConfigBuilder()
+            return mock_config_builder
         else:
             return result
+
+
+if __name__ == '__main__':
+    unittest.main()
