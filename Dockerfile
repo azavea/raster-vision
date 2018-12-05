@@ -49,6 +49,7 @@ RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 RUN cd /tmp && \
     git clone https://github.com/mapbox/tippecanoe.git && \
     cd tippecanoe && \
+    git checkout 9c708a && \
     make && \
     make install
 
