@@ -3,15 +3,13 @@ import logging
 import copy
 from subprocess import check_output
 import os
-import gzip
-import shutil
 
 from supermercado.burntiles import burn
 from shapely.geometry import shape, mapping
 from shapely.ops import cascaded_union
 
 from rastervision.data.vector_source.vector_source import VectorSource
-from rastervision.utils.files import download_if_needed, get_local_path
+from rastervision.utils.files import get_cached_file
 from rastervision.rv_config import RVConfig
 
 log = logging.getLogger(__name__)
@@ -76,6 +74,7 @@ def vector_tile_to_geojson(uri, zoom, id_field, crs_transformer, extent):
 
     # Download tiles and convert to geojson.
     features = []
+    cache_dir = os.path.join(RVConfig.get_tmp_dir_root(), 'vector-tiles')
     for xyz in xyzs:
         x, y, z = xyz
         # If this isn't a zxy schema, this is a no-op.
@@ -85,22 +84,7 @@ def vector_tile_to_geojson(uri, zoom, id_field, crs_transformer, extent):
         # * LRU in memory cache
         # * Filter out features that have None as class_id before calling
         # process_features
-
-        # Only download if it isn't in the cache.
-        cache_dir = os.path.join(RVConfig.get_tmp_dir_root(), 'vector-tiles')
-        tile_path = get_local_path(tile_uri, cache_dir)
-        if not os.path.isfile(tile_path):
-            download_if_needed(tile_uri, cache_dir)
-
-        # Unzip if .gz file
-        if tile_path.endswith('.gz'):
-            ungz_tile_path = tile_path[:-3]
-            if not os.path.isfile(ungz_tile_path):
-                with gzip.open(tile_path, 'rb') as f_in:
-                    with open(ungz_tile_path, 'wb') as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-            tile_path = ungz_tile_path
-
+        tile_path = get_cached_file(cache_dir, tile_uri)
         cmd = [
             'tippecanoe-decode', '-f', '-c', tile_path,
             str(z),
