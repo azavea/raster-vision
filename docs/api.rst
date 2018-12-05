@@ -238,10 +238,10 @@ rv.GEOJSON_SOURCE
   :inherited-members:
   :exclude-members: from_proto, validate
 
-rv.MBTILES_SOURCE
+rv.VECTOR_TILE_SOURCE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.data.MBTilesVectorSourceConfigBuilder
+.. autoclass:: rastervision.data.VectorTileVectorSourceConfigBuilder
   :members:
   :undoc-members:
   :inherited-members:

@@ -91,21 +91,34 @@ class VectorTileVectorSourceConfigBuilder(VectorSourceConfigBuilder):
         return b
 
     def with_uri(self, uri):
+        """Set the URI of the vector tiles.
+
+        Args:
+            uri: (str) URI of vector tile endpoint. Should either contain {z}/{x}/{y} or
+                point to .mbtiles file.
+        """
         b = deepcopy(self)
         b.config['uri'] = uri
         return b
 
     def with_zoom(self, zoom):
-        """Set the zoom level to use when fetching vector tiles.
+        """Set the zoom level to use when accessing vector tiles.
 
-        Note: the vector tiles endpoint needs to support the zoom level. Typically only
-        a subset of zoom levels are supported.
+        Note: the vector tiles need to support the zoom level. Typically only a subset of
+        zoom levels are supported.
         """
         b = deepcopy(self)
         b.config['zoom'] = zoom
         return b
 
     def with_id_field(self, id_field='@id'):
+        """Set the name of the id field.
+
+        Args:
+            id_field: (str) name of field in feature['properties'] that contains the
+                feature's unique id. Used for merging features that are split across
+                tile boundaries.
+        """
         b = deepcopy(self)
         b.config['id_field'] = id_field
         return b

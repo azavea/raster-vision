@@ -128,7 +128,7 @@ class VectorTileVectorSource(VectorSource):
 
         Args:
             uri: (str) URI of vector tile endpoint. Should either contain {z}/{x}/{y} or
-                point to VectorTile file.
+                point to .mbtiles file.
             zoom: (int) valid zoom level to use when fetching tiles from endpoint
             id_field: (str) name of field in feature['properties'] that contains the
                 feature's unique id. Used for merging features that are split across
