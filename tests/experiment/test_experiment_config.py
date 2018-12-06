@@ -84,22 +84,6 @@ class TestExperimentConfig(unittest.TestCase):
                                .with_analyzer(analyzer) \
                                .with_train_key('model_name')
 
-    @staticmethod
-    def get_test_task():
-        task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
-                            .with_chip_size(300) \
-                            .with_classes({
-                                'car': (1, 'blue'),
-                                'building': (2, 'red')}) \
-                            .with_chip_options(neg_ratio=0.0,
-                                               ioa_thresh=1.0,
-                                               window_method='sliding') \
-                            .with_predict_options(merge_thresh=0.1,
-                                                  score_thresh=0.5) \
-                            .build()
-
-        return task
-
     def test_object_detection_exp(self):
         e = self.get_valid_exp_builder().build()
 

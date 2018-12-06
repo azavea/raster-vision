@@ -5,7 +5,6 @@ from rastervision.command import (AnalyzeCommand, CommandConfig,
                                   CommandConfigBuilder, NoOpCommand)
 from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
-from rastervision.rv_config import RVConfig
 from rastervision.command.utils import (check_scenes_type,
                                         check_analyzers_type)
 
