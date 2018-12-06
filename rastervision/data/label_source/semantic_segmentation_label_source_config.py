@@ -9,6 +9,7 @@ from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourc
 from rastervision.data.raster_source import RasterSourceConfig
 from rastervision.data.raster_source.image_source_config import ImageSourceConfig
 
+
 class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
     def __init__(self, source, rgb_class_map=None):
         super().__init__(source_type=rv.SEMANTIC_SEGMENTATION_RASTER)

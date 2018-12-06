@@ -10,7 +10,6 @@ from rastervision.command.utils import (check_scenes_type,
                                         check_analyzers_type)
 
 
-
 class AnalyzeCommandConfig(CommandConfig):
     def __init__(self, root_uri, task, scenes, analyzers):
         super().__init__(rv.ANALYZE, root_uri)
