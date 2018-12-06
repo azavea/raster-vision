@@ -43,7 +43,7 @@ class TinySpacenetExperimentSet(rv.ExperimentSet):
 
         task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
                             .with_chip_size(512) \
-                            .with_chip_options(target_count_threshold=50) \
+                            .with_chip_options(chips_per_scene=50) \
                             .with_classes({
                                 'building': (1, 'red')
                             }) \
