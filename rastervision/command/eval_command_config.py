@@ -7,6 +7,7 @@ from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 from rastervision.rv_config import RVConfig
 from rastervision.command.utils import (check_scenes_type, check_task_type)
+from rastervision.evaluation import EvaluatorConfig
 
 
 class EvalCommandConfig(CommandConfig):
@@ -79,6 +80,12 @@ class EvalCommandConfigBuilder(CommandConfigBuilder):
             raise rv.ConfigError(
                 'evaluators must be a list of EvaluatorConfig objects, got {}'.
                 format(type(self.evaluators)))
+        for evaluator in self.evaluators:
+            if not issubclass(type(evaluator), EvaluatorConfig):
+                if not isinstance(evaluator, str):
+                    raise rv.ConfigError(
+                        'evaluators must be a subclass of EvaluatorConfig or string,'
+                        ' got {}'.format(type(evaluator)))
 
     def build(self):
         self.validate()
