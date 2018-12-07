@@ -106,11 +106,23 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
             raise rv.ConfigError(
                 'You must specify a vector_source for the RasterizedSourceConfig. '
                 'Use "with_vector_source"')
+        if not isinstance(
+                self.config.get('vector_source'), VectorSourceConfig):
+            raise rv.ConfigError(
+                'vector source must be a child of class VectorSourceConfig, got {}'.
+                format(type(self.config.get('vector_source'))))
 
         if self.config.get('rasterizer_options') is None:
             raise rv.ConfigError(
                 'You must configure the rasterizer for the RasterizedSourceConfig. '
                 'Use "with_rasterizer_options"')
+        if not isinstance(
+                self.config.get('rasterizer_options'),
+                RasterizedSourceConfig.RasterizerOptions):
+            raise rv.ConfigError(
+                'rasterizer_options must be of type '
+                'GeoJSONSourceConfig.RasterizerOptions, got'.format(
+                    type(self.config.get('rasterizer_options'))))
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

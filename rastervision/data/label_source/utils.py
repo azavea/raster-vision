@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 from PIL import ImageColor
 
+import rastervision as rv
 from rastervision.core.box import Box
 from rastervision.data import (ChipClassificationLabels, ObjectDetectionLabels)
 from rastervision.utils.files import file_to_str
@@ -180,3 +181,10 @@ def rgb_to_int_array(rgb_array):
     g = np.array(rgb_array[:, :, 1], dtype=np.uint32) * (1 << 8)
     b = np.array(rgb_array[:, :, 2], dtype=np.uint32) * (1 << 0)
     return r + g + b
+
+
+def check_uri_type(uri):
+    if not isinstance(uri, str):
+        raise rv.ConfigError(
+            'uri set with "with_uri" must be of type str, got {}'.format(
+                type(uri)))

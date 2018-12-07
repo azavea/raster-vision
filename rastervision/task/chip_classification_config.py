@@ -58,6 +58,10 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
         if 'class_map' not in self.config:
             raise rv.ConfigError('Class map required for this task. '
                                  'Use "with_classes"')
+        if not isinstance(self.config['class_map'], ClassMap):
+            raise rv.ConfigError(
+                'Class map set with "with_classes" must be of type ClassMap, got {}'.
+                format(type(self.config['class_map'])))
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

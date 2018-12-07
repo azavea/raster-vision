@@ -9,6 +9,7 @@ from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.protos.tf_object_detection.pipeline_pb2 import TrainEvalPipelineConfig
 from rastervision.utils.files import file_to_str
 from rastervision.utils.misc import set_nested_keys
+from rastervision.task import ObjectDetectionConfig
 
 # Default location to Tensorflow Object Detection's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/object_detection/model_main.py'
@@ -217,9 +218,18 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         if not self.config.get('tfod_config'):
             raise rv.ConfigError('You must specify a template for the backend '
                                  "configuration - use 'with_template'.")
+        if not isinstance(self.config.get('tfod_config'), dict):
+            raise rv.ConfigError(
+                'tfod_config must be of type dict, got {}'.format(
+                    type(self.config.get('tfod_config'))))
         if self.require_task and not self.task:
             raise rv.ConfigError('You must specify the task this backend '
                                  "is for - use 'with_task'.")
+        if self.require_task and not isinstance(self.task,
+                                                ObjectDetectionConfig):
+            raise rv.ConfigError(
+                'Task set with with_task must be of type ObjectDetectionConfig, got {}.'.
+                format(type(self.task)))
         return True
 
     def build(self):

@@ -127,3 +127,8 @@ class SemanticSegmentationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
             raise rv.ConfigError(
                 'You must set the source for SemanticSegmentationLabelSourceConfig'
                 ' Use "with_raster_source".')
+
+        if not isinstance(source, (str, RasterSourceConfig)):
+            raise rv.ConfigError(
+                'Raster source must be of type str or ImageSourceConfig, got {}'.
+                format(type(source)))
