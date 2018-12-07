@@ -10,8 +10,13 @@ from rastervision.data.label_source.utils import (
 from rastervision.data.utils import geojson_to_shapes
 
 
-def infer_cell(shapes, cell, ioa_thresh, use_intersection_over_cell,
-               background_class_id, pick_min_class_id):
+def infer_cell(shapes,
+               cell,
+               ioa_thresh,
+               use_intersection_over_cell,
+               background_class_id,
+               pick_min_class_id,
+               str_tree=None):
     """Infer the class_id of a cell given a set of polygons.
 
     Given a cell and a set of polygons, the problem is to infer the class_id
@@ -36,8 +41,12 @@ def infer_cell(shapes, cell, ioa_thresh, use_intersection_over_cell,
         pick_min_class_id: If true, the class_id for a cell is the minimum
             class_id of the boxes in that cell. Otherwise, pick the class_id of
             the box covering the greatest area.
+        str_tree: Either an STRtree object or None.  Used for geometric queries.
+
     """
-    str_tree = STRtree([shape for shape, class_id in shapes])
+    if not str_tree:
+        str_tree = STRtree([shape for shape, class_id in shapes])
+
     # Monkey-patching class_id onto shapely.geom is not a good idea because
     # if you transform it, the class_id will be lost, but this works here. I wanted to
     # use a dictionary to associate shape with class_id, but couldn't because they are
@@ -107,10 +116,11 @@ def infer_labels(geojson, crs_transformer, extent, cell_size, ioa_thresh,
     labels = ChipClassificationLabels()
 
     cells = extent.get_windows(cell_size, cell_size)
+    str_tree = STRtree([shape for shape, class_id in shapes])
     for cell in cells:
         class_id = infer_cell(shapes, cell, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
+                              pick_min_class_id, str_tree)
         labels.set_cell(cell, class_id)
     return labels
 
