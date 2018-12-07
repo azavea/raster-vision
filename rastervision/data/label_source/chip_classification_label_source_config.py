@@ -1,9 +1,8 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.label_source import (LabelSourceConfig,
-                                            LabelSourceConfigBuilder,
-                                            ChipClassificationLabelSource)
+from rastervision.data.label_source import (
+    LabelSourceConfig, LabelSourceConfigBuilder, ChipClassificationLabelSource)
 from rastervision.data.vector_source import VectorSourceConfig
 from rastervision.protos.label_source_pb2 import (LabelSourceConfig as
                                                   LabelSourceConfigMsg)
