@@ -194,4 +194,4 @@ class S3FileSystem(FileSystem):
         bucket = parsed_uri.netloc
         prefix = os.path.join(parsed_uri.path[1:])
         keys = get_matching_s3_keys(bucket, prefix, suffix=ext)
-        return [os.path.join('s3:/', bucket, key) for key in keys]
+        return [os.path.join('s3://', bucket, key) for key in keys]
