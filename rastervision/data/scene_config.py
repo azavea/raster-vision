@@ -19,12 +19,12 @@ class SceneConfig(BundledConfigMixin, Config):
                  raster_source,
                  label_source=None,
                  label_store=None,
-                 aoi_uri=None):
+                 aoi_uris=None):
         self.id = id
         self.raster_source = raster_source
         self.label_source = label_source
         self.label_store = label_store
-        self.aoi_uri = aoi_uri
+        self.aoi_uris = aoi_uris
 
     def create_scene(self, task_config: TaskConfig, tmp_dir: str) -> Scene:
         """Create this scene.
@@ -46,10 +46,14 @@ class SceneConfig(BundledConfigMixin, Config):
         if self.label_store:
             label_store = self.label_store.create_store(
                 task_config, extent, crs_transformer, tmp_dir)
+
         aoi_polygons = None
-        if self.aoi_uri:
-            aoi_js = json.loads(file_to_str(self.aoi_uri))
-            aoi_polygons = aoi_json_to_shapely(aoi_js, crs_transformer)
+        if self.aoi_uris:
+            aoi_polygons = []
+            for uri in self.aoi_uris:
+                aoi_js = json.loads(file_to_str(uri))
+                aoi_polygons.extend(
+                    aoi_json_to_shapely(aoi_js, crs_transformer))
 
         return Scene(self.id, raster_source, label_source, label_store,
                      aoi_polygons)
@@ -58,7 +62,7 @@ class SceneConfig(BundledConfigMixin, Config):
         msg = SceneConfigMsg(
             id=self.id,
             raster_source=self.raster_source.to_proto(),
-            aoi_uri=self.aoi_uri)
+            aoi_uris=self.aoi_uris)
 
         if self.label_source:
             msg.ground_truth_label_source.CopyFrom(
@@ -128,8 +132,9 @@ class SceneConfig(BundledConfigMixin, Config):
             self.label_store.update_for_command(
                 command_type, experiment_config, context, io_def)
 
-        if self.aoi_uri:
-            io_def.add_input(self.aoi_uri)
+        if self.aoi_uris:
+            for uri in self.aoi_uris:
+                io_def.add_input(uri)
 
         return io_def
 
@@ -153,7 +158,7 @@ class SceneConfigBuilder(ConfigBuilder):
                 'raster_source': prev.raster_source,
                 'label_source': prev.label_source,
                 'label_store': prev.label_store,
-                'aoi_uri': prev.aoi_uri
+                'aoi_uris': prev.aoi_uris
             }
         super().__init__(SceneConfig, config)
         self.task = None
@@ -167,8 +172,13 @@ class SceneConfigBuilder(ConfigBuilder):
         if msg.HasField('prediction_label_store'):
             b = b.with_label_store(
                 LabelStoreConfig.from_proto(msg.prediction_label_store))
+
+        # Here for backward compatibility.
         if msg.HasField('aoi_uri'):
             b = b.with_aoi_uri(msg.aoi_uri)
+
+        if len(msg.aoi_uris):
+            b = b.with_aoi_uris(msg.aoi_uris)
 
         return b
 
@@ -296,10 +306,19 @@ class SceneConfigBuilder(ConfigBuilder):
         """Sets the Area of Interest for the scene.
 
             Args:
-                uri: The URI points to the AoI (nominally a GeoJSON
-                    polygon).
+                uri: a URI of a GeoJSON file with polygons.
 
         """
         b = deepcopy(self)
-        b.config['aoi_uri'] = uri
+        b.config['aoi_uris'] = [uri]
+        return b
+
+    def with_aoi_uris(self, uris):
+        """Sets the areas of interest for the scene.
+
+            Args:
+                uris: List of URIs each to a GeoJSON file with polygons.
+        """
+        b = deepcopy(self)
+        b.config['aoi_uris'] = uris
         return b

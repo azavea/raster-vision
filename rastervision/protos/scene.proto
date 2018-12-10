@@ -22,5 +22,9 @@ message SceneConfig {
     optional LabelStoreConfig prediction_label_store = 4;
 
     // Optional AOI that describes where the scene is fully labeled.
+
+    // XXX here for backward compatibility
     optional string aoi_uri = 5;
+    
+    repeated string aoi_uris = 6;
 }
