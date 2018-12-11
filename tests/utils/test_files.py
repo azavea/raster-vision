@@ -1,7 +1,9 @@
 import os
 import unittest
+from unittest.mock import patch
 import json
 import datetime
+import gzip
 
 import boto3
 from moto import mock_s3
@@ -10,7 +12,7 @@ import rastervision as rv
 from rastervision.utils.files import (
     file_to_str, str_to_file, download_if_needed, upload_or_copy,
     load_json_config, ProtobufParseException, make_dir, get_local_path,
-    file_exists, sync_from_dir, sync_to_dir, list_paths)
+    file_exists, sync_from_dir, sync_to_dir, list_paths, get_cached_file)
 from rastervision.filesystem import (NotReadableError, NotWritableError)
 from rastervision.filesystem.filesystem import FileSystem
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
@@ -493,6 +495,67 @@ class TestHttpMisc(unittest.TestCase):
         fs = FileSystem.get_file_system(uri, 'r')
         self.assertRaises(NotWritableError,
                           lambda: fs.write_bytes(uri, bytes([0x00, 0x01])))
+
+
+class TestGetCachedFile(unittest.TestCase):
+    def setUp(self):
+        # Setup mock S3 bucket.
+        self.mock_s3 = mock_s3()
+        self.mock_s3.start()
+        self.s3 = boto3.client('s3')
+        self.bucket_name = 'mock_bucket'
+        self.s3.create_bucket(Bucket=self.bucket_name)
+
+        self.content_str = 'hello'
+        self.file_name = 'hello.txt'
+        self.temp_dir = RVConfig.get_tmp_dir()
+        self.cache_dir = os.path.join(self.temp_dir.name, 'cache')
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+        self.mock_s3.stop()
+
+    def test_local(self):
+        local_path = os.path.join(self.temp_dir.name, self.file_name)
+        str_to_file(self.content_str, local_path)
+
+        path = get_cached_file(self.cache_dir, local_path)
+        self.assertTrue(os.path.isfile(path))
+
+    def test_local_zip(self):
+        local_path = os.path.join(self.temp_dir.name, self.file_name)
+        local_gz_path = local_path + '.gz'
+        with gzip.open(local_gz_path, 'wb') as f:
+            f.write(bytes(self.content_str, encoding='utf-8'))
+
+        with patch('gzip.open', side_effect=gzip.open) as patched_gzip_open:
+            path = get_cached_file(self.cache_dir, local_gz_path)
+            self.assertTrue(os.path.isfile(path))
+            self.assertNotEqual(path, local_gz_path)
+            with open(path, 'r') as f:
+                self.assertEqual(f.read(), self.content_str)
+
+            # Check that calling it again doesn't invoke the gzip.open method again.
+            path = get_cached_file(self.cache_dir, local_gz_path)
+            self.assertTrue(os.path.isfile(path))
+            self.assertNotEqual(path, local_gz_path)
+            with open(path, 'r') as f:
+                self.assertEqual(f.read(), self.content_str)
+            self.assertEqual(patched_gzip_open.call_count, 1)
+
+    def test_remote(self):
+        with patch(
+                'rastervision.utils.files.download_if_needed',
+                side_effect=download_if_needed) as patched_download:
+            s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
+            str_to_file(self.content_str, s3_path)
+            path = get_cached_file(self.cache_dir, s3_path)
+            self.assertTrue(os.path.isfile(path))
+
+            # Check that calling it again doesn't invoke the download method again.
+            path = get_cached_file(self.cache_dir, s3_path)
+            self.assertTrue(os.path.isfile(path))
+            self.assertEqual(patched_download.call_count, 1)
 
 
 if __name__ == '__main__':

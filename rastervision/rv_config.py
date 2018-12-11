@@ -27,6 +27,12 @@ class RVConfig:
         return tempfile.TemporaryDirectory(dir=RVConfig.tmp_dir)
 
     @staticmethod
+    def get_tmp_dir_root():
+        if RVConfig.tmp_dir is None:
+            RVConfig.set_tmp_dir()
+        return RVConfig.tmp_dir
+
+    @staticmethod
     def set_tmp_dir(tmp_dir=None):
         """Set RVConfig.tmp_dir to well-known value.
 

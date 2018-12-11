@@ -47,8 +47,9 @@ RUN rm -f /usr/bin/pip && ln -s /usr/bin/pip3 /usr/bin/pip
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 
 RUN cd /tmp && \
-    git clone https://github.com/mapbox/tippecanoe.git && \
-    cd tippecanoe && \
+    wget https://github.com/mapbox/tippecanoe/archive/1.32.5.zip && \
+    unzip 1.32.5.zip && \
+    cd tippecanoe-1.32.5 && \
     make && \
     make install
 

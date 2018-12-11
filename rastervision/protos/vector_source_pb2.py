@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/vector_source.proto',
   package='rv.protos',
   syntax='proto2',
-  serialized_pb=_b('\n\'rastervision/protos/vector_source.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\"\xf4\x02\n\x12VectorSourceConfig\x12\x38\n\x07mbtiles\x18\x01 \x01(\x0b\x32%.rv.protos.VectorSourceConfig.MBTilesH\x00\x12\x38\n\x07geojson\x18\x02 \x01(\x0b\x32%.rv.protos.VectorSourceConfig.GeoJSONH\x00\x12\x30\n\rcustom_config\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x12\x13\n\x0bsource_type\x18\x04 \x02(\t\x12\x33\n\x12\x63lass_id_to_filter\x18\x05 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x18\n\x10\x64\x65\x66\x61ult_class_id\x18\x06 \x01(\x05\x1a$\n\x07MBTiles\x12\x0b\n\x03uri\x18\x01 \x02(\t\x12\x0c\n\x04zoom\x18\x02 \x02(\x05\x1a\x16\n\x07GeoJSON\x12\x0b\n\x03uri\x18\x01 \x02(\tB\x16\n\x14vector_source_config')
+  serialized_pb=_b('\n\'rastervision/protos/vector_source.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\"\x8c\x03\n\x12VectorSourceConfig\x12;\n\x07mbtiles\x18\x01 \x01(\x0b\x32(.rv.protos.VectorSourceConfig.VectorTileH\x00\x12\x38\n\x07geojson\x18\x02 \x01(\x0b\x32%.rv.protos.VectorSourceConfig.GeoJSONH\x00\x12\x30\n\rcustom_config\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x12\x13\n\x0bsource_type\x18\x04 \x02(\t\x12\x33\n\x12\x63lass_id_to_filter\x18\x05 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x18\n\x10\x64\x65\x66\x61ult_class_id\x18\x06 \x01(\x05\x1a\x39\n\nVectorTile\x12\x0b\n\x03uri\x18\x01 \x02(\t\x12\x0c\n\x04zoom\x18\x02 \x02(\x05\x12\x10\n\x08id_field\x18\x03 \x02(\t\x1a\x16\n\x07GeoJSON\x12\x0b\n\x03uri\x18\x01 \x02(\tB\x16\n\x14vector_source_config')
   ,
   dependencies=[google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -28,24 +28,31 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
-_VECTORSOURCECONFIG_MBTILES = _descriptor.Descriptor(
-  name='MBTiles',
-  full_name='rv.protos.VectorSourceConfig.MBTiles',
+_VECTORSOURCECONFIG_VECTORTILE = _descriptor.Descriptor(
+  name='VectorTile',
+  full_name='rv.protos.VectorSourceConfig.VectorTile',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='uri', full_name='rv.protos.VectorSourceConfig.MBTiles.uri', index=0,
+      name='uri', full_name='rv.protos.VectorSourceConfig.VectorTile.uri', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='zoom', full_name='rv.protos.VectorSourceConfig.MBTiles.zoom', index=1,
+      name='zoom', full_name='rv.protos.VectorSourceConfig.VectorTile.zoom', index=1,
       number=2, type=5, cpp_type=1, label=2,
       has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='id_field', full_name='rv.protos.VectorSourceConfig.VectorTile.id_field', index=2,
+      number=3, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -61,8 +68,8 @@ _VECTORSOURCECONFIG_MBTILES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=373,
-  serialized_end=409,
+  serialized_start=376,
+  serialized_end=433,
 )
 
 _VECTORSOURCECONFIG_GEOJSON = _descriptor.Descriptor(
@@ -91,8 +98,8 @@ _VECTORSOURCECONFIG_GEOJSON = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=411,
-  serialized_end=433,
+  serialized_start=435,
+  serialized_end=457,
 )
 
 _VECTORSOURCECONFIG = _descriptor.Descriptor(
@@ -147,7 +154,7 @@ _VECTORSOURCECONFIG = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[_VECTORSOURCECONFIG_MBTILES, _VECTORSOURCECONFIG_GEOJSON, ],
+  nested_types=[_VECTORSOURCECONFIG_VECTORTILE, _VECTORSOURCECONFIG_GEOJSON, ],
   enum_types=[
   ],
   options=None,
@@ -160,12 +167,12 @@ _VECTORSOURCECONFIG = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=85,
-  serialized_end=457,
+  serialized_end=481,
 )
 
-_VECTORSOURCECONFIG_MBTILES.containing_type = _VECTORSOURCECONFIG
+_VECTORSOURCECONFIG_VECTORTILE.containing_type = _VECTORSOURCECONFIG
 _VECTORSOURCECONFIG_GEOJSON.containing_type = _VECTORSOURCECONFIG
-_VECTORSOURCECONFIG.fields_by_name['mbtiles'].message_type = _VECTORSOURCECONFIG_MBTILES
+_VECTORSOURCECONFIG.fields_by_name['mbtiles'].message_type = _VECTORSOURCECONFIG_VECTORTILE
 _VECTORSOURCECONFIG.fields_by_name['geojson'].message_type = _VECTORSOURCECONFIG_GEOJSON
 _VECTORSOURCECONFIG.fields_by_name['custom_config'].message_type = google_dot_protobuf_dot_struct__pb2._STRUCT
 _VECTORSOURCECONFIG.fields_by_name['class_id_to_filter'].message_type = google_dot_protobuf_dot_struct__pb2._STRUCT
@@ -182,10 +189,10 @@ DESCRIPTOR.message_types_by_name['VectorSourceConfig'] = _VECTORSOURCECONFIG
 
 VectorSourceConfig = _reflection.GeneratedProtocolMessageType('VectorSourceConfig', (_message.Message,), dict(
 
-  MBTiles = _reflection.GeneratedProtocolMessageType('MBTiles', (_message.Message,), dict(
-    DESCRIPTOR = _VECTORSOURCECONFIG_MBTILES,
+  VectorTile = _reflection.GeneratedProtocolMessageType('VectorTile', (_message.Message,), dict(
+    DESCRIPTOR = _VECTORSOURCECONFIG_VECTORTILE,
     __module__ = 'rastervision.protos.vector_source_pb2'
-    # @@protoc_insertion_point(class_scope:rv.protos.VectorSourceConfig.MBTiles)
+    # @@protoc_insertion_point(class_scope:rv.protos.VectorSourceConfig.VectorTile)
     ))
   ,
 
@@ -200,7 +207,7 @@ VectorSourceConfig = _reflection.GeneratedProtocolMessageType('VectorSourceConfi
   # @@protoc_insertion_point(class_scope:rv.protos.VectorSourceConfig)
   ))
 _sym_db.RegisterMessage(VectorSourceConfig)
-_sym_db.RegisterMessage(VectorSourceConfig.MBTiles)
+_sym_db.RegisterMessage(VectorSourceConfig.VectorTile)
 _sym_db.RegisterMessage(VectorSourceConfig.GeoJSON)
 
 

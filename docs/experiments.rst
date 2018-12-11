@@ -281,7 +281,7 @@ A ``VectorSource`` is an object that supports reading vector data like polygons 
 VectorSourceConfig
 ...................
 
-Here is an example of configuring an ``MBTilesVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/master/spacenet/vegas.py>`_.
+Here is an example of configuring an ``VectorTileVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/master/spacenet/vegas.py>`_.
 
 
 .. code::
@@ -289,7 +289,7 @@ Here is an example of configuring an ``MBTilesVectorSource`` which uses Mapbox v
     uri = 'http://foo.com/{z}/{x}/{y}.mvt'
     class_id_to_filter = {1: ['has', 'building']}
 
-    b = MBTilesVectorSourceConfigBuilder() \
+    b = VectorTileVectorSourceConfigBuilder() \
         .with_class_inference(class_id_to_filter=class_id_to_filter,
                               default_class_id=None) \
         .with_uri(uri) \

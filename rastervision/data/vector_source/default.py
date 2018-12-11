@@ -32,7 +32,7 @@ class GeoJSONVectorSourceDefaultProvider(VectorSourceDefaultProvider):
                                     .build()
 
 
-class MBTilesVectorSourceDefaultProvider(VectorSourceDefaultProvider):
+class VectorTileVectorSourceDefaultProvider(VectorSourceDefaultProvider):
     @staticmethod
     def handles(uri):
         ext = os.path.splitext(uri)[1]
@@ -40,6 +40,6 @@ class MBTilesVectorSourceDefaultProvider(VectorSourceDefaultProvider):
 
     @staticmethod
     def construct(uri):
-        return rv.VectorSourceConfig.builder(rv.MBTILES_SOURCE) \
+        return rv.VectorSourceConfig.builder(rv.VECTOR_TILE_SOURCE) \
                                     .with_uri(uri) \
                                     .build()
