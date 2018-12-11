@@ -50,54 +50,83 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
            train_label_uri = '{}/buildings_AOI_2_Vegas_img205.geojson'.format(base_uri)
            val_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'.format(base_uri)
            val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
+           channel_order = [0, 1, 2]
+           background_class_id = 2
 
-           task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
-                               .with_chip_size(300) \
+           # ------------- TASK -------------
+
+           task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                               .with_chip_size(512) \
+                               .with_chip_options(chips_per_scene=50) \
                                .with_classes({
                                    'building': (1, 'red')
                                }) \
-                               .with_chip_options(neg_ratio=1.0,
-                                                  ioa_thresh=0.8) \
-                               .with_predict_options(merge_thresh=0.1,
-                                                     score_thresh=0.5) \
                                .build()
 
-           backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+           # ------------- BACKEND -------------
+
+           backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
                                      .with_task(task) \
                                      .with_debug(True) \
                                      .with_batch_size(1) \
-                                     .with_num_steps(2) \
-                                     .with_model_defaults(rv.SSD_MOBILENET_V2_COCO)  \
+                                     .with_num_steps(1) \
+                                     .with_model_defaults(rv.MOBILENET_V2)  \
                                      .build()
 
+           # ------------- TRAINING -------------
+
            train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                                      .with_uri(train_image_uri) \
-                                                      .with_stats_transformer() \
-                                                      .build()
+                                                .with_uri(train_image_uri) \
+                                                .with_channel_order(channel_order) \
+                                                .with_stats_transformer() \
+                                                .build()
+
+           train_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
+                                                            .with_vector_source(train_label_uri) \
+                                                            .with_rasterizer_options(background_class_id) \
+                                                            .build()
+           train_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                                                    .with_raster_source(train_label_raster_source) \
+                                                    .build()
 
            train_scene =  rv.SceneConfig.builder() \
                                         .with_task(task) \
                                         .with_id('train_scene') \
                                         .with_raster_source(train_raster_source) \
-                                        .with_label_source(train_label_uri) \
+                                        .with_label_source(train_label_source) \
                                         .build()
+
+           # ------------- VALIDATION -------------
 
            val_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
                                                     .with_uri(val_image_uri) \
+                                                    .with_channel_order(channel_order) \
                                                     .with_stats_transformer() \
                                                     .build()
+
+           val_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
+                                                          .with_vector_source(val_label_uri) \
+                                                          .with_rasterizer_options(background_class_id) \
+                                                          .build()
+           val_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                                                  .with_raster_source(val_label_raster_source) \
+                                                  .build()
 
            val_scene = rv.SceneConfig.builder() \
                                      .with_task(task) \
                                      .with_id('val_scene') \
                                      .with_raster_source(val_raster_source) \
-                                     .with_label_source(val_label_uri) \
+                                     .with_label_source(val_label_source) \
                                      .build()
+
+           # ------------- DATASET -------------
 
            dataset = rv.DatasetConfig.builder() \
                                      .with_train_scene(train_scene) \
                                      .with_validation_scene(val_scene) \
                                      .build()
+
+           # ------------- EXPERIMENT -------------
 
            experiment = rv.ExperimentConfig.builder() \
                                            .with_id('tiny-spacenet-experiment') \
@@ -114,15 +143,14 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
    if __name__ == '__main__':
        rv.main()
 
-
 The ``exp_main`` method has a special name: any method starting with ``exp_`` is one that Raster Vision
 will look for experiments in. Raster Vision does this by calling the method and processing any experiments
 that are returned - you can either return a single experiment or a list of experiments.
 
 Notice that we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
-object detection on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
+semantic segmentation on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
 actually training the model - it's using the
-`TensorFlow Object Detection API <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ for that. Raster Vision
+`TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_ for that. Raster Vision
 just provides a configuration wrapper that sets up all of the options and data for the experiment
 workflow that utilizes that library.
 
@@ -252,6 +280,30 @@ saved off in the ``experiments`` directory.
 Don't get too excited to look at the evaluation results in ``eval/tiny-spacenet-experiment/`` - we
 trained a model for 2 steps, and the model is likely making random predictions at this point. We would need to
 train on a lot more data for a lot longer for the model to become good at this task.
+
+Predict Packages
+----------------
+
+To immediately use Raster Vision with a fully trained model, one can make use of the pretrained models in our `Model Zoo <https://github.com/azavea/raster-vision-examples#model-zoo>`_.
+
+For example, to perform semantic segmentation using a MobileNet-based DeepLab model that has been pretrained for Las Vegas, one can type:
+
+.. code-block:: console
+
+   > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/predict_package.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif predictions.tif
+
+This will perform a prediction on the image ``1929.tif`` using the provided prediction package, and will produce a file called ``predictions.tif`` that contains the predictions.
+Notice that the prediction package and the input raster are transparently downloaded via HTTP.
+The input image (false color) and predictions are reproduced below.
+
+.. image:: img/vegas/1929.png
+  :width: 333
+  :alt: The input image
+
+.. image:: img/vegas/predictions.png
+  :width: 333
+  :alt: The predictions
+
 
 Next Steps
 ----------
