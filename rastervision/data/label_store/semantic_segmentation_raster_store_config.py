@@ -113,6 +113,7 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
             }
 
         super().__init__(SemanticSegmentationRasterStoreConfig, config)
+        self.valid_modes = set(['buildings'])
 
     def from_proto(self, msg):
         uri = msg.semantic_segmentation_raster_store.uri
@@ -141,7 +142,7 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
                     written, or "" indicating that the filename should
                     be auto-generated.  'class_id' is the integer
                     prediction class that is of interest.  The 'mode'
-                    key must be set to 'buildings' or 'polygons'.
+                    key must be set to 'buildings'.
 
         """
         b = deepcopy(self)
@@ -169,3 +170,34 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
         b = deepcopy(self)
         b.config['rgb'] = rgb
         return b
+
+    def validate(self):
+        vector_output = self.config.get('vector_output')
+
+        if vector_output and not isinstance(vector_output, list):
+            for vo in vector_output:
+                if not hasattr(vo, 'mode'):
+                    raise rv.ConfigError(
+                        'The attribute vector_output of'
+                        ' SemanticSegmentationRasterStoreConfig'
+                        ' must be either trivial, a protobuf configuration'
+                        ' object, or a list of'
+                        ' appropriate dictionaries.')
+                if vo.mode not in self.valid_modes:
+                    raise rv.ConfigError(
+                        'mode key in vector_output dictionary must be one of {}'
+                        .format(self.valid_modes))
+        elif vector_output and isinstance(vector_output, list):
+            for vo in vector_output:
+                if not isinstance(vo, dict):
+                    raise rv.ConfigError(
+                        'The attribute vector_output of'
+                        ' SemanticSegmentationRasterStoreConfig'
+                        ' must be either trivial, a protobuf configuration'
+                        ' object, or a list of'
+                        ' appropriate dictionaries.')
+                if 'mode' not in vo.keys(
+                ) or vo['mode'] not in self.valid_modes:
+                    raise rv.ConfigError(
+                        'mode key in vector_output dictionary must be one of {}'
+                        .format(self.valid_modes))
