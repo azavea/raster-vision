@@ -59,3 +59,6 @@ class RasterioCRSTransformer(CRSTransformer):
         transform = dataset.transform
         image_crs = dataset.crs['init']
         return cls(transform, image_crs, map_crs)
+
+    def get_affine_transform(self):
+        return self.transform

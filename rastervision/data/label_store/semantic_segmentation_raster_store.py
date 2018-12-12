@@ -6,8 +6,6 @@ from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy)
 from rastervision.data.label import SemanticSegmentationLabels
 from rastervision.data.label_store import LabelStore
 from rastervision.data.label_source import SegmentationClassTransformer
-from rastervision.data.crs_transformer.rasterio_crs_transformer import (
-    RasterioCRSTransformer)
 
 
 class SemanticSegmentationRasterStore(LabelStore):
@@ -119,7 +117,6 @@ class SemanticSegmentationRasterStore(LabelStore):
 
         if self.vector_output:
             import mask_to_polygons.vectorification as m2p
-            from affine import Affine
 
             for vo in self.vector_output:
                 uri = vo['uri']
@@ -128,10 +125,7 @@ class SemanticSegmentationRasterStore(LabelStore):
                 class_mask = np.array(mask == class_id, dtype=np.uint8)
                 local_geojson_path = get_local_path(uri, self.tmp_dir)
 
-                if isinstance(self.crs_transformer, RasterioCRSTransformer):
-                    transform = self.crs_transformer.transform
-                else:
-                    transform = Affine.identity()
+                transform = self.crs_transformer.get_affine_transform()
 
                 if uri and mode == 'buildings':
                     geojson = m2p.geojson_from_mask(class_mask, transform)
