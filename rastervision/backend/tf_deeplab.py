@@ -18,14 +18,15 @@ from rastervision.backend import Backend
 from rastervision.data.scene import Scene
 from rastervision.data.label import SemanticSegmentationLabels
 from rastervision.core.training_data import TrainingData
-from rastervision.backend.tf_object_detection import (
-    write_tf_record, terminate_at_exit, TRAIN, VALIDATION)
+from rastervision.backend.tf_object_detection import (write_tf_record, TRAIN,
+                                                      VALIDATION)
 from rastervision.protos.deeplab.train_pb2 import (TrainingParameters as
                                                    TrainingParametersMsg)
 from rastervision.utils.files import (download_if_needed, get_local_path,
                                       make_dir, start_sync, upload_or_copy,
                                       sync_to_dir, sync_from_dir)
-from rastervision.utils.misc import (numpy_to_png, png_to_numpy, save_img)
+from rastervision.utils.misc import (numpy_to_png, png_to_numpy, save_img,
+                                     terminate_at_exit)
 from rastervision.data.label_source.utils import color_to_integer
 from rastervision.rv_config import RVConfig
 
