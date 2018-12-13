@@ -82,6 +82,7 @@ html_theme = 'click'
 html_theme_options = {'index_sidebar_logo': False}
 html_context = {
     'project_links': [
+        ProjectLink('Quickstart', 'quickstart.html'),
         ProjectLink('Documentation TOC', 'index.html#documentation'),
         ProjectLink('API Reference TOC', 'index.html#api-reference'),
         ProjectLink('Project Website', 'https://rastervision.io/'),
