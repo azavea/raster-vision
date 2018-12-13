@@ -313,6 +313,8 @@ The input image (false color) and predictions are reproduced below.
   :width: 333
   :alt: The predictions
 
+.. seealso:: You can read more about the :ref:`predict package` and the :ref:`predict cli command` CLI command in the documentation.
+
 
 Next Steps
 ----------
