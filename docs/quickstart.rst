@@ -31,6 +31,15 @@ Now we can run a console in the the Docker container by doing
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with
              Docker containers.
 
+The Data
+--------
+
+.. raw:: html
+
+         <div style="position: relative; padding-bottom: 56.25%; overflow: hidden; max-width: 100%;">
+             <iframe src="_static/tiny-spacenet-map.html" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+         </div>
+
 Creating an ExperimentSet
 -------------------------
 
