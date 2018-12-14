@@ -121,7 +121,10 @@ class TFDeeplabConfig(BackendConfig):
             # Set the fine tune checkpoint name to the experiment id
             if not self.fine_tune_checkpoint_name:
                 self.fine_tune_checkpoint_name = experiment_config.id
-            io_def.add_output(self.fine_tune_checkpoint_name)
+            full_checkpoint_path = '{}.tar.gz'.format(
+                os.path.join(self.training_output_uri,
+                             self.fine_tune_checkpoint_name))
+            io_def.add_output(full_checkpoint_path)
         if command_type in [rv.PREDICT, rv.BUNDLE]:
             if not self.model_uri:
                 io_def.add_missing('Missing model_uri.')
