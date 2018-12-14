@@ -4,6 +4,7 @@ Brief description of what this PR does, and why it is needed.
 
 ### Checklist
 
+- [ ] Updated `docs/changelog.rst`
 - [ ] Ran scripts/format_code and commited any changes
 - [ ] Documentation updated if needed
 - [ ] PR has a name that won't get you publicly shamed for vagueness
