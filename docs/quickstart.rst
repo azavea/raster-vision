@@ -259,7 +259,7 @@ once for many train commands from various experiments. The experiment configurat
 saved off in the ``experiments`` directory.
 
 Don't get too excited to look at the evaluation results in ``eval/tiny-spacenet-experiment/`` - we
-trained a model for 2 steps, and the model is likely making random predictions at this point. We would need to
+trained a model for 1 step, and the model is likely making random predictions at this point. We would need to
 train on a lot more data for a lot longer for the model to become good at this task.
 
 Predict Packages
