@@ -8,7 +8,7 @@ Raster Vision 0.9.0
 ~~~~~~~~~~~~~~~~~~~
 - Add support for vector tiles in .mbtiles files `#601 <https://github.com/azavea/raster-vision/pull/601>`_
 - Add support for getting labels from zxy vector tiles `#532 <https://github.com/azavea/raster-vision/pull/532>`_
-- Remove custom ``__deepcopy__`` implementation from ``ConfiBuilder``s. `#567 <https://github.com/azavea/raster-vision/pull/567>`_
+- Remove custom ``__deepcopy__`` implementation from ``ConfigBuilder``s. `#567 <https://github.com/azavea/raster-vision/pull/567>`_
 - Add ability to shift raster images by given numbers of meters.  `#573 <https://github.com/azavea/raster-vision/pull/573>`_
 
 Raster Vision 0.8
@@ -19,6 +19,7 @@ Raster Vision 0.8.2
 
 Bug Fixes
 ^^^^^^^^^
+- Fixed issue with handling width > height in semseg eval `#627 <https://github.com/azavea/raster-vision/pull/627>`_
 - Fixed issue with experiment configs not setting key names correctly `#523 <https://github.com/azavea/raster-vision/pull/576>`_
 - Fixed issue with Raster Sources that have channel order `#503 <https://github.com/azavea/raster-vision/pull/576>`_
 
