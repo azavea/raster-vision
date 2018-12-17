@@ -23,8 +23,7 @@ class VectorSource(ABC):
 
     def get_geojson(self):
         if self.geojson is None:
-            self.geojson = self.class_inference.transform_geojson(
-                self._get_geojson())
+            self.geojson = self._get_geojson()
         return self.geojson
 
     @abstractmethod
