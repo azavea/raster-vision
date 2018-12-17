@@ -1,27 +1,40 @@
+import logging
+
 from rasterio.features import rasterize
 import numpy as np
 import shapely
+from shapely.strtree import STRtree
 
 from rastervision.data import (ActivateMixin, ActivationError)
 from rastervision.data.raster_source import RasterSource
 from rastervision.data.utils import geojson_to_shapes
 
+log = logging.getLogger(__name__)
 
-def geojson_to_raster(geojson, rasterizer_options, extent, crs_transformer):
+
+def geojson_to_raster(str_tree, rasterizer_options, extent, crs_transformer):
     line_buffer = rasterizer_options.line_buffer
     background_class_id = rasterizer_options.background_class_id
 
-    # Crop shapes against extent and remove empty shapes.
-    shapes = geojson_to_shapes(geojson, crs_transformer)
+    log.debug('Cropping shapes to chip extent...')
+    # Crop shapes against extent, remove empty shapes, and put in extent frame of
+    # reference.
+    shapes = str_tree.query(extent.to_shapely())
+    shapes = [(s, s.class_id) for s in shapes]
     shapes = [(s.intersection(extent.to_shapely()), c) for s, c in shapes]
     shapes = [(s, c) for s, c in shapes if not s.is_empty]
     shapes = [(s.buffer(line_buffer), c)
               if type(s) is shapely.geometry.LineString else (s, c)
               for s, c in shapes]
+    shapes = [(shapely.ops.transform(lambda x, y, z=None: (x - extent.xmin, y - extent.ymin), s),
+               c)
+              for s, c in shapes]
+    log.debug('# of shapes in extent: {}'.format(len(shapes)))
 
     out_shape = (extent.get_height(), extent.get_width())
-    # rasterize needs to passed >= 1 shapes.
+    # rasterize needs to be passed >= 1 shapes.
     if shapes:
+        log.debug('rasterio.rasterize()...')
         raster = rasterize(
             shapes, out_shape=out_shape, fill=background_class_id)
     else:
@@ -79,16 +92,26 @@ class RasterizedSource(ActivateMixin, RasterSource):
         """
         if not self.activated:
             raise ActivationError('GeoJSONSource must be activated before use')
-        return self.raster[window.ymin:window.ymax, window.xmin:window.xmax, :]
+
+        log.debug('Rasterizing window: {}'.format(window))
+        chip = geojson_to_raster(self.str_tree, self.rasterizer_options,
+                                 window, self.crs_transformer)
+        # Add third singleton dim since rasters must have >=1 channel.
+        return np.expand_dims(chip, 2)
 
     def _activate(self):
         geojson = self.vector_source.get_geojson()
-        self.raster = geojson_to_raster(geojson, self.rasterizer_options,
-                                        self.extent, self.crs_transformer)
-        # Add third singleton dim since rasters must have >=1 channel.
-        self.raster = np.expand_dims(self.raster, 2)
+        shapes = geojson_to_shapes(geojson, self.crs_transformer)
+
+        # Monkey-patching class_id onto shapely.geom is not a good idea because
+        # if you transform it, the class_id will be lost, but this works here. I wanted to
+        # use a dictionary to associate shape with class_id, but couldn't because they are
+        # mutable.
+        for shape, class_id in shapes:
+            shape.class_id = class_id
+        self.str_tree = STRtree([shape for shape, class_id in shapes])
         self.activated = True
 
     def _deactivate(self):
-        self.raster = None
+        self.str_tree = None
         self.activated = False
