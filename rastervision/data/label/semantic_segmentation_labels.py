@@ -43,7 +43,10 @@ class SemanticSegmentationLabels(Labels):
         """
         arr = self.to_array()
         mask = rasterize(
-            [(p, 1) for p in aoi_polygons], out_shape=arr.shape, fill=0, dtype=np.uint8)
+            [(p, 1) for p in aoi_polygons],
+            out_shape=arr.shape,
+            fill=0,
+            dtype=np.uint8)
         arr = arr * mask
         return SemanticSegmentationLabels.from_array(arr)
 
@@ -60,7 +63,15 @@ class SemanticSegmentationLabels(Labels):
         return Box(0, 0, ymax, xmax)
 
     def to_array(self):
+        # If the entire array is stored as a single label pair, just return it to avoid
+        # allocating more memory and copying everything.
         extent = self.get_extent()
+        if len(self.label_pairs) == 1:
+            label_array = self.label_pairs[0][1]
+            if (label_array.shape[0] == extent.get_height()
+                    and label_array.shape[1] == extent.get_width()):
+                return label_array
+
         arr = np.zeros((extent.ymax, extent.xmax))
         for window, label_array in self.label_pairs:
             arr[window.ymin:window.ymax, window.xmin:window.xmax] = label_array
