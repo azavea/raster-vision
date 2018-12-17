@@ -43,7 +43,7 @@ class SemanticSegmentationLabels(Labels):
         """
         arr = self.to_array()
         mask = rasterize(
-            [(p, 1) for p in aoi_polygons], out_shape=arr.shape, fill=0)
+            [(p, 1) for p in aoi_polygons], out_shape=arr.shape, fill=0, dtype=np.uint8)
         arr = arr * mask
         return SemanticSegmentationLabels.from_array(arr)
 

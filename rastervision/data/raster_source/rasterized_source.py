@@ -26,19 +26,26 @@ def geojson_to_raster(str_tree, rasterizer_options, extent, crs_transformer):
     shapes = [(s.buffer(line_buffer), c)
               if type(s) is shapely.geometry.LineString else (s, c)
               for s, c in shapes]
-    shapes = [(shapely.ops.transform(lambda x, y, z=None: (x - extent.xmin, y - extent.ymin), s),
-               c)
+
+    def transform_shape(x, y, z=None):
+        return (x - extent.xmin, y - extent.ymin)
+
+    shapes = [(shapely.ops.transform(transform_shape, s), c)
               for s, c in shapes]
     log.debug('# of shapes in extent: {}'.format(len(shapes)))
 
     out_shape = (extent.get_height(), extent.get_width())
+
     # rasterize needs to be passed >= 1 shapes.
     if shapes:
         log.debug('rasterio.rasterize()...')
         raster = rasterize(
-            shapes, out_shape=out_shape, fill=background_class_id)
+            shapes,
+            out_shape=out_shape,
+            fill=background_class_id,
+            dtype=np.uint8)
     else:
-        raster = np.full(out_shape, background_class_id)
+        raster = np.full(out_shape, background_class_id, dtype=np.uint8)
 
     return raster
 
