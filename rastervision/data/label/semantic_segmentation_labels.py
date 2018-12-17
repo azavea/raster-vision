@@ -61,7 +61,7 @@ class SemanticSegmentationLabels(Labels):
 
     def to_array(self):
         extent = self.get_extent()
-        arr = np.zeros((extent.ymax, extent.ymax))
+        arr = np.zeros((extent.ymax, extent.xmax))
         for window, label_array in self.label_pairs:
             arr[window.ymin:window.ymax, window.xmin:window.xmax] = label_array
         return arr

@@ -9,31 +9,36 @@ from rastervision.data.label import SemanticSegmentationLabels
 class TestSemanticSegmentationLabels(unittest.TestCase):
     def setUp(self):
         labels = np.zeros((100, 100))
-        # Make 2x2 grid that spans 200x200
+        # Make 2x3 grid that spans 200x300
         # yapf: disable
         label_pairs = [
             (Box.make_square(0, 0, 100), labels),
             (Box.make_square(0, 100, 100), labels),
+            (Box.make_square(0, 200, 100), labels),
             (Box.make_square(100, 0, 100), labels),
-            (Box.make_square(100, 100, 100), labels)
+            (Box.make_square(100, 100, 100), labels),
+            (Box.make_square(100, 200, 100), labels)
         ]
         # yapf: enable
         self.labels = SemanticSegmentationLabels(label_pairs)
 
     def test_get_extent(self):
         extent = self.labels.get_extent()
-        self.assertTrue(extent == Box.make_square(0, 0, 200))
+        self.assertEqual(extent.get_width(), 300)
+        self.assertEqual(extent.get_height(), 200)
 
     def test_get_clipped_labels(self):
-        extent = Box.make_square(0, 0, 150)
+        extent = Box.make_square(0, 0, 250)
         clipped = self.labels.get_clipped_labels(extent)
         pairs = clipped.get_label_pairs()
         # yapf: disable
         expected_pairs = [
-            (Box.make_square(0, 0, 100), np.zeros((100, 100))),
-            (Box(0, 100, 100, 150), np.zeros((100, 50))),
-            (Box(100, 0, 150, 100), np.zeros((50, 100))),
-            (Box(100, 100, 150, 150), np.zeros((50, 50)))
+            (Box(0, 0, 100, 100), np.zeros((100, 100))),
+            (Box(0, 100, 100, 200), np.zeros((100, 100))),
+            (Box(0, 200, 100, 250), np.zeros((100, 50))),
+            (Box(100, 0, 200, 100), np.zeros((100, 100))),
+            (Box(100, 100, 200, 200), np.zeros((100, 100))),
+            (Box(100, 200, 200, 250), np.zeros((100, 50)))
         ]
         # yapf: enable
 
@@ -55,7 +60,7 @@ class TestSemanticSegmentationLabels(unittest.TestCase):
 
     def test_to_array(self):
         arr = self.labels.to_array()
-        expected_arr = np.zeros((200, 200))
+        expected_arr = np.zeros((200, 300))
         np.testing.assert_array_equal(arr, expected_arr)
 
     def test_filter_by_aoi(self):
