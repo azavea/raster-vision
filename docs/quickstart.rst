@@ -3,7 +3,9 @@
 Quickstart
 ==========
 
-For this Quickstart we are going to be using one of the published  :ref:`docker containers`
+In this Quickstart, we'll train a semantic segmentation model on `SpaceNet <https://spacenetchallenge.github.io/datasets/datasetHomePage.html>`_ data. Don't get too excited - we'll only be training for a very short time on a very small training set! So the model that is created here  will be pretty much worthless. But! These steps will show how Raster Vision experiments are set up and run, so when you are ready to run against a lot of training data for a longer time on a GPU, you know what you have to do. That's one of the core ideas of Raster Vision - the work to get an experiment you created against a tiny test set is simply to point it at more data, tweak some parameters and run it in a GPU-enabled environment. Also, we'll show how to make predictions on the data using a model we've already trained on GPUs for some time to show what you can expect to get out Raster Vision from a basic setup.
+
+For the Quickstart we are going to be using one of the published  :ref:`docker containers`
 as it has an environment with all necessary dependencies already installed.
 
 .. seealso:: It is also possible to install Raster Vision using ``pip``, but it can be time-consuming to install all the necessary dependencies. See :ref:`install raster vision` for more details.
@@ -30,6 +32,15 @@ Now we can run a console in the the Docker container by doing
 
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with
              Docker containers.
+
+The Data
+--------
+
+.. raw:: html
+
+         <div style="position: relative; padding-bottom: 56.25%; overflow: hidden; max-width: 100%;">
+             <iframe src="_static/tiny-spacenet-map.html" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+         </div>
 
 Creating an ExperimentSet
 -------------------------
@@ -278,7 +289,7 @@ once for many train commands from various experiments. The experiment configurat
 saved off in the ``experiments`` directory.
 
 Don't get too excited to look at the evaluation results in ``eval/tiny-spacenet-experiment/`` - we
-trained a model for 2 steps, and the model is likely making random predictions at this point. We would need to
+trained a model for 1 step, and the model is likely making random predictions at this point. We would need to
 train on a lot more data for a lot longer for the model to become good at this task.
 
 Predict Packages
@@ -303,6 +314,8 @@ The input image (false color) and predictions are reproduced below.
 .. image:: img/vegas/predictions.png
   :width: 333
   :alt: The predictions
+
+.. seealso:: You can read more about the :ref:`predict package` and the :ref:`predict cli command` CLI command in the documentation.
 
 
 Next Steps
