@@ -520,11 +520,6 @@ class TFDeeplab(Backend):
         train_py = self.backend_config.script_locations.train_py
         export_py = self.backend_config.script_locations.export_py
 
-        # Restart support
-        train_restart_dir = self.backend_config.train_options.train_restart_dir
-        if type(train_restart_dir) is str and len(train_restart_dir) > 0:
-            tmp_dir = train_restart_dir
-
         # Setup local input and output directories
         log.info('Setting up local input and output directories')
         train_logdir = self.backend_config.training_output_uri
@@ -550,11 +545,16 @@ class TFDeeplab(Backend):
         tfic_ckpt = glob.glob('{}/*/*.index'.format(tfic_dir))[0]
         tfic_ckpt = tfic_ckpt[0:-len('.index')]
 
+        # Restart support
+        train_restart_dir = self.backend_config.train_options.train_restart_dir
+        if type(train_restart_dir) is not str or len(train_restart_dir) == 0:
+            train_restart_dir = train_logdir
+
         # Get output from potential previous run so we can resume training.
         if type(train_restart_dir) is str and len(
                 train_restart_dir
         ) > 0 and not self.backend_config.train_options.replace_model:
-            sync_from_dir(train_logdir, train_logdir_local)
+            sync_from_dir(train_restart_dir, train_logdir_local)
         else:
             if self.backend_config.train_options.replace_model:
                 if os.path.exists(train_logdir_local):
