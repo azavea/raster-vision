@@ -6,6 +6,7 @@ Raster Vision 0.9
 
 Raster Vision 0.9.0
 ~~~~~~~~~~~~~~~~~~~
+- Decrease semseg memory usage `#630 <https://github.com/azavea/raster-vision/pull/630>`_
 - Add support for vector tiles in .mbtiles files `#601 <https://github.com/azavea/raster-vision/pull/601>`_
 - Add support for getting labels from zxy vector tiles `#532 <https://github.com/azavea/raster-vision/pull/532>`_
 - Remove custom ``__deepcopy__`` implementation from ``ConfigBuilder``s. `#567 <https://github.com/azavea/raster-vision/pull/567>`_

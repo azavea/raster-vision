@@ -109,6 +109,16 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                     target_count_threshold=conf.chip_options.target_count_threshold,
                     stride=conf.chip_options.stride)
 
+    def validate(self):
+        super().validate()
+        # Segmentation masks are stored as uint8 to save space, so can only handle 256
+        # classes. If this is really needed, we can add an option for saving with uint16.
+        max_classes = 256
+        if len(self.config['class_map']) > max_classes:
+            raise rv.ConfigError(
+                'Cannot use more than {} classes with semantic segmentation.'.
+                format(max_classes))
+
     def with_classes(
             self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
                 ClassItem], Dict[str, int], Dict[str, Tuple[int, str]]]):

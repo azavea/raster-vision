@@ -1,7 +1,10 @@
 import math
+import logging
 
 from rastervision.evaluation import ClassEvaluationItem
 from rastervision.evaluation import ClassificationEvaluation
+
+log = logging.getLogger(__name__)
 
 
 class SemanticSegmentationEvaluation(ClassificationEvaluation):
@@ -17,6 +20,12 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
         # http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html  # noqa
         ground_truth_labels = ground_truth_labels.to_array()
         prediction_labels = prediction_labels.to_array()
+
+        log.debug('Type of ground truth labels: {}'.format(
+            ground_truth_labels.dtype))
+        log.debug('Type of prediction labels: {}'.format(
+            prediction_labels.dtype))
+
         # This shouldn't happen, but just in case...
         if ground_truth_labels.shape != prediction_labels.shape:
             raise ValueError(

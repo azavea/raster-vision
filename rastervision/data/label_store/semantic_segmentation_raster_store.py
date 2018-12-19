@@ -66,7 +66,7 @@ class SemanticSegmentationRasterStore(LabelStore):
         clipped_labels = labels.get_clipped_labels(self.extent)
 
         band_count = 1
-        dtype = np.int32
+        dtype = np.uint8
         if self.class_trans:
             band_count = 3
             dtype = np.uint8
