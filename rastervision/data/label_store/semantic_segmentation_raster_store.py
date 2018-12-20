@@ -116,9 +116,11 @@ class SemanticSegmentationRasterStore(LabelStore):
         upload_or_copy(local_path, self.uri)
 
         if self.vector_output:
-            import mask_to_polygons.vectorification as m2p
+            import mask_to_polygons.vectorification as vectorification
+            import mask_to_polygons.processing.denoise as denoise
 
             for vo in self.vector_output:
+                denoise_radius = vo['denoise']
                 uri = vo['uri']
                 mode = vo['mode']
                 class_id = vo['class_id']
@@ -127,8 +129,11 @@ class SemanticSegmentationRasterStore(LabelStore):
 
                 transform = self.crs_transformer.get_affine_transform()
 
+                if denoise_radius > 0:
+                    class_mask = denoise.denoise(class_mask, denoise_radius)
+
                 if uri and mode == 'buildings':
-                    geojson = m2p.geojson_from_mask(class_mask, transform)
+                    geojson = vectorification.geojson_from_mask(class_mask, transform)
 
                 if local_geojson_path:
                     with open(local_geojson_path, 'w') as file_out:

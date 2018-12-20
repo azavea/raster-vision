@@ -23,6 +23,7 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
             for vo in self.vector_output:
                 msg2 = LabelStoreConfigMsg.SemanticSegmentationRasterStore.VectorOutput(
                 )
+                msg2.denoise = vo['denoise'] if 'denoise' in vo.keys() else 0
                 msg2.uri = vo['uri'] if 'uri' in vo.keys() else ''
                 msg2.mode = vo['mode']
                 msg2.class_id = vo['class_id']
@@ -137,12 +138,13 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
                 vector_output: Either a list of dictionaries or a
                     protobuf object.  The dictionary or the object
                     contain (respectively) keys (attributes) called
-                    'uri', 'class_id', and 'mode.  The 'uri' key is
-                    either a file where the GeoJSON prediction will be
-                    written, or "" indicating that the filename should
-                    be auto-generated.  'class_id' is the integer
-                    prediction class that is of interest.  The 'mode'
-                    key must be set to 'buildings'.
+                    'denoise', 'uri', 'class_id', and 'mode.  The
+                    'uri' key is either a file where the GeoJSON
+                    prediction will be written, or "" indicating that
+                    the filename should be auto-generated.  'class_id'
+                    is the integer prediction class that is of
+                    interest.  The 'mode' key must be set to
+                    'buildings'.
 
         """
         b = deepcopy(self)
@@ -154,6 +156,7 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
         else:
             for vo in vector_output:
                 ar.append({
+                    'denoise': vo.denoise,
                     'uri': vo.uri,
                     'mode': vo.mode,
                     'class_id': vo.class_id
