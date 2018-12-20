@@ -45,7 +45,8 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
                                                   -class_id, class_name)
 
             # XXX
-            if hasattr(self, 'class_to_eval_item') and isinstance(self.class_to_eval_item, dict):
+            if hasattr(self, 'class_to_eval_item') and isinstance(
+                    self.class_to_eval_item, dict):
                 self.class_to_eval_item[-class_id] = evaluation_item
             else:
                 self.class_to_eval_item = {-class_id: evaluation_item}

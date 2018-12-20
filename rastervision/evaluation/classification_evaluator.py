@@ -42,7 +42,8 @@ class ClassificationEvaluator(Evaluator):
                 scene_evaluation.compute(ground_truth, predictions)
                 evaluation.merge(scene_evaluation)
 
-            if hasattr(label_source.source, 'vector_source') and hasattr(label_store, 'vector_output'):
+            if hasattr(label_source.source, 'vector_source') and hasattr(
+                    label_store, 'vector_output'):
                 tmp_dir = RVConfig.get_tmp_dir().name
                 gt_geojson = label_source.source.vector_source.uri
                 gt_geojson_local = download_if_needed(gt_geojson, tmp_dir)
@@ -50,9 +51,11 @@ class ClassificationEvaluator(Evaluator):
                     pred_geojson = vo['uri']
                     mode = vo['mode']
                     class_id = vo['class_id']
-                    pred_geojson_local = download_if_needed(pred_geojson, tmp_dir)
+                    pred_geojson_local = download_if_needed(
+                        pred_geojson, tmp_dir)
                     scene_evaluation = self.create_evaluation()
-                    scene_evaluation.compute_vector(gt_geojson_local, pred_geojson_local, mode, class_id)
+                    scene_evaluation.compute_vector(
+                        gt_geojson_local, pred_geojson_local, mode, class_id)
                     # import pdb ; pdb.set_trace()
                     evaluation.merge(scene_evaluation)
 
