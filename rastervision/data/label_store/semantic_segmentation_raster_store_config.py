@@ -114,7 +114,7 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
             }
 
         super().__init__(SemanticSegmentationRasterStoreConfig, config)
-        self.valid_modes = set(['buildings'])
+        self.valid_modes = set(['buildings', 'polygons'])
 
     def from_proto(self, msg):
         uri = msg.semantic_segmentation_raster_store.uri
@@ -144,7 +144,7 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
                     the filename should be auto-generated.  'class_id'
                     is the integer prediction class that is of
                     interest.  The 'mode' key must be set to
-                    'buildings'.
+                    'buildings' or 'polygons'.
 
         """
         b = deepcopy(self)

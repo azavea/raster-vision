@@ -55,9 +55,16 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                                            .with_raster_source(label_path) \
                                            .build()
 
-        vector_output = {'denoise': 1, 'mode': 'buildings', 'class_id': 1}
+        vector_output = [{
+            'mode': 'buildings',
+            'class_id': 1
+        }, {
+            'denoise': 50,
+            'mode': 'polygons',
+            'class_id': 1
+        }]
         label_store = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
-                                         .with_vector_output([vector_output]) \
+                                         .with_vector_output(vector_output) \
                                          .with_rgb(True) \
                                          .build()
 
