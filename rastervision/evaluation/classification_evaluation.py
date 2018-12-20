@@ -24,6 +24,10 @@ class ClassificationEvaluation(ABC):
         """Gets the evaluation for a particular EvaluationItem key"""
         return self.class_to_eval_item[key]
 
+    def has_id(self, key):
+        """Answers whether or not the EvaluationItem key is represented"""
+        return key in self.class_to_eval_item
+
     def to_json(self):
         json_rep = []
         for eval_item in self.class_to_eval_item.values():
@@ -54,7 +58,10 @@ class ClassificationEvaluation(ABC):
         else:
             for key, other_eval_item in \
                     evaluation.class_to_eval_item.items():
-                self.get_by_id(key).merge(other_eval_item)
+                if self.has_id(key):
+                    self.get_by_id(key).merge(other_eval_item)
+                else:
+                    self.class_to_eval_item[key] = other_eval_item
 
         self.compute_avg()
 

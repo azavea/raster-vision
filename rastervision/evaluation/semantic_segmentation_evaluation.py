@@ -3,6 +3,7 @@ import logging
 
 from rastervision.evaluation import ClassEvaluationItem
 from rastervision.evaluation import ClassificationEvaluation
+from rastervision.rv_config import RVConfig
 
 log = logging.getLogger(__name__)
 
@@ -14,6 +15,41 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
     def __init__(self, class_map):
         super().__init__()
         self.class_map = class_map
+
+    def compute_vector(self, gt_filename, pred_filename, mode, class_id):
+        import mask_to_polygons.vectorification as vectorification
+        import mask_to_polygons.processing.score as score
+
+        ground_truth = vectorification.geometries_from_geojson(gt_filename)
+        predictions = vectorification.geometries_from_geojson(pred_filename)
+        # import pdb ; pdb.set_trace()
+        if len(ground_truth) > 0 and len(predictions) > 0:
+            results = score.spacenet(predictions, ground_truth)
+
+            true_positives = results['tp']
+            false_positives = results['fp']
+            false_negatives = results['fn']
+            precision = float(true_positives) / (
+                true_positives + false_positives)
+            recall = float(true_positives) / (true_positives + false_negatives)
+            if precision + recall != 0:
+                f1 = 2 * (precision * recall) / (precision + recall)
+            else:
+                f1 = 0.0
+            count_error = int(false_positives + false_negatives)
+            gt_count = len(ground_truth)
+            class_name = 'vector-{}'.format(mode)
+
+            evaluation_item = ClassEvaluationItem(precision, recall, f1,
+                                                  count_error, gt_count,
+                                                  -class_id, class_name)
+
+            # XXX
+            if hasattr(self, 'class_to_eval_item') and isinstance(self.class_to_eval_item, dict):
+                self.class_to_eval_item[-class_id] = evaluation_item
+            else:
+                self.class_to_eval_item = {-class_id: evaluation_item}
+            self.compute_avg()
 
     def compute(self, ground_truth_labels, prediction_labels):
         # Definitions of precision, recall, and f1 taken from

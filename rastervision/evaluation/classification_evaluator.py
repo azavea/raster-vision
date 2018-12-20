@@ -3,6 +3,10 @@ import logging
 
 from rastervision.evaluation import Evaluator
 from rastervision.data import ActivateMixin
+from rastervision.rv_config import RVConfig
+from rastervision.utils.files import (download_if_needed, get_local_path,
+                                      make_dir, start_sync, upload_or_copy,
+                                      sync_to_dir, sync_from_dir)
 
 log = logging.getLogger(__name__)
 
@@ -37,4 +41,19 @@ class ClassificationEvaluator(Evaluator):
                 scene_evaluation = self.create_evaluation()
                 scene_evaluation.compute(ground_truth, predictions)
                 evaluation.merge(scene_evaluation)
+
+            if hasattr(label_source.source, 'vector_source') and hasattr(label_store, 'vector_output'):
+                tmp_dir = RVConfig.get_tmp_dir().name
+                gt_geojson = label_source.source.vector_source.uri
+                gt_geojson_local = download_if_needed(gt_geojson, tmp_dir)
+                for vo in label_store.vector_output:
+                    pred_geojson = vo['uri']
+                    mode = vo['mode']
+                    class_id = vo['class_id']
+                    pred_geojson_local = download_if_needed(pred_geojson, tmp_dir)
+                    scene_evaluation = self.create_evaluation()
+                    scene_evaluation.compute_vector(gt_geojson_local, pred_geojson_local, mode, class_id)
+                    # import pdb ; pdb.set_trace()
+                    evaluation.merge(scene_evaluation)
+
         evaluation.save(self.output_uri)
