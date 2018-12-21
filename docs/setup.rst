@@ -121,7 +121,7 @@ Any INI file option can also be stated in the environment. Just prepend the sect
 
 In addition to those environment variables that match the INI file values, there are the following environment variable options:
 
-* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a docker conatiner setup that mounts large network storage into a specific directory inside the docker container. The tmp_dir can also be set on :ref:`cli` as a root option.
+* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a Docker conatiner setup that mounts large network storage into a specific directory inside the Docker container. The tmp_dir can also be set on :ref:`cli` as a root option.
 * ``RV_CONFIG`` - Optional path to the specific Raster Vision Configuration file. These configurations will override  configurations that exist in configurations files in the default locations, but will not cause those configurations to be ignored.
 * ``RV_CONFIG_DIR`` - Optional path to the directory that contains Raster Vision configuration. Defaults to ``${HOME}/.rastervision``
 
@@ -144,6 +144,52 @@ You'll likely need to load up volumes and expose ports to make this container fu
 We publish containers set up for both CPU-only running and GPU-running, and tag each container as appropriate. So you can also pull down the ``quay.io/azavea/raster-vision:gpu-0.8`` image, as well as ``quay.io/azavea/raster-vision:cpu-latest`` and ``quay.io/azavea/raster-vision:gpu-latest``.
 
 You can also base your own Dockerfiles off the Raster Vision container to use with your own codebase. See the Dockerfiles in the `Raster Vision Examples <https://github.com/azavea/raster-vision/examples>`_ repository.
+
+.. _running on gpu:
+
+Running on a machine with GPUs
+------------------------------
+
+If you are running Raster Vision in a Docker container with GPUs - e.g. if you have your own GPU machine or you spun up a GPU-enabled machine on a cloud provider like a p3.2xlarge on AWS - you'll need to make sure of a couple of things so that the Docker container is able to utilize the GPUs.
+
+Install nvidia-docker
+^^^^^^^^^^^^^^^^^^^^^
+
+You'll need to install the `nvidia-docker <https://github.com/NVIDIA/nvidia-docker>`_ runtime on your system. Follow their `quickstart <https://github.com/NVIDIA/nvidia-docker#quickstart>`_ and installation instructions. Make sure that your GPU is supported by NVIDIA Docker - if not you might need to find another way to have your Docker container communicate with the GPU. If you figure out how to support more GPUs, please let us know so we can add the steps to this documentation!
+
+Use the nvidia-docker runtime
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When running your Docker container, be sure to include the ``--runtime=nvidia`` option, e.g.
+
+.. code-block:: console
+
+   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:gpu-0.8 /bin/bash
+
+Ensure your setup sees the GPUS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We recommend you ensure that the GPUs are actually enabled. If you don't, you may run a training job that you think is using the GPU and isn't, and runs very slowly.
+
+One way to check this is to make sure TensorFlow can see the GPU(s). To do this, open up an ipython console and initialize TensorFlow:
+
+.. code-block:: console
+
+   > ipython
+   In [1]: import tensorflow as tf
+   In [2]: sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+
+This should print out console output that looks something like:
+
+.. code-block:: console
+
+    .../gpu/gpu_device.cc:1405] Found device 0 with properties: name: GeForce GTX
+
+If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-interface>`_  installed, you can also use this command to inspect GPU utilization while the training job is running:
+
+.. code-block:: console
+
+    > watch -d -n 0.5 nvidia-smi
 
 .. _aws batch setup:
 
