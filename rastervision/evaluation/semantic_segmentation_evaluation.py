@@ -3,7 +3,6 @@ import logging
 
 from rastervision.evaluation import ClassEvaluationItem
 from rastervision.evaluation import ClassificationEvaluation
-from rastervision.rv_config import RVConfig
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +21,6 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
 
         ground_truth = vectorification.geometries_from_geojson(gt_filename)
         predictions = vectorification.geometries_from_geojson(pred_filename)
-        # import pdb ; pdb.set_trace()
         if len(ground_truth) > 0 and len(predictions) > 0:
             results = score.spacenet(predictions, ground_truth)
 
@@ -44,7 +42,6 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
                                                   count_error, gt_count,
                                                   -class_id, class_name)
 
-            # XXX
             if hasattr(self, 'class_to_eval_item') and isinstance(
                     self.class_to_eval_item, dict):
                 self.class_to_eval_item[-class_id] = evaluation_item
