@@ -8,70 +8,41 @@ from rastervision.data.label import SemanticSegmentationLabels
 
 class TestSemanticSegmentationLabels(unittest.TestCase):
     def setUp(self):
-        labels = np.zeros((100, 100))
-        # Make 2x3 grid that spans 200x300
-        # yapf: disable
-        label_pairs = [
-            (Box.make_square(0, 0, 100), labels),
-            (Box.make_square(0, 100, 100), labels),
-            (Box.make_square(0, 200, 100), labels),
-            (Box.make_square(100, 0, 100), labels),
-            (Box.make_square(100, 100, 100), labels),
-            (Box.make_square(100, 200, 100), labels)
-        ]
-        # yapf: enable
-        self.labels = SemanticSegmentationLabels(label_pairs)
+        self.windows = [Box.make_square(0, 0, 10), Box.make_square(0, 10, 10)]
+        self.label_arr0 = np.random.choice([1, 2], (10, 10))
+        self.label_arr1 = np.random.choice([1, 2], (10, 10))
 
-    def test_get_extent(self):
-        extent = self.labels.get_extent()
-        self.assertEqual(extent.get_width(), 300)
-        self.assertEqual(extent.get_height(), 200)
+        def label_fn(window):
+            if window == self.windows[0]:
+                return self.label_arr0.copy()
+            elif window == self.windows[1]:
+                return self.label_arr1.copy()
+            else:
+                raise ValueError('Unknown window: {}'.format(window))
 
-    def test_get_clipped_labels(self):
-        extent = Box.make_square(0, 0, 250)
-        clipped = self.labels.get_clipped_labels(extent)
-        pairs = clipped.get_label_pairs()
-        # yapf: disable
-        expected_pairs = [
-            (Box(0, 0, 100, 100), np.zeros((100, 100))),
-            (Box(0, 100, 100, 200), np.zeros((100, 100))),
-            (Box(0, 200, 100, 250), np.zeros((100, 50))),
-            (Box(100, 0, 200, 100), np.zeros((100, 100))),
-            (Box(100, 100, 200, 200), np.zeros((100, 100))),
-            (Box(100, 200, 200, 250), np.zeros((100, 50)))
-        ]
-        # yapf: enable
+        self.label_fn = label_fn
+        self.labels = SemanticSegmentationLabels(self.windows, label_fn)
 
-        def to_tuple(label_pairs):
-            return [(p[0].tuple_format(), p[1].shape) for p in label_pairs]
+    def test_get(self):
+        np.testing.assert_array_equal(
+            self.labels.get_label_arr(self.windows[0]), self.label_arr0)
 
-        pairs = to_tuple(pairs)
-        expected_pairs = to_tuple(expected_pairs)
-        for pair, expected_pair in zip(pairs, expected_pairs):
-            self.assertTupleEqual(pair, expected_pair)
+    def test_get_with_aoi(self):
+        aoi_polygons = [Box.make_square(5, 15, 2).to_shapely()]
+        exp_label_arr = self.label_arr1.copy()
+        mask = np.zeros(exp_label_arr.shape)
+        mask[5:7, 5:7] = 1
+        exp_label_arr = exp_label_arr * mask
 
-    def test_from_array(self):
-        arr = np.zeros((5, 5))
-        labels = SemanticSegmentationLabels.from_array(arr)
-        pairs = labels.get_label_pairs()
-        self.assertEqual(len(pairs), 1)
-        self.assertEqual(pairs[0][0], Box.make_square(0, 0, 5))
-        np.testing.assert_array_equal(pairs[0][1], arr)
+        labels = self.labels.filter_by_aoi(aoi_polygons)
+        label_arr = labels.get_label_arr(self.windows[1])
+        np.testing.assert_array_equal(label_arr, exp_label_arr)
 
-    def test_to_array(self):
-        arr = self.labels.to_array()
-        expected_arr = np.zeros((200, 300))
-        np.testing.assert_array_equal(arr, expected_arr)
-
-    def test_filter_by_aoi(self):
-        arr = np.ones((5, 5))
-        labels = SemanticSegmentationLabels.from_array(arr)
-        aoi_polygons = [Box.make_square(0, 0, 2).to_shapely()]
-        labels = labels.filter_by_aoi(aoi_polygons)
-        arr = labels.to_array()
-        expected_arr = np.zeros((5, 5))
-        expected_arr[0:2, 0:2] = 1
-        np.testing.assert_array_equal(arr, expected_arr)
+        # Set clip_extent
+        clip_extent = Box(0, 0, 10, 18)
+        label_arr = labels.get_label_arr(
+            self.windows[1], clip_extent=clip_extent)
+        np.testing.assert_array_equal(label_arr, exp_label_arr[:, 0:8])
 
 
 if __name__ == '__main__':

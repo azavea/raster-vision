@@ -1,96 +1,103 @@
 from rastervision.data.label import Labels
-from rastervision.core.box import Box
 
 import numpy as np
 from rasterio.features import rasterize
+import shapely
 
 
 class SemanticSegmentationLabels(Labels):
-    """A set of spatially referenced labels.
+    """A set of spatially referenced semantic segmentation labels.
+
+    Since labels are represented as rasters, the labels for a scene can take up a lot of
+    memory. Therefore, to avoid running out of memory, labels are computed as needed for
+    windows.
     """
 
-    def __init__(self, label_pairs=None):
+    def __init__(self, windows, label_fn, aoi_polygons=None):
         """Constructor
 
         Args:
-            label_pairs: list of (window, label_array) where window is Box and
-                label_array is numpy array of shape [height, width] and each value
-                is a class_id
+            windows: a list of Box representing the windows covering a scene
+            label_fn: a function that takes a window (Box) and returns a label array
+                of the same shape with each value a class id.
+            aoi_polygons: a list of shapely.geom that contains the AOIs
+                (areas of interest) for a scene.
+
         """
-
-        self.label_pairs = []
-        if label_pairs is not None:
-            self.label_pairs = label_pairs
-
-    def __eq__(self, other):
-        return (isinstance(other, SemanticSegmentationLabels)
-                and np.array_equal(self.to_array(), other.to_array()))
+        self.windows = windows
+        self.label_fn = label_fn
+        self.aoi_polygons = aoi_polygons
 
     def __add__(self, other):
         """Add labels to these labels.
 
         Returns a concatenation of this and the other labels.
         """
-        return SemanticSegmentationLabels(self.label_pairs + other.label_pairs)
+        return SemanticSegmentationLabels(
+            self.windows + other.windows,
+            self.label_fn,
+            aoi_polygons=self.aoi_polygons)
 
     def filter_by_aoi(self, aoi_polygons):
-        """Returns a copy of these labels filtered by a given set of AOI polygons
+        """Returns a new SemanticSegmentationLabels object with aoi_polygons set."""
+        return SemanticSegmentationLabels(
+            self.windows, self.label_fn, aoi_polygons=aoi_polygons)
 
-        Converts values that lie outside of aoi_polygons to 0 (ie. don't care class)
+    def add_window(self, window):
+        self.windows.append(window)
+
+    def get_windows(self):
+        return self.windows
+
+    def get_label_arr(self, window, clip_extent=None):
+        """Get the label array for a window.
+
+        Note: the window should be kept relatively small to avoid running out of memory.
 
         Args:
-          aoi_polygons - A list of AOI polygons to filter by, in pixel coordinates.
+            window: Box
+            clip_extent: a Box representing the extent of the corresponding Scene
+
+        Returns:
+            np.ndarray of class_ids with zeros filled in outside the AOIs and clipped
+                to the clip_extent
         """
-        arr = self.to_array()
-        mask = rasterize(
-            [(p, 1) for p in aoi_polygons],
-            out_shape=arr.shape,
-            fill=0,
-            dtype=np.uint8)
-        arr = arr * mask
-        return SemanticSegmentationLabels.from_array(arr)
+        window_geom = window.to_shapely()
 
-    def add_label_pair(self, window, label_array):
-        self.label_pairs.append((window, label_array))
+        if not self.aoi_polygons:
+            label_arr = self.label_fn(window)
+        else:
+            # For each aoi_polygon, intersect with window, and put in window frame of
+            # reference.
+            window_aois = []
+            for aoi in self.aoi_polygons:
+                window_aoi = aoi.intersection(window_geom)
+                if not window_aoi.is_empty:
 
-    def get_label_pairs(self):
-        return self.label_pairs
+                    def transform_shape(x, y, z=None):
+                        return (x - window.xmin, y - window.ymin)
 
-    def get_extent(self):
-        windows = list(map(lambda pair: pair[0], self.get_label_pairs()))
-        xmax = max(map(lambda w: w.xmax, windows))
-        ymax = max(map(lambda w: w.ymax, windows))
-        return Box(0, 0, ymax, xmax)
+                    window_aoi = shapely.ops.transform(transform_shape,
+                                                       window_aoi)
+                    window_aois.append(window_aoi)
 
-    def to_array(self):
-        # If the entire array is stored as a single label pair, just return it to avoid
-        # allocating more memory and copying everything.
-        extent = self.get_extent()
-        if len(self.label_pairs) == 1:
-            label_array = self.label_pairs[0][1]
-            if (label_array.shape[0] == extent.get_height()
-                    and label_array.shape[1] == extent.get_width()):
-                return label_array
+            if window_aois:
+                # If window intersects with AOI, set pixels outside the AOI polygon to 0,
+                # so they are ignored during eval.
+                label_arr = self.label_fn(window)
+                mask = rasterize(
+                    [(p, 0) for p in window_aois],
+                    out_shape=label_arr.shape,
+                    fill=1,
+                    dtype=np.uint8)
+                label_arr[mask.astype(np.bool)] = 0
+            else:
+                # If window does't overlap with any AOI, then return all zeros.
+                label_arr = np.zeros((window.get_height(), window.get_width()))
 
-        arr = np.zeros((extent.ymax, extent.xmax))
-        for window, label_array in self.label_pairs:
-            arr[window.ymin:window.ymax, window.xmin:window.xmax] = label_array
-        return arr
+        if clip_extent is not None:
+            clip_window = window.intersection(clip_extent)
+            label_arr = label_arr[0:clip_window.get_height(), 0:
+                                  clip_window.get_width()]
 
-    @staticmethod
-    def from_array(arr):
-        window = Box(0, 0, arr.shape[0], arr.shape[1])
-        label_pair = (window, arr)
-        return SemanticSegmentationLabels([label_pair])
-
-    def get_clipped_labels(self, extent):
-        clipped_labels = SemanticSegmentationLabels()
-
-        for window, label_array in self.get_label_pairs():
-            clipped_window = window.intersection(extent)
-            clipped_label_array = label_array[0:(
-                clipped_window.ymax - clipped_window.ymin), 0:(
-                    clipped_window.xmax - clipped_window.xmin)]
-            clipped_labels.add_label_pair(clipped_window, clipped_label_array)
-
-        return clipped_labels
+        return label_arr
