@@ -20,6 +20,9 @@ class ClassificationEvaluation(ABC):
         self.class_to_eval_item = {}
         self.avg_item = None
 
+    def set_class_to_eval_item(self, class_to_eval_item):
+        self.class_to_eval_item = class_to_eval_item
+
     def get_by_id(self, key):
         """Gets the evaluation for a particular EvaluationItem key"""
         return self.class_to_eval_item[key]
