@@ -93,7 +93,6 @@ class SemanticSegmentationRasterStore(LabelStore):
         dtype = np.uint8
         if self.class_trans:
             band_count = 3
-            dtype = np.uint8
 
         if self.vector_output:
             # We need to store the whole output mask to run feature extraction.
