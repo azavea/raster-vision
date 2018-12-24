@@ -52,5 +52,8 @@ class Backend(ABC):
         Args:
             chips: [[height, width, channels], ...] numpy array of chips
             windows: List of boxes that are the windows aligned with the chips.
+
+        Return:
+            Labels object containing predictions
         """
         pass

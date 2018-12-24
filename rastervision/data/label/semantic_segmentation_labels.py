@@ -38,6 +38,13 @@ class SemanticSegmentationLabels(Labels):
             self.label_fn,
             aoi_polygons=self.aoi_polygons)
 
+    def __eq__(self, other):
+        for window in self.get_windows():
+            if not np.array_equal(
+                    self.get_label_arr(window), other.get_label_arr(window)):
+                return False
+        return True
+
     def filter_by_aoi(self, aoi_polygons):
         """Returns a new SemanticSegmentationLabels object with aoi_polygons set."""
         return SemanticSegmentationLabels(

@@ -211,27 +211,29 @@ def run_test(test, temp_dir):
                 uri = scenes_to_uris[scene_config.id]
                 predict(uri, predictor_label_store_uri)
                 scene = scene_config.create_scene(experiment.task, temp_dir)
+
                 scene_labels = scene.prediction_label_store.get_labels()
 
                 extent = scene.raster_source.get_extent()
                 crs_transformer = scene.raster_source.get_crs_transformer()
-                predictor_labels = scene_config.label_store \
+                predictor_label_store = scene_config.label_store \
                                                .for_prediction(
                                                    predictor_label_store_uri) \
                                                .create_store(
                                                    experiment.task,
                                                    extent,
                                                    crs_transformer,
-                                                   temp_dir) \
-                                               .get_labels()
+                                                   temp_dir)
 
-                if not predictor_labels == scene_labels:
-                    e = TestError(
-                        test, ('Predictor did not produce the same labels '
-                               'as the Predict command'),
-                        'for scene {} in experiment {}'.format(
-                            scene_config.id, experiment.id))
-                    errors.append(e)
+                from rastervision.data import ActivateMixin
+                with ActivateMixin.compose(scene, predictor_label_store):
+                    if not predictor_label_store.get_labels() == scene_labels:
+                        e = TestError(
+                            test, ('Predictor did not produce the same labels '
+                                   'as the Predict command'),
+                            'for scene {} in experiment {}'.format(
+                                scene_config.id, experiment.id))
+                        errors.append(e)
 
     return errors
 
