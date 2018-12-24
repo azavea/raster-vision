@@ -112,8 +112,8 @@ def check_eval(test, temp_dir):
     expected_eval_path = get_expected_eval_path(test)
 
     if os.path.isfile(actual_eval_path):
-        expected_eval = open_json(expected_eval_path)
-        actual_eval = open_json(actual_eval_path)
+        expected_eval = open_json(expected_eval_path)['overall']
+        actual_eval = open_json(actual_eval_path)['overall']
 
         for expected_item in expected_eval:
             class_name = expected_item['class_name']

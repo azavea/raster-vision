@@ -54,7 +54,7 @@ class TestChipClassificationEvaluator(unittest.TestCase):
 
             results = None
             with open(output_uri) as f:
-                results = json.loads(f.read())
+                results = json.loads(f.read())['overall']
 
             for result in results:
                 self.assertEqual(result['f1'], 1.0)
