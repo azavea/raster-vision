@@ -6,6 +6,7 @@ Raster Vision 0.9
 
 Raster Vision 0.9.0
 ~~~~~~~~~~~~~~~~~~~
+- Make and save predictions and do eval chip-by-chip `#635 <https://github.com/azavea/raster-vision/pull/635>`_
 - Decrease semseg memory usage `#630 <https://github.com/azavea/raster-vision/pull/630>`_
 - Add support for vector tiles in .mbtiles files `#601 <https://github.com/azavea/raster-vision/pull/601>`_
 - Add support for getting labels from zxy vector tiles `#532 <https://github.com/azavea/raster-vision/pull/532>`_
