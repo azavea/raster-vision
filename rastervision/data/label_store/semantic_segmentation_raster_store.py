@@ -126,7 +126,8 @@ class SemanticSegmentationRasterStore(LabelStore):
                                    window.xmin + class_labels.shape[1]))
                 if mask is not None:
                     mask[clipped_window[0][0]:clipped_window[0][1],
-                         clipped_window[1][0]:clipped_window[1][1]] = class_labels
+                         clipped_window[1][0]:clipped_window[1][
+                             1]] = class_labels
                 if self.class_trans:
                     rgb_labels = self.class_trans.class_to_rgb(class_labels)
                     for chan in range(3):
@@ -168,7 +169,6 @@ class SemanticSegmentationRasterStore(LabelStore):
                     with open(local_geojson_path, 'w') as file_out:
                         file_out.write(geojson)
                         upload_or_copy(local_geojson_path, uri)
-
 
     def empty_labels(self):
         """Returns an empty SemanticSegmentationLabels object."""

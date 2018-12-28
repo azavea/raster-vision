@@ -24,7 +24,8 @@ def get_class_eval_item(gt_arr, pred_arr, class_id, class_map):
     class_name = class_map.get_by_id(class_id).name
 
     if gt_arr.sum() == 0:
-        return ClassEvaluationItem(None, None, None, 0, 0, class_id, class_name)
+        return ClassEvaluationItem(None, None, None, 0, 0, class_id,
+                                   class_name)
 
     # Definitions of precision, recall, and f1 taken from
     # http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html  # noqa
