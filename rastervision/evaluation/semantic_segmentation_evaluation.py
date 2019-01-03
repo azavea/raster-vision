@@ -29,6 +29,21 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
         self.class_map = class_map
 
     def compute_vector(self, gt, pred, mode, class_id):
+        """Compute evaluation over vectorized predictions.
+
+            Args:
+                gt: Ground-truth GeoJSON.  Either a string (containing
+                    unparsed GeoJSON or a file name), or a dictionary
+                    containing parsed GeoJSON.
+                pred: GeoJSON for predictions.  Either a string
+                    (containing unparsed GeoJSON or a file name), or a
+                    dictionary containing parsed GeoJSON.
+                mode: A string containing either 'buildings' or
+                    'polygons'.
+                class_id: An integer containing the class id of
+                    interest.
+
+        """
         import mask_to_polygons.vectorification as vectorification
         import mask_to_polygons.processing.score as score
 

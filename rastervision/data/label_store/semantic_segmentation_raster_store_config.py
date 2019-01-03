@@ -135,7 +135,6 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
         """Configure vector output for predictions.
 
             Args:
-
                 vector_output: Either a list of dictionaries or a
                     protobuf object.  The dictionary or the object
                     contain (respectively) keys (attributes) called
