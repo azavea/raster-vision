@@ -1,10 +1,23 @@
 import math
 import logging
+import json
 
 from rastervision.evaluation import ClassEvaluationItem
 from rastervision.evaluation import ClassificationEvaluation
 
 log = logging.getLogger(__name__)
+
+
+def is_geojson(data):
+    if isinstance(data, dict):
+        return True
+    else:
+        try:
+            json.loads(data)
+            retval = True
+        except ValueError:
+            retval = False
+        return retval
 
 
 class SemanticSegmentationEvaluation(ClassificationEvaluation):
@@ -14,6 +27,75 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
     def __init__(self, class_map):
         super().__init__()
         self.class_map = class_map
+
+    def compute_vector(self, gt, pred, mode, class_id):
+        """Compute evaluation over vectorized predictions.
+
+            Args:
+                gt: Ground-truth GeoJSON.  Either a string (containing
+                    unparsed GeoJSON or a file name), or a dictionary
+                    containing parsed GeoJSON.
+                pred: GeoJSON for predictions.  Either a string
+                    (containing unparsed GeoJSON or a file name), or a
+                    dictionary containing parsed GeoJSON.
+                mode: A string containing either 'buildings' or
+                    'polygons'.
+                class_id: An integer containing the class id of
+                    interest.
+
+        """
+        import mask_to_polygons.vectorification as vectorification
+        import mask_to_polygons.processing.score as score
+
+        # Ground truth as list of geometries
+        if is_geojson(gt):
+            _ground_truth = gt
+            if 'features' in _ground_truth.keys():
+                _ground_truth = _ground_truth['features']
+            ground_truth = []
+            for feature in _ground_truth:
+                if 'geometry' in feature.keys():
+                    ground_truth.append(feature['geometry'])
+                else:
+                    ground_truth.append(feature)
+        else:
+            ground_truth = vectorification.geometries_from_geojson(gt)
+
+        # Predictions as list of geometries
+        if is_geojson(pred):
+            predictions = pred
+        else:
+            predictions = vectorification.geometries_from_geojson(pred)
+
+        if len(ground_truth) > 0 and len(predictions) > 0:
+            results = score.spacenet(predictions, ground_truth)
+
+            true_positives = results['tp']
+            false_positives = results['fp']
+            false_negatives = results['fn']
+            precision = float(true_positives) / (
+                true_positives + false_positives)
+            recall = float(true_positives) / (true_positives + false_negatives)
+            if precision + recall != 0:
+                f1 = 2 * (precision * recall) / (precision + recall)
+            else:
+                f1 = 0.0
+            count_error = int(false_positives + false_negatives)
+            gt_count = len(ground_truth)
+            class_name = 'vector-{}-{}'.format(
+                mode,
+                self.class_map.get_by_id(class_id).name)
+
+            evaluation_item = ClassEvaluationItem(precision, recall, f1,
+                                                  count_error, gt_count,
+                                                  -class_id, class_name)
+
+            if hasattr(self, 'class_to_eval_item') and isinstance(
+                    self.class_to_eval_item, dict):
+                self.class_to_eval_item[-class_id] = evaluation_item
+            else:
+                self.class_to_eval_item = {-class_id: evaluation_item}
+            self.compute_avg()
 
     def compute(self, ground_truth_labels, prediction_labels):
         # Definitions of precision, recall, and f1 taken from

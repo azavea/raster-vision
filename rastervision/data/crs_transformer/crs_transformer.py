@@ -34,3 +34,6 @@ class CRSTransformer(object):
 
     def get_map_crs(self):
         return self.map_crs
+
+    def get_affine_transform(self):
+        raise NotImplementedError()

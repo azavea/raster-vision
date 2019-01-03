@@ -6,13 +6,14 @@ FROM tensorflow/tensorflow:1.10.1-gpu-py3
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-# Install misc. packages, GDAL, jq (for parsing extra-requirements.json), and Tippecanoe
+# Install misc. packages, GDAL, jq (for parsing extra-requirements.json), Tippecanoe dependencies, and OpenCV
 RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get update && \
     apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
-            gdal-bin=2.1.* \
-            jq \
-            build-essential libsqlite3-dev zlib1g-dev && \
+                       gdal-bin=2.1.* \
+                       jq=1.5* \
+                       build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
+                       libopencv-dev=2.4.* python-opencv=2.4.* && \
     apt-get autoremove && apt-get autoclean && apt-get clean
 
 # Install protoc
@@ -46,6 +47,7 @@ ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 RUN rm -f /usr/bin/pip && ln -s /usr/bin/pip3 /usr/bin/pip
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 
+# Install Tippecanoe
 RUN cd /tmp && \
     wget https://github.com/mapbox/tippecanoe/archive/1.32.5.zip && \
     unzip 1.32.5.zip && \
@@ -73,3 +75,7 @@ RUN cat extras_requirements.json | jq  '.[][]' | grep -v 'tensorflow' | sort -u 
 # Install requirements.txt
 COPY ./requirements.txt /opt/src/requirements.txt
 RUN pip install -r requirements.txt
+
+# Install optional-requirements.txt
+COPY ./optional-requirements.txt /opt/src/optional-requirements.txt
+RUN pip install -r optional-requirements.txt

@@ -37,4 +37,5 @@ class ClassificationEvaluator(Evaluator):
                 scene_evaluation = self.create_evaluation()
                 scene_evaluation.compute(ground_truth, predictions)
                 evaluation.merge(scene_evaluation)
+
         evaluation.save(self.output_uri)

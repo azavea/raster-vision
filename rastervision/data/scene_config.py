@@ -34,7 +34,6 @@ class SceneConfig(BundledConfigMixin, Config):
               tmp_dir - Temporary directory to use
         """
         raster_source = self.raster_source.create_source(tmp_dir)
-
         extent = raster_source.get_extent()
         crs_transformer = raster_source.get_crs_transformer()
 
@@ -46,7 +45,6 @@ class SceneConfig(BundledConfigMixin, Config):
         if self.label_store:
             label_store = self.label_store.create_store(
                 task_config, extent, crs_transformer, tmp_dir)
-
         aoi_polygons = None
         if self.aoi_uris:
             aoi_polygons = []

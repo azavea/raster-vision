@@ -37,7 +37,7 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                                                debug_chip_probability=1.0) \
                             .build()
 
-        # .with_config belowe needed to copy final layer from pretrained model.
+        # .with_config below needed to copy final layer from pretrained model.
         backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
                                   .with_task(task) \
                                   .with_model_defaults(rv.MOBILENET_V2) \
@@ -55,7 +55,16 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                                            .with_raster_source(label_path) \
                                            .build()
 
+        vector_output = [{
+            'mode': 'buildings',
+            'class_id': 1
+        }, {
+            'denoise': 50,
+            'mode': 'polygons',
+            'class_id': 1
+        }]
         label_store = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+                                         .with_vector_output(vector_output) \
                                          .with_rgb(True) \
                                          .build()
 
