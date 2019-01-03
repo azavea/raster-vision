@@ -135,16 +135,22 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
         """Configure vector output for predictions.
 
             Args:
+
                 vector_output: Either a list of dictionaries or a
                     protobuf object.  The dictionary or the object
                     contain (respectively) keys (attributes) called
-                    'denoise', 'uri', 'class_id', and 'mode.  The
-                    'uri' key is either a file where the GeoJSON
-                    prediction will be written, or "" indicating that
-                    the filename should be auto-generated.  'class_id'
-                    is the integer prediction class that is of
-                    interest.  The 'mode' key must be set to
-                    'buildings' or 'polygons'.
+                    'denoise', 'uri', 'class_id', and 'mode'.  The
+                    value associated with the 'denoise' key specifies
+                    the radius of the structural element used to
+                    perform a low-pass filtering process on the mask
+                    (see
+                    https://en.wikipedia.org/wiki/Mathematical_morphology#Opening).
+                    The value associated with the 'uri' key is either
+                    a file where the GeoJSON prediction will be
+                    written, or "" indicating that the filename should
+                    be auto-generated.  'class_id' is the integer
+                    prediction class that is of interest.  The 'mode'
+                    key must be set to 'buildings' or 'polygons'.
 
         """
         b = deepcopy(self)
