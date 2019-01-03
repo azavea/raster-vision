@@ -42,8 +42,7 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
                     label_source.source, 'vector_source') and hasattr(
                         label_store, 'vector_output'):
                 tmp_dir = RVConfig.get_tmp_dir().name
-                gt_geojson = label_source.source.vector_source.uri
-                gt_geojson_local = download_if_needed(gt_geojson, tmp_dir)
+                gt_geojson = label_source.source.vector_source.get_geojson()
                 for vo in label_store.vector_output:
                     pred_geojson = vo['uri']
                     mode = vo['mode']
@@ -52,7 +51,7 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
                         pred_geojson, tmp_dir)
                     scene_evaluation = self.create_evaluation()
                     scene_evaluation.compute_vector(
-                        gt_geojson_local, pred_geojson_local, mode, class_id)
+                        gt_geojson, pred_geojson_local, mode, class_id)
                     evaluation.merge(scene_evaluation)
 
         evaluation.save(self.output_uri)

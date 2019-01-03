@@ -1,10 +1,23 @@
 import math
 import logging
+import json
 
 from rastervision.evaluation import ClassEvaluationItem
 from rastervision.evaluation import ClassificationEvaluation
 
 log = logging.getLogger(__name__)
+
+
+def is_geojson(data):
+    if isinstance(data, dict):
+        return True
+    else:
+        try:
+            json.loads(data)
+            retval = True
+        except ValueError:
+            retval = False
+        return retval
 
 
 class SemanticSegmentationEvaluation(ClassificationEvaluation):
@@ -15,12 +28,30 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
         super().__init__()
         self.class_map = class_map
 
-    def compute_vector(self, gt_filename, pred_filename, mode, class_id):
+    def compute_vector(self, gt, pred, mode, class_id):
         import mask_to_polygons.vectorification as vectorification
         import mask_to_polygons.processing.score as score
 
-        ground_truth = vectorification.geometries_from_geojson(gt_filename)
-        predictions = vectorification.geometries_from_geojson(pred_filename)
+        # Ground truth as list of geometries
+        if is_geojson(gt):
+            _ground_truth = gt
+            if 'features' in _ground_truth.keys():
+                _ground_truth = _ground_truth['features']
+            ground_truth = []
+            for feature in _ground_truth:
+                if 'geometry' in feature.keys():
+                    ground_truth.append(feature['geometry'])
+                else:
+                    ground_truth.append(feature)
+        else:
+            ground_truth = vectorification.geometries_from_geojson(gt)
+
+        # Predictions as list of geometries
+        if is_geojson(pred):
+            predictions = pred
+        else:
+            predictions = vectorification.geometries_from_geojson(pred)
+
         if len(ground_truth) > 0 and len(predictions) > 0:
             results = score.spacenet(predictions, ground_truth)
 
