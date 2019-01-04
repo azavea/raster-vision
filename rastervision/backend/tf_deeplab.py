@@ -483,13 +483,11 @@ class TFDeeplab(Backend):
         upload_or_copy(training_record_path_local, training_record_path)
         upload_or_copy(validation_record_path_local, validation_record_path)
 
-        if self.backend_config.debug:
-            training_zip_path = join(base_uri, '{}-{}'.format(
-                TRAIN, self.index))
+        if self.backend_config.debug and self.index == 0:
+            training_zip_path = join(base_uri, '{}'.format(TRAIN))
             training_zip_path_local = get_local_path(training_zip_path,
                                                      tmp_dir)
-            validation_zip_path = join(base_uri, '{}-{}'.format(
-                VALIDATION, self.index))
+            validation_zip_path = join(base_uri, '{}'.format(VALIDATION))
             validation_zip_path_local = get_local_path(validation_zip_path,
                                                        tmp_dir)
 
