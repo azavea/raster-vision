@@ -36,6 +36,7 @@ message TrainingParameters {
 
         // Dataset (DeepLab)
         optional string train_split = 22 [default = "train"];
+	optional string eval_split = 33 [default = "validation"];
         optional string dataset = 23 [default = "custom"];
         required int32 train_batch_size = 24;
         required int32 training_number_of_steps = 25;
