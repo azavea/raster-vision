@@ -12,6 +12,7 @@ from rastervision.task import SemanticSegmentationConfig
 
 # Default location to Tensorflow Deeplab's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/deeplab/train.py'
+DEFAULT_SCRIPT_EVAL = '/opt/tf-models/deeplab/eval.py'
 DEFAULT_SCRIPT_EXPORT = '/opt/tf-models/deeplab/export_model.py'
 CHIP_OUTPUT_FILES = ['train-{}.record', 'validation-{}.record']
 DEBUG_CHIP_OUTPUT_FILES = ['train.zip', 'validation.zip']
@@ -34,8 +35,10 @@ class TFDeeplabConfig(BackendConfig):
     class ScriptLocations:
         def __init__(self,
                      train_py=DEFAULT_SCRIPT_TRAIN,
-                     export_py=DEFAULT_SCRIPT_EXPORT):
+                     export_py=DEFAULT_SCRIPT_EXPORT,
+                     eval_py=DEFAULT_SCRIPT_EVAL):
             self.train_py = train_py
+            self.eval_py = eval_py
             self.export_py = export_py
 
     def __init__(self,
@@ -77,6 +80,7 @@ class TFDeeplabConfig(BackendConfig):
     def to_proto(self):
         d = {
             'train_py': self.script_locations.train_py,
+            'eval_py': self.script_locations.eval_py,
             'export_py': self.script_locations.export_py,
             'train_restart_dir': self.train_options.train_restart_dir,
             'sync_interval': self.train_options.sync_interval,
@@ -198,7 +202,7 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             replace_model=conf.replace_model,
             do_eval=conf.do_eval)
         b = b.with_script_locations(
-            train_py=conf.train_py, export_py=conf.export_py)
+            train_py=conf.train_py, export_py=conf.export_py, eval_py=conf.eval_py)
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
         b = b.with_model_uri(conf.model_uri)
@@ -404,9 +408,10 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
 
     def with_script_locations(self,
                               train_py=DEFAULT_SCRIPT_TRAIN,
-                              export_py=DEFAULT_SCRIPT_EXPORT):
+                              export_py=DEFAULT_SCRIPT_EXPORT,
+                              eval_py=DEFAULT_SCRIPT_EVAL):
         script_locs = TFDeeplabConfig.ScriptLocations(
-            train_py=train_py, export_py=export_py)
+            train_py=train_py, export_py=export_py, eval_py=eval_py)
         b = deepcopy(self)
         b.config['script_locations'] = script_locs
         return b
