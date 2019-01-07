@@ -266,7 +266,7 @@ def get_latest_checkpoint(train_logdir_local: str) -> str:
 
 
 def get_evaluation_args(eval_py: str, train_logdir_local: str,
-                        dataset_dir_local: str, tfdl_config):
+                        dataset_dir_local: str, eval_logdir: str, tfdl_config):
     """Generate the array of arguments needed to run the eval script.
 
     Args:
@@ -275,6 +275,8 @@ def get_evaluation_args(eval_py: str, train_logdir_local: str,
               found.
          dataset_dir_local: The directory in which the records are
               found.
+         eval_logdir: The directory where evaluation events should be
+              logged.
          tfdl_config: google.protobuf.Struct with fields from
             rv.protos.deeplab.train.proto containing TF Deeplab training configuration
 
@@ -298,7 +300,7 @@ def get_evaluation_args(eval_py: str, train_logdir_local: str,
     args = ['python', eval_py]
 
     args.append('--checkpoint_dir={}'.format(train_logdir_local))
-    args.append('--eval_logdir={}'.format(train_logdir_local))
+    args.append('--eval_logdir={}'.format(eval_logdir))
     args.append('--dataset_dir={}'.format(dataset_dir_local))
 
     for field in multi_fields:
@@ -641,20 +643,28 @@ class TFDeeplab(Backend):
             train_process = Popen(train_args, env=train_env)
             terminate_at_exit(train_process)
 
-            if self.backend_config.train_options.do_eval:
-                # Start eval script
-                log.info('Starting eval script')
-                eval_args = get_evaluation_args(eval_py, train_logdir_local,
-                                                dataset_dir_local, tfdl_config)
-                eval_process = Popen(eval_args, env=train_env)
-                terminate_at_exit(eval_process)
-
             if self.backend_config.train_options.do_monitoring:
                 # Start tensorboard
                 log.info('Starting tensorboard process')
                 tensorboard_process = Popen(
                     ['tensorboard', '--logdir={}'.format(train_logdir_local)])
                 terminate_at_exit(tensorboard_process)
+
+            if self.backend_config.train_options.do_eval:
+                # Start eval script
+                log.info('Starting eval script')
+                eval_logdir = os.path.join(tmp_dir, 'eval_logdir')
+                eval_args = get_evaluation_args(eval_py, train_logdir_local,
+                                                dataset_dir_local, eval_logdir,
+                                                tfdl_config)
+                eval_process = Popen(eval_args, env=train_env)
+                terminate_at_exit(eval_process)
+
+                tensorboard_process2 = Popen([
+                    'tensorboard', '--logdir={}'.format(eval_logdir),
+                    '--port=6007'
+                ])
+                terminate_at_exit(tensorboard_process2)
 
             # Wait for training and tensorboard
             log.info('Waiting for training and tensorboard processes')
