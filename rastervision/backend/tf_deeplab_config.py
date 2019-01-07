@@ -202,7 +202,9 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             replace_model=conf.replace_model,
             do_eval=conf.do_eval)
         b = b.with_script_locations(
-            train_py=conf.train_py, export_py=conf.export_py, eval_py=conf.eval_py)
+            train_py=conf.train_py,
+            export_py=conf.export_py,
+            eval_py=conf.eval_py)
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
         b = b.with_model_uri(conf.model_uri)
