@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/backend.proto',
   package='rv.protos',
   syntax='proto2',
-  serialized_pb=_b('\n!rastervision/protos/backend.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\"\xe2\x0b\n\rBackendConfig\x12\x14\n\x0c\x62\x61\x63kend_type\x18\x01 \x02(\t\x12\x1c\n\x14pretrained_model_uri\x18\x03 \x01(\t\x12V\n\x1atf_object_detection_config\x18\x04 \x01(\x0b\x32\x30.rv.protos.BackendConfig.TFObjectDetectionConfigH\x00\x12Y\n\x1bkeras_classification_config\x18\x05 \x01(\x0b\x32\x32.rv.protos.BackendConfig.KerasClassificationConfigH\x00\x12\x45\n\x11tf_deeplab_config\x18\x07 \x01(\x0b\x32(.rv.protos.BackendConfig.TFDeeplabConfigH\x00\x12\x30\n\rcustom_config\x18\x06 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x1a\xb6\x03\n\x17TFObjectDetectionConfig\x12\x1a\n\rsync_interval\x18\x01 \x01(\x05:\x03\x36\x30\x30\x12\x1b\n\rdo_monitoring\x18\x02 \x01(\x08:\x04true\x12\x1c\n\rreplace_model\x18\x03 \x01(\x08:\x05\x66\x61lse\x12\x44\n\rmodel_main_py\x18\x04 \x01(\t:-/opt/tf-models/object_detection/model_main.py\x12L\n\texport_py\x18\x05 \x01(\t:9/opt/tf-models/object_detection/export_inference_graph.py\x12\x19\n\x11training_data_uri\x18\x06 \x01(\t\x12\x1b\n\x13training_output_uri\x18\x07 \x01(\t\x12\x11\n\tmodel_uri\x18\x08 \x01(\t\x12!\n\x19\x66ine_tune_checkpoint_name\x18\t \x01(\t\x12\x14\n\x05\x64\x65\x62ug\x18\n \x01(\x08:\x05\x66\x61lse\x12,\n\x0btfod_config\x18\x0b \x02(\x0b\x32\x17.google.protobuf.Struct\x1a\xff\x01\n\x19KerasClassificationConfig\x12\x1a\n\rsync_interval\x18\x01 \x01(\x05:\x03\x36\x30\x30\x12\x1b\n\rdo_monitoring\x18\x02 \x01(\x08:\x04true\x12\x1c\n\rreplace_model\x18\x03 \x01(\x08:\x05\x66\x61lse\x12\x19\n\x11training_data_uri\x18\x04 \x01(\t\x12\x1b\n\x13training_output_uri\x18\x05 \x01(\t\x12\x11\n\tmodel_uri\x18\x06 \x01(\t\x12\x14\n\x05\x64\x65\x62ug\x18\x07 \x01(\x08:\x05\x66\x61lse\x12*\n\tkc_config\x18\x08 \x02(\x0b\x32\x17.google.protobuf.Struct\x1a\xa3\x03\n\x0fTFDeeplabConfig\x12\x31\n\x08train_py\x18\x01 \x01(\t:\x1f/opt/tf-models/deeplab/train.py\x12\x39\n\texport_py\x18\x02 \x01(\t:&/opt/tf-models/deeplab/export_model.py\x12\x19\n\x11train_restart_dir\x18\x03 \x01(\t\x12\x1a\n\rsync_interval\x18\x04 \x01(\x05:\x03\x36\x30\x30\x12\x1b\n\rdo_monitoring\x18\x05 \x01(\x08:\x04true\x12\x1c\n\rreplace_model\x18\x06 \x01(\x08:\x05\x66\x61lse\x12\x19\n\x11training_data_uri\x18\x07 \x01(\t\x12\x1b\n\x13training_output_uri\x18\x08 \x01(\t\x12\x11\n\tmodel_uri\x18\t \x01(\t\x12!\n\x19\x66ine_tune_checkpoint_name\x18\n \x01(\t\x12,\n\x0btfdl_config\x18\x0b \x02(\x0b\x32\x17.google.protobuf.Struct\x12\x14\n\x05\x64\x65\x62ug\x18\x0c \x01(\x08:\x05\x66\x61lseB\x10\n\x0e\x62\x61\x63kend_config')
+  serialized_pb=_b('\n!rastervision/protos/backend.proto\x12\trv.protos\x1a\x1cgoogle/protobuf/struct.proto\"\xfa\x0b\n\rBackendConfig\x12\x14\n\x0c\x62\x61\x63kend_type\x18\x01 \x02(\t\x12\x1c\n\x14pretrained_model_uri\x18\x03 \x01(\t\x12V\n\x1atf_object_detection_config\x18\x04 \x01(\x0b\x32\x30.rv.protos.BackendConfig.TFObjectDetectionConfigH\x00\x12Y\n\x1bkeras_classification_config\x18\x05 \x01(\x0b\x32\x32.rv.protos.BackendConfig.KerasClassificationConfigH\x00\x12\x45\n\x11tf_deeplab_config\x18\x07 \x01(\x0b\x32(.rv.protos.BackendConfig.TFDeeplabConfigH\x00\x12\x30\n\rcustom_config\x18\x06 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x1a\xb6\x03\n\x17TFObjectDetectionConfig\x12\x1a\n\rsync_interval\x18\x01 \x01(\x05:\x03\x36\x30\x30\x12\x1b\n\rdo_monitoring\x18\x02 \x01(\x08:\x04true\x12\x1c\n\rreplace_model\x18\x03 \x01(\x08:\x05\x66\x61lse\x12\x44\n\rmodel_main_py\x18\x04 \x01(\t:-/opt/tf-models/object_detection/model_main.py\x12L\n\texport_py\x18\x05 \x01(\t:9/opt/tf-models/object_detection/export_inference_graph.py\x12\x19\n\x11training_data_uri\x18\x06 \x01(\t\x12\x1b\n\x13training_output_uri\x18\x07 \x01(\t\x12\x11\n\tmodel_uri\x18\x08 \x01(\t\x12!\n\x19\x66ine_tune_checkpoint_name\x18\t \x01(\t\x12\x14\n\x05\x64\x65\x62ug\x18\n \x01(\x08:\x05\x66\x61lse\x12,\n\x0btfod_config\x18\x0b \x02(\x0b\x32\x17.google.protobuf.Struct\x1a\xff\x01\n\x19KerasClassificationConfig\x12\x1a\n\rsync_interval\x18\x01 \x01(\x05:\x03\x36\x30\x30\x12\x1b\n\rdo_monitoring\x18\x02 \x01(\x08:\x04true\x12\x1c\n\rreplace_model\x18\x03 \x01(\x08:\x05\x66\x61lse\x12\x19\n\x11training_data_uri\x18\x04 \x01(\t\x12\x1b\n\x13training_output_uri\x18\x05 \x01(\t\x12\x11\n\tmodel_uri\x18\x06 \x01(\t\x12\x14\n\x05\x64\x65\x62ug\x18\x07 \x01(\x08:\x05\x66\x61lse\x12*\n\tkc_config\x18\x08 \x02(\x0b\x32\x17.google.protobuf.Struct\x1a\xbb\x03\n\x0fTFDeeplabConfig\x12\x31\n\x08train_py\x18\x01 \x01(\t:\x1f/opt/tf-models/deeplab/train.py\x12\x39\n\texport_py\x18\x02 \x01(\t:&/opt/tf-models/deeplab/export_model.py\x12\x19\n\x11train_restart_dir\x18\x03 \x01(\t\x12\x1a\n\rsync_interval\x18\x04 \x01(\x05:\x03\x36\x30\x30\x12\x1b\n\rdo_monitoring\x18\x05 \x01(\x08:\x04true\x12\x16\n\x07\x64o_eval\x18\r \x01(\x08:\x05\x66\x61lse\x12\x1c\n\rreplace_model\x18\x06 \x01(\x08:\x05\x66\x61lse\x12\x19\n\x11training_data_uri\x18\x07 \x01(\t\x12\x1b\n\x13training_output_uri\x18\x08 \x01(\t\x12\x11\n\tmodel_uri\x18\t \x01(\t\x12!\n\x19\x66ine_tune_checkpoint_name\x18\n \x01(\t\x12,\n\x0btfdl_config\x18\x0b \x02(\x0b\x32\x17.google.protobuf.Struct\x12\x14\n\x05\x64\x65\x62ug\x18\x0c \x01(\x08:\x05\x66\x61lseB\x10\n\x0e\x62\x61\x63kend_config')
   ,
   dependencies=[google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -250,49 +250,56 @@ _BACKENDCONFIG_TFDEEPLABCONFIG = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='replace_model', full_name='rv.protos.BackendConfig.TFDeeplabConfig.replace_model', index=5,
+      name='do_eval', full_name='rv.protos.BackendConfig.TFDeeplabConfig.do_eval', index=5,
+      number=13, type=8, cpp_type=7, label=1,
+      has_default_value=True, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='replace_model', full_name='rv.protos.BackendConfig.TFDeeplabConfig.replace_model', index=6,
       number=6, type=8, cpp_type=7, label=1,
       has_default_value=True, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='training_data_uri', full_name='rv.protos.BackendConfig.TFDeeplabConfig.training_data_uri', index=6,
+      name='training_data_uri', full_name='rv.protos.BackendConfig.TFDeeplabConfig.training_data_uri', index=7,
       number=7, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='training_output_uri', full_name='rv.protos.BackendConfig.TFDeeplabConfig.training_output_uri', index=7,
+      name='training_output_uri', full_name='rv.protos.BackendConfig.TFDeeplabConfig.training_output_uri', index=8,
       number=8, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='model_uri', full_name='rv.protos.BackendConfig.TFDeeplabConfig.model_uri', index=8,
+      name='model_uri', full_name='rv.protos.BackendConfig.TFDeeplabConfig.model_uri', index=9,
       number=9, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='fine_tune_checkpoint_name', full_name='rv.protos.BackendConfig.TFDeeplabConfig.fine_tune_checkpoint_name', index=9,
+      name='fine_tune_checkpoint_name', full_name='rv.protos.BackendConfig.TFDeeplabConfig.fine_tune_checkpoint_name', index=10,
       number=10, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='tfdl_config', full_name='rv.protos.BackendConfig.TFDeeplabConfig.tfdl_config', index=10,
+      name='tfdl_config', full_name='rv.protos.BackendConfig.TFDeeplabConfig.tfdl_config', index=11,
       number=11, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='debug', full_name='rv.protos.BackendConfig.TFDeeplabConfig.debug', index=11,
+      name='debug', full_name='rv.protos.BackendConfig.TFDeeplabConfig.debug', index=12,
       number=12, type=8, cpp_type=7, label=1,
       has_default_value=True, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
@@ -311,7 +318,7 @@ _BACKENDCONFIG_TFDEEPLABCONFIG = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=1148,
-  serialized_end=1567,
+  serialized_end=1591,
 )
 
 _BACKENDCONFIG = _descriptor.Descriptor(
@@ -379,7 +386,7 @@ _BACKENDCONFIG = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=79,
-  serialized_end=1585,
+  serialized_end=1609,
 )
 
 _BACKENDCONFIG_TFOBJECTDETECTIONCONFIG.fields_by_name['tfod_config'].message_type = google_dot_protobuf_dot_struct__pb2._STRUCT
