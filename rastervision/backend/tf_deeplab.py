@@ -653,18 +653,12 @@ class TFDeeplab(Backend):
             if self.backend_config.train_options.do_eval:
                 # Start eval script
                 log.info('Starting eval script')
-                eval_logdir = os.path.join(tmp_dir, 'eval_logdir')
+                eval_logdir = train_logdir_local
                 eval_args = get_evaluation_args(eval_py, train_logdir_local,
                                                 dataset_dir_local, eval_logdir,
                                                 tfdl_config)
                 eval_process = Popen(eval_args, env=train_env)
                 terminate_at_exit(eval_process)
-
-                tensorboard_process2 = Popen([
-                    'tensorboard', '--logdir={}'.format(eval_logdir),
-                    '--port=6007'
-                ])
-                terminate_at_exit(tensorboard_process2)
 
             # Wait for training and tensorboard
             log.info('Waiting for training and tensorboard processes')
