@@ -176,7 +176,7 @@ def create_tf_example(image: np.ndarray,
                       labels: np.ndarray,
                       class_map: ClassMap,
                       chip_id: str = ''):
-    """Create a TensorFlow from an image, the labels, &c.
+    """Create a TensorFlow Example from an image, the labels, &c.
 
     Args:
          image: An np.ndarray containing the image data.
@@ -294,7 +294,7 @@ def get_evaluation_args(eval_py: str, train_logdir_local: str,
 
     multi_fields = [
         'atrous_rates',
-        'train_crop_size',
+        'eval_crop_size',
     ]
 
     args = ['python', eval_py]

@@ -41,6 +41,7 @@ message TrainingParameters {
         required int32 train_batch_size = 24;
         required int32 training_number_of_steps = 25;
         repeated int32 train_crop_size = 26;
+        repeated int32 eval_crop_size = 34;
 
         // Dataset (RasterVision)
         optional int32 dl_custom_train = 27 [default = 1333];

@@ -258,7 +258,8 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
     def _process_task(self):
         return self.with_config(
             {
-                'trainCropSize': [self.task.chip_size, self.task.chip_size]
+                'trainCropSize': [self.task.chip_size, self.task.chip_size],
+                'evalCropSize': [self.task.chip_size, self.task.chip_size]
             },
             ignore_missing_keys=True)
 
