@@ -94,8 +94,14 @@ def main(profile, verbose):
     help=('Rerun commands, regardless if '
           'their output files already exist.'))
 @click.option('--tempdir', help=('Temporary directory to use for this run.'))
+@click.option(
+    '--splits',
+    '-s',
+    default=1,
+    metavar='INTEGER',
+    help=('The number of processes to attempt to split each stage into.'))
 def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
-        prefix, methods, path, filters, rerun, tempdir):
+        prefix, methods, path, filters, rerun, tempdir, splits):
     """Run Raster Vision commands from experiments, using the
     experiment runner named RUNNER."""
 
@@ -110,6 +116,9 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
                     'Must be one of: "{}"'.format(runner,
                                                   '", "'.join(valid_runners)))
         sys.exit(1)
+
+    if runner.lower() == rv.INPROCESS.lower():
+        splits = 1
 
     runner = ExperimentRunner.get_runner(runner)
 
@@ -156,7 +165,8 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         commands_to_run=commands,
         rerun_commands=rerun,
         skip_file_check=skip_file_check,
-        dry_run=dry_run)
+        dry_run=dry_run,
+        splits=splits)
 
 
 @main.command()

@@ -52,7 +52,8 @@ class ExperimentRunner(ABC):
             commands_to_run=rv.ALL_COMMANDS,
             rerun_commands=False,
             skip_file_check=False,
-            dry_run: bool = False):
+            dry_run: bool = False,
+            splits: int = 1):
         if not isinstance(experiments, list):
             experiments = [experiments]
 
