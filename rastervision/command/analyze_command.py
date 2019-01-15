@@ -7,7 +7,7 @@ class AnalyzeCommand(Command):
     def __init__(self, command_config):
         self.command_config = command_config
 
-    def run(self, tmp_dir=None):
+    def run(self, tmp_dir=None, index: int = 0, count: int = 1):
         if not tmp_dir:
             tmp_dir = self.get_tmp_dir()
 

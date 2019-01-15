@@ -13,7 +13,7 @@ class BackendConfig(BundledConfigMixin, Config):
         self.pretrained_model_uri = pretrained_model_uri
 
     @abstractmethod
-    def create_backend(self, task_config):
+    def create_backend(self, task_config, index: int = 0, count: int = 1):
         """Create the Backend that this configuration represents
 
            Args:

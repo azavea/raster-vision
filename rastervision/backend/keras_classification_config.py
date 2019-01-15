@@ -46,7 +46,7 @@ class KerasClassificationConfig(BackendConfig):
         self.training_output_uri = training_output_uri
         self.model_uri = model_uri
 
-    def create_backend(self, task_config):
+    def create_backend(self, task_config, index: int = 0, count: int = 1):
         from rastervision.backend.keras_classification import KerasClassification
         return KerasClassification(self, task_config)
 

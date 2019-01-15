@@ -65,7 +65,7 @@ class TFObjectDetectionConfig(BackendConfig):
         self.model_uri = model_uri
         self.fine_tune_checkpoint_name = fine_tune_checkpoint_name
 
-    def create_backend(self, task_config):
+    def create_backend(self, task_config, index: int = 0, count: int = 1):
         return TFObjectDetection(self, task_config)
 
     def get_num_steps(self):

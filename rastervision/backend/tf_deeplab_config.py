@@ -74,8 +74,8 @@ class TFDeeplabConfig(BackendConfig):
         self.index = index
         self.count = count
 
-    def create_backend(self, task_config):
-        return TFDeeplab(self, task_config)
+    def create_backend(self, task_config, index: int = 0, count: int = 1):
+        return TFDeeplab(self, task_config, index=index, count=count)
 
     def to_proto(self):
         d = {

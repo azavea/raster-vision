@@ -7,11 +7,20 @@ import rastervision as rv
 log = logging.getLogger(__name__)
 
 
+def semantic_segmentation_uris(uris, split):
+    retval = []
+    for uri in uris:
+        retval.append(uri.replace('0.record', '{}.record'.format(split)))
+    return set(retval)
+
+
 class CommandDefinition:
     def __init__(self, experiment_id, command_config, io_def):
         self.experiment_id = experiment_id
         self.command_config = command_config
         self.io_def = io_def
+        self.index = 0
+        self.count = 1
 
     def _key(self):
         return (self.command_config.command_type, '|'.join(

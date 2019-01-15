@@ -58,7 +58,7 @@ class MockBackendConfig(SupressDeepCopyMixin, BackendConfig):
         else:
             return result
 
-    def create_backend(self, task_config):
+    def create_backend(self, task_config, index: int = 0, count: int = 1):
         result = self.mock.create_backend(task_config)
         if result is None:
             return MockBackend()

@@ -5,7 +5,7 @@ from rastervision.rv_config import RVConfig
 
 class Command(ABC):
     @abstractmethod
-    def run(self, tmp_dir):
+    def run(self, tmp_dir, index: int = 0, count: int = 1):
         """Run the command."""
         pass
 
@@ -26,5 +26,5 @@ class NoOpCommand(Command):
     """Defines a command that does nothing.
     """
 
-    def run(self, tmp_dir):
+    def run(self, tmp_dir, index: int = 0, count: int = 1):
         pass

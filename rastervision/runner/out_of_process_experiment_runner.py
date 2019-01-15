@@ -6,17 +6,20 @@ from rastervision.utils.files import save_json_config
 from rastervision.cli import Verbosity
 
 
-def make_command(command_config_uri, tmp_dir=None):
+def make_command(command_config_uri,
+                 tmp_dir=None,
+                 index: int = 0,
+                 count: int = 1):
     verbosity = Verbosity.get()
     v_flag = 'v' * max(0, verbosity - 1)
     if v_flag:
         v_flag = '-{}'.format(v_flag)
     if tmp_dir is None:
-        command = 'python -m rastervision {} run_command {}'.format(
-            v_flag, command_config_uri)
+        command = 'python -m rastervision {} run_command {} --index {} --count {}'.format(  # noqa
+            v_flag, command_config_uri, index, count)
     else:
-        command = 'python -m rastervision {} run_command {} --tempdir {}'.format(
-            v_flag, command_config_uri, tmp_dir)
+        command = 'python -m rastervision {} run_command {} --tempdir {} --index {} --count {}'.format(  # noqa
+            v_flag, command_config_uri, tmp_dir, index, count)
     return command
 
 
@@ -65,7 +68,8 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
                             cur_command, upstream_command))
                 parent_job_ids.append(ids_to_job[upstream_id])
 
-            run_command = make_command(command_uri, self.tmp_dir)
+            run_command = make_command(command_uri, self.tmp_dir,
+                                       command_def.index, command_def.count)
             job_id = self.submit(command_config.command_type,
                                  command_def.experiment_id, run_command,
                                  parent_job_ids)

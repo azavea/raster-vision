@@ -61,7 +61,6 @@ class ExperimentRunner(ABC):
         command_definitions = CommandDefinition.from_experiments(experiments)
 
         # Filter  out commands we aren't running.
-
         log.debug('Filtering commands not in target command list...')
         command_definitions, not_requested = CommandDefinition.filter_to_target_commands(
             command_definitions, commands_to_run)

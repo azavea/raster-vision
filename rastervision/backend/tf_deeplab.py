@@ -455,7 +455,11 @@ class TFDeeplab(Backend):
 
     """
 
-    def __init__(self, backend_config, task_config, index: int = 0):
+    def __init__(self,
+                 backend_config,
+                 task_config,
+                 index: int = 0,
+                 count: int = 1):
         """Constructor.
 
         Args:
@@ -467,6 +471,7 @@ class TFDeeplab(Backend):
         self.task_config = task_config
         self.class_map = task_config.class_map
         self.index = index
+        self.count = count
 
     def process_scene_data(self, scene: Scene, data: TrainingData,
                            tmp_dir: str) -> str:
