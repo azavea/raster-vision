@@ -16,18 +16,21 @@ class ChipClassificationConfig(TaskConfig):
                  predict_package_uri=None,
                  debug=False,
                  predict_debug_uri=None,
-                 chip_size=300):
+                 chip_size=300,
+                 max_imbalance=0):
         super().__init__(rv.CHIP_CLASSIFICATION, predict_batch_size,
                          predict_package_uri, debug, predict_debug_uri)
         self.class_map = class_map
         self.chip_size = chip_size
+        self.max_imbalance = max_imbalance
 
     def create_task(self, backend):
         return ChipClassification(self, backend)
 
     def to_proto(self):
         conf = TaskConfigMsg.ChipClassificationConfig(
-            chip_size=self.chip_size, class_items=self.class_map.to_proto())
+            chip_size=self.chip_size, max_imbalance=self.max_imbalance,
+            class_items=self.class_map.to_proto())
         return TaskConfigMsg(
             task_type=rv.CHIP_CLASSIFICATION,
             chip_classification_config=conf,
@@ -47,6 +50,7 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
             config = {
                 'class_map': prev.class_map,
                 'chip_size': prev.chip_size,
+                'max_imbalance': prev.max_imbalance,
                 'predict_batch_size': prev.predict_batch_size,
                 'predict_package_uri': prev.predict_package_uri,
                 'debug': prev.debug,
@@ -68,7 +72,8 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
         conf = msg.chip_classification_config
         return b.with_classes(list(conf.class_items)) \
                 .with_predict_package_uri(msg.predict_package_uri) \
-                .with_chip_size(conf.chip_size)
+                .with_chip_size(conf.chip_size) \
+                .with_max_imbalance(conf.max_imbalance)
 
     def with_classes(
             self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
@@ -93,4 +98,9 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
         """
         b = deepcopy(self)
         b.config['chip_size'] = chip_size
+        return b
+
+    def with_max_imbalance(self, max_imbalance):
+        b = deepcopy(self)
+        b.config['max_imbalance'] = max_imbalance
         return b

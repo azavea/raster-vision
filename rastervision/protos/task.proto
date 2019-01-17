@@ -28,6 +28,7 @@ message TaskConfig {
     message ChipClassificationConfig {
         repeated ClassItem class_items = 1;
         required int32 chip_size = 2;
+        optional float max_imbalance = 3 [default=0.0];
     }
 
     message SemanticSegmentationConfig {
