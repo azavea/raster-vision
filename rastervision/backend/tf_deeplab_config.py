@@ -13,7 +13,7 @@ from rastervision.task import SemanticSegmentationConfig
 # Default location to Tensorflow Deeplab's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/deeplab/train.py'
 DEFAULT_SCRIPT_EXPORT = '/opt/tf-models/deeplab/export_model.py'
-CHIP_OUTPUT_FILES = ['train-0.record', 'validation-0.record']
+CHIP_OUTPUT_FILES = ['train-{}.record', 'validation-{}.record']
 DEBUG_CHIP_OUTPUT_FILES = ['train.zip', 'validation.zip']
 
 
@@ -45,7 +45,9 @@ class TFDeeplabConfig(BackendConfig):
                  training_data_uri=None,
                  training_output_uri=None,
                  model_uri=None,
-                 fine_tune_checkpoint_name=None):
+                 fine_tune_checkpoint_name=None,
+                 index: int = 0,
+                 count: int = 1):
         if train_options is None:
             train_options = TFDeeplabConfig.TrainOptions()
         if script_locations is None:
@@ -63,6 +65,9 @@ class TFDeeplabConfig(BackendConfig):
         self.training_output_uri = training_output_uri
         self.model_uri = model_uri
         self.fine_tune_checkpoint_name = fine_tune_checkpoint_name
+
+        self.index = index
+        self.count = count
 
     def create_backend(self, task_config):
         return TFDeeplab(self, task_config)
@@ -102,17 +107,23 @@ class TFDeeplabConfig(BackendConfig):
                            io_def=None):
         io_def = super().update_for_command(command_type, experiment_config,
                                             context, io_def)
-        if command_type == rv.CHIP:
+        if command_type == rv.CHIP and self.index == 0:
             self.training_data_uri = experiment_config.chip_uri
-            outputs = list(
-                map(lambda x: os.path.join(self.training_data_uri, x),
-                    CHIP_OUTPUT_FILES))
+            outputs = []
+            for i in range(0, self.count):
+                for template in CHIP_OUTPUT_FILES:
+                    file_name = os.path.join(self.training_data_uri,
+                                             template.format(i))
+                    outputs.append(file_name)
             io_def.add_outputs(outputs)
-        if command_type == rv.TRAIN:
+        if command_type == rv.TRAIN and self.index == 0:
             self.training_output_uri = experiment_config.train_uri
-            inputs = list(
-                map(lambda x: os.path.join(experiment_config.chip_uri, x),
-                    CHIP_OUTPUT_FILES))
+            inputs = []
+            for i in range(0, self.count):
+                for template in CHIP_OUTPUT_FILES:
+                    file_name = os.path.join(self.training_data_uri,
+                                             template.format(i))
+                    inputs.append(file_name)
             io_def.add_inputs(inputs)
 
             self.model_uri = os.path.join(self.training_output_uri, 'model')
