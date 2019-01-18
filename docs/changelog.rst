@@ -14,6 +14,7 @@ Raster Vision 0.9.0
 - Add ability to shift raster images by given numbers of meters.  `#573 <https://github.com/azavea/raster-vision/pull/573>`_
 - Add ability to generate GeoJSON segmentation predictions.  `#575 <https://github.com/azavea/raster-vision/pull/575>`_
 - Add ability to run the DeepLab eval script.  `#653 <https://github.com/azavea/raster-vision/pull/653>`_
+- Add ability to split the "chipping" stage into multiple processes.  `#657 <https://github.com/azavea/raster-vision/pull/657>`_
 
 Raster Vision 0.8
 -----------------
