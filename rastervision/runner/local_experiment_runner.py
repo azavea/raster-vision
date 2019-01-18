@@ -56,7 +56,9 @@ class LocalExperimentRunner(OutOfProcessExperimentRunner):
                 print('Saving command configuration to {}...'.format(
                     command_uri))
                 save_json_config(command_config.to_proto(), command_uri)
-                run_command = make_command(command_uri, self.tmp_dir)
+                run_command = make_command(command_uri, self.tmp_dir,
+                                           command_def.index,
+                                           command_def.count)
                 makefile.write('\t{}\n\n'.format(run_command))
 
         process = Popen(['make', '-j', '-f', makefile_name])
