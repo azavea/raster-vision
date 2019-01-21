@@ -12,6 +12,6 @@
         "awscli==1.15.*"
     ],
     "feature-extraction": [
-        "https://github.com/jamesmcclain/mask-to-polygons/archive/ensure-valid.zip"
+        "https://github.com/azavea/mask-to-polygons/archive/085c022158052473dd75d278c76cfa16067fc53a.zip"
     ]
 }
