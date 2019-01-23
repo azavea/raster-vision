@@ -170,8 +170,12 @@ class KerasClassification(Backend):
 
         return class_dirs
 
-    def process_sceneset_results(self, training_results, validation_results,
-                                 tmp_dir):
+    def process_sceneset_results(self,
+                                 training_results,
+                                 validation_results,
+                                 tmp_dir,
+                                 index: int = 0,
+                                 count: int = 1):
         """After all scenes have been processed, collect all the images of
         each class across all scenes
 

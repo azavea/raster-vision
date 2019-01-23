@@ -15,12 +15,17 @@ def semantic_segmentation_uris(uris, split):
 
 
 class CommandDefinition:
-    def __init__(self, experiment_id, command_config, io_def):
+    def __init__(self,
+                 experiment_id,
+                 command_config,
+                 io_def,
+                 index: int = 0,
+                 count: int = 1):
         self.experiment_id = experiment_id
         self.command_config = command_config
         self.io_def = io_def
-        self.index = 0
-        self.count = 1
+        self.index = index
+        self.count = count
 
     def _key(self):
         return (self.command_config.command_type, '|'.join(
@@ -34,7 +39,10 @@ class CommandDefinition:
         return hash(self._key())
 
     @classmethod
-    def from_experiments(cls, experiments: List[rv.ExperimentConfig]):
+    def from_experiments(cls,
+                         experiments: List[rv.ExperimentConfig],
+                         index: int = 0,
+                         count: int = 1):
         command_definitions = []
 
         for experiment in experiments:
@@ -45,11 +53,13 @@ class CommandDefinition:
             for command_type in rv.ALL_COMMANDS:
                 log.debug(
                     'Updating config for command {}...'.format(command_type))
-                io_def = e.update_for_command(command_type, e)
+                io_def = e.update_for_command(
+                    command_type, e, index=index, count=count)
                 log.debug('Creating experiment configuration...'.format(
                     command_type))
                 command_config = e.make_command_config(command_type)
-                command_def = cls(e.id, command_config, io_def)
+                command_def = cls(
+                    e.id, command_config, io_def, index=index, count=count)
                 command_definitions.append(command_def)
 
         return command_definitions

@@ -51,7 +51,9 @@ class ExperimentConfig(Config):
                            command_type,
                            experiment_config,
                            context=None,
-                           io_def=None):
+                           io_def=None,
+                           index: int = 0,
+                           count: int = 1):
         """
         Returns a tuple (config, dependencies) with the
         """
@@ -62,12 +64,22 @@ class ExperimentConfig(Config):
                                      io_def)
 
         log.debug('Updating backend for command {}'.format(command_type))
-        self.backend.update_for_command(command_type, experiment_config,
-                                        context, io_def)
+        self.backend.update_for_command(
+            command_type,
+            experiment_config,
+            context,
+            io_def,
+            index=index,
+            count=count)
 
         log.debug('Updating dataset for command {}'.format(command_type))
-        self.dataset.update_for_command(command_type, experiment_config,
-                                        context, io_def)
+        self.dataset.update_for_command(
+            command_type,
+            experiment_config,
+            context,
+            io_def,
+            index=index,
+            count=count)
 
         log.debug('Updating analyzers for command {}'.format(command_type))
         for analyzer in self.analyzers:

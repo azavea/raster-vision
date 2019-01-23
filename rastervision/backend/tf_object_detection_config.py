@@ -124,7 +124,9 @@ class TFObjectDetectionConfig(BackendConfig):
                            command_type,
                            experiment_config,
                            context=None,
-                           io_def=None):
+                           io_def=None,
+                           index: int = 0,
+                           count: int = 1):
         io_def = super().update_for_command(command_type, experiment_config,
                                             context, io_def)
         if command_type == rv.CHIP:

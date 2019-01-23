@@ -91,7 +91,9 @@ class DatasetConfig(Config):
                            command_type,
                            experiment_config,
                            context=None,
-                           io_def=None):
+                           io_def=None,
+                           index: int = 0,
+                           count: int = 1):
         verbosity = Verbosity.get()
 
         io_def = io_def or rv.core.CommandIODefinition()
@@ -138,7 +140,6 @@ class DatasetConfig(Config):
                               command_type == rv.PREDICT)
 
         if command_type in [rv.ANALYZE, rv.PREDICT, rv.EVAL, rv.BUNDLE]:
-
             log.debug(
                 'Updating test scenes for command {}'.format(command_type))
             if Verbosity.get() >= Verbosity.VERBOSE:

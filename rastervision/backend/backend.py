@@ -24,7 +24,7 @@ class Backend(ABC):
 
     @abstractmethod
     def process_sceneset_results(self, training_results, validation_results,
-                                 tmp_dir):
+                                 tmp_dir, index, count):
         """After all scenes have been processed, process the resultset
 
         Args:

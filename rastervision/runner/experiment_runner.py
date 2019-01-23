@@ -58,7 +58,10 @@ class ExperimentRunner(ABC):
             experiments = [experiments]
 
         log.debug('Generating command definitions from experiments...')
-        command_definitions = CommandDefinition.from_experiments(experiments)
+        command_definitions = []
+        for i in range(0, splits):
+            command_definitions = command_definitions + CommandDefinition.from_experiments(  # noqa
+                experiments, index=i, count=splits)
 
         # Filter  out commands we aren't running.
         log.debug('Filtering commands not in target command list...')

@@ -628,8 +628,12 @@ class TFObjectDetection(Backend):
 
         return record_path
 
-    def process_sceneset_results(self, training_results, validation_results,
-                                 tmp_dir):
+    def process_sceneset_results(self,
+                                 training_results,
+                                 validation_results,
+                                 tmp_dir,
+                                 index: int = 0,
+                                 count: int = 1):
         """After all scenes have been processed, merge all TFRecords
 
         Args:

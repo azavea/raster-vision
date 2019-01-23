@@ -85,7 +85,13 @@ class Task(object):
         """
         pass
 
-    def make_chips(self, train_scenes, validation_scenes, augmentors, tmp_dir):
+    def make_chips(self,
+                   train_scenes,
+                   validation_scenes,
+                   augmentors,
+                   tmp_dir,
+                   index: int = 0,
+                   count: int = 1):
         """Make training chips.
 
         Convert Scenes with a ground_truth_label_store into training
@@ -130,7 +136,11 @@ class Task(object):
             validation_scenes, VALIDATION, augment=False)
 
         self.backend.process_sceneset_results(
-            processed_training_results, processed_validation_results, tmp_dir)
+            processed_training_results,
+            processed_validation_results,
+            tmp_dir,
+            index=index,
+            count=count)
 
     def train(self, tmp_dir):
         """Train a model.

@@ -455,11 +455,7 @@ class TFDeeplab(Backend):
 
     """
 
-    def __init__(self,
-                 backend_config,
-                 task_config,
-                 index: int = 0,
-                 count: int = 1):
+    def __init__(self, backend_config, task_config):
         """Constructor.
 
         Args:
@@ -470,8 +466,6 @@ class TFDeeplab(Backend):
         self.backend_config = backend_config
         self.task_config = task_config
         self.class_map = task_config.class_map
-        self.index = index
-        self.count = count
 
     def process_scene_data(self, scene: Scene, data: TrainingData,
                            tmp_dir: str) -> str:
@@ -506,9 +500,12 @@ class TFDeeplab(Backend):
 
         return record_path
 
-    def process_sceneset_results(self, training_results: List[str],
+    def process_sceneset_results(self,
+                                 training_results: List[str],
                                  validation_results: List[str],
-                                 tmp_dir: str) -> None:
+                                 tmp_dir: str,
+                                 index: int = 0,
+                                 count: int = 1) -> None:
         """Merge TFRecord files from individual scenes into two at-large files
         (one for training data and one for validation data).
 
@@ -523,11 +520,10 @@ class TFDeeplab(Backend):
 
         """
         base_uri = self.backend_config.training_data_uri
-        training_record_path = get_record_uri(base_uri, TRAIN, self.index)
+        training_record_path = get_record_uri(base_uri, TRAIN, index)
         training_record_path_local = get_local_path(training_record_path,
                                                     tmp_dir)
-        validation_record_path = get_record_uri(base_uri, VALIDATION,
-                                                self.index)
+        validation_record_path = get_record_uri(base_uri, VALIDATION, index)
         validation_record_path_local = get_local_path(validation_record_path,
                                                       tmp_dir)
 
@@ -538,7 +534,7 @@ class TFDeeplab(Backend):
         upload_or_copy(training_record_path_local, training_record_path)
         upload_or_copy(validation_record_path_local, validation_record_path)
 
-        if self.backend_config.debug and self.index == 0:
+        if self.backend_config.debug:
             training_zip_path = join(base_uri, '{}'.format(TRAIN))
             training_zip_path_local = get_local_path(training_zip_path,
                                                      tmp_dir)

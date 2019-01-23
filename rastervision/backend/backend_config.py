@@ -42,7 +42,9 @@ class BackendConfig(BundledConfigMixin, Config):
                            command_type,
                            experiment_config,
                            context=None,
-                           io_def=None):
+                           io_def=None,
+                           index: int = 0,
+                           count: int = 1):
         io_def = io_def or CommandIODefinition()
         if command_type == rv.TRAIN:
             if self.pretrained_model_uri:

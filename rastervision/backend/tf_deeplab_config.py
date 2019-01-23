@@ -50,9 +50,7 @@ class TFDeeplabConfig(BackendConfig):
                  training_data_uri=None,
                  training_output_uri=None,
                  model_uri=None,
-                 fine_tune_checkpoint_name=None,
-                 index: int = 0,
-                 count: int = 1):
+                 fine_tune_checkpoint_name=None):
         if train_options is None:
             train_options = TFDeeplabConfig.TrainOptions()
         if script_locations is None:
@@ -71,11 +69,8 @@ class TFDeeplabConfig(BackendConfig):
         self.model_uri = model_uri
         self.fine_tune_checkpoint_name = fine_tune_checkpoint_name
 
-        self.index = index
-        self.count = count
-
-    def create_backend(self, task_config, index: int = 0, count: int = 1):
-        return TFDeeplab(self, task_config, index=index, count=count)
+    def create_backend(self, task_config):
+        return TFDeeplab(self, task_config)
 
     def to_proto(self):
         d = {
@@ -111,22 +106,23 @@ class TFDeeplabConfig(BackendConfig):
                            command_type,
                            experiment_config,
                            context=None,
-                           io_def=None):
+                           io_def=None,
+                           index: int = 0,
+                           count: int = 1):
         io_def = super().update_for_command(command_type, experiment_config,
                                             context, io_def)
-        if command_type == rv.CHIP and self.index == 0:
+        if command_type == rv.CHIP:
             self.training_data_uri = experiment_config.chip_uri
             outputs = []
-            for i in range(0, self.count):
-                for template in CHIP_OUTPUT_FILES:
-                    file_name = os.path.join(self.training_data_uri,
-                                             template.format(i))
-                    outputs.append(file_name)
+            for template in CHIP_OUTPUT_FILES:
+                file_name = os.path.join(self.training_data_uri,
+                                         template.format(index))
+                outputs.append(file_name)
             io_def.add_outputs(outputs)
-        if command_type == rv.TRAIN and self.index == 0:
+        if command_type == rv.TRAIN:
             self.training_output_uri = experiment_config.train_uri
             inputs = []
-            for i in range(0, self.count):
+            for i in range(0, count):
                 for template in CHIP_OUTPUT_FILES:
                     file_name = os.path.join(self.training_data_uri,
                                              template.format(i))

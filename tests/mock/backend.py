@@ -20,8 +20,12 @@ class MockBackend(Backend):
     def process_scene_data(self, scene, data, tmp_dir):
         return self.mock.process_scene_data(scene, data, tmp_dir)
 
-    def process_sceneset_results(self, training_results, validation_results,
-                                 tmp_dir):
+    def process_sceneset_results(self,
+                                 training_results,
+                                 validation_results,
+                                 tmp_dir,
+                                 index: int = 0,
+                                 count: int = 1):
         return self.mock.process_sceneset_results(training_results,
                                                   validation_results, tmp_dir)
 
@@ -69,7 +73,9 @@ class MockBackendConfig(SupressDeepCopyMixin, BackendConfig):
                            command_type,
                            experiment_config,
                            context=None,
-                           io_def=None):
+                           io_def=None,
+                           index: int = 0,
+                           count: int = 1):
         result = self.mock.update_for_command(command_type, experiment_config,
                                               context, io_def)
         if result is None:

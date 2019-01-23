@@ -11,8 +11,12 @@ class NoopBackend(Backend):
     def process_scene_data(self, scene, data, tmp_dir):
         pass
 
-    def process_sceneset_results(self, training_results, validation_results,
-                                 tmp_dir):
+    def process_sceneset_results(self,
+                                 training_results,
+                                 validation_results,
+                                 tmp_dir,
+                                 index: int = 0,
+                                 count: int = 1):
         pass
 
     def train(self, tmp_dir):
@@ -41,7 +45,9 @@ class NoopBackendConfig(BackendConfig):
                            command_type,
                            experiment_config,
                            context=None,
-                           io_def=None):
+                           io_def=None,
+                           index: int = 0,
+                           count: int = 1):
         return io_def or rv.core.CommandIODefinition()
 
     def save_bundle_files(self, bundle_dir):
