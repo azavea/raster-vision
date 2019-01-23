@@ -93,10 +93,16 @@ class ExperimentConfig(Config):
 
         return io_def
 
-    def make_command_config(self, command_type):
-        return rv._registry.get_command_config_builder(command_type)() \
-                           .with_experiment(self) \
-                           .build()
+    def make_command_config(self, command_type, index: int = 0,
+                            count: int = 1):
+        if command_type == 'CHIP':
+            return rv._registry.get_command_config_builder(command_type)() \
+                               .with_experiment(self) \
+                               .build(index=index, count=count)
+        else:
+            return rv._registry.get_command_config_builder(command_type)() \
+                               .with_experiment(self) \
+                               .build()
 
     def fully_resolve(self):
         """Returns a fully resolved copy of this  experiment.

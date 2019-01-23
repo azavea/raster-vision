@@ -51,7 +51,9 @@ class LocalExperimentRunner(OutOfProcessExperimentRunner):
                 command_def = command_dag.get_command_definition(command_id)
                 command_config = command_def.command_config
                 command_root_uri = command_config.root_uri
-                command_uri = os.path.join(command_root_uri, 'command-config-{}.json'.format(command_def.index))
+                command_uri = os.path.join(
+                    command_root_uri,
+                    'command-config-{}.json'.format(command_def.index))
                 print('Saving command configuration to {}...'.format(
                     command_uri))
                 save_json_config(command_config.to_proto(), command_uri)

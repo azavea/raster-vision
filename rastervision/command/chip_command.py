@@ -19,12 +19,10 @@ class ChipCommand(Command):
         task = cc.task.create_task(backend)
 
         train_scenes = list(
-            map(lambda s: s.create_scene(cc.task, tmp_dir),
-                cc.train_scenes[index::count]))
+            map(lambda s: s.create_scene(cc.task, tmp_dir), cc.train_scenes))
 
         val_scenes = list(
-            map(lambda s: s.create_scene(cc.task, tmp_dir),
-                cc.val_scenes[index::count]))
+            map(lambda s: s.create_scene(cc.task, tmp_dir), cc.val_scenes))
 
         augmentors = list(map(lambda a: a.create_augmentor(), cc.augmentors))
 

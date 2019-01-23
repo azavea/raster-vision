@@ -103,11 +103,11 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
                         'val_scenes must be a list of class SceneConfig, '
                         'got a list of {}'.format(type(s)))
 
-    def build(self):
+    def build(self, index: int = 0, count: int = 1):
         self.validate()
-        return ChipCommandConfig(self.root_uri, self.task, self.backend,
-                                 self.augmentors, self.train_scenes,
-                                 self.val_scenes)
+        return ChipCommandConfig(
+            self.root_uri, self.task, self.backend, self.augmentors,
+            self.train_scenes[index::count], self.val_scenes[index::count])
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
