@@ -15,6 +15,7 @@ Raster Vision 0.9.0
 - Add ability to generate GeoJSON segmentation predictions.  `#575 <https://github.com/azavea/raster-vision/pull/575>`_
 - Add ability to run the DeepLab eval script.  `#653 <https://github.com/azavea/raster-vision/pull/653>`_
 - Add ability to split the "chipping" stage into multiple processes.  `#657 <https://github.com/azavea/raster-vision/pull/657>`_
+- Add ability to split the "prediction" stage into multiple processes.  `#667 <https://github.com/azavea/raster-vision/pull/667>`_
 
 Raster Vision 0.8
 -----------------
