@@ -137,9 +137,10 @@ class Predictor():
             # Reload scene to refresh any new analyzer config
             scene = scene_config.create_scene(self.task_config, self.tmp_dir)
 
-        labels = self.task.predict_scene(scene, self.tmp_dir)
-        if label_uri:
-            scene.prediction_label_store.save(labels)
+        with scene.activate():
+            labels = self.task.predict_scene(scene, self.tmp_dir)
+            if label_uri:
+                scene.prediction_label_store.save(labels)
 
         if config_uri:
             msg = self.bundle_config.to_builder() \

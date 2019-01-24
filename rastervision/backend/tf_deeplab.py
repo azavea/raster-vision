@@ -52,8 +52,8 @@ def make_tf_examples(training_data: TrainingData, class_map: ClassMap) -> List:
     tf_examples = []
     log.info('Creating TFRecord')
     for chip, window, labels in training_data:
-        tf_example = create_tf_example(chip, window, labels.to_array(),
-                                       class_map)
+        tf_example = create_tf_example(chip, window,
+                                       labels.get_label_arr(window), class_map)
         tf_examples.append(tf_example)
     return tf_examples
 
@@ -660,24 +660,24 @@ class TFDeeplab(Backend):
         """Predict using an already-trained DeepLab model.
 
         Args:
-            chips: An np.ndarray containing the image data.
-            windows: A list of windows corresponding to the respective
-                 training chips.
-             tmp_dir: (str) temporary directory to use
-        Returns:
-             A list of Box × np.ndarray pairs.
+            chips: An np.ndarray containing the image data in a batch of size 1.
+            tmp_dir: (str) temporary directory to use
 
+        Returns:
+             SemanticSegmentationLabels object with predictions for a single chip
         """
         self.load_model(tmp_dir)
-        labels = SemanticSegmentationLabels()
+        label_arr = self.sess.run(
+            OUTPUT_TENSOR_NAME, feed_dict={INPUT_TENSOR_NAME: [chips[0]]})[0]
 
-        # Feeding in one chip at a time because the model doesn't seem to
-        # accept > 1.
-        # TODO fix this
-        for ind, window in enumerate(windows):
-            class_labels = self.sess.run(
-                OUTPUT_TENSOR_NAME,
-                feed_dict={INPUT_TENSOR_NAME: [chips[ind]]})[0]
-            labels.add_label_pair(window, class_labels)
+        # Return "trivial" instance of SemanticSegmentationLabels that holds a single
+        # window and has ability to get labels for that one window.
+        def label_fn(_window):
+            if _window == windows[0]:
+                return label_arr
+            else:
+                raise ValueError('Trying to get labels for unknown window.')
+
+        labels = SemanticSegmentationLabels(windows, label_fn)
 
         return labels

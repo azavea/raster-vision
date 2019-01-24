@@ -2,7 +2,8 @@ import numpy as np
 import rasterio
 
 import rastervision as rv
-from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy)
+from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
+                                      file_exists)
 from rastervision.data.label import SemanticSegmentationLabels
 from rastervision.data.label_store import LabelStore
 from rastervision.data.label_source import SegmentationClassTransformer
@@ -42,23 +43,37 @@ class SemanticSegmentationRasterStore(LabelStore):
         else:
             self.class_trans = None
 
-    def get_labels(self):
+        self.source = None
+        if file_exists(uri):
+            self.source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                               .with_uri(self.uri) \
+                                               .build() \
+                                               .create_source(self.tmp_dir)
+
+    def _subcomponents_to_activate(self):
+        if self.source is not None:
+            return [self.source]
+        return []
+
+    def get_labels(self, chip_size=1000):
         """Get all labels.
 
         Returns:
-            SemanticSegmentationLabels
+            SemanticSegmentationLabels with windows of size chip_size covering the
+                scene with no overlap.
         """
-        source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                      .with_uri(self.uri) \
-                                      .build() \
-                                      .create_source(self.tmp_dir)
-        with source.activate():
-            raw_labels = source.get_raw_image_array()
+
+        def label_fn(window):
+            raw_labels = self.source.get_raw_chip(window)
             if self.class_trans:
                 labels = self.class_trans.rgb_to_class(raw_labels)
             else:
                 labels = np.squeeze(raw_labels)
-            return SemanticSegmentationLabels.from_array(labels)
+            return labels
+
+        extent = self.source.get_extent()
+        windows = extent.get_windows(chip_size, chip_size)
+        return SemanticSegmentationLabels(windows, label_fn)
 
     def save(self, labels):
         """Save.
@@ -73,15 +88,18 @@ class SemanticSegmentationRasterStore(LabelStore):
         # Need more general way of computing transform for the more general case.
         transform = self.crs_transformer.transform
         crs = self.crs_transformer.get_image_crs()
-        clipped_labels = labels.get_clipped_labels(self.extent)
 
         band_count = 1
         dtype = np.uint8
         if self.class_trans:
             band_count = 3
-            dtype = np.uint8
 
         if self.vector_output:
+            # We need to store the whole output mask to run feature extraction.
+            # If the raster is large, this will result in running out of memory, so
+            # more work will be needed to get this to work in a scalable way. But this
+            # is complicated because of the need to merge features that are split
+            # across windows.
             mask = np.zeros(
                 (self.extent.ymax, self.extent.xmax), dtype=np.uint8)
         else:
@@ -99,19 +117,27 @@ class SemanticSegmentationRasterStore(LabelStore):
                 dtype=dtype,
                 transform=transform,
                 crs=crs) as dataset:
-            for (window, class_labels) in clipped_labels.get_label_pairs():
-                window = (window.ymin, window.ymax), (window.xmin, window.xmax)
+            for window in labels.get_windows():
+                class_labels = labels.get_label_arr(
+                    window, clip_extent=self.extent)
+                clipped_window = ((window.ymin,
+                                   window.ymin + class_labels.shape[0]),
+                                  (window.xmin,
+                                   window.xmin + class_labels.shape[1]))
                 if mask is not None:
-                    mask[window[0][0]:window[0][1], window[1][0]:window[1][
-                        1]] = class_labels
+                    mask[clipped_window[0][0]:clipped_window[0][1],
+                         clipped_window[1][0]:clipped_window[1][
+                             1]] = class_labels
                 if self.class_trans:
                     rgb_labels = self.class_trans.class_to_rgb(class_labels)
                     for chan in range(3):
                         dataset.write_band(
-                            chan + 1, rgb_labels[:, :, chan], window=window)
+                            chan + 1,
+                            rgb_labels[:, :, chan],
+                            window=clipped_window)
                 else:
                     img = class_labels.astype(dtype)
-                    dataset.write_band(1, img, window=window)
+                    dataset.write_band(1, img, window=clipped_window)
 
         upload_or_copy(local_path, self.uri)
 

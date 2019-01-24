@@ -5,6 +5,7 @@ import numpy as np
 import shapely
 from shapely.strtree import STRtree
 
+from rastervision.core import Box
 from rastervision.data import (ActivateMixin, ActivationError)
 from rastervision.data.raster_source import RasterSource
 from rastervision.data.utils import geojson_to_shapes
@@ -12,29 +13,30 @@ from rastervision.data.utils import geojson_to_shapes
 log = logging.getLogger(__name__)
 
 
-def geojson_to_raster(str_tree, rasterizer_options, extent, crs_transformer):
+def geojson_to_raster(str_tree, rasterizer_options, window, extent,
+                      crs_transformer):
     line_buffer = rasterizer_options.line_buffer
     background_class_id = rasterizer_options.background_class_id
 
-    log.debug('Cropping shapes to chip extent...')
-    # Crop shapes against extent, remove empty shapes, and put in extent frame of
+    log.debug('Cropping shapes to window...')
+    # Crop shapes against window, remove empty shapes, and put in window frame of
     # reference.
-    shapes = str_tree.query(extent.to_shapely())
+    shapes = str_tree.query(window.to_shapely())
     shapes = [(s, s.class_id) for s in shapes]
-    shapes = [(s.intersection(extent.to_shapely()), c) for s, c in shapes]
+    shapes = [(s.intersection(window.to_shapely()), c) for s, c in shapes]
     shapes = [(s, c) for s, c in shapes if not s.is_empty]
     shapes = [(s.buffer(line_buffer), c)
               if type(s) is shapely.geometry.LineString else (s, c)
               for s, c in shapes]
 
-    def transform_shape(x, y, z=None):
-        return (x - extent.xmin, y - extent.ymin)
+    def to_window_frame(x, y, z=None):
+        return (x - window.xmin, y - window.ymin)
 
-    shapes = [(shapely.ops.transform(transform_shape, s), c)
+    shapes = [(shapely.ops.transform(to_window_frame, s), c)
               for s, c in shapes]
-    log.debug('# of shapes in extent: {}'.format(len(shapes)))
+    log.debug('# of shapes in window: {}'.format(len(shapes)))
 
-    out_shape = (extent.get_height(), extent.get_width())
+    out_shape = (window.get_height(), window.get_width())
 
     # rasterize needs to be passed >= 1 shapes.
     if shapes:
@@ -46,6 +48,19 @@ def geojson_to_raster(str_tree, rasterizer_options, extent, crs_transformer):
             dtype=np.uint8)
     else:
         raster = np.full(out_shape, background_class_id, dtype=np.uint8)
+
+    # Ensure that parts of window outside of extent have zero values which are counted as
+    # the don't-care class for segmentation.
+    valid_window = window.to_shapely().intersection(extent.to_shapely())
+    if valid_window.is_empty:
+        raster[:, :] = 0
+    else:
+        vw = shapely.ops.transform(to_window_frame, valid_window)
+        vw = Box.from_shapely(vw).to_int()
+        new_raster = np.zeros(out_shape)
+        new_raster[vw.ymin:vw.ymax, vw.xmin:vw.xmax] = \
+            raster[vw.ymin:vw.ymax, vw.xmin:vw.xmax]
+        raster = new_raster
 
     return raster
 
@@ -91,6 +106,11 @@ class RasterizedSource(ActivateMixin, RasterSource):
     def _get_chip(self, window):
         """Return the chip located in the window.
 
+        Polygons falling within the window are rasterized using the class_id, and
+        the background is filled with background_class_id. Also, any pixels in the
+        window outside the extent are zero, which is the don't-care class for
+        segmentation.
+
         Args:
             window: Box
 
@@ -101,8 +121,9 @@ class RasterizedSource(ActivateMixin, RasterSource):
             raise ActivationError('GeoJSONSource must be activated before use')
 
         log.debug('Rasterizing window: {}'.format(window))
-        chip = geojson_to_raster(self.str_tree, self.rasterizer_options,
-                                 window, self.crs_transformer)
+        chip = geojson_to_raster(self.str_tree,
+                                 self.rasterizer_options, window,
+                                 self.get_extent(), self.crs_transformer)
         # Add third singleton dim since rasters must have >=1 channel.
         return np.expand_dims(chip, 2)
 
