@@ -103,11 +103,26 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
                         'val_scenes must be a list of class SceneConfig, '
                         'got a list of {}'.format(type(s)))
 
-    def build(self, index: int = 0, count: int = 1):
+    def build(self, io_def=None):
         self.validate()
-        return ChipCommandConfig(
-            self.root_uri, self.task, self.backend, self.augmentors,
-            self.train_scenes[index::count], self.val_scenes[index::count])
+
+        def predicate(scene):
+            if hasattr(scene.raster_source, 'uris'):
+                return all(
+                    map(lambda uri: uri in io_def.input_uris,
+                        scene.raster_source.uris))
+            else:
+                return True
+
+        if io_def is not None:
+            train_scenes = list(filter(predicate, self.train_scenes))
+            val_scenes = list(filter(predicate, self.val_scenes))
+        else:
+            train_scenes = self.train_scenes
+            val_scenes = self.val_scenes
+
+        return ChipCommandConfig(self.root_uri, self.task, self.backend,
+                                 self.augmentors, train_scenes, val_scenes)
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

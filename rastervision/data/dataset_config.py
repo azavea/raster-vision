@@ -98,7 +98,10 @@ class DatasetConfig(Config):
 
         io_def = io_def or rv.core.CommandIODefinition()
 
+        parallelized = {rv.PREDICT, rv.CHIP}
+
         def update_scenes(scenes_to_update, io_def, ensure_label_store):
+            i = 0
             for scene in scenes_to_update:
                 if ensure_label_store:
                     # Ensure there is a label store associated with
@@ -109,8 +112,14 @@ class DatasetConfig(Config):
                                                  .with_label_store() \
                                                  .build() \
                                                  .label_store
-                scene.update_for_command(command_type, experiment_config,
-                                         context, io_def)
+                if (command_type in parallelized and i % count == index) or (
+                        command_type not in parallelized):
+                    scene.update_for_command(command_type, experiment_config,
+                                             context, io_def)
+                else:
+                    scene.update_for_command(command_type, experiment_config,
+                                             context, None)
+                i = i + 1
 
         if command_type in [rv.ANALYZE, rv.CHIP]:
             log.debug(

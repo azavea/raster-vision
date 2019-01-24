@@ -93,12 +93,12 @@ class ExperimentConfig(Config):
 
         return io_def
 
-    def make_command_config(self, command_type, index: int = 0,
-                            count: int = 1):
-        if command_type == 'CHIP':
+    def make_command_config(self, command_type, io_def=None):
+        parallelized = {rv.PREDICT, rv.CHIP}
+        if command_type in parallelized and io_def is not None:
             return rv._registry.get_command_config_builder(command_type)() \
                                .with_experiment(self) \
-                               .build(index=index, count=count)
+                               .build(io_def)
         else:
             return rv._registry.get_command_config_builder(command_type)() \
                                .with_experiment(self) \

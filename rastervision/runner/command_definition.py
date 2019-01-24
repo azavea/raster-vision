@@ -50,8 +50,7 @@ class CommandDefinition:
                     command_type, e, index=index, count=count)
                 log.debug('Creating experiment configuration...'.format(
                     command_type))
-                command_config = e.make_command_config(
-                    command_type, index=index, count=count)
+                command_config = e.make_command_config(command_type, io_def)
                 command_def = cls(
                     e.id, command_config, io_def, index=index, count=count)
                 command_definitions.append(command_def)

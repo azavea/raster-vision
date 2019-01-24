@@ -74,10 +74,24 @@ class PredictCommandConfigBuilder(CommandConfigBuilder):
                 'with_backend or with_experiment')
         check_backend_type(self.backend)
 
-    def build(self):
+    def build(self, io_def=None):
         self.validate()
+
+        def predicate(scene):
+            if hasattr(scene.raster_source, 'uris'):
+                return all(
+                    map(lambda uri: uri in io_def.input_uris,
+                        scene.raster_source.uris))
+            else:
+                return True
+
+        if io_def is not None:
+            scenes = list(filter(predicate, self.scenes))
+        else:
+            scenes = self.scenes
+
         return PredictCommandConfig(self.root_uri, self.task, self.backend,
-                                    self.scenes)
+                                    scenes)
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
