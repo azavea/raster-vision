@@ -42,11 +42,13 @@ message BackendConfig {
 
     message TFDeeplabConfig {
         optional string train_py = 1 [default="/opt/tf-models/deeplab/train.py"];
+        optional string eval_py = 14 [default="/opt/tf-models/deeplab/eval.py"];
         optional string export_py = 2 [default="/opt/tf-models/deeplab/export_model.py"];
 
         optional string train_restart_dir = 3;
         optional int32 sync_interval = 4 [default=600];
         optional bool do_monitoring = 5 [default=true];
+	optional bool do_eval = 13 [default=false];
         optional bool replace_model = 6 [default=false];
 
         optional string training_data_uri = 7;

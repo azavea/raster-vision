@@ -93,8 +93,8 @@ class Task(object):
         options.
 
         Args:
-            train_scenes: list of Scene
-            validation_scenes: list of Scene
+            train_scenes: list of Scenes
+            validation_scenes: list of Scenes
                 (that is disjoint from train_scenes)
             augmentors: Augmentors used to augment training data
         """

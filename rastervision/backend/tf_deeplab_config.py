@@ -12,6 +12,7 @@ from rastervision.task import SemanticSegmentationConfig
 
 # Default location to Tensorflow Deeplab's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/deeplab/train.py'
+DEFAULT_SCRIPT_EVAL = '/opt/tf-models/deeplab/eval.py'
 DEFAULT_SCRIPT_EXPORT = '/opt/tf-models/deeplab/export_model.py'
 CHIP_OUTPUT_FILES = ['train-{}.record', 'validation-{}.record']
 DEBUG_CHIP_OUTPUT_FILES = ['train.zip', 'validation.zip']
@@ -23,17 +24,21 @@ class TFDeeplabConfig(BackendConfig):
                      train_restart_dir=None,
                      sync_interval=600,
                      do_monitoring=True,
-                     replace_model=False):
+                     replace_model=False,
+                     do_eval=False):
             self.train_restart_dir = train_restart_dir
             self.sync_interval = sync_interval
             self.do_monitoring = do_monitoring
             self.replace_model = replace_model
+            self.do_eval = do_eval
 
     class ScriptLocations:
         def __init__(self,
                      train_py=DEFAULT_SCRIPT_TRAIN,
-                     export_py=DEFAULT_SCRIPT_EXPORT):
+                     export_py=DEFAULT_SCRIPT_EXPORT,
+                     eval_py=DEFAULT_SCRIPT_EVAL):
             self.train_py = train_py
+            self.eval_py = eval_py
             self.export_py = export_py
 
     def __init__(self,
@@ -75,10 +80,12 @@ class TFDeeplabConfig(BackendConfig):
     def to_proto(self):
         d = {
             'train_py': self.script_locations.train_py,
+            'eval_py': self.script_locations.eval_py,
             'export_py': self.script_locations.export_py,
             'train_restart_dir': self.train_options.train_restart_dir,
             'sync_interval': self.train_options.sync_interval,
             'do_monitoring': self.train_options.do_monitoring,
+            'do_eval': self.train_options.do_eval,
             'replace_model': self.train_options.replace_model,
             'debug': self.debug,
             'training_data_uri': self.training_data_uri,
@@ -192,9 +199,12 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             train_restart_dir=conf.train_restart_dir,
             sync_interval=conf.sync_interval,
             do_monitoring=conf.do_monitoring,
-            replace_model=conf.replace_model)
+            replace_model=conf.replace_model,
+            do_eval=conf.do_eval)
         b = b.with_script_locations(
-            train_py=conf.train_py, export_py=conf.export_py)
+            train_py=conf.train_py,
+            export_py=conf.export_py,
+            eval_py=conf.eval_py)
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
         b = b.with_model_uri(conf.model_uri)
@@ -248,7 +258,8 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
     def _process_task(self):
         return self.with_config(
             {
-                'trainCropSize': [self.task.chip_size, self.task.chip_size]
+                'trainCropSize': [self.task.chip_size, self.task.chip_size],
+                'evalCropSize': [self.task.chip_size, self.task.chip_size]
             },
             ignore_missing_keys=True)
 
@@ -327,25 +338,28 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
                            train_restart_dir=None,
                            sync_interval=600,
                            do_monitoring=True,
-                           replace_model=False):
+                           replace_model=False,
+                           do_eval=False):
         """Sets the train options for this backend.
 
            Args:
               sync_interval: How often to sync output of training to the cloud
                 (in seconds).
-
               do_monitoring: Run process to monitor training (eg. Tensorboard)
-
               replace_model: Replace the model checkpoint if exists.
                              If false, this will continue training from
                              checkpoing if exists, if the backend allows for this.
+              do_eval: Boolean determining whether to run the eval
+                   script.
+
         """
         b = deepcopy(self)
         b.config['train_options'] = TFDeeplabConfig.TrainOptions(
             train_restart_dir=train_restart_dir,
             sync_interval=sync_interval,
             do_monitoring=do_monitoring,
-            replace_model=replace_model)
+            replace_model=replace_model,
+            do_eval=do_eval)
 
         return b.with_config(
             {
@@ -397,9 +411,10 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
 
     def with_script_locations(self,
                               train_py=DEFAULT_SCRIPT_TRAIN,
-                              export_py=DEFAULT_SCRIPT_EXPORT):
+                              export_py=DEFAULT_SCRIPT_EXPORT,
+                              eval_py=DEFAULT_SCRIPT_EVAL):
         script_locs = TFDeeplabConfig.ScriptLocations(
-            train_py=train_py, export_py=export_py)
+            train_py=train_py, export_py=export_py, eval_py=eval_py)
         b = deepcopy(self)
         b.config['script_locations'] = script_locs
         return b

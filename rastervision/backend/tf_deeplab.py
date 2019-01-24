@@ -176,7 +176,7 @@ def create_tf_example(image: np.ndarray,
                       labels: np.ndarray,
                       class_map: ClassMap,
                       chip_id: str = ''):
-    """Create a TensorFlow from an image, the labels, &c.
+    """Create a TensorFlow Example from an image, the labels, &c.
 
     Args:
          image: An np.ndarray containing the image data.
@@ -263,6 +263,56 @@ def get_latest_checkpoint(train_logdir_local: str) -> str:
     times = map(os.path.getmtime, ckpts)
     latest = sorted(zip(times, ckpts))[-1][1]
     return latest[:len(latest) - len('.meta')]
+
+
+def get_evaluation_args(eval_py: str, train_logdir_local: str,
+                        dataset_dir_local: str, eval_logdir: str, tfdl_config):
+    """Generate the array of arguments needed to run the eval script.
+
+    Args:
+         eval_py: The URI of the eval script.
+         train_logdir_local: The directory in-which checkpoints can be
+              found.
+         dataset_dir_local: The directory in which the records are
+              found.
+         eval_logdir: The directory where evaluation events should be
+              logged.
+         tfdl_config: google.protobuf.Struct with fields from
+            rv.protos.deeplab.train.proto containing TF Deeplab training configuration
+
+    Returns:
+         A list of arguments suitable for running the eval script.
+
+    """
+    fields = [
+        'dataset',
+        'output_stride',
+        'decoder_output_stride',
+        'model_variant',
+        'eval_split',
+    ]
+
+    multi_fields = [
+        'atrous_rates',
+        'eval_crop_size',
+    ]
+
+    args = ['python', eval_py]
+
+    args.append('--checkpoint_dir={}'.format(train_logdir_local))
+    args.append('--eval_logdir={}'.format(eval_logdir))
+    args.append('--dataset_dir={}'.format(dataset_dir_local))
+
+    for field in multi_fields:
+        for item in tfdl_config.__getattribute__(field):
+            args.append('--{}={}'.format(field, item))
+
+    for field in fields:
+        field_value = tfdl_config.__getattribute__(field)
+        if (not type(field_value) is str) or (not len(field_value) == 0):
+            args.append('--{}={}'.format(field, field_value))
+
+    return args
 
 
 def get_training_args(train_py: str, train_logdir_local: str, tfic_ckpt: str,
@@ -521,6 +571,7 @@ class TFDeeplab(Backend):
              None
         """
         train_py = self.backend_config.script_locations.train_py
+        eval_py = self.backend_config.script_locations.eval_py
         export_py = self.backend_config.script_locations.export_py
 
         # Setup local input and output directories
@@ -598,6 +649,16 @@ class TFDeeplab(Backend):
                 tensorboard_process = Popen(
                     ['tensorboard', '--logdir={}'.format(train_logdir_local)])
                 terminate_at_exit(tensorboard_process)
+
+            if self.backend_config.train_options.do_eval:
+                # Start eval script
+                log.info('Starting eval script')
+                eval_logdir = train_logdir_local
+                eval_args = get_evaluation_args(eval_py, train_logdir_local,
+                                                dataset_dir_local, eval_logdir,
+                                                tfdl_config)
+                eval_process = Popen(eval_args, env=train_env)
+                terminate_at_exit(eval_process)
 
             # Wait for training and tensorboard
             log.info('Waiting for training and tensorboard processes')
