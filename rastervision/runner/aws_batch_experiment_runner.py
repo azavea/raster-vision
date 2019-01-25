@@ -24,6 +24,14 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
                 job_queue = 'raster-vision-cpu'
         self.job_queue = job_queue
 
+        cpu_job_queue = batch_config('cpu_job_queue', default='')
+        if not cpu_job_queue:
+            if self.gpu:
+                cpu_job_queue = 'raster-vision-cpu'
+            else:
+                cpu_job_queue = job_queue
+        self.cpu_job_queue = cpu_job_queue
+
         job_definition = batch_config('job_definition', default='')
         if not job_definition:
             if self.gpu:
@@ -31,6 +39,14 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
             else:
                 job_definition = 'raster-vision-cpu'
         self.job_definition = job_definition
+
+        cpu_job_definition = batch_config('cpu_job_definition', default='')
+        if not cpu_job_definition:
+            if self.gpu:
+                cpu_job_definition = 'raster-vision-cpu'
+            else:
+                cpu_job_definition = job_definition
+        self.cpu_job_definition = cpu_job_definition
 
         self.submit = self.batch_submit
         self.execution_environment = 'Batch'
