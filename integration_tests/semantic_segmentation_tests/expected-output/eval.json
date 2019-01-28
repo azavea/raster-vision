@@ -1,4 +1,4 @@
-[
+{"overall": [
     {
         "count_error": 245,
         "gt_count": 90000,
@@ -26,4 +26,4 @@
         "recall": 0.9993194444444444,
         "class_name": "average"
     }
-]
+]}

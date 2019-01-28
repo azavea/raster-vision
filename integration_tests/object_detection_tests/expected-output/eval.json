@@ -1,4 +1,4 @@
-[
+{"overall": [
     {
         "class_id": 1,
         "precision": 1.0,
@@ -26,4 +26,4 @@
         "count_error": 0.0,
         "gt_count": 7
     }
-]
+]}
