@@ -8,6 +8,7 @@ import "google/protobuf/struct.proto";
 message EvaluatorConfig {
     message ClassificationEvaluatorConfig {
         required string output_uri = 1;
+        optional string vector_output_uri = 3;
         repeated ClassItem class_items = 2;
     }
 

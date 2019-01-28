@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/evaluator.proto',
   package='rv.protos',
   syntax='proto2',
-  serialized_pb=_b('\n#rastervision/protos/evaluator.proto\x12\trv.protos\x1a$rastervision/protos/class_item.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xaa\x02\n\x0f\x45valuatorConfig\x12\x16\n\x0e\x65valuator_type\x18\x01 \x02(\t\x12Y\n\x15\x63lassification_config\x18\x02 \x01(\x0b\x32\x38.rv.protos.EvaluatorConfig.ClassificationEvaluatorConfigH\x00\x12\x30\n\rcustom_config\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x1a^\n\x1d\x43lassificationEvaluatorConfig\x12\x12\n\noutput_uri\x18\x01 \x02(\t\x12)\n\x0b\x63lass_items\x18\x02 \x03(\x0b\x32\x14.rv.protos.ClassItemB\x12\n\x10\x65valuator_config')
+  serialized_pb=_b('\n#rastervision/protos/evaluator.proto\x12\trv.protos\x1a$rastervision/protos/class_item.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xc5\x02\n\x0f\x45valuatorConfig\x12\x16\n\x0e\x65valuator_type\x18\x01 \x02(\t\x12Y\n\x15\x63lassification_config\x18\x02 \x01(\x0b\x32\x38.rv.protos.EvaluatorConfig.ClassificationEvaluatorConfigH\x00\x12\x30\n\rcustom_config\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructH\x00\x1ay\n\x1d\x43lassificationEvaluatorConfig\x12\x12\n\noutput_uri\x18\x01 \x02(\t\x12\x19\n\x11vector_output_uri\x18\x03 \x01(\t\x12)\n\x0b\x63lass_items\x18\x02 \x03(\x0b\x32\x14.rv.protos.ClassItemB\x12\n\x10\x65valuator_config')
   ,
   dependencies=[rastervision_dot_protos_dot_class__item__pb2.DESCRIPTOR,google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -44,7 +44,14 @@ _EVALUATORCONFIG_CLASSIFICATIONEVALUATORCONFIG = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='class_items', full_name='rv.protos.EvaluatorConfig.ClassificationEvaluatorConfig.class_items', index=1,
+      name='vector_output_uri', full_name='rv.protos.EvaluatorConfig.ClassificationEvaluatorConfig.vector_output_uri', index=1,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='class_items', full_name='rv.protos.EvaluatorConfig.ClassificationEvaluatorConfig.class_items', index=2,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -63,7 +70,7 @@ _EVALUATORCONFIG_CLASSIFICATIONEVALUATORCONFIG = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=303,
-  serialized_end=397,
+  serialized_end=424,
 )
 
 _EVALUATORCONFIG = _descriptor.Descriptor(
@@ -110,7 +117,7 @@ _EVALUATORCONFIG = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=119,
-  serialized_end=417,
+  serialized_end=444,
 )
 
 _EVALUATORCONFIG_CLASSIFICATIONEVALUATORCONFIG.fields_by_name['class_items'].message_type = rastervision_dot_protos_dot_class__item__pb2._CLASSITEM
