@@ -27,7 +27,8 @@ class SemanticSegmentationRasterStore(LabelStore):
             extent: (Box) The extent of the scene
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
-            vector_output: Array of dictionaries containing vectorization options
+            vector_output: (None or array of dicts) containing vectorifiction
+                configuration information
             class_map: (ClassMap) with color values used to convert class ids to
                 RGB values
 

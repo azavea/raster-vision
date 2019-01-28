@@ -6,6 +6,8 @@ from rastervision.data.label_store import (
     LabelStoreConfig, LabelStoreConfigBuilder, SemanticSegmentationRasterStore)
 from rastervision.protos.label_store_pb2 import LabelStoreConfig as LabelStoreConfigMsg
 
+VectorOutput = LabelStoreConfigMsg.SemanticSegmentationRasterStore.VectorOutput
+
 
 class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
     def __init__(self, uri=None, vector_output=[], rgb=False):
@@ -21,13 +23,29 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
         if self.vector_output:
             ar = []
             for vo in self.vector_output:
-                msg2 = LabelStoreConfigMsg.SemanticSegmentationRasterStore.VectorOutput(
-                )
-                msg2.denoise = vo['denoise'] if 'denoise' in vo.keys() else 0
-                msg2.uri = vo['uri'] if 'uri' in vo.keys() else ''
-                msg2.mode = vo['mode']
-                msg2.class_id = vo['class_id']
-                ar.append(msg2)
+                vo_msg = VectorOutput()
+                vo_msg.denoise = vo['denoise'] if 'denoise' in vo.keys() else 0
+                vo_msg.uri = vo['uri'] if 'uri' in vo.keys() else ''
+                vo_msg.mode = vo['mode']
+                vo_msg.class_id = vo['class_id']
+                if 'building_options' in vo.keys():
+                    options = vo['building_options']
+                else:
+                    options = {
+                        'min_aspect_ratio': 1.618,
+                        'min_area': None,
+                        'element_width_factor': 0.5,
+                        'element_thickness': 0.001,
+                    }
+                vo_msg.building_options.min_aspect_ratio = options[
+                    'min_aspect_ratio']
+                if options['min_area']:
+                    vo_msg.building_options.min_area = options['min_area']
+                vo_msg.building_options.element_width_factor = options[
+                    'element_width_factor']
+                vo_msg.building_options.element_thickness = options[
+                    'element_thickness']
+                ar.append(vo_msg)
             msg.semantic_segmentation_raster_store.vector_output.extend(ar)
         msg.semantic_segmentation_raster_store.rgb = self.rgb
         return msg
@@ -119,10 +137,10 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
     def from_proto(self, msg):
         uri = msg.semantic_segmentation_raster_store.uri
         rgb = msg.semantic_segmentation_raster_store.rgb
-        vo = msg.semantic_segmentation_raster_store.vector_output
+        vo_msg = msg.semantic_segmentation_raster_store.vector_output
 
         return self.with_uri(uri) \
-                   .with_vector_output(vo) \
+                   .with_vector_output(vo_msg) \
                    .with_rgb(rgb)
 
     def with_uri(self, uri):
@@ -159,12 +177,19 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
             for vo in vector_output:
                 ar.append(vo.copy())
         else:
-            for vo in vector_output:
+            for vo_msg in vector_output:
+                bldg_msg = vo_msg.building_options
                 ar.append({
-                    'denoise': vo.denoise,
-                    'uri': vo.uri,
-                    'mode': vo.mode,
-                    'class_id': vo.class_id
+                    'denoise': vo_msg.denoise,
+                    'uri': vo_msg.uri,
+                    'mode': vo_msg.mode,
+                    'class_id': vo_msg.class_id,
+                    'building_options': {
+                        'min_aspect_ratio': bldg_msg.min_aspect_ratio,
+                        'min_area': bldg_msg.min_area,
+                        'element_width_factor': bldg_msg.element_width_factor,
+                        'element_thickness': bldg_msg.element_thickness,
+                    },
                 })
 
         b.config['vector_output'] = ar
