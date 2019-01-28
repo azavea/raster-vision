@@ -13,7 +13,11 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
     are classification-based.
     """
 
-    def __init__(self, evaluator_type, class_map, output_uri=None, vector_output_uri=None):
+    def __init__(self,
+                 evaluator_type,
+                 class_map,
+                 output_uri=None,
+                 vector_output_uri=None):
         super().__init__(evaluator_type)
         self.class_map = class_map
         self.output_uri = output_uri
@@ -40,8 +44,8 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
                 self.output_uri = os.path.join(experiment_config.eval_uri,
                                                'eval.json')
             if not self.vector_output_uri:
-                self.vector_output_uri = os.path.join(experiment_config.eval_uri,
-                                               'vector-eval.json')
+                self.vector_output_uri = os.path.join(
+                    experiment_config.eval_uri, 'vector-eval.json')
             io_def.add_output(self.output_uri)
             io_def.add_output(self.vector_output_uri)
 

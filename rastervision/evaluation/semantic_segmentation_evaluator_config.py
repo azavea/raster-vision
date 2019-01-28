@@ -10,7 +10,8 @@ class SemanticSegmentationEvaluatorConfig(ClassificationEvaluatorConfig):
                          output_uri, vector_output_uri)
 
     def create_evaluator(self):
-        return SemanticSegmentationEvaluator(self.class_map, self.output_uri, self.vector_output_uri)
+        return SemanticSegmentationEvaluator(self.class_map, self.output_uri,
+                                             self.vector_output_uri)
 
 
 class SemanticSegmentationEvaluatorConfigBuilder(

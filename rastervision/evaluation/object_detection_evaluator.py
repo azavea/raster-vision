@@ -7,7 +7,7 @@ class ObjectDetectionEvaluator(ClassificationEvaluator):
     """
 
     def __init__(self, class_map, output_uri):
-        super().__init__(class_map, output_uri)
+        super().__init__(class_map, output_uri, None)
 
     def create_evaluation(self):
         return ObjectDetectionEvaluation(self.class_map)
