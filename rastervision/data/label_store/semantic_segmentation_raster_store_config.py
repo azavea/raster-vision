@@ -31,20 +31,17 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
                 if 'building_options' in vo.keys():
                     options = vo['building_options']
                 else:
-                    options = {
-                        'min_aspect_ratio': 1.618,
-                        'min_area': None,
-                        'element_width_factor': 0.5,
-                        'element_thickness': 0.001,
-                    }
-                vo_msg.building_options.min_aspect_ratio = options[
-                    'min_aspect_ratio']
-                if options['min_area']:
-                    vo_msg.building_options.min_area = options['min_area']
-                vo_msg.building_options.element_width_factor = options[
-                    'element_width_factor']
-                vo_msg.building_options.element_thickness = options[
-                    'element_thickness']
+                    options = {}
+                bldg_msg = vo_msg.building_options
+                if 'min_aspect_ratio' in options.keys():
+                    bldg_msg.min_aspect_ratio = options['min_aspect_ratio']
+                if 'min_area' in options.keys() and options['min_area']:
+                    bldg_msg.min_area = options['min_area']
+                if 'element_width_factor' in options.keys():
+                    bldg_msg.element_width_factor = options[
+                        'element_width_factor']
+                if 'element_thickness' in options.keys():
+                    bldg_msg.element_thickness = options['element_thickness']
                 ar.append(vo_msg)
             msg.semantic_segmentation_raster_store.vector_output.extend(ar)
         msg.semantic_segmentation_raster_store.rgb = self.rgb
@@ -185,10 +182,14 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
                     'mode': vo_msg.mode,
                     'class_id': vo_msg.class_id,
                     'building_options': {
-                        'min_aspect_ratio': bldg_msg.min_aspect_ratio,
-                        'min_area': bldg_msg.min_area,
-                        'element_width_factor': bldg_msg.element_width_factor,
-                        'element_thickness': bldg_msg.element_thickness,
+                        'min_aspect_ratio':
+                        bldg_msg.min_aspect_ratio,
+                        'min_area':
+                        bldg_msg.min_area if bldg_msg.min_area > 0 else None,
+                        'element_width_factor':
+                        bldg_msg.element_width_factor,
+                        'element_thickness':
+                        bldg_msg.element_thickness,
                     },
                 })
 

@@ -59,7 +59,7 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
             'mode': 'buildings',
             'class_id': 1,
             'building_options': {
-                'element_width_factor': 0.51  #  Arbitrary change
+                'element_width_factor': 0.51
             }
         }, {
             'denoise': 50,

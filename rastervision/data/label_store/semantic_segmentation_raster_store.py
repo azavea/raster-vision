@@ -160,8 +160,15 @@ class SemanticSegmentationRasterStore(LabelStore):
                     class_mask = denoise.denoise(class_mask, denoise_radius)
 
                 if uri and mode == 'buildings':
+                    options = vo['building_options']
                     geojson = vectorification.geojson_from_mask(
-                        mask=class_mask, transform=transform, mode=mode)
+                        mask=class_mask,
+                        transform=transform,
+                        mode=mode,
+                        min_aspect_ratio=options['min_aspect_ratio'],
+                        min_area=options['min_area'],
+                        width_factor=options['element_width_factor'],
+                        thickness=options['element_thickness'])
                 elif uri and mode == 'polygons':
                     geojson = vectorification.geojson_from_mask(
                         mask=class_mask, transform=transform, mode=mode)
