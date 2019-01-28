@@ -47,7 +47,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         ])
         output_uri = join(self.tmp_dir.name, 'out.json')
         scenes = [self.get_scene(1), self.get_scene(2)]
-        evaluator = SemanticSegmentationEvaluator(class_map, output_uri)
+        evaluator = SemanticSegmentationEvaluator(class_map, output_uri, None)
         evaluator.process(scenes, self.tmp_dir.name)
         eval_json = json.loads(file_to_str(output_uri))
         exp_eval_json = json.loads(

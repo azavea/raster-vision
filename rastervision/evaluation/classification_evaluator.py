@@ -11,9 +11,10 @@ class ClassificationEvaluator(Evaluator):
     """Evaluates predictions for a set of scenes.
     """
 
-    def __init__(self, class_map, output_uri):
+    def __init__(self, class_map, output_uri, vector_output_uri=None):
         self.class_map = class_map
         self.output_uri = output_uri
+        self.vector_output_uri = vector_output_uri
 
     @abstractmethod
     def create_evaluation(self):
@@ -21,6 +22,7 @@ class ClassificationEvaluator(Evaluator):
 
     def process(self, scenes, tmp_dir):
         evaluation = self.create_evaluation()
+
         for scene in scenes:
             log.info('Computing evaluation for scene {}...'.format(scene.id))
             label_source = scene.ground_truth_label_source
