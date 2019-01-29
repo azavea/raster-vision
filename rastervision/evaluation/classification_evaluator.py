@@ -11,10 +11,9 @@ class ClassificationEvaluator(Evaluator):
     """Evaluates predictions for a set of scenes.
     """
 
-    def __init__(self, class_map, output_uri, vector_output_uri):
+    def __init__(self, class_map, output_uri):
         self.class_map = class_map
         self.output_uri = output_uri
-        self.vector_output_uri = vector_output_uri
 
     @abstractmethod
     def create_evaluation(self):

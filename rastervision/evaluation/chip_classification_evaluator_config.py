@@ -5,7 +5,7 @@ from rastervision.evaluation \
 
 
 class ChipClassificationEvaluatorConfig(ClassificationEvaluatorConfig):
-    def __init__(self, class_map, output_uri=None, vector_output_uri=None):
+    def __init__(self, class_map, output_uri=None):
         super().__init__(rv.CHIP_CLASSIFICATION_EVALUATOR, class_map,
                          output_uri)
 
