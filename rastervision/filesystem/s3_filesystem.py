@@ -78,19 +78,23 @@ class S3FileSystem(FileSystem):
         return parsed_uri.scheme == 's3'
 
     @staticmethod
-    def file_exists(uri: str) -> bool:
+    def file_exists(uri: str, include_dir: bool = True) -> bool:
         # Lazily load boto
         import botocore
 
-        s3 = S3FileSystem.get_session().resource('s3')
+        s3 = S3FileSystem.get_session().client('s3')
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         key = parsed_uri.path[1:]
+
         try:
-            s3.Object(bucket, key).load()
+            response = s3.list_objects_v2(Bucket=bucket, Prefix=key, MaxKeys=1)
+            if response['KeyCount'] == 0:
+                return False
+            response_key = response['Contents'][0]['Key']
+            return (response_key == key) or include_dir
         except botocore.exceptions.ClientError as e:
             return False
-        return True
 
     @staticmethod
     def read_str(uri: str) -> str:

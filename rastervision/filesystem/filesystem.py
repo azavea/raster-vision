@@ -33,7 +33,14 @@ class FileSystem(ABC):
 
     @staticmethod
     @abstractmethod
-    def file_exists(uri: str) -> bool:
+    def file_exists(uri: str, include_dir: bool = True) -> bool:
+        """Check if a  file exists.
+        Args:
+          uri: The URI to check
+          include_dir: Include directories in check, if this filesystem
+                       supports directory reads. Otherwise only
+                       return true if a single file exists at the URI.
+        """
         pass  # pragma: no cover
 
     @staticmethod

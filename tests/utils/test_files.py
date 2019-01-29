@@ -337,6 +337,23 @@ class TestS3Misc(unittest.TestCase):
         list_paths(s3_directory)
         self.assertEqual(len(list_paths(s3_directory)), 1)
 
+    def test_file_exists(self):
+        path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
+        s3_path = 's3://{}/xxx/lorem.txt'.format(self.bucket_name)
+        s3_directory = 's3://{}/xxx/'.format(self.bucket_name)
+        directory = os.path.dirname(path)
+        make_dir(directory, check_empty=False)
+
+        with open(path, 'w+') as file:
+            file.write(self.lorem)
+        upload_or_copy(path, s3_path)
+
+        self.assertTrue(file_exists(s3_directory, include_dir=True))
+        self.assertTrue(file_exists(s3_path, include_dir=False))
+        self.assertFalse(file_exists(s3_directory, include_dir=False))
+        self.assertFalse(file_exists(s3_directory + 'NOTPOSSIBLE', include_dir=False))
+
+
 
 class TestLocalMisc(unittest.TestCase):
     def setUp(self):
@@ -427,6 +444,21 @@ class TestLocalMisc(unittest.TestCase):
         stamp = fs.last_modified(path)
 
         self.assertTrue(isinstance(stamp, datetime.datetime))
+
+    def test_file_exists(self):
+        fs = FileSystem.get_file_system(self.temp_dir.name, 'r')
+
+        path1 = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
+        dir1 = os.path.dirname(path1)
+        make_dir(dir1, check_empty=False)
+
+        with open(path1, 'w+') as file:
+            file.write(self.lorem)
+
+        self.assertTrue(fs.file_exists(dir1, include_dir=True))
+        self.assertTrue(fs.file_exists(path1, include_dir=False))
+        self.assertFalse(fs.file_exists(dir1, include_dir=False))
+        self.assertFalse(fs.file_exists(dir1 + 'NOTPOSSIBLE', include_dir=False))
 
 
 class TestHttpMisc(unittest.TestCase):

@@ -156,10 +156,10 @@ def download_or_copy(uri, target_dir, fs=None):
     return local_path
 
 
-def file_exists(uri, fs=None):
+def file_exists(uri, fs=None, include_dir=True):
     if not fs:
         fs = FileSystem.get_file_system(uri, 'r')
-    return fs.file_exists(uri)
+    return fs.file_exists(uri, include_dir)
 
 
 def list_paths(uri, ext='', fs=None):
