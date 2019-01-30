@@ -8,8 +8,8 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
         def get_path(part):
             return os.path.join(os.path.dirname(__file__), part)
 
-        img_path = get_path('scene/image.tif')
-        label_path = get_path('scene/labels.tif')
+        img_paths = [get_path('scene/image.tif'), get_path('scene/image2.tif')]
+        label_paths = [get_path('scene/labels.tif'), get_path('scene/labels2.tif')]
         class_map = {'red': (1, 'red'), 'green': (2, 'green')}
         num_steps = 1
         batch_size = 1
@@ -52,8 +52,13 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
 
         label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
                                            .with_rgb_class_map(task.class_map) \
-                                           .with_raster_source(label_path) \
+                                           .with_raster_source(label_paths[0]) \
                                            .build()
+
+        label_source2 = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+                                            .with_rgb_class_map(task.class_map) \
+                                            .with_raster_source(label_paths[1]) \
+                                            .build()
 
         vector_output = [{
             'mode': 'buildings',
@@ -63,7 +68,13 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
             'mode': 'polygons',
             'class_id': 1
         }]
+
         label_store = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+                                         .with_vector_output(vector_output) \
+                                         .with_rgb(True) \
+                                         .build()
+
+        label_store2 = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
                                          .with_vector_output(vector_output) \
                                          .with_rgb(True) \
                                          .build()
@@ -71,14 +82,24 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
         scene = rv.SceneConfig.builder() \
                               .with_task(task) \
                               .with_id('test-scene') \
-                              .with_raster_source(img_path, channel_order=[0, 1, 2]) \
+                              .with_raster_source(img_paths[0], channel_order=[0, 1, 2]) \
                               .with_label_source(label_source) \
                               .with_label_store(label_store) \
                               .build()
 
+        scene2 = rv.SceneConfig.builder() \
+                              .with_task(task) \
+                              .with_id('test-scene2') \
+                              .with_raster_source(img_paths[1], channel_order=[0, 1, 2]) \
+                              .with_label_source(label_source2) \
+                              .with_label_store(label_store2) \
+                              .build()
+
+        scenes = [scene, scene2]
+
         dataset = rv.DatasetConfig.builder() \
-                                  .with_train_scene(scene) \
-                                  .with_validation_scene(scene) \
+                                  .with_train_scenes(scenes) \
+                                  .with_validation_scenes(scenes) \
                                   .build()
 
         experiment = rv.ExperimentConfig.builder() \

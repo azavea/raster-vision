@@ -14,9 +14,11 @@ class CommandDefinition:
         self.io_def = io_def
 
     def _key(self):
-        return (self.command_config.command_type, '|'.join(
-            sorted(self.io_def.input_uris)), '|'.join(
-                sorted(self.io_def.output_uris)))
+        return (self.command_config.command_type,
+                self.command_config.split_id,
+                '|'.join(
+                    sorted(self.io_def.input_uris)), '|'.join(
+                        sorted(self.io_def.output_uris)))
 
     def __eq__(self, other):
         return self._key() == other._key()
@@ -25,7 +27,9 @@ class CommandDefinition:
         return hash(self._key())
 
     @classmethod
-    def from_experiments(cls, experiments: List[rv.ExperimentConfig]):
+    def from_experiments(cls,
+                         experiments: List[rv.ExperimentConfig],
+                         splits: int = 1):
         command_definitions = []
 
         for experiment in experiments:
@@ -39,10 +43,11 @@ class CommandDefinition:
                 e.update_for_command(command_type, e)
                 log.debug('Creating experiment configuration...'.format(
                     command_type))
-                command_config = e.make_command_config(command_type)
-                io_def = command_config.report_io()
-                command_def = cls(e.id, command_config, io_def)
-                command_definitions.append(command_def)
+                base_command_config = e.make_command_config(command_type)
+                for command_config in base_command_config.split(splits):
+                    io_def = command_config.report_io()
+                    command_def = cls(e.id, command_config, io_def)
+                    command_definitions.append(command_def)
 
         return command_definitions
 
@@ -118,12 +123,13 @@ class CommandDefinition:
         clashing_commands = []
         for command_def in command_definitions:
             command_type = command_def.command_config.command_type
+            split_id = command_def.command_config.split_id
             for output_uri in command_def.io_def.output_uris:
-                if (output_uri, command_type) not in outputs_to_defs:
-                    outputs_to_defs[(output_uri, command_type)] = []
-                outputs_to_defs[(output_uri, command_type)].append(command_def)
+                if (output_uri, command_type, split_id) not in outputs_to_defs:
+                    outputs_to_defs[(output_uri, command_type, split_id)] = []
+                outputs_to_defs[(output_uri, command_type, split_id)].append(command_def)
 
-        for ((output_uri, _), command_defs) in outputs_to_defs.items():
+        for ((output_uri, _, _), command_defs) in outputs_to_defs.items():
             if len(command_defs) > 1:
                 clashing_commands.append((output_uri, command_defs))
 

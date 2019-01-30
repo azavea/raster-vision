@@ -8,9 +8,10 @@ from rastervision.protos.command_pb2 \
 
 
 class CommandConfig(ABC):
-    def __init__(self, command_type, root_uri):
+    def __init__(self, command_type, root_uri, split_id=0):
         self.command_type = command_type
         self.root_uri = root_uri
+        self.split_id = split_id
 
     @abstractmethod
     def create_command(self):
@@ -24,6 +25,13 @@ class CommandConfig(ABC):
         """
         pass
 
+    def split(self, num_parts):
+        """Split this command config into num_parts parts if possible.
+        This will return a list containing 1 - num_parts command configurations.
+        If the command configuration does not split, will return [self]
+        """
+        return [self]
+
 
     def to_proto(self):
         """Returns the protobuf configuration for this config.
@@ -32,6 +40,7 @@ class CommandConfig(ABC):
         return CommandConfigMsg(
             command_type=self.command_type,
             root_uri=self.root_uri,
+            split_id=self.split_id,
             plugins=plugin_config)
 
     def to_builder(self):
@@ -58,8 +67,10 @@ class CommandConfigBuilder(ABC):
     def __init__(self, prev):
         if prev is None:
             self.root_uri = None
+            self.split_id = 0
         else:
             self.root_uri = prev.root_uri
+            self.split_id = prev.split_id
 
     @abstractmethod
     def build(self, prev=None):
@@ -81,7 +92,7 @@ class CommandConfigBuilder(ABC):
         if msg.HasField('plugins'):
             PluginRegistry.get_instance().add_plugins_from_proto(msg.plugins)
 
-        return self.with_root_uri(msg.root_uri)
+        return self.with_root_uri(msg.root_uri).with_split_id(msg.split_id)
 
     def validate(self):
         if self.root_uri is None:
@@ -98,4 +109,9 @@ class CommandConfigBuilder(ABC):
     def with_root_uri(self, root_uri):
         b = deepcopy(self)
         b.root_uri = root_uri
+        return b
+
+    def with_split_id(self, split_id):
+        b = deepcopy(self)
+        b.split_id = split_id
         return b

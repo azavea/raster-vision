@@ -68,7 +68,8 @@ class BackendConfigBuilder(ConfigBuilder):
         pass
 
     def from_proto(self, msg):
-        return self.with_pretrained_model(msg.pretrained_model_uri)
+        return self \
+            .with_pretrained_model(msg.pretrained_model_uri)
 
     def with_task(self, task):
         """Sets a specific task type.

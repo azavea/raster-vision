@@ -156,7 +156,7 @@ def run_test(test, temp_dir):
     # Check that running doesn't raise any exceptions.
     try:
         IntegrationTestExperimentRunner(os.path.join(temp_dir, test.lower())) \
-            .run(experiment, rerun_commands=True)
+            .run(experiment, rerun_commands=True, splits=2)
 
     except Exception as exc:
         errors.append(
