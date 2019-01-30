@@ -22,15 +22,8 @@ class ObjectDetectionGeoJSONSourceConfig(LabelSourceConfig):
         return ObjectDetectionGeoJSONSource(self.uri, crs_transformer,
                                             task_config.class_map, extent)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
+    def report_io(self, command_type, io_def):
         io_def.add_input(self.uri)
-
-        return io_def
 
 
 class ObjectDetectionGeoJSONSourceConfigBuilder(LabelSourceConfigBuilder):

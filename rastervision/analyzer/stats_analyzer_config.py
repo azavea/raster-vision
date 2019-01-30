@@ -47,16 +47,15 @@ class StatsAnalyzerConfig(AnalyzerConfig):
     def update_for_command(self,
                            command_type,
                            experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
+                           context=None):
         if command_type == rv.ANALYZE:
             if not self.stats_uri:
                 self.stats_uri = os.path.join(experiment_config.analyze_uri,
                                               'stats.json')
 
+    def report_io(self, command_type, io_def):
+        if command_type == rv.ANALYZE:
             io_def.add_output(self.stats_uri)
-        return io_def
 
 
 class StatsAnalyzerConfigBuilder(AnalyzerConfigBuilder):

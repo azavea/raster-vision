@@ -29,10 +29,7 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
     def update_for_command(self,
                            command_type,
                            experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
-
+                           context=None):
         if command_type == rv.PREDICT:
             if not self.uri:
                 # Construct the  URI for this prediction store,
@@ -44,12 +41,13 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
                         uri = os.path.join(root, '{}.json'.format(c.id))
                 if uri:
                     self.uri = uri
-                    io_def.add_output(uri)
                 else:
                     raise rv.ConfigError(
                         'ObjectDetectionGeoJSONStoreConfig has no '
                         'URI set, and is not associated with a SceneConfig.')
 
+    def report_io(self, command_type, io_def):
+        if command_type == rv.PREDICT:
             io_def.add_output(self.uri)
 
         if command_type == rv.EVAL:
@@ -58,8 +56,6 @@ class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
             else:
                 msg = 'No URI set for ObjectDetectionGeoJSONStoreConfig'
                 io_def.add_missing(msg)
-
-        return io_def
 
 
 class ObjectDetectionGeoJSONStoreConfigBuilder(LabelStoreConfigBuilder):

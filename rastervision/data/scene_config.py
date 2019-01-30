@@ -112,29 +112,31 @@ class SceneConfig(BundledConfigMixin, Config):
     def update_for_command(self,
                            command_type,
                            experiment_config,
-                           context=None,
-                           io_def=None):
+                           context=None):
         if context is None:
             context = []
         context = context + [self]
-        io_def = io_def or rv.core.CommandIODefinition()
 
-        self.raster_source.update_for_command(command_type, experiment_config,
-                                              context, io_def)
+        self.raster_source.update_for_command(command_type, experiment_config, context)
 
         if self.label_source:
-            self.label_source.update_for_command(
-                command_type, experiment_config, context, io_def)
+            self.label_source.update_for_command(command_type, experiment_config, context)
 
         if self.label_store:
-            self.label_store.update_for_command(
-                command_type, experiment_config, context, io_def)
+            self.label_store.update_for_command(command_type, experiment_config, context)
+
+    def report_io(self, command_type, io_def):
+        self.raster_source.report_io(command_type, io_def)
+
+        if self.label_source:
+            self.label_source.report_io(command_type, io_def)
+
+        if self.label_store:
+            self.label_store.report_io(command_type, io_def)
 
         if self.aoi_uris:
             for uri in self.aoi_uris:
                 io_def.add_input(uri)
-
-        return io_def
 
     @staticmethod
     def builder():

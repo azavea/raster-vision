@@ -44,6 +44,14 @@ class PredictCommandConfig(CommandConfig):
 
         return msg
 
+    def report_io(self):
+        io_def = rv.core.CommandIODefinition()
+        self.task.report_io(self.command_type, io_def)
+        self.backend.report_io(self.command_type, io_def)
+        for scene in self.scenes:
+            scene.report_io(self.command_type, io_def)
+        return io_def
+
     @staticmethod
     def builder():
         return PredictCommandConfigBuilder()

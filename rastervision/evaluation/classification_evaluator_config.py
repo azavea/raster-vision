@@ -29,15 +29,14 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
     def update_for_command(self,
                            command_type,
                            experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
+                           context=None):
         if command_type == rv.EVAL:
             if not self.output_uri:
-                self.output_uri = os.path.join(experiment_config.eval_uri,
-                                               'eval.json')
+                self.output_uri = os.path.join(experiment_config.eval_uri, 'eval.json')
+
+    def report_io(self, command_type, io_def):
+        if command_type == rv.EVAL:
             io_def.add_output(self.output_uri)
-        return io_def
 
 
 class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):

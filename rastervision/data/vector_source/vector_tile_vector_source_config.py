@@ -42,11 +42,7 @@ class VectorTileVectorSourceConfig(VectorSourceConfig):
                 class_id_to_filter=self.class_id_to_filter,
                 default_class_id=self.default_class_id))
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
+    def report_io(self, command_type, io_def):
         # We shouldn't include self.uri as an input because it is just a URI schema
         # and the file checker will raise an error if it's included.
         pass

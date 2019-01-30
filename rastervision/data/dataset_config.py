@@ -94,9 +94,7 @@ class DatasetConfig(Config):
                            io_def=None):
         verbosity = Verbosity.get()
 
-        io_def = io_def or rv.core.CommandIODefinition()
-
-        def update_scenes(scenes_to_update, io_def, ensure_label_store):
+        def update_scenes(scenes_to_update, ensure_label_store):
             for scene in scenes_to_update:
                 if ensure_label_store:
                     # Ensure there is a label store associated with
@@ -107,8 +105,7 @@ class DatasetConfig(Config):
                                                  .with_label_store() \
                                                  .build() \
                                                  .label_store
-                scene.update_for_command(command_type, experiment_config,
-                                         context, io_def)
+                scene.update_for_command(command_type, experiment_config, context)
 
         if command_type in [rv.ANALYZE, rv.CHIP]:
             log.debug(
@@ -117,9 +114,9 @@ class DatasetConfig(Config):
                 with click.progressbar(
                         self.train_scenes,
                         label='Updating train scenes') as scenes_to_update:
-                    update_scenes(scenes_to_update, io_def, False)
+                    update_scenes(scenes_to_update, False)
             else:
-                update_scenes(self.train_scenes, io_def, False)
+                update_scenes(self.train_scenes, False)
 
         if command_type in [
                 rv.ANALYZE, rv.CHIP, rv.PREDICT, rv.EVAL, rv.BUNDLE
@@ -131,11 +128,9 @@ class DatasetConfig(Config):
                         self.validation_scenes,
                         label='Updating validation scenes...  '
                 ) as scenes_to_update:
-                    update_scenes(scenes_to_update, io_def,
-                                  command_type == rv.PREDICT)
+                    update_scenes(scenes_to_update, command_type == rv.PREDICT)
             else:
-                update_scenes(self.validation_scenes, io_def,
-                              command_type == rv.PREDICT)
+                update_scenes(self.validation_scenes, command_type == rv.PREDICT)
 
         if command_type in [rv.ANALYZE, rv.PREDICT, rv.EVAL, rv.BUNDLE]:
 
@@ -145,20 +140,37 @@ class DatasetConfig(Config):
                 with click.progressbar(
                         self.test_scenes,
                         label='Updating test scenes...  ') as scenes_to_update:
-                    update_scenes(scenes_to_update, io_def,
-                                  command_type == rv.PREDICT)
+                    update_scenes(scenes_to_update, command_type == rv.PREDICT)
             else:
-                update_scenes(self.test_scenes, io_def,
-                              command_type == rv.PREDICT)
+                update_scenes(self.test_scenes, command_type == rv.PREDICT)
 
         if command_type == rv.CHIP:
             log.debug(
                 'Updating augmentors for command {}'.format(command_type))
             for augmentor in self.augmentors:
-                augmentor.update_for_command(command_type, experiment_config,
-                                             context, io_def)
+                augmentor.update_for_command(command_type, experiment_config, context)
+
+    def report_io(self, command_type, io_def):
+        if command_type in [rv.ANALYZE, rv.CHIP]:
+            for scene in self.train_scenes:
+                scene.report_io(command_type, io_def)
+
+        if command_type in [
+                rv.ANALYZE, rv.CHIP, rv.PREDICT, rv.EVAL, rv.BUNDLE
+        ]:
+            for scene in self.validation_scenes:
+                scene.report_io(command_type, io_def)
+
+        if command_type in [rv.ANALYZE, rv.PREDICT, rv.EVAL, rv.BUNDLE]:
+            for scene in self.test_scenes:
+                scene.report_io(command_type, io_def)
+
+        if command_type == rv.CHIP:
+            for augmentor in self.augmentors:
+                augmentor.report_io(command_type, io_def)
 
         return io_def
+
 
     @staticmethod
     def from_proto(msg):

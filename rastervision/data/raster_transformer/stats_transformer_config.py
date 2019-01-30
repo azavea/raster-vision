@@ -46,9 +46,7 @@ class StatsTransformerConfig(RasterTransformerConfig):
     def update_for_command(self,
                            command_type,
                            experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
+                           context=None):
         if command_type != rv.ANALYZE:
             if not self.stats_uri:
                 # Find the stats URI from a StatsAnalyzer
@@ -56,6 +54,8 @@ class StatsTransformerConfig(RasterTransformerConfig):
                     if analyzer.analyzer_type == rv.STATS_ANALYZER:
                         self.stats_uri = analyzer.stats_uri
 
+    def report_io(self, command_type, io_def):
+        if command_type != rv.ANALYZE:
             if not self.stats_uri:
                 io_def.add_missing(
                     "StatsTransformerConfig is missing 'stats_uri' property "
@@ -65,8 +65,6 @@ class StatsTransformerConfig(RasterTransformerConfig):
                     'this experiment.'.format(command_type))
             else:
                 io_def.add_input(self.stats_uri)
-
-        return io_def
 
 
 class StatsTransformerConfigBuilder(RasterTransformerConfigBuilder):

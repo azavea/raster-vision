@@ -69,17 +69,9 @@ class GeoTiffSourceConfig(RasterSourceConfig):
             x_shift_meters=x_shift_meters,
             y_shift_meters=y_shift_meters)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = super().update_for_command(command_type, experiment_config,
-                                            context, io_def)
-        for uri in self.uris:
-            io_def.add_input(uri)
-
-        return io_def
+    def report_io(self, command_type, io_def):
+        super().report_io(command_type, io_def)
+        io_def.add_inputs(self.uris)
 
 
 class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):

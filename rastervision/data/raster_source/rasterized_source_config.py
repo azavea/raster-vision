@@ -80,13 +80,13 @@ class RasterizedSourceConfig(RasterSourceConfig):
     def update_for_command(self,
                            command_type,
                            experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = super().update_for_command(command_type, experiment_config,
-                                            context, io_def)
-        self.vector_source.update_for_command(command_type, experiment_config,
-                                              context, io_def)
-        return io_def
+                           context=None):
+        super().update_for_command(command_type, experiment_config, context)
+        self.vector_source.update_for_command(command_type, experiment_config, context)
+
+    def report_io(self, command_type, io_def):
+        super().update_for_command(command_type, io_def)
+        self.vector_source.report_io(command_type, io_def)
 
 
 class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):

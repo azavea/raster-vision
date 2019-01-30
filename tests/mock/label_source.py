@@ -55,14 +55,12 @@ class MockLabelSourceConfig(SupressDeepCopyMixin, LabelSourceConfig):
     def update_for_command(self,
                            command_type,
                            experiment_config,
-                           context=None,
-                           io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config,
-                                              context, io_def)
-        if result is None:
-            return io_def or rv.core.CommandIODefinition()
-        else:
-            return result
+                           context=None):
+        super().update_for_command(command_type, experiment_config, context)
+        self.mock.update_for_command(command_type, experiment_config, context)
+
+    def report_io(self, command_type, io_def):
+        self.mock.report_io(command_type, io_def)
 
 
 class MockLabelSourceConfigBuilder(SupressDeepCopyMixin,

@@ -17,6 +17,14 @@ class CommandConfig(ABC):
         """Run the command."""
         pass
 
+    @abstractmethod
+    def report_io(self):
+        """Returns an IODefinition object with all inputs and outputs reported
+        for this command.
+        """
+        pass
+
+
     def to_proto(self):
         """Returns the protobuf configuration for this config.
         """

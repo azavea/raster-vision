@@ -36,10 +36,11 @@ class CommandDefinition:
             for command_type in rv.ALL_COMMANDS:
                 log.debug(
                     'Updating config for command {}...'.format(command_type))
-                io_def = e.update_for_command(command_type, e)
+                e.update_for_command(command_type, e)
                 log.debug('Creating experiment configuration...'.format(
                     command_type))
                 command_config = e.make_command_config(command_type)
+                io_def = command_config.report_io()
                 command_def = cls(e.id, command_config, io_def)
                 command_definitions.append(command_def)
 

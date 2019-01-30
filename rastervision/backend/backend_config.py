@@ -38,16 +38,10 @@ class BackendConfig(BundledConfigMixin, Config):
                            .from_proto(msg) \
                            .build()
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or CommandIODefinition()
+    def report_io(self, command_type, io_def):
         if command_type == rv.TRAIN:
             if self.pretrained_model_uri:
                 io_def.add_input(self.pretrained_model_uri)
-        return io_def
 
 
 class BackendConfigBuilder(ConfigBuilder):

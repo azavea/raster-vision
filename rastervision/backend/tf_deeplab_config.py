@@ -102,34 +102,42 @@ class TFDeeplabConfig(BackendConfig):
     def update_for_command(self,
                            command_type,
                            experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = super().update_for_command(command_type, experiment_config,
-                                            context, io_def)
+                           context=None):
+        super().update_for_command(command_type, experiment_config, context)
+
         if command_type == rv.CHIP:
             self.training_data_uri = experiment_config.chip_uri
-            io_def.add_output(self.training_data_uri)
+
         if command_type == rv.TRAIN:
             self.training_output_uri = experiment_config.train_uri
-            io_def.add_input(self.training_data_uri)
 
             self.model_uri = os.path.join(self.training_output_uri, 'model')
+
+            if not self.fine_tune_checkpoint_name:
+                # Set the fine tune checkpoint name to the experiment id
+                self.fine_tune_checkpoint_name = experiment_config.id
+
+    def report_io(self, command_type, io_def):
+        super().report_io(command_type, io_def)
+
+        if command_type == rv.CHIP:
+            io_def.add_output(self.training_data_uri)
+
+        if command_type == rv.TRAIN:
+            io_def.add_input(self.training_data_uri)
             io_def.add_output(self.model_uri)
 
-            # Set the fine tune checkpoint name to the experiment id
-            if not self.fine_tune_checkpoint_name:
-                self.fine_tune_checkpoint_name = experiment_config.id
             full_checkpoint_path = '{}.tar.gz'.format(
                 os.path.join(self.training_output_uri,
                              self.fine_tune_checkpoint_name))
             io_def.add_output(full_checkpoint_path)
+
         if command_type in [rv.PREDICT, rv.BUNDLE]:
             if not self.model_uri:
                 io_def.add_missing('Missing model_uri.')
             else:
                 io_def.add_input(self.model_uri)
 
-        return io_def
 
     def save_bundle_files(self, bundle_dir):
         if not self.model_uri:
