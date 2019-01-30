@@ -90,7 +90,7 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
             self.merge(window_eval)
 
     def compute_vector(self, gt, pred, mode, class_id):
-        """Compute evaluation over vectorized predictions.
+        """Compute evaluation over vector predictions.
             Args:
                 gt: Ground-truth GeoJSON.  Either a string (containing
                     unparsed GeoJSON or a file name), or a dictionary
