@@ -209,13 +209,32 @@ Set the appropriate configuration in your :ref:`raster vision config`:
 
    [AWS_BATCH]
    job_queue=rasterVisionQueue
+   cpu_job_queue=rasterVisionQueue
    job_definition=raster-vision-gpu
+   cpu_job_definition=raster-vision-gpu
    attempts=1
 
 
-* ``job_queue`` - Job Queue to submit Batch jobs to.
-* ``job_definition`` - The Job Definition that define the Batch jobs to run.
+* ``job_queue`` - Job Queue to submit GPU Batch jobs to.
+* ``cpu_job_queue`` - Job Queue to submit CPU-only jobs to.
+* ``job_definition`` - The Job Definition that defines the Batch jobs to run.
+* ``cpu_job_definition`` - The Job Definition that defines the CPU Batch jobs to run.
 * ``attempts`` - Optional number of attempts to retry failed jobs.
+
+Note that in the sample file given above, the same respective resources are used for the GPU-capable and the CPU-capable jobs.
+That is because the  `Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-aws>`_ only creates one GPU-capable queue and one GPU-capable job definition.
+That repository is currently under revision.
+
+If you have created a CPU-only job queue and a CPU-only job definition, the configuration will look something like this:
+
+.. code:: ini
+
+   [AWS_BATCH]
+   job_queue=rasterVisionQueue
+   cpu_job_queue=rasterVisionQueueCPU
+   job_definition=raster-vision-gpu
+   cpu_job_definition=raster-vision-cpu
+   attempts=1
 
 .. seealso::
    For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws batch`.
