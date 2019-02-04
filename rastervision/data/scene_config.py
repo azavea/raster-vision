@@ -320,3 +320,9 @@ class SceneConfigBuilder(ConfigBuilder):
         b = deepcopy(self)
         b.config['aoi_uris'] = uris
         return b
+
+    def clear_aois(self):
+        """Clears the AOIs for this scene"""
+        b = deepcopy(self)
+        b.config['aoi_uris'] = None
+        return b
