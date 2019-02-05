@@ -38,7 +38,7 @@ If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can in
 
     > pip install rastervision[aws,tensorflow,tensorflow-gpu]
 
-If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to follow the instructions in thier documentation about how to install, or look at our Dockerfile to see an example of setting this up.
+If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to follow the instructions in their documentation about how to install, or look at our Dockerfile to see an example of setting this up.
 
 .. note:: You must install Tensorflow Object Detection and Deep Lab from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream.
 
@@ -64,7 +64,7 @@ By default, Raster Vision looks for a configuration file named ``default`` in th
 Profiles
 ^^^^^^^^
 
-Profiles allow you to specify profile names from the command line or enviroment variables
+Profiles allow you to specify profile names from the command line or environment variables
 to determine which settings to use. The configuration file used will be named the same as the
 profile: if you had two profiles (the ``default`` and one named ``myprofile``), your
 ``${HOME}/.rastervision`` would look like this:
@@ -121,7 +121,7 @@ Any INI file option can also be stated in the environment. Just prepend the sect
 
 In addition to those environment variables that match the INI file values, there are the following environment variable options:
 
-* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a Docker conatiner setup that mounts large network storage into a specific directory inside the Docker container. The tmp_dir can also be set on :ref:`cli` as a root option.
+* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a Docker container setup that mounts large network storage into a specific directory inside the Docker container. The tmp_dir can also be set on :ref:`cli` as a root option.
 * ``RV_CONFIG`` - Optional path to the specific Raster Vision Configuration file. These configurations will override  configurations that exist in configurations files in the default locations, but will not cause those configurations to be ignored.
 * ``RV_CONFIG_DIR`` - Optional path to the directory that contains Raster Vision configuration. Defaults to ``${HOME}/.rastervision``
 
@@ -200,7 +200,7 @@ If you want to run code against AWS, you'll need a specific Raster Vision AWS Ba
 
 .. _aws batch config section:
 
-AWS Batch Confugration Section
+AWS Batch Configuration Section
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Set the appropriate configuration in your :ref:`raster vision config`:
