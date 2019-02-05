@@ -91,7 +91,7 @@ html_context = {
         ProjectLink('Gitter Channel', 'https://gitter.im/azavea/raster-vision'),
         ProjectLink('Raster Vision Examples', 'https://github.com/azavea/raster-vision-examples'),
         ProjectLink('QGIS Plugin', 'https://github.com/azavea/raster-vision-qgis'),
-        ProjectLink('AWS Batch Setup', 'https://github.com/azavea/raster-vision-aws'),
+        ProjectLink('AWS Batch Setup', 'https://github.com/azavea/raster-vision-cluodformation'),
         ProjectLink('Issue Tracker', 'https://github.com/azavea/raster-vision/issues/'),
         ProjectLink('CHANGELOG', 'changelog.html'),
         ProjectLink('Azavea', 'https://www.azavea.com/'),

@@ -196,7 +196,7 @@ If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-i
 Setting up AWS Batch
 --------------------
 
-If you want to run code against AWS, you'll need a specific Raster Vision AWS Batch setup on your account, which you can accomplish through the instructions at the  `Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-aws>`_.
+If you want to run code against AWS, you'll need a specific Raster Vision AWS Batch setup on your account, which you can accomplish by following the instructions found in the `CloudFormation-based Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-cloudformation>`_.
 
 .. _aws batch config section:
 
@@ -208,10 +208,10 @@ Set the appropriate configuration in your :ref:`raster vision config`:
 .. code:: ini
 
    [AWS_BATCH]
-   job_queue=rasterVisionQueue
-   cpu_job_queue=rasterVisionQueue
-   job_definition=raster-vision-gpu
-   cpu_job_definition=raster-vision-gpu
+   job_queue=RasterVisionGpuJobQueue
+   cpu_job_queue=RasterVisionCpuJobQueue
+   job_definition=RasterVisionHostedGpuJobDefinition
+   cpu_job_definition=RasterVisionHostedCpuJobDefinition
    attempts=1
 
 
@@ -221,20 +221,10 @@ Set the appropriate configuration in your :ref:`raster vision config`:
 * ``cpu_job_definition`` - The Job Definition that defines the CPU Batch jobs to run.
 * ``attempts`` - Optional number of attempts to retry failed jobs.
 
-Note that in the sample file given above, the same respective resources are used for the GPU-capable and the CPU-capable jobs.
-That is because the  `Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-aws>`_ only creates one GPU-capable queue and one GPU-capable job definition.
-That repository is currently under revision.
-
-If you have created a CPU-only job queue and a CPU-only job definition, the configuration will look something like this:
-
-.. code:: ini
-
-   [AWS_BATCH]
-   job_queue=rasterVisionQueue
-   cpu_job_queue=rasterVisionQueueCPU
-   job_definition=raster-vision-gpu
-   cpu_job_definition=raster-vision-cpu
-   attempts=1
+Note the names of the resources in the sample given above.
+By default, the code in `Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-cloudformation>`_ will create resources with those names.
+During that setup process, you will be given the option to supply a prefix (e.g. ``myname``) that will be prepended to all resource names.
+If you exercise that option, then the above names will be something like ``mynameRasterVisionGpuJobQueue'', ``mynameRasterVisionHostedCpuJobDefinition``, and so-on.
 
 .. seealso::
    For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws batch`.
