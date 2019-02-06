@@ -17,6 +17,36 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
         self.rgb = rgb
 
     def to_proto(self):
+        """Turn this configuration into a ProtoBuf message.
+
+        The fields in the message are as follows:
+            - `denoise` gives the radius of the structural element
+              used to remove high-frequency signals from the image.
+            - `uri` is the location where vector output should be
+              written
+            - `mode` is the vectorification mode (currently only
+              "polygons" and "buildings" are acceptable values).
+            - `class_id` specifies the predication class that is to
+              turned into vectors
+            - `building_options` communicates options useful for
+              vectorification of building predictions (it is intended
+              to break-up clusters of buildings):
+                - `min_aspect_ratio` is the ratio between length and
+                  height (or height and length) of anything that can
+                  be considered to be a cluster of buildings.  The
+                  goal is to distinguish between rows of buildings and
+                  (say) a single building.
+                - `min_area` is the minimum area of anything that can
+                  be considered to be a cluster of buildings.  The
+                  goal is to distinguish between buildings and
+                  artifacts.
+                - `element_width_factor` is the width of the
+                  structural element used to break building clusters
+                  as a fraction of the width of the cluster.
+                - `element_thickness` is the thickness of the
+                  structural element that is used to break building
+                  clusters.
+        """
         msg = super().to_proto()
         if self.uri:
             msg.semantic_segmentation_raster_store.uri = self.uri
