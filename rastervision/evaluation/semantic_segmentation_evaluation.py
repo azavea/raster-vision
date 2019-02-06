@@ -90,7 +90,7 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
             self.merge(window_eval)
 
     def compute_vector(self, gt, pred, mode, class_id):
-        """Compute evaluation over vectorized predictions.
+        """Compute evaluation over vector predictions.
             Args:
                 gt: Ground-truth GeoJSON.  Either a string (containing
                     unparsed GeoJSON or a file name), or a dictionary
@@ -147,11 +147,11 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
 
             evaluation_item = ClassEvaluationItem(precision, recall, f1,
                                                   count_error, gt_count,
-                                                  -class_id, class_name)
+                                                  class_id, class_name)
 
             if hasattr(self, 'class_to_eval_item') and isinstance(
                     self.class_to_eval_item, dict):
-                self.class_to_eval_item[-class_id] = evaluation_item
+                self.class_to_eval_item[class_id] = evaluation_item
             else:
-                self.class_to_eval_item = {-class_id: evaluation_item}
+                self.class_to_eval_item = {class_id: evaluation_item}
             self.compute_avg()

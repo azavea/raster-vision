@@ -27,7 +27,7 @@ class SemanticSegmentationRasterStore(LabelStore):
             extent: (Box) The extent of the scene
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
-            vector_output: (str or None) URI of GeoJSON polygons derived from the mask
+            vector_output: Array of dictionaries containing vectorization options
             class_map: (ClassMap) with color values used to convert class ids to
                 RGB values
 

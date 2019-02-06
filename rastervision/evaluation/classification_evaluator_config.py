@@ -13,14 +13,21 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
     are classification-based.
     """
 
-    def __init__(self, evaluator_type, class_map, output_uri=None):
+    def __init__(self,
+                 evaluator_type,
+                 class_map,
+                 output_uri=None,
+                 vector_output_uri=None):
         super().__init__(evaluator_type)
         self.class_map = class_map
         self.output_uri = output_uri
+        self.vector_output_uri = vector_output_uri
 
     def to_proto(self):
         sub_msg = EvaluatorConfigMsg.ClassificationEvaluatorConfig(
-            class_items=self.class_map.to_proto(), output_uri=self.output_uri)
+            class_items=self.class_map.to_proto(),
+            output_uri=self.output_uri,
+            vector_output_uri=self.vector_output_uri)
         msg = EvaluatorConfigMsg(
             evaluator_type=self.evaluator_type, classification_config=sub_msg)
 
@@ -36,7 +43,12 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
             if not self.output_uri:
                 self.output_uri = os.path.join(experiment_config.eval_uri,
                                                'eval.json')
+            if not self.vector_output_uri:
+                self.vector_output_uri = os.path.join(
+                    experiment_config.eval_uri, 'vector-eval.json')
             io_def.add_output(self.output_uri)
+            io_def.add_output(self.vector_output_uri)
+
         return io_def
 
 
@@ -46,6 +58,7 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
         if prev:
             self.config = {
                 'output_uri': prev.output_uri,
+                'vector_output_uri': prev.vector_output_uri,
                 'class_map': prev.class_map
             }
         super().__init__(cls, self.config)
@@ -64,6 +77,7 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
     def from_proto(cls, msg):
         b = cls()
         return b.with_output_uri(msg.classification_config.output_uri) \
+                .with_vector_output_uri(msg.classification_config.vector_output_uri) \
                 .with_class_map(list(msg.classification_config.class_items))
 
     def with_output_uri(self, output_uri):
@@ -74,6 +88,16 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
         """
         b = deepcopy(self)
         b.config['output_uri'] = output_uri
+        return b
+
+    def with_vector_output_uri(self, vector_output_uri):
+        """Set the vector_output_uri.
+
+            Args:
+                vector_output_uri: URI to the vector stats json to use
+        """
+        b = deepcopy(self)
+        b.config['vector_output_uri'] = vector_output_uri
         return b
 
     def with_task(self, task):

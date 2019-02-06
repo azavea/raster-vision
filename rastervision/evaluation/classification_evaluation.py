@@ -15,12 +15,17 @@ class ClassificationEvaluation(ABC):
 
     def __init__(self):
         self.clear()
+        self._is_empty = True
 
     def clear(self):
         """Clear the Evaluation."""
         self.class_to_eval_item = {}
         self.scene_to_eval = {}
         self.avg_item = None
+        self._is_empty = True
+
+    def is_empty(self):
+        return self._is_empty
 
     def set_class_to_eval_item(self, class_to_eval_item):
         self.class_to_eval_item = class_to_eval_item
@@ -37,7 +42,8 @@ class ClassificationEvaluation(ABC):
         json_rep = []
         for eval_item in self.class_to_eval_item.values():
             json_rep.append(eval_item.to_json())
-        json_rep.append(self.avg_item.to_json())
+        if self.avg_item:
+            json_rep.append(self.avg_item.to_json())
 
         if self.scene_to_eval:
             json_rep = {'overall': json_rep}
@@ -76,6 +82,7 @@ class ClassificationEvaluation(ABC):
                 else:
                     self.class_to_eval_item[key] = other_eval_item
 
+        self._is_empty = False
         self.compute_avg()
 
         if scene_id is not None:
