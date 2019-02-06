@@ -90,6 +90,10 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         vector_eval_json = json.loads(file_to_str(vector_output_uri))
         exp_vector_eval_json = json.loads(
             file_to_str(data_file_path('expected-vector-eval.json')))
+        # NOTE:  The precision  and recall  values found  in the  file
+        # `expected-vector-eval.json`  are equal to fractions of  the
+        # form (n-1)/n for  n <= 7 which  can be seen to  be (and have
+        # been manually verified to be) correct.
         self.assertDictEqual(vector_eval_json, exp_vector_eval_json)
 
 

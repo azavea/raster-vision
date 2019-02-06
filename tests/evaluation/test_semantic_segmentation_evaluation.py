@@ -61,6 +61,9 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         eval = SemanticSegmentationEvaluation(class_map)
         eval.compute_vector(gt_uri, pred_uri, 'polygons', 1)
 
+        # NOTE: The  two geojson files referenced  above contain three
+        # unique geometries total, each  file contains two geometries,
+        # and there is one geometry shared between the two.
         tp = 1.0
         fp = 1.0
         fn = 1.0
