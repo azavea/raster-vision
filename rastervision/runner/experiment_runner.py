@@ -61,24 +61,7 @@ class ExperimentRunner(ABC):
             experiments = [experiments]
 
         log.debug('Generating command definitions from experiments...')
-        command_definitions = CommandDefinition.from_experiments(experiments, splits)
-
-        # Filter  out commands we aren't running.
-
-        log.debug('Filtering commands not in target command list...')
-        command_definitions, not_requested = CommandDefinition.filter_to_target_commands(
-            command_definitions, commands_to_run)
-
-        # Print unrequested commands
-        if dry_run:
-            if not_requested:
-                print()
-                click.echo(
-                    click.style(
-                        'Commands not requsted:', fg='yellow', underline=True))
-                for command in not_requested:
-                    self.print_command(command)
-                    print()
+        command_definitions = CommandDefinition.from_experiments(experiments, commands_to_run, splits)
 
         # Filter  out commands that don't have any output.
         log.debug('Filtering commands that do not have any output...')

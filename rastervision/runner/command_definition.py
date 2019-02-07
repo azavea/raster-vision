@@ -29,6 +29,7 @@ class CommandDefinition:
     @classmethod
     def from_experiments(cls,
                          experiments: List[rv.ExperimentConfig],
+                         commands_to_run: List[string],
                          splits: int = 1):
         command_definitions = []
 
@@ -41,28 +42,16 @@ class CommandDefinition:
                 log.debug(
                     'Updating config for command {}...'.format(command_type))
                 e.update_for_command(command_type, e)
-                log.debug('Creating experiment configuration...'.format(
-                    command_type))
-                base_command_config = e.make_command_config(command_type)
-                for command_config in base_command_config.split(splits):
-                    io_def = command_config.report_io()
-                    command_def = cls(e.id, command_config, io_def)
-                    command_definitions.append(command_def)
+                if command_type in commands_to_run:
+                    log.debug('Creating command configurations for {}...'.format(
+                        command_type))
+                    base_command_config = e.make_command_config(command_type)
+                    for command_config in base_command_config.split(splits):
+                        io_def = command_config.report_io()
+                        command_def = cls(e.id, command_config, io_def)
+                        command_definitions.append(command_def)
 
         return command_definitions
-
-    @staticmethod
-    def filter_to_target_commands(command_definitions, target_commands):
-        """Filters commands by the target command type."""
-        result = []
-        skipped = []
-        for command_def in command_definitions:
-            if command_def.command_config.command_type in target_commands:
-                result.append(command_def)
-            else:
-                skipped.append(command_def)
-
-        return (result, skipped)
 
     @staticmethod
     def filter_no_output(command_definitions):
