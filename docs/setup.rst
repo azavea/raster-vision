@@ -196,7 +196,7 @@ If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-i
 Setting up AWS Batch
 --------------------
 
-If you want to run code against AWS, you'll need a specific Raster Vision AWS Batch setup on your account, which you can accomplish by following the instructions found in the `CloudFormation-based Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-batch>`_.
+If you want to run code against AWS, you'll need a specific Raster Vision AWS Batch setup on your account, which you can accomplish by following the instructions found in the `CloudFormation-based Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-aws>`_.
 
 .. _aws batch config section:
 
