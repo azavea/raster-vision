@@ -110,26 +110,18 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
             raise rv.ConfigError('Backend not set for ChipCommandConfig. Use '
                                  'with_backend or with_experiment')
         check_backend_type(self.backend)
-        # if self.train_scenes == []:
-        #     raise rv.ConfigError(
-        #         'Train scenes not set for ChipCommandConfig. Use '
-        #         'with_train_scenes or with_experiment')
-        # if len(self.train_scenes) > 0:
-        #     for s in self.train_scenes:
-        #         if not isinstance(s, SceneConfig):
-        #             raise rv.ConfigError(
-        #                 'train_scenes must be a list of class SceneConfig, '
-        #                 'got a list of {}'.format(type(s)))
-        # if self.val_scenes == []:
-        #     raise rv.ConfigError(
-        #         'Val scenes not set for ChipCommandConfig. Use '
-        #         'with_val_scenes or with_experiment')
-        # if len(self.val_scenes) > 0:
-        #     for s in self.val_scenes:
-        #         if not isinstance(s, SceneConfig):
-        #             raise rv.ConfigError(
-        #                 'val_scenes must be a list of class SceneConfig, '
-        #                 'got a list of {}'.format(type(s)))
+        if len(self.train_scenes) > 0:
+            for s in self.train_scenes:
+                if not isinstance(s, SceneConfig):
+                    raise rv.ConfigError(
+                        'train_scenes must be a list of class SceneConfig, '
+                        'got a list of {}'.format(type(s)))
+        if len(self.val_scenes) > 0:
+            for s in self.val_scenes:
+                if not isinstance(s, SceneConfig):
+                    raise rv.ConfigError(
+                        'val_scenes must be a list of class SceneConfig, '
+                        'got a list of {}'.format(type(s)))
 
     def build(self):
         self.validate()
