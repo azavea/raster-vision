@@ -57,7 +57,10 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
 
         vector_output = [{
             'mode': 'buildings',
-            'class_id': 1
+            'class_id': 1,
+            'building_options': {
+                'element_width_factor': 0.51
+            }
         }, {
             'denoise': 50,
             'mode': 'polygons',

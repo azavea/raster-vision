@@ -6,6 +6,8 @@ from rastervision.data.label_store import (
     LabelStoreConfig, LabelStoreConfigBuilder, SemanticSegmentationRasterStore)
 from rastervision.protos.label_store_pb2 import LabelStoreConfig as LabelStoreConfigMsg
 
+VectorOutput = LabelStoreConfigMsg.SemanticSegmentationRasterStore.VectorOutput
+
 
 class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
     def __init__(self, uri=None, vector_output=[], rgb=False):
@@ -15,19 +17,62 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
         self.rgb = rgb
 
     def to_proto(self):
+        """Turn this configuration into a ProtoBuf message.
+
+        The fields in the message are as follows:
+            - `denoise` gives the radius of the structural element
+              used to remove high-frequency signals from the image.
+            - `uri` is the location where vector output should be
+              written
+            - `mode` is the vectorification mode (currently only
+              "polygons" and "buildings" are acceptable values).
+            - `class_id` specifies the predication class that is to
+              turned into vectors
+            - `building_options` communicates options useful for
+              vectorification of building predictions (it is intended
+              to break-up clusters of buildings):
+                - `min_aspect_ratio` is the ratio between length and
+                  height (or height and length) of anything that can
+                  be considered to be a cluster of buildings.  The
+                  goal is to distinguish between rows of buildings and
+                  (say) a single building.
+                - `min_area` is the minimum area of anything that can
+                  be considered to be a cluster of buildings.  The
+                  goal is to distinguish between buildings and
+                  artifacts.
+                - `element_width_factor` is the width of the
+                  structural element used to break building clusters
+                  as a fraction of the width of the cluster.
+                - `element_thickness` is the thickness of the
+                  structural element that is used to break building
+                  clusters.
+        """
         msg = super().to_proto()
         if self.uri:
             msg.semantic_segmentation_raster_store.uri = self.uri
         if self.vector_output:
             ar = []
             for vo in self.vector_output:
-                msg2 = LabelStoreConfigMsg.SemanticSegmentationRasterStore.VectorOutput(
-                )
-                msg2.denoise = vo['denoise'] if 'denoise' in vo.keys() else 0
-                msg2.uri = vo['uri'] if 'uri' in vo.keys() else ''
-                msg2.mode = vo['mode']
-                msg2.class_id = vo['class_id']
-                ar.append(msg2)
+                vo_msg = VectorOutput()
+                vo_msg.denoise = vo['denoise'] if 'denoise' in vo.keys() else 0
+                vo_msg.uri = vo['uri'] if 'uri' in vo.keys() else ''
+                vo_msg.mode = vo['mode']
+                vo_msg.class_id = vo['class_id']
+                if 'building_options' in vo.keys():
+                    options = vo['building_options']
+                else:
+                    options = {}
+                bldg_msg = vo_msg.building_options
+                if 'min_aspect_ratio' in options.keys():
+                    bldg_msg.min_aspect_ratio = options['min_aspect_ratio']
+                if 'min_area' in options.keys() and options['min_area']:
+                    bldg_msg.min_area = options['min_area']
+                if 'element_width_factor' in options.keys():
+                    bldg_msg.element_width_factor = options[
+                        'element_width_factor']
+                if 'element_thickness' in options.keys():
+                    bldg_msg.element_thickness = options['element_thickness']
+                ar.append(vo_msg)
             msg.semantic_segmentation_raster_store.vector_output.extend(ar)
         msg.semantic_segmentation_raster_store.rgb = self.rgb
         return msg
@@ -119,10 +164,10 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
     def from_proto(self, msg):
         uri = msg.semantic_segmentation_raster_store.uri
         rgb = msg.semantic_segmentation_raster_store.rgb
-        vo = msg.semantic_segmentation_raster_store.vector_output
+        vo_msg = msg.semantic_segmentation_raster_store.vector_output
 
         return self.with_uri(uri) \
-                   .with_vector_output(vo) \
+                   .with_vector_output(vo_msg) \
                    .with_rgb(rgb)
 
     def with_uri(self, uri):
@@ -159,12 +204,23 @@ class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):
             for vo in vector_output:
                 ar.append(vo.copy())
         else:
-            for vo in vector_output:
+            for vo_msg in vector_output:
+                bldg_msg = vo_msg.building_options
                 ar.append({
-                    'denoise': vo.denoise,
-                    'uri': vo.uri,
-                    'mode': vo.mode,
-                    'class_id': vo.class_id
+                    'denoise': vo_msg.denoise,
+                    'uri': vo_msg.uri,
+                    'mode': vo_msg.mode,
+                    'class_id': vo_msg.class_id,
+                    'building_options': {
+                        'min_aspect_ratio':
+                        bldg_msg.min_aspect_ratio,
+                        'min_area':
+                        bldg_msg.min_area if bldg_msg.min_area > 0 else None,
+                        'element_width_factor':
+                        bldg_msg.element_width_factor,
+                        'element_thickness':
+                        bldg_msg.element_thickness,
+                    },
                 })
 
         b.config['vector_output'] = ar

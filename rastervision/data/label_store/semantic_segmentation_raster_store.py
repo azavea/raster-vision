@@ -27,7 +27,8 @@ class SemanticSegmentationRasterStore(LabelStore):
             extent: (Box) The extent of the scene
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
-            vector_output: Array of dictionaries containing vectorization options
+            vector_output: (None or array of dicts) containing vectorifiction
+                configuration information
             class_map: (ClassMap) with color values used to convert class ids to
                 RGB values
 
@@ -159,8 +160,15 @@ class SemanticSegmentationRasterStore(LabelStore):
                     class_mask = denoise.denoise(class_mask, denoise_radius)
 
                 if uri and mode == 'buildings':
+                    options = vo['building_options']
                     geojson = vectorification.geojson_from_mask(
-                        mask=class_mask, transform=transform, mode=mode)
+                        mask=class_mask,
+                        transform=transform,
+                        mode=mode,
+                        min_aspect_ratio=options['min_aspect_ratio'],
+                        min_area=options['min_area'],
+                        width_factor=options['element_width_factor'],
+                        thickness=options['element_thickness'])
                 elif uri and mode == 'polygons':
                     geojson = vectorification.geojson_from_mask(
                         mask=class_mask, transform=transform, mode=mode)

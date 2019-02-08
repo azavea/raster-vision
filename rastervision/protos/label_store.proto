@@ -6,11 +6,19 @@ import "google/protobuf/struct.proto";
 
 message LabelStoreConfig {
     message SemanticSegmentationRasterStore {
+        message BuildingOptions {
+            optional float min_aspect_ratio = 1 [default=1.618];
+            optional float min_area = 2;
+            optional float element_width_factor = 3 [default=0.5];
+            optional float element_thickness = 4 [default=0.001];
+        }
+
         message VectorOutput {
             optional int32 denoise = 1 [default=0];
             optional string uri = 2 [default=""];
             required string mode = 3;
             required int32 class_id = 4;
+            optional BuildingOptions building_options = 5;
         }
 
         optional string uri = 1;
