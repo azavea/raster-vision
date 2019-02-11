@@ -3,6 +3,7 @@ import logging
 import copy
 from subprocess import check_output
 import os
+from functools import lru_cache
 
 from supermercado.burntiles import burn
 from shapely.geometry import shape, mapping
@@ -50,27 +51,14 @@ def merge_geojson(geojson, id_field):
     return {'type': 'FeatureCollection', 'features': proc_features}
 
 
-tile_feature_cache = {}
-
-
+@lru_cache(maxsize=32)
 def get_tile_features(tile_uri, z, x, y):
     """Get GeoJSON features for a specific tile using in-memory caching."""
     cache_dir = os.path.join(RVConfig.get_tmp_dir_root(), 'vector-tiles')
-    tile_index = (tile_uri, z, x, y)
-    tile_features = tile_feature_cache.get(tile_index)
-    if tile_features is None:
-        tile_path = get_cached_file(cache_dir, tile_uri)
-        cmd = [
-            'tippecanoe-decode', '-f', '-c', tile_path,
-            str(z),
-            str(x),
-            str(y)
-        ]
-        tile_geojson_str = check_output(cmd).decode('utf-8')
-        tile_features = [json.loads(ts) for ts in tile_geojson_str.split('\n')]
-        tile_feature_cache[tile_index] = tile_features
-    else:
-        log.debug('Vector tile cache hit: ' + str(tile_index))
+    tile_path = get_cached_file(cache_dir, tile_uri)
+    cmd = ['tippecanoe-decode', '-f', '-c', tile_path, str(z), str(x), str(y)]
+    tile_geojson_str = check_output(cmd).decode('utf-8')
+    tile_features = [json.loads(ts) for ts in tile_geojson_str.split('\n')]
 
     return tile_features
 
