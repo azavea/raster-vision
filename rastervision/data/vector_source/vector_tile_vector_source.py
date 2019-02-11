@@ -3,6 +3,7 @@ import logging
 import copy
 from subprocess import check_output
 import os
+from functools import lru_cache
 
 from supermercado.burntiles import burn
 from shapely.geometry import shape, mapping
@@ -15,20 +16,18 @@ from rastervision.rv_config import RVConfig
 log = logging.getLogger(__name__)
 
 
-def process_features(features, map_extent, id_field):
-    """Merge features that share an id and crop them against the extent.
+def merge_geojson(geojson, id_field):
+    """Merge features that share an id.
 
     Args:
-        features: (list) GeoJSON feature that have an id property used to merge
+        geojson: (dict) GeoJSON with features that have an id property used to merge
             features that are split across multiple tiles.
-        map_extent: (Box) in map coordinates
         id_field: (str) name of field in feature['properties'] that contains the
             feature's unique id. Used for merging features that are split across
             tile boundaries.
     """
-    extent_geom = map_extent.to_shapely()
     id_to_features = {}
-    for f in features:
+    for f in geojson['features']:
         id = f['properties'][id_field]
         id_features = id_to_features.get(id, [])
         id_features.append(f)
@@ -45,23 +44,30 @@ def process_features(features, map_extent, id_field):
             id_geoms.append(g)
 
         union_geom = cascaded_union(id_geoms)
-        geom = union_geom.intersection(extent_geom)
         union_feature = copy.deepcopy(id_features[0])
-        union_feature['geometry'] = mapping(geom)
+        union_feature['geometry'] = mapping(union_geom)
         proc_features.append(union_feature)
-    return proc_features
+
+    return {'type': 'FeatureCollection', 'features': proc_features}
 
 
-def vector_tile_to_geojson(uri, zoom, id_field, crs_transformer, extent):
-    """Get GeoJSON covering an extent from a vector tile endpoint.
+@lru_cache(maxsize=32)
+def get_tile_features(tile_uri, z, x, y):
+    """Get GeoJSON features for a specific tile using in-memory caching."""
+    cache_dir = os.path.join(RVConfig.get_tmp_dir_root(), 'vector-tiles')
+    tile_path = get_cached_file(cache_dir, tile_uri)
+    cmd = ['tippecanoe-decode', '-f', '-c', tile_path, str(z), str(x), str(y)]
+    tile_geojson_str = check_output(cmd).decode('utf-8')
+    tile_features = [json.loads(ts) for ts in tile_geojson_str.split('\n')]
 
-    Merges features that are split across tiles and crops against the extentself.
-    """
+    return tile_features
+
+
+def vector_tile_to_geojson(uri, zoom, map_extent):
+    """Get GeoJSON features that overlap with an extent from a vector tile endpoint."""
     log.info('Downloading and converting vector tiles to GeoJSON...')
 
     # Figure out which tiles cover the extent.
-    map_extent = extent.reproject(
-        lambda point: crs_transformer.pixel_to_map(point))
     extent_polys = [{
         'type': 'Feature',
         'properties': {},
@@ -72,32 +78,29 @@ def vector_tile_to_geojson(uri, zoom, id_field, crs_transformer, extent):
     }]
     xyzs = burn(extent_polys, zoom)
 
-    # Download tiles and convert to geojson.
+    # Retrieve tile features.
     features = []
-    cache_dir = os.path.join(RVConfig.get_tmp_dir_root(), 'vector-tiles')
     for xyz in xyzs:
         x, y, z = xyz
         # If this isn't a zxy schema, this is a no-op.
         tile_uri = uri.format(x=x, y=y, z=z)
-
-        # TODO some opportunities for improving efficiency:
-        # * LRU in memory cache
-        # * Filter out features that have None as class_id before calling
-        # process_features
-        tile_path = get_cached_file(cache_dir, tile_uri)
-        cmd = [
-            'tippecanoe-decode', '-f', '-c', tile_path,
-            str(z),
-            str(x),
-            str(y)
-        ]
-        tile_geojson_str = check_output(cmd).decode('utf-8')
-        tile_features = [json.loads(ts) for ts in tile_geojson_str.split('\n')]
+        tile_features = get_tile_features(tile_uri, z, x, y)
         features.extend(tile_features)
 
-    proc_features = process_features(features, map_extent, id_field)
-    geojson = {'type': 'FeatureCollection', 'features': proc_features}
-    return geojson
+    # Crop features to extent
+    extent_geom = map_extent.to_shapely()
+    cropped_features = []
+    for f in features:
+        geom = shape(f['geometry'])
+        if f['geometry']['type'].lower() in ['polygon', 'multipolygon']:
+            geom = geom.buffer(0)
+        geom = geom.intersection(extent_geom)
+        if not geom.is_empty:
+            f = dict(f)
+            f['geometry'] = mapping(geom)
+            cropped_features.append(f)
+
+    return {'type': 'FeatureCollection', 'features': cropped_features}
 
 
 class VectorTileVectorSource(VectorSource):
@@ -129,5 +132,18 @@ class VectorTileVectorSource(VectorSource):
         super().__init__(class_inf_opts)
 
     def _get_geojson(self):
-        return vector_tile_to_geojson(self.uri, self.zoom, self.id_field,
-                                      self.crs_transformer, self.extent)
+        # This attempts to do things in an efficient order. First, we extract raw
+        # GeoJSON from the vector tiles covering the extent. This uses caching, so that
+        # we never have to process the same vector tile twice (even across scenes). Then,
+        # we infer class ids, which drops any irrelevant features which should speed up
+        # the next phase which merges features that are split across tiles.
+        map_extent = self.extent.reproject(
+            lambda point: self.crs_transformer.pixel_to_map(point))
+        log.debug(
+            'Reading and converting vector tiles to GeoJSON for extent...')
+        geojson = vector_tile_to_geojson(self.uri, self.zoom, map_extent)
+        log.debug('Inferring class_ids...')
+        geojson = self.class_inference.transform_geojson(geojson)
+        log.debug('Merging GeoJSON features...')
+        geojson = merge_geojson(geojson, self.id_field)
+        return geojson

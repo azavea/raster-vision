@@ -16,4 +16,5 @@ class GeoJSONVectorSource(VectorSource):
         super().__init__(class_inf_opts)
 
     def _get_geojson(self):
-        return json.loads(file_to_str(self.uri))
+        geojson = json.loads(file_to_str(self.uri))
+        return self.class_inference.transform_geojson(geojson)
