@@ -12,6 +12,6 @@
         "awscli==1.15.*"
     ],
     "feature-extraction": [
-        "https://github.com/azavea/mask-to-polygons/archive/085c022158052473dd75d278c76cfa16067fc53a.zip"
+        "https://github.com/azavea/mask-to-polygons/archive/400f118a0beb78050c48b73558c51074f2035466.zip"
     ]
 }

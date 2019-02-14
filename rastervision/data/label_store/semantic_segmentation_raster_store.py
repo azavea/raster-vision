@@ -154,7 +154,8 @@ class SemanticSegmentationRasterStore(LabelStore):
                 class_mask = np.array(mask == class_id, dtype=np.uint8)
                 local_geojson_path = get_local_path(uri, self.tmp_dir)
 
-                transform = self.crs_transformer.get_affine_transform()
+                def transform(x, y):
+                    return self.crs_transformer.pixel_to_map((x, y))
 
                 if denoise_radius > 0:
                     class_mask = denoise.denoise(class_mask, denoise_radius)
