@@ -10,6 +10,10 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
 
         img_path = get_path('scene/image.tif')
         label_path = get_path('scene/labels.json')
+
+        img2_path = get_path('scene/image2.tif')
+        label2_path = get_path('scene/labels2.json')
+
         backend_conf_path = get_path('configs/backend.config')
 
         pretrained_model = (
@@ -38,31 +42,35 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                                                       replace_model=True) \
                                   .build()
 
-        label_source = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
-                                           .with_uri(label_path) \
-                                           .with_ioa_thresh(0.5) \
-                                           .with_use_intersection_over_cell(False) \
-                                           .with_pick_min_class_id(True) \
-                                           .with_background_class_id(3) \
-                                           .with_infer_cells(True) \
-                                           .build()
+        def make_scene(i_path, l_path):
+            label_source = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                                               .with_uri(l_path) \
+                                               .with_ioa_thresh(0.5) \
+                                               .with_use_intersection_over_cell(False) \
+                                               .with_pick_min_class_id(True) \
+                                               .with_background_class_id(3) \
+                                               .with_infer_cells(True) \
+                                               .build()
 
-        raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                             .with_uri(img_path) \
-                                             .with_channel_order([0, 1, 2]) \
-                                             .with_stats_transformer() \
-                                             .build()
+            raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                                 .with_uri(i_path) \
+                                                 .with_channel_order([0, 1, 2]) \
+                                                 .with_stats_transformer() \
+                                                 .build()
 
-        scene = rv.SceneConfig.builder() \
-                              .with_task(task) \
-                              .with_id('cc_test') \
-                              .with_raster_source(raster_source) \
-                              .with_label_source(label_source) \
-                              .build()
+            return rv.SceneConfig.builder() \
+                                 .with_task(task) \
+                                 .with_id(i_path) \
+                                 .with_raster_source(raster_source) \
+                                 .with_label_source(label_source) \
+                                 .build()
+
+        scene_1 = make_scene(img_path, label_path)
+        scene_2 = make_scene(img2_path, label2_path)
 
         dataset = rv.DatasetConfig.builder() \
-                                  .with_train_scene(scene) \
-                                  .with_validation_scene(scene) \
+                                  .with_train_scenes([scene_1, scene_2]) \
+                                  .with_validation_scenes([scene_1, scene_2]) \
                                   .build()
 
         experiment = rv.ExperimentConfig.builder() \

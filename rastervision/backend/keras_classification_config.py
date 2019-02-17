@@ -10,9 +10,6 @@ from rastervision.utils.files import file_to_str
 from rastervision.protos.keras_classification.pipeline_pb2 import PipelineConfig
 from rastervision.task.chip_classification_config import ChipClassificationConfig
 
-# Default location to Tensorflow Object Detection's scripts.
-CHIP_OUTPUT_FILES = ['training.zip', 'validation.zip']
-
 
 class KerasClassificationConfig(BackendConfig):
     class TrainOptions:
@@ -112,20 +109,13 @@ class KerasClassificationConfig(BackendConfig):
     def report_io(self, command_type, io_def):
         super().report_io(command_type, io_def)
         if command_type == rv.CHIP:
-            outputs = list(
-                map(lambda x: os.path.join(self.training_data_uri, x),
-                    CHIP_OUTPUT_FILES))
-
-            io_def.add_outputs(outputs)
+            io_def.add_output(self.training_data_uri)
 
         if command_type == rv.TRAIN:
             if not self.training_data_uri:
                 io_def.add_missing('Missing training_data_uri.')
             else:
-                inputs = list(
-                    map(lambda x: os.path.join(self.training_data_uri, x),
-                        CHIP_OUTPUT_FILES))
-                io_def.add_inputs(inputs)
+                io_def.add_input(self.training_data_uri)
 
             io_def.add_output(self.model_uri)
 

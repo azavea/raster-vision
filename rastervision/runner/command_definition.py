@@ -29,7 +29,7 @@ class CommandDefinition:
     @classmethod
     def from_experiments(cls,
                          experiments: List[rv.ExperimentConfig],
-                         commands_to_run: List[string],
+                         commands_to_run: List[str],
                          splits: int = 1):
         command_definitions = []
 
