@@ -3,6 +3,9 @@ import click
 
 from rastervision.runner import OutOfProcessExperimentRunner
 from rastervision.rv_config import RVConfig
+import rastervision as rv
+
+CPU_STAGES = {rv.ANALYZE, rv.CHIP, rv.EVAL, rv.BUNDLE}
 
 
 class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
@@ -24,6 +27,14 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
                 job_queue = 'raster-vision-cpu'
         self.job_queue = job_queue
 
+        cpu_job_queue = batch_config('cpu_job_queue', default='')
+        if not cpu_job_queue:
+            if self.gpu:
+                cpu_job_queue = 'raster-vision-cpu'
+            else:
+                cpu_job_queue = job_queue
+        self.cpu_job_queue = cpu_job_queue
+
         job_definition = batch_config('job_definition', default='')
         if not job_definition:
             if self.gpu:
@@ -31,6 +42,14 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
             else:
                 job_definition = 'raster-vision-cpu'
         self.job_definition = job_definition
+
+        cpu_job_definition = batch_config('cpu_job_definition', default='')
+        if not cpu_job_definition:
+            if self.gpu:
+                cpu_job_definition = 'raster-vision-cpu'
+            else:
+                cpu_job_definition = job_definition
+        self.cpu_job_definition = cpu_job_definition
 
         self.submit = self.batch_submit
         self.execution_environment = 'Batch'
@@ -65,10 +84,17 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
         job_name = '{}_{}_{}'.format(command_type, exp, uuid_part)
         depends_on = [{'jobId': job_id} for job_id in parent_job_ids]
 
+        if command_type in CPU_STAGES:
+            job_queue = self.cpu_job_queue
+            job_definition = self.cpu_job_definition
+        else:
+            job_queue = self.job_queue
+            job_definition = self.job_definition
+
         kwargs = {
             'jobName': job_name,
-            'jobQueue': self.job_queue,
-            'jobDefinition': self.job_definition,
+            'jobQueue': job_queue,
+            'jobDefinition': job_definition,
             'containerOverrides': {
                 'command': full_command
             },

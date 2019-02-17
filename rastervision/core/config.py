@@ -1,5 +1,6 @@
 from abc import (ABC, abstractmethod)
 import os
+import inspect
 
 from rastervision.utils.files import download_or_copy
 
@@ -97,7 +98,10 @@ class ConfigBuilder(ABC):
         """Returns the configuration that is built by this builder.
         """
         self.validate()
-        return self.config_class(**self.config)
+        arguments = set(inspect.getargspec(self.config_class).args)
+        keys = set(self.config.keys())
+        config = {k: self.config[k] for k in (arguments & keys)}
+        return self.config_class(**config)
 
     def validate(self):
         """Validate this config, if there is validation on the builder that

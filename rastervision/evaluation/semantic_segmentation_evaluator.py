@@ -13,14 +13,17 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
     """Evaluates predictions for a set of scenes.
     """
 
-    def __init__(self, class_map, output_uri):
+    def __init__(self, class_map, output_uri, vector_output_uri):
         super().__init__(class_map, output_uri)
+        self.vector_output_uri = vector_output_uri
 
     def create_evaluation(self):
         return SemanticSegmentationEvaluation(self.class_map)
 
     def process(self, scenes, tmp_dir):
         evaluation = self.create_evaluation()
+        vect_evaluation = self.create_evaluation()
+
         for scene in scenes:
             log.info('Computing evaluation for scene {}...'.format(scene.id))
             label_source = scene.ground_truth_label_source
@@ -49,9 +52,13 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
                     class_id = vo['class_id']
                     pred_geojson_local = download_if_needed(
                         pred_geojson, tmp_dir)
-                    scene_evaluation = self.create_evaluation()
-                    scene_evaluation.compute_vector(
+                    vect_scene_evaluation = self.create_evaluation()
+                    vect_scene_evaluation.compute_vector(
                         gt_geojson, pred_geojson_local, mode, class_id)
-                    evaluation.merge(scene_evaluation, scene_id=scene.id)
+                    vect_evaluation.merge(
+                        vect_scene_evaluation, scene_id=scene.id)
 
-        evaluation.save(self.output_uri)
+        if not evaluation.is_empty():
+            evaluation.save(self.output_uri)
+        if not vect_evaluation.is_empty():
+            vect_evaluation.save(self.vector_output_uri)

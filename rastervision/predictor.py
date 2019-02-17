@@ -58,6 +58,7 @@ class Predictor():
         scene_builder = scene_config.load_bundle_files(package_dir) \
                                     .to_builder() \
                                     .clear_label_source() \
+                                    .clear_aois() \
                                     .with_id('PREDICTOR')
 
         # If the scene does not have a label store, generate a default one.

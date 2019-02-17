@@ -21,6 +21,7 @@ class ClassificationEvaluator(Evaluator):
 
     def process(self, scenes, tmp_dir):
         evaluation = self.create_evaluation()
+
         for scene in scenes:
             log.info('Computing evaluation for scene {}...'.format(scene.id))
             label_source = scene.ground_truth_label_source

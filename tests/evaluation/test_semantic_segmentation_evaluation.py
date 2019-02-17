@@ -8,6 +8,7 @@ from rastervision.evaluation.semantic_segmentation_evaluation import (
 from rastervision.data.label_source.semantic_segmentation_label_source import (
     SemanticSegmentationLabelSource)
 from tests.mock import MockRasterSource
+from tests import data_file_path
 
 
 class TestSemanticSegmentationEvaluation(unittest.TestCase):
@@ -51,6 +52,26 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         self.assertAlmostEqual(recall1, eval.class_to_eval_item[1].recall)
         self.assertEqual(precision2, eval.class_to_eval_item[2].precision)
         self.assertAlmostEqual(recall2, eval.class_to_eval_item[2].recall)
+
+    def test_vector_compute(self):
+        class_map = ClassMap([ClassItem(id=1, name='one', color='#000021')])
+        gt_uri = data_file_path('3-gt-polygons.geojson')
+        pred_uri = data_file_path('3-pred-polygons.geojson')
+
+        eval = SemanticSegmentationEvaluation(class_map)
+        eval.compute_vector(gt_uri, pred_uri, 'polygons', 1)
+
+        # NOTE: The  two geojson files referenced  above contain three
+        # unique geometries total, each  file contains two geometries,
+        # and there is one geometry shared between the two.
+        tp = 1.0
+        fp = 1.0
+        fn = 1.0
+        precision = float(tp) / (tp + fp)
+        recall = float(tp) / (tp + fn)
+
+        self.assertAlmostEqual(precision, eval.class_to_eval_item[1].precision)
+        self.assertAlmostEqual(recall, eval.class_to_eval_item[1].recall)
 
 
 if __name__ == '__main__':
