@@ -1,4 +1,5 @@
 from copy import deepcopy
+from math import ceil
 
 import rastervision as rv
 from rastervision.command import (ChipCommand, CommandConfig,
@@ -68,7 +69,8 @@ class ChipCommandConfig(CommandConfig):
         commands = []
         t_scenes = list(map(lambda x: (0, x), self.train_scenes))
         v_scenes = list(map(lambda x: (1, x), self.val_scenes))
-        group_size = max(int((len(t_scenes) + len(v_scenes)) / num_parts), 1)
+        group_size = max(
+            int(ceil((len(t_scenes) + len(v_scenes)) / num_parts)), 1)
         for i, l in enumerate(grouped(t_scenes + v_scenes, group_size)):
             split_t_scenes = list(
                 map(lambda x: x[1], filter(lambda x: x[0] == 0, l)))
