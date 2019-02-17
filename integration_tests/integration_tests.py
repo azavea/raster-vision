@@ -240,7 +240,10 @@ def run_test(test, temp_dir):
 
 @click.command()
 @click.argument('tests', nargs=-1)
-def main(tests):
+@click.option(
+    '--rv_root', '-t', help=('Sets the rv_root directory used. '
+                             'If set, test will not clean this directory up.'))
+def main(tests, rv_root):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:
         tests = all_tests
@@ -248,6 +251,9 @@ def main(tests):
     tests = list(map(lambda x: x.upper(), tests))
 
     with RVConfig.get_tmp_dir() as temp_dir:
+        if rv_root:
+            temp_dir = rv_root
+
         errors = []
         for test in tests:
             if test not in all_tests:
