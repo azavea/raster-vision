@@ -60,7 +60,7 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
 
             return rv.SceneConfig.builder() \
                                  .with_task(task) \
-                                 .with_id(i_path) \
+                                 .with_id(os.path.basename(i_path)) \
                                  .with_raster_source(raster_source) \
                                  .with_label_source(label_source) \
                                  .build()

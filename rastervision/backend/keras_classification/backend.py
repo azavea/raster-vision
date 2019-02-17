@@ -64,7 +64,7 @@ class DatasetFiles(FileGroup):
 
         self.training_zip_uri = join(
             base_uri, 'training-{}.zip'.format(self.partition_id))
-        self.training_local_uri = join(tmp_dir,
+        self.training_local_uri = join(self.base_dir,
                                        'training-{}'.format(self.partition_id))
         self.training_download_uri = self.get_local_path(
             join(self.base_uri, 'training'))
@@ -73,7 +73,7 @@ class DatasetFiles(FileGroup):
         self.validation_zip_uri = join(
             base_uri, 'validation-{}.zip'.format(self.partition_id))
         self.validation_local_uri = join(
-            tmp_dir, 'validation-{}'.format(self.partition_id))
+            self.base_dir, 'validation-{}'.format(self.partition_id))
         self.validation_download_uri = self.get_local_path(
             join(self.base_uri, 'validation'))
         make_dir(self.validation_local_uri)
