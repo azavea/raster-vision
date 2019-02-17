@@ -44,9 +44,7 @@ class StatsAnalyzerConfig(AnalyzerConfig):
                    .with_stats_uri(local_stats_uri) \
                    .build()
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         if command_type == rv.ANALYZE:
             if not self.stats_uri:

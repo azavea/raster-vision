@@ -3,7 +3,6 @@ from copy import deepcopy
 import logging
 
 import rastervision as rv
-from rastervision.core import CommandIODefinition
 from rastervision.core.config import (Config, ConfigBuilder)
 from rastervision.utils.files import save_json_config
 from rastervision.protos.experiment_pb2 \
@@ -47,45 +46,50 @@ class ExperimentConfig(Config):
         self.eval_uri = eval_uri
         self.bundle_uri = bundle_uri
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         log.debug('Updating task for command {}'.format(command_type))
         self.task.update_for_command(command_type, experiment_config, context)
 
         log.debug('Updating backend for command {}'.format(command_type))
-        self.backend.update_for_command(command_type, experiment_config, context)
+        self.backend.update_for_command(command_type, experiment_config,
+                                        context)
 
         log.debug('Updating dataset for command {}'.format(command_type))
-        self.dataset.update_for_command(command_type, experiment_config, context)
+        self.dataset.update_for_command(command_type, experiment_config,
+                                        context)
 
         log.debug('Updating analyzers for command {}'.format(command_type))
         for analyzer in self.analyzers:
-            analyzer.update_for_command(command_type, experiment_config, context)
+            analyzer.update_for_command(command_type, experiment_config,
+                                        context)
 
         log.debug('Updating evaluators for command {}'.format(command_type))
         for evaluator in self.evaluators:
-            evaluator.update_for_command(command_type, experiment_config, context)
+            evaluator.update_for_command(command_type, experiment_config,
+                                         context)
 
     def report_io(self, command_type, io_def):
         log.debug('Reporting IO on task for command {}'.format(command_type))
         self.task.report_io(command_type, io_def)
 
-        log.debug('Reporting IO on backend for command {}'.format(command_type))
+        log.debug(
+            'Reporting IO on backend for command {}'.format(command_type))
         self.backend.report_io(command_type, io_def)
 
-        log.debug('Reporting IO on dataset for command {}'.format(command_type))
+        log.debug(
+            'Reporting IO on dataset for command {}'.format(command_type))
         self.dataset.report_io(command_type, io_def)
 
-        log.debug('Reporting IO on analyzers for command {}'.format(command_type))
+        log.debug(
+            'Reporting IO on analyzers for command {}'.format(command_type))
         for analyzer in self.analyzers:
             analyzer.report_io(command_type, io_def)
 
-        log.debug('Reporting IO on evaluators for command {}'.format(command_type))
+        log.debug(
+            'Reporting IO on evaluators for command {}'.format(command_type))
         for evaluator in self.evaluators:
             evaluator.report_io_command(command_type, io_def)
-
 
     def make_command_config(self, command_type):
         return rv._registry.get_command_config_builder(command_type)() \

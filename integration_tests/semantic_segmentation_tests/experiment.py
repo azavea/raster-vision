@@ -9,7 +9,10 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
             return os.path.join(os.path.dirname(__file__), part)
 
         img_paths = [get_path('scene/image.tif'), get_path('scene/image2.tif')]
-        label_paths = [get_path('scene/labels.tif'), get_path('scene/labels2.tif')]
+        label_paths = [
+            get_path('scene/labels.tif'),
+            get_path('scene/labels2.tif')
+        ]
         class_map = {'red': (1, 'red'), 'green': (2, 'green')}
         num_steps = 1
         batch_size = 1

@@ -1,5 +1,3 @@
-import random
-
 import click
 import numpy as np
 import rasterio
@@ -10,17 +8,18 @@ import json
 def flip_geom(m, b, geom):
     """Flips a geom along a straight line y = mx + b.
     """
+
     def traverse_coords(coords, dst_coords):
         for p in coords:
             if type(p[0]) is list:
-                l = []
-                traverse_coords(p, l)
-                dst_coords.append(l)
+                lst = []
+                traverse_coords(p, lst)
+                dst_coords.append(lst)
             else:
                 x, y = p[0], p[1]
-                d = (x + (y - b) * m)/(1 + m*m)
-                x2 = 2*d - x
-                y2 = 2*d*m - y + 2*b
+                d = (x + (y - b) * m) / (1 + m * m)
+                x2 = 2 * d - x
+                y2 = 2 * d * m - y + 2 * b
                 dst_coords.append((x2, y2))
         return dst_coords
 
@@ -28,6 +27,7 @@ def flip_geom(m, b, geom):
         'type': geom['type'],
         'coordinates': traverse_coords(geom['coordinates'], [])
     }
+
 
 @click.command()
 @click.argument('src_tiff_path')
@@ -49,7 +49,9 @@ def flip_scene(src_tiff_path, src_labels_path, dst_tiff_path, dst_labels_path):
 
         img_crs = pyproj.Proj(init=src.crs['init'])
         map_crs = pyproj.Proj(init='epsg:4326')
-        t = lambda x,y: pyproj.transform(img_crs, map_crs, x, y)
+
+        def t(x, y):
+            return pyproj.transform(img_crs, map_crs, x, y)
 
         # Find the center horizontal line through the image.
 
@@ -58,14 +60,12 @@ def flip_scene(src_tiff_path, src_labels_path, dst_tiff_path, dst_labels_path):
         ur = (src.bounds.right, src.bounds.top)
         lr = (src.bounds.right, src.bounds.bottom)
 
-        left = t(ul[0] - ((ul[0] - ll[0]) / 2),
-                 ul[1] - ((ul[1] - ll[1]) / 2))
+        left = t(ul[0] - ((ul[0] - ll[0]) / 2), ul[1] - ((ul[1] - ll[1]) / 2))
 
-        right = t(ur[0] - ((ur[0] - lr[0]) / 2),
-                  ur[1] - ((ur[1] - lr[1]) / 2))
+        right = t(ur[0] - ((ur[0] - lr[0]) / 2), ur[1] - ((ur[1] - lr[1]) / 2))
 
         m = abs(left[1] - right[1]) / abs(left[0] - right[0])
-        b = left[1] - (m*left[0])
+        b = left[1] - (m * left[0])
 
         def traverse_labels(src, dst):
             for key in src:
@@ -99,6 +99,7 @@ def flip_scene(src_tiff_path, src_labels_path, dst_tiff_path, dst_labels_path):
             dst_labels_file.write(json.dumps(dst_labels, indent=4))
 
         print('done.')
+
 
 if __name__ == '__main__':
     flip_scene()

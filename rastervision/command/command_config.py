@@ -32,7 +32,6 @@ class CommandConfig(ABC):
         """
         return [self]
 
-
     def to_proto(self):
         """Returns the protobuf configuration for this config.
         """

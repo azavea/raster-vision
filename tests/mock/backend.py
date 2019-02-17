@@ -65,9 +65,7 @@ class MockBackendConfig(SupressDeepCopyMixin, BackendConfig):
         else:
             return result
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         super().update_for_command(command_type, experiment_config, context)
         self.mock.update_for_command(command_type, experiment_config, context)

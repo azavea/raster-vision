@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import Mock
 import numpy as np
 
-import rastervision as rv
 from rastervision.core import Box
 from rastervision.data import (RasterSource, RasterSourceConfig,
                                RasterSourceConfigBuilder,
@@ -75,9 +74,7 @@ class MockRasterSourceConfig(SupressDeepCopyMixin, RasterSourceConfig):
         else:
             return result
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         super().update_for_command(command_type, experiment_config, context)
         self.mock.update_for_command(command_type, experiment_config, context)

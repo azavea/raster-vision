@@ -96,8 +96,8 @@ class PredictCommandConfigBuilder(CommandConfigBuilder):
 
     def build(self):
         self.validate()
-        return PredictCommandConfig(self.root_uri, self.split_id, self.task, self.backend,
-                                    self.scenes)
+        return PredictCommandConfig(self.root_uri, self.split_id, self.task,
+                                    self.backend, self.scenes)
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

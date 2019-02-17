@@ -132,8 +132,9 @@ def terminate_at_exit(process):
 
     atexit.register(terminate)
 
+
 def grouped(l, size):
     """Returns a list of lists of length 'size'.
     The last list will have size <= 'size'.
     """
-    return [l[n:n+size] for n in range(0, len(l), size)]
+    return [l[n:n + size] for n in range(0, len(l), size)]

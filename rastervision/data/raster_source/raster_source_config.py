@@ -102,16 +102,16 @@ class RasterSourceConfig(BundledConfigMixin, Config):
     def create_transformers(self):
         return list(map(lambda c: c.create_transformer(), self.transformers))
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         for transformer in self.transformers:
-            transformer.update_for_command(command_type, experiment_config, context)
+            transformer.update_for_command(command_type, experiment_config,
+                                           context)
 
     def report_io(self, command_type, io_def):
         for transformer in self.transformers:
             transformer.report_io(command_type, io_def)
+
 
 class RasterSourceConfigBuilder(ConfigBuilder):
     def from_proto(self, msg):

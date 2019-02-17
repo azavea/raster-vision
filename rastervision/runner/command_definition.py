@@ -14,11 +14,9 @@ class CommandDefinition:
         self.io_def = io_def
 
     def _key(self):
-        return (self.command_config.command_type,
-                self.command_config.split_id,
-                '|'.join(
-                    sorted(self.io_def.input_uris)), '|'.join(
-                        sorted(self.io_def.output_uris)))
+        return (self.command_config.command_type, self.command_config.split_id,
+                '|'.join(sorted(self.io_def.input_uris)), '|'.join(
+                    sorted(self.io_def.output_uris)))
 
     def __eq__(self, other):
         return self._key() == other._key()
@@ -43,8 +41,9 @@ class CommandDefinition:
                     'Updating config for command {}...'.format(command_type))
                 e.update_for_command(command_type, e)
                 if command_type in commands_to_run:
-                    log.debug('Creating command configurations for {}...'.format(
-                        command_type))
+                    log.debug(
+                        'Creating command configurations for {}...'.format(
+                            command_type))
                     base_command_config = e.make_command_config(command_type)
                     for command_config in base_command_config.split(splits):
                         io_def = command_config.report_io()
@@ -116,7 +115,8 @@ class CommandDefinition:
             for output_uri in command_def.io_def.output_uris:
                 if (output_uri, command_type, split_id) not in outputs_to_defs:
                     outputs_to_defs[(output_uri, command_type, split_id)] = []
-                outputs_to_defs[(output_uri, command_type, split_id)].append(command_def)
+                outputs_to_defs[(output_uri, command_type,
+                                 split_id)].append(command_def)
 
         for ((output_uri, _, _), command_defs) in outputs_to_defs.items():
             if len(command_defs) > 1:

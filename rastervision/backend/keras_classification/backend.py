@@ -16,6 +16,7 @@ from rastervision.data import ChipClassificationLabels
 
 log = logging.getLogger(__name__)
 
+
 def merge_class_dirs(scene_class_dirs, output_dir):
     seen_classes = set([])
     chip_ind = 0
@@ -30,8 +31,7 @@ def merge_class_dirs(scene_class_dirs, output_dir):
                     join(src_class_dir, class_file)
                     for class_file in os.listdir(src_class_dir)
             ]:
-                dst_class_file = join(dst_class_dir,
-                                      '{}.png'.format(chip_ind))
+                dst_class_file = join(dst_class_dir, '{}.png'.format(chip_ind))
                 shutil.move(src_class_file, dst_class_file)
                 chip_ind += 1
 
@@ -62,16 +62,21 @@ class DatasetFiles(FileGroup):
 
         self.partition_id = uuid.uuid4()
 
-        self.training_zip_uri = join(base_uri, 'training-{}.zip'.format(self.partition_id))
-        self.training_local_uri = join(tmp_dir, 'training-{}'.format(self.partition_id))
-        self.training_download_uri = self.get_local_path(join(self.base_uri, 'training'))
+        self.training_zip_uri = join(
+            base_uri, 'training-{}.zip'.format(self.partition_id))
+        self.training_local_uri = join(tmp_dir,
+                                       'training-{}'.format(self.partition_id))
+        self.training_download_uri = self.get_local_path(
+            join(self.base_uri, 'training'))
         make_dir(self.training_local_uri)
 
-        self.validation_zip_uri = join(base_uri, 'validation-{}.zip'.format(self.partition_id))
-        self.validation_local_uri = join(tmp_dir, 'validation-{}'.format(self.partition_id))
-        self.validation_download_uri = self.get_local_path(join(self.base_uri, 'validation'))
+        self.validation_zip_uri = join(
+            base_uri, 'validation-{}.zip'.format(self.partition_id))
+        self.validation_local_uri = join(
+            tmp_dir, 'validation-{}'.format(self.partition_id))
+        self.validation_download_uri = self.get_local_path(
+            join(self.base_uri, 'validation'))
         make_dir(self.validation_local_uri)
-
 
     def download(self):
         def _download(split, output_dir):
@@ -86,10 +91,9 @@ class DatasetFiles(FileGroup):
                     # Append each of the directories containing this partitions'
                     # labeled images based on the class directory.
                     data_dir_subdirectories = next(os.walk(data_dir))[1]
-                    scene_class_dirs.append(dict([
-                        (class_name, os.path.join(data_dir, class_name))
-                        for class_name in data_dir_subdirectories
-                    ]))
+                    scene_class_dirs.append(
+                        dict([(class_name, os.path.join(data_dir, class_name))
+                              for class_name in data_dir_subdirectories]))
             merge_class_dirs(scene_class_dirs, output_dir)
 
         _download('training', self.training_download_uri)
@@ -98,13 +102,16 @@ class DatasetFiles(FileGroup):
     def upload(self):
         def _upload(data_dir, zip_uri, split):
             if not any(os.scandir(data_dir)):
-                log.warn('No data to write for split {} in partition {}...'.format(split, self.partition_id))
+                log.warn(
+                    'No data to write for split {} in partition {}...'.format(
+                        split, self.partition_id))
             else:
                 shutil.make_archive(data_dir, 'zip', data_dir)
                 upload_or_copy(data_dir + '.zip', zip_uri)
 
         _upload(self.training_local_uri, self.training_zip_uri, 'training')
-        _upload(self.validation_local_uri, self.validation_zip_uri, 'validation')
+        _upload(self.validation_local_uri, self.validation_zip_uri,
+                'validation')
 
 
 class ModelFiles(FileGroup):

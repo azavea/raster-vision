@@ -51,7 +51,7 @@ class ImageSourceConfig(RasterSourceConfig):
         transformers = self.create_transformers()
         return ImageSource(self.uri, transformers, tmp_dir, self.channel_order)
 
-    def report_io(self, io_def):
+    def report_io(self, command_type, io_def):
         super().report_io(command_type, io_def)
         io_def.add_input(self.uri)
 

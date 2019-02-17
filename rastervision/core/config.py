@@ -45,7 +45,6 @@ class Config(ABC):
         """
         pass  # pragma: no cover
 
-
     @abstractmethod
     def report_io(self, command_type, io_def):
         """Updates the given CommandIODefinition to include the inputs, outputs,

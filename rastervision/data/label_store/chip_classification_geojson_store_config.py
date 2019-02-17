@@ -26,9 +26,7 @@ class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
         return ChipClassificationGeoJSONStore(self.uri, crs_transformer,
                                               task_config.class_map)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         if command_type == rv.PREDICT:
             if not self.uri:

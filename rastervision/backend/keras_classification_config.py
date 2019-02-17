@@ -90,9 +90,7 @@ class KerasClassificationConfig(BackendConfig):
                    .with_model_uri(local_model_uri) \
                    .build()
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         super().update_for_command(command_type, experiment_config, context)
 
@@ -104,7 +102,8 @@ class KerasClassificationConfig(BackendConfig):
             if not self.training_output_uri:
                 self.training_output_uri = experiment_config.train_uri
             if not self.model_uri:
-                self.model_uri = os.path.join(self.training_output_uri, 'model')
+                self.model_uri = os.path.join(self.training_output_uri,
+                                              'model')
 
     def report_io(self, command_type, io_def):
         super().report_io(command_type, io_def)

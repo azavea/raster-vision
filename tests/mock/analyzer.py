@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import Mock
 
-import rastervision as rv
 from rastervision.analyzer import (Analyzer, AnalyzerConfig,
                                    AnalyzerConfigBuilder)  # noqa
 from rastervision.protos.analyzer_pb2 \
@@ -45,9 +44,7 @@ class MockAnalyzerConfig(SupressDeepCopyMixin, AnalyzerConfig):
         else:
             return result
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         super().update_for_command(command_type, experiment_config, context)
         self.mock.update_for_command(command_type, experiment_config, context)

@@ -120,9 +120,7 @@ class TFObjectDetectionConfig(BackendConfig):
                    .with_model_uri(local_model_uri) \
                    .build()
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         super().update_for_command(command_type, experiment_config, context)
         if command_type == rv.CHIP:
@@ -133,7 +131,8 @@ class TFObjectDetectionConfig(BackendConfig):
             if not self.training_output_uri:
                 self.training_output_uri = experiment_config.train_uri
             if not self.model_uri:
-                self.model_uri = os.path.join(self.training_output_uri, 'model')
+                self.model_uri = os.path.join(self.training_output_uri,
+                                              'model')
             if not self.fine_tune_checkpoint_name:
                 # Set the fine tune checkpoint name to the experiment id
                 self.fine_tune_checkpoint_name = experiment_config.id

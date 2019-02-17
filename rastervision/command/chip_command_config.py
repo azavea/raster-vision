@@ -10,9 +10,10 @@ from rastervision.data import SceneConfig
 from rastervision.command.utils import (check_task_type, check_backend_type)
 from rastervision.utils.misc import grouped
 
+
 class ChipCommandConfig(CommandConfig):
-    def __init__(self, root_uri, split_id, task, backend, augmentors, train_scenes,
-                 val_scenes):
+    def __init__(self, root_uri, split_id, task, backend, augmentors,
+                 train_scenes, val_scenes):
         super().__init__(rv.CHIP, root_uri, split_id)
         self.task = task
         self.backend = backend
@@ -69,8 +70,10 @@ class ChipCommandConfig(CommandConfig):
         v_scenes = list(map(lambda x: (1, x), self.val_scenes))
         group_size = max(int((len(t_scenes) + len(v_scenes)) / num_parts), 1)
         for i, l in enumerate(grouped(t_scenes + v_scenes, group_size)):
-            split_t_scenes = list(map(lambda x: x[1], filter(lambda x: x[0] == 0, l)))
-            split_v_scenes = list(map(lambda x: x[1], filter(lambda x: x[0] == 1, l)))
+            split_t_scenes = list(
+                map(lambda x: x[1], filter(lambda x: x[0] == 0, l)))
+            split_v_scenes = list(
+                map(lambda x: x[1], filter(lambda x: x[0] == 1, l)))
             c = self.to_builder() \
                 .with_train_scenes(split_t_scenes) \
                 .with_val_scenes(split_v_scenes) \
@@ -126,8 +129,8 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
     def build(self):
         self.validate()
         return ChipCommandConfig(self.root_uri, self.split_id, self.task,
-                                 self.backend, self.augmentors, self.train_scenes,
-                                 self.val_scenes)
+                                 self.backend, self.augmentors,
+                                 self.train_scenes, self.val_scenes)
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

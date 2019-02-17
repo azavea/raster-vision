@@ -3,8 +3,7 @@ from copy import deepcopy
 
 import rastervision as rv
 from rastervision.rv_config import RVConfig
-from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin,
-                               CommandIODefinition)
+from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin)
 
 
 class BackendConfig(BundledConfigMixin, Config):

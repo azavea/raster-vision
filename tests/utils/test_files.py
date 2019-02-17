@@ -351,8 +351,8 @@ class TestS3Misc(unittest.TestCase):
         self.assertTrue(file_exists(s3_directory, include_dir=True))
         self.assertTrue(file_exists(s3_path, include_dir=False))
         self.assertFalse(file_exists(s3_directory, include_dir=False))
-        self.assertFalse(file_exists(s3_directory + 'NOTPOSSIBLE', include_dir=False))
-
+        self.assertFalse(
+            file_exists(s3_directory + 'NOTPOSSIBLE', include_dir=False))
 
 
 class TestLocalMisc(unittest.TestCase):
@@ -458,7 +458,8 @@ class TestLocalMisc(unittest.TestCase):
         self.assertTrue(fs.file_exists(dir1, include_dir=True))
         self.assertTrue(fs.file_exists(path1, include_dir=False))
         self.assertFalse(fs.file_exists(dir1, include_dir=False))
-        self.assertFalse(fs.file_exists(dir1 + 'NOTPOSSIBLE', include_dir=False))
+        self.assertFalse(
+            fs.file_exists(dir1 + 'NOTPOSSIBLE', include_dir=False))
 
 
 class TestHttpMisc(unittest.TestCase):

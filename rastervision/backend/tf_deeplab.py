@@ -246,6 +246,7 @@ def get_record_uri(base_uri: str, split: str, suffix: str) -> str:
     """
     return join(base_uri, split, '{}-{}.record'.format(split, suffix))
 
+
 def get_record_dir(base_uri: str, split: str) -> str:
     """Given a base URI and a split, return the directory URI
     that contains the split records.
@@ -592,7 +593,8 @@ class TFDeeplab(Backend):
         log.info('Setting up local input and output directories')
         train_logdir = self.backend_config.training_output_uri
         train_logdir_local = get_local_path(train_logdir, tmp_dir)
-        dataset_dir = get_record_dir(self.backend_config.training_data_uri, TRAIN)
+        dataset_dir = get_record_dir(self.backend_config.training_data_uri,
+                                     TRAIN)
         dataset_dir_local = get_local_path(dataset_dir, tmp_dir)
         make_dir(tmp_dir)
         make_dir(train_logdir_local)

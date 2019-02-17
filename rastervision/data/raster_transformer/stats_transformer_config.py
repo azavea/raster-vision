@@ -43,9 +43,7 @@ class StatsTransformerConfig(RasterTransformerConfig):
 
         return StatsTransformer(RasterStats.load(self.stats_uri))
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         if command_type != rv.ANALYZE:
             if not self.stats_uri:

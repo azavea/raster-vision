@@ -241,8 +241,10 @@ def run_test(test, temp_dir):
 @click.command()
 @click.argument('tests', nargs=-1)
 @click.option(
-    '--rv_root', '-t', help=('Sets the rv_root directory used. '
-                             'If set, test will not clean this directory up.'))
+    '--rv_root',
+    '-t',
+    help=('Sets the rv_root directory used. '
+          'If set, test will not clean this directory up.'))
 def main(tests, rv_root):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:

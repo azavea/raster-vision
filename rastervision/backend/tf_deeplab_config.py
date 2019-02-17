@@ -15,6 +15,7 @@ DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/deeplab/train.py'
 DEFAULT_SCRIPT_EVAL = '/opt/tf-models/deeplab/eval.py'
 DEFAULT_SCRIPT_EXPORT = '/opt/tf-models/deeplab/export_model.py'
 
+
 class TFDeeplabConfig(BackendConfig):
     class TrainOptions:
         def __init__(self,
@@ -99,9 +100,7 @@ class TFDeeplabConfig(BackendConfig):
 
         return msg
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         super().update_for_command(command_type, experiment_config, context)
 
@@ -137,7 +136,6 @@ class TFDeeplabConfig(BackendConfig):
                 io_def.add_missing('Missing model_uri.')
             else:
                 io_def.add_input(self.model_uri)
-
 
     def save_bundle_files(self, bundle_dir):
         if not self.model_uri:

@@ -105,7 +105,8 @@ class DatasetConfig(Config):
                                                  .with_label_store() \
                                                  .build() \
                                                  .label_store
-                scene.update_for_command(command_type, experiment_config, context)
+                scene.update_for_command(command_type, experiment_config,
+                                         context)
 
         if command_type in [rv.ANALYZE, rv.CHIP]:
             log.debug(
@@ -130,7 +131,8 @@ class DatasetConfig(Config):
                 ) as scenes_to_update:
                     update_scenes(scenes_to_update, command_type == rv.PREDICT)
             else:
-                update_scenes(self.validation_scenes, command_type == rv.PREDICT)
+                update_scenes(self.validation_scenes,
+                              command_type == rv.PREDICT)
 
         if command_type in [rv.ANALYZE, rv.PREDICT, rv.EVAL, rv.BUNDLE]:
 
@@ -148,7 +150,8 @@ class DatasetConfig(Config):
             log.debug(
                 'Updating augmentors for command {}'.format(command_type))
             for augmentor in self.augmentors:
-                augmentor.update_for_command(command_type, experiment_config, context)
+                augmentor.update_for_command(command_type, experiment_config,
+                                             context)
 
     def report_io(self, command_type, io_def):
         if command_type in [rv.ANALYZE, rv.CHIP]:
@@ -170,7 +173,6 @@ class DatasetConfig(Config):
                 augmentor.report_io(command_type, io_def)
 
         return io_def
-
 
     @staticmethod
     def from_proto(msg):

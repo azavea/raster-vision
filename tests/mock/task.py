@@ -78,9 +78,7 @@ class MockTaskConfig(SupressDeepCopyMixin, TaskConfig):
     def load_bundle_files(self, bundle_dir):
         return self.mock.load_bundle_files(bundle_dir)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         super().update_for_command(command_type, experiment_config, context)
         self.mock.update_for_command(command_type, experiment_config, context)

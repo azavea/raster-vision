@@ -109,21 +109,22 @@ class SceneConfig(BundledConfigMixin, Config):
     def to_builder(self):
         return SceneConfigBuilder(self)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         if context is None:
             context = []
         context = context + [self]
 
-        self.raster_source.update_for_command(command_type, experiment_config, context)
+        self.raster_source.update_for_command(command_type, experiment_config,
+                                              context)
 
         if self.label_source:
-            self.label_source.update_for_command(command_type, experiment_config, context)
+            self.label_source.update_for_command(command_type,
+                                                 experiment_config, context)
 
         if self.label_store:
-            self.label_store.update_for_command(command_type, experiment_config, context)
+            self.label_store.update_for_command(command_type,
+                                                experiment_config, context)
 
     def report_io(self, command_type, io_def):
         self.raster_source.report_io(command_type, io_def)

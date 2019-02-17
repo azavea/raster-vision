@@ -52,9 +52,7 @@ class TaskConfig(BundledConfigMixin, Config):
                            .from_proto(msg) \
                            .build()
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         if command_type == rv.BUNDLE:
             if not self.predict_package_uri:

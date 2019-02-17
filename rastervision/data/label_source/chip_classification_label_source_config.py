@@ -51,11 +51,10 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
             self.pick_min_class_id, self.background_class_id, self.cell_size,
             self.infer_cells)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
-        self.vector_source.update_for_command(command_type, experiment_config, context)
+        self.vector_source.update_for_command(command_type, experiment_config,
+                                              context)
 
         if not self.cell_size:
             self.cell_size = experiment_config.task.chip_size

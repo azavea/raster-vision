@@ -50,9 +50,7 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
             vector_output=self.vector_output,
             class_map=class_map)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         if command_type == rv.PREDICT:
             if not self.uri:
@@ -82,7 +80,6 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
                         vo['uri'] = os.path.join(
                             root, '{}-{}-{}.geojson'.format(
                                 c.id, class_id, mode))
-
 
     def report_io(self, command_type, io_def):
         if command_type == rv.PREDICT:

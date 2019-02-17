@@ -77,12 +77,11 @@ class RasterizedSourceConfig(RasterSourceConfig):
         return RasterizedSource(vector_source, self.rasterizer_options, extent,
                                 crs_transformer)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
+    def update_for_command(self, command_type, experiment_config,
                            context=None):
         super().update_for_command(command_type, experiment_config, context)
-        self.vector_source.update_for_command(command_type, experiment_config, context)
+        self.vector_source.update_for_command(command_type, experiment_config,
+                                              context)
 
     def report_io(self, command_type, io_def):
         super().update_for_command(command_type, io_def)
