@@ -74,7 +74,8 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
 
         Args:
            command_type: (str) the type of command. ie. a value in rv.command.api
-           command_split_id: (int or str) the split ID of command. ie. the parallelized command ID
+           command_split_id: (int or str) the split ID of command.
+                             ie. the parallelized command ID
            experiment_id: (str) id of experiment
            command: (str) command to run inside Docker container
            parent_job_ids (list of str): ids of jobs that this job depends on
@@ -110,7 +111,8 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
             new_parents = []
             group_id = str(uuid.uuid4()).split('-')[0]
             for i, group in enumerate(grouped(parent_job_ids, 20)):
-                group_split_id = '{}_{}-{}_{}'.format(group_id, command_type, command_split_id, i)
+                group_split_id = '{}_{}-{}_{}'.format(group_id, command_type,
+                                                      command_split_id, i)
                 new_parents.append(
                     self.batch_submit(DEPENDENCY_GROUP_JOB, group_split_id,
                                       experiment_id, NOOP_COMMAND, group,
