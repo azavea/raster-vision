@@ -6,6 +6,7 @@ Raster Vision 0.9
 
 Raster Vision 0.9.0
 ~~~~~~~~~~~~~~~~~~~
+- Optimize StatsAnalyzer `#690 <https://github.com/azavea/raster-vision/pull/690>`_
 - Include per-scene eval metrics `#641 <https://github.com/azavea/raster-vision/pull/641>`_
 - Make and save predictions and do eval chip-by-chip `#635 <https://github.com/azavea/raster-vision/pull/635>`_
 - Decrease semseg memory usage `#630 <https://github.com/azavea/raster-vision/pull/630>`_
