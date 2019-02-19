@@ -103,9 +103,9 @@ class StatsAnalyzerConfigBuilder(AnalyzerConfigBuilder):
         If sample_prob is set, then a subset of each scene is used to compute stats which
         speeds up the computation. Roughly speaking, if sample_prob=0.5, then half the
         pixels in the scene will be used. More precisely, the number of chips is equal to
-        sample_prob * (width * height / 300^2). Each chip is uniformly sampled from the
-        scene with replacement. Otherwise, it uses a sliding window over the entire
-        scene to compute stats.
+        sample_prob * (width * height / 300^2), or 1, whichever is greater. Each chip is
+        uniformly sampled from the scene with replacement. Otherwise, it uses a sliding
+        window over the entire scene to compute stats.
 
         Args:
             sample_prob: (float or None) between 0 and 1

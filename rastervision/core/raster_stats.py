@@ -64,9 +64,9 @@ class RasterStats():
         If sample_prob is set, then a subset of each scene is used to compute stats which
         speeds up the computation. Roughly speaking, if sample_prob=0.5, then half the
         pixels in the scene will be used. More precisely, the number of chips is equal to
-        sample_prob * (width * height / 300^2). Each chip is uniformly sampled from the
-        scene with replacement. Otherwise, it uses a sliding window over the entire
-        scene to compute stats.
+        sample_prob * (width * height / 300^2), or 1, whichever is greater. Each chip is
+        uniformly sampled from the scene with replacement. Otherwise, it uses a sliding
+        window over the entire scene to compute stats.
 
         Args:
             raster_sources: list of RasterSource
@@ -106,6 +106,7 @@ class RasterStats():
                     num_pixels = extent.get_width() * extent.get_height()
                     num_chips = round(
                         sample_prob * (num_pixels / (chip_size**2)))
+                    num_chips = max(1, num_chips)
                     for _ in range(num_chips):
                         window = raster_source.get_extent().make_random_square(
                             chip_size)
