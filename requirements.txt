@@ -1,7 +1,6 @@
 networkx==2.1
 everett==0.9
 pluginbase==0.7
-npstreams==1.4.*
 lxml==4.2.*
 shapely==1.6.*
 pyproj==1.9.5.*
