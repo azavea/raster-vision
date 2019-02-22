@@ -19,7 +19,9 @@ class Command(ABC):
             else:
                 return self._tmp_dir.name
         else:
-            return RVConfig.get_tmp_dir().name
+            tmp_dir = RVConfig.get_tmp_dir()
+            self.set_tmp_dir(tmp_dir)
+            return tmp_dir.name
 
 
 class NoOpCommand(Command):
