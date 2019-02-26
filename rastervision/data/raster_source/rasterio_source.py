@@ -1,4 +1,5 @@
 from abc import abstractmethod
+import tempfile
 
 import numpy as np
 import rasterio
@@ -38,8 +39,8 @@ def load_window(image_dataset, window=None, channels=None, is_masked=False):
 class RasterioRasterSource(ActivateMixin, RasterSource):
     def __init__(self, raster_transformers, temp_dir, channel_order=None):
         self.temp_dir = temp_dir
-        self.imagery_path = self._download_data(temp_dir)
-
+        self.image_temp_dir = None
+        self.image_dataset = None
         num_channels = None
 
         # Activate in order to get information out of the raster
@@ -98,8 +99,14 @@ class RasterioRasterSource(ActivateMixin, RasterSource):
                            self.channels)
 
     def _activate(self):
+        # Download images to temporary directory and delete it when done.
+        self.image_temp_dir = tempfile.TemporaryDirectory(dir=self.temp_dir)
+        self.imagery_path = self._download_data(self.image_temp_dir.name)
         self.image_dataset = rasterio.open(self.imagery_path)
+        self._set_crs_transformer()
 
     def _deactivate(self):
         self.image_dataset.close()
         self.image_dataset = None
+        self.image_temp_dir.cleanup()
+        self.image_temp_dir = None
