@@ -6,6 +6,7 @@ from rastervision.core import Box
 from rastervision.data import (RasterSource, RasterSourceConfig,
                                RasterSourceConfigBuilder,
                                IdentityCRSTransformer)
+from rastervision.data import (ActivateMixin)
 from rastervision.protos.raster_source_pb2 \
     import RasterSourceConfig as RasterSourceConfigMsg
 
@@ -14,17 +15,28 @@ from tests.mock import SupressDeepCopyMixin
 MOCK_SOURCE = 'MOCK_SOURCE'
 
 
-class MockRasterSource(RasterSource):
+class MockRasterSource(RasterSource, ActivateMixin):
     def __init__(self, channel_order, num_channels, raster_transformers=[]):
         super().__init__(channel_order, num_channels, raster_transformers)
         self.mock = Mock()
+        self.set_return_vals()
 
-        # Set default return values
+    def set_return_vals(self, raster=None):
         self.mock.get_extent.return_value = Box.make_square(0, 0, 2)
         self.mock.get_dtype.return_value = np.uint8
         self.mock.get_crs_transformer.return_value = IdentityCRSTransformer()
         self.mock._get_chip.return_value = np.random.rand(1, 2, 2, 3)
-        self.raster = None
+
+        if raster is not None:
+            self.mock.get_extent.return_value = Box(0, 0, raster.shape[0],
+                                                    raster.shape[1])
+            self.mock.get_dtype.return_value = raster.dtype
+
+            def get_chip(window):
+                return raster[window.ymin:window.ymax, window.xmin:
+                              window.xmax, :]
+
+            self.mock._get_chip.side_effect = get_chip
 
     def get_extent(self):
         return self.mock.get_extent()
@@ -36,12 +48,16 @@ class MockRasterSource(RasterSource):
         return self.mock.get_crs_transformer()
 
     def _get_chip(self, window):
-        if self.raster is None:
-            return self.mock._get_chip(window)
-        return self.raster[window.ymin:window.ymax, window.xmin:window.xmax, :]
+        return self.mock._get_chip(window)
 
     def set_raster(self, raster):
-        self.raster = raster
+        self.set_return_vals(raster=raster)
+
+    def _activate(self):
+        pass
+
+    def _deactivate(self):
+        pass
 
 
 class MockRasterSourceConfig(SupressDeepCopyMixin, RasterSourceConfig):
