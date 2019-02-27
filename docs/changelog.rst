@@ -6,6 +6,7 @@ Raster Vision 0.9
 
 Raster Vision 0.9.0
 ~~~~~~~~~~~~~~~~~~~
+- Predict zero for nodata pixels on semantic segmentation `#701 <https://github.com/azavea/raster-vision/pull/701>`_
 - Add support for evaluating vector output with AOIs `#698 <https://github.com/azavea/raster-vision/pull/698>`_
 - Conserve disk space when dealing with raster files `#692 <https://github.com/azavea/raster-vision/pull/692>`_
 - Optimize StatsAnalyzer `#690 <https://github.com/azavea/raster-vision/pull/690>`_
