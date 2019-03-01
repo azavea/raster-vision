@@ -247,17 +247,15 @@ def run_test(test, temp_dir):
     help=('Sets the rv_root directory used. '
           'If set, test will not clean this directory up.'))
 @click.option(
-    '--verbose',
-    '-v',
-    is_flag=True,
-    help=('Sets the logging level to DEBUG.'))
+    '--verbose', '-v', is_flag=True, help=('Sets the logging level to DEBUG.'))
 def main(tests, rv_root, verbose):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:
         tests = all_tests
 
     if verbose:
-        rv._registry.initialize_config(verbosity=rv.cli.verbosity.Verbosity.DEBUG)
+        rv._registry.initialize_config(
+            verbosity=rv.cli.verbosity.Verbosity.DEBUG)
 
     tests = list(map(lambda x: x.upper(), tests))
 

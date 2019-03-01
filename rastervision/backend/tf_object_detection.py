@@ -366,16 +366,18 @@ class TrainingPackage(object):
         self.partition_id = uuid.uuid4()
 
         self.training_record_uri = join(
-            base_uri, 'training', 'training-{}.record'.format(self.partition_id))
-        self.training_local_record_path = join(self.base_dir,
-                                       'training-{}.record'.format(self.partition_id))
+            base_uri, 'training',
+            'training-{}.record'.format(self.partition_id))
+        self.training_local_record_path = join(
+            self.base_dir, 'training-{}.record'.format(self.partition_id))
         self.training_download_uri = self.get_local_path(
             join(self.base_uri, 'training'))
 
         self.validation_record_uri = join(
-            base_uri, 'validation', 'validation-{}.record'.format(self.partition_id))
-        self.validation_local_record_path = join(self.base_dir,
-                                                 'validation-{}.record'.format(self.partition_id))
+            base_uri, 'validation',
+            'validation-{}.record'.format(self.partition_id))
+        self.validation_local_record_path = join(
+            self.base_dir, 'validation-{}.record'.format(self.partition_id))
         self.validation_download_uri = self.get_local_path(
             join(self.base_uri, 'validation'))
 
@@ -423,7 +425,8 @@ class TrainingPackage(object):
         Returns:
             (string) URI of zip file containing debug chips, possibly remote
         """
-        return join(self.base_uri, '{}-debug/chips-{}.zip'.format(split, self.partition_id))
+        return join(self.base_uri, '{}-debug/chips-{}.zip'.format(
+            split, self.partition_id))
 
     def upload(self, debug=False):
         """Upload training and validation data, and class map files.
@@ -433,9 +436,11 @@ class TrainingPackage(object):
                 zip files
         """
         if os.path.exists(self.training_local_record_path):
-            upload_or_copy(self.training_local_record_path, self.training_record_uri)
+            upload_or_copy(self.training_local_record_path,
+                           self.training_record_uri)
         if os.path.exists(self.validation_local_record_path):
-            upload_or_copy(self.validation_local_record_path, self.validation_record_uri)
+            upload_or_copy(self.validation_local_record_path,
+                           self.validation_record_uri)
         if debug:
             if os.path.exists(self.get_debug_chips_uri(TRAIN)):
                 self.upload_or_copy(self.get_debug_chips_uri(TRAIN))
@@ -444,12 +449,14 @@ class TrainingPackage(object):
 
     def download_data(self):
         """Download training and validation data, and class map files."""
+
         def _download(split, output_dir):
             for uri in list_paths(self.base_uri, 'record'):
                 base_name = os.path.basename(uri)
                 if base_name.startswith(split):
                     record_path = self.download_if_needed(uri)
-                    target_record_path = os.path.join(output_dir, os.path.basename(record_path))
+                    target_record_path = os.path.join(
+                        output_dir, os.path.basename(record_path))
                     shutil.move(record_path, target_record_path)
 
         _download('training', self.training_download_uri)
@@ -525,7 +532,6 @@ class TrainingPackage(object):
                 config.train_config.fine_tune_checkpoint)
             config.train_config.fine_tune_checkpoint = pretrained_model_path
 
-
         # Save TF label map based on class_map.
         class_map_path = os.path.join(self.temp_dir, 'label-map.pbtxt')
         tf_class_map = make_tf_class_map(class_map)
@@ -536,7 +542,8 @@ class TrainingPackage(object):
         config.train_input_reader.label_map_path = class_map_path
 
         eval_record_uris = list_paths(self.validation_download_uri, 'record')
-        config.eval_input_reader[0].tf_record_input_reader.input_path[:] = eval_record_uris
+        config.eval_input_reader[
+            0].tf_record_input_reader.input_path[:] = eval_record_uris
         config.eval_input_reader[0].label_map_path = class_map_path
 
         # Save an updated copy of the config file.
@@ -617,7 +624,8 @@ class TFObjectDetection(Backend):
         tf_examples = make_tf_examples(data, self.class_map)
         # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
-        record_path = os.path.join(tmp_dir, '{}-{}.record'.format(scene.id, uuid.uuid4()))
+        record_path = os.path.join(
+            tmp_dir, '{}-{}.record'.format(scene.id, uuid.uuid4()))
         log.debug('Writing to record path {}'.format(record_path))
         write_tf_record(tf_examples, record_path)
 
@@ -647,18 +655,20 @@ class TFObjectDetection(Backend):
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)
 
         if training_results:
-            _merge_training_results(training_results,
-                                    self.training_package.training_local_record_path,
-                                    TRAIN)
+            _merge_training_results(
+                training_results,
+                self.training_package.training_local_record_path, TRAIN)
         else:
-            log.warn('No training chips for partition {}'.format(self.training_package.partition_id))
+            log.warn('No training chips for partition {}'.format(
+                self.training_package.partition_id))
 
         if validation_results:
-            _merge_training_results(validation_results,
-                                self.training_package.validation_local_record_path,
-                                VALIDATION)
+            _merge_training_results(
+                validation_results,
+                self.training_package.validation_local_record_path, VALIDATION)
         else:
-            log.warn('No validation chips for partition {}'.format(self.training_package.partition_id))
+            log.warn('No validation chips for partition {}'.format(
+                self.training_package.partition_id))
 
         self.training_package.upload(debug=self.config.debug)
 

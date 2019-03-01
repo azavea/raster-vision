@@ -53,6 +53,7 @@ class StatsAnalyzerConfig(AnalyzerConfig):
             if not self.stats_uri:
                 self.stats_uri = os.path.join(experiment_config.analyze_uri,
                                               'stats.json')
+
     def report_io(self, command_type, io_def):
         if command_type == rv.ANALYZE:
             io_def.add_output(self.stats_uri)

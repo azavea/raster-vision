@@ -14,8 +14,9 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSet):
         label2_path = get_path('scene/labels2.json')
         backend_conf_path = get_path('configs/backend.config')
 
-        pretrained_model = ('https://github.com/azavea/raster-vision-data/'
-                            'releases/download/v0.0.7/object-detection-test.tar.gz')
+        pretrained_model = (
+            'https://github.com/azavea/raster-vision-data/'
+            'releases/download/v0.0.7/object-detection-test.tar.gz')
 
         task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
                             .with_chip_size(300) \
