@@ -76,3 +76,27 @@ includes plugin files.
 
 .. note::
    To run on AWS Batch, you'll need the proper setup. See :ref:`aws batch setup` for instructions.
+
+.. _parallelizing commands:
+
+Running commands in Parallel
+----------------------------
+
+Raster Vision can run certain commands in parallel, such as the :ref:`chip command` and :ref:`predict command` commands. To do so, use the :ref:`run split option` option in the ``run`` command of the CLI.
+
+Commands implement a ``split`` method on them, that either returns the original command if they
+can not be  split, e.g. with training, or a sequence of commands that are split up into
+a given number of groups. For instance, using ``--splits 5`` on a ``CHIP`` command over
+50 training scenes and 25 validation scenes will result in 5 CHIP commands, that can be run
+in parallel, that will each create chips for 15 scenes.
+
+The command DAG that is given to the experiment runner is constructed such that each split command
+can be run in parallel if the runner supports parallelization, and that any command that is dependent on
+the output of the split command will be dependent on each of the splits. So that means, in the above example,
+a ``TRAIN`` command, which was dependent on a single ``CHIP`` command pre-split, will be dependent each of the
+5 individual ``CHIP`` commands after the split.
+
+Each runner will handle parallelization differently. For instance, the local runner will run each
+of the splits simultaneously, so be sure the split number is in relation to the number of CPUs available.
+The AWS Batch runner will submit jobs for each of the command splits, and the Batch Compute Environment will
+dictate how  many resources are available to run Batch jobs simultaneously.

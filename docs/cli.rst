@@ -25,7 +25,13 @@ Run is the main interface into running ``ExperimentSet`` workflows.
 
 Some specific parameters to call out:
 
+-\\-arg
+~~~~~~~~~~~
+
 Use ``-a`` to pass arguments into the experiment methods; many of which take a root_uri, which is where Raster Vision will store all the output of the experiment. If you forget to supply this, Raster Vision will remind you.
+
+-\\-dry-run
+~~~~~~~~~~~
 
 Using the ``-n`` or ``--dry-run`` flag is useful to see what you're about to run before you run it. Combine this with the verbose flag for different levels of output:
 
@@ -35,8 +41,17 @@ Using the ``-n`` or ``--dry-run`` flag is useful to see what you're about to run
    > rastervision -v run spacenet.chip_classification -a root_uri s3://example/ --dry_run
    > rastervision -vv run spacenet.chip_classification -a root_uri s3://example/ --dry_run
 
+-\\-skip-file-check
+~~~~~~~~~~~~~~~~~~~
 
-Use ``-x`` to avoid checking if files exist, which can take a long time for large experiments. This is useful to do the first run, but if you haven't changed anything about the experiment and are sure the files are there, it's often nice to skip that step.
+Use ``--skip-file-check`` or ``-x`` to avoid checking if files exist, which can take a long time for large experiments. This is useful to do the first run, but if you haven't changed anything about the experiment and are sure the files are there, it's often nice to skip that step.
+
+.. _run split option:
+
+-\\-splits
+~~~~~~~~~~
+
+Use ``-s N`` or ``--splits N``, where ``N`` is the number of splits to create, to parallelize commands that can be split into parallelizable chunks. See :ref:`parallelizing commands` for more information.
 
 .. _predict cli command:
 
