@@ -14,7 +14,7 @@ from rastervision.task import ObjectDetectionConfig
 # Default location to Tensorflow Object Detection's scripts.
 DEFAULT_SCRIPT_TRAIN = '/opt/tf-models/object_detection/model_main.py'
 DEFAULT_SCRIPT_EXPORT = '/opt/tf-models/object_detection/export_inference_graph.py'
-CHIP_OUTPUT_FILES = ['label-map.pbtxt', 'train.record', 'validation.record']
+CHIP_OUTPUT_FILES = ['training', 'validation']
 DEBUG_CHIP_OUTPUT_FILES = [
     'train-debug-chips.zip', 'validation-debug-chips.zip'
 ]

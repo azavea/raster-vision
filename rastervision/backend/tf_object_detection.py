@@ -20,7 +20,7 @@ from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
 from rastervision.utils.files import (get_local_path, upload_or_copy, make_dir,
                                       download_if_needed, sync_to_dir,
-                                      sync_from_dir, start_sync)
+                                      sync_from_dir, start_sync, list_paths)
 from rastervision.utils.misc import (save_img, replace_nones_in_dict,
                                      terminate_at_exit)
 from rastervision.rv_config import RVConfig
@@ -307,6 +307,7 @@ def export_inference_graph(train_root_dir,
             os.path.join(output_dir, fname) for fname in os.listdir(output_dir)
             if fname.startswith('model.ckpt')
         ]
+
         with RVConfig.get_tmp_dir() as tmp_dir:
             model_dir = os.path.join(tmp_dir, fine_tune_checkpoint_name)
             make_dir(model_dir)
@@ -342,7 +343,7 @@ class TrainingPackage(object):
         validation.record
     """
 
-    def __init__(self, base_uri, config, temp_dir):
+    def __init__(self, base_uri, config):
         """Constructor.
 
         Creates a temporary directory.
@@ -353,7 +354,7 @@ class TrainingPackage(object):
             config: TFObjectDetectionConfig
         """
 
-        self.temp_dir = temp_dir
+        self.temp_dir = None
 
         self.base_uri = base_uri
         self.base_dir = self.get_local_path(base_uri)
@@ -361,6 +362,25 @@ class TrainingPackage(object):
         make_dir(self.base_dir)
 
         self.config = config
+
+        self.partition_id = uuid.uuid4()
+
+        self.training_record_uri = join(
+            base_uri, 'training', 'training-{}.record'.format(self.partition_id))
+        self.training_local_record_path = join(self.base_dir,
+                                       'training-{}.record'.format(self.partition_id))
+        self.training_download_uri = self.get_local_path(
+            join(self.base_uri, 'training'))
+
+        self.validation_record_uri = join(
+            base_uri, 'validation', 'validation-{}.record'.format(self.partition_id))
+        self.validation_local_record_path = join(self.base_dir,
+                                                 'validation-{}.record'.format(self.partition_id))
+        self.validation_download_uri = self.get_local_path(
+            join(self.base_uri, 'validation'))
+
+    def set_tmp_dir(self, tmp_dir):
+        self.temp_dir = tmp_dir
 
     def get_local_path(self, uri):
         """Get local version of uri.
@@ -394,17 +414,6 @@ class TrainingPackage(object):
         """
         return download_if_needed(uri, self.temp_dir)
 
-    def get_record_uri(self, split):
-        """Get URI of TFRecord for dataset split.
-
-        Args:
-            split: (string) 'train' or 'validation'
-
-        Returns:
-            (string) URI of TFRecord file, possibly remote
-        """
-        return join(self.base_uri, '{}.record'.format(split))
-
     def get_debug_chips_uri(self, split):
         """Get URI of debug chips zip file for dataset split.
 
@@ -414,18 +423,7 @@ class TrainingPackage(object):
         Returns:
             (string) URI of zip file containing debug chips, possibly remote
         """
-        return join(self.base_uri, '{}-debug-chips.zip'.format(split))
-
-    def get_class_map_uri(self):
-        """Get URI of class map file.
-
-        The TF Object Detection API uses its own class map file that maps
-        class_ids to class_names, which they call a "label map".
-
-        Returns:
-            (string) URI of class map file, possibly remote
-        """
-        return join(self.base_uri, 'label-map.pbtxt')
+        return join(self.base_uri, '{}-debug/chips-{}.zip'.format(split, self.partition_id))
 
     def upload(self, debug=False):
         """Upload training and validation data, and class map files.
@@ -434,19 +432,28 @@ class TrainingPackage(object):
             debug: (bool) if True, also upload the corresponding debug chip
                 zip files
         """
-        self.upload_or_copy(self.get_record_uri(TRAIN))
-        self.upload_or_copy(self.get_record_uri(VALIDATION))
-        self.upload_or_copy(self.get_class_map_uri())
+        if os.path.exists(self.training_local_record_path):
+            upload_or_copy(self.training_local_record_path, self.training_record_uri)
+        if os.path.exists(self.validation_local_record_path):
+            upload_or_copy(self.validation_local_record_path, self.validation_record_uri)
         if debug:
-            self.upload_or_copy(self.get_debug_chips_uri(TRAIN))
-            self.upload_or_copy(self.get_debug_chips_uri(VALIDATION))
+            if os.path.exists(self.get_debug_chips_uri(TRAIN)):
+                self.upload_or_copy(self.get_debug_chips_uri(TRAIN))
+            if os.path.exists(self.get_debug_chips_uri(VALIDATION)):
+                self.upload_or_copy(self.get_debug_chips_uri(VALIDATION))
 
     def download_data(self):
         """Download training and validation data, and class map files."""
-        # No need to download debug chips.
-        self.download_if_needed(self.get_record_uri(TRAIN))
-        self.download_if_needed(self.get_record_uri(VALIDATION))
-        self.download_if_needed(self.get_class_map_uri())
+        def _download(split, output_dir):
+            for uri in list_paths(self.base_uri, 'record'):
+                base_name = os.path.basename(uri)
+                if base_name.startswith(split):
+                    record_path = self.download_if_needed(uri)
+                    target_record_path = os.path.join(output_dir, os.path.basename(record_path))
+                    shutil.move(record_path, target_record_path)
+
+        _download('training', self.training_download_uri)
+        _download('validation', self.validation_download_uri)
 
     def download_pretrained_model(self, pretrained_model_zip_uri):
         """Download pretrained model and unzip it.
@@ -483,7 +490,7 @@ class TrainingPackage(object):
                                      'model.ckpt')
         return pretrained_model_path
 
-    def download_config(self):
+    def download_config(self, class_map):
         from rastervision.protos.tf_object_detection.pipeline_pb2 \
             import TrainEvalPipelineConfig
         """Download a model and backend config and update its fields.
@@ -518,28 +525,18 @@ class TrainingPackage(object):
                 config.train_config.fine_tune_checkpoint)
             config.train_config.fine_tune_checkpoint = pretrained_model_path
 
-        class_map_path = self.get_local_path(self.get_class_map_uri())
 
-        train_path = self.get_local_path(self.get_record_uri(TRAIN))
-        if hasattr(config.train_input_reader.tf_record_input_reader.input_path,
-                   'append'):
-            config.train_input_reader.tf_record_input_reader.input_path[:] = \
-                [train_path]
-        else:
-            config.train_input_reader.tf_record_input_reader.input_path = \
-                train_path
+        # Save TF label map based on class_map.
+        class_map_path = os.path.join(self.temp_dir, 'label-map.pbtxt')
+        tf_class_map = make_tf_class_map(class_map)
+        save_tf_class_map(tf_class_map, class_map_path)
+
+        train_record_uris = list_paths(self.training_download_uri, 'record')
+        config.train_input_reader.tf_record_input_reader.input_path[:] = train_record_uris
         config.train_input_reader.label_map_path = class_map_path
 
-        eval_path = self.get_local_path(self.get_record_uri(VALIDATION))
-
-        if hasattr(
-                config.eval_input_reader[0].tf_record_input_reader.input_path,
-                'append'):
-            config.eval_input_reader[0].tf_record_input_reader.input_path[:] = \
-                [eval_path]
-        else:
-            config.eval_input_reader[0].tf_record_input_reader.input_path = \
-                eval_path
+        eval_record_uris = list_paths(self.validation_download_uri, 'record')
+        config.eval_input_reader[0].tf_record_input_reader.input_path[:] = eval_record_uris
         config.eval_input_reader[0].label_map_path = class_map_path
 
         # Save an updated copy of the config file.
@@ -593,6 +590,9 @@ class TFObjectDetection(Backend):
         self.config = backend_config
         self.class_map = task_config.class_map
 
+        self.training_package = TrainingPackage(self.config.training_data_uri,
+                                                self.config)
+
     def process_scene_data(self, scene, data, tmp_dir):
         """Process each scene's training data
 
@@ -612,18 +612,13 @@ class TFObjectDetection(Backend):
                             'to turn the raster data into uint8 data'.format(
                                 rv.TF_OBJECT_DETECTION))
 
-        training_package = TrainingPackage(self.config.training_data_uri,
-                                           self.config, tmp_dir)
-        self.scene_training_packages.append(training_package)
+        self.training_package.set_tmp_dir(tmp_dir)
+        self.scene_training_packages.append(self.training_package)
         tf_examples = make_tf_examples(data, self.class_map)
         # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
-        record_path = training_package.get_local_path(
-            training_package.get_record_uri('{}-{}'.format(
-                scene.id, uuid.uuid4())))
-        record_path = training_package.get_local_path(
-            training_package.get_record_uri('{}-{}'.format(
-                scene.id, uuid.uuid4())))
+        record_path = os.path.join(tmp_dir, '{}-{}.record'.format(scene.id, uuid.uuid4()))
+        log.debug('Writing to record path {}'.format(record_path))
         write_tf_record(tf_examples, record_path)
 
         return record_path
@@ -636,47 +631,45 @@ class TFObjectDetection(Backend):
             training_results: list of training scenes' TFRecords
             validation_results: list of validation scenes' TFRecords
         """
-        training_package = TrainingPackage(self.config.training_data_uri,
-                                           self.config, tmp_dir)
+        self.training_package.set_tmp_dir(tmp_dir)
 
-        def _merge_training_results(results, split):
-
-            # "split" tf record
-            record_path = training_package.get_local_path(
-                training_package.get_record_uri(split))
-
+        def _merge_training_results(results, record_path, split):
             # merge each scene's tfrecord into "split" tf record
             merge_tf_records(record_path, results)
 
             # Save debug chips.
             if self.config.debug:
-                debug_zip_path = training_package.get_local_path(
-                    training_package.get_debug_chips_uri(split))
+                debug_zip_path = self.training_package.get_local_path(
+                    self.training_package.get_debug_chips_uri(split))
                 with RVConfig.get_tmp_dir() as debug_dir:
                     make_debug_images(record_path, self.class_map, debug_dir)
                     shutil.make_archive(
                         os.path.splitext(debug_zip_path)[0], 'zip', debug_dir)
 
-        _merge_training_results(training_results, TRAIN)
-        _merge_training_results(validation_results, VALIDATION)
+        if training_results:
+            _merge_training_results(training_results,
+                                    self.training_package.training_local_record_path,
+                                    TRAIN)
+        else:
+            log.warn('No training chips for partition {}'.format(self.training_package.partition_id))
 
-        # Save TF label map based on class_map.
-        class_map_path = training_package.get_local_path(
-            training_package.get_class_map_uri())
-        tf_class_map = make_tf_class_map(self.class_map)
-        save_tf_class_map(tf_class_map, class_map_path)
+        if validation_results:
+            _merge_training_results(validation_results,
+                                self.training_package.validation_local_record_path,
+                                VALIDATION)
+        else:
+            log.warn('No validation chips for partition {}'.format(self.training_package.partition_id))
 
-        training_package.upload(debug=self.config.debug)
+        self.training_package.upload(debug=self.config.debug)
 
         # clear scene training packages
         del self.scene_training_packages[:]
 
     def train(self, tmp_dir):
+        self.training_package.set_tmp_dir(tmp_dir)
         # Download training data and update config file.
-        training_package = TrainingPackage(self.config.training_data_uri,
-                                           self.config, tmp_dir)
-        training_package.download_data()
-        config_path = training_package.download_config()
+        self.training_package.download_data()
+        config_path = self.training_package.download_config(self.class_map)
 
         # Setup output dirs.
         output_dir = get_local_path(self.config.training_output_uri, tmp_dir)
@@ -686,9 +679,13 @@ class TFObjectDetection(Backend):
             make_dir(output_dir)
             sync_from_dir(self.config.training_output_uri, output_dir)
         else:
-            if os.path.exists(output_dir):
-                shutil.rmtree(output_dir)
-            make_dir(output_dir)
+            for f in os.listdir(output_dir):
+                if not f.startswith('command-config'):
+                    path = os.path.join(output_dir, f)
+                    if os.path.isfile(path):
+                        os.remove(path)
+                    else:
+                        shutil.rmtree(path)
 
         local_config_path = os.path.join(output_dir, 'pipeline.config')
         shutil.copy(config_path, local_config_path)
