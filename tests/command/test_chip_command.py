@@ -8,17 +8,20 @@ import tests.mock as mk
 
 class TestChipCommand(mk.MockMixin, unittest.TestCase):
     def test_command_create(self):
-        task = rv.task.ChipClassificationConfig({})
-        backend = rv.backend.KerasClassificationConfig('')
+        task = rv.TaskConfig.builder(mk.MOCK_TASK).build()
+        backend = rv.BackendConfig.builder(mk.MOCK_BACKEND).build()
         with RVConfig.get_tmp_dir() as tmp_dir:
-            cmd = rv.command.ChipCommandConfig.builder() \
-                                              .with_task(task) \
-                                              .with_backend(backend) \
-                                              .with_train_scenes('') \
-                                              .with_val_scenes('') \
-                                              .with_root_uri(tmp_dir) \
-                                              .build() \
-                                              .create_command()
+            cmd_conf = rv.command.ChipCommandConfig.builder() \
+                                                   .with_task(task) \
+                                                   .with_backend(backend) \
+                                                   .with_train_scenes([]) \
+                                                   .with_val_scenes([]) \
+                                                   .with_root_uri(tmp_dir) \
+                                                   .build()
+
+            cmd_conf = rv.command.CommandConfig.from_proto(cmd_conf.to_proto())
+            cmd = cmd_conf.create_command()
+
             self.assertTrue(cmd, rv.command.ChipCommand)
 
     def test_missing_config_task(self):

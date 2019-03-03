@@ -5,9 +5,10 @@ import rastervision as rv
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 
 from tests import data_file_path
+from tests.mock import (MockMixin, create_mock_experiment)
 
 
-class TestTFDeeplabConfig(unittest.TestCase):
+class TestTFDeeplabConfig(MockMixin, unittest.TestCase):
     template_uri = data_file_path('tf_deeplab/mobilenet_v2.json')
 
     def generate_task(self, classes=['one', 'two'], chip_size=300):
@@ -33,6 +34,45 @@ class TestTFDeeplabConfig(unittest.TestCase):
         self.assertEqual(b.tfdl_config['modelVariant'], 'mobilenet_v2')
         self.assertEqual(b.model_uri, model_uri)
         self.assertEqual(b.fine_tune_checkpoint_name, 'foo')
+
+    def test_update_for_command_and_report_io(self):
+        b = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+                            .with_task(self.generate_task()) \
+                            .with_template(self.get_template_uri()) \
+                            .with_batch_size(100) \
+                            .build()
+
+        exp_id = 'exp_id'
+        training_data_uri = '/chip_uri'
+        train_uri = '/train_uri'
+        model_uri = '/train_uri/model'
+        checkpoint_path = '/train_uri/{}.tar.gz'.format(exp_id)
+
+        exp = create_mock_experiment()
+        exp.id = exp_id
+        exp.chip_uri = training_data_uri
+        exp.train_uri = train_uri
+
+        b.update_for_command(rv.CHIP, exp)
+        b.update_for_command(rv.TRAIN, exp)
+
+        self.assertEqual(b.training_data_uri, training_data_uri)
+        self.assertEqual(b.model_uri, model_uri)
+        self.assertEqual(b.fine_tune_checkpoint_name, exp_id)
+
+        chip_io = rv.core.CommandIODefinition()
+        b.report_io(rv.CHIP, chip_io)
+        self.assertEqual(chip_io.output_uris, set([training_data_uri]))
+
+        train_io = rv.core.CommandIODefinition()
+        b.report_io(rv.TRAIN, train_io)
+        self.assertEqual(train_io.input_uris, set([training_data_uri]))
+        self.assertEqual(train_io.output_uris,
+                         set([model_uri, checkpoint_path]))
+
+        bundle_io = rv.core.CommandIODefinition()
+        b.report_io(rv.BUNDLE, bundle_io)
+        self.assertEqual(bundle_io.input_uris, set([model_uri]))
 
     def test_build_backend_from_proto(self):
         config = {

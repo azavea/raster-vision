@@ -183,25 +183,33 @@ class TestBundleCommand(mk.MockMixin, unittest.TestCase):
 
     def test_command_run_with_mocks(self):
         with RVConfig.get_tmp_dir() as tmp_dir:
+            predict_package_uri = os.path.join(tmp_dir, 'predict_package.zip')
+
             task_config = rv.TaskConfig.builder(mk.MOCK_TASK).build()
-            task_config.predict_package_uri = os.path.join(
-                tmp_dir, 'predict_package.zip')
+
             backend_config = rv.BackendConfig.builder(mk.MOCK_BACKEND).build()
             scene = mk.create_mock_scene()
             analyzer_config = rv.AnalyzerConfig.builder(
                 mk.MOCK_ANALYZER).build()
 
-            cmd = rv.command.BundleCommandConfig.builder() \
-                                              .with_task(task_config) \
-                                              .with_backend(backend_config) \
-                                              .with_scene(scene) \
-                                              .with_analyzers([analyzer_config]) \
-                                              .with_root_uri('.') \
-                                              .build() \
-                                              .create_command()
+            cmd_conf = rv.command.BundleCommandConfig.builder() \
+                                                     .with_task(task_config) \
+                                                     .with_backend(backend_config) \
+                                                     .with_scene(scene) \
+                                                     .with_analyzers([analyzer_config]) \
+                                                     .with_root_uri('.') \
+                                                     .build()
+
+            cmd_conf = rv.command.CommandConfig.from_proto(cmd_conf.to_proto())
+
+            cmd_conf.task.predict_package_uri = predict_package_uri
+            analyzer_config = cmd_conf.analyzers[0]
+
+            cmd = cmd_conf.create_command()
+
             cmd.run()
 
-            self.assertTrue(os.path.exists(task_config.predict_package_uri))
+            self.assertTrue(os.path.exists(predict_package_uri))
             self.assertTrue(analyzer_config.mock.save_bundle_files.called)
 
 

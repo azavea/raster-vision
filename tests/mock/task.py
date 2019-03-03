@@ -89,8 +89,8 @@ class MockTaskConfig(SupressDeepCopyMixin, TaskConfig):
         # Have input always be this file, and output be a non-existant file,
         # so commands always run
         super().report_io(command_type, io_def)
-        io_def.add_input(__file__)
-        io_def.add_output('{}{}'.format(__file__, 'xxxx'))
+        io_def.add_inputs([__file__])
+        io_def.add_outputs(['{}{}'.format(__file__, 'xxxx')])
 
 
 class MockTaskConfigBuilder(SupressDeepCopyMixin, TaskConfigBuilder):
