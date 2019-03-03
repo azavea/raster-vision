@@ -39,6 +39,9 @@ def flip_scene(src_tiff_path, src_labels_path, dst_tiff_path, dst_labels_path):
 
     Useful for generating multiple training scenes for integration test usage.
     """
+
+    labels_are_tif = src_labels_path.endswith('.tif')
+
     with rasterio.open(src_tiff_path) as src:
         profile = src.profile
         bands = src.read()
@@ -47,26 +50,37 @@ def flip_scene(src_tiff_path, src_labels_path, dst_tiff_path, dst_labels_path):
             fbands = np.flip(bands, 1)
             dst.write(fbands)
 
-        img_crs = pyproj.Proj(init=src.crs['init'])
-        map_crs = pyproj.Proj(init='epsg:4326')
+        if not labels_are_tif:
 
-        def t(x, y):
-            return pyproj.transform(img_crs, map_crs, x, y)
+            img_crs = pyproj.Proj(init=src.crs['init'])
+            map_crs = pyproj.Proj(init='epsg:4326')
 
-        # Find the center horizontal line through the image.
+            def t(x, y):
+                return pyproj.transform(img_crs, map_crs, x, y)
 
-        ll = (src.bounds.left, src.bounds.bottom)
-        ul = (src.bounds.left, src.bounds.top)
-        ur = (src.bounds.right, src.bounds.top)
-        lr = (src.bounds.right, src.bounds.bottom)
+            # Find the center horizontal line through the image.
 
-        left = t(ul[0] - ((ul[0] - ll[0]) / 2), ul[1] - ((ul[1] - ll[1]) / 2))
+            ll = (src.bounds.left, src.bounds.bottom)
+            ul = (src.bounds.left, src.bounds.top)
+            ur = (src.bounds.right, src.bounds.top)
+            lr = (src.bounds.right, src.bounds.bottom)
 
-        right = t(ur[0] - ((ur[0] - lr[0]) / 2), ur[1] - ((ur[1] - lr[1]) / 2))
+            left = t(ul[0] - ((ul[0] - ll[0]) / 2), ul[1] - ((ul[1] - ll[1]) / 2))
 
-        m = abs(left[1] - right[1]) / abs(left[0] - right[0])
-        b = left[1] - (m * left[0])
+            right = t(ur[0] - ((ur[0] - lr[0]) / 2), ur[1] - ((ur[1] - lr[1]) / 2))
 
+            m = abs(left[1] - right[1]) / abs(left[0] - right[0])
+            b = left[1] - (m * left[0])
+
+    if labels_are_tif:
+        with rasterio.open(src_labels_path) as src:
+            profile = src.profile
+            bands = src.read()
+
+            with rasterio.open(dst_labels_path, 'w', **profile) as dst:
+                fbands = np.flip(bands, 1)
+                dst.write(fbands)
+    else:
         def traverse_labels(src, dst):
             for key in src:
                 e = src[key]
@@ -98,7 +112,7 @@ def flip_scene(src_tiff_path, src_labels_path, dst_tiff_path, dst_labels_path):
         with open(dst_labels_path, 'w') as dst_labels_file:
             dst_labels_file.write(json.dumps(dst_labels, indent=4))
 
-        print('done.')
+    print('done.')
 
 
 if __name__ == '__main__':
