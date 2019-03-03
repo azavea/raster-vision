@@ -65,9 +65,11 @@ def flip_scene(src_tiff_path, src_labels_path, dst_tiff_path, dst_labels_path):
             ur = (src.bounds.right, src.bounds.top)
             lr = (src.bounds.right, src.bounds.bottom)
 
-            left = t(ul[0] - ((ul[0] - ll[0]) / 2), ul[1] - ((ul[1] - ll[1]) / 2))
+            left = t(ul[0] - ((ul[0] - ll[0]) / 2),
+                     ul[1] - ((ul[1] - ll[1]) / 2))
 
-            right = t(ur[0] - ((ur[0] - lr[0]) / 2), ur[1] - ((ur[1] - lr[1]) / 2))
+            right = t(ur[0] - ((ur[0] - lr[0]) / 2),
+                      ur[1] - ((ur[1] - lr[1]) / 2))
 
             m = abs(left[1] - right[1]) / abs(left[0] - right[0])
             b = left[1] - (m * left[0])
@@ -81,6 +83,7 @@ def flip_scene(src_tiff_path, src_labels_path, dst_tiff_path, dst_labels_path):
                 fbands = np.flip(bands, 1)
                 dst.write(fbands)
     else:
+
         def traverse_labels(src, dst):
             for key in src:
                 e = src[key]
