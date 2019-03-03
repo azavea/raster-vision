@@ -11,6 +11,8 @@ env:
       - CLEAN_TRAVIS_TAG=${TRAVIS_TAG/[[:space:]]/}
       - COMMIT=${CLEAN_TRAVIS_TAG:-${TRAVIS_COMMIT:0:7}}
 
+if: (type = pull_request) OR (tag IS present) OR (branch = develop) OR (branch =~ /^feature.*/)
+
 script:
    - .travis/build
    - .travis/test
