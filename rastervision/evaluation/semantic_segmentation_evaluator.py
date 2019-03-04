@@ -1,12 +1,33 @@
 import logging
+import json
 
-from rastervision.data import ActivateMixin
-from rastervision.rv_config import RVConfig
-from rastervision.utils.files import (download_if_needed)
+from shapely.geometry import mapping
+import shapely
+
+from rastervision.data import ActivateMixin, geojson_to_shapes
+from rastervision.utils.files import (file_to_str)
 from rastervision.evaluation import (ClassificationEvaluator,
                                      SemanticSegmentationEvaluation)
 
 log = logging.getLogger(__name__)
+
+
+def filter_geojson_by_aoi(geojson, crs_transformer, aoi_polygons):
+    shapes = [s for s, c in geojson_to_shapes(geojson, crs_transformer)]
+    tree = shapely.strtree.STRtree(shapes)
+    filtered_shapes = []
+    for aoi_poly in aoi_polygons:
+        shapes_in_aoi = tree.query(aoi_poly)
+        for s in shapes_in_aoi:
+            s_int = s.intersection(aoi_poly)
+            filtered_shapes.append(s_int)
+
+    features = [{
+        'type': 'feature',
+        'geometry': mapping(s)
+    } for s in filtered_shapes]
+
+    return {'type': 'FeatureCollection', 'features': features}
 
 
 class SemanticSegmentationEvaluator(ClassificationEvaluator):
@@ -44,17 +65,26 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
             if hasattr(label_source, 'source') and hasattr(
                     label_source.source, 'vector_source') and hasattr(
                         label_store, 'vector_output'):
-                tmp_dir = RVConfig.get_tmp_dir().name
                 gt_geojson = label_source.source.vector_source.get_geojson()
                 for vo in label_store.vector_output:
-                    pred_geojson = vo['uri']
+                    pred_geojson_uri = vo['uri']
                     mode = vo['mode']
                     class_id = vo['class_id']
-                    pred_geojson_local = download_if_needed(
-                        pred_geojson, tmp_dir)
+                    pred_geojson = json.loads(file_to_str(pred_geojson_uri))
+
+                    if scene.aoi_polygons:
+                        gt_geojson = filter_geojson_by_aoi(
+                            gt_geojson,
+                            scene.raster_source.get_crs_transformer(),
+                            scene.aoi_polygons)
+                        pred_geojson = filter_geojson_by_aoi(
+                            pred_geojson,
+                            scene.raster_source.get_crs_transformer(),
+                            scene.aoi_polygons)
+
                     vect_scene_evaluation = self.create_evaluation()
                     vect_scene_evaluation.compute_vector(
-                        gt_geojson, pred_geojson_local, mode, class_id)
+                        gt_geojson, pred_geojson, mode, class_id)
                     vect_evaluation.merge(
                         vect_scene_evaluation, scene_id=scene.id)
 
