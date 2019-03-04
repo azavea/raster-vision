@@ -3,6 +3,7 @@ from os.path import join
 import json
 
 import numpy as np
+from shapely.geometry import shape
 
 from rastervision.core.class_map import (ClassItem, ClassMap)
 from rastervision.data.label_source.semantic_segmentation_label_source import (
@@ -40,7 +41,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
 
         return Scene(scene_id, rs, gt_ls, pred_ls)
 
-    def get_vector_scene(self, class_id):
+    def get_vector_scene(self, class_id, use_aoi=False):
         gt_uri = data_file_path('{}-gt-polygons.geojson'.format(class_id))
         pred_uri = data_file_path('{}-pred-polygons.geojson'.format(class_id))
 
@@ -59,6 +60,12 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
             'mode': 'polygons',
             'class_id': class_id
         }]
+
+        if use_aoi:
+            aoi_uri = data_file_path('{}-aoi.geojson'.format(class_id))
+            aoi_geojson = json.loads(file_to_str(aoi_uri))
+            aoi_polygons = [shape(aoi_geojson['features'][0]['geometry'])]
+            return Scene(scene_id, rs, gt_ls, pred_ls, aoi_polygons)
 
         return Scene(scene_id, rs, gt_ls, pred_ls)
 
@@ -90,6 +97,26 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         vector_eval_json = json.loads(file_to_str(vector_output_uri))
         exp_vector_eval_json = json.loads(
             file_to_str(data_file_path('expected-vector-eval.json')))
+        # NOTE:  The precision  and recall  values found  in the  file
+        # `expected-vector-eval.json`  are equal to fractions of  the
+        # form (n-1)/n for  n <= 7 which  can be seen to  be (and have
+        # been manually verified to be) correct.
+        self.assertDictEqual(vector_eval_json, exp_vector_eval_json)
+
+    def test_vector_evaluator_with_aoi(self):
+        class_map = ClassMap([
+            ClassItem(id=1, name='one'),
+        ])
+        output_uri = join(self.tmp_dir.name, 'raster-out.json')
+        vector_output_uri = join(self.tmp_dir.name, 'vector-out.json')
+        scenes = [self.get_vector_scene(1, use_aoi=True)]
+        evaluator = SemanticSegmentationEvaluator(class_map, output_uri,
+                                                  vector_output_uri)
+        evaluator.process(scenes, self.tmp_dir.name)
+        vector_eval_json = json.loads(file_to_str(vector_output_uri))
+        exp_vector_eval_json = json.loads(
+            file_to_str(data_file_path('expected-vector-eval-with-aoi.json')))
+
         # NOTE:  The precision  and recall  values found  in the  file
         # `expected-vector-eval.json`  are equal to fractions of  the
         # form (n-1)/n for  n <= 7 which  can be seen to  be (and have

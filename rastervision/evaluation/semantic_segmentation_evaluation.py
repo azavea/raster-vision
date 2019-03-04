@@ -107,27 +107,27 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
         import mask_to_polygons.processing.score as score
 
         # Ground truth as list of geometries
-        if is_geojson(gt):
-            _ground_truth = gt
-            if 'features' in _ground_truth.keys():
-                _ground_truth = _ground_truth['features']
-            ground_truth = []
-            for feature in _ground_truth:
-                if 'geometry' in feature.keys():
-                    ground_truth.append(feature['geometry'])
-                else:
-                    ground_truth.append(feature)
-        else:
-            ground_truth = vectorification.geometries_from_geojson(gt)
+        def get_geoms(x):
+            if is_geojson(x):
+                _x = x
+                if 'features' in _x.keys():
+                    _x = _x['features']
+                geoms = []
+                for feature in _x:
+                    if 'geometry' in feature.keys():
+                        geoms.append(feature['geometry'])
+                    else:
+                        geoms.append(feature)
+            else:
+                geoms = vectorification.geometries_from_geojson(x)
 
-        # Predictions as list of geometries
-        if is_geojson(pred):
-            predictions = pred
-        else:
-            predictions = vectorification.geometries_from_geojson(pred)
+            return geoms
 
-        if len(ground_truth) > 0 and len(predictions) > 0:
-            results = score.spacenet(predictions, ground_truth)
+        gt = get_geoms(gt)
+        pred = get_geoms(pred)
+
+        if len(gt) > 0 and len(pred) > 0:
+            results = score.spacenet(pred, gt)
 
             true_positives = results['tp']
             false_positives = results['fp']
@@ -140,7 +140,7 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
             else:
                 f1 = 0.0
             count_error = int(false_positives + false_negatives)
-            gt_count = len(ground_truth)
+            gt_count = len(gt)
             class_name = 'vector-{}-{}'.format(
                 mode,
                 self.class_map.get_by_id(class_id).name)
