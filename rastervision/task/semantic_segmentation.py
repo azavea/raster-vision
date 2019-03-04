@@ -126,12 +126,12 @@ class SemanticSegmentation(Task):
 
         def label_fn(window):
             chip = raster_source.get_chip(window)
-            if np.any(chip):
-                chip = raster_source.get_chip(window)
-                labels = self.backend.predict([chip], [window], tmp_dir)
-                label_arr = labels.get_label_arr(window)
-            else:
-                label_arr = np.zeros((window.get_height(), window.get_width()))
+            labels = self.backend.predict([chip], [window], tmp_dir)
+            label_arr = labels.get_label_arr(window)
+
+            # Set NODATA pixels in imagery to predicted value of 0 (ie. ignore)
+            label_arr[np.sum(chip, axis=2) == 0] = 0
+
             print('.', end='', flush=True)
             return label_arr
 
