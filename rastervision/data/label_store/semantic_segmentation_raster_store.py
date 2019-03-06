@@ -85,9 +85,7 @@ class SemanticSegmentationRasterStore(LabelStore):
         local_path = get_local_path(self.uri, self.tmp_dir)
         make_dir(local_path, use_dirname=True)
 
-        # TODO: this only works if crs_transformer is RasterioCRSTransformer.
-        # Need more general way of computing transform for the more general case.
-        transform = self.crs_transformer.transform
+        transform = self.crs_transformer.get_affine_transform()
         crs = self.crs_transformer.get_image_crs()
 
         band_count = 1

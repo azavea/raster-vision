@@ -29,6 +29,7 @@ Raster Vision 0.8.2
 
 Bug Fixes
 ^^^^^^^^^
+- Fixed issue with saving semseg predictions for non-georeferenced imagery `#708 <https://github.com/azavea/raster-vision/pull/708>`_
 - Fixed issue with handling width > height in semseg eval `#627 <https://github.com/azavea/raster-vision/pull/627>`_
 - Fixed issue with experiment configs not setting key names correctly `#523 <https://github.com/azavea/raster-vision/pull/576>`_
 - Fixed issue with Raster Sources that have channel order `#503 <https://github.com/azavea/raster-vision/pull/576>`_
