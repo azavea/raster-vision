@@ -15,11 +15,13 @@ Raster Vision 0.9.0
 - Decrease semseg memory usage `#630 <https://github.com/azavea/raster-vision/pull/630>`_
 - Add support for vector tiles in .mbtiles files `#601 <https://github.com/azavea/raster-vision/pull/601>`_
 - Add support for getting labels from zxy vector tiles `#532 <https://github.com/azavea/raster-vision/pull/532>`_
-- Remove custom ``__deepcopy__`` implementation from ``ConfigBuilder``s. `#567 <https://github.com/azavea/raster-vision/pull/567>`_
+- Remove custom ``__deepcopy__`` implementation from ``ConfigBuilder``\s. `#567 <https://github.com/azavea/raster-vision/pull/567>`_
 - Add ability to shift raster images by given numbers of meters.  `#573 <https://github.com/azavea/raster-vision/pull/573>`_
 - Add ability to generate GeoJSON segmentation predictions.  `#575 <https://github.com/azavea/raster-vision/pull/575>`_
 - Add ability to run the DeepLab eval script.  `#653 <https://github.com/azavea/raster-vision/pull/653>`_
 - Submit CPU-only stages to a CPU queue on Aws.  `#668 <https://github.com/azavea/raster-vision/pull/668>`_
+- Parallelize CHIP and PREDICT commands  `#671 <https://github.com/azavea/raster-vision/pull/671>`_
+- Refactor ``update_for_command`` to split out the IO reporting into ``report_io``. `#671 <https://github.com/azavea/raster-vision/pull/671>`_
 
 Raster Vision 0.8
 -----------------
