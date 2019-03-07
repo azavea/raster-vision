@@ -54,3 +54,50 @@ Global Registry
 ---------------
 
 Another major design pattern of Raster Vision is the use of a global registry. This is what gives the ability for the single interface to construct all subclass builders through the static ``builder()`` method on the ``Config`` via a key, e.g. ``rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE)``. The key is used to look up what ConfigBuilders are registered inside the global registery, and the registry determines what builder to return from the ``build()`` call. More importantly, this enables Raster Vision to have a flexible system to create :ref:`plugins` out of anything that has a keyed ConfigBuilder. The registry pattern goes beyond Configs and ConfigBuilders, though: this is also how internal classes and plugins are chosen for :ref:`default provider`, :ref:`experiment runner`, and :ref:`filesystem`.
+
+.. _configuration topics:
+
+Configuration Topics
+--------------------
+
+Configuration objects have a couple of methods that require some understanding if you'd like deeper
+knowledge of how Raster Vision works - for example if you are creating plugins.
+
+Implicit Configuration
+^^^^^^^^^^^^^^^^^^^^^^
+
+Configuration values can be set implicitly from other configuration. For example, if my backend
+requires a ``model_uri`` to save a model to, and it is not set, the configuration may set
+it to ``/opt/data/rv_root/train/experiment-name/model.hdf``. This was implicitly set by knowing the
+root URI for the train command is ``/opt/data/rv_root/train/experiment-name``, which is set on the
+experiment (by default constructed from the ``root_uri`` and ``experiment_id``).
+The mechanism that allows this is that configurations
+implement a method called ``update_for_command``, with the following signature:
+
+.. autoclass:: rastervision.core.Config
+   :members: update_for_command
+
+This method is called before running commands on an experiment, and gives the configuration a
+chance to update any values it needs to based on the experiment and any other context it needs.
+The context argument is, for example, the ``SceneConfig`` that the configuration is attached
+to (e.g. a ``RasterSourceConfig``). Context should be set whenever a parent configuration
+calls ``update_for_command`` on child configuration, when that parent configuration is part
+of a collection of configurations (e.g., the collection of ``SceneConfig``s in a ``DataSetConfig``).
+
+Reporting IO
+^^^^^^^^^^^^
+
+Raster Vision requires that configuration reports on it's input and output files, which allows it to tie
+together commands into a Directed Acyclic Graph of operations that the ``ExperimentRunner``\s can execute.
+The way this reporting happens is through the ``report_io`` method on configuration:
+
+.. autoclass:: rastervision.core.Config
+   :members: report_io
+
+For each specific command, configuration should set any input files or directories onto the ``io_def`` through the add ``add_input`` method, and set any output  files or directories using the ``add_output`` method.
+
+If a configuration does not correctly report on its IO, it could result in commands not running or
+rerunning happening even though output already exists and the ``--rerun`` flag is not used. This
+can be a common pitfall for plugin development, and care should be taken to ensure that IO is
+properly being reported. The ``--dry-run`` flag with the  ``-v`` verbosity flag can be useful here
+for ensuring the IO that is reported  is what is expected.
