@@ -8,7 +8,7 @@ class DoubleCRSTransformer(CRSTransformer):
     """
 
     def map_to_pixel(self, web_point):
-        return (web_point[0] * 2, web_point[1] * 2)
+        return (web_point[0] * 2.0, web_point[1] * 2.0)
 
     def pixel_to_map(self, pixel_point):
-        return (pixel_point[0] / 2, pixel_point[1] / 2)
+        return (pixel_point[0] / 2.0, pixel_point[1] / 2.0)

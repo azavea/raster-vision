@@ -6,7 +6,6 @@ from rastervision.data.label_source import (
 from rastervision.data.vector_source import VectorSourceConfig
 from rastervision.protos.label_source_pb2 import (LabelSourceConfig as
                                                   LabelSourceConfigMsg)
-from rastervision.data.label_source.utils import check_uri_type
 
 
 class ChipClassificationLabelSourceConfig(LabelSourceConfig):
@@ -83,14 +82,23 @@ class ChipClassificationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
         super().__init__(ChipClassificationLabelSourceConfig, config)
 
     def validate(self):
-        if self.config.get('vector_source') is None:
+        super().validate()
+
+        vector_source = self.config.get('vector_source')
+        if vector_source is None:
             raise rv.ConfigError(
                 'You must set the vector_source for ChipClassificationLabelSourceConfig'
                 ' Use "with_vector_source".')
-        check_uri_type(self.config.get('vector_source').uri)
+        if not isinstance(vector_source, VectorSourceConfig):
+            raise rv.ConfigError(
+                'vector source must be a child of class VectorSourceConfig, got {}'.
+                format(type(vector_source)))
+        if vector_source.has_null_class_bufs():
+            raise rv.ConfigError(
+                'Setting buffer to None for a class in the vector_source is not allowed '
+                'for ChipClassificationLabelSourceConfig.')
 
     def from_proto(self, msg):
-
         # Added for backwards compatibility.
         if msg.HasField('chip_classification_geojson_source'):
             conf = msg.chip_classification_geojson_source

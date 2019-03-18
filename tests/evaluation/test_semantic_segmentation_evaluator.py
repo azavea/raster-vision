@@ -6,10 +6,13 @@ import numpy as np
 from shapely.geometry import shape
 
 from rastervision.core.class_map import (ClassItem, ClassMap)
-from rastervision.data.label_source.semantic_segmentation_label_source import (
-    SemanticSegmentationLabelSource)
-from rastervision.data import Scene
-from tests.mock import (MockRasterSource, MockRasterizedSource)
+from rastervision.core import Box
+from rastervision.data import (Scene, RasterizedSource, GeoJSONVectorSource,
+                               IdentityCRSTransformer,
+                               SemanticSegmentationLabelSource)
+from rastervision.data.raster_source.rasterized_source_config import (
+    RasterizedSourceConfig)
+from tests.mock import (MockRasterSource)
 from rastervision.evaluation import SemanticSegmentationEvaluator
 from rastervision.rv_config import RVConfig
 from rastervision.utils.files import file_to_str
@@ -49,10 +52,19 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         rs = MockRasterSource(channel_order=[0, 1, 3], num_channels=3)
         rs.set_raster(np.zeros((10, 10, 3)))
 
-        gt_rs = MockRasterizedSource(gt_uri)
+        crs_transformer = IdentityCRSTransformer()
+        extent = Box.make_square(0, 0, 360)
+
+        gt_rs = RasterizedSource(
+            GeoJSONVectorSource(gt_uri, crs_transformer),
+            RasterizedSourceConfig.RasterizerOptions(2), extent,
+            crs_transformer)
         gt_ls = SemanticSegmentationLabelSource(source=gt_rs)
 
-        pred_rs = MockRasterizedSource(pred_uri)
+        pred_rs = RasterizedSource(
+            GeoJSONVectorSource(pred_uri, crs_transformer),
+            RasterizedSourceConfig.RasterizerOptions(2), extent,
+            crs_transformer)
         pred_ls = SemanticSegmentationLabelSource(source=pred_rs)
         pred_ls.vector_output = [{
             'uri': pred_uri,

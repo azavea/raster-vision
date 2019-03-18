@@ -1,6 +1,5 @@
 import unittest
 import os
-import json
 
 import numpy as np
 from moto import mock_s3
@@ -8,14 +7,13 @@ from moto import mock_s3
 import rastervision as rv
 
 from rastervision.data.label_source import ObjectDetectionLabelSource
-from rastervision.data.label_source.utils import (
-    geojson_to_object_detection_labels)
 from rastervision.data import ObjectDetectionLabels
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
 from rastervision.filesystem import NotReadableError
 from rastervision.rv_config import RVConfig
 from rastervision.data.crs_transformer import IdentityCRSTransformer
+from rastervision.utils.files import json_to_file
 
 from tests import data_file_path
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
@@ -35,7 +33,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         self.file_path = os.path.join(self.temp_dir.name, self.file_name)
 
         self.crs_transformer = DoubleCRSTransformer()
-        self.geojson_dict = {
+        self.geojson = {
             'type':
             'FeatureCollection',
             'features': [{
@@ -65,59 +63,10 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
             }]
         }
 
-        self.multipolygon_geojson_dict = {
-            'type':
-            'FeatureCollection',
-            'features': [{
-                'type': 'Feature',
-                'geometry': {
-                    'type':
-                    'MultiPolygon',
-                    'coordinates': [[[[0., 0.], [0., 1.], [1., 1.], [1., 0.],
-                                      [0., 0.]]]]
-                },
-                'properties': {
-                    'class_id': 1,
-                    'score': 0.9
-                }
-            }, {
-                'type': 'Feature',
-                'geometry': {
-                    'type':
-                    'MultiPolygon',
-                    'coordinates':
-                    [[[[1., 1.], [1., 2.], [2., 2.], [2., 1.], [1., 1.]]],
-                     [[[1., 0.], [1., 1.], [2., 1.], [2., 0.], [1., 0.]]]]
-                },
-                'properties': {
-                    'score': 0.9,
-                    'class_id': 2
-                }
-            }]
-        }
-
-        self.linestring_geojson_dict = {
-            'type':
-            'FeatureCollection',
-            'features': [{
-                'type': 'Feature',
-                'properties': {
-                    'score': 0.9,
-                    'class_id': 2
-                },
-                'geometry': {
-                    'type': 'LineString',
-                    'coordinates': [[0., 0.], [0., 1.]]
-                }
-            }]
-        }
-
         self.extent = Box.make_square(0, 0, 10)
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
-        with open(self.file_path, 'w') as label_file:
-            self.geojson_str = json.dumps(self.geojson_dict)
-            label_file.write(self.geojson_str)
+        json_to_file(self.geojson, self.file_path)
 
     def tearDown(self):
         access, secret = self.prev_keys
@@ -132,40 +81,6 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
 
         self.mock_s3.stop()
         self.temp_dir.cleanup()
-
-    def test_multipolygon_geojson_to_labels(self):
-        labels = geojson_to_object_detection_labels(
-            self.multipolygon_geojson_dict, self.crs_transformer)
-
-        # construct expected labels object
-        expected_npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.],
-                                     [0., 2., 2., 4.]])
-        expected_class_ids = np.array([1, 2, 2])
-        expected_scores = np.array([0.9, 0.9, 0.9])
-        expected_labels = ObjectDetectionLabels(
-            expected_npboxes, expected_class_ids, expected_scores)
-
-        labels.assert_equal(expected_labels)
-
-    def test_polygon_geojson_to_labels(self):
-        labels = geojson_to_object_detection_labels(self.geojson_dict,
-                                                    self.crs_transformer)
-
-        # construct expected labels object
-        expected_npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
-        expected_class_ids = np.array([1, 2])
-        expected_scores = np.array([0.9, 0.9])
-        expected_labels = ObjectDetectionLabels(
-            expected_npboxes, expected_class_ids, expected_scores)
-
-        labels.assert_equal(expected_labels)
-
-    def test_read_invalid_geometry_type(self):
-        with self.assertRaises(Exception):
-            geojson_to_object_detection_labels(
-                self.linestring_geojson_dict,
-                self.crs_transformer,
-                extent=None)
 
     def test_read_invalid_uri_readable_true(self):
         with self.assertRaises(NotReadableError):
@@ -258,6 +173,17 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
                             .with_classes(classes) \
                             .build()
             config.create_source(task_config, extent, crs_transformer, tmp_dir)
+
+    def test_using_null_class_bufs(self):
+        uri = data_file_path('polygon-labels.geojson')
+        vs = rv.VectorSourceConfig.builder(rv.GEOJSON_SOURCE) \
+                .with_uri(uri) \
+                .with_buffers(line_bufs={1: None}) \
+                .build()
+        with self.assertRaises(rv.ConfigError):
+            rv.LabelSourceConfig.builder(rv.OBJECT_DETECTION) \
+                .with_vector_source(vs) \
+                .build()
 
 
 if __name__ == '__main__':

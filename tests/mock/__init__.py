@@ -11,7 +11,6 @@ class SupressDeepCopyMixin:
 from tests.mock.task import *
 from tests.mock.backend import *
 from tests.mock.raster_source import *
-from tests.mock.rasterized_source import *
 from tests.mock.label_source import *
 from tests.mock.label_store import *
 from tests.mock.raster_transformer import *

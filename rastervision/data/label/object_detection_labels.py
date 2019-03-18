@@ -1,4 +1,5 @@
 import numpy as np
+from shapely.geometry import shape
 
 from rastervision.core.box import Box
 from rastervision.data.label import Labels
@@ -82,6 +83,47 @@ class ObjectDetectionLabels(Labels):
                   if boxlist.has_field('scores') else None)
         return ObjectDetectionLabels(
             boxlist.get(), boxlist.get_field('classes'), scores=scores)
+
+    @staticmethod
+    def from_geojson(geojson, extent=None):
+        """Convert GeoJSON to ObjectDetectionLabels object.
+
+        If extent is provided, filter out the boxes that lie "more than a little
+        bit" outside the extent.
+
+        Args:
+            geojson: (dict) normalized GeoJSON (see VectorSource)
+            extent: (Box) in pixel coords
+
+        Returns:
+            ObjectDetectionLabels
+        """
+        boxes = []
+        class_ids = []
+        scores = []
+
+        for f in geojson['features']:
+            geom = shape(f['geometry'])
+            (xmin, ymin, xmax, ymax) = geom.bounds
+            boxes.append(Box(ymin, xmin, ymax, xmax))
+
+            props = f['properties']
+            class_ids.append(props['class_id'])
+            scores.append(props.get('score', 1.0))
+
+        if len(boxes):
+            boxes = np.array(
+                [box.npbox_format() for box in boxes], dtype=float)
+            class_ids = np.array(class_ids)
+            scores = np.array(scores)
+            labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
+        else:
+            labels = ObjectDetectionLabels.make_empty()
+
+        if extent is not None:
+            labels = ObjectDetectionLabels.get_overlapping(
+                labels, extent, ioa_thresh=0.8, clip=True)
+        return labels
 
     def get_boxes(self):
         """Return list of Boxes."""
