@@ -47,10 +47,20 @@ class ObjectDetectionLabelSourceConfigBuilder(LabelSourceConfigBuilder):
         super().__init__(ObjectDetectionLabelSourceConfig, config)
 
     def validate(self):
-        if self.config.get('vector_source') is None:
+        super().validate()
+        vector_source = self.config.get('vector_source')
+        if vector_source is None:
             raise rv.ConfigError(
                 'You must set the vector_source for ObjectDetectionLabelSourceConfig'
                 ' Use "with_vector_source".')
+        if not isinstance(vector_source, VectorSourceConfig):
+            raise rv.ConfigError(
+                'vector source must be a child of class VectorSourceConfig, got {}'.
+                format(type(vector_source)))
+        if vector_source.has_null_class_bufs():
+            raise rv.ConfigError(
+                'Setting buffer to None for a class in the vector_source is not allowed '
+                'for ObjectDetectionLabelSourceConfig.')
 
     def from_proto(self, msg):
         b = ObjectDetectionLabelSourceConfigBuilder()

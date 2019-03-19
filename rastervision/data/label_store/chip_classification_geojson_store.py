@@ -1,12 +1,9 @@
-import json
-
 from rastervision.data.label import ChipClassificationLabels
-from rastervision.data.label_source.utils import load_label_store_json
 from rastervision.data.label_store import LabelStore
-from rastervision.data.label_source.utils import geojson_to_chip_classification_labels
-from rastervision.data.label_store.utils import classification_labels_to_geojson
-
-from rastervision.utils.files import str_to_file
+from rastervision.data.label_store.utils import boxes_to_geojson
+from rastervision.data.label_source import ChipClassificationLabelSource
+from rastervision.data.vector_source import GeoJSONVectorSource
+from rastervision.utils.files import json_to_file
 
 
 class ChipClassificationGeoJSONStore(LabelStore):
@@ -33,16 +30,22 @@ class ChipClassificationGeoJSONStore(LabelStore):
         Note that if the grid is inferred from polygons, only the grid will be
         written, not the original polygons.
         """
-        geojson_dict = classification_labels_to_geojson(
-            labels, self.crs_transformer, self.class_map)
-        geojson_str = json.dumps(geojson_dict)
-
-        str_to_file(geojson_str, self.uri)
+        boxes = labels.get_cells()
+        class_ids = labels.get_class_ids()
+        scores = list(labels.get_scores())
+        geojson = boxes_to_geojson(
+            boxes,
+            class_ids,
+            self.crs_transformer,
+            self.class_map,
+            scores=scores)
+        json_to_file(geojson, self.uri)
 
     def get_labels(self):
-        json_dict = load_label_store_json(self.uri)
-        return geojson_to_chip_classification_labels(json_dict,
-                                                     self.crs_transformer)
+        vector_source = GeoJSONVectorSource(self.uri, self.crs_transformer)
+        source = ChipClassificationLabelSource(
+            vector_source, self.crs_transformer, self.class_map)
+        return source.get_labels()
 
     def empty_labels(self):
         return ChipClassificationLabels()

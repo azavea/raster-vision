@@ -1,14 +1,13 @@
 from copy import deepcopy
 from typing import Union
-import json
+
+from shapely.geometry import shape
 
 import rastervision as rv
 from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin)
 from rastervision.task import TaskConfig
 from rastervision.data import (Scene, RasterSourceConfig, LabelSourceConfig,
-                               LabelStoreConfig)
-from rastervision.utils.files import file_to_str
-from rastervision.utils.geojson import aoi_json_to_shapely
+                               LabelStoreConfig, GeoJSONVectorSource)
 from rastervision.protos.scene_pb2 \
     import SceneConfig as SceneConfigMsg
 
@@ -49,9 +48,10 @@ class SceneConfig(BundledConfigMixin, Config):
         if self.aoi_uris:
             aoi_polygons = []
             for uri in self.aoi_uris:
-                aoi_js = json.loads(file_to_str(uri))
-                aoi_polygons.extend(
-                    aoi_json_to_shapely(aoi_js, crs_transformer))
+                aoi_geojson = GeoJSONVectorSource(
+                    uri, crs_transformer).get_geojson()
+                for f in aoi_geojson['features']:
+                    aoi_polygons.append(shape(f['geometry']))
 
         return Scene(self.id, raster_source, label_source, label_store,
                      aoi_polygons)

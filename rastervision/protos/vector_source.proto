@@ -24,4 +24,6 @@ message VectorSourceConfig {
     required string source_type = 4;
     optional google.protobuf.Struct class_id_to_filter = 5;
     optional int32 default_class_id = 6;
+    optional google.protobuf.Struct line_bufs = 7;
+    optional google.protobuf.Struct point_bufs = 8;
 }

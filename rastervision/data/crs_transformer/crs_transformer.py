@@ -12,7 +12,8 @@ class CRSTransformer(object):
         """Transform point from map to pixel-based coordinates.
 
         Args:
-            map_point: (x, y) tuple in map coordinates (eg. lon/lat)
+            map_point: (x, y) tuple in map coordinates (eg. lon/lat). x and y can be
+            single values or array-like.
 
         Returns:
             (x, y) tuple in pixel coordinates
@@ -23,7 +24,8 @@ class CRSTransformer(object):
         """Transform point from pixel to map-based coordinates.
 
         Args:
-            pixel_point: (x, y) tuple in pixel coordinates
+            pixel_point: (x, y) tuple in pixel coordinates. x and y can be
+            single values or array-like.
 
         Returns:
             (x, y) tuple in map coordinates (eg. lon/lat)

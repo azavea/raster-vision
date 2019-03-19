@@ -29,7 +29,7 @@ def create_filter(filt):
 
     def func(f):
         """evaluates whether a given feature passes its filter"""
-        p = f['properties'] if f else {}  # pylint: disable=unused-variable
+        p = f.get('properties', {}) if f else {}  # pylint: disable=unused-variable
         return eval(_compile(filt))
 
     return func

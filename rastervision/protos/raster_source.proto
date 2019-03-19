@@ -24,6 +24,8 @@ message RasterSourceConfig {
             // shapes in the GeoJSON file.
             required int32 background_class_id = 2;
 
+            // Here for backward compatibility. Now this is configured as part of the
+            // VectorSource.
             // Number of pixels to add to each side of line when rasterized.
             optional int32 line_buffer = 3 [default=15];
         }

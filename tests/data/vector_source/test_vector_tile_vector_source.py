@@ -25,6 +25,7 @@ class TestVectorTileVectorSource(unittest.TestCase):
             .with_uri(uri) \
             .with_zoom(14) \
             .with_id_field('__id') \
+            .with_buffers(line_bufs={1: 0.0001}, point_bufs={1: 0.0001}) \
             .build()
         config = VectorTileVectorSourceConfig.from_proto(b.to_proto())
         aoi_path = data_file_path('vector_tiles/lv-aoi.json')
