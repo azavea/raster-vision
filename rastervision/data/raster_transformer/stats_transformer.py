@@ -23,11 +23,15 @@ class StatsTransformer(RasterTransformer):
         Transforms non-uint8 to uint8 values using raster_stats.
 
         Args:
-            chip: [height, width, channels] numpy array
-            channel_order: The channel order to use for these statistics.
+            chip: ndarray of shape [height, width, channels] This is assumed to already
+                have the channel_order applied to it if channel_order is set. In other
+                words, channels should be equal to len(channel_order).
+            channel_order: list of indices of channels that were extracted from the
+                raw imagery.
 
         Returns:
             [height, width, channels] uint8 numpy array
+
         """
         if chip.dtype != np.uint8:
             if self.raster_stats:
