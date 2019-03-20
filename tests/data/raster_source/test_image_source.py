@@ -28,7 +28,7 @@ class TestImageSource(unittest.TestCase):
 
             transformers = [stats_transformer]
 
-            chip = (np.ones((2, 2, 4)) * [3, 3, 3, 0]).astype(np.uint16)
+            chip = (np.ones((2, 2, 4)) * [3, 3, 3, 3]).astype(np.uint16)
             save_img(chip, img_path)
 
             source = rv.RasterSourceConfig.builder(rv.IMAGE_SOURCE) \
