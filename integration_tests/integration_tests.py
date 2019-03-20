@@ -197,6 +197,21 @@ def run_test(test, temp_dir):
                             'test {}, experiment {}'.format(
                                 test, experiment.id))
         else:
+            try:
+                console_info(
+                    'Checking predict package raises exception on invalid '
+                    'channel_order...')
+                pp = experiment.task.predict_package_uri
+                rv.Predictor(pp, temp_dir, channel_order=[0, 1, 7])
+                msg = (
+                    'Predictor should have raised an exception due to invalid '
+                    'channel_order but did not.')
+                details = 'for experiment {}'.format(experiment.id)
+                e = TestError(test, msg, details)
+                errors.append(e)
+            except ValueError:
+                pass
+
             console_info('Checking predict package produces same results...')
             pp = experiment.task.predict_package_uri
             predict = rv.Predictor(pp, temp_dir).predict

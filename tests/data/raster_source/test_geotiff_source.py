@@ -178,6 +178,21 @@ class TestGeoTiffSource(unittest.TestCase):
                                                         2]).astype(np.uint8)
                 np.testing.assert_equal(out_chip, expected_out_chip)
 
+    def test_channel_order_error(self):
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            img_path = os.path.join(tmp_dir, 'img.tif')
+            chip = np.ones((2, 2, 3)).astype(np.uint8)
+            chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
+            save_img(chip, img_path)
+
+            channel_order = [3, 1, 0]
+            with self.assertRaises(ChannelOrderError):
+                rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                     .with_uri(img_path) \
+                                     .with_channel_order(channel_order) \
+                                     .build() \
+                                     .create_source(tmp_dir=tmp_dir)
+
     def test_with_stats_transformer(self):
         config = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
                                       .with_uri('dummy') \

@@ -5,6 +5,7 @@ import rastervision as rv
 from rastervision.utils.files import (download_if_needed, make_dir,
                                       load_json_config, save_json_config)
 from rastervision.protos.command_pb2 import CommandConfig as CommandConfigMsg
+from rastervision.data.raster_source import ChannelOrderError
 
 
 class Predictor():
@@ -18,7 +19,7 @@ class Predictor():
         """Creates a new Predictor.
 
         Args:
-          prediction_packaage_uri - The URI of the prediction package to use.
+          prediction_package_uri - The URI of the prediction package to use.
                                     Can be any type of URI that Raster Vision can read.
           tmp_dir - Temporary directory in which to store files that are used by the
                     Predictor. This directory is not cleaned up by this class.
@@ -128,15 +129,23 @@ class Predictor():
         scene_config = self.scene_config.for_prediction(image_uri, label_uri) \
                                         .create_local(self.tmp_dir)
 
-        scene = scene_config.create_scene(self.task_config, self.tmp_dir)
-        # If we are analyzing per scene, run analyzers
-        # Analyzers should overwrite files in the tmp_dir
-        if self.update_stats:
-            for analyzer in self.analyzers:
-                analyzer.process([scene], self.tmp_dir)
-
-            # Reload scene to refresh any new analyzer config
+        try:
             scene = scene_config.create_scene(self.task_config, self.tmp_dir)
+            # If we are analyzing per scene, run analyzers
+            # Analyzers should overwrite files in the tmp_dir
+            if self.update_stats:
+                for analyzer in self.analyzers:
+                    analyzer.process([scene], self.tmp_dir)
+
+                # Reload scene to refresh any new analyzer config
+                scene = scene_config.create_scene(self.task_config,
+                                                  self.tmp_dir)
+        except ChannelOrderError:
+            raise ValueError(
+                'The predict package is using a channel_order '
+                'with channels unavailable in the imagery.\nTo set a new '
+                'channel_order that only uses channels available in the '
+                'imagery, use the --channel-order option.')
 
         with scene.activate():
             labels = self.task.predict_scene(scene, self.tmp_dir)
