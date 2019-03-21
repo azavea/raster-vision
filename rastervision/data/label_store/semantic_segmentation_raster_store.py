@@ -46,7 +46,7 @@ class SemanticSegmentationRasterStore(LabelStore):
 
         self.source = None
         if file_exists(uri):
-            self.source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+            self.source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                                .with_uri(self.uri) \
                                                .build() \
                                                .create_source(self.tmp_dir)

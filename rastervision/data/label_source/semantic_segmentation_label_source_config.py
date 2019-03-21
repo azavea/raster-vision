@@ -126,5 +126,5 @@ class SemanticSegmentationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
 
         if not isinstance(source, (str, RasterSourceConfig)):
             raise rv.ConfigError(
-                'Raster source must be of type str or ImageSourceConfig, got {}'.
+                'raster_source must be of type str or RasterSourceConfig, got {}'.
                 format(type(source)))

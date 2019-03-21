@@ -72,7 +72,7 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
     def test_build(self):
         try:
             rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-              .with_raster_source('x.geojson') \
+              .with_raster_source('x.tif') \
               .with_rgb_class_map([]) \
               .build()
         except rv.ConfigError:
@@ -81,7 +81,7 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
     def test_build_deprecated(self):
         try:
             rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
-              .with_raster_source('x.geojson') \
+              .with_raster_source('x.tif') \
               .with_rgb_class_map([]) \
               .build()
         except rv.ConfigError:

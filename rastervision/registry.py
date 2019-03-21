@@ -4,7 +4,7 @@ from rastervision.cli import Verbosity
 from rastervision.rv_config import RVConfig
 from rastervision.plugin import PluginRegistry
 from rastervision.data.raster_source.default import (
-    GeoTiffSourceDefaultProvider, ImageSourceDefaultProvider)
+    RasterioSourceDefaultProvider)
 from rastervision.data.vector_source.default import (
     GeoJSONVectorSourceDefaultProvider, VectorTileVectorSourceDefaultProvider)
 from rastervision.data.label_source.default import (
@@ -56,16 +56,18 @@ class Registry:
             rv.data.StatsTransformerConfigBuilder,
 
             # Raster Sources
-            (rv.RASTER_SOURCE, rv.GEOTIFF_SOURCE):
-            rv.data.GeoTiffSourceConfigBuilder,
             (rv.RASTER_SOURCE, rv.RASTERIZED_SOURCE):
             rv.data.RasterizedSourceConfigBuilder,
-            (rv.RASTER_SOURCE, rv.IMAGE_SOURCE):
-            rv.data.ImageSourceConfigBuilder,
+            (rv.RASTER_SOURCE, rv.RASTERIO_SOURCE):
+            rv.data.RasterioSourceConfigBuilder,
 
             # Alias provided for backwards compatibility.
             (rv.RASTER_SOURCE, rv.GEOJSON_SOURCE):
             rv.data.RasterizedSourceConfigBuilder,
+            (rv.RASTER_SOURCE, rv.GEOTIFF_SOURCE):
+            rv.data.RasterioSourceConfigBuilder,
+            (rv.RASTER_SOURCE, rv.IMAGE_SOURCE):
+            rv.data.RasterioSourceConfigBuilder,
 
             # Vector Sources
             (rv.VECTOR_SOURCE, rv.VECTOR_TILE_SOURCE):
@@ -114,11 +116,7 @@ class Registry:
             rv.evaluation.SemanticSegmentationEvaluatorConfigBuilder,
         }
 
-        self._internal_default_raster_sources = [
-            GeoTiffSourceDefaultProvider,
-            # This is the catch-all case, ensure it's on the bottom of the search stack.
-            ImageSourceDefaultProvider
-        ]
+        self._internal_default_raster_sources = [RasterioSourceDefaultProvider]
 
         self._internal_default_vector_sources = [
             GeoJSONVectorSourceDefaultProvider,
