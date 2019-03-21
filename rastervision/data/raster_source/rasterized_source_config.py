@@ -13,21 +13,18 @@ from rastervision.utils.files import download_if_needed
 
 class RasterizedSourceConfig(RasterSourceConfig):
     class RasterizerOptions(object):
-        def __init__(self, background_class_id, line_buffer=15):
+        def __init__(self, background_class_id):
             """Constructor.
 
             Args:
                 background_class_id: The class_id to use for background pixels that don't
                     overlap with any shapes in the GeoJSON file.
-                line_buffer: Number of pixels to add to each side of line when rasterized.
             """
             self.background_class_id = background_class_id
-            self.line_buffer = line_buffer
 
         def to_proto(self):
             return RasterSourceConfigMsg.RasterizedSource.RasterizerOptions(
-                background_class_id=self.background_class_id,
-                line_buffer=self.line_buffer)
+                background_class_id=self.background_class_id)
 
     def __init__(self,
                  vector_source,
@@ -101,15 +98,20 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
 
     def validate(self):
         super().validate()
-        if self.config.get('vector_source') is None:
+
+        vector_source = self.config.get('vector_source')
+        if vector_source is None:
             raise rv.ConfigError(
                 'You must specify a vector_source for the RasterizedSourceConfig. '
                 'Use "with_vector_source"')
-        if not isinstance(
-                self.config.get('vector_source'), VectorSourceConfig):
+        if not isinstance(vector_source, VectorSourceConfig):
             raise rv.ConfigError(
                 'vector source must be a child of class VectorSourceConfig, got {}'.
-                format(type(self.config.get('vector_source'))))
+                format(type(vector_source)))
+        if vector_source.has_null_class_bufs():
+            raise rv.ConfigError(
+                'Setting buffer to None for a class in the vector_source is not allowed '
+                'for RasterizedSourceConfig.')
 
         if self.config.get('rasterizer_options') is None:
             raise rv.ConfigError(
@@ -138,8 +140,7 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
         return b \
             .with_vector_source(vector_source) \
             .with_rasterizer_options(
-                rasterizer_options.background_class_id,
-                rasterizer_options.line_buffer)
+                rasterizer_options.background_class_id)
 
     def with_vector_source(self, vector_source):
         """Set the vector_source.
@@ -166,16 +167,15 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
         b.config['vector_source'] = provider.construct(uri)
         return b
 
-    def with_rasterizer_options(self, background_class_id, line_buffer=15):
+    def with_rasterizer_options(self, background_class_id):
         """Specify options for converting GeoJSON to raster.
 
         Args:
             background_class_id: The class_id to use for background pixels that don't
                 overlap with any shapes in the GeoJSON file.
-            line_buffer: Number of pixels to add to each side of line when rasterized.
         """
         b = deepcopy(self)
         b.config[
             'rasterizer_options'] = RasterizedSourceConfig.RasterizerOptions(
-                background_class_id, line_buffer=line_buffer)
+                background_class_id)
         return b

@@ -8,12 +8,19 @@ from rastervision.data.vector_source.class_inference import ClassInferenceOption
 
 
 class GeoJSONVectorSourceConfig(VectorSourceConfig):
-    def __init__(self, uri, class_id_to_filter=None, default_class_id=1):
+    def __init__(self,
+                 uri,
+                 class_id_to_filter=None,
+                 default_class_id=1,
+                 line_bufs=None,
+                 point_bufs=None):
         self.uri = uri
         super().__init__(
             rv.GEOJSON_SOURCE,
             class_id_to_filter=class_id_to_filter,
-            default_class_id=default_class_id)
+            default_class_id=default_class_id,
+            line_bufs=line_bufs,
+            point_bufs=point_bufs)
 
     def to_proto(self):
         msg = super().to_proto()
@@ -23,6 +30,9 @@ class GeoJSONVectorSourceConfig(VectorSourceConfig):
     def create_source(self, crs_transformer=None, extent=None, class_map=None):
         return GeoJSONVectorSource(
             self.uri,
+            crs_transformer,
+            line_bufs=self.line_bufs,
+            point_bufs=self.point_bufs,
             class_inf_opts=ClassInferenceOptions(
                 class_map=class_map,
                 class_id_to_filter=self.class_id_to_filter,
@@ -39,7 +49,9 @@ class GeoJSONVectorSourceConfigBuilder(VectorSourceConfigBuilder):
             config = {
                 'uri': prev.uri,
                 'class_id_to_filter': prev.class_id_to_filter,
-                'default_class_id': prev.default_class_id
+                'default_class_id': prev.default_class_id,
+                'line_bufs': prev.line_bufs,
+                'point_bufs': prev.point_bufs
             }
 
         super().__init__(GeoJSONVectorSourceConfig, config)

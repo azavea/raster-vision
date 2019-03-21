@@ -4,6 +4,7 @@ import gzip
 from threading import Timer
 import time
 import logging
+import json
 
 from google.protobuf import json_format
 
@@ -306,3 +307,13 @@ def get_cached_file(cache_dir, uri):
         path = ungz_path
 
     return path
+
+
+def file_to_json(uri):
+    """Return JSON dict based on file at uri."""
+    return json.loads(file_to_str(uri))
+
+
+def json_to_file(js, uri):
+    """Upload file to uri based on JSON dict."""
+    str_to_file(json.dumps(js), uri)

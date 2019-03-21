@@ -47,14 +47,3 @@ def boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
         features.append(feature)
 
     return {'type': 'FeatureCollection', 'features': features}
-
-
-def classification_labels_to_geojson(labels, crs_transformer, class_map):
-    """Return a geojson dict from classification labels.
-    """
-    boxes = labels.get_cells()
-    class_ids = labels.get_class_ids()
-    scores = list(labels.get_scores())
-
-    return boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
-                            scores)

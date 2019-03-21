@@ -1,6 +1,5 @@
 import unittest
 import os
-import json
 
 import numpy as np
 
@@ -8,7 +7,7 @@ import rastervision as rv
 from rastervision.core import Box
 from rastervision.data.raster_source import RasterSourceConfig
 from rastervision.data.crs_transformer import IdentityCRSTransformer
-from rastervision.utils.files import str_to_file
+from rastervision.utils.files import json_to_file
 from rastervision.rv_config import RVConfig
 
 
@@ -22,12 +21,15 @@ class TestRasterizedSource(unittest.TestCase):
         self.line_buffer = 1
         self.uri = os.path.join(self.tmp_dir.name, 'temp.json')
 
+    def tearDown(self):
+        self.tmp_dir.cleanup()
+
     def build_source(self, geojson):
-        str_to_file(json.dumps(geojson), self.uri)
+        json_to_file(geojson, self.uri)
 
         config = RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
             .with_uri(self.uri) \
-            .with_rasterizer_options(self.background_class_id, self.line_buffer) \
+            .with_rasterizer_options(self.background_class_id) \
             .build()
 
         # Convert to proto and back as a test.
@@ -39,9 +41,6 @@ class TestRasterizedSource(unittest.TestCase):
                                       self.extent)
 
         return source
-
-    def tearDown(self):
-        self.tmp_dir.cleanup()
 
     def test_get_chip(self):
         geojson = {
@@ -96,6 +95,17 @@ class TestRasterizedSource(unittest.TestCase):
             expected_chip[0:5, 0:5, :] = self.background_class_id
 
             np.testing.assert_array_equal(chip, expected_chip)
+
+    def test_using_null_class_bufs(self):
+        vs = rv.VectorSourceConfig.builder(rv.GEOJSON_SOURCE) \
+            .with_uri(self.uri) \
+            .with_buffers(line_bufs={1: None}) \
+            .build()
+        with self.assertRaises(rv.ConfigError):
+            RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
+                .with_vector_source(vs) \
+                .with_rasterizer_options(self.background_class_id) \
+                .build()
 
 
 if __name__ == '__main__':

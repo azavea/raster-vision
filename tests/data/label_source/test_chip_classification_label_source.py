@@ -1,27 +1,22 @@
 import unittest
 import os
-import json
-import copy
 
-import shapely
+from shapely.geometry import shape
+from shapely.strtree import STRtree
 
 import rastervision as rv
 from rastervision.rv_config import RVConfig
-from rastervision.data.label_source import (infer_cell, infer_labels,
-                                            read_labels)
-from rastervision.data.crs_transformer import IdentityCRSTransformer
+from rastervision.data.label_source import (infer_cell)
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.data.utils import geojson_to_shapes
-from tests import data_file_path
+from rastervision.utils.files import json_to_file
+
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
 
 class TestChipClassificationLabelSource(unittest.TestCase):
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
-        # Use a multipolygon with two polygons that are the same to test that
-        # multipolygons can be handled.
         self.geojson = {
             'type':
             'FeatureCollection',
@@ -30,9 +25,8 @@ class TestChipClassificationLabelSource(unittest.TestCase):
                 'geometry': {
                     'type':
                     'MultiPolygon',
-                    'coordinates':
-                    [[[[0., 0.], [0., 1.], [1., 1.], [1., 0.], [0., 0.]]],
-                     [[[0., 0.], [0., 1.], [1., 1.], [1., 0.], [0., 0.]]]]
+                    'coordinates': [[[[0., 0.], [0., 2.], [2., 2.], [2., 0.],
+                                      [0., 0.]]]]
                 },
                 'properties': {
                     'class_name': 'car',
@@ -44,8 +38,8 @@ class TestChipClassificationLabelSource(unittest.TestCase):
                 'geometry': {
                     'type':
                     'Polygon',
-                    'coordinates': [[[1., 1.], [1., 2.], [2., 2.], [2., 1.],
-                                     [1., 1.]]]
+                    'coordinates': [[[2., 2.], [2., 4.], [4., 4.], [4., 2.],
+                                     [2., 2.]]]
                 },
                 'properties': {
                     'score': 0.0,
@@ -55,64 +49,34 @@ class TestChipClassificationLabelSource(unittest.TestCase):
             }]
         }
 
-        # Make copy of geojson with multipolygon converted to polygon. This will be used
-        # to test read_labels.
-        self.geojson_no_multipolygons = copy.deepcopy(self.geojson)
-        feature = self.geojson_no_multipolygons['features'][0]
-        feature['geometry']['type'] = 'Polygon'
-        feature['geometry']['coordinates'] = feature['geometry'][
-            'coordinates'][0]
-
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
-        self.box1 = Box.make_square(0, 0, 2)
-        self.box2 = Box.make_square(2, 2, 2)
+        class MockTaskConfig():
+            def __init__(self, class_map):
+                self.class_map = class_map
+
+        self.task_config = MockTaskConfig(self.class_map)
+
+        self.box1 = Box.make_square(0, 0, 4)
+        self.box2 = Box.make_square(4, 4, 4)
         self.class_id1 = 1
         self.class_id2 = 2
         self.background_class_id = 3
 
-        self.shapes = geojson_to_shapes(self.geojson, self.crs_transformer)
+        geoms = []
+        for f in self.geojson['features']:
+            g = shape(f['geometry'])
+            g.class_id = f['properties']['class_id']
+            geoms.append(g)
+        self.str_tree = STRtree(geoms)
 
         self.file_name = 'labels.json'
         self.temp_dir = RVConfig.get_tmp_dir()
-        self.file_path = os.path.join(self.temp_dir.name, self.file_name)
-
-        with open(self.file_path, 'w') as label_file:
-            self.geojson_str = json.dumps(self.geojson)
-            label_file.write(self.geojson_str)
+        self.uri = os.path.join(self.temp_dir.name, self.file_name)
+        json_to_file(self.geojson, self.uri)
 
     def tearDown(self):
         self.temp_dir.cleanup()
-
-    def test_get_str_tree(self):
-        str_tree = shapely.strtree.STRtree(
-            [shape for shape, class_id in self.shapes])
-        # Monkey-patching class_id onto shapely.geom is not a good idea because
-        # if you transform it, the class_id will be lost, but this works here. I wanted to
-        # use a dictionary to associate shape with class_id, but couldn't because they are
-        # mutable.
-        for shape, class_id in self.shapes:
-            shape.class_id = class_id
-
-        # Check first box.
-        query_box = Box.make_square(0, 0, 1)
-        query_geom = shapely.geometry.Polygon(
-            [(p[0], p[1]) for p in query_box.geojson_coordinates()])
-        polygons = str_tree.query(query_geom)
-
-        self.assertEqual(len(polygons), 2)
-        self.assertEqual(Box.from_shapely(polygons[0]), self.box1)
-        self.assertEqual(polygons[0].class_id, self.class_id1)
-
-        # Check second box.
-        query_box = Box.make_square(3, 3, 1)
-        query_geom = shapely.geometry.Polygon(
-            [(p[0], p[1]) for p in query_box.geojson_coordinates()])
-        polygons = str_tree.query(query_geom)
-
-        self.assertEqual(len(polygons), 1)
-        self.assertEqual(Box.from_shapely(polygons[0]), self.box2)
-        self.assertEqual(polygons[0].class_id, self.class_id2)
 
     def test_infer_cell1(self):
         # More of box 1 is in cell.
@@ -122,7 +86,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id1)
@@ -135,7 +99,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id2)
@@ -148,7 +112,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, None)
@@ -162,7 +126,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, None)
@@ -176,7 +140,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id1)
@@ -189,7 +153,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(self.shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.background_class_id)
@@ -202,7 +166,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = False
 
-        class_id = infer_cell(self.shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, None)
@@ -216,39 +180,53 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = None
         pick_min_class_id = True
 
-        class_id = infer_cell(self.shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
                               pick_min_class_id)
         self.assertEqual(class_id, self.class_id2)
 
-    def test_infer_labels(self):
-        extent = Box.make_square(0, 0, 4)
-        ioa_thresh = 0.5
-        use_intersection_over_cell = False
-        background_class_id = self.background_class_id
-        pick_min_class_id = False
-        cell_size = 2
+    def test_get_labels_inferred(self):
+        extent = Box.make_square(0, 0, 8)
 
-        labels = infer_labels(
-            self.geojson, self.crs_transformer, extent, cell_size, ioa_thresh,
-            use_intersection_over_cell, pick_min_class_id, background_class_id)
+        msg = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                .with_uri(self.uri) \
+                .with_ioa_thresh(0.5) \
+                .with_use_intersection_over_cell(False) \
+                .with_pick_min_class_id(False) \
+                .with_background_class_id(self.background_class_id) \
+                .with_infer_cells(True) \
+                .with_cell_size(4) \
+                .build().to_proto()
+        config = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                   .from_proto(msg).build()
+        source = config.create_source(self.task_config, extent,
+                                      self.crs_transformer, self.temp_dir.name)
+
+        labels = source.get_labels()
         cells = labels.get_cells()
 
         self.assertEqual(len(cells), 4)
-        class_id = labels.get_cell_class_id(self.box1)
-        self.assertEqual(class_id, self.class_id1)
-        class_id = labels.get_cell_class_id(self.box2)
-        self.assertEqual(class_id, self.class_id2)
-        class_id = labels.get_cell_class_id(Box.make_square(0, 2, 2))
-        self.assertEqual(class_id, self.background_class_id)
-        class_id = labels.get_cell_class_id(Box.make_square(2, 0, 2))
-        self.assertEqual(class_id, self.background_class_id)
+        self.assertEqual(labels.get_cell_class_id(self.box1), self.class_id1)
+        self.assertEqual(labels.get_cell_class_id(self.box2), self.class_id2)
+        self.assertEqual(
+            labels.get_cell_class_id(Box.make_square(0, 4, 4)),
+            self.background_class_id)
+        self.assertEqual(
+            labels.get_cell_class_id(Box.make_square(4, 0, 4)),
+            self.background_class_id)
 
-    def test_read_labels1(self):
+    def test_get_labels_small_extent(self):
         # Extent only has enough of first box in it.
-        extent = Box.make_square(0, 0, 0.5)
-        labels = read_labels(self.geojson_no_multipolygons,
-                             self.crs_transformer, extent)
+        extent = Box.make_square(0, 0, 2)
+
+        msg = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                .with_uri(self.uri) \
+                .build().to_proto()
+        config = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                   .from_proto(msg).build()
+        source = config.create_source(self.task_config, extent,
+                                      self.crs_transformer, self.temp_dir.name)
+        labels = source.get_labels()
 
         cells = labels.get_cells()
         self.assertEqual(len(cells), 1)
@@ -257,11 +235,18 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         class_id = labels.get_cell_class_id(self.box2)
         self.assertEqual(class_id, None)
 
-    def test_read_labels2(self):
+    def test_get_labels(self):
         # Extent contains both boxes.
-        extent = Box.make_square(0, 0, 4)
-        labels = read_labels(self.geojson_no_multipolygons,
-                             self.crs_transformer, extent)
+        extent = Box.make_square(0, 0, 8)
+
+        msg = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                .with_uri(self.uri) \
+                .build().to_proto()
+        config = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                   .from_proto(msg).build()
+        source = config.create_source(self.task_config, extent,
+                                      self.crs_transformer, self.temp_dir.name)
+        labels = source.get_labels()
 
         cells = labels.get_cells()
         self.assertEqual(len(cells), 2)
@@ -290,23 +275,15 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         except rv.ConfigError:
             self.fail('ConfigError raised unexpectedly')
 
-    def test_builder(self):
-        uri = data_file_path('polygon-labels.geojson')
-        msg = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
-                .with_uri(uri) \
-                .build().to_proto()
-        config = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
-                   .from_proto(msg).build()
-        self.assertEqual(config.vector_source.uri, uri)
-
-        classes = ['one', 'two']
-        extent = Box.make_square(0, 0, 10)
-        crs_transformer = IdentityCRSTransformer()
-        with RVConfig.get_tmp_dir() as tmp_dir:
-            task_config = rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \
-                            .with_classes(classes) \
-                            .build()
-            config.create_source(task_config, extent, crs_transformer, tmp_dir)
+    def test_using_null_class_bufs(self):
+        vs = rv.VectorSourceConfig.builder(rv.GEOJSON_SOURCE) \
+            .with_uri(self.uri) \
+            .with_buffers(point_bufs={1: None}) \
+            .build()
+        with self.assertRaises(rv.ConfigError):
+            rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                .with_vector_source(vs) \
+                .build()
 
 
 if __name__ == '__main__':

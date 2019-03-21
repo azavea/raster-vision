@@ -1,34 +1,28 @@
 import numpy as np
 from shapely.strtree import STRtree
-from shapely import geometry
+from shapely.geometry import shape
 
 import rastervision as rv
 from rastervision.data import ChipClassificationLabels
 from rastervision.data.label_source import LabelSource
-from rastervision.data.label_source.utils import (
-    geojson_to_chip_classification_labels)
-from rastervision.data.utils import geojson_to_shapes
+from rastervision.core import Box
 
 
-def infer_cell(shapes,
-               cell,
-               ioa_thresh,
-               use_intersection_over_cell,
-               background_class_id,
-               pick_min_class_id,
-               str_tree=None):
+def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
+               background_class_id, pick_min_class_id):
     """Infer the class_id of a cell given a set of polygons.
 
     Given a cell and a set of polygons, the problem is to infer the class_id
     that best captures the content of the cell. This is non-trivial since there
     can be multiple polygons of differing classes overlapping with the cell.
-    Any polygons that sufficiently overlap with the cell are in the running for
+    Any polygons that sufficiently overlaps with the cell are in the running for
     setting the class_id. If there are none in the running, the cell is either
     considered null or background. See args for more details.
 
     Args:
-        shapes: List of (shapely.geometry, class_id) tuples
         cell: Box
+        str_tree: (STRtree) collection of geoms in scene used for geometric queries.
+            The geoms need to have class_id monkey-patched onto them.
         ioa_thresh: (float) the minimum IOA of a polygon and cell for that
             polygon to be a candidate for setting the class_id
         use_intersection_over_cell: (bool) If true, then use the area of the
@@ -41,42 +35,29 @@ def infer_cell(shapes,
         pick_min_class_id: If true, the class_id for a cell is the minimum
             class_id of the boxes in that cell. Otherwise, pick the class_id of
             the box covering the greatest area.
-        str_tree: Either an STRtree object or None.  Used for geometric queries.
-
     """
-    if not str_tree:
-        str_tree = STRtree([shape for shape, class_id in shapes])
+    cell_geom = cell.to_shapely()
+    inter_polys = str_tree.query(cell_geom)
 
-    # Monkey-patching class_id onto shapely.geom is not a good idea because
-    # if you transform it, the class_id will be lost, but this works here. I wanted to
-    # use a dictionary to associate shape with class_id, but couldn't because they are
-    # mutable.
-    for shape, class_id in shapes:
-        shape.class_id = class_id
-
-    cell_geom = geometry.Polygon(
-        [(p[0], p[1]) for p in cell.geojson_coordinates()])
-    intersecting_polygons = str_tree.query(cell_geom)
-
-    intersection_over_cells = []
-    intersection_over_polygons = []
+    inter_over_cells = []
+    inter_over_polys = []
     class_ids = []
 
     # Find polygons whose intersection with the cell is big enough.
-    for polygon in intersecting_polygons:
-        intersection = polygon.intersection(cell_geom)
-        intersection_over_cell = intersection.area / cell_geom.area
-        intersection_over_polygon = intersection.area / polygon.area
+    for poly in inter_polys:
+        inter = poly.intersection(cell_geom)
+        inter_over_cell = inter.area / cell_geom.area
+        inter_over_poly = inter.area / poly.area
 
         if use_intersection_over_cell:
-            enough_intersection = intersection_over_cell >= ioa_thresh
+            enough_inter = inter_over_cell >= ioa_thresh
         else:
-            enough_intersection = intersection_over_polygon >= ioa_thresh
+            enough_inter = inter_over_poly >= ioa_thresh
 
-        if enough_intersection:
-            intersection_over_cells.append(intersection_over_cell)
-            intersection_over_polygons.append(intersection_over_polygon)
-            class_ids.append(polygon.class_id)
+        if enough_inter:
+            inter_over_cells.append(inter_over_cell)
+            inter_over_polys.append(inter_over_poly)
+            class_ids.append(poly.class_id)
 
     # Infer class id for cell.
     if len(class_ids) == 0:
@@ -86,87 +67,77 @@ def infer_cell(shapes,
     else:
         # Pick class_id of the polygon with the biggest intersection over
         # cell. If there is a tie, pick the first.
-        class_id = class_ids[np.argmax(intersection_over_cells)]
+        class_id = class_ids[np.argmax(inter_over_cells)]
 
     return class_id
 
 
-def infer_labels(geojson, crs_transformer, extent, cell_size, ioa_thresh,
+def infer_labels(geojson, extent, cell_size, ioa_thresh,
                  use_intersection_over_cell, pick_min_class_id,
                  background_class_id):
     """Infer ChipClassificationLabels grid from GeoJSON containing polygons.
 
     Given GeoJSON with polygons associated with class_ids, infer a grid of
-    cells and class_ids that best captures the contents of each cell.
+    cells and class_ids that best captures the contents of each cell. See infer_cell for
+    info on the args.
 
     Args:
-        geojson: dict in GeoJSON format
-        crs_transformer: CRSTransformer used to convert from map to pixel based
-            coordinates
+        geojson: dict in normalized GeoJSON format (see VectorSource)
         extent: Box representing the bounds of the grid
 
     Returns:
         ChipClassificationLabels
     """
-    shapes = geojson_to_shapes(geojson, crs_transformer)
-    # Only keep polygons and multipolygons.
-    # TODO: handle linestrings
-    shapes = [(shape, class_id) for shape, class_id in shapes
-              if type(shape) in [geometry.Polygon, geometry.MultiPolygon]]
     labels = ChipClassificationLabels()
-
     cells = extent.get_windows(cell_size, cell_size)
-    str_tree = STRtree([shape for shape, class_id in shapes])
+
+    # We need to associate class_id with each geom. Monkey-patching it onto the geom
+    # seems like a bad idea, but it's the only straightforward way of doing this
+    # that I've been able to find.
+    geoms = []
+    for f in geojson['features']:
+        g = shape(f['geometry'])
+        g.class_id = f['properties']['class_id']
+        geoms.append(g)
+    str_tree = STRtree(geoms)
+
     for cell in cells:
-        class_id = infer_cell(shapes, cell, ioa_thresh,
+        class_id = infer_cell(cell, str_tree, ioa_thresh,
                               use_intersection_over_cell, background_class_id,
-                              pick_min_class_id, str_tree)
+                              pick_min_class_id)
         labels.set_cell(cell, class_id)
     return labels
 
 
-def read_labels(geojson, crs_transformer, extent=None):
-    """Construct ChipClassificationLabels from GeoJSON containing grid of cells.
+def read_labels(geojson, extent=None):
+    """Convert GeoJSON to ChipClassificationLabels.
 
     If the GeoJSON already contains a grid of cells, then it can be constructed
     in a straightforward manner without having to infer the class of cells.
 
-    Args:
-        geojson: dict in GeoJSON format
-        crs_transformer: CRSTransformer used to convert from map to pixel based
-            coordinates
-        extent: Box used to filter the grid in the geojson so the grid
-            only contains cells that overlap with the extent
-
-    Returns:
-        ChipClassificationLabels
-    """
-    return geojson_to_chip_classification_labels(geojson, crs_transformer,
-                                                 extent)
-
-
-def load_geojson(geojson, crs_transformer, extent, infer_cells, cell_size,
-                 ioa_thresh, use_intersection_over_cell, pick_min_class_id,
-                 background_class_id):
-    """Construct ChipClassificationLabels from GeoJSON.
-
-    Either infers or reads the grid from the GeoJSON depending on the
-    value of infer_cells.
+    If extent is given, only labels that intersect with the extent are returned.
 
     Args:
-        geojson: dict in GeoJSON format
-        crs_transformer: CRSTransformer used to convert from map to pixel based
-            coordinates
-        extent: Box representing the bounds of the grid
+        geojson: dict in normalized GeoJSON format (see VectorSource)
+        extent: Box in pixel coords
+
     Returns:
-        ChipClassificationLabels
+       ChipClassificationLabels
     """
-    if infer_cells:
-        labels = infer_labels(geojson, crs_transformer, extent, cell_size,
-                              ioa_thresh, use_intersection_over_cell,
-                              pick_min_class_id, background_class_id)
-    else:
-        labels = read_labels(geojson, crs_transformer, extent)
+    labels = ChipClassificationLabels()
+
+    for f in geojson['features']:
+        geom = shape(f['geometry'])
+        (xmin, ymin, xmax, ymax) = geom.bounds
+        cell = Box(ymin, xmin, ymax, xmax)
+        if extent is not None and not cell.to_shapely().intersects(
+                extent.to_shapely()):
+            continue
+
+        props = f['properties']
+        class_id = props['class_id']
+        scores = props.get('scores')
+        labels.set_cell(cell, class_id, scores)
 
     return labels
 
@@ -186,7 +157,7 @@ class ChipClassificationLabelSource(LabelSource):
                  vector_source,
                  crs_transformer,
                  class_map,
-                 extent,
+                 extent=None,
                  ioa_thresh=None,
                  use_intersection_over_cell=False,
                  pick_min_class_id=False,
@@ -210,12 +181,14 @@ class ChipClassificationLabelSource(LabelSource):
                 .create_source(
                     crs_transformer=crs_transformer, extent=extent, class_map=class_map)
 
-        self.labels = ChipClassificationLabels()
         geojson = vector_source.get_geojson()
-        self.labels = load_geojson(geojson, crs_transformer, extent,
-                                   infer_cells, cell_size, ioa_thresh,
-                                   use_intersection_over_cell,
-                                   pick_min_class_id, background_class_id)
+
+        if infer_cells:
+            self.labels = infer_labels(geojson, extent, cell_size, ioa_thresh,
+                                       use_intersection_over_cell,
+                                       pick_min_class_id, background_class_id)
+        else:
+            self.labels = read_labels(geojson, extent)
 
     def get_labels(self, window=None):
         if window is None:

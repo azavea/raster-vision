@@ -2,32 +2,28 @@ import logging
 
 from rasterio.features import rasterize
 import numpy as np
-import shapely
+from shapely.geometry import shape
 from shapely.strtree import STRtree
+import shapely
 
 from rastervision.core import Box
 from rastervision.data import (ActivateMixin, ActivationError)
 from rastervision.data.raster_source import RasterSource
-from rastervision.data.utils import geojson_to_shapes
 
 log = logging.getLogger(__name__)
 
 
-def geojson_to_raster(str_tree, rasterizer_options, window, extent,
-                      crs_transformer):
-    line_buffer = rasterizer_options.line_buffer
+def geoms_to_raster(str_tree, rasterizer_options, window, extent):
     background_class_id = rasterizer_options.background_class_id
 
     log.debug('Cropping shapes to window...')
     # Crop shapes against window, remove empty shapes, and put in window frame of
     # reference.
-    shapes = str_tree.query(window.to_shapely())
+    window_geom = window.to_shapely()
+    shapes = str_tree.query(window_geom)
     shapes = [(s, s.class_id) for s in shapes]
-    shapes = [(s.intersection(window.to_shapely()), c) for s, c in shapes]
+    shapes = [(s.intersection(window_geom), c) for s, c in shapes]
     shapes = [(s, c) for s, c in shapes if not s.is_empty]
-    shapes = [(s.buffer(line_buffer), c)
-              if type(s) is shapely.geometry.LineString else (s, c)
-              for s, c in shapes]
 
     def to_window_frame(x, y, z=None):
         return (x - window.xmin, y - window.ymin)
@@ -51,7 +47,7 @@ def geojson_to_raster(str_tree, rasterizer_options, window, extent,
 
     # Ensure that parts of window outside of extent have zero values which are counted as
     # the don't-care class for segmentation.
-    valid_window = window.to_shapely().intersection(extent.to_shapely())
+    valid_window = window_geom.intersection(extent.to_shapely())
     if valid_window.is_empty:
         raster[:, :] = 0
     else:
@@ -121,23 +117,19 @@ class RasterizedSource(ActivateMixin, RasterSource):
             raise ActivationError('GeoJSONSource must be activated before use')
 
         log.debug('Rasterizing window: {}'.format(window))
-        chip = geojson_to_raster(self.str_tree,
-                                 self.rasterizer_options, window,
-                                 self.get_extent(), self.crs_transformer)
+        chip = geoms_to_raster(self.str_tree, self.rasterizer_options, window,
+                               self.get_extent())
         # Add third singleton dim since rasters must have >=1 channel.
         return np.expand_dims(chip, 2)
 
     def _activate(self):
         geojson = self.vector_source.get_geojson()
-        shapes = geojson_to_shapes(geojson, self.crs_transformer)
-
-        # Monkey-patching class_id onto shapely.geom is not a good idea because
-        # if you transform it, the class_id will be lost, but this works here. I wanted to
-        # use a dictionary to associate shape with class_id, but couldn't because they are
-        # mutable.
-        for shape, class_id in shapes:
-            shape.class_id = class_id
-        self.str_tree = STRtree([shape for shape, class_id in shapes])
+        geoms = []
+        for f in geojson['features']:
+            geom = shape(f['geometry'])
+            geom.class_id = f['properties']['class_id']
+            geoms.append(geom)
+        self.str_tree = STRtree(geoms)
         self.activated = True
 
     def _deactivate(self):

@@ -1,14 +1,11 @@
 import unittest
 import os
-import json
 
-from rastervision.data import (ChipClassificationLabelSource,
-                               ChipClassificationGeoJSONStore)
+import rastervision as rv
 from rastervision.core.box import Box
 from rastervision.core.class_map import ClassMap, ClassItem
-from rastervision.data.label_source.chip_classification_label_source import read_labels
-from rastervision.data.label_store.utils import classification_labels_to_geojson
 from rastervision.rv_config import RVConfig
+from rastervision.utils.files import json_to_file
 
 from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
@@ -16,7 +13,7 @@ from tests.data.mock_crs_transformer import DoubleCRSTransformer
 class TestChipClassificationGeoJSONStore(unittest.TestCase):
     def setUp(self):
         self.crs_transformer = DoubleCRSTransformer()
-        self.geojson_dict = {
+        self.geojson = {
             'type':
             'FeatureCollection',
             'features': [{
@@ -48,44 +45,41 @@ class TestChipClassificationGeoJSONStore(unittest.TestCase):
 
         self.class_map = ClassMap([ClassItem(1, 'car'), ClassItem(2, 'house')])
 
-        self.file_name = 'labels.json'
-        self.temp_dir = RVConfig.get_tmp_dir()
-        self.file_path = os.path.join(self.temp_dir.name, self.file_name)
+        class MockTaskConfig():
+            def __init__(self, class_map):
+                self.class_map = class_map
 
-        with open(self.file_path, 'w') as label_file:
-            self.geojson_str = json.dumps(self.geojson_dict)
-            label_file.write(self.geojson_str)
+        self.task_config = MockTaskConfig(self.class_map)
+        self.temp_dir = RVConfig.get_tmp_dir()
+        self.uri = os.path.join(self.temp_dir.name, 'labels.json')
+
+        json_to_file(self.geojson, self.uri)
 
     def tearDown(self):
         self.temp_dir.cleanup()
-
-    def test_classification_labels_to_geojson(self):
-        self.maxDiff = None
-        extent = Box.make_square(0, 0, 4)
-        labels = read_labels(self.geojson_dict, self.crs_transformer, extent)
-        geojson_dict = classification_labels_to_geojson(
-            labels, self.crs_transformer, self.class_map)
-        self.assertDictEqual(geojson_dict, self.geojson_dict)
 
     def test_constructor_save(self):
         # Read it, write it using label_store, read it again, and compare.
         extent = Box.make_square(0, 0, 10)
 
-        label_source = ChipClassificationLabelSource(
-            self.file_path,
-            self.crs_transformer,
-            self.class_map,
-            extent,
-            infer_cells=False)
+        msg = rv.LabelStoreConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
+                .with_uri(self.uri) \
+                .build().to_proto()
+        config = rv.LabelStoreConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
+                   .from_proto(msg).build()
+        label_store = config.create_store(
+            self.task_config, extent, self.crs_transformer, self.temp_dir.name)
 
-        labels1 = label_source.get_labels()
-
-        new_path = os.path.join(self.temp_dir.name, 'test_save_reload.json')
-
-        label_store = ChipClassificationGeoJSONStore(
-            new_path, self.crs_transformer, self.class_map)
+        labels1 = label_store.get_labels()
+        new_uri = os.path.join(self.temp_dir.name, 'test_save_reload.json')
+        msg = rv.LabelStoreConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
+                .with_uri(new_uri) \
+                .build().to_proto()
+        config = rv.LabelStoreConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
+                   .from_proto(msg).build()
+        label_store = config.create_store(
+            self.task_config, extent, self.crs_transformer, self.temp_dir.name)
         label_store.save(labels1)
-
         labels2 = label_store.get_labels()
 
         self.assertDictEqual(labels1.cell_to_class_id,
