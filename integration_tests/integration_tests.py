@@ -143,6 +143,113 @@ def get_experiment(test, tmp_dir):
     raise Exception('Unknown test {}'.format(test))
 
 
+def test_prediction_package_validation(experiment, test, temp_dir, image_uri):
+    console_info('Checking predict command validation...')
+    errors = []
+    pp = experiment.task.predict_package_uri
+    predict = rv.Predictor(pp, temp_dir, channel_order=[0, 1, 7]).predict
+    try:
+        predict(image_uri, 'x.txt')
+        e = TestError(test,
+                      ('Predictor should have raised exception due to invalid '
+                       'channel_order, but did not.'),
+                      'in experiment {}'.format(experiment.id))
+        errors.append(e)
+    except ValueError:
+        pass
+
+    return errors
+
+
+def test_prediction_package_results(experiment, test, temp_dir, scenes,
+                                    scenes_to_uris):
+    console_info('Checking predict package produces same results...')
+    errors = []
+    pp = experiment.task.predict_package_uri
+    predict = rv.Predictor(pp, temp_dir).predict
+
+    for scene_config in scenes:
+        # Need to write out labels and read them back,
+        # otherwise the floating point precision direct box
+        # coordinates will not match those from the PREDICT
+        # command, which are rounded to pixel coordinates
+        # via pyproj logic (in the case of rasterio crs transformer.
+        predictor_label_store_uri = os.path.join(
+            temp_dir, test.lower(), 'predictor/{}'.format(scene_config.id))
+        uri = scenes_to_uris[scene_config.id]
+
+        predict(uri, predictor_label_store_uri)
+
+        scene = scene_config.create_scene(experiment.task, temp_dir)
+
+        scene_labels = scene.prediction_label_store.get_labels()
+
+        extent = scene.raster_source.get_extent()
+        crs_transformer = scene.raster_source.get_crs_transformer()
+        predictor_label_store = scene_config.label_store \
+                                       .for_prediction(
+                                           predictor_label_store_uri) \
+                                       .create_store(
+                                           experiment.task,
+                                           extent,
+                                           crs_transformer,
+                                           temp_dir)
+
+        from rastervision.data import ActivateMixin
+        with ActivateMixin.compose(scene, predictor_label_store):
+            if not predictor_label_store.get_labels() == scene_labels:
+                e = TestError(
+                    test, ('Predictor did not produce the same labels '
+                           'as the Predict command'),
+                    'for scene {} in experiment {}'.format(
+                        scene_config.id, experiment.id))
+                errors.append(e)
+
+    return errors
+
+
+def test_prediction_package(experiment,
+                            test,
+                            temp_dir,
+                            check_channel_order=False):
+    # Check the prediction package
+    # This will only work with raster_sources that
+    # have a single URI.
+    skip = False
+    errors = []
+    experiment = experiment.fully_resolve()
+
+    scenes_to_uris = {}
+    scenes = experiment.dataset.validation_scenes
+    for scene in scenes:
+        rs = scene.raster_source
+        if hasattr(rs, 'uri'):
+            scenes_to_uris[scene.id] = rs.uri
+        elif hasattr(rs, 'uris'):
+            uris = rs.uris
+            if len(uris) > 1:
+                skip = True
+            else:
+                scenes_to_uris[scene.id] = uris[0]
+        else:
+            skip = True
+
+    if skip:
+        console_warning('Skipping predict package test for '
+                        'test {}, experiment {}'.format(test, experiment.id))
+    else:
+        if check_channel_order:
+            errors.extend(
+                test_prediction_package_validation(experiment, test, temp_dir,
+                                                   uris[0]))
+        else:
+            errors.extend(
+                test_prediction_package_results(experiment, test, temp_dir,
+                                                scenes, scenes_to_uris))
+
+    return errors
+
+
 def run_test(test, temp_dir):
     errors = []
     experiment = get_experiment(test, temp_dir)
@@ -160,7 +267,7 @@ def run_test(test, temp_dir):
             .run(experiment, rerun_commands=True, splits=2,
                  commands_to_run=commands_to_run)
 
-    except Exception as exc:
+    except Exception:
         errors.append(
             TestError(test, 'raised an exception while running',
                       traceback.format_exc()))
@@ -170,87 +277,10 @@ def run_test(test, temp_dir):
     errors.extend(check_eval(test, temp_dir))
 
     if not errors:
-        # Check the prediction package
-        # This will only work with raster_sources that
-        # have a single URI.
-        skip = False
-
-        experiment = experiment.fully_resolve()
-
-        scenes_to_uris = {}
-        scenes = experiment.dataset.validation_scenes
-        for scene in scenes:
-            rs = scene.raster_source
-            if hasattr(rs, 'uri'):
-                scenes_to_uris[scene.id] = rs.uri
-            elif hasattr(rs, 'uris'):
-                uris = rs.uris
-                if len(uris) > 1:
-                    skip = True
-                else:
-                    scenes_to_uris[scene.id] = uris[0]
-            else:
-                skip = True
-
-        if skip:
-            console_warning('Skipping predict package test for '
-                            'test {}, experiment {}'.format(
-                                test, experiment.id))
-        else:
-            try:
-                console_info(
-                    'Checking predict package raises exception on invalid '
-                    'channel_order...')
-                pp = experiment.task.predict_package_uri
-                rv.Predictor(pp, temp_dir, channel_order=[0, 1, 7])
-                msg = (
-                    'Predictor should have raised an exception due to invalid '
-                    'channel_order but did not.')
-                details = 'for experiment {}'.format(experiment.id)
-                e = TestError(test, msg, details)
-                errors.append(e)
-            except ValueError:
-                pass
-
-            console_info('Checking predict package produces same results...')
-            pp = experiment.task.predict_package_uri
-            predict = rv.Predictor(pp, temp_dir).predict
-
-            for scene_config in scenes:
-                # Need to write out labels and read them back,
-                # otherwise the floating point precision direct box
-                # coordinates will not match those from the PREDICT
-                # command, which are rounded to pixel coordinates
-                # via pyproj logic (in the case of rasterio crs transformer.
-                predictor_label_store_uri = os.path.join(
-                    temp_dir, test.lower(),
-                    'predictor/{}'.format(scene_config.id))
-                uri = scenes_to_uris[scene_config.id]
-                predict(uri, predictor_label_store_uri)
-                scene = scene_config.create_scene(experiment.task, temp_dir)
-
-                scene_labels = scene.prediction_label_store.get_labels()
-
-                extent = scene.raster_source.get_extent()
-                crs_transformer = scene.raster_source.get_crs_transformer()
-                predictor_label_store = scene_config.label_store \
-                                               .for_prediction(
-                                                   predictor_label_store_uri) \
-                                               .create_store(
-                                                   experiment.task,
-                                                   extent,
-                                                   crs_transformer,
-                                                   temp_dir)
-
-                from rastervision.data import ActivateMixin
-                with ActivateMixin.compose(scene, predictor_label_store):
-                    if not predictor_label_store.get_labels() == scene_labels:
-                        e = TestError(
-                            test, ('Predictor did not produce the same labels '
-                                   'as the Predict command'),
-                            'for scene {} in experiment {}'.format(
-                                scene_config.id, experiment.id))
-                        errors.append(e)
+        errors.extend(test_prediction_package(experiment, test, temp_dir))
+        errors.extend(
+            test_prediction_package(
+                experiment, test, temp_dir, check_channel_order=True))
 
     return errors
 

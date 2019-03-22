@@ -116,7 +116,7 @@ class Predictor():
            image_uri - URI of the image to make predictions against.
                        This can be any type of URI readable by Raster Vision
                        FileSystems.
-           label_uri - Optional URI to save labels  off into.
+           label_uri - Optional URI to save labels off into.
            config_uri - Optional URI in which to save the bundle_config,
                         which can be useful to client applications for understanding
                         how to interpret the labels.
