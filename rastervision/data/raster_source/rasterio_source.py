@@ -75,6 +75,10 @@ class RasterioSource(ActivateMixin, RasterSource):
                  y_shift_meters=0.0):
         """Constructor.
 
+        This RasterSource can read any file that can be opened by Rasterio/GDAL
+        including georeferenced formats such as GeoTIFF and non-georeferenced formats
+        such as JPG. See https://www.gdal.org/formats_list.html for more details.
+
         If channel_order is None, then use non-alpha channels. This also sets any
         masked or NODATA pixel values to be zeros.
 

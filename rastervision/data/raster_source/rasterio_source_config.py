@@ -75,6 +75,12 @@ class RasterioSourceConfig(RasterSourceConfig):
 
 
 class RasterioSourceConfigBuilder(RasterSourceConfigBuilder):
+    """This RasterSource can read any file that can be opened by Rasterio/GDAL.
+
+    This includes georeferenced formats such as GeoTIFF and non-georeferenced formats
+    such as JPG. See https://www.gdal.org/formats_list.html for more details.
+    """
+
     def __init__(self, prev=None):
         config = {}
         if prev:
