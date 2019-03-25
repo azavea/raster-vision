@@ -56,8 +56,7 @@ class TestMakeDir(unittest.TestCase):
         directory = os.path.dirname(path)
         make_dir(directory, check_empty=False)
 
-        with open(path, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path)
 
         self.assertTrue(file_exists(path))
 
@@ -73,8 +72,7 @@ class TestMakeDir(unittest.TestCase):
         directory = os.path.dirname(path)
         make_dir(directory, check_empty=False)
 
-        with open(path, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path)
 
         s3_path = 's3://{}/lorem.txt'.format(self.bucket_name)
         upload_or_copy(path, s3_path)
@@ -234,8 +232,7 @@ class TestLoadJsonConfig(unittest.TestCase):
 
     def write_config_file(self, config):
         file_contents = json.dumps(config)
-        with open(self.file_path, 'w') as myfile:
-            myfile.write(file_contents)
+        str_to_file(file_contents, self.file_path)
 
     def test_valid(self):
         config = {
@@ -283,8 +280,7 @@ class TestLoadJsonConfig(unittest.TestCase):
                 "taskType": "CHIP_CLASSIFICATION
             }
         '''
-        with open(self.file_path, 'w') as myfile:
-            myfile.write(invalid_json_str)
+        str_to_file(invalid_json_str, self.file_path)
 
         with self.assertRaises(ProtobufParseException):
             load_json_config(self.file_path, TaskConfigMsg())
@@ -316,8 +312,7 @@ class TestS3Misc(unittest.TestCase):
 
         fs = FileSystem.get_file_system(s3_path, 'r')
 
-        with open(path, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path)
         upload_or_copy(path, s3_path)
         stamp = fs.last_modified(s3_path)
 
@@ -330,8 +325,7 @@ class TestS3Misc(unittest.TestCase):
         directory = os.path.dirname(path)
         make_dir(directory, check_empty=False)
 
-        with open(path, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path)
         upload_or_copy(path, s3_path)
 
         list_paths(s3_directory)
@@ -344,8 +338,7 @@ class TestS3Misc(unittest.TestCase):
         directory = os.path.dirname(path)
         make_dir(directory, check_empty=False)
 
-        with open(path, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path)
         upload_or_copy(path, s3_path)
 
         self.assertTrue(file_exists(s3_directory, include_dir=True))
@@ -426,8 +419,7 @@ class TestLocalMisc(unittest.TestCase):
         make_dir(dir1, check_empty=False)
         make_dir(dir2, check_empty=False)
 
-        with open(path1, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path1)
 
         upload_or_copy(path1, path2)
         self.assertEqual(len(list_paths(dir2)), 1)
@@ -439,8 +431,7 @@ class TestLocalMisc(unittest.TestCase):
 
         fs = FileSystem.get_file_system(path, 'r')
 
-        with open(path, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path)
         stamp = fs.last_modified(path)
 
         self.assertTrue(isinstance(stamp, datetime.datetime))
@@ -452,8 +443,7 @@ class TestLocalMisc(unittest.TestCase):
         dir1 = os.path.dirname(path1)
         make_dir(dir1, check_empty=False)
 
-        with open(path1, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path1)
 
         self.assertTrue(fs.file_exists(dir1, include_dir=True))
         self.assertTrue(fs.file_exists(path1, include_dir=False))
@@ -500,8 +490,7 @@ class TestHttpMisc(unittest.TestCase):
         directory = os.path.dirname(path)
         make_dir(directory, check_empty=False)
 
-        with open(path, 'w+') as file:
-            file.write(self.lorem)
+        str_to_file(self.lorem, path)
 
         self.assertRaises(NotWritableError, lambda: upload_or_copy(path, dst))
         os.remove(path)
