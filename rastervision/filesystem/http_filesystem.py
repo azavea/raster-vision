@@ -16,7 +16,7 @@ class HttpFileSystem(FileSystem):
         return parsed_uri.scheme in ['http', 'https']
 
     @staticmethod
-    def file_exists(uri: str) -> bool:
+    def file_exists(uri: str, include_dir: bool = True) -> bool:
         try:
             response = urllib.request.urlopen(uri)
             if response.getcode() == 200:

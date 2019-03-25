@@ -38,14 +38,8 @@ class GeoJSONVectorSourceConfig(VectorSourceConfig):
                 class_id_to_filter=self.class_id_to_filter,
                 default_class_id=self.default_class_id))
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
+    def report_io(self, command_type, io_def):
         io_def.add_input(self.uri)
-        return io_def
 
 
 class GeoJSONVectorSourceConfigBuilder(VectorSourceConfigBuilder):

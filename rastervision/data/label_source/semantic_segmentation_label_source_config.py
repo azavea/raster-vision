@@ -32,20 +32,16 @@ class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
         return SemanticSegmentationLabelSource(raster_source,
                                                self.rgb_class_map)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
+    def update_for_command(self, command_type, experiment_config,
+                           context=None):
         if context is None:
             context = []
         context = context + [self]
-        io_def = io_def or rv.core.CommandIODefinition()
-
         self.source.update_for_command(command_type, experiment_config,
-                                       context, io_def)
+                                       context)
 
-        return io_def
+    def report_io(self, command_type, io_def):
+        self.source.update_for_command(command_type, io_def)
 
 
 class SemanticSegmentationLabelSourceConfigBuilder(LabelSourceConfigBuilder):

@@ -1,5 +1,7 @@
 # flake8: noqa
 
+import rastervision as rv
+
 
 class SupressDeepCopyMixin:
     """Supress deep copy in mock objects, since we want to check mocks after processing."""
@@ -50,6 +52,25 @@ def create_mock_scene():
                          .with_label_source(label_source_config) \
                          .with_label_store(label_store_config) \
                          .build()
+
+
+def create_mock_experiment():
+    b = rv.BackendConfig.builder(MOCK_BACKEND).build()
+    t = rv.TaskConfig.builder(MOCK_TASK).build()
+    ds = rv.DatasetConfig.builder() \
+                         .with_test_scenes([create_mock_scene()]) \
+                         .with_validation_scenes([create_mock_scene()]) \
+                         .build()
+    e = rv.EvaluatorConfig.builder(MOCK_EVALUATOR).build()
+
+    return rv.ExperimentConfig.builder() \
+                              .with_backend(b) \
+                              .with_task(t) \
+                              .with_dataset(ds) \
+                              .with_evaluator(e) \
+                              .with_root_uri('/dev/null') \
+                              .with_id('mock_experiment') \
+                              .build()
 
 
 def register_plugin(plugin_registry):

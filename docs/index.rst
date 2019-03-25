@@ -182,7 +182,7 @@ usage patterns.
    codebase
    plugins
    qgis
-   contributing
+   CONTRIBUTING
    release
 
 API Reference

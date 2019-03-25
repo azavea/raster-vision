@@ -29,10 +29,6 @@ class AugmentorConfig(Config):
                            .from_proto(msg) \
                            .build()
 
-    def update_for_command(self, command_type, experiment_config, context=[]):
-        # Generally augmentors do not have an affect on the IO.
-        return rv.core.CommandIODefinition()
-
 
 class AugmentorConfigBuilder(ConfigBuilder):
     pass

@@ -5,6 +5,9 @@ We are happy to take contributions! It is best to get in touch with the maintain
 about larger features or design changes *before* starting the work,
 as it will make the process of accepting changes smoother.
 
+Contributor License Agreement (CLA)
+-----------------------------------
+
 Everyone who contributes code to Raster Vision will be asked to sign the
 Azavea CLA, which is based off of the Apache CLA.
 

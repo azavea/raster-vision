@@ -7,11 +7,12 @@ from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 from rastervision.rv_config import RVConfig
 from rastervision.command.utils import (check_backend_type, check_task_type)
+from rastervision.utils.misc import split_into_groups
 
 
 class PredictCommandConfig(CommandConfig):
-    def __init__(self, root_uri, task, backend, scenes):
-        super().__init__(rv.PREDICT, root_uri)
+    def __init__(self, root_uri, split_id, task, backend, scenes):
+        super().__init__(rv.PREDICT, root_uri, split_id)
         self.task = task
         self.backend = backend
         self.scenes = scenes
@@ -43,6 +44,24 @@ class PredictCommandConfig(CommandConfig):
                     task=task, backend=backend, scenes=scenes)))
 
         return msg
+
+    def report_io(self):
+        io_def = rv.core.CommandIODefinition()
+        self.task.report_io(self.command_type, io_def)
+        self.backend.report_io(self.command_type, io_def)
+        for scene in self.scenes:
+            scene.report_io(self.command_type, io_def)
+        return io_def
+
+    def split(self, num_parts):
+        commands = []
+        for i, l in enumerate(split_into_groups(self.scenes, num_parts)):
+            c = self.to_builder() \
+                .with_scenes(l) \
+                .with_split_id(i) \
+                .build()
+            commands.append(c)
+        return commands
 
     @staticmethod
     def builder():
@@ -76,8 +95,8 @@ class PredictCommandConfigBuilder(CommandConfigBuilder):
 
     def build(self):
         self.validate()
-        return PredictCommandConfig(self.root_uri, self.task, self.backend,
-                                    self.scenes)
+        return PredictCommandConfig(self.root_uri, self.split_id, self.task,
+                                    self.backend, self.scenes)
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

@@ -20,6 +20,9 @@ class NodataAugmentorConfig(AugmentorConfig):
     def create_augmentor(self):
         return NodataAugmentor(self.aug_prob)
 
+    def report_io(self, command_type, io_def):
+        pass
+
 
 class NodataAugmentorConfigBuilder(AugmentorConfigBuilder):
     def __init__(self, prev=None):

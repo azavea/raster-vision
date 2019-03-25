@@ -39,8 +39,8 @@ class LocalFileSystem(FileSystem):
         return True
 
     @staticmethod
-    def file_exists(uri: str) -> bool:
-        return os.path.isfile(uri)
+    def file_exists(uri: str, include_dir: bool = True) -> bool:
+        return (os.path.isfile(uri) or (include_dir and os.path.isdir(uri)))
 
     @staticmethod
     def read_str(file_uri: str) -> str:

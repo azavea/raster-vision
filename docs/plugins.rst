@@ -26,6 +26,17 @@ you later refer to in your experiment configurations. For instance, if you devel
 
 You'll need to implement the ``to_proto`` method and the ``Config`` and the ``from_proto`` method on ``ConfigBuilder`` - in the ``.proto`` files for the entity you are creating a plugin for, you'll see a ``google.protobuf.Struct custom_config`` section. This is the field in the protobuf that can handle arbitrary JSON, and should be used in plugins for configuration.
 
+.. note::
+
+   Be sure to review the :ref:`configuration topics` and ensure you're implementing ``report_io`` and ``update_for_command`` properly in your configuration.
+
+.. note::
+
+   A common pitfall is implementing the ``ConfigBuilder.from_proto`` and ``Config.to_proto`` methods
+   correctly. Look to other ``Config`` and ``ConfigBuilder`` implementations in the Raster Vision
+   codebase for examples on how to do this correctly - and utilize the ``custom_config`` in the protobufs
+   to be able to set arbitrary configuration that is specific to your plugin implementation.
+
 Registering the Plugin
 ----------------------
 

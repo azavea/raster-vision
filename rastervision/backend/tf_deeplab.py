@@ -24,7 +24,7 @@ from rastervision.protos.deeplab.train_pb2 import (TrainingParameters as
                                                    TrainingParametersMsg)
 from rastervision.utils.files import (download_if_needed, get_local_path,
                                       make_dir, start_sync, upload_or_copy,
-                                      sync_to_dir, sync_from_dir)
+                                      sync_to_dir, sync_from_dir, list_paths)
 from rastervision.utils.misc import (numpy_to_png, png_to_numpy, save_img,
                                      terminate_at_exit)
 from rastervision.data.label_source.utils import color_to_integer
@@ -231,21 +231,36 @@ def create_tf_example(image: np.ndarray,
     return tf.train.Example(features=features)
 
 
-def get_record_uri(base_uri: str, split: str, index: int = 0) -> str:
+def get_record_uri(base_uri: str, split: str, suffix: str) -> str:
     """Given a base URI and a split, return a filename to use.
 
     Args:
          base_uri: The directory under-which the returned record uri
               will reside.
          split: The split ("train", "validate", et cetera).
-         index: The index of this file within the overall sequence of
-             TFRecord files.
+         suffix: Unique identifier to place at the end  of the tf record file.
     Returns:
          A uri, under the base_uri, that can be used to store a record
          file.
 
     """
-    return join(base_uri, '{}-{}.record'.format(split, index))
+    return join(base_uri, split, '{}-{}.record'.format(split, suffix))
+
+
+def get_record_dir(base_uri: str, split: str) -> str:
+    """Given a base URI and a split, return the directory URI
+    that contains the split records.
+
+    Args:
+         base_uri: The directory under-which the returned record uri
+              will reside.
+         split: The split ("train", "validate", et cetera).
+    Returns:
+         A uri for a directory, under the base_uri, that contains
+    the TF records for the given split.
+
+    """
+    return join(base_uri, split)
 
 
 def get_latest_checkpoint(train_logdir_local: str) -> str:
@@ -455,7 +470,7 @@ class TFDeeplab(Backend):
 
     """
 
-    def __init__(self, backend_config, task_config, index: int = 0):
+    def __init__(self, backend_config, task_config):
         """Constructor.
 
         Args:
@@ -466,7 +481,6 @@ class TFDeeplab(Backend):
         self.backend_config = backend_config
         self.task_config = task_config
         self.class_map = task_config.class_map
-        self.index = index
 
     def process_scene_data(self, scene: Scene, data: TrainingData,
                            tmp_dir: str) -> str:
@@ -518,11 +532,12 @@ class TFDeeplab(Backend):
 
         """
         base_uri = self.backend_config.training_data_uri
-        training_record_path = get_record_uri(base_uri, TRAIN, self.index)
+        chip_suffix = str(uuid.uuid4()).split('-')[0]
+        training_record_path = get_record_uri(base_uri, TRAIN, chip_suffix)
         training_record_path_local = get_local_path(training_record_path,
                                                     tmp_dir)
         validation_record_path = get_record_uri(base_uri, VALIDATION,
-                                                self.index)
+                                                chip_suffix)
         validation_record_path_local = get_local_path(validation_record_path,
                                                       tmp_dir)
 
@@ -533,7 +548,7 @@ class TFDeeplab(Backend):
         upload_or_copy(training_record_path_local, training_record_path)
         upload_or_copy(validation_record_path_local, validation_record_path)
 
-        if self.backend_config.debug and self.index == 0:
+        if self.backend_config.debug:
             training_zip_path = join(base_uri, '{}'.format(TRAIN))
             training_zip_path_local = get_local_path(training_zip_path,
                                                      tmp_dir)
@@ -578,7 +593,8 @@ class TFDeeplab(Backend):
         log.info('Setting up local input and output directories')
         train_logdir = self.backend_config.training_output_uri
         train_logdir_local = get_local_path(train_logdir, tmp_dir)
-        dataset_dir = self.backend_config.training_data_uri
+        dataset_dir = get_record_dir(self.backend_config.training_data_uri,
+                                     TRAIN)
         dataset_dir_local = get_local_path(dataset_dir, tmp_dir)
         make_dir(tmp_dir)
         make_dir(train_logdir_local)
@@ -586,7 +602,8 @@ class TFDeeplab(Backend):
 
         # Download training data
         log.info('Downloading training data')
-        download_if_needed(get_record_uri(dataset_dir, TRAIN), tmp_dir)
+        for i, record_file in enumerate(list_paths(dataset_dir)):
+            download_if_needed(record_file, tmp_dir)
 
         # Download and untar initial checkpoint.
         log.info('Downloading and untarring initial checkpoint')
@@ -640,6 +657,7 @@ class TFDeeplab(Backend):
 
             # Start training
             log.info('Starting training process')
+            log.info(' '.join(train_args))
             train_process = Popen(train_args, env=train_env)
             terminate_at_exit(train_process)
 

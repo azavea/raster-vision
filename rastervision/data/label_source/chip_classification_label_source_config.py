@@ -50,19 +50,16 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
             self.pick_min_class_id, self.background_class_id, self.cell_size,
             self.infer_cells)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
+    def update_for_command(self, command_type, experiment_config,
+                           context=None):
         self.vector_source.update_for_command(command_type, experiment_config,
-                                              context, io_def)
+                                              context)
 
         if not self.cell_size:
             self.cell_size = experiment_config.task.chip_size
 
-        return io_def
+    def report_io(self, command_type, io_def):
+        self.vector_source.report_io(command_type, io_def)
 
 
 class ChipClassificationLabelSourceConfigBuilder(LabelSourceConfigBuilder):

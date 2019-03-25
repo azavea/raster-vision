@@ -22,15 +22,12 @@ class Config(ABC):
         """
         pass  # pragma: no cover
 
-    @abstractmethod
     def update_for_command(self,
                            command_type,
                            experiment_config,
                            context=None,
                            io_def=None):
-        """Updates this configuration for the given command, and
-        returns a CommandIODefinition that includes the inputs, outputs,
-        and missing files for this configuration at this command.x
+        """Updates this configuration for the given command
 
            Args:
               command_type: The command type that is currently being preprocessed.
@@ -39,20 +36,30 @@ class Config(ABC):
               context: Optional list of parent configurations, to allow
                        for child configurations contained in collections
                        to understand their context in the experiment configuration.
-              io_def: The CommandIODefinition that this call should modify.
-                      If not provided, update_for_command will use a new, empty instance.
 
            Returns:
-              The updated CommandIODefinition with any input and ouput
-              files for this config under this command, as well as any
-              missing inputs to communication. If io_def is passed in,
-              the return value will be equal to the io_def parameter.
+              Nothing. Call should mutate the configuration object itself.
 
            Note: While configuration is immutable for client
                  facing operations, this is an internal operation and
                  mutates the configuration.
         """
         pass  # pragma: no cover
+
+    @abstractmethod
+    def report_io(self, command_type, io_def):
+        """Updates the given CommandIODefinition to include the inputs, outputs,
+        and missing files for this configuration at this command.
+
+           Args:
+              command_type: The command type that is currently being preprocessed.
+              io_def: The CommandIODefinition that this call should modify.
+
+           Returns:
+              Nothing. This call should make the appropriate calls to the given io_def
+              to mutate its state.
+        """
+        pass
 
     @staticmethod
     @abstractmethod

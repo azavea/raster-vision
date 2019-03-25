@@ -12,7 +12,7 @@ import tests.mock as mk
 
 class TestAnalyzeCommand(mk.MockMixin, unittest.TestCase):
     def test_command_create(self):
-        task = rv.task.ChipClassificationConfig({})
+        task = rv.TaskConfig.builder(mk.MOCK_TASK).build()
         with RVConfig.get_tmp_dir() as tmp_dir:
             img_path = os.path.join(tmp_dir, 'img.tif')
             chip = np.ones((2, 2, 4)).astype(np.uint8)
@@ -26,13 +26,16 @@ class TestAnalyzeCommand(mk.MockMixin, unittest.TestCase):
                 rv.analyzer.StatsAnalyzerConfig(stats_uri='dummy_path')
             ]
 
-            cmd = rv.command.AnalyzeCommandConfig.builder() \
-                                                 .with_task(task) \
-                                                 .with_root_uri(tmp_dir) \
-                                                 .with_scenes(scenes) \
-                                                 .with_analyzers(analyzers) \
-                                                 .build() \
-                                                 .create_command()
+            cmd_conf = rv.command.AnalyzeCommandConfig.builder() \
+                                                      .with_task(task) \
+                                                      .with_root_uri(tmp_dir) \
+                                                      .with_scenes(scenes) \
+                                                      .with_analyzers(analyzers) \
+                                                      .build()
+
+            cmd_conf = rv.command.CommandConfig.from_proto(cmd_conf.to_proto())
+            cmd = cmd_conf.create_command()
+
             self.assertTrue(cmd, rv.command.AnalyzeCommand)
 
     def test_no_config_error(self):

@@ -6,9 +6,10 @@ import rastervision as rv
 from rastervision.rv_config import RVConfig
 
 from tests import data_file_path
+from tests.mock import (MockMixin, create_mock_experiment)
 
 
-class TestChipClassificationEvaluator(unittest.TestCase):
+class TestChipClassificationEvaluator(MockMixin, unittest.TestCase):
     def test_accounts_for_aoi(self):
         task = rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \
                             .with_classes(['car', 'building', 'background']) \
@@ -47,6 +48,8 @@ class TestChipClassificationEvaluator(unittest.TestCase):
                                   .with_task(task) \
                                   .with_output_uri(output_uri) \
                                   .build()
+
+            e.update_for_command(rv.EVAL, create_mock_experiment())
 
             evaluator = e.create_evaluator()
 

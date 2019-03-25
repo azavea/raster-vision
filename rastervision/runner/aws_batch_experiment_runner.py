@@ -1,11 +1,19 @@
 import uuid
 import click
+import logging
 
 from rastervision.runner import OutOfProcessExperimentRunner
 from rastervision.rv_config import RVConfig
+from rastervision.utils.misc import grouped
 import rastervision as rv
 
-CPU_STAGES = {rv.ANALYZE, rv.CHIP, rv.EVAL, rv.BUNDLE}
+DEPENDENCY_GROUP_JOB = 'DEPENDENCY_GROUP'
+
+CPU_STAGES = {rv.ANALYZE, rv.CHIP, rv.EVAL, rv.BUNDLE, DEPENDENCY_GROUP_JOB}
+
+NOOP_COMMAND = 'python -m rastervision --help'
+
+log = logging.getLogger(__name__)
 
 
 class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
@@ -56,6 +64,7 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
 
     def batch_submit(self,
                      command_type,
+                     command_split_id,
                      experiment_id,
                      command,
                      parent_job_ids=None,
@@ -65,6 +74,8 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
 
         Args:
            command_type: (str) the type of command. ie. a value in rv.command.api
+           command_split_id: (int or str) the split ID of command.
+                             ie. the parallelized command ID
            experiment_id: (str) id of experiment
            command: (str) command to run inside Docker container
            parent_job_ids (list of str): ids of jobs that this job depends on
@@ -75,13 +86,40 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
         if parent_job_ids is None:
             parent_job_ids = []
 
-        full_command = command.split()
+        if command_type == DEPENDENCY_GROUP_JOB:
+            full_command = NOOP_COMMAND.split()
+        else:
+            full_command = command.split()
 
         client = boto3.client('batch')
 
         uuid_part = str(uuid.uuid4()).split('-')[0]
         exp = ''.join(e for e in experiment_id if e.isalnum())
-        job_name = '{}_{}_{}'.format(command_type, exp, uuid_part)
+        job_name = '{}-{}_{}_{}'.format(command_type, command_split_id, exp,
+                                        uuid_part)
+
+        group_level = 1
+        while len(parent_job_ids) > 20:
+            # AWS Batch only allows for 20 parent jobs.
+            # This hacks around that limit.
+            # Group dependencies  into batches of 20,
+            # and submit noop jobs that form a graph
+            # of dependencies where no set of leaves is
+            # greater than 20.
+            log.warn('More that 20 parent jobs detected, grouping [LEVEL {}]'.
+                     format(group_level))
+            new_parents = []
+            group_id = str(uuid.uuid4()).split('-')[0]
+            for i, group in enumerate(grouped(parent_job_ids, 20)):
+                group_split_id = '{}_{}-{}_{}'.format(group_id, command_type,
+                                                      command_split_id, i)
+                new_parents.append(
+                    self.batch_submit(DEPENDENCY_GROUP_JOB, group_split_id,
+                                      experiment_id, NOOP_COMMAND, group,
+                                      array_size))
+            parent_job_ids = new_parents
+            group_level += 1
+
         depends_on = [{'jobId': job_id} for job_id in parent_job_ids]
 
         if command_type in CPU_STAGES:
@@ -109,8 +147,8 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
 
         job_id = client.submit_job(**kwargs)['jobId']
 
-        msg = '{} command submitted job with jobName={} and jobId={}'.format(
-            command_type, job_name, job_id)
+        msg = '{}-{} command submitted job with jobName={} and jobId={}'.format(
+            command_type, command_split_id, job_name, job_id)
         click.echo(click.style(msg, fg='green'))
 
         return job_id

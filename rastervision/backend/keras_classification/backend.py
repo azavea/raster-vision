@@ -2,6 +2,7 @@ from os.path import join
 import os
 import shutil
 import uuid
+import logging
 
 import numpy as np
 from google.protobuf import json_format
@@ -9,9 +10,30 @@ from google.protobuf import json_format
 from rastervision.backend import Backend
 from rastervision.utils.files import (make_dir, get_local_path, upload_or_copy,
                                       download_if_needed, start_sync,
-                                      sync_to_dir, sync_from_dir)
+                                      sync_to_dir, sync_from_dir, list_paths)
 from rastervision.utils.misc import save_img
 from rastervision.data import ChipClassificationLabels
+
+log = logging.getLogger(__name__)
+
+
+def merge_class_dirs(scene_class_dirs, output_dir):
+    seen_classes = set([])
+    chip_ind = 0
+    for scene_class_dir in scene_class_dirs:
+        for class_name, src_class_dir in scene_class_dir.items():
+            dst_class_dir = join(output_dir, class_name)
+            if class_name not in seen_classes:
+                make_dir(dst_class_dir)
+                seen_classes.add(class_name)
+
+            for src_class_file in [
+                    join(src_class_dir, class_file)
+                    for class_file in os.listdir(src_class_dir)
+            ]:
+                dst_class_file = join(dst_class_dir, '{}.png'.format(chip_ind))
+                shutil.move(src_class_file, dst_class_file)
+                chip_ind += 1
 
 
 class FileGroup(object):
@@ -38,34 +60,58 @@ class DatasetFiles(FileGroup):
     def __init__(self, base_uri, tmp_dir):
         FileGroup.__init__(self, base_uri, tmp_dir)
 
-        self.training_uri = join(base_uri, 'training')
-        make_dir(self.get_local_path(self.training_uri))
-        self.training_zip_uri = join(base_uri, 'training.zip')
+        self.partition_id = uuid.uuid4()
 
-        self.validation_uri = join(base_uri, 'validation')
-        make_dir(self.get_local_path(self.validation_uri))
-        self.validation_zip_uri = join(base_uri, 'validation.zip')
+        self.training_zip_uri = join(
+            base_uri, 'training-{}.zip'.format(self.partition_id))
+        self.training_local_uri = join(self.base_dir,
+                                       'training-{}'.format(self.partition_id))
+        self.training_download_uri = self.get_local_path(
+            join(self.base_uri, 'training'))
+        make_dir(self.training_local_uri)
 
-        self.scratch_uri = join(base_uri, 'scratch')
-        make_dir(self.get_local_path(self.scratch_uri))
+        self.validation_zip_uri = join(
+            base_uri, 'validation-{}.zip'.format(self.partition_id))
+        self.validation_local_uri = join(
+            self.base_dir, 'validation-{}'.format(self.partition_id))
+        self.validation_download_uri = self.get_local_path(
+            join(self.base_uri, 'validation'))
+        make_dir(self.validation_local_uri)
 
     def download(self):
-        def _download(data_zip_uri):
-            data_zip_path = self.download_if_needed(data_zip_uri)
-            data_dir = os.path.splitext(data_zip_path)[0]
-            shutil.unpack_archive(data_zip_path, data_dir)
+        def _download(split, output_dir):
+            scene_class_dirs = []
+            for uri in list_paths(self.base_uri, 'zip'):
+                base_name = os.path.basename(uri)
+                if base_name.startswith(split):
+                    data_zip_path = self.download_if_needed(uri)
+                    data_dir = os.path.splitext(data_zip_path)[0]
+                    shutil.unpack_archive(data_zip_path, data_dir)
 
-        _download(self.training_zip_uri)
-        _download(self.validation_zip_uri)
+                    # Append each of the directories containing this partitions'
+                    # labeled images based on the class directory.
+                    data_dir_subdirectories = next(os.walk(data_dir))[1]
+                    scene_class_dirs.append(
+                        dict([(class_name, os.path.join(data_dir, class_name))
+                              for class_name in data_dir_subdirectories]))
+            merge_class_dirs(scene_class_dirs, output_dir)
+
+        _download('training', self.training_download_uri)
+        _download('validation', self.validation_download_uri)
 
     def upload(self):
-        def _upload(data_uri):
-            data_dir = self.get_local_path(data_uri)
-            shutil.make_archive(data_dir, 'zip', data_dir)
-            self.upload_or_copy(data_uri + '.zip')
+        def _upload(data_dir, zip_uri, split):
+            if not any(os.scandir(data_dir)):
+                log.warn(
+                    'No data to write for split {} in partition {}...'.format(
+                        split, self.partition_id))
+            else:
+                shutil.make_archive(data_dir, 'zip', data_dir)
+                upload_or_copy(data_dir + '.zip', zip_uri)
 
-        _upload(self.training_uri)
-        _upload(self.validation_uri)
+        _upload(self.training_local_uri, self.training_zip_uri, 'training')
+        _upload(self.validation_local_uri, self.validation_zip_uri,
+                'validation')
 
 
 class ModelFiles(FileGroup):
@@ -107,9 +153,9 @@ class ModelFiles(FileGroup):
         config.model.nb_classes = len(class_map)
 
         config.trainer.options.training_data_dir = \
-            dataset_files.get_local_path(dataset_files.training_uri)
+            dataset_files.training_download_uri
         config.trainer.options.validation_data_dir = \
-            dataset_files.get_local_path(dataset_files.validation_uri)
+            dataset_files.validation_download_uri
 
         del config.trainer.options.class_names[:]
         config.trainer.options.class_names.extend(class_map.get_class_names())
@@ -146,9 +192,7 @@ class KerasClassification(Backend):
             dictionary of Scene's classes and corresponding local directory
                 path
         """
-        dataset_files = DatasetFiles(self.config.training_data_uri, tmp_dir)
-
-        scratch_dir = dataset_files.get_local_path(dataset_files.scratch_uri)
+        scratch_dir = join(tmp_dir, 'scratch-{}'.format(uuid.uuid4()))
         # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
         scene_dir = join(scratch_dir, '{}-{}'.format(scene.id, uuid.uuid4()))
@@ -182,31 +226,11 @@ class KerasClassification(Backend):
                 classes and corresponding local directory path
         """
         dataset_files = DatasetFiles(self.config.training_data_uri, tmp_dir)
-        training_dir = dataset_files.get_local_path(dataset_files.training_uri)
-        validation_dir = dataset_files.get_local_path(
-            dataset_files.validation_uri)
+        training_dir = dataset_files.training_local_uri
+        validation_dir = dataset_files.validation_local_uri
 
-        def _merge_training_results(scene_class_dirs, output_dir):
-            for class_name in self.class_map.get_class_names():
-                class_dir = join(output_dir, class_name)
-                make_dir(class_dir)
-
-            chip_ind = 0
-            for scene_class_dir in scene_class_dirs:
-                for class_name, src_class_dir in scene_class_dir.items():
-                    dst_class_dir = join(output_dir, class_name)
-                    src_class_files = [
-                        join(src_class_dir, class_file)
-                        for class_file in os.listdir(src_class_dir)
-                    ]
-                    for src_class_file in src_class_files:
-                        dst_class_file = join(dst_class_dir,
-                                              '{}.png'.format(chip_ind))
-                        shutil.move(src_class_file, dst_class_file)
-                        chip_ind += 1
-
-        _merge_training_results(training_results, training_dir)
-        _merge_training_results(validation_results, validation_dir)
+        merge_class_dirs(training_results, training_dir)
+        merge_class_dirs(validation_results, validation_dir)
         dataset_files.upload()
 
     def train(self, tmp_dir):

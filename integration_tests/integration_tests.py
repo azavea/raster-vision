@@ -146,6 +146,7 @@ def get_experiment(test, tmp_dir):
 def run_test(test, temp_dir):
     errors = []
     experiment = get_experiment(test, temp_dir)
+    commands_to_run = rv.ALL_COMMANDS
 
     # Check serialization
     pp_uri = os.path.join(experiment.bundle_uri, 'predict_package.zip')
@@ -156,7 +157,8 @@ def run_test(test, temp_dir):
     # Check that running doesn't raise any exceptions.
     try:
         IntegrationTestExperimentRunner(os.path.join(temp_dir, test.lower())) \
-            .run(experiment, rerun_commands=True)
+            .run(experiment, rerun_commands=True, splits=2,
+                 commands_to_run=commands_to_run)
 
     except Exception as exc:
         errors.append(
@@ -240,14 +242,28 @@ def run_test(test, temp_dir):
 
 @click.command()
 @click.argument('tests', nargs=-1)
-def main(tests):
+@click.option(
+    '--rv_root',
+    '-t',
+    help=('Sets the rv_root directory used. '
+          'If set, test will not clean this directory up.'))
+@click.option(
+    '--verbose', '-v', is_flag=True, help=('Sets the logging level to DEBUG.'))
+def main(tests, rv_root, verbose):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:
         tests = all_tests
 
+    if verbose:
+        rv._registry.initialize_config(
+            verbosity=rv.cli.verbosity.Verbosity.DEBUG)
+
     tests = list(map(lambda x: x.upper(), tests))
 
     with RVConfig.get_tmp_dir() as temp_dir:
+        if rv_root:
+            temp_dir = rv_root
+
         errors = []
         for test in tests:
             if test not in all_tests:

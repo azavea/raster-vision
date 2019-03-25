@@ -95,13 +95,8 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
             vector_output=self.vector_output,
             class_map=class_map)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
-
+    def update_for_command(self, command_type, experiment_config,
+                           context=None):
         if command_type == rv.PREDICT:
             if not self.uri:
                 # Construct the URI for this prediction store,
@@ -113,7 +108,6 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
                         uri = os.path.join(root, '{}.tif'.format(c.id))
                 if uri:
                     self.uri = uri
-                    io_def.add_output(uri)
                 else:
                     raise rv.ConfigError(
                         'SemanticSegmentationRasterStoreConfig has no '
@@ -131,8 +125,12 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
                         vo['uri'] = os.path.join(
                             root, '{}-{}-{}.geojson'.format(
                                 c.id, class_id, mode))
-                io_def.add_output(vo['uri'])
 
+    def report_io(self, command_type, io_def):
+        if command_type == rv.PREDICT:
+            # Construct URIs for vector predictions
+            for vo in self.vector_output:
+                io_def.add_output(vo['uri'])
             io_def.add_output(self.uri)
 
         if command_type == rv.EVAL:
@@ -144,8 +142,6 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
 
             for vo in self.vector_output:
                 io_def.add_input(vo['uri'])
-
-        return io_def
 
 
 class SemanticSegmentationRasterStoreConfigBuilder(LabelStoreConfigBuilder):

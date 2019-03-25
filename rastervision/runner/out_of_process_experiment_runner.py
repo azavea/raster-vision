@@ -47,7 +47,9 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
             command_def = command_dag.get_command_definition(command_id)
             command_config = command_def.command_config
             command_root_uri = command_config.root_uri
-            command_uri = os.path.join(command_root_uri, 'command-config.json')
+            command_basename = 'command-config-{}.json'.format(
+                command_config.split_id)
+            command_uri = os.path.join(command_root_uri, command_basename)
             print('Saving command configuration to {}...'.format(command_uri))
             save_json_config(command_config.to_proto(), command_uri)
 
@@ -66,9 +68,9 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
                 parent_job_ids.append(ids_to_job[upstream_id])
 
             run_command = make_command(command_uri, self.tmp_dir)
-            job_id = self.submit(command_config.command_type,
-                                 command_def.experiment_id, run_command,
-                                 parent_job_ids)
+            job_id = self.submit(
+                command_config.command_type, command_config.split_id,
+                command_def.experiment_id, run_command, parent_job_ids)
 
             ids_to_job[command_id] = job_id
 

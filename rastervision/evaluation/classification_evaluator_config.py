@@ -33,12 +33,8 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
 
         return msg
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or rv.core.CommandIODefinition()
+    def update_for_command(self, command_type, experiment_config,
+                           context=None):
         if command_type == rv.EVAL:
             if not self.output_uri:
                 self.output_uri = os.path.join(experiment_config.eval_uri,
@@ -46,6 +42,9 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
             if not self.vector_output_uri:
                 self.vector_output_uri = os.path.join(
                     experiment_config.eval_uri, 'vector-eval.json')
+
+    def report_io(self, command_type, io_def):
+        if command_type == rv.EVAL:
             io_def.add_output(self.output_uri)
             io_def.add_output(self.vector_output_uri)
 

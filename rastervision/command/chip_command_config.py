@@ -8,12 +8,13 @@ from rastervision.protos.command_pb2 \
 from rastervision.rv_config import RVConfig
 from rastervision.data import SceneConfig
 from rastervision.command.utils import (check_task_type, check_backend_type)
+from rastervision.utils.misc import split_into_groups
 
 
 class ChipCommandConfig(CommandConfig):
-    def __init__(self, root_uri, task, backend, augmentors, train_scenes,
-                 val_scenes):
-        super().__init__(rv.CHIP, root_uri)
+    def __init__(self, root_uri, split_id, task, backend, augmentors,
+                 train_scenes, val_scenes):
+        super().__init__(rv.CHIP, root_uri, split_id)
         self.task = task
         self.backend = backend
         self.augmentors = augmentors
@@ -51,6 +52,37 @@ class ChipCommandConfig(CommandConfig):
 
         return msg
 
+    def report_io(self):
+        io_def = rv.core.CommandIODefinition()
+        self.task.report_io(self.command_type, io_def)
+        self.backend.report_io(self.command_type, io_def)
+        for scene in self.train_scenes:
+            scene.report_io(self.command_type, io_def)
+        for scene in self.val_scenes:
+            scene.report_io(self.command_type, io_def)
+        for augmentor in self.augmentors:
+            augmentor.report_io(self.command_type, io_def)
+        return io_def
+
+    def split(self, num_parts):
+        commands = []
+        t_scenes = list(map(lambda x: (0, x), self.train_scenes))
+        v_scenes = list(map(lambda x: (1, x), self.val_scenes))
+
+        for i, l in enumerate(
+                split_into_groups(t_scenes + v_scenes, num_parts)):
+            split_t_scenes = list(
+                map(lambda x: x[1], filter(lambda x: x[0] == 0, l)))
+            split_v_scenes = list(
+                map(lambda x: x[1], filter(lambda x: x[0] == 1, l)))
+            c = self.to_builder() \
+                .with_train_scenes(split_t_scenes) \
+                .with_val_scenes(split_v_scenes) \
+                .with_split_id(i) \
+                .build()
+            commands.append(c)
+        return commands
+
     @staticmethod
     def builder():
         return ChipCommandConfigBuilder()
@@ -82,20 +114,12 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
             raise rv.ConfigError('Backend not set for ChipCommandConfig. Use '
                                  'with_backend or with_experiment')
         check_backend_type(self.backend)
-        if self.train_scenes == []:
-            raise rv.ConfigError(
-                'Train scenes not set for ChipCommandConfig. Use '
-                'with_train_scenes or with_experiment')
         if len(self.train_scenes) > 0:
             for s in self.train_scenes:
                 if not isinstance(s, SceneConfig):
                     raise rv.ConfigError(
                         'train_scenes must be a list of class SceneConfig, '
                         'got a list of {}'.format(type(s)))
-        if self.val_scenes == []:
-            raise rv.ConfigError(
-                'Val scenes not set for ChipCommandConfig. Use '
-                'with_val_scenes or with_experiment')
         if len(self.val_scenes) > 0:
             for s in self.val_scenes:
                 if not isinstance(s, SceneConfig):
@@ -105,9 +129,9 @@ class ChipCommandConfigBuilder(CommandConfigBuilder):
 
     def build(self):
         self.validate()
-        return ChipCommandConfig(self.root_uri, self.task, self.backend,
-                                 self.augmentors, self.train_scenes,
-                                 self.val_scenes)
+        return ChipCommandConfig(self.root_uri, self.split_id, self.task,
+                                 self.backend, self.augmentors,
+                                 self.train_scenes, self.val_scenes)
 
     def from_proto(self, msg):
         b = super().from_proto(msg)

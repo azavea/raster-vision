@@ -1,6 +1,7 @@
 from typing import List
 import logging
 from copy import deepcopy
+from collections import defaultdict
 
 import rastervision as rv
 
@@ -14,9 +15,9 @@ class CommandDefinition:
         self.io_def = io_def
 
     def _key(self):
-        return (self.command_config.command_type, '|'.join(
-            sorted(self.io_def.input_uris)), '|'.join(
-                sorted(self.io_def.output_uris)))
+        return (self.command_config.command_type, self.command_config.split_id,
+                '|'.join(sorted(self.io_def.input_uris)), '|'.join(
+                    sorted(self.io_def.output_uris)))
 
     def __eq__(self, other):
         return self._key() == other._key()
@@ -25,7 +26,10 @@ class CommandDefinition:
         return hash(self._key())
 
     @classmethod
-    def from_experiments(cls, experiments: List[rv.ExperimentConfig]):
+    def from_experiments(cls,
+                         experiments: List[rv.ExperimentConfig],
+                         commands_to_run: List[str],
+                         splits: int = 1):
         command_definitions = []
 
         for experiment in experiments:
@@ -36,27 +40,18 @@ class CommandDefinition:
             for command_type in rv.ALL_COMMANDS:
                 log.debug(
                     'Updating config for command {}...'.format(command_type))
-                io_def = e.update_for_command(command_type, e)
-                log.debug('Creating experiment configuration...'.format(
-                    command_type))
-                command_config = e.make_command_config(command_type)
-                command_def = cls(e.id, command_config, io_def)
-                command_definitions.append(command_def)
+                e.update_for_command(command_type, e)
+                if command_type in commands_to_run:
+                    log.debug(
+                        'Creating command configurations for {}...'.format(
+                            command_type))
+                    base_command_config = e.make_command_config(command_type)
+                    for command_config in base_command_config.split(splits):
+                        io_def = command_config.report_io()
+                        command_def = cls(e.id, command_config, io_def)
+                        command_definitions.append(command_def)
 
         return command_definitions
-
-    @staticmethod
-    def filter_to_target_commands(command_definitions, target_commands):
-        """Filters commands by the target command type."""
-        result = []
-        skipped = []
-        for command_def in command_definitions:
-            if command_def.command_config.command_type in target_commands:
-                result.append(command_def)
-            else:
-                skipped.append(command_def)
-
-        return (result, skipped)
 
     @staticmethod
     def filter_no_output(command_definitions):
@@ -113,16 +108,16 @@ class CommandDefinition:
         Returns a List[str, List[CommandDefinition]] of output URIs
         and clashing commands.
         """
-        outputs_to_defs = {}
+        outputs_to_defs = defaultdict(lambda: [])
         clashing_commands = []
         for command_def in command_definitions:
             command_type = command_def.command_config.command_type
+            split_id = command_def.command_config.split_id
             for output_uri in command_def.io_def.output_uris:
-                if (output_uri, command_type) not in outputs_to_defs:
-                    outputs_to_defs[(output_uri, command_type)] = []
-                outputs_to_defs[(output_uri, command_type)].append(command_def)
+                outputs_to_defs[(output_uri, command_type,
+                                 split_id)].append(command_def)
 
-        for ((output_uri, _), command_defs) in outputs_to_defs.items():
+        for ((output_uri, _, _), command_defs) in outputs_to_defs.items():
             if len(command_defs) > 1:
                 clashing_commands.append((output_uri, command_defs))
 

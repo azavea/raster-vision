@@ -72,6 +72,10 @@ class SemanticSegmentationRasterStore(LabelStore):
                 labels = np.squeeze(raw_labels)
             return labels
 
+        if self.source is None:
+            raise Exception('Raster source at {} does not exist'.format(
+                self.uri))
+
         extent = self.source.get_extent()
         windows = extent.get_windows(chip_size, chip_size)
         return SemanticSegmentationLabels(windows, label_fn)

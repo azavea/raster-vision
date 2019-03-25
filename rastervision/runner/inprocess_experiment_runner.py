@@ -37,8 +37,9 @@ class InProcessExperimentRunner(ExperimentRunner):
                 command_config = builder.from_proto(msg).build()
 
                 command_root_uri = command_config.root_uri
-                command_uri = os.path.join(command_root_uri,
-                                           'command-config.json')
+                command_basename = 'command-config-{}.json'.format(
+                    command_config.split_id)
+                command_uri = os.path.join(command_root_uri, command_basename)
                 log.info('Saving command configuration to {}...'.format(
                     command_uri))
                 save_json_config(command_config.to_proto(), command_uri)

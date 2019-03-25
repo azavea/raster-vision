@@ -78,24 +78,19 @@ class MockTaskConfig(SupressDeepCopyMixin, TaskConfig):
     def load_bundle_files(self, bundle_dir):
         return self.mock.load_bundle_files(bundle_dir)
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config,
-                                              context, io_def)
-        if result is None:
-            # Have input always be this file, and output be a non-existant file,
-            # so commands always run
+    def update_for_command(self, command_type, experiment_config,
+                           context=None):
+        super().update_for_command(command_type, experiment_config, context)
+        self.mock.update_for_command(command_type, experiment_config, context)
 
-            io_def = super().update_for_command(
-                command_type, experiment_config, context, io_def)
-            io_def.add_input(__file__)
-            io_def.add_output('{}{}'.format(__file__, 'xxxx'))
-            return io_def
-        else:
-            return result
+    def report_io(self, command_type, io_def):
+        self.mock.report_io(command_type, io_def)
+
+        # Have input always be this file, and output be a non-existant file,
+        # so commands always run
+        super().report_io(command_type, io_def)
+        io_def.add_inputs([__file__])
+        io_def.add_outputs(['{}{}'.format(__file__, 'xxxx')])
 
 
 class MockTaskConfigBuilder(SupressDeepCopyMixin, TaskConfigBuilder):

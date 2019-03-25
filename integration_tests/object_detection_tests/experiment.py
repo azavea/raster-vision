@@ -10,10 +10,13 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSet):
 
         img_path = get_path('scene/image.tif')
         label_path = get_path('scene/labels.json')
+        img2_path = get_path('scene/image2.tif')
+        label2_path = get_path('scene/labels2.json')
         backend_conf_path = get_path('configs/backend.config')
 
-        pretrained_model = ('https://github.com/azavea/raster-vision-data/'
-                            'releases/download/v0.0.5/od-model.tar.gz')
+        pretrained_model = (
+            'https://github.com/azavea/raster-vision-data/'
+            'releases/download/v0.0.7/object-detection-test.tar.gz')
 
         task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
                             .with_chip_size(300) \
@@ -21,7 +24,7 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSet):
                                 'car': (1, 'blue'),
                                 'building': (2, 'red')
                             }) \
-                            .with_chip_options(neg_ratio=0.0,
+                            .with_chip_options(neg_ratio=1.0,
                                                ioa_thresh=1.0,
                                                window_method='sliding') \
                             .with_predict_options(merge_thresh=0.1,
@@ -30,12 +33,13 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSet):
 
         backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                                   .with_task(task) \
-                                  .with_num_steps(350) \
+                                  .with_num_steps(200) \
                                   .with_template(backend_conf_path) \
                                   .with_pretrained_model(pretrained_model) \
                                   .with_train_options(sync_interval=None,
                                                       do_monitoring=False,
                                                       replace_model=True) \
+                                  .with_debug(True) \
                                   .build()
 
         scene = rv.SceneConfig.builder() \
@@ -45,9 +49,16 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSet):
                               .with_label_source(label_path) \
                               .build()
 
+        scene2 = rv.SceneConfig.builder() \
+                               .with_task(task) \
+                               .with_id('od_test-2') \
+                               .with_raster_source(img2_path, channel_order=[0, 1, 2]) \
+                               .with_label_source(label2_path) \
+                               .build()
+
         dataset = rv.DatasetConfig.builder() \
-                                  .with_train_scene(scene) \
-                                  .with_validation_scene(scene) \
+                                  .with_train_scenes([scene, scene2]) \
+                                  .with_validation_scenes([scene, scene2]) \
                                   .build()
 
         experiment = rv.ExperimentConfig.builder() \

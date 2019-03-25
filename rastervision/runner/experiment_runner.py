@@ -16,9 +16,11 @@ class ExperimentRunner(ABC):
     def print_command(self, command_def, command_id=None, command_dag=None):
         verbosity = Verbosity.get()
         command_type = command_def.command_config.command_type
+        split_id = command_def.command_config.split_id
         experiment_id = command_def.experiment_id
         click.echo(
-            click.style('{} '.format(command_type), bold=True), nl=False)
+            click.style('{}-{} '.format(command_type, split_id), bold=True),
+            nl=False)
         click.echo('from {}'.format(experiment_id))
 
         if verbosity >= Verbosity.VERBOSE:
@@ -43,8 +45,9 @@ class ExperimentRunner(ABC):
             if upstreams:
                 for upstream_id in upstreams:
                     cdef = command_dag.get_command_definition(upstream_id)
-                    msg = '  DEPENDS ON: {} from {}'.format(
-                        cdef.command_config.command_type, cdef.experiment_id)
+                    msg = '  DEPENDS ON: {}-{} from {}'.format(
+                        cdef.command_config.command_type,
+                        cdef.command_config.split_id, cdef.experiment_id)
                     click.echo(click.style(msg, fg='cyan'))
 
     def run(self,
@@ -52,29 +55,14 @@ class ExperimentRunner(ABC):
             commands_to_run=rv.ALL_COMMANDS,
             rerun_commands=False,
             skip_file_check=False,
-            dry_run: bool = False):
+            dry_run: bool = False,
+            splits: int = 1):
         if not isinstance(experiments, list):
             experiments = [experiments]
 
         log.debug('Generating command definitions from experiments...')
-        command_definitions = CommandDefinition.from_experiments(experiments)
-
-        # Filter  out commands we aren't running.
-
-        log.debug('Filtering commands not in target command list...')
-        command_definitions, not_requested = CommandDefinition.filter_to_target_commands(
-            command_definitions, commands_to_run)
-
-        # Print unrequested commands
-        if dry_run:
-            if not_requested:
-                print()
-                click.echo(
-                    click.style(
-                        'Commands not requsted:', fg='yellow', underline=True))
-                for command in not_requested:
-                    self.print_command(command)
-                    print()
+        command_definitions = CommandDefinition.from_experiments(
+            experiments, commands_to_run, splits)
 
         # Filter  out commands that don't have any output.
         log.debug('Filtering commands that do not have any output...')

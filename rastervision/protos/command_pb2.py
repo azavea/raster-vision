@@ -26,7 +26,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/command.proto',
   package='rv.protos',
   syntax='proto2',
-  serialized_pb=_b('\n!rastervision/protos/command.proto\x12\trv.protos\x1a\"rastervision/protos/analyzer.proto\x1a#rastervision/protos/augmentor.proto\x1a\x1erastervision/protos/task.proto\x1a!rastervision/protos/backend.proto\x1a\x1frastervision/protos/scene.proto\x1a#rastervision/protos/evaluator.proto\x1a rastervision/protos/plugin.proto\"\xb9\x0b\n\rCommandConfig\x12\x14\n\x0c\x63ommand_type\x18\x01 \x02(\t\x12\x10\n\x08root_uri\x18\x02 \x02(\t\x12@\n\x0e\x61nalyze_config\x18\x03 \x01(\x0b\x32&.rv.protos.CommandConfig.AnalyzeConfigH\x00\x12:\n\x0b\x63hip_config\x18\x04 \x01(\x0b\x32#.rv.protos.CommandConfig.ChipConfigH\x00\x12<\n\x0ctrain_config\x18\x05 \x01(\x0b\x32$.rv.protos.CommandConfig.TrainConfigH\x00\x12@\n\x0epredict_config\x18\x06 \x01(\x0b\x32&.rv.protos.CommandConfig.PredictConfigH\x00\x12:\n\x0b\x65val_config\x18\x07 \x01(\x0b\x32#.rv.protos.CommandConfig.EvalConfigH\x00\x12>\n\rbundle_config\x18\x08 \x01(\x0b\x32%.rv.protos.CommandConfig.BundleConfigH\x00\x12(\n\x07plugins\x18\t \x01(\x0b\x32\x17.rv.protos.PluginConfig\x1a\x8a\x01\n\rAnalyzeConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12&\n\x06scenes\x18\x02 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x12,\n\tanalyzers\x18\x03 \x03(\x0b\x32\x19.rv.protos.AnalyzerConfig\x1a\xe6\x01\n\nChipConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x02 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x12.\n\naugmentors\x18\x03 \x03(\x0b\x32\x1a.rv.protos.AugmentorConfig\x12,\n\x0ctrain_scenes\x18\x04 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x12*\n\nval_scenes\x18\x05 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x1a]\n\x0bTrainConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x02 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x1a\x87\x01\n\rPredictConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x02 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x12&\n\x06scenes\x18\x03 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x1a\xb4\x01\n\nEvalConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x02 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x12&\n\x06scenes\x18\x03 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x12.\n\nevaluators\x18\x04 \x03(\x0b\x32\x1a.rv.protos.EvaluatorConfig\x1a\xb3\x01\n\x0c\x42undleConfig\x12,\n\tanalyzers\x18\x01 \x03(\x0b\x32\x19.rv.protos.AnalyzerConfig\x12#\n\x04task\x18\x02 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x03 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x12%\n\x05scene\x18\x04 \x02(\x0b\x32\x16.rv.protos.SceneConfigB\x10\n\x0e\x63ommand_config')
+  serialized_pb=_b('\n!rastervision/protos/command.proto\x12\trv.protos\x1a\"rastervision/protos/analyzer.proto\x1a#rastervision/protos/augmentor.proto\x1a\x1erastervision/protos/task.proto\x1a!rastervision/protos/backend.proto\x1a\x1frastervision/protos/scene.proto\x1a#rastervision/protos/evaluator.proto\x1a rastervision/protos/plugin.proto\"\xce\x0b\n\rCommandConfig\x12\x14\n\x0c\x63ommand_type\x18\x01 \x02(\t\x12\x10\n\x08root_uri\x18\x02 \x02(\t\x12@\n\x0e\x61nalyze_config\x18\x03 \x01(\x0b\x32&.rv.protos.CommandConfig.AnalyzeConfigH\x00\x12:\n\x0b\x63hip_config\x18\x04 \x01(\x0b\x32#.rv.protos.CommandConfig.ChipConfigH\x00\x12<\n\x0ctrain_config\x18\x05 \x01(\x0b\x32$.rv.protos.CommandConfig.TrainConfigH\x00\x12@\n\x0epredict_config\x18\x06 \x01(\x0b\x32&.rv.protos.CommandConfig.PredictConfigH\x00\x12:\n\x0b\x65val_config\x18\x07 \x01(\x0b\x32#.rv.protos.CommandConfig.EvalConfigH\x00\x12>\n\rbundle_config\x18\x08 \x01(\x0b\x32%.rv.protos.CommandConfig.BundleConfigH\x00\x12(\n\x07plugins\x18\t \x01(\x0b\x32\x17.rv.protos.PluginConfig\x12\x13\n\x08split_id\x18\n \x01(\x05:\x01\x30\x1a\x8a\x01\n\rAnalyzeConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12&\n\x06scenes\x18\x02 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x12,\n\tanalyzers\x18\x03 \x03(\x0b\x32\x19.rv.protos.AnalyzerConfig\x1a\xe6\x01\n\nChipConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x02 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x12.\n\naugmentors\x18\x03 \x03(\x0b\x32\x1a.rv.protos.AugmentorConfig\x12,\n\x0ctrain_scenes\x18\x04 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x12*\n\nval_scenes\x18\x05 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x1a]\n\x0bTrainConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x02 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x1a\x87\x01\n\rPredictConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x02 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x12&\n\x06scenes\x18\x03 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x1a\xb4\x01\n\nEvalConfig\x12#\n\x04task\x18\x01 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x02 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x12&\n\x06scenes\x18\x03 \x03(\x0b\x32\x16.rv.protos.SceneConfig\x12.\n\nevaluators\x18\x04 \x03(\x0b\x32\x1a.rv.protos.EvaluatorConfig\x1a\xb3\x01\n\x0c\x42undleConfig\x12,\n\tanalyzers\x18\x01 \x03(\x0b\x32\x19.rv.protos.AnalyzerConfig\x12#\n\x04task\x18\x02 \x02(\x0b\x32\x15.rv.protos.TaskConfig\x12)\n\x07\x62\x61\x63kend\x18\x03 \x02(\x0b\x32\x18.rv.protos.BackendConfig\x12%\n\x05scene\x18\x04 \x02(\x0b\x32\x16.rv.protos.SceneConfigB\x10\n\x0e\x63ommand_config')
   ,
   dependencies=[rastervision_dot_protos_dot_analyzer__pb2.DESCRIPTOR,rastervision_dot_protos_dot_augmentor__pb2.DESCRIPTOR,rastervision_dot_protos_dot_task__pb2.DESCRIPTOR,rastervision_dot_protos_dot_backend__pb2.DESCRIPTOR,rastervision_dot_protos_dot_scene__pb2.DESCRIPTOR,rastervision_dot_protos_dot_evaluator__pb2.DESCRIPTOR,rastervision_dot_protos_dot_plugin__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -74,8 +74,8 @@ _COMMANDCONFIG_ANALYZECONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=771,
-  serialized_end=909,
+  serialized_start=792,
+  serialized_end=930,
 )
 
 _COMMANDCONFIG_CHIPCONFIG = _descriptor.Descriptor(
@@ -132,8 +132,8 @@ _COMMANDCONFIG_CHIPCONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=912,
-  serialized_end=1142,
+  serialized_start=933,
+  serialized_end=1163,
 )
 
 _COMMANDCONFIG_TRAINCONFIG = _descriptor.Descriptor(
@@ -169,8 +169,8 @@ _COMMANDCONFIG_TRAINCONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1144,
-  serialized_end=1237,
+  serialized_start=1165,
+  serialized_end=1258,
 )
 
 _COMMANDCONFIG_PREDICTCONFIG = _descriptor.Descriptor(
@@ -213,8 +213,8 @@ _COMMANDCONFIG_PREDICTCONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1240,
-  serialized_end=1375,
+  serialized_start=1261,
+  serialized_end=1396,
 )
 
 _COMMANDCONFIG_EVALCONFIG = _descriptor.Descriptor(
@@ -264,8 +264,8 @@ _COMMANDCONFIG_EVALCONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1378,
-  serialized_end=1558,
+  serialized_start=1399,
+  serialized_end=1579,
 )
 
 _COMMANDCONFIG_BUNDLECONFIG = _descriptor.Descriptor(
@@ -315,8 +315,8 @@ _COMMANDCONFIG_BUNDLECONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1561,
-  serialized_end=1740,
+  serialized_start=1582,
+  serialized_end=1761,
 )
 
 _COMMANDCONFIG = _descriptor.Descriptor(
@@ -389,6 +389,13 @@ _COMMANDCONFIG = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='split_id', full_name='rv.protos.CommandConfig.split_id', index=9,
+      number=10, type=5, cpp_type=1, label=1,
+      has_default_value=True, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -405,7 +412,7 @@ _COMMANDCONFIG = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=293,
-  serialized_end=1758,
+  serialized_end=1779,
 )
 
 _COMMANDCONFIG_ANALYZECONFIG.fields_by_name['task'].message_type = rastervision_dot_protos_dot_task__pb2._TASKCONFIG

@@ -31,12 +31,8 @@ class NoopLabelStoreConfig(LabelStoreConfig):
     def create_store(self, task_config, extent, crs_transformer, tmp_dir):
         return NoopLabelStore()
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        return io_def or rv.core.CommandIODefinition()
+    def report_io(self, command_type, io_def):
+        pass
 
     def for_prediction(self, label_store_uri):
         return self

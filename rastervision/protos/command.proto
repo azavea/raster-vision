@@ -64,4 +64,5 @@ message CommandConfig {
     }
 
     optional PluginConfig plugins = 9;
+    optional int32 split_id = 10 [default = 0];
 }

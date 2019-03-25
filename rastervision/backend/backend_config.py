@@ -3,8 +3,7 @@ from copy import deepcopy
 
 import rastervision as rv
 from rastervision.rv_config import RVConfig
-from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin,
-                               CommandIODefinition)
+from rastervision.core import (Config, ConfigBuilder, BundledConfigMixin)
 
 
 class BackendConfig(BundledConfigMixin, Config):
@@ -38,16 +37,10 @@ class BackendConfig(BundledConfigMixin, Config):
                            .from_proto(msg) \
                            .build()
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        io_def = io_def or CommandIODefinition()
+    def report_io(self, command_type, io_def):
         if command_type == rv.TRAIN:
             if self.pretrained_model_uri:
                 io_def.add_input(self.pretrained_model_uri)
-        return io_def
 
 
 class BackendConfigBuilder(ConfigBuilder):
@@ -74,7 +67,8 @@ class BackendConfigBuilder(ConfigBuilder):
         pass
 
     def from_proto(self, msg):
-        return self.with_pretrained_model(msg.pretrained_model_uri)
+        return self \
+            .with_pretrained_model(msg.pretrained_model_uri)
 
     def with_task(self, task):
         """Sets a specific task type.

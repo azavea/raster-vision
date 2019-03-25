@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import Mock
 
-import rastervision as rv
 from rastervision.augmentor import (Augmentor, AugmentorConfig,
                                     AugmentorConfigBuilder)
 from rastervision.protos.augmentor_pb2 import AugmentorConfig as AugmentorConfigMsg
@@ -49,17 +48,13 @@ class MockAugmentorConfig(SupressDeepCopyMixin, AugmentorConfig):
         else:
             return result
 
-    def update_for_command(self,
-                           command_type,
-                           experiment_config,
-                           context=None,
-                           io_def=None):
-        result = self.mock.update_for_command(command_type, experiment_config,
-                                              context, io_def)
-        if result is None:
-            return io_def or rv.core.CommandIODefinition()
-        else:
-            return result
+    def update_for_command(self, command_type, experiment_config,
+                           context=None):
+        super().update_for_command(command_type, experiment_config, context)
+        self.mock.update_for_command(command_type, experiment_config, context)
+
+    def report_io(self, command_type, io_def):
+        self.mock.report_io(command_type, io_def)
 
 
 class MockAugmentorConfigBuilder(SupressDeepCopyMixin, AugmentorConfigBuilder):
