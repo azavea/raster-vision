@@ -343,7 +343,7 @@ class TrainingPackage(object):
         validation.record
     """
 
-    def __init__(self, base_uri, config):
+    def __init__(self, base_uri, config, tmp_dir, partition_id):
         """Constructor.
 
         Creates a temporary directory.
@@ -354,7 +354,7 @@ class TrainingPackage(object):
             config: TFObjectDetectionConfig
         """
 
-        self.temp_dir = None
+        self.temp_dir = tmp_dir
 
         self.base_uri = base_uri
         self.base_dir = self.get_local_path(base_uri)
@@ -363,7 +363,7 @@ class TrainingPackage(object):
 
         self.config = config
 
-        self.partition_id = uuid.uuid4()
+        self.partition_id = partition_id
 
         self.training_record_uri = join(
             base_uri, 'training',
@@ -380,9 +380,6 @@ class TrainingPackage(object):
             self.base_dir, 'validation-{}.record'.format(self.partition_id))
         self.validation_download_uri = self.get_local_path(
             join(self.base_uri, 'validation'))
-
-    def set_tmp_dir(self, tmp_dir):
-        self.temp_dir = tmp_dir
 
     def get_local_path(self, uri):
         """Get local version of uri.
@@ -597,8 +594,7 @@ class TFObjectDetection(Backend):
         self.config = backend_config
         self.class_map = task_config.class_map
 
-        self.training_package = TrainingPackage(self.config.training_data_uri,
-                                                self.config)
+        self.partition_id = uuid.uuid4()
 
     def process_scene_data(self, scene, data, tmp_dir):
         """Process each scene's training data
@@ -619,8 +615,9 @@ class TFObjectDetection(Backend):
                             'to turn the raster data into uint8 data'.format(
                                 rv.TF_OBJECT_DETECTION))
 
-        self.training_package.set_tmp_dir(tmp_dir)
-        self.scene_training_packages.append(self.training_package)
+        training_package = TrainingPackage(self.config.training_data_uri,
+                                           self.config, tmp_dir, self.partition_id)
+        self.scene_training_packages.append(training_package)
         tf_examples = make_tf_examples(data, self.class_map)
         # Ensure directory is unique since scene id's could be shared between
         # training and test sets.
@@ -639,7 +636,8 @@ class TFObjectDetection(Backend):
             training_results: list of training scenes' TFRecords
             validation_results: list of validation scenes' TFRecords
         """
-        self.training_package.set_tmp_dir(tmp_dir)
+        training_package = TrainingPackage(self.config.training_data_uri,
+                                           self.config, tmp_dir, self.partition_id)
 
         def _merge_training_results(results, record_path, split):
             # merge each scene's tfrecord into "split" tf record
@@ -647,8 +645,8 @@ class TFObjectDetection(Backend):
 
             # Save debug chips.
             if self.config.debug:
-                debug_zip_path = self.training_package.get_local_path(
-                    self.training_package.get_debug_chips_uri(split))
+                debug_zip_path = training_package.get_local_path(
+                    training_package.get_debug_chips_uri(split))
                 with RVConfig.get_tmp_dir() as debug_dir:
                     make_debug_images(record_path, self.class_map, debug_dir)
                     shutil.make_archive(
@@ -657,36 +655,37 @@ class TFObjectDetection(Backend):
         if training_results:
             _merge_training_results(
                 training_results,
-                self.training_package.training_local_record_path, TRAIN)
+                training_package.training_local_record_path, TRAIN)
         else:
             log.warn('No training chips for partition {}'.format(
-                self.training_package.partition_id))
+                training_package.partition_id))
 
         if validation_results:
             _merge_training_results(
                 validation_results,
-                self.training_package.validation_local_record_path, VALIDATION)
+                training_package.validation_local_record_path, VALIDATION)
         else:
             log.warn('No validation chips for partition {}'.format(
-                self.training_package.partition_id))
+                training_package.partition_id))
 
-        self.training_package.upload(debug=self.config.debug)
+        training_package.upload(debug=self.config.debug)
 
         # clear scene training packages
         del self.scene_training_packages[:]
 
     def train(self, tmp_dir):
-        self.training_package.set_tmp_dir(tmp_dir)
+        training_package = TrainingPackage(self.config.training_data_uri,
+                                           self.config, tmp_dir, self.partition_id)
         # Download training data and update config file.
-        self.training_package.download_data()
-        config_path = self.training_package.download_config(self.class_map)
+        training_package.download_data()
+        config_path = training_package.download_config(self.class_map)
 
         # Setup output dirs.
         output_dir = get_local_path(self.config.training_output_uri, tmp_dir)
+        make_dir(output_dir)
 
         # Get output from potential previous run so we can resume training.
         if not self.config.train_options.replace_model:
-            make_dir(output_dir)
             sync_from_dir(self.config.training_output_uri, output_dir)
         else:
             for f in os.listdir(output_dir):
