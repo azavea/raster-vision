@@ -1,6 +1,7 @@
 import unittest
 
-from rastervision.utils.misc import (replace_nones_in_dict, set_nested_keys)
+from rastervision.utils.misc import (replace_nones_in_dict, set_nested_keys,
+                                     split_into_groups)
 
 
 class TestMiscUtils(unittest.TestCase):
@@ -208,3 +209,18 @@ class TestMiscUtils(unittest.TestCase):
         set_nested_keys(d, mod, set_missing_keys=True)
 
         self.assertEqual(d, expected)
+
+    def test_split_into_groups(self):
+        lst = [1, 2, 3, 4, 5, 6]
+
+        g1 = split_into_groups(lst[:5], 3)
+        self.assertEqual(g1, [[1, 2], [3, 4], [5]])
+
+        g2 = split_into_groups(lst, 7)
+        self.assertEqual(g2, [[1], [2], [3], [4], [5], [6]])
+
+        g3 = split_into_groups(lst[0:1], 7)
+        self.assertEqual(g3, [[1]])
+
+        g4 = split_into_groups(lst, 3)
+        self.assertEqual(g4, [[1, 2], [3, 4], [5, 6]])

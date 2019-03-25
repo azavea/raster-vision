@@ -1,5 +1,4 @@
 from copy import deepcopy
-from math import ceil
 
 import rastervision as rv
 from rastervision.command import (PredictCommand, CommandConfig,
@@ -8,7 +7,7 @@ from rastervision.protos.command_pb2 \
     import CommandConfig as CommandConfigMsg
 from rastervision.rv_config import RVConfig
 from rastervision.command.utils import (check_backend_type, check_task_type)
-from rastervision.utils.misc import grouped
+from rastervision.utils.misc import split_into_groups
 
 
 class PredictCommandConfig(CommandConfig):
@@ -56,8 +55,7 @@ class PredictCommandConfig(CommandConfig):
 
     def split(self, num_parts):
         commands = []
-        group_size = max(int(ceil(len(self.scenes) / num_parts)), 1)
-        for i, l in enumerate(grouped(self.scenes, group_size)):
+        for i, l in enumerate(split_into_groups(self.scenes, num_parts)):
             c = self.to_builder() \
                 .with_scenes(l) \
                 .with_split_id(i) \
