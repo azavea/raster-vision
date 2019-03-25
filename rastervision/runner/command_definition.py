@@ -1,6 +1,7 @@
 from typing import List
 import logging
 from copy import deepcopy
+from collections import defaultdict
 
 import rastervision as rv
 
@@ -107,14 +108,12 @@ class CommandDefinition:
         Returns a List[str, List[CommandDefinition]] of output URIs
         and clashing commands.
         """
-        outputs_to_defs = {}
+        outputs_to_defs = defaultdict(lambda: [])
         clashing_commands = []
         for command_def in command_definitions:
             command_type = command_def.command_config.command_type
             split_id = command_def.command_config.split_id
             for output_uri in command_def.io_def.output_uris:
-                if (output_uri, command_type, split_id) not in outputs_to_defs:
-                    outputs_to_defs[(output_uri, command_type, split_id)] = []
                 outputs_to_defs[(output_uri, command_type,
                                  split_id)].append(command_def)
 
