@@ -87,7 +87,7 @@ of a collection of configurations (e.g., the collection of ``SceneConfig``s in a
 Reporting IO
 ^^^^^^^^^^^^
 
-Raster Vision requires that configuration reports on it's input and output files, which allows it to tie
+Raster Vision requires that configuration reports on its input and output files, which allows it to tie
 together commands into a Directed Acyclic Graph of operations that the ``ExperimentRunner``\s can execute.
 The way this reporting happens is through the ``report_io`` method on configuration:
 
@@ -100,4 +100,4 @@ If a configuration does not correctly report on its IO, it could result in comma
 rerunning happening even though output already exists and the ``--rerun`` flag is not used. This
 can be a common pitfall for plugin development, and care should be taken to ensure that IO is
 properly being reported. The ``--dry-run`` flag with the  ``-v`` verbosity flag can be useful here
-for ensuring the IO that is reported  is what is expected.
+for ensuring the IO that is reported is what is expected.
