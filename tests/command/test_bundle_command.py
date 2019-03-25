@@ -30,7 +30,7 @@ class TestBundleCommand(mk.MockMixin, unittest.TestCase):
                         .build()
 
         raster_source = rv.RasterSourceConfig \
-                          .builder(rv.IMAGE_SOURCE) \
+                          .builder(rv.RASTERIO_SOURCE) \
                           .with_uri('TEST') \
                           .with_transformer(transformer) \
                           .build()

@@ -11,11 +11,12 @@ from rastervision.utils.misc import save_img
 from rastervision.data.raster_source import ChannelOrderError
 from rastervision.rv_config import RVConfig
 from rastervision.utils.files import make_dir
+from rastervision.protos.raster_source_pb2 import RasterSourceConfig as RasterSourceMsg
 
 from tests import data_file_path
 
 
-class TestGeoTiffSource(unittest.TestCase):
+class TestRasterioSource(unittest.TestCase):
     def test_nodata_val(self):
         with RVConfig.get_tmp_dir() as temp_dir:
             # make geotiff filled with ones and zeros with nodata == 1
@@ -37,7 +38,7 @@ class TestGeoTiffSource(unittest.TestCase):
                 for channel in range(nb_channels):
                     image_dataset.write(im[:, :, channel], channel + 1)
 
-            source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+            source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                           .with_uri(image_path) \
                                           .build() \
                                           .create_source(tmp_dir=temp_dir)
@@ -68,7 +69,7 @@ class TestGeoTiffSource(unittest.TestCase):
                 image_dataset.write_mask(
                     np.zeros(im.shape[0:2]).astype(np.bool))
 
-            source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+            source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                           .with_uri(image_path) \
                                           .build() \
                                           .create_source(tmp_dir=temp_dir)
@@ -80,7 +81,7 @@ class TestGeoTiffSource(unittest.TestCase):
     def test_get_dtype(self):
         img_path = data_file_path('small-rgb-tile.tif')
         with RVConfig.get_tmp_dir() as tmp_dir:
-            source = rv.data.GeoTiffSourceConfig(uris=[img_path]) \
+            source = rv.data.RasterioSourceConfig(uris=[img_path]) \
                             .create_source(tmp_dir)
 
             self.assertEqual(source.get_dtype(), np.uint8)
@@ -89,8 +90,8 @@ class TestGeoTiffSource(unittest.TestCase):
         img_path = data_file_path('small-rgb-tile.tif')
         channel_order = [0, 1]
 
-        source = rv.data.GeoTiffSourceConfig(uris=[img_path],
-                                             channel_order=channel_order) \
+        source = rv.data.RasterioSourceConfig(uris=[img_path],
+                                              channel_order=channel_order) \
                         .create_source(tmp_dir=None)
 
         with source.activate():
@@ -103,10 +104,10 @@ class TestGeoTiffSource(unittest.TestCase):
         img_path = data_file_path('ones.tif')
         channel_order = [0]
 
-        msg = rv.data.GeoTiffSourceConfig(uris=[img_path],
-                                          x_shift_meters=1.0,
-                                          y_shift_meters=0.0,
-                                          channel_order=channel_order) \
+        msg = rv.data.RasterioSourceConfig(uris=[img_path],
+                                           x_shift_meters=1.0,
+                                           y_shift_meters=0.0,
+                                           channel_order=channel_order) \
                      .to_proto()
 
         tmp_dir = RVConfig.get_tmp_dir().name
@@ -127,10 +128,10 @@ class TestGeoTiffSource(unittest.TestCase):
         img_path = data_file_path('ones.tif')
         channel_order = [0]
 
-        msg = rv.data.GeoTiffSourceConfig(uris=[img_path],
-                                          x_shift_meters=0.0,
-                                          y_shift_meters=1.0,
-                                          channel_order=channel_order) \
+        msg = rv.data.RasterioSourceConfig(uris=[img_path],
+                                           x_shift_meters=0.0,
+                                           y_shift_meters=1.0,
+                                           channel_order=channel_order) \
                      .to_proto()
 
         tmp_dir = RVConfig.get_tmp_dir().name
@@ -149,7 +150,7 @@ class TestGeoTiffSource(unittest.TestCase):
         img_path = data_file_path('small-rgb-tile.tif')
         channel_order = [0, 1]
 
-        msg = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+        msg = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                    .with_uri(img_path) \
                                    .with_channel_order(channel_order) \
                                    .build() \
@@ -170,7 +171,7 @@ class TestGeoTiffSource(unittest.TestCase):
             stats_uri = os.path.join(temp_dir, 'temp.tif')
             stats = RasterStats()
             stats.compute([
-                rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE)
+                rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE)
                 .with_uri(img_path).build().create_source(temp_dir)
             ])
             stats.save(stats_uri)
@@ -179,7 +180,7 @@ class TestGeoTiffSource(unittest.TestCase):
                                                     .with_stats_uri(stats_uri) \
                                                     .build()
 
-            msg = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+            msg = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                        .with_uri(img_path) \
                                        .with_channel_order(channel_order) \
                                        .with_transformer(transformer) \
@@ -201,7 +202,7 @@ class TestGeoTiffSource(unittest.TestCase):
             save_img(chip, img_path)
 
             channel_order = [0, 1, 2]
-            source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+            source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                           .with_uri(img_path) \
                                           .with_channel_order(channel_order) \
                                           .build() \
@@ -222,7 +223,7 @@ class TestGeoTiffSource(unittest.TestCase):
 
             channel_order = [3, 1, 0]
             with self.assertRaises(ChannelOrderError):
-                rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                      .with_uri(img_path) \
                                      .with_channel_order(channel_order) \
                                      .build() \
@@ -241,7 +242,7 @@ class TestGeoTiffSource(unittest.TestCase):
             with rasterio.open(img_path, 'r+') as src:
                 src.colorinterp = ci
 
-            source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+            source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                           .with_uri(img_path) \
                                           .build() \
                                           .create_source(tmp_dir=tmp_dir)
@@ -251,8 +252,31 @@ class TestGeoTiffSource(unittest.TestCase):
                 expected_out_chip[:, :, :] *= np.array([1, 2]).astype(np.uint8)
                 np.testing.assert_equal(out_chip, expected_out_chip)
 
+    def test_non_geo(self):
+        # Check if non-georeferenced image files can be read and CRSTransformer
+        # implements the identity function.
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            img_path = os.path.join(tmp_dir, 'img.png')
+            chip = np.ones((2, 2, 3)).astype(np.uint8)
+            save_img(chip, img_path)
+
+            source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                                          .with_uri(img_path) \
+                                          .build() \
+                                          .create_source(tmp_dir=tmp_dir)
+            with source.activate():
+                out_chip = source.get_image_array()
+                np.testing.assert_equal(out_chip, chip)
+
+                p = (3, 4)
+                out_p = source.get_crs_transformer().map_to_pixel(p)
+                np.testing.assert_equal(out_p, p)
+
+                out_p = source.get_crs_transformer().pixel_to_map(p)
+                np.testing.assert_equal(out_p, p)
+
     def test_with_stats_transformer(self):
-        config = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+        config = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                       .with_uri('dummy') \
                                       .with_stats_transformer() \
                                       .build()
@@ -263,14 +287,38 @@ class TestGeoTiffSource(unittest.TestCase):
 
     def test_missing_config_uri(self):
         with self.assertRaises(rv.ConfigError):
-            rv.data.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE).build()
+            rv.data.RasterSourceConfig.builder(rv.RASTERIO_SOURCE).build()
 
     def test_no_missing_config(self):
         try:
             rv.data.RasterSourceConfig.builder(
-                rv.GEOTIFF_SOURCE).with_uri('').build()
+                rv.RASTERIO_SOURCE).with_uri('').build()
         except rv.ConfigError:
             self.fail('ConfigError raised unexpectedly')
+
+    def test_backcompat_geotiff_source(self):
+        msg = RasterSourceMsg()
+        uris = ['a', 'b']
+        x = 5
+        y = 6
+        msg.geotiff_files.uris.extend(uris)
+        msg.geotiff_files.x_shift_meters = x
+        msg.geotiff_files.y_shift_meters = y
+
+        rs_config = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                        .from_proto(msg).build()
+        self.assertEqual(rs_config.uris, uris)
+        self.assertEqual(rs_config.x_shift_meters, x)
+        self.assertEqual(rs_config.y_shift_meters, y)
+
+    def test_backcompat_image_source(self):
+        msg = RasterSourceMsg()
+        uri = 'a'
+        msg.image_file.uri = uri
+
+        rs_config = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                        .from_proto(msg).build()
+        self.assertEqual(rs_config.uris, [uri])
 
 
 if __name__ == '__main__':

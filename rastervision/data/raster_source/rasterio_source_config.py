@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.raster_source.geotiff_source import GeoTiffSource
+from rastervision.data.raster_source.rasterio_source import RasterioSource
 from rastervision.data.raster_source.raster_source_config \
     import (RasterSourceConfig, RasterSourceConfigBuilder)
 from rastervision.protos.raster_source_pb2 \
@@ -9,7 +9,7 @@ from rastervision.protos.raster_source_pb2 \
 from rastervision.utils.files import download_if_needed
 
 
-class GeoTiffSourceConfig(RasterSourceConfig):
+class RasterioSourceConfig(RasterSourceConfig):
     def __init__(self,
                  uris,
                  x_shift_meters=0.0,
@@ -17,7 +17,7 @@ class GeoTiffSourceConfig(RasterSourceConfig):
                  transformers=None,
                  channel_order=None):
         super().__init__(
-            source_type=rv.GEOTIFF_SOURCE,
+            source_type=rv.RASTERIO_SOURCE,
             transformers=transformers,
             channel_order=channel_order)
         self.uris = uris
@@ -26,8 +26,8 @@ class GeoTiffSourceConfig(RasterSourceConfig):
 
     def to_proto(self):
         msg = super().to_proto()
-        msg.geotiff_files.CopyFrom(
-            RasterSourceConfigMsg.GeoTiffFiles(
+        msg.rasterio_source.CopyFrom(
+            RasterSourceConfigMsg.RasterioSource(
                 uris=self.uris,
                 x_shift_meters=self.x_shift_meters,
                 y_shift_meters=self.y_shift_meters))
@@ -61,7 +61,7 @@ class GeoTiffSourceConfig(RasterSourceConfig):
         transformers = self.create_transformers()
         x_shift_meters = self.x_shift_meters
         y_shift_meters = self.y_shift_meters
-        return GeoTiffSource(
+        return RasterioSource(
             uris=self.uris,
             raster_transformers=transformers,
             temp_dir=tmp_dir,
@@ -74,7 +74,13 @@ class GeoTiffSourceConfig(RasterSourceConfig):
         io_def.add_inputs(self.uris)
 
 
-class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
+class RasterioSourceConfigBuilder(RasterSourceConfigBuilder):
+    """This RasterSource can read any file that can be opened by Rasterio/GDAL.
+
+    This includes georeferenced formats such as GeoTIFF and non-georeferenced formats
+    such as JPG. See https://www.gdal.org/formats_list.html for more details.
+    """
+
     def __init__(self, prev=None):
         config = {}
         if prev:
@@ -86,13 +92,13 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
                 'y_shift_meters': prev.y_shift_meters,
             }
 
-        super().__init__(GeoTiffSourceConfig, config)
+        super().__init__(RasterioSourceConfig, config)
 
     def validate(self):
         super().validate()
         if self.config.get('uris') is None:
             raise rv.ConfigError(
-                'You must specify uris for the GeoTiffSourceConfig. Use '
+                'You must specify uris for the RasterioSourceConfig. Use '
                 '"with_uris".')
         if not isinstance(self.config.get('uris'), list):
             raise rv.ConfigError(
@@ -106,20 +112,32 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
     def from_proto(self, msg):
         b = super().from_proto(msg)
 
-        x = msg.geotiff_files.x_shift_meters
-        y = msg.geotiff_files.y_shift_meters
-        return b \
-            .with_uris(msg.geotiff_files.uris) \
-            .with_shifts(x, y)
+        # Need to do this for backward compatibility.
+        if msg.HasField('geotiff_files') or msg.HasField('rasterio_source'):
+            if msg.HasField('geotiff_files'):
+                source = msg.geotiff_files
+            else:
+                source = msg.rasterio_source
+
+            return b \
+                .with_uris(source.uris) \
+                .with_shifts(source.x_shift_meters, source.y_shift_meters)
+        elif msg.HasField('image_file'):
+            source = msg.image_file
+            return b.with_uri(source.uri)
+        else:
+            raise rv.ConfigError(
+                'RasterioSourceConfig protobuf message should contain geotiff_files, '
+                'rasterio_source, or image_file')
 
     def with_uris(self, uris):
-        """Set URIs for a GeoTIFFs containing as raster data."""
+        """Set URIs for raster files that can be read by Rasterio."""
         b = deepcopy(self)
         b.config['uris'] = list(uris)
         return b
 
     def with_uri(self, uri):
-        """Set URI for a GeoTIFF containing raster data."""
+        """Set URI for raster files that can be read by Rasterio."""
         b = deepcopy(self)
         b.config['uris'] = [uri]
         return b
@@ -127,13 +145,14 @@ class GeoTiffSourceConfigBuilder(RasterSourceConfigBuilder):
     def with_shifts(self, x, y):
         """Set the x- and y-shifts in meters.
 
-            Args:
-                x: A number of meters to shift along the x-axis.  A
-                    positive shift moves the "camera" to the right.
+        This will only have an effect on georeferenced imagery.
 
-                y: A number of meters to shift along the y-axis.  A
-                    positive shift moves the "camera" down.
+        Args:
+            x: A number of meters to shift along the x-axis.  A
+                positive shift moves the "camera" to the right.
 
+            y: A number of meters to shift along the y-axis.  A
+                positive shift moves the "camera" down.
         """
         b = deepcopy(self)
         b.config['x_shift_meters'] = x

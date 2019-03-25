@@ -17,6 +17,12 @@ message RasterSourceConfig {
         required string uri = 1;
     }
 
+    message RasterioSource {
+        repeated string uris = 1;
+        optional float x_shift_meters = 2;
+        optional float y_shift_meters = 3;
+    }
+
     // Used to read a VectorSource as a raster useful for semantic segmentation.
     message RasterizedSource {
         message RasterizerOptions {
@@ -60,5 +66,6 @@ message RasterSourceConfig {
         GeoJSONFile geojson_file = 6;
         google.protobuf.Struct custom_config = 7;
         RasterizedSource rasterized_source = 8;
+        RasterioSource rasterio_source = 9;        
     }
 }

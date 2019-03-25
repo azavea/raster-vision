@@ -31,7 +31,7 @@ class TestChipClassification(unittest.TestCase):
                                            .build()
 
         source_uri = data_file_path('evaluator/cc-label-img-blank.tif')
-        raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+        raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                              .with_uri(source_uri) \
                                              .build()
 

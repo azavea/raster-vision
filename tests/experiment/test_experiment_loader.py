@@ -39,7 +39,7 @@ class DummyExperimentSet(rv.ExperimentSet):
                                                       do_monitoring=False) \
                                   .build()
 
-        raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+        raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                           .with_uri(img_path) \
                           .with_channel_order([0, 1, 2]) \
                           .with_stats_transformer() \
