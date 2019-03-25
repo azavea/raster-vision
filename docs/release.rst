@@ -10,9 +10,9 @@ This is a guide to the process of creating a new release, and is meant for the m
 Prepare branch
 ---------------
 
-This assumes that there is already a branch for a minor release called ``0.8``. To create a bug fix release (version 0.8.1), we need to backport all the bug fix commits on the ``develop`` branch into the ``0.8`` branch that have been added since the last bug fix release. For each bug fix PR on ``develop`` we need to create a PR against ``0.8`` based on a branch of ``0.8`` that has cherry-picked the commits from the original PR. The title of the PR should start with [BACKPORT]. Our goal is to create and merge each backport PR immediately after each bug fix PR is merged, so hopefully the preceding is already done by the time we are creating a bug fix release.
+This assumes that there is already a branch for a minor release called ``0.8``. To create a bug fix release (version 0.8.1), we need to backport all the bug fix commits on the ``master`` branch into the ``0.8`` branch that have been added since the last bug fix release. For each bug fix PR on ``master`` we need to create a PR against ``0.8`` based on a branch of ``0.8`` that has cherry-picked the commits from the original PR. The title of the PR should start with [BACKPORT]. Our goal is to create and merge each backport PR immediately after each bug fix PR is merged, so hopefully the preceding is already done by the time we are creating a bug fix release.
 
-Make and merge a PR against ``0.8`` (but not ``develop``) that increments ``version.py`` to ``0.8.1``.
+Make and merge a PR against ``0.8`` (but not ``master``) that increments ``version.py`` to ``0.8.1``.
 Then wait for the ``0.8`` branch to be built by Travis and the ``0.8`` Docker images to be published to Quay. If that is successful, we can proceed to the next steps of actually publishing a release.
 
 Make Github release

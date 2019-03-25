@@ -3,8 +3,8 @@ set -e
 
 if [ "$QUAY_USERNAME" != "" -a "$QUAY_PASSWORD" != "" ]; then
     if [ -z "${TRAVIS_TAG}" ]; then
-        if [ "$TRAVIS_BRANCH" == "develop" ]; then
-            echo "INFO: Push to develop branch, publishing commit and latest tags";
+        if [ "$TRAVIS_BRANCH" == "master" ]; then
+            echo "INFO: Push to master branch, publishing commit and latest tags";
             # Only use the first 7 characters of the commit hash
             COMMIT=${TRAVIS_COMMIT:0:7}
             .travis/build "BUILD_ALL" && \

@@ -6,6 +6,7 @@ Raster Vision 0.9
 
 Raster Vision 0.9.0
 ~~~~~~~~~~~~~~~~~~~
+- Switch default branch to master `#726 <https://github.com/azavea/raster-vision/pull/726>`_
 - Merge GeoTiffSource and ImageSource into RasterioSource `#723 <https://github.com/azavea/raster-vision/pull/723>`_
 - Simplify/clarify/test/validate RasterSource `#721 <https://github.com/azavea/raster-vision/pull/721>`_
 - Simplify and generalize geom processing `#711 <https://github.com/azavea/raster-vision/pull/711>`_
