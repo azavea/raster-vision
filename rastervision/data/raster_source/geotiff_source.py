@@ -55,10 +55,9 @@ class GeoTiffSource(RasterioRasterSource):
         self.crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
 
-    def _get_chip(self, window):
-        no_shift = self.x_shift_meters == 0.0 and self.y_shift_meters == 0.0
-        yes_shift = not no_shift
-        if yes_shift:
+    def _get_shifted_window(self, window):
+        do_shift = self.x_shift_meters != 0.0 or self.y_shift_meters != 0.0
+        if do_shift:
             ymin, xmin, ymax, xmax = window.tuple_format()
             width = window.get_width()
             height = window.get_height()
@@ -97,8 +96,11 @@ class GeoTiffSource(RasterioRasterSource):
             xmin4, ymin4 = ~transform * (xmin3, ymin3)
 
             window = Box(ymin4, xmin4, ymin4 + height, xmin4 + width)
+        return window
 
-        return super()._get_chip(window)
+    def _get_chip(self, window):
+        shifted_window = self._get_shifted_window(window)
+        return super()._get_chip(shifted_window)
 
     def _activate(self):
         super()._activate()

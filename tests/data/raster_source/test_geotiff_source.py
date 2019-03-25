@@ -3,11 +3,12 @@ import os
 
 import numpy as np
 import rasterio
+from rasterio.enums import ColorInterp
 
 import rastervision as rv
-from rastervision.core import (Box, RasterStats)
+from rastervision.core import (RasterStats)
 from rastervision.utils.misc import save_img
-from rastervision.data.raster_source.rasterio_source import load_window
+from rastervision.data.raster_source import ChannelOrderError
 from rastervision.rv_config import RVConfig
 from rastervision.utils.files import make_dir
 
@@ -15,7 +16,7 @@ from tests import data_file_path
 
 
 class TestGeoTiffSource(unittest.TestCase):
-    def test_load_window(self):
+    def test_nodata_val(self):
         with RVConfig.get_tmp_dir() as temp_dir:
             # make geotiff filled with ones and zeros with nodata == 1
             image_path = os.path.join(temp_dir, 'temp.tif')
@@ -36,11 +37,45 @@ class TestGeoTiffSource(unittest.TestCase):
                 for channel in range(nb_channels):
                     image_dataset.write(im[:, :, channel], channel + 1)
 
-            # Should be all zeros after converting nodata values to zero.
-            window = Box.make_square(0, 0, 100).rasterio_format()
-            with rasterio.open(image_path) as image_dataset:
-                chip = load_window(image_dataset, window=window)
-            np.testing.assert_equal(chip, np.zeros(chip.shape))
+            source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                          .with_uri(image_path) \
+                                          .build() \
+                                          .create_source(tmp_dir=temp_dir)
+            with source.activate():
+                out_chip = source.get_image_array()
+                expected_out_chip = np.zeros((height, width, nb_channels))
+                np.testing.assert_equal(out_chip, expected_out_chip)
+
+    def test_mask(self):
+        with RVConfig.get_tmp_dir() as temp_dir:
+            # make geotiff filled with ones and zeros and mask the whole image
+            image_path = os.path.join(temp_dir, 'temp.tif')
+            height = 100
+            width = 100
+            nb_channels = 3
+            with rasterio.open(
+                    image_path,
+                    'w',
+                    driver='GTiff',
+                    height=height,
+                    width=width,
+                    count=nb_channels,
+                    dtype=np.uint8) as image_dataset:
+                im = np.random.randint(
+                    0, 2, (height, width, nb_channels)).astype(np.uint8)
+                for channel in range(nb_channels):
+                    image_dataset.write(im[:, :, channel], channel + 1)
+                image_dataset.write_mask(
+                    np.zeros(im.shape[0:2]).astype(np.bool))
+
+            source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                          .with_uri(image_path) \
+                                          .build() \
+                                          .create_source(tmp_dir=temp_dir)
+            with source.activate():
+                out_chip = source.get_image_array()
+                expected_out_chip = np.zeros((height, width, nb_channels))
+                np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_get_dtype(self):
         img_path = data_file_path('small-rgb-tile.tif')
@@ -176,6 +211,44 @@ class TestGeoTiffSource(unittest.TestCase):
                 expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
                 expected_out_chip[:, :, :] *= np.array([0, 1,
                                                         2]).astype(np.uint8)
+                np.testing.assert_equal(out_chip, expected_out_chip)
+
+    def test_channel_order_error(self):
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            img_path = os.path.join(tmp_dir, 'img.tif')
+            chip = np.ones((2, 2, 3)).astype(np.uint8)
+            chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
+            save_img(chip, img_path)
+
+            channel_order = [3, 1, 0]
+            with self.assertRaises(ChannelOrderError):
+                rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                     .with_uri(img_path) \
+                                     .with_channel_order(channel_order) \
+                                     .build() \
+                                     .create_source(tmp_dir=tmp_dir)
+
+    def test_detects_alpha(self):
+        # Set first channel to alpha. Expectation is that when omitting channel_order,
+        # only the second and third channels will be in output.
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            img_path = os.path.join(tmp_dir, 'img.tif')
+            chip = np.ones((2, 2, 3)).astype(np.uint8)
+            chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
+            save_img(chip, img_path)
+
+            ci = (ColorInterp.alpha, ColorInterp.blue, ColorInterp.green)
+            with rasterio.open(img_path, 'r+') as src:
+                src.colorinterp = ci
+
+            source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+                                          .with_uri(img_path) \
+                                          .build() \
+                                          .create_source(tmp_dir=tmp_dir)
+            with source.activate():
+                out_chip = source.get_image_array()
+                expected_out_chip = np.ones((2, 2, 2)).astype(np.uint8)
+                expected_out_chip[:, :, :] *= np.array([1, 2]).astype(np.uint8)
                 np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_with_stats_transformer(self):

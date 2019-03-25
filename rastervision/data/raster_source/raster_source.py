@@ -1,6 +1,14 @@
 from abc import ABC, abstractmethod
 
 
+class ChannelOrderError(Exception):
+    def __init__(self, channel_order, num_channels):
+        self.channel_order = channel_order
+        self.num_channels = num_channels
+        msg = 'The channel_order={} contains a channel index >= num_channels={}'
+        super().__init__(msg.format(str(channel_order), num_channels))
+
+
 class RasterSource(ABC):
     """A source of raster data.
 
@@ -12,16 +20,21 @@ class RasterSource(ABC):
         """Construct a new RasterSource.
 
         Args:
-            channel_order: numpy array of length n where n is the number of
-                channels to use and the values are channel indices.
-            num_channels: Number of channels in the raster data, before applying
+            channel_order: list of channel indices to use when extracting chip from
+                raw imagery.
+            num_channels: Number of channels in the raw imagery before applying
                 channel_order.
             raster_transformers: RasterTransformers used to transform chips
                 whenever they are retrieved.
         """
-        self.raster_transformers = raster_transformers
         self.channel_order = channel_order
         self.num_channels = num_channels
+        self.raster_transformers = raster_transformers
+
+    def validate_channel_order(self, channel_order, num_channels):
+        for c in channel_order:
+            if c >= num_channels:
+                raise ChannelOrderError(channel_order, num_channels)
 
     @abstractmethod
     def get_extent(self):
@@ -44,7 +57,7 @@ class RasterSource(ABC):
 
     @abstractmethod
     def _get_chip(self, window):
-        """Return the chip located in the window.
+        """Return the raw chip located in the window.
 
         Args:
             window: Box
@@ -57,11 +70,14 @@ class RasterSource(ABC):
     def get_chip(self, window):
         """Return the transformed chip in the window.
 
+        Get a raw chip, extract subset of channels using channel_order, and then apply
+        transformations.
+
         Args:
             window: Box
 
         Returns:
-            [height, width, channels] numpy array
+            np.ndarray with shape [height, width, channels]
         """
         chip = self._get_chip(window)
 
@@ -74,13 +90,13 @@ class RasterSource(ABC):
         return chip
 
     def get_raw_chip(self, window):
-        """Return the untransformed chip in the window.
+        """Return raw chip without using channel_order or applying transforms.
 
         Args:
-            window: Box
+            window: (Box) the window for which to get the chip
 
         Returns:
-            [height, width, channels] numpy array
+            np.ndarray with shape [height, width, channels]
         """
         return self._get_chip(window)
 
@@ -92,7 +108,7 @@ class RasterSource(ABC):
         return self.get_chip(self.get_extent())
 
     def get_raw_image_array(self):
-        """Return entire untransformed image array.
+        """Return entire raw image without using channel_order or applying transforms.
 
         Not safe to call on very large RasterSources.
         """

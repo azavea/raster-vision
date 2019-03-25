@@ -125,9 +125,11 @@ class RasterSourceConfigBuilder(ConfigBuilder):
     def with_channel_order(self, channel_order):
         """Defines the channel order for this raster source.
 
+        This defines the subset of channel indices and their order to use when extracting
+        chips from raw imagery.
+
         Args:
-            channel_order: numpy array of length n where n is the number of
-                channels to use and the values are channel indices
+            channel_order: list of channel indices
         """
         b = deepcopy(self)
         b.config['channel_order'] = channel_order
