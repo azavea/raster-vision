@@ -27,8 +27,8 @@ class CommandConfig(ABC):
 
     def split(self, num_parts):
         """Split this command config into num_parts parts if possible.
-        This will return a list containing 1 - num_parts command configurations.
-        If the command configuration does not split, will return [self]
+        This will return a list of size between 1 and num_parts containing command
+        configurations. If the command configuration does not split, will return [self]
         """
         return [self]
 
