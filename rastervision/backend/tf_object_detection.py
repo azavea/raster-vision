@@ -616,7 +616,8 @@ class TFObjectDetection(Backend):
                                 rv.TF_OBJECT_DETECTION))
 
         training_package = TrainingPackage(self.config.training_data_uri,
-                                           self.config, tmp_dir, self.partition_id)
+                                           self.config, tmp_dir,
+                                           self.partition_id)
         self.scene_training_packages.append(training_package)
         tf_examples = make_tf_examples(data, self.class_map)
         # Ensure directory is unique since scene id's could be shared between
@@ -637,7 +638,8 @@ class TFObjectDetection(Backend):
             validation_results: list of validation scenes' TFRecords
         """
         training_package = TrainingPackage(self.config.training_data_uri,
-                                           self.config, tmp_dir, self.partition_id)
+                                           self.config, tmp_dir,
+                                           self.partition_id)
 
         def _merge_training_results(results, record_path, split):
             # merge each scene's tfrecord into "split" tf record
@@ -654,8 +656,8 @@ class TFObjectDetection(Backend):
 
         if training_results:
             _merge_training_results(
-                training_results,
-                training_package.training_local_record_path, TRAIN)
+                training_results, training_package.training_local_record_path,
+                TRAIN)
         else:
             log.warn('No training chips for partition {}'.format(
                 training_package.partition_id))
@@ -675,7 +677,8 @@ class TFObjectDetection(Backend):
 
     def train(self, tmp_dir):
         training_package = TrainingPackage(self.config.training_data_uri,
-                                           self.config, tmp_dir, self.partition_id)
+                                           self.config, tmp_dir,
+                                           self.partition_id)
         # Download training data and update config file.
         training_package.download_data()
         config_path = training_package.download_config(self.class_map)
