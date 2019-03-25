@@ -320,6 +320,36 @@ class TestRasterioSource(unittest.TestCase):
                         .from_proto(msg).build()
         self.assertEqual(rs_config.uris, [uri])
 
+    def test_no_epsg(self):
+        crs = rasterio.crs.CRS()
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            image_path = os.path.join(tmp_dir, 'temp.tif')
+            height = 100
+            width = 100
+            nb_channels = 3
+            with rasterio.open(
+                    image_path,
+                    'w',
+                    driver='GTiff',
+                    height=height,
+                    width=width,
+                    count=nb_channels,
+                    dtype=np.uint8,
+                    crs=crs) as image_dataset:
+                im = np.zeros((height, width, nb_channels)).astype(np.uint8)
+                for channel in range(nb_channels):
+                    image_dataset.write(im[:, :, channel], channel + 1)
+
+            try:
+                rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                                     .with_uri(image_path) \
+                                     .build() \
+                                     .create_source(tmp_dir=tmp_dir)
+            except Exception:
+                self.fail(
+                    'Creating RasterioSource with CRS with no EPSG attribute '
+                    'raised an exception when it should not have.')
+
 
 if __name__ == '__main__':
     unittest.main()

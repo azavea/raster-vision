@@ -17,7 +17,7 @@ class RasterioCRSTransformer(CRSTransformer):
             map_crs: CRS code
         """
         self.map_proj = pyproj.Proj(init=map_crs)
-        self.image_proj = pyproj.Proj(init=image_crs)
+        self.image_proj = pyproj.Proj(image_crs)
 
         super().__init__(image_crs, map_crs, transform)
 
@@ -56,7 +56,7 @@ class RasterioCRSTransformer(CRSTransformer):
         if dataset.crs is None:
             return IdentityCRSTransformer()
         transform = dataset.transform
-        image_crs = dataset.crs['init']
+        image_crs = dataset.crs
         return cls(transform, image_crs, map_crs)
 
     def get_affine_transform(self):
