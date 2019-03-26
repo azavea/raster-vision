@@ -5,8 +5,8 @@
 [![Docker Repository on Quay](https://quay.io/repository/azavea/raster-vision/status "Docker Repository on Quay")](https://quay.io/repository/azavea/raster-vision)
 [![Join the chat at https://gitter.im/azavea/raster-vision](https://badges.gitter.im/azavea/raster-vision.svg)](https://gitter.im/azavea/raster-vision?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://api.travis-ci.org/azavea/raster-vision.svg?branch=develop)](http://travis-ci.org/azavea/raster-vision)
-[![codecov](https://codecov.io/gh/azavea/raster-vision/branch/develop/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
+[![Build Status](https://api.travis-ci.org/azavea/raster-vision.svg?branch=master)](http://travis-ci.org/azavea/raster-vision)
+[![codecov](https://codecov.io/gh/azavea/raster-vision/branch/master/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
 
 Raster Vision is an open source Python framework for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
 * It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning workflow including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
@@ -158,7 +158,7 @@ The tag for the `raster-vision` image determines what type of image it is:
 - The `cpu-*` tags are for running the CPU containers.
 - The `gpu-*` tags are for running the GPU containers.
 
-We publish a new tag per merge into `develop`, which is tagged with the first 7 characters of the commit hash.
+We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash.
 To use the latest version, pull the `latest` suffix, e.g. `raster-vision:gpu-latest`.
 Git tags are also published, with the github tag name as the docker tag suffix.
 
