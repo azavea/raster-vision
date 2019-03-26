@@ -8,7 +8,7 @@ from rasterio.enums import ColorInterp
 import rastervision as rv
 from rastervision.core import (RasterStats)
 from rastervision.utils.misc import save_img
-from rastervision.data.raster_source import ChannelOrderError
+from rastervision.data.raster_source import ChannelOrderError, RasterioSourceConfig
 from rastervision.rv_config import RVConfig
 from rastervision.utils.files import make_dir
 from rastervision.protos.raster_source_pb2 import RasterSourceConfig as RasterSourceMsg
@@ -349,6 +349,14 @@ class TestRasterioSource(unittest.TestCase):
                 self.fail(
                     'Creating RasterioSource with CRS with no EPSG attribute '
                     'raised an exception when it should not have.')
+
+    def test_default_provider(self):
+        # The default provider should return a RasterioSourceConfig for any uri not
+        # caught by some other default provider.
+        uri = 'x.abcdefg'
+        provider = rv._registry.get_raster_source_default_provider(uri)
+        rs_config = provider.construct(uri)
+        self.assertIsInstance(rs_config, RasterioSourceConfig)
 
 
 if __name__ == '__main__':
