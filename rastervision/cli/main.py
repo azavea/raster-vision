@@ -257,7 +257,7 @@ class OptionEatAll(click.Option):
 @click.option(
     '--channel-order',
     cls=OptionEatAll,
-    help='List of indices comprising channel_order. Example: 2 1 0)
+    help='List of indices comprising channel_order. Example: 2 1 0')
 @click.option(
     '--export-config',
     type=click.Path(exists=False),
