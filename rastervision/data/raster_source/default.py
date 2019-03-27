@@ -1,5 +1,4 @@
 from abc import (ABC, abstractmethod)
-import os
 
 import rastervision as rv
 
@@ -20,8 +19,10 @@ class RasterSourceDefaultProvider(ABC):
 class RasterioSourceDefaultProvider(RasterSourceDefaultProvider):
     @staticmethod
     def handles(uri):
-        ext = os.path.splitext(uri)[1]
-        return ext.lower() in ['.tif', '.tiff', '.geotiff', '.png', '.jpg']
+        # Since there are so many types handled by Rasterio/GDAL, the RasterioSource
+        # will be the catch-all. More specific types can be handled by other
+        # RasterSources.
+        return True
 
     @staticmethod
     def construct(uri, channel_order=None):
