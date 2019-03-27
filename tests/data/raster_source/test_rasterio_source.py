@@ -252,6 +252,14 @@ class TestRasterioSource(unittest.TestCase):
                 expected_out_chip[:, :, :] *= np.array([1, 2]).astype(np.uint8)
                 np.testing.assert_equal(out_chip, expected_out_chip)
 
+    def test_empty_channel_order(self):
+        config = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                                      .with_uri('a.tif') \
+                                      .build()
+        msg = config.to_proto()
+        config = rv.RasterSourceConfig.from_proto(msg)
+        self.assertEqual(config.channel_order, None)
+
     def test_non_geo(self):
         # Check if non-georeferenced image files can be read and CRSTransformer
         # implements the identity function.

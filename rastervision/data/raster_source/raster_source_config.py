@@ -119,7 +119,10 @@ class RasterSourceConfigBuilder(ConfigBuilder):
             map(lambda m: RasterTransformerConfig.from_proto(m),
                 msg.transformers))
 
-        return self.with_channel_order(list(msg.channel_order)) \
+        channel_order = list(msg.channel_order)
+        if len(channel_order) == 0:
+            channel_order = None
+        return self.with_channel_order(channel_order) \
                    .with_transformers(transformers)
 
     def with_channel_order(self, channel_order):
