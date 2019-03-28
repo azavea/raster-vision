@@ -11,7 +11,7 @@ env:
       - CLEAN_TRAVIS_TAG=${TRAVIS_TAG/[[:space:]]/}
       - COMMIT=${CLEAN_TRAVIS_TAG:-${TRAVIS_COMMIT:0:7}}
 
-if: (type = pull_request) OR (tag IS present) OR (branch = develop) OR (branch =~ /^feature.*/)
+if: (type = pull_request) OR (tag IS present) OR (branch = master) OR (branch =~ /^feature.*/)
 
 script:
    - .travis/build
@@ -26,7 +26,7 @@ deploy:
      skip_cleanup: true
      on:
         all_branches: true
-        condition: $TRAVIS_BRANCH =~ ^develop|[0-9]+(\.[0-9]+)*$
+        condition: $TRAVIS_BRANCH =~ ^master|[0-9]+(\.[0-9]+)*$
    - provider: script
      script: .travis/deploy
      skip_cleanup: true
