@@ -182,6 +182,21 @@ class ObjectDetectionLabelsTest(unittest.TestCase):
             scores=expected_scores[pruned_inds])
         pruned_labels.assert_equal(expected_labels)
 
+    def test_filter_by_aoi(self):
+        aois = [Box.make_square(0, 0, 2).to_shapely()]
+        filt_labels = self.labels.filter_by_aoi(aois)
+
+        npboxes = np.array([[0., 0., 2., 2.]])
+        class_ids = np.array([1])
+        scores = np.array([0.9])
+        exp_labels = ObjectDetectionLabels(npboxes, class_ids, scores=scores)
+        self.assertEqual(filt_labels, exp_labels)
+
+        aois = [Box.make_square(4, 4, 2).to_shapely()]
+        filt_labels = self.labels.filter_by_aoi(aois)
+        exp_labels = ObjectDetectionLabels.make_empty()
+        self.assertEqual(filt_labels, exp_labels)
+
 
 if __name__ == '__main__':
     unittest.main()
