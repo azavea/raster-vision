@@ -12,11 +12,19 @@
 
 **Raster Vision** is an open source framework for Python developers building computer
 vision models on satellite, aerial, and other large imagery sets (including
-oblique drone imagery). It allows for engineers to quickly and repeatably
+oblique drone imagery). There is built-in support for chip classification, object detection, and semantic segmentation using Tensorflow.
+
+.. image:: _static/cv-tasks.png
+    :align: center
+
+Raster Vision allows engineers to quickly and repeatably
 configure *experiments* that go through core components of a machine learning
 workflow: analyzing training data, creating training chips, training models,
 creating predictions, evaluating models, and bundling the model files and
 configuration for easy deployment.
+
+.. image:: _static/overview-raster-vision-workflow.png
+    :align: center
 
 Raster Vision workflows begin when you have a set of images and training data,
 optionally with Areas of Interest (AOIs) that describe where the images are labeled. Raster Vision
@@ -24,9 +32,6 @@ workflows end with a packaged model and configuration that allows you to
 easily utilize models in various  deployment situations. Inside the Raster Vision
 workflow, there's the process of running multiple experiments to find the best model
 or models to deploy.
-
-.. image:: _static/overview-raster-vision-workflow.png
-    :align: center
 
 The process of running experiments includes executing workflows that perform the following
 commands:
