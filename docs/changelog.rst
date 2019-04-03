@@ -35,6 +35,7 @@ Raster Vision 0.8.2
 
 Bug Fixes
 ^^^^^^^^^
+- Fix filter_by_aoi for ObjectDetectionLabels `#746 <https://github.com/azavea/raster-vision/pull/746>`_
 - Load null channel_order correctly `#733 <https://github.com/azavea/raster-vision/pull/733>`_
 - Handle Rasterio crs that doesn't contain EPSG `#725 <https://github.com/azavea/raster-vision/pull/725>`_
 - Fixed issue with saving semseg predictions for non-georeferenced imagery `#708 <https://github.com/azavea/raster-vision/pull/708>`_

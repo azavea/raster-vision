@@ -63,6 +63,22 @@ class TestChipClassificationLabels(unittest.TestCase):
         self.assertEqual(len(cells), 3)
         self.assertTrue(cell3 in cells)
 
+    def test_filter_by_aoi(self):
+        aois = [Box.make_square(0, 0, 2).to_shapely()]
+        filt_labels = self.labels.filter_by_aoi(aois)
+
+        exp_labels = ChipClassificationLabels()
+        cell1 = Box.make_square(0, 0, 2)
+        class_id1 = 1
+        exp_labels.set_cell(cell1, class_id1)
+        self.assertEqual(filt_labels, exp_labels)
+
+        aois = [Box.make_square(4, 4, 2).to_shapely()]
+        filt_labels = self.labels.filter_by_aoi(aois)
+
+        exp_labels = ChipClassificationLabels()
+        self.assertEqual(filt_labels, exp_labels)
+
 
 if __name__ == '__main__':
     unittest.main()
