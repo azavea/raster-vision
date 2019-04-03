@@ -61,10 +61,13 @@ class ObjectDetectionLabels(Labels):
             box_poly = box.to_shapely()
             for aoi in aoi_polygons:
                 if box_poly.within(aoi):
-                    new_boxes.append(box)
+                    new_boxes.append(box.npbox_format())
                     new_class_ids.append(class_id)
                     new_scores.append(score)
                     break
+
+        if len(new_boxes) == 0:
+            return ObjectDetectionLabels.make_empty()
 
         return ObjectDetectionLabels(
             np.array(new_boxes), np.array(new_class_ids), np.array(new_scores))
