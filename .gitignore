@@ -110,3 +110,6 @@ deployment/ansible/*.retry
 # GDAL files
 
 *.aux.xml
+
+./data
+./notebooks
