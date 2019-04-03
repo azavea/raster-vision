@@ -9,8 +9,8 @@ fi
 function usage() {
     echo -n \
          "Usage: $(basename "$0") [--cpu|--gpu]
-Build docker images for model training.
-If the type is not specified, it will build both cpu and gpu docker images.
+Build Docker images.
+If the type is not specified, it will build both cpu and gpu Docker images.
 "
 }
 

@@ -1,0 +1,102 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+DOCKER_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+REPO_ROOT="$( cd -P "$( dirname "$DOCKER_DIR" )" && pwd )"
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0") <options> <command>
+Run a console in the raster-vision-cpu Docker image locally.
+
+Environment variables:
+RASTER_VISION_DATA_DIR (directory for storing data; mounted to /opt/data)
+RASTER_VISION_NOTEBOOK_DIR (optional directory for Jupyter notebooks; mounted to /opt/notebooks)
+AWS_PROFILE (optional AWS profile)
+
+Options:
+--aws forwards AWS credentials (sets AWS_PROFILE env var and mounts ~/.aws to /root/.aws)
+--tensorboard maps port 6006
+--gpu use the NVIDIA runtime and GPU image
+--name sets the name of the running container
+--jupyter runs Jupyter and forwards port 8888
+--jupyter forwards port 8888, mounts $RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
+--docs runs the docs server and forwards port 8000
+
+All arguments after above options are passed to 'docker run'.
+"
+}
+
+IMAGE="raster-vision-cpu"
+RASTER_VISION_DATA_DIR="${RASTER_VISION_DATA_DIR:-${REPO_ROOT}/data}"
+RASTER_VISION_NOTEBOOK_DIR="${RASTER_VISION_NOTEBOOK_DIR:-${REPO_ROOT}/notebooks}"
+
+# Parse options using scheme in
+# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --help)
+        usage
+        exit 0
+        shift
+        ;;
+        --aws)
+        AWS="-e AWS_PROFILE=${AWS_PROFILE:-default} -v ${HOME}/.aws:/root/.aws:ro"
+        shift # past argument
+        ;;
+        --tensorboard)
+        TENSORBOARD="-p 6006:6006"
+        shift # past argument
+        ;;
+        --gpu)
+        IMAGE="raster-vision-gpu"
+        RUNTIME="--runtime=nvidia"
+        shift # past argument
+        ;;
+        --name)
+        shift
+        NAME="--name $1"
+        shift
+        ;;
+        --jupyter)
+        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -p 8888:8888"
+        CMD=(/run_jupyter.sh --ip 0.0.0.0 --port 8888 --no-browser --allow-root --notebook-dir=/opt/notebooks)
+        shift
+        ;;
+        --docs)
+        DOCS="-p 8000:8000"
+        CMD=(/bin/bash -c "cd docs && make livehtml")
+        shift
+        ;;
+        *)    # unknown option
+        POSITIONAL+=("$1") # save it in an array for later
+        shift # past argument
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [ -z "${CMD}" ]
+then
+    CMD=(${@:1})
+fi
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    docker run ${RUNTIME} ${NAME} --rm -it \
+        -v "${HOME}"/.rastervision:/root/.rastervision \
+        -v ${REPO_ROOT}:/opt/src \
+        -v ${RASTER_VISION_DATA_DIR}:/opt/data \
+        ${TENSORBOARD} ${AWS} ${JUPYTER} ${DOCS} \
+        ${IMAGE} "${CMD[@]}"
+fi
