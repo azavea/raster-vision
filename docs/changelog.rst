@@ -6,8 +6,9 @@ Raster Vision 0.9
 
 Raster Vision 0.9.0
 ~~~~~~~~~~~~~~~~~~~
-- Switch default branch to master `#726 <https://github.com/azavea/raster-vision/pull/726>`_
+
 - Unify Docker scripts `#743 <https://github.com/azavea/raster-vision/pull/743>`_
+- Switch default branch to master `#726 <https://github.com/azavea/raster-vision/pull/726>`_
 - Merge GeoTiffSource and ImageSource into RasterioSource `#723 <https://github.com/azavea/raster-vision/pull/723>`_
 - Simplify/clarify/test/validate RasterSource `#721 <https://github.com/azavea/raster-vision/pull/721>`_
 - Simplify and generalize geom processing `#711 <https://github.com/azavea/raster-vision/pull/711>`_
@@ -36,6 +37,7 @@ Raster Vision 0.8.2
 
 Bug Fixes
 ^^^^^^^^^
+- Allow using default stride for semseg sliding window  `#745 <https://github.com/azavea/raster-vision/pull/745>_`
 - Load null channel_order correctly `#733 <https://github.com/azavea/raster-vision/pull/733>`_
 - Handle Rasterio crs that doesn't contain EPSG `#725 <https://github.com/azavea/raster-vision/pull/725>`_
 - Fixed issue with saving semseg predictions for non-georeferenced imagery `#708 <https://github.com/azavea/raster-vision/pull/708>`_
