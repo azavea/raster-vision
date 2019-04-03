@@ -14,7 +14,7 @@ You can get the library directly from PyPI:
 
     > pip install rastervision
 
-.. note:: Raster Vision requires Python 3 or later.
+.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision`` if you have more than one version of Python installed.
 
 Troubleshooting macOS Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
