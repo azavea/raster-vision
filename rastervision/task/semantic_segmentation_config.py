@@ -95,6 +95,10 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
         negative_survival_probability = conf.chip_options \
                                             .negative_survival_probability
 
+        stride = conf.chip_options.stride
+        if stride == 0:
+            stride = None
+
         return self.with_classes(list(conf.class_items)) \
                 .with_predict_batch_size(msg.predict_batch_size) \
                 .with_predict_package_uri(msg.predict_package_uri) \
@@ -107,7 +111,7 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                     negative_survival_probability=negative_survival_probability,
                     chips_per_scene=conf.chip_options.chips_per_scene,
                     target_count_threshold=conf.chip_options.target_count_threshold,
-                    stride=conf.chip_options.stride)
+                    stride=stride)
 
     def validate(self):
         super().validate()

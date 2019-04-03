@@ -36,6 +36,7 @@ Raster Vision 0.8.2
 
 Bug Fixes
 ^^^^^^^^^
+- Allow using default stride for semseg sliding window  `#745 <https://github.com/azavea/raster-vision/pull/745>_`
 - Fix filter_by_aoi for ObjectDetectionLabels `#746 <https://github.com/azavea/raster-vision/pull/746>`_
 - Load null channel_order correctly `#733 <https://github.com/azavea/raster-vision/pull/733>`_
 - Handle Rasterio crs that doesn't contain EPSG `#725 <https://github.com/azavea/raster-vision/pull/725>`_

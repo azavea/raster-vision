@@ -77,6 +77,7 @@ class SemanticSegmentation(Task):
             stride = chip_options.stride
             if stride is None:
                 stride = chip_size / 2
+            stride = int(round(stride))
 
             return list(
                 filter_windows((extent.get_windows(chip_size, stride))))
