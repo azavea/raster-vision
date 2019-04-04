@@ -26,7 +26,6 @@ Options:
 --tensorboard maps port 6006
 --gpu use the NVIDIA runtime and GPU image
 --name sets the name of the running container
---jupyter runs Jupyter and forwards port 8888
 --jupyter forwards port 8888, mounts $RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
 --docs runs the docs server and forwards port 8000
 
