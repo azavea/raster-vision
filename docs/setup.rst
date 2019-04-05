@@ -1,18 +1,84 @@
 Setup
 =====
 
+.. _docker containers:
+
+Docker Containers
+-----------------
+
+Using the Docker containers published for Raster Vision makes it easy to use a fully set up environment. We have tested this with Docker 18, although you may be able to use a lower version.
+
+Docker containers are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_. To run the container for the latest release, run:
+
+.. code-block:: console
+
+   > docker run --rm -it quay.io/azavea/raster-vision:cpu-0.9 /bin/bash
+
+You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <https://github.com/azavea/raster-vision/blob/0.9/docker/run>`_ script for an example usage.
+
+We publish containers set up for both CPU-only running and GPU-only running, and tag each container as appropriate. So, you can also pull down the ``quay.io/azavea/raster-vision:gpu-0.9`` image, as well as ``quay.io/azavea/raster-vision:cpu-latest`` and ``quay.io/azavea/raster-vision:gpu-latest`` for the latest commits on the ``master`` branch.
+
+You can also base your own Dockerfiles off the Raster Vision image to use with your own codebase. See the Dockerfiles in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.
+
+Docker Scripts
+~~~~~~~~~~~~~~
+
+There are several scripts under `docker/ <https://github.com/azavea/raster-vision/tree/0.9/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code.
+
+After cloning the repo, you can build the Docker images using:
+
+.. code-block:: console
+
+    > docker/build
+
+Before running the container, set an environment variable to a local directory in which to store data.
+
+.. code-block:: console
+
+    > export RASTER_VISION_DATA_DIR="/path/to/data"
+
+To run a Bash console in the Docker container use:
+
+.. code-block:: console
+
+    > docker/run
+
+This will mount the ``$RASTER_VISION_DATA_DIR`` local directory to to ``/opt/data/`` inside the container. This script also has options for forwarding AWS credentials (`--aws`), running Jupyter notebooks (`--jupyter`), running on a GPU (`--gpu`), and others which can be seen below.
+
+.. code-block:: console
+
+    > docker/run --help
+
+    Usage: run <options> <command>
+    Run a console in the raster-vision-cpu Docker image locally.
+
+    Environment variables:
+    RASTER_VISION_DATA_DIR (directory for storing data; mounted to /opt/data)
+    RASTER_VISION_NOTEBOOK_DIR (optional directory for Jupyter notebooks; mounted to /opt/notebooks)
+    AWS_PROFILE (optional AWS profile)
+
+    Options:
+    --aws forwards AWS credentials (sets AWS_PROFILE env var and mounts ~/.aws to /root/.aws)
+    --tensorboard maps port 6006
+    --gpu use the NVIDIA runtime and GPU image
+    --name sets the name of the running container
+    --jupyter forwards port 8888, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
+    --docs runs the docs server and forwards port 8000
+
+    All arguments after above options are passed to 'docker run'.
+
 .. _install raster vision:
 
-Installing Raster Vision
+Installing via pip
 ------------------------
 
 .. currentmodule:: rastervision
 
-You can get the library directly from PyPI:
+Rather than running Raster Vision from inside a Docker container, you can directly install the library using ``pip``. However, we recommend using the Docker images since it can be difficult to install some of the dependencies.
 
 .. code-block:: console
 
-    > pip install rastervision
+   > pip install rastervision
 
 .. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision`` if you have more than one version of Python installed.
 
@@ -25,9 +91,9 @@ To circumvent a problem installing pyproj with Python 3.7, you may also have to 
 
 .. code-block:: console
 
-   > pip install cython
-   > pip install git+https://github.com/jswhit/pyproj.git
-   > pip install rastervision
+  > pip install cython
+  > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
+  > pip install rastervision
 
 Using AWS, Tensorflow, and/or Keras
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,15 +102,9 @@ If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can in
 
 .. code-block:: console
 
-    > pip install rastervision[aws,tensorflow,tensorflow-gpu]
+   > pip install rastervision[aws,tensorflow,tensorflow-gpu]
 
-If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to follow the instructions in their documentation about how to install, or look at our Dockerfile to see an example of setting this up.
-
-.. note:: You must install Tensorflow Object Detection and Deep Lab from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream.
-
-.. note:: The usage of :ref:`docker containers` is recommended, as it provides a consistent environment for running Raster Vision.
-
-If you have Docker installed, simply run the published container according to the instructions in :ref:`docker containers`
+If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to install these from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream. You will also need to install `Tippecanoe <https://github.com/mapbox/tippecanoe>`_ if you would like to do vector tile processing. For an example of setting these up, see the `Dockerfile <https://github.com/azavea/raster-vision/blob/lf/0.9/Dockerfile>`_.
 
 .. _raster vision config:
 
@@ -62,7 +122,7 @@ Raster Vision will look for configuration in the following locations, in this or
 By default, Raster Vision looks for a configuration file named ``default`` in the ``${HOME}/.rastervision`` folder.
 
 Profiles
-^^^^^^^^
+~~~~~~~~
 
 Profiles allow you to specify profile names from the command line or environment variables
 to determine which settings to use. The configuration file used will be named the same as the
@@ -74,15 +134,15 @@ profile: if you had two profiles (the ``default`` and one named ``myprofile``), 
    > ls ~/.rastervision
    default    myprofile
 
-See the root options of the :ref:`cli` for the option to set the profile.
+Use the ``rastervision --profile`` option in the :ref:`cli` to set the profile.
 
 Configuration File Sections
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _rv config section:
 
 RV
-~~~
+^^
 
 .. code-block:: ini
 
@@ -94,7 +154,7 @@ RV
 .. _plugins config section:
 
 PLUGINS
-~~~~~~~
+^^^^^^^
 
 .. code-block:: ini
 
@@ -115,7 +175,7 @@ Other configurations are documented elsewhere:
 * :ref:`aws batch config section`
 
 Environment Variables
-^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~
 
 Any INI file option can also be stated in the environment. Just prepend the section name to the setting name, e.g. ``RV_MODEL_DEFAULTS_URI``.
 
@@ -125,49 +185,32 @@ In addition to those environment variables that match the INI file values, there
 * ``RV_CONFIG`` - Optional path to the specific Raster Vision Configuration file. These configurations will override  configurations that exist in configurations files in the default locations, but will not cause those configurations to be ignored.
 * ``RV_CONFIG_DIR`` - Optional path to the directory that contains Raster Vision configuration. Defaults to ``${HOME}/.rastervision``
 
-.. _docker containers:
-
-Docker Containers
------------------
-
-Using the Docker containers published for Raster Vision allows
-you to use a fully set up environment. We have tested this with Docker 18, although you may be able to use a lower version.
-
-Docker containers are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_. To run the raster vision container for the latest release, run:
-
-.. code-block:: console
-
-   > docker run --rm -it quay.io/azavea/raster-vision:cpu-0.8 /bin/bash
-
-You'll likely need to load up volumes and expose ports to make this container fully useful; see the `docker/console <https://github.com/azavea/raster-vision/blob/0.8/docker/console>`_ script for an example usage.
-
-We publish containers set up for both CPU-only running and GPU-running, and tag each container as appropriate. So you can also pull down the ``quay.io/azavea/raster-vision:gpu-0.8`` image, as well as ``quay.io/azavea/raster-vision:cpu-latest`` and ``quay.io/azavea/raster-vision:gpu-latest``.
-
-You can also base your own Dockerfiles off the Raster Vision container to use with your own codebase. See the Dockerfiles in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.
 
 .. _running on gpu:
 
 Running on a machine with GPUs
 ------------------------------
 
-If you are running Raster Vision in a Docker container with GPUs - e.g. if you have your own GPU machine or you spun up a GPU-enabled machine on a cloud provider like a p3.2xlarge on AWS - you'll need to make sure of a couple of things so that the Docker container is able to utilize the GPUs.
+If you would like to run Raster Vision in a Docker container with GPUs - e.g. if you have your own GPU machine or you spun up a GPU-enabled machine on a cloud provider like a p3.2xlarge on AWS - you'll need to check some things so that the Docker container can utilize the GPUs.
+
+Here are some (slightly out of date, but still useful) `instructions <https://github.com/agroimpacts/geog287387/blob/master/materials/tutorials/ubuntu-deeplearning-ami-raster-vision.md>`_ written by a community member on setting up an AWS account and a GPU-enabled EC2 instance to run Raster Vision.
 
 Install nvidia-docker
-^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~
 
-You'll need to install the `nvidia-docker <https://github.com/NVIDIA/nvidia-docker>`_ runtime on your system. Follow their `quickstart <https://github.com/NVIDIA/nvidia-docker#quickstart>`_ and installation instructions. Make sure that your GPU is supported by NVIDIA Docker - if not you might need to find another way to have your Docker container communicate with the GPU. If you figure out how to support more GPUs, please let us know so we can add the steps to this documentation!
+You'll need to install the `nvidia-docker <https://github.com/NVIDIA/nvidia-docker>`_ runtime on your system. Follow their `Quickstart <https://github.com/NVIDIA/nvidia-docker#quickstart>`_ and installation instructions. Make sure that your GPU is supported by NVIDIA Docker - if not you might need to find another way to have your Docker container communicate with the GPU. If you figure out how to support more GPUs, please let us know so we can add the steps to this documentation!
 
 Use the nvidia-docker runtime
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When running your Docker container, be sure to include the ``--runtime=nvidia`` option, e.g.
 
 .. code-block:: console
 
-   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:gpu-0.8 /bin/bash
+   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:gpu-0.9 /bin/bash
 
 Ensure your setup sees the GPUS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We recommend you ensure that the GPUs are actually enabled. If you don't, you may run a training job that you think is using the GPU and isn't, and runs very slowly.
 
@@ -196,14 +239,14 @@ If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-i
 Setting up AWS Batch
 --------------------
 
-If you want to run code against AWS, you'll need a specific Raster Vision AWS Batch setup on your account, which you can accomplish by following the instructions found in the `CloudFormation-based Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-aws>`_.
+To run Raster Vision using AWS Batch, you'll need to setup your AWS account with a specific set of Batch resources, which you can do using the CloudFormation template in the `Raster Vision AWS Batch repository <https://github.com/azavea/raster-vision-aws>`_.
 
 .. _aws batch config section:
 
 AWS Batch Configuration Section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Set the appropriate configuration in your :ref:`raster vision config`:
+After creating the resources on AWS, set the corresponding configuration in your :ref:`raster vision config`:
 
 .. code:: ini
 
@@ -214,14 +257,13 @@ Set the appropriate configuration in your :ref:`raster vision config`:
    cpu_job_definition=RasterVisionHostedCpuJobDefinition
    attempts=1
 
-
 * ``job_queue`` - Job Queue to submit GPU Batch jobs to.
 * ``cpu_job_queue`` - Job Queue to submit CPU-only jobs to.
 * ``job_definition`` - The Job Definition that defines the Batch jobs to run.
 * ``cpu_job_definition`` - The Job Definition that defines the CPU Batch jobs to run.
 * ``attempts`` - Optional number of attempts to retry failed jobs.
 
-The names of the resources in the example profile above were generated by running the `Raster Vision for AWS Batch setup repository <https://github.com/azavea/raster-vision-cloudformation>`_. The exact names may vary depending on how the CloudFormation stack is configured. Check the AWS Batch console to see the names of the resources that were created.
+Check the AWS Batch console to see the names of the resources that were created, as they vary depending on how CloudFormation was configured.
 
 .. seealso::
    For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws batch`.
