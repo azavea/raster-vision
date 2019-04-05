@@ -1,15 +1,15 @@
 .. _cli:
 
-Command  Line Interface
+Command Line Interface
 =======================
 
 .. currentmodule:: rastervision
 
-The Raster Vision command line utiliy, ``rastervision`` is installed with a ``pip install`` of
-rastervision. It consists of subcommands, with some top level options:
+The Raster Vision command line utility, ``rastervision``, is installed with a ``pip install`` of
+``rastervision``, which is installed by default in the :ref:`docker containers`.
+It has subcommands, with some top level options:
 
 .. command-output:: rastervision --help
-
 
 Commands
 --------
@@ -28,7 +28,7 @@ Some specific parameters to call out:
 -\\-arg
 ~~~~~~~~~~~
 
-Use ``-a`` to pass arguments into the experiment methods; many of which take a root_uri, which is where Raster Vision will store all the output of the experiment. If you forget to supply this, Raster Vision will remind you.
+Use ``-a`` to pass arguments into the experiment methods; many of which take a ``root_uri`` which is where Raster Vision will store all the output of the experiment. If you forget to supply an argument, Raster Vision will remind you.
 
 -\\-dry-run
 ~~~~~~~~~~~

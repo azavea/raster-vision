@@ -28,8 +28,8 @@ To install the QGIS Plugin, you must have ``rastervision`` installed in the Pyth
 Installing from Plugin Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A package containing all the needed dependencies can be installed through QGIS Plugin Manager.
-To install from plugin manager:
+A package containing all the needed dependencies can be installed through the QGIS Plugin Manager.
+To install from the plugin manager:
 
 Click the menu "Plugins" -> "Manage and Install Plugins".
 Enter 'Raster Vision' in search box. After installation is complete, there should be a "Raster Vision" submenu under the "Plugins" menu.
@@ -41,7 +41,7 @@ To install, grab the release `.tar.gz` file from the `GitHub Releases <https://g
 
 .. code-block:: console
 
-   tar -xvf rastervision_qgis-v0.8.0.tar.gz -C ${QGIS_PLUGIN_DIRECTORY}
+   tar -xvf rastervision_qgis-v0.9.0.tar.gz -C ${QGIS_PLUGIN_DIRECTORY}
 
 Where ``${QGIS_PLUGIN_DIRECTORY}`` is your QGIS plugin directory. See this `GIS StackExchange post <https://gis.stackexchange.com/questions/274311/qgis-3-plugin-folder-location>`_ if you need help finding your plugin directory.
 
@@ -65,7 +65,7 @@ To run predict through Docker, make sure that the Docker command is on the ``PAT
 
 The ``Load Experiment`` Dialog of the plugin lets you load results from an experiment.
 
-The first step in using this feature is to load up an experiment configuration JSON file. You can find
+The first step in using this feature is to load an experiment configuration JSON file. You can find
 experiment configurations in the ``experiments`` directory under the ``root_uri`` of your
 experiment.
 
@@ -78,11 +78,11 @@ that were used in the experiment. The names that appear in the dialog are the sc
 .. image:: _static/qgis/qgis-experiment-loaded.png
    :align: center
 
-You can select which data type you want form each scene in the "Layers to Load" section. You can also select Scenes that you want to load from the list boxes.
+You can select which data type you want from each scene in the "Layers to Load" section. You can also select Scenes that you want to load from the list boxes.
 
-You can choose one of your configued :ref:`qgis style profile` from the "Style Profile" box. All incoming layers will be styled according to the style profile.
+You can choose one of your configured :ref:`qgis style profile` from the "Style Profile" box. All incoming layers will be styled according to the style profile.
 
-When you're satisfied with your choices, pressing OK and the project will load in QGIS. This will clear the current project in QGIS and load the new layers - if you already have layers, it will confirm that you want to clear out your project.
+When you're satisfied with your choices, press OK and the project will load in QGIS. This will clear the current project in QGIS and load the new layers - if you already have layers, it will confirm that you want to clear your project.
 
 The layers that load will have the following naming conventions:
 
@@ -99,19 +99,19 @@ The layers that load will have the following naming conventions:
 .. image:: _static/qgis/qgis-predict.png
    :align: center
 
-This Dialog allows you to make predictions using a :ref:`predict package` from a raster vision experiment.
+This Dialog allows you to make predictions using a :ref:`predict package` from a Raster Vision experiment.
 
 To use do the following:
 
-* input the predict package URI
-* select a layer from the "Input Layer" dropdown, which is populated from the raster layers of the current QGIS project
+* Enter the predict package URI
+* Select a layer from the "Input Layer" dropdown, which is populated from the raster layers of the current QGIS project
 * Optionally choose a Style Profile
 * Select whether or not to update any stats used by the model with the given image
 * Give the path where the prediction labels should be saved to
 
 You can use Docker or a local installation of Raster Vision to run the prediction. If using Docker, you'll have to give the name of the image from which to run the container.
 
-This runs a similar process as the :ref:`predict cli command` CLI command, and will load the prediciton layer after prediction completes.
+This runs a similar process as the :ref:`predict cli command` CLI command, and will load the prediction layer after prediction completes.
 
 .. _qgis style profile:
 
@@ -124,7 +124,7 @@ This runs a similar process as the :ref:`predict cli command` CLI command, and w
 Set up style profiles so that when you load an experiment or make predictions,
 layers are automatically styled with given SLDs or QML files.
 
-The best way to do this is to styl each of the types of layers you want after first loading an experiment. Export an SLD or QML of the style for each layer by using the `Style` -> `Save Style` command in the `Symbology` section of the layer properties. Then, create a style profile for that experiment group, and point it to the appropriate QML or SLD files. Now you'll be able to select the style profile when loading new experiments and making predictions.
+The best way to do this is to style each of the types of layers you want after first loading an experiment. Export an SLD or QML of the style for each layer by using the `Style` -> `Save Style` command in the `Symbology` section of the layer properties. Then, create a style profile for that experiment group, and point it to the appropriate QML or SLD files. Now you'll be able to select the style profile when loading new experiments and making predictions.
 
 |configure icon| Configure
 --------------------------
@@ -132,4 +132,4 @@ The best way to do this is to styl each of the types of layers you want after fi
 .. image:: _static/qgis/qgis-configure.png
    :align: center
 
-Configure the plugin with a working directory.  If the files live on S3, this plugin will download files as necessary to your local working directory. If the file already exists in the working directory, the plugin will check the timestamps and overwrite the local file if the file on S3 is newer.
+Configure the plugin with a working directory. If the files live on S3, this plugin will download files as necessary to your local working directory. If the file already exists in the working directory, the plugin will check the timestamps and overwrite the local file if the file on S3 is newer.

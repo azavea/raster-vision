@@ -10,8 +10,8 @@ Experiments are configured programmatically using a compositional API based on t
 Experiment Set
 --------------
 
-An experiment set is a set of related experiments and can be created by subclassing ExperimentSet. For each experiment, the class should have a method prefixed with ``exp_`` that returns either a single ExperimentConfig, or
-a list of ExperimentConfig objects.
+An experiment set is a set of related experiments and can be created by subclassing ``ExperimentSet``. For each experiment, the class should have a method prefixed with ``exp_`` that returns either a single ``ExperimentConfig``, or
+a list of ``ExperimentConfig`` objects.
 
 In the ``tiny_spacenet.py`` example from the :ref:`quickstart`, the ``TinySpacenetExperimentSet`` is the ``ExperimentSet`` that Raster Vision finds when executing ``rastervision run -p tiny_spacenet.py``.
 
@@ -45,7 +45,7 @@ actual execution of the commands, be it locally or on AWS Batch, are determined 
 all the details about how the commands will execute (which files, what methods, what hyperparameters, etc.)
 are determined by the ``ExperimentConfig``.
 
-The following diagram shows a hierarchy of the high level components that comprise an experiment configuration:
+The following diagram shows the hierarchy of the high level components that comprise an experiment configuration:
 
 .. image:: _static/experiments-experiment.png
     :align: center
@@ -70,8 +70,7 @@ Task
 ----
 
 A ``Task`` is a computer vision task such as chip classification, object detection, or semantic segmentation.
-Tasks are configured using a `TaskConfig`, which is then set into the experiment with the ``.with_task(task)``
-method.
+Tasks are configured using a ``TaskConfig``, which is then set into the experiment with the ``.with_task(task)`` method.
 
 .. image:: _static/cv-tasks.png
     :align: center
@@ -98,7 +97,7 @@ Semantic Segmentation
 
 In semantic segmentation, the goal is to predict the class of each pixel in a scene. This task requires the highest labeling effort, but also provides the most spatially precise predictions. Like object detection, these models take longer to train than chip classification models.
 
-Future Tasks
+New Tasks
 ^^^^^^^^^^^^
 
 It is possible to add support for new tasks by extending the Task class. Some potential tasks to add are chip regression (goal: predict a number for each chip) and instance segmentation (goal: predict a segmentation mask for each individual object).
@@ -106,20 +105,17 @@ It is possible to add support for new tasks by extending the Task class. Some po
 TaskConfig
 ^^^^^^^^^^
 
-A ``TaskConfig`` is always constructed through a builder, which is created with **key** from the ``.build`` static method of ``TaskConfig``. In our ``tiny_spacenet.py`` example, we configured an object detection task:
+A ``TaskConfig`` is always constructed through a builder, which is created by passing a **key** to the ``.builder`` static method of ``TaskConfig``. In our ``tiny_spacenet.py`` example, we configured a semantic segmentation task:
 
 .. code::
 
-   task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
-                       .with_chip_size(512) \
-                       .with_classes({
-                           'building': (1, 'red')
-                       }) \
-                       .with_chip_options(neg_ratio=1.0,
-                                          ioa_thresh=0.8) \
-                       .with_predict_options(merge_thresh=0.1,
-                                             score_thresh=0.5) \
-                       .build()
+    task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                        .with_chip_size(300) \
+                        .with_chip_options(chips_per_scene=50) \
+                        .with_classes({
+                            'building': (1, 'red')
+                        }) \
+                        .build()
 
 .. seealso:: The :ref:`task api reference` API Reference docs have more information about the
              Task types available.
@@ -131,8 +127,8 @@ Backend
 
 To avoid reinventing the wheel, Raster Vision relies on third-party libraries to implement core functionality around building and training models for the various computer vision tasks it supports.
 To maintain flexibility and avoid being tied to any one library, Raster Vision tasks interact with third-party libraries via a "backend" interface `inspired by Keras <https://keras.io/backend/>`_.
-Each backend is a subclass of Backend and contains methods for translating between Raster Vision data structures and calls to a third-party library.
-
+Each backend is a subclass of ``Backend`` and mediates between Raster Vision data structures and a third-party library.
+Backends are configured using a ``BackendConfig, which is then set into the experiment using the ``.with_backend(backend)``.
 
 Keras Classification
 ^^^^^^^^^^^^^^^^^^^^
@@ -160,35 +156,39 @@ For semantic segmentation, the default backend is Tensorflow Deeplab. It has sup
 BackendConfig
 ^^^^^^^^^^^^^
 
-A ``BackendConfig`` is always constructed through a builder, which is created with **key** from the ``.build`` static method of ``BackendConfig``. In our ``tiny_spacenet.py`` example, we configured the TensorFlow Object Detection backend:
+A ``BackendConfig`` is always constructed through a builder, which is created with a **key** using the ``.builder`` static method of ``BackendConfig``. In our ``tiny_spacenet.py`` example, we configured the TensorFlow DeepLab backend:
 
 .. code::
 
-   backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
-                             .with_task(task) \
-                             .with_debug(True) \
-                             .with_batch_size(8) \
-                             .with_num_steps(5) \
-                             .with_model_defaults(rv.SSD_MOBILENET_V2_COCO)  \
-                             .build()
+    backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+                              .with_task(task) \
+                              .with_debug(True) \
+                              .with_batch_size(1) \
+                              .with_num_steps(1) \
+                              .with_model_defaults(rv.MOBILENET_V2)  \
+                              .build()
 
 .. seealso:: The :ref:`backend api reference` API Reference docs have more information about the
              Backend types available.
 
+.. _dataset:
+
 Dataset
 -------
 
-A Dataset contains the `training, validation, and test splits <https://en.wikipedia.org/wiki/Training,_test,_and_validation_sets>`_ needed to train and evaluate a model. Each dataset split is a list of scenes. A dataset can also hold :ref:`augmentor`, which describe how to augment the training scenes (but not the validation and test scenes).
+A ``Dataset`` contains the `training, validation, and test splits <https://en.wikipedia.org/wiki/Training,_test,_and_validation_sets>`_ needed to train and evaluate a model. Each dataset split is a list of scenes. A dataset can also hold an :ref:`augmentor`, which describes how to augment the training scenes (but not the validation and test scenes).
 
 In our ``tiny_spacenet.py`` example, we configured the dataset with single scenes, though more often
-in real use cases you call ``with_train_scenes`` and ``with_validaiton_scenes`` with many scenes:
+in real use cases you would call ``with_train_scenes`` and ``with_validation_scenes`` with many scenes:
 
 .. code::
 
    dataset = rv.DatasetConfig.builder() \
-                             .with_train_scene(train_scene) \
-                             .with_validation_scene(val_scene) \
+                             .with_train_scenes(train_scenes) \
+                             .with_validation_scenes(val_scenes) \
                              .build()
+
+.. _scene:
 
 Scene
 -----
@@ -196,24 +196,26 @@ Scene
 .. image:: _static/experiments-scene.png
     :align: center
 
-A scene represents an image, associated labels, and an optional Area of Interest (AOI) that describes what area of the scene has been exhaustively labeled. Labels are task-specific annotations, and can represent geometries (bounding boxes for object detection or chip classification), rasters (semantic segmentaiton), or even numerical values (for regression tasks, not yet implemented). Specifying an AOI allows Raster Vision to understand not only where it can pull "positive" chips from, or subsets of imagery that contain the target class we are trying to identify, but also lets Raster Vision know where it is able to pull "negative" examples, or subsets of imagery that contain none of the elements that are desired to be detected.
+A scene represents an image, associated labels, and an optional list of areas of interest (AOIs) that describes which parts of the scene have been exhaustively labeled. Labels are task-specific annotations, and can represent geometries (bounding boxes for object detection or chip classification), rasters (semantic segmentation), or even numerical values (for regression tasks, not yet implemented). Specifying an AOI allows Raster Vision to understand not only where it can pull "positive" chips from, or subsets of imagery that contain the target class we are trying to identify, but also lets Raster Vision know where it is able to pull "negative" examples, or subsets of imagery that are missing the target class.
 
 A scene is composed of the following elements:
 
-* *Image*: Represented in Raster Vision by a ``RasterSource``, an large scene image can contain multiple sub-images or a single file.
-* *Labels*: Represented in Raster Vision as a ``LabelSource``, this is what provides the annotates or labels for the scene. The nature of the labels that are produced by the LabelSource are specific to the :ref:`task` that the machine learning model is performing.
-* *AOI* (Optional): An Area of Interest that describes which sections of the scene image (RasterSource) are exhaustively labeled.
+* *Image*: Represented in Raster Vision by a ``RasterSource``, a large scene image can contain multiple sub-images or a single file.
+* *Labels*: Represented in Raster Vision as a ``LabelSource``, this is what provides the annotations or labels for the scene. The nature of the labels that are produced by the LabelSource are specific to the :ref:`task` that the machine learning model is performing.
+* *AOIs* (Optional): An optional list of areas of interest that describes which sections of the scene image (RasterSource) are exhaustively labeled.
 
 In addition to the outline above, which describes training data completely, a :ref:`label store` is also associated with scenes on which Raster Vision will perform prediction. The label store determines how to store and retrieve the predictions from a scene.
 
 SceneConfig
 ^^^^^^^^^^^
 
-A ``SceneConfig`` consists of a ``RasterSource`` optionally combined with a ``LabelSource``, ``LabelStore``, and AOI.
+A ``SceneConfig`` consists of a ``RasterSourceConfig`` optionally combined with a ``LabelSourceConfig``, ``LabelStoreConfig``, and list of AOIs. Each AOI is expected to be a URI to a GeoJSON file containing polygons.
 
 In our ``tiny_spacenet.py`` example, we configured the train scene with a GeoTIFF URI and a GeoJSON URI.
-We pass in a built ``RasterSource``, however we pass in just the URI for the ``LabelSource``. This is because
-the ``SceneConfig`` can construct a default ``LabelSource`` based on the URI using :ref:`default provider`.
+We pass in a ``RasterSourceConfig`` object to the ``with_raster_source`` method, but just pass the URI to ``with_label_source``. This is because
+the ``SceneConfig`` can construct a default ``LabelSourceConfig`` based on the URI using :ref:`default provider`. The ``LabelStoreConfig`` is not explicitly set in the building of the ``SceneConfig``. This is because
+the prediction label store can be determined by :ref:`default provider` by finding the
+default ``LabelStore`` provider for a given task.
 
 .. code::
 
@@ -224,72 +226,61 @@ the ``SceneConfig`` can construct a default ``LabelSource`` based on the URI usi
                                 .with_label_source(train_label_uri) \
                                 .build()
 
-The validation scene is also constructed very similary. However, it's worth noting that the
-``LabelStore`` is not even mentioned in the building of the configuraiton. This is because
-the prediction label store can be deteremined by :ref:`default provider`, by finding the
-default ``LabelStore`` provider for a given task.
-
 .. _raster source:
 
 RasterSource
 ^^^^^^^^^^^^
 
-A ``RasterSource`` represents a source of raster data for a scene, and has subclasses for various data sources. They are used to retrieve small windows of raster data from larger scenes. You can also set a subset of channels (i.e. bands) that you want to use and their order using a RasterSource. For example, satellite imagery often contains more than three channels, but pretrained models trained on datasets like Imagenet only support three (RGB) input channels. In order to cope with this situation, we can select three of the channels to utilize.
+A ``RasterSource`` represents a source of raster data for a scene, and has subclasses for various data sources. They are used to retrieve small windows of raster data from larger scenes. You can also set a subset of channels (i.e. bands) that you want to use and their order. For example, satellite imagery often contains more than three channels, but pretrained models trained on datasets like Imagenet only support three (RGB) input channels. In order to cope with this situation, we can select three of the channels to utilize.
 
-GeoTIFF
+Imagery
 ........
 
-*rv.GEOTIFF_SOURCE*
+*rv.RASTERIO_SOURCE*
 
-Georeferenced imagery stored as GeoTIFFs can be read using a ``GeoTIFFSource``. If there are multiple image files that cover a single scene, you can pass the corresponding list of URIs using ``with_uris()``, and read from the ``RasterSource`` as if it were a single stitched-together image. This is implemented behind the scenes using Rasterio, which builds a VRT out of the constituent images.
+Any images that can be read by `GDAL/Rasterio <https://www.gdal.org/formats_list.html>`_ can be handled by the ``RasterioSource``. This includes georeferenced imagery such as GeoTIFFs. If there are multiple image files that cover a single scene, you can pass the corresponding list of URIs using ``with_uris()``, and read from the ``RasterSource`` as if it were a single stitched-together image.
 
-Image
-.......
-
-*rv.IMAGE_SOURCE*
-
-Non-georeferenced images including ``.tif``, ``.png``, and ``.jpg`` files can be read using an ``ImageSource``. This is useful for oblique drone imagery, biomedical imagery, and any other (potentially massive!) non-georeferenced images.
+The ``RasterioSource`` can also read non-georeferenced images such as ``.tif``, ``.png``, and ``.jpg`` files. This is useful for oblique drone imagery, biomedical imagery, and any other (potentially massive!) non-georeferenced images.
 
 Rasterized Vectors
 ...................
 
 *rv.RASTERIZED_SOURCE*
 
-Semantic segmentation labels stored as polygons and lines in a ``VectorSource`` can be rasterized and read using a ``RasterizedSource``. This is a slightly unusual use of a ``RasterSource`` as we're using it to read labels, and not images to use as input to a model.
+Semantic segmentation labels stored as polygons in a ``VectorSource`` can be rasterized and read using a ``RasterizedSource``. This is a slightly unusual use of a ``RasterSource`` as we're using it to read labels, and not images to use as input to a model.
 
 RasterSourceConfig
 ...................
 
-In the ``tiny_spacenet.py`` example, we build up the training scene raster source:
+In the ``tiny_spacenet.py`` example, we build the training scene raster source:
 
 .. code::
 
-   train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+   train_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                               .with_uri(train_image_uri) \
                                               .with_stats_transformer() \
                                               .build()
 
-.. seealso:: The :ref:`raster source api reference` API Reference docs have more information about the RasterSource types available.
+.. seealso:: The :ref:`raster source api reference` API Reference docs have more information about RasterSources.
 
 .. _vector source:
 
 VectorSource
 ^^^^^^^^^^^^
 
-A ``VectorSource`` is an object that supports reading vector data like polygons and lines from various places. It is used by ``ObjectDetectionLabelSource`` and ``ChipClassificationLabelSource``, as well as the ``RasterizerSource`` (a type of ``RasterSource``).
+A ``VectorSource`` is an object that supports reading vector data like polygons and lines from various places. It is used by ``ObjectDetectionLabelSource`` and ``ChipClassificationLabelSource``, as well as the ``RasterizedSource`` (a type of ``RasterSource``).
 
 VectorSourceConfig
 ...................
 
-Here is an example of configuring an ``VectorTileVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/master/spacenet/vegas.py>`_.
-
+Here is an example of configuring a ``VectorTileVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/tree/0.9#spacenet-vegas-roads-and-buildings>`_.
 
 .. code::
 
     uri = 'http://foo.com/{z}/{x}/{y}.mvt'
     class_id_to_filter = {1: ['has', 'building']}
 
-    b = VectorTileVectorSourceConfigBuilder() \
+    b = rv.VectorSource.builder(rv.VECTOR_TILE_SOURCE) \
         .with_class_inference(class_id_to_filter=class_id_to_filter,
                               default_class_id=None) \
         .with_uri(uri) \
@@ -305,7 +296,7 @@ LabelSource
 
 A ``LabelSource`` is an object that allows reading ground truth labels for a scene. There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
 
-Here is an example of configuring a ``SemanticSegmentationLabelSource`` using rasterized vector data.  A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/master/spacenet/vegas.py>`_.
+Here is an example of configuring a ``SemanticSegmentationLabelSource`` using rasterized vector data.  A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/0.9/spacenet/vegas.py>`_.
 
 .. code::
 

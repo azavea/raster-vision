@@ -3,10 +3,7 @@ API Reference
 
 .. module:: rastervision
 
-This part of the documentation lists the full API reference of public
-classes and functions.
-
-.. note:: This documentation is not exhaustive, but covers most of the public API that is important to typical Raster Vision usage.
+This API documentation is not exhaustive, but covers most of the public API that is important to typical Raster Vision usage.
 
 ExperimentConfigBuilder
 -----------------------
@@ -147,19 +144,10 @@ RasterSourceConfigBuilders are created by calling
 
 Where ``SOURCE_TYPE`` is one of the following:
 
-rv.GEOTIFF_SOURCE
-~~~~~~~~~~~~~~~~~
+rv.RASTERIO_SOURCE
+~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.data.GeoTiffSourceConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.IMAGE_SOURCE
-~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.ImageSourceConfigBuilder
+.. autoclass:: rastervision.data.RasterioSourceConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
