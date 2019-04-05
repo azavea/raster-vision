@@ -42,7 +42,7 @@ class TinySpacenetExperimentSet(rv.ExperimentSet):
         # ------------- TASK -------------
 
         task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                            .with_chip_size(512) \
+                            .with_chip_size(300) \
                             .with_chip_options(chips_per_scene=50) \
                             .with_classes({
                                 'building': (1, 'red')
@@ -61,11 +61,11 @@ class TinySpacenetExperimentSet(rv.ExperimentSet):
 
         # ------------- TRAINING -------------
 
-        train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                             .with_uri(train_image_uri) \
-                                             .with_channel_order(channel_order) \
-                                             .with_stats_transformer() \
-                                             .build()
+        train_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                                                   .with_uri(train_image_uri) \
+                                                   .with_channel_order(channel_order) \
+                                                   .with_stats_transformer() \
+                                                   .build()
 
         train_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
                                                          .with_vector_source(train_label_uri) \
@@ -84,7 +84,7 @@ class TinySpacenetExperimentSet(rv.ExperimentSet):
 
         # ------------- VALIDATION -------------
 
-        val_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+        val_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                                  .with_uri(val_image_uri) \
                                                  .with_channel_order(channel_order) \
                                                  .with_stats_transformer() \

@@ -3,12 +3,12 @@
 Quickstart
 ==========
 
-In this Quickstart, we'll train a semantic segmentation model on `SpaceNet <https://spacenetchallenge.github.io/datasets/datasetHomePage.html>`_ data. Don't get too excited - we'll only be training for a very short time on a very small training set! So the model that is created here  will be pretty much worthless. But! These steps will show how Raster Vision experiments are set up and run, so when you are ready to run against a lot of training data for a longer time on a GPU, you know what you have to do. That's one of the core ideas of Raster Vision - the work to get an experiment you created against a tiny test set is simply to point it at more data, tweak some parameters and run it in a GPU-enabled environment. Also, we'll show how to make predictions on the data using a model we've already trained on GPUs for some time to show what you can expect to get out Raster Vision from a basic setup.
+In this Quickstart, we'll train a semantic segmentation model on `SpaceNet <https://spacenetchallenge.github.io/datasets/datasetHomePage.html>`_ data. Don't get too excited - we'll only be training for a very short time on a very small training set! So the model that is created here will be pretty much worthless. But! These steps will show how Raster Vision experiments are set up and run, so when you are ready to run against a lot of training data for a longer time on a GPU, you'll know what you have to do. Also, we'll show how to make predictions on the data using a model we've already trained on GPUs to show what you can expect to get out of Raster Vision.
 
-For the Quickstart we are going to be using one of the published  :ref:`docker containers`
+For the Quickstart we are going to be using one of the published :ref:`docker containers`
 as it has an environment with all necessary dependencies already installed.
 
-.. seealso:: It is also possible to install Raster Vision using ``pip``, but it can be time-consuming to install all the necessary dependencies. See :ref:`install raster vision` for more details.
+.. seealso:: It is also possible to install Raster Vision using ``pip``, but it can be time-consuming and error-prone to install all the necessary dependencies. See :ref:`install raster vision` for more details.
 
 .. note:: This Quickstart requires a Docker installation. We have tested this with Docker 18, although you may be able to use a lower version. See `Get Started with Docker <https://www.docker.com/get-started>`_ for installation instructions.
 
@@ -28,7 +28,7 @@ Now we can run a console in the the Docker container by doing
    > docker run --rm -it -p 6006:6006 \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_EXP_DIR}:/opt/data \
-        quay.io/azavea/raster-vision:cpu-0.8 /bin/bash
+        quay.io/azavea/raster-vision:cpu-0.9 /bin/bash
 
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with
              Docker containers.
@@ -45,7 +45,7 @@ The Data
 Creating an ExperimentSet
 -------------------------
 
-Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to create an :ref:`experiment set`. You can think of an ExperimentSet a lot like the ``unittest.TestSuite``: It's a class that contains specially-named methods that are run via reflection by the ``rastervision`` command line tool.
+Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to create an :ref:`experiment set`. You can think of an ``ExperimentSet`` a lot like the ``unittest.TestSuite``: It's a class that contains specially-named methods that are run via reflection by the ``rastervision`` command line tool.
 
 .. click:example::
 
@@ -67,7 +67,7 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
            # ------------- TASK -------------
 
            task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                               .with_chip_size(512) \
+                               .with_chip_size(300) \
                                .with_chip_options(chips_per_scene=50) \
                                .with_classes({
                                    'building': (1, 'red')
@@ -86,11 +86,11 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
 
            # ------------- TRAINING -------------
 
-           train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                                .with_uri(train_image_uri) \
-                                                .with_channel_order(channel_order) \
-                                                .with_stats_transformer() \
-                                                .build()
+           train_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                                                      .with_uri(train_image_uri) \
+                                                      .with_channel_order(channel_order) \
+                                                      .with_stats_transformer() \
+                                                      .build()
 
            train_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
                                                             .with_vector_source(train_label_uri) \
@@ -109,7 +109,7 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
 
            # ------------- VALIDATION -------------
 
-           val_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+           val_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                                     .with_uri(val_image_uri) \
                                                     .with_channel_order(channel_order) \
                                                     .with_stats_transformer() \
@@ -161,15 +161,17 @@ that are returned - you can either return a single experiment or a list of exper
 Notice that we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
 semantic segmentation on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
 actually training the model - it's using the
-`TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_ for that. Raster Vision
+`TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_  library for that.
+Raster Vision
 just provides a configuration wrapper that sets up all of the options and data for the experiment
 workflow that utilizes that library.
 
 You also can see we set up a ``SceneConfig``, which points to a ``RasterSourceConfig``, and calls
 ``with_label_source`` with a GeoJSON URI, which sets a default ``LabelSourceConfig`` type into
 the scene based on the extension of the URI. We also set a ``StatsTransformer`` to be used
-for the ``RasterSource`` represented by this configuration by calling ``with_stats_transformer()``,
+for the ``RasterSource`` by calling ``with_stats_transformer()``,
 which sets a default ``StatsTransformerConfig`` onto the ``RasterSourceConfig`` transformers.
+This transformer is needed to convert uint16 values in the rasters to the uint8 values required by the Deeplab backend.
 
 Running an experiment
 ---------------------
@@ -281,7 +283,7 @@ If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like
 
 Each directory with a command name contains output for that command type across experiments.
 The directory inside those have our experiment ID as the name - this is so different experiments
-can share root_uri's without overwritting each other's output. You can also use "keys", e.g.
+can share ``root_uri``'s without overwriting each other's output. You can also use "keys", e.g.
 ``.with_chip_key('chip-size-300')`` on an ``ExperimentConfigBuilder`` to set the directory
 for a command across experiments, so that they can share command output. This is useful
 in the case where many experiments have the same CHIP output, and so you only want to run that
@@ -295,7 +297,7 @@ train on a lot more data for a lot longer for the model to become good at this t
 Predict Packages
 ----------------
 
-To immediately use Raster Vision with a fully trained model, one can make use of the pretrained models in our `Model Zoo <https://github.com/azavea/raster-vision-examples#model-zoo>`_.
+To immediately use Raster Vision with a fully trained model, one can make use of the pretrained models in our `Model Zoo <https://github.com/azavea/raster-vision-examples#model-zoo>`_. However, be warned that these models probably won't work well on imagery taken in a different city, with a different ground sampling distance, or different sensor.
 
 For example, to perform semantic segmentation using a MobileNet-based DeepLab model that has been pretrained for Las Vegas, one can type:
 
@@ -315,7 +317,7 @@ The input image (false color) and predictions are reproduced below.
   :width: 333
   :alt: The predictions
 
-.. seealso:: You can read more about the :ref:`predict package` and the :ref:`predict cli command` CLI command in the documentation.
+.. seealso:: You can read more about the :ref:`predict package` concept and the :ref:`predict cli command` CLI command in the documentation.
 
 
 Next Steps
