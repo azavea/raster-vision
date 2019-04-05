@@ -17,7 +17,19 @@ Raster Vision is an open source Python framework for building computer vision mo
 * The framework is extensible to new data sources, tasks (eg. object detection), backends (eg. TF Object Detection API), and cloud providers.
 * There is a [QGIS plugin](https://github.com/azavea/raster-vision-qgis) for viewing the results of experiments on a map.
 
-See the documentation for more details: https://docs.rastervision.io
+See the [documentation](https://docs.rastervision.io) for more details.
+
+### Setup
+
+There are several ways to setup Raster Vision:
+* To build Docker images from scratch, after cloning this repo, run `docker/build`, and run the container using `docker/run`.
+* Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision). The tag for the `raster-vision` image determines what type of image it is:
+    - The `cpu-*` tags are for running the CPU containers.
+    - The `gpu-*` tags are for running the GPU containers.
+    - We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:gpu-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
+* Raster Vision can be installed directly using `pip install rastervision`. However, some of its dependencies will have to be installed manually.
+
+For more detailed instructions, see the [Setup docs](https://docs.rastervision.io/en/0.8/setup.html).
 
 ### Example
 
@@ -42,7 +54,7 @@ class TinySpacenetExperimentSet(rv.ExperimentSet):
         # ------------- TASK -------------
 
         task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                            .with_chip_size(512) \
+                            .with_chip_size(300) \
                             .with_chip_options(chips_per_scene=50) \
                             .with_classes({
                                 'building': (1, 'red')
@@ -61,11 +73,11 @@ class TinySpacenetExperimentSet(rv.ExperimentSet):
 
         # ------------- TRAINING -------------
 
-        train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                             .with_uri(train_image_uri) \
-                                             .with_channel_order(channel_order) \
-                                             .with_stats_transformer() \
-                                             .build()
+        train_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                                                   .with_uri(train_image_uri) \
+                                                   .with_channel_order(channel_order) \
+                                                   .with_stats_transformer() \
+                                                   .build()
 
         train_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
                                                          .with_vector_source(train_label_uri) \
@@ -84,7 +96,7 @@ class TinySpacenetExperimentSet(rv.ExperimentSet):
 
         # ------------- VALIDATION -------------
 
-        val_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+        val_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                                                  .with_uri(val_image_uri) \
                                                  .with_channel_order(channel_order) \
                                                  .with_stats_transformer() \
@@ -130,10 +142,10 @@ if __name__ == '__main__':
     rv.main()
 ```
 
-Raster Vision uses a unittest-like method for executing experiments. For instance, if the above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment on AWS Batch by running:
+Raster Vision uses a unittest-like method for executing experiments. For instance, if the above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment using:
 
 ```bash
-> rastervision run aws_batch -p tiny_spacenet.py
+> rastervision run local -p tiny_spacenet.py
 ```
 
 See the [Quickstart](https://docs.rastervision.io/en/0.8/quickstart.html) for a more complete description of running this example.
@@ -150,17 +162,6 @@ See the [Quickstart](https://docs.rastervision.io/en/0.8/quickstart.html) for a 
 You can find more information and talk to developers (let us know what you're working on!) at:
 * [Gitter](https://gitter.im/azavea/raster-vision)
 * [Mailing List](https://groups.google.com/forum/#!forum/raster-vision)
-
-### Docker images
-
-Raster Vision is publishing docker images to [quay.io](https://quay.io/repository/azavea/raster-vision).
-The tag for the `raster-vision` image determines what type of image it is:
-- The `cpu-*` tags are for running the CPU containers.
-- The `gpu-*` tags are for running the GPU containers.
-
-We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash.
-To use the latest version, pull the `latest` suffix, e.g. `raster-vision:gpu-latest`.
-Git tags are also published, with the github tag name as the docker tag suffix.
 
 ### Contributing
 

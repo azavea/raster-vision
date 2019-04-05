@@ -156,26 +156,24 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                           chips_per_scene=1000,
                           target_count_threshold=1000,
                           stride=None):
-        """Sets semantic segmentation configurations for the Chip command
+        """Sets semantic segmentation configurations for the Chip command.
 
-           Args:
-            window_method: Window method to use for chipping.
-                           Options are: random_sample, sliding
+        Args:
+            window_method: Window method to use for chipping. Options are:
+                random_sample, sliding
             target_classes: list of class ids to train model on
             debug_chip_probability: probability of generating a debug chip.
-                                    Applies to the 'random_sample' window method.
+                Applies to the 'random_sample' window method.
             negative_survival_probability: probability that a sampled negative
-                                           chip will be utilized if it does not
-                                           contain more pixels than
-                                           target_count_threshold.
-                                           Applies to the 'random_sample' window method.
-            chips_per_scene: number of chips to generate per scene.
-                             Applies to the 'random_sample' window method.
-            target_count_threshold: minimum number of pixels covering target_classes
-                                    that a chip must have.
-                                    Applies to the 'random_sample' window method.
-            stride: Stride of windows across image. Defaults to half the chip size.
-                    Applies to the 'sliding_window' method.
+                chip will be utilized if it does not contain more pixels than
+                target_count_threshold. Applies to the 'random_sample' window method.
+            chips_per_scene: number of chips to generate per scene. Applies to
+                the 'random_sample' window method.
+            target_count_threshold: minimum number of pixels covering
+                target_classes that a chip must have. Applies to the
+                'random_sample' window method.
+            stride: Stride of windows across image. Defaults to half the chip
+                size. Applies to the 'sliding_window' method.
 
         Returns:
             SemanticSegmentationConfigBuilder

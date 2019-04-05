@@ -148,34 +148,37 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
         """Sets object detection configurations for the Chip command
 
         Args:
-           neg_ratio: The ratio of negative chips (those containing no bounding boxes)
-                      to positive chips. This can be useful if the statistics of the
-                      background is different in positive chips. For example, in car
-                      detection, the positive chips will always contain roads, but no
-                      examples of rooftops since cars tend to not be near rooftops.
-                      This option is not used when window_method is `sliding`.
+            neg_ratio: The ratio of negative chips (those containing no bounding
+                boxes) to positive chips. This can be useful if the statistics
+                of the background is different in positive chips. For example,
+                in car detection, the positive chips will always contain roads,
+                but no examples of rooftops since cars tend to not be near
+                rooftops. This option is not used when window_method is
+                `sliding`.
 
-           ioa_thresh: When a box is partially outside of a training chip, it is not
-                       clear if (a clipped version) of the box should be included in
-                       the chip. If the IOA (intersection over area) of the box with
-                       the chip is greater than ioa_thresh, it is included in the chip.
+            ioa_thresh: When a box is partially outside of a training chip, it
+                is not clear if (a clipped version) of the box should be
+                included in the chip. If the IOA (intersection over area) of the
+                box with the chip is greater than ioa_thresh, it is included in
+                the chip.
 
-           window_method: Different models in the Object Detection API have different
-                          inputs. Some models allow variable size inputs so several
-                          methods of building training data are required
+            window_method: Different models in the Object Detection API have
+                different inputs. Some models allow variable size inputs so
+                several methods of building training data are required
 
-                          Valid values are:
-                            - chip (default)
-                            - label
-                               - each label's bounding box is the positive window
-                            - image
-                               - each image is the positive window
-                            - sliding
-                               - each image is from a sliding window with 50% overlap
+                Valid values are:
+                - chip (default)
+                - label
+                   - each label's bounding box is the positive window
+                - image
+                   - each image is the positive window
+                - sliding
+                   - each image is from a sliding window with 50% overlap
 
-            label_buffer: If method is "label", the positive window can be buffered.
-                          If value is >= 0. and < 1., the value is treated as a percentage
-                          If value is >= 1., the value is treated in number of pixels
+            label_buffer:
+                If method is "label", the positive window can be buffered.
+                If value is >= 0. and < 1., the value is treated as a percentage
+                If value is >= 1., the value is treated in number of pixels
         """
         b = deepcopy(self)
         b.config['chip_options'] = ObjectDetectionConfig.ChipOptions(
@@ -192,10 +195,11 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
            merge_thresh: If predicted boxes have an IOA (intersection over area)
                          greater than merge_thresh, then they are merged into a
                          single box during postprocessing. This is needed since
-                         the sliding window approach results in some false duplicates.
+                         the sliding window approach results in some false
+                         duplicates.
 
-           score_thresh: Predicted boxes are only output if their
-                         score is above score_thresh.
+           score_thresh: Predicted boxes are only output if their score is
+                         above score_thresh.
         """
         b = deepcopy(self)
         b.config['predict_options'] = ObjectDetectionConfig.PredictOptions(

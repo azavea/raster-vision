@@ -12,11 +12,19 @@
 
 **Raster Vision** is an open source framework for Python developers building computer
 vision models on satellite, aerial, and other large imagery sets (including
-oblique drone imagery). It allows for engineers to quickly and repeatably
+oblique drone imagery). There is built-in support for chip classification, object detection, and semantic segmentation using Tensorflow.
+
+.. image:: _static/cv-tasks.png
+    :align: center
+
+Raster Vision allows engineers to quickly and repeatably
 configure *experiments* that go through core components of a machine learning
 workflow: analyzing training data, creating training chips, training models,
 creating predictions, evaluating models, and bundling the model files and
 configuration for easy deployment.
+
+.. image:: _static/overview-raster-vision-workflow.png
+    :align: center
 
 Raster Vision workflows begin when you have a set of images and training data,
 optionally with Areas of Interest (AOIs) that describe where the images are labeled. Raster Vision
@@ -24,9 +32,6 @@ workflows end with a packaged model and configuration that allows you to
 easily utilize models in various  deployment situations. Inside the Raster Vision
 workflow, there's the process of running multiple experiments to find the best model
 or models to deploy.
-
-.. image:: _static/overview-raster-vision-workflow.png
-    :align: center
 
 The process of running experiments includes executing workflows that perform the following
 commands:
@@ -43,110 +48,110 @@ and maintain.
 
 .. click:example::
 
-   # tiny_spacenet.py
+    # tiny_spacenet.py
 
-   import rastervision as rv
+    import rastervision as rv
 
-   class TinySpacenetExperimentSet(rv.ExperimentSet):
-       def exp_main(self):
-           base_uri = ('https://s3.amazonaws.com/azavea-research-public-data/'
-                       'raster-vision/examples/spacenet')
-           train_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img205.tif'.format(base_uri)
-           train_label_uri = '{}/buildings_AOI_2_Vegas_img205.geojson'.format(base_uri)
-           val_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'.format(base_uri)
-           val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
-           channel_order = [0, 1, 2]
-           background_class_id = 2
+    class TinySpacenetExperimentSet(rv.ExperimentSet):
+        def exp_main(self):
+            base_uri = ('https://s3.amazonaws.com/azavea-research-public-data/'
+                        'raster-vision/examples/spacenet')
+            train_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img205.tif'.format(base_uri)
+            train_label_uri = '{}/buildings_AOI_2_Vegas_img205.geojson'.format(base_uri)
+            val_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'.format(base_uri)
+            val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
+            channel_order = [0, 1, 2]
+            background_class_id = 2
 
-           # ------------- TASK -------------
+            # ------------- TASK -------------
 
-           task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                               .with_chip_size(512) \
-                               .with_chip_options(chips_per_scene=50) \
-                               .with_classes({
-                                   'building': (1, 'red')
-                               }) \
-                               .build()
+            task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                                .with_chip_size(300) \
+                                .with_chip_options(chips_per_scene=50) \
+                                .with_classes({
+                                    'building': (1, 'red')
+                                }) \
+                                .build()
 
-           # ------------- BACKEND -------------
+            # ------------- BACKEND -------------
 
-           backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                     .with_task(task) \
-                                     .with_debug(True) \
-                                     .with_batch_size(1) \
-                                     .with_num_steps(1) \
-                                     .with_model_defaults(rv.MOBILENET_V2)  \
-                                     .build()
+            backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+                                      .with_task(task) \
+                                      .with_debug(True) \
+                                      .with_batch_size(1) \
+                                      .with_num_steps(1) \
+                                      .with_model_defaults(rv.MOBILENET_V2)  \
+                                      .build()
 
-           # ------------- TRAINING -------------
+            # ------------- TRAINING -------------
 
-           train_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                                .with_uri(train_image_uri) \
-                                                .with_channel_order(channel_order) \
-                                                .with_stats_transformer() \
-                                                .build()
+            train_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                                                       .with_uri(train_image_uri) \
+                                                       .with_channel_order(channel_order) \
+                                                       .with_stats_transformer() \
+                                                       .build()
 
-           train_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
-                                                            .with_vector_source(train_label_uri) \
-                                                            .with_rasterizer_options(background_class_id) \
-                                                            .build()
-           train_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                                                    .with_raster_source(train_label_raster_source) \
-                                                    .build()
+            train_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
+                                                             .with_vector_source(train_label_uri) \
+                                                             .with_rasterizer_options(background_class_id) \
+                                                             .build()
+            train_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                                                     .with_raster_source(train_label_raster_source) \
+                                                     .build()
 
-           train_scene =  rv.SceneConfig.builder() \
-                                        .with_task(task) \
-                                        .with_id('train_scene') \
-                                        .with_raster_source(train_raster_source) \
-                                        .with_label_source(train_label_source) \
-                                        .build()
+            train_scene =  rv.SceneConfig.builder() \
+                                         .with_task(task) \
+                                         .with_id('train_scene') \
+                                         .with_raster_source(train_raster_source) \
+                                         .with_label_source(train_label_source) \
+                                         .build()
 
-           # ------------- VALIDATION -------------
+            # ------------- VALIDATION -------------
 
-           val_raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
-                                                    .with_uri(val_image_uri) \
-                                                    .with_channel_order(channel_order) \
-                                                    .with_stats_transformer() \
-                                                    .build()
+            val_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
+                                                     .with_uri(val_image_uri) \
+                                                     .with_channel_order(channel_order) \
+                                                     .with_stats_transformer() \
+                                                     .build()
 
-           val_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
-                                                          .with_vector_source(val_label_uri) \
-                                                          .with_rasterizer_options(background_class_id) \
-                                                          .build()
-           val_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                                                  .with_raster_source(val_label_raster_source) \
-                                                  .build()
+            val_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
+                                                           .with_vector_source(val_label_uri) \
+                                                           .with_rasterizer_options(background_class_id) \
+                                                           .build()
+            val_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                                                   .with_raster_source(val_label_raster_source) \
+                                                   .build()
 
-           val_scene = rv.SceneConfig.builder() \
-                                     .with_task(task) \
-                                     .with_id('val_scene') \
-                                     .with_raster_source(val_raster_source) \
-                                     .with_label_source(val_label_source) \
-                                     .build()
+            val_scene = rv.SceneConfig.builder() \
+                                      .with_task(task) \
+                                      .with_id('val_scene') \
+                                      .with_raster_source(val_raster_source) \
+                                      .with_label_source(val_label_source) \
+                                      .build()
 
-           # ------------- DATASET -------------
+            # ------------- DATASET -------------
 
-           dataset = rv.DatasetConfig.builder() \
-                                     .with_train_scene(train_scene) \
-                                     .with_validation_scene(val_scene) \
-                                     .build()
+            dataset = rv.DatasetConfig.builder() \
+                                      .with_train_scene(train_scene) \
+                                      .with_validation_scene(val_scene) \
+                                      .build()
 
-           # ------------- EXPERIMENT -------------
+            # ------------- EXPERIMENT -------------
 
-           experiment = rv.ExperimentConfig.builder() \
-                                           .with_id('tiny-spacenet-experiment') \
-                                           .with_root_uri('/opt/data/rv') \
-                                           .with_task(task) \
-                                           .with_backend(backend) \
-                                           .with_dataset(dataset) \
-                                           .with_stats_analyzer() \
-                                           .build()
+            experiment = rv.ExperimentConfig.builder() \
+                                            .with_id('tiny-spacenet-experiment') \
+                                            .with_root_uri('/opt/data/rv') \
+                                            .with_task(task) \
+                                            .with_backend(backend) \
+                                            .with_dataset(dataset) \
+                                            .with_stats_analyzer() \
+                                            .build()
 
-           return experiment
+            return experiment
 
 
-   if __name__ == '__main__':
-       rv.main()
+    if __name__ == '__main__':
+        rv.main()
 
 Raster Vision uses a ``unittest``-like method for executing experiments. For instance, if the
 above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment

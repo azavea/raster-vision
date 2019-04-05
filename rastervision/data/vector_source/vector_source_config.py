@@ -134,7 +134,8 @@ class VectorSourceConfigBuilder(ConfigBuilder):
 
         Args:
             class_id_to_filter: (dict) map from class_id to JSON filter.
-                The filter schema is according to https://github.com/mapbox/mapbox-gl-js/blob/c9900db279db776f493ce8b6749966cedc2d6b8a/src/style-spec/feature_filter/index.js  # noqa
+                The filter schema is according to
+                https://github.com/mapbox/mapbox-gl-js/blob/c9900db279db776f493ce8b6749966cedc2d6b8a/src/style-spec/feature_filter/index.js  # noqa
             default_class_id: (int) the default class_id to use if class can't be
                 inferred using other mechanisms. If a feature defaults to a class_id of
                 None, then that feature will be deleted.
@@ -155,14 +156,14 @@ class VectorSourceConfigBuilder(ConfigBuilder):
         their width roughly matches the width of roads in the imagery.
 
         Args:
-            line_bufs: (dict or None) If none, uses default buffer value of 1. Otherwise,
-                a map from class_id to number of pixels to buffer by. If the buffer value
-                is None, then no buffering will be performed and the LineString or Point
-                won't get converted to a Polygon. Not converting to Polygon is
-                incompatible with the currently available LabelSources, but may be useful
-                in the future.
-            point_bufs: (dict or None) same as above, but used for buffering Points into
-                Polygons.
+            line_bufs: (dict or None) If none, uses default buffer value of 1.
+                Otherwise, a map from class_id to number of pixels to buffer by.
+                If the buffer value is None, then no buffering will be performed
+                and the LineString or Point won't get converted to a Polygon.
+                Not converting to Polygon is incompatible with the currently
+                available LabelSources, but may be useful in the future.
+            point_bufs: (dict or None) same as above, but used for buffering
+                Points into Polygons.
         """
         b = deepcopy(self)
 

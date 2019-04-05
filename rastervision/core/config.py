@@ -29,35 +29,35 @@ class Config(ABC):
                            io_def=None):
         """Updates this configuration for the given command
 
-           Args:
-              command_type: The command type that is currently being preprocessed.
-              experiment_config: The experiment configuration that this configuration
-                                 is a part of.
-              context: Optional list of parent configurations, to allow
-                       for child configurations contained in collections
-                       to understand their context in the experiment configuration.
+        Note: While configuration is immutable for client facing operations,
+        this is an internal operation and mutates the configuration.
 
-           Returns:
-              Nothing. Call should mutate the configuration object itself.
+        Args:
+            command_type: The command type that is currently being
+                preprocessed. experiment_config: The experiment configuration
+                that this configuration is a part of.
+            context: Optional list of parent configurations, to allow for child
+                configurations contained in collections to understand their
+                context in the experiment configuration.
 
-           Note: While configuration is immutable for client
-                 facing operations, this is an internal operation and
-                 mutates the configuration.
+        Returns:
+          Nothing. Call should mutate the configuration object itself.
         """
         pass  # pragma: no cover
 
     @abstractmethod
     def report_io(self, command_type, io_def):
-        """Updates the given CommandIODefinition to include the inputs, outputs,
-        and missing files for this configuration at this command.
+        """Updates the given CommandIODefinition.
 
-           Args:
-              command_type: The command type that is currently being preprocessed.
-              io_def: The CommandIODefinition that this call should modify.
+        So that it includes the inputs, outputs, and missing files for this
+        configuration at this command.
 
-           Returns:
-              Nothing. This call should make the appropriate calls to the given io_def
-              to mutate its state.
+        Args:
+            command_type: The command type that is currently being preprocessed.
+            io_def: The CommandIODefinition that this call should modify.
+
+        Returns: Nothing. This call should make the appropriate calls to the
+            given io_def to mutate its state.
         """
         pass
 
