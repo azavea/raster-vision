@@ -48,7 +48,7 @@ message BackendConfig {
         optional string train_restart_dir = 3;
         optional int32 sync_interval = 4 [default=600];
         optional bool do_monitoring = 5 [default=true];
-	optional bool do_eval = 13 [default=false];
+	    optional bool do_eval = 13 [default=false];
         optional bool replace_model = 6 [default=false];
 
         optional string training_data_uri = 7;

@@ -202,10 +202,10 @@ class SceneConfigBuilder(ConfigBuilder):
         Sets the raster source for this scene.
 
         Args:
-           raster_source: Can either be a raster source configuration, or
-                          a string. If a string, the registry will be queried
-                          to grab the default RasterSourceConfig for the string.
-           channel_order: Optional channel order for this raster source.
+            raster_source: Can either be a raster source configuration, or
+                a string. If a string, the registry will be queried
+                to grab the default RasterSourceConfig for the string.
+            channel_order: Optional channel order for this raster source.
         """
         b = deepcopy(self)
         if isinstance(raster_source, RasterSourceConfig):

@@ -166,7 +166,6 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         return b.with_template(json_format.MessageToDict(conf.kc_config))
 
     def validate(self):
-
         super().validate()
         if not self.config.get('kc_config'):
             raise rv.ConfigError('You must specify a template for the backend '
@@ -188,9 +187,7 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
                                      type(self.task)))
 
     def build(self):
-        """Build this configuration, setting any values into the
-           TF object detection pipeline config as necessary.
-        """
+        """Build this configuration."""
         self.validate()
 
         b = deepcopy(self)
@@ -224,8 +221,10 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
             set_missing_keys=True)
 
     def _load_model_defaults(self, model_defaults):
-        """Loads defaults. Expected keys are "pretrained_model_uri" and "pipeline_config_uri",
-           neither of which is required.
+        """Loads defaults.
+
+        Expected keys are "pretrained_model_uri" and "pipeline_config_uri",
+        neither of which is required.
         """
         expected_keys = ['pretrained_model_uri', 'kc_config']
         unknown_keys = set(model_defaults.keys()) - set(expected_keys)
@@ -242,8 +241,10 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_template(self, template):
-        """Use a template from the dict, string or uri as the base for the
-        Keras Classification API.
+        """Use a template as the base for configuring Keras Classification.
+
+        Args:
+            template: dict, string or uri
         """
         template_json = None
         if type(template) is dict:
@@ -288,9 +289,11 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
                     config_mod,
                     ignore_missing_keys=False,
                     set_missing_keys=False):
-        """Given a dict, modify the tensorflow pipeline configuration
-           such that keys that are found recursively in the configuration
-           are replaced with those values. TODO: better explination.
+        """Modify the backend configuration.
+
+        Given a dict, modify the tensorflow pipeline configuration
+        such that keys that are found recursively in the configuration
+        are replaced with those values. TODO: better explanation.
         """
         b = deepcopy(self)
         b.config_mods.append((config_mod, ignore_missing_keys,
@@ -307,9 +310,8 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
     def with_training_data_uri(self, training_data_uri):
         """Whence comes the training data?
 
-            Args:
-                training_data_uri: The location of the training data.
-
+        Args:
+            training_data_uri: The location of the training data.
         """
         b = deepcopy(self)
         b.config['training_data_uri'] = training_data_uri
@@ -318,20 +320,16 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
     def with_training_output_uri(self, training_output_uri):
         """Whither goes the training output?
 
-            Args:
-                training_output_uri: The location where the training
-                    output will be stored.
-
+        Args:
+            training_output_uri: The location where the training output will
+                be stored.
         """
         b = deepcopy(self)
         b.config['training_output_uri'] = training_output_uri
         return b
 
     def with_model_uri(self, model_uri):
-        """Defines the name of the model file that will be created for
-        this model after training.
-
-        """
+        """Sets the filename of the trained model."""
         b = deepcopy(self)
         b.config['model_uri'] = model_uri
         return b
@@ -342,15 +340,15 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
                            replace_model=False):
         """Sets the train options for this backend.
 
-           Args:
-              sync_interval: How often to sync output of training to
-                             the cloud (in seconds).
+        Args:
+            sync_interval: How often to sync output of training to
+                the cloud (in seconds).
 
-              do_monitoring: Run process to monitor training (eg. Tensorboard)
+            do_monitoring: Run process to monitor training (eg. Tensorboard)
 
-              replace_model: Replace the model checkpoint if exists.
-                             If false, this will continue training from
-                             checkpoing if exists, if the backend allows for this.
+            replace_model: Replace the model checkpoint if exists.
+                If false, this will continue training from the checkpoint
+                if it exists, if the backend allows for this.
         """
         b = deepcopy(self)
         b.config['train_options'] = KerasClassificationConfig.TrainOptions(

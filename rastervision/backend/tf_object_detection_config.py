@@ -230,8 +230,10 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return True
 
     def build(self):
-        """Build this configuration, setting any values into the
-           TF object detection pipeline config as necessary.
+        """Build this configuration.
+
+        Set any values into the TF object detection pipeline config as
+        necessary.
         """
         self.validate()
 
@@ -299,12 +301,11 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         """Use a template for TF Object Detection pipeline config.
 
         Args:
-           template: A dict, string or uri as the base for the tensorflow object
-                     detection API model training pipeline, for example those found
-                     here:
-                     https://github.com/tensorflow/models/tree/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs # noqa
+            template: A dict, string or uri as the base for the TF
+                Object Detection API model training pipeline, for example those
+                found here:
+                https://github.com/tensorflow/models/tree/eef6bb5bd3b3cd5fcf54306bf29750b7f9f9a5ea/research/object_detection/samples/configs # noqa
         """
-
         template_json = None
         if type(template) is dict:
             template_json = template
@@ -344,9 +345,10 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
                     config_mod,
                     ignore_missing_keys=False,
                     set_missing_keys=False):
-        """Given a dict, modify the tensorflow pipeline configuration
-           such that keys that are found recursively in the configuration
-           are replaced with those values. TODO: better explination.
+        """Given a dict, modify the tensorflow pipeline configuration.
+
+        Modify it such that keys that are found recursively in the
+        configuration are replaced with those values. TODO: better explanation.
         """
         b = deepcopy(self)
         b.config_mods.append((config_mod, ignore_missing_keys,
@@ -363,9 +365,8 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
     def with_training_data_uri(self, training_data_uri):
         """Whence comes the training data?
 
-            Args:
-                training_data_uri: The location of the training data.
-
+        Args:
+            training_data_uri: The location of the training data.
         """
         b = deepcopy(self)
         b.config['training_data_uri'] = training_data_uri
@@ -374,10 +375,9 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
     def with_training_output_uri(self, training_output_uri):
         """Whither goes the training output?
 
-            Args:
-                training_output_uri: The location where the training
-                    output will be stored.
-
+        Args:
+            training_output_uri: The location where the training
+                output will be stored.
         """
         b = deepcopy(self)
         b.config['training_output_uri'] = training_output_uri
@@ -393,8 +393,7 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_fine_tune_checkpoint_name(self, fine_tune_checkpoint_name):
-        """Defines the name of the fine tune checkpoint that will
-        be created for this model after training."""
+        """Defines the name of the fine tune checkpoint for this model."""
         b = deepcopy(self)
         b.config['fine_tune_checkpoint_name'] = fine_tune_checkpoint_name
         return b
@@ -405,15 +404,15 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
                            replace_model=False):
         """Sets the train options for this backend.
 
-           Args:
-              sync_interval: How often to sync output of training
-                             to the cloud (in seconds).
+       Args:
+          sync_interval: How often to sync output of training
+                         to the cloud (in seconds).
 
-              do_monitoring: Run process to monitor training (eg. Tensorboard)
+          do_monitoring: Run process to monitor training (eg. Tensorboard)
 
-              replace_model: Replace the model checkpoint if exists.
-                             If false, this will continue training from
-                             checkpoing if exists, if the backend allows for this.
+          replace_model: Replace the model checkpoint if exists.
+                         If false, this will continue training from
+                         checkpoing if exists, if the backend allows for this.
         """
         b = deepcopy(self)
         b.config['train_options'] = TFObjectDetectionConfig.TrainOptions(

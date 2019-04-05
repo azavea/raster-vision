@@ -222,8 +222,7 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         return True
 
     def build(self):
-        """Build this configuration, setting any values into the
-           TFDL config as necessary.
+        """Build this configuration.
         """
         self.validate()
         b = deepcopy(self)
@@ -250,8 +249,10 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             ignore_missing_keys=True)
 
     def _load_model_defaults(self, model_defaults):
-        """Loads defaults. Expected keys are "pretrained_model_uri" and "pipeline_config_uri",
-           neither of which is required.
+        """Loads defaults.
+
+        Expected keys are "pretrained_model_uri" and "pipeline_config_uri",
+        neither of which is required.
         """
         expected_keys = ['pretrained_model_uri', 'tfdl_config']
         unknown_keys = set(model_defaults.keys()) - set(expected_keys)
@@ -304,9 +305,10 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
                     config_mod,
                     ignore_missing_keys=False,
                     set_missing_keys=False):
-        """Given a dict, modify the tensorflow pipeline configuration
-           such that keys that are found recursively in the configuration
-           are replaced with those values.
+        """Given a dict, modify the tensorflow pipeline configuration.
+
+        Modify it such that keys that are found recursively in the
+        configuration are replaced with those values.
         """
         b = deepcopy(self)
         b.config_mods.append((config_mod, ignore_missing_keys,
@@ -314,8 +316,7 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         return b
 
     def with_debug(self, debug):
-        """Sets the debug flag for this backend.
-        """
+        """Sets the debug flag for this backend."""
         b = deepcopy(self)
         b.config['debug'] = debug
         return b
@@ -328,16 +329,15 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
                            do_eval=False):
         """Sets the train options for this backend.
 
-           Args:
-              sync_interval: How often to sync output of training to the cloud
+        Args:
+            sync_interval: How often to sync output of training to the cloud
                 (in seconds).
-              do_monitoring: Run process to monitor training (eg. Tensorboard)
-              replace_model: Replace the model checkpoint if exists.
-                             If false, this will continue training from
-                             checkpoing if exists, if the backend allows for this.
-              do_eval: Boolean determining whether to run the eval
-                   script.
-
+            do_monitoring: Run process to monitor training (eg. Tensorboard)
+            replace_model: Replace the model checkpoint if exists.
+                If false, this will continue training from checkpoint if
+                exists, if the backend allows for this.
+            do_eval: Boolean determining whether to run the eval
+               script.
         """
         b = deepcopy(self)
         b.config['train_options'] = TFDeeplabConfig.TrainOptions(
@@ -355,19 +355,13 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             ignore_missing_keys=True)
 
     def with_model_uri(self, model_uri):
-        """Defines the name of the model file that will be created for
-        this model after training.
-
-        """
+        """Sets the filename for the model that will be trained."""
         b = deepcopy(self)
         b.config['model_uri'] = model_uri
         return b
 
     def with_fine_tune_checkpoint_name(self, fine_tune_checkpoint_name):
-        """Defines the name of the fine tune checkpoint that will be created
-        for this model after training.
-
-        """
+        """Sets the name of the fine tune checkpoint for the model."""
         b = deepcopy(self)
         b.config['fine_tune_checkpoint_name'] = fine_tune_checkpoint_name
         return b
@@ -375,9 +369,8 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
     def with_training_data_uri(self, training_data_uri):
         """Whence comes the training data?
 
-            Args:
-                training_data_uri: The location of the training data.
-
+        Args:
+            training_data_uri: The location of the training data.
         """
         b = deepcopy(self)
         b.config['training_data_uri'] = training_data_uri
@@ -386,10 +379,9 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
     def with_training_output_uri(self, training_output_uri):
         """Whither goes the training output?
 
-            Args:
-                training_output_uri: The location where the training
-                    output will be stored.
-
+        Args:
+            training_output_uri: The location where the training
+                output will be stored.
         """
         b = deepcopy(self)
         b.config['training_output_uri'] = training_output_uri
