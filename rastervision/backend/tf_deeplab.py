@@ -549,32 +549,26 @@ class TFDeeplab(Backend):
         upload_or_copy(validation_record_path_local, validation_record_path)
 
         if self.backend_config.debug:
-            training_zip_path = join(base_uri, '{}'.format(TRAIN))
-            training_zip_path_local = get_local_path(training_zip_path,
-                                                     tmp_dir)
-            validation_zip_path = join(base_uri, '{}'.format(VALIDATION))
-            validation_zip_path_local = get_local_path(validation_zip_path,
-                                                       tmp_dir)
 
-            training_debug_dir = join(tmp_dir, 'training-debug')
-            make_debug_images(
-                training_record_path_local, training_debug_dir, self.class_map,
-                self.task_config.chip_options.debug_chip_probability)
-            shutil.make_archive(training_zip_path_local, 'zip',
-                                training_debug_dir)
+            def _make_debug_chips(split, record_path_local):
+                zip_path = join(base_uri, '{}-debug'.format(split),
+                                chip_suffix)
+                zip_path_local = get_local_path(zip_path, tmp_dir)
 
-            validation_debug_dir = join(tmp_dir, 'validation-debug')
-            make_debug_images(
-                validation_record_path_local, validation_debug_dir,
-                self.class_map,
-                self.task_config.chip_options.debug_chip_probability)
-            shutil.make_archive(validation_zip_path_local, 'zip',
-                                validation_debug_dir)
+                debug_dir = join(tmp_dir, '{}-debug'.format(split),
+                                 chip_suffix)
+                make_debug_images(
+                    record_path_local, debug_dir, self.class_map,
+                    self.task_config.chip_options.debug_chip_probability)
+                shutil.make_archive(zip_path_local, 'zip', debug_dir)
 
-            upload_or_copy('{}.zip'.format(training_zip_path_local),
-                           '{}.zip'.format(training_zip_path))
-            upload_or_copy('{}.zip'.format(validation_zip_path_local),
-                           '{}.zip'.format(validation_zip_path))
+                upload_or_copy('{}.zip'.format(zip_path_local),
+                               '{}.zip'.format(zip_path))
+
+            if training_results:
+                _make_debug_chips(TRAIN, training_record_path_local)
+            if validation_results:
+                _make_debug_chips(VALIDATION, validation_record_path_local)
 
     def train(self, tmp_dir: str) -> None:
         """Train a DeepLab model the task and backend config.
