@@ -38,6 +38,7 @@ Features
 
 Bug Fixes
 ^^^^^^^^^
+- Fix Deeplab resume bug: update path in checkpoint file `#756 <https://github.com/azavea/raster-vision/pull/756>`_
 - Allow Spaces in ``--channel-order`` Argument `#731 <https://github.com/azavea/raster-vision/pull/731>`_
 - Fix error when using predict packages with AOIs `#674 <https://github.com/azavea/raster-vision/pull/674>`_
 - Correct checkpoint name `#624 <https://github.com/azavea/raster-vision/pull/624>`_
