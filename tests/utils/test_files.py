@@ -334,15 +334,16 @@ class TestS3Misc(unittest.TestCase):
     def test_file_exists(self):
         path = os.path.join(self.temp_dir.name, 'lorem', 'ipsum.txt')
         s3_path = 's3://{}/xxx/lorem.txt'.format(self.bucket_name)
+        s3_path_prefix = 's3://{}/xxx/lorem'.format(self.bucket_name)
         s3_directory = 's3://{}/xxx/'.format(self.bucket_name)
-        directory = os.path.dirname(path)
-        make_dir(directory, check_empty=False)
+        make_dir(path, check_empty=False, use_dirname=True)
 
         str_to_file(self.lorem, path)
         upload_or_copy(path, s3_path)
 
         self.assertTrue(file_exists(s3_directory, include_dir=True))
         self.assertTrue(file_exists(s3_path, include_dir=False))
+        self.assertFalse(file_exists(s3_path_prefix, include_dir=True))
         self.assertFalse(file_exists(s3_directory, include_dir=False))
         self.assertFalse(
             file_exists(s3_directory + 'NOTPOSSIBLE', include_dir=False))
