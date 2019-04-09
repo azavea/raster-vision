@@ -82,19 +82,32 @@ class S3FileSystem(FileSystem):
         # Lazily load boto
         import botocore
 
-        s3 = S3FileSystem.get_session().client('s3')
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         key = parsed_uri.path[1:]
 
-        try:
-            response = s3.list_objects_v2(Bucket=bucket, Prefix=key, MaxKeys=1)
-            if response['KeyCount'] == 0:
+        if include_dir:
+            s3 = S3FileSystem.get_session().client('s3')
+            try:
+                # Ensure key ends in slash so that this won't pick up files that
+                # contain the key as a prefix, but aren't actually directories.
+                # Example: if key is 'model' then we don't want to consider
+                # model-123 a match.
+                dir_key = key if key[-1] == '/' else key + '/'
+                response = s3.list_objects_v2(
+                    Bucket=bucket, Prefix=dir_key, MaxKeys=1)
+                if response['KeyCount'] == 0:
+                    return S3FileSystem.file_exists(uri, include_dir=False)
+                return True
+            except botocore.exceptions.ClientError as e:
                 return False
-            response_key = response['Contents'][0]['Key']
-            return (response_key == key) or include_dir
-        except botocore.exceptions.ClientError as e:
-            return False
+        else:
+            s3r = S3FileSystem.get_session().resource('s3')
+            try:
+                s3r.Object(bucket, key).load()
+                return True
+            except botocore.exceptions.ClientError as e:
+                return False
 
     @staticmethod
     def read_str(uri: str) -> str:
