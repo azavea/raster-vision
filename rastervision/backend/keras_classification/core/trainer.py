@@ -28,7 +28,7 @@ class Trainer(object):
         self.optimizer = optimizer
         self.options = options
 
-        self.model_path = os.path.join(options.output_dir, 'model')
+        self.model_path = os.path.join(options.output_dir, 'exported-model')
         make_dir(self.model_path, use_dirname=True)
         self.weights_path = os.path.join(options.output_dir,
                                          'model-weights.hdf5')

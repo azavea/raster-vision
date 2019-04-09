@@ -321,7 +321,7 @@ def export_inference_graph(train_root_dir,
 
         # Move frozen inference graph and clean up generated files.
 
-        output_path = join(output_dir, 'model')
+        output_path = join(output_dir, 'exported-model')
         shutil.move(inference_graph_path, output_path)
         saved_model_dir = join(output_dir, 'saved_model')
         shutil.rmtree(saved_model_dir)

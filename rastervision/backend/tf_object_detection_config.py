@@ -132,7 +132,7 @@ class TFObjectDetectionConfig(BackendConfig):
                 self.training_output_uri = experiment_config.train_uri
             if not self.model_uri:
                 self.model_uri = os.path.join(self.training_output_uri,
-                                              'model')
+                                              'exported-model')
             if not self.fine_tune_checkpoint_name:
                 # Set the fine tune checkpoint name to the experiment id
                 self.fine_tune_checkpoint_name = experiment_config.id

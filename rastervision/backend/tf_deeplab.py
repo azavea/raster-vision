@@ -30,7 +30,7 @@ from rastervision.utils.misc import (numpy_to_png, png_to_numpy, save_img,
 from rastervision.data.label_source.utils import color_to_integer
 from rastervision.rv_config import RVConfig
 
-FROZEN_INFERENCE_GRAPH = 'model'
+FROZEN_INFERENCE_GRAPH = 'exported-model'
 INPUT_TENSOR_NAME = 'ImageTensor:0'
 OUTPUT_TENSOR_NAME = 'SemanticPredictions:0'
 
@@ -692,7 +692,8 @@ class TFDeeplab(Backend):
             latest_checkpoints = get_latest_checkpoint(train_logdir_local)
             model_checkpoint_files = glob.glob(
                 '{}*'.format(latest_checkpoints))
-            inference_graph_path = os.path.join(train_logdir_local, 'model')
+            inference_graph_path = os.path.join(train_logdir_local,
+                                                'exported-model')
 
             with RVConfig.get_tmp_dir() as tmp_dir:
                 model_dir = os.path.join(tmp_dir, fine_tune_checkpoint_name)

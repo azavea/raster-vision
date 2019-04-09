@@ -103,7 +103,7 @@ class KerasClassificationConfig(BackendConfig):
                 self.training_output_uri = experiment_config.train_uri
             if not self.model_uri:
                 self.model_uri = os.path.join(self.training_output_uri,
-                                              'model')
+                                              'exported-model')
 
     def report_io(self, command_type, io_def):
         super().report_io(command_type, io_def)

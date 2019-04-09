@@ -110,7 +110,8 @@ class TFDeeplabConfig(BackendConfig):
         if command_type == rv.TRAIN:
             self.training_output_uri = experiment_config.train_uri
 
-            self.model_uri = os.path.join(self.training_output_uri, 'model')
+            self.model_uri = os.path.join(self.training_output_uri,
+                                          'exported-model')
 
             if not self.fine_tune_checkpoint_name:
                 # Set the fine tune checkpoint name to the experiment id

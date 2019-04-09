@@ -131,7 +131,7 @@ class ModelFiles(FileGroup):
         """
         FileGroup.__init__(self, base_uri, tmp_dir)
 
-        self.model_uri = join(self.base_uri, 'model')
+        self.model_uri = join(self.base_uri, 'exported-model')
         self.log_uri = join(self.base_uri, 'log.csv')
 
         if replace_model:

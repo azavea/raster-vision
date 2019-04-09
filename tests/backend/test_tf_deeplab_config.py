@@ -45,7 +45,7 @@ class TestTFDeeplabConfig(MockMixin, unittest.TestCase):
         exp_id = 'exp_id'
         training_data_uri = '/chip_uri'
         train_uri = '/train_uri'
-        model_uri = '/train_uri/model'
+        model_uri = '/train_uri/exported-model'
         checkpoint_path = '/train_uri/{}.tar.gz'.format(exp_id)
 
         exp = create_mock_experiment()
