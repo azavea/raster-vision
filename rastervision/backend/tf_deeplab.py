@@ -620,6 +620,17 @@ class TFDeeplab(Backend):
                 train_restart_dir
         ) > 0 and not self.backend_config.train_options.replace_model:
             sync_from_dir(train_restart_dir, train_logdir_local)
+
+            # Need to update model_checkpoint_path in the checkpoint file,
+            # since it has the absolute paths from the previous run which
+            # was using a different temporary directory on another machine.
+            # If Deeplab could save relative paths instead (like the Object
+            # Detection API does), then we wouldn't need to do this.
+            latest_checkpoint = get_latest_checkpoint(train_logdir_local)
+            checkpoint_path = join(train_logdir_local, 'checkpoint')
+            with open(checkpoint_path, 'w') as cf:
+                cf.write(
+                    'model_checkpoint_path: \"{}\"'.format(latest_checkpoint))
         else:
             if self.backend_config.train_options.replace_model:
                 if os.path.exists(train_logdir_local):
