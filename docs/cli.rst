@@ -8,8 +8,21 @@ Command  Line Interface
 The Raster Vision command line utiliy, ``rastervision`` is installed with a ``pip install`` of
 rastervision. It consists of subcommands, with some top level options:
 
-.. command-output:: rastervision --help
+.. code-block:: terminal
 
+   > rastervision --help
+    Usage: python -m rastervision [OPTIONS] COMMAND [ARGS]...
+
+    Options:
+     -p, --profile TEXT  Sets the configuration profile name to use.
+     -v, --verbose       Sets the output to  be verbose.
+     --help              Show this message and exit.
+
+    Commands:
+     ls           Print out a list of Experiment IDs.
+     predict      Make predictions using a predict package.
+     run          Run Raster Vision commands against Experiments.
+     run_command  Run a command from configuration file.
 
 Commands
 --------
@@ -21,7 +34,34 @@ run
 
 Run is the main interface into running ``ExperimentSet`` workflows.
 
-.. command-output:: rastervision run --help
+.. code-block:: terminal
+
+    > rastervision run --help
+    Usage: python -m rastervision run [OPTIONS] RUNNER [COMMANDS]...
+
+      Run Raster Vision commands from experiments, using the experiment runner
+      named RUNNER.
+
+    Options:
+      -e, --experiment_module TEXT  Name of an importable module to look for
+                                    experiment sets in. If not supplied,
+                                    experiments will be loaded from __main__
+      -p, --path PATTERN            Path of file containing ExprimentSet to run.
+      -n, --dry-run                 Execute a dry run, which will print out
+                                    information about the commands to be run, but
+                                    will not actually run the commands
+      -x, --skip-file-check         Skip the step that verifies that file exist.
+      -a, --arg KEY VALUE           Pass a parameter to the experiments if the
+                                    method parameter list takes in a parameter
+                                    with that key. Multiple args can be supplied
+      --prefix PREFIX               Prefix for methods containing experiments.
+                                    (default: "exp_")
+      -m, --method PATTERN          Pattern to match method names to run.
+      -f, --filter PATTERN          Pattern to match experiment names to run.
+      -r, --rerun                   Rerun commands, regardless if their output
+                                    files already exist.
+      --tempdir TEXT                Temporary directory to use for this run.
+      --help                        Show this message and exit.
 
 Some specific parameters to call out:
 
@@ -45,7 +85,22 @@ predict
 
 Use ``predict`` to make predictions on new imagery given a :ref:`predict package`.
 
-.. command-output:: rastervision predict --help
+.. code-block:: terminal
+
+    > rastervision predict --help
+    Usage: python -m rastervision predict [OPTIONS] PREDICT_PACKAGE IMAGE_URI
+                                          OUTPUT_URI
+
+      Make predictions on the image at IMAGE_URI using PREDICT_PACKAGE and store
+      the prediciton output at OUTPUT_URI.
+
+    Options:
+      -a, --update-stats    Run an analysis on this individual image, as opposed
+                            to using any analysis like statistics that exist in
+                            the prediction package
+      --channel-order TEXT  String containing channel_order. Example: "2 1 0"
+      --export-config PATH  Exports the configuration to the given output file.
+      --help                Show this message and exit.
 
 ls
 ^^^
@@ -54,7 +109,21 @@ The ``ls`` command very simply lists the IDs of experiments in the given module 
 This functionality is likely to expand to give more information about expriments discovered
 in a project in later versions.
 
-.. command-output:: rastervision ls --help
+.. code-block:: terminal
+
+    > rastervision ls --help
+    Usage: python -m rastervision ls [OPTIONS]
+
+      Print out a list of Experiment IDs.
+
+    Options:
+      -e, --experiment-module TEXT  Name of an importable module to look for
+                                    experiment sets in. If not supplied,
+                                    experiments will be loaded from __main__
+      -a, --arg KEY VALUE           Pass a parameter to the experiments if the
+                                    method parameter list takes in a parameter
+                                    with that key. Multiple args can be supplied
+      --help                        Show this message and exit.
 
 run_command
 ^^^^^^^^^^^
@@ -63,4 +132,13 @@ The ``run_command`` is used to run a specific command from a serialized command 
 This is likely only useful to people writing :ref:`experiment runner` that want to run
 commands remotely from serialzed command JSON.
 
-.. command-output:: rastervision run_command --help
+.. code-block:: terminal
+
+    > rastervision run_command --help
+    Usage: python -m rastervision run_command [OPTIONS] COMMAND_CONFIG_URI
+
+      Run a command from a serialized command configuration at
+      COMMAND_CONFIG_URI.
+
+    Options:
+      --help  Show this message and exit.
