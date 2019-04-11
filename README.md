@@ -7,6 +7,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://api.travis-ci.org/azavea/raster-vision.svg?branch=master)](http://travis-ci.org/azavea/raster-vision)
 [![codecov](https://codecov.io/gh/azavea/raster-vision/branch/master/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
+[![Documentation Status](https://readthedocs.org/projects/raster-vision/badge/?version=0.8)](https://docs.rastervision.io/en/0.8/?badge=0.8)
 
 Raster Vision is an open source Python framework for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
 * It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning workflow including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
