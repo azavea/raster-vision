@@ -47,6 +47,18 @@ extensions = [
     'sphinxcontrib.programoutput'
 ]
 
+# https://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
+import sys
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+MOCK_MODULES = ['pyproj', 'h5py']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
 
 # Add any paths that contain templates here, relative to this directory.
