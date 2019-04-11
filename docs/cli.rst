@@ -14,17 +14,15 @@ rastervision. It consists of subcommands, with some top level options:
     Usage: python -m rastervision [OPTIONS] COMMAND [ARGS]...
 
     Options:
-      -p, --profile TEXT  Sets the configuration profile name to use.
-      -v, --verbose       Sets the output to  be verbose.
-      --help              Show this message and exit.
+     -p, --profile TEXT  Sets the configuration profile name to use.
+     -v, --verbose       Sets the output to  be verbose.
+     --help              Show this message and exit.
 
     Commands:
-      ls           Print out a list of Experiment IDs.
-      predict      Make predictions using a predict package.
-      run          Run Raster Vision commands against Experiments.
-      run_command  Run a command from configuration file.
-
-
+     ls           Print out a list of Experiment IDs.
+     predict      Make predictions using a predict package.
+     run          Run Raster Vision commands against Experiments.
+     run_command  Run a command from configuration file.
 
 Commands
 --------
@@ -41,8 +39,8 @@ Run is the main interface into running ``ExperimentSet`` workflows.
     > rastervision run --help
     Usage: python -m rastervision run [OPTIONS] RUNNER [COMMANDS]...
 
-    Run Raster Vision commands from experiments, using the experiment runner
-    named RUNNER.
+      Run Raster Vision commands from experiments, using the experiment runner
+      named RUNNER.
 
     Options:
       -e, --experiment_module TEXT  Name of an importable module to look for
@@ -63,8 +61,6 @@ Run is the main interface into running ``ExperimentSet`` workflows.
       -r, --rerun                   Rerun commands, regardless if their output
                                     files already exist.
       --tempdir TEXT                Temporary directory to use for this run.
-      -s, --splits INTEGER          The number of processes to attempt to split
-                                    each stage into.
       --help                        Show this message and exit.
 
 Some specific parameters to call out:
@@ -102,8 +98,7 @@ Use ``predict`` to make predictions on new imagery given a :ref:`predict package
       -a, --update-stats    Run an analysis on this individual image, as opposed
                             to using any analysis like statistics that exist in
                             the prediction package
-      --channel-order TEXT  List of indices comprising channel_order. Example: 2 1
-                            0
+      --channel-order TEXT  String containing channel_order. Example: "2 1 0"
       --export-config PATH  Exports the configuration to the given output file.
       --help                Show this message and exit.
 
@@ -142,9 +137,8 @@ commands remotely from serialzed command JSON.
     > rastervision run_command --help
     Usage: python -m rastervision run_command [OPTIONS] COMMAND_CONFIG_URI
 
-    Run a command from a serialized command configuration at
-    COMMAND_CONFIG_URI.
+      Run a command from a serialized command configuration at
+      COMMAND_CONFIG_URI.
 
     Options:
-    --tempdir TEXT
-    --help          Show this message and exit.
+      --help  Show this message and exit.
