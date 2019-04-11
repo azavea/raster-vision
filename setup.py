@@ -1,6 +1,7 @@
 # flake8: noqa
 
 from os import path as op
+import os
 import json
 import io
 import re
@@ -15,6 +16,11 @@ here = op.abspath(op.dirname(__file__))
 # get the dependencies and installs
 with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
     all_reqs = f.read().split('\n')
+
+# The RTD build environment fails with the reqs in bad_reqs.
+if 'READTHEDOCS' in os.environ:
+    bad_reqs = ['pyproj', 'h5py']
+    all_reqs = list(filter(lambda r: r.split('==')[0] not in bad_reqs, all_reqs))
 
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 dependency_links = [
@@ -35,10 +41,10 @@ def replace_images(readme):
 with io.open(op.join(here, 'extras_requirements.json'), encoding='utf-8') as f:
     extras_require = json.loads(f.read())
 
-# Uncomment this line if we are using a commit of mask-to-polygons 
+# Uncomment this line if we are using a commit of mask-to-polygons
 # (as opposed to released version) to avoid error.
 # del extras_require['feature-extraction']
-    
+
 setup(
     name='rastervision',
     version=__version__,
