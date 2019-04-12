@@ -9,6 +9,7 @@ Raster Vision 0.9.0
 
 Features
 ^^^^^^^^
+- Add requester_pays RV config option `#762 <https://github.com/azavea/raster-vision/pull/762>`_
 - Unify Docker scripts `#743 <https://github.com/azavea/raster-vision/pull/743>`_
 - Switch default branch to master `#726 <https://github.com/azavea/raster-vision/pull/726>`_
 - Merge GeoTiffSource and ImageSource into RasterioSource `#723 <https://github.com/azavea/raster-vision/pull/723>`_
