@@ -151,6 +151,18 @@ RV
 
 * ``model_defaults_uri`` - Specifies the URI of the :ref:`model defaults` JSON. Leave this option out to use the Raster Vision supplied model defaults.
 
+.. _s3 config section:
+
+AWS_S3
+^^^^^^
+
+.. code-block:: ini
+
+   [AWS_S3]
+   requester_pays = False
+
+* ``requester_pays`` - Set to True if you would like to allow using `requester pays <https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html>`_ S3 buckets. The default value is False.
+
 .. _plugins config section:
 
 PLUGINS

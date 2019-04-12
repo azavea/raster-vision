@@ -9,7 +9,8 @@ from rastervision.filesystem import (FileSystem, NotReadableError,
 
 
 # Code from https://alexwlchan.net/2017/07/listing-s3-keys/
-def get_matching_s3_objects(bucket, prefix='', suffix=''):
+def get_matching_s3_objects(bucket, prefix='', suffix='',
+                            request_payer='None'):
     """
     Generate objects in an S3 bucket.
 
@@ -21,7 +22,7 @@ def get_matching_s3_objects(bucket, prefix='', suffix=''):
     """
     import boto3
     s3 = boto3.client('s3')
-    kwargs = {'Bucket': bucket}
+    kwargs = {'Bucket': bucket, 'RequestPayer': request_payer}
 
     # If the prefix is a single string (not a tuple of strings), we can
     # do the filtering directly in the S3 API.
@@ -53,7 +54,7 @@ def get_matching_s3_objects(bucket, prefix='', suffix=''):
             break
 
 
-def get_matching_s3_keys(bucket, prefix='', suffix=''):
+def get_matching_s3_keys(bucket, prefix='', suffix='', request_payer='None'):
     """
     Generate the keys in an S3 bucket.
 
@@ -61,11 +62,22 @@ def get_matching_s3_keys(bucket, prefix='', suffix=''):
     :param prefix: Only fetch keys that start with this prefix (optional).
     :param suffix: Only fetch keys that end with this suffix (optional).
     """
-    for obj in get_matching_s3_objects(bucket, prefix, suffix):
+    for obj in get_matching_s3_objects(bucket, prefix, suffix, request_payer):
         yield obj['Key']
 
 
 class S3FileSystem(FileSystem):
+    @staticmethod
+    def get_request_payer():
+        # Import here to avoid circular reference.
+        from rastervision.rv_config import RVConfig
+        rv_config = RVConfig.get_instance()
+        s3_config = rv_config.get_subconfig('AWS_S3')
+
+        # 'None' needs the quotes because boto3 cannot handle None.
+        return ('requester' if s3_config(
+            'requester_pays', parser=bool, default='False') else 'None')
+
     @staticmethod
     def get_session():
         # Lazily load boto
@@ -85,6 +97,7 @@ class S3FileSystem(FileSystem):
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         key = parsed_uri.path[1:]
+        request_payer = S3FileSystem.get_request_payer()
 
         if include_dir:
             s3 = S3FileSystem.get_session().client('s3')
@@ -95,7 +108,10 @@ class S3FileSystem(FileSystem):
                 # model-123 a match.
                 dir_key = key if key[-1] == '/' else key + '/'
                 response = s3.list_objects_v2(
-                    Bucket=bucket, Prefix=dir_key, MaxKeys=1)
+                    Bucket=bucket,
+                    Prefix=dir_key,
+                    MaxKeys=1,
+                    RequestPayer=request_payer)
                 if response['KeyCount'] == 0:
                     return S3FileSystem.file_exists(uri, include_dir=False)
                 return True
@@ -104,7 +120,7 @@ class S3FileSystem(FileSystem):
         else:
             s3r = S3FileSystem.get_session().resource('s3')
             try:
-                s3r.Object(bucket, key).load()
+                s3r.Object(bucket, key).load(RequestPayer=request_payer)
                 return True
             except botocore.exceptions.ClientError as e:
                 return False
@@ -118,12 +134,16 @@ class S3FileSystem(FileSystem):
         import botocore
 
         s3 = S3FileSystem.get_session().client('s3')
+        request_payer = S3FileSystem.get_request_payer()
 
         parsed_uri = urlparse(uri)
         with io.BytesIO() as file_buffer:
             try:
-                s3.download_fileobj(parsed_uri.netloc, parsed_uri.path[1:],
-                                    file_buffer)
+                s3.download_fileobj(
+                    parsed_uri.netloc,
+                    parsed_uri.path[1:],
+                    file_buffer,
+                    ExtraArgs={'RequestPayer': request_payer})
                 return file_buffer.getvalue()
             except botocore.exceptions.ClientError as e:
                 raise NotReadableError('Could not read {}'.format(uri)) from e
@@ -161,6 +181,9 @@ class S3FileSystem(FileSystem):
         command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
         if delete:
             command.append('--delete')
+        request_payer = S3FileSystem.get_request_payer()
+        if request_payer:
+            command.append('--request-payer')
         subprocess.run(command)
 
     @staticmethod
@@ -183,10 +206,15 @@ class S3FileSystem(FileSystem):
         import botocore
 
         s3 = S3FileSystem.get_session().client('s3')
+        request_payer = S3FileSystem.get_request_payer()
 
         parsed_uri = urlparse(uri)
         try:
-            s3.download_file(parsed_uri.netloc, parsed_uri.path[1:], path)
+            s3.download_file(
+                parsed_uri.netloc,
+                parsed_uri.path[1:],
+                path,
+                ExtraArgs={'RequestPayer': request_payer})
         except botocore.exceptions.ClientError:
             raise NotReadableError('Could not read {}'.format(uri))
 
@@ -202,13 +230,17 @@ class S3FileSystem(FileSystem):
         parsed_uri = urlparse(uri)
         bucket, key = parsed_uri.netloc, parsed_uri.path[1:]
         s3 = S3FileSystem.get_session().client('s3')
-        head_data = s3.head_object(Bucket=bucket, Key=key)
+        request_payer = S3FileSystem.get_request_payer()
+        head_data = s3.head_object(
+            Bucket=bucket, Key=key, RequestPayer=request_payer)
         return head_data['LastModified']
 
     @staticmethod
     def list_paths(uri, ext=''):
+        request_payer = S3FileSystem.get_request_payer()
         parsed_uri = urlparse(uri)
         bucket = parsed_uri.netloc
         prefix = os.path.join(parsed_uri.path[1:])
-        keys = get_matching_s3_keys(bucket, prefix, suffix=ext)
+        keys = get_matching_s3_keys(
+            bucket, prefix, suffix=ext, request_payer=request_payer)
         return [os.path.join('s3://', bucket, key) for key in keys]
