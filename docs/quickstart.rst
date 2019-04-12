@@ -238,48 +238,48 @@ If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like
 .. code-block:: console
 
    > tree -L 3
-
    .
    ├── analyze
    │   └── tiny-spacenet-experiment
-   │       ├── command-config.json
+   │       ├── command-config-0.json
    │       └── stats.json
    ├── bundle
    │   └── tiny-spacenet-experiment
-   │       ├── command-config.json
+   │       ├── command-config-0.json
    │       └── predict_package.zip
    ├── chip
    │   └── tiny-spacenet-experiment
-   │       ├── command-config.json
-   │       ├── label-map.pbtxt
-   │       ├── train-debug-chips.zip
-   │       ├── train.record
-   │       ├── train_scene-f353604b-7bc6-40b3-b9ce-e6d45cd27e8c.record
-   │       ├── val_scene-f3086bc2-6281-4d46-a612-cf04094db1fb.record
-   │       ├── validation-debug-chips.zip
-   │       └── validation.record
+   │       ├── command-config-0.json
+   │       ├── train
+   │       ├── train-debug
+   │       ├── train_scene-c5555210-aa62-4740-9999-1c8ef6b62033.record
+   │       ├── val_scene-fc6eba80-7cf7-4939-b09e-cfb146f83ede.record
+   │       ├── validation
+   │       └── validation-debug
    ├── eval
    │   └── tiny-spacenet-experiment
-   │       ├── command-config.json
+   │       ├── command-config-0.json
    │       └── eval.json
    ├── experiments
    │   └── tiny-spacenet-experiment.json
    ├── predict
    │   └── tiny-spacenet-experiment
-   │       ├── command-config.json
-   │       └── val_scene.json
+   │       ├── command-config-0.json
+   │       └── val_scene.tif
    └── train
        └── tiny-spacenet-experiment
            ├── checkpoint
-           ├── command-config.json
-           ├── eval
+           ├── command-config-0.json
+           ├── events.out.tfevents.1555099114.7df338f8935a
+           ├── graph.pbtxt
            ├── model
-           ├── model.ckpt.data-00000-of-00001
-           ├── model.ckpt.index
-           ├── model.ckpt.meta
-           ├── pipeline.config
-           ├── tiny-spacenet-experiment.tar.gz
-           └── train
+           ├── model.ckpt-0.data-00000-of-00001
+           ├── model.ckpt-0.index
+           ├── model.ckpt-0.meta
+           ├── model.ckpt-1.data-00000-of-00001
+           ├── model.ckpt-1.index
+           ├── model.ckpt-1.meta
+           └── tiny-spacenet-experiment.tar.gz
 
 Each directory with a command name contains output for that command type across experiments.
 The directory inside those have our experiment ID as the name - this is so different experiments
