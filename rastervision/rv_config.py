@@ -8,9 +8,9 @@ from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
                              ConfigIniEnv, ConfigOSEnv)
 
 import rastervision as rv
-from rastervision.utils.files import file_to_str
 from rastervision.cli import Verbosity
 from rastervision.filesystem.local_filesystem import make_dir
+from rastervision.utils.files import file_to_str
 
 log = logging.getLogger(__name__)
 
