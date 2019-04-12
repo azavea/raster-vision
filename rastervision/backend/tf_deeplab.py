@@ -22,9 +22,9 @@ from rastervision.backend.tf_object_detection import (write_tf_record, TRAIN,
                                                       VALIDATION)
 from rastervision.protos.deeplab.train_pb2 import (TrainingParameters as
                                                    TrainingParametersMsg)
-from rastervision.utils.files import (download_if_needed, get_local_path,
-                                      make_dir, start_sync, upload_or_copy,
-                                      sync_to_dir, sync_from_dir, list_paths)
+from rastervision.utils.files import (
+    download_if_needed, get_local_path, make_dir, start_sync, upload_or_copy,
+    sync_to_dir, sync_from_dir, list_paths, file_exists)
 from rastervision.utils.misc import (numpy_to_png, png_to_numpy, save_img,
                                      terminate_at_exit)
 from rastervision.data.label_source.utils import color_to_integer
@@ -626,11 +626,12 @@ class TFDeeplab(Backend):
             # was using a different temporary directory on another machine.
             # If Deeplab could save relative paths instead (like the Object
             # Detection API does), then we wouldn't need to do this.
-            latest_checkpoint = get_latest_checkpoint(train_logdir_local)
             checkpoint_path = join(train_logdir_local, 'checkpoint')
-            with open(checkpoint_path, 'w') as cf:
-                cf.write(
-                    'model_checkpoint_path: \"{}\"'.format(latest_checkpoint))
+            if file_exists(checkpoint_path):
+                latest_checkpoint = get_latest_checkpoint(train_logdir_local)
+                with open(checkpoint_path, 'w') as cf:
+                    cf.write('model_checkpoint_path: \"{}\"'.format(
+                        latest_checkpoint))
         else:
             if self.backend_config.train_options.replace_model:
                 if os.path.exists(train_logdir_local):
