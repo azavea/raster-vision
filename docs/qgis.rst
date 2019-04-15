@@ -1,6 +1,10 @@
 QGIS Plugin
 ===========
 
+.. warning::
+
+    The QGIS Plugin has not been updated yet for Raster Vision 0.9, so these instructions will not work. We plan to release the 0.9 version of the QGIS plugin soon.
+
 .. |experiment icon| image:: _static/qgis/icon-experiment.png
    :scale: 35%
 
@@ -23,7 +27,7 @@ models.
 Installing
 ----------
 
-To install the QGIS Plugin, you must have ``rastervision`` installed in the Python 3 environment that is running QGIS. Don't worry, you won't have to install all of the deep learning frameworks just to use the plugin - you can just ``pip install rastervision`` (or ``pip3 install rastervision`` if Python 3 is not the default on your system). This has been tested with Python 3.6 and QGIS 3.2.
+To install the QGIS Plugin, you must have ``rastervision`` installed in the Python 3 environment that is running QGIS. Don't worry, you won't have to install all of the deep learning frameworks just to use the plugin - you can just ``pip install rastervision==0.9.0rc1`` (or ``pip3 install rastervision==0.9.0rc1`` if Python 3 is not the default on your system). This has been tested with Python 3.6 and QGIS 3.2.
 
 Installing from Plugin Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
