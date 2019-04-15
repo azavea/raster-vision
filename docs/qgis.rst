@@ -1,6 +1,10 @@
 QGIS Plugin
 ===========
 
+.. warning::
+
+    The QGIS Plugin has not been updated yet for Raster Vision 0.9, so these instructions will not work. We plan to release the 0.9 version of the QGIS plugin soon.
+
 .. |experiment icon| image:: _static/qgis/icon-experiment.png
    :scale: 35%
 
