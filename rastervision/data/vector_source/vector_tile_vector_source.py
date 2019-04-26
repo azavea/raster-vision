@@ -57,8 +57,12 @@ def get_tile_features(tile_uri, z, x, y):
     cache_dir = os.path.join(RVConfig.get_tmp_dir_root(), 'vector-tiles')
     tile_path = get_cached_file(cache_dir, tile_uri)
     cmd = ['tippecanoe-decode', '-f', '-c', tile_path, str(z), str(x), str(y)]
+    log.debug('Running command: {}'.format(' '.join(cmd)))
     tile_geojson_str = check_output(cmd).decode('utf-8')
-    tile_features = [json.loads(ts) for ts in tile_geojson_str.split('\n')]
+    tile_features = [
+        json.loads(ts) for ts in tile_geojson_str.split('\n')
+        if ts.startswith('{')
+    ]
 
     return tile_features
 
