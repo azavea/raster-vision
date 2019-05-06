@@ -78,6 +78,7 @@ class TestPlugin(mk.MockMixin, unittest.TestCase):
                                    .with_analyzer(analyzer_config) \
                                    .with_evaluator(evaluator_config) \
                                    .with_root_uri(tmp_dir) \
+                                   .with_custom_config({'mock_key': 'mock'}) \
                                    .with_id('test') \
                                    .build()
 

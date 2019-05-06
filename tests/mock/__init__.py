@@ -19,6 +19,7 @@ from tests.mock.raster_transformer import *
 from tests.mock.augmentor import *
 from tests.mock.analyzer import *
 from tests.mock.evaluator import *
+from tests.mock.command import *
 
 
 class MockMixin:
@@ -93,3 +94,6 @@ def register_plugin(plugin_registry):
                                             MockAnalyzerConfigBuilder)
     plugin_registry.register_config_builder(rv.EVALUATOR, MOCK_EVALUATOR,
                                             MockEvaluatorConfigBuilder)
+
+    plugin_registry.register_command_config_builder(MOCK_COMMAND,
+                                                    MockCommandConfigBuilder)

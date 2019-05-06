@@ -56,7 +56,8 @@ class TestPlugin(unittest.TestCase):
                 data_file_path('plugins/noop_label_source.py'),
                 data_file_path('plugins/noop_label_store.py'),
                 data_file_path('plugins/noop_evaluator.py'),
-                data_file_path('plugins/noop_runner.py')
+                data_file_path('plugins/noop_runner.py'),
+                data_file_path('plugins/noop_command.py')
             ]
 
             config = {
@@ -139,6 +140,7 @@ class TestPlugin(unittest.TestCase):
                                    .with_analyzer(analyzer) \
                                    .with_evaluator(evaluator) \
                                    .with_root_uri('/no/matter') \
+                                   .with_custom_config({ 'noop_key': 'noop'}) \
                                    .build()
 
             rv.ExperimentRunner.get_runner('NOOP_RUNNER').run(
