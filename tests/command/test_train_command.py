@@ -9,26 +9,26 @@ import tests.mock as mk
 class TrainCommand(mk.MockMixin, unittest.TestCase):
     def test_missing_config_task(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.TrainCommandConfig.builder() \
-                                         .with_backend('') \
-                                         .build()
+            rv.CommandConfig.builder(rv.TRAIN) \
+                            .with_backend('') \
+                            .build()
 
     def test_missing_config_backend(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.TrainCommandConfig.builder() \
-                                         .with_task('') \
-                                         .build()
+            rv.CommandConfig.builder(rv.TRAIN) \
+                            .with_task('') \
+                            .build()
 
     def test_no_config_error(self):
         task = rv.task.ChipClassificationConfig({})
         backend = rv.backend.KerasClassificationConfig('')
         try:
             with RVConfig.get_tmp_dir() as tmp_dir:
-                rv.command.TrainCommandConfig.builder() \
-                                             .with_task(task) \
-                                             .with_root_uri(tmp_dir) \
-                                             .with_backend(backend) \
-                                             .build()
+                rv.CommandConfig.builder(rv.TRAIN) \
+                                .with_task(task) \
+                                .with_root_uri(tmp_dir) \
+                                .with_backend(backend) \
+                                .build()
         except rv.ConfigError:
             self.fail('rv.ConfigError raised unexpectedly')
 
@@ -37,11 +37,11 @@ class TrainCommand(mk.MockMixin, unittest.TestCase):
         backend_config = rv.BackendConfig.builder(mk.MOCK_BACKEND).build()
         backend = backend_config.create_backend(task_config)
 
-        cmd_conf = rv.command.TrainCommandConfig.builder() \
-                                                .with_task(task_config) \
-                                                .with_backend(backend_config) \
-                                                .with_root_uri('.') \
-                                                .build()
+        cmd_conf = rv.CommandConfig.builder(rv.TRAIN) \
+                                   .with_task(task_config) \
+                                   .with_backend(backend_config) \
+                                   .with_root_uri('.') \
+                                   .build()
 
         cmd_conf = rv.command.CommandConfig.from_proto(cmd_conf.to_proto())
 

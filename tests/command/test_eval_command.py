@@ -24,12 +24,12 @@ class TestEvalCommand(mk.MockMixin, unittest.TestCase):
             scenes = [rv.data.SceneConfig('scene_id', source)]
             evaluator = rv.EvaluatorConfig.builder(mk.MOCK_EVALUATOR).build()
 
-            cmd_conf = rv.command.EvalCommandConfig.builder() \
-                                                   .with_task(task) \
-                                                   .with_root_uri(tmp_dir) \
-                                                   .with_scenes(scenes) \
-                                                   .with_evaluators([evaluator]) \
-                                                   .build()
+            cmd_conf = rv.CommandConfig.builder(rv.EVAL) \
+                                       .with_task(task) \
+                                       .with_root_uri(tmp_dir) \
+                                       .with_scenes(scenes) \
+                                       .with_evaluators([evaluator]) \
+                                       .build()
 
             cmd_conf = rv.command.CommandConfig.from_proto(cmd_conf.to_proto())
             cmd = cmd_conf.create_command()
@@ -38,35 +38,35 @@ class TestEvalCommand(mk.MockMixin, unittest.TestCase):
 
     def test_missing_config_task(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.EvalCommandConfig.builder() \
-                                        .with_scenes('') \
-                                        .with_evaluators('') \
-                                        .build()
+            rv.CommandConfig.builder(rv.EVAL) \
+                            .with_scenes('') \
+                            .with_evaluators('') \
+                            .build()
 
     def test_missing_config_scenes(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.EvalCommandConfig.builder() \
-                                        .with_task('') \
-                                        .with_evaluators('') \
-                                        .build()
+            rv.CommandConfig.builder(rv.EVAL) \
+                            .with_task('') \
+                            .with_evaluators('') \
+                            .build()
 
     def test_missing_config_evaluators(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.EvalCommandConfig.builder() \
-                                        .with_task('') \
-                                        .with_scenes('') \
-                                        .build()
+            rv.CommandConfig.builder(rv.EVAL) \
+                            .with_task('') \
+                            .with_scenes('') \
+                            .build()
 
     def test_no_config_error(self):
         task = rv.task.ChipClassificationConfig({})
         try:
             with RVConfig.get_tmp_dir() as tmp_dir:
-                rv.command.EvalCommandConfig.builder() \
-                                            .with_task(task) \
-                                            .with_root_uri(tmp_dir) \
-                                            .with_scenes(['']) \
-                                            .with_evaluators(['']) \
-                                            .build()
+                rv.CommandConfig.builder(rv.EVAL) \
+                                .with_task(task) \
+                                .with_root_uri(tmp_dir) \
+                                .with_scenes(['']) \
+                                .with_evaluators(['']) \
+                                .build()
         except rv.ConfigError:
             self.fail('rv.ConfigError raised unexpectedly')
 
@@ -78,13 +78,13 @@ class TestEvalCommand(mk.MockMixin, unittest.TestCase):
         evaluator = evaluator_config.create_evaluator()
         evaluator_config.mock.create_evaluator.return_value = evaluator
 
-        cmd = rv.command.EvalCommandConfig.builder() \
-                                          .with_task(task_config) \
-                                          .with_scenes([scene]) \
-                                          .with_evaluators([evaluator_config]) \
-                                          .with_root_uri('.') \
-                                          .build() \
-                                          .create_command()
+        cmd = rv.CommandConfig.builder(rv.EVAL) \
+                              .with_task(task_config) \
+                              .with_scenes([scene]) \
+                              .with_evaluators([evaluator_config]) \
+                              .with_root_uri('.') \
+                              .build() \
+                              .create_command()
         cmd.run()
 
         self.assertTrue(evaluator.mock.process.called)

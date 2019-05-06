@@ -46,10 +46,6 @@ class AnalyzeCommandConfig(CommandConfig):
             analyzer.report_io(self.command_type, io_def)
         return io_def
 
-    @staticmethod
-    def builder():
-        return AnalyzeCommandConfigBuilder()
-
 
 class AnalyzeCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):

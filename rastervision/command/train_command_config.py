@@ -45,10 +45,6 @@ class TrainCommandConfig(CommandConfig):
         self.backend.report_io(self.command_type, io_def)
         return io_def
 
-    @staticmethod
-    def builder():
-        return TrainCommandConfigBuilder()
-
 
 class TrainCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):

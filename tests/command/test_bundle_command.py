@@ -66,14 +66,14 @@ class TestBundleCommand(mk.MockMixin, unittest.TestCase):
             backend = get_backend(task, tmp_dir)
             analyzer = self.get_analyzer(tmp_dir)
             scene = self.get_scene(tmp_dir)
-            cmd = BundleCommandConfig.builder() \
-                                     .with_task(task) \
-                                     .with_root_uri(tmp_dir) \
-                                     .with_backend(backend) \
-                                     .with_analyzers([analyzer]) \
-                                     .with_scene(scene) \
-                                     .build() \
-                                     .create_command(tmp_dir)
+            cmd = rv.CommandConfig.builder(rv.BUNDLE) \
+                                  .with_task(task) \
+                                  .with_root_uri(tmp_dir) \
+                                  .with_backend(backend) \
+                                  .with_analyzers([analyzer]) \
+                                  .with_scene(scene) \
+                                  .build() \
+                                  .create_command(tmp_dir)
 
             cmd.run(tmp_dir)
 
@@ -121,14 +121,14 @@ class TestBundleCommand(mk.MockMixin, unittest.TestCase):
             backend = get_backend(task, tmp_dir)
             analyzer = self.get_analyzer(tmp_dir)
             scene = self.get_scene(tmp_dir)
-            cmd = BundleCommandConfig.builder() \
-                                     .with_task(task) \
-                                     .with_root_uri(tmp_dir) \
-                                     .with_backend(backend) \
-                                     .with_analyzers([analyzer]) \
-                                     .with_scene(scene) \
-                                     .build() \
-                                     .create_command()
+            cmd = rv.CommandConfig.builder(rv.BUNDLE) \
+                                  .with_task(task) \
+                                  .with_root_uri(tmp_dir) \
+                                  .with_backend(backend) \
+                                  .with_analyzers([analyzer]) \
+                                  .with_scene(scene) \
+                                  .build() \
+                                  .create_command()
 
             cmd.run(tmp_dir)
 
@@ -151,35 +151,35 @@ class TestBundleCommand(mk.MockMixin, unittest.TestCase):
 
     def test_missing_config_task(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.BundleCommandConfig.builder() \
-                                          .with_scene('') \
-                                          .with_backend('') \
-                                          .with_analyzers([]) \
-                                          .build()
+            rv.command.rv.CommandConfig.builder(rv.BUNDLE) \
+                                       .with_scene('') \
+                                       .with_backend('') \
+                                       .with_analyzers([]) \
+                                       .build()
 
     def test_missing_config_backendf(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.BundleCommandConfig.builder() \
-                                          .with_task('') \
-                                          .with_scene('') \
-                                          .with_analyzers([]) \
-                                          .build()
+            rv.command.rv.CommandConfig.builder(rv.BUNDLE) \
+                                       .with_task('') \
+                                       .with_scene('') \
+                                       .with_analyzers([]) \
+                                       .build()
 
     def test_missing_config_scene(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.BundleCommandConfig.builder() \
-                                          .with_task('') \
-                                          .with_backend('') \
-                                          .with_analyzers([]) \
-                                          .build()
+            rv.command.rv.CommandConfig.builder(rv.BUNDLE) \
+                                       .with_task('') \
+                                       .with_backend('') \
+                                       .with_analyzers([]) \
+                                       .build()
 
     def test_missing_config_analyzers(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.BundleCommandConfig.builder() \
-                                          .with_task('') \
-                                          .with_scene('') \
-                                          .with_backend('') \
-                                          .build()
+            rv.command.rv.CommandConfig.builder(rv.BUNDLE) \
+                                       .with_task('') \
+                                       .with_scene('') \
+                                       .with_backend('') \
+                                       .build()
 
     def test_command_run_with_mocks(self):
         with RVConfig.get_tmp_dir() as tmp_dir:
@@ -192,13 +192,13 @@ class TestBundleCommand(mk.MockMixin, unittest.TestCase):
             analyzer_config = rv.AnalyzerConfig.builder(
                 mk.MOCK_ANALYZER).build()
 
-            cmd_conf = rv.command.BundleCommandConfig.builder() \
-                                                     .with_task(task_config) \
-                                                     .with_backend(backend_config) \
-                                                     .with_scene(scene) \
-                                                     .with_analyzers([analyzer_config]) \
-                                                     .with_root_uri('.') \
-                                                     .build()
+            cmd_conf = rv.command.rv.CommandConfig.builder(rv.BUNDLE) \
+                                                  .with_task(task_config) \
+                                                  .with_backend(backend_config) \
+                                                  .with_scene(scene) \
+                                                  .with_analyzers([analyzer_config]) \
+                                                  .with_root_uri('.') \
+                                                  .build()
 
             cmd_conf = rv.command.CommandConfig.from_proto(cmd_conf.to_proto())
 

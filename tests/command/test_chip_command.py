@@ -11,13 +11,13 @@ class TestChipCommand(mk.MockMixin, unittest.TestCase):
         task = rv.TaskConfig.builder(mk.MOCK_TASK).build()
         backend = rv.BackendConfig.builder(mk.MOCK_BACKEND).build()
         with RVConfig.get_tmp_dir() as tmp_dir:
-            cmd_conf = rv.command.ChipCommandConfig.builder() \
-                                                   .with_task(task) \
-                                                   .with_backend(backend) \
-                                                   .with_train_scenes([]) \
-                                                   .with_val_scenes([]) \
-                                                   .with_root_uri(tmp_dir) \
-                                                   .build()
+            cmd_conf = rv.CommandConfig.builder(rv.CHIP) \
+                                       .with_task(task) \
+                                       .with_backend(backend) \
+                                       .with_train_scenes([]) \
+                                       .with_val_scenes([]) \
+                                       .with_root_uri(tmp_dir) \
+                                       .build()
 
             cmd_conf = rv.command.CommandConfig.from_proto(cmd_conf.to_proto())
             cmd = cmd_conf.create_command()
@@ -26,48 +26,48 @@ class TestChipCommand(mk.MockMixin, unittest.TestCase):
 
     def test_missing_config_task(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.ChipCommandConfig.builder() \
-                                        .with_backend('') \
-                                        .with_train_scenes('') \
-                                        .with_val_scenes('') \
-                                        .build()
+            rv.CommandConfig.builder(rv.CHIP) \
+                            .with_backend('') \
+                            .with_train_scenes('') \
+                            .with_val_scenes('') \
+                            .build()
 
     def test_missing_config_backend(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.ChipCommandConfig.builder() \
-                                        .with_task('') \
-                                        .with_train_scenes('') \
-                                        .with_val_scenes('') \
-                                        .build()
+            rv.CommandConfig.builder(rv.CHIP) \
+                            .with_task('') \
+                            .with_train_scenes('') \
+                            .with_val_scenes('') \
+                            .build()
 
     def test_missing_config_train_scenes(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.ChipCommandConfig.builder() \
-                                        .with_task('') \
-                                        .with_backend('') \
-                                        .with_val_scenes('') \
-                                        .build()
+            rv.CommandConfig.builder(rv.CHIP) \
+                            .with_task('') \
+                            .with_backend('') \
+                            .with_val_scenes('') \
+                            .build()
 
     def test_missing_config_val_scenes(self):
         with self.assertRaises(rv.ConfigError):
-            rv.command.ChipCommandConfig.builder() \
-                                        .with_task('') \
-                                        .with_backend('') \
-                                        .with_train_scenes('') \
-                                        .build()
+            rv.CommandConfig.builder(rv.CHIP) \
+                            .with_task('') \
+                            .with_backend('') \
+                            .with_train_scenes('') \
+                            .build()
 
     def test_no_config_error(self):
         task = rv.task.ChipClassificationConfig({})
         backend = rv.backend.KerasClassificationConfig('')
         try:
             with RVConfig.get_tmp_dir() as tmp_dir:
-                rv.command.ChipCommandConfig.builder() \
-                                            .with_task(task) \
-                                            .with_root_uri(tmp_dir) \
-                                            .with_backend(backend) \
-                                            .with_train_scenes('') \
-                                            .with_val_scenes('') \
-                                            .build()
+                rv.CommandConfig.builder(rv.CHIP) \
+                                .with_task(task) \
+                                .with_root_uri(tmp_dir) \
+                                .with_backend(backend) \
+                                .with_train_scenes('') \
+                                .with_val_scenes('') \
+                                .build()
         except rv.ConfigError:
             self.fail('rv.ConfigError raised unexpectedly')
 
@@ -79,14 +79,14 @@ class TestChipCommand(mk.MockMixin, unittest.TestCase):
         task_config.mock.create_task.return_value = task
         backend_config.mock.create_backend.return_value = backend
         scene = mk.create_mock_scene()
-        cmd = rv.command.ChipCommandConfig.builder() \
-                                          .with_task(task_config) \
-                                          .with_backend(backend_config) \
-                                          .with_train_scenes([scene]) \
-                                          .with_val_scenes([scene]) \
-                                          .with_root_uri('.') \
-                                          .build() \
-                                          .create_command()
+        cmd = rv.CommandConfig.builder(rv.CHIP) \
+                              .with_task(task_config) \
+                              .with_backend(backend_config) \
+                              .with_train_scenes([scene]) \
+                              .with_val_scenes([scene]) \
+                              .with_root_uri('.') \
+                              .build() \
+                              .create_command()
         cmd.run()
 
         self.assertTrue(task.mock.get_train_windows.called)

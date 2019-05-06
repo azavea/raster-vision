@@ -53,10 +53,6 @@ class EvalCommandConfig(CommandConfig):
             evaluator.report_io(self.command_type, io_def)
         return io_def
 
-    @staticmethod
-    def builder():
-        return EvalCommandConfigBuilder()
-
 
 class EvalCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):

@@ -46,12 +46,10 @@ class CommandConfig(ABC):
         return rv._registry.get_command_config_builder(self.command_type)(self)
 
     @staticmethod
-    @abstractmethod
-    def builder():
-        """Returns a new builder that takes this configuration
-           as its starting point.
+    def builder(command_type):
+        """Returns a new builder for the given command type.
         """
-        pass
+        return rv._registry.get_command_config_builder(command_type)()
 
     @staticmethod
     def from_proto(msg):

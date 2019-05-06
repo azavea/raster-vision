@@ -63,10 +63,6 @@ class PredictCommandConfig(CommandConfig):
             commands.append(c)
         return commands
 
-    @staticmethod
-    def builder():
-        return PredictCommandConfigBuilder()
-
 
 class PredictCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):

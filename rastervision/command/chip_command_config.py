@@ -83,10 +83,6 @@ class ChipCommandConfig(CommandConfig):
             commands.append(c)
         return commands
 
-    @staticmethod
-    def builder():
-        return ChipCommandConfigBuilder()
-
 
 class ChipCommandConfigBuilder(CommandConfigBuilder):
     def __init__(self, prev=None):
