@@ -58,10 +58,12 @@ class NoopCommandConfigBuilder(CommandConfigBuilder):
         if not noop_key:
             noop_uri = experiment_config.custom_config.get('noop_uri')
             if not noop_uri:
-                raise rv.ConfigError('NoopCommand requires a noop_key or noop_uri '
-                                     'be set in the experiment custom_config')
+                raise rv.ConfigError(
+                    'NoopCommand requires a noop_key or noop_uri '
+                    'be set in the experiment custom_config')
         else:
-            noop_uri = os.path.join(experiment_config.root_uri, "noop", noop_key)
+            noop_uri = os.path.join(experiment_config.root_uri, 'noop',
+                                    noop_key)
 
         return noop_uri
 
@@ -69,5 +71,7 @@ class NoopCommandConfigBuilder(CommandConfigBuilder):
         b = super().with_experiment(experiment_config)
         return b
 
+
 def register_plugin(plugin_registry):
-    plugin_registry.register_command_config_builder(NOOP_COMMAND, NoopCommandConfigBuilder)
+    plugin_registry.register_command_config_builder(NOOP_COMMAND,
+                                                    NoopCommandConfigBuilder)

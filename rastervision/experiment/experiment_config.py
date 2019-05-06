@@ -139,7 +139,8 @@ class ExperimentConfig(Config):
         if self.custom_config:
             msg.MergeFrom(
                 ExperimentConfigMsg(
-                    custom_config=json_format.ParseDict(self.custom_config, struct_pb2.Struct())))
+                    custom_config=json_format.ParseDict(
+                        self.custom_config, struct_pb2.Struct())))
 
         return msg
 

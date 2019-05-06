@@ -79,10 +79,12 @@ class MockCommandConfigBuilder(CommandConfigBuilder):
         if not mock_key:
             mock_uri = experiment_config.custom_config.get('mock_uri')
             if not mock_uri:
-                raise rv.ConfigError('MockCommand requires a mock_key or mock_uri '
-                                     'be set in the experiment custom_config')
+                raise rv.ConfigError(
+                    'MockCommand requires a mock_key or mock_uri '
+                    'be set in the experiment custom_config')
         else:
-            mock_uri = os.path.join(experiment_config.root_uri, "mock", mock_key)
+            mock_uri = os.path.join(experiment_config.root_uri, 'mock',
+                                    mock_key)
 
         return mock_uri
 
