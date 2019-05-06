@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package rv.protos;
 
+import "google/protobuf/struct.proto";
+
 import "rastervision/protos/analyzer.proto";
 import "rastervision/protos/augmentor.proto";
 import "rastervision/protos/task.proto";
@@ -61,6 +63,7 @@ message CommandConfig {
         PredictConfig predict_config = 6;
         EvalConfig eval_config = 7;
         BundleConfig bundle_config = 8;
+        google.protobuf.Struct custom_config = 11;
     }
 
     optional PluginConfig plugins = 9;

@@ -37,7 +37,7 @@ class CommandDefinition:
             log.debug(
                 'Generating command definitions for experiment {}...'.format(
                     e.id))
-            for command_type in rv.ALL_COMMANDS:
+            for command_type in rv.all_commands():
                 log.debug(
                     'Updating config for command {}...'.format(command_type))
                 e.update_for_command(command_type, e)

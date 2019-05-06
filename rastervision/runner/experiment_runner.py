@@ -52,11 +52,14 @@ class ExperimentRunner(ABC):
 
     def run(self,
             experiments: Union[List[rv.ExperimentConfig], rv.ExperimentConfig],
-            commands_to_run=rv.ALL_COMMANDS,
+            commands_to_run=None,
             rerun_commands=False,
             skip_file_check=False,
             dry_run: bool = False,
             splits: int = 1):
+        if not commands_to_run:
+            commands_to_run = rv.all_commands()
+
         if not isinstance(experiments, list):
             experiments = [experiments]
 

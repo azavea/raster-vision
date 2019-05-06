@@ -253,7 +253,7 @@ def test_prediction_package(experiment,
 def run_test(test, temp_dir):
     errors = []
     experiment = get_experiment(test, temp_dir)
-    commands_to_run = rv.ALL_COMMANDS
+    commands_to_run = rv.all_commands()
 
     # Check serialization
     pp_uri = os.path.join(experiment.bundle_uri, 'predict_package.zip')

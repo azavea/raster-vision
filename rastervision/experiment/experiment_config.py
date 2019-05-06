@@ -103,7 +103,7 @@ class ExperimentConfig(Config):
         and is constructed by calling update_for_command for each command.
         """
         e = deepcopy(self)
-        for command_type in rv.ALL_COMMANDS:
+        for command_type in rv.all_commands():
             e.update_for_command(command_type, e)
         return e
 

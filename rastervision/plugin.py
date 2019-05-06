@@ -48,6 +48,8 @@ class PluginRegistry:
         """
         self.plugin_root_dir = os.path.join(rv_home, 'plugins')
         self.config_builders = {}
+        self.command_config_builders = {}
+        self.commands = []
         self.default_raster_sources = []
         self.default_vector_sources = []
         self.default_label_sources = []
@@ -143,6 +145,22 @@ class PluginRegistry:
             raise PluginError('ConfigBuilder already registered for group '
                               '{} and key {}'.format(group, key))
         self.config_builders[(group, key)] = builder_class
+
+    def register_command_config_builder(self, command_type, builder_class):
+        """Registers a ConfigBuilder as a plugin.
+
+        Args:
+           command_type - The key used for this plugin. This will be used to
+                          construct the builder in a ".builder(key)" call.
+           builder_class - The subclass of CommandConfigBuilder that builds
+                           the CommandConfig for this plugin.
+        """
+        if command_type in self.command_config_builders:
+            raise PluginError(
+                'CommandConfigBuilder already registered for command'
+                'with type {}'.format(command_key))
+        self.command_config_builders[command_type] = builder_class
+        self.commands.append(command_type)
 
     def register_default_raster_source(self, provider_class):
         """Registers a RasterSourceDefaultProvider for use as a plugin."""

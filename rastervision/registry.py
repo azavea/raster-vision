@@ -150,6 +150,10 @@ class Registry:
             rv.BUNDLE: rv.command.BundleCommandConfigBuilder
         }
 
+        self.commands = [
+            rv.ANALYZE, rv.CHIP, rv.TRAIN, rv.PREDICT, rv.EVAL, rv.BUNDLE
+        ]
+
         self.experiment_runners = {
             rv.INPROCESS: rv.runner.InProcessExperimentRunner,
             rv.AWS_BATCH: rv.runner.AwsBatchExperimentRunner,
@@ -318,11 +322,22 @@ class Registry:
                             'found for task type {}'.format(task_type))
 
     def get_command_config_builder(self, command_type):
-        builder = self.command_config_builders.get(command_type)
-        if not builder:
-            raise RegistryError(
-                'No command found for type {}'.format(command_type))
-        return builder
+        internal_builder = self.command_config_builders.get(command_type)
+        if internal_builder:
+            return internal_builder
+        else:
+            self._ensure_plugins_loaded()
+            plugin_builder = self._plugin_registry.command_config_builders.get(
+                command_type)
+            if plugin_builder:
+                return plugin_builder
+
+        raise RegistryError(
+            'No command found for type {}'.format(command_type))
+
+    def get_commands(self):
+        self._ensure_plugins_loaded()
+        return self.commands + self._plugin_registry.commands
 
     def get_experiment_runner(self, runner_type):
         internal_runner = self.experiment_runners.get(runner_type)

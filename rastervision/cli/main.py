@@ -124,7 +124,7 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         sys.exit(1)
 
     if not commands:
-        commands = rv.ALL_COMMANDS
+        commands = rv.all_commands()
     else:
         commands = list(map(lambda x: x.upper(), commands))
 
