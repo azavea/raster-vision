@@ -7,3 +7,4 @@ omit =
     rastervision/utils/geojson.py
     rastervision/utils/misc.py
     rastervision/data/vector_source/label_maker/**.py
+    rastervision/data/label/tfod_utils/**.py
