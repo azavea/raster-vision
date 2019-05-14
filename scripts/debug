@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0") <python module + args>
+Run a Python module using VS code debugger.
+
+Example:
+./scripts/debug rastervision run inprocess -e examples.potsdam
+
+"
+}
+
+python -m ptvsd --host 0.0.0.0 --port 3000 --wait -m ${@:1}
