@@ -78,9 +78,10 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
 
             eval_items = []
             for class_id in self.class_map.get_keys():
-                eval_item = get_class_eval_item(gt_arr, pred_arr, class_id,
-                                                self.class_map)
-                eval_items.append(eval_item)
+                if class_id > 0:
+                    eval_item = get_class_eval_item(gt_arr, pred_arr, class_id,
+                                                    self.class_map)
+                    eval_items.append(eval_item)
 
             # Treat each window as if it was a small Scene.
             window_eval = SemanticSegmentationEvaluation(self.class_map)
