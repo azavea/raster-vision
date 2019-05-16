@@ -3,14 +3,12 @@ from rastervision.augmentor import (Augmentor, AugmentorConfig,
                                     AugmentorConfigBuilder)
 from rastervision.protos.augmentor_pb2 import AugmentorConfig as AugmentorConfigMsg
 
-from .noop_utils import noop
-
 NOOP_AUGMENTOR = 'NOOP_AUGMENTOR'
 
 
 class NoopAugmentor(Augmentor):
     def process(self, training_data, tmp_dir):
-        return noop(training_data)
+        return training_data
 
 
 class NoopAugmentorConfig(AugmentorConfig):

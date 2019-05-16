@@ -10,16 +10,18 @@ class TestPlugin(unittest.TestCase):
     def test_single_plugin_from_path(self):
         config = {
             'PLUGINS_files':
-            '["{}"]'.format(data_file_path('plugins/noop_augmentor.py'))
+            '["{}"]'.format(
+                data_file_path('plugins/noop_raster_transformer.py'))
         }
         rv._registry.initialize_config(config_overrides=config)
 
         try:
-            augmentor = rv.AugmentorConfig.builder('NOOP_AUGMENTOR') \
+            transformer = rv.RasterTransformerConfig.builder('NOOP_TRANSFORMER') \
                                           .build() \
-                                          .create_augmentor()
+                                          .create_transformer()
 
-            self.assertIsInstance(augmentor, rv.augmentor.Augmentor)
+            self.assertIsInstance(transformer,
+                                  rv.data.raster_transformer.RasterTransformer)
         finally:
             # Reset config
             rv._registry.initialize_config()
@@ -40,13 +42,13 @@ class TestPlugin(unittest.TestCase):
 
     def test_runs_noop_experiment_from_plugins(self):
         # set the env var to have rv pick up this configuration
-        # which adds the tests.test_plugin module as a plugin.
+        # which adds the tests.test_plugin and tests.test_plugin_2 modules
+        # as a plugin.
         old_rv_config = os.environ.get('RV_CONFIG')
         os.environ['RV_CONFIG'] = data_file_path('plugins/default')
 
         try:
             plugin_files = [
-                data_file_path('plugins/noop_augmentor.py'),
                 data_file_path('plugins/noop_task.py'),
                 data_file_path('plugins/noop_backend.py'),
                 data_file_path('plugins/noop_raster_transformer.py'),
