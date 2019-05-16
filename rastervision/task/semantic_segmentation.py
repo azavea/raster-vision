@@ -7,6 +7,10 @@ from .task import Task
 from rastervision.core.box import Box
 from rastervision.data.scene import Scene
 from rastervision.data.label import SemanticSegmentationLabels
+from rastervision.core.training_data import TrainingData
+
+TRAIN = 'train'
+VALIDATION = 'validation'
 
 log = logging.getLogger(__name__)
 
@@ -90,6 +94,64 @@ class SemanticSegmentation(Task):
 
             return list(
                 filter_windows((extent.get_windows(chip_size, stride))))
+
+    def make_chips(self, train_scenes, validation_scenes, augmentors, tmp_dir):
+        """Make training chips.
+
+        Convert Scenes with a ground_truth_label_store into training
+        chips in MLBackend-specific format, and write to URI specified in
+        options.
+
+        Args:
+            train_scenes: list of Scenes
+            validation_scenes: list of Scenes
+                (that is disjoint from train_scenes)
+            augmentors: Augmentors used to augment training data
+        """
+
+        def _process_scene(scene, type_, augment):
+            with scene.activate():
+                data = TrainingData()
+                log.info('Making {} chips for scene: {}'.format(
+                    type_, scene.id))
+                windows = self.get_train_windows(scene)
+                for window in windows:
+                    chip = scene.raster_source.get_chip(window)
+                    labels = self.get_train_labels(window, scene)
+
+                    # If chip has ignore labels, fill in those pixels with
+                    # nodata.
+                    label_arr = labels.get_label_arr(window)
+                    zero_inds = label_arr.ravel() == 0
+                    chip_shape = chip.shape
+                    if np.any(zero_inds):
+                        chip = np.reshape(chip, (-1, chip.shape[2]))
+                        chip[zero_inds, :] = 0
+                        chip = np.reshape(chip, chip_shape)
+
+                    data.append(chip, window, labels)
+                # Shuffle data so the first N samples which are displayed in
+                # Tensorboard are more diverse.
+                data.shuffle()
+
+                # Process augmentation
+                if augment:
+                    for augmentor in augmentors:
+                        data = augmentor.process(data, tmp_dir)
+
+                return self.backend.process_scene_data(scene, data, tmp_dir)
+
+        def _process_scenes(scenes, type_, augment):
+            return [_process_scene(scene, type_, augment) for scene in scenes]
+
+        # TODO: parallel processing!
+        processed_training_results = _process_scenes(
+            train_scenes, TRAIN, augment=True)
+        processed_validation_results = _process_scenes(
+            validation_scenes, VALIDATION, augment=False)
+
+        self.backend.process_sceneset_results(
+            processed_training_results, processed_validation_results, tmp_dir)
 
     def get_train_labels(self, window: Box, scene: Scene) -> np.ndarray:
         """Get the training labels for the given window in the given scene.
