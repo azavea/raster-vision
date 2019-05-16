@@ -56,22 +56,31 @@ class SemanticSegmentation(Task):
              A list of windows, list(Box)
 
         """
+        raster_source = scene.raster_source
+        extent = raster_source.get_extent()
+        label_source = scene.ground_truth_label_source
+        chip_size = self.config.chip_size
+        chip_options = self.config.chip_options
 
         def filter_windows(windows):
             if scene.aoi_polygons:
                 windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
+
+            if 0 in self.config.class_map.get_keys():
+                filt_windows = []
+                for w in windows:
+                    label_arr = label_source.get_labels(w).get_label_arr(w)
+                    ignore_inds = label_arr.ravel() == 0
+                    if np.all(ignore_inds):
+                        pass
+                    else:
+                        filt_windows.append(w)
+                windows = filt_windows
             return windows
-
-        raster_source = scene.raster_source
-        extent = raster_source.get_extent()
-        label_store = scene.ground_truth_label_source
-        chip_size = self.config.chip_size
-
-        chip_options = self.config.chip_options
 
         if chip_options.window_method == 'random_sample':
             return get_random_sample_train_windows(
-                label_store, chip_size, self.config.class_map, extent,
+                label_source, chip_size, self.config.class_map, extent,
                 chip_options, filter_windows)
         elif chip_options.window_method == 'sliding':
             stride = chip_options.stride
