@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+Raster Vision 0.10
+-----------------
+
+Raster Vision 0.10.0
+~~~~~~~~~~~~~~~~~~~
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed issue with configuration not being able to read lists `#784 <https://github.com/azavea/raster-vision/pull/784>`__
+
 Raster Vision 0.9
 -----------------
 
@@ -51,6 +62,7 @@ Bug Fixes
 - Fixed issue with handling width > height in semseg eval `#627 <https://github.com/azavea/raster-vision/pull/627>`_
 - Fixed issue with experiment configs not setting key names correctly `#576 <https://github.com/azavea/raster-vision/pull/576>`_
 - Fixed issue with Raster Sources that have channel order `#576 <https://github.com/azavea/raster-vision/pull/576>`_
+
 
 Raster Vision 0.8
 -----------------

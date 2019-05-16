@@ -17,8 +17,8 @@ class TestPlugin(unittest.TestCase):
 
         try:
             transformer = rv.RasterTransformerConfig.builder('NOOP_TRANSFORMER') \
-                                          .build() \
-                                          .create_transformer()
+                                                    .build() \
+                                                    .create_transformer()
 
             self.assertIsInstance(transformer,
                                   rv.data.raster_transformer.RasterTransformer)
