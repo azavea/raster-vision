@@ -10,7 +10,7 @@ ENV LANG C.UTF-8
 RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get update && \
     apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
-                       gdal-bin=2.1.* \
+                       gdal-bin=2.2.* \
                        jq=1.5* \
                        build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
                        libopencv-dev=2.4.* python-opencv=2.4.* && \
@@ -38,7 +38,7 @@ RUN mkdir -p /opt/tf-models/temp/ && \
     pip install pycocotools==2.0.*
 
 # Setup GDAL_DATA directory, rasterio needs it.
-ENV GDAL_DATA=/usr/share/gdal/2.1/
+ENV GDAL_DATA=/usr/share/gdal/2.2/
 
 # See https://github.com/mapbox/rasterio/issues/1289
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
