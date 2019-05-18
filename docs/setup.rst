@@ -173,11 +173,11 @@ PLUGINS
 .. code-block:: ini
 
    [PLUGINS]
-   files=[]
-   modules=[]
+   files=analyzers.py,backends.py
+   modules=rvplugins.analyzer,rvplugins.backend
 
-* ``files`` - Optional list of Python file URIs to gather plugins from. Must be a JSON-parsable array of values, e.g. ``["analyzers.py","backends.py"]``.
-* ``modules`` - Optional list of modules to load plugins from. Must be a JSON-parsable array of values, e.g. ``["rvplugins.analyzer","rvplugins.backend"]``.
+* ``files`` - Optional list of Python file URIs to gather plugins from as a comma-separated list of values, e.g. ``analyzers.py,backends.py``.
+* ``modules`` - Optional list of modules to load plugins from as a comma-separated list of values, e.g. ``rvplugins.analyzer,rvplugins.backend``.
 
 See :ref:`plugins` for more information about the Plugin architecture.
 

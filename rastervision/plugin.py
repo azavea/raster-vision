@@ -13,6 +13,24 @@ class PluginError(Exception):
     pass
 
 
+def load_conf_list(s):
+    """Loads a list of items from the config.
+
+    Lists should be comma separated.
+
+    This takes into account that previous versions of Raster Vision
+    allowed for a `[ "module" ]` like syntax, even though that didn't
+    work for multi-value lists.
+    """
+    try:
+        # A comma separated list of values will be transformed to
+        # having a list-like string, with ' instead of ". Replacing
+        # single quotes with double quotes lets us parse it as a JSON list.
+        return json.loads(s.replace("'", '"'))
+    except json.JSONDecodeError:
+        return list(map(lambda x: x.strip(), s.split(',')))
+
+
 class PluginRegistry:
     @staticmethod
     def get_instance():
@@ -38,11 +56,11 @@ class PluginRegistry:
         self.experiment_runners = {}
         self.filesystems = []
 
-        plugin_files = json.loads(plugin_config('files', default='[]'))
+        plugin_files = load_conf_list(plugin_config('files', default='[]'))
         self._load_from_files(plugin_files)
         self.plugin_files = plugin_files
 
-        plugin_modules = json.loads(plugin_config('modules', default='[]'))
+        plugin_modules = load_conf_list(plugin_config('modules', default='[]'))
         self._load_from_modules(plugin_modules)
         self.plugin_modules = plugin_modules
 
