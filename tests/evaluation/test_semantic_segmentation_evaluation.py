@@ -65,10 +65,9 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         pred_raster.set_raster(pred_array)
         pred_label_source = SemanticSegmentationLabelSource(source=pred_raster)
 
-        class_map = ClassMap([
-            ClassItem(id=0, name='ignore'),
-            ClassItem(id=1, name='one')
-        ])
+        class_map = ClassMap(
+            [ClassItem(id=0, name='ignore'),
+             ClassItem(id=1, name='one')])
         eval = SemanticSegmentationEvaluation(class_map)
         eval.compute(gt_label_source.get_labels(),
                      pred_label_source.get_labels())

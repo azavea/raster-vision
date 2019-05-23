@@ -46,6 +46,7 @@ class ClassMap(object):
     the class 0 is reserved for use as an "ignore" class, which denotes
     pixels that should not be used for training the model or evaluating it.
     """
+
     def __init__(self, class_items):
         """Construct a new ClassMap.
 
