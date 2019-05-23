@@ -53,6 +53,27 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         self.assertEqual(precision2, eval.class_to_eval_item[2].precision)
         self.assertAlmostEqual(recall2, eval.class_to_eval_item[2].recall)
 
+    def test_compute_ignore_class(self):
+        gt_array = np.ones((4, 4, 1), dtype=np.uint8)
+        gt_array[0, 0, 0] = 0
+        gt_raster = MockRasterSource([0], 1)
+        gt_raster.set_raster(gt_array)
+        gt_label_source = SemanticSegmentationLabelSource(source=gt_raster)
+
+        pred_array = np.ones((4, 4, 1), dtype=np.uint8)
+        pred_raster = MockRasterSource([0], 1)
+        pred_raster.set_raster(pred_array)
+        pred_label_source = SemanticSegmentationLabelSource(source=pred_raster)
+
+        class_map = ClassMap(
+            [ClassItem(id=0, name='ignore'),
+             ClassItem(id=1, name='one')])
+        eval = SemanticSegmentationEvaluation(class_map)
+        eval.compute(gt_label_source.get_labels(),
+                     pred_label_source.get_labels())
+        self.assertAlmostEqual(1, len(eval.class_to_eval_item))
+        self.assertAlmostEqual(1.0, eval.class_to_eval_item[0].f1)
+
     def test_vector_compute(self):
         class_map = ClassMap([ClassItem(id=1, name='one', color='#000021')])
         gt_uri = data_file_path('3-gt-polygons.geojson')

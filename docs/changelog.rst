@@ -7,6 +7,11 @@ Raster Vision 0.10
 Raster Vision 0.10.0
 ~~~~~~~~~~~~~~~~~~~
 
+Features
+^^^^^^^^^^^^
+
+- Handle "ignore" class for semantic segmentation `#783 <https://github.com/azavea/raster-vision/pull/783>`__
+
 Bug Fixes
 ^^^^^^^^^
 

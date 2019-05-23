@@ -40,7 +40,12 @@ class ClassItem(object):
 
 
 class ClassMap(object):
-    """A map from class_id to ClassItem."""
+    """A map from class_id to ClassItem.
+
+    The class ids should be integers >= 1. For semantic segmentation,
+    the class 0 is reserved for use as an "ignore" class, which denotes
+    pixels that should not be used for training the model or evaluating it.
+    """
 
     def __init__(self, class_items):
         """Construct a new ClassMap.
