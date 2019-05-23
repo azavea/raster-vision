@@ -50,6 +50,7 @@ class PluginRegistry:
         self.config_builders = {}
         self.command_config_builders = {}
         self.commands = []
+        self.aux_command_classes = {}
         self.default_raster_sources = []
         self.default_vector_sources = []
         self.default_label_sources = []
@@ -158,9 +159,28 @@ class PluginRegistry:
         if command_type in self.command_config_builders:
             raise PluginError(
                 'CommandConfigBuilder already registered for command'
-                'with type {}'.format(command_key))
+                'with type {}'.format(command_type))
         self.command_config_builders[command_type] = builder_class
         self.commands.append(command_type)
+
+    def register_aux_command(self, command_type, command_class):
+        """Registers a custom AuxCommand as a plugin.
+
+        Args:
+           command_type - The key used for this plugin. This will be used to
+                          construct the builder in a ".builder(key)" call.
+           command_class - The subclass of AuxCommand subclass to register.
+        """
+        if command_type in self.command_config_builders:
+            raise PluginError(
+                'CommandConfigBuilder is already registered for command'
+                'with type {}'.format(command_type))
+        if command_type in self.aux_command_classes:
+            raise PluginError('AuxCommand is already registered for command'
+                              'with type {}'.format(command_type))
+        self.aux_command_classes[command_type] = command_class
+        if command_class.options.include_by_default:
+            self.commands.append(command_type)
 
     def register_default_raster_source(self, provider_class):
         """Registers a RasterSourceDefaultProvider for use as a plugin."""

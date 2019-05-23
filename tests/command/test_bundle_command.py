@@ -3,7 +3,6 @@ import unittest
 import zipfile
 
 import rastervision as rv
-from rastervision.command import BundleCommandConfig
 from rastervision.protos.command_pb2 import CommandConfig as CommandConfigMsg
 from rastervision.utils.files import (make_dir, load_json_config)
 from rastervision.rv_config import RVConfig

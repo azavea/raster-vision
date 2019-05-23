@@ -1,11 +1,12 @@
 import os
-import unittest
 from unittest.mock import Mock
 
 from google.protobuf import struct_pb2
 
 import rastervision as rv
 from rastervision.command import (Command, CommandConfig, CommandConfigBuilder)
+from rastervision.protos.command_pb2 \
+    import CommandConfig as CommandConfigMsg
 
 MOCK_COMMAND = 'MOCK_COMMAND'
 
@@ -57,8 +58,8 @@ class MockCommandConfig(CommandConfig):
 
 
 class MockCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self, prev=None):
-        super().__init__(prev)
+    def __init__(self, command_type, prev=None):
+        super().__init__(command_type, prev)
 
     def validate(self):
         super().validate()
@@ -69,8 +70,6 @@ class MockCommandConfigBuilder(CommandConfigBuilder):
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
-
-        conf = msg.custom_config
 
         return b
 

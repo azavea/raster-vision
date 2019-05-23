@@ -55,13 +55,16 @@ class CommandConfig(ABC):
     def from_proto(msg):
         """Creates a TaskConfig from the specificed protobuf message
         """
-        return rv._registry.get_command_config_builder(msg.command_type)() \
+        command_type = msg.command_type
+        return rv._registry.get_command_config_builder(command_type)() \
                            .from_proto(msg) \
                            .build()
 
 
 class CommandConfigBuilder(ABC):
-    def __init__(self, prev):
+    def __init__(self, command_type, prev):
+        self.command_type = command_type
+
         if prev is None:
             self.root_uri = None
             self.split_id = 0

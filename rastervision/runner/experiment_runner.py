@@ -52,6 +52,8 @@ class ExperimentRunner(ABC):
 
     def run(self,
             experiments: Union[List[rv.ExperimentConfig], rv.ExperimentConfig],
+            command_configs: Union[List[rv.CommandConfig],
+                                   rv.CommandConfig] = None,
             commands_to_run=None,
             rerun_commands=False,
             skip_file_check=False,
@@ -66,6 +68,14 @@ class ExperimentRunner(ABC):
         log.debug('Generating command definitions from experiments...')
         command_definitions = CommandDefinition.from_experiments(
             experiments, commands_to_run, splits)
+
+        if command_configs:
+            if not isinstance(command_configs, list):
+                command_configs = [command_configs]
+            log.debug('Generating command definitions from commands...')
+            command_definitions.extend(
+                CommandDefinition.from_command_configs(
+                    command_configs, commands_to_run, splits))
 
         # Filter  out commands that don't have any output.
         log.debug('Filtering commands that do not have any output...')
@@ -159,7 +169,8 @@ class ExperimentRunner(ABC):
         experiments_by_id = dict(map(lambda e: (e.id, e), experiments))
         seen_ids = set([])
         for command_def in command_dag.get_command_definitions():
-            if command_def.experiment_id not in seen_ids:
+            if command_def.experiment_id is not None and \
+               command_def.experiment_id not in seen_ids:
                 seen_ids.add(command_def.experiment_id)
                 experiment = experiments_by_id[command_def.experiment_id]
                 if not dry_run:

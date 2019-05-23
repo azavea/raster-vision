@@ -1,6 +1,7 @@
 import os
 from copy import deepcopy
 import logging
+import json
 
 from google.protobuf import (json_format, struct_pb2)
 
@@ -140,7 +141,9 @@ class ExperimentConfig(Config):
             msg.MergeFrom(
                 ExperimentConfigMsg(
                     custom_config=json_format.ParseDict(
-                        self.custom_config, struct_pb2.Struct())))
+                        {
+                            'config': json.dumps(self.custom_config)
+                        }, struct_pb2.Struct())))
 
         return msg
 
@@ -296,7 +299,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
                 .with_bundle_uri(msg.bundle_uri)
 
         if msg.custom_config:
-            b = b.with_custom_config(msg.custom_config)
+            b = b.with_custom_config(json.loads(msg.custom_config['config']))
 
         return b
 
@@ -443,6 +446,26 @@ class ExperimentConfigBuilder(ConfigBuilder):
         """
         b = self._copy()
         b.config['bundle_uri'] = uri
+        return b
+
+    def clear_command_uris(self):
+        """Clears existing command URIs and keys.
+        Useful for re-using experiment configs for new builders.
+        """
+        b = self._copy()
+        b = b.with_analyze_key(None) \
+             .with_analyze_uri(None) \
+             .with_chip_key(None) \
+             .with_chip_uri(None) \
+             .with_train_key(None) \
+             .with_train_uri(None) \
+             .with_predict_key(None) \
+             .with_predict_uri(None) \
+             .with_eval_key(None) \
+             .with_eval_uri(None) \
+             .with_bundle_key(None) \
+             .with_bundle_uri(None) \
+
         return b
 
     def with_custom_config(self, config):

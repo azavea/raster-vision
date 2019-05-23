@@ -37,7 +37,9 @@ class CommandDefinition:
             log.debug(
                 'Generating command definitions for experiment {}...'.format(
                     e.id))
-            for command_type in rv.all_commands():
+            commands_to_update = rv.all_commands() + \
+                                 list(set(commands_to_run) - set(rv.all_commands()))
+            for command_type in commands_to_update:
                 log.debug(
                     'Updating config for command {}...'.format(command_type))
                 e.update_for_command(command_type, e)
@@ -50,6 +52,24 @@ class CommandDefinition:
                         io_def = command_config.report_io()
                         command_def = cls(e.id, command_config, io_def)
                         command_definitions.append(command_def)
+
+        return command_definitions
+
+    @classmethod
+    def from_command_configs(cls,
+                             command_configs: List[rv.CommandConfig],
+                             commands_to_run: List[str],
+                             splits: int = 1):
+        command_definitions = []
+
+        for base_command_config in command_configs:
+            if base_command_config.command_type in commands_to_run:
+                log.debug('Creating command configurations for {}...'.format(
+                    base_command_config.command_type))
+                for command_config in base_command_config.split(splits):
+                    io_def = command_config.report_io()
+                    command_def = cls(None, command_config, io_def)
+                    command_definitions.append(command_def)
 
         return command_definitions
 

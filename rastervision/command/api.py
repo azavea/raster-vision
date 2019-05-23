@@ -10,6 +10,8 @@ EVAL = 'EVAL'
 BUNDLE = 'BUNDLE'
 
 from .command_config import CommandConfig
+from .aux_command import (AuxCommand, AuxCommandOptions)
+from .aux.api import *
 
 
 def all_commands():

@@ -7,7 +7,7 @@ from rastervision.core import Box
 import tests.mock as mk
 
 
-class TestPlugin(mk.MockMixin, unittest.TestCase):
+class TestMocks(mk.MockMixin, unittest.TestCase):
     def test_mocks(self):
         """Test to ensure all mocks are working as expected."""
         task_config = rv.TaskConfig.builder(mk.MOCK_TASK) \
