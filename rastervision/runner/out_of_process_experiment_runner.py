@@ -69,8 +69,12 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
 
             run_command = make_command(command_uri, self.tmp_dir)
             job_id = self.submit(
-                command_config.command_type, command_config.split_id,
-                command_def.experiment_id, run_command, parent_job_ids)
+                command_config.command_type,
+                command_config.split_id,
+                command_def.experiment_id,
+                run_command,
+                parent_job_ids,
+                utilizes_gpu=command_config.utilizes_gpu())
 
             ids_to_job[command_id] = job_id
 

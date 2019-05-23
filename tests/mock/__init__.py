@@ -24,8 +24,11 @@ from tests.mock.aux_command import *
 
 
 class MockMixin:
+    def mock_config(self):
+        return {'PLUGINS_modules': '["{}"]'.format(__name__)}
+
     def setUp(self):
-        config = {'PLUGINS_modules': '["{}"]'.format(__name__)}
+        config = self.mock_config()
         rv._registry.initialize_config(config_overrides=config)
         super().setUp()
 

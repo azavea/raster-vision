@@ -17,6 +17,10 @@ class PredictCommandConfig(CommandConfig):
         self.backend = backend
         self.scenes = scenes
 
+    def utilizes_gpu(self):
+        # TODO: Make this backend dependent.
+        return True
+
     def create_command(self, tmp_dir=None):
         if len(self.scenes) == 0:
             return NoOpCommand()

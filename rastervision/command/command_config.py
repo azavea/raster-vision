@@ -32,6 +32,16 @@ class CommandConfig(ABC):
         """
         return [self]
 
+    def utilizes_gpu(self):
+        """Method that determines if this command can utilize a GPU.
+        This is useful for runners to know what resources to utilize
+        for command execution - e.g. don't spin up the more expensive
+        GPU machines if this command can't use the GPUs.
+
+        Defaults to False.
+        """
+        return False
+
     def to_proto(self):
         """Returns the protobuf configuration for this config.
         """

@@ -15,6 +15,10 @@ class TrainCommandConfig(CommandConfig):
         self.task = task
         self.backend = backend
 
+    def utilizes_gpu(self):
+        # TODO: Make this backend dependent.
+        return True
+
     def create_command(self, tmp_dir=None):
         if not tmp_dir:
             _tmp_dir = RVConfig.get_tmp_dir()

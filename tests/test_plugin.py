@@ -140,7 +140,7 @@ class TestPlugin(unittest.TestCase):
                                    .with_analyzer(analyzer) \
                                    .with_evaluator(evaluator) \
                                    .with_root_uri('/no/matter') \
-                                   .with_custom_config({ 'noop_key': 'noop'}) \
+                                   .with_custom_config({'noop_key': 'noop'}) \
                                    .build()
 
             rv.ExperimentRunner.get_runner('NOOP_RUNNER').run(

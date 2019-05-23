@@ -5,11 +5,8 @@ import logging
 from rastervision.runner import OutOfProcessExperimentRunner
 from rastervision.rv_config import RVConfig
 from rastervision.utils.misc import grouped
-import rastervision as rv
 
 DEPENDENCY_GROUP_JOB = 'DEPENDENCY_GROUP'
-
-CPU_STAGES = {rv.ANALYZE, rv.CHIP, rv.EVAL, rv.BUNDLE, DEPENDENCY_GROUP_JOB}
 
 NOOP_COMMAND = 'python -m rastervision --help'
 
@@ -62,13 +59,21 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
         self.submit = self.batch_submit
         self.execution_environment = 'Batch'
 
+    def _get_boto_client(self):
+        """Returns a boto client.
+        Encapsulated in a method for testability.
+        """
+        import boto3
+        return boto3.client('batch')
+
     def batch_submit(self,
                      command_type,
                      command_split_id,
                      experiment_id,
                      command,
                      parent_job_ids=None,
-                     array_size=None):
+                     array_size=None,
+                     utilizes_gpu=False):
         """
         Submit a job to run on Batch.
 
@@ -81,8 +86,6 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
            parent_job_ids (list of str): ids of jobs that this job depends on
            array_size: (int) size of the Batch array job
         """
-        import boto3
-
         if parent_job_ids is None:
             parent_job_ids = []
 
@@ -91,10 +94,13 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
         else:
             full_command = command.split()
 
-        client = boto3.client('batch')
+        client = self._get_boto_client()
 
         uuid_part = str(uuid.uuid4()).split('-')[0]
-        exp = ''.join(e for e in experiment_id if e.isalnum())
+        if experiment_id is None:
+            exp = 'COMMAND'
+        else:
+            exp = ''.join(e for e in experiment_id if e.isalnum())
         job_name = '{}-{}_{}_{}'.format(command_type, command_split_id, exp,
                                         uuid_part)
 
@@ -122,12 +128,12 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
 
         depends_on = [{'jobId': job_id} for job_id in parent_job_ids]
 
-        if command_type in CPU_STAGES:
-            job_queue = self.cpu_job_queue
-            job_definition = self.cpu_job_definition
-        else:
+        if utilizes_gpu:
             job_queue = self.job_queue
             job_definition = self.job_definition
+        else:
+            job_queue = self.cpu_job_queue
+            job_definition = self.cpu_job_definition
 
         kwargs = {
             'jobName': job_name,
