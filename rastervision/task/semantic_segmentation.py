@@ -144,7 +144,6 @@ class SemanticSegmentation(Task):
         def _process_scenes(scenes, type_, augment):
             return [_process_scene(scene, type_, augment) for scene in scenes]
 
-        # TODO: parallel processing!
         processed_training_results = _process_scenes(
             train_scenes, TRAIN, augment=True)
         processed_validation_results = _process_scenes(
