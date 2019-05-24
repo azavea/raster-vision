@@ -179,7 +179,7 @@ class SemanticSegmentation(Task):
              An sequence of windows.
 
         """
-        chip_size = self.config.chip_size
+        chip_size = self.config.predict_chip_size
         return extent.get_windows(chip_size, chip_size)
 
     def post_process_predictions(self, labels, scene):

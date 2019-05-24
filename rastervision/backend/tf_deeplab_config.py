@@ -219,6 +219,12 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             raise rv.ConfigError('Task set with with_task must be of type'
                                  ' SemanticSegmentationConfig, got {}.'.format(
                                      type(self.task)))
+
+        if self.task and (self.task.predict_chip_size != self.task.chip_size):
+            raise rv.ConfigError(
+                'TFDeepLab Backend does not currently support predict_chip_size'
+                ' that is not equal to training chip_size.')
+
         return True
 
     def build(self):

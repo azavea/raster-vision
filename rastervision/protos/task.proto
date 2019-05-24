@@ -44,6 +44,7 @@ message TaskConfig {
         repeated ClassItem class_items = 1;
         required int32 chip_size = 2;
         required ChipOptions chip_options = 3;
+        optional int32 predict_chip_size = 4 [default=0];
     }
 
     required string task_type = 1;
