@@ -27,8 +27,10 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         self.tmp_dir.cleanup()
 
     def get_scene(self, class_id):
+        # Make scene where ground truth is all set to class_id
+        # and predictions are set to half 1's and half 2's
         scene_id = str(class_id)
-        rs = MockRasterSource(channel_order=[0, 1, 3], num_channels=3)
+        rs = MockRasterSource(channel_order=[0, 1, 2], num_channels=3)
         rs.set_raster(np.zeros((10, 10, 3)))
 
         gt_rs = MockRasterSource(channel_order=[0], num_channels=1)

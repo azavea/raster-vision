@@ -1,63 +1,143 @@
-{   "overall": [   {   "class_id": 1,
-                       "class_name": "one",
-                       "count_error": 50,
-                       "f1": 0.6666666666666666,
-                       "gt_count": 100,
-                       "precision": 1.0,
-                       "recall": 0.5},
-                   {   "class_id": 2,
-                       "class_name": "two",
-                       "count_error": 50.0,
-                       "f1": 0.6666666666666666,
-                       "gt_count": 100,
-                       "precision": 1.0,
-                       "recall": 0.5},
-                   {   "class_id": null,
-                       "class_name": "average",
-                       "count_error": 50.0,
-                       "f1": 0.6666666666666666,
-                       "gt_count": 200,
-                       "precision": 1.0,
-                       "recall": 0.5}],
-    "per_scene": {   "1": [   {   "class_id": 1,
-                                  "class_name": "one",
-                                  "count_error": 50,
-                                  "f1": 0.6666666666666666,
-                                  "gt_count": 100,
-                                  "precision": 1.0,
-                                  "recall": 0.5},
-                              {   "class_id": 2,
-                                  "class_name": "two",
-                                  "count_error": 50,
-                                  "f1": null,
-                                  "gt_count": 0,
-                                  "precision": 0.0,
-                                  "recall": null},
-                              {   "class_id": null,
-                                  "class_name": "average",
-                                  "count_error": 50.0,
-                                  "f1": 0.6666666666666666,
-                                  "gt_count": 100,
-                                  "precision": 1.0,
-                                  "recall": 0.5}],
-                     "2": [   {   "class_id": 1,
-                                  "class_name": "one",
-                                  "count_error": 50,
-                                  "f1": null,
-                                  "gt_count": 0,
-                                  "precision": 0.0,
-                                  "recall": null},
-                              {   "class_id": 2,
-                                  "class_name": "two",
-                                  "count_error": 50,
-                                  "f1": 0.6666666666666666,
-                                  "gt_count": 100,
-                                  "precision": 1.0,
-                                  "recall": 0.5},
-                              {   "class_id": null,
-                                  "class_name": "average",
-                                  "count_error": 50.0,
-                                  "f1": 0.6666666666666666,
-                                  "gt_count": 100,
-                                  "precision": 1.0,
-                                  "recall": 0.5}]}}
+{
+    "per_scene": {
+        "1": [
+            {
+                "precision": 1.0,
+                "gt_count": 100.0,
+                "count_error": 50,
+                "class_name": "one",
+                "class_id": 1,
+                "recall": 0.5,
+                "f1": 0.6666666666666666,
+                "conf_mat": [
+                    0.0,
+                    50.0,
+                    50.0
+                ]
+            },
+            {
+                "precision": 0.0,
+                "gt_count": 0.0,
+                "count_error": 50,
+                "class_name": "two",
+                "class_id": 2,
+                "recall": null,
+                "f1": null,
+                "conf_mat": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "precision": 1.0,
+                "gt_count": 100.0,
+                "count_error": 50.0,
+                "class_name": "average",
+                "class_id": null,
+                "recall": 0.5,
+                "f1": 0.6666666666666666,
+                "conf_mat": [
+                    0.0,
+                    50.0,
+                    50.0
+                ]
+            }
+        ],
+        "2": [
+            {
+                "precision": 0.0,
+                "gt_count": 0.0,
+                "count_error": 50,
+                "class_name": "one",
+                "class_id": 1,
+                "recall": null,
+                "f1": null,
+                "conf_mat": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            },
+            {
+                "precision": 1.0,
+                "gt_count": 100.0,
+                "count_error": 50,
+                "class_name": "two",
+                "class_id": 2,
+                "recall": 0.5,
+                "f1": 0.6666666666666666,
+                "conf_mat": [
+                    0.0,
+                    50.0,
+                    50.0
+                ]
+            },
+            {
+                "precision": 1.0,
+                "gt_count": 100.0,
+                "count_error": 50.0,
+                "class_name": "average",
+                "class_id": null,
+                "recall": 0.5,
+                "f1": 0.6666666666666666,
+                "conf_mat": [
+                    0.0,
+                    50.0,
+                    50.0
+                ]
+            }
+        ]
+    },
+    "overall": [
+        {
+            "precision": 1.0,
+            "gt_count": 100.0,
+            "count_error": 50,
+            "class_name": "one",
+            "class_id": 1,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "conf_mat": [
+                0.0,
+                50.0,
+                50.0
+            ]
+        },
+        {
+            "precision": 1.0,
+            "gt_count": 100.0,
+            "count_error": 50.0,
+            "class_name": "two",
+            "class_id": 2,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "conf_mat": [
+                0.0,
+                50.0,
+                50.0
+            ]
+        },
+        {
+            "precision": 1.0,
+            "gt_count": 200.0,
+            "count_error": 50.0,
+            "class_name": "average",
+            "class_id": null,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "conf_mat": [
+                [
+                    0.0,
+                    50.0,
+                    50.0
+                ],
+                [
+                    0.0,
+                    50.0,
+                    50.0
+                ]
+            ]
+        }
+    ]
+}
