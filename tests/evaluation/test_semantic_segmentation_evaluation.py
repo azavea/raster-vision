@@ -56,7 +56,7 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         self.assertAlmostEqual(recall2, eval.class_to_eval_item[2].recall)
         self.assertAlmostEqual(f12, eval.class_to_eval_item[2].f1)
 
-        avg_conf_mat = np.array([[1., 13, 0], [0, 1, 0]])
+        avg_conf_mat = np.array([[0, 0, 0], [1., 13, 0], [0, 1, 0]])
         avg_recall = (14 / 15) * recall1 + (1 / 15) * recall2
         self.assertTrue(np.array_equal(avg_conf_mat, eval.avg_item.conf_mat))
         self.assertEqual(avg_recall, eval.avg_item.recall)

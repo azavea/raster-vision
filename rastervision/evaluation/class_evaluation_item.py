@@ -54,15 +54,21 @@ class ClassEvaluationItem(EvaluationItem):
             self.count_error = weighted_avg(self.count_error,
                                             other.count_error)
             self.gt_count = total_gt_count
-            if other.conf_mat is not None:
-                if self.class_name == 'average':
-                    if self.conf_mat is None:
-                        self.conf_mat = np.array(other.conf_mat)
-                    else:
-                        self.conf_mat = np.stack(
-                            [self.conf_mat, other.conf_mat])
+
+        if other.conf_mat is not None:
+            if self.class_name == 'average':
+                if self.conf_mat is None:
+                    # Make first row all zeros so that the array indices
+                    # correspond to valid class ids (ie. >= 1).
+                    self.conf_mat = np.concatenate(
+                        [np.zeros_like(other.conf_mat)[np.newaxis, :],
+                            np.array(other.conf_mat)[np.newaxis, :]], axis=0)
                 else:
-                    self.conf_mat += other.conf_mat
+                    self.conf_mat = np.concatenate(
+                        [self.conf_mat, other.conf_mat[np.newaxis, :]],
+                        axis=0)
+            else:
+                self.conf_mat += other.conf_mat
 
     def to_json(self):
         new_dict = {}
