@@ -66,8 +66,10 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
     def compute(self, gt_labels, pred_labels):
         self.clear()
 
-        labels = np.arange(len(self.class_map) + 1)
-        conf_mat = np.zeros((len(self.class_map) + 1, ) * 2)
+        # Ensure there is a row and column for each class_id even when
+        # class_ids are non-consecutive.
+        labels = np.arange(max(self.class_map.get_keys()) + 1)
+        conf_mat = np.zeros((len(labels), len(labels)))
         for window in pred_labels.get_windows():
             log.debug('Evaluating window: {}'.format(window))
             gt_arr = gt_labels.get_label_arr(window).ravel()

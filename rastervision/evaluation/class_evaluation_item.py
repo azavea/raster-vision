@@ -61,12 +61,14 @@ class ClassEvaluationItem(EvaluationItem):
                     # Make first row all zeros so that the array indices
                     # correspond to valid class ids (ie. >= 1).
                     self.conf_mat = np.concatenate(
-                        [np.zeros_like(other.conf_mat)[np.newaxis, :],
-                            np.array(other.conf_mat)[np.newaxis, :]], axis=0)
+                        [
+                            np.zeros_like(other.conf_mat)[np.newaxis, :],
+                            np.array(other.conf_mat)[np.newaxis, :]
+                        ],
+                        axis=0)
                 else:
                     self.conf_mat = np.concatenate(
-                        [self.conf_mat, other.conf_mat[np.newaxis, :]],
-                        axis=0)
+                        [self.conf_mat, other.conf_mat[np.newaxis, :]], axis=0)
             else:
                 self.conf_mat += other.conf_mat
 
