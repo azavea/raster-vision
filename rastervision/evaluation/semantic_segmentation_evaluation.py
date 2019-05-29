@@ -2,6 +2,9 @@ import math
 import logging
 import json
 
+from sklearn.metrics import confusion_matrix
+import numpy as np
+
 from rastervision.evaluation import ClassEvaluationItem
 from rastervision.evaluation import ClassificationEvaluation
 
@@ -20,30 +23,21 @@ def is_geojson(data):
         return retval
 
 
-def get_class_eval_item(gt_arr, pred_arr, class_id, class_map):
+def get_class_eval_item(conf_mat, class_id, class_map):
     class_name = class_map.get_by_id(class_id).name
 
-    if gt_arr.sum() == 0:
+    if conf_mat.ravel().sum() == 0:
         return ClassEvaluationItem(None, None, None, 0, 0, class_id,
                                    class_name)
 
-    # Definitions of precision, recall, and f1 taken from
-    # http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html  # noqa
-    not_dont_care = (gt_arr != 0)  # By assumption
-    gt = (gt_arr == class_id)
-    pred = (pred_arr == class_id)
-    not_gt = (gt_arr != class_id)
-    not_pred = (pred_arr != class_id)
-
-    true_pos = (gt * pred).sum()
-    false_pos = (not_gt * pred * not_dont_care).sum()
-    false_neg = (gt * not_pred * not_dont_care).sum()
-
+    true_pos = conf_mat[class_id, class_id]
+    false_pos = conf_mat[1:, class_id].sum() - true_pos
+    false_neg = conf_mat[class_id, :].sum() - true_pos
     precision = float(true_pos) / (true_pos + false_pos)
     recall = float(true_pos) / (true_pos + false_neg)
     f1 = 2 * (precision * recall) / (precision + recall)
     count_error = int(false_pos + false_neg)
-    gt_count = int(gt.sum())
+    gt_count = conf_mat[class_id, :].sum()
 
     if math.isnan(precision):
         precision = None
@@ -59,7 +53,7 @@ def get_class_eval_item(gt_arr, pred_arr, class_id, class_map):
         f1 = float(f1)
 
     return ClassEvaluationItem(precision, recall, f1, count_error, gt_count,
-                               class_id, class_name)
+                               class_id, class_name, conf_mat[class_id, :])
 
 
 class SemanticSegmentationEvaluation(ClassificationEvaluation):
@@ -71,24 +65,22 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
 
     def compute(self, gt_labels, pred_labels):
         self.clear()
+
+        # Ensure there is a row and column for each class_id even when
+        # class_ids are non-consecutive.
+        labels = np.arange(max(self.class_map.get_keys()) + 1)
+        conf_mat = np.zeros((len(labels), len(labels)))
         for window in pred_labels.get_windows():
             log.debug('Evaluating window: {}'.format(window))
-            gt_arr = gt_labels.get_label_arr(window)
-            pred_arr = pred_labels.get_label_arr(window)
+            gt_arr = gt_labels.get_label_arr(window).ravel()
+            pred_arr = pred_labels.get_label_arr(window).ravel()
+            conf_mat += confusion_matrix(gt_arr, pred_arr, labels=labels)
 
-            eval_items = []
-            for class_id in self.class_map.get_keys():
-                if class_id > 0:
-                    eval_item = get_class_eval_item(gt_arr, pred_arr, class_id,
-                                                    self.class_map)
-                    eval_items.append(eval_item)
-
-            # Treat each window as if it was a small Scene.
-            window_eval = SemanticSegmentationEvaluation(self.class_map)
-            window_eval.set_class_to_eval_item(
-                dict(zip(self.class_map.get_keys(), eval_items)))
-            window_eval.compute_avg()
-            self.merge(window_eval)
+        for class_id in self.class_map.get_keys():
+            if class_id > 0:
+                self.class_to_eval_item[class_id] = get_class_eval_item(
+                    conf_mat, class_id, self.class_map)
+        self.compute_avg()
 
     def compute_vector(self, gt, pred, mode, class_id):
         """Compute evaluation over vector predictions.

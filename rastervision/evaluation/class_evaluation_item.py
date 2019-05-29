@@ -1,3 +1,5 @@
+import numpy as np
+
 from rastervision.evaluation import EvaluationItem
 
 
@@ -15,7 +17,8 @@ class ClassEvaluationItem(EvaluationItem):
                  count_error=None,
                  gt_count=0,
                  class_id=None,
-                 class_name=None):
+                 class_name=None,
+                 conf_mat=None):
         self.precision = precision
         self.recall = recall
         self.f1 = f1
@@ -23,6 +26,7 @@ class ClassEvaluationItem(EvaluationItem):
         # Ground truth count of elements (boxes for object detection, pixels
         # for segmentation, cells for classification).
         self.gt_count = gt_count
+        self.conf_mat = conf_mat
         self.class_id = class_id
         self.class_name = class_name
 
@@ -51,8 +55,30 @@ class ClassEvaluationItem(EvaluationItem):
                                             other.count_error)
             self.gt_count = total_gt_count
 
+        if other.conf_mat is not None:
+            if self.class_name == 'average':
+                if self.conf_mat is None:
+                    # Make first row all zeros so that the array indices
+                    # correspond to valid class ids (ie. >= 1).
+                    self.conf_mat = np.concatenate(
+                        [
+                            np.zeros_like(other.conf_mat)[np.newaxis, :],
+                            np.array(other.conf_mat)[np.newaxis, :]
+                        ],
+                        axis=0)
+                else:
+                    self.conf_mat = np.concatenate(
+                        [self.conf_mat, other.conf_mat[np.newaxis, :]], axis=0)
+            else:
+                self.conf_mat += other.conf_mat
+
     def to_json(self):
-        return self.__dict__
+        new_dict = {}
+        for k, v in self.__dict__.items():
+            new_dict[k] = v.tolist() if isinstance(v, np.ndarray) else v
+        if new_dict['conf_mat'] is None:
+            del new_dict['conf_mat']
+        return new_dict
 
     def __repr__(self):
         return str(self.to_json())

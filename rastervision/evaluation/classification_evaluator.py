@@ -14,6 +14,7 @@ class ClassificationEvaluator(Evaluator):
     def __init__(self, class_map, output_uri):
         self.class_map = class_map
         self.output_uri = output_uri
+        self.eval = None
 
     @abstractmethod
     def create_evaluation(self):
@@ -39,3 +40,4 @@ class ClassificationEvaluator(Evaluator):
                 scene_evaluation.compute(ground_truth, predictions)
                 evaluation.merge(scene_evaluation, scene_id=scene.id)
         evaluation.save(self.output_uri)
+        self.eval = evaluation
