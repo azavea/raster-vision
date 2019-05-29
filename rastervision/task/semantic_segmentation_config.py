@@ -33,11 +33,13 @@ class SemanticSegmentationConfig(TaskConfig):
                  predict_package_uri=None,
                  debug=True,
                  chip_size=300,
+                 predict_chip_size=300,
                  chip_options=None):
         super().__init__(rv.SEMANTIC_SEGMENTATION, predict_batch_size,
                          predict_package_uri, debug)
         self.class_map = class_map
         self.chip_size = chip_size
+        self.predict_chip_size = predict_chip_size
         if chip_options is None:
             chip_options = SemanticSegmentationConfig.ChipOptions()
         self.chip_options = chip_options
@@ -65,6 +67,7 @@ class SemanticSegmentationConfig(TaskConfig):
 
         conf = TaskConfigMsg.SemanticSegmentationConfig(
             chip_size=self.chip_size,
+            predict_chip_size=self.predict_chip_size,
             class_items=self.class_map.to_proto(),
             chip_options=chip_options)
         msg.MergeFrom(
@@ -85,6 +88,7 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                 'debug': prev.debug,
                 'class_map': prev.class_map,
                 'chip_size': prev.chip_size,
+                'predict_chip_size': prev.predict_chip_size,
                 'chip_options': prev.chip_options
             }
         super().__init__(SemanticSegmentationConfig, config)
@@ -99,11 +103,17 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
         if stride == 0:
             stride = None
 
+        # for backward compatibility
+        predict_chip_size = conf.predict_chip_size
+        if predict_chip_size == 0:
+            predict_chip_size = conf.chip_size
+
         return self.with_classes(list(conf.class_items)) \
                 .with_predict_batch_size(msg.predict_batch_size) \
                 .with_predict_package_uri(msg.predict_package_uri) \
                 .with_debug(msg.debug) \
                 .with_chip_size(conf.chip_size) \
+                .with_predict_chip_size(predict_chip_size) \
                 .with_chip_options(
                     window_method=conf.chip_options.window_method,
                     target_classes=list(conf.chip_options.target_classes),
@@ -146,6 +156,16 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
         """
         b = deepcopy(self)
         b.config['chip_size'] = chip_size
+        return b
+
+    def with_predict_chip_size(self, chip_size):
+        """Set the chip_size to use only at prediction time for this task.
+
+            Args:
+                chip_size: Integer value chip size
+        """
+        b = deepcopy(self)
+        b.config['predict_chip_size'] = chip_size
         return b
 
     def with_chip_options(self,
