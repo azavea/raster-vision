@@ -5,6 +5,7 @@ package keras_classification.protos;
 message Optimizer {
     enum Type {
         ADAM = 1;
+        SGD = 2;
     }
 
     required Type type = 4;
