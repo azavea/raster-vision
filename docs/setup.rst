@@ -78,14 +78,14 @@ Rather than running Raster Vision from inside a Docker container, you can direct
 
 .. code-block:: console
 
-   > pip install rastervision
+   > pip install rastervision==0.9.0
 
-.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision`` if you have more than one version of Python installed.
+.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision==0.9.0`` if you have more than one version of Python installed.
 
 Troubleshooting macOS Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you encounter problems running ``pip install rastervision`` on macOS, you may have to manually install Cython and pyproj.
+If you encounter problems running ``pip install rastervision==0.9.0`` on macOS, you may have to manually install Cython and pyproj.
 
 To circumvent a problem installing pyproj with Python 3.7, you may also have to install that library using ``git+https``:
 
@@ -93,7 +93,7 @@ To circumvent a problem installing pyproj with Python 3.7, you may also have to 
 
   > pip install cython
   > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
-  > pip install rastervision
+  > pip install rastervision==0.9.0
 
 Using AWS, Tensorflow, and/or Keras
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,7 +102,7 @@ If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can in
 
 .. code-block:: console
 
-   > pip install rastervision[aws,tensorflow,tensorflow-gpu]
+   > pip install rastervision[aws,tensorflow,tensorflow-gpu]==0.9.0
 
 If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to install these from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream. You will also need to install `Tippecanoe <https://github.com/mapbox/tippecanoe>`_ if you would like to do vector tile processing. For an example of setting these up, see the `Dockerfile <https://github.com/azavea/raster-vision/blob/lf/0.9/Dockerfile>`_.
 
