@@ -82,8 +82,6 @@ Rather than running Raster Vision from inside a Docker container, you can direct
 
 .. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision==0.9.0`` if you have more than one version of Python installed.
 
-.. note:: Because 0.9 is a release candidate at the moment, it is necessary to explicitly state the version when installing via pip.
-
 Troubleshooting macOS Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
