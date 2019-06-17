@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='rastervision/protos/keras_classification/optimizer.proto',
   package='keras_classification.protos',
   syntax='proto2',
-  serialized_pb=_b('\n8rastervision/protos/keras_classification/optimizer.proto\x12\x1bkeras_classification.protos\"i\n\tOptimizer\x12\x39\n\x04type\x18\x04 \x02(\x0e\x32+.keras_classification.protos.Optimizer.Type\x12\x0f\n\x07init_lr\x18\x05 \x02(\x02\"\x10\n\x04Type\x12\x08\n\x04\x41\x44\x41M\x10\x01')
+  serialized_pb=_b('\n8rastervision/protos/keras_classification/optimizer.proto\x12\x1bkeras_classification.protos\"r\n\tOptimizer\x12\x39\n\x04type\x18\x04 \x02(\x0e\x32+.keras_classification.protos.Optimizer.Type\x12\x0f\n\x07init_lr\x18\x05 \x02(\x02\"\x19\n\x04Type\x12\x08\n\x04\x41\x44\x41M\x10\x01\x12\x07\n\x03SGD\x10\x02')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -35,11 +35,15 @@ _OPTIMIZER_TYPE = _descriptor.EnumDescriptor(
       name='ADAM', index=0, number=1,
       options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='SGD', index=1, number=2,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
   serialized_start=178,
-  serialized_end=194,
+  serialized_end=203,
 )
 _sym_db.RegisterEnumDescriptor(_OPTIMIZER_TYPE)
 
@@ -79,7 +83,7 @@ _OPTIMIZER = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=89,
-  serialized_end=194,
+  serialized_end=203,
 )
 
 _OPTIMIZER.fields_by_name['type'].enum_type = _OPTIMIZER_TYPE
