@@ -98,7 +98,7 @@ class ConfigBuilder(ABC):
         """Returns the configuration that is built by this builder.
         """
         self.validate()
-        arguments = set(inspect.getargspec(self.config_class).args)
+        arguments = set(inspect.getfullargspec(self.config_class).args)
         keys = set(self.config.keys())
         config = {k: self.config[k] for k in (arguments & keys)}
         return self.config_class(**config)

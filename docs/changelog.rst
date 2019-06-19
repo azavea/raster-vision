@@ -19,6 +19,7 @@ Bug Fixes
 ^^^^^^^^^
 
 - Fixed issue with configuration not being able to read lists `#784 <https://github.com/azavea/raster-vision/pull/784>`__
+- Fixed ConfigBuilders not supporting type annotations in __init__ `#800 <https://github.com/azavea/raster-vision/pull/800>`__
 
 Raster Vision 0.9
 -----------------
