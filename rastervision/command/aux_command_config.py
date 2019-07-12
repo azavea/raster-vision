@@ -13,11 +13,12 @@ from rastervision.utils.misc import split_into_groups
 
 
 class AuxCommandConfig(CommandConfig):
-    def __init__(self, command_class, root_uri, config):
+    def __init__(self, command_class, root_uri, config, split_id=0):
         super().__init__(command_class.command_type, root_uri)
         self.command_class = command_class
         self.command_options = command_class.options
         self.config = config
+        self.split_id = split_id
 
     def create_command(self, tmp_dir=None):
         if not tmp_dir:
@@ -102,7 +103,7 @@ class AuxCommandConfigBuilder(CommandConfigBuilder):
 
     def build(self):
         self.validate()
-        return AuxCommandConfig(self.command_class, self.root_uri, self.config)
+        return AuxCommandConfig(self.command_class, self.root_uri, self.config, self.split_id)
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
