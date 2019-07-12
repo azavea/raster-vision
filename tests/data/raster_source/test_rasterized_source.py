@@ -24,12 +24,12 @@ class TestRasterizedSource(unittest.TestCase):
     def tearDown(self):
         self.tmp_dir.cleanup()
 
-    def build_source(self, geojson):
+    def build_source(self, geojson, all_touched=False):
         json_to_file(geojson, self.uri)
 
         config = RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
             .with_uri(self.uri) \
-            .with_rasterizer_options(self.background_class_id) \
+            .with_rasterizer_options(self.background_class_id, all_touched=all_touched) \
             .build()
 
         # Convert to proto and back as a test.
@@ -94,6 +94,37 @@ class TestRasterizedSource(unittest.TestCase):
             expected_chip = np.zeros((10, 10, 1))
             expected_chip[0:5, 0:5, :] = self.background_class_id
 
+            np.testing.assert_array_equal(chip, expected_chip)
+
+    def test_get_chip_all_touched(self):
+        geojson = {
+            'type':
+            'FeatureCollection',
+            'features': [{
+                'type': 'Feature',
+                'geometry': {
+                    'type':
+                    'Polygon',
+                    'coordinates': [[[0., 0.], [0., 0.4], [0.4, 0.4], [0.4, 0.],
+                                     [0., 0.]]]
+                },
+                'properties': {
+                    'class_id': self.class_id,
+                }
+            }]
+        }
+
+        false_source = self.build_source(geojson, all_touched=False)
+        true_source = self.build_source(geojson, all_touched=True)
+        with false_source.activate():
+            chip = false_source.get_image_array()
+            expected_chip = self.background_class_id * np.ones((10, 10, 1))
+            np.testing.assert_array_equal(chip, expected_chip)
+
+        with true_source.activate():
+            chip = true_source.get_image_array()
+            expected_chip = self.background_class_id * np.ones((10, 10, 1))
+            expected_chip[0:1, 0:1, 0] = self.class_id
             np.testing.assert_array_equal(chip, expected_chip)
 
     def test_using_null_class_bufs(self):
