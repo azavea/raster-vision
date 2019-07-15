@@ -105,8 +105,8 @@ class TestRasterizedSource(unittest.TestCase):
                 'geometry': {
                     'type':
                     'Polygon',
-                    'coordinates': [[[0., 0.], [0., 0.4], [0.4, 0.4], [0.4, 0.],
-                                     [0., 0.]]]
+                    'coordinates': [[[0., 0.], [0., 0.4], [0.4, 0.4],
+                                     [0.4, 0.], [0., 0.]]]
                 },
                 'properties': {
                     'class_id': self.class_id,
