@@ -138,7 +138,8 @@ class ExperimentRunner(ABC):
             clashing_msgs = []
             for (output_uri, c_defs) in clashing_commands:
                 command_type = c_defs[0].command_config.command_type
-                experiments = ', '.join(map(lambda c: c.experiment_id or command_type, c_defs))
+                experiments = ', '.join(
+                    map(lambda c: c.experiment_id or command_type, c_defs))
                 clashing_msgs.append(
                     'The {} command in the following experiments '
                     'output {}, but are not equal: {}'.format(

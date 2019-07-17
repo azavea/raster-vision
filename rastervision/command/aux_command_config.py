@@ -103,7 +103,8 @@ class AuxCommandConfigBuilder(CommandConfigBuilder):
 
     def build(self):
         self.validate()
-        return AuxCommandConfig(self.command_class, self.root_uri, self.config, self.split_id)
+        return AuxCommandConfig(self.command_class, self.root_uri, self.config,
+                                self.split_id)
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
