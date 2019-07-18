@@ -91,6 +91,8 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
             command_def = command_dag.get_command_definition(command_id)
             command_config = command_def.command_config
             command_root_uri = command_config.root_uri
-            command_uri = os.path.join(command_root_uri, 'command-config.json')
+            command_basename = 'command-config-{}.json'.format(
+                command_config.split_id)
+            command_uri = os.path.join(command_root_uri, command_basename)
             run_command = make_command(command_uri, self.tmp_dir)
             click.echo('  {}'.format(run_command))
