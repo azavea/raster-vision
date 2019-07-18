@@ -33,6 +33,33 @@ class TestCogifyCommand(mk.MockMixin, unittest.TestCase):
                 self.assertEqual(ds.block_shapes, [(128, 128), (128, 128),
                                                    (128, 128)])
                 self.assertEqual(ds.overviews(1), [2, 4, 8, 16, 32])
+                self.assertEqual(ds.compression.value, 'DEFLATE')
+
+    def test_command_create_no_compression(self):
+        src_path = data_file_path('small-rgb-tile.tif')
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            cog_path = os.path.join(tmp_dir, 'cog.tif')
+
+            cmd_conf = rv.CommandConfig.builder(rv.COGIFY) \
+                                       .with_root_uri(tmp_dir) \
+                                       .with_config(uris=[(src_path, cog_path)],
+                                                    block_size=128,
+                                                    compression='none') \
+                                       .build()
+
+            cmd_conf = rv.command.CommandConfig.from_proto(cmd_conf.to_proto())
+            cmd = cmd_conf.create_command()
+
+            self.assertTrue(cmd, rv.command.aux.CogifyCommand)
+
+            cmd.run(tmp_dir)
+
+            # Check that it's cogified
+            with rasterio.open(cog_path) as ds:
+                self.assertEqual(ds.block_shapes, [(128, 128), (128, 128),
+                                                   (128, 128)])
+                self.assertEqual(ds.overviews(1), [2, 4, 8, 16, 32])
+                self.assertIsNone(ds.compression)
 
     def test_command_through_experiment(self):
         src_path = data_file_path('small-rgb-tile.tif')

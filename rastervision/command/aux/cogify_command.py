@@ -8,6 +8,7 @@ COGIFY = 'COGIFY'
 
 DEFAULT_BLOCK_SIZE = 512
 DEFAULT_RESAMPLE_METHOD = 'near'
+DEFAULT_COMPRESSION = 'deflate'
 DEFAULT_OVERVIEWS = [2, 4, 8, 16, 32]
 
 
@@ -15,6 +16,7 @@ def gdal_cog_commands(input_path,
                       tmp_dir,
                       block_size=DEFAULT_BLOCK_SIZE,
                       resample_method=DEFAULT_RESAMPLE_METHOD,
+                      compression=DEFAULT_COMPRESSION,
                       overviews=None):
     """
     GDAL commands to create a COG from an input file.
@@ -28,27 +30,44 @@ def gdal_cog_commands(input_path,
         fname = os.path.splitext(os.path.basename(input_path))[0]
         return os.path.join(tmp_dir, '{}-{}.tif'.format(fname, command))
 
+    compression = compression.lower()
+    def add_compression(cmd, overview=False):
+        if compression != 'none':
+            if not overview:
+                return cmd[:1] + ['-co', 'compress={}'.format(compression)] + cmd[1:]
+            else:
+                return cmd[:1] + ['--config', 'COMPRESS_OVERVIEW', compression] + cmd[1:]
+        else:
+            return cmd
+
     # Step 1: Translate to a GeoTiff.
     translate_path = get_output_path('translate')
-    translate = [
-        'gdal_translate', '-of', 'GTiff', '-co', 'tiled=YES', input_path,
+    translate = add_compression([
+        'gdal_translate', '-of', 'GTiff',
+        '-co', 'tiled=YES',
+        '-co', 'BIGTIFF=IF_SAFER',
+        input_path,
         translate_path
-    ]
+    ])
 
     # Step 2: Add overviews
-    add_overviews = ['gdaladdo', '-r', resample_method, translate_path] + list(
-        map(lambda x: str(x), overviews))
+    add_overviews = add_compression(
+        ['gdaladdo', '-r', resample_method, translate_path] + list(
+        map(lambda x: str(x), overviews)), overview=True)
 
     # Step 3: Translate to COG
     output_path = get_output_path('cog')
 
-    create_cog = [
-        'gdal_translate', '-co', 'TILED=YES', '-co', 'COMPRESS=deflate', '-co',
-        'COPY_SRC_OVERVIEWS=YES', '-co', 'BLOCKXSIZE={}'.format(block_size),
-        '-co', 'BLOCKYSIZE={}'.format(block_size), '--config',
-        'GDAL_TIFF_OVR_BLOCKSIZE',
+    create_cog = add_compression([
+        'gdal_translate',
+        '-co', 'TILED=YES',
+        '-co', 'COPY_SRC_OVERVIEWS=YES',
+        '-co', 'BLOCKXSIZE={}'.format(block_size),
+        '-co', 'BLOCKYSIZE={}'.format(block_size),
+        '-co', 'BIGTIFF=IF_SAFER',
+        '--config', 'GDAL_TIFF_OVR_BLOCKSIZE',
         str(block_size), translate_path, output_path
-    ]
+    ])
 
     return ([translate, add_overviews, create_cog], output_path)
 
@@ -71,6 +90,7 @@ def create_cog(source_uri,
                local_dir,
                block_size=DEFAULT_BLOCK_SIZE,
                resample_method=DEFAULT_RESAMPLE_METHOD,
+               compression=DEFAULT_COMPRESSION,
                overviews=None):
     local_path = download_or_copy(source_uri, local_dir)
 
@@ -79,6 +99,7 @@ def create_cog(source_uri,
         local_dir,
         block_size=block_size,
         resample_method=resample_method,
+        compression=compression,
         overviews=overviews)
     for command in commands:
         run_cmd(command)
@@ -94,6 +115,8 @@ class CogifyCommand(AuxCommand):
           the COG URI.
     block_size: The tile size for the COG. Defaults to 512.
     resample_method: The resample method to use for overviews. Defaults to 'near'.
+    compression: The compression method to use. Defaults to 'deflate'.
+                 Use 'none' for no compression.
     overviews: The overview levels to create. Defaults to [2, 4, 8, 16, 32]
     """
     command_type = COGIFY
@@ -111,6 +134,8 @@ class CogifyCommand(AuxCommand):
         block_size = self.command_config.get('block_size', DEFAULT_BLOCK_SIZE)
         resample_method = self.command_config.get('resample_method',
                                                   DEFAULT_RESAMPLE_METHOD)
+        compression = self.command_config.get('compression',
+                                              DEFAULT_COMPRESSION)
         overviews = self.command_config.get('overviews', DEFAULT_OVERVIEWS)
 
         for src, dst in uris:
@@ -120,4 +145,5 @@ class CogifyCommand(AuxCommand):
                 tmp_dir,
                 block_size=block_size,
                 resample_method=resample_method,
+                compression=compression,
                 overviews=overviews)
