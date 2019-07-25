@@ -13,18 +13,24 @@ from rastervision.utils.files import download_if_needed
 
 class RasterizedSourceConfig(RasterSourceConfig):
     class RasterizerOptions(object):
-        def __init__(self, background_class_id):
+        def __init__(self, background_class_id, all_touched=False):
             """Constructor.
 
             Args:
                 background_class_id: The class_id to use for background pixels that don't
                     overlap with any shapes in the GeoJSON file.
+                all_touched: If True, all pixels touched by geometries will be burned in.
+                             If false, only pixels whose center is within the polygon or
+                             that are selected by Bresenham’s line algorithm will be
+                             burned in. (See rasterio.features.rasterize).
             """
             self.background_class_id = background_class_id
+            self.all_touched = all_touched
 
         def to_proto(self):
             return RasterSourceConfigMsg.RasterizedSource.RasterizerOptions(
-                background_class_id=self.background_class_id)
+                background_class_id=self.background_class_id,
+                all_touched=self.all_touched)
 
     def __init__(self,
                  vector_source,
@@ -140,7 +146,8 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
         return b \
             .with_vector_source(vector_source) \
             .with_rasterizer_options(
-                rasterizer_options.background_class_id)
+                rasterizer_options.background_class_id,
+                rasterizer_options.all_touched)
 
     def with_vector_source(self, vector_source):
         """Set the vector_source.
@@ -167,15 +174,20 @@ class RasterizedSourceConfigBuilder(RasterSourceConfigBuilder):
         b.config['vector_source'] = provider.construct(uri)
         return b
 
-    def with_rasterizer_options(self, background_class_id):
+    def with_rasterizer_options(self, background_class_id, all_touched=False):
         """Specify options for converting GeoJSON to raster.
 
         Args:
             background_class_id: The class_id to use for background pixels that don't
                 overlap with any shapes in the GeoJSON file.
+            all_touched: If True, all pixels touched by geometries will be burned in.
+                         If false, only pixels whose center is within the polygon or that
+                         are selected by Bresenham’s line algorithm will be burned in.
+                         (See rasterio.features.rasterize).
+
         """
         b = deepcopy(self)
         b.config[
             'rasterizer_options'] = RasterizedSourceConfig.RasterizerOptions(
-                background_class_id)
+                background_class_id, all_touched)
         return b

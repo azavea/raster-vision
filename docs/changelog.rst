@@ -2,7 +2,7 @@ CHANGELOG
 =========
 
 Raster Vision 0.10
------------------
+------------------
 
 Raster Vision 0.10.0
 ~~~~~~~~~~~~~~~~~~~
@@ -14,6 +14,7 @@ Features
 - Add predict_chip_size as option for semantic segmentation `#786 <https://github.com/azavea/raster-vision/pull/786>`__
 - Handle "ignore" class for semantic segmentation `#783 <https://github.com/azavea/raster-vision/pull/783>`__
 - Add stochastic gradient descent ("SGD") as an optimizer option for chip classification `#792 <https://github.com/azavea/raster-vision/pull/792>`__
+- Add option to determine if all touched pixels should be rasterized for rasterized RasterSource `#803 <https://github.com/azavea/raster-vision/pull/803>`_
 
 Bug Fixes
 ^^^^^^^^^

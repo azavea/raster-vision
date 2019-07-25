@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 def geoms_to_raster(str_tree, rasterizer_options, window, extent):
     background_class_id = rasterizer_options.background_class_id
+    all_touched = rasterizer_options.all_touched
 
     log.debug('Cropping shapes to window...')
     # Crop shapes against window, remove empty shapes, and put in window frame of
@@ -41,7 +42,8 @@ def geoms_to_raster(str_tree, rasterizer_options, window, extent):
             shapes,
             out_shape=out_shape,
             fill=background_class_id,
-            dtype=np.uint8)
+            dtype=np.uint8,
+            all_touched=all_touched)
     else:
         raster = np.full(out_shape, background_class_id, dtype=np.uint8)
 
