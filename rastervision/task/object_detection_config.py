@@ -133,8 +133,11 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
     def with_chip_size(self, chip_size):
         """Set the chip_size for this task.
 
-            Args:
-                chip_size: Integer value chip size
+        Note that some model implementations have a minimum size of input they
+        can handle. A value of > 200 is usually safe.
+
+        Args:
+            chip_size: (int) chip size in units of pixels
         """
         b = deepcopy(self)
         b.config['chip_size'] = chip_size
