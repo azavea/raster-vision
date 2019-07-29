@@ -190,7 +190,14 @@ class ChipClassificationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
         return b
 
     def with_cell_size(self, cell_size):
-        """Sets the cell size of the chips."""
+        """Sets the cell size of the chips.
+
+        If not explicitly set, the chip size will be used if this object is
+        created as part of an experiment.
+
+        Args:
+            cell_size: (int) the size of the cells in units of pixels
+        """
         b = deepcopy(self)
         b.config['cell_size'] = cell_size
         return b

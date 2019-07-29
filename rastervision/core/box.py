@@ -241,8 +241,8 @@ class Box():
         """Return list of grid of boxes within this box.
 
         Args:
-            chip_size: (int) the length of each square-shaped window
-            stride: (int) how much each window is offset from the last
+            chip_size: (int) the length of each square-shaped window in pixels
+            stride: (int) how much each window is offset from the last in pixels
 
         """
         height = self.get_height()

@@ -68,7 +68,8 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         Args:
              window: Either None or a window given as a Box object. Uses full extent of
                 scene if window is not provided.
-             chip_size: size of sub-windows to use if full extent is used.
+             chip_size: size of sub-windows to use if full extent is used (in
+                units of pixels)
         Returns:
              SemanticSegmentationLabels
         """
