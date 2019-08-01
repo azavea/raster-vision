@@ -31,40 +31,39 @@ def gdal_cog_commands(input_path,
         return os.path.join(tmp_dir, '{}-{}.tif'.format(fname, command))
 
     compression = compression.lower()
+
     def add_compression(cmd, overview=False):
         if compression != 'none':
             if not overview:
-                return cmd[:1] + ['-co', 'compress={}'.format(compression)] + cmd[1:]
+                return cmd[:1] + ['-co', 'compress={}'.format(compression)
+                                  ] + cmd[1:]
             else:
-                return cmd[:1] + ['--config', 'COMPRESS_OVERVIEW', compression] + cmd[1:]
+                return cmd[:1] + [
+                    '--config', 'COMPRESS_OVERVIEW', compression
+                ] + cmd[1:]
         else:
             return cmd
 
     # Step 1: Translate to a GeoTiff.
     translate_path = get_output_path('translate')
     translate = add_compression([
-        'gdal_translate', '-of', 'GTiff',
-        '-co', 'tiled=YES',
-        '-co', 'BIGTIFF=IF_SAFER',
-        input_path,
-        translate_path
+        'gdal_translate', '-of', 'GTiff', '-co', 'tiled=YES', '-co',
+        'BIGTIFF=IF_SAFER', input_path, translate_path
     ])
 
     # Step 2: Add overviews
     add_overviews = add_compression(
         ['gdaladdo', '-r', resample_method, translate_path] + list(
-        map(lambda x: str(x), overviews)), overview=True)
+            map(lambda x: str(x), overviews)),
+        overview=True)
 
     # Step 3: Translate to COG
     output_path = get_output_path('cog')
 
     create_cog = add_compression([
-        'gdal_translate',
-        '-co', 'TILED=YES',
-        '-co', 'COPY_SRC_OVERVIEWS=YES',
-        '-co', 'BLOCKXSIZE={}'.format(block_size),
-        '-co', 'BLOCKYSIZE={}'.format(block_size),
-        '-co', 'BIGTIFF=IF_SAFER',
+        'gdal_translate', '-co', 'TILED=YES', '-co', 'COPY_SRC_OVERVIEWS=YES',
+        '-co', 'BLOCKXSIZE={}'.format(block_size), '-co',
+        'BLOCKYSIZE={}'.format(block_size), '-co', 'BIGTIFF=IF_SAFER',
         '--config', 'GDAL_TIFF_OVR_BLOCKSIZE',
         str(block_size), translate_path, output_path
     ])
@@ -109,15 +108,21 @@ def create_cog(source_uri,
 
 class CogifyCommand(AuxCommand):
     """Turns a GDAL-readable raster into a Cloud Optimized GeoTiff.
+
     Configuration:
 
-    uris: A list of tuples of (src_path, dest_path) where dest_path is
-          the COG URI.
-    block_size: The tile size for the COG. Defaults to 512.
-    resample_method: The resample method to use for overviews. Defaults to 'near'.
-    compression: The compression method to use. Defaults to 'deflate'.
-                 Use 'none' for no compression.
-    overviews: The overview levels to create. Defaults to [2, 4, 8, 16, 32]
+        uris: A list of tuples of (src_path, dest_path) where dest_path is
+              the COG URI.
+
+        block_size: The tile size for the COG. Defaults to 512.
+
+        resample_method: The resample method to use for overviews. Defaults to 'near'.
+
+        compression: The compression method to use. Defaults to 'deflate'.
+        Use 'none' for no compression.
+
+        overviews: The overview levels to create. Defaults to [2, 4, 8, 16, 32]
+
     """
     command_type = COGIFY
     options = AuxCommandOptions(
