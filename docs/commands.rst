@@ -3,13 +3,14 @@
 Commands
 ========
 
+Standard Commands
+-----------------
+
+A Raster Vision experiment is a sequence of commands that each run a component of a machine learning workflow.
+
 .. image:: _static/commands-chain-workflow.png
     :align: center
 
-Command Types
--------------
-
-A Raster Vision experiment is a sequence of commands that each run a component of a machine learning workflow.
 
 ANALYZE
 ^^^^^^^
@@ -44,3 +45,175 @@ BUNDLE
 ^^^^^^
 
 The BUNDLE command gathers files necessary to create a prediction package from the output of the previous commands. A prediction package contains a model file plus associated configuration data, and can be used to make predictions on new imagery in a deployed application.
+
+Auxiliary (Aux) Commands
+------------------------
+
+Raster Vision utilizes *auxiliary commands* for things like data preperation. These are commands that do not run in the normal ML pipeline (e.g., if one were to run run ``rastervision run`` without an command specified). Auxiliary commands normally do not have the same type of implicit configuration setting as normal commands; because of this, file paths are often set explicity, and these commands are often configured and returned from an ``ExperimentSet`` method directly, instead of implicity created through the ``ExperimentConfig``.
+
+Configuring Aux Commands
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are two ways to configure an Aux command: one is through custom configuration set on an ``ExperimentConfig``, and the other is to directly return a ``CommandConfig`` instance from an experiment method. Normally Aux Commands are run separately from the normal experiment workflow, so we suggest returning command configurations as a default.
+
+Configurating an Aux Command from an ExperimentConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to pass an Aux Command configuraiton through the experiment, you must set the configuration on the custom configuration of the experiment, as a dictionary of aux command configuration values, set onto a property that is the command name.
+
+The aux command configuration dict must either have a ``root_uri`` property set, which will determine the root
+URI to store command configuration, or a ``key`` property, which will be used to implicitly construct
+the root URI based on the Experiment's overall root URI.
+
+The aux command configuration must also have a ``config`` key, which holds the configuration values for that
+particular command as a dict.
+
+For example, to set the configuration for the CogifyCommand on your experiment, you would do the following:
+
+.. click:example::
+    import rastervision as rv
+
+    class ExampleExperiments(rv.ExperimentSet):
+       def get_experiment_builder(self):
+           # Experiment generation code here
+           pass
+
+       def exp_example(self):
+           experiment_builder = get_experiment_builder()
+
+           e = experiment_builder \
+               .with_root_uri(tmp_dir) \
+               .with_custom_config({
+                   'cogify': {
+                       'key': 'test',
+                       'config': {
+                           'uris': [(src_path, cog_path)],
+                           'block_size': 128
+                       }
+                   }
+               }) \
+               .build()
+
+           return e
+
+
+
+Configurating an Aux Command directly
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can configure the command configuration using the builder pattern directly. Aux Command builders all have the `with_root_uri` method, to set the root URI that will store command configuration, as well as the ``with_config`` method. This ``with_config`` method accetps **kwargs for configuration values.
+
+You can return one or more command configuration directly from an experiment method, as a single command configuration or a list of configs.
+
+Below is an example of an ExperimentSet that has one experiment method, that returns a configuration for a cogify command.
+
+.. click:example::
+    import rastervision as rv
+
+    class Preprocess(rv.ExperimentSet):
+       def exp_cogify(self):
+           root_uri = 's3://my-bucket/cogify'
+           uris = [('s3://my-bucket/original/some.tif', 's3://my-bucket/cogs/some-cog.tif')]
+
+           cmd_config = rv.CommandConfig.builder(rv.COGIFY) \
+                                        .with_root_uri(root_uri) \
+                                        .with_config(uris=uris,
+                                                     resample_method='bilinear',
+                                                     compression='jpeg') \
+                                        .build()
+
+           return cmd_config
+
+Running Aux Commands
+~~~~~~~~~~~~~~~~~~~~
+
+By default Aux Commands won't run without explicitly being run. That means
+
+.. code-block:: terminal
+
+   > rastervision -p example run local -e example.Preprocess
+
+Will not run the above Cogify command, however this will:
+
+.. code-block:: terminal
+
+   > rastervision -p example run local -e example.Preprocess cogify
+
+
+COGIFY
+^^^^^^
+
+The ``COGIFY`` command will turn GDAL-readable images and turn them into `Cloud Optimized GeoTiffs <https://www.cogeo.org/>`_.
+
+See the CogifyCommand entry in the :ref:`aux command api` API docs for configuration options.
+
+
+Custom Commands
+---------------
+
+Custom Commands allow advanced Raster Vision users to implement their own commands using the :ref:`plugins` architecture.
+
+To create a standard custom command, you will need to create implementations of the ``Command``, ``CommandConfig``, and ``CommandConfigBuilder`` interfaces. You then need to register the ``CommandConfigBuilder`` using the ``register_command_config_builder`` method of the plugin regsitry.
+
+Custom Aux Commands are much more simple to write. For instance, the following example creates and registers a custom AuxCommand that copies a file from one location to the other, with a no-op processing:
+
+.. click:example::
+
+    import rastervision as rv
+    from rastervision.utils.files import (download_or_copy, upload_or_copy)
+
+    def process_file(local_file_path, options):
+        # Do something
+        local_output_path = local_file_path
+        return local_output_path
+
+    class ExampleCommand(rv.AuxCommand):
+        command_type = "EXAMPLE"
+        options = rv.AuxCommandOptions(
+            split_on='uris',
+            inputs=lambda conf: map(lambda tup: tup[0], conf['uris']),
+            outputs=lambda conf: map(lambda tup: tup[1], conf['uris']),
+            required_fields=['uris', 'options'])
+
+        def run(self, tmp_dir=None):
+            if not tmp_dir:
+                tmp_dir = self.get_tmp_dir()
+
+            options = self.command_config['options']
+            for src, dest in self.command_config['uris']:
+                src_local = download_or_copy(src, tmp_dir)
+                output_local = process_file(src_local, options)
+                upload_or_copy(output_local, dest)
+
+    def register_plugin(plugin_registry):
+        plugin_registry.register_aux_command("EXAMPLE",
+                                             ExampleCommand)
+
+Notice there is only one class to implement: the ``rv.AuxCommand`` class.
+
+When creating an custom AuxCommand, be sure to set the options correctly - see the :ref:`aux command options api` API docs for more information about options.
+
+To use a custom command, refer to it by the ``command_type`` in the ``rv.CommandConfig.builder(...)`` method, like so:
+
+.. click:example::
+    import rastervision as rv
+
+    class Preprocess(rv.ExperimentSet):
+       def exp_example_command(self):
+           root_uri = 's3://my-bucket/example'
+           uris = [('s3://my-bucket/original/some.tif', 's3://my-bucket/processed/some.tif')]
+           options = { 'something_useful': 'yes' }
+
+           cmd_config = rv.CommandConfig.builder("EXAMPLE") \
+                                        .with_root_uri(root_uri) \
+                                        .with_config(uris=uris,
+                                                     options=options) \
+                                        .build()
+
+           return cmd_config
+
+To run the command, use the ``command_type`` name on the command line, e.g.:
+
+.. code-block:: terminal
+
+   > rastervision -p example run local -e example.Preprocess example

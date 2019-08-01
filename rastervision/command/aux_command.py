@@ -2,7 +2,6 @@ from rastervision.command import Command
 
 
 class AuxCommandOptions:
-
     def __init__(self,
                  split_on=None,
                  inputs=lambda config: None,
@@ -29,9 +28,10 @@ class AuxCommandOptions:
             by default, meaning it will run every time no specific commands are issued
             on the command line (e.g. how a standard command would run).
 
-            required_fields: Set this to properties of the configuration that are required.
-            If the user of the command does not set values into those configuration properties,
-            an error will be thrown at configuration building time.
+            required_fields: Set this to properties of the configuration that are
+            required. If the user of the command does not set values into those
+            configuration properties, an error will be thrown at configuration building
+            time.
 
         """
         self.split_on = split_on
