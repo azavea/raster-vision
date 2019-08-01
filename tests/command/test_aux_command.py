@@ -47,6 +47,27 @@ class TestAuxCommand(mk.MockMixin, unittest.TestCase):
 
             # Nothing to assert here, just ensures code path runs.
 
+    def test_command_from_experiment_case_insensitive(self):
+        with RVConfig.get_tmp_dir() as tmp_dir:
+            uris = [('one', '1'), ('two', '2'), ('three', '3'), ('four', '4')]
+
+            e = mk.create_mock_experiment().to_builder() \
+                                           .with_root_uri(tmp_dir) \
+                                           .with_custom_config({
+                                               'MOCK_AUX_COMMAND': {
+                                                   'key': 'mock',
+                                                   'config': {
+                                                       'uris': uris
+                                                   }
+                                               }
+                                           }) \
+                                           .build()
+
+            rv.ExperimentRunner.get_runner(rv.LOCAL).run(
+                e, splits=2, commands_to_run=[mk.MOCK_AUX_COMMAND])
+
+            # Nothing to assert here, just ensures code path runs.
+
     def test_command_split(self):
         with RVConfig.get_tmp_dir() as tmp_dir:
             uris = [('one', '1'), ('two', '2'), ('three', '3'), ('four', '4')]

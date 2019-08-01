@@ -116,12 +116,28 @@ class AuxCommandConfigBuilder(CommandConfigBuilder):
 
         return b
 
+    def _get_config_from_experiment(self, experiment_config):
+        command_name = self.command_type.lower()
+        matching_props = list(
+            filter(lambda x: x.lower() == command_name,
+                   experiment_config.custom_config.keys()))
+        if len(matching_props) > 1:
+            raise rv.ConfigError(
+                'Multiple configurations matching the {} command found. '
+                'Use only one configuration - property match is not case sensitive.'.
+                format(self.command_type))
+        elif len(matching_props) == 1:
+            return experiment_config.custom_config[matching_props[0]]
+        else:
+            return None
+
     def get_root_uri(self, experiment_config):
         if self.root_uri:
             return self.root_uri
+
         command_name = self.command_type.lower()
-        command_config = experiment_config.custom_config.get(
-            '{}'.format(command_name))
+        command_config = self._get_config_from_experiment(experiment_config)
+
         if not command_config:
             raise rv.ConfigError(
                 '{} command requires experiment custom_config '
@@ -142,9 +158,9 @@ class AuxCommandConfigBuilder(CommandConfigBuilder):
 
     def with_experiment(self, experiment_config):
         b = super().with_experiment(experiment_config)
-        command_name = self.command_type.lower()
-        command_config = experiment_config.custom_config.get(
-            '{}'.format(command_name))
+
+        command_config = self._get_config_from_experiment(experiment_config)
+
         if command_config:
             config_data = command_config.get('config')
             if not config_data:
