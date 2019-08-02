@@ -46,6 +46,8 @@ BUNDLE
 
 The BUNDLE command gathers files necessary to create a prediction package from the output of the previous commands. A prediction package contains a model file plus associated configuration data, and can be used to make predictions on new imagery in a deployed application.
 
+.. _aux commands:
+
 Auxiliary (Aux) Commands
 ------------------------
 

@@ -11,7 +11,7 @@ Experiment Set
 --------------
 
 An experiment set is a set of related experiments and can be created by subclassing ``ExperimentSet``. For each experiment, the class should have a method prefixed with ``exp_`` that returns either a single ``ExperimentConfig``, or
-a list of ``ExperimentConfig`` objects.
+a list of ``ExperimentConfig`` objects. You can also return a ``CommandConfig`` directly or multiple in a list; this is useful when running :ref:`aux commands`.
 
 In the ``tiny_spacenet.py`` example from the :ref:`quickstart`, the ``TinySpacenetExperimentSet`` is the ``ExperimentSet`` that Raster Vision finds when executing ``rastervision run -p tiny_spacenet.py``.
 
