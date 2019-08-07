@@ -6,4 +6,3 @@ from rastervision.data.raster_source.rasterio_source import *
 from rastervision.data.raster_source.rasterio_source_config import *
 from rastervision.data.raster_source.rasterized_source import *
 from rastervision.data.raster_source.rasterized_source_config import *
-from rastervision.data.raster_source.zxy2geotiff import *

@@ -8,7 +8,9 @@ import rasterio
 from rasterio.windows import Window
 import pyproj
 
-from rastervision.utils.files import download_if_needed, get_local_path
+from rastervision.utils.files import (download_if_needed, get_local_path,
+                                      upload_or_copy)
+from rastervision.command.aux.cogify_command import create_cog
 
 
 def lnglat2merc(lng, lat):
@@ -46,7 +48,7 @@ def merc2pixel(tile_x, tile_y, zoom, merc_x, merc_y, tile_sz=256):
     return (pix_x, pix_y)
 
 
-def _zxy2geotiff(tile_schema, zoom, bounds, output_uri):
+def _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=False):
     """Generates a GeoTIFF of a bounded region from a ZXY tile server.
 
     Args:
@@ -151,13 +153,19 @@ def _zxy2geotiff(tile_schema, zoom, bounds, output_uri):
                 out_y += window_height
             out_x += window_width
 
+    if make_cog:
+        create_cog(output_path, output_uri, tmp_dir)
+    else:
+        upload_or_copy(output_path, output_uri)
+
 
 @click.command()
 @click.argument('tile_schema')
 @click.argument('zoom')
 @click.argument('bounds')
 @click.argument('output_uri')
-def zxy2geotiff(tile_schema, zoom, bounds, output_uri):
+@click.option('--make-cog', is_flag=True, default=False)
+def zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog):
     """Generates a GeoTIFF of a bounded region from a ZXY tile server.
 
     TILE_SCHEMA: the URI schema for zxy tiles (ie. a slippy map tile server) of
@@ -175,7 +183,7 @@ def zxy2geotiff(tile_schema, zoom, bounds, output_uri):
     local file system.
     """
     bounds = [float(x) for x in bounds.split(' ')]
-    _zxy2geotiff(tile_schema, int(zoom), bounds, output_uri)
+    _zxy2geotiff(tile_schema, int(zoom), bounds, output_uri, make_cog=make_cog)
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ from PIL import Image
 import numpy as np
 import rasterio
 from rastervision.utils.files import make_dir
-from rastervision.data.raster_source.zxy2geotiff import _zxy2geotiff, merc2lnglat
+from rastervision.utils.zxy2geotiff import _zxy2geotiff, merc2lnglat
 
 
 class TestZXY2Geotiff(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestZXY2Geotiff(unittest.TestCase):
         self.tmp_dir = tmp_dir_obj.name
         self.tmp_dir = '/opt/data/test-zxy'
 
-    def _test_zxy2geotiff(self, use_tms=False):
+    def _test_zxy2geotiff(self, use_tms=False, make_cog=False):
         # We generate a 3x3 grid of zxy tiles and save them. Then,
         # get the lng/lat of the center of the NW (northwest) and SE tiles,
         # and pass those as bounds to zxy2geotiff. We open the resulting
@@ -60,7 +60,7 @@ class TestZXY2Geotiff(unittest.TestCase):
         # min_lat, min_lng, max_lat, max_lng = bounds
         bounds = [se_lat, nw_lng, nw_lat, se_lng]
         output_uri = join(self.tmp_dir, 'output.tif')
-        _zxy2geotiff(tile_schema, zoom, bounds, output_uri)
+        _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=make_cog)
 
         with rasterio.open(output_uri) as dataset:
             tiff_arr = dataset.read()
@@ -70,6 +70,9 @@ class TestZXY2Geotiff(unittest.TestCase):
 
     def test_zxy2geotiff(self):
         self._test_zxy2geotiff()
+
+    def test_zxy2geotiff_cog(self):
+        self._test_zxy2geotiff(make_cog=True)
 
     def test_zxy2geotiff_tms(self):
         self._test_zxy2geotiff(use_tms=True)
