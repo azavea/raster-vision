@@ -10,6 +10,29 @@ from rastervision.utils.files import make_dir
 from rastervision.utils.zxy2geotiff import _zxy2geotiff, merc2lnglat
 
 
+def gen_zxy_tiles(root_dir, zoom, xlen, ylen, use_tms=False):
+    img_arr = np.random.randint(
+        0, 256, (ylen * 256, xlen * 256, 3), dtype=np.uint8)
+
+    i = 0
+    for y in range(ylen):
+        for x in range(xlen):
+            im = Image.fromarray(
+                img_arr[y * 256:(y + 1) * 256, x * 256:(x + 1) * 256, :])
+
+            tile_y = y
+            # The TMS convention is for the y axis to start at the bottom
+            # rather than the top.
+            if use_tms:
+                tile_y = (2**zoom) - y - 1
+            im_path = join(root_dir, '{}/{}/{}.png'.format(zoom, x, tile_y))
+            make_dir(im_path, use_dirname=True)
+            im.save(im_path)
+            i += 1
+
+    return img_arr
+
+
 class TestZXY2Geotiff(unittest.TestCase):
     def setUp(self):
         tmp_dir_obj = tempfile.TemporaryDirectory()
@@ -21,31 +44,9 @@ class TestZXY2Geotiff(unittest.TestCase):
         # get the lng/lat of the center of the NW (northwest) and SE tiles,
         # and pass those as bounds to zxy2geotiff. We open the resulting
         # geotiff and check that the content is correct.
-        img_arr = np.random.randint(
-            0, 256, (3 * 256, 3 * 256, 3), dtype=np.uint8)
+
         zoom = 18
-
-        i = 0
-        for y in range(3):
-            for x in range(3):
-                im = Image.fromarray(
-                    img_arr[y * 256:(y + 1) * 256, x * 256:(x + 1) * 256, :])
-
-                tile_y = y
-                # The TMS convention is for the y axis to start at the bottom
-                # rather than the top.
-                if use_tms:
-                    tile_y = (2**zoom) - y - 1
-                im_path = join(self.tmp_dir, '{}/{}/{}.png'.format(
-                    zoom, x, tile_y))
-                make_dir(im_path, use_dirname=True)
-                im.save(im_path)
-                i += 1
-
-        tile_schema = join(self.tmp_dir, '{z}/{x}/{y}.png')
-        if use_tms:
-            tile_schema = join(self.tmp_dir, '{z}/{x}/{-y}.png')
-
+        img_arr = gen_zxy_tiles(self.tmp_dir, zoom, 3, 3, use_tms=use_tms)
         # Get center of NW and SE tiles.
         nw_bounds = mercantile.xy_bounds(0, 0, zoom)
         nw_merc_y = nw_bounds.bottom + (nw_bounds.top - nw_bounds.bottom) / 2
@@ -60,6 +61,9 @@ class TestZXY2Geotiff(unittest.TestCase):
         # min_lat, min_lng, max_lat, max_lng = bounds
         bounds = [se_lat, nw_lng, nw_lat, se_lng]
         output_uri = join(self.tmp_dir, 'output.tif')
+        tile_schema = join(self.tmp_dir, '{z}/{x}/{y}.png')
+        if use_tms:
+            tile_schema = join(self.tmp_dir, '{z}/{x}/{-y}.png')
         _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=make_cog)
 
         with rasterio.open(output_uri) as dataset:
@@ -77,19 +81,33 @@ class TestZXY2Geotiff(unittest.TestCase):
     def test_zxy2geotiff_tms(self):
         self._test_zxy2geotiff(use_tms=True)
 
+    def test_zxy2geotiff_dry_run(self):
+        zoom = 18
+
+        # Get center of NW and SE tiles.
+        nw_bounds = mercantile.xy_bounds(0, 0, zoom)
+        nw_merc_y = nw_bounds.bottom + (nw_bounds.top - nw_bounds.bottom) / 2
+        nw_merc_x = nw_bounds.left + (nw_bounds.right - nw_bounds.left) / 2
+        nw_lng, nw_lat = merc2lnglat(nw_merc_x, nw_merc_y)
+
+        se_bounds = mercantile.xy_bounds(2, 2, zoom)
+        se_merc_y = se_bounds.bottom + (se_bounds.top - se_bounds.bottom) / 2
+        se_merc_x = se_bounds.left + (se_bounds.right - se_bounds.left) / 2
+        se_lng, se_lat = merc2lnglat(se_merc_x, se_merc_y)
+
+        # min_lat, min_lng, max_lat, max_lng = bounds
+        bounds = [se_lat, nw_lng, nw_lat, se_lng]
+        output_uri = join(self.tmp_dir, 'output.tif')
+        tile_schema = join(self.tmp_dir, '{z}/{x}/{y}.png')
+        height, width, transform = _zxy2geotiff(
+            tile_schema, zoom, bounds, output_uri, dry_run=True)
+        self.assertEqual((height, width), (512, 512))
+
     def test_zxy2geotiff_single_tile(self):
         # Same as above test except it uses a single tile instead of a 3x3
         # grid.
-        img_arr = np.random.randint(0, 256, (256, 256, 3), dtype=np.uint8)
         zoom = 18
-
-        im = Image.fromarray(img_arr)
-        x = 0
-        y = 0
-        im_path = join(self.tmp_dir, '{}/{}/{}.png'.format(zoom, x, y))
-        make_dir(im_path, use_dirname=True)
-        im.save(im_path)
-
+        img_arr = gen_zxy_tiles(self.tmp_dir, zoom, 1, 1)
         tile_schema = join(self.tmp_dir, '{z}/{x}/{y}.png')
 
         # Get NW and SE corner of central half of tile.

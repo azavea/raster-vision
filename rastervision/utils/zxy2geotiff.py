@@ -10,7 +10,6 @@ import pyproj
 
 from rastervision.utils.files import (download_if_needed, get_local_path,
                                       upload_or_copy)
-from rastervision.command.aux.cogify_command import create_cog
 
 
 def lnglat2merc(lng, lat):
@@ -48,7 +47,12 @@ def merc2pixel(tile_x, tile_y, zoom, merc_x, merc_y, tile_sz=256):
     return (pix_x, pix_y)
 
 
-def _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=False):
+def _zxy2geotiff(tile_schema,
+                 zoom,
+                 bounds,
+                 output_uri,
+                 make_cog=False,
+                 dry_run=False):
     """Generates a GeoTIFF of a bounded region from a ZXY tile server.
 
     Args:
@@ -62,6 +66,11 @@ def _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=False):
             max_lat, max_lng
         output_uri: (str) where to save the GeoTIFF. The URI can be for http, S3, or the
             local file system
+        dry_run: (bool)
+
+    Returns:
+        if dry_run is True, this doesn't generate the geotiff and just returns
+            the height, width, and transform.
     """
     min_lat, min_lng, max_lat, max_lng = bounds
     if min_lat >= max_lat:
@@ -110,6 +119,10 @@ def _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=False):
 
     transform = rasterio.transform.from_bounds(nw_merc_x, se_merc_y, se_merc_x,
                                                nw_merc_y, width, height)
+
+    if dry_run:
+        return height, width, transform
+
     with rasterio.open(
             output_path,
             'w',
@@ -154,6 +167,7 @@ def _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=False):
             out_x += window_width
 
     if make_cog:
+        from rastervision.command.aux.cogify_command import create_cog
         create_cog(output_path, output_uri, tmp_dir)
     else:
         upload_or_copy(output_path, output_uri)
