@@ -370,7 +370,7 @@ rv.CHIP_CLASSIFICATION_EVALUATOR
 rv.OBJECT_DETECTION_EVALUATOR
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervisio.evaluation.ObjectDetectionEvaluatorConfigBuilder
+.. autoclass:: rastervision.evaluation.ObjectDetectionEvaluatorConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
