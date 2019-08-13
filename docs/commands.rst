@@ -97,13 +97,13 @@ For example, to set the configuration for the CogifyCommand on your experiment, 
     import rastervision as rv
 
     class ExampleExperiments(rv.ExperimentSet):
-       def get_experiment_builder(self):
-           # Experiment generation code here
-           pass
-
        def exp_example(self):
+
+           # Full experiment configuration builder generated elsewhere...
            experiment_builder = get_experiment_builder()
 
+           # Before building the ExperimentConfig, set custom configuration
+           # for the COGIFY Aux Command.
            e = experiment_builder \
                .with_root_uri(tmp_dir) \
                .with_custom_config({
