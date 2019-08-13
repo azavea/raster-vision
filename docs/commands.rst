@@ -180,6 +180,8 @@ Custom Commands allow advanced Raster Vision users to implement their own comman
 
 To create a standard custom command, you will need to create implementations of the ``Command``, ``CommandConfig``, and ``CommandConfigBuilder`` interfaces. You then need to register the ``CommandConfigBuilder`` using the ``register_command_config_builder`` method of the plugin registry.
 
+Custom commands that are built as standard commands will by default always be run - that is, if you run `rastervision run ...` without any specific command, your custom command will be run by default. The order in which it is run will be determined by how the inputs and outputs it declares are connected with other command definitions. One detail to note is the ``update_for_command`` method of custom commands will be called *after* it is called for the standard commands, in the order in which the custom commands were registered with Raster Vision.
+
 Custom Aux Commands
 -------------------
 
