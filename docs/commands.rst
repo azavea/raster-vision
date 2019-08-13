@@ -3,14 +3,35 @@
 Commands
 ========
 
+Commands are at the heart of how Raster Vision turns configuration into actions that can run in various environments (e.g. locally or on AWS Batch). When a user runs an Experiment through Raster Vision, every :ref:`experiment` is transformed into one or more commands configurations, which are then tied together through their inputs and outputs, and used to generate the commands to be run. Without commands, experiments are simply configuration.
+
+Command Generation and Execution
+--------------------------------
+
+Commands are generated from CommandConfigs in the runner environment. Commands follow the same :ref:`config vs entity` differentiation that ExperimentConfig elements do - they are only created when and where they are to be executed. For example, if you are running Raster Vision against AWS Batch, the Commands themselves are only created in the AWS Batch task that is going to run the command.
+
+Each ``CommandConfig`` is initially generated in the client environment. They can be created directly from a ``CommandConfigBuilder``, or generated as part of an internal Raster Vision process that generates CommandConfigs from ExperimentConfigs. The flowchart below shows how all configurations are eventually decomposed into CommandConfigs, and then executed in the runner environment as Commands:
+
+.. image:: _static/command-execution-workflow.png
+    :align: center
+
+Command Architecture
+--------------------
+
+.. image:: _static/command-hierarchy.png
+    :align: center
+
+Every command derives from the ``Command`` abstract class, and is associated with a ``CommandConfig`` and ``CommandConfigBuilder``. Every command must implement methods that describe the input and output of the command; this is how commands are structured in the Directed Acyclic Graph (DAG) of commands - if command B declares an input that is declared as output from command A, then there will be an edge (Command A)->(Command B) in the DAG of commands. This ensures that commands are run in the proper order. Commands often will declare their inputs implicitly based on configuration, so that you do not have to specify full URIs for inputs and outputs. However, this is command specific; e.g. Aux Commands are often more explicitly configured.
+
+Commands are further differentiated between standard commands and auxiliary commands. Auxiliary commands are a simplified version of commands are less flexible as far as implicit configuration setting, but are often easier to utilize and implement for explicitly configured commands such as those used for preprocessing data.
+
 Standard Commands
 -----------------
 
-A Raster Vision experiment is a sequence of commands that each run a component of a machine learning workflow.
+There are several commands that are commonly at the core to machine learning workflow, which are implemented as standard commands in Raster Vision:
 
 .. image:: _static/commands-chain-workflow.png
     :align: center
-
 
 ANALYZE
 ^^^^^^^
@@ -22,7 +43,7 @@ The ANALYZE command is used to analyze scenes that are part of an experiment and
 CHIP
 ^^^^
 
-Scenes are comprised of large geospatial raster sources (eg. GeoTIFFs) and geospatial label sources (eg. GeoJSONs), but models can only consume small images (i.e. chips) and labels in pixel based-coordinates. In addition, each backend has its own dataset format. The CHIP command solves this problem by converting scenes into training chips and into a format the backend can use for training.
+Scenes are comprised of large geospatial raster sources (e.g. GeoTIFFs) and geospatial label sources (e.g. GeoJSONs), but models can only consume small images (i.e. chips) and labels in pixel based-coordinates. In addition, each backend has its own dataset format. The CHIP command solves this problem by converting scenes into training chips and into a format the backend can use for training.
 
 TRAIN
 ^^^^^
@@ -51,17 +72,17 @@ The BUNDLE command gathers files necessary to create a prediction package from t
 Auxiliary (Aux) Commands
 ------------------------
 
-Raster Vision utilizes *auxiliary commands* for things like data preperation. These are commands that do not run in the normal ML pipeline (e.g., if one were to run run ``rastervision run`` without an command specified). Auxiliary commands normally do not have the same type of implicit configuration setting as normal commands; because of this, file paths are often set explicity, and these commands are often configured and returned from an ``ExperimentSet`` method directly, instead of implicity created through the ``ExperimentConfig``.
+Raster Vision utilizes *auxiliary commands* for things like data preparation. These are commands that do not run in the normal ML pipeline (e.g., if one were to run run ``rastervision run`` without an command specified). Auxiliary commands normally do not have the same type of implicit configuration setting as normal commands; because of this, file paths are often set explicitly, and these commands are often configured and returned from an ``ExperimentSet`` method directly, instead of implicitly created through the ``ExperimentConfig``.
 
 Configuring Aux Commands
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are two ways to configure an Aux command: one is through custom configuration set on an ``ExperimentConfig``, and the other is to directly return a ``CommandConfig`` instance from an experiment method. Normally Aux Commands are run separately from the normal experiment workflow, so we suggest returning command configurations as a default.
 
-Configurating an Aux Command from an ExperimentConfig
+Configuring an Aux Command from an ExperimentConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to pass an Aux Command configuraiton through the experiment, you must set the configuration on the custom configuration of the experiment, as a dictionary of aux command configuration values, set onto a property that is the command name.
+In order to pass an Aux Command configuration through the experiment, you must set the configuration on the custom configuration of the experiment, as a dictionary of aux command configuration values, set onto a property that is the command name.
 
 The aux command configuration dict must either have a ``root_uri`` property set, which will determine the root
 URI to store command configuration, or a ``key`` property, which will be used to implicitly construct
@@ -100,10 +121,10 @@ For example, to set the configuration for the CogifyCommand on your experiment, 
 
 
 
-Configurating an Aux Command directly
+Configuring an Aux Command directly
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can configure the command configuration using the builder pattern directly. Aux Command builders all have the `with_root_uri` method, to set the root URI that will store command configuration, as well as the ``with_config`` method. This ``with_config`` method accetps **kwargs for configuration values.
+You can configure the command configuration using the builder pattern directly. Aux Command builders all have the `with_root_uri` method, to set the root URI that will store command configuration, as well as the ``with_config`` method. This ``with_config`` method accepts **kwargs for configuration values.
 
 You can return one or more command configuration directly from an experiment method, as a single command configuration or a list of configs.
 
@@ -141,6 +162,8 @@ Will not run the above Cogify command, however this will:
 
    > rastervision -p example run local -e example.Preprocess cogify
 
+Aux Commands included with Raster Vision
+----------------------------------------
 
 COGIFY
 ^^^^^^
@@ -155,9 +178,12 @@ Custom Commands
 
 Custom Commands allow advanced Raster Vision users to implement their own commands using the :ref:`plugins` architecture.
 
-To create a standard custom command, you will need to create implementations of the ``Command``, ``CommandConfig``, and ``CommandConfigBuilder`` interfaces. You then need to register the ``CommandConfigBuilder`` using the ``register_command_config_builder`` method of the plugin regsitry.
+To create a standard custom command, you will need to create implementations of the ``Command``, ``CommandConfig``, and ``CommandConfigBuilder`` interfaces. You then need to register the ``CommandConfigBuilder`` using the ``register_command_config_builder`` method of the plugin registry.
 
-Custom Aux Commands are much more simple to write. For instance, the following example creates and registers a custom AuxCommand that copies a file from one location to the other, with a no-op processing:
+Custom Aux Commands
+-------------------
+
+Custom Aux Commands are more simple to write than a standard custom command. For instance, the following example creates and registers a custom AuxCommand that copies a file from one location to the other, with a no-op processing:
 
 .. click:example::
 

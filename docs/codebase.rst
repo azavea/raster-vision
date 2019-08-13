@@ -1,6 +1,8 @@
 Codebase Design Patterns
 ========================
 
+.. _config vs entity:
+
 Configuration vs Entity
 -----------------------
 
