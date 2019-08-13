@@ -15,6 +15,7 @@ Features
 - Handle "ignore" class for semantic segmentation `#783 <https://github.com/azavea/raster-vision/pull/783>`__
 - Add stochastic gradient descent ("SGD") as an optimizer option for chip classification `#792 <https://github.com/azavea/raster-vision/pull/792>`__
 - Add option to determine if all touched pixels should be rasterized for rasterized RasterSource `#803 <https://github.com/azavea/raster-vision/pull/803>`_
+- Add ZXYRasterSource `#812 <https://github.com/azavea/raster-vision/pull/812>`__
 
 Bug Fixes
 ^^^^^^^^^
