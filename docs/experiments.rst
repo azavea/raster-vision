@@ -242,6 +242,10 @@ Any images that can be read by `GDAL/Rasterio <https://www.gdal.org/formats_list
 
 The ``RasterioSource`` can also read non-georeferenced images such as ``.tif``, ``.png``, and ``.jpg`` files. This is useful for oblique drone imagery, biomedical imagery, and any other (potentially massive!) non-georeferenced images.
 
+*rv.ZXY_RASTER_SOURCE*
+
+The ``ZXYRasterSource`` can read imagery stored in Z/X/Y (or TMS) `tile servers <https://en.wikipedia.org/wiki/Tiled_web_map>`_.
+
 Rasterized Vectors
 ...................
 

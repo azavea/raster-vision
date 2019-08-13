@@ -17,7 +17,10 @@ class RasterioCRSTransformer(CRSTransformer):
             map_crs: CRS code
         """
         self.map_proj = pyproj.Proj(init=map_crs)
-        self.image_proj = pyproj.Proj(image_crs)
+        if isinstance(image_crs, str) and image_crs.startswith('epsg:'):
+            self.image_proj = pyproj.Proj(init=image_crs)
+        else:
+            self.image_proj = pyproj.Proj(image_crs)
 
         super().__init__(image_crs, map_crs, transform)
 

@@ -153,6 +153,16 @@ rv.RASTERIO_SOURCE
    :inherited-members:
    :exclude-members: from_proto, validate
 
+
+rv.ZXY_RASTER_SOURCE
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.data.ZXYRasterSourceConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
 rv.RASTERIZED_SOURCE
 ~~~~~~~~~~~~~~~~~~~~~
 

@@ -23,6 +23,14 @@ message RasterSourceConfig {
         optional float y_shift_meters = 3;
     }
 
+    message ZXYRasterSource {
+        required string tile_schema = 1;
+        required int32 zoom = 2;
+        repeated double bounds = 3;
+        optional float x_shift_meters = 4;
+        optional float y_shift_meters = 5;
+    }
+
     // Used to read a VectorSource as a raster useful for semantic segmentation.
     message RasterizedSource {
         message RasterizerOptions {
@@ -70,5 +78,6 @@ message RasterSourceConfig {
         google.protobuf.Struct custom_config = 7;
         RasterizedSource rasterized_source = 8;
         RasterioSource rasterio_source = 9;
+        ZXYRasterSource zxy_raster_source = 10;
     }
 }

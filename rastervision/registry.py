@@ -60,6 +60,8 @@ class Registry:
             rv.data.RasterizedSourceConfigBuilder,
             (rv.RASTER_SOURCE, rv.RASTERIO_SOURCE):
             rv.data.RasterioSourceConfigBuilder,
+            (rv.RASTER_SOURCE, rv.ZXY_RASTER_SOURCE):
+            rv.data.ZXYRasterSourceConfigBuilder,
 
             # Alias provided for backwards compatibility.
             (rv.RASTER_SOURCE, rv.GEOJSON_SOURCE):
