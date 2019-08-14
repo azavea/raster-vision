@@ -1,6 +1,9 @@
 import os
 from copy import deepcopy
 import logging
+import json
+
+from google.protobuf import (json_format, struct_pb2)
 
 import rastervision as rv
 from rastervision.core.config import (Config, ConfigBuilder)
@@ -28,7 +31,8 @@ class ExperimentConfig(Config):
                  eval_uri,
                  bundle_uri,
                  evaluators=None,
-                 analyzers=None):
+                 analyzers=None,
+                 custom_config=None):
         if analyzers is None:
             analyzers = []
 
@@ -45,6 +49,7 @@ class ExperimentConfig(Config):
         self.predict_uri = predict_uri
         self.eval_uri = eval_uri
         self.bundle_uri = bundle_uri
+        self.custom_config = custom_config or {}
 
     def update_for_command(self, command_type, experiment_config,
                            context=None):
@@ -103,7 +108,7 @@ class ExperimentConfig(Config):
         and is constructed by calling update_for_command for each command.
         """
         e = deepcopy(self)
-        for command_type in rv.ALL_COMMANDS:
+        for command_type in rv.all_commands():
             e.update_for_command(command_type, e)
         return e
 
@@ -131,6 +136,15 @@ class ExperimentConfig(Config):
         msg.predict_uri = self.predict_uri
         msg.eval_uri = self.eval_uri
         msg.bundle_uri = self.bundle_uri
+
+        if self.custom_config:
+            msg.MergeFrom(
+                ExperimentConfigMsg(
+                    custom_config=json_format.ParseDict(
+                        {
+                            'config': json.dumps(self.custom_config)
+                        }, struct_pb2.Struct())))
+
         return msg
 
     def to_builder(self):
@@ -164,7 +178,8 @@ class ExperimentConfigBuilder(ConfigBuilder):
                 'train_uri': prev.train_uri,
                 'predict_uri': prev.predict_uri,
                 'eval_uri': prev.eval_uri,
-                'bundle_uri': prev.bundle_uri
+                'bundle_uri': prev.bundle_uri,
+                'custom_config': prev.custom_config
             }
         super().__init__(ExperimentConfig, config)
         self.analyze_key = None
@@ -173,6 +188,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
         self.predict_key = None
         self.eval_key = None
         self.bundle_key = None
+        self.custom_config = None
 
     def validate(self):
 
@@ -268,7 +284,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
             map(lambda a: rv.AnalyzerConfig.from_proto(a), msg.analyzers))
         evaluators = list(
             map(lambda e: rv.EvaluatorConfig.from_proto(e), msg.evaluators))
-        return self.with_id(msg.id) \
+        b = self.with_id(msg.id) \
                 .with_task(rv.TaskConfig.from_proto(msg.task)) \
                 .with_backend(rv.BackendConfig.from_proto(msg.backend)) \
                 .with_dataset(rv.DatasetConfig.from_proto(msg.dataset)) \
@@ -281,6 +297,11 @@ class ExperimentConfigBuilder(ConfigBuilder):
                 .with_predict_uri(msg.predict_uri) \
                 .with_eval_uri(msg.eval_uri) \
                 .with_bundle_uri(msg.bundle_uri)
+
+        if msg.custom_config:
+            b = b.with_custom_config(json.loads(msg.custom_config['config']))
+
+        return b
 
     def _copy(self):
         """Create a copy; avoid using deepcopy on the dataset
@@ -300,6 +321,7 @@ class ExperimentConfigBuilder(ConfigBuilder):
         e.config['predict_uri'] = self.config.get('predict_uri')
         e.config['eval_uri'] = self.config.get('eval_uri')
         e.config['bundle_uri'] = self.config.get('bundle_uri')
+        e.config['custom_config'] = self.config.get('custom_config')
         e.analyze_key = self.analyze_key
         e.chip_key = self.chip_key
         e.train_key = self.train_key
@@ -424,6 +446,33 @@ class ExperimentConfigBuilder(ConfigBuilder):
         """
         b = self._copy()
         b.config['bundle_uri'] = uri
+        return b
+
+    def clear_command_uris(self):
+        """Clears existing command URIs and keys.
+        Useful for re-using experiment configs for new builders.
+        """
+        b = self._copy()
+        b = b.with_analyze_key(None) \
+             .with_analyze_uri(None) \
+             .with_chip_key(None) \
+             .with_chip_uri(None) \
+             .with_train_key(None) \
+             .with_train_uri(None) \
+             .with_predict_key(None) \
+             .with_predict_uri(None) \
+             .with_eval_key(None) \
+             .with_eval_uri(None) \
+             .with_bundle_key(None) \
+             .with_bundle_uri(None) \
+
+        return b
+
+    def with_custom_config(self, config):
+        """Sets custom configuration for this experiment.
+        This can be used by plugins such as custom commands."""
+        b = self._copy()
+        b.config['custom_config'] = config
         return b
 
     def with_analyze_key(self, key):

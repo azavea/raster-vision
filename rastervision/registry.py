@@ -150,6 +150,12 @@ class Registry:
             rv.BUNDLE: rv.command.BundleCommandConfigBuilder
         }
 
+        self.aux_command_classes = {rv.COGIFY: rv.command.aux.CogifyCommand}
+
+        self.commands = [
+            rv.ANALYZE, rv.CHIP, rv.TRAIN, rv.PREDICT, rv.EVAL, rv.BUNDLE
+        ]
+
         self.experiment_runners = {
             rv.INPROCESS: rv.runner.InProcessExperimentRunner,
             rv.AWS_BATCH: rv.runner.AwsBatchExperimentRunner,
@@ -317,12 +323,69 @@ class Registry:
         raise RegistryError('No EvaluatorDefaultProvider '
                             'found for task type {}'.format(task_type))
 
+    def _get_aux_command_class(self, command_type):
+        aux_command_class = self.aux_command_classes.get(command_type)
+
+        if aux_command_class is None:
+            self._ensure_plugins_loaded()
+            aux_command_class = self._plugin_registry.aux_command_classes.get(
+                command_type)
+
+        return aux_command_class
+
     def get_command_config_builder(self, command_type):
         builder = self.command_config_builders.get(command_type)
-        if not builder:
+        if builder is None:
+            self._ensure_plugins_loaded()
+            builder = self._plugin_registry.command_config_builders.get(
+                command_type)
+
+        if builder:
+
+            def create_builder(*args, **kwargs):
+                return builder(command_type, *args, **kwargs)
+
+            return create_builder
+
+        # Aux commands
+
+        aux_command_class = self._get_aux_command_class(command_type)
+        if aux_command_class:
+            from rastervision.command.aux_command_config import AuxCommandConfigBuilder
+
+            def create_builder(*args, **kwargs):
+                return AuxCommandConfigBuilder(command_type, *args, **kwargs) \
+                    .with_command_class(aux_command_class)
+
+            return create_builder
+
+        raise RegistryError(
+            'No command found for type {}'.format(command_type))
+
+    def get_aux_command_class(self, command_type):
+        aux_command_class = self._get_aux_command_class(command_type)
+
+        if aux_command_class:
+            return aux_command_class
+        else:
             raise RegistryError(
-                'No command found for type {}'.format(command_type))
-        return builder
+                'No command class found for type {}'.format(command_type))
+
+    def get_commands(self):
+        self._ensure_plugins_loaded()
+
+        aux_commands_to_include = [
+            command_type
+            for command_type, cls in self.aux_command_classes.items()
+            if cls.options.include_by_default
+        ] + [
+            command_type for command_type, cls in
+            self._plugin_registry.aux_command_classes.items()
+            if cls.options.include_by_default
+        ]
+
+        return self.commands + self._plugin_registry.commands + \
+            aux_commands_to_include
 
     def get_experiment_runner(self, runner_type):
         internal_runner = self.experiment_runners.get(runner_type)

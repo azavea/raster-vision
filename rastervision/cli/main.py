@@ -124,7 +124,7 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         sys.exit(1)
 
     if not commands:
-        commands = rv.ALL_COMMANDS
+        commands = rv.all_commands()
     else:
         commands = list(map(lambda x: x.upper(), commands))
 
@@ -139,16 +139,17 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         experiment_name_patterns=filters)
     try:
         if experiment_module:
-            experiments = loader.load_from_module(experiment_module)
+            experiments, command_configs = loader.load_from_module(
+                experiment_module)
         elif path:
-            experiments = loader.load_from_file(path)
+            experiments, command_configs = loader.load_from_file(path)
         else:
-            experiments = loader.load_from_module('__main__')
+            experiments, command_configs = loader.load_from_module('__main__')
     except LoaderError as e:
         print_error(str(e))
         sys.exit(1)
 
-    if not experiments:
+    if not experiments and not commands:
         if experiment_module:
             print_error(
                 'No experiments found in {}.'.format(experiment_module))
@@ -159,6 +160,7 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
 
     runner.run(
         experiments,
+        command_configs=command_configs,
         commands_to_run=commands,
         rerun_commands=rerun,
         skip_file_check=skip_file_check,

@@ -32,6 +32,16 @@ class CommandConfig(ABC):
         """
         return [self]
 
+    def utilizes_gpu(self):
+        """Method that determines if this command can utilize a GPU.
+        This is useful for runners to know what resources to utilize
+        for command execution - e.g. don't spin up the more expensive
+        GPU machines if this command can't use the GPUs.
+
+        Defaults to False.
+        """
+        return False
+
     def to_proto(self):
         """Returns the protobuf configuration for this config.
         """
@@ -46,24 +56,25 @@ class CommandConfig(ABC):
         return rv._registry.get_command_config_builder(self.command_type)(self)
 
     @staticmethod
-    @abstractmethod
-    def builder():
-        """Returns a new builder that takes this configuration
-           as its starting point.
+    def builder(command_type):
+        """Returns a new builder for the given command type.
         """
-        pass
+        return rv._registry.get_command_config_builder(command_type)()
 
     @staticmethod
     def from_proto(msg):
         """Creates a TaskConfig from the specificed protobuf message
         """
-        return rv._registry.get_command_config_builder(msg.command_type)() \
+        command_type = msg.command_type
+        return rv._registry.get_command_config_builder(command_type)() \
                            .from_proto(msg) \
                            .build()
 
 
 class CommandConfigBuilder(ABC):
-    def __init__(self, prev):
+    def __init__(self, command_type, prev):
+        self.command_type = command_type
+
         if prev is None:
             self.root_uri = None
             self.split_id = 0

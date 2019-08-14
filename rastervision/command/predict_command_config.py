@@ -17,6 +17,10 @@ class PredictCommandConfig(CommandConfig):
         self.backend = backend
         self.scenes = scenes
 
+    def utilizes_gpu(self):
+        # TODO: Make this backend dependent.
+        return True
+
     def create_command(self, tmp_dir=None):
         if len(self.scenes) == 0:
             return NoOpCommand()
@@ -63,14 +67,10 @@ class PredictCommandConfig(CommandConfig):
             commands.append(c)
         return commands
 
-    @staticmethod
-    def builder():
-        return PredictCommandConfigBuilder()
-
 
 class PredictCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self, prev=None):
-        super().__init__(prev)
+    def __init__(self, command_type, prev=None):
+        super().__init__(command_type, prev)
         if prev is None:
             self.task = None
             self.backend = None

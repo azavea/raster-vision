@@ -54,14 +54,10 @@ class BundleCommandConfig(CommandConfig):
             analyzer.report_io(self.command_type, io_def)
         return io_def
 
-    @staticmethod
-    def builder():
-        return BundleCommandConfigBuilder()
-
 
 class BundleCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self, prev=None):
-        super().__init__(prev)
+    def __init__(self, command_type, prev=None):
+        super().__init__(command_type, prev)
         if prev is None:
             self.task = None
             self.backend = None

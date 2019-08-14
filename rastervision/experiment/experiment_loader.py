@@ -42,23 +42,34 @@ class ExperimentLoader:
         return name
 
     def load_from_file(self, path):
+        """Loads experiments and commands from an ExperimentSet contained
+        in the given file.
+
+        Returns a tuple (experiments, commands)"""
         name = self._get_name_from_path(path)
         return self.load_from_module(name)
 
     def load_from_module(self, name):
-        result = []
+        """Loads experiments and commands from an ExperimentSet contained
+        in the given module.
+
+        Returns a tuple (experiments, commands)"""
+        experiments, commands = [], []
         module = import_module(name)
         for name, obj in inspect.getmembers(module):
             if inspect.isclass(obj) and issubclass(obj, rv.ExperimentSet):
                 experiment_set = obj()
-                result += self.load_from_set(experiment_set)
-        return result
+                es, cs = self.load_from_set(experiment_set)
+                experiments += es
+                commands += cs
+        return (experiments, commands)
 
     def load_from_set(self, experiment_set):
         return self.load_from_sets([experiment_set])
 
     def load_from_sets(self, experiment_sets):
-        results = []
+        experiments = []
+        commands = []
         for experiment_set in experiment_sets:
             for attrname in dir(experiment_set):
                 include_method = True
@@ -78,21 +89,25 @@ class ExperimentLoader:
                             for pattern in self.exp_method_patterns)
 
                     if include_method:
-                        es = self.load_from_experiment(exp_func, full_name)
-                        results.extend(es)
+                        es, cs = self.load_from_experiment(exp_func, full_name)
+                        experiments.extend(es)
+                        commands.extend(cs)
 
         if self.exp_name_patterns:
+            # Avoid running commands if experiment names are used to filter
+            commands = []
 
             def include(e):
                 return any(
                     fnmatchcase(e.id, pattern)
                     for pattern in self.exp_name_patterns)
 
-            results = list(filter(include, results))
-        return results
+            experiments = list(filter(include, experiments))
+
+        return (experiments, commands)
 
     def load_from_experiment(self, exp_func, full_name):
-        results = []
+        experiments, commands = [], []
         kwargs = {}
         params = inspect.signature(exp_func).parameters.items()
         required_params = [
@@ -110,8 +125,17 @@ class ExperimentLoader:
                 kwargs[key] = self.exp_args[key]
 
         exp = exp_func(**kwargs)
-        if isinstance(exp, list):
-            results.extend(exp)
-        else:
-            results.append(exp)
-        return results
+        if not isinstance(exp, list):
+            exp = [exp]
+
+        for o in exp:
+            if isinstance(o, rv.CommandConfig):
+                commands.append(o)
+            elif isinstance(o, rv.ExperimentConfig):
+                experiments.append(o)
+            else:
+                raise LoaderError(
+                    'Unknown type for experiment or command: {}'.format(
+                        type(o)))
+
+        return (experiments, commands)

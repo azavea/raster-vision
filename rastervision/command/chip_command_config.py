@@ -83,14 +83,10 @@ class ChipCommandConfig(CommandConfig):
             commands.append(c)
         return commands
 
-    @staticmethod
-    def builder():
-        return ChipCommandConfigBuilder()
-
 
 class ChipCommandConfigBuilder(CommandConfigBuilder):
-    def __init__(self, prev=None):
-        super().__init__(prev)
+    def __init__(self, command_type, prev=None):
+        super().__init__(command_type, prev)
         if prev is None:
             self.task = None
             self.backend = None

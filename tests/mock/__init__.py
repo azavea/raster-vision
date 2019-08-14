@@ -19,11 +19,16 @@ from tests.mock.raster_transformer import *
 from tests.mock.augmentor import *
 from tests.mock.analyzer import *
 from tests.mock.evaluator import *
+from tests.mock.command import *
+from tests.mock.aux_command import *
 
 
 class MockMixin:
+    def mock_config(self):
+        return {'PLUGINS_modules': '["{}"]'.format(__name__)}
+
     def setUp(self):
-        config = {'PLUGINS_modules': '["{}"]'.format(__name__)}
+        config = self.mock_config()
         rv._registry.initialize_config(config_overrides=config)
         super().setUp()
 
@@ -93,3 +98,7 @@ def register_plugin(plugin_registry):
                                             MockAnalyzerConfigBuilder)
     plugin_registry.register_config_builder(rv.EVALUATOR, MOCK_EVALUATOR,
                                             MockEvaluatorConfigBuilder)
+
+    plugin_registry.register_command_config_builder(MOCK_COMMAND,
+                                                    MockCommandConfigBuilder)
+    plugin_registry.register_aux_command(MOCK_AUX_COMMAND, MockAuxCommand)

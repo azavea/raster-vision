@@ -385,6 +385,23 @@ rv.SEMANTIC_SEGMENTATION_EVALUATOR
    :inherited-members:
    :exclude-members: from_proto, validate
 
+.. _aux command api:
+
+Aux Commands
+------------
+
+.. autoclass:: rastervision.command.aux.CogifyCommand
+
+.. _aux command options api:
+
+Aux Command Options
+-------------------
+
+.. autoclass:: rastervision.command.aux_command.AuxCommandOptions
+
+   .. automethod:: __init__
+
+
 .. _predictor api:
 
 Predictor
