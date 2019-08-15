@@ -79,7 +79,7 @@ do
         shift
         ;;
         --debug)
-        DEBUG="-p 3000:3000"
+        DEBUG="-p 3003:3000"
         shift
         ;;
         *)    # unknown option
