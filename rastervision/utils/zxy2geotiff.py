@@ -1,4 +1,6 @@
 import tempfile
+from os.path import join
+import os
 
 from PIL import Image
 import numpy as np
@@ -10,7 +12,7 @@ import pyproj
 
 from rastervision.utils.files import (download_if_needed, get_local_path,
                                       upload_or_copy)
-
+from rastervision.filesystem.http_filesystem import HttpFileSystem
 
 def lnglat2merc(lng, lat):
     """Convert lng, lat point to x/y Web Mercator tuple."""
@@ -156,8 +158,18 @@ def _zxy2geotiff(tile_schema,
                 if is_tms:
                     y = (2**zoom) - y - 1
                 tile_uri = tile_schema.format(x=x, y=y, z=zoom)
-                tile_path = download_if_needed(tile_uri, tmp_dir)
+
+                # Http URIS may have extra query parameters after the
+                # {z}/{x}/{y} so we can't create the local path in the usual
+                # way.
+                print(tile_uri)
+                if HttpFileSystem.matches_uri(tile_uri, 'r'):
+                    tile_path = join(tmp_dir, 'tile.png')
+                    HttpFileSystem.copy_from(tile_uri, tile_path)
+                else:
+                    tile_path = download_if_needed(tile_uri, tmp_dir)
                 img = np.array(Image.open(tile_path))
+                os.remove(tile_path)
                 img = img[tile_ymin:tile_ymax + 1, tile_xmin:tile_xmax + 1, :]
 
                 window = Window(out_x, out_y, window_width, window_height)

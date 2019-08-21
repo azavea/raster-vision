@@ -37,7 +37,7 @@ class ZXYRasterSourceConfig(RasterSourceConfig):
                 imagery
         """
         super().__init__(
-            source_type=rv.RASTERIO_SOURCE,
+            source_type=rv.ZXY_RASTER_SOURCE,
             transformers=transformers,
             channel_order=channel_order)
         self.tile_schema = tile_schema
