@@ -42,7 +42,10 @@ class MirrorAugmentor(Augmentor):
 			if random.uniform(0,1) < self.aug_prob:
 				chip = np.copy(chip)
 				augmented_data.append(mirror_horizontally(chip), window, labels)
+				
 				augmented_data.append(mirror_vertically(chip), window, labels)
+				augmented_data.append(mirror_horizontally(mirror_horizontally(chip)), window, labels)
+				
 				augmented_data.append(mirror_diagonal1(chip), window, labels)
 				augmented_data.append(mirror_diagonal2(chip), window, labels)
 
