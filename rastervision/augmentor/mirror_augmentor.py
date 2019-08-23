@@ -40,13 +40,36 @@ class MirrorAugmentor(Augmentor):
 
 		for chip, window, labels in training_data:
 			if random.uniform(0,1) < self.aug_prob:
-				chip = np.copy(chip)
-				augmented_data.append(mirror_horizontally(chip), window, labels)
 				
-				augmented_data.append(mirror_vertically(chip), window, labels)
-				augmented_data.append(mirror_horizontally(mirror_horizontally(chip)), window, labels)
-				
-				augmented_data.append(mirror_diagonal1(chip), window, labels)
-				augmented_data.append(mirror_diagonal2(chip), window, labels)
+				original = np.copy(chip)
+				horizontal = mirror_horizontally(original)
+
+				original_vertical = mirror_vertically(original)
+				horizontal_vertical = mirror_vertically(horizontal)
+
+				original_diag1 = mirror_diagonal1(original)
+				original_diag2 = mirror_diagonal2(original)
+
+				horizontal_diag1 = mirror_diagonal1(horizontal)
+				horizontal_diag2 = mirror_diagonal2(horizontal)
+
+				original_vertical_diag1 = mirror_diagonal1(original_vertical)
+				horizontal_vertical_diag2 = mirror_diagonal2(original_vertical)
+
+				copies = [
+					original,
+					horizontal,
+					original_vertical,
+					horizontal_vertical,
+					original_diag1,
+					original_diag2,
+					horizontal_diag1,
+					horizontal_diag2,
+					original_vertical_diag1,
+					horizontal_vertical_diag2
+					]
+
+				for copy in copies:
+					augmented_data.append(copy,window,labels)
 
 		return augmented_data
