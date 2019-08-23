@@ -8,7 +8,7 @@ from rastervision.protos.augmentor_pb2 import AugmentorConfig as AugmentorConfig
 
 
 class MirrorAugmentorConfig(AugmentorConfig):
-	def __init__(self, aug_prob=1.0, axes=4):
+	def __init__(self, aug_prob=1.0):
 		super().__init__(rv.MIRROR_AUGMENTOR)
 		self.aug_prob = aug_prob
 		self.axes = axes
@@ -18,7 +18,6 @@ class MirrorAugmentorConfig(AugmentorConfig):
 			augmentor_type = 
 				self.augmentor_type,
 				aug_prob = self.aug_prob,
-				axes = self.axes
 		)
 		return msg
 
@@ -36,14 +35,12 @@ class MirrorAugmentorConfigBuilder(AugmentorConfigBuilder):
 		config = {}
 		if prev:
 			config = {
-				'aug_prob': prev.aug_prob,
-				'axes': prev.axes
+				'aug_prob': prev.aug_prob
 			}
 		super().__init__(MirrorAugmentorConfig, config)
 
 	def from_proto(self, msg):
 		a = self.with_probability(msg.aug_prob)
-		a = self.with_axes(msg.axes)
 		return a
 
 	def with_probability(self, aug_prob):
