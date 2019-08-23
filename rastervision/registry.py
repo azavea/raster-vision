@@ -106,6 +106,8 @@ class Registry:
             # Augmentors
             (rv.AUGMENTOR, rv.NODATA_AUGMENTOR):
             rv.augmentor.NodataAugmentorConfigBuilder,
+            (rv.AUGMENTOR, rv.MIRROR_AUGMENTOR):
+            rv.augmentor. rv.MirrorAugmentorConfigBuilder,
 
             # Evaluators
             (rv.EVALUATOR, rv.CHIP_CLASSIFICATION_EVALUATOR):
