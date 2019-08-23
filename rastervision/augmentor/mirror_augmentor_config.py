@@ -22,7 +22,7 @@ class MirrorAugmentorConfig(AugmentorConfig):
 		)
 		return msg
 
-	def creat_augmentor(self):
+	def create_augmentor(self):
 		return MirrorAugmentor(
 			self.aug_prob,
 			self.axes
