@@ -1,14 +1,21 @@
 import random
 import numpy as np
 from rastervision.core import TrainingData
+from rastervision.augmentor import Augmentor
+from rastervision.core import TrainingData
+
 
 class MirrorAugmentor(Augmentor):
 	"""Randomly add a mirrored copy of the chips to the data.
 
-	In case where there is not much training data, this might increase the amount of training data
+	In case where there is not much training data, this might
+	increase the amount of training data. It is meant to be used with
+	the chip-classification task, as the labels are not mirrored. This would
+	result in wrongly placed labels for any other task than chip-classification.
+
 
 	Args:
-		prob: probability that the data is mirrord
+		prob: (float) probability that the data is mirrord
 
 		axes: (int) Either 4 or 8. When 4 is used, the images are mirrored along their horizontal
 		and vertical axes. If 8 is used, also the diagonal axes (transpose and transverse) are used.
