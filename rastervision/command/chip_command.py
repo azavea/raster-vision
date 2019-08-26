@@ -24,6 +24,8 @@ class ChipCommand(Command):
         val_scenes = list(
             map(lambda s: s.create_scene(cc.task, tmp_dir), cc.val_scenes))
 
+        print("chip_command.py line 27", cc.augmentors)
         augmentors = list(map(lambda a: a.create_augmentor(), cc.augmentors))
+        print("chip_command.py line 29", augmentors)
 
         task.make_chips(train_scenes, val_scenes, augmentors, tmp_dir)

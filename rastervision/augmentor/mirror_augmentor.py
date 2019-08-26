@@ -28,10 +28,10 @@ class MirrorAugmentor(Augmentor):
 
 		# Define functions that do the mirroring
 		def mirror_horizontally(chip):
-			return np.flip(np.copy(chip), axes = 1)
+			return np.flip(np.copy(chip), axis = 1)
 
 		def mirror_vertically(chip):
-			return np.copy(chip, axes = 0)
+			return np.flip(np.copy(chip), axis = 0)
 
 		def mirror_diagonal1(chip):
 			return np.transpose(np.copy(chip), axes = [1,0,2])
@@ -39,9 +39,7 @@ class MirrorAugmentor(Augmentor):
 		def mirror_diagonal2(chip):
 			return np.transpose(np.copy(mirror_horizontally(chip)), axes = [1,0,2])
 
-		topcounter = 0
 		for chip, window, labels in training_data:
-			topcounter += 1 
 			if random.uniform(0,1) < self.aug_prob:
 				
 				original = np.copy(chip)
@@ -71,10 +69,8 @@ class MirrorAugmentor(Augmentor):
 					original_vertical_diag1,
 					horizontal_vertical_diag2
 					]
-				bottomcounter = 0
+
 				for copy in copies:
-					bottomcounter += 1
 					augmented_data.append(copy,window,labels)
-					scipy.misc.imsave('/opt/data/mirrored/' + str(stopcounter) + '_' + bottomcounter + '.png', copy)
 
 		return augmented_data

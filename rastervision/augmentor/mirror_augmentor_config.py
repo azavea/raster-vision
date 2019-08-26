@@ -11,7 +11,7 @@ class MirrorAugmentorConfig(AugmentorConfig):
 	def __init__(self, aug_prob=1.0):
 		super().__init__(rv.MIRROR_AUGMENTOR)
 		self.aug_prob = aug_prob
-
+	
 	def to_proto(self):
 		msg = AugmentorConfigMsg(
 			augmentor_type = 
