@@ -22,8 +22,7 @@ class MirrorAugmentorConfig(AugmentorConfig):
 
 	def create_augmentor(self):
 		return MirrorAugmentor(
-			self.aug_prob,
-			self.axes
+			self.aug_prob
 		)
 
 	def report_io(self, command_type, io_def):
@@ -51,17 +50,4 @@ class MirrorAugmentorConfigBuilder(AugmentorConfigBuilder):
 		'''
 		b = deepcopy(self)
 		b.config['aug_prob'] = aug_prob
-		return b
-
-	def with_axes(self, axes):
-		'''Sets the axis along which the mirrorring that is done.
-
-		Default is 4, meaning that mirroring is done
-		along the x and y axis, which is a horizontal and vertical mirror.
-		If set to 8 also both the diagonal axis are used. Beware that this
-		also increases the amount of data by a factor 8, so ensure
-		you have enough storage available.
-		'''
-		b = deepcopy(self)
-		b.config['axes'] = axes
 		return b

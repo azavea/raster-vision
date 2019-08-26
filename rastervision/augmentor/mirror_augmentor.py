@@ -3,6 +3,7 @@ import numpy as np
 from rastervision.core import TrainingData
 from rastervision.augmentor import Augmentor
 from rastervision.core import TrainingData
+import scipy.misc # For testing, saves the images
 
 
 class MirrorAugmentor(Augmentor):
@@ -38,7 +39,9 @@ class MirrorAugmentor(Augmentor):
 		def mirror_diagonal2(chip):
 			return np.transpose(np.copy(mirror_horizontally(chip)), axes = [1,0,2])
 
+		topcounter = 0
 		for chip, window, labels in training_data:
+			topcounter += 1 
 			if random.uniform(0,1) < self.aug_prob:
 				
 				original = np.copy(chip)
@@ -68,8 +71,10 @@ class MirrorAugmentor(Augmentor):
 					original_vertical_diag1,
 					horizontal_vertical_diag2
 					]
-
+				bottomcounter = 0
 				for copy in copies:
+					bottomcounter += 1
 					augmented_data.append(copy,window,labels)
+					scipy.misc.imsave('/opt/data/mirrored/' + str(stopcounter) + '_' + bottomcounter + '.png', copy)
 
 		return augmented_data
