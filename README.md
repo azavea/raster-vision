@@ -16,7 +16,6 @@ Raster Vision is an open source Python framework for building computer vision mo
 ![Examples of chip classification, object detection and semantic segmentation](docs/_static/cv-tasks.png)
 * Experiments can be executed on CPUs and GPUs with built-in support for running in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
 * The framework is extensible to new data sources, tasks (eg. object detection), backends (eg. TF Object Detection API), and cloud providers.
-* There is a [QGIS plugin](https://github.com/azavea/raster-vision-qgis) for viewing the results of experiments on a map.
 
 See the [documentation](https://docs.rastervision.io) for more details.
 
@@ -156,7 +155,6 @@ See the [Quickstart](https://docs.rastervision.io/en/0.9/quickstart.html) for a 
 * [Raster Vision Documentation](https://docs.rastervision.io)
 * [raster-vision-examples](https://github.com/azavea/raster-vision-examples): A repository of examples of running RV on open datasets
 * [raster-vision-aws](https://github.com/azavea/raster-vision-aws): Deployment code for setting up AWS Batch with GPUs
-* [raster-vision-qgis](https://github.com/azavea/raster-vision-qgis): A QGIS plugin for visualizing the results of experiments on a map
 
 ### Contact and Support
 

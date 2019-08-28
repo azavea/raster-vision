@@ -324,8 +324,4 @@ Next Steps
 ----------
 
 This is just a quick example of a Raster Vision workflow. For a more complete example of how to train
-a model on SpaceNet (optionally using GPUs on AWS Batch) and view the results in QGIS, see the SpaceNet examples in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.
-
-.. warning::
-
-    The QGIS Plugin has not been updated yet for Raster Vision 0.9, so the QGIS instructions will not work. We plan to release the 0.9 version of the QGIS plugin soon.
+a model on SpaceNet (optionally using GPUs on AWS Batch), see the SpaceNet examples in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.

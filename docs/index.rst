@@ -186,7 +186,6 @@ usage patterns.
    misc
    codebase
    plugins
-   qgis
    CONTRIBUTING
    release
 
