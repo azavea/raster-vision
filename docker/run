@@ -24,17 +24,20 @@ AWS_PROFILE (optional AWS profile)
 Options:
 --aws forwards AWS credentials (sets AWS_PROFILE env var and mounts ~/.aws to /root/.aws)
 --tensorboard maps port 6006
---gpu use the NVIDIA runtime and GPU image
 --name sets the name of the running container
 --jupyter forwards port 8888, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
 --docs runs the docs server and forwards port 8000
 --debug forwards port 3000 for use with remote debugger
+--tf-gpu use raster-vision-tf-gpu image and nvidia runtime
+--tf-cpu use raster-vision-tf-cpu image
+--pytorch-gpu use raster-vision-pytorch image and nvidia runtime
 
+Note: raster-vision-pytorch is used by default
 All arguments after above options are passed to 'docker run'.
 "
 }
 
-IMAGE="raster-vision-cpu"
+IMAGE="raster-vision-pytorch"
 RASTER_VISION_DATA_DIR="${RASTER_VISION_DATA_DIR:-${REPO_ROOT}/data}"
 RASTER_VISION_NOTEBOOK_DIR="${RASTER_VISION_NOTEBOOK_DIR:-${REPO_ROOT}/notebooks}"
 
@@ -58,8 +61,17 @@ do
         TENSORBOARD="-p 6006:6006"
         shift # past argument
         ;;
-        --gpu)
-        IMAGE="raster-vision-gpu"
+        --tf-gpu)
+        IMAGE="raster-vision-tf-gpu"
+        RUNTIME="--runtime=nvidia"
+        shift # past argument
+        ;;
+        --tf-cpu)
+        IMAGE="raster-vision-tf-cpu"
+        shift # past argument
+        ;;
+        --pytorch-gpu)
+        IMAGE="raster-vision-pytorch"
         RUNTIME="--runtime=nvidia"
         shift # past argument
         ;;

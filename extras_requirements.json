@@ -1,11 +1,17 @@
 {
     "tensorflow": [
         "keras==2.2.2",
-        "tensorflow>=1.10.1"
+        "tensorflow==1.10.1"
     ],
     "tensorflow-gpu": [
         "keras==2.2.2",
-        "tensorflow-gpu>=1.10.1"
+        "tensorflow-gpu==1.10.1"
+    ],
+    "pytorch": [
+        "torch==1.1.*",
+        "torchvision==0.3.*",
+        "fastai==1.0.57",
+        "tensorboard==1.14.*"
     ],
     "aws": [
         "boto3==1.7.*",

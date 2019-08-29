@@ -43,14 +43,6 @@ class Registry:
             (rv.TASK, rv.SEMANTIC_SEGMENTATION):
             rv.task.SemanticSegmentationConfigBuilder,
 
-            # Backends
-            (rv.BACKEND, rv.TF_OBJECT_DETECTION):
-            rv.backend.TFObjectDetectionConfigBuilder,
-            (rv.BACKEND, rv.KERAS_CLASSIFICATION):
-            rv.backend.KerasClassificationConfigBuilder,
-            (rv.BACKEND, rv.TF_DEEPLAB):
-            rv.backend.TFDeeplabConfigBuilder,
-
             # Raster Transformers
             (rv.RASTER_TRANSFORMER, rv.STATS_TRANSFORMER):
             rv.data.StatsTransformerConfigBuilder,
@@ -115,6 +107,20 @@ class Registry:
             (rv.EVALUATOR, rv.SEMANTIC_SEGMENTATION_EVALUATOR):
             rv.evaluation.SemanticSegmentationEvaluatorConfigBuilder,
         }
+
+        if rv.backend.tf_available:
+            self._internal_config_builders[(rv.BACKEND, rv.TF_OBJECT_DETECTION)] = \
+                rv.backend.TFObjectDetectionConfigBuilder
+            self._internal_config_builders[(rv.BACKEND, rv.KERAS_CLASSIFICATION)] = \
+                rv.backend.KerasClassificationConfigBuilder
+            self._internal_config_builders[(rv.BACKEND, rv.TF_DEEPLAB)] = \
+                rv.backend.TFDeeplabConfigBuilder
+
+        if rv.backend.pytorch_available:
+            self._internal_config_builders[(rv.BACKEND, rv.FASTAI_CHIP_CLASSIFICATION)] = \
+                rv.backend.FastaiChipClassificationConfigBuilder
+            self._internal_config_builders[(rv.BACKEND, rv.FASTAI_SEMANTIC_SEGMENTATION)] = \
+                rv.backend.FastaiSemanticSegmentationConfigBuilder
 
         self._internal_default_raster_sources = [RasterioSourceDefaultProvider]
 
@@ -212,6 +218,12 @@ class Registry:
                                                                         key))
             if plugin_builder:
                 return plugin_builder
+
+        if group == rv.BACKEND:
+            if key in [rv.TF_OBJECT_DETECTION, rv.TF_DEEPLAB, rv.KERAS_CLASSIFICATION]:
+                raise RegistryError('Backend type {} not available. Perhaps you forgot to switch to the TF Docker image.'.format(key))
+            if key in [rv.FASTAI_CHIP_CLASSIFICATION, rv.FASTAI_SEMANTIC_SEGMENTATION]:
+                raise RegistryError('Backend type {} not available. Perhaps you forgot to switch to the PyTorch Docker image.'.format(key))
 
         raise RegistryError('Unknown type {} for {} '.format(key, group))
 

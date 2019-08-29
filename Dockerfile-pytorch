@@ -1,0 +1,12 @@
+FROM raster-vision-cuda-10.0:latest
+
+RUN pip install torch==1.1.* torchvision==0.3.*
+RUN pip install fastai==1.0.57
+RUN pip install tensorboard==1.14.*
+
+COPY scripts/rastervision /usr/local/bin/
+COPY rastervision /opt/src/rastervision
+COPY scripts /opt/src/scripts/
+RUN /opt/src/scripts/compile
+
+CMD ["bash"]

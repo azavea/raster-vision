@@ -10,6 +10,8 @@ env:
    global:
       - CLEAN_TRAVIS_TAG=${TRAVIS_TAG/[[:space:]]/}
       - COMMIT=${CLEAN_TRAVIS_TAG:-${TRAVIS_COMMIT:0:7}}
+    - IMAGE_TYPE=pytorch
+    - IMAGE_TYPE=tf
 
 if: (type = pull_request) OR (tag IS present) OR (branch = master) OR (branch =~ /^feature.*/)
 

@@ -12,7 +12,7 @@ import tensorflow
 
 import rastervision as rv
 
-from integration_tests.chip_classification_tests.experiment \
+from integration_tests.tf_chip_classification_tests.experiment \
     import ChipClassificationIntegrationTest
 from integration_tests.object_detection_tests.experiment \
     import ObjectDetectionIntegrationTest
@@ -21,7 +21,7 @@ from integration_tests.semantic_segmentation_tests.experiment \
 from rastervision.rv_config import RVConfig
 
 all_tests = [
-    rv.CHIP_CLASSIFICATION, rv.OBJECT_DETECTION, rv.SEMANTIC_SEGMENTATION
+    rv.KERAS_CLASSIFICATION, rv.TF_OBJECT_DETECTION, rv.TF_DEEPLAB
 ]
 
 np.random.seed(1234)
@@ -130,15 +130,15 @@ def check_eval(test, temp_dir):
 
 
 def get_experiment(test, tmp_dir):
-    if test == rv.OBJECT_DETECTION:
+    if test == rv.TF_OBJECT_DETECTION:
         return ObjectDetectionIntegrationTest().exp_main(
             os.path.join(tmp_dir, test.lower()))
-    if test == rv.CHIP_CLASSIFICATION:
+    if test == rv.KERAS_CLASSIFICATION:
         return ChipClassificationIntegrationTest().exp_main(
             os.path.join(tmp_dir, test.lower()))
-    if test == rv.SEMANTIC_SEGMENTATION:
+    if test == rv.TF_DEEPLAB:
         return SemanticSegmentationIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()))
+            os.path.join(tmp_dir, test.lower()), use_tf=True)
 
     raise Exception('Unknown test {}'.format(test))
 

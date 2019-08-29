@@ -4,7 +4,7 @@ import rastervision as rv
 
 
 class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
-    def exp_main(self, root_uri):
+    def exp_main(self, root_uri, use_tf=False):
         def get_path(part):
             return os.path.join(os.path.dirname(__file__), part)
 
@@ -17,19 +17,6 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
         num_steps = 1
         batch_size = 1
 
-        # These are the parameters that were used to train the following pretrained
-        # model.
-        # num_steps = 5000
-        # batch_size = 8
-        # I found it was also possible to train for 2000 steps with the same eval,
-        # and even fewer steps may be possible. But because it takes
-        # 5 secs/step with batch size of 1 on a CPU, it doesn't seem feasible to actually
-        # train during CI. So instead we just use the model trained on the GPU and then
-        # fine-tune it for one step.
-        pretrained_model = (
-            'https://github.com/azavea/raster-vision-data/releases/'
-            'download/0.0.6/deeplab-test-model.tar.gz')
-
         # This a divisor of the scene length.
         chip_size = 300
         task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
@@ -40,18 +27,46 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                                                debug_chip_probability=1.0) \
                             .build()
 
-        # .with_config below needed to copy final layer from pretrained model.
-        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                  .with_task(task) \
-                                  .with_model_defaults(rv.MOBILENET_V2) \
-                                  .with_pretrained_model(pretrained_model) \
-                                  .with_train_options(do_monitoring=True,
-                                                      replace_model=True) \
-                                  .with_num_steps(num_steps) \
-                                  .with_batch_size(batch_size) \
-                                  .with_debug(True) \
-                                  .with_config({'initializeLastLayer': 'true'}) \
-                                  .build()
+        if use_tf:
+            # These are the parameters that were used to train the following pretrained
+            # model.
+            # num_steps = 5000
+            # batch_size = 8
+            # I found it was also possible to train for 2000 steps with the same eval,
+            # and even fewer steps may be possible. But because it takes
+            # 5 secs/step with batch size of 1 on a CPU, it doesn't seem feasible to actually
+            # train during CI. So instead we just use the model trained on the GPU and then
+            # fine-tune it for one step.
+            pretrained_model = (
+                'https://github.com/azavea/raster-vision-data/releases/'
+                'download/0.0.6/deeplab-test-model.tar.gz')
+
+            # .with_config below needed to copy final layer from pretrained model.
+            backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+                                    .with_task(task) \
+                                    .with_model_defaults(rv.MOBILENET_V2) \
+                                    .with_pretrained_model(pretrained_model) \
+                                    .with_train_options(do_monitoring=True,
+                                                        replace_model=True) \
+                                    .with_num_steps(num_steps) \
+                                    .with_batch_size(batch_size) \
+                                    .with_debug(True) \
+                                    .with_config({'initializeLastLayer': 'true'}) \
+                                    .build()
+        else:
+            # TODO
+            pretrained_uri = ''
+            num_epochs = 1
+            backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+                .with_task(task) \
+                .with_train_options(
+                    lr=1e-4,
+                    batch_size=batch_size,
+                    num_epochs=num_epochs,
+                    model_arch='resnet18',
+                    debug=False) \
+                .with_pretrained_uri(pretrained_uri) \
+                .build()
 
         label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
                                            .with_rgb_class_map(task.class_map) \
