@@ -117,9 +117,11 @@ class Registry:
                 rv.backend.TFDeeplabConfigBuilder
 
         if rv.backend.pytorch_available:
-            self._internal_config_builders[(rv.BACKEND, rv.FASTAI_CHIP_CLASSIFICATION)] = \
+            key_val = (rv.BACKEND, rv.FASTAI_CHIP_CLASSIFICATION)
+            self._internal_config_builders[key_val] = \
                 rv.backend.FastaiChipClassificationConfigBuilder
-            self._internal_config_builders[(rv.BACKEND, rv.FASTAI_SEMANTIC_SEGMENTATION)] = \
+            key_val = (rv.BACKEND, rv.FASTAI_SEMANTIC_SEGMENTATION)
+            self._internal_config_builders[key_val] = \
                 rv.backend.FastaiSemanticSegmentationConfigBuilder
 
         self._internal_default_raster_sources = [RasterioSourceDefaultProvider]
@@ -220,10 +222,20 @@ class Registry:
                 return plugin_builder
 
         if group == rv.BACKEND:
-            if key in [rv.TF_OBJECT_DETECTION, rv.TF_DEEPLAB, rv.KERAS_CLASSIFICATION]:
-                raise RegistryError('Backend type {} not available. Perhaps you forgot to switch to the TF Docker image.'.format(key))
-            if key in [rv.FASTAI_CHIP_CLASSIFICATION, rv.FASTAI_SEMANTIC_SEGMENTATION]:
-                raise RegistryError('Backend type {} not available. Perhaps you forgot to switch to the PyTorch Docker image.'.format(key))
+            if key in [
+                    rv.TF_OBJECT_DETECTION, rv.TF_DEEPLAB,
+                    rv.KERAS_CLASSIFICATION
+            ]:
+                raise RegistryError(
+                    'Backend type {} not available. Perhaps you forgot to switch to '
+                    'the TF Docker image.'.format(key))
+            if key in [
+                    rv.FASTAI_CHIP_CLASSIFICATION,
+                    rv.FASTAI_SEMANTIC_SEGMENTATION
+            ]:
+                raise RegistryError(
+                    'Backend type {} not available. Perhaps you forgot to switch to '
+                    'the PyTorch Docker image.'.format(key))
 
         raise RegistryError('Unknown type {} for {} '.format(key, group))
 

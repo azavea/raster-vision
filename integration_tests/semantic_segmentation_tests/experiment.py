@@ -4,7 +4,7 @@ import rastervision as rv
 
 
 class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
-    def exp_main(self, root_uri, use_tf=False):
+    def exp_main(self, root_uri, use_tf=True):
         def get_path(part):
             return os.path.join(os.path.dirname(__file__), part)
 
@@ -34,9 +34,9 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
             # batch_size = 8
             # I found it was also possible to train for 2000 steps with the same eval,
             # and even fewer steps may be possible. But because it takes
-            # 5 secs/step with batch size of 1 on a CPU, it doesn't seem feasible to actually
-            # train during CI. So instead we just use the model trained on the GPU and then
-            # fine-tune it for one step.
+            # 5 secs/step with batch size of 1 on a CPU, it doesn't seem feasible to
+            # actually train during CI. So instead we just use the model trained on
+            # the GPU and then fine-tune it for one step.
             pretrained_model = (
                 'https://github.com/azavea/raster-vision-data/releases/'
                 'download/0.0.6/deeplab-test-model.tar.gz')

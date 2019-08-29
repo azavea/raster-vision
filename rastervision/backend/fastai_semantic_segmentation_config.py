@@ -56,8 +56,7 @@ class FastaiSemanticSegmentationConfig(SimpleBackendConfig):
     backend_class = FastaiSemanticSegmentation
 
 
-class FastaiSemanticSegmentationConfigBuilder(
-        SimpleBackendConfigBuilder):
+class FastaiSemanticSegmentationConfigBuilder(SimpleBackendConfigBuilder):
     config_class = FastaiSemanticSegmentationConfig
 
     def _applicable_tasks(self):

@@ -20,9 +20,7 @@ from integration_tests.semantic_segmentation_tests.experiment \
     import SemanticSegmentationIntegrationTest
 from rastervision.rv_config import RVConfig
 
-all_tests = [
-    rv.KERAS_CLASSIFICATION, rv.TF_OBJECT_DETECTION, rv.TF_DEEPLAB
-]
+all_tests = [rv.KERAS_CLASSIFICATION, rv.TF_OBJECT_DETECTION, rv.TF_DEEPLAB]
 
 np.random.seed(1234)
 tensorflow.set_random_seed(5678)

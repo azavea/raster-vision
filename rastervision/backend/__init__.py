@@ -15,7 +15,6 @@ try:
 except ImportError as e:
     pytorch_available = False
 
-
 if tf_available:
     from rastervision.backend.tf_object_detection import TFObjectDetection
     from rastervision.backend.tf_object_detection_config import (
@@ -31,8 +30,7 @@ if pytorch_available:
     from rastervision.backend.fastai_chip_classification import (
         FastaiChipClassification)
     from rastervision.backend.fastai_chip_classification_config import (
-        FastaiChipClassificationConfig,
-        FastaiChipClassificationConfigBuilder)
+        FastaiChipClassificationConfig, FastaiChipClassificationConfigBuilder)
     from rastervision.backend.fastai_semantic_segmentation import (
         FastaiSemanticSegmentation)
     from rastervision.backend.fastai_semantic_segmentation_config import (

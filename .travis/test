@@ -10,10 +10,11 @@ if [ ! -z "$(git status --porcelain)" ]; then
 fi
 
 if [ "$IMAGE_TYPE" = "pytorch" ]; then
+    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/style_tests
+    # docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/unit_tests
+    # docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/integration_tests
     docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} rm -f $(pwd)/.coverage $(pwd)/coverage.xml
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/style_tests && \
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/unit_tests && \
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/integration_tests
 else
+    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${TF_CPU_IMAGE} $(pwd)/scripts/unit_tests
     docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${TF_CPU_IMAGE} $(pwd)/scripts/integration_tests
 fi
