@@ -1,4 +1,8 @@
 #!/bin/bash
 
-docker run -w $(pwd) -v $(pwd):$(pwd) --rm raster-vision-cpu coverage xml
-docker run -e CODECOV_TOKEN=$CODECOV_TOKEN -v $(pwd):$(pwd) --rm raster-vision-cpu codecov --root=$(pwd) --commit=$TRAVIS_COMMIT
+source .travis/env
+
+if [ "$IMAGE_TYPE" = "tf" ]; then
+    docker run -w $(pwd) -v $(pwd):$(pwd) --rm ${TF_CPU_IMAGE} coverage xml
+    docker run -e CODECOV_TOKEN=$CODECOV_TOKEN -v $(pwd):$(pwd) --rm ${TF_CPU_IMAGE} codecov --root=$(pwd) --commit=$TRAVIS_COMMIT
+fi

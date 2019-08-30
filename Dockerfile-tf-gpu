@@ -1,6 +1,6 @@
-FROM raster-vision-base:latest
+FROM raster-vision-tf:latest
 
-RUN pip uninstall -y tensorflow_gpu && pip install tensorflow==1.10.1
+RUN cat extras_requirements.json | jq  '.["tensorflow-gpu"][]' | xargs pip install
 
 COPY scripts/rastervision /usr/local/bin/
 COPY rastervision /opt/src/rastervision
