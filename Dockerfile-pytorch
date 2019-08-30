@@ -1,0 +1,10 @@
+FROM raster-vision-cuda-10.0:latest
+
+RUN cat extras_requirements.json | jq  '.["pytorch"][]' | xargs pip install
+
+COPY scripts/rastervision /usr/local/bin/
+COPY rastervision /opt/src/rastervision
+COPY scripts /opt/src/scripts/
+RUN /opt/src/scripts/compile
+
+CMD ["bash"]
