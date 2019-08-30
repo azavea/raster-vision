@@ -32,7 +32,7 @@ Options:
 --tf-cpu use raster-vision-tf-cpu image
 --pytorch-gpu use raster-vision-pytorch image and nvidia runtime
 
-Note: raster-vision-pytorch is used by default
+Note: raster-vision-pytorch image is used by default
 All arguments after above options are passed to 'docker run'.
 "
 }
