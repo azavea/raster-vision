@@ -3,7 +3,7 @@ everett==0.9
 pluginbase==0.7
 lxml==4.2.*
 shapely==1.6.*
-pyproj==1.9.5.*
+pyproj==1.9.6
 imageio==2.3.*
 scikit-learn==0.19.*
 six==1.11.*
