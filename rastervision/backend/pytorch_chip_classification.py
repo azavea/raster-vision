@@ -5,6 +5,7 @@ import glob
 import logging
 import json
 from subprocess import Popen
+import os
 
 import matplotlib
 matplotlib.use('Agg')  # noqa
@@ -84,6 +85,9 @@ class PyTorchChipClassification(Backend):
         self.backend_opts = backend_opts
         self.train_opts = train_opts
         self.inf_learner = None
+
+        torch_cache_dir = '/opt/data/torch-cache'
+        os.environ['TORCH_HOME'] = torch_cache_dir
 
     def log_options(self):
         log.info('backend_opts:\n' +
