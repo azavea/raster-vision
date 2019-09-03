@@ -176,7 +176,7 @@ def tta_predict(learner, im_arr):
     return label_arr
 
 
-class FastaiSemanticSegmentation(Backend):
+class PyTorchSemanticSegmentation(Backend):
     """Semantic segmentation backend using PyTorch and fastai."""
 
     def __init__(self, task_config, backend_opts, train_opts):
@@ -185,7 +185,7 @@ class FastaiSemanticSegmentation(Backend):
         Args:
             task_config: (SemanticSegmentationConfig)
             backend_opts: (simple_backend_config.BackendOptions)
-            train_opts: (fastai_semantic_segmentation_backend_config.TrainOptions)
+            train_opts: (pytorch_semantic_segmentation_backend_config.TrainOptions)
         """
         self.task_config = task_config
         self.backend_opts = backend_opts

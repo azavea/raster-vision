@@ -69,7 +69,7 @@ def make_debug_chips(data, class_map, tmp_dir, train_uri, max_count=30):
     _make_debug_chips('val')
 
 
-class FastaiChipClassification(Backend):
+class PyTorchChipClassification(Backend):
     """Chip classification backend using PyTorch and fastai."""
 
     def __init__(self, task_config, backend_opts, train_opts):
@@ -78,7 +78,7 @@ class FastaiChipClassification(Backend):
         Args:
             task_config: (ChipClassificationConfig)
             backend_opts: (simple_backend_config.BackendOptions)
-            train_opts: (fastai_chip_classification_config.TrainOptions)
+            train_opts: (pytorch_chip_classification_config.TrainOptions)
         """
         self.task_config = task_config
         self.backend_opts = backend_opts

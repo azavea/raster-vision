@@ -27,12 +27,12 @@ if tf_available:
                                                         TFDeeplabConfigBuilder)
 
 if pytorch_available:
-    from rastervision.backend.fastai_chip_classification import (
-        FastaiChipClassification)
-    from rastervision.backend.fastai_chip_classification_config import (
-        FastaiChipClassificationConfig, FastaiChipClassificationConfigBuilder)
-    from rastervision.backend.fastai_semantic_segmentation import (
-        FastaiSemanticSegmentation)
-    from rastervision.backend.fastai_semantic_segmentation_config import (
-        FastaiSemanticSegmentationConfig,
-        FastaiSemanticSegmentationConfigBuilder)
+    from rastervision.backend.pytorch_chip_classification import (
+        PyTorchChipClassification)
+    from rastervision.backend.pytorch_chip_classification_config import (
+        PyTorchChipClassificationConfig, PyTorchChipClassificationConfigBuilder)
+    from rastervision.backend.pytorch_semantic_segmentation import (
+        PyTorchSemanticSegmentation)
+    from rastervision.backend.pytorch_semantic_segmentation_config import (
+        PyTorchSemanticSegmentationConfig,
+        PyTorchSemanticSegmentationConfigBuilder)

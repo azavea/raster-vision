@@ -117,12 +117,12 @@ class Registry:
                 rv.backend.TFDeeplabConfigBuilder
 
         if rv.backend.pytorch_available:
-            key_val = (rv.BACKEND, rv.FASTAI_CHIP_CLASSIFICATION)
+            key_val = (rv.BACKEND, rv.PYTORCH_CHIP_CLASSIFICATION)
             self._internal_config_builders[key_val] = \
-                rv.backend.FastaiChipClassificationConfigBuilder
-            key_val = (rv.BACKEND, rv.FASTAI_SEMANTIC_SEGMENTATION)
+                rv.backend.PyTorchChipClassificationConfigBuilder
+            key_val = (rv.BACKEND, rv.PYTORCH_SEMANTIC_SEGMENTATION)
             self._internal_config_builders[key_val] = \
-                rv.backend.FastaiSemanticSegmentationConfigBuilder
+                rv.backend.PyTorchSemanticSegmentationConfigBuilder
 
         self._internal_default_raster_sources = [RasterioSourceDefaultProvider]
 
@@ -230,8 +230,8 @@ class Registry:
                     'Backend type {} not available. Perhaps you forgot to switch to '
                     'the TF Docker image.'.format(key))
             if key in [
-                    rv.FASTAI_CHIP_CLASSIFICATION,
-                    rv.FASTAI_SEMANTIC_SEGMENTATION
+                    rv.PYTORCH_CHIP_CLASSIFICATION,
+                    rv.PYTORCH_SEMANTIC_SEGMENTATION
             ]:
                 raise RegistryError(
                     'Backend type {} not available. Perhaps you forgot to switch to '
