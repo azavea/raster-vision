@@ -7,6 +7,8 @@ from rastervision.rv_config import RVConfig
 from tests import data_file_path
 
 
+@unittest.skipIf(not rv.backend.tf_available,
+                 "TF is not available")
 class TestChipClassification(unittest.TestCase):
     def test_make_predict_windows_with_aoi(self):
         task_config = rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \

@@ -7,6 +7,8 @@ from rastervision.core import Box
 import tests.mock as mk
 
 
+@unittest.skipIf(not rv.backend.tf_available,
+                 "TF is not available")
 class PredictCommand(mk.MockMixin, unittest.TestCase):
     def test_command_create(self):
         task = rv.TaskConfig.builder(mk.MOCK_TASK).build()

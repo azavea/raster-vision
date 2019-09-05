@@ -9,7 +9,8 @@ from tests import data_file_path
 
 CLASSES = ['car', 'background']
 
-
+@unittest.skipIf(not rv.backend.tf_available,
+                 "TF is not available")
 class TestKerasClassificationConfig(unittest.TestCase):
     template_uri = data_file_path('keras-classification/resnet50.json')
 

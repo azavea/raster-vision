@@ -6,6 +6,8 @@ from rastervision.rv_config import RVConfig
 import tests.mock as mk
 
 
+@unittest.skipIf(not rv.backend.tf_available,
+                 "TF is not available")
 class TrainCommand(mk.MockMixin, unittest.TestCase):
     def test_missing_config_task(self):
         with self.assertRaises(rv.ConfigError):
