@@ -11,6 +11,7 @@ import tests.mock as mk
 from tests import data_file_path
 
 
+@unittest.skipIf(not rv.backend.tf_available, 'TF is not available')
 class TestBundleCommand(mk.MockMixin, unittest.TestCase):
     def get_analyzer(self, tmp_dir):
         stats_uri = os.path.join(tmp_dir, 'stats.json')

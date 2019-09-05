@@ -8,6 +8,7 @@ from tests import data_file_path
 from tests.mock import (MockMixin, create_mock_experiment)
 
 
+@unittest.skipIf(not rv.backend.tf_available, 'TF is not available')
 class TestTFDeeplabConfig(MockMixin, unittest.TestCase):
     template_uri = data_file_path('tf_deeplab/mobilenet_v2.json')
 

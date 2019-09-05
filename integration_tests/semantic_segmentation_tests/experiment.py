@@ -4,7 +4,7 @@ import rastervision as rv
 
 
 class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
-    def exp_main(self, root_uri):
+    def exp_main(self, root_uri, use_tf=False):
         def get_path(part):
             return os.path.join(os.path.dirname(__file__), part)
 
@@ -40,18 +40,30 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                                                debug_chip_probability=1.0) \
                             .build()
 
-        # .with_config below needed to copy final layer from pretrained model.
-        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                  .with_task(task) \
-                                  .with_model_defaults(rv.MOBILENET_V2) \
-                                  .with_pretrained_model(pretrained_model) \
-                                  .with_train_options(do_monitoring=True,
-                                                      replace_model=True) \
-                                  .with_num_steps(num_steps) \
-                                  .with_batch_size(batch_size) \
-                                  .with_debug(True) \
-                                  .with_config({'initializeLastLayer': 'true'}) \
-                                  .build()
+        if use_tf:
+            # .with_config below needed to copy final layer from pretrained model.
+            backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+                .with_task(task) \
+                .with_model_defaults(rv.MOBILENET_V2) \
+                .with_pretrained_model(pretrained_model) \
+                .with_train_options(do_monitoring=True,
+                                    replace_model=True) \
+                .with_num_steps(num_steps) \
+                .with_batch_size(batch_size) \
+                .with_debug(True) \
+                .with_config({'initializeLastLayer': 'true'}) \
+                .build()
+        else:
+            pretrained_uri = (
+                'https://github.com/azavea/raster-vision-data/releases/download/'
+                'v0.8.0/pytorch_semantic_segmentation_test.pth')
+            backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
+                .with_task(task) \
+                .with_train_options(
+                    batch_size=2,
+                    num_epochs=1) \
+                .with_pretrained_uri(pretrained_uri) \
+                .build()
 
         label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
                                            .with_rgb_class_map(task.class_map) \
