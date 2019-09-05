@@ -4,7 +4,7 @@ import rastervision as rv
 
 
 class ChipClassificationIntegrationTest(rv.ExperimentSet):
-    def exp_main(self, tmp_dir):
+    def exp_main(self, root_uri, use_tf=False):
         def get_path(part):
             return os.path.join(os.path.dirname(__file__), part)
 
@@ -30,16 +30,28 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                             .with_debug(True) \
                             .build()
 
-        backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                                  .with_task(task) \
-                                  .with_debug(True) \
-                                  .with_template(backend_conf_path) \
-                                  .with_num_epochs(8) \
-                                  .with_pretrained_model(pretrained_model) \
-                                  .with_train_options(sync_interval=None,
-                                                      do_monitoring=False,
-                                                      replace_model=True) \
-                                  .build()
+        if use_tf:
+            backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
+                                    .with_task(task) \
+                                    .with_debug(True) \
+                                    .with_template(backend_conf_path) \
+                                    .with_num_epochs(8) \
+                                    .with_pretrained_model(pretrained_model) \
+                                    .with_train_options(sync_interval=None,
+                                                        do_monitoring=False,
+                                                        replace_model=True) \
+                                    .build()
+        else:
+            pretrained_uri = (
+                'https://github.com/azavea/raster-vision-data/releases/download/'
+                'v0.8.0/pytorch_chip_classification_test.pth')
+            backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
+                .with_task(task) \
+                .with_train_options(
+                    batch_size=8,
+                    num_epochs=1) \
+                .with_pretrained_uri(pretrained_uri) \
+                .build()
 
         def make_scene(i_path, l_path):
             label_source = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
@@ -74,7 +86,7 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
 
         experiment = rv.ExperimentConfig.builder() \
                                         .with_id('chip-classification-test') \
-                                        .with_root_uri(tmp_dir) \
+                                        .with_root_uri(root_uri) \
                                         .with_task(task) \
                                         .with_backend(backend) \
                                         .with_dataset(dataset) \

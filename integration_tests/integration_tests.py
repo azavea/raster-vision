@@ -8,7 +8,6 @@ import traceback
 
 import click
 import numpy as np
-import tensorflow
 
 import rastervision as rv
 
@@ -25,7 +24,9 @@ all_tests = [
 ]
 
 np.random.seed(1234)
-tensorflow.set_random_seed(5678)
+if rv.backend.tf_available:
+    import tensorflow
+    tensorflow.set_random_seed(5678)
 
 # Suppress warnings and info to avoid cluttering CI log
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -129,16 +130,18 @@ def check_eval(test, temp_dir):
     return errors
 
 
-def get_experiment(test, tmp_dir):
+def get_experiment(test, use_tf, tmp_dir):
     if test == rv.OBJECT_DETECTION:
-        return ObjectDetectionIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()))
+        if use_tf:
+            return ObjectDetectionIntegrationTest().exp_main(
+                os.path.join(tmp_dir, test.lower()))
+        return None
     if test == rv.CHIP_CLASSIFICATION:
         return ChipClassificationIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()))
+            os.path.join(tmp_dir, test.lower()), use_tf)
     if test == rv.SEMANTIC_SEGMENTATION:
         return SemanticSegmentationIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()))
+            os.path.join(tmp_dir, test.lower()), use_tf)
 
     raise Exception('Unknown test {}'.format(test))
 
@@ -250,9 +253,9 @@ def test_prediction_package(experiment,
     return errors
 
 
-def run_test(test, temp_dir):
+def run_test(test, use_tf, temp_dir):
     errors = []
-    experiment = get_experiment(test, temp_dir)
+    experiment = get_experiment(test, use_tf, temp_dir)
     commands_to_run = rv.all_commands()
 
     # Check serialization
@@ -294,7 +297,9 @@ def run_test(test, temp_dir):
           'If set, test will not clean this directory up.'))
 @click.option(
     '--verbose', '-v', is_flag=True, help=('Sets the logging level to DEBUG.'))
-def main(tests, rv_root, verbose):
+@click.option(
+    '--use-tf', '-v', is_flag=True, help=('Run using TF-based backends.'))
+def main(tests, rv_root, verbose, use_tf):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:
         tests = all_tests
@@ -304,6 +309,10 @@ def main(tests, rv_root, verbose):
             verbosity=rv.cli.verbosity.Verbosity.DEBUG)
 
     tests = list(map(lambda x: x.upper(), tests))
+
+    if rv.OBJECT_DETECTION in tests and not use_tf:
+        print('object detection is not available for pytorch')
+        tests.remove(rv.OBJECT_DETECTION)
 
     with RVConfig.get_tmp_dir() as temp_dir:
         if rv_root:
@@ -315,7 +324,7 @@ def main(tests, rv_root, verbose):
                 print('{} is not a valid test.'.format(test))
                 return
 
-            errors.extend(run_test(test, temp_dir))
+            errors.extend(run_test(test, use_tf, temp_dir))
 
             for error in errors:
                 print(error)
