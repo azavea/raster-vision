@@ -7,8 +7,7 @@ from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from tests import data_file_path
 
 
-@unittest.skipIf(not rv.backend.tf_available,
-                 "TF is not available")
+@unittest.skipIf(not rv.backend.tf_available, 'TF is not available')
 class TestTFObjectDetectionConfig(unittest.TestCase):
     template_uri = data_file_path(
         'tf_object_detection/embedded_ssd_mobilenet_v1_coco.config')

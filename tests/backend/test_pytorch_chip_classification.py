@@ -3,9 +3,7 @@ import unittest
 import rastervision as rv
 
 
-@unittest.skipIf(not rv.backend.pytorch_available,
-                 "PyTorch is not available")
-
+@unittest.skipIf(not rv.backend.pytorch_available, 'PyTorch is not available')
 class TestPyTorchChipClassificationConfig(unittest.TestCase):
     def test_builder(self):
         batch_size = 10
@@ -32,6 +30,7 @@ class TestPyTorchChipClassificationConfig(unittest.TestCase):
 
         self.assertEqual(backend.train_opts.batch_size, batch_size)
         self.assertEqual(backend.train_opts.num_epochs, num_epochs)
+
 
 if __name__ == '__main__':
     unittest.main()

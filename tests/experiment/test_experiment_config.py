@@ -5,8 +5,7 @@ import rastervision as rv
 from tests import data_file_path
 
 
-@unittest.skipIf(not rv.backend.tf_available,
-                 "TF is not available")
+@unittest.skipIf(not rv.backend.tf_available, 'TF is not available')
 class TestExperimentConfig(unittest.TestCase):
     @staticmethod
     def get_test_task():

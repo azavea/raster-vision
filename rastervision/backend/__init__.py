@@ -30,7 +30,8 @@ if pytorch_available:
     from rastervision.backend.pytorch_chip_classification import (
         PyTorchChipClassification)
     from rastervision.backend.pytorch_chip_classification_config import (
-        PyTorchChipClassificationConfig, PyTorchChipClassificationConfigBuilder)
+        PyTorchChipClassificationConfig,
+        PyTorchChipClassificationConfigBuilder)
     from rastervision.backend.pytorch_semantic_segmentation import (
         PyTorchSemanticSegmentation)
     from rastervision.backend.pytorch_semantic_segmentation_config import (

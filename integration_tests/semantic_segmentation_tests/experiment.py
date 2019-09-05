@@ -40,20 +40,19 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                                                debug_chip_probability=1.0) \
                             .build()
 
-
         if use_tf:
             # .with_config below needed to copy final layer from pretrained model.
             backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                    .with_task(task) \
-                                    .with_model_defaults(rv.MOBILENET_V2) \
-                                    .with_pretrained_model(pretrained_model) \
-                                    .with_train_options(do_monitoring=True,
-                                                        replace_model=True) \
-                                    .with_num_steps(num_steps) \
-                                    .with_batch_size(batch_size) \
-                                    .with_debug(True) \
-                                    .with_config({'initializeLastLayer': 'true'}) \
-                                    .build()
+                .with_task(task) \
+                .with_model_defaults(rv.MOBILENET_V2) \
+                .with_pretrained_model(pretrained_model) \
+                .with_train_options(do_monitoring=True,
+                                    replace_model=True) \
+                .with_num_steps(num_steps) \
+                .with_batch_size(batch_size) \
+                .with_debug(True) \
+                .with_config({'initializeLastLayer': 'true'}) \
+                .build()
         else:
             pretrained_uri = (
                 'https://github.com/azavea/raster-vision-data/releases/download/'

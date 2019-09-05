@@ -32,15 +32,15 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
 
         if use_tf:
             backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                                    .with_task(task) \
-                                    .with_debug(True) \
-                                    .with_template(backend_conf_path) \
-                                    .with_num_epochs(8) \
-                                    .with_pretrained_model(pretrained_model) \
-                                    .with_train_options(sync_interval=None,
-                                                        do_monitoring=False,
-                                                        replace_model=True) \
-                                    .build()
+                .with_task(task) \
+                .with_debug(True) \
+                .with_template(backend_conf_path) \
+                .with_num_epochs(8) \
+                .with_pretrained_model(pretrained_model) \
+                .with_train_options(sync_interval=None,
+                                    do_monitoring=False,
+                                    replace_model=True) \
+                .build()
         else:
             pretrained_uri = (
                 'https://github.com/azavea/raster-vision-data/releases/download/'

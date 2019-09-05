@@ -7,8 +7,7 @@ from rastervision.experiment import ExperimentLoader
 from tests import data_file_path
 
 
-@unittest.skipIf(not rv.backend.tf_available,
-                 "TF is not available")
+@unittest.skipIf(not rv.backend.tf_available, 'TF is not available')
 class DummyExperimentSet(rv.ExperimentSet):
     def get_base(self):
         root_uri = '/some/dummy/root'
@@ -82,8 +81,7 @@ class DummyExperimentSet(rv.ExperimentSet):
         return es
 
 
-@unittest.skipIf(not rv.backend.tf_available,
-                 "TF is not available")
+@unittest.skipIf(not rv.backend.tf_available, 'TF is not available')
 class TestExperimentConfig(unittest.TestCase):
     def test_load_module(self):
         args = {'required_param': 'yes', 'dummy': 1}
