@@ -253,9 +253,8 @@ class PyTorchChipClassification(Backend):
             log.info('Loading weights from pretrained_uri: {}'.format(
                 pretrained_uri))
             pretrained_path = download_if_needed(pretrained_uri, tmp_dir)
-            learn.model.load_state_dict(
-                torch.load(pretrained_path, map_location=learn.data.device),
-                strict=False)
+            learn.model = torch.load(
+                pretrained_path, map_location=learn.data.device)['model']
 
         # Save every epoch so that resume functionality provided by
         # TrackEpochCallback will work.
