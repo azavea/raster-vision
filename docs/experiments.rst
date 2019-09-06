@@ -126,16 +126,25 @@ Backend
 -------
 
 To avoid reinventing the wheel, Raster Vision relies on third-party libraries to implement core functionality around building and training models for the various computer vision tasks it supports.
-To maintain flexibility and avoid being tied to any one library, Raster Vision tasks interact with third-party libraries via a "backend" interface `inspired by Keras <https://keras.io/backend/>`_.
-Each backend is a subclass of ``Backend`` and mediates between Raster Vision data structures and a third-party library.
+To maintain flexibility and avoid being tied to any one library, Raster Vision tasks interact with other libraries via a "backend" interface `inspired by Keras <https://keras.io/backend/>`_.
+Each backend is a subclass of ``Backend`` and mediates between Raster Vision data structures and another library.
 Backends are configured using a ``BackendConfig, which is then set into the experiment using the ``.with_backend(backend)``.
 
-Keras Classification
-^^^^^^^^^^^^^^^^^^^^
+We are in the process of sunsetting the Tensorflow-based backends in favor of backends based on PyTorch. However, there is no PyTorch-based object detection backend yet.
 
-*rv.KERAS_CLASSIFICATION*
+PyTorch Chip Classification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For chip classification, the default backend is Keras Classification, which is a small, simple library for image classification using Keras. Currently, it only has support for ResNet50.
+*rv.PYTORCH_CHIP_CLASSIFICATION*
+
+For chip classification, the default backend is PyTorch Chip Classification. It uses `fastai <https://docs.fast.ai/>`_ to train classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+
+PyTorch Semantic Segmentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*rv.PYTORCH_SEMANTIC_SEGMENTATION*
+
+For semantic segmentation, the default backend is PyTorch Semantic Segmentation. It uses `fastai <https://docs.fast.ai/>`_ to train a UNet with encoder backbones from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 
 TensorFlow Object Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -144,29 +153,36 @@ TensorFlow Object Detection
 
 For object detection, the default backend is the Tensorflow Object Detection API. It supports a variety of object detection architectures such as SSD, Faster-RCNN, and RetinaNet with Mobilenet, ResNet, and Inception as base models.
 
+Keras Classification
+^^^^^^^^^^^^^^^^^^^^
+
+*rv.KERAS_CLASSIFICATION*
+
+This backend uses Keras Classification, a small, simple interal library for image classification using Keras. Currently, it only has support for ResNet50.
+
 TensorFlow DeepLab
 ^^^^^^^^^^^^^^^^^^
 
 *rv.TF_DEEPLAB*
 
-For semantic segmentation, the default backend is Tensorflow Deeplab. It has support for the Deeplab segmentation architecture with Mobilenet and Inception as base models.
+This backend has support for the Deeplab segmentation architecture with Mobilenet and Inception as base models.
 
-.. note:: For each backend included with Raster Vision there is a list of  :ref:`model defaults` with a default configuration for each model architecture. Each default can be considered a good starting point for configuring that model.
+.. note:: For each Tensorflow-based backend included with Raster Vision there is a list of  :ref:`model defaults` with a default configuration for each model architecture. Each default can be considered a good starting point for configuring that model.
 
 BackendConfig
 ^^^^^^^^^^^^^
 
-A ``BackendConfig`` is always constructed through a builder, which is created with a **key** using the ``.builder`` static method of ``BackendConfig``. In our ``tiny_spacenet.py`` example, we configured the TensorFlow DeepLab backend:
+A ``BackendConfig`` is always constructed through a builder, which is created with a **key** using the ``.builder`` static method of ``BackendConfig``. In our ``tiny_spacenet.py`` example, we configured the PyTorch semantic segmentation backend:
 
 .. code::
 
-    backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                              .with_task(task) \
-                              .with_debug(True) \
-                              .with_batch_size(1) \
-                              .with_num_steps(1) \
-                              .with_model_defaults(rv.MOBILENET_V2)  \
-                              .build()
+    backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
+        .with_task(task) \
+        .with_train_options(
+            batch_size=2,
+            num_epochs=1,
+            debug=True) \
+        .build()
 
 .. seealso:: The :ref:`backend api reference` API Reference docs have more information about the
              Backend types available.

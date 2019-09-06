@@ -3,8 +3,7 @@ from copy import deepcopy
 from google.protobuf import (text_format, json_format)
 
 import rastervision as rv
-from rastervision.backend import (BackendConfig, BackendConfigBuilder,
-                                  TFObjectDetection)
+from rastervision.backend import (BackendConfig, BackendConfigBuilder)
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.protos.tf_object_detection.pipeline_pb2 import TrainEvalPipelineConfig
 from rastervision.utils.files import file_to_str
@@ -66,6 +65,7 @@ class TFObjectDetectionConfig(BackendConfig):
         self.fine_tune_checkpoint_name = fine_tune_checkpoint_name
 
     def create_backend(self, task_config):
+        from rastervision.backend.tf_object_detection import TFObjectDetection
         return TFObjectDetection(self, task_config)
 
     def get_num_steps(self):
