@@ -22,7 +22,6 @@ from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
                                       sync_from_dir, sync_to_dir, str_to_file)
 from rastervision.utils.misc import save_img
 from rastervision.backend import Backend
-from rastervision.backend.
 from rastervision.data.label import ChipClassificationLabels
 from rastervision.utils.misc import terminate_at_exit
 
