@@ -14,7 +14,7 @@ import numpy as np
 
 import torch
 from fastai.vision import (ImageList, get_transforms, models, cnn_learner)
-from fastai.callbacks import TrackEpochCallback
+from fastai.callbacks import TrackEpochCallback, OverSamplingCallback
 from fastai.basic_train import load_learner
 
 from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
@@ -22,12 +22,13 @@ from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
                                       sync_from_dir, sync_to_dir, str_to_file)
 from rastervision.utils.misc import save_img
 from rastervision.backend import Backend
+from rastervision.backend.
 from rastervision.data.label import ChipClassificationLabels
 from rastervision.utils.misc import terminate_at_exit
 
 from rastervision.backend.fastai_utils import (
     SyncCallback, MySaveModelCallback, ExportCallback, MyCSVLogger, Precision,
-    Recall, FBeta, zipdir, TensorboardLogger)
+    Recall, FBeta, zipdir, TensorboardLogger, get_oversampling_weights)
 
 log = logging.getLogger(__name__)
 
@@ -266,6 +267,19 @@ class PyTorchChipClassification(Backend):
             SyncCallback(train_dir, self.backend_opts.train_uri,
                          self.train_opts.sync_interval)
         ]
+
+        oversample = self.train_opts.oversample
+        if oversample:
+            weights = get_oversampling_weights(data.train_ds,
+                                               oversample['rare_class_ids'],
+                                               oversample['rare_target_prop'])
+            oversample_callback = OverSamplingCallback(learn, weights=weights)
+            callbacks.append(oversample_callback)
+
+        if self.train_opts.debug:
+            if oversample:
+                oversample_callback.on_train_begin()
+            make_debug_chips(data, class_map, tmp_dir, train_uri)        
 
         if self.train_opts.log_tensorboard:
             callbacks.append(TensorboardLogger(learn, 'run'))

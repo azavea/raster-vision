@@ -216,6 +216,43 @@ def zipdir(dir, zip_path):
                            join('/'.join(dirs),
                                 os.path.basename(file)))
 
+def get_oversampling_weights(dataset, rare_class_ids, rare_target_prop):
+    """Return weight vector for oversampling chips with rare classes.
+
+    Args:
+        dataset: PyTorch DataSet with semantic segmentation data
+        rare_class_ids: list of rare class ids
+        rare_target_prop: desired probability of sampling a chip covering the
+            rare classes
+    """
+
+    def filter_chip_inds():
+        chip_inds = []
+        for i, (x, y) in enumerate(dataset):
+            match = False
+            for class_id in rare_class_ids:
+                if torch.any(y.data == class_id):
+                    match = True
+                    break
+            if match:
+                chip_inds.append(i)
+        return chip_inds
+
+    def get_sample_weights(num_samples, rare_chip_inds, rare_target_prob):
+        rare_weight = rare_target_prob / len(rare_chip_inds)
+        common_weight = (1 - rare_target_prob) / (
+            num_samples - len(rare_chip_inds))
+        weights = torch.full((num_samples, ), common_weight)
+        weights[rare_chip_inds] = rare_weight
+        return weights
+
+    chip_inds = filter_chip_inds()
+    print('prop of rare chips before oversampling: ',
+          len(chip_inds) / len(dataset))
+    weights = get_sample_weights(len(dataset), chip_inds, rare_target_prop)
+    return weights
+
+
 
 # This code was adapted from
 # https://github.com/Pendar2/fastai-tensorboard-callback/blob/master/fastai_tensorboard_callback/tensorboard_cb.py
