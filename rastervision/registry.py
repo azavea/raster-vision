@@ -123,6 +123,9 @@ class Registry:
             key_val = (rv.BACKEND, rv.PYTORCH_SEMANTIC_SEGMENTATION)
             self._internal_config_builders[key_val] = \
                 rv.backend.PyTorchSemanticSegmentationConfigBuilder
+            key_val = (rv.BACKEND, rv.PYTORCH_OBJECT_DETECTION)
+            self._internal_config_builders[key_val] = \
+                rv.backend.PyTorchObjectDetectionConfigBuilder
 
         self._internal_default_raster_sources = [RasterioSourceDefaultProvider]
 
@@ -231,7 +234,8 @@ class Registry:
                     'the TF Docker image.'.format(key))
             if key in [
                     rv.PYTORCH_CHIP_CLASSIFICATION,
-                    rv.PYTORCH_SEMANTIC_SEGMENTATION
+                    rv.PYTORCH_SEMANTIC_SEGMENTATION,
+                    rv.PYTORCH_OBJECT_DETECTION
             ]:
                 raise RegistryError(
                     'Backend type {} not available. Perhaps you forgot to switch to '
