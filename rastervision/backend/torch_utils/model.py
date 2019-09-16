@@ -1,8 +1,46 @@
 import torch
 import torch.nn as nn
-from torchvision.models.detection import fasterrcnn_resnet50_fpn
+from torchvision.models.detection.faster_rcnn import FasterRCNN
+from torchvision.models.detection.backbone_utils import BackboneWithFPN
+from torchvision.models import resnet
+from torchvision.ops import misc as misc_nn_ops
 
 from rastervision.backend.torch_utils.boxlist import BoxList
+
+
+def get_out_channels(model):
+    out = {}
+
+    def make_save_output(layer_name):
+        def save_output(layer, input, output):
+            out[layer_name] = output.shape[1]
+        return save_output
+
+    model.layer1.register_forward_hook(make_save_output('layer1'))
+    model.layer2.register_forward_hook(make_save_output('layer2'))
+    model.layer3.register_forward_hook(make_save_output('layer3'))
+    model.layer4.register_forward_hook(make_save_output('layer4'))
+
+    model(torch.empty((1, 3, 128, 128)))
+    return [out['layer1'], out['layer2'], out['layer3'], out['layer4']]
+
+
+# This fixes a bug in torchvision.
+def resnet_fpn_backbone(backbone_name, pretrained):
+    backbone = resnet.__dict__[backbone_name](
+        pretrained=pretrained,
+        norm_layer=misc_nn_ops.FrozenBatchNorm2d)
+
+    # freeze layers
+    for name, parameter in backbone.named_parameters():
+        if 'layer2' not in name and 'layer3' not in name and 'layer4' not in name:
+            parameter.requires_grad_(False)
+
+    return_layers = {'layer1': 0, 'layer2': 1, 'layer3': 2, 'layer4': 3}
+
+    out_channels = 256
+    in_channels_list = get_out_channels(backbone)
+    return BackboneWithFPN(backbone, return_layers, in_channels_list, out_channels)
 
 
 class MyFasterRCNN(nn.Module):
@@ -12,17 +50,12 @@ class MyFasterRCNN(nn.Module):
     and inject bogus boxes to circumvent torchvision's inability to handle
     training examples with no ground truth boxes.
     """
-
-    def __init__(self, num_labels, img_sz, pretrained=True):
+    def __init__(self, backbone_arch, num_labels, img_sz, pretrained=True):
         super().__init__()
 
-        self.model = fasterrcnn_resnet50_fpn(
-            pretrained=False,
-            progress=True,
-            num_classes=num_labels,
-            pretrained_backbone=pretrained,
-            min_size=img_sz,
-            max_size=img_sz)
+        backbone = resnet_fpn_backbone(backbone_arch, pretrained)
+        self.model = FasterRCNN(
+            backbone, num_labels, min_size=img_sz, max_size=img_sz)
         self.subloss_names = [
             'total_loss', 'loss_box_reg', 'loss_classifier', 'loss_objectness',
             'loss_rpn_box_reg'

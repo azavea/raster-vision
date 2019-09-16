@@ -15,6 +15,7 @@ class TrainOptions():
                  lr=None,
                  one_cycle=None,
                  num_epochs=None,
+                 model_arch=None,
                  sync_interval=None,
                  log_tensorboard=None,
                  run_tensorboard=None,
@@ -23,6 +24,7 @@ class TrainOptions():
         self.lr = lr
         self.one_cycle = one_cycle
         self.num_epochs = num_epochs
+        self.model_arch = model_arch
         self.sync_interval = sync_interval
         self.log_tensorboard = log_tensorboard
         self.run_tensorboard = run_tensorboard
@@ -52,6 +54,7 @@ class PyTorchObjectDetectionConfigBuilder(SimpleBackendConfigBuilder):
                            lr=1e-4,
                            one_cycle=True,
                            num_epochs=5,
+                           model_arch='resnet18',
                            sync_interval=1,
                            log_tensorboard=True,
                            run_tensorboard=True,
@@ -70,6 +73,9 @@ class PyTorchObjectDetectionConfigBuilder(SimpleBackendConfigBuilder):
                 details.
             num_epochs: (int) number of epochs (sweeps through training set) to
                 train model for
+            model_arch: (str) classification model backbone to use.
+                Any Resnet option in torchvision.models is valid,
+                for example, resnet18.
             sync_interval: (int) sync training directory to cloud every
                 sync_interval epochs.
             log_tensorboard: (bool) if True, write events to Tensorboard log
@@ -87,6 +93,7 @@ class PyTorchObjectDetectionConfigBuilder(SimpleBackendConfigBuilder):
             lr=lr,
             one_cycle=one_cycle,
             num_epochs=num_epochs,
+            model_arch=model_arch,
             sync_interval=sync_interval,
             log_tensorboard=log_tensorboard,
             run_tensorboard=run_tensorboard,

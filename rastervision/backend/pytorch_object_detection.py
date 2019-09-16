@@ -235,7 +235,8 @@ class PyTorchObjectDetection(Backend):
         # Setup model
         num_labels = len(databunch.label_names)
         lr = self.train_opts.lr
-        model = MyFasterRCNN(num_labels, chip_size, pretrained=True)
+        model = MyFasterRCNN(
+            self.train_opts.model_arch, num_labels, chip_size, pretrained=True)
         model = model.to(self.device)
         opt = optim.Adam(model.parameters(), lr=lr)
         model_path = join(train_dir, 'model')
@@ -363,7 +364,8 @@ class PyTorchObjectDetection(Backend):
             # add one for background class
             num_classes = len(self.task_config.class_map) + 1
             model = MyFasterRCNN(
-                num_classes, self.task_config.chip_size, pretrained=False)
+                self.train_opts.model_arch, num_classes, self.task_config.chip_size,
+                pretrained=False)
             model = model.to(self.device)
             model.load_state_dict(
                 torch.load(model_path, map_location=self.device))
