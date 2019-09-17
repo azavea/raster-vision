@@ -4,6 +4,7 @@ import tempfile
 import pycocotools
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
+import numpy as np
 
 from rastervision.utils.files import json_to_file
 
@@ -90,7 +91,7 @@ def compute_coco_eval(outputs, targets, num_labels):
         preds = get_coco_preds(outputs)
         # ap is undefined when there are no predicted boxes
         if len(preds) == 0:
-            return [0., 0.]
+            return None
 
         gt = get_coco_gt(targets, num_labels)
         gt_path = join(tmp_dir, 'gt.json')
@@ -107,4 +108,18 @@ def compute_coco_eval(outputs, targets, num_labels):
         coco_eval.accumulate()
         coco_eval.summarize()
 
-        return coco_eval.stats
+        return coco_eval
+
+
+def compute_class_f1(coco_eval):
+    precision = coco_eval.eval['precision'][0, :, :, 0, -1]
+    scores = coco_eval.eval['scores'][0, :, :, 0, -1]
+    recall = np.linspace(0, 1, num=precision.shape[0])
+    recall = recall[:, None]
+
+    f1s = (2 * precision * recall) / (np.maximum(precision + recall, 1e-4))
+    best_f1s = f1s.max(axis=0)
+    best_f1_inds = f1s.argmax(axis=0)
+    best_scores = scores[best_f1_inds, range(len(best_f1_inds))]
+
+    return best_f1s, best_scores
