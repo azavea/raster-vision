@@ -271,7 +271,7 @@ def get_oversampling_weights(
             match = False
             for class_name in rare_class_names:
                 if y.obj == class_name:
-                    math = True
+                    match = True
                     break
             if match:
                 chip_inds.append(i)
