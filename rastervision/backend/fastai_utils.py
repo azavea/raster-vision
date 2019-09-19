@@ -258,7 +258,7 @@ def get_oversampling_weights(
 
     def filter_chip_inds_byname():
         '''
-        For the chip segmentation the labels have two attributes:
+        For the chip classification the labels have two attributes:
         "data", which is the index of the folder the image is in
         and "obj", which is a string of the folder name the image is in.
         Using the indices is not safe and can be confusing for the user
