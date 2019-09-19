@@ -47,7 +47,6 @@ def make_debug_chips(data, class_map, tmp_dir, train_uri, max_count=30):
         max_count: (int) maximum number of chips to generate. If None,
             generates all of them.
     """
-
     def _make_debug_chips(split):
         debug_chips_dir = join(tmp_dir, '{}-debug-chips'.format(split))
         zip_path = join(tmp_dir, '{}-debug-chips.zip'.format(split))
@@ -59,8 +58,8 @@ def make_debug_chips(data, class_map, tmp_dir, train_uri, max_count=30):
                 break
 
             x.show(y=y)
-            plt.savefig(
-                join(debug_chips_dir, '{}.png'.format(i)), figsize=(5, 5))
+            plt.savefig(join(debug_chips_dir, '{}.png'.format(i)),
+                        figsize=(5, 5))
             plt.close()
 
         zipdir(debug_chips_dir, zip_path)
@@ -72,7 +71,6 @@ def make_debug_chips(data, class_map, tmp_dir, train_uri, max_count=30):
 
 class PyTorchChipClassification(Backend):
     """Chip classification backend using PyTorch and fastai."""
-
     def __init__(self, task_config, backend_opts, train_opts):
         """Constructor.
 
@@ -198,8 +196,8 @@ class PyTorchChipClassification(Backend):
         num_workers = 0 if self.train_opts.debug else 4
         tfms = get_transforms(flip_vert=self.train_opts.flip_vert)
 
-        data = (ImageList.from_folder(chip_dir).split_by_folder(
-            train='train', valid='val'))
+        data = (ImageList.from_folder(chip_dir).split_by_folder(train='train',
+                                                                valid='val'))
         train_count = None
         if self.train_opts.train_count is not None:
             train_count = min(len(data.train), self.train_opts.train_count)
@@ -228,16 +226,17 @@ class PyTorchChipClassification(Backend):
         metrics = [
             Precision(average='weighted', clas_idx=1, ignore_idx=ignore_idx),
             Recall(average='weighted', clas_idx=1, ignore_idx=ignore_idx),
-            FBeta(
-                average='weighted', clas_idx=1, beta=1, ignore_idx=ignore_idx)
+            FBeta(average='weighted',
+                  clas_idx=1,
+                  beta=1,
+                  ignore_idx=ignore_idx)
         ]
         model_arch = getattr(models, self.train_opts.model_arch)
-        learn = cnn_learner(
-            data,
-            model_arch,
-            metrics=metrics,
-            wd=self.train_opts.weight_decay,
-            path=train_dir)
+        learn = cnn_learner(data,
+                            model_arch,
+                            metrics=metrics,
+                            wd=self.train_opts.weight_decay,
+                            path=train_dir)
         learn.unfreeze()
 
         if self.train_opts.mixed_prec and torch.cuda.is_available():
@@ -253,8 +252,8 @@ class PyTorchChipClassification(Backend):
             log.info('Loading weights from pretrained_uri: {}'.format(
                 pretrained_uri))
             pretrained_path = download_if_needed(pretrained_uri, tmp_dir)
-            learn.model = torch.load(
-                pretrained_path, map_location=learn.data.device)['model']
+            learn.model = torch.load(pretrained_path,
+                                     map_location=learn.data.device)['model']
 
         # Save every epoch so that resume functionality provided by
         # TrackEpochCallback will work.
@@ -269,16 +268,17 @@ class PyTorchChipClassification(Backend):
 
         oversample = self.train_opts.oversample
         if oversample:
-            weights = get_oversampling_weights(data.train_ds,
-                                               oversample['rare_class_ids'],
-                                               oversample['rare_target_prop'])
+            weights = get_oversampling_weights(
+                dataset=data.train_ds,
+                rare_class_names=oversample['rare_class_name'],
+                rare_target_prop=oversample['rare_target_prop'])
             oversample_callback = OverSamplingCallback(learn, weights=weights)
             callbacks.append(oversample_callback)
 
         if self.train_opts.debug:
             if oversample:
                 oversample_callback.on_train_begin()
-            make_debug_chips(data, class_map, tmp_dir, train_uri)        
+            make_debug_chips(data, class_map, tmp_dir, train_uri)
 
         if self.train_opts.log_tensorboard:
             callbacks.append(TensorboardLogger(learn, 'run'))
@@ -318,10 +318,10 @@ class PyTorchChipClassification(Backend):
             self.log_options()
             model_uri = self.backend_opts.model_uri
             model_path = download_if_needed(model_uri, tmp_dir)
-            self.inf_learner = load_learner(
-                dirname(model_path), basename(model_path))
-            self.device = torch.device('cuda:0'
-                                       if torch.cuda.is_available() else 'cpu')
+            self.inf_learner = load_learner(dirname(model_path),
+                                            basename(model_path))
+            self.device = torch.device(
+                'cuda:0' if torch.cuda.is_available() else 'cpu')
 
     def predict(self, chips, windows, tmp_dir):
         """Return predictions for a batch of chips.

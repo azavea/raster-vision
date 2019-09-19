@@ -3,12 +3,15 @@ from os.path import join
 import zipfile
 from typing import Any
 import warnings
+import numpy as np
 
 from fastai.callbacks import CSVLogger, Callback, SaveModelCallback, TrackerCallback
 from fastai.metrics import add_metrics
 from fastai.torch_core import dataclass, torch, Tensor, Optional, warn
 from fastai.basic_train import Learner
 from torch.utils.tensorboard import SummaryWriter
+
+from fastai.vision import (LabelList,SegmentationItemList)
 
 from rastervision.utils.files import (sync_to_dir)
 
@@ -216,23 +219,60 @@ def zipdir(dir, zip_path):
                            join('/'.join(dirs),
                                 os.path.basename(file)))
 
-def get_oversampling_weights(dataset, rare_class_ids, rare_target_prop):
+def get_oversampling_weights(
+    dataset,
+    rare_target_prop,
+    rare_class_ids=None,
+    rare_class_names=None):
     """Return weight vector for oversampling chips with rare classes.
 
     Args:
-        dataset: PyTorch DataSet with semantic segmentation data
-        rare_class_ids: list of rare class ids
+        dataset: PyTorch DataSet with semantic segmentation or chip classification data
+        rare_class_ids: list of rare class ids, in case of semantic segmentation
+        rare_class_names: list of rare class names, in case of chip classification
         rare_target_prop: desired probability of sampling a chip covering the
             rare classes
     """
 
-    def filter_chip_inds():
+    # Check that either the id or name is given, not both or neither
+    if rare_class_ids != None and rare_class_names != None:
+        log.error("You are using oversampling and have \
+            specified both rare_class_ids as well as rare_class_names \
+            You can only specify one.")
+    elif rare_class_ids == None and rare_class_names == None:
+        log.error("You are using oversampling but have not specified \
+            rare_class_names or rare_class_ids. You should specify rare_class_names \
+            if you are using chip classification, rare_class_ids if doing semantic\
+            segmentation")
+
+    def filter_chip_inds_byclassid():
         chip_inds = []
         for i, (x, y) in enumerate(dataset):
             match = False
             for class_id in rare_class_ids:
-                if torch.any(y.data == class_id):
+                if torch.any(torch.from_numpy(np.array(y.data)) == class_id):
                     match = True
+                    break
+            if match:
+                chip_inds.append(i)
+        return chip_inds
+
+    def filter_chip_inds_byname():
+        '''
+        For the chip segmentation the labels have two attributes:
+        "data", which is the index of the folder the image is in
+        and "obj", which is a string of the folder name the image is in.
+        Using the indices is not safe and can be confusing for the user
+        as the task.with_classes() method allows the user to specify
+        an id per class, which does not have to match the index of the folder.
+        Therefore it is safer to use the name of the folder instead of the index.
+        '''
+        chip_inds = []
+        for i, (x, y) in enumerate(dataset):
+            match = False
+            for class_name in rare_class_names:
+                if y.obj == class_name:
+                    math = True
                     break
             if match:
                 chip_inds.append(i)
@@ -246,10 +286,15 @@ def get_oversampling_weights(dataset, rare_class_ids, rare_target_prop):
         weights[rare_chip_inds] = rare_weight
         return weights
 
-    chip_inds = filter_chip_inds()
+    if rare_class_ids: # It is a segmenation task, filter by class id
+        chip_inds = filter_chip_inds_byclassid()
+    elif rare_class_names: # it is a chip classification task, filter by class name
+        chip_inds = filter_chip_inds_byname()
+
     print('prop of rare chips before oversampling: ',
           len(chip_inds) / len(dataset))
     weights = get_sample_weights(len(dataset), chip_inds, rare_target_prop)
+    sys.exit()
     return weights
 
 

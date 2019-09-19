@@ -129,23 +129,22 @@ class PyTorchSemanticSegmentationConfigBuilder(SimpleBackendConfigBuilder):
                 to help cope with severely imbalanced datasets.
         """
         b = deepcopy(self)
-        b.train_opts = TrainOptions(
-            batch_size=batch_size,
-            weight_decay=weight_decay,
-            lr=lr,
-            one_cycle=one_cycle,
-            num_epochs=num_epochs,
-            model_arch=model_arch,
-            mixed_prec=mixed_prec,
-            flip_vert=flip_vert,
-            sync_interval=sync_interval,
-            debug=debug,
-            train_prop=train_prop,
-            train_count=train_count,
-            log_tensorboard=log_tensorboard,
-            run_tensorboard=run_tensorboard,
-            tta=tta,
-            oversample=oversample)
+        b.train_opts = TrainOptions(batch_size=batch_size,
+                                    weight_decay=weight_decay,
+                                    lr=lr,
+                                    one_cycle=one_cycle,
+                                    num_epochs=num_epochs,
+                                    model_arch=model_arch,
+                                    mixed_prec=mixed_prec,
+                                    flip_vert=flip_vert,
+                                    sync_interval=sync_interval,
+                                    debug=debug,
+                                    train_prop=train_prop,
+                                    train_count=train_count,
+                                    log_tensorboard=log_tensorboard,
+                                    run_tensorboard=run_tensorboard,
+                                    tta=tta,
+                                    oversample=oversample)
         return b
 
     def with_pretrained_uri(self, pretrained_uri):

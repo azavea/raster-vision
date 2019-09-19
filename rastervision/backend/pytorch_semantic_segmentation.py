@@ -81,14 +81,13 @@ def make_debug_chips(data, class_map, tmp_dir, train_uri, max_count=30):
                 # This could be a good things to contribute upstream to fastai.
                 plt.axis('off')
                 plt.imshow(x.data.permute((1, 2, 0)).detach().cpu().numpy())
-                plt.imshow(
-                    y.data.squeeze().detach().cpu().numpy(),
-                    alpha=0.4,
-                    vmin=0,
-                    vmax=len(colors),
-                    cmap=cmap)
-                plt.savefig(
-                    join(debug_chips_dir, '{}.png'.format(i)), figsize=(3, 3))
+                plt.imshow(y.data.squeeze().detach().cpu().numpy(),
+                           alpha=0.4,
+                           vmin=0,
+                           vmax=len(colors),
+                           cmap=cmap)
+                plt.savefig(join(debug_chips_dir, '{}.png'.format(i)),
+                            figsize=(3, 3))
                 plt.close()
                 i += 1
 
@@ -102,6 +101,7 @@ def make_debug_chips(data, class_map, tmp_dir, train_uri, max_count=30):
 
     _make_debug_chips('train')
     _make_debug_chips('val')
+
 
 def tta_predict(learner, im_arr):
     """Use test-time augmentation to make predictions for a single image.
@@ -141,7 +141,6 @@ def tta_predict(learner, im_arr):
 
 class PyTorchSemanticSegmentation(Backend):
     """Semantic segmentation backend using PyTorch and fastai."""
-
     def __init__(self, task_config, backend_opts, train_opts):
         """Constructor.
 
@@ -307,17 +306,18 @@ class PyTorchSemanticSegmentation(Backend):
         metrics = [
             Precision(average='weighted', clas_idx=1, ignore_idx=ignore_idx),
             Recall(average='weighted', clas_idx=1, ignore_idx=ignore_idx),
-            FBeta(
-                average='weighted', clas_idx=1, beta=1, ignore_idx=ignore_idx)
+            FBeta(average='weighted',
+                  clas_idx=1,
+                  beta=1,
+                  ignore_idx=ignore_idx)
         ]
         model_arch = getattr(models, self.train_opts.model_arch)
-        learn = unet_learner(
-            data,
-            model_arch,
-            metrics=metrics,
-            wd=self.train_opts.weight_decay,
-            bottle=True,
-            path=train_dir)
+        learn = unet_learner(data,
+                             model_arch,
+                             metrics=metrics,
+                             wd=self.train_opts.weight_decay,
+                             bottle=True,
+                             path=train_dir)
         learn.unfreeze()
 
         if self.train_opts.mixed_prec and torch.cuda.is_available():
@@ -333,8 +333,8 @@ class PyTorchSemanticSegmentation(Backend):
             print('Loading weights from pretrained_uri: {}'.format(
                 pretrained_uri))
             pretrained_path = download_if_needed(pretrained_uri, tmp_dir)
-            learn.model = torch.load(
-                pretrained_path, map_location=learn.data.device)['model']
+            learn.model = torch.load(pretrained_path,
+                                     map_location=learn.data.device)['model']
 
         # Save every epoch so that resume functionality provided by
         # TrackEpochCallback will work.
@@ -349,9 +349,10 @@ class PyTorchSemanticSegmentation(Backend):
 
         oversample = self.train_opts.oversample
         if oversample:
-            weights = get_oversampling_weights(data.train_ds,
-                                               oversample['rare_class_ids'],
-                                               oversample['rare_target_prop'])
+            weights = get_oversampling_weights(
+                dataset=data.train_ds,
+                rare_class_ids=oversample['rare_class_ids'],
+                rare_target_prop=oversample['rare_target_prop'])
             oversample_callback = OverSamplingCallback(learn, weights=weights)
             callbacks.append(oversample_callback)
 
@@ -398,8 +399,8 @@ class PyTorchSemanticSegmentation(Backend):
             self.log_options()
             model_uri = self.backend_opts.model_uri
             model_path = download_if_needed(model_uri, tmp_dir)
-            self.inf_learner = load_learner(
-                dirname(model_path), basename(model_path))
+            self.inf_learner = load_learner(dirname(model_path),
+                                            basename(model_path))
 
     def predict(self, chips, windows, tmp_dir):
         """Return a prediction for a single chip.
