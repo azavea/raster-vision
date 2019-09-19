@@ -22,13 +22,11 @@ class InProcessExperimentRunner(ExperimentRunner):
     commands are run from stage-specific processes.
 
     """
-
     def __init__(self, tmp_dir=None):
         self.tmp_dir = tmp_dir
 
     def _run_experiment(self, command_dag):
         """Runs all commands on this machine."""
-
         def run_commands(tmp_dir):
             for command_config in command_dag.get_sorted_commands():
                 msg = command_config.to_proto()

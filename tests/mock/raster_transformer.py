@@ -1,8 +1,9 @@
 import unittest
 from unittest.mock import Mock
 
-from rastervision.data import (
-    RasterTransformerConfig, RasterTransformerConfigBuilder, RasterTransformer)
+from rastervision.data import (RasterTransformerConfig,
+                               RasterTransformerConfigBuilder,
+                               RasterTransformer)
 from rastervision.protos.raster_transformer_pb2 \
     import RasterTransformerConfig as RasterTransformerConfigMsg
 

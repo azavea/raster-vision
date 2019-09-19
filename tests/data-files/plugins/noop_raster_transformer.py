@@ -1,7 +1,7 @@
 import rastervision as rv
-from rastervision.data import (
-    RasterTransformerConfig, RasterTransformerConfigBuilder,
-    NoopTransformer)  # Already a real noop transformer
+from rastervision.data import (RasterTransformerConfig,
+                               RasterTransformerConfigBuilder, NoopTransformer
+                               )  # Already a real noop transformer
 from rastervision.protos.raster_transformer_pb2 \
     import RasterTransformerConfig as RasterTransformerConfigMsg
 

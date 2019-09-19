@@ -1,13 +1,14 @@
 import numpy as np
 
-from rastervision.data.label_source.utils import (
-    color_to_triple, color_to_integer, rgb_to_int_array)
+from rastervision.data.label_source.utils import (color_to_triple,
+                                                  color_to_integer,
+                                                  rgb_to_int_array)
 
 
 class SegmentationClassTransformer():
     def __init__(self, class_map):
-        color_to_class = dict(
-            [(item.color, item.id) for item in class_map.get_items()])
+        color_to_class = dict([(item.color, item.id)
+                               for item in class_map.get_items()])
 
         # color int to class
         color_int_to_class = dict(
@@ -41,12 +42,12 @@ class SegmentationClassTransformer():
             default_triple = (0x00, 0x00, 0x00)
             return class_to_color_triple.get(class_id, default_triple)[channel]
 
-        class_to_r = np.vectorize(
-            lambda c: class_to_channel_color(0, c), otypes=[np.uint8])
-        class_to_g = np.vectorize(
-            lambda c: class_to_channel_color(1, c), otypes=[np.uint8])
-        class_to_b = np.vectorize(
-            lambda c: class_to_channel_color(2, c), otypes=[np.uint8])
+        class_to_r = np.vectorize(lambda c: class_to_channel_color(0, c),
+                                  otypes=[np.uint8])
+        class_to_g = np.vectorize(lambda c: class_to_channel_color(1, c),
+                                  otypes=[np.uint8])
+        class_to_b = np.vectorize(lambda c: class_to_channel_color(2, c),
+                                  otypes=[np.uint8])
         self.transform_class_to_color = [class_to_r, class_to_g, class_to_b]
 
     def rgb_to_class(self, rgb_labels):

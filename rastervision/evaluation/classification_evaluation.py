@@ -12,7 +12,6 @@ class ClassificationEvaluation(ABC):
 
     Evaluations can be keyed, for instance, if evaluations happen per class.
     """
-
     def __init__(self):
         self.clear()
         self._is_empty = True

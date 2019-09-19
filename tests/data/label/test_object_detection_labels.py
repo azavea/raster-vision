@@ -18,8 +18,9 @@ class ObjectDetectionLabelsTest(unittest.TestCase):
         ])
         self.class_ids = np.array([1, 2])
         self.scores = np.array([0.9, 0.9])
-        self.labels = ObjectDetectionLabels(
-            self.npboxes, self.class_ids, scores=self.scores)
+        self.labels = ObjectDetectionLabels(self.npboxes,
+                                            self.class_ids,
+                                            scores=self.scores)
 
     def test_from_boxlist(self):
         from rastervision.data.label.tfod_utils.np_box_list import BoxList
@@ -33,23 +34,26 @@ class ObjectDetectionLabelsTest(unittest.TestCase):
         npboxes = np.empty((0, 4))
         class_ids = np.empty((0, ))
         scores = np.empty((0, ))
-        expected_labels = ObjectDetectionLabels(
-            npboxes, class_ids, scores=scores)
+        expected_labels = ObjectDetectionLabels(npboxes,
+                                                class_ids,
+                                                scores=scores)
 
         labels = ObjectDetectionLabels.make_empty()
         labels.assert_equal(expected_labels)
 
     def test_constructor(self):
-        labels = ObjectDetectionLabels(
-            self.npboxes, self.class_ids, scores=self.scores)
+        labels = ObjectDetectionLabels(self.npboxes,
+                                       self.class_ids,
+                                       scores=self.scores)
         expected_labels = ObjectDetectionLabels(self.npboxes, self.class_ids,
                                                 self.scores)
         labels.assert_equal(expected_labels)
 
         labels = ObjectDetectionLabels(self.npboxes, self.class_ids)
         scores = np.ones(self.class_ids.shape)
-        expected_labels = ObjectDetectionLabels(
-            self.npboxes, self.class_ids, scores=scores)
+        expected_labels = ObjectDetectionLabels(self.npboxes,
+                                                self.class_ids,
+                                                scores=scores)
         labels.assert_equal(expected_labels)
 
     def test_get_boxes(self):
@@ -108,24 +112,29 @@ class ObjectDetectionLabelsTest(unittest.TestCase):
         labels.assert_equal(self.labels)
 
         window = Box.make_square(0, 0, 3)
-        labels = ObjectDetectionLabels.get_overlapping(
-            self.labels, window, ioa_thresh=0.5)
+        labels = ObjectDetectionLabels.get_overlapping(self.labels,
+                                                       window,
+                                                       ioa_thresh=0.5)
         npboxes = np.array([[0., 0., 2., 2.]])
         class_ids = np.array([1])
         scores = np.array([0.9])
-        expected_labels = ObjectDetectionLabels(
-            npboxes, class_ids, scores=scores)
+        expected_labels = ObjectDetectionLabels(npboxes,
+                                                class_ids,
+                                                scores=scores)
         labels.assert_equal(expected_labels)
 
         window = Box.make_square(0, 0, 3)
-        labels = ObjectDetectionLabels.get_overlapping(
-            self.labels, window, ioa_thresh=0.1, clip=True)
+        labels = ObjectDetectionLabels.get_overlapping(self.labels,
+                                                       window,
+                                                       ioa_thresh=0.1,
+                                                       clip=True)
         expected_npboxes = np.array([
             [0., 0., 2., 2.],
             [2., 2., 3., 3.],
         ])
-        expected_labels = ObjectDetectionLabels(
-            expected_npboxes, self.class_ids, scores=self.scores)
+        expected_labels = ObjectDetectionLabels(expected_npboxes,
+                                                self.class_ids,
+                                                scores=self.scores)
         labels.assert_equal(expected_labels)
 
     def test_concatenate(self):
@@ -139,8 +148,9 @@ class ObjectDetectionLabelsTest(unittest.TestCase):
                             [4., 4., 5., 5.]])
         class_ids = np.array([1, 2, 2])
         scores = np.array([0.9, 0.9, 0.3])
-        expected_labels = ObjectDetectionLabels(
-            npboxes, class_ids, scores=scores)
+        expected_labels = ObjectDetectionLabels(npboxes,
+                                                class_ids,
+                                                scores=scores)
         new_labels.assert_equal(expected_labels)
 
     def test_prune_duplicates(self):

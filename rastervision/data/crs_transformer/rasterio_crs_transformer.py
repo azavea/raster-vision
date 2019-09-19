@@ -8,7 +8,6 @@ from rastervision.data.crs_transformer import (CRSTransformer,
 
 class RasterioCRSTransformer(CRSTransformer):
     """Transformer for a RasterioRasterSource."""
-
     def __init__(self, transform, image_crs, map_crs='epsg:4326'):
         """Construct transformer.
 

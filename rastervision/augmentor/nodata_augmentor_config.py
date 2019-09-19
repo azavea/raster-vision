@@ -13,8 +13,8 @@ class NodataAugmentorConfig(AugmentorConfig):
         self.aug_prob = aug_prob
 
     def to_proto(self):
-        msg = AugmentorConfigMsg(
-            augmentor_type=self.augmentor_type, aug_prob=self.aug_prob)
+        msg = AugmentorConfigMsg(augmentor_type=self.augmentor_type,
+                                 aug_prob=self.aug_prob)
         return msg
 
     def create_augmentor(self):

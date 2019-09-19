@@ -10,7 +10,6 @@ from rastervision.data.raster_source import ChannelOrderError
 
 class Predictor():
     """Class for making predictions based off of a prediction package."""
-
     def __init__(self,
                  prediction_package_uri,
                  tmp_dir,

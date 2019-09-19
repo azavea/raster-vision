@@ -42,13 +42,12 @@ class ChipClassificationEvaluation(ClassificationEvaluation):
             class_id = class_map_item.id
             class_name = class_map_item.name
 
-            eval_item = ClassEvaluationItem(
-                float(precision[class_id]),
-                float(recall[class_id]),
-                float(f1[class_id]),
-                gt_count=float(support[class_id]),
-                class_id=class_id,
-                class_name=class_name)
+            eval_item = ClassEvaluationItem(float(precision[class_id]),
+                                            float(recall[class_id]),
+                                            float(f1[class_id]),
+                                            gt_count=float(support[class_id]),
+                                            class_id=class_id,
+                                            class_name=class_name)
             class_to_eval_item[class_id] = eval_item
 
         return class_to_eval_item

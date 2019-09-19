@@ -16,8 +16,8 @@ class CommandDefinition:
 
     def _key(self):
         return (self.command_config.command_type, self.command_config.split_id,
-                '|'.join(sorted(self.io_def.input_uris)), '|'.join(
-                    sorted(self.io_def.output_uris)))
+                '|'.join(sorted(self.io_def.input_uris)),
+                '|'.join(sorted(self.io_def.output_uris)))
 
     def __eq__(self, other):
         return self._key() == other._key()

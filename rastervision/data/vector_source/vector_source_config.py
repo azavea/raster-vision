@@ -41,9 +41,10 @@ class VectorSourceConfig(Config):
 
         if self.class_id_to_filter is not None:
             # Convert class_ids to str to put into json format.
-            class_id_to_filter = dict(
-                [(str(class_id), filter)
-                 for class_id, filter in self.class_id_to_filter.items()])
+            class_id_to_filter = dict([
+                (str(class_id), filter)
+                for class_id, filter in self.class_id_to_filter.items()
+            ])
             d = {'class_id_to_filter': class_id_to_filter}
             msg.MergeFrom(json_format.ParseDict(d, VectorSourceConfigMsg()))
 
@@ -58,8 +59,8 @@ class VectorSourceConfig(Config):
 
         if self.point_bufs is not None:
             # Convert class_ids to str to put into json format.
-            point_bufs = dict(
-                [(str(c), v) for c, v in self.point_bufs.items()])
+            point_bufs = dict([(str(c), v)
+                               for c, v in self.point_bufs.items()])
             d = {'point_bufs': point_bufs}
             msg.MergeFrom(json_format.ParseDict(d, VectorSourceConfigMsg()))
 
@@ -95,17 +96,17 @@ class VectorSourceConfigBuilder(ConfigBuilder):
         if msg.HasField('class_id_to_filter'):
             # Convert class_ids from strs to ints.
             # Have to use camel case after parsing from json :(
-            class_id_to_filter = dict(
-                [(int(class_id), filter)
-                 for class_id, filter in d['classIdToFilter'].items()])
+            class_id_to_filter = dict([
+                (int(class_id), filter)
+                for class_id, filter in d['classIdToFilter'].items()
+            ])
 
         default_class_id = None
         if msg.HasField('default_class_id'):
             default_class_id = msg.default_class_id
 
-        b = b.with_class_inference(
-            class_id_to_filter=class_id_to_filter,
-            default_class_id=default_class_id)
+        b = b.with_class_inference(class_id_to_filter=class_id_to_filter,
+                                   default_class_id=default_class_id)
 
         line_bufs = msg.line_bufs if msg.HasField('line_bufs') else None
         point_bufs = msg.point_bufs if msg.HasField('point_bufs') else None
@@ -143,8 +144,8 @@ class VectorSourceConfigBuilder(ConfigBuilder):
         b = deepcopy(self)
         # Ensure class_ids are ints.
         if class_id_to_filter is not None:
-            class_id_to_filter = dict(
-                [(int(c), f) for c, f in class_id_to_filter.items()])
+            class_id_to_filter = dict([(int(c), f)
+                                       for c, f in class_id_to_filter.items()])
         b.config['class_id_to_filter'] = class_id_to_filter
         b.config['default_class_id'] = default_class_id
         return b

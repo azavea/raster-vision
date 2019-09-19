@@ -24,15 +24,14 @@ class TestRasterioSource(unittest.TestCase):
             height = 100
             width = 100
             nb_channels = 3
-            with rasterio.open(
-                    image_path,
-                    'w',
-                    driver='GTiff',
-                    height=height,
-                    width=width,
-                    count=nb_channels,
-                    dtype=np.uint8,
-                    nodata=1) as image_dataset:
+            with rasterio.open(image_path,
+                               'w',
+                               driver='GTiff',
+                               height=height,
+                               width=width,
+                               count=nb_channels,
+                               dtype=np.uint8,
+                               nodata=1) as image_dataset:
                 im = np.random.randint(
                     0, 2, (height, width, nb_channels)).astype(np.uint8)
                 for channel in range(nb_channels):
@@ -54,14 +53,13 @@ class TestRasterioSource(unittest.TestCase):
             height = 100
             width = 100
             nb_channels = 3
-            with rasterio.open(
-                    image_path,
-                    'w',
-                    driver='GTiff',
-                    height=height,
-                    width=width,
-                    count=nb_channels,
-                    dtype=np.uint8) as image_dataset:
+            with rasterio.open(image_path,
+                               'w',
+                               driver='GTiff',
+                               height=height,
+                               width=width,
+                               count=nb_channels,
+                               dtype=np.uint8) as image_dataset:
                 im = np.random.randint(
                     0, 2, (height, width, nb_channels)).astype(np.uint8)
                 for channel in range(nb_channels):
@@ -171,8 +169,8 @@ class TestRasterioSource(unittest.TestCase):
             stats_uri = os.path.join(temp_dir, 'temp.tif')
             stats = RasterStats()
             stats.compute([
-                rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE)
-                .with_uri(img_path).build().create_source(temp_dir)
+                rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE).with_uri(
+                    img_path).build().create_source(temp_dir)
             ])
             stats.save(stats_uri)
 
@@ -335,15 +333,14 @@ class TestRasterioSource(unittest.TestCase):
             height = 100
             width = 100
             nb_channels = 3
-            with rasterio.open(
-                    image_path,
-                    'w',
-                    driver='GTiff',
-                    height=height,
-                    width=width,
-                    count=nb_channels,
-                    dtype=np.uint8,
-                    crs=crs) as image_dataset:
+            with rasterio.open(image_path,
+                               'w',
+                               driver='GTiff',
+                               height=height,
+                               width=width,
+                               count=nb_channels,
+                               dtype=np.uint8,
+                               crs=crs) as image_dataset:
                 im = np.zeros((height, width, nb_channels)).astype(np.uint8)
                 for channel in range(nb_channels):
                     image_dataset.write(im[:, :, channel], channel + 1)

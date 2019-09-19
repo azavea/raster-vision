@@ -57,10 +57,9 @@ class SceneConfig(BundledConfigMixin, Config):
                      aoi_polygons)
 
     def to_proto(self):
-        msg = SceneConfigMsg(
-            id=self.id,
-            raster_source=self.raster_source.to_proto(),
-            aoi_uris=self.aoi_uris)
+        msg = SceneConfigMsg(id=self.id,
+                             raster_source=self.raster_source.to_proto(),
+                             aoi_uris=self.aoi_uris)
 
         if self.label_source:
             msg.ground_truth_label_source.CopyFrom(

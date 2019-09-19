@@ -9,10 +9,12 @@ import boto3
 from moto import mock_s3
 
 import rastervision as rv
-from rastervision.utils.files import (
-    file_to_str, str_to_file, download_if_needed, upload_or_copy,
-    load_json_config, ProtobufParseException, make_dir, get_local_path,
-    file_exists, sync_from_dir, sync_to_dir, list_paths, get_cached_file)
+from rastervision.utils.files import (file_to_str, str_to_file,
+                                      download_if_needed, upload_or_copy,
+                                      load_json_config, ProtobufParseException,
+                                      make_dir, get_local_path, file_exists,
+                                      sync_from_dir, sync_to_dir, list_paths,
+                                      get_cached_file)
 from rastervision.filesystem import (NotReadableError, NotWritableError)
 from rastervision.filesystem.filesystem import FileSystem
 from rastervision.protos.task_pb2 import TaskConfig as TaskConfigMsg
@@ -132,7 +134,6 @@ class TestGetLocalPath(unittest.TestCase):
 
 class TestFileToStr(unittest.TestCase):
     """Test file_to_str and str_to_file."""
-
     def setUp(self):
         # Setup mock S3 bucket.
         self.mock_s3 = mock_s3()
@@ -177,7 +178,6 @@ class TestFileToStr(unittest.TestCase):
 
 class TestDownloadIfNeeded(unittest.TestCase):
     """Test download_if_needed and upload_or_copy and str_to_file."""
-
     def setUp(self):
         # Setup mock S3 bucket.
         self.mock_s3 = mock_s3()
@@ -567,9 +567,8 @@ class TestGetCachedFile(unittest.TestCase):
             self.assertEqual(patched_gzip_open.call_count, 1)
 
     def test_remote(self):
-        with patch(
-                'rastervision.utils.files.download_if_needed',
-                side_effect=download_if_needed) as patched_download:
+        with patch('rastervision.utils.files.download_if_needed',
+                   side_effect=download_if_needed) as patched_download:
             s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
             str_to_file(self.content_str, s3_path)
             path = get_cached_file(self.cache_dir, s3_path)

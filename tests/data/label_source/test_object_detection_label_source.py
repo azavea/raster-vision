@@ -85,55 +85,57 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
     def test_read_invalid_uri_readable_true(self):
         with self.assertRaises(NotReadableError):
             invalid_uri = 's3://invalid_path/invalid.json'
-            ObjectDetectionLabelSource(
-                invalid_uri,
-                self.crs_transformer,
-                self.class_map,
-                extent=self.extent)
+            ObjectDetectionLabelSource(invalid_uri,
+                                       self.crs_transformer,
+                                       self.class_map,
+                                       extent=self.extent)
 
     def test_read_without_extent(self):
-        store = ObjectDetectionLabelSource(
-            self.file_path, self.crs_transformer, self.class_map, extent=None)
+        store = ObjectDetectionLabelSource(self.file_path,
+                                           self.crs_transformer,
+                                           self.class_map,
+                                           extent=None)
         labels = store.get_labels()
 
         npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
         class_ids = np.array([1, 2])
         scores = np.array([0.9, 0.9])
-        expected_labels = ObjectDetectionLabels(
-            npboxes, class_ids, scores=scores)
+        expected_labels = ObjectDetectionLabels(npboxes,
+                                                class_ids,
+                                                scores=scores)
         labels.assert_equal(expected_labels)
 
     def test_read_with_extent(self):
         # Extent only includes the first box.
         extent = Box.make_square(0, 0, 3)
-        store = ObjectDetectionLabelSource(
-            self.file_path,
-            self.crs_transformer,
-            self.class_map,
-            extent=extent)
+        store = ObjectDetectionLabelSource(self.file_path,
+                                           self.crs_transformer,
+                                           self.class_map,
+                                           extent=extent)
         labels = store.get_labels()
 
         npboxes = np.array([[0., 0., 2., 2.]])
         class_ids = np.array([1])
         scores = np.array([0.9])
-        expected_labels = ObjectDetectionLabels(
-            npboxes, class_ids, scores=scores)
+        expected_labels = ObjectDetectionLabels(npboxes,
+                                                class_ids,
+                                                scores=scores)
         labels.assert_equal(expected_labels)
 
         # Extent includes both boxes, but clips the second.
         extent = Box.make_square(0, 0, 3.9)
-        store = ObjectDetectionLabelSource(
-            self.file_path,
-            self.crs_transformer,
-            self.class_map,
-            extent=extent)
+        store = ObjectDetectionLabelSource(self.file_path,
+                                           self.crs_transformer,
+                                           self.class_map,
+                                           extent=extent)
         labels = store.get_labels()
 
         npboxes = np.array([[0., 0., 2., 2.], [2., 2., 3.9, 3.9]])
         class_ids = np.array([1, 2])
         scores = np.array([0.9, 0.9])
-        expected_labels = ObjectDetectionLabels(
-            npboxes, class_ids, scores=scores)
+        expected_labels = ObjectDetectionLabels(npboxes,
+                                                class_ids,
+                                                scores=scores)
         labels.assert_equal(expected_labels)
 
     def test_missing_config_uri(self):

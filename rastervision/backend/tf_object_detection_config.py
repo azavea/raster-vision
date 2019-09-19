@@ -92,9 +92,8 @@ class TFObjectDetectionConfig(BackendConfig):
         conf = json_format.ParseDict(
             d, BackendConfigMsg.TFObjectDetectionConfig())
 
-        msg = BackendConfigMsg(
-            backend_type=rv.TF_OBJECT_DETECTION,
-            tf_object_detection_config=conf)
+        msg = BackendConfigMsg(backend_type=rv.TF_OBJECT_DETECTION,
+                               tf_object_detection_config=conf)
 
         if self.pretrained_model_uri:
             msg.MergeFrom(
@@ -196,12 +195,11 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         # assume the task has already been set and do not
         # require it during validation.
         b.require_task = False
-        b = b.with_train_options(
-            sync_interval=conf.sync_interval,
-            do_monitoring=conf.do_monitoring,
-            replace_model=conf.replace_model)
-        b = b.with_script_locations(
-            model_main_uri=conf.model_main_py, export_uri=conf.export_py)
+        b = b.with_train_options(sync_interval=conf.sync_interval,
+                                 do_monitoring=conf.do_monitoring,
+                                 replace_model=conf.replace_model)
+        b = b.with_script_locations(model_main_uri=conf.model_main_py,
+                                    export_uri=conf.export_py)
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
         b = b.with_model_uri(conf.model_uri)
@@ -225,8 +223,8 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         if self.require_task and not isinstance(self.task,
                                                 ObjectDetectionConfig):
             raise rv.ConfigError(
-                'Task set with with_task must be of type ObjectDetectionConfig, got {}.'.
-                format(type(self.task)))
+                'Task set with with_task must be of type ObjectDetectionConfig, got {}.'
+                .format(type(self.task)))
         return True
 
     def build(self):
@@ -244,10 +242,8 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         if pretrained_model:
             b = b.with_config({'fineTuneCheckpoint': pretrained_model})
         else:
-            b = b.with_config(
-                {
-                    'fineTuneCheckpoint': ''
-                }, ignore_missing_keys=True)
+            b = b.with_config({'fineTuneCheckpoint': ''},
+                              ignore_missing_keys=True)
 
         for config_mod, ignore_missing_keys, set_missing_keys in b.config_mods:
             try:
@@ -315,8 +311,8 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
             try:
                 msg = text_format.Parse(template, TrainEvalPipelineConfig())
             except text_format.ParseError:
-                msg = text_format.Parse(
-                    file_to_str(template), TrainEvalPipelineConfig())
+                msg = text_format.Parse(file_to_str(template),
+                                        TrainEvalPipelineConfig())
             template_json = json_format.MessageToDict(msg)
 
         b = deepcopy(self)
@@ -325,21 +321,17 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
 
     def with_batch_size(self, batch_size):
         """Sets the training batch size."""
-        return self.with_config(
-            {
-                'trainConfig': {
-                    'batchSize': batch_size
-                }
-            }, set_missing_keys=True)
+        return self.with_config({'trainConfig': {
+            'batchSize': batch_size
+        }},
+                                set_missing_keys=True)
 
     def with_num_steps(self, num_steps):
         """Sets the number of training steps."""
-        return self.with_config(
-            {
-                'trainConfig': {
-                    'numSteps': num_steps
-                }
-            }, set_missing_keys=True)
+        return self.with_config({'trainConfig': {
+            'numSteps': num_steps
+        }},
+                                set_missing_keys=True)
 
     def with_config(self,
                     config_mod,
@@ -351,8 +343,8 @@ class TFObjectDetectionConfigBuilder(BackendConfigBuilder):
         configuration are replaced with those values. TODO: better explanation.
         """
         b = deepcopy(self)
-        b.config_mods.append((config_mod, ignore_missing_keys,
-                              set_missing_keys))
+        b.config_mods.append(
+            (config_mod, ignore_missing_keys, set_missing_keys))
         return b
 
     def with_debug(self, debug):

@@ -15,7 +15,6 @@ class RasterSource(ABC):
     This should be subclassed when adding a new source of raster data such as
     a set of files, an API, a TMS URI schema, etc.
     """
-
     def __init__(self, channel_order, num_channels, raster_transformers=[]):
         """Construct a new RasterSource.
 

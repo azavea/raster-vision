@@ -12,7 +12,6 @@ from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 
 class BackendOptions():
     """Options that pertain to backends created using SimpleBackendConfig."""
-
     def __init__(self,
                  chip_uri=None,
                  train_uri=None,
@@ -34,7 +33,6 @@ class SimpleBackendConfig(BackendConfig):
     BackendConfig. See subclasses of this for examples of how to write your
     own subclass.
     """
-
     def __init__(self, backend_opts, train_opts):
         """Constructor.
 
@@ -74,8 +72,8 @@ class SimpleBackendConfig(BackendConfig):
 
         custom_config = struct_pb2.Struct()
         custom_config['json'] = json.dumps(config)
-        msg = BackendConfigMsg(
-            backend_type=self.backend_type, custom_config=custom_config)
+        msg = BackendConfigMsg(backend_type=self.backend_type,
+                               custom_config=custom_config)
         return msg
 
     def create_backend(self, task_config):
@@ -142,7 +140,6 @@ class SimpleBackendConfigBuilder(BackendConfigBuilder):
     subclassing BackendConfigBuilder. See subclasses of this for examples of
     how to write your own subclass.
     """
-
     def __init__(self, prev_config=None):
         self.backend_opts = BackendOptions()
         self.train_opts = self.config_class.train_opts_class()

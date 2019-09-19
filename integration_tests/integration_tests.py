@@ -67,8 +67,9 @@ class TestError():
 
     def __str__(self):
         return ('Error\n' + '------\n' + 'Test: {}\n'.format(self.test) +
-                'Message: {}\n'.format(self.message) + 'Details: {}'.format(
-                    str(self.details)) if self.details else '' + '\n')
+                'Message: {}\n'.format(self.message) +
+                'Details: {}'.format(str(self.details))
+                if self.details else '' + '\n')
 
 
 def get_test_dir(test):
@@ -282,23 +283,28 @@ def run_test(test, use_tf, temp_dir):
     if not errors:
         errors.extend(test_prediction_package(experiment, test, temp_dir))
         errors.extend(
-            test_prediction_package(
-                experiment, test, temp_dir, check_channel_order=True))
+            test_prediction_package(experiment,
+                                    test,
+                                    temp_dir,
+                                    check_channel_order=True))
 
     return errors
 
 
 @click.command()
 @click.argument('tests', nargs=-1)
-@click.option(
-    '--rv_root',
-    '-t',
-    help=('Sets the rv_root directory used. '
-          'If set, test will not clean this directory up.'))
-@click.option(
-    '--verbose', '-v', is_flag=True, help=('Sets the logging level to DEBUG.'))
-@click.option(
-    '--use-tf', '-v', is_flag=True, help=('Run using TF-based backends.'))
+@click.option('--rv_root',
+              '-t',
+              help=('Sets the rv_root directory used. '
+                    'If set, test will not clean this directory up.'))
+@click.option('--verbose',
+              '-v',
+              is_flag=True,
+              help=('Sets the logging level to DEBUG.'))
+@click.option('--use-tf',
+              '-v',
+              is_flag=True,
+              help=('Run using TF-based backends.'))
 def main(tests, rv_root, verbose, use_tf):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:

@@ -12,7 +12,6 @@ from rastervision.data.label_source import SegmentationClassTransformer
 class SemanticSegmentationRasterStore(LabelStore):
     """A prediction label store for segmentation raster files.
     """
-
     def __init__(self,
                  uri,
                  extent,
@@ -63,7 +62,6 @@ class SemanticSegmentationRasterStore(LabelStore):
             SemanticSegmentationLabels with windows of size chip_size covering the
                 scene with no overlap.
         """
-
         def label_fn(window):
             raw_labels = self.source.get_raw_chip(window)
             if self.class_trans:
@@ -103,41 +101,39 @@ class SemanticSegmentationRasterStore(LabelStore):
             # more work will be needed to get this to work in a scalable way. But this
             # is complicated because of the need to merge features that are split
             # across windows.
-            mask = np.zeros(
-                (self.extent.ymax, self.extent.xmax), dtype=np.uint8)
+            mask = np.zeros((self.extent.ymax, self.extent.xmax),
+                            dtype=np.uint8)
         else:
             mask = None
 
         # https://github.com/mapbox/rasterio/blob/master/docs/quickstart.rst
         # https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
-        with rasterio.open(
-                local_path,
-                'w',
-                driver='GTiff',
-                height=self.extent.ymax,
-                width=self.extent.xmax,
-                count=band_count,
-                dtype=dtype,
-                transform=transform,
-                crs=crs) as dataset:
+        with rasterio.open(local_path,
+                           'w',
+                           driver='GTiff',
+                           height=self.extent.ymax,
+                           width=self.extent.xmax,
+                           count=band_count,
+                           dtype=dtype,
+                           transform=transform,
+                           crs=crs) as dataset:
             for window in labels.get_windows():
-                class_labels = labels.get_label_arr(
-                    window, clip_extent=self.extent)
+                class_labels = labels.get_label_arr(window,
+                                                    clip_extent=self.extent)
                 clipped_window = ((window.ymin,
                                    window.ymin + class_labels.shape[0]),
                                   (window.xmin,
                                    window.xmin + class_labels.shape[1]))
                 if mask is not None:
                     mask[clipped_window[0][0]:clipped_window[0][1],
-                         clipped_window[1][0]:clipped_window[1][
-                             1]] = class_labels
+                         clipped_window[1][0]:clipped_window[1]
+                         [1]] = class_labels
                 if self.class_trans:
                     rgb_labels = self.class_trans.class_to_rgb(class_labels)
                     for chan in range(3):
-                        dataset.write_band(
-                            chan + 1,
-                            rgb_labels[:, :, chan],
-                            window=clipped_window)
+                        dataset.write_band(chan + 1,
+                                           rgb_labels[:, :, chan],
+                                           window=clipped_window)
                 else:
                     img = class_labels.astype(dtype)
                     dataset.write_band(1, img, window=clipped_window)

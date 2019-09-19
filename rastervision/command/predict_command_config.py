@@ -43,9 +43,8 @@ class PredictCommandConfig(CommandConfig):
         scenes = list(map(lambda s: s.to_proto(), self.scenes))
 
         msg.MergeFrom(
-            CommandConfigMsg(
-                predict_config=CommandConfigMsg.PredictConfig(
-                    task=task, backend=backend, scenes=scenes)))
+            CommandConfigMsg(predict_config=CommandConfigMsg.PredictConfig(
+                task=task, backend=backend, scenes=scenes)))
 
         return msg
 

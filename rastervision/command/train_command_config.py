@@ -37,9 +37,8 @@ class TrainCommandConfig(CommandConfig):
         backend = self.backend.to_proto()
 
         msg.MergeFrom(
-            CommandConfigMsg(
-                train_config=CommandConfigMsg.TrainConfig(
-                    task=task, backend=backend)))
+            CommandConfigMsg(train_config=CommandConfigMsg.TrainConfig(
+                task=task, backend=backend)))
 
         return msg
 

@@ -90,8 +90,8 @@ class TFDeeplabConfig(BackendConfig):
 
         conf = json_format.ParseDict(d, BackendConfigMsg.TFDeeplabConfig())
 
-        msg = BackendConfigMsg(
-            backend_type=rv.TF_DEEPLAB, tf_deeplab_config=conf)
+        msg = BackendConfigMsg(backend_type=rv.TF_DEEPLAB,
+                               tf_deeplab_config=conf)
 
         if self.pretrained_model_uri:
             msg.MergeFrom(
@@ -181,16 +181,14 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         # assume the task has already been set and do not
         # require it during validation.
         b.require_task = False
-        b = b.with_train_options(
-            train_restart_dir=conf.train_restart_dir,
-            sync_interval=conf.sync_interval,
-            do_monitoring=conf.do_monitoring,
-            replace_model=conf.replace_model,
-            do_eval=conf.do_eval)
-        b = b.with_script_locations(
-            train_py=conf.train_py,
-            export_py=conf.export_py,
-            eval_py=conf.eval_py)
+        b = b.with_train_options(train_restart_dir=conf.train_restart_dir,
+                                 sync_interval=conf.sync_interval,
+                                 do_monitoring=conf.do_monitoring,
+                                 replace_model=conf.replace_model,
+                                 do_eval=conf.do_eval)
+        b = b.with_script_locations(train_py=conf.train_py,
+                                    export_py=conf.export_py,
+                                    eval_py=conf.eval_py)
         b = b.with_training_data_uri(conf.training_data_uri)
         b = b.with_training_output_uri(conf.training_output_uri)
         b = b.with_model_uri(conf.model_uri)
@@ -263,9 +261,9 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         expected_keys = ['pretrained_model_uri', 'tfdl_config']
         unknown_keys = set(model_defaults.keys()) - set(expected_keys)
         if unknown_keys:
-            raise rv.ConfigError(('Unexpected keys in model defaults:'
-                                  ' {}. Expected keys: {}').format(
-                                      unknown_keys, expected_keys))
+            raise rv.ConfigError(
+                ('Unexpected keys in model defaults:'
+                 ' {}. Expected keys: {}').format(unknown_keys, expected_keys))
 
         b = self
         if 'pretrained_model_uri' in model_defaults:
@@ -288,8 +286,8 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
             try:
                 msg = json_format.Parse(template, TrainingParametersMsg())
             except json_format.ParseError:
-                msg = json_format.Parse(
-                    file_to_str(template), TrainingParametersMsg())
+                msg = json_format.Parse(file_to_str(template),
+                                        TrainingParametersMsg())
             template_json = json_format.MessageToDict(msg)
         b = deepcopy(self)
         b.config['tfdl_config'] = template_json
@@ -317,8 +315,8 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
         configuration are replaced with those values.
         """
         b = deepcopy(self)
-        b.config_mods.append((config_mod, ignore_missing_keys,
-                              set_missing_keys))
+        b.config_mods.append(
+            (config_mod, ignore_missing_keys, set_missing_keys))
         return b
 
     def with_debug(self, debug):
@@ -397,8 +395,9 @@ class TFDeeplabConfigBuilder(BackendConfigBuilder):
                               train_py=DEFAULT_SCRIPT_TRAIN,
                               export_py=DEFAULT_SCRIPT_EXPORT,
                               eval_py=DEFAULT_SCRIPT_EVAL):
-        script_locs = TFDeeplabConfig.ScriptLocations(
-            train_py=train_py, export_py=export_py, eval_py=eval_py)
+        script_locs = TFDeeplabConfig.ScriptLocations(train_py=train_py,
+                                                      export_py=export_py,
+                                                      eval_py=eval_py)
         b = deepcopy(self)
         b.config['script_locations'] = script_locs
         return b

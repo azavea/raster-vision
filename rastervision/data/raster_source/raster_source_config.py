@@ -25,10 +25,9 @@ class RasterSourceConfig(BundledConfigMixin, Config):
 
     def to_proto(self):
         transformers = list(map(lambda c: c.to_proto(), self.transformers))
-        msg = RasterSourceConfigMsg(
-            source_type=self.source_type,
-            channel_order=self.channel_order,
-            transformers=transformers)
+        msg = RasterSourceConfigMsg(source_type=self.source_type,
+                                    channel_order=self.channel_order,
+                                    transformers=transformers)
         return msg
 
     def save_bundle_files(self, bundle_dir):

@@ -14,8 +14,8 @@ def check_analyzers_type(analyzers):
         if not issubclass(type(analyzer), AnalyzerConfig):
             if not isinstance(analyzer, str):
                 raise rv.ConfigError(
-                    'analyzers must be of class AnalyzerConfig or string, got {}'.
-                    format(type(analyzer)))
+                    'analyzers must be of class AnalyzerConfig or string, got {}'
+                    .format(type(analyzer)))
 
 
 def check_backend_type(backend):

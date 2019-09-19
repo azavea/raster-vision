@@ -18,8 +18,8 @@ class NoopEvaluatorConfig(EvaluatorConfig):
         super().__init__(NOOP_EVALUATOR)
 
     def to_proto(self):
-        msg = EvaluatorConfigMsg(
-            evaluator_type=self.evaluator_type, custom_config={})
+        msg = EvaluatorConfigMsg(evaluator_type=self.evaluator_type,
+                                 custom_config={})
         return msg
 
     def create_evaluator(self):

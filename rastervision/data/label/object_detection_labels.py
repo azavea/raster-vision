@@ -14,7 +14,6 @@ class ObjectDetectionLabels(Labels):
 
     Implemented using the Tensorflow Object Detection API's BoxList class.
     """
-
     def __init__(self, npboxes, class_ids, scores=None):
         """Construct a set of object detection labels.
 
@@ -70,8 +69,9 @@ class ObjectDetectionLabels(Labels):
         if len(new_boxes) == 0:
             return ObjectDetectionLabels.make_empty()
 
-        return ObjectDetectionLabels(
-            np.array(new_boxes), np.array(new_class_ids), np.array(new_scores))
+        return ObjectDetectionLabels(np.array(new_boxes),
+                                     np.array(new_class_ids),
+                                     np.array(new_scores))
 
     @staticmethod
     def make_empty():
@@ -85,8 +85,9 @@ class ObjectDetectionLabels(Labels):
         """Make ObjectDetectionLabels from BoxList object."""
         scores = (boxlist.get_field('scores')
                   if boxlist.has_field('scores') else None)
-        return ObjectDetectionLabels(
-            boxlist.get(), boxlist.get_field('classes'), scores=scores)
+        return ObjectDetectionLabels(boxlist.get(),
+                                     boxlist.get_field('classes'),
+                                     scores=scores)
 
     @staticmethod
     def from_geojson(geojson, extent=None):
@@ -116,8 +117,8 @@ class ObjectDetectionLabels(Labels):
             scores.append(props.get('score', 1.0))
 
         if len(boxes):
-            boxes = np.array(
-                [box.npbox_format() for box in boxes], dtype=float)
+            boxes = np.array([box.npbox_format() for box in boxes],
+                             dtype=float)
             class_ids = np.array(class_ids)
             scores = np.array(scores)
             labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
@@ -125,8 +126,10 @@ class ObjectDetectionLabels(Labels):
             labels = ObjectDetectionLabels.make_empty()
 
         if extent is not None:
-            labels = ObjectDetectionLabels.get_overlapping(
-                labels, extent, ioa_thresh=0.8, clip=True)
+            labels = ObjectDetectionLabels.get_overlapping(labels,
+                                                           extent,
+                                                           ioa_thresh=0.8,
+                                                           clip=True)
         return labels
 
     def get_boxes(self):
@@ -224,8 +227,9 @@ class ObjectDetectionLabels(Labels):
         """
         window_npbox = window.npbox_format()
         window_boxlist = BoxList(np.expand_dims(window_npbox, axis=0))
-        boxlist = prune_non_overlapping_boxes(
-            labels.boxlist, window_boxlist, minoverlap=ioa_thresh)
+        boxlist = prune_non_overlapping_boxes(labels.boxlist,
+                                              window_boxlist,
+                                              minoverlap=ioa_thresh)
         if clip:
             boxlist = clip_to_window(boxlist, window_npbox)
 
@@ -259,9 +263,8 @@ class ObjectDetectionLabels(Labels):
             ObjectDetectionLabels
         """
         max_output_size = 1000000
-        pruned_boxlist = non_max_suppression(
-            labels.boxlist,
-            max_output_size=max_output_size,
-            iou_threshold=merge_thresh,
-            score_threshold=score_thresh)
+        pruned_boxlist = non_max_suppression(labels.boxlist,
+                                             max_output_size=max_output_size,
+                                             iou_threshold=merge_thresh,
+                                             score_threshold=score_thresh)
         return ObjectDetectionLabels.from_boxlist(pruned_boxlist)

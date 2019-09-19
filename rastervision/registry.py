@@ -29,7 +29,6 @@ class Registry:
     """Singleton that holds instances of Raster Vision types,
        to be referenced by configuration code by key.
     """
-
     def __init__(self):
         self._rv_config = None
         self._plugin_registry = None
@@ -182,11 +181,10 @@ class Registry:
                           rv_home=None,
                           config_overrides=None,
                           verbosity=Verbosity.NORMAL):
-        self._rv_config = RVConfig(
-            profile=profile,
-            rv_home=rv_home,
-            config_overrides=config_overrides,
-            verbosity=verbosity)
+        self._rv_config = RVConfig(profile=profile,
+                                   rv_home=rv_home,
+                                   config_overrides=config_overrides,
+                                   verbosity=verbosity)
         # Reset the plugins in case this is a re-initialization,
         self._plugin_registry = None
 
@@ -216,8 +214,8 @@ class Registry:
             return internal_builder
         else:
             self._ensure_plugins_loaded()
-            plugin_builder = self._plugin_registry.config_builders.get((group,
-                                                                        key))
+            plugin_builder = self._plugin_registry.config_builders.get(
+                (group, key))
             if plugin_builder:
                 return plugin_builder
 
@@ -245,8 +243,8 @@ class Registry:
         # plugin filesystems.
         if search_plugins:
             self._ensure_plugins_loaded()
-            filesystems = (
-                self._plugin_registry.filesystems + self.filesystems)
+            filesystems = (self._plugin_registry.filesystems +
+                           self.filesystems)
         else:
             filesystems = self.filesystems
 
@@ -403,9 +401,8 @@ class Registry:
             for command_type, cls in self.aux_command_classes.items()
             if cls.options.include_by_default
         ] + [
-            command_type for command_type, cls in
-            self._plugin_registry.aux_command_classes.items()
-            if cls.options.include_by_default
+            command_type for command_type, cls in self._plugin_registry.
+            aux_command_classes.items() if cls.options.include_by_default
         ]
 
         return self.commands + self._plugin_registry.commands + \
@@ -426,5 +423,5 @@ class Registry:
 
     def get_experiment_runner_keys(self):
         self._ensure_plugins_loaded()
-        return (list(self.experiment_runners.keys()) + list(
-            self._plugin_registry.experiment_runners.keys()))
+        return (list(self.experiment_runners.keys()) +
+                list(self._plugin_registry.experiment_runners.keys()))

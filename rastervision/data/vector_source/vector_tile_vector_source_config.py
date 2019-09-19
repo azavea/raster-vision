@@ -20,12 +20,11 @@ class VectorTileVectorSourceConfig(VectorSourceConfig):
         self.uri = uri
         self.zoom = zoom
         self.id_field = id_field
-        super().__init__(
-            rv.VECTOR_TILE_SOURCE,
-            class_id_to_filter=class_id_to_filter,
-            default_class_id=default_class_id,
-            line_bufs=line_bufs,
-            point_bufs=point_bufs)
+        super().__init__(rv.VECTOR_TILE_SOURCE,
+                         class_id_to_filter=class_id_to_filter,
+                         default_class_id=default_class_id,
+                         line_bufs=line_bufs,
+                         point_bufs=point_bufs)
 
     def to_proto(self):
         msg = super().to_proto()

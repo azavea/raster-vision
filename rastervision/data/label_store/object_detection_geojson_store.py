@@ -25,12 +25,11 @@ class ObjectDetectionGeoJSONStore(LabelStore):
         boxes = labels.get_boxes()
         class_ids = labels.get_class_ids().tolist()
         scores = labels.get_scores().tolist()
-        geojson = boxes_to_geojson(
-            boxes,
-            class_ids,
-            self.crs_transformer,
-            self.class_map,
-            scores=scores)
+        geojson = boxes_to_geojson(boxes,
+                                   class_ids,
+                                   self.crs_transformer,
+                                   self.class_map,
+                                   scores=scores)
         json_to_file(geojson, self.uri)
 
     def get_labels(self):

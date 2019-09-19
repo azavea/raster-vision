@@ -7,7 +7,6 @@ class Labels(ABC):
     A set of labels predicted by a model or provided by human labelers for the
     sake of training.
     """
-
     @abstractmethod
     def __add__(self, other):
         """Add labels to these labels.

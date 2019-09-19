@@ -12,7 +12,6 @@ log = logging.getLogger(__name__)
 class CommandDAG:
     """ A directed acyclic graph of command definitions.
     """
-
     def __init__(self,
                  command_definitions,
                  rerun_commands=False,

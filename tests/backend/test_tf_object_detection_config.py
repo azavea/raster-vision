@@ -75,8 +75,8 @@ class TestTFObjectDetectionConfig(unittest.TestCase):
 
         self.assertEqual(msg.backend_type, rv.TF_OBJECT_DETECTION)
         self.assertEqual(
-            msg.tf_object_detection_config.tfod_config['trainConfig'][
-                'batchSize'], 100)
+            msg.tf_object_detection_config.tfod_config['trainConfig']
+            ['batchSize'], 100)
         self.assertEqual(
             msg.tf_object_detection_config.fine_tune_checkpoint_name, 'foo')
 

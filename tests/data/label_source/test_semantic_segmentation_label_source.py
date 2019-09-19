@@ -33,8 +33,8 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
             source=raster_source, rgb_class_map=rgb_class_map)
         with label_source.activate():
             extent = Box(0, 0, 10, 10)
-            self.assertFalse(
-                label_source.enough_target_pixels(extent, 30, [1]))
+            self.assertFalse(label_source.enough_target_pixels(
+                extent, 30, [1]))
 
     def test_get_labels(self):
         data = np.zeros((10, 10, 1), dtype=np.uint8)

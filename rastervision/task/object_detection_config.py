@@ -63,9 +63,8 @@ class ObjectDetectionConfig(TaskConfig):
             chip_options=chip_options,
             predict_options=predict_options)
         msg.MergeFrom(
-            TaskConfigMsg(
-                object_detection_config=conf,
-                predict_package_uri=self.predict_package_uri))
+            TaskConfigMsg(object_detection_config=conf,
+                          predict_package_uri=self.predict_package_uri))
 
         return msg
 
@@ -98,8 +97,8 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
                                  'Use "with_classes"')
         if not isinstance(self.config['class_map'], ClassMap):
             raise rv.ConfigError(
-                'Class map set with "with_classes" must be of type ClassMap, got {}'.
-                format(type(self.config['class_map'])))
+                'Class map set with "with_classes" must be of type ClassMap, got {}'
+                .format(type(self.config['class_map'])))
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
@@ -115,9 +114,10 @@ class ObjectDetectionConfigBuilder(TaskConfigBuilder):
                 .with_predict_options(merge_thresh=conf.predict_options.merge_thresh,
                                       score_thresh=conf.predict_options.score_thresh)
 
-    def with_classes(
-            self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
-                ClassItem], Dict[str, int], Dict[str, Tuple[int, str]]]):
+    def with_classes(self,
+                     classes: Union[ClassMap, List[str], List[ClassItemMsg],
+                                    List[ClassItem], Dict[str, int],
+                                    Dict[str, Tuple[int, str]]]):
         """Set the classes for this task.
 
             Args:

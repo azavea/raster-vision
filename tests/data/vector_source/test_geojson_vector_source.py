@@ -16,7 +16,6 @@ from tests.data.mock_crs_transformer import DoubleCRSTransformer
 
 class TestGeoJSONVectorSource(unittest.TestCase):
     """This also indirectly tests the ClassInference class."""
-
     def setUp(self):
         self.temp_dir = RVConfig.get_tmp_dir()
         self.uri = os.path.join(self.temp_dir.name, 'vectors.json')
@@ -50,8 +49,8 @@ class TestGeoJSONVectorSource(unittest.TestCase):
             .build()
         msg = b.to_proto()
         config = GeoJSONVectorSourceConfig.from_proto(msg)
-        source = config.create_source(
-            crs_transformer=IdentityCRSTransformer(), class_map=class_map)
+        source = config.create_source(crs_transformer=IdentityCRSTransformer(),
+                                      class_map=class_map)
         trans_geojson = source.get_geojson()
         class_ids = [
             f['properties']['class_id'] for f in trans_geojson['features']
@@ -92,8 +91,8 @@ class TestGeoJSONVectorSource(unittest.TestCase):
             .build()
         msg = b.to_proto()
         config = GeoJSONVectorSourceConfig.from_proto(msg)
-        source = config.create_source(
-            crs_transformer=crs_transformer, class_map=class_map)
+        source = config.create_source(crs_transformer=crs_transformer,
+                                      class_map=class_map)
         return source.get_geojson(to_map_coords=to_map_coords)
 
     def test_transform_geojson_no_coords(self):

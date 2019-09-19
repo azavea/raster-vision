@@ -75,34 +75,27 @@ def create_tf_example(image, window, labels, class_map, chip_id=''):
         for class_id in class_ids
     ]
 
-    tf_example = tf.train.Example(
-        features=tf.train.Features(
-            feature={
-                'image/height':
-                dataset_util.int64_feature(height),
-                'image/width':
-                dataset_util.int64_feature(width),
-                'image/filename':
-                dataset_util.bytes_feature(chip_id.encode('utf8')),
-                'image/source_id':
-                dataset_util.bytes_feature(chip_id.encode('utf8')),
-                'image/encoded':
-                dataset_util.bytes_feature(encoded_image.getvalue()),
-                'image/format':
-                dataset_util.bytes_feature(image_format.encode('utf8')),
-                'image/object/bbox/xmin':
-                dataset_util.float_list_feature(xmins),
-                'image/object/bbox/xmax':
-                dataset_util.float_list_feature(xmaxs),
-                'image/object/bbox/ymin':
-                dataset_util.float_list_feature(ymins),
-                'image/object/bbox/ymax':
-                dataset_util.float_list_feature(ymaxs),
-                'image/object/class/text':
-                dataset_util.bytes_list_feature(class_names),
-                'image/object/class/label':
-                dataset_util.int64_list_feature(class_ids)
-            }))
+    tf_example = tf.train.Example(features=tf.train.Features(
+        feature={
+            'image/height': dataset_util.int64_feature(height),
+            'image/width': dataset_util.int64_feature(width),
+            'image/filename': dataset_util.bytes_feature(chip_id.encode(
+                'utf8')),
+            'image/source_id': dataset_util.bytes_feature(
+                chip_id.encode('utf8')),
+            'image/encoded': dataset_util.bytes_feature(
+                encoded_image.getvalue()),
+            'image/format': dataset_util.bytes_feature(
+                image_format.encode('utf8')),
+            'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
+            'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
+            'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
+            'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
+            'image/object/class/text': dataset_util.bytes_list_feature(
+                class_names),
+            'image/object/class/label': dataset_util.int64_list_feature(
+                class_ids)
+        }))
 
     return tf_example
 
@@ -342,7 +335,6 @@ class TrainingPackage(object):
         validation-debug-chips.zip
         validation.record
     """
-
     def __init__(self, base_uri, config, tmp_dir, partition_id):
         """Constructor.
 
@@ -422,8 +414,8 @@ class TrainingPackage(object):
         Returns:
             (string) URI of zip file containing debug chips, possibly remote
         """
-        return join(self.base_uri, '{}-debug/chips-{}.zip'.format(
-            split, self.partition_id))
+        return join(self.base_uri,
+                    '{}-debug/chips-{}.zip'.format(split, self.partition_id))
 
     def upload(self, debug=False):
         """Upload training and validation data, and class map files.
@@ -446,7 +438,6 @@ class TrainingPackage(object):
 
     def download_data(self):
         """Download training and validation data, and class map files."""
-
         def _download(split, output_dir):
             for uri in list_paths(self.base_uri, 'record'):
                 base_name = os.path.basename(uri)
@@ -570,8 +561,9 @@ def compute_prediction(image_nps, windows, detection_graph, session):
     scores = detection_graph.get_tensor_by_name('detection_scores:0')
     class_ids = detection_graph.get_tensor_by_name('detection_classes:0')
 
-    (boxes, scores, class_ids) = session.run(
-        [boxes, scores, class_ids], feed_dict={image_tensor: image_nps})
+    (boxes, scores,
+     class_ids) = session.run([boxes, scores, class_ids],
+                              feed_dict={image_tensor: image_nps})
 
     labels = ObjectDetectionLabels.make_empty()
     for chip_boxes, chip_scores, chip_class_ids, window in zip(
@@ -711,12 +703,11 @@ class TFObjectDetection(Backend):
             self.config.training_output_uri,
             sync_interval=self.config.train_options.sync_interval)
         with sync:
-            train(
-                local_config_path,
-                output_dir,
-                self.config.get_num_steps(),
-                model_main_py=model_main_py,
-                do_monitoring=self.config.train_options.do_monitoring)
+            train(local_config_path,
+                  output_dir,
+                  self.config.get_num_steps(),
+                  model_main_py=model_main_py,
+                  do_monitoring=self.config.train_options.do_monitoring)
 
         export_inference_graph(
             output_dir,

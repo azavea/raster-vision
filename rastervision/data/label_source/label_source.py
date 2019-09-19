@@ -9,7 +9,6 @@ class LabelSource(ABC):
     between LabelSources and Labels can be understood by analogy to the
     difference between a database and result sets queried from a database.
     """
-
     @abstractmethod
     def get_labels(self, window=None):
         """Return labels overlapping with window.

@@ -3,7 +3,6 @@ from rastervision.data import ActivateMixin
 
 class Scene(ActivateMixin):
     """The raster data and labels associated with an area of interest."""
-
     def __init__(self,
                  id,
                  raster_source,

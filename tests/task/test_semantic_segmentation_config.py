@@ -65,8 +65,9 @@ class TestSemanticSegmentationConfig(unittest.TestCase):
         self.assertEqual(msg.task_type, rv.SEMANTIC_SEGMENTATION)
         self.assertEqual(msg.semantic_segmentation_config.chip_size, 500)
 
-        actual_class_items = dict(
-            [(i.id, i) for i in msg.semantic_segmentation_config.class_items])
+        actual_class_items = dict([
+            (i.id, i) for i in msg.semantic_segmentation_config.class_items
+        ])
         expected_class_items = dict([(i.id, i) for i in expected_classes])
 
         self.assertDictEqual(actual_class_items, expected_class_items)

@@ -15,7 +15,6 @@ class ClassInferenceOptions():
 
 class ClassInference():
     """Infers missing class_ids from GeoJSON features."""
-
     def __init__(self, options):
         """Constructor.
 

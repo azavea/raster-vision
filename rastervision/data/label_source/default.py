@@ -46,8 +46,8 @@ class ChipClassificationLabelSourceDefaultProvider(LabelSourceDefaultProvider):
                                    .build()
 
 
-class SemanticSegmentationLabelSourceDefaultProvider(
-        LabelSourceDefaultProvider):
+class SemanticSegmentationLabelSourceDefaultProvider(LabelSourceDefaultProvider
+                                                     ):
     @staticmethod
     def handles(task_type, uri):
         if task_type == rv.SEMANTIC_SEGMENTATION:

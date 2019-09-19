@@ -208,12 +208,10 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         self.assertEqual(len(cells), 4)
         self.assertEqual(labels.get_cell_class_id(self.box1), self.class_id1)
         self.assertEqual(labels.get_cell_class_id(self.box2), self.class_id2)
-        self.assertEqual(
-            labels.get_cell_class_id(Box.make_square(0, 4, 4)),
-            self.background_class_id)
-        self.assertEqual(
-            labels.get_cell_class_id(Box.make_square(4, 0, 4)),
-            self.background_class_id)
+        self.assertEqual(labels.get_cell_class_id(Box.make_square(0, 4, 4)),
+                         self.background_class_id)
+        self.assertEqual(labels.get_cell_class_id(Box.make_square(4, 0, 4)),
+                         self.background_class_id)
 
     def test_get_labels_small_extent(self):
         # Extent only has enough of first box in it.

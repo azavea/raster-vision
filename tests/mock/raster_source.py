@@ -33,8 +33,8 @@ class MockRasterSource(RasterSource, ActivateMixin):
             self.mock.get_dtype.return_value = raster.dtype
 
             def get_chip(window):
-                return raster[window.ymin:window.ymax, window.xmin:
-                              window.xmax, :]
+                return raster[window.ymin:window.ymax, window.xmin:window.
+                              xmax, :]
 
             self.mock._get_chip.side_effect = get_chip
 

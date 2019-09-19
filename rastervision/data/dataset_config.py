@@ -66,11 +66,10 @@ class DatasetConfig(Config):
 
         augmentors = list(map(lambda x: x.create_augmentor(), self.augmentors))
 
-        return Dataset(
-            train_scenes=train_scenes,
-            validation_scenes=val_scenes,
-            test_scenes=test_scenes,
-            augmentors=augmentors)
+        return Dataset(train_scenes=train_scenes,
+                       validation_scenes=val_scenes,
+                       test_scenes=test_scenes,
+                       augmentors=augmentors)
 
     def to_proto(self):
         """Returns the protobuf configuration for this config.
@@ -81,11 +80,10 @@ class DatasetConfig(Config):
 
         augmentors = list(map(lambda x: x.to_proto(), self.augmentors))
 
-        return DatasetConfigMsg(
-            train_scenes=train_scenes,
-            validation_scenes=val_scenes,
-            test_scenes=test_scenes,
-            augmentors=augmentors)
+        return DatasetConfigMsg(train_scenes=train_scenes,
+                                validation_scenes=val_scenes,
+                                test_scenes=test_scenes,
+                                augmentors=augmentors)
 
     def update_for_command(self,
                            command_type,
@@ -125,10 +123,9 @@ class DatasetConfig(Config):
             log.debug('Updating validation scenes for command {}'.format(
                 command_type))
             if Verbosity.get() >= Verbosity.VERBOSE:
-                with click.progressbar(
-                        self.validation_scenes,
-                        label='Updating validation scenes...  '
-                ) as scenes_to_update:
+                with click.progressbar(self.validation_scenes,
+                                       label='Updating validation scenes...  '
+                                       ) as scenes_to_update:
                     update_scenes(scenes_to_update, command_type == rv.PREDICT)
             else:
                 update_scenes(self.validation_scenes,

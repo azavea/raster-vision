@@ -36,8 +36,8 @@ class MockAugmentorConfig(SupressDeepCopyMixin, AugmentorConfig):
     def to_proto(self):
         result = self.mock.to_proto()
         if result is None:
-            return AugmentorConfigMsg(
-                augmentor_type=self.augmentor_type, custom_config={})
+            return AugmentorConfigMsg(augmentor_type=self.augmentor_type,
+                                      custom_config={})
         else:
             return result
 

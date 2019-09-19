@@ -7,7 +7,6 @@ from rastervision.data.raster_transformer.raster_transformer \
 class StatsTransformer(RasterTransformer):
     """Transforms non-uint8 to uint8 values using raster_stats.
     """
-
     def __init__(self, raster_stats=None):
         """Construct a new StatsTransformer.
 

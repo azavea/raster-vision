@@ -11,7 +11,6 @@ class ActivateMixin:
     whatever has to be done to make the entity usable, and cleanup
     after the entity is not needed anymore.
     """
-
     class ActivateContextManager:
         def __init__(self, activate, deactivate):
             self.activate = activate

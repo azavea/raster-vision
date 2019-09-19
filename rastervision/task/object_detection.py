@@ -96,8 +96,9 @@ class ObjectDetection(Task):
             chip_size = self.config.chip_size
             stride = chip_size
             return list(
-                filter_windows((raster_source.get_extent().get_windows(
-                    chip_size, stride))))
+                filter_windows(
+                    (raster_source.get_extent().get_windows(chip_size,
+                                                            stride))))
 
         # Make positive windows which contain labels.
         pos_windows = filter_windows(
@@ -113,8 +114,8 @@ class ObjectDetection(Task):
         # negative window, and could get into an infinite loop in some cases,
         # so we cap the number of attempts.
         if nb_pos_windows:
-            nb_neg_windows = round(
-                self.config.chip_options.neg_ratio * nb_pos_windows)
+            nb_neg_windows = round(self.config.chip_options.neg_ratio *
+                                   nb_pos_windows)
         else:
             nb_neg_windows = 100  # just make some
         max_attempts = 100 * nb_neg_windows

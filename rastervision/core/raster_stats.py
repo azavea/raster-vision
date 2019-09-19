@@ -104,8 +104,8 @@ class RasterStats():
                 with raster_source.activate():
                     extent = raster_source.get_extent()
                     num_pixels = extent.get_width() * extent.get_height()
-                    num_chips = round(
-                        sample_prob * (num_pixels / (chip_size**2)))
+                    num_chips = round(sample_prob * (num_pixels /
+                                                     (chip_size**2)))
                     num_chips = max(1, num_chips)
                     for _ in range(num_chips):
                         window = raster_source.get_extent().make_random_square(

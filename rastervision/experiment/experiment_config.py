@@ -122,13 +122,12 @@ class ExperimentConfig(Config):
         analyzers = list(map(lambda a: a.to_proto(), self.analyzers))
         evaluators = list(map(lambda e: e.to_proto(), self.evaluators))
 
-        msg = ExperimentConfigMsg(
-            id=self.id,
-            task=self.task.to_proto(),
-            backend=self.backend.to_proto(),
-            dataset=self.dataset.to_proto(),
-            analyzers=analyzers,
-            evaluators=evaluators)
+        msg = ExperimentConfigMsg(id=self.id,
+                                  task=self.task.to_proto(),
+                                  backend=self.backend.to_proto(),
+                                  dataset=self.dataset.to_proto(),
+                                  analyzers=analyzers,
+                                  evaluators=evaluators)
         msg.root_uri = self.root_uri
         msg.analyze_uri = self.analyze_uri
         msg.chip_uri = self.chip_uri
@@ -139,11 +138,9 @@ class ExperimentConfig(Config):
 
         if self.custom_config:
             msg.MergeFrom(
-                ExperimentConfigMsg(
-                    custom_config=json_format.ParseDict(
-                        {
-                            'config': json.dumps(self.custom_config)
-                        }, struct_pb2.Struct())))
+                ExperimentConfigMsg(custom_config=json_format.ParseDict(
+                    {'config': json.dumps(self.custom_config)},
+                    struct_pb2.Struct())))
 
         return msg
 

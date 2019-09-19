@@ -15,12 +15,11 @@ class GeoJSONVectorSourceConfig(VectorSourceConfig):
                  line_bufs=None,
                  point_bufs=None):
         self.uri = uri
-        super().__init__(
-            rv.GEOJSON_SOURCE,
-            class_id_to_filter=class_id_to_filter,
-            default_class_id=default_class_id,
-            line_bufs=line_bufs,
-            point_bufs=point_bufs)
+        super().__init__(rv.GEOJSON_SOURCE,
+                         class_id_to_filter=class_id_to_filter,
+                         default_class_id=default_class_id,
+                         line_bufs=line_bufs,
+                         point_bufs=point_bufs)
 
     def to_proto(self):
         msg = super().to_proto()

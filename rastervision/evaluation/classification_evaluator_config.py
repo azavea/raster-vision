@@ -12,7 +12,6 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
     """Abstract class for usage with simple evaluators that
     are classification-based.
     """
-
     def __init__(self,
                  evaluator_type,
                  class_map,
@@ -28,8 +27,8 @@ class ClassificationEvaluatorConfig(EvaluatorConfig):
             class_items=self.class_map.to_proto(),
             output_uri=self.output_uri,
             vector_output_uri=self.vector_output_uri)
-        msg = EvaluatorConfigMsg(
-            evaluator_type=self.evaluator_type, classification_config=sub_msg)
+        msg = EvaluatorConfigMsg(evaluator_type=self.evaluator_type,
+                                 classification_config=sub_msg)
 
         return msg
 
@@ -69,8 +68,8 @@ class ClassificationEvaluatorConfigBuilder(EvaluatorConfigBuilder):
                 'Use "with_class_map".')
         if not isinstance(self.config.get('class_map'), ClassMap):
             raise rv.ConfigError(
-                'class_map set with "with_class_map" must be of type ClassMap, got {}'.
-                format(type(self.config.get('class_map'))))
+                'class_map set with "with_class_map" must be of type ClassMap, got {}'
+                .format(type(self.config.get('class_map'))))
 
     @classmethod
     def from_proto(cls, msg):

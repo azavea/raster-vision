@@ -32,7 +32,6 @@ def filter_geojson_by_aoi(geojson, aoi_polygons):
 class SemanticSegmentationEvaluator(ClassificationEvaluator):
     """Evaluates predictions for a set of scenes.
     """
-
     def __init__(self, class_map, output_uri, vector_output_uri):
         super().__init__(class_map, output_uri)
         self.vector_output_uri = vector_output_uri
@@ -83,8 +82,8 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
                     vect_scene_evaluation = self.create_evaluation()
                     vect_scene_evaluation.compute_vector(
                         gt_geojson, pred_geojson, mode, class_id)
-                    vect_evaluation.merge(
-                        vect_scene_evaluation, scene_id=scene.id)
+                    vect_evaluation.merge(vect_scene_evaluation,
+                                          scene_id=scene.id)
 
         if not evaluation.is_empty():
             evaluation.save(self.output_uri)

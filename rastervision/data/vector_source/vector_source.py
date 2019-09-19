@@ -107,7 +107,6 @@ def transform_geojson(geojson,
 
 class VectorSource(ABC):
     """A source of vector data."""
-
     def __init__(self,
                  crs_transformer,
                  line_bufs=None,
@@ -152,12 +151,11 @@ class VectorSource(ABC):
         if self.geojson is None:
             self.geojson = self._get_geojson()
 
-        geojson = transform_geojson(
-            self.geojson,
-            self.crs_transformer,
-            self.line_bufs,
-            self.point_bufs,
-            to_map_coords=to_map_coords)
+        geojson = transform_geojson(self.geojson,
+                                    self.crs_transformer,
+                                    self.line_bufs,
+                                    self.point_bufs,
+                                    to_map_coords=to_map_coords)
 
         return geojson
 

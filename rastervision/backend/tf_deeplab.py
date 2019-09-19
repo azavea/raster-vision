@@ -22,9 +22,10 @@ from rastervision.backend.tf_object_detection import (write_tf_record, TRAIN,
                                                       VALIDATION)
 from rastervision.protos.deeplab.train_pb2 import (TrainingParameters as
                                                    TrainingParametersMsg)
-from rastervision.utils.files import (
-    download_if_needed, get_local_path, make_dir, start_sync, upload_or_copy,
-    sync_to_dir, sync_from_dir, list_paths, file_exists)
+from rastervision.utils.files import (download_if_needed, get_local_path,
+                                      make_dir, start_sync, upload_or_copy,
+                                      sync_to_dir, sync_from_dir, list_paths,
+                                      file_exists)
 from rastervision.utils.misc import (numpy_to_png, png_to_numpy, save_img,
                                      terminate_at_exit)
 from rastervision.data.label_source.utils import color_to_integer
@@ -139,12 +140,15 @@ def make_debug_images(record_path: str, output_dir: str, class_map: ClassMap,
             im_labels_packed = im_packed + labels_packed
             im_packed = image_fn(im_labels_packed)
 
-            im_unpacked[:, :, 0] = np.bitwise_and(
-                im_packed >> 16, 0xff, dtype=np.uint8)
-            im_unpacked[:, :, 1] = np.bitwise_and(
-                im_packed >> 8, 0xff, dtype=np.uint8)
-            im_unpacked[:, :, 2] = np.bitwise_and(
-                im_packed >> 0, 0xff, dtype=np.uint8)
+            im_unpacked[:, :, 0] = np.bitwise_and(im_packed >> 16,
+                                                  0xff,
+                                                  dtype=np.uint8)
+            im_unpacked[:, :, 1] = np.bitwise_and(im_packed >> 8,
+                                                  0xff,
+                                                  dtype=np.uint8)
+            im_unpacked[:, :, 2] = np.bitwise_and(im_packed >> 0,
+                                                  0xff,
+                                                  dtype=np.uint8)
 
             output_path = join(output_dir, '{}.png'.format(ind))
             save_img(im_unpacked, output_path)
@@ -469,7 +473,6 @@ class TFDeeplab(Backend):
     backend.
 
     """
-
     def __init__(self, backend_config, task_config):
         """Constructor.
 
@@ -657,9 +660,10 @@ class TFDeeplab(Backend):
                 list(map(lambda c: c.id, self.class_map.get_items())))
             num_classes = len(self.class_map.get_items())
             num_classes = max(max_class, num_classes) + 1
-            (train_args, train_env) = get_training_args(
-                train_py, train_logdir_local, tfic_ckpt, dataset_dir_local,
-                num_classes, tfdl_config)
+            (train_args,
+             train_env) = get_training_args(train_py, train_logdir_local,
+                                            tfic_ckpt, dataset_dir_local,
+                                            num_classes, tfdl_config)
 
             # Start training
             log.info('Starting training process')
@@ -752,8 +756,8 @@ class TFDeeplab(Backend):
              SemanticSegmentationLabels object with predictions for a single chip
         """
         self.load_model(tmp_dir)
-        label_arr = self.sess.run(
-            OUTPUT_TENSOR_NAME, feed_dict={INPUT_TENSOR_NAME: [chips[0]]})[0]
+        label_arr = self.sess.run(OUTPUT_TENSOR_NAME,
+                                  feed_dict={INPUT_TENSOR_NAME: [chips[0]]})[0]
 
         # Return "trivial" instance of SemanticSegmentationLabels that holds a single
         # window and has ability to get labels for that one window.

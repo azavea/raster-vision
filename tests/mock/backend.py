@@ -53,8 +53,8 @@ class MockBackendConfig(SupressDeepCopyMixin, BackendConfig):
     def to_proto(self):
         result = self.mock.to_proto()
         if result is None:
-            return BackendConfigMsg(
-                backend_type=self.backend_type, custom_config={})
+            return BackendConfigMsg(backend_type=self.backend_type,
+                                    custom_config={})
         else:
             return result
 

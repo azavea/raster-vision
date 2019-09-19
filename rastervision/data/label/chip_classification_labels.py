@@ -4,7 +4,6 @@ from rastervision.data.label import Labels
 
 class ChipClassificationLabels(Labels):
     """Represents a spatial grid of cells associated with classes."""
-
     def __init__(self):
         self.cell_to_class_id = {}
 

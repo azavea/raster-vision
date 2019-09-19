@@ -56,7 +56,6 @@ class FileGroup(object):
 
 class DatasetFiles(FileGroup):
     """Utilities for files produced when calling convert_training_data."""
-
     def __init__(self, base_uri, tmp_dir):
         FileGroup.__init__(self, base_uri, tmp_dir)
 
@@ -116,7 +115,6 @@ class DatasetFiles(FileGroup):
 
 class ModelFiles(FileGroup):
     """Utilities for files produced when calling train."""
-
     def __init__(self, base_uri, tmp_dir, replace_model=False):
         """Create these model files.
 
@@ -263,8 +261,9 @@ class KerasClassification(Backend):
             _train(backend_config_path, pretrained_model_path, do_monitoring)
 
         # Perform final sync
-        sync_to_dir(
-            model_files.base_dir, self.config.training_output_uri, delete=True)
+        sync_to_dir(model_files.base_dir,
+                    self.config.training_output_uri,
+                    delete=True)
 
     def load_model(self, tmp_dir):
         from rastervision.backend.keras_classification.builders \

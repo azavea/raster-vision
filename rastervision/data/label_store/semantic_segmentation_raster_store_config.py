@@ -2,8 +2,9 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.label_store import (
-    LabelStoreConfig, LabelStoreConfigBuilder, SemanticSegmentationRasterStore)
+from rastervision.data.label_store import (LabelStoreConfig,
+                                           LabelStoreConfigBuilder,
+                                           SemanticSegmentationRasterStore)
 from rastervision.protos.label_store_pb2 import LabelStoreConfig as LabelStoreConfigMsg
 
 VectorOutput = LabelStoreConfigMsg.SemanticSegmentationRasterStore.VectorOutput
@@ -123,8 +124,8 @@ class SemanticSegmentationRasterStoreConfig(LabelStoreConfig):
                         mode = vo['mode']
                         class_id = vo['class_id']
                         vo['uri'] = os.path.join(
-                            root, '{}-{}-{}.geojson'.format(
-                                c.id, class_id, mode))
+                            root,
+                            '{}-{}-{}.geojson'.format(c.id, class_id, mode))
 
     def report_io(self, command_type, io_def):
         if command_type == rv.PREDICT:

@@ -2,8 +2,9 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.label_store import (
-    LabelStoreConfig, LabelStoreConfigBuilder, ChipClassificationGeoJSONStore)
+from rastervision.data.label_store import (LabelStoreConfig,
+                                           LabelStoreConfigBuilder,
+                                           ChipClassificationGeoJSONStore)
 
 
 class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):

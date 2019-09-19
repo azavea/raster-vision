@@ -27,8 +27,9 @@ class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
         return msg
 
     def create_source(self, task_config, extent, crs_transformer, tmp_dir):
-        raster_source = self.source.create_source(
-            tmp_dir, crs_transformer, extent, task_config.class_map)
+        raster_source = self.source.create_source(tmp_dir, crs_transformer,
+                                                  extent,
+                                                  task_config.class_map)
         return SemanticSegmentationLabelSource(raster_source,
                                                self.rgb_class_map)
 
@@ -126,5 +127,5 @@ class SemanticSegmentationLabelSourceConfigBuilder(LabelSourceConfigBuilder):
 
         if not isinstance(source, (str, RasterSourceConfig)):
             raise rv.ConfigError(
-                'raster_source must be of type str or RasterSourceConfig, got {}'.
-                format(type(source)))
+                'raster_source must be of type str or RasterSourceConfig, got {}'
+                .format(type(source)))

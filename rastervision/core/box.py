@@ -11,7 +11,6 @@ class BoxSizeError(ValueError):
 
 class Box():
     """A multi-purpose box (ie. rectangle)."""
-
     def __init__(self, ymin, xmin, ymax, xmax):
         """Construct a bounding box.
 
@@ -62,8 +61,8 @@ class Box():
         return (self.xmin, self.ymin, self.xmax, self.ymax)
 
     def to_int(self):
-        return Box(
-            int(self.ymin), int(self.xmin), int(self.ymax), int(self.xmax))
+        return Box(int(self.ymin), int(self.xmin), int(self.ymax),
+                   int(self.xmax))
 
     def npbox_format(self):
         """Return Box in npbox format used by TF Object Detection API.
@@ -72,8 +71,8 @@ class Box():
             Numpy array of form [ymin, xmin, ymax, xmax] with float type
 
         """
-        return np.array(
-            [self.ymin, self.xmin, self.ymax, self.xmax], dtype=np.float)
+        return np.array([self.ymin, self.xmin, self.ymax, self.xmax],
+                        dtype=np.float)
 
     @staticmethod
     def to_npboxes(boxes):
@@ -226,13 +225,12 @@ class Box():
         else:
             delta_height = delta_width = int(round(buffer_size))
 
-        return Box(
-            max(0, math.floor(self.ymin - delta_height)),
-            max(0, math.floor(self.xmin - delta_width)),
-            min(max_extent.get_height(),
-                int(self.ymax) + delta_height),
-            min(max_extent.get_width(),
-                int(self.xmax) + delta_width))
+        return Box(max(0, math.floor(self.ymin - delta_height)),
+                   max(0, math.floor(self.xmin - delta_width)),
+                   min(max_extent.get_height(),
+                       int(self.ymax) + delta_height),
+                   min(max_extent.get_width(),
+                       int(self.xmax) + delta_width))
 
     def make_copy(self):
         return Box(*(self.tuple_format()))

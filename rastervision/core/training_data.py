@@ -3,7 +3,6 @@ import random
 
 class TrainingData(object):
     """A set of chips, windows, and labels used to train a model."""
-
     def __init__(self):
         """Construct a new TrainingData."""
         self.chips = []

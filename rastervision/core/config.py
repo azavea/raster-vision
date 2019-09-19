@@ -120,7 +120,6 @@ class ConfigBuilder(ABC):
 class BundledConfigMixin(ABC):
     """Mixin for configurations that participate in the bundling of a
     prediction package"""
-
     @abstractmethod
     def save_bundle_files(self, bundle_dir):
         """Place files into a bundle directory for bundling into

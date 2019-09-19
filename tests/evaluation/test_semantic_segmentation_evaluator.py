@@ -57,10 +57,9 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         crs_transformer = IdentityCRSTransformer()
         extent = Box.make_square(0, 0, 360)
 
-        gt_rs = RasterizedSource(
-            GeoJSONVectorSource(gt_uri, crs_transformer),
-            RasterizedSourceConfig.RasterizerOptions(2), extent,
-            crs_transformer)
+        gt_rs = RasterizedSource(GeoJSONVectorSource(gt_uri, crs_transformer),
+                                 RasterizedSourceConfig.RasterizerOptions(2),
+                                 extent, crs_transformer)
         gt_ls = SemanticSegmentationLabelSource(source=gt_rs)
 
         pred_rs = RasterizedSource(

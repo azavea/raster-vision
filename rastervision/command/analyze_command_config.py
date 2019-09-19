@@ -31,9 +31,8 @@ class AnalyzeCommandConfig(CommandConfig):
         analyzers = list(map(lambda a: a.to_proto(), self.analyzers))
 
         msg.MergeFrom(
-            CommandConfigMsg(
-                analyze_config=CommandConfigMsg.AnalyzeConfig(
-                    task=task, scenes=scenes, analyzers=analyzers)))
+            CommandConfigMsg(analyze_config=CommandConfigMsg.AnalyzeConfig(
+                task=task, scenes=scenes, analyzers=analyzers)))
 
         return msg
 

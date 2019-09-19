@@ -150,10 +150,9 @@ class RasterioSource(ActivateMixin, RasterSource):
         if self.image_dataset is None:
             raise ActivationError('RasterSource must be activated before use')
         shifted_window = self._get_shifted_window(window)
-        return load_window(
-            self.image_dataset,
-            window=shifted_window.rasterio_format(),
-            is_masked=self.is_masked)
+        return load_window(self.image_dataset,
+                           window=shifted_window.rasterio_format(),
+                           is_masked=self.is_masked)
 
     def _activate(self):
         # Download images to temporary directory and delete it when done.

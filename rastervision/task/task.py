@@ -17,7 +17,6 @@ class Task(object):
 
     This should be subclassed to add a new task, such as object detection
     """
-
     def __init__(self, task_config, backend):
         """Construct a new Task.
 
@@ -98,7 +97,6 @@ class Task(object):
                 (that is disjoint from train_scenes)
             augmentors: Augmentors used to augment training data
         """
-
         def _process_scene(scene, type_, augment):
             with scene.activate():
                 data = TrainingData()
@@ -123,13 +121,16 @@ class Task(object):
         def _process_scenes(scenes, type_, augment):
             return [_process_scene(scene, type_, augment) for scene in scenes]
 
-        processed_training_results = _process_scenes(
-            train_scenes, TRAIN, augment=True)
-        processed_validation_results = _process_scenes(
-            validation_scenes, VALIDATION, augment=False)
+        processed_training_results = _process_scenes(train_scenes,
+                                                     TRAIN,
+                                                     augment=True)
+        processed_validation_results = _process_scenes(validation_scenes,
+                                                       VALIDATION,
+                                                       augment=False)
 
-        self.backend.process_sceneset_results(
-            processed_training_results, processed_validation_results, tmp_dir)
+        self.backend.process_sceneset_results(processed_training_results,
+                                              processed_validation_results,
+                                              tmp_dir)
 
     def train(self, tmp_dir):
         """Train a model.
@@ -168,8 +169,8 @@ class Task(object):
 
         def predict_batch(predict_chips, predict_windows):
             nonlocal labels
-            new_labels = self.backend.predict(
-                np.array(predict_chips), predict_windows, tmp_dir)
+            new_labels = self.backend.predict(np.array(predict_chips),
+                                              predict_windows, tmp_dir)
             labels += new_labels
             print('.' * len(predict_chips), end='', flush=True)
 

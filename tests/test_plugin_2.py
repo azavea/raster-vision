@@ -16,8 +16,8 @@ class NoopAugmentorConfig(AugmentorConfig):
         super().__init__(NOOP_AUGMENTOR)
 
     def to_proto(self):
-        msg = AugmentorConfigMsg(
-            augmentor_type=self.augmentor_type, custom_config={})
+        msg = AugmentorConfigMsg(augmentor_type=self.augmentor_type,
+                                 custom_config={})
         return msg
 
     def create_augmentor(self):

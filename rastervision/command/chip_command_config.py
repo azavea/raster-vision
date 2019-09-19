@@ -43,12 +43,11 @@ class ChipCommandConfig(CommandConfig):
         train_scenes = list(map(lambda s: s.to_proto(), self.train_scenes))
         val_scenes = list(map(lambda s: s.to_proto(), self.val_scenes))
         msg.MergeFrom(
-            CommandConfigMsg(
-                chip_config=CommandConfigMsg.ChipConfig(
-                    task=task,
-                    backend=backend,
-                    train_scenes=train_scenes,
-                    val_scenes=val_scenes)))
+            CommandConfigMsg(chip_config=CommandConfigMsg.ChipConfig(
+                task=task,
+                backend=backend,
+                train_scenes=train_scenes,
+                val_scenes=val_scenes)))
 
         return msg
 
@@ -69,8 +68,8 @@ class ChipCommandConfig(CommandConfig):
         t_scenes = list(map(lambda x: (0, x), self.train_scenes))
         v_scenes = list(map(lambda x: (1, x), self.val_scenes))
 
-        for i, l in enumerate(
-                split_into_groups(t_scenes + v_scenes, num_parts)):
+        for i, l in enumerate(split_into_groups(t_scenes + v_scenes,
+                                                num_parts)):
             split_t_scenes = list(
                 map(lambda x: x[1], filter(lambda x: x[0] == 0, l)))
             split_v_scenes = list(

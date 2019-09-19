@@ -12,11 +12,10 @@ from rastervision.core.class_map import (ClassItem, ClassMap)
 
 
 @click.command()
-@click.option(
-    '--task',
-    '-t',
-    type=click.Choice(['object_detection', 'semantic_segmentation']),
-    required=True)
+@click.option('--task',
+              '-t',
+              type=click.Choice(['object_detection', 'semantic_segmentation']),
+              required=True)
 @click.option('--chip_size', '-c', default=300, type=int)
 @click.option('--chips_per_dimension', '-s', default=3, type=int)
 @click.argument('tiff_path')
@@ -63,17 +62,16 @@ def generate_scene(task, tiff_path, labels_path, chip_size,
     print('Generated {} boxes with {} different classes.'.format(
         len(boxes), len(set(class_ids))))
 
-    with rasterio.open(
-            tiff_path,
-            'w',
-            driver='GTiff',
-            height=ymax,
-            transform=transform,
-            crs='EPSG:4326',
-            compression=rasterio.enums.Compression.none,
-            width=xmax,
-            count=nb_channels,
-            dtype='uint8') as dst:
+    with rasterio.open(tiff_path,
+                       'w',
+                       driver='GTiff',
+                       height=ymax,
+                       transform=transform,
+                       crs='EPSG:4326',
+                       compression=rasterio.enums.Compression.none,
+                       width=xmax,
+                       count=nb_channels,
+                       dtype='uint8') as dst:
         for channel_ind in range(0, nb_channels):
             dst.write(image[:, :, channel_ind], channel_ind + 1)
 
@@ -96,17 +94,16 @@ def generate_scene(task, tiff_path, labels_path, chip_size,
             label_image[box.ymin:box.ymax, box.xmin:box.xmax, 0] = class_id
 
         # save labels to raster
-        with rasterio.open(
-                labels_path,
-                'w',
-                driver='GTiff',
-                height=ymax,
-                transform=transform,
-                crs='EPSG:4326',
-                compression=rasterio.enums.Compression.none,
-                width=xmax,
-                count=1,
-                dtype='uint8') as dst:
+        with rasterio.open(labels_path,
+                           'w',
+                           driver='GTiff',
+                           height=ymax,
+                           transform=transform,
+                           crs='EPSG:4326',
+                           compression=rasterio.enums.Compression.none,
+                           width=xmax,
+                           count=1,
+                           dtype='uint8') as dst:
             dst.write(label_image[:, :, 0], 1)
 
 

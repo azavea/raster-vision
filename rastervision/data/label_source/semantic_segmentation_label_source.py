@@ -12,7 +12,6 @@ from rastervision.data.raster_source import RasterSource
 
 class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
     """A read-only label source for semantic segmentation."""
-
     def __init__(self, source: RasterSource, rgb_class_map: ClassMap = None):
         """Constructor.
 
@@ -73,7 +72,6 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         Returns:
              SemanticSegmentationLabels
         """
-
         def label_fn(_window):
             raw_labels = self.source.get_raw_chip(_window)
 

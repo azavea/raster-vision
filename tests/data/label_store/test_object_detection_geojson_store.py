@@ -64,25 +64,29 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
     def test_write_invalid_uri(self):
         labels = ObjectDetectionLabels.make_empty()
         invalid_uri = 's3://invalid_path/invalid.json'
-        label_store = ObjectDetectionGeoJSONStore(
-            invalid_uri, self.crs_transformer, self.class_map)
+        label_store = ObjectDetectionGeoJSONStore(invalid_uri,
+                                                  self.crs_transformer,
+                                                  self.class_map)
         with self.assertRaises(NotWritableError):
             label_store.save(labels)
 
     def test_valid_uri(self):
         # Read it, write it using label_store, read it again, and compare.
-        label_source = ObjectDetectionLabelSource(
-            self.file_path, self.crs_transformer, self.class_map, self.extent)
+        label_source = ObjectDetectionLabelSource(self.file_path,
+                                                  self.crs_transformer,
+                                                  self.class_map, self.extent)
         labels1 = label_source.get_labels()
 
         new_path = os.path.join(self.temp_dir.name, 'test_save_reload.json')
 
-        label_store = ObjectDetectionGeoJSONStore(
-            new_path, self.crs_transformer, self.class_map)
+        label_store = ObjectDetectionGeoJSONStore(new_path,
+                                                  self.crs_transformer,
+                                                  self.class_map)
         label_store.save(labels1)
 
-        label_store = ObjectDetectionLabelSource(
-            self.file_path, self.crs_transformer, self.class_map, self.extent)
+        label_store = ObjectDetectionLabelSource(self.file_path,
+                                                 self.crs_transformer,
+                                                 self.class_map, self.extent)
         labels2 = label_store.get_labels()
 
         labels1.assert_equal(labels2)

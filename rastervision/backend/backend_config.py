@@ -104,11 +104,12 @@ class BackendConfigBuilder(ConfigBuilder):
                 return self._load_model_defaults(
                     backend_defaults[model_defaults_key])
             else:
-                raise rv.ConfigError('No defaults found for model key {}'
-                                     .format(model_defaults_key))
+                raise rv.ConfigError(
+                    'No defaults found for model key {}'.format(
+                        model_defaults_key))
         else:
-            raise rv.ConfigError('No model defaults for backend {}'
-                                 .format(self.backend_type))
+            raise rv.ConfigError('No model defaults for backend {}'.format(
+                self.backend_type))
         return self
 
     def _load_model_defaults(self, model_defaults):

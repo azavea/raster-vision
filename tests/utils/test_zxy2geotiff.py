@@ -21,23 +21,24 @@ class TestZXY2Geotiff(unittest.TestCase):
         # get the lng/lat of the center of the NW (northwest) and SE tiles,
         # and pass those as bounds to zxy2geotiff. We open the resulting
         # geotiff and check that the content is correct.
-        img_arr = np.random.randint(
-            0, 256, (3 * 256, 3 * 256, 3), dtype=np.uint8)
+        img_arr = np.random.randint(0,
+                                    256, (3 * 256, 3 * 256, 3),
+                                    dtype=np.uint8)
         zoom = 18
 
         i = 0
         for y in range(3):
             for x in range(3):
-                im = Image.fromarray(
-                    img_arr[y * 256:(y + 1) * 256, x * 256:(x + 1) * 256, :])
+                im = Image.fromarray(img_arr[y * 256:(y + 1) * 256, x *
+                                             256:(x + 1) * 256, :])
 
                 tile_y = y
                 # The TMS convention is for the y axis to start at the bottom
                 # rather than the top.
                 if use_tms:
                     tile_y = (2**zoom) - y - 1
-                im_path = join(self.tmp_dir, '{}/{}/{}.png'.format(
-                    zoom, x, tile_y))
+                im_path = join(self.tmp_dir,
+                               '{}/{}/{}.png'.format(zoom, x, tile_y))
                 make_dir(im_path, use_dirname=True)
                 im.save(im_path)
                 i += 1

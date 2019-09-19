@@ -88,7 +88,6 @@ def start_sync(src_dir_uri, dest_dir_uri, sync_interval=600,
         sync_interval: (int) period in seconds for syncing
         fs:  Optional FileSystem to use
     """
-
     def _sync_dir():
         while True:
             time.sleep(sync_interval)

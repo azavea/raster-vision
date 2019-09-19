@@ -10,7 +10,6 @@ log = logging.getLogger(__name__)
 class ClassificationEvaluator(Evaluator):
     """Evaluates predictions for a set of scenes.
     """
-
     def __init__(self, class_map, output_uri):
         self.class_map = class_map
         self.output_uri = output_uri

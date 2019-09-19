@@ -195,10 +195,10 @@ class RVConfig:
         environment variable.
         """
         subconfig = self.get_subconfig('RV')
-        default_path = os.path.join(
-            os.path.dirname(rv.backend.__file__), 'model_defaults.json')
-        model_default_uri = subconfig(
-            'model_defaults_uri', default=default_path)
+        default_path = os.path.join(os.path.dirname(rv.backend.__file__),
+                                    'model_defaults.json')
+        model_default_uri = subconfig('model_defaults_uri',
+                                      default=default_path)
 
         model_defaults = json.loads(file_to_str(model_default_uri))
 

@@ -76,8 +76,8 @@ class TestBox(unittest.TestCase):
         self.assertEqual(self.box.shapely_format(), shapely_box)
 
     def test_npbox_format(self):
-        self.assertEqual(
-            tuple(self.box.npbox_format()), self.box.tuple_format())
+        self.assertEqual(tuple(self.box.npbox_format()),
+                         self.box.tuple_format())
         self.assertEqual(self.box.npbox_format().dtype, np.float)
 
     def test_geojson_coordinates(self):

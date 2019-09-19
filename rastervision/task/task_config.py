@@ -33,12 +33,11 @@ class TaskConfig(BundledConfigMixin, Config):
         return rv._registry.get_config_builder(rv.TASK, self.task_type)(self)
 
     def to_proto(self):
-        return TaskConfigMsg(
-            task_type=self.task_type,
-            predict_batch_size=self.predict_batch_size,
-            predict_package_uri=self.predict_package_uri,
-            debug=self.debug,
-            predict_debug_uri=self.predict_debug_uri)
+        return TaskConfigMsg(task_type=self.task_type,
+                             predict_batch_size=self.predict_batch_size,
+                             predict_package_uri=self.predict_package_uri,
+                             debug=self.debug,
+                             predict_debug_uri=self.predict_debug_uri)
 
     @staticmethod
     def builder(task_type):

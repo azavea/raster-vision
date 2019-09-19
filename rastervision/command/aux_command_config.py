@@ -124,8 +124,8 @@ class AuxCommandConfigBuilder(CommandConfigBuilder):
         if len(matching_props) > 1:
             raise rv.ConfigError(
                 'Multiple configurations matching the {} command found. '
-                'Use only one configuration - property match is not case sensitive.'.
-                format(self.command_type))
+                'Use only one configuration - property match is not case sensitive.'
+                .format(self.command_type))
         elif len(matching_props) == 1:
             return experiment_config.custom_config[matching_props[0]]
         else:

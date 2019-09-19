@@ -5,7 +5,6 @@ import rastervision as rv
 
 class SupressDeepCopyMixin:
     """Supress deep copy in mock objects, since we want to check mocks after processing."""
-
     def __deepcopy__(self, memodict={}):
         return self
 

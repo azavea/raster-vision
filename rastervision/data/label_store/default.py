@@ -65,8 +65,8 @@ class ChipClassificationGeoJSONStoreDefaultProvider(LabelStoreDefaultProvider):
         return b.build()
 
 
-class SemanticSegmentationRasterStoreDefaultProvider(
-        LabelStoreDefaultProvider):
+class SemanticSegmentationRasterStoreDefaultProvider(LabelStoreDefaultProvider
+                                                     ):
     @staticmethod
     def is_default_for(task_type):
         return task_type == rv.SEMANTIC_SEGMENTATION

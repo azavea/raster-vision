@@ -35,7 +35,6 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
     within the calling process.
 
     """
-
     def __init__(self):
         self.tmp_dir = None
 
@@ -68,25 +67,23 @@ class OutOfProcessExperimentRunner(ExperimentRunner):
                 parent_job_ids.append(ids_to_job[upstream_id])
 
             run_command = make_command(command_uri, self.tmp_dir)
-            job_id = self.submit(
-                command_config.command_type,
-                command_config.split_id,
-                command_def.experiment_id,
-                run_command,
-                parent_job_ids,
-                utilizes_gpu=command_config.utilizes_gpu())
+            job_id = self.submit(command_config.command_type,
+                                 command_config.split_id,
+                                 command_def.experiment_id,
+                                 run_command,
+                                 parent_job_ids,
+                                 utilizes_gpu=command_config.utilizes_gpu())
 
             ids_to_job[command_id] = job_id
 
     def _dry_run(self, command_dag):
         """Runs all commands."""
         click.echo(
-            click.style(
-                '\n{} commands to be issued:'.format(
-                    self.execution_environment),
-                fg='green',
-                bold=True,
-                underline=True))
+            click.style('\n{} commands to be issued:'.format(
+                self.execution_environment),
+                        fg='green',
+                        bold=True,
+                        underline=True))
         for command_id in command_dag.get_sorted_command_ids():
             command_def = command_dag.get_command_definition(command_id)
             command_config = command_def.command_config

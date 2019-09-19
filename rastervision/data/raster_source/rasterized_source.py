@@ -38,12 +38,11 @@ def geoms_to_raster(str_tree, rasterizer_options, window, extent):
     # rasterize needs to be passed >= 1 shapes.
     if shapes:
         log.debug('rasterio.rasterize()...')
-        raster = rasterize(
-            shapes,
-            out_shape=out_shape,
-            fill=background_class_id,
-            dtype=np.uint8,
-            all_touched=all_touched)
+        raster = rasterize(shapes,
+                           out_shape=out_shape,
+                           fill=background_class_id,
+                           dtype=np.uint8,
+                           all_touched=all_touched)
     else:
         raster = np.full(out_shape, background_class_id, dtype=np.uint8)
 
@@ -65,7 +64,6 @@ def geoms_to_raster(str_tree, rasterizer_options, window, extent):
 
 class RasterizedSource(ActivateMixin, RasterSource):
     """A RasterSource based on the rasterization of a VectorSource."""
-
     def __init__(self, vector_source, rasterizer_options, extent,
                  crs_transformer):
         """Constructor.

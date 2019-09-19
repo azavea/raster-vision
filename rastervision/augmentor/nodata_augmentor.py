@@ -12,7 +12,6 @@ class NodataAugmentor(Augmentor):
     This is useful for training the model to negatively predict
     chips that are on boundaries or containing mostly NoData.
     """
-
     def __init__(self, aug_prob):
         self.aug_prob = aug_prob
 

@@ -27,6 +27,5 @@ class Command(ABC):
 class NoOpCommand(Command):
     """Defines a command that does nothing.
     """
-
     def run(self, tmp_dir):
         pass

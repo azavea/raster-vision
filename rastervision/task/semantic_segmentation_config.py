@@ -71,9 +71,8 @@ class SemanticSegmentationConfig(TaskConfig):
             class_items=self.class_map.to_proto(),
             chip_options=chip_options)
         msg.MergeFrom(
-            TaskConfigMsg(
-                semantic_segmentation_config=conf,
-                predict_package_uri=self.predict_package_uri))
+            TaskConfigMsg(semantic_segmentation_config=conf,
+                          predict_package_uri=self.predict_package_uri))
 
         return msg
 
@@ -133,9 +132,10 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
                 'Cannot use more than {} classes with semantic segmentation.'.
                 format(max_classes))
 
-    def with_classes(
-            self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
-                ClassItem], Dict[str, int], Dict[str, Tuple[int, str]]]):
+    def with_classes(self,
+                     classes: Union[ClassMap, List[str], List[ClassItemMsg],
+                                    List[ClassItem], Dict[str, int],
+                                    Dict[str, Tuple[int, str]]]):
         """Set the classes for this task.
 
             Args:

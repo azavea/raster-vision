@@ -129,8 +129,8 @@ class PluginRegistry:
         plugin sources for plugins that are currently loaded
         in the registry.
         """
-        return PluginConfigMsg(
-            plugin_uris=self.plugin_files, plugin_modules=self.plugin_modules)
+        return PluginConfigMsg(plugin_uris=self.plugin_files,
+                               plugin_modules=self.plugin_modules)
 
     def register_config_builder(self, group, key, builder_class):
         """Registers a ConfigBuilder as a plugin.

@@ -67,8 +67,9 @@ class TestChipClassificationGeoJSONStore(unittest.TestCase):
                 .build().to_proto()
         config = rv.LabelStoreConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
                    .from_proto(msg).build()
-        label_store = config.create_store(
-            self.task_config, extent, self.crs_transformer, self.temp_dir.name)
+        label_store = config.create_store(self.task_config, extent,
+                                          self.crs_transformer,
+                                          self.temp_dir.name)
 
         labels1 = label_store.get_labels()
         new_uri = os.path.join(self.temp_dir.name, 'test_save_reload.json')
@@ -77,8 +78,9 @@ class TestChipClassificationGeoJSONStore(unittest.TestCase):
                 .build().to_proto()
         config = rv.LabelStoreConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
                    .from_proto(msg).build()
-        label_store = config.create_store(
-            self.task_config, extent, self.crs_transformer, self.temp_dir.name)
+        label_store = config.create_store(self.task_config, extent,
+                                          self.crs_transformer,
+                                          self.temp_dir.name)
         label_store.save(labels1)
         labels2 = label_store.get_labels()
 

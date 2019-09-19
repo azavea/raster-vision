@@ -12,7 +12,6 @@ class SemanticSegmentationLabels(Labels):
     memory. Therefore, to avoid running out of memory, labels are computed as needed for
     windows.
     """
-
     def __init__(self, windows, label_fn, aoi_polygons=None):
         """Constructor
 
@@ -33,22 +32,22 @@ class SemanticSegmentationLabels(Labels):
 
         Returns a concatenation of this and the other labels.
         """
-        return SemanticSegmentationLabels(
-            self.windows + other.windows,
-            self.label_fn,
-            aoi_polygons=self.aoi_polygons)
+        return SemanticSegmentationLabels(self.windows + other.windows,
+                                          self.label_fn,
+                                          aoi_polygons=self.aoi_polygons)
 
     def __eq__(self, other):
         for window in self.get_windows():
-            if not np.array_equal(
-                    self.get_label_arr(window), other.get_label_arr(window)):
+            if not np.array_equal(self.get_label_arr(window),
+                                  other.get_label_arr(window)):
                 return False
         return True
 
     def filter_by_aoi(self, aoi_polygons):
         """Returns a new SemanticSegmentationLabels object with aoi_polygons set."""
-        return SemanticSegmentationLabels(
-            self.windows, self.label_fn, aoi_polygons=aoi_polygons)
+        return SemanticSegmentationLabels(self.windows,
+                                          self.label_fn,
+                                          aoi_polygons=aoi_polygons)
 
     def add_window(self, window):
         self.windows.append(window)
@@ -92,11 +91,10 @@ class SemanticSegmentationLabels(Labels):
                 # If window intersects with AOI, set pixels outside the AOI polygon to 0,
                 # so they are ignored during eval.
                 label_arr = self.label_fn(window)
-                mask = rasterize(
-                    [(p, 0) for p in window_aois],
-                    out_shape=label_arr.shape,
-                    fill=1,
-                    dtype=np.uint8)
+                mask = rasterize([(p, 0) for p in window_aois],
+                                 out_shape=label_arr.shape,
+                                 fill=1,
+                                 dtype=np.uint8)
                 label_arr[mask.astype(np.bool)] = 0
             else:
                 # If window does't overlap with any AOI, then return all zeros.
@@ -104,7 +102,7 @@ class SemanticSegmentationLabels(Labels):
 
         if clip_extent is not None:
             clip_window = window.intersection(clip_extent)
-            label_arr = label_arr[0:clip_window.get_height(), 0:
-                                  clip_window.get_width()]
+            label_arr = label_arr[0:clip_window.get_height(), 0:clip_window.
+                                  get_width()]
 
         return label_arr

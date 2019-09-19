@@ -9,7 +9,6 @@ class ClassEvaluationItem(EvaluationItem):
     None is used for values that are undefined because they involve a division
     by zero (eg. precision when there are no predictions).
     """
-
     def __init__(self,
                  precision=None,
                  recall=None,
@@ -45,8 +44,8 @@ class ClassEvaluationItem(EvaluationItem):
                 if self_val is None and other_val is None:
                     return 0.0
                 # Handle a single None value by setting them to zero.
-                return (self_ratio * (self_val or 0) +
-                        other_ratio * (other_val or 0))
+                return (self_ratio * (self_val or 0) + other_ratio *
+                        (other_val or 0))
 
             self.precision = weighted_avg(self.precision, other.precision)
             self.recall = weighted_avg(self.recall, other.recall)
@@ -60,12 +59,11 @@ class ClassEvaluationItem(EvaluationItem):
                 if self.conf_mat is None:
                     # Make first row all zeros so that the array indices
                     # correspond to valid class ids (ie. >= 1).
-                    self.conf_mat = np.concatenate(
-                        [
-                            np.zeros_like(other.conf_mat)[np.newaxis, :],
-                            np.array(other.conf_mat)[np.newaxis, :]
-                        ],
-                        axis=0)
+                    self.conf_mat = np.concatenate([
+                        np.zeros_like(other.conf_mat)[np.newaxis, :],
+                        np.array(other.conf_mat)[np.newaxis, :]
+                    ],
+                                                   axis=0)
                 else:
                     self.conf_mat = np.concatenate(
                         [self.conf_mat, other.conf_mat[np.newaxis, :]], axis=0)

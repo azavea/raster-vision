@@ -6,7 +6,6 @@ from rastervision.data import ActivateMixin
 class LabelStore(ABC, ActivateMixin):
     """This defines how to store prediction labels are stored for a scene.
     """
-
     @abstractmethod
     def save(self, labels):
         """Save.

@@ -38,8 +38,10 @@ class BundleCommandConfig(CommandConfig):
         scene = self.scene.to_proto()
         analyzers = list(map(lambda a: a.to_proto(), self.analyzers))
 
-        b = CommandConfigMsg.BundleConfig(
-            task=task, backend=backend, scene=scene, analyzers=analyzers)
+        b = CommandConfigMsg.BundleConfig(task=task,
+                                          backend=backend,
+                                          scene=scene,
+                                          analyzers=analyzers)
 
         msg.MergeFrom(CommandConfigMsg(bundle_config=b))
 

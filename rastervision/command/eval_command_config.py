@@ -38,9 +38,8 @@ class EvalCommandConfig(CommandConfig):
         evaluators = list(map(lambda e: e.to_proto(), self.evaluators))
 
         msg.MergeFrom(
-            CommandConfigMsg(
-                eval_config=CommandConfigMsg.EvalConfig(
-                    task=task, scenes=scenes, evaluators=evaluators)))
+            CommandConfigMsg(eval_config=CommandConfigMsg.EvalConfig(
+                task=task, scenes=scenes, evaluators=evaluators)))
 
         return msg
 

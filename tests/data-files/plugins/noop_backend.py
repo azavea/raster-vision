@@ -30,8 +30,8 @@ class NoopBackendConfig(BackendConfig):
         super().__init__(NOOP_BACKEND)
 
     def to_proto(self):
-        msg = BackendConfigMsg(
-            backend_type=self.backend_type, custom_config={})
+        msg = BackendConfigMsg(backend_type=self.backend_type,
+                               custom_config={})
         return msg
 
     def create_backend(self, task_config):

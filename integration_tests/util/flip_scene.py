@@ -8,7 +8,6 @@ import json
 def flip_geom(m, b, geom):
     """Flips a geom along a straight line y = mx + b.
     """
-
     def traverse_coords(coords, dst_coords):
         for p in coords:
             if type(p[0]) is list:

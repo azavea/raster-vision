@@ -91,8 +91,9 @@ class TestClassMap(unittest.TestCase):
         source = {'one': (1, 'red'), 'two': (2, 'green'), 'three': (3, 'blue')}
         cm = ClassMap.construct_from(source)
         for name in source:
-            expected = ClassItem(
-                id=source[name][0], name=name, color=source[name][1])
+            expected = ClassItem(id=source[name][0],
+                                 name=name,
+                                 color=source[name][1])
             actual = cm.get_by_id(source[name][0])
             self.assertEqual(actual, expected)
 

@@ -63,8 +63,9 @@ class TestObjectDetectionConfig(unittest.TestCase):
         self.assertEqual(msg.task_type, rv.OBJECT_DETECTION)
         self.assertEqual(msg.object_detection_config.chip_size, 500)
 
-        actual_class_items = dict(
-            [(i.id, i) for i in msg.object_detection_config.class_items])
+        actual_class_items = dict([
+            (i.id, i) for i in msg.object_detection_config.class_items
+        ])
         expected_class_items = dict([(i.id, i) for i in expected_classes])
 
         self.assertDictEqual(actual_class_items, expected_class_items)

@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 
 class BundleCommand(Command):
     """Bundles all the necessary files together into a prediction package."""
-
     def __init__(self, command_config):
         self.command_config = command_config
 
@@ -66,8 +65,7 @@ class BundleCommand(Command):
         with zipfile.ZipFile(package_path, 'w') as package_zip:
             for path in bundle_files:
                 package_zip.write(path, arcname=os.path.basename(path))
-            package_zip.write(
-                bundle_config_path,
-                arcname=os.path.basename(bundle_config_path))
+            package_zip.write(bundle_config_path,
+                              arcname=os.path.basename(bundle_config_path))
 
         upload_or_copy(package_path, cc.task.predict_package_uri)

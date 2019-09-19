@@ -78,15 +78,14 @@ class ObjectDetectionEvaluation(ClassificationEvaluation):
             class_name = class_map.get_by_id(class_id).name
 
             if gt_count == 0:
-                eval_item = ClassEvaluationItem(
-                    class_id=class_id, class_name=class_name)
+                eval_item = ClassEvaluationItem(class_id=class_id,
+                                                class_name=class_name)
             elif pred_count == 0:
-                eval_item = ClassEvaluationItem(
-                    precision=None,
-                    recall=0,
-                    gt_count=gt_count,
-                    class_id=class_id,
-                    class_name=class_name)
+                eval_item = ClassEvaluationItem(precision=None,
+                                                recall=0,
+                                                gt_count=gt_count,
+                                                class_id=class_id,
+                                                class_name=class_name)
             else:
                 prec = tp / (tp + fp)
                 recall = tp / (tp + fn)
@@ -98,14 +97,13 @@ class ObjectDetectionEvaluation(ClassificationEvaluation):
                 if gt_count > 0:
                     norm_count_err = count_err / gt_count
 
-                eval_item = ClassEvaluationItem(
-                    precision=prec,
-                    recall=recall,
-                    f1=f1,
-                    count_error=norm_count_err,
-                    gt_count=gt_count,
-                    class_id=class_id,
-                    class_name=class_name)
+                eval_item = ClassEvaluationItem(precision=prec,
+                                                recall=recall,
+                                                f1=f1,
+                                                count_error=norm_count_err,
+                                                gt_count=gt_count,
+                                                class_id=class_id,
+                                                class_name=class_name)
 
             class_to_eval_item[class_id] = eval_item
 

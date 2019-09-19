@@ -40,8 +40,8 @@ class TestSemanticSegmentationLabels(unittest.TestCase):
 
         # Set clip_extent
         clip_extent = Box(0, 0, 10, 18)
-        label_arr = labels.get_label_arr(
-            self.windows[1], clip_extent=clip_extent)
+        label_arr = labels.get_label_arr(self.windows[1],
+                                         clip_extent=clip_extent)
         np.testing.assert_array_equal(label_arr, exp_label_arr[:, 0:8])
 
 

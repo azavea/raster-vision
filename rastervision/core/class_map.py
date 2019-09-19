@@ -4,7 +4,6 @@ from rastervision.protos.class_item_pb2 \
 
 class ClassItem(object):
     """A class id and associated data."""
-
     def __init__(self, id: int, name: str = None, color=None):
         """Construct a new ClassItem.
 
@@ -46,7 +45,6 @@ class ClassMap(object):
     the class 0 is reserved for use as an "ignore" class, which denotes
     pixels that should not be used for training the model or evaluating it.
     """
-
     def __init__(self, class_items):
         """Construct a new ClassMap.
 

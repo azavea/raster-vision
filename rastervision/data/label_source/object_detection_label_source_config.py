@@ -1,8 +1,9 @@
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.data.label_source import (
-    LabelSourceConfig, LabelSourceConfigBuilder, ObjectDetectionLabelSource)
+from rastervision.data.label_source import (LabelSourceConfig,
+                                            LabelSourceConfigBuilder,
+                                            ObjectDetectionLabelSource)
 from rastervision.data.vector_source import VectorSourceConfig
 from rastervision.protos.label_source_pb2 import LabelSourceConfig as LabelSourceConfigMsg
 
@@ -53,8 +54,8 @@ class ObjectDetectionLabelSourceConfigBuilder(LabelSourceConfigBuilder):
                 ' Use "with_vector_source".')
         if not isinstance(vector_source, VectorSourceConfig):
             raise rv.ConfigError(
-                'vector source must be a child of class VectorSourceConfig, got {}'.
-                format(type(vector_source)))
+                'vector source must be a child of class VectorSourceConfig, got {}'
+                .format(type(vector_source)))
         if vector_source.has_null_class_bufs():
             raise rv.ConfigError(
                 'Setting buffer to None for a class in the vector_source is not allowed '

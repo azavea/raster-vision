@@ -152,7 +152,6 @@ class ChipClassificationLabelSource(LabelSource):
     and associated class_ids using the extent and options if infer_cells is
     set to True.
     """
-
     def __init__(self,
                  vector_source,
                  crs_transformer,

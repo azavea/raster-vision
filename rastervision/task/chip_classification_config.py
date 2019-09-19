@@ -28,10 +28,9 @@ class ChipClassificationConfig(TaskConfig):
     def to_proto(self):
         conf = TaskConfigMsg.ChipClassificationConfig(
             chip_size=self.chip_size, class_items=self.class_map.to_proto())
-        return TaskConfigMsg(
-            task_type=rv.CHIP_CLASSIFICATION,
-            chip_classification_config=conf,
-            predict_package_uri=self.predict_package_uri)
+        return TaskConfigMsg(task_type=rv.CHIP_CLASSIFICATION,
+                             chip_classification_config=conf,
+                             predict_package_uri=self.predict_package_uri)
 
     def save_bundle_files(self, bundle_dir):
         return (self, [])
@@ -60,8 +59,8 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
                                  'Use "with_classes"')
         if not isinstance(self.config['class_map'], ClassMap):
             raise rv.ConfigError(
-                'Class map set with "with_classes" must be of type ClassMap, got {}'.
-                format(type(self.config['class_map'])))
+                'Class map set with "with_classes" must be of type ClassMap, got {}'
+                .format(type(self.config['class_map'])))
 
     def from_proto(self, msg):
         b = super().from_proto(msg)
@@ -70,9 +69,10 @@ class ChipClassificationConfigBuilder(TaskConfigBuilder):
                 .with_predict_package_uri(msg.predict_package_uri) \
                 .with_chip_size(conf.chip_size)
 
-    def with_classes(
-            self, classes: Union[ClassMap, List[str], List[ClassItemMsg], List[
-                ClassItem], Dict[str, int], Dict[str, Tuple[int, str]]]):
+    def with_classes(self,
+                     classes: Union[ClassMap, List[str], List[ClassItemMsg],
+                                    List[ClassItem], Dict[str, int],
+                                    Dict[str, Tuple[int, str]]]):
         """Set the classes for this task.
 
             Args:

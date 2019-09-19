@@ -18,10 +18,13 @@ def print_error(msg):
 
 
 @click.group()
-@click.option(
-    '--profile', '-p', help='Sets the configuration profile name to use.')
-@click.option(
-    '-v', '--verbose', help='Sets the output to  be verbose.', count=True)
+@click.option('--profile',
+              '-p',
+              help='Sets the configuration profile name to use.')
+@click.option('-v',
+              '--verbose',
+              help='Sets the output to  be verbose.',
+              count=True)
 def main(profile, verbose):
     # Make sure current directory is on PYTHON_PATH
     # so that we can run against modules in current dir.
@@ -31,68 +34,60 @@ def main(profile, verbose):
     rv._registry.initialize_config(profile=profile, verbosity=verbose + 1)
 
 
-@main.command(
-    'run', short_help='Run Raster Vision commands against Experiments.')
+@main.command('run',
+              short_help='Run Raster Vision commands against Experiments.')
 @click.argument('runner')
 @click.argument('commands', nargs=-1)
-@click.option(
-    '--experiment_module',
-    '-e',
-    help=('Name of an importable module to look for experiment sets '
-          'in. If not supplied, experiments will be loaded '
-          'from __main__'))
-@click.option(
-    '--path',
-    '-p',
-    metavar='PATTERN',
-    help=('Path of file containing ExprimentSet to run.'))
-@click.option(
-    '--dry-run',
-    '-n',
-    is_flag=True,
-    help=('Execute a dry run, which will print out information '
-          'about the commands to be run, but will not actually '
-          'run the commands'))
-@click.option(
-    '--skip-file-check',
-    '-x',
-    is_flag=True,
-    help=('Skip the step that verifies that file exist.'))
-@click.option(
-    '--arg',
-    '-a',
-    type=(str, str),
-    multiple=True,
-    metavar='KEY VALUE',
-    help=('Pass a parameter to the experiments if the method '
-          'parameter list takes in a parameter with that key. '
-          'Multiple args can be supplied'))
+@click.option('--experiment_module',
+              '-e',
+              help=('Name of an importable module to look for experiment sets '
+                    'in. If not supplied, experiments will be loaded '
+                    'from __main__'))
+@click.option('--path',
+              '-p',
+              metavar='PATTERN',
+              help=('Path of file containing ExprimentSet to run.'))
+@click.option('--dry-run',
+              '-n',
+              is_flag=True,
+              help=('Execute a dry run, which will print out information '
+                    'about the commands to be run, but will not actually '
+                    'run the commands'))
+@click.option('--skip-file-check',
+              '-x',
+              is_flag=True,
+              help=('Skip the step that verifies that file exist.'))
+@click.option('--arg',
+              '-a',
+              type=(str, str),
+              multiple=True,
+              metavar='KEY VALUE',
+              help=('Pass a parameter to the experiments if the method '
+                    'parameter list takes in a parameter with that key. '
+                    'Multiple args can be supplied'))
 @click.option(
     '--prefix',
     metavar='PREFIX',
     default='exp_',
     help=('Prefix for methods containing experiments. (default: "exp_")'))
-@click.option(
-    '--method',
-    '-m',
-    'methods',
-    multiple=True,
-    metavar='PATTERN',
-    help=('Pattern to match method names to run.'))
-@click.option(
-    '--filter',
-    '-f',
-    'filters',
-    multiple=True,
-    metavar='PATTERN',
-    help=('Pattern to match experiment names to run.'))
-@click.option(
-    '--rerun',
-    '-r',
-    is_flag=True,
-    default=False,
-    help=('Rerun commands, regardless if '
-          'their output files already exist.'))
+@click.option('--method',
+              '-m',
+              'methods',
+              multiple=True,
+              metavar='PATTERN',
+              help=('Pattern to match method names to run.'))
+@click.option('--filter',
+              '-f',
+              'filters',
+              multiple=True,
+              metavar='PATTERN',
+              help=('Pattern to match experiment names to run.'))
+@click.option('--rerun',
+              '-r',
+              is_flag=True,
+              default=False,
+              help=('Rerun commands, regardless if '
+                    'their output files already exist.'))
 @click.option('--tempdir', help=('Temporary directory to use for this run.'))
 @click.option(
     '--splits',
@@ -132,11 +127,10 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
     for k, v in arg:
         experiment_args[k] = v
 
-    loader = ExperimentLoader(
-        experiment_args=experiment_args,
-        experiment_method_prefix=prefix,
-        experiment_method_patterns=methods,
-        experiment_name_patterns=filters)
+    loader = ExperimentLoader(experiment_args=experiment_args,
+                              experiment_method_prefix=prefix,
+                              experiment_method_patterns=methods,
+                              experiment_name_patterns=filters)
     try:
         if experiment_module:
             experiments, command_configs = loader.load_from_module(
@@ -158,32 +152,29 @@ def run(runner, commands, experiment_module, dry_run, skip_file_check, arg,
         else:
             print_error('No experiments found.')
 
-    runner.run(
-        experiments,
-        command_configs=command_configs,
-        commands_to_run=commands,
-        rerun_commands=rerun,
-        skip_file_check=skip_file_check,
-        dry_run=dry_run,
-        splits=splits)
+    runner.run(experiments,
+               command_configs=command_configs,
+               commands_to_run=commands,
+               rerun_commands=rerun,
+               skip_file_check=skip_file_check,
+               dry_run=dry_run,
+               splits=splits)
 
 
 @main.command()
-@click.option(
-    '--experiment-module',
-    '-e',
-    help=('Name of an importable module to look for experiment sets '
-          'in. If not supplied, experiments will be loaded '
-          'from __main__'))
-@click.option(
-    '--arg',
-    '-a',
-    type=(str, str),
-    multiple=True,
-    metavar='KEY VALUE',
-    help=('Pass a parameter to the experiments if the method '
-          'parameter list takes in a parameter with that key. '
-          'Multiple args can be supplied'))
+@click.option('--experiment-module',
+              '-e',
+              help=('Name of an importable module to look for experiment sets '
+                    'in. If not supplied, experiments will be loaded '
+                    'from __main__'))
+@click.option('--arg',
+              '-a',
+              type=(str, str),
+              multiple=True,
+              metavar='KEY VALUE',
+              help=('Pass a parameter to the experiments if the method '
+                    'parameter list takes in a parameter with that key. '
+                    'Multiple args can be supplied'))
 def ls(experiment_module, arg):
     """Print out a list of Experiment IDs."""
     if experiment_module:
@@ -244,26 +235,23 @@ class OptionEatAll(click.Option):
         return retval
 
 
-@main.command(
-    'predict', short_help='Make predictions using a predict package.')
+@main.command('predict',
+              short_help='Make predictions using a predict package.')
 @click.argument('predict_package')
 @click.argument('image_uri')
 @click.argument('output_uri')
-@click.option(
-    '--update-stats',
-    '-a',
-    is_flag=True,
-    help=('Run an analysis on this individual image, as '
-          'opposed to using any analysis like statistics '
-          'that exist in the prediction package'))
-@click.option(
-    '--channel-order',
-    cls=OptionEatAll,
-    help='List of indices comprising channel_order. Example: 2 1 0')
-@click.option(
-    '--export-config',
-    type=click.Path(exists=False),
-    help='Exports the configuration to the given output file.')
+@click.option('--update-stats',
+              '-a',
+              is_flag=True,
+              help=('Run an analysis on this individual image, as '
+                    'opposed to using any analysis like statistics '
+                    'that exist in the prediction package'))
+@click.option('--channel-order',
+              cls=OptionEatAll,
+              help='List of indices comprising channel_order. Example: 2 1 0')
+@click.option('--export-config',
+              type=click.Path(exists=False),
+              help='Exports the configuration to the given output file.')
 def predict(predict_package, image_uri, output_uri, update_stats,
             channel_order, export_config):
     """Make predictions on the image at IMAGE_URI
@@ -281,8 +269,8 @@ def predict(predict_package, image_uri, output_uri, update_stats,
         predictor.predict(image_uri, output_uri, export_config)
 
 
-@main.command(
-    'run_command', short_help='Run a command from configuration file.')
+@main.command('run_command',
+              short_help='Run a command from configuration file.')
 @click.argument('command_config_uri')
 @click.option('--tempdir')
 def run_command(command_config_uri, tempdir):

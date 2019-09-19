@@ -7,7 +7,6 @@ class Analyzer(ABC):
        can be used for later procesess.
 
     """
-
     @abstractmethod
     def process(self, scenes, tmp_dir):
         pass

@@ -53,8 +53,8 @@ def gdal_cog_commands(input_path,
 
     # Step 2: Add overviews
     add_overviews = add_compression(
-        ['gdaladdo', '-r', resample_method, translate_path] + list(
-            map(lambda x: str(x), overviews)),
+        ['gdaladdo', '-r', resample_method, translate_path] +
+        list(map(lambda x: str(x), overviews)),
         overview=True)
 
     # Step 3: Translate to COG
@@ -93,13 +93,12 @@ def create_cog(source_uri,
                overviews=None):
     local_path = download_or_copy(source_uri, local_dir)
 
-    commands, output_path = gdal_cog_commands(
-        local_path,
-        local_dir,
-        block_size=block_size,
-        resample_method=resample_method,
-        compression=compression,
-        overviews=overviews)
+    commands, output_path = gdal_cog_commands(local_path,
+                                              local_dir,
+                                              block_size=block_size,
+                                              resample_method=resample_method,
+                                              compression=compression,
+                                              overviews=overviews)
     for command in commands:
         run_cmd(command)
 
@@ -144,11 +143,10 @@ class CogifyCommand(AuxCommand):
         overviews = self.command_config.get('overviews', DEFAULT_OVERVIEWS)
 
         for src, dst in uris:
-            create_cog(
-                src,
-                dst,
-                tmp_dir,
-                block_size=block_size,
-                resample_method=resample_method,
-                compression=compression,
-                overviews=overviews)
+            create_cog(src,
+                       dst,
+                       tmp_dir,
+                       block_size=block_size,
+                       resample_method=resample_method,
+                       compression=compression,
+                       overviews=overviews)

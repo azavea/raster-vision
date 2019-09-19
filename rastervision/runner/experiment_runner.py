@@ -18,9 +18,9 @@ class ExperimentRunner(ABC):
         command_type = command_def.command_config.command_type
         split_id = command_def.command_config.split_id
         experiment_id = command_def.experiment_id
-        click.echo(
-            click.style('{}-{} '.format(command_type, split_id), bold=True),
-            nl=False)
+        click.echo(click.style('{}-{} '.format(command_type, split_id),
+                               bold=True),
+                   nl=False)
         click.echo('from {}'.format(experiment_id))
 
         if verbosity >= Verbosity.VERBOSE:
@@ -52,8 +52,8 @@ class ExperimentRunner(ABC):
 
     def run(self,
             experiments: Union[List[rv.ExperimentConfig], rv.ExperimentConfig],
-            command_configs: Union[List[rv.CommandConfig],
-                                   rv.CommandConfig] = None,
+            command_configs: Union[List[rv.CommandConfig], rv.
+                                   CommandConfig] = None,
             commands_to_run=None,
             rerun_commands=False,
             skip_file_check=False,
@@ -74,8 +74,9 @@ class ExperimentRunner(ABC):
                 command_configs = [command_configs]
             log.debug('Generating command definitions from commands...')
             command_definitions.extend(
-                CommandDefinition.from_command_configs(
-                    command_configs, commands_to_run, splits))
+                CommandDefinition.from_command_configs(command_configs,
+                                                       commands_to_run,
+                                                       splits))
 
         # Filter  out commands that don't have any output.
         log.debug('Filtering commands that do not have any output...')
@@ -151,8 +152,9 @@ class ExperimentRunner(ABC):
                                  'override each other: \n{}\n'.format(s))
 
         log.debug('Constructing command DAG...')
-        command_dag = CommandDAG(
-            unique_commands, rerun_commands, skip_file_check=skip_file_check)
+        command_dag = CommandDAG(unique_commands,
+                                 rerun_commands,
+                                 skip_file_check=skip_file_check)
 
         # Print conflicating or alread fulfilled commands
         if dry_run:
@@ -189,11 +191,10 @@ class ExperimentRunner(ABC):
                 print()
             else:
                 click.echo(
-                    click.style(
-                        'Commands to be run in this order:',
-                        fg='green',
-                        bold=True,
-                        underline=True))
+                    click.style('Commands to be run in this order:',
+                                fg='green',
+                                bold=True,
+                                underline=True))
                 for command_id in command_dag.get_sorted_command_ids():
                     command_def = command_dag.get_command_definition(
                         command_id)

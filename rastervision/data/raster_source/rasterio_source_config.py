@@ -16,10 +16,9 @@ class RasterioSourceConfig(RasterSourceConfig):
                  y_shift_meters=0.0,
                  transformers=None,
                  channel_order=None):
-        super().__init__(
-            source_type=rv.RASTERIO_SOURCE,
-            transformers=transformers,
-            channel_order=channel_order)
+        super().__init__(source_type=rv.RASTERIO_SOURCE,
+                         transformers=transformers,
+                         channel_order=channel_order)
         self.uris = uris
         self.x_shift_meters = x_shift_meters
         self.y_shift_meters = y_shift_meters
@@ -61,13 +60,12 @@ class RasterioSourceConfig(RasterSourceConfig):
         transformers = self.create_transformers()
         x_shift_meters = self.x_shift_meters
         y_shift_meters = self.y_shift_meters
-        return RasterioSource(
-            uris=self.uris,
-            raster_transformers=transformers,
-            temp_dir=tmp_dir,
-            channel_order=self.channel_order,
-            x_shift_meters=x_shift_meters,
-            y_shift_meters=y_shift_meters)
+        return RasterioSource(uris=self.uris,
+                              raster_transformers=transformers,
+                              temp_dir=tmp_dir,
+                              channel_order=self.channel_order,
+                              x_shift_meters=x_shift_meters,
+                              y_shift_meters=y_shift_meters)
 
     def report_io(self, command_type, io_def):
         super().report_io(command_type, io_def)
@@ -80,7 +78,6 @@ class RasterioSourceConfigBuilder(RasterSourceConfigBuilder):
     This includes georeferenced formats such as GeoTIFF and non-georeferenced formats
     such as JPG. See https://www.gdal.org/formats_list.html for more details.
     """
-
     def __init__(self, prev=None):
         config = {}
         if prev:

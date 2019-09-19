@@ -15,14 +15,14 @@ from rastervision.command.aux.cogify_command import create_cog
 
 def lnglat2merc(lng, lat):
     """Convert lng, lat point to x/y Web Mercator tuple."""
-    return pyproj.transform(
-        pyproj.Proj(init='epsg:4326'), pyproj.Proj(init='epsg:3857'), lng, lat)
+    return pyproj.transform(pyproj.Proj(init='epsg:4326'),
+                            pyproj.Proj(init='epsg:3857'), lng, lat)
 
 
 def merc2lnglat(x, y):
     """Convert x, y Web Mercator point to lng/lat tuple."""
-    return pyproj.transform(
-        pyproj.Proj(init='epsg:3857'), pyproj.Proj(init='epsg:4326'), x, y)
+    return pyproj.transform(pyproj.Proj(init='epsg:3857'),
+                            pyproj.Proj(init='epsg:4326'), x, y)
 
 
 def merc2pixel(tile_x, tile_y, zoom, merc_x, merc_y, tile_sz=256):
@@ -110,16 +110,15 @@ def _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=False):
 
     transform = rasterio.transform.from_bounds(nw_merc_x, se_merc_y, se_merc_x,
                                                nw_merc_y, width, height)
-    with rasterio.open(
-            output_path,
-            'w',
-            driver='GTiff',
-            height=height,
-            width=width,
-            count=3,
-            crs='epsg:3857',
-            transform=transform,
-            dtype=rasterio.uint8) as dataset:
+    with rasterio.open(output_path,
+                       'w',
+                       driver='GTiff',
+                       height=height,
+                       width=width,
+                       count=3,
+                       crs='epsg:3857',
+                       transform=transform,
+                       dtype=rasterio.uint8) as dataset:
         out_x = 0
         for xi, x in enumerate(range(xmin, xmax + 1)):
             tile_xmin, tile_xmax = 0, tile_sz - 1
@@ -148,8 +147,8 @@ def _zxy2geotiff(tile_schema, zoom, bounds, output_uri, make_cog=False):
                 img = img[tile_ymin:tile_ymax + 1, tile_xmin:tile_xmax + 1, :]
 
                 window = Window(out_x, out_y, window_width, window_height)
-                dataset.write(
-                    np.transpose(img[:, :, 0:3], (2, 0, 1)), window=window)
+                dataset.write(np.transpose(img[:, :, 0:3], (2, 0, 1)),
+                              window=window)
                 out_y += window_height
             out_x += window_width
 

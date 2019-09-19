@@ -19,8 +19,11 @@ class TestClassEvaluationItem(unittest.TestCase):
 
     def test_merge_first_empty(self):
         a = ClassEvaluationItem()
-        b = ClassEvaluationItem(
-            precision=1, recall=1, f1=1, count_error=0, gt_count=1)
+        b = ClassEvaluationItem(precision=1,
+                                recall=1,
+                                f1=1,
+                                count_error=0,
+                                gt_count=1)
         a.merge(b)
         self.assertEqual(a.precision, 1)
         self.assertEqual(a.recall, 1)
@@ -29,8 +32,11 @@ class TestClassEvaluationItem(unittest.TestCase):
         self.assertEqual(a.gt_count, 1)
 
     def test_merge_second_empty(self):
-        a = ClassEvaluationItem(
-            precision=1, recall=1, f1=1, count_error=0, gt_count=1)
+        a = ClassEvaluationItem(precision=1,
+                                recall=1,
+                                f1=1,
+                                count_error=0,
+                                gt_count=1)
         b = ClassEvaluationItem()
         a.merge(b)
         self.assertEqual(a.precision, 1)
@@ -40,10 +46,16 @@ class TestClassEvaluationItem(unittest.TestCase):
         self.assertEqual(a.gt_count, 1)
 
     def test_merge(self):
-        a = ClassEvaluationItem(
-            precision=1, recall=1, f1=1, count_error=0, gt_count=1)
-        b = ClassEvaluationItem(
-            precision=0, recall=0, f1=0, count_error=1, gt_count=2)
+        a = ClassEvaluationItem(precision=1,
+                                recall=1,
+                                f1=1,
+                                count_error=0,
+                                gt_count=1)
+        b = ClassEvaluationItem(precision=0,
+                                recall=0,
+                                f1=0,
+                                count_error=1,
+                                gt_count=2)
         a.merge(b)
         self.assertEqual(a.precision, 1 / 3)
         self.assertEqual(a.recall, 1 / 3)

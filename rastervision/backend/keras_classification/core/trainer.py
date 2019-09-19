@@ -63,8 +63,9 @@ class Trainer(object):
         callbacks = [model_checkpoint, weights_checkpoint, csv_logger]
 
         if self.options.lr_schedule:
-            lr_schedule = sorted(
-                self.options.lr_schedule, key=lambda x: x.epoch, reverse=True)
+            lr_schedule = sorted(self.options.lr_schedule,
+                                 key=lambda x: x.epoch,
+                                 reverse=True)
 
             def schedule(curr_epoch):
                 for lr_schedule_item in lr_schedule:
@@ -105,8 +106,9 @@ class Trainer(object):
         if validation_mode:
             generator = ImageDataGenerator(rescale=1. / 255)
         else:
-            generator = ImageDataGenerator(
-                rescale=1. / 255, horizontal_flip=True, vertical_flip=True)
+            generator = ImageDataGenerator(rescale=1. / 255,
+                                           horizontal_flip=True,
+                                           vertical_flip=True)
 
         generator = generator.flow_from_directory(
             image_folder_dir,
@@ -121,10 +123,10 @@ class Trainer(object):
         loss_function = 'categorical_crossentropy'
         metrics = ['accuracy']
         initial_epoch = self.get_initial_epoch()
-        steps_per_epoch = int(
-            self.nb_training_samples / self.options.batch_size)
-        validation_steps = int(
-            self.nb_validation_samples / self.options.batch_size)
+        steps_per_epoch = int(self.nb_training_samples /
+                              self.options.batch_size)
+        validation_steps = int(self.nb_validation_samples /
+                               self.options.batch_size)
 
         # Useful for testing
         if self.options.short_epoch:
@@ -140,14 +142,13 @@ class Trainer(object):
                 ['tensorboard', '--logdir={}'.format(self.tf_logs_path)])
             terminate_at_exit(tensorboard_process)
 
-        self.model.fit_generator(
-            self.training_gen,
-            initial_epoch=initial_epoch,
-            steps_per_epoch=steps_per_epoch,
-            epochs=self.options.nb_epochs,
-            validation_data=self.validation_gen,
-            validation_steps=validation_steps,
-            callbacks=callbacks)
+        self.model.fit_generator(self.training_gen,
+                                 initial_epoch=initial_epoch,
+                                 steps_per_epoch=steps_per_epoch,
+                                 epochs=self.options.nb_epochs,
+                                 validation_data=self.validation_gen,
+                                 validation_steps=validation_steps,
+                                 callbacks=callbacks)
 
         if do_monitoring:
             tensorboard_process.terminate()

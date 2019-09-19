@@ -7,7 +7,6 @@ class Backend(ABC):
     This should be subclassed to provide a bridge to third party ML libraries.
     There is a many-to-one relationship from backends to tasks.
     """
-
     @abstractmethod
     def process_scene_data(self, scene, data, tmp_dir):
         """Process each scene's training data

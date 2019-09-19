@@ -58,7 +58,6 @@ def get_class_eval_item(conf_mat, class_id, class_map):
 
 class SemanticSegmentationEvaluation(ClassificationEvaluation):
     """Evaluation for semantic segmentation."""
-
     def __init__(self, class_map):
         super().__init__()
         self.class_map = class_map
@@ -125,8 +124,8 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
             true_positives = results['tp']
             false_positives = results['fp']
             false_negatives = results['fn']
-            precision = float(true_positives) / (
-                true_positives + false_positives)
+            precision = float(true_positives) / (true_positives +
+                                                 false_positives)
             recall = float(true_positives) / (true_positives + false_negatives)
             if precision + recall != 0:
                 f1 = 2 * (precision * recall) / (precision + recall)

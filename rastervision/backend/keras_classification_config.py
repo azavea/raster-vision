@@ -62,9 +62,8 @@ class KerasClassificationConfig(BackendConfig):
         conf = json_format.ParseDict(
             d, BackendConfigMsg.KerasClassificationConfig())
 
-        msg = BackendConfigMsg(
-            backend_type=rv.KERAS_CLASSIFICATION,
-            keras_classification_config=conf)
+        msg = BackendConfigMsg(backend_type=rv.KERAS_CLASSIFICATION,
+                               keras_classification_config=conf)
 
         if self.pretrained_model_uri:
             msg.MergeFrom(
@@ -257,8 +256,8 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
             try:
                 msg = json_format.Parse(template, PipelineConfig())
             except json_format.ParseError:
-                msg = json_format.Parse(
-                    file_to_str(template), PipelineConfig())
+                msg = json_format.Parse(file_to_str(template),
+                                        PipelineConfig())
             template_json = json_format.MessageToDict(msg)
 
         b = deepcopy(self)
@@ -267,23 +266,21 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
 
     def with_batch_size(self, batch_size):
         """Sets the training batch size."""
-        return self.with_config({
-            'trainer': {
+        return self.with_config(
+            {'trainer': {
                 'options': {
                     'batchSize': batch_size
                 }
-            }
-        })
+            }})
 
     def with_num_epochs(self, num_epochs):
         """Sets the number of training epochs."""
-        return self.with_config({
-            'trainer': {
+        return self.with_config(
+            {'trainer': {
                 'options': {
                     'nbEpochs': num_epochs
                 }
-            }
-        })
+            }})
 
     def with_config(self,
                     config_mod,
@@ -296,8 +293,8 @@ class KerasClassificationConfigBuilder(BackendConfigBuilder):
         are replaced with those values. TODO: better explanation.
         """
         b = deepcopy(self)
-        b.config_mods.append((config_mod, ignore_missing_keys,
-                              set_missing_keys))
+        b.config_mods.append(
+            (config_mod, ignore_missing_keys, set_missing_keys))
         return b
 
     def with_debug(self, debug):

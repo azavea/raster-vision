@@ -39,8 +39,9 @@ def get_random_sample_train_windows(label_store, chip_size, class_map, extent,
         elif attempts == chips_per_scene and len(windows) == 0:
             windows.append(candidate_window)
         else:
-            good = label_store.enough_target_pixels(
-                candidate_window, target_count_threshold, target_classes)
+            good = label_store.enough_target_pixels(candidate_window,
+                                                    target_count_threshold,
+                                                    target_classes)
             if good or (np.random.rand() < prob):
                 windows.append(candidate_window)
 
@@ -49,7 +50,6 @@ def get_random_sample_train_windows(label_store, chip_size, class_map, extent,
 
 class SemanticSegmentation(Task):
     """Task-derived type that implements the semantic segmentation task."""
-
     def get_train_windows(self, scene: Scene) -> List[Box]:
         """Get training windows covering a scene.
 
@@ -83,17 +83,18 @@ class SemanticSegmentation(Task):
             return windows
 
         if chip_options.window_method == 'random_sample':
-            return get_random_sample_train_windows(
-                label_source, chip_size, self.config.class_map, extent,
-                chip_options, filter_windows)
+            return get_random_sample_train_windows(label_source, chip_size,
+                                                   self.config.class_map,
+                                                   extent, chip_options,
+                                                   filter_windows)
         elif chip_options.window_method == 'sliding':
             stride = chip_options.stride
             if stride is None:
                 stride = chip_size / 2
             stride = int(round(stride))
 
-            return list(
-                filter_windows((extent.get_windows(chip_size, stride))))
+            return list(filter_windows((extent.get_windows(chip_size,
+                                                           stride))))
 
     def make_chips(self, train_scenes, validation_scenes, augmentors, tmp_dir):
         """Make training chips.
@@ -108,7 +109,6 @@ class SemanticSegmentation(Task):
                 (that is disjoint from train_scenes)
             augmentors: Augmentors used to augment training data
         """
-
         def _process_scene(scene, type_, augment):
             with scene.activate():
                 data = TrainingData()
@@ -144,13 +144,16 @@ class SemanticSegmentation(Task):
         def _process_scenes(scenes, type_, augment):
             return [_process_scene(scene, type_, augment) for scene in scenes]
 
-        processed_training_results = _process_scenes(
-            train_scenes, TRAIN, augment=True)
-        processed_validation_results = _process_scenes(
-            validation_scenes, VALIDATION, augment=False)
+        processed_training_results = _process_scenes(train_scenes,
+                                                     TRAIN,
+                                                     augment=True)
+        processed_validation_results = _process_scenes(validation_scenes,
+                                                       VALIDATION,
+                                                       augment=False)
 
-        self.backend.process_sceneset_results(
-            processed_training_results, processed_validation_results, tmp_dir)
+        self.backend.process_sceneset_results(processed_training_results,
+                                              processed_validation_results,
+                                              tmp_dir)
 
     def get_train_labels(self, window: Box, scene: Scene) -> np.ndarray:
         """Get the training labels for the given window in the given scene.

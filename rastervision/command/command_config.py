@@ -46,11 +46,10 @@ class CommandConfig(ABC):
         """Returns the protobuf configuration for this config.
         """
         plugin_config = PluginRegistry.get_instance().to_proto()
-        return CommandConfigMsg(
-            command_type=self.command_type,
-            root_uri=self.root_uri,
-            split_id=self.split_id,
-            plugins=plugin_config)
+        return CommandConfigMsg(command_type=self.command_type,
+                                root_uri=self.root_uri,
+                                split_id=self.split_id,
+                                plugins=plugin_config)
 
     def to_builder(self):
         return rv._registry.get_command_config_builder(self.command_type)(self)
