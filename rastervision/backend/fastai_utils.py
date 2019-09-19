@@ -3,7 +3,6 @@ from os.path import join
 import zipfile
 from typing import Any
 import warnings
-import numpy as np
 
 from fastai.callbacks import CSVLogger, Callback, SaveModelCallback, TrackerCallback
 from fastai.metrics import add_metrics
@@ -250,7 +249,7 @@ def get_oversampling_weights(
         for i, (x, y) in enumerate(dataset):
             match = False
             for class_id in rare_class_ids:
-                if torch.any(torch.from_numpy(np.array(y.data)) == class_id):
+                if torch.any(y.data == class_id):
                     match = True
                     break
             if match:
@@ -294,10 +293,7 @@ def get_oversampling_weights(
     print('prop of rare chips before oversampling: ',
           len(chip_inds) / len(dataset))
     weights = get_sample_weights(len(dataset), chip_inds, rare_target_prop)
-    sys.exit()
     return weights
-
-
 
 # This code was adapted from
 # https://github.com/Pendar2/fastai-tensorboard-callback/blob/master/fastai_tensorboard_callback/tensorboard_cb.py
