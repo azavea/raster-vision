@@ -5,8 +5,8 @@ import click
 import torch
 import numpy as np
 
-from rastervision.backend.torch_utils.metrics import (
-    compute_coco_eval, compute_class_f1)
+from rastervision.backend.torch_utils.metrics import (compute_coco_eval,
+                                                      compute_class_f1)
 
 warnings.filterwarnings('ignore')
 
@@ -59,13 +59,21 @@ def validate_epoch(model, device, dl, num_labels):
 
     coco_eval = compute_coco_eval(outs, ys, num_labels)
 
-    metrics = {'map': 0.0, 'map50': 0.0,
-               'mean_f1': 0.0, 'mean_score_thresh': 0.5}
+    metrics = {
+        'map': 0.0,
+        'map50': 0.0,
+        'mean_f1': 0.0,
+        'mean_score_thresh': 0.5
+    }
     if coco_eval is not None:
         coco_metrics = coco_eval.stats
         best_f1s, best_scores = compute_class_f1(coco_eval)
         mean_f1 = np.mean(best_f1s[1:])
         mean_score_thresh = np.mean(best_scores[1:])
-        metrics = {'map': coco_metrics[0], 'map50': coco_metrics[1],
-                   'mean_f1': mean_f1, 'mean_score_thresh': mean_score_thresh}
+        metrics = {
+            'map': coco_metrics[0],
+            'map50': coco_metrics[1],
+            'mean_f1': mean_f1,
+            'mean_score_thresh': mean_score_thresh
+        }
     return metrics

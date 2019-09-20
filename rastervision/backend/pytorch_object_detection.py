@@ -364,7 +364,9 @@ class PyTorchObjectDetection(Backend):
             # add one for background class
             num_classes = len(self.task_config.class_map) + 1
             model = MyFasterRCNN(
-                self.train_opts.model_arch, num_classes, self.task_config.chip_size,
+                self.train_opts.model_arch,
+                num_classes,
+                self.task_config.chip_size,
                 pretrained=False)
             model = model.to(self.device)
             model.load_state_dict(

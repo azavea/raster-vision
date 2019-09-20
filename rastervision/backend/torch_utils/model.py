@@ -14,6 +14,7 @@ def get_out_channels(model):
     def make_save_output(layer_name):
         def save_output(layer, input, output):
             out[layer_name] = output.shape[1]
+
         return save_output
 
     model.layer1.register_forward_hook(make_save_output('layer1'))
@@ -28,8 +29,7 @@ def get_out_channels(model):
 # This fixes a bug in torchvision.
 def resnet_fpn_backbone(backbone_name, pretrained):
     backbone = resnet.__dict__[backbone_name](
-        pretrained=pretrained,
-        norm_layer=misc_nn_ops.FrozenBatchNorm2d)
+        pretrained=pretrained, norm_layer=misc_nn_ops.FrozenBatchNorm2d)
 
     # freeze layers
     for name, parameter in backbone.named_parameters():
@@ -40,7 +40,8 @@ def resnet_fpn_backbone(backbone_name, pretrained):
 
     out_channels = 256
     in_channels_list = get_out_channels(backbone)
-    return BackboneWithFPN(backbone, return_layers, in_channels_list, out_channels)
+    return BackboneWithFPN(backbone, return_layers, in_channels_list,
+                           out_channels)
 
 
 class MyFasterRCNN(nn.Module):
@@ -50,6 +51,7 @@ class MyFasterRCNN(nn.Module):
     and inject bogus boxes to circumvent torchvision's inability to handle
     training examples with no ground truth boxes.
     """
+
     def __init__(self, backbone_arch, num_labels, img_sz, pretrained=True):
         super().__init__()
 
@@ -86,10 +88,17 @@ class MyFasterRCNN(nn.Module):
             for x, y in zip(input, targets):
                 h, w = x.shape[1:]
                 boxes = torch.cat(
-                    [y.boxes, torch.tensor([[0., 0, h, w]], device=input.device)], dim=0)
+                    [
+                        y.boxes,
+                        torch.tensor([[0., 0, h, w]], device=input.device)
+                    ],
+                    dim=0)
                 labels = torch.cat(
-                    [y.get_field('labels'),
-                     torch.tensor([0], device=input.device)], dim=0)
+                    [
+                        y.get_field('labels'),
+                        torch.tensor([0], device=input.device)
+                    ],
+                    dim=0)
                 bl = BoxList(boxes, labels=labels)
                 new_targets.append(bl)
             targets = new_targets
