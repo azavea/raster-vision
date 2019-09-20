@@ -24,11 +24,11 @@ from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
 from rastervision.utils.misc import save_img, terminate_at_exit
 from rastervision.backend import Backend
 from rastervision.data import ObjectDetectionLabels
-from rastervision.backend.torch_utils.data import build_databunch
-from rastervision.backend.torch_utils.plot import plot_xy
-from rastervision.backend.torch_utils.model import MyFasterRCNN
-from rastervision.backend.torch_utils.train import (train_epoch,
-                                                    validate_epoch)
+from rastervision.backend.torch_utils.object_detection.data import build_databunch
+from rastervision.backend.torch_utils.object_detection.plot import plot_xy
+from rastervision.backend.torch_utils.object_detection.model import MyFasterRCNN
+from rastervision.backend.torch_utils.object_detection.train import (
+    train_epoch, validate_epoch)
 from rastervision.backend.torch_utils.scheduler import (CyclicLR)
 
 log = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ def make_debug_chips(databunch, class_map, tmp_dir, train_uri, max_count=30):
     is useful for making sure we are feeding correct data into the model.
 
     Args:
-        data: DataBunch for a semantic segmentation dataset
+        data: DataBunch for an object detection problem
         class_map: (rv.ClassMap) class map used to map class ids to colors
         tmp_dir: (str) path to temp directory
         train_uri: (str) URI of root of training output
@@ -223,7 +223,7 @@ class PyTorchObjectDetection(Backend):
             with zipfile.ZipFile(zip_path, 'r') as zipf:
                 zipf.extractall(chip_dir)
 
-        # Setup databunch.
+        # Setup dataset and dataloaders.
         batch_size = self.train_opts.batch_size
         chip_size = self.task_config.chip_size
         databunch = build_databunch(chip_dir, chip_size, batch_size)
@@ -234,13 +234,10 @@ class PyTorchObjectDetection(Backend):
 
         # Setup model
         num_labels = len(databunch.label_names)
-        lr = self.train_opts.lr
         model = MyFasterRCNN(
             self.train_opts.model_arch, num_labels, chip_size, pretrained=True)
         model = model.to(self.device)
-        opt = optim.Adam(model.parameters(), lr=lr)
         model_path = join(train_dir, 'model')
-        log_path = join(train_dir, 'log.csv')
 
         # Load weights from a pretrained model.
         pretrained_uri = self.backend_opts.pretrained_uri
@@ -262,16 +259,14 @@ class PyTorchObjectDetection(Backend):
                 torch.load(model_path, map_location=self.device))
 
         # Write header of log CSV file.
+        log_path = join(train_dir, 'log.csv')
         if not isfile(log_path):
             with open(log_path, 'w') as log_file:
                 log_writer = csv.writer(log_file)
                 row = ['epoch'] + ['map50', 'time'] + model.subloss_names
                 log_writer.writerow(row)
 
-        # Training loop.
-        step_scheduler, epoch_scheduler = None, None
-        num_epochs = self.train_opts.num_epochs
-
+        # Setup Tensorboard logging.
         if self.train_opts.log_tensorboard:
             log_dir = join(train_dir, 'tb-logs')
             make_dir(log_dir)
@@ -281,6 +276,12 @@ class PyTorchObjectDetection(Backend):
                 tensorboard_process = Popen(
                     ['tensorboard', '--logdir={}'.format(log_dir)])
                 terminate_at_exit(tensorboard_process)
+
+        # Setup optimizer.
+        lr = self.train_opts.lr
+        opt = optim.Adam(model.parameters(), lr=lr)
+        step_scheduler, epoch_scheduler = None, None
+        num_epochs = self.train_opts.num_epochs
 
         if self.train_opts.one_cycle and num_epochs > 1:
             steps_per_epoch = len(databunch.train_ds) // batch_size
@@ -297,22 +298,25 @@ class PyTorchObjectDetection(Backend):
             for _ in range(start_epoch * steps_per_epoch):
                 step_scheduler.step()
 
+        # Training loop.
         for epoch in range(start_epoch, num_epochs):
-            # Train and validate for one epoch.
             start = time.time()
+
+            # Train one epoch.
             train_loss = train_epoch(model, self.device, databunch.train_dl,
                                      opt, step_scheduler, epoch_scheduler)
             if epoch_scheduler:
                 epoch_scheduler.step()
-
             log.info('----------------------------------------')
             log.info('epoch: {}'.format(epoch))
             log.info('train loss: {}'.format(train_loss))
 
+            # Validate one epoch.
             metrics = validate_epoch(model, self.device, databunch.valid_dl,
                                      num_labels)
             log.info('validation metrics: {}'.format(metrics))
 
+            # Print elapsed time for epoch.
             end = time.time()
             epoch_time = datetime.timedelta(seconds=end - start)
             log.info('epoch elapsed time: {}'.format(epoch_time))
