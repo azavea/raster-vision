@@ -80,6 +80,7 @@ rv.SEMANTIC_SEGMENTATION
 BackendConfig
 -------------
 
+There are backends based on PyTorch and Tensorflow. Remember to use the appropriate Docker image depending on the backend. Note that the Tensorflow backends are being sunsetted.
 BackendConfigBuilders are created by calling
 
 .. code::
@@ -88,10 +89,28 @@ BackendConfigBuilders are created by calling
 
 Where ``BACKEND_TYPE`` is one of the following:
 
+rv.PYTORCH_SEMANTIC_SEGMENTATION
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.backend.pytorch_semantic_segmentation_config.PyTorchSemanticSegmentationConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+rv.PYTORCH_CHIP_CLASSIFICATION
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.backend.pytorch_chip_classification_config.PyTorchChipClassificationConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
 rv.KERAS_CLASSIFICATION
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.backend.KerasClassificationConfigBuilder
+.. autoclass:: rastervision.backend.keras_classification_config.KerasClassificationConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
@@ -100,7 +119,7 @@ rv.KERAS_CLASSIFICATION
 rv.TF_OBJECT_DETECTION
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.backend.TFObjectDetectionConfigBuilder
+.. autoclass:: rastervision.backend.tf_object_detection_config.TFObjectDetectionConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:
@@ -109,7 +128,7 @@ rv.TF_OBJECT_DETECTION
 rv.TF_DEEPLAB
 ~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.backend.TFDeeplabConfigBuilder
+.. autoclass:: rastervision.backend.tf_deeplab_config.TFDeeplabConfigBuilder
    :members:
    :undoc-members:
    :inherited-members:

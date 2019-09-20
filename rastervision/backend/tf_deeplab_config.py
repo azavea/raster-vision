@@ -3,8 +3,7 @@ from copy import deepcopy
 from google.protobuf import (json_format)
 
 import rastervision as rv
-from rastervision.backend import (BackendConfig, BackendConfigBuilder,
-                                  TFDeeplab)
+from rastervision.backend import (BackendConfig, BackendConfigBuilder)
 from rastervision.protos.backend_pb2 import BackendConfig as BackendConfigMsg
 from rastervision.utils.files import file_to_str
 from rastervision.utils.misc import set_nested_keys
@@ -68,6 +67,7 @@ class TFDeeplabConfig(BackendConfig):
         self.fine_tune_checkpoint_name = fine_tune_checkpoint_name
 
     def create_backend(self, task_config):
+        from rastervision.backend.tf_deeplab import TFDeeplab
         return TFDeeplab(self, task_config)
 
     def to_proto(self):

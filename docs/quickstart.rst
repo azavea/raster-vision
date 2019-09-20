@@ -28,7 +28,7 @@ Now we can run a console in the the Docker container by doing
    > docker run --rm -it -p 6006:6006 \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_EXP_DIR}:/opt/data \
-        quay.io/azavea/raster-vision:cpu-0.9 /bin/bash
+        quay.io/azavea/raster-vision:cpu-0.10 /bin/bash
 
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with
              Docker containers.
@@ -70,19 +70,20 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
                                .with_chip_size(300) \
                                .with_chip_options(chips_per_scene=50) \
                                .with_classes({
-                                   'building': (1, 'red')
+                                   'building': (1, 'red'),
+                                   'background': (2, 'black')
                                }) \
                                .build()
 
            # ------------- BACKEND -------------
 
-           backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                     .with_task(task) \
-                                     .with_debug(True) \
-                                     .with_batch_size(1) \
-                                     .with_num_steps(1) \
-                                     .with_model_defaults(rv.MOBILENET_V2)  \
-                                     .build()
+           backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
+               .with_task(task) \
+               .with_train_options(
+                   batch_size=2,
+                   num_epochs=1,
+                   debug=True) \
+               .build()
 
            # ------------- TRAINING -------------
 
@@ -158,20 +159,13 @@ The ``exp_main`` method has a special name: any method starting with ``exp_`` is
 will look for experiments in. Raster Vision does this by calling the method and processing any experiments
 that are returned - you can either return a single experiment or a list of experiments.
 
-Notice that we create a ``TaskConfig`` and ``BackendConfig`` that configure Raster Vision to perform
-semantic segmentation on buildings. In fact, Raster Vision isn't doing any of the heavy lifting of
-actually training the model - it's using the
-`TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_  library for that.
-Raster Vision
-just provides a configuration wrapper that sets up all of the options and data for the experiment
-workflow that utilizes that library.
-
-You also can see we set up a ``SceneConfig``, which points to a ``RasterSourceConfig``, and calls
+Notice that we set up a ``SceneConfig``, which points to a ``RasterSourceConfig``, and calls
 ``with_label_source`` with a GeoJSON URI, which sets a default ``LabelSourceConfig`` type into
 the scene based on the extension of the URI. We also set a ``StatsTransformer`` to be used
 for the ``RasterSource`` by calling ``with_stats_transformer()``,
 which sets a default ``StatsTransformerConfig`` onto the ``RasterSourceConfig`` transformers.
-This transformer is needed to convert uint16 values in the rasters to the uint8 values required by the Deeplab backend.
+This transformer is needed to convert uint16 values in the rasters to the uint8 values needed by the
+data loader in PyTorch. (In the future, we plan on relaxing this requirement.)
 
 Running an experiment
 ---------------------
@@ -222,8 +216,6 @@ list the output here to save space, but give it a try:
 
 When we're ready to run, we just remove the ``-n`` flag:
 
-.. note:: TensorFlow 1.10 will not work on some older computers due to unsupported vector instructions. Consider building a custom wheel to run the newer version of TensorFlow.
-
 .. code-block:: console
 
    > rastervision run local -p tiny_spacenet.py
@@ -238,48 +230,39 @@ If you go to ``${RV_QUICKSTART_EXP_DIR}`` you should see a folder structure like
 .. code-block:: console
 
    > tree -L 3
-   .
-   ├── analyze
-   │   └── tiny-spacenet-experiment
-   │       ├── command-config-0.json
-   │       └── stats.json
-   ├── bundle
-   │   └── tiny-spacenet-experiment
-   │       ├── command-config-0.json
-   │       └── predict_package.zip
-   ├── chip
-   │   └── tiny-spacenet-experiment
-   │       ├── command-config-0.json
-   │       ├── train
-   │       ├── train-debug
-   │       ├── train_scene-c5555210-aa62-4740-9999-1c8ef6b62033.record
-   │       ├── val_scene-fc6eba80-7cf7-4939-b09e-cfb146f83ede.record
-   │       ├── validation
-   │       └── validation-debug
-   ├── eval
-   │   └── tiny-spacenet-experiment
-   │       ├── command-config-0.json
-   │       └── eval.json
-   ├── experiments
-   │   └── tiny-spacenet-experiment.json
-   ├── predict
-   │   └── tiny-spacenet-experiment
-   │       ├── command-config-0.json
-   │       └── val_scene.tif
-   └── train
-       └── tiny-spacenet-experiment
-           ├── checkpoint
-           ├── command-config-0.json
-           ├── events.out.tfevents.1555099114.7df338f8935a
-           ├── graph.pbtxt
-           ├── model
-           ├── model.ckpt-0.data-00000-of-00001
-           ├── model.ckpt-0.index
-           ├── model.ckpt-0.meta
-           ├── model.ckpt-1.data-00000-of-00001
-           ├── model.ckpt-1.index
-           ├── model.ckpt-1.meta
-           └── tiny-spacenet-experiment.tar.gz
+    .
+    ├── analyze
+    │   └── tiny-spacenet-experiment
+    │       ├── command-config-0.json
+    │       └── stats.json
+    ├── bundle
+    │   └── tiny-spacenet-experiment
+    │       ├── command-config-0.json
+    │       └── predict_package.zip
+    ├── chip
+    │   └── tiny-spacenet-experiment
+    │       ├── chips
+    │       └── command-config-0.json
+    ├── eval
+    │   └── tiny-spacenet-experiment
+    │       ├── command-config-0.json
+    │       └── eval.json
+    ├── experiments
+    │   └── tiny-spacenet-experiment.json
+    ├── predict
+    │   └── tiny-spacenet-experiment
+    │       ├── command-config-0.json
+    │       └── val_scene.tif
+    └── train
+        └── tiny-spacenet-experiment
+            ├── command-config-0.json
+            ├── done.txt
+            ├── log.csv
+            ├── logs
+            ├── model
+            ├── models
+            ├── train-debug-chips.zip
+            └── val-debug-chips.zip
 
 Each directory with a command name contains output for that command type across experiments.
 The directory inside those have our experiment ID as the name - this is so different experiments

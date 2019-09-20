@@ -22,7 +22,7 @@ What are the benefits of using Raster Vision?
 Who is Raster Vision for?
 -------------------------
 
-* Developers **new to deep learning** who want to get spun up on applying deep learning to imagery quickly or who want to leverage existing deep learning libraries like Tensorflow and Keras for their projects simply.
+* Developers **new to deep learning** who want to get spun up on applying deep learning to imagery quickly or who want to leverage existing deep learning libraries like PyTorch for their projects simply.
 * People who are **already applying deep learning** to problems and want to make their processes more robust, faster and scalable.
 * Machine Learning engineers who are **developing new deep learning capabilities** they want to plug into a framework that allows them to focus on the hard problems.
 * **Teams building models collaboratively** that are in need of ways to share model configurations and create repeatable results in a consistent and maintainable way.

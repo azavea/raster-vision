@@ -14,7 +14,9 @@ REPO_ROOT="$( cd -P "$( dirname "$DOCKER_DIR" )" && pwd )"
 function usage() {
     echo -n \
          "Usage: $(basename "$0") <options> <command>
-Run a console in the raster-vision-cpu Docker image locally.
+
+Run a console in a Raster Vision Docker image locally.
+By default, the raster-vision-pytorch image is used in the CPU runtime.
 
 Environment variables:
 RASTER_VISION_DATA_DIR (directory for storing data; mounted to /opt/data)
@@ -32,7 +34,6 @@ Options:
 --tf-cpu use raster-vision-tf-cpu image
 --pytorch-gpu use raster-vision-pytorch image and nvidia runtime
 
-Note: raster-vision-pytorch image is used by default
 All arguments after above options are passed to 'docker run'.
 "
 }

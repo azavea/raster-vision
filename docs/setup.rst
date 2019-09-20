@@ -3,29 +3,35 @@ Setup
 
 .. _docker containers:
 
-Docker Containers
+Docker Images
 -----------------
 
-Using the Docker containers published for Raster Vision makes it easy to use a fully set up environment. We have tested this with Docker 18, although you may be able to use a lower version.
+Using the Docker images published for Raster Vision makes it easy to use a fully set up environment. We have tested this with Docker 18, although you may be able to use a lower version.
 
-Docker containers are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_. To run the container for the latest release, run:
+Docker images are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_. To run the container for the latest release, run:
 
 .. code-block:: console
 
-   > docker run --rm -it quay.io/azavea/raster-vision:cpu-0.9 /bin/bash
+   > docker run --rm -it quay.io/azavea/raster-vision:pytorch-0.10 /bin/bash
 
-You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <https://github.com/azavea/raster-vision/blob/0.9/docker/run>`_ script for an example usage.
+You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <https://github.com/azavea/raster-vision/blob/0.10/docker/run>`_ script for an example usage.
 
-We publish containers set up for both CPU-only running and GPU-only running, and tag each container as appropriate. So, you can also pull down the ``quay.io/azavea/raster-vision:gpu-0.9`` image, as well as ``quay.io/azavea/raster-vision:cpu-latest`` and ``quay.io/azavea/raster-vision:gpu-latest`` for the latest commits on the ``master`` branch.
+There are Raster Vision backends for PyTorch and Tensorflow -- the Tensorflow ones are being sunsetted.
+We publish separate Docker images with the dependencies necessary for using the PyTorch and Tensorflow backends, and there are CPU and GPU variants for the Tensorflow images.
+There are also images with the `-latest` suffix for the latest commits on the ``master`` branch. The available images include:
+
+* ``quay.io/azavea/raster-vision:tf-gpu-0.10`` and ``quay.io/azavea/raster-vision:tf-gpu-latest``
+* ``quay.io/azavea/raster-vision:tf-cpu-0.10`` and ``quay.io/azavea/raster-vision:tf-cpu-latest``
+* ``quay.io/azavea/raster-vision:pytorch-0.10`` and ``quay.io/azavea/raster-vision:pytorch-latest``
 
 You can also base your own Dockerfiles off the Raster Vision image to use with your own codebase. See the Dockerfiles in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.
 
 Docker Scripts
 ~~~~~~~~~~~~~~
 
-There are several scripts under `docker/ <https://github.com/azavea/raster-vision/tree/0.9/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code.
+There are several scripts under `docker/ <https://github.com/azavea/raster-vision/tree/0.10/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code.
 
-After cloning the repo, you can build the Docker images using:
+After cloning the repo, you can build all the Docker images using:
 
 .. code-block:: console
 
@@ -37,33 +43,41 @@ Before running the container, set an environment variable to a local directory i
 
     > export RASTER_VISION_DATA_DIR="/path/to/data"
 
-To run a Bash console in the Docker container use:
+To run a Bash console in the PyTorch Docker container use:
 
 .. code-block:: console
 
     > docker/run
 
-This will mount the ``$RASTER_VISION_DATA_DIR`` local directory to to ``/opt/data/`` inside the container. This script also has options for forwarding AWS credentials (`--aws`), running Jupyter notebooks (`--jupyter`), running on a GPU (`--gpu`), and others which can be seen below.
+This will mount the ``$RASTER_VISION_DATA_DIR`` local directory to to ``/opt/data/`` inside the container.
+
+This script also has options for forwarding AWS credentials, running Jupyter notebooks, and switching between different images, which can be seen below.
+
+Remember to use the correct image for the backend you are using!
 
 .. code-block:: console
 
-    > docker/run --help
-
+    > ./docker/run --help
     Usage: run <options> <command>
-    Run a console in the raster-vision-cpu Docker image locally.
+
+    Run a console in a Raster Vision Docker image locally.
+    By default, the raster-vision-pytorch image is used in the CPU runtime.
 
     Environment variables:
     RASTER_VISION_DATA_DIR (directory for storing data; mounted to /opt/data)
-    RASTER_VISION_NOTEBOOK_DIR (optional directory for Jupyter notebooks; mounted to /opt/notebooks)
     AWS_PROFILE (optional AWS profile)
+    RASTER_VISION_REPO (optional path to main RV repo; mounted to /opt/src)
 
     Options:
     --aws forwards AWS credentials (sets AWS_PROFILE env var and mounts ~/.aws to /root/.aws)
     --tensorboard maps port 6006
     --gpu use the NVIDIA runtime and GPU image
     --name sets the name of the running container
-    --jupyter forwards port 8888, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
-    --docs runs the docs server and forwards port 8000
+    --jupyter forwards port 8888, mounts ./notebooks to /opt/notebooks, and runs Jupyter
+    --debug maps port 3007 on localhost to 3000 inside container
+    --tf-gpu use raster-vision-examples-tf-gpu image and nvidia runtime
+    --tf-cpu use raster-vision-examples-tf-cpu image
+    --pytorch-gpu use raster-vision-examples-pytorch image and nvidia runtime
 
     All arguments after above options are passed to 'docker run'.
 
@@ -78,14 +92,14 @@ Rather than running Raster Vision from inside a Docker container, you can direct
 
 .. code-block:: console
 
-   > pip install rastervision==0.9.0
+   > pip install rastervision==0.10.0
 
-.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision==0.9.0`` if you have more than one version of Python installed.
+.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision==0.10.0`` if you have more than one version of Python installed.
 
 Troubleshooting macOS Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you encounter problems running ``pip install rastervision==0.9.0`` on macOS, you may have to manually install Cython and pyproj.
+If you encounter problems running ``pip install rastervision==0.10.0`` on macOS, you may have to manually install Cython and pyproj.
 
 To circumvent a problem installing pyproj with Python 3.7, you may also have to install that library using ``git+https``:
 
@@ -93,18 +107,20 @@ To circumvent a problem installing pyproj with Python 3.7, you may also have to 
 
   > pip install cython
   > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
-  > pip install rastervision==0.9.0
+  > pip install rastervision==0.10.0
 
 Using AWS, Tensorflow, and/or Keras
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you'd like to use AWS, Tensorflow and/or Keras with Raster Vision, you can include any of these extras:
+If you'd like to use AWS, PyTorch, Tensorflow and/or Keras with Raster Vision, you can include any of these extras:
 
 .. code-block:: console
 
-   > pip install rastervision[aws,tensorflow,tensorflow-gpu]==0.9.0
+   > pip install rastervision[aws,pytorch,tensorflow-cpu,tensorflow-gpu]==0.10.0
 
-If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to install these from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream. You will also need to install `Tippecanoe <https://github.com/mapbox/tippecanoe>`_ if you would like to do vector tile processing. For an example of setting these up, see the `Dockerfile <https://github.com/azavea/raster-vision/blob/lf/0.9/Dockerfile>`_.
+If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to install these from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream.
+
+You will also need to install `Tippecanoe <https://github.com/mapbox/tippecanoe>`_ if you would like to do vector tile processing. For an example of setting these up, see the various `Dockerfiles  <https://github.com/azavea/raster-vision/blob/0.10/>`_.
 
 .. _raster vision config:
 
@@ -219,7 +235,7 @@ When running your Docker container, be sure to include the ``--runtime=nvidia`` 
 
 .. code-block:: console
 
-   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:gpu-0.9 /bin/bash
+   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:pytorch-0.10 /bin/bash
 
 Ensure your setup sees the GPUS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,20 +278,22 @@ After creating the resources on AWS, set the corresponding configuration in your
 
 .. code:: ini
 
-   [AWS_BATCH]
-   job_queue=RasterVisionGpuJobQueue
-   cpu_job_queue=RasterVisionCpuJobQueue
-   job_definition=RasterVisionHostedGpuJobDefinition
-   cpu_job_definition=RasterVisionHostedCpuJobDefinition
-   attempts=1
+    [AWS_BATCH]
+    job_queue=RasterVisionGpuJobQueue
+    job_definition=RasterVisionHostedPyTorchJobDefinition
+    cpu_job_queue=RasterVisionCpuJobQueue
+    cpu_job_definition=RasterVisionHostedPyTorchJobDefinition
+    attempts=5
 
 * ``job_queue`` - Job Queue to submit GPU Batch jobs to.
 * ``cpu_job_queue`` - Job Queue to submit CPU-only jobs to.
-* ``job_definition`` - The Job Definition that defines the Batch jobs to run.
-* ``cpu_job_definition`` - The Job Definition that defines the CPU Batch jobs to run.
+* ``job_definition`` - The Job Definition that defines the Batch jobs to run on GPU.
+* ``cpu_job_definition`` - The Job Definition that defines the Batch jobs to run on CPU (which might be the same as the ``job_definition``)
 * ``attempts`` - Optional number of attempts to retry failed jobs.
 
 Check the AWS Batch console to see the names of the resources that were created, as they vary depending on how CloudFormation was configured.
+
+If you would like the ability to switch between PyTorch and Tensorflow-based jobs, you should create separate Raster Vision profiles for each of the two sets of resources.
 
 .. seealso::
    For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws batch`.

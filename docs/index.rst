@@ -12,7 +12,7 @@
 
 **Raster Vision** is an open source framework for Python developers building computer
 vision models on satellite, aerial, and other large imagery sets (including
-oblique drone imagery). There is built-in support for chip classification, object detection, and semantic segmentation using Tensorflow.
+oblique drone imagery). There is built-in support for chip classification, object detection, and semantic segmentation using PyTorch and Tensorflow.
 
 .. image:: _static/cv-tasks.png
     :align: center
@@ -69,19 +69,20 @@ and maintain.
                                 .with_chip_size(300) \
                                 .with_chip_options(chips_per_scene=50) \
                                 .with_classes({
-                                    'building': (1, 'red')
+                                    'building': (1, 'red'),
+                                    'background': (2, 'black')
                                 }) \
                                 .build()
 
             # ------------- BACKEND -------------
 
-            backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                      .with_task(task) \
-                                      .with_debug(True) \
-                                      .with_batch_size(1) \
-                                      .with_num_steps(1) \
-                                      .with_model_defaults(rv.MOBILENET_V2)  \
-                                      .build()
+            backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
+                .with_task(task) \
+                .with_train_options(
+                    batch_size=2,
+                    num_epochs=1,
+                    debug=True) \
+                .build()
 
             # ------------- TRAINING -------------
 

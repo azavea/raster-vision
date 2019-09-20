@@ -12,7 +12,7 @@
 Raster Vision is an open source Python framework for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
 * It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning workflow including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
 ![Overview of Raster Vision workflow](docs/_static/overview-raster-vision-workflow.png)
-* There is built-in support for chip classification, object detection, and semantic segmentation using Tensorflow.
+* There is built-in support for chip classification, object detection, and semantic segmentation with backends using PyTorch and Tensorflow.
 ![Examples of chip classification, object detection and semantic segmentation](docs/_static/cv-tasks.png)
 * Experiments can be executed on CPUs and GPUs with built-in support for running in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
 * The framework is extensible to new data sources, tasks (eg. object detection), backends (eg. TF Object Detection API), and cloud providers.
@@ -24,9 +24,10 @@ See the [documentation](https://docs.rastervision.io) for more details.
 There are several ways to setup Raster Vision:
 * To build Docker images from scratch, after cloning this repo, run `docker/build`, and run the container using `docker/run`.
 * Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision). The tag for the `raster-vision` image determines what type of image it is:
-    - The `cpu-*` tags are for running the CPU containers.
-    - The `gpu-*` tags are for running the GPU containers.
-    - We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:gpu-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
+    - The `tf-cpu-*` tags are for running the Tensorflow CPU containers.
+    - The `tf-gpu-*` tags are for running the Tensorflow GPU containers.
+    - The `pytorch-*` tags are for running the PyTorch containers.
+    - We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:pytorch-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
 * Raster Vision can be installed directly using `pip install rastervision`. However, some of its dependencies will have to be installed manually.
 
 For more detailed instructions, see the [Setup docs](https://docs.rastervision.io/en/0.9/setup.html).
@@ -57,19 +58,20 @@ class TinySpacenetExperimentSet(rv.ExperimentSet):
                             .with_chip_size(300) \
                             .with_chip_options(chips_per_scene=50) \
                             .with_classes({
-                                'building': (1, 'red')
+                                'building': (1, 'red'),
+                                'background': (2, 'black')
                             }) \
                             .build()
 
         # ------------- BACKEND -------------
 
-        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                  .with_task(task) \
-                                  .with_debug(True) \
-                                  .with_batch_size(1) \
-                                  .with_num_steps(1) \
-                                  .with_model_defaults(rv.MOBILENET_V2)  \
-                                  .build()
+        backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
+            .with_task(task) \
+            .with_train_options(
+                batch_size=2,
+                num_epochs=1,
+                debug=True) \
+            .build()
 
         # ------------- TRAINING -------------
 
