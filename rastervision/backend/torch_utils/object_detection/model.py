@@ -5,7 +5,7 @@ from torchvision.models.detection.backbone_utils import BackboneWithFPN
 from torchvision.models import resnet
 from torchvision.ops import misc as misc_nn_ops
 
-from rastervision.backend.torch_utils.boxlist import BoxList
+from rastervision.backend.torch_utils.object_detection.boxlist import BoxList
 
 
 def get_out_channels(model):
