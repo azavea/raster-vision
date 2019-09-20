@@ -1,10 +1,12 @@
 import os
+from os.path import join
 import shutil
 import gzip
 from threading import Timer
 import time
 import logging
 import json
+import zipfile
 
 from google.protobuf import json_format
 
@@ -317,3 +319,27 @@ def file_to_json(uri):
 def json_to_file(js, uri):
     """Upload file to uri based on JSON dict."""
     str_to_file(json.dumps(js), uri)
+
+
+def zipdir(dir, zip_path):
+    """Save a zip file with contents of directory.
+
+    Contents of directory will be at root of zip file.
+
+    Args:
+        dir: (str) directory to zip
+        zip_path: (str) path to zip file to create
+    """
+    make_dir(zip_path, use_dirname=True)
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as ziph:
+        for dirpath, dirnames, filenames in os.walk(dir):
+            for fn in filenames:
+                ziph.write(join(dirpath, fn), join(dirpath[len(dir):], fn))
+
+
+def unzip(zip_path, target_dir):
+    """Unzip contents of zip file at zip_path into target_dir"""
+    make_dir(target_dir)
+    zip_ref = zipfile.ZipFile(zip_path, 'r')
+    zip_ref.extractall(target_dir)
+    zip_ref.close()
