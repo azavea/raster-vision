@@ -1,20 +1,44 @@
 from os.path import join
 
+import logging
+log = logging.getLogger(__name__)
+
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose, ToTensor
 from torch.utils.data import DataLoader
 
+from albumentations import (
+    HorizontalFlip,
+    VerticalFlip,
+    Transpose,
+    Rotate,
+    GaussNoise)
+
 from rastervision.backend.torch_utils.data import DataBunch
 
-
-def build_databunch(data_dir, img_sz, batch_sz, class_names):
+def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
     num_workers = 4
 
     train_dir = join(data_dir, 'train')
     valid_dir = join(data_dir, 'valid')
 
-    aug_transform = Compose([ToTensor()])
-    transform = Compose([ToTensor()])
+    aug_transform = [ToTensor()]
+    transform = [ToTensor()]
+
+    for augmentor in augmentors:
+        if augmentor == 'RandomHorizontalFlip':
+            aug_transform.append(HorizontalFlip(p=0.5))
+        elif augmentor == 'RandomVerticalFlip':
+            aug_transform.append(VerticalFlip(p=0.5))
+        elif augmentor == '360Rotation':
+            aug_transform.append(Rotate(p=1.0,limit=360))
+        elif augmentor == 'RandomGaussianNoise':
+            aug_transform.append(GaussNoise(p=0.5))
+        else:
+            log.warning('Unknown augmentor: {}, is the spelling correct?'.format(augmentor))
+
+    aug_transform = Compose(aug_transform)
+    transform = Compose(transform)
 
     train_ds = ImageFolder(train_dir, transform=aug_transform)
     valid_ds = ImageFolder(valid_dir, transform=transform)
