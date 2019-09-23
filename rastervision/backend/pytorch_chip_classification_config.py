@@ -128,7 +128,11 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
                     For all images (p=1.0) gives them a random rotation between 0 and 360 degrees clockwise.
                     The amount of rotation is determined via a uniform distribution.
 
-
+                RandomGaussianNoise
+                    Randomly (p=0.5) adds gaussian noise to the image. Standard
+                    values of of the albumentation library are used. 
+                    See also:
+                    https://albumentations.readthedocs.io/en/latest/api/augmentations.html#albumentations.augmentations.transforms.GaussNoise
         """
         b = deepcopy(self)
         b.train_opts = TrainOptions(
