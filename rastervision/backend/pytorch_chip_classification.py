@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import optim
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import CyclicLR
 
 from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
                                       list_paths, download_if_needed,
@@ -31,7 +32,6 @@ from rastervision.backend.torch_utils.chip_classification.train import (
     train_epoch, validate_epoch)
 from rastervision.backend.torch_utils.chip_classification.model import (
     get_model)
-from rastervision.backend.torch_utils.scheduler import (CyclicLR)
 
 log = logging.getLogger(__name__)
 
@@ -96,6 +96,7 @@ class PyTorchChipClassification(Backend):
 
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        log.info('Device = {}'.format(self.device))
 
     def log_options(self):
         log.info('backend_opts:\n' +
@@ -206,6 +207,7 @@ class PyTorchChipClassification(Backend):
         databunch = build_databunch(
             chip_dir, chip_size, batch_size,
             self.task_config.class_map.get_class_names())
+        log.info(databunch)
         num_labels = len(databunch.label_names)
         if self.train_opts.debug:
             make_debug_chips(databunch, self.task_config.class_map, tmp_dir,
@@ -281,15 +283,14 @@ class PyTorchChipClassification(Backend):
 
         # Training loop.
         for epoch in range(start_epoch, num_epochs):
-            start = time.time()
-
             # Train one epoch.
+            log.info('-----------------------------------------------------')
+            log.info('epoch: {}'.format(epoch))
+            start = time.time()
             train_loss = train_epoch(model, self.device, databunch.train_dl,
                                      opt, loss_fn, step_scheduler)
             if epoch_scheduler:
                 epoch_scheduler.step()
-            log.info('----------------------------------------')
-            log.info('epoch: {}'.format(epoch))
             log.info('train loss: {}'.format(train_loss))
 
             # Validate one epoch.
