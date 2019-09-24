@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 from albumentations import (
     HorizontalFlip,
     VerticalFlip,
-    Transpose,
     Rotate,
     GaussNoise,
     RandomGamma,
@@ -34,17 +33,14 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
     train_dir = join(data_dir, 'train')
     valid_dir = join(data_dir, 'valid')
 
-    aug_transform = [ToTensor()]
-    transform = [ToTensor()]
-
     for augmentor in augmentors:
-        if augmentor == 'RandomHorizontalFlip':
+        if augmentor == 'HorizontalFlip':
             aug_transform.append(HorizontalFlip(p=0.5))
-        elif augmentor == 'RandomVerticalFlip':
+        elif augmentor == 'VerticalFlip':
             aug_transform.append(VerticalFlip(p=0.5))
-        elif augmentor == '360Rotation':
+        elif augmentor == 'Rotate':
             aug_transform.append(Rotate(p=1.0,limit=360))
-        elif augmentor == 'RandomGaussianNoise':
+        elif augmentor == 'GaussNoise':
             aug_transform.append(GaussNoise(p=0.5))
         elif augmentor == 'RandomGamma':
             aug_transform.append(RandomGamma(p=0.5))
@@ -71,8 +67,10 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
         else:
             log.warning('Unknown augmentor: {}, is the spelling correct?'.format(augmentor))
 
-    aug_transform = Compose(aug_transform)
-    transform = Compose(transform)
+    standard_transformers = [ToTensor()]
+
+    aug_transform = Compose(aug_transform.extend(standard_transformers))
+    transform = Compose(transform.extend(standard_transformers))
 
     train_ds = ImageFolder(train_dir, transform=aug_transform)
     valid_ds = ImageFolder(valid_dir, transform=transform)
