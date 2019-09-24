@@ -46,6 +46,4 @@ def validate_epoch(model, device, data_loader, num_labels):
                              (y == labels[:, None, None])).sum(
                                  dim=2, dtype=torch.float32)
 
-    # Ignore index zero.
-    conf_mat = conf_mat[1:, 1:]
     return compute_conf_mat_metrics(conf_mat)
