@@ -205,7 +205,8 @@ class PyTorchChipClassification(Backend):
         # Setup data loader.
         batch_size = self.train_opts.batch_size
         chip_size = self.task_config.chip_size
-        class_names = self.task_config.get_class_names()
+        #class_names = self.task_config.get_class_names()
+        class_names = []
         train_augmentors = self.train_opts.augmentors
 
         databunch = build_databunch(

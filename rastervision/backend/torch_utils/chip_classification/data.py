@@ -12,7 +12,19 @@ from albumentations import (
     VerticalFlip,
     Transpose,
     Rotate,
-    GaussNoise)
+    GaussNoise,
+    RandomGamma,
+    HueSaturationValue,
+    RGBShift,
+    RandomBrightness,
+    RandomContrast,
+    ChannelShuffle,
+    InvertImg,
+    ToGray,
+    RandomSnow,
+    RandomFog,
+    ChannelDropout
+)
 
 from rastervision.backend.torch_utils.data import DataBunch
 
@@ -34,6 +46,28 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
             aug_transform.append(Rotate(p=1.0,limit=360))
         elif augmentor == 'RandomGaussianNoise':
             aug_transform.append(GaussNoise(p=0.5))
+        elif augmentor == 'RandomGamma':
+            aug_transform.append(RandomGamma(p=0.5))
+        elif augmentor == 'HueSaturationValue':
+            aug_transform.append(HueSaturationValue(p=0.5))
+        elif augmentor == 'RGBShift':
+            aug_transform.append(RGBShift(p=0.5))
+        elif augmentor == 'RandomBrightness':
+            aug_transform.append(RandomBrightness(p=0.5))
+        elif augmentor == 'RandomContrast':
+            aug_transform.append(RandomContrast(p=0.5))
+        elif augmentor == 'ChannelShuffle':
+            aug_transform.append(ChannelShuffle(p=0.5))
+        elif augmentor == 'InvertImg':
+            aug_transform.append(InvertImg(p=0.5))
+        elif augmentor == 'ToGray':
+            aug_transform.append(ToGray(p=0.5))
+        elif augmentor == 'RandomSnow':
+            aug_transform.append(RandomSnow(p=0.5))
+        elif augmentor == 'RandomFog':
+            aug_transform.append(RandomFog(p=0.5))
+        elif augmentor == 'ChannelDropout':
+            aug_transform.append(ChannelDropout(p=0.5))
         else:
             log.warning('Unknown augmentor: {}, is the spelling correct?'.format(augmentor))
 
