@@ -15,4 +15,3 @@ rasterio==1.0.7
 protobuf==3.6.*
 scipy==1.1.*
 supermercado==0.0.*
-albumentations==0.3.3

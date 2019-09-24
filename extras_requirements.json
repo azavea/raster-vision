@@ -12,7 +12,8 @@
         "torchvision==0.3.*",
         "fastai==1.0.57",
         "tensorboard==1.14.*",
-        "numpy<1.17"
+        "numpy<1.17",
+        "albumentations==0.3.3"
     ],
     "aws": [
         "boto3==1.7.*",
