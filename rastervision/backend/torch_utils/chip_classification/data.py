@@ -8,7 +8,7 @@ from rastervision.backend.torch_utils.data import DataBunch
 
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names):
-    num_workers = 0
+    num_workers = 4
 
     train_dir = join(data_dir, 'train')
     valid_dir = join(data_dir, 'valid')
