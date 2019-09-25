@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import optim
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import CyclicLR
 import numpy as np
 
 from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
@@ -97,6 +98,8 @@ class PyTorchSemanticSegmentation(Backend):
 
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        log.info('Device = {}'.format(self.device))
         # TODO move this into the SemanticSegmentation RV task
         self.class_map = self.task_config.class_map.copy()
         self.class_map.add_nodata_item()
@@ -216,6 +219,7 @@ class PyTorchSemanticSegmentation(Backend):
         class_names = self.class_map.get_class_names()
         databunch = build_databunch(chip_dir, chip_size, batch_size,
                                     class_names)
+        log.info(databunch)
         num_labels = len(databunch.label_names)
         if self.train_opts.debug:
             make_debug_chips(databunch, self.class_map, tmp_dir, train_uri)
@@ -290,15 +294,14 @@ class PyTorchSemanticSegmentation(Backend):
 
         # Training loop.
         for epoch in range(start_epoch, num_epochs):
+            log.info('-----------------------------------------------------')
+            log.info('epoch: {}'.format(epoch))
             start = time.time()
-
-            # Train one epoch.
             train_loss = train_epoch(model, self.device, databunch.train_dl,
                                      opt, loss_fn, step_scheduler)
             if epoch_scheduler:
                 epoch_scheduler.step()
-            log.info('----------------------------------------')
-            log.info('epoch: {}'.format(epoch))
+
             log.info('train loss: {}'.format(train_loss))
 
             # Validate one epoch.
