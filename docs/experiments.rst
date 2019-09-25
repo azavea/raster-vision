@@ -130,21 +130,28 @@ To maintain flexibility and avoid being tied to any one library, Raster Vision t
 Each backend is a subclass of ``Backend`` and mediates between Raster Vision data structures and another library.
 Backends are configured using a ``BackendConfig, which is then set into the experiment using the ``.with_backend(backend)``.
 
-We are in the process of sunsetting the Tensorflow-based backends in favor of backends based on PyTorch. However, there is no PyTorch-based object detection backend yet.
+We are in the process of sunsetting the Tensorflow-based backends in favor of backends based on PyTorch.
 
 PyTorch Chip Classification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *rv.PYTORCH_CHIP_CLASSIFICATION*
 
-For chip classification, the default backend is PyTorch Chip Classification. It uses `fastai <https://docs.fast.ai/>`_ to train classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+For chip classification, the default backend is PyTorch Chip Classification. It trains classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 
 PyTorch Semantic Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *rv.PYTORCH_SEMANTIC_SEGMENTATION*
 
-For semantic segmentation, the default backend is PyTorch Semantic Segmentation. It uses `fastai <https://docs.fast.ai/>`_ to train a UNet with encoder backbones from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+For semantic segmentation, the default backend is PyTorch Semantic Segmentation. It trains the DeepLabV3 model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+
+PyTorch Object Detection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*rv.PYTORCH_OBJECT_DETECTION*
+
+For object detection, the default backend is PyTorch Object Detection. It trains the Faster-RCNN model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 
 TensorFlow Object Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

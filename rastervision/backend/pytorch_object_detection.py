@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import optim
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import CyclicLR
 
 from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
                                       list_paths, download_if_needed,
@@ -95,6 +96,7 @@ class PyTorchObjectDetection(Backend):
 
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        log.info('Device = {}'.format(self.device))
 
     def log_options(self):
         log.info('backend_opts:\n' +
@@ -227,6 +229,7 @@ class PyTorchObjectDetection(Backend):
         batch_size = self.train_opts.batch_size
         chip_size = self.task_config.chip_size
         databunch = build_databunch(chip_dir, chip_size, batch_size)
+        log.info(databunch)
         num_labels = len(databunch.label_names)
         if self.train_opts.debug:
             make_debug_chips(databunch, self.task_config.class_map, tmp_dir,
@@ -300,6 +303,9 @@ class PyTorchObjectDetection(Backend):
 
         # Training loop.
         for epoch in range(start_epoch, num_epochs):
+            # Train one epoch.
+            log.info('-----------------------------------------------------')
+            log.info('epoch: {}'.format(epoch))
             start = time.time()
 
             # Train one epoch.
@@ -307,8 +313,6 @@ class PyTorchObjectDetection(Backend):
                                      opt, step_scheduler, epoch_scheduler)
             if epoch_scheduler:
                 epoch_scheduler.step()
-            log.info('----------------------------------------')
-            log.info('epoch: {}'.format(epoch))
             log.info('train loss: {}'.format(train_loss))
 
             # Validate one epoch.

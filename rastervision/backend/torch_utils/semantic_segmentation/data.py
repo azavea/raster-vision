@@ -47,7 +47,7 @@ class SegmentationDataset(Dataset):
 
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names):
-    num_workers = 4
+    num_workers = 0
 
     train_dir = join(data_dir, 'train')
     valid_dir = join(data_dir, 'valid')
