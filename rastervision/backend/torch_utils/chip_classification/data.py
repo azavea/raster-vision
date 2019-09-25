@@ -27,12 +27,10 @@ from albumentations import (
 
 from rastervision.backend.torch_utils.data import DataBunch
 
-def build_databunch(data_dir, img_sz, batch_sz, class_names):
+def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
     num_workers = 0
 
-    train_dir = join(data_dir, 'train')
-    valid_dir = join(data_dir, 'valid')
-
+    aug_transform = []
     for augmentor in augmentors:
         if augmentor == 'HorizontalFlip':
             aug_transform.append(HorizontalFlip(p=0.5))
@@ -65,12 +63,17 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names):
         elif augmentor == 'ChannelDropout':
             aug_transform.append(ChannelDropout(p=0.5))
         else:
-            log.warning('Unknown augmentor: {}, is the spelling correct?'.format(augmentor))
+            log.warning('Unknown augmentor: {0}, is the spelling correct? \
+                Continuing without {0}'.format(augmentor))
 
     standard_transformers = [ToTensor()]
+    aug_transform.extend(standard_transformers)
 
-    aug_transform = Compose(aug_transform.extend(standard_transformers))
-    transform = Compose(transform.extend(standard_transformers))
+    aug_transform = Compose(aug_transform)
+    transform = Compose(standard_transformers)
+
+    train_dir = join(data_dir, 'train')
+    valid_dir = join(data_dir, 'val')
 
     train_ds = ImageFolder(train_dir, transform=aug_transform)
     valid_ds = ImageFolder(valid_dir, transform=transform)
