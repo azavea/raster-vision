@@ -73,7 +73,7 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
     transform = Compose(standard_transformers)
 
     train_dir = join(data_dir, 'train')
-    valid_dir = join(data_dir, 'val')
+    valid_dir = join(data_dir, 'valid')
 
     train_ds = ImageFolder(train_dir, transform=aug_transform)
     valid_ds = ImageFolder(valid_dir, transform=transform)

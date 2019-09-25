@@ -208,7 +208,6 @@ class PyTorchChipClassification(Backend):
         chip_size = self.task_config.chip_size
         class_names = self.task_config.get_class_names()
         train_augmentors = self.train_opts.augmentors
-        print("Input train_augmentors", train_augmentors)
 
         databunch = build_databunch(
             data_dir = chip_dir,
