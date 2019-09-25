@@ -95,7 +95,7 @@ class PyTorchSemanticSegmentationConfigBuilder(SimpleBackendConfigBuilder):
             sync_interval=sync_interval,
             debug=debug,
             log_tensorboard=log_tensorboard,
-            run_tensorboard=run_tensorboard):
+            run_tensorboard=run_tensorboard)
         return b
 
     def with_pretrained_uri(self, pretrained_uri):
