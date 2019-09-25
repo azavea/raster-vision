@@ -30,7 +30,6 @@ from rastervision.backend.torch_utils.object_detection.plot import plot_xy
 from rastervision.backend.torch_utils.object_detection.model import MyFasterRCNN
 from rastervision.backend.torch_utils.object_detection.train import (
     train_epoch, validate_epoch)
-from rastervision.backend.torch_utils.scheduler import (CyclicLR)
 
 log = logging.getLogger(__name__)
 

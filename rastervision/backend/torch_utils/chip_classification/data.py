@@ -1,16 +1,12 @@
 from os.path import join
 
-<<<<<<< HEAD
 import logging
 log = logging.getLogger(__name__)
 
-=======
->>>>>>> 031806aa2105d5f5724edf91e6fc6691df77afd6
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose, ToTensor
 from torch.utils.data import DataLoader
 
-<<<<<<< HEAD
 from albumentations import (
     HorizontalFlip,
     VerticalFlip,
@@ -98,8 +94,4 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names):
         num_workers=num_workers,
         pin_memory=True)
 
-<<<<<<< HEAD
     return DataBunch(train_ds, train_dl, valid_ds, valid_dl, class_names)
-=======
-    return DataBunch(train_ds, train_dl, valid_ds, valid_dl, class_names)
->>>>>>> 031806aa2105d5f5724edf91e6fc6691df77afd6

@@ -32,7 +32,6 @@ from rastervision.backend.torch_utils.chip_classification.train import (
     train_epoch, validate_epoch)
 from rastervision.backend.torch_utils.chip_classification.model import (
     get_model)
-from rastervision.backend.torch_utils.scheduler import (CyclicLR)
 
 log = logging.getLogger(__name__)
 
