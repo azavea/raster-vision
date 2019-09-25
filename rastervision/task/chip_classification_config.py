@@ -40,9 +40,8 @@ class ChipClassificationConfig(TaskConfig):
         return self
 
     def get_class_names(self):
-        return [self.class_map.class_item_map[class_item_id].name \
-        for class_item_id \
-        in self.class_map.class_item_map]
+        return [(self.class_map.class_item_map[class_item_id].name, class_item_id) \
+        for class_item_id in self.class_map.class_item_map]
 
 class ChipClassificationConfigBuilder(TaskConfigBuilder):
     def __init__(self, prev=None):
