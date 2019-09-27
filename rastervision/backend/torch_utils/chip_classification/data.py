@@ -1,10 +1,11 @@
 from os.path import join
 
-from torchvision.datasets import ImageFolder
 from torchvision.transforms import Compose, ToTensor
 from torch.utils.data import DataLoader
 
 from rastervision.backend.torch_utils.data import DataBunch
+from rastervision.backend.torch_utils.chip_classification.folder import (
+    ImageFolder)
 
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names):
@@ -16,15 +17,8 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names):
     aug_transform = Compose([ToTensor()])
     transform = Compose([ToTensor()])
 
-    train_ds = ImageFolder(train_dir, transform=aug_transform)
-    valid_ds = ImageFolder(valid_dir, transform=transform)
-
-    class_to_idx = dict(
-        [(class_name, idx) for idx, class_name in enumerate(class_names)])
-    train_ds.classes = class_names
-    train_ds.class_to_idx = class_to_idx
-    valid_ds.classes = class_names
-    valid_ds.class_to_idx = class_to_idx
+    train_ds = ImageFolder(train_dir, transform=aug_transform, classes=class_names)
+    valid_ds = ImageFolder(valid_dir, transform=transform, classes=class_names)
 
     train_dl = DataLoader(
         train_ds,
