@@ -345,7 +345,7 @@ class PyTorchObjectDetection(Backend):
                     tb_writer.add_histogram(name, param, epoch)
 
             if (train_uri.startswith('s3://')
-                    and ((epoch + 1) % self.train_opts.sync_interval)):
+                    and (((epoch + 1) % self.train_opts.sync_interval) == 0)):
                 sync_to_dir(train_dir, train_uri)
 
         # Close Tensorboard.
