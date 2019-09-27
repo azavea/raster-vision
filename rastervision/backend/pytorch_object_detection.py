@@ -170,8 +170,8 @@ class PyTorchObjectDetection(Backend):
         containing:
         train/{scene_id}-{ind}.png
         train/{scene_id}-labels.json
-        val/{scene_id}-{ind}.png
-        val/{scene_id}-labels.json
+        valid/{scene_id}-{ind}.png
+        valid/{scene_id}-labels.json
 
         Args:
             training_results: dependent on the ml_backend's process_scene_data
