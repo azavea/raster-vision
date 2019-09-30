@@ -55,13 +55,13 @@ class ObjectDetectionIntegrationTest(rv.ExperimentSet):
                     .with_task(task) \
                     .with_train_options(
                         batch_size=8,
-                        num_epochs=500,
-                        sync_interval=500) \
+                        num_epochs=200,
+                        sync_interval=200) \
                     .build()
             else:
                 pretrained_uri = (
                     'https://github.com/azavea/raster-vision-data/releases/download/'
-                    'v0.8.0/pytorch_chip_classification_test.pth')
+                    'v0.9.0/pytorch_object_detection_test.pth')
 
                 backend = rv.BackendConfig.builder(rv.PYTORCH_OBJECT_DETECTION) \
                     .with_task(task) \

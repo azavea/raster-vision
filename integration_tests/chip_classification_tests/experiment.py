@@ -53,13 +53,14 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                 backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
                     .with_task(task) \
                     .with_train_options(
-                        batch_size=8,
-                        num_epochs=500) \
+                        batch_size=16,
+                        num_epochs=10,
+                        sync_interval=200) \
                     .build()
             else:
                 pretrained_uri = (
                     'https://github.com/azavea/raster-vision-data/releases/download/'
-                    'v0.8.0/pytorch_chip_classification_test.pth')
+                    'v0.9.0/pytorch_chip_classification_test.pth')
                 backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
                     .with_task(task) \
                     .with_train_options(
