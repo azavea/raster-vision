@@ -26,6 +26,7 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names):
         shuffle=True,
         batch_size=batch_sz,
         num_workers=num_workers,
+        drop_last=True,
         pin_memory=True)
     valid_dl = DataLoader(
         valid_ds,
