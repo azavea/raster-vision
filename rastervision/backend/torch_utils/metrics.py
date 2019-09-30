@@ -14,8 +14,8 @@ def compute_conf_mat_metrics(conf_mat):
     weights = gt_count / total
     weighted_precision = (weights * precision).sum()
     weighted_recall = (weights * recall).sum()
-    weighted_f1 = ((2 * weighted_precision * weighted_recall) /
-                   torch.max(weighted_precision + weighted_recall, eps))
+    weighted_f1 = ((2 * weighted_precision * weighted_recall) / torch.max(
+        weighted_precision + weighted_recall, eps))
     metrics = {
         'precision': weighted_precision.item(),
         'recall': weighted_recall.item(),

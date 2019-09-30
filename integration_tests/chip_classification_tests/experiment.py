@@ -5,7 +5,8 @@ from integration_tests.util.misc import str_to_bool
 
 
 class ChipClassificationIntegrationTest(rv.ExperimentSet):
-    def exp_main(self, root_uri, data_uri=None, full_train=False, use_tf=False):
+    def exp_main(self, root_uri, data_uri=None, full_train=False,
+                 use_tf=False):
         full_train = str_to_bool(full_train)
         use_tf = str_to_bool(use_tf)
 
@@ -36,7 +37,8 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
         if use_tf:
             pretrained_model = (
                 'https://github.com/azavea/raster-vision-data/'
-                'releases/download/v0.0.7/chip-classification-test-weights.hdf5')
+                'releases/download/v0.0.7/chip-classification-test-weights.hdf5'
+            )
 
             backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
                 .with_task(task) \

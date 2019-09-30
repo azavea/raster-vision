@@ -5,7 +5,8 @@ from integration_tests.util.misc import str_to_bool
 
 
 class ObjectDetectionIntegrationTest(rv.ExperimentSet):
-    def exp_main(self, root_uri, data_uri=None, full_train=False, use_tf=False):
+    def exp_main(self, root_uri, data_uri=None, full_train=False,
+                 use_tf=False):
         full_train = str_to_bool(full_train)
         use_tf = str_to_bool(use_tf)
 

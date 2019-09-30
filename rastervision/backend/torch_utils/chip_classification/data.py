@@ -17,7 +17,8 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names):
     aug_transform = Compose([ToTensor()])
     transform = Compose([ToTensor()])
 
-    train_ds = ImageFolder(train_dir, transform=aug_transform, classes=class_names)
+    train_ds = ImageFolder(
+        train_dir, transform=aug_transform, classes=class_names)
     valid_ds = ImageFolder(valid_dir, transform=transform, classes=class_names)
 
     train_dl = DataLoader(
