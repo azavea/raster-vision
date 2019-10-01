@@ -80,7 +80,8 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                     .with_task(task) \
                     .with_train_options(
                         batch_size=2,
-                        num_epochs=1) \
+                        num_epochs=1,
+                        lr=1e-9) \
                     .with_pretrained_uri(pretrained_uri) \
                     .build()
 

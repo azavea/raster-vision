@@ -66,8 +66,9 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                 backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
                     .with_task(task) \
                     .with_train_options(
-                        batch_size=8,
-                        num_epochs=1) \
+                        batch_size=2,
+                        num_epochs=1,
+                        lr=1e-9) \
                     .with_pretrained_uri(pretrained_uri) \
                     .build()
 
