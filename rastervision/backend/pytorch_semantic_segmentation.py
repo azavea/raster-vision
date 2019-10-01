@@ -386,7 +386,7 @@ class PyTorchSemanticSegmentation(Backend):
 
         def label_fn(_window):
             if _window == windows[0]:
-                return out[0].argmax(0).squeeze()
+                return out[0].argmax(0).squeeze().numpy()
             else:
                 raise ValueError('Trying to get labels for unknown window.')
 
