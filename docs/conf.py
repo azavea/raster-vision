@@ -59,6 +59,8 @@ class Mock(MagicMock):
 MOCK_MODULES = ['pyproj', 'h5py']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
+autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools']
+
 intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
 
 # Add any paths that contain templates here, relative to this directory.
