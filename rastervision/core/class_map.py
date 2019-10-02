@@ -57,6 +57,13 @@ class ClassMap(object):
         for class_item in class_items:
             self.class_item_map[class_item.id] = class_item
 
+    def copy(self):
+        return ClassMap(self.class_item_map.values())
+
+    def add_nodata_item(self):
+        if 0 not in self.get_keys():
+            self.class_item_map[0] = ClassItem(0, 'nodata', 'grey')
+
     def get_by_id(self, id):
         """Return a ClassItem by its id.
 

@@ -80,6 +80,7 @@ To use a model trained by Raster Vision for transfer learning or fine tuning, yo
 
 * ``rv.PYTORCH_CHIP_CLASSIFICATION``: You can use the ``model`` file in the train command output as a pretrained model.
 * ``rv.PYTORCH_SEMANTIC_SEGMENTATION``: You can use the ``model`` file in the train command output as a pretrained model.
+* ``rv.PYTORCH_OBJECT_DETECTION``: You can use the ``model`` file in the train command output as a pretrained model.
 * ``rv.KERAS_CLASSIFICATION``: You can use the ``model_weights.hdf5`` file in the train command output as a pretrained model.
 * ``rv.TF_OBJECT_DETECTION``: Use the ``<experiment_id>.tar.gz`` that is in the train command output as a pretrained model. The default name of the file is the experiment ID, however you can change the backend configuration to use another name with the ``.with_fine_tune_checkpoint_name`` method.
 * ``rv.TF_DEEPLAB``: Use the ``<experiment_id>.tar.gz`` that is in the TRAIN command output as a pretrained model. The default name of the file is the experiment ID, however you can change the backend configuration to use another name with the ``.with_fine_tune_checkpoint_name`` method.

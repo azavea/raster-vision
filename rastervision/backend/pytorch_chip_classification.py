@@ -1,4 +1,4 @@
-from os.path import join, basename, dirname
+from os.path import (join, isfile)
 import uuid
 import zipfile
 import glob
@@ -6,41 +6,45 @@ import logging
 import json
 from subprocess import Popen
 import os
+import csv
+import time
+import datetime
 
 import matplotlib
 matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
-import numpy as np
-
 import torch
-from fastai.vision import (ImageList, get_transforms, models, cnn_learner)
-from fastai.callbacks import TrackEpochCallback
-from fastai.basic_train import load_learner
+from torch import optim
+from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import CyclicLR
 
 from rastervision.utils.files import (get_local_path, make_dir, upload_or_copy,
                                       list_paths, download_if_needed,
-                                      sync_from_dir, sync_to_dir, str_to_file)
+                                      sync_from_dir, sync_to_dir, str_to_file,
+                                      zipdir, file_to_json, json_to_file)
 from rastervision.utils.misc import save_img
 from rastervision.backend import Backend
 from rastervision.data.label import ChipClassificationLabels
 from rastervision.utils.misc import terminate_at_exit
-
-from rastervision.backend.fastai_utils import (
-    SyncCallback, MySaveModelCallback, ExportCallback, MyCSVLogger, Precision,
-    Recall, FBeta, zipdir, TensorboardLogger)
+from rastervision.backend.torch_utils.chip_classification.plot import plot_xy
+from rastervision.backend.torch_utils.chip_classification.data import build_databunch
+from rastervision.backend.torch_utils.chip_classification.train import (
+    train_epoch, validate_epoch)
+from rastervision.backend.torch_utils.chip_classification.model import (
+    get_model)
 
 log = logging.getLogger(__name__)
 
 
-def make_debug_chips(data, class_map, tmp_dir, train_uri, max_count=30):
-    """Save debug chips for a fastai DataBunch.
+def make_debug_chips(databunch, class_map, tmp_dir, train_uri, max_count=30):
+    """Save debug chips for a Databunch for a chip classification dataset
 
     This saves a plot for each example in the training and validation sets into
     train-debug-chips.zip and valid-debug-chips.zip under the train_uri. This
     is useful for making sure we are feeding correct data into the model.
 
     Args:
-        data: fastai DataBunch for a semantic segmentation dataset
+        databunch: DataBunch for chip classification
         class_map: (rv.ClassMap) class map used to map class ids to colors
         tmp_dir: (str) path to temp directory
         train_uri: (str) URI of root of training output
@@ -53,21 +57,22 @@ def make_debug_chips(data, class_map, tmp_dir, train_uri, max_count=30):
         zip_path = join(tmp_dir, '{}-debug-chips.zip'.format(split))
         zip_uri = join(train_uri, '{}-debug-chips.zip'.format(split))
         make_dir(debug_chips_dir)
-        ds = data.train_ds if split == 'train' else data.valid_ds
+        ds = databunch.train_ds if split == 'train' else databunch.valid_ds
         for i, (x, y) in enumerate(ds):
             if i >= max_count:
                 break
 
-            x.show(y=y)
+            fig, ax = plt.subplots(1)
+            plot_xy(ax, x, y, databunch.label_names)
             plt.savefig(
-                join(debug_chips_dir, '{}.png'.format(i)), figsize=(5, 5))
+                join(debug_chips_dir, '{}.png'.format(i)), figsize=(6, 6))
             plt.close()
 
         zipdir(debug_chips_dir, zip_path)
         upload_or_copy(zip_path, zip_uri)
 
     _make_debug_chips('train')
-    _make_debug_chips('val')
+    _make_debug_chips('valid')
 
 
 class PyTorchChipClassification(Backend):
@@ -88,6 +93,10 @@ class PyTorchChipClassification(Backend):
 
         torch_cache_dir = '/opt/data/torch-cache'
         os.environ['TORCH_HOME'] = torch_cache_dir
+
+        self.model = None
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        log.info('Device = {}'.format(self.device))
 
     def log_options(self):
         log.info('backend_opts:\n' +
@@ -131,7 +140,7 @@ class PyTorchChipClassification(Backend):
 
         This writes a zip file for a group of scenes at {chip_uri}/{uuid}.zip containing:
         train-img/{class_name}/{scene_id}-{ind}.png
-        val-img/{class_name}/{scene_id}-{ind}.png
+        valid-img/{class_name}/{scene_id}-{ind}.png
 
         This method is called once per instance of the chip command.
         A number of instances of the chip command can run simultaneously to
@@ -161,7 +170,7 @@ class PyTorchChipClassification(Backend):
                         zipf.write(path, join(split, class_name, fn))
 
             _write_zip(training_results, 'train')
-            _write_zip(validation_results, 'val')
+            _write_zip(validation_results, 'valid')
 
         upload_or_copy(group_path, group_uri)
 
@@ -192,108 +201,138 @@ class PyTorchChipClassification(Backend):
                 zipf.extractall(chip_dir)
 
         # Setup data loader.
-        size = self.task_config.chip_size
-        class_map = self.task_config.class_map
-        classes = class_map.get_class_names()
-        num_workers = 0 if self.train_opts.debug else 4
-        tfms = get_transforms(flip_vert=self.train_opts.flip_vert)
-
-        data = (ImageList.from_folder(chip_dir).split_by_folder(
-            train='train', valid='val'))
-        train_count = None
-        if self.train_opts.train_count is not None:
-            train_count = min(len(data.train), self.train_opts.train_count)
-        elif self.train_opts.train_prop != 1.0:
-            train_count = int(
-                round(self.train_opts.train_prop * len(data.train)))
-        train_items = data.train.items
-        if train_count is not None:
-            train_inds = np.random.permutation(np.arange(len(
-                data.train)))[0:train_count]
-            train_items = train_items[train_inds]
-        items = np.concatenate([train_items, data.valid.items])
-
-        data = ImageList(items, chip_dir) \
-            .split_by_folder(train='train', valid='val') \
-            .label_from_folder(classes=classes) \
-            .transform(tfms, size=size) \
-            .databunch(bs=self.train_opts.batch_size, num_workers=num_workers)
-        log.info(str(data))
-
+        batch_size = self.train_opts.batch_size
+        chip_size = self.task_config.chip_size
+        databunch = build_databunch(
+            chip_dir, chip_size, batch_size,
+            self.task_config.class_map.get_class_names())
+        log.info(databunch)
+        num_labels = len(databunch.label_names)
         if self.train_opts.debug:
-            make_debug_chips(data, class_map, tmp_dir, train_uri)
+            make_debug_chips(databunch, self.task_config.class_map, tmp_dir,
+                             train_uri)
 
-        # Setup learner.
-        ignore_idx = -1
-        metrics = [
-            Precision(average='weighted', clas_idx=1, ignore_idx=ignore_idx),
-            Recall(average='weighted', clas_idx=1, ignore_idx=ignore_idx),
-            FBeta(
-                average='weighted', clas_idx=1, beta=1, ignore_idx=ignore_idx)
-        ]
-        model_arch = getattr(models, self.train_opts.model_arch)
-        learn = cnn_learner(
-            data,
-            model_arch,
-            metrics=metrics,
-            wd=self.train_opts.weight_decay,
-            path=train_dir)
-        learn.unfreeze()
+        # Setup model
+        num_labels = len(databunch.label_names)
+        model = get_model(
+            self.train_opts.model_arch, num_labels, pretrained=True)
+        model = model.to(self.device)
+        model_path = join(train_dir, 'model')
 
-        if self.train_opts.mixed_prec and torch.cuda.is_available():
-            # This loss_scale works for Resnet 34 and 50. You might need to
-            # adjust this for other models.
-            learn = learn.to_fp16(loss_scale=256)
-
-        # Setup callbacks and train model.
-        model_path = get_local_path(self.backend_opts.model_uri, tmp_dir)
-
+        # Load weights from a pretrained model.
         pretrained_uri = self.backend_opts.pretrained_uri
         if pretrained_uri:
             log.info('Loading weights from pretrained_uri: {}'.format(
                 pretrained_uri))
             pretrained_path = download_if_needed(pretrained_uri, tmp_dir)
-            learn.model = torch.load(
-                pretrained_path, map_location=learn.data.device)['model']
+            model.load_state_dict(
+                torch.load(pretrained_path, map_location=self.device))
 
-        # Save every epoch so that resume functionality provided by
-        # TrackEpochCallback will work.
-        callbacks = [
-            TrackEpochCallback(learn),
-            MySaveModelCallback(learn, every='epoch'),
-            MyCSVLogger(learn, filename='log'),
-            ExportCallback(learn, model_path, monitor='f_beta'),
-            SyncCallback(train_dir, self.backend_opts.train_uri,
-                         self.train_opts.sync_interval)
-        ]
+        # Possibly resume training from checkpoint.
+        start_epoch = 0
+        train_state_path = join(train_dir, 'train_state.json')
+        if isfile(train_state_path):
+            log.info('Resuming from checkpoint: {}\n'.format(model_path))
+            train_state = file_to_json(train_state_path)
+            start_epoch = train_state['epoch'] + 1
+            model.load_state_dict(
+                torch.load(model_path, map_location=self.device))
 
+        # Write header of log CSV file.
+        metric_names = ['precision', 'recall', 'f1']
+        log_path = join(train_dir, 'log.csv')
+        if not isfile(log_path):
+            with open(log_path, 'w') as log_file:
+                log_writer = csv.writer(log_file)
+                row = ['epoch', 'time', 'train_loss'] + metric_names
+                log_writer.writerow(row)
+
+        # Setup Tensorboard logging.
         if self.train_opts.log_tensorboard:
-            callbacks.append(TensorboardLogger(learn, 'run'))
+            log_dir = join(train_dir, 'tb-logs')
+            make_dir(log_dir)
+            tb_writer = SummaryWriter(log_dir=log_dir)
+            if self.train_opts.run_tensorboard:
+                log.info('Starting tensorboard process')
+                tensorboard_process = Popen(
+                    ['tensorboard', '--logdir={}'.format(log_dir)])
+                terminate_at_exit(tensorboard_process)
 
-        if self.train_opts.run_tensorboard:
-            log.info('Starting tensorboard process')
-            log_dir = join(train_dir, 'logs', 'run')
-            tensorboard_process = Popen(
-                ['tensorboard', '--logdir={}'.format(log_dir)])
-            terminate_at_exit(tensorboard_process)
-
+        # Setup optimizer, loss, and LR scheduler.
+        loss_fn = torch.nn.CrossEntropyLoss()
         lr = self.train_opts.lr
+        opt = optim.Adam(model.parameters(), lr=lr)
+        step_scheduler, epoch_scheduler = None, None
         num_epochs = self.train_opts.num_epochs
-        if self.train_opts.one_cycle:
-            if lr is None:
-                learn.lr_find()
-                learn.recorder.plot(suggestion=True, return_fig=True)
-                lr = learn.recorder.min_grad_lr
-                log.info('lr_find() found lr: {}'.format(lr))
-            learn.fit_one_cycle(num_epochs, lr, callbacks=callbacks)
-        else:
-            learn.fit(num_epochs, lr, callbacks=callbacks)
 
-        if self.train_opts.run_tensorboard:
-            tensorboard_process.terminate()
+        if self.train_opts.one_cycle and num_epochs > 1:
+            steps_per_epoch = len(databunch.train_ds) // batch_size
+            total_steps = num_epochs * steps_per_epoch
+            step_size_up = (num_epochs // 2) * steps_per_epoch
+            step_size_down = total_steps - step_size_up
+            step_scheduler = CyclicLR(
+                opt,
+                base_lr=lr / 10,
+                max_lr=lr,
+                step_size_up=step_size_up,
+                step_size_down=step_size_down,
+                cycle_momentum=False)
+            for _ in range(start_epoch * steps_per_epoch):
+                step_scheduler.step()
 
-        # Since model is exported every epoch, we need some other way to
-        # show that training is finished.
+        # Training loop.
+        for epoch in range(start_epoch, num_epochs):
+            # Train one epoch.
+            log.info('-----------------------------------------------------')
+            log.info('epoch: {}'.format(epoch))
+            start = time.time()
+            train_loss = train_epoch(model, self.device, databunch.train_dl,
+                                     opt, loss_fn, step_scheduler)
+            if epoch_scheduler:
+                epoch_scheduler.step()
+            log.info('train loss: {}'.format(train_loss))
+
+            # Validate one epoch.
+            metrics = validate_epoch(model, self.device, databunch.valid_dl,
+                                     num_labels)
+            log.info('validation metrics: {}'.format(metrics))
+
+            # Print elapsed time for epoch.
+            end = time.time()
+            epoch_time = datetime.timedelta(seconds=end - start)
+            log.info('epoch elapsed time: {}'.format(epoch_time))
+
+            # Save model and state.
+            torch.save(model.state_dict(), model_path)
+            train_state = {'epoch': epoch}
+            json_to_file(train_state, train_state_path)
+
+            # Append to log CSV file.
+            with open(log_path, 'a') as log_file:
+                log_writer = csv.writer(log_file)
+                row = [epoch, epoch_time, train_loss]
+                row += [metrics[k] for k in metric_names]
+                log_writer.writerow(row)
+
+            # Write to Tensorboard log.
+            if self.train_opts.log_tensorboard:
+                for key, val in metrics.items():
+                    tb_writer.add_scalar(key, val, epoch)
+                tb_writer.add_scalar('train_loss', train_loss, epoch)
+                for name, param in model.named_parameters():
+                    tb_writer.add_histogram(name, param, epoch)
+
+            if (train_uri.startswith('s3://')
+                    and (((epoch + 1) % self.train_opts.sync_interval) == 0)):
+                sync_to_dir(train_dir, train_uri)
+
+        # Close Tensorboard.
+        if self.train_opts.log_tensorboard:
+            tb_writer.close()
+            if self.train_opts.run_tensorboard:
+                tensorboard_process.terminate()
+
+        # Mark that the command has completed.
         str_to_file('done!', self.backend_opts.train_done_uri)
 
         # Sync output to cloud.
@@ -301,14 +340,17 @@ class PyTorchChipClassification(Backend):
 
     def load_model(self, tmp_dir):
         """Load the model in preparation for one or more prediction calls."""
-        if self.inf_learner is None:
-            self.log_options()
+        if self.model is None:
             model_uri = self.backend_opts.model_uri
             model_path = download_if_needed(model_uri, tmp_dir)
-            self.inf_learner = load_learner(
-                dirname(model_path), basename(model_path))
-            self.device = torch.device('cuda:0'
-                                       if torch.cuda.is_available() else 'cpu')
+
+            num_classes = len(self.task_config.class_map)
+            model = get_model(
+                self.train_opts.model_arch, num_classes, pretrained=True)
+            model = model.to(self.device)
+            model.load_state_dict(
+                torch.load(model_path, map_location=self.device))
+            self.model = model
 
     def predict(self, chips, windows, tmp_dir):
         """Return predictions for a batch of chips.
@@ -327,15 +369,15 @@ class PyTorchChipClassification(Backend):
         # (batch_size, h, w, nchannels) --> (batch_size, nchannels, h, w)
         chips = torch.Tensor(chips).permute((0, 3, 1, 2)) / 255.
         chips = chips.to(self.device)
+        model = self.model.eval()
 
-        model = self.inf_learner.model.eval()
-        preds = model(chips).detach().cpu()
+        with torch.no_grad():
+            out = model(chips).cpu()
+            labels = ChipClassificationLabels()
 
-        labels = ChipClassificationLabels()
-
-        for class_probs, window in zip(preds, windows):
-            # Add 1 to class_id since they start at 1.
-            class_id = int(class_probs.argmax() + 1)
-            labels.set_cell(window, class_id, class_probs)
+            for class_probs, window in zip(out, windows):
+                # Add 1 to class_id since they start at 1.
+                class_id = int(class_probs.argmax() + 1)
+                labels.set_cell(window, class_id, class_probs.numpy())
 
         return labels

@@ -5,15 +5,15 @@ import click
 import torch
 import numpy as np
 
-from rastervision.backend.torch_utils.metrics import (compute_coco_eval,
-                                                      compute_class_f1)
+from rastervision.backend.torch_utils.object_detection.metrics import (
+    compute_coco_eval, compute_class_f1)
 
 warnings.filterwarnings('ignore')
 
 
 def train_epoch(model,
                 device,
-                dl,
+                data_loader,
                 opt,
                 step_scheduler=None,
                 epoch_scheduler=None):
@@ -21,7 +21,7 @@ def train_epoch(model,
     train_loss = defaultdict(lambda: 0.0)
     num_samples = 0
 
-    with click.progressbar(dl, label='Training') as bar:
+    with click.progressbar(data_loader, label='Training') as bar:
         for batch_ind, (x, y) in enumerate(bar):
             x = x.to(device)
             y = [_y.to(device) for _y in y]
@@ -43,13 +43,13 @@ def train_epoch(model,
     return dict(train_loss)
 
 
-def validate_epoch(model, device, dl, num_labels):
+def validate_epoch(model, device, data_loader, num_labels):
     model.eval()
 
     ys = []
     outs = []
     with torch.no_grad():
-        with click.progressbar(dl, label='Validating') as bar:
+        with click.progressbar(data_loader, label='Validating') as bar:
             for batch_ind, (x, y) in enumerate(bar):
                 x = x.to(device)
                 out = model(x)
