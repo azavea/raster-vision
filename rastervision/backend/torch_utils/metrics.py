@@ -1,9 +1,15 @@
 import torch
 
 
-def compute_conf_mat_metrics(conf_mat):
+def compute_conf_mat(out, y, num_labels):
+    labels = torch.arange(0, num_labels)
+    return ((out == labels[:, None]) & (y == labels[:, None, None])).sum(
+        dim=2, dtype=torch.float32)
+
+
+def compute_conf_mat_metrics(conf_mat, eps=1e-6):
     # eps is to avoid dividing by zero.
-    eps = torch.tensor(1e-4)
+    eps = torch.tensor(eps)
     gt_count = conf_mat.sum(dim=1)
     pred_count = conf_mat.sum(dim=0)
     total = conf_mat.sum()

@@ -1,7 +1,8 @@
 import click
 import torch
 
-from rastervision.backend.torch_utils.metrics import (compute_conf_mat_metrics)
+from rastervision.backend.torch_utils.metrics import (compute_conf_mat_metrics,
+                                                      compute_conf_mat)
 
 
 def train_epoch(model, device, data_loader, opt, loss_fn, step_scheduler=None):
@@ -39,11 +40,6 @@ def validate_epoch(model, device, data_loader, num_labels):
 
                 out = out.argmax(-1).view(-1).cpu()
                 y = y.cpu()
-                if batch_ind == 0:
-                    labels = torch.arange(0, num_labels)
-
-                conf_mat += ((out == labels[:, None]) &
-                             (y == labels[:, None, None])).sum(
-                                 dim=2, dtype=torch.float32)
+                conf_mat += compute_conf_mat(out, y, num_labels)
 
     return compute_conf_mat_metrics(conf_mat)
