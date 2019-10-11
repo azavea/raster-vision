@@ -73,9 +73,8 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
                 details.
             num_epochs: (int) number of epochs (sweeps through training set) to
                 train model for
-            model_arch: (str) classification model backbone to use for UNet
-                architecture. Any option in torchvision.models is valid, for
-                example, resnet18.
+            model_arch: (str) Any classification model option in
+                torchvision.models is valid, for example, resnet18.
             sync_interval: (int) sync training directory to cloud every
                 sync_interval epochs.
             debug: (bool) if True, save debug chips (ie. visualizations of
