@@ -114,11 +114,11 @@ class Box():
 
         lb = self.ymin - (size - self.get_height())
         ub = self.ymin
-        rand_y = random.randint(lb, ub)
+        rand_y = random.randint(int(lb), int(ub))
 
         lb = self.xmin - (size - self.get_width())
         ub = self.xmin
-        rand_x = random.randint(lb, ub)
+        rand_x = random.randint(int(lb), int(ub))
 
         return Box.make_square(rand_y, rand_x, size)
 
@@ -137,11 +137,11 @@ class Box():
 
         lb = self.ymin
         ub = self.ymax - size
-        rand_y = random.randint(lb, ub)
+        rand_y = random.randint(int(lb), int(ub))
 
         lb = self.xmin
         ub = self.xmax - size
-        rand_x = random.randint(lb, ub)
+        rand_x = random.randint(int(lb), int(ub))
 
         return Box.make_square(rand_y, rand_x, size)
 

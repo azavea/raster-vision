@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+Raster Vision 0.11
+-------------------
+
+Raster Vision 0.11.0
+~~~~~~~~~~~~~~~~~~~~~
+
+Bug Fixes
+^^^^^^^^^^
+
+- Ensure randint args are ints `#849 <https://github.com/azavea/raster-vision/pull/849>`__
+
+
 Raster Vision 0.10
 ------------------
 
