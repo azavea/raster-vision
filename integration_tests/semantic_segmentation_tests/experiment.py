@@ -1,12 +1,20 @@
 import os
 
 import rastervision as rv
+from integration_tests.util.misc import str_to_bool
 
 
 class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
-    def exp_main(self, root_uri, use_tf=False):
+    def exp_main(self, root_uri, data_uri=None, full_train=False,
+                 use_tf=False):
+        full_train = str_to_bool(full_train)
+        use_tf = str_to_bool(use_tf)
+
         def get_path(part):
-            return os.path.join(os.path.dirname(__file__), part)
+            if full_train:
+                return os.path.join(data_uri, part)
+            else:
+                return os.path.join(os.path.dirname(__file__), part)
 
         img_paths = [get_path('scene/image.tif'), get_path('scene/image2.tif')]
         label_paths = [
@@ -26,9 +34,6 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
         # 5 secs/step with batch size of 1 on a CPU, it doesn't seem feasible to actually
         # train during CI. So instead we just use the model trained on the GPU and then
         # fine-tune it for one step.
-        pretrained_model = (
-            'https://github.com/azavea/raster-vision-data/releases/'
-            'download/0.0.6/deeplab-test-model.tar.gz')
 
         # This a divisor of the scene length.
         chip_size = 300
@@ -41,6 +46,10 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                             .build()
 
         if use_tf:
+            pretrained_model = (
+                'https://github.com/azavea/raster-vision-data/releases/'
+                'download/0.0.6/deeplab-test-model.tar.gz')
+
             # .with_config below needed to copy final layer from pretrained model.
             backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
                 .with_task(task) \
@@ -54,16 +63,27 @@ class SemanticSegmentationIntegrationTest(rv.ExperimentSet):
                 .with_config({'initializeLastLayer': 'true'}) \
                 .build()
         else:
-            pretrained_uri = (
-                'https://github.com/azavea/raster-vision-data/releases/download/'
-                'v0.8.0/pytorch_semantic_segmentation_test.pth')
-            backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
-                .with_task(task) \
-                .with_train_options(
-                    batch_size=2,
-                    num_epochs=1) \
-                .with_pretrained_uri(pretrained_uri) \
-                .build()
+            if full_train:
+                backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
+                    .with_task(task) \
+                    .with_train_options(
+                        batch_size=8,
+                        num_epochs=200,
+                        sync_interval=200) \
+                    .build()
+            else:
+                pretrained_uri = (
+                    'https://github.com/azavea/raster-vision-data/releases/download/'
+                    'v0.9.0/pytorch_semantic_segmentation_test.pth')
+
+                backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
+                    .with_task(task) \
+                    .with_train_options(
+                        batch_size=2,
+                        num_epochs=1,
+                        lr=1e-9) \
+                    .with_pretrained_uri(pretrained_uri) \
+                    .build()
 
         label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
                                            .with_rgb_class_map(task.class_map) \

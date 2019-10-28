@@ -1,14 +1,26 @@
 CHANGELOG
 =========
 
+Raster Vision 0.11
+-------------------
+
+Raster Vision 0.11.0
+~~~~~~~~~~~~~~~~~~~~~
+
+Bug Fixes
+^^^^^^^^^^
+
+- Ensure randint args are ints `#849 <https://github.com/azavea/raster-vision/pull/849>`__
+
+
 Raster Vision 0.10
 ------------------
 
 Raster Vision 0.10.0
 ~~~~~~~~~~~~~~~~~~~
 
-Notes on switching to PyTorch
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Notes on switching to PyTorch-based backends
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The current backends based on Tensorflow have several problems:
 
@@ -16,13 +28,11 @@ The current backends based on Tensorflow have several problems:
 * Tensorflow, in the maintainer's opinion, is more difficult to write and debug than PyTorch (although this is starting to improve).
 * The third party libraries assume that training images are stored as PNG or JPG files. This limits our ability to handle more than three bands and more that 8-bits per channel. We have recently completed some research on how to train models on > 3 bands, and we plan on adding this functionality to Raster Vision.
 
-Therefore, we are in the process of sunsetting the Tensorflow backends (which will probably be removed) and implementing PyTorch-based backends. At the moment, we have PyTorch backends for chip classification and semantic segmentation which use the fastai library. We plan on adding an object detection backend, and may re-write them without using fastai to eliminate yet another library we need to understand and increase their hackability.
-
-The main things to be aware of in upgrading to this version of Raster Vision are as follows:
+Therefore, we are in the process of sunsetting the Tensorflow backends (which will probably be removed) and have implemented replacement PyTorch-based backends. The main things to be aware of in upgrading to this version of Raster Vision are as follows:
 
 * Instead of there being CPU and GPU Docker images (based on Tensorflow), there are now tf-cpu, tf-gpu, and pytorch (which works on both CPU and GPU) images. Using ``./docker/build --tf`` or ``./docker/build --pytorch`` will only build the TF or PyTorch images, respectively.
 * Using the TF backends requires being in the TF container, and similar for PyTorch. There are now ``--tf-cpu``, ``--tf-gpu``, and ``--pytorch-gpu`` options for the ``./docker/run`` command. The default setting is to use the PyTorch image in the standard (CPU) Docker runtime.
-* The `raster-vision-aws <https://github.com/azavea/raster-vision-aws>`_ CloudFormation setup creates TFCpu, TFGPU, and PyTorch Batch job defs and ECR repos.
+* The `raster-vision-aws <https://github.com/azavea/raster-vision-aws>`_ CloudFormation setup creates Batch resources for TF-CPU, TF-GPU, and PyTorch. It also now uses default AMIs provided by AWS, simplifying the setup process.
 * To easily switch between running TF and PyTorch jobs on Batch, we recommend creating two separate Raster Vision profiles with the Batch resources for each of them.
 * The way to use the ``ConfigBuilders`` for the new backends can be seen in the `examples repo <https://github.com/azavea/raster-vision-examples>`_ and the :ref:`backend api reference`
 

@@ -44,7 +44,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'pallets_sphinx_themes',
-    'sphinxcontrib.programoutput'
+    'sphinxcontrib.programoutput',
+    'sphinxcontrib.napoleon',
 ]
 
 # https://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
@@ -58,6 +59,8 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['pyproj', 'h5py']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools']
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
 

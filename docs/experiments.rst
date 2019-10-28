@@ -130,21 +130,28 @@ To maintain flexibility and avoid being tied to any one library, Raster Vision t
 Each backend is a subclass of ``Backend`` and mediates between Raster Vision data structures and another library.
 Backends are configured using a ``BackendConfig, which is then set into the experiment using the ``.with_backend(backend)``.
 
-We are in the process of sunsetting the Tensorflow-based backends in favor of backends based on PyTorch. However, there is no PyTorch-based object detection backend yet.
+We are in the process of sunsetting the Tensorflow-based backends in favor of backends based on PyTorch.
 
 PyTorch Chip Classification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *rv.PYTORCH_CHIP_CLASSIFICATION*
 
-For chip classification, the default backend is PyTorch Chip Classification. It uses `fastai <https://docs.fast.ai/>`_ to train classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+For chip classification, the default backend is PyTorch Chip Classification. It trains classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 
 PyTorch Semantic Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *rv.PYTORCH_SEMANTIC_SEGMENTATION*
 
-For semantic segmentation, the default backend is PyTorch Semantic Segmentation. It uses `fastai <https://docs.fast.ai/>`_ to train a UNet with encoder backbones from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+For semantic segmentation, the default backend is PyTorch Semantic Segmentation. It trains the DeepLabV3 model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+
+PyTorch Object Detection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*rv.PYTORCH_OBJECT_DETECTION*
+
+For object detection, the default backend is PyTorch Object Detection. It trains the Faster-RCNN model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 
 TensorFlow Object Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -289,7 +296,7 @@ A ``VectorSource`` is an object that supports reading vector data like polygons 
 VectorSourceConfig
 ...................
 
-Here is an example of configuring a ``VectorTileVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/tree/0.9#spacenet-vegas-roads-and-buildings>`_.
+Here is an example of configuring a ``VectorTileVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/tree/0.10#spacenet-vegas-roads-and-buildings>`_.
 
 .. code::
 
@@ -312,7 +319,7 @@ LabelSource
 
 A ``LabelSource`` is an object that allows reading ground truth labels for a scene. There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
 
-Here is an example of configuring a ``SemanticSegmentationLabelSource`` using rasterized vector data.  A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/0.9/spacenet/vegas.py>`_.
+Here is an example of configuring a ``SemanticSegmentationLabelSource`` using rasterized vector data.  A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/0.10/spacenet/vegas.py>`_.
 
 .. code::
 

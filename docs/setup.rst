@@ -280,9 +280,9 @@ After creating the resources on AWS, set the corresponding configuration in your
 
     [AWS_BATCH]
     job_queue=RasterVisionGpuJobQueue
-    job_definition=RasterVisionHostedPyTorchJobDefinition
+    job_definition=RasterVisionHostedPyTorchGpuJobDefinition
     cpu_job_queue=RasterVisionCpuJobQueue
-    cpu_job_definition=RasterVisionHostedPyTorchJobDefinition
+    cpu_job_definition=RasterVisionHostedPyTorchCpuJobDefinition
     attempts=5
 
 * ``job_queue`` - Job Queue to submit GPU Batch jobs to.

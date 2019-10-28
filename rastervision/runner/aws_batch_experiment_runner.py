@@ -94,6 +94,11 @@ class AwsBatchExperimentRunner(OutOfProcessExperimentRunner):
         else:
             full_command = command.split()
 
+        # When running on Batch, we set the temp dir to be inside /opt/data
+        # since it is mounted to the host instance which has much more disk
+        # space.
+        full_command += ['--tempdir', '/opt/data/temp/']
+
         client = self._get_boto_client()
 
         uuid_part = str(uuid.uuid4()).split('-')[0]

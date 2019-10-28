@@ -132,16 +132,14 @@ def check_eval(test, temp_dir):
 
 def get_experiment(test, use_tf, tmp_dir):
     if test == rv.OBJECT_DETECTION:
-        if use_tf:
-            return ObjectDetectionIntegrationTest().exp_main(
-                os.path.join(tmp_dir, test.lower()))
-        return None
+        return ObjectDetectionIntegrationTest().exp_main(
+            os.path.join(tmp_dir, test.lower()), use_tf=use_tf)
     if test == rv.CHIP_CLASSIFICATION:
         return ChipClassificationIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()), use_tf)
+            os.path.join(tmp_dir, test.lower()), use_tf=use_tf)
     if test == rv.SEMANTIC_SEGMENTATION:
         return SemanticSegmentationIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()), use_tf)
+            os.path.join(tmp_dir, test.lower()), use_tf=use_tf)
 
     raise Exception('Unknown test {}'.format(test))
 
@@ -309,10 +307,6 @@ def main(tests, rv_root, verbose, use_tf):
             verbosity=rv.cli.verbosity.Verbosity.DEBUG)
 
     tests = list(map(lambda x: x.upper(), tests))
-
-    if rv.OBJECT_DETECTION in tests and not use_tf:
-        print('object detection is not available for pytorch')
-        tests.remove(rv.OBJECT_DETECTION)
 
     with RVConfig.get_tmp_dir() as temp_dir:
         if rv_root:

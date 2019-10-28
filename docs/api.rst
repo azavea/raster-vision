@@ -107,6 +107,16 @@ rv.PYTORCH_CHIP_CLASSIFICATION
    :inherited-members:
    :exclude-members: from_proto, validate
 
+rv.PYTORCH_OBJECT_DETECTION
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.backend.pytorch_object_detection_config.PyTorchObjectDetectionConfigBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :exclude-members: from_proto, validate
+
+
 rv.KERAS_CLASSIFICATION
 ~~~~~~~~~~~~~~~~~~~~~~~
 
