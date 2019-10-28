@@ -39,6 +39,9 @@ class ChipClassificationConfig(TaskConfig):
     def load_bundle_files(self, bundle_dir):
         return self
 
+    def get_class_names(self):
+        return [self.class_map.class_item_map[class_item_id].name \
+        for class_item_id in self.class_map.class_item_map]
 
 class ChipClassificationConfigBuilder(TaskConfigBuilder):
     def __init__(self, prev=None):

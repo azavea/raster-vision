@@ -97,6 +97,7 @@ class PyTorchSemanticSegmentation(Backend):
 
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
         log.info('Device = {}'.format(self.device))
         # TODO move this into the SemanticSegmentation RV task
         self.class_map = self.task_config.class_map.copy()
@@ -292,7 +293,6 @@ class PyTorchSemanticSegmentation(Backend):
 
         # Training loop.
         for epoch in range(start_epoch, num_epochs):
-            # Train one epoch.
             log.info('-----------------------------------------------------')
             log.info('epoch: {}'.format(epoch))
             start = time.time()
@@ -300,6 +300,7 @@ class PyTorchSemanticSegmentation(Backend):
                                      opt, loss_fn, step_scheduler)
             if epoch_scheduler:
                 epoch_scheduler.step()
+
             log.info('train loss: {}'.format(train_loss))
 
             # Validate one epoch.

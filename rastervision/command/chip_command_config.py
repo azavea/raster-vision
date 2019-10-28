@@ -37,7 +37,6 @@ class ChipCommandConfig(CommandConfig):
 
     def to_proto(self):
         msg = super().to_proto()
-
         task = self.task.to_proto()
         backend = self.backend.to_proto()
         train_scenes = list(map(lambda s: s.to_proto(), self.train_scenes))

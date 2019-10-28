@@ -306,6 +306,8 @@ class PyTorchObjectDetection(Backend):
             log.info('-----------------------------------------------------')
             log.info('epoch: {}'.format(epoch))
             start = time.time()
+
+            # Train one epoch.
             train_loss = train_epoch(model, self.device, databunch.train_dl,
                                      opt, step_scheduler, epoch_scheduler)
             if epoch_scheduler:
