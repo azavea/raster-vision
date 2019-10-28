@@ -334,7 +334,7 @@ class PyTorchSemanticSegmentation(Backend):
                     tb_writer.add_histogram(name, param, epoch)
 
             if (train_uri.startswith('s3://')
-                    and ((epoch + 1) % self.train_opts.sync_interval)):
+                    and (((epoch + 1) % self.train_opts.sync_interval) == 0)):
                 sync_to_dir(train_dir, train_uri)
 
         # Close Tensorboard.
@@ -387,7 +387,7 @@ class PyTorchSemanticSegmentation(Backend):
 
         def label_fn(_window):
             if _window == windows[0]:
-                return out[0].argmax(0).squeeze()
+                return out[0].argmax(0).squeeze().numpy()
             else:
                 raise ValueError('Trying to get labels for unknown window.')
 

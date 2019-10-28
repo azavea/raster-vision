@@ -1,12 +1,20 @@
 import os
 
 import rastervision as rv
+from integration_tests.util.misc import str_to_bool
 
 
 class ChipClassificationIntegrationTest(rv.ExperimentSet):
-    def exp_main(self, root_uri, use_tf=False):
+    def exp_main(self, root_uri, data_uri=None, full_train=False,
+                 use_tf=False):
+        full_train = str_to_bool(full_train)
+        use_tf = str_to_bool(use_tf)
+
         def get_path(part):
-            return os.path.join(os.path.dirname(__file__), part)
+            if full_train:
+                return os.path.join(data_uri, part)
+            else:
+                return os.path.join(os.path.dirname(__file__), part)
 
         img_path = get_path('scene/image.tif')
         label_path = get_path('scene/labels.json')
@@ -15,10 +23,6 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
         label2_path = get_path('scene/labels2.json')
 
         backend_conf_path = get_path('configs/backend.config')
-
-        pretrained_model = (
-            'https://github.com/azavea/raster-vision-data/'
-            'releases/download/v0.0.7/chip-classification-test-weights.hdf5')
 
         task = rv.TaskConfig.builder(rv.CHIP_CLASSIFICATION) \
                             .with_chip_size(200) \
@@ -31,6 +35,11 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                             .build()
 
         if use_tf:
+            pretrained_model = (
+                'https://github.com/azavea/raster-vision-data/'
+                'releases/download/v0.0.7/chip-classification-test-weights.hdf5'
+            )
+
             backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
                 .with_task(task) \
                 .with_debug(True) \
@@ -42,16 +51,26 @@ class ChipClassificationIntegrationTest(rv.ExperimentSet):
                                     replace_model=True) \
                 .build()
         else:
-            pretrained_uri = (
-                'https://github.com/azavea/raster-vision-data/releases/download/'
-                'v0.8.0/pytorch_chip_classification_test.pth')
-            backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
-                .with_task(task) \
-                .with_train_options(
-                    batch_size=8,
-                    num_epochs=1) \
-                .with_pretrained_uri(pretrained_uri) \
-                .build()
+            if full_train:
+                backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
+                    .with_task(task) \
+                    .with_train_options(
+                        batch_size=16,
+                        num_epochs=10,
+                        sync_interval=200) \
+                    .build()
+            else:
+                pretrained_uri = (
+                    'https://github.com/azavea/raster-vision-data/releases/download/'
+                    'v0.9.0/pytorch_chip_classification_test.pth')
+                backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
+                    .with_task(task) \
+                    .with_train_options(
+                        batch_size=2,
+                        num_epochs=1,
+                        lr=1e-9) \
+                    .with_pretrained_uri(pretrained_uri) \
+                    .build()
 
         def make_scene(i_path, l_path):
             label_source = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \

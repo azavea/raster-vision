@@ -193,7 +193,6 @@ class PyTorchChipClassification(Backend):
         sync_from_dir(train_uri, train_dir)
 
         # Get zip file for each group, and unzip them into chip_dir.
-        tmp_dir = '/opt/data/temp/'
         chip_dir = join(tmp_dir, 'chips')
         make_dir(chip_dir)
         for zip_uri in list_paths(self.backend_opts.chip_uri, 'zip'):
@@ -335,7 +334,7 @@ class PyTorchChipClassification(Backend):
                     tb_writer.add_histogram(name, param, epoch)
 
             if (train_uri.startswith('s3://')
-                    and ((epoch + 1) % self.train_opts.sync_interval)):
+                    and (((epoch + 1) % self.train_opts.sync_interval) == 0)):
                 sync_to_dir(train_dir, train_uri)
 
         # Close Tensorboard.

@@ -8,8 +8,8 @@
         "tensorflow-gpu==1.10.1"
     ],
     "pytorch": [
-        "torch==1.2.*",
-        "torchvision==0.4.*",
+        "torch==1.2.0",
+        "torchvision==0.4.0",
         "tensorboard==1.14.*",
         "numpy<1.17",
         "albumentations==0.3.3"

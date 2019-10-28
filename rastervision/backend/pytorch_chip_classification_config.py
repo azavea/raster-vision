@@ -12,32 +12,22 @@ from rastervision.backend.api import PYTORCH_CHIP_CLASSIFICATION
 class TrainOptions():
     def __init__(self,
                  batch_size=None,
-                 weight_decay=None,
                  lr=None,
                  one_cycle=None,
                  num_epochs=None,
                  model_arch=None,
-                 mixed_prec=None,
-                 flip_vert=None,
                  sync_interval=None,
                  debug=None,
-                 train_prop=None,
-                 train_count=None,
                  log_tensorboard=None,
                  run_tensorboard=None,
                  augmentors=None):
         self.batch_size = batch_size
-        self.weight_decay = weight_decay
         self.lr = lr
         self.one_cycle = one_cycle
         self.num_epochs = num_epochs
         self.model_arch = model_arch
-        self.mixed_prec = mixed_prec
-        self.flip_vert = flip_vert
         self.sync_interval = sync_interval
         self.debug = debug
-        self.train_prop = train_prop
-        self.train_count = train_count
         self.log_tensorboard = log_tensorboard
         self.run_tensorboard = run_tensorboard
         self.augmentors = augmentors
@@ -62,17 +52,12 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
 
     def with_train_options(self,
                            batch_size=8,
-                           weight_decay=1e-2,
                            lr=1e-4,
                            one_cycle=True,
                            num_epochs=1,
                            model_arch='resnet18',
-                           mixed_prec=False,
-                           flip_vert=True,
                            sync_interval=1,
                            debug=False,
-                           train_prop=1.0,
-                           train_count=None,
                            log_tensorboard=True,
                            run_tensorboard=True,
                            augmentors=[]):
@@ -81,35 +66,23 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
         Args:
             batch_size: (int) the batch size
             weight_decay: (float) the weight decay
-            lr: (float or None) the learning rate if using a fixed LR
+            lr: (float) the learning rate if using a fixed LR
                 (ie. one_cycle is False),
-                or the maximum LR to use if one_cycle is True,
-                or None if automatic learning rate finder (pytorch lr_find)
-                should be used
-            one_cycle: (bool) True if pytorch fit_one_cycle should be used. This
+                or the maximum LR to use if one_cycle is True
+            one_cycle: (bool) True if cyclic learning rate scheduler should
+                be used. This
                 cycles the LR once during the course of training and seems to
                 result in a pretty consistent improvement. See lr for more
                 details.
             num_epochs: (int) number of epochs (sweeps through training set) to
                 train model for
-            model_arch: (str) classification model backbone to use for UNet
-                architecture. Any option in torchvision.models is valid, for
-                example, resnet18.
-            mixed_prec: (bool) use mixed-precision training. Ideally, this will
-                make things run ~2x fast if GPU supports half-precision training
-                (such as on Tesla V100). All arrays should be divisible by
-                8 to maximize speed gains.
-                See https://docs.nvidia.com/deeplearning/sdk/mixed-precision-training/index.html # noqa
-            flip_vert: (bool) use vertical flips and rotations for data aug
+            model_arch: (str) Any classification model option in
+                torchvision.models is valid, for example, resnet18.
             sync_interval: (int) sync training directory to cloud every
                 sync_interval epochs.
             debug: (bool) if True, save debug chips (ie. visualizations of
                 input to model during training) during training and use
                 single-core for creating minibatches.
-            train_prop: (float) number between 0 and 1 that controls what
-                proportion of the training set is used for training
-            train_count: (int) number of training examples to use during
-                training
             log_tensorboard: (bool) if True, write events to Tensorboard log
                 file
             run_tensorboard: (bool) if True, run a Tensorboard server at
@@ -147,17 +120,12 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
         b = deepcopy(self)
         b.train_opts = TrainOptions(
             batch_size=batch_size,
-            weight_decay=weight_decay,
             lr=lr,
             one_cycle=one_cycle,
             num_epochs=num_epochs,
             model_arch=model_arch,
-            mixed_prec=mixed_prec,
-            flip_vert=flip_vert,
             sync_interval=sync_interval,
             debug=debug,
-            train_prop=train_prop,
-            train_count=train_count,
             log_tensorboard=log_tensorboard,
             run_tensorboard=run_tensorboard,
             augmentors=augmentors)

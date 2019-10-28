@@ -47,6 +47,8 @@ class SegmentationDataset(Dataset):
 
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names):
+    # set to zero to prevent "dataloader is killed by signal"
+    # TODO fix this
     num_workers = 0
 
     train_dir = join(data_dir, 'train')
@@ -63,6 +65,7 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names):
         shuffle=True,
         batch_size=batch_sz,
         num_workers=num_workers,
+        drop_last=True,
         pin_memory=True)
     valid_dl = DataLoader(
         valid_ds,

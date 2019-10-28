@@ -170,8 +170,8 @@ class PyTorchObjectDetection(Backend):
         containing:
         train/{scene_id}-{ind}.png
         train/{scene_id}-labels.json
-        val/{scene_id}-{ind}.png
-        val/{scene_id}-labels.json
+        valid/{scene_id}-{ind}.png
+        valid/{scene_id}-labels.json
 
         Args:
             training_results: dependent on the ml_backend's process_scene_data
@@ -347,7 +347,7 @@ class PyTorchObjectDetection(Backend):
                     tb_writer.add_histogram(name, param, epoch)
 
             if (train_uri.startswith('s3://')
-                    and ((epoch + 1) % self.train_opts.sync_interval)):
+                    and (((epoch + 1) % self.train_opts.sync_interval) == 0)):
                 sync_to_dir(train_dir, train_uri)
 
         # Close Tensorboard.
