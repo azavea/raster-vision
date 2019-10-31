@@ -19,7 +19,8 @@ class TrainOptions():
                  sync_interval=None,
                  debug=None,
                  log_tensorboard=None,
-                 run_tensorboard=None):
+                 run_tensorboard=None,
+                 augmentors=[]):
         self.batch_size = batch_size
         self.lr = lr
         self.one_cycle = one_cycle
@@ -29,6 +30,7 @@ class TrainOptions():
         self.debug = debug
         self.log_tensorboard = log_tensorboard
         self.run_tensorboard = run_tensorboard
+        self.augmentors = augmentors
 
     def __setattr__(self, name, value):
         if name in ['batch_size', 'num_epochs', 'sync_interval']:
@@ -57,7 +59,8 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
                            sync_interval=1,
                            debug=False,
                            log_tensorboard=True,
-                           run_tensorboard=True):
+                           run_tensorboard=True,
+                           augmentors=[]):
         """Set options for training models.
 
         Args:
@@ -96,7 +99,8 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
             sync_interval=sync_interval,
             debug=debug,
             log_tensorboard=log_tensorboard,
-            run_tensorboard=run_tensorboard)
+            run_tensorboard=run_tensorboard,
+            augmentors=augmentors)
         return b
 
     def with_pretrained_uri(self, pretrained_uri):

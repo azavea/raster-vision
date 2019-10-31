@@ -7,6 +7,10 @@ Raster Vision 0.11
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
 
+Features
+
+- Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#851 <https://github.com/azavea/raster-vision/pull/851>`__
+
 Bug Fixes
 ^^^^^^^^^^
 
