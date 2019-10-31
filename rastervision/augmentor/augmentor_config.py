@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 import rastervision as rv
 from rastervision.core import (Config, ConfigBuilder)
-from rastervision.protos.augmentor_pb2 import AugmentorConfig as AugmentorConfigMsg
+
 
 class AugmentorConfig(Config):
     def __init__(self, augmentor_type):
@@ -28,6 +28,7 @@ class AugmentorConfig(Config):
         return rv._registry.get_config_builder(rv.AUGMENTOR, msg.augmentor_type)() \
                            .from_proto(msg) \
                            .build()
+
 
 class AugmentorConfigBuilder(ConfigBuilder):
     pass

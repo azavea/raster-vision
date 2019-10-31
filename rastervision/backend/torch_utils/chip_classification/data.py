@@ -18,15 +18,16 @@ from rastervision.backend.torch_utils.chip_classification.folder import (
 
 log = logging.getLogger(__name__)
 
+
 class ToTensor(ToTensorV2):
     def __init__(self, always_apply=True, p=1.0):
         super(ToTensorV2, self).__init__(always_apply=always_apply, p=p)
 
-    def apply(self,img,**params):
+    def apply(self, img, **params):
         # Overrides default method because that returns a
         # torch.ByteTensor(), and we need a torch.FloatTensor().
         # because the model weights are torch.FloatTensor() as well
-        return from_numpy(img.transpose(2,0,1)).float()
+        return from_numpy(img.transpose(2, 0, 1)).float()
 
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
@@ -40,17 +41,15 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
         'Rotate': Rotate(),
         'HorizontalFlip': HorizontalFlip(),
         'GaussianBlur': GaussianBlur(),
-        'GaussNoise': GaussNoise()
-    }
+        'GaussNoise': GaussNoise()}
 
     augmentors_placeholder = []
     for augmentor in augmentors:
         try:
             augmentors_placeholder.append(augmentors_dict[augmentor])
-        except:
-            log.warning('{0} is an unknown augmentor. Continuing without {0}. Known augmentors are: {1}'.format(
-                augmentor,
-                list(augmentor_lookup.keys())))
+        except KeyError as e:
+            log.warning('{0} is an unknown augmentor. Continuing without {0}. \
+                Known augmentors are: {1}'.format(e, list(augmentors_dict.keys())))
     augmentors_placeholder.append(ToTensor())
 
     aug_transforms = Compose(augmentors_placeholder)
@@ -61,7 +60,7 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
         transform=aug_transforms,
         classes=class_names
     )
-    
+
     valid_ds = ImageFolder(
         valid_dir,
         transform=transforms,

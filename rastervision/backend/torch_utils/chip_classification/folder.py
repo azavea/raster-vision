@@ -181,7 +181,6 @@ IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif',
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
-    from numpy import asarray
     with open(path, 'rb') as f:
         img = Image.open(f)
         return img.convert('RGB')
