@@ -10,6 +10,7 @@ from PIL import Image
 import os
 import os.path
 import sys
+from random import choice
 
 
 def has_file_allowed_extension(filename, extensions):
@@ -122,6 +123,50 @@ class DatasetFolder(VisionDataset):
         self.class_to_idx = class_to_idx
         self.samples = samples
         self.targets = [s[1] for s in samples]
+
+    def get_equalized_samples(self):
+        # For each class count the amount of samples
+        count_per_class_dict = {}
+        for class_name in self.classes:
+            class_idx = self.class_to_idx[class_name]
+            count_per_class_dict[class_idx] = 0
+        for sample in self.samples:
+            count_per_class_dict[sample[1]] += 1
+
+        # Create dict with a key per class
+        # with a list of samples for its values
+        # {1:[sample1,sample2,etc.]}
+        samples_per_class_idx = {}
+        for class_name in self.classes:
+            class_idx = self.class_to_idx[class_name]
+            samples_per_class_idx[class_idx] = []
+        for sample in self.samples:
+            samples_per_class_idx[sample[1]].append(sample)
+
+        largest_class_idx = max(zip(count_per_class_dict.values(), count_per_class_dict.keys()))[1]
+        largest_class_count = count_per_class_dict[largest_class_idx]
+
+        equalized_samples = []
+
+        for class_name in self.classes:
+            class_idx = self.class_to_idx[class_name]
+            class_count = count_per_class_dict[class_idx]
+            if class_idx == largest_class_idx: # Just add all the samples
+                for sample in self.samples:
+                    if sample[1] == class_idx:
+                        equalized_samples.append(sample)
+            else: # Check how often the sample should be added
+                multiplier = largest_class_count // class_count
+                remainder = largest_class_count - (multiplier * class_count)
+                
+                for sample in self.samples:
+                    if sample[1] == class_idx:
+                        equalized_samples.extend([sample]*multiplier)
+
+                # Now the remainder is to be randomly chosen
+                for i in range(remainder):
+                    equalized_samples.append(choice(samples_per_class_idx[class_idx]))
+        return equalized_samples
 
     def _find_classes(self, dir):
         """
