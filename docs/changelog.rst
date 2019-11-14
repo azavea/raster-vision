@@ -11,7 +11,7 @@ Bug Fixes
 ^^^^^^^^^^
 
 - Ensure randint args are ints `#849 <https://github.com/azavea/raster-vision/pull/849>`__
-
+- Prioritize default temp dir `#856 <https://github.com/azavea/raster-vision/pull/856>`__
 
 Raster Vision 0.10
 ------------------
