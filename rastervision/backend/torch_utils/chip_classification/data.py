@@ -30,8 +30,8 @@ def build_databunch(equalize, data_dir, img_sz, batch_sz, class_names):
 
         valid_ds.samples = equalize_classes_through_oversampling(
             classes = valid_ds.classes,
-            class_to_idx = valid.class_to_idx,
-            samples = valid.samples
+            class_to_idx = valid_ds.class_to_idx,
+            samples = valid_ds.samples
         )
 
     train_dl = DataLoader(
