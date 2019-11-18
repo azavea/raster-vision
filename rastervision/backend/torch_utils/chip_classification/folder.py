@@ -6,7 +6,6 @@
 from torchvision.datasets.vision import VisionDataset
 
 from PIL import Image
-from numpy import (array,ndarray)
 
 import os
 import os.path
@@ -156,16 +155,7 @@ class DatasetFolder(VisionDataset):
         path, target = self.samples[index]
         sample = self.loader(path)
         if self.transform is not None:
-            # Convert PIL image to numpy array first, because albumentations used for
-            # the transforms expect an array.
-
-            sample_np = array(sample)
-            sample = self.transform(image=sample_np)
-            if isinstance(sample,ndarray):
-                sample = Image.fromarray(sample['image'])
-            sample = sample['image']
-            # Otherwise it is a tensor and we should not change its type
-
+            sample = self.transform(sample)
         if self.target_transform is not None:
             target = self.target_transform(target)
 
@@ -184,7 +174,8 @@ def pil_loader(path):
     with open(path, 'rb') as f:
         img = Image.open(f)
         return img.convert('RGB')
-        
+
+
 def accimage_loader(path):
     import accimage
     try:
@@ -192,6 +183,7 @@ def accimage_loader(path):
     except IOError:
         # Potentially a decoding problem, fall back to PIL.Image
         return pil_loader(path)
+
 
 def default_loader(path):
     from torchvision import get_image_backend
