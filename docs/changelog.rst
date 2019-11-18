@@ -11,6 +11,7 @@ Bug Fixes
 ^^^^^^^^^^
 
 - Ensure randint args are ints `#849 <https://github.com/azavea/raster-vision/pull/849>`__
+- The augmentors were not serialized properly for the chip command  `#857 <https://github.com/azavea/raster-vision/pull/857>`
 
 
 Raster Vision 0.10
