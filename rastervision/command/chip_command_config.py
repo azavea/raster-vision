@@ -42,13 +42,15 @@ class ChipCommandConfig(CommandConfig):
         backend = self.backend.to_proto()
         train_scenes = list(map(lambda s: s.to_proto(), self.train_scenes))
         val_scenes = list(map(lambda s: s.to_proto(), self.val_scenes))
+        augmentors = list(map(lambda a: a.to_proto(), self.augmentors))
         msg.MergeFrom(
             CommandConfigMsg(
                 chip_config=CommandConfigMsg.ChipConfig(
                     task=task,
                     backend=backend,
                     train_scenes=train_scenes,
-                    val_scenes=val_scenes)))
+                    val_scenes=val_scenes,
+                    augmentors=augmentors)))
 
         return msg
 
