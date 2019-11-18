@@ -56,7 +56,11 @@ RUN pip install -r docs/requirements.txt
 # Install extra requirements that apply to both types of images
 COPY ./extras_requirements.json /opt/src/extras_requirements.json
 RUN cat extras_requirements.json | jq  '.["aws"][]' | xargs pip install
-RUN cat extras_requirements.json | jq  '.["feature-extraction"][]' | xargs pip install
+
+# RUN cat extras_requirements.json | jq  '.["feature-extraction"][]' | xargs pip install
+# TODO before release, we need to upgrade version of mask-to-polygons on pypi and
+# update extra_requirements.json
+RUN pip install git+git://github.com/azavea/mask-to-polygons@d3834c58b0a6d95c4da78ca71104ac0a8a8681ad
 
 # Install requirements.txt
 COPY ./requirements.txt /opt/src/requirements.txt
