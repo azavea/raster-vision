@@ -62,7 +62,7 @@ class MockAugmentorConfigBuilder(SupressDeepCopyMixin, AugmentorConfigBuilder):
         super().__init__(MockAugmentorConfig, {})
         self.mock = Mock()
 
-        self.mock.from_proto = None
+        self.mock.from_proto.return_value = None
 
     def from_proto(self, msg):
         result = self.mock.from_proto(msg)
