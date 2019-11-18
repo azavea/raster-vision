@@ -30,7 +30,7 @@ class TrainOptions():
         self.debug = debug
         self.log_tensorboard = log_tensorboard
         self.run_tensorboard = run_tensorboard
-        self.equalize=equalize
+        self.equalize = equalize
 
     def __setattr__(self, name, value):
         if name in ['batch_size', 'num_epochs', 'sync_interval']:
@@ -91,7 +91,7 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
             equalize: (bool) if True, the data will be sampled such that each
                 class occurs with the same probability. So if we have class A
                 with 120 images and class B with 50 images, the training will be
-                performed on 240 images (amount_of_images_in_largest_class * 
+                performed on 240 images (amount_of_images_in_largest_class *
                 amount_of_classes). All 120 images from class A will be used
                 exactly once. All images off class B will be used at least 2 times.
                 The 20 remaining images will be randomly sampled for the initial 50.
