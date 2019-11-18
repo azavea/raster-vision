@@ -1,16 +1,13 @@
 import logging
 from os.path import join
 
-from torch.utils.data import DataLoader
-from torch import from_numpy
-from albumentations.pytorch import ToTensorV2
+import numpy as np
+import torch
+from torch.utils.data import DataLoader, Dataset
 from albumentations.core.composition import Compose
 from albumentations.augmentations.transforms import (
-    Blur,
-    Rotate,
-    HorizontalFlip,
-    GaussianBlur,
-    GaussNoise)
+    Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
+    GaussNoise, RGBShift, ToGray)
 
 from rastervision.backend.torch_utils.data import DataBunch
 from rastervision.backend.torch_utils.chip_classification.folder import (
@@ -19,15 +16,30 @@ from rastervision.backend.torch_utils.chip_classification.folder import (
 log = logging.getLogger(__name__)
 
 
-class ToTensor(ToTensorV2):
-    def __init__(self, always_apply=True, p=1.0):
-        super(ToTensorV2, self).__init__(always_apply=always_apply, p=p)
+class AlbumentationDataset(Dataset):
+    """An adapter to use arbitrary datasets with albumentations transforms."""
 
-    def apply(self, img, **params):
-        # Overrides default method because that returns a
-        # torch.ByteTensor(), and we need a torch.FloatTensor().
-        # because the model weights are torch.FloatTensor() as well
-        return from_numpy(img.transpose(2, 0, 1)).float()
+    def __init__(self, orig_dataset, transform=None):
+        """Constructor.
+
+        Args:
+            orig_dataset: (Dataset) which is assumed to return PIL Image objects
+                and not perform any transforms of its own
+            transform: (albumentations.core.transforms_interface.ImageOnlyTransform)
+        """
+        self.orig_dataset = orig_dataset
+        self.transform = transform
+
+    def __getitem__(self, ind):
+        x, y = self.orig_dataset[ind]
+        x = np.array(x)
+        if self.transform:
+            x = self.transform(image=x)['image']
+        x = torch.tensor(x).permute(2, 0, 1).float() / 255.0
+        return x, y
+
+    def __len__(self):
+        return len(self.orig_dataset)
 
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
@@ -38,34 +50,29 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
 
     augmentors_dict = {
         'Blur': Blur(),
-        'Rotate': Rotate(),
+        'RandomRotate90': RandomRotate90(),
         'HorizontalFlip': HorizontalFlip(),
+        'VerticalFlip': VerticalFlip(),
         'GaussianBlur': GaussianBlur(),
-        'GaussNoise': GaussNoise()}
+        'GaussNoise': GaussNoise(),
+        'RGBShift': RGBShift(),
+        'ToGray': ToGray()
+    }
 
-    augmentors_placeholder = []
+    aug_transforms = []
     for augmentor in augmentors:
         try:
-            augmentors_placeholder.append(augmentors_dict[augmentor])
+            aug_transforms.append(augmentors_dict[augmentor])
         except KeyError as e:
             log.warning('{0} is an unknown augmentor. Continuing without {0}. \
-                Known augmentors are: {1}'.format(e, list(augmentors_dict.keys())))
-    augmentors_placeholder.append(ToTensor())
+                Known augmentors are: {1}'
+                        .format(e, list(augmentors_dict.keys())))
+    aug_transforms = Compose(aug_transforms)
 
-    aug_transforms = Compose(augmentors_placeholder)
-    transforms = Compose(augmentors_placeholder)
-
-    train_ds = ImageFolder(
-        train_dir,
-        transform=aug_transforms,
-        classes=class_names
-    )
-
-    valid_ds = ImageFolder(
-        valid_dir,
-        transform=transforms,
-        classes=class_names
-    )
+    train_ds = AlbumentationDataset(
+        ImageFolder(train_dir, classes=class_names), transform=aug_transforms)
+    valid_ds = AlbumentationDataset(
+        ImageFolder(valid_dir, classes=class_names))
 
     train_dl = DataLoader(
         train_ds,
