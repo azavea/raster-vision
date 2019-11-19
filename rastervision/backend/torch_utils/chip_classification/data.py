@@ -69,12 +69,15 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes, desir
         train_sampler = WeightedRandomSampler(weights=train_sample_weights,
                                                 num_samples=num_train_samples,
                                                 replacement=True)
+        shuffle = False
+
     else:
         train_sampler = None
+        shuffle = True
 
     train_dl = DataLoader(
         train_ds,
-        shuffle=True,
+        shuffle=shuffle,
         batch_size=batch_sz,
         num_workers=num_workers,
         drop_last=True,
@@ -84,7 +87,6 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes, desir
         valid_ds,
         batch_size=batch_sz,
         num_workers=num_workers,
-        pin_memory=True,
-        sampler=None)
+        pin_memory=True)
 
     return DataBunch(train_ds, train_dl, valid_ds, valid_dl, class_names)
