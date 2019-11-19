@@ -54,8 +54,6 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes, desir
     if rare_classes != []:
         train_sample_weights = calculate_oversampling_weights(train_ds, rare_classes,
                                                                 desired_prob)
-        valid_sample_weights = calculate_oversampling_weights(valid_ds, rare_classes,
-                                                                desired_prob)
 
         def get_class_with_max_count(imageFolder):
             count_per_class = {}
@@ -67,17 +65,12 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes, desir
             return count_per_class[largest_class_idx]
 
         num_train_samples = len(train_ds.classes) * get_class_with_max_count(train_ds)
-        num_valid_samples = len(valid_ds.classes) * get_class_with_max_count(valid_ds)
 
         train_sampler = WeightedRandomSampler(weights=train_sample_weights,
                                                 num_samples=num_train_samples,
                                                 replacement=True)
-        valid_sampler = WeightedRandomSampler(weights=valid_sample_weights,
-                                                num_samples=num_valid_samples,
-                                                replacement=True)
     else:
         train_sampler = None
-        valid_sampler = None
 
     train_dl = DataLoader(
         train_ds,
@@ -92,6 +85,6 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes, desir
         batch_size=batch_sz,
         num_workers=num_workers,
         pin_memory=True,
-        sampler=valid_sampler)
+        sampler=None)
 
     return DataBunch(train_ds, train_dl, valid_ds, valid_dl, class_names)
