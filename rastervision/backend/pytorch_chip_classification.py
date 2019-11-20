@@ -98,15 +98,6 @@ class PyTorchChipClassification(Backend):
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        if torch.cuda.device_count() > 0:
-            self.device = 'cuda'
-            log.info(
-                'There are {0} CUDA devices available for training.'.format(
-                    torch.cuda.device_count()))
-        else:
-            self.device = 'cpu'
-            log.info('No CUDA device detected, using CPU')
-
     def log_options(self):
         log.info('backend_opts:\n' +
                  json.dumps(self.backend_opts.__dict__, indent=4))
