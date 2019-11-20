@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import torch
+import torch.nn as nn
 from torch import optim
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import CyclicLR
@@ -96,7 +97,15 @@ class PyTorchChipClassification(Backend):
 
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        log.info('Device = {}'.format(self.device))
+        
+
+        if torch.cuda.device_count() > 0:
+            self.device = 'cuda'
+            log.info('There are {0} CUDA devices available for training.'.format(torch.cuda.device_count()))
+        else:
+            self.device = 'cpu'
+            log.info('No CUDA device detected, using CPU')
+        
 
     def log_options(self):
         log.info('backend_opts:\n' +
@@ -217,6 +226,8 @@ class PyTorchChipClassification(Backend):
         num_labels = len(databunch.label_names)
         model = get_model(
             self.train_opts.model_arch, num_labels, pretrained=True)
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
         model = model.to(self.device)
         model_path = join(train_dir, 'model')
 
@@ -348,6 +359,10 @@ class PyTorchChipClassification(Backend):
             num_classes = len(self.task_config.class_map)
             model = get_model(
                 self.train_opts.model_arch, num_classes, pretrained=False)
+            
+            if torch.cuda.device_count() > 1:
+                model = nn.DataParallel(model)
+
             model = model.to(self.device)
             model.load_state_dict(
                 torch.load(model_path, map_location=self.device))
