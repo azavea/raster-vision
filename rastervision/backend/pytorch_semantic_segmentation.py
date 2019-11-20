@@ -357,7 +357,7 @@ class PyTorchSemanticSegmentation(Backend):
 
             num_classes = len(self.class_map)
             model = get_model(
-                self.train_opts.model_arch, num_classes, pretrained=True)
+                self.train_opts.model_arch, num_classes, pretrained=False)
             model = model.to(self.device)
             model.load_state_dict(
                 torch.load(model_path, map_location=self.device))
