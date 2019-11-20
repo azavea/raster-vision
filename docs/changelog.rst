@@ -8,6 +8,7 @@ Features
 ~~~~~~~~~~
 
 - Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#859 <https://github.com/azavea/raster-vision/pull/859>`__
+- For chip classification: multi-GPU systems are supported. By default all GPU's will be used for training and prediction. No user input required. `#861 <https://github.com/azavea/raster-vision/pull/861>`__
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
