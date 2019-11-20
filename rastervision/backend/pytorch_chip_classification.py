@@ -236,7 +236,7 @@ class PyTorchChipClassification(Backend):
             from collections import OrderedDict
             new_state_dict = OrderedDict()
             for key, value, in state_dict.items():
-                name = 'module.' + key # add 'module.'
+                name = 'module.' + key  # add 'module.'
                 new_state_dict[name] = value
             return new_state_dict
 
@@ -252,7 +252,7 @@ class PyTorchChipClassification(Backend):
             from collections import OrderedDict
             new_state_dict = OrderedDict()
             for key, value, in state_dict.items():
-                name = key[7:] # remove 'module.'
+                name = key[7:]  # remove 'module.'
                 new_state_dict[name] = value
             return new_state_dict
 
@@ -262,9 +262,13 @@ class PyTorchChipClassification(Backend):
                 pretrained_uri))
             pretrained_path = download_if_needed(pretrained_uri, tmp_dir)
             state_dict = torch.load(pretrained_path, map_location=self.device)
-            if 'module' in list(model.state_dict().items())[0][0] and 'module' not in list(state_dict.items())[0][0]:
+            if 'module' in list(
+                    model.state_dict().items())[0][0] and 'module' not in list(
+                        state_dict.items())[0][0]:
                 state_dict = convert_state_dict_to_dataparallel(state_dict)
-            elif 'module' not in list(model.state_dict().items())[0][0] and 'module' in list(state_dict.items())[0][0]:
+            elif 'module' not in list(
+                    model.state_dict().items())[0][0] and 'module' in list(
+                        state_dict.items())[0][0]:
                 state_dict = convert_state_dict_from_dataparallel(state_dict)
             model.load_state_dict(state_dict)
 
@@ -276,9 +280,13 @@ class PyTorchChipClassification(Backend):
             train_state = file_to_json(train_state_path)
             start_epoch = train_state['epoch'] + 1
             state_dict = torch.load(model_path, map_location=self.device)
-            if 'module' in list(model.state_dict().items())[0][0] and 'module' not in list(state_dict.items())[0][0]:
+            if 'module' in list(
+                    model.state_dict().items())[0][0] and 'module' not in list(
+                        state_dict.items())[0][0]:
                 state_dict = convert_state_dict_to_dataparallel(state_dict)
-            elif 'module' not in list(model.state_dict().items())[0][0] and 'module' in list(state_dict.items())[0][0]:
+            elif 'module' not in list(
+                    model.state_dict().items())[0][0] and 'module' in list(
+                        state_dict.items())[0][0]:
                 state_dict = convert_state_dict_from_dataparallel(state_dict)
             model.load_state_dict(state_dict)
 
