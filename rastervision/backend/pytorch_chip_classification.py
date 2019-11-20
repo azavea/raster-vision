@@ -224,13 +224,49 @@ class PyTorchChipClassification(Backend):
         model_path = join(train_dir, 'model')
 
         # Load weights from a pretrained model.
+        def convert_state_dict_to_dataparallel(state_dict):
+            '''
+            This function converts the state dict of a model created without
+            the nn.DataParallel module to one that can be read by a nn.DataParallel
+            enabled model.
+
+            Args:
+                state_dict (ordered dict): state_dict of the model
+            '''
+            from collections import OrderedDict
+            new_state_dict = OrderedDict()
+            for key, value, in state_dict.items():
+                name = 'module.' + key # add 'module.'
+                new_state_dict[name] = value
+            return new_state_dict
+
+        def convert_state_dict_from_dataparallel(state_dict):
+            '''
+            This function converts the state dict of a model created with
+            the nn.DataParallel module to one that can be read into a model
+            without the nn.DataParallel.
+
+            Args:
+                state_dict (ordered dict): state_dict of the model
+            '''
+            from collections import OrderedDict
+            new_state_dict = OrderedDict()
+            for key, value, in state_dict.items():
+                name = key[7:] # remove 'module.'
+                new_state_dict[name] = value
+            return new_state_dict
+
         pretrained_uri = self.backend_opts.pretrained_uri
         if pretrained_uri:
             log.info('Loading weights from pretrained_uri: {}'.format(
                 pretrained_uri))
             pretrained_path = download_if_needed(pretrained_uri, tmp_dir)
-            model.load_state_dict(
-                torch.load(pretrained_path, map_location=self.device))
+            state_dict = torch.load(pretrained_path, map_location=self.device)
+            if 'module' in list(model.state_dict().items())[0][0] and 'module' not in list(state_dict.items())[0][0]:
+                state_dict = convert_state_dict_to_dataparallel(state_dict)
+            elif 'module' not in list(model.state_dict().items())[0][0] and 'module' in list(state_dict.items())[0][0]:
+                state_dict = convert_state_dict_from_dataparallel(state_dict)
+            model.load_state_dict(state_dict)
 
         # Possibly resume training from checkpoint.
         start_epoch = 0
@@ -239,8 +275,12 @@ class PyTorchChipClassification(Backend):
             log.info('Resuming from checkpoint: {}\n'.format(model_path))
             train_state = file_to_json(train_state_path)
             start_epoch = train_state['epoch'] + 1
-            model.load_state_dict(
-                torch.load(model_path, map_location=self.device))
+            state_dict = torch.load(model_path, map_location=self.device)
+            if 'module' in list(model.state_dict().items())[0][0] and 'module' not in list(state_dict.items())[0][0]:
+                state_dict = convert_state_dict_to_dataparallel(state_dict)
+            elif 'module' not in list(model.state_dict().items())[0][0] and 'module' in list(state_dict.items())[0][0]:
+                state_dict = convert_state_dict_from_dataparallel(state_dict)
+            model.load_state_dict(state_dict)
 
         # Write header of log CSV file.
         metric_names = ['precision', 'recall', 'f1']
