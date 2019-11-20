@@ -4,7 +4,6 @@ from os.path import join
 import numpy as np
 import torch
 
-from torchvision.transforms import Compose, ToTensor
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import WeightedRandomSampler
 from albumentations.core.composition import Compose
@@ -41,13 +40,12 @@ def calculate_oversampling_weights(imageFolder, rare_classes, desired_prob):
     rare_weight = desired_prob / len(chip_inds)
     common_weight = (1.0 - desired_prob) / (len(imageFolder) - len(chip_inds))
 
-    weights = 
-    ((len(imageFolder), ), common_weight)
+    weights = torch.full((len(imageFolder), ), common_weight)
     weights[chip_inds] = rare_weight
 
     return weights
 
-  
+
 class AlbumentationDataset(Dataset):
     """An adapter to use arbitrary datasets with albumentations transforms."""
 

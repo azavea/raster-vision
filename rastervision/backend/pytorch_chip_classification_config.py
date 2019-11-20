@@ -37,7 +37,6 @@ class TrainOptions():
         self.desired_prob = desired_prob
         self.augmentors = augmentors
 
-
     def __setattr__(self, name, value):
         if name in ['batch_size', 'num_epochs', 'sync_interval']:
             value = int(value) if isinstance(value, float) else value
@@ -69,7 +68,6 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
                            rare_classes=[],
                            desired_prob=None,
                            augmentors=[]):
-
         """Set options for training models.
 
         Args:
@@ -122,7 +120,7 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
             log_tensorboard=log_tensorboard,
             run_tensorboard=run_tensorboard,
             rare_classes=rare_classes,
-            desired_prob=desired_prob)
+            desired_prob=desired_prob,
             augmentors=augmentors)
         return b
 
