@@ -203,10 +203,10 @@ class PyTorchChipClassification(Backend):
         # Setup data loader.
         batch_size = self.train_opts.batch_size
         chip_size = self.task_config.chip_size
-        databunch = build_databunch(chip_dir, chip_size, batch_size,
-                                    self.task_config.class_map.get_class_names(),
-                                    self.train_opts.rare_classes,
-                                    self.train_opts.desired_prob)
+        databunch = build_databunch(
+            chip_dir, chip_size, batch_size,
+            self.task_config.class_map.get_class_names(),
+            self.train_opts.rare_classes, self.train_opts.desired_prob)
         log.info(databunch)
         num_labels = len(databunch.label_names)
         if self.train_opts.debug:

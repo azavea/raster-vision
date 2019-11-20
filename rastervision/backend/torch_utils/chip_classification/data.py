@@ -26,19 +26,20 @@ def calculate_oversampling_weights(imageFolder, rare_classes, desired_prob):
     chip_inds = []
     for rare_class_id in rare_classes:
         for idx, (sample, class_idx) in enumerate(imageFolder):
-                if class_idx == rare_class_id:
-                    chip_inds.append(idx)
+            if class_idx == rare_class_id:
+                chip_inds.append(idx)
 
     rare_weight = desired_prob / len(chip_inds)
     common_weight = (1.0 - desired_prob) / (len(imageFolder) - len(chip_inds))
 
-    weights = full((len(imageFolder),), common_weight)
+    weights = full((len(imageFolder), ), common_weight)
     weights[chip_inds] = rare_weight
 
     return weights
 
 
-def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes, desired_prob):
+def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes,
+                    desired_prob):
     num_workers = 4
 
     train_dir = join(data_dir, 'train')
@@ -52,8 +53,8 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes, desir
     valid_ds = ImageFolder(valid_dir, transform=transform, classes=class_names)
 
     if rare_classes != []:
-        train_sample_weights = calculate_oversampling_weights(train_ds, rare_classes,
-                                                                desired_prob)
+        train_sample_weights = calculate_oversampling_weights(
+            train_ds, rare_classes, desired_prob)
 
         def get_class_with_max_count(imageFolder):
             count_per_class = {}
@@ -64,11 +65,13 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes, desir
             largest_class_idx = max(count_per_class, key=count_per_class.get)
             return count_per_class[largest_class_idx]
 
-        num_train_samples = len(train_ds.classes) * get_class_with_max_count(train_ds)
+        num_train_samples = len(
+            train_ds.classes) * get_class_with_max_count(train_ds)
 
-        train_sampler = WeightedRandomSampler(weights=train_sample_weights,
-                                                num_samples=num_train_samples,
-                                                replacement=True)
+        train_sampler = WeightedRandomSampler(
+            weights=train_sample_weights,
+            num_samples=num_train_samples,
+            replacement=True)
         shuffle = False
 
     else:
