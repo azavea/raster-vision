@@ -21,7 +21,9 @@ class TrainOptions():
                  log_tensorboard=None,
                  run_tensorboard=None,
                  rare_classes=None,
-                 desired_prob=None):
+                 desired_prob=None,
+                 augmentors=[]):
+
         self.batch_size = batch_size
         self.lr = lr
         self.one_cycle = one_cycle
@@ -33,6 +35,8 @@ class TrainOptions():
         self.run_tensorboard = run_tensorboard
         self.rare_classes = rare_classes
         self.desired_prob = desired_prob
+        self.augmentors = augmentors
+
 
     def __setattr__(self, name, value):
         if name in ['batch_size', 'num_epochs', 'sync_interval']:
@@ -63,7 +67,9 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
                            log_tensorboard=True,
                            run_tensorboard=True,
                            rare_classes=[],
-                           desired_prob=None):
+                           desired_prob=None,
+                           augmentors=[]):
+
         """Set options for training models.
 
         Args:
@@ -98,6 +104,11 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
                 float can be given (between 0.0 and 1.0) indicating the desired
                 probability of the rare classes. If e.g. set to 0.5, the change of
                 drawing any rare class sample is 0.5.
+            augmentors: (list of str) any of ['Blur', 'RandomRotate90', 'HorizontalFlip',
+                'VerticalFlip', 'GaussianBlur', or 'GaussNoise', 'RGBShift', 'ToGray'].
+                These use the default settings for each of the transforms in
+                https://albumentations.readthedocs.io
+
         """
         b = deepcopy(self)
         b.train_opts = TrainOptions(
@@ -112,6 +123,7 @@ class PyTorchChipClassificationConfigBuilder(SimpleBackendConfigBuilder):
             run_tensorboard=run_tensorboard,
             rare_classes=rare_classes,
             desired_prob=desired_prob)
+            augmentors=augmentors)
         return b
 
     def with_pretrained_uri(self, pretrained_uri):

@@ -1,12 +1,21 @@
+import logging
 from os.path import join
 
-from torch import full
+import numpy as np
+import torch
+
 from torchvision.transforms import Compose, ToTensor
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import WeightedRandomSampler
+from albumentations.core.composition import Compose
+from albumentations.augmentations.transforms import (
+    Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
+    GaussNoise, RGBShift, ToGray)
 
 from rastervision.backend.torch_utils.data import DataBunch
 from rastervision.backend.torch_utils.chip_classification.folder import ImageFolder
+
+log = logging.getLogger(__name__)
 
 
 def calculate_oversampling_weights(imageFolder, rare_classes, desired_prob):
@@ -32,25 +41,71 @@ def calculate_oversampling_weights(imageFolder, rare_classes, desired_prob):
     rare_weight = desired_prob / len(chip_inds)
     common_weight = (1.0 - desired_prob) / (len(imageFolder) - len(chip_inds))
 
-    weights = full((len(imageFolder), ), common_weight)
+    weights = 
+    ((len(imageFolder), ), common_weight)
     weights[chip_inds] = rare_weight
 
     return weights
 
+  
+class AlbumentationDataset(Dataset):
+    """An adapter to use arbitrary datasets with albumentations transforms."""
+
+    def __init__(self, orig_dataset, transform=None):
+        """Constructor.
+
+        Args:
+            orig_dataset: (Dataset) which is assumed to return PIL Image objects
+                and not perform any transforms of its own
+            transform: (albumentations.core.transforms_interface.ImageOnlyTransform)
+        """
+        self.orig_dataset = orig_dataset
+        self.transform = transform
+
+    def __getitem__(self, ind):
+        x, y = self.orig_dataset[ind]
+        x = np.array(x)
+        if self.transform:
+            x = self.transform(image=x)['image']
+        x = torch.tensor(x).permute(2, 0, 1).float() / 255.0
+        return x, y
+
+    def __len__(self):
+        return len(self.orig_dataset)
+
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes,
-                    desired_prob):
+                    desired_prob, augmentors):
     num_workers = 4
 
     train_dir = join(data_dir, 'train')
     valid_dir = join(data_dir, 'valid')
 
-    aug_transform = Compose([ToTensor()])
-    transform = Compose([ToTensor()])
+    augmentors_dict = {
+        'Blur': Blur(),
+        'RandomRotate90': RandomRotate90(),
+        'HorizontalFlip': HorizontalFlip(),
+        'VerticalFlip': VerticalFlip(),
+        'GaussianBlur': GaussianBlur(),
+        'GaussNoise': GaussNoise(),
+        'RGBShift': RGBShift(),
+        'ToGray': ToGray()
+    }
 
-    train_ds = ImageFolder(
-        train_dir, transform=aug_transform, classes=class_names)
-    valid_ds = ImageFolder(valid_dir, transform=transform, classes=class_names)
+    aug_transforms = []
+    for augmentor in augmentors:
+        try:
+            aug_transforms.append(augmentors_dict[augmentor])
+        except KeyError as e:
+            log.warning('{0} is an unknown augmentor. Continuing without {0}. \
+                Known augmentors are: {1}'
+                        .format(e, list(augmentors_dict.keys())))
+    aug_transforms = Compose(aug_transforms)
+
+    train_ds = AlbumentationDataset(
+        ImageFolder(train_dir, classes=class_names), transform=aug_transforms)
+    valid_ds = AlbumentationDataset(
+        ImageFolder(valid_dir, classes=class_names))
 
     if rare_classes != []:
         train_sample_weights = calculate_oversampling_weights(

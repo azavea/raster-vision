@@ -4,6 +4,11 @@ CHANGELOG
 Raster Vision 0.11
 -------------------
 
+Features
+~~~~~~~~~~
+
+- Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#859 <https://github.com/azavea/raster-vision/pull/859>`__
+
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -16,7 +21,8 @@ Bug Fixes
 ^^^^^^^^^^
 
 - Ensure randint args are ints `#849 <https://github.com/azavea/raster-vision/pull/849>`__
-
+- The augmentors were not serialized properly for the chip command  `#857 <https://github.com/azavea/raster-vision/pull/857>`__
+- Fix problems with pretrained flag `#860 <https://github.com/azavea/raster-vision/pull/860>`__
 
 Raster Vision 0.10
 ------------------
