@@ -97,15 +97,15 @@ class PyTorchChipClassification(Backend):
 
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        
 
         if torch.cuda.device_count() > 0:
             self.device = 'cuda'
-            log.info('There are {0} CUDA devices available for training.'.format(torch.cuda.device_count()))
+            log.info(
+                'There are {0} CUDA devices available for training.'.format(
+                    torch.cuda.device_count()))
         else:
             self.device = 'cpu'
             log.info('No CUDA device detected, using CPU')
-        
 
     def log_options(self):
         log.info('backend_opts:\n' +
@@ -359,7 +359,7 @@ class PyTorchChipClassification(Backend):
             num_classes = len(self.task_config.class_map)
             model = get_model(
                 self.train_opts.model_arch, num_classes, pretrained=False)
-            
+
             if torch.cuda.device_count() > 1:
                 model = nn.DataParallel(model)
 
