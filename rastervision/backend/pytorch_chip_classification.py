@@ -97,6 +97,7 @@ class PyTorchChipClassification(Backend):
 
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        log.info('Device = {}'.format(self.device))
 
     def log_options(self):
         log.info('backend_opts:\n' +
