@@ -43,7 +43,7 @@ with io.open(op.join(here, 'extras_requirements.json'), encoding='utf-8') as f:
 
 # Uncomment this line if we are using a commit of mask-to-polygons
 # (as opposed to released version) to avoid error.
-# del extras_require['feature-extraction']
+del extras_require['feature-extraction']
 
 setup(
     name='rastervision',

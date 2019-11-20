@@ -203,9 +203,10 @@ class PyTorchChipClassification(Backend):
         # Setup data loader.
         batch_size = self.train_opts.batch_size
         chip_size = self.task_config.chip_size
+        augmentors = self.train_opts.augmentors
         databunch = build_databunch(
             chip_dir, chip_size, batch_size,
-            self.task_config.class_map.get_class_names())
+            self.task_config.class_map.get_class_names(), augmentors)
         log.info(databunch)
         num_labels = len(databunch.label_names)
         if self.train_opts.debug:
@@ -346,7 +347,7 @@ class PyTorchChipClassification(Backend):
 
             num_classes = len(self.task_config.class_map)
             model = get_model(
-                self.train_opts.model_arch, num_classes, pretrained=True)
+                self.train_opts.model_arch, num_classes, pretrained=False)
             model = model.to(self.device)
             model.load_state_dict(
                 torch.load(model_path, map_location=self.device))
