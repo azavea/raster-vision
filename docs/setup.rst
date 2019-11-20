@@ -262,6 +262,10 @@ If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-i
 
     > watch -d -n 0.5 nvidia-smi
 
+Multi GPU systems
+~~~~~~~~~~~~~~~~~
+The chip classification task automatically makes use of multiple GPU's.
+
 .. _aws batch setup:
 
 Setting up AWS Batch
