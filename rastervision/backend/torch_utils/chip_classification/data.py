@@ -2,6 +2,7 @@ from os.path import join
 
 from torchvision.transforms import Compose, ToTensor
 from torch.utils.data import DataLoader
+from torch.cuda import device_count
 
 from rastervision.backend.torch_utils.data import DataBunch
 from rastervision.backend.torch_utils.chip_classification.folder import (
@@ -9,7 +10,11 @@ from rastervision.backend.torch_utils.chip_classification.folder import (
 
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names):
-    num_workers = 4
+    # To avoid memory errors
+    if device_count() > 1:    
+        num_workers = 0
+    else:
+        num_workers = 4
 
     train_dir = join(data_dir, 'train')
     valid_dir = join(data_dir, 'valid')
