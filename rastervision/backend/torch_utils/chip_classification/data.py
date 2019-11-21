@@ -17,12 +17,12 @@ from rastervision.backend.torch_utils.chip_classification.folder import ImageFol
 log = logging.getLogger(__name__)
 
 
-def calculate_oversampling_weights(data, rare_classes, desired_prob):
+def calculate_oversampling_weights(targets, rare_classes, desired_prob):
     '''
     Calculates weights tensor for oversampling
 
     args:
-        data: (list of tup) in the form (image_path, label)
+        targets: (list) containing the class labels/targets/y-data
         rare classes: (list) of ints of the class labels that should be oversamples
         desired prob: (float) a single probability that the rare classes should
             have.
@@ -31,14 +31,14 @@ def calculate_oversampling_weights(data, rare_classes, desired_prob):
     '''
 
     chip_idx = []
-    for idx, (image_pth, class_idx) in enumerate(data):
-        if class_idx in rare_classes:
+    for idx, target in enumerate(targets):
+        if target in rare_classes:
             chip_idx.append(idx)
 
     rare_weight = desired_prob / len(chip_idx)
-    common_weight = (1.0 - desired_prob) / (len(data) - len(chip_idx))
+    common_weight = (1.0 - desired_prob) / (len(targets) - len(chip_idx))
 
-    weights = torch.full((len(data), ), common_weight)
+    weights = torch.full((len(targets), ), common_weight)
     weights[chip_idx] = rare_weight
 
     return weights
@@ -72,7 +72,7 @@ class AlbumentationDataset(Dataset):
 
 def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes,
                     desired_prob, augmentors):
-    num_workers = 4
+    num_workers = 0
 
     train_dir = join(data_dir, 'train')
     valid_dir = join(data_dir, 'valid')
@@ -104,8 +104,9 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes,
         ImageFolder(valid_dir, classes=class_names))
 
     if rare_classes != []:
+        targets = [target[1] for target in train_ds.orig_dataset.imgs]
         train_sample_weights = calculate_oversampling_weights(
-            train_ds.orig_dataset.imgs, rare_classes, desired_prob)
+            targets, rare_classes, desired_prob)
         num_train_samples = len(train_ds)
         train_sampler = WeightedRandomSampler(
             weights=train_sample_weights,
