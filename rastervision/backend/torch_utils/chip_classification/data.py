@@ -17,31 +17,29 @@ from rastervision.backend.torch_utils.chip_classification.folder import ImageFol
 log = logging.getLogger(__name__)
 
 
-def calculate_oversampling_weights(imageFolder, rare_classes, desired_prob):
+def calculate_oversampling_weights(data, rare_classes, desired_prob):
     '''
     Calculates weights tensor for oversampling
 
     args:
-        imageFolder: instance of
-            rastervision.backend.torch_utils.chip_classification.folder.ImageFolder
-        rare classes: (list) of ints of the classes that should be oversamples
+        data: (list of tup) in the form (image_path, label)
+        rare classes: (list) of ints of the class labels that should be oversamples
         desired prob: (float) a single probability that the rare classes should
             have.
     returns:
         (tensor) with weights per index, e.g [0.5,0.1,0.9]
     '''
 
-    chip_inds = []
-    for rare_class_id in rare_classes:
-        for idx, (sample, class_idx) in enumerate(imageFolder):
-            if class_idx == rare_class_id:
-                chip_inds.append(idx)
+    chip_idx = []
+    for idx, (image_pth, class_idx) in enumerate(data):
+        if class_idx in rare_classes:
+            chip_idx.append(idx)
 
-    rare_weight = desired_prob / len(chip_inds)
-    common_weight = (1.0 - desired_prob) / (len(imageFolder) - len(chip_inds))
+    rare_weight = desired_prob / len(chip_idx)
+    common_weight = (1.0 - desired_prob) / (len(data) - len(chip_idx))
 
-    weights = torch.full((len(imageFolder), ), common_weight)
-    weights[chip_inds] = rare_weight
+    weights = torch.full((len(data), ), common_weight)
+    weights[chip_idx] = rare_weight
 
     return weights
 
@@ -107,26 +105,13 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes,
 
     if rare_classes != []:
         train_sample_weights = calculate_oversampling_weights(
-            train_ds, rare_classes, desired_prob)
-
-        def get_class_with_max_count(imageFolder):
-            count_per_class = {}
-            for class_idx in imageFolder.class_to_idx.values():
-                count_per_class[class_idx] = 0
-            for (sample_path, class_index) in imageFolder.samples:
-                count_per_class[class_index] += 1
-            largest_class_idx = max(count_per_class, key=count_per_class.get)
-            return count_per_class[largest_class_idx]
-
-        num_train_samples = len(
-            train_ds.classes) * get_class_with_max_count(train_ds)
-
+            train_ds.orig_dataset.imgs, rare_classes, desired_prob)
+        num_train_samples = len(train_ds)
         train_sampler = WeightedRandomSampler(
             weights=train_sample_weights,
             num_samples=num_train_samples,
             replacement=True)
         shuffle = False
-
     else:
         train_sampler = None
         shuffle = True
