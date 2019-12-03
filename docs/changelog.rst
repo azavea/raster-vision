@@ -8,6 +8,7 @@ Features
 ~~~~~~~~~~
 
 - Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#859 <https://github.com/azavea/raster-vision/pull/859>`__
+- Updated the Quickstart doc with pytorch docker image and model `#863 <https://github.com/azavea/raster-vision/pull/863>`__
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
