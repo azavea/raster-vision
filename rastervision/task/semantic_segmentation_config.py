@@ -184,7 +184,10 @@ class SemanticSegmentationConfigBuilder(TaskConfigBuilder):
         Args:
             window_method: Window method to use for chipping. Options are:
                 random_sample, sliding
-            target_classes: list of class ids to train model on
+            target_classes: list of class ids considered as targets (ie. those
+                to prioritize when creating chips) which is only used in
+                conjunction with the target_count_threshold and
+                negative_survival_probability options.
             debug_chip_probability: probability of generating a debug chip.
                 Applies to the 'random_sample' window method.
             negative_survival_probability: probability that a sampled negative
