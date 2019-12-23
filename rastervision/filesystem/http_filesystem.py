@@ -73,6 +73,13 @@ class HttpFileSystem(FileSystem):
         parsed_uri = urlparse(uri)
         path = os.path.join(download_dir, 'http', parsed_uri.netloc,
                             parsed_uri.path[1:])
+        # This function is expected to return something that is file path-like
+        # (as opposed to directory-like),
+        # so if the path ends with / we strip it off. This was motivated by
+        # a URI that was a zxy tile schema that doesn't end in .png which is
+        # parsed by urlparse into a path that ends in a /.
+        if path.endswith('/'):
+            path = path[:-1]
         return path
 
     @staticmethod
