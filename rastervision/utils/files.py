@@ -139,7 +139,7 @@ def download_if_needed(uri, download_dir, fs=None):
     make_dir(path, use_dirname=True)
 
     if path != uri:
-        log.info('Downloading {} to {}'.format(uri, path))
+        log.debug('Downloading {} to {}'.format(uri, path))
 
     fs.copy_from(uri, path)
 

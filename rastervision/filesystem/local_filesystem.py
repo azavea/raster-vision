@@ -14,7 +14,7 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
         check_empty: if True, check that directory is empty
         force_empty: if True, delete files if necessary to make directory
             empty
-        use_dirname: if path is a file, use the the parent directory as path
+        use_dirname: if True, use the the parent directory as path
 
     Raises:
         ValueError if check_empty is True and directory is not empty
