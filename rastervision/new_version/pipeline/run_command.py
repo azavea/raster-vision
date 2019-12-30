@@ -4,7 +4,6 @@ import tempfile
 import click
 
 from rastervision.utils.files import file_to_json, make_dir
-from rastervision.new_version.pipeline.pipeline_config import PipelineConfig
 from rastervision.new_version.pipeline.config import build_config
 
 
@@ -15,9 +14,6 @@ def _run_command(cfg_json_uri, command, split_ind, num_splits):
     tmp_dir = tmp_dir_obj.name
 
     pipeline_cfg_dict = file_to_json(cfg_json_uri)
-    # need this to add stuff to registry
-    # TODO figure out better solution
-    from rastervision.new_version.pipeline.registry import registry
     cfg = build_config(pipeline_cfg_dict)
     pipeline = cfg.get_pipeline()(cfg, tmp_dir)
 

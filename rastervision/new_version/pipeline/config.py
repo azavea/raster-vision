@@ -22,8 +22,8 @@ def register_config(type_hint, version=0, upgraders=None):
                 __base__=cls)
             if upgraders is None or len(upgraders) != version:
                 raise ValueError(
-                    'If version > 0, must supply list of upgraders with length equal to version.'
-                )
+                    'If version > 0, must supply list of upgraders with length'
+                    ' equal to version.')
             upgrader_map[type_hint] = (version, upgraders)
         else:
             cls = create_model(

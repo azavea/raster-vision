@@ -1,7 +1,7 @@
 from os.path import join, isfile
 import csv
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore')  # noqa
 import time
 import datetime
 from abc import ABC, abstractmethod
@@ -11,7 +11,7 @@ import math
 
 import click
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import torch
@@ -217,7 +217,8 @@ class Learner(ABC):
         """Make a prediction using a TF-formatted (ie. channels last) numpy array.
 
         Args:
-            x: (ndarray) of shape [height, width, channels] or [batch_size, height, width, channels]
+            x: (ndarray) of shape [height, width, channels] or
+                [batch_size, height, width, channels]
 
         Returns:
             ndarray of shape [batch_size, num_features]

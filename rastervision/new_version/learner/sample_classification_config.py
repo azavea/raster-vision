@@ -7,7 +7,8 @@ from rastervision.new_version.learner.learner_config import (
 
 
 def get_config(runner, test=False):
-    base_uri = 's3://raster-vision-lf-dev/learner/classification' if runner == 'aws_batch' else '/opt/data/learner/classification'
+    base_uri = ('s3://raster-vision-lf-dev/learner/classification' if
+                runner == 'aws_batch' else '/opt/data/learner/classification')
     root_uri = join(base_uri, 'output')
     data_uri = join(base_uri, 'tiny-buildings.zip')
 

@@ -1,11 +1,11 @@
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore')  # noqa
 from os.path import join, isfile, isdir
 import csv
 import zipfile
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
@@ -156,16 +156,29 @@ class RegressionLearner(Learner):
             valid_ds = Subset(valid_ds, range(batch_sz))
             test_ds = Subset(test_ds, range(batch_sz))
 
-        # build dataloaders
-        train_dl = DataLoader(train_ds, shuffle=True, batch_size=batch_sz, num_workers=num_workers, pin_memory=True) \
-            if train_ds else None
-        valid_dl = DataLoader(valid_ds, shuffle=True, batch_size=batch_sz, num_workers=num_workers, pin_memory=True) \
-            if valid_ds else None
-        test_dl = DataLoader(test_ds, shuffle=True, batch_size=batch_sz, num_workers=num_workers, pin_memory=True) \
-            if test_ds else None
+        train_dl = DataLoader(
+            train_ds,
+            shuffle=True,
+            batch_size=batch_sz,
+            num_workers=num_workers,
+            pin_memory=True)
+        valid_dl = DataLoader(
+            valid_ds,
+            shuffle=True,
+            batch_size=batch_sz,
+            num_workers=num_workers,
+            pin_memory=True)
+        test_dl = DataLoader(
+            test_ds,
+            shuffle=True,
+            batch_size=batch_sz,
+            num_workers=num_workers,
+            pin_memory=True)
 
-        self.train_ds, self.valid_ds, self.test_ds = train_ds, valid_ds, test_ds
-        self.train_dl, self.valid_dl, self.test_dl = train_dl, valid_dl, test_dl
+        self.train_ds, self.valid_ds, self.test_ds = (train_ds, valid_ds,
+                                                      test_ds)
+        self.train_dl, self.valid_dl, self.test_dl = (train_dl, valid_dl,
+                                                      test_dl)
 
     def on_overfit_start(self):
         self.on_train_start()

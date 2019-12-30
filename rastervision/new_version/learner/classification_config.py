@@ -1,5 +1,3 @@
-from typing import List
-
 from rastervision.new_version.pipeline.config import register_config
 from rastervision.new_version.learner.learner_config import LearnerConfig, DataConfig
 
