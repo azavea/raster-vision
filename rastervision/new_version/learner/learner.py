@@ -22,7 +22,7 @@ from rastervision.utils.files import (sync_to_dir, json_to_file, file_to_json,
                                       sync_from_dir, get_local_path, unzip)
 
 from rastervision.new_version.pipeline.config import build_config
-from rastervision.new_version.learner.config import LearnerConfig
+from rastervision.new_version.learner.learner_config import LearnerConfig
 
 
 class Learner(ABC):

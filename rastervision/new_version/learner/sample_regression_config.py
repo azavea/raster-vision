@@ -2,7 +2,7 @@ from os.path import join
 
 from rastervision.new_version.learner.regression.config import (
     RegressionLearnerConfig, RegressionDataConfig, RegressionModelConfig)
-from rastervision.new_version.learner.config import (LearnerPipelineConfig,
+from rastervision.new_version.learner.learner_config import (LearnerPipelineConfig,
                                                      SolverConfig)
 
 

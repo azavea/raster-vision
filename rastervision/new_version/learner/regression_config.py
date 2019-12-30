@@ -1,7 +1,8 @@
 from typing import List
 
 from rastervision.new_version.pipeline.config import register_config
-from rastervision.new_version.learner.config import LearnerConfig, DataConfig, ModelConfig
+from rastervision.new_version.learner.learner_config import (
+    LearnerConfig, DataConfig, ModelConfig)
 
 
 @register_config('regression_model')
@@ -27,5 +28,6 @@ class RegressionLearnerConfig(LearnerConfig):
             self.model.output_multiplier = [1.0] * len(self.data.labels)
 
     def get_learner(self):
-        from rastervision.new_version.learner.regression.learner import RegressionLearner
+        from rastervision.new_version.learner.regression_learner import (
+            RegressionLearner)
         return RegressionLearner

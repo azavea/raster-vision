@@ -1,5 +1,5 @@
 from rastervision.new_version.pipeline.pipeline import Pipeline
-from rastervision.new_version.learner.config import LearnerPipelineConfig
+from rastervision.new_version.learner.learner_config import LearnerPipelineConfig
 
 LEARNER_PIPELINE = 'learner_pipeline'
 

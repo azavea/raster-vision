@@ -1,7 +1,7 @@
 from typing import List
 
 from rastervision.new_version.pipeline.config import register_config
-from rastervision.new_version.learner.config import LearnerConfig, DataConfig
+from rastervision.new_version.learner.learner_config import LearnerConfig, DataConfig
 
 
 @register_config('classification_data')
@@ -14,5 +14,6 @@ class ClassificationLearnerConfig(LearnerConfig):
     data: ClassificationDataConfig
 
     def get_learner(self):
-        from rastervision.new_version.learner.classification.learner import ClassificationLearner
+        from rastervision.new_version.learner.classification_learner import (
+            ClassificationLearner)
         return ClassificationLearner

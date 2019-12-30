@@ -1,8 +1,9 @@
 from os.path import join
 
-from rastervision.new_version.learner.classification.config import (
+from rastervision.new_version.learner.classification_config import (
     ClassificationLearnerConfig, ClassificationDataConfig)
-from rastervision.new_version.learner.config import LearnerPipelineConfig, SolverConfig, ModelConfig
+from rastervision.new_version.learner.learner_config import (
+    LearnerPipelineConfig, SolverConfig, ModelConfig)
 
 
 def get_config(runner, test=False):
