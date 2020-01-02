@@ -1,0 +1,20 @@
+# flake8: noqa
+
+from rastervision.v2.task.api import (OBJECT_DETECTION, CHIP_CLASSIFICATION,
+                                   SEMANTIC_SEGMENTATION)
+
+# Registry Keys
+LABEL_SOURCE = 'LABEL_SOURCE'
+
+# Deprecated keys provided for backward compatibility.
+OBJECT_DETECTION_GEOJSON = 'OBJECT_DETECTION_GEOJSON'
+CHIP_CLASSIFICATION_GEOJSON = 'CHIP_CLASSIFICATION_GEOJSON'
+SEMANTIC_SEGMENTATION_RASTER = 'SEMANTIC_SEGMENTATION_RASTER'
+
+label_source_deprecated_map = {
+    OBJECT_DETECTION_GEOJSON: OBJECT_DETECTION,
+    CHIP_CLASSIFICATION_GEOJSON: CHIP_CLASSIFICATION,
+    SEMANTIC_SEGMENTATION_RASTER: SEMANTIC_SEGMENTATION
+}
+
+from rastervision.v2.data.label_source.label_source_config import LabelSourceConfig
