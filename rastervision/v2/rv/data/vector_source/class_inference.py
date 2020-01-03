@@ -1,32 +1,20 @@
 import copy
 
-from rastervision.v2.data.vector_source.label_maker.filter import create_filter
-
-
-class ClassInferenceOptions():
-    def __init__(self,
-                 class_map=None,
-                 class_id_to_filter=None,
-                 default_class_id=1):
-        self.class_map = class_map
-        self.class_id_to_filter = class_id_to_filter
-        self.default_class_id = default_class_id
+from rastervision.v2.rv.data.vector_source.label_maker.filter import (
+    create_filter)
 
 
 class ClassInference():
     """Infers missing class_ids from GeoJSON features."""
 
-    def __init__(self, options):
-        """Constructor.
+    def __init__(self, class_map=None, class_id_to_filter=None, default_class_id=0):
+        self.class_map = class_map
+        self.class_id_to_filter = class_id_to_filter
+        self.default_class_id = default_class_id
 
-        Args:
-            options: (ClassInferenceOptions)
-        """
-        self.options = options
-
-        if self.options.class_id_to_filter is not None:
+        if self.class_id_to_filter is not None:
             self.class_id_to_filter = {}
-            for class_id, filter_exp in self.options.class_id_to_filter.items(
+            for class_id, filter_exp in self.class_id_to_filter.items(
             ):
                 self.class_id_to_filter[class_id] = create_filter(filter_exp)
 
@@ -48,21 +36,21 @@ class ClassInference():
         if class_id is not None:
             return class_id
 
-        if self.options.class_map is not None:
+        if self.class_map is not None:
             class_name = feature.get('properties', {}).get('class_name')
-            if class_name in self.options.class_map.get_class_names():
-                return self.options.class_map.get_by_name(class_name).id
+            if class_name in self.class_map.get_class_names():
+                return self.class_map.get_by_name(class_name).id
 
             label = feature.get('properties', {}).get('label')
-            if label in self.options.class_map.get_class_names():
-                return self.options.class_map.get_by_name(label).id
+            if label in self.class_map.get_class_names():
+                return self.class_map.get_by_name(label).id
 
-        if self.options.class_id_to_filter is not None:
+        if self.class_id_to_filter is not None:
             for class_id, filter_fn in self.class_id_to_filter.items():
                 if filter_fn(feature):
                     return class_id
 
-        return self.options.default_class_id
+        return self.default_class_id
 
     def transform_geojson(self, geojson):
         """Transform GeoJSON by appending class_ids and removing features with no class.

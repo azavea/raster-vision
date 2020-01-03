@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from shapely.geometry import shape, mapping
 import shapely
 
-from rastervision.v2.data.vector_source.class_inference import (
-    ClassInference, ClassInferenceOptions)
+from rastervision.v2.rv.data.vector_source.class_inference import (
+    ClassInference)
 
 
 def transform_geojson(geojson,
@@ -109,31 +109,16 @@ class VectorSource(ABC):
     """A source of vector data."""
 
     def __init__(self,
-                 crs_transformer,
-                 line_bufs=None,
-                 point_bufs=None,
-                 class_inf_opts=None):
-        """Constructor.
-
-        Args:
-            crs_transformer: (CRSTransformer)
-            line_bufs: (dict or None) If none, uses default buffer value of 1. Otherwise,
-                a map from class_id to number of pixels to buffer by. If the buffer value
-                is None, then no buffering will be performed and the LineString or Point
-                won't get converted to a Polygon. Not converting to Polygon is
-                incompatible with the currently available LabelSources, but may be useful
-                in the future.
-            point_bufs: (dict or None) same as above, but used for buffering Points into
-                Polygons.
-            class_inf_opts: (ClassInferenceOptions)
-        """
+                 vs_config,
+                 class_map,
+                 crs_transformer):
+        self.vs_config = vs_config
+        self.class_map = class_map
         self.crs_transformer = crs_transformer
-        self.line_bufs = line_bufs
-        self.point_bufs = point_bufs
-        if class_inf_opts is None:
-            class_inf_opts = ClassInferenceOptions()
-        self.class_inference = ClassInference(class_inf_opts)
-
+        self.class_inference = ClassInference(
+            class_map=class_map,
+            class_id_to_filter=vs_config.class_id_to_filter,
+            default_class_id=vs_config.default_class_id):
         self.geojson = None
 
     def get_geojson(self, to_map_coords=False):
@@ -155,8 +140,8 @@ class VectorSource(ABC):
         geojson = transform_geojson(
             self.geojson,
             self.crs_transformer,
-            self.line_bufs,
-            self.point_bufs,
+            self.vs_config.line_bufs,
+            self.vs_config.point_bufs,
             to_map_coords=to_map_coords)
 
         return geojson

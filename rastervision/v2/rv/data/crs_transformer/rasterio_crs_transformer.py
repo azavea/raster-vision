@@ -2,7 +2,7 @@ import pyproj
 
 from rasterio.transform import (rowcol, xy)
 
-from rastervision.v2.data.crs_transformer import (CRSTransformer,
+from rastervision.v2.rv.data.crs_transformer import (CRSTransformer,
                                                IdentityCRSTransformer)
 
 

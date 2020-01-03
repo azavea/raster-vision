@@ -2,10 +2,8 @@ import os
 from copy import deepcopy
 
 import rastervision as rv
-from rastervision.v2.analyzer import (AnalyzerConfig, AnalyzerConfigBuilder,
+from rastervision.v2.rv.analyzer import (AnalyzerConfig, AnalyzerConfigBuilder,
                                    StatsAnalyzer)
-from rastervision.v2.protos.analyzer_pb2 import AnalyzerConfig as AnalyzerConfigMsg
-
 
 class StatsAnalyzerConfig(AnalyzerConfig):
     def __init__(self, stats_uri=None, sample_prob=None):

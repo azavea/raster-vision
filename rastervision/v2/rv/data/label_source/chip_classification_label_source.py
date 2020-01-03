@@ -154,16 +154,11 @@ class ChipClassificationLabelSource(LabelSource):
     """
 
     def __init__(self,
+                 chip_ls_config,
                  vector_source,
                  crs_transformer,
                  class_map,
-                 extent=None,
-                 ioa_thresh=None,
-                 use_intersection_over_cell=False,
-                 pick_min_class_id=False,
-                 background_class_id=None,
-                 cell_size=None,
-                 infer_cells=False):
+                 extent=None):
         """Constructs a LabelSource for ChipClassificaiton backed by a GeoJSON file.
 
         Args:
@@ -174,19 +169,14 @@ class ChipClassificationLabelSource(LabelSource):
                 (or label) field
             extent: Box used to filter the labels by extent or compute grid
         """
-        if isinstance(vector_source, str):
-            provider = rv._registry.get_vector_source_default_provider(
-                vector_source)
-            vector_source = provider.construct(vector_source) \
-                .create_source(
-                    crs_transformer=crs_transformer, extent=extent, class_map=class_map)
-
+        cfg = chip_ls_config
         geojson = vector_source.get_geojson()
 
-        if infer_cells:
-            self.labels = infer_labels(geojson, extent, cell_size, ioa_thresh,
-                                       use_intersection_over_cell,
-                                       pick_min_class_id, background_class_id)
+        if chip_ls_config.infer_cells:
+            self.labels = infer_labels(
+                geojson, extent, cfg.cell_size, cfg.ioa_thresh,
+                cfg.use_intersection_over_cell, cfg.pick_min_class_id,
+                cfg.background_class_id)
         else:
             self.labels = read_labels(geojson, extent)
 

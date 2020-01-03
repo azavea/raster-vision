@@ -78,7 +78,7 @@ def make_debug_chips(databunch, class_map, tmp_dir, train_uri, max_count=30):
 class PyTorchChipClassification(Backend):
     """Chip classification backend using PyTorch and fastai."""
 
-    def __init__(self, task_config, backend_opts, train_opts):
+    def __init__(self, task_config, backend_config):
         """Constructor.
 
         Args:

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from rastervision.v2.data import ActivateMixin
+from rastervision.v2.rv.data import ActivateMixin
 
 
 class LabelStore(ABC, ActivateMixin):

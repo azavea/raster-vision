@@ -6,4 +6,4 @@ ANALYZER = 'ANALYZER'
 
 STATS_ANALYZER = 'STATS_ANALYZER'
 
-from rastervision.v2.analyzer.analyzer_config import AnalyzerConfig
+from rastervision.v2.rv.analyzer.analyzer_config import AnalyzerConfig

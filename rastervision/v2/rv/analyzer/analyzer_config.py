@@ -1,8 +1,7 @@
 from abc import abstractmethod
 
-import rastervision as rv
-from rastervision.v2.core.config import (Config, ConfigBuilder,
-                                      BundledConfigMixin)
+from rastervision.v2.core.config import (
+    Config, ConfigBuilder, BundledConfigMixin)
 
 
 class AnalyzerConfig(BundledConfigMixin, Config):

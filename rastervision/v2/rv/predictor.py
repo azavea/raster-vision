@@ -2,10 +2,9 @@ import os
 import zipfile
 
 import rastervision as rv
-from rastervision.v2.core.filesystem import (download_if_needed, make_dir,
-                                      load_json_config, save_json_config)
-from rastervision.v2.protos.command_pb2 import CommandConfig as CommandConfigMsg
-from rastervision.v2.data.raster_source import ChannelOrderError
+from rastervision.v2.core.filesystem import (
+    download_if_needed, make_dir, load_json_config, save_json_config)
+from rastervision.v2.rv.data.raster_source import ChannelOrderError
 
 
 class Predictor():

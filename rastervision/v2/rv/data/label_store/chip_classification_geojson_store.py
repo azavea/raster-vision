@@ -1,8 +1,8 @@
-from rastervision.v2.data.label import ChipClassificationLabels
-from rastervision.v2.data.label_store import LabelStore
-from rastervision.v2.data.label_store.utils import boxes_to_geojson
-from rastervision.v2.data.label_source import ChipClassificationLabelSource
-from rastervision.v2.data.vector_source import GeoJSONVectorSource
+from rastervision.v2.rv.data.label import ChipClassificationLabels
+from rastervision.v2.rv.data.label_store import LabelStore
+from rastervision.v2.rv.data.label_store.utils import boxes_to_geojson
+from rastervision.v2.rv.data.label_source import ChipClassificationLabelSource
+from rastervision.v2.rv.data.vector_source import GeoJSONVectorSource
 from rastervision.v2.core.filesystem import json_to_file
 
 
