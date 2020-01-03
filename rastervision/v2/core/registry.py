@@ -4,6 +4,9 @@ class RegistryError(Exception):
 
 class Registry():
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.runners = {}
         self.filesystems = []
         self.configs = {}

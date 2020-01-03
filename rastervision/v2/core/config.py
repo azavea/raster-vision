@@ -23,7 +23,7 @@ def register_config(type_hint, version=0, upgraders=None):
                 raise ValueError(
                     'If version > 0, must supply list of upgraders with length'
                     ' equal to version.')
-            _registry.add_config_upgrader(type_hint, (version, upgraders))
+            _registry.add_config_upgraders(type_hint, (version, upgraders))
         else:
             cls = create_model(
                 cls.__name__,

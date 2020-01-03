@@ -12,3 +12,7 @@ class PipelineConfig(Config):
 
 def get_config(runner):
     return PipelineConfig(root_uri='/opt/data/')
+
+
+def register_plugin(registry):
+    pass

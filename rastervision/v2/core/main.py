@@ -2,15 +2,15 @@
 import sys
 import os
 from os.path import join
-import tempfile
 import logging
 import importlib
 
 import click
 
-from rastervision.v2.core import _registry, _rv_config
+from rastervision.v2.core import (
+    _registry, _rv_config, system_init)
 from rastervision.v2.core.filesystem import (
-    file_to_json, make_dir, json_to_file)
+    file_to_json, json_to_file)
 from rastervision.v2.core.config import build_config
 
 log = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def main(profile, verbose):
     sys.path.append(os.curdir)
 
     # Initialize configuration
-    _rv_config.update(profile=profile, verbosity=verbose + 1)
+    system_init(profile=profile, verbosity=verbose + 1)
 
 
 @main.command(
@@ -80,7 +80,9 @@ def run(runner, cfg_path, commands, arg, splits):
 
 
 def _run_command(cfg_json_uri, command, split_ind, num_splits):
-    tmp_dir = _rv_config.get_tmp_dir()
+    tmp_dir_obj = _rv_config.get_tmp_dir()
+    tmp_dir = tmp_dir_obj.name
+
     pipeline_cfg_dict = file_to_json(cfg_json_uri)
     cfg = build_config(pipeline_cfg_dict)
     pipeline = cfg.get_pipeline()(cfg, tmp_dir)

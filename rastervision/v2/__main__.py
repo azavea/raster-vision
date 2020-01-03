@@ -1,6 +1,6 @@
 import sys
 
-from rastervision.v2.core.cli.main import main
+from rastervision.v2.core.main import main
 
 # Code taken from unittest
 if sys.argv[0].endswith('__main__.py'):

@@ -1,4 +1,4 @@
-from rastervision.v2.core.cli.main import _run_command
+from rastervision.v2.core.main import _run_command
 from rastervision.v2.core.filesystem import (
     file_to_json, json_to_file)
 

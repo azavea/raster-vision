@@ -6,7 +6,7 @@ import logging
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
                              ConfigIniEnv, ConfigOSEnv)
 
-from rastervision.v2.core.cli import Verbosity
+from rastervision.v2.core.verbosity import Verbosity
 
 
 log = logging.getLogger(__name__)
@@ -17,19 +17,26 @@ class RVConfig:
 
     tmp_dir = None
 
-    def __init__(self):
-        self.update()
+    def __init__(self,
+                 profile=None,
+                 rv_home=None,
+                 config_overrides=None,
+                 tmp_dir=None,
+                 verbosity=Verbosity.NORMAL):
+        self.reset(
+            profile=profile, rv_home=rv_home, config_overrides=config_overrides,
+            tmp_dir=tmp_dir, verbosity=verbosity)
 
-    def update(self,
-               profile=None,
-               rv_home=None,
-               config_overrides=None,
-               tmp_dir=None,
-               verbosity=Verbosity.NORMAL):
+    def reset(self,
+              profile=None,
+              rv_home=None,
+              config_overrides=None,
+              tmp_dir=None,
+              verbosity=Verbosity.NORMAL):
         self.verbosity = verbosity
 
         # Set logging level
-        root_log = logging.getLogger('rastervision')
+        root_log = logging.getLogger('rastervision.v2')
         if self.verbosity >= Verbosity.VERBOSE:
             root_log.setLevel(logging.DEBUG)
         elif self.verbosity >= Verbosity.NORMAL:
