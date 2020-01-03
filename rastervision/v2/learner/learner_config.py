@@ -76,5 +76,5 @@ class LearnerPipelineConfig(PipelineConfig):
         super().update(parent=parent)
 
     def get_pipeline(self):
-        from rastervision.v2.learner.pipeline import LearnerPipeline
+        from rastervision.v2.learner.learner_pipeline import LearnerPipeline
         return LearnerPipeline

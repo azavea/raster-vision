@@ -1,11 +1,9 @@
 from rastervision.v2.core.pipeline import Pipeline
-from rastervision.v2.learner.learner_config import LearnerPipelineConfig
 
 LEARNER_PIPELINE = 'learner_pipeline'
 
 
 class LearnerPipeline(Pipeline):
-    config_class = LearnerPipelineConfig
     commands = ['train']
     gpu_commands = ['train']
 
