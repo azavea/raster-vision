@@ -110,13 +110,13 @@ class VectorSource(ABC):
 
     def __init__(self,
                  vs_config,
-                 class_map,
+                 class_config,
                  crs_transformer):
         self.vs_config = vs_config
-        self.class_map = class_map
+        self.class_config = class_config
         self.crs_transformer = crs_transformer
         self.class_inference = ClassInference(
-            class_map=class_map,
+            class_config=class_config,
             class_id_to_filter=vs_config.class_id_to_filter,
             default_class_id=vs_config.default_class_id)
         self.geojson = None

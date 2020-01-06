@@ -1,7 +1,8 @@
 from typing import Dict, Optional
 
-from rastervision.v2.core.config import Config
+from rastervision.v2.core.config import Config, register_config
 
+@register_config('vector_source')
 class VectorSourceConfig(Config):
     default_class_id: int = 0
     class_id_to_filter: Optional[Dict] = None
@@ -20,3 +21,6 @@ class VectorSourceConfig(Config):
                     return True
 
         return False
+
+    def build(self, class_config, crs_transformer):
+        raise NotImplementedError()

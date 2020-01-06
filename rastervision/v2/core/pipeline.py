@@ -10,6 +10,5 @@ class Pipeline():
     def test_cpu(self, split_ind=0, num_splits=1):
         print(self.config)
 
-    @staticmethod
     def test_gpu(self):
         print(self.config)

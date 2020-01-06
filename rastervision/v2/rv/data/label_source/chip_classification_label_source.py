@@ -155,19 +155,9 @@ class ChipClassificationLabelSource(LabelSource):
     def __init__(self,
                  chip_ls_config,
                  vector_source,
+                 class_config,
                  crs_transformer,
-                 class_map,
                  extent=None):
-        """Constructs a LabelSource for ChipClassificaiton backed by a GeoJSON file.
-
-        Args:
-            vector_source: (VectorSource or str)
-            crs_transformer: CRSTransformer to convert from map coords in label
-                in GeoJSON file to pixel coords.
-            class_map: ClassMap used to infer class_ids from class_name
-                (or label) field
-            extent: Box used to filter the labels by extent or compute grid
-        """
         cfg = chip_ls_config
         geojson = vector_source.get_geojson()
 

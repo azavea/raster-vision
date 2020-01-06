@@ -1,7 +1,9 @@
 from rastervision.v2.core.pipeline_config import PipelineConfig
 from rastervision.v2.rv.data import DatasetConfig
 from rastervision.v2.rv.backend import BackendConfig
+from rastervision.v2.core.config import register_config
 
+@register_config('task')
 class TaskConfig(PipelineConfig):
     dataset: DatasetConfig
     backend: BackendConfig
@@ -16,6 +18,3 @@ class TaskConfig(PipelineConfig):
     train_uri: str = None
     predict_uri: str = None
     eval_uri: str = None
-
-    def build(self):
-        pass
