@@ -2,10 +2,9 @@ import numpy as np
 from shapely.strtree import STRtree
 from shapely.geometry import shape
 
-import rastervision as rv
-from rastervision.v2.data import ChipClassificationLabels
-from rastervision.v2.data.label_source import LabelSource
-from rastervision.v2.core import Box
+from rastervision.v2.rv.data import ChipClassificationLabels
+from rastervision.v2.rv.data.label_source import LabelSource
+from rastervision.v2.rv import Box
 
 
 def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,

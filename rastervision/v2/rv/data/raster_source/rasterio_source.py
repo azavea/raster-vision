@@ -12,7 +12,7 @@ from rasterio.enums import (ColorInterp, MaskFlags)
 
 from rastervision.v2.core.filesystem import download_if_needed
 from rastervision.v2.rv.box import Box
-from rastervision.v2.rv.crs_transformer import RasterioCRSTransformer
+from rastervision.v2.rv.data.crs_transformer import RasterioCRSTransformer
 from rastervision.v2.rv.data.raster_source import RasterSource
 from rastervision.v2.rv.data import (ActivateMixin, ActivationError)
 

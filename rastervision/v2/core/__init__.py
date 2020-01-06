@@ -72,11 +72,11 @@ def system_init(profile=None, verbosity=Verbosity.NORMAL):
                 if register_plugin:
                     register_plugin(_registry)
 
-    '''
-    import rastervision.v2.learner.learner_config
-    import rastervision.v2.learner.regression_config
-    import rastervision.v2.learner.classification_config
-    '''
-
 load_builtins()
 system_init()
+
+'''
+from rastervision.v2.core.config import *
+from rastervision.v2.core.pipeline import *
+from rastervision.v2.core.pipeline_config import *
+'''

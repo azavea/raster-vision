@@ -1,4 +1,4 @@
-from rastervision.v2.rv.task import Task Pipeline
+from rastervision.v2.rv.task import Task
 
 
 class ChipClassification(Task):

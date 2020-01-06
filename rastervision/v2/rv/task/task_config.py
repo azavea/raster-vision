@@ -1,7 +1,5 @@
-from typing import List
-
-from rastervision.v2.core import PipelineConfig
-from rastervision.v2.rv.data import DatasetConfig, ClassConfig
+from rastervision.v2.core.pipeline_config import PipelineConfig
+from rastervision.v2.rv.data import DatasetConfig
 from rastervision.v2.rv.backend import BackendConfig
 
 class TaskConfig(PipelineConfig):

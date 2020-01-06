@@ -1,6 +1,6 @@
 from typing import List
 
-from rastervision.v2.core import Config
+from rastervision.v2.core.config import Config
 
 class ClassConfig(Config):
     names: List[str]

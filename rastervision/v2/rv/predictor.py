@@ -124,7 +124,7 @@ class Predictor():
                 how to interpret the labels.
 
             Returns:
-                rastervision.v2.data.labels.Labels containing the predicted labels.
+                rastervision.v2.rv.data.labels.Labels containing the predicted labels.
         """
         if not self.model_loaded:
             self.load_model()

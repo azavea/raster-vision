@@ -2,7 +2,7 @@ from abc import (abstractmethod)
 import logging
 
 from rastervision.v2.evaluation import Evaluator
-from rastervision.v2.data import ActivateMixin
+from rastervision.v2.rv.data import ActivateMixin
 
 log = logging.getLogger(__name__)
 

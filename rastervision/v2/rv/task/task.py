@@ -1,4 +1,4 @@
-from rastervision.v2.core import Pipeline
+from rastervision.v2.core.pipeline import Pipeline
 
 
 class Task(Pipeline):
