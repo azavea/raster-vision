@@ -10,7 +10,7 @@ class ChipClassificationGeoJSONStore(LabelStore):
     """A GeoJSON file with classification labels in it.
     """
 
-    def __init__(self, uri, crs_transformer, class_map):
+    def __init__(self, uri, class_config, crs_transformer):
         """Construct ClassificationLabelStore backed by a GeoJSON file.
 
         Args:
@@ -21,8 +21,8 @@ class ChipClassificationGeoJSONStore(LabelStore):
                 (or label) field
         """
         self.uri = uri
+        self.class_config = class_config
         self.crs_transformer = crs_transformer
-        self.class_map = class_map
 
     def save(self, labels):
         """Save labels to URI if writable.
@@ -42,7 +42,8 @@ class ChipClassificationGeoJSONStore(LabelStore):
         json_to_file(geojson, self.uri)
 
     def get_labels(self):
-        vector_source = GeoJSONVectorSource(self.uri, self.crs_transformer)
+        geojson_vs_config = GeoJSONVectorSourceConfig()
+        vector_source = GeoJSONVectorSource(self.uri, self.class_config, self.crs_transformer)
         source = ChipClassificationLabelSource(
             vector_source, self.crs_transformer, self.class_map)
         return source.get_labels()

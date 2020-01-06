@@ -206,25 +206,25 @@ class Box():
         """Return new square Box."""
         return Box(ymin, xmin, ymin + size, xmin + size)
 
-    def make_eroded(self, erosion_size):
-        """Return new Box whose sides are eroded by erosion_size."""
-        return Box(self.ymin + erosion_size, self.xmin + erosion_size,
-                   self.ymax - erosion_size, self.xmax - erosion_size)
+    def make_eroded(self, erosion_sz):
+        """Return new Box whose sides are eroded by erosion_sz."""
+        return Box(self.ymin + erosion_sz, self.xmin + erosion_sz,
+                   self.ymax - erosion_sz, self.xmax - erosion_sz)
 
-    def make_buffer(self, buffer_size, max_extent):
-        """Return new Box whose sides are buffered by buffer_size.
+    def make_buffer(self, buffer_sz, max_extent):
+        """Return new Box whose sides are buffered by buffer_sz.
 
         The resulting box is clipped so that the values of the corners are
         always greater than zero and less than the height and width of
         max_extent.
 
         """
-        buffer_size = max(0., buffer_size)
-        if buffer_size < 1.:
-            delta_width = int(round(buffer_size * self.get_width()))
-            delta_height = int(round(buffer_size * self.get_height()))
+        buffer_sz = max(0., buffer_sz)
+        if buffer_sz < 1.:
+            delta_width = int(round(buffer_sz * self.get_width()))
+            delta_height = int(round(buffer_sz * self.get_height()))
         else:
-            delta_height = delta_width = int(round(buffer_size))
+            delta_height = delta_width = int(round(buffer_sz))
 
         return Box(
             max(0, math.floor(self.ymin - delta_height)),
@@ -237,11 +237,11 @@ class Box():
     def make_copy(self):
         return Box(*(self.tuple_format()))
 
-    def get_windows(self, chip_size, stride):
+    def get_windows(self, chip_sz, stride):
         """Return list of grid of boxes within this box.
 
         Args:
-            chip_size: (int) the length of each square-shaped window in pixels
+            chip_sz: (int) the length of each square-shaped window in pixels
             stride: (int) how much each window is offset from the last in pixels
 
         """
@@ -251,7 +251,7 @@ class Box():
         result = []
         for row_start in range(0, height, stride):
             for col_start in range(0, width, stride):
-                result.append(Box.make_square(row_start, col_start, chip_size))
+                result.append(Box.make_square(row_start, col_start, chip_sz))
         return result
 
     def to_dict(self):

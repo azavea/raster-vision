@@ -9,9 +9,9 @@ class TaskConfig(PipelineConfig):
     backend: BackendConfig
 
     debug: bool = False
-    train_chip_size: int = 200
-    predict_chip_size: int = 800
-    predict_batch_size: int = 8
+    train_chip_sz: int = 200
+    predict_chip_sz: int = 800
+    predict_batch_sz: int = 8
 
     analyze_uri: str = None
     chip_uri: str = None

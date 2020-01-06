@@ -108,19 +108,19 @@ class ClassificationLearner(Learner):
         train_dl = DataLoader(
             train_ds,
             shuffle=True,
-            batch_size=batch_sz,
+            batch_sz=batch_sz,
             num_workers=num_workers,
             pin_memory=True)
         valid_dl = DataLoader(
             valid_ds,
             shuffle=True,
-            batch_size=batch_sz,
+            batch_sz=batch_sz,
             num_workers=num_workers,
             pin_memory=True)
         test_dl = DataLoader(
             test_ds,
             shuffle=True,
-            batch_size=batch_sz,
+            batch_sz=batch_sz,
             num_workers=num_workers,
             pin_memory=True)
 

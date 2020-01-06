@@ -15,7 +15,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     pick_min_class_id: bool = False
     background_class_id: Optional[int] = None
     infer_cells: bool = False
-    cell_size: Optional[int] = None
+    cell_sz: Optional[int] = None
 
     def build(self, class_config, crs_transformer, extent):
         vector_source = self.vector_source.build()

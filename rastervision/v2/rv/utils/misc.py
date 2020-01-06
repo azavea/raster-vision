@@ -152,6 +152,6 @@ def split_into_groups(lst, num_groups):
     Returns:
        A list of size between 1 and num_groups containing lists
        of items of l."""
-    group_size = max(int(ceil((len(lst)) / num_groups)), 1)
+    group_sz = max(int(ceil((len(lst)) / num_groups)), 1)
 
-    return grouped(lst, group_size)
+    return grouped(lst, group_sz)

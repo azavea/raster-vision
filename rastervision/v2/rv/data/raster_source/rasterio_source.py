@@ -30,10 +30,10 @@ def build_vrt(vrt_path, image_paths):
     subprocess.run(cmd)
 
 
-def download_and_build_vrt(image_uris, temp_dir):
+def download_and_build_vrt(image_uris, tmp_dir):
     log.info('Building VRT...')
-    image_paths = [download_if_needed(uri, temp_dir) for uri in image_uris]
-    image_path = os.path.join(temp_dir, 'index.vrt')
+    image_paths = [download_if_needed(uri, tmp_dir) for uri in image_uris]
+    image_path = os.path.join(tmp_dir, 'index.vrt')
     build_vrt(image_path, image_paths)
     return image_path
 
@@ -70,10 +70,10 @@ class RasterioSource(ActivateMixin, RasterSource):
     def __init__(self,
                  uris,
                  raster_transformers,
-                 temp_dir,
+                 tmp_dir,
                  channel_order=None,
-                 x_shift_meters=0.0,
-                 y_shift_meters=0.0):
+                 x_shift=0.0,
+                 y_shift=0.0):
         """Constructor.
 
         This RasterSource can read any file that can be opened by Rasterio/GDAL
@@ -87,11 +87,11 @@ class RasterioSource(ActivateMixin, RasterSource):
             channel_order: list of indices of channels to extract from raw imagery
         """
         self.uris = uris
-        self.temp_dir = temp_dir
-        self.image_temp_dir = None
+        self.tmp_dir = tmp_dir
+        self.image_tmp_dir = None
         self.image_dataset = None
-        self.x_shift_meters = x_shift_meters
-        self.y_shift_meters = y_shift_meters
+        self.x_shift = x_shift
+        self.y_shift = y_shift
 
         num_channels = None
 
@@ -127,15 +127,15 @@ class RasterioSource(ActivateMixin, RasterSource):
 
         super().__init__(channel_order, num_channels, raster_transformers)
 
-    def _download_data(self, temp_dir):
+    def _download_data(self, tmp_dir):
         """Download any data needed for this Raster Source.
 
         Return a single local path representing the image or a VRT of the data.
         """
         if len(self.uris) == 1:
-            return download_if_needed(self.uris[0], temp_dir)
+            return download_if_needed(self.uris[0], tmp_dir)
         else:
-            return download_and_build_vrt(self.uris, temp_dir)
+            return download_and_build_vrt(self.uris, tmp_dir)
 
     def get_crs_transformer(self):
         return self.crs_transformer
@@ -158,8 +158,8 @@ class RasterioSource(ActivateMixin, RasterSource):
 
     def _activate(self):
         # Download images to temporary directory and delete it when done.
-        self.image_temp_dir = tempfile.TemporaryDirectory(dir=self.temp_dir)
-        self.imagery_path = self._download_data(self.image_temp_dir.name)
+        self.image_tmp_dir = tempfile.TemporaryDirectory(dir=self.tmp_dir)
+        self.imagery_path = self._download_data(self.image_tmp_dir.name)
         self.image_dataset = rasterio.open(self.imagery_path)
         self._set_crs_transformer()
 
@@ -176,11 +176,11 @@ class RasterioSource(ActivateMixin, RasterSource):
     def _deactivate(self):
         self.image_dataset.close()
         self.image_dataset = None
-        self.image_temp_dir.cleanup()
-        self.image_temp_dir = None
+        self.image_tmp_dir.cleanup()
+        self.image_tmp_dir = None
 
     def _get_shifted_window(self, window):
-        do_shift = self.x_shift_meters != 0.0 or self.y_shift_meters != 0.0
+        do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
         if do_shift:
             ymin, xmin, ymax, xmax = window.tuple_format()
             width = window.get_width()
@@ -202,9 +202,9 @@ class RasterioSource(ActivateMixin, RasterSource):
             #
             # Courtesy of https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters  # noqa
             lat_radians = math.pi * lat / 180.0
-            dlon = Decimal(self.x_shift_meters) / Decimal(
+            dlon = Decimal(self.x_shift) / Decimal(
                 meters_per_degree * math.cos(lat_radians))
-            dlat = Decimal(self.y_shift_meters) / Decimal(meters_per_degree)
+            dlat = Decimal(self.y_shift) / Decimal(meters_per_degree)
             lon = float(Decimal(lon) + dlon)
             lat = float(Decimal(lat) + dlat)
 

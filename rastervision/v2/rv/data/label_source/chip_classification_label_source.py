@@ -71,7 +71,7 @@ def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
     return class_id
 
 
-def infer_labels(geojson, extent, cell_size, ioa_thresh,
+def infer_labels(geojson, extent, cell_sz, ioa_thresh,
                  use_intersection_over_cell, pick_min_class_id,
                  background_class_id):
     """Infer ChipClassificationLabels grid from GeoJSON containing polygons.
@@ -88,7 +88,7 @@ def infer_labels(geojson, extent, cell_size, ioa_thresh,
         ChipClassificationLabels
     """
     labels = ChipClassificationLabels()
-    cells = extent.get_windows(cell_size, cell_size)
+    cells = extent.get_windows(cell_sz, cell_sz)
 
     # We need to associate class_id with each geom. Monkey-patching it onto the geom
     # seems like a bad idea, but it's the only straightforward way of doing this
@@ -163,7 +163,7 @@ class ChipClassificationLabelSource(LabelSource):
 
         if chip_ls_config.infer_cells:
             self.labels = infer_labels(
-                geojson, extent, cfg.cell_size, cfg.ioa_thresh,
+                geojson, extent, cfg.cell_sz, cfg.ioa_thresh,
                 cfg.use_intersection_over_cell, cfg.pick_min_class_id,
                 cfg.background_class_id)
         else:

@@ -83,5 +83,5 @@ def get_config(runner, test=False):
 
     config = ChipClassificationConfig(
         root_uri=root_uri, dataset=dataset, backend=backend,
-        train_chip_size=200, debug=debug)
+        train_chip_sz=200, debug=debug)
     return config
