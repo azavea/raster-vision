@@ -5,9 +5,8 @@ from rastervision.v2.rv.data import DatasetConfig, ClassConfig
 from rastervision.v2.rv.backend import BackendConfig
 
 class TaskConfig(PipelineConfig):
-    backend: BackendConfig
     dataset: DatasetConfig
-    class_config: ClassConfig
+    backend: BackendConfig
 
     debug: bool = False
     train_chip_size: int = 200
