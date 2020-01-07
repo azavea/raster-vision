@@ -38,12 +38,12 @@ class ClassInference():
 
         if self.class_config is not None:
             class_name = feature.get('properties', {}).get('class_name')
-            if class_name in self.class_config.get_class_names():
-                return self.class_config.get_by_name(class_name).id
+            if class_name in self.class_config.names:
+                return self.class_config.names.index(class_name)
 
             label = feature.get('properties', {}).get('label')
-            if label in self.class_config.get_class_names():
-                return self.class_config.get_by_name(label).id
+            if label in self.class_config.names:
+                return self.class_config.names.index(label)
 
         if self.class_id_to_filter is not None:
             for class_id, filter_fn in self.class_id_to_filter.items():

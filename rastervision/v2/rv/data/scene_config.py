@@ -17,11 +17,13 @@ class SceneConfig(Config):
     label_store: Optional[LabelStoreConfig] = None
     aoi_uris: Optional[List[str]] = None
 
-    def build(self, class_config):
-        raster_source = self.raster_source.build()
+    def build(self, class_config, tmp_dir):
+        raster_source = self.raster_source.build(tmp_dir)
         crs_transformer = raster_source.get_crs_transformer()
+        extent = raster_source.get_extent()
 
-        label_source = self.label_source.build(class_config, crs_transformer)
+        label_source = self.label_source.build(
+            class_config, crs_transformer, extent)
         label_store = self.label_store.build(class_config, crs_transformer)
 
         aoi_polygons = None

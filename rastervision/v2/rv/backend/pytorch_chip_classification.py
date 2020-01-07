@@ -84,7 +84,8 @@ class PyTorchChipClassification(Backend):
         upload_or_copy(group_path, group_uri)
 
     def train(self):
-        self.learner.main()
+        learner = self.learner.get_learner()(self.learner, self.tmp_dir)
+        learner.main()
 
     def load_model(self):
         pass

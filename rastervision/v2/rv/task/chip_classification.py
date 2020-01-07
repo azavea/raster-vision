@@ -109,7 +109,7 @@ class ChipClassification(Task):
                 return backend.process_scene_data(scene, data, self.tmp_dir)
 
         def _process_scenes(scenes, split):
-            return [_process_scene(s.build(class_config), split)
+            return [_process_scene(s.build(class_config, self.tmp_dir), split)
                     for s in config.dataset.train_scenes]
 
         train_results = _process_scenes(config.dataset.train_scenes, TRAIN)
@@ -119,8 +119,8 @@ class ChipClassification(Task):
             train_results, valid_results, self.tmp_dir)
 
     def train(self):
-        backend = self.config.backend.build(self.tmp_dir)
-        backend.train(self.tmp_dir)
+        backend = self.config.backend.build(self.config, self.tmp_dir)
+        backend.train()
 
     def predict(self, split_ind=0, num_splits=1):
         pass
