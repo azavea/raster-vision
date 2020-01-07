@@ -66,7 +66,7 @@ def run(runner, cfg_path, commands, arg, splits):
         cfgs = [cfgs]
 
     for cfg in cfgs:
-        cfg.update_all()
+        cfg.update()
         cfg_dict = cfg.dict()
         cfg_json_uri = join(cfg.root_uri, 'pipeline.json')
         json_to_file(cfg_dict, cfg_json_uri)

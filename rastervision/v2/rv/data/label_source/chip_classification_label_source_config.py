@@ -21,3 +21,8 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
             self, vector_source, class_config, crs_transformer, extent=extent)
+
+
+    def update(self, task=None, scene=None):
+        super().update(task, scene)
+        self.vector_source.update(task, scene)

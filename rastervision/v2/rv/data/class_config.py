@@ -6,3 +6,6 @@ from rastervision.v2.core.config import Config, register_config
 class ClassConfig(Config):
     names: List[str]
     colors: List[str]
+
+    def update(self, task=None):
+        pass

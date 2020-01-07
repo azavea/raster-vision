@@ -9,6 +9,9 @@ class ModelConfig(Config):
     backbone: str = 'resnet18'
     init_weights: str = None
 
+    def update(self, learner=None):
+        pass
+
 
 @register_config('solver')
 class SolverConfig(Config):
@@ -21,6 +24,9 @@ class SolverConfig(Config):
     one_cycle: bool = True
     multi_stage: List = []
 
+    def update(self, learner=None):
+        pass
+
 
 @register_config('data')
 class DataConfig(Config):
@@ -30,6 +36,9 @@ class DataConfig(Config):
     colors: List[str] = []
     img_sz: int = 256
     num_workers: int = 4
+
+    def update(self, learner=None):
+        pass
 
 
 @register_config('learner')
@@ -46,7 +55,9 @@ class LearnerConfig(Config):
 
     output_uri: str = None
 
-    def update(self, parent=None):
+    def update(self):
+        super().update()
+
         if self.overfit_mode:
             self.data.img_sz = self.data.img_sz // 2
             if self.test_mode:
@@ -58,7 +69,9 @@ class LearnerConfig(Config):
             self.solver.batch_sz = 4
             self.data.num_workers = 0
 
-        super().update(parent)
+        self.model.update(learner=self)
+        self.solver.update(learner=self)
+        self.data.update(learner=self)
 
     def get_learner():
         from rastervision.v2.learner.learner import Learner
@@ -69,11 +82,13 @@ class LearnerConfig(Config):
 class LearnerPipelineConfig(PipelineConfig):
     learner: LearnerConfig
 
-    def update(self, parent=None):
+    def update(self):
+        super().update()
+
         if self.learner.output_uri is None:
             self.learner.output_uri = self.root_uri
 
-        super().update(parent=parent)
+        self.learner.update()
 
     def get_pipeline(self):
         from rastervision.v2.learner.learner_pipeline import LearnerPipeline

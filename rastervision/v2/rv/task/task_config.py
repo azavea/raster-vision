@@ -21,16 +21,22 @@ class TaskConfig(PipelineConfig):
     predict_uri: str = None
     eval_uri: str = None
 
-    def update(self, parent=None):
-        if self.analyze_uri is not None:
+    def update(self):
+        super().update()
+
+        if self.analyze_uri is None:
             self.analyze_uri = join(self.root_uri, 'analyze')
-        if self.chip_uri is not None:
+        if self.chip_uri is None:
             self.chip_uri = join(self.root_uri, 'chip')
-        if self.train_uri is not None:
+        if self.train_uri is None:
             self.train_uri = join(self.root_uri, 'train')
-        if self.predict_uri is not None:
+        if self.predict_uri is None:
             self.predict_uri = join(self.root_uri, 'predict')
-        if self.eval_uri is not None:
+        if self.eval_uri is None:
             self.eval_uri = join(self.root_uri, 'eval')
-        
-        super().update(parent)
+
+        self.dataset.update(task=self)
+        self.backend.update(task=self)
+
+    def get_default_label_store(self, scene):
+        raise NotImplementedError()

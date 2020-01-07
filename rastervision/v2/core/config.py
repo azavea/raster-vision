@@ -82,16 +82,5 @@ class Config(BaseModel):
     class Config:
         extra = 'forbid'
 
-    def update(self, parent=None):
+    def update(self):
         pass
-
-    def update_all(self, parent=None):
-        self.update(parent=parent)
-
-        for v in vars(self).values():
-            if isinstance(v, Config):
-                v.update(parent=self)
-            elif isinstance(v, list):
-                for _v in v:
-                    if isinstance(_v, Config):
-                        _v.update(parent=self)

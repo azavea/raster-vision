@@ -1,3 +1,5 @@
+from typing import Optional
+
 from rastervision.v2.rv.backend import BackendConfig
 from rastervision.v2.learner.classification_config import (
     ClassificationLearnerConfig)
@@ -11,15 +13,16 @@ from rastervision.v2.rv.task.chip_classification_config import (
 class PyTorchChipClassificationConfig(BackendConfig):
     learner: ClassificationLearnerConfig
 
-    def update(self, parent=None):
-        if isinstance(parent, ChipClassificationConfig):
-            parent: ChipClassificationConfig
-            self.learner.data.img_sz = parent.train_chip_sz
-            self.learner.test_mode = parent.debug
-            self.learner.data.colors = parent.dataset.class_config.colors
-            self.learner.data.labels = parent.dataset.class_config.names
+    def update(self, task=None):
+        super().update(task=task)
 
-        super().update(parent)
+        if task is not None:
+            self.learner.data.img_sz = task.train_chip_sz
+            self.learner.test_mode = task.debug
+            self.learner.data.colors = task.dataset.class_config.colors
+            self.learner.data.labels = task.dataset.class_config.names
+
+        self.learner.update()
 
     def build(self, tmp_dir):
         learner = self.learner.get_learner()(self.learner, self.tmp_dir)

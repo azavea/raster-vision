@@ -9,6 +9,10 @@ from rastervision.v2.learner.learner_config import (
 class RegressionModelConfig(ModelConfig):
     output_multiplier: List[float] = None
 
+    def update(self, learner=None):
+        if learner is not None and self.output_multiplier is None:
+            self.model.output_multiplier = [1.0] * len(learner.data.labels)
+
 
 @register_config('regression_data')
 class RegressionDataConfig(DataConfig):
@@ -20,12 +24,6 @@ class RegressionDataConfig(DataConfig):
 class RegressionLearnerConfig(LearnerConfig):
     model: RegressionModelConfig
     data: RegressionDataConfig
-
-    def update(self, parent=None):
-        super().update(parent)
-
-        if self.model.output_multiplier is None:
-            self.model.output_multiplier = [1.0] * len(self.data.labels)
 
     def get_learner(self):
         from rastervision.v2.learner.regression_learner import (

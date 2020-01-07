@@ -23,7 +23,7 @@ class SceneConfig(Config):
 
         label_source = self.label_source.build(class_config, crs_transformer)
         label_store = self.label_store.build(class_config, crs_transformer)
-        
+
         aoi_polygons = None
         if self.aoi_uris:
             aoi_polygons = []
@@ -36,3 +36,13 @@ class SceneConfig(Config):
         return Scene(
             self.id, raster_source, ground_truth_label_source=label_source,
             prediction_label_store=label_store, aoi_polygons=aoi_polygons)
+
+    def update(self, task=None):
+        super().update()
+
+        self.raster_source.update(task=task, scene=self)
+        self.label_source.update(task=task, scene=self)
+        if self.label_store is None and task is not None:
+            self.label_store = task.get_default_label_store(scene=self)
+        if self.label_store is not None:
+            self.label_store.update(task=task, scene=self)
