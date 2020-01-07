@@ -6,7 +6,7 @@ class ChipClassification(Task):
         pass
 
     def chip(self, split_ind=0, num_splits=1):
-        pass
+        print(self.config)
 
     def train(self):
         pass

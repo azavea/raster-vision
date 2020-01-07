@@ -18,6 +18,6 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     cell_sz: Optional[int] = None
 
     def build(self, class_config, crs_transformer, extent):
-        vector_source = self.vector_source.build()
+        vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
             self, vector_source, class_config, crs_transformer, extent=extent)

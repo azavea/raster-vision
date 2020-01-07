@@ -7,8 +7,8 @@ from rastervision.v2.rv.data.vector_source.label_maker.filter import (
 class ClassInference():
     """Infers missing class_ids from GeoJSON features."""
 
-    def __init__(self, class_map=None, class_id_to_filter=None, default_class_id=0):
-        self.class_map = class_map
+    def __init__(self, class_config=None, class_id_to_filter=None, default_class_id=0):
+        self.class_config = class_config
         self.class_id_to_filter = class_id_to_filter
         self.default_class_id = default_class_id
 
@@ -26,7 +26,7 @@ class ClassInference():
 
         Rules:
             1) If class_id is in feature['properties'], use it.
-            2) If class_name or label are in feature['properties'] and in class_map,
+            2) If class_name or label are in feature['properties'] and in class_config,
                 use corresponding class_id.
             3) If class_id_to_filter is set and filter is true when applied to feature,
                 use corresponding class_id.
@@ -36,14 +36,14 @@ class ClassInference():
         if class_id is not None:
             return class_id
 
-        if self.class_map is not None:
+        if self.class_config is not None:
             class_name = feature.get('properties', {}).get('class_name')
-            if class_name in self.class_map.get_class_names():
-                return self.class_map.get_by_name(class_name).id
+            if class_name in self.class_config.get_class_names():
+                return self.class_config.get_by_name(class_name).id
 
             label = feature.get('properties', {}).get('label')
-            if label in self.class_map.get_class_names():
-                return self.class_map.get_by_name(label).id
+            if label in self.class_config.get_class_names():
+                return self.class_config.get_by_name(label).id
 
         if self.class_id_to_filter is not None:
             for class_id, filter_fn in self.class_id_to_filter.items():

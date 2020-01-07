@@ -7,7 +7,7 @@ from rastervision.v2.rv.data.raster_source import RasterSourceConfig
 from rastervision.v2.rv.data.label_source import LabelSourceConfig
 from rastervision.v2.rv.data.label_store import LabelStoreConfig
 from rastervision.v2.rv.data.scene import Scene
-from rastervision.v2.rv.data.vector_source import GeoJSONVectorSource
+from rastervision.v2.rv.data.vector_source import GeoJSONVectorSourceConfig
 
 @register_config('scene')
 class SceneConfig(Config):
@@ -17,20 +17,19 @@ class SceneConfig(Config):
     label_store: Optional[LabelStoreConfig] = None
     aoi_uris: Optional[List[str]] = None
 
-    def build(self):
+    def build(self, class_config, crs_transformer):
         raster_source = self.raster_source.build()
-        extent = raster_source.get_extent()
         crs_transformer = raster_source.get_crs_transformer()
 
-        label_source = self.label_source.build()
-        label_store = self.label_store.build()
+        label_source = self.label_source.build(class_config, crs_transformer)
+        label_store = self.label_store.build(class_config, crs_transformer)
+        
         aoi_polygons = None
-
         if self.aoi_uris:
             aoi_polygons = []
             for uri in self.aoi_uris:
-                aoi_geojson = GeoJSONVectorSource(
-                    uri, crs_transformer).get_geojson()
+                aoi_geojson = GeoJSONVectorSourceConfig(uri).build(
+                    class_config, crs_transformer).get_geojson()
                 for f in aoi_geojson['features']:
                     aoi_polygons.append(shape(f['geometry']))
 
