@@ -9,7 +9,7 @@ class Backend(ABC):
     """
 
     @abstractmethod
-    def process_scene_data(self, scene, data, tmp_dir):
+    def process_scene_data(self, scene, data):
         """Process each scene's training data
 
         Args:
@@ -23,8 +23,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def process_sceneset_results(self, training_results, validation_results,
-                                 tmp_dir):
+    def process_sceneset_results(self, training_results, validation_results):
         """After all scenes have been processed, process the resultset
 
         Args:
@@ -35,18 +34,18 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def train(self, tmp_dir):
+    def train(self):
         """Train a model.
         """
         pass
 
     @abstractmethod
-    def load_model(self, tmp_dir):
+    def load_model(self):
         """Load the model in preparation for one or more prediction calls."""
         pass
 
     @abstractmethod
-    def predict(self, chips, windows, tmp_dir):
+    def predict(self, chips, windows):
         """Return predictions for a chip using model.
 
         Args:

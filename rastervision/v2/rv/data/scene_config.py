@@ -17,7 +17,7 @@ class SceneConfig(Config):
     label_store: Optional[LabelStoreConfig] = None
     aoi_uris: Optional[List[str]] = None
 
-    def build(self, class_config, crs_transformer):
+    def build(self, class_config):
         raster_source = self.raster_source.build()
         crs_transformer = raster_source.get_crs_transformer()
 

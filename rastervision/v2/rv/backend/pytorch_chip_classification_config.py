@@ -24,7 +24,6 @@ class PyTorchChipClassificationConfig(BackendConfig):
 
         self.learner.update()
 
-    def build(self, tmp_dir):
-        learner = self.learner.get_learner()(self.learner, self.tmp_dir)
-        learner = self.learner.build()
-        return PyTorchChipClassification(learner)
+    def build(self, task, tmp_dir):
+        learner = self.learner.get_learner()(self.learner, tmp_dir)
+        return PyTorchChipClassification(task, learner, tmp_dir)
