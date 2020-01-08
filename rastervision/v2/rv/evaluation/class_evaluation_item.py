@@ -1,6 +1,6 @@
 import numpy as np
 
-from rastervision.v2.evaluation import EvaluationItem
+from rastervision.v2.rv.evaluation import EvaluationItem
 
 
 class ClassEvaluationItem(EvaluationItem):

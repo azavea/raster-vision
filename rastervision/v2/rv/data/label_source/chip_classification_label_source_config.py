@@ -17,7 +17,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     infer_cells: bool = False
     cell_sz: Optional[int] = None
 
-    def build(self, class_config, crs_transformer, extent):
+    def build(self, class_config, crs_transformer, extent=None):
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
             self, vector_source, class_config, crs_transformer, extent=extent)

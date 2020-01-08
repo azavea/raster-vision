@@ -1,13 +1,13 @@
-from rastervision.v2.evaluation import (ClassificationEvaluator,
-                                     ChipClassificationEvaluation)
+from rastervision.v2.rv.evaluation import (
+    ClassificationEvaluator, ChipClassificationEvaluation)
 
 
 class ChipClassificationEvaluator(ClassificationEvaluator):
     """Evaluates predictions for a set of scenes.
     """
 
-    def __init__(self, class_map, output_uri):
-        super().__init__(class_map, output_uri)
+    def __init__(self, class_config, output_uri):
+        super().__init__(class_config, output_uri)
 
     def create_evaluation(self):
-        return ChipClassificationEvaluation(self.class_map)
+        return ChipClassificationEvaluation(self.class_config)

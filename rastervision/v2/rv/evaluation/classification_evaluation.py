@@ -3,7 +3,7 @@ import copy
 
 import json
 
-from rastervision.v2.evaluation import ClassEvaluationItem
+from rastervision.v2.rv.evaluation import ClassEvaluationItem
 from rastervision.v2.core.filesystem import str_to_file
 
 

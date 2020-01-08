@@ -6,5 +6,5 @@ class Evaluator(ABC):
     """
 
     @abstractmethod
-    def process(self, scenes, tmp_dir):
+    def process(self, scenes):
         pass

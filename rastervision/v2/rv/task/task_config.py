@@ -1,14 +1,17 @@
 from os.path import join
+from typing import List
 
 from rastervision.v2.core.pipeline_config import PipelineConfig
 from rastervision.v2.rv.data import DatasetConfig
 from rastervision.v2.rv.backend import BackendConfig
+from rastervision.v2.rv.evaluation import EvaluatorConfig
 from rastervision.v2.core.config import register_config
 
 @register_config('task')
 class TaskConfig(PipelineConfig):
     dataset: DatasetConfig
     backend: BackendConfig
+    evaluators: List[EvaluatorConfig] = []
 
     debug: bool = False
     train_chip_sz: int = 200
@@ -37,6 +40,13 @@ class TaskConfig(PipelineConfig):
 
         self.dataset.update(task=self)
         self.backend.update(task=self)
+        if not self.evaluators:
+            self.evaluators.append(self.get_default_evaluator())
+        for evaluator in self.evaluators:
+            evaluator.update(task=self)
 
     def get_default_label_store(self, scene):
+        raise NotImplementedError()
+
+    def get_default_evaluator(self):
         raise NotImplementedError()

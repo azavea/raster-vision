@@ -1,7 +1,7 @@
 from abc import (abstractmethod)
 import logging
 
-from rastervision.v2.evaluation import Evaluator
+from rastervision.v2.rv.evaluation import Evaluator
 from rastervision.v2.rv.data import ActivateMixin
 
 log = logging.getLogger(__name__)
@@ -11,8 +11,8 @@ class ClassificationEvaluator(Evaluator):
     """Evaluates predictions for a set of scenes.
     """
 
-    def __init__(self, class_map, output_uri):
-        self.class_map = class_map
+    def __init__(self, class_config, output_uri):
+        self.class_config = class_config
         self.output_uri = output_uri
         self.eval = None
 

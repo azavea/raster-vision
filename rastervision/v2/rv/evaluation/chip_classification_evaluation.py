@@ -1,24 +1,24 @@
 import numpy as np
 from sklearn import metrics
 
-from rastervision.v2.evaluation import ClassificationEvaluation
-from rastervision.v2.evaluation import ClassEvaluationItem
+from rastervision.v2.rv.evaluation import (
+    ClassificationEvaluation, ClassEvaluationItem)
 
 
 class ChipClassificationEvaluation(ClassificationEvaluation):
-    def __init__(self, class_map):
+    def __init__(self, class_config):
         super().__init__()
-        self.class_map = class_map
+        self.class_config = class_config
 
     def compute(self, ground_truth_labels, prediction_labels):
         self.class_to_eval_item = ChipClassificationEvaluation.compute_eval_items(
-            ground_truth_labels, prediction_labels, self.class_map)
+            ground_truth_labels, prediction_labels, self.class_config)
 
         self.compute_avg()
 
     @staticmethod
-    def compute_eval_items(gt_labels, pred_labels, class_map):
-        nb_classes = len(class_map)
+    def compute_eval_items(gt_labels, pred_labels, class_config):
+        nb_classes = len(class_config.names)
         class_to_eval_item = {}
 
         gt_class_ids = []
@@ -33,15 +33,11 @@ class ChipClassificationEvaluation(ClassificationEvaluation):
                 gt_class_ids.append(gt_class_id)
                 pred_class_ids.append(pred_class_id)
 
-        # Add 1 because class_ids start at 1.
-        sklabels = np.arange(1 + nb_classes)
+        sklabels = np.arange(nb_classes)
         precision, recall, f1, support = metrics.precision_recall_fscore_support(
             gt_class_ids, pred_class_ids, labels=sklabels, warn_for=())
 
-        for class_map_item in class_map.get_items():
-            class_id = class_map_item.id
-            class_name = class_map_item.name
-
+        for class_id, class_name in enumerate(class_config.names):
             eval_item = ClassEvaluationItem(
                 float(precision[class_id]),
                 float(recall[class_id]),

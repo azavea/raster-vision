@@ -153,15 +153,17 @@ class ChipClassificationLabelSource(LabelSource):
     """
 
     def __init__(self,
-                 chip_ls_config,
+                 label_source_config,
                  vector_source,
                  class_config,
                  crs_transformer,
                  extent=None):
-        cfg = chip_ls_config
+        # extent is only needed if infer_cells is True or if it is False and
+        # you want to filter cells by extent
+        cfg = label_source_config
         geojson = vector_source.get_geojson()
 
-        if chip_ls_config.infer_cells:
+        if cfg.infer_cells:
             self.labels = infer_labels(
                 geojson, extent, cfg.cell_sz, cfg.ioa_thresh,
                 cfg.use_intersection_over_cell, cfg.pick_min_class_id,

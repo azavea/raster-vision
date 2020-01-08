@@ -1,9 +1,10 @@
 import logging
 
+import click
 import numpy as np
 
 from rastervision.v2.core.pipeline import Pipeline
-from rastervision.v2.rv import Box, TrainingData
+from rastervision.v2.rv import TrainingData
 from rastervision.v2.rv.task import TRAIN, VALIDATION
 
 log = logging.getLogger(__name__)
@@ -149,4 +150,11 @@ class Task(Pipeline):
         return self.post_process_predictions(labels, scene)
 
     def eval(self):
-        pass
+        class_config = self.config.dataset.class_config
+        scenes = [s.build(class_config, self.tmp_dir)
+                  for s in self.config.dataset.validation_scenes]
+        evaluators = [e.build(class_config) for e in self.config.evaluators]
+        for evaluator in evaluators:
+            msg = 'Running evaluator: {}...'.format(type(evaluator).__name__)
+            click.echo(click.style(msg, fg='green'))
+            evaluator.process(scenes, self.tmp_dir)

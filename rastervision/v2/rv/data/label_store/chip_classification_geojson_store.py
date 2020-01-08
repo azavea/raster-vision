@@ -2,8 +2,10 @@ from rastervision.v2.core.filesystem import json_to_file
 from rastervision.v2.rv.data.label import ChipClassificationLabels
 from rastervision.v2.rv.data.label_store import LabelStore
 from rastervision.v2.rv.data.label_store.utils import boxes_to_geojson
-from rastervision.v2.rv.data.label_source import ChipClassificationLabelSource
-from rastervision.v2.rv.data.vector_source import GeoJSONVectorSource, GeoJSONVectorSourceConfig
+from rastervision.v2.rv.data.label_source import (
+    ChipClassificationLabelSourceConfig)
+from rastervision.v2.rv.data.vector_source import (
+    GeoJSONVectorSourceConfig)
 
 
 class ChipClassificationGeoJSONStore(LabelStore):
@@ -42,11 +44,10 @@ class ChipClassificationGeoJSONStore(LabelStore):
         json_to_file(geojson, self.uri)
 
     def get_labels(self):
-        vector_source = GeoJSONVectorSourceConfig(uri=self.uri).build(
+        vs = GeoJSONVectorSourceConfig(uri=self.uri)
+        ls = ChipClassificationLabelSourceConfig(vector_source=vs).build(
             self.class_config, self.crs_transformer)
-        source = ChipClassificationLabelSource(
-            vector_source, self.crs_transformer, self.class_map)
-        return source.get_labels()
+        return ls.get_labels()
 
     def empty_labels(self):
         return ChipClassificationLabels()
