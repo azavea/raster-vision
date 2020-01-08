@@ -202,18 +202,19 @@ class Learner(ABC):
     def normalize_input(self, x):
         return x.float() / 255.0
 
-    def predict(self, x, normalize=False):
+    def predict(self, x, normalize=False, raw_out=False):
         x = self.to_batch(x)
         if normalize:
             x = self.normalize_input(x)
         x = x.to(self.device)
         with torch.no_grad():
             out = self.model(x)
-            out = self.post_forward(out)
+            if not raw_out:
+                out = self.post_forward(out)
         out = out.cpu()
         return out
 
-    def numpy_predict(self, x):
+    def numpy_predict(self, x, raw_out=False):
         """Make a prediction using a TF-formatted (ie. channels last) numpy array.
 
         Args:
@@ -226,7 +227,7 @@ class Learner(ABC):
         x = torch.tensor(x)
         x = self.to_batch(x)
         x = x.permute((0, 3, 1, 2))
-        out = self.predict(x, normalize=True)
+        out = self.predict(x, normalize=True, raw_out=raw_out)
         return out.numpy()
 
     def predict_dataloader(self, dl, one_batch=False, return_x=True):

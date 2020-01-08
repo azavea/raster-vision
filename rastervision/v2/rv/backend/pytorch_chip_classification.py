@@ -3,17 +3,18 @@ import uuid
 import zipfile
 import glob
 
-from rastervision.v2.rv.backend import Backend
-from rastervision.v2.rv.utils.misc import save_img
 from rastervision.v2.core.filesystem import (
     get_local_path, make_dir, upload_or_copy)
-
+from rastervision.v2.rv.data.label import ChipClassificationLabels
+from rastervision.v2.rv.backend import Backend
+from rastervision.v2.rv.utils.misc import save_img
 
 class PyTorchChipClassification(Backend):
-    def __init__(self, task, learner, tmp_dir):
-        self.task = task
-        self.learner = learner
+    def __init__(self, task_cfg, learner_cfg, tmp_dir):
+        self.task_cfg = task_cfg
+        self.learner_cfg = learner_cfg
         self.tmp_dir = tmp_dir
+        self.learner = None
 
     def process_scene_data(self, scene, data):
         """Make training chips for a scene.
@@ -36,7 +37,7 @@ class PyTorchChipClassification(Backend):
             if class_id is None:
                 continue
 
-            class_name = self.task.dataset.class_config.names[class_id]
+            class_name = self.task_cfg.dataset.class_config.names[class_id]
             class_dir = join(scene_dir, class_name)
             make_dir(class_dir)
             chip_path = join(class_dir, '{}-{}.png'.format(scene.id, ind))
@@ -63,7 +64,7 @@ class PyTorchChipClassification(Backend):
                 that all hold validation chips
         """
         group = str(uuid.uuid4())
-        group_uri = join(self.task.chip_uri, '{}.zip'.format(group))
+        group_uri = join(self.task_cfg.chip_uri, '{}.zip'.format(group))
         group_path = get_local_path(group_uri, self.tmp_dir)
         make_dir(group_path, use_dirname=True)
 
@@ -82,11 +83,23 @@ class PyTorchChipClassification(Backend):
         upload_or_copy(group_path, group_uri)
 
     def train(self):
-        learner = self.learner.get_learner()(self.learner, self.tmp_dir)
+        learner = self.learner_cfg.get_learner()(self.learner_cfg, self.tmp_dir)
         learner.main()
 
     def load_model(self):
-        pass
+        # TODO make this part of learner config
+        model_bundle_path = join(self.learner_cfg.output_uri, 'model-bundle.zip')
+        self.learner = self.learner_cfg.get_learner().from_model_bundle(
+            model_bundle_path, self.tmp_dir)
 
     def predict(self, chips, windows):
-        pass
+        if self.learner is None:
+            raise Exception('Must call load_model() before predict.')
+        out = self.learner.numpy_predict(chips, raw_out=True)
+        labels = ChipClassificationLabels()
+
+        for class_probs, window in zip(out, windows):
+            class_id = class_probs.argmax()
+            labels.set_cell(window, class_id, class_probs)
+
+        return labels

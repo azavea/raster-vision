@@ -1,4 +1,4 @@
-def boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
+def boxes_to_geojson(boxes, class_ids, crs_transformer, class_config,
                      scores=None):
     """Convert boxes and associated data into a GeoJSON dict.
 
@@ -7,7 +7,6 @@ def boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
         class_ids: list of int (one for each box)
         crs_transformer: CRSTransformer used to convert pixel coords to map
             coords in the GeoJSON
-        class_map: ClassMap used to infer class_name from class_id
         scores: optional list of score or scores.
                 If floats (one for each box), property name will be "score".
                 If lists of floats, property name will be "scores".
@@ -21,7 +20,7 @@ def boxes_to_geojson(boxes, class_ids, crs_transformer, class_map,
         polygon = [list(crs_transformer.pixel_to_map(p)) for p in polygon]
 
         class_id = int(class_ids[box_ind])
-        class_name = class_map.get_by_id(class_id).name
+        class_name = class_config.names[class_id]
 
         feature = {
             'type': 'Feature',

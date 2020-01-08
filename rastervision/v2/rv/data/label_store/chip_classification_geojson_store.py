@@ -37,7 +37,7 @@ class ChipClassificationGeoJSONStore(LabelStore):
             boxes,
             class_ids,
             self.crs_transformer,
-            self.class_map,
+            self.class_config,
             scores=scores)
         json_to_file(geojson, self.uri)
 
