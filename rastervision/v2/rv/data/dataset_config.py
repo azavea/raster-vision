@@ -3,6 +3,7 @@ from typing import Optional, List
 from rastervision.v2.core.config import Config, register_config
 from rastervision.v2.rv.data.scene_config import SceneConfig
 from rastervision.v2.rv.data.class_config import ClassConfig
+from rastervision.v2.rv.utils.misc import split_into_groups
 
 @register_config('dataset')
 class DatasetConfig(Config):
@@ -22,3 +23,20 @@ class DatasetConfig(Config):
         if self.test_scenes is not None:
             for s in self.test_scenes:
                 s.update(task=task)
+
+    def get_split_config(self, split_ind, num_splits):
+        new_cfg = self.copy()
+
+        groups = split_into_groups(self.train_scenes, num_splits)
+        new_cfg.train_scenes = groups[split_ind] if split_ind < len(groups) else []
+        
+        groups = split_into_groups(self.validation_scenes, num_splits)
+        new_cfg.validation_scenes = groups[split_ind] if split_ind < len(groups) else []
+
+        if self.test_scenes:
+            groups = split_into_groups(self.test_scenes, num_splits)
+            new_cfg.test_scenes = groups[split_ind] if split_ind < len(groups) else []
+        
+        return new_cfg
+
+        

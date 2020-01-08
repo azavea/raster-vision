@@ -44,10 +44,10 @@ class Task(Pipeline):
         raise NotImplementedError()
 
     def chip(self, split_ind=0, num_splits=1):
-        # TODO handle split
-        config = self.config
-        backend = self.config.backend.build(config, self.tmp_dir)
-        class_config = config.dataset.class_config
+        cfg = self.config
+        backend = cfg.backend.build(cfg, self.tmp_dir)
+        dataset = cfg.dataset.get_split_config(split_ind, num_splits)
+        class_cfg = dataset.class_config
 
         def _process_scene(scene, split):
             with scene.activate():
@@ -64,14 +64,12 @@ class Task(Pipeline):
                 return backend.process_scene_data(scene, data)
 
         def _process_scenes(scenes, split):
-            return [_process_scene(s.build(class_config, self.tmp_dir), split)
-                    for s in config.dataset.train_scenes]
+            return [_process_scene(s.build(class_cfg, self.tmp_dir), split)
+                    for s in dataset.train_scenes]
 
-        train_results = _process_scenes(config.dataset.train_scenes, TRAIN)
-        valid_results = _process_scenes(
-            config.dataset.validation_scenes, VALIDATION)
-        backend.process_sceneset_results(
-            train_results, valid_results)
+        train_results = _process_scenes(dataset.train_scenes, TRAIN)
+        valid_results = _process_scenes(dataset.validation_scenes, VALIDATION)
+        backend.process_sceneset_results(train_results, valid_results)
 
     def train(self):
         backend = self.config.backend.build(self.config, self.tmp_dir)
@@ -99,6 +97,8 @@ class Task(Pipeline):
     def predict(self, split_ind=0, num_splits=1):
         backend = self.config.backend.build(self.config, self.tmp_dir)
         backend.load_model()
+        class_config = self.config.dataset.class_config
+        dataset = self.config.dataset.get_split_config(split_ind, num_splits)
 
         def _predict(scenes):
             for scene in scenes:
@@ -107,12 +107,12 @@ class Task(Pipeline):
                     label_store = scene.prediction_label_store
                     label_store.save(labels)
 
-        class_config = self.config.dataset.class_config
+        
         _predict([s.build(class_config, self.tmp_dir)
-                  for s in self.config.dataset.validation_scenes])
-        if self.config.dataset.test_scenes:
+                  for s in dataset.validation_scenes])
+        if dataset.test_scenes:
             _predict([s.build(class_config, self.tmp_dir)
-                    for s in self.config.dataset.test_scenes])
+                      for s in dataset.test_scenes])
 
     def predict_scene(self, scene, backend):
         """Predict on a single scene, and return the labels."""
