@@ -134,14 +134,14 @@ class Learner(ABC):
         cfg = self.cfg
         if cfg.solver.one_cycle and cfg.solver.num_epochs > 1:
             total_steps = cfg.solver.num_epochs * self.steps_per_epoch
-            step_sz_up = (cfg.solver.num_epochs // 2) * self.steps_per_epoch
-            step_sz_down = total_steps - step_sz_up
+            step_size_up = (cfg.solver.num_epochs // 2) * self.steps_per_epoch
+            step_size_down = total_steps - step_size_up
             step_scheduler = CyclicLR(
                 self.opt,
                 base_lr=cfg.solver.lr / 10,
                 max_lr=cfg.solver.lr,
-                step_sz_up=step_sz_up,
-                step_sz_down=step_sz_down,
+                step_size_up=step_size_up,
+                step_size_down=step_size_down,
                 cycle_momentum=False)
             for _ in range(self.start_epoch * self.steps_per_epoch):
                 step_scheduler.step()

@@ -58,7 +58,7 @@ def get_config(runner, test=False):
             ioa_thresh=0.5,
             use_intersection_over_cell=False,
             pick_min_class_id=True,
-            background_class_id=2,
+            background_class_id=1,
             infer_cells=True)
 
         return SceneConfig(

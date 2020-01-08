@@ -27,10 +27,10 @@ class SceneConfig(Config):
         label_store = self.label_store.build(class_config, crs_transformer)
 
         aoi_polygons = None
-        if self.aoi_uris:
+        if self.aoi_uris is not None:
             aoi_polygons = []
             for uri in self.aoi_uris:
-                aoi_geojson = GeoJSONVectorSourceConfig(uri).build(
+                aoi_geojson = GeoJSONVectorSourceConfig(uri=uri).build(
                     class_config, crs_transformer).get_geojson()
                 for f in aoi_geojson['features']:
                     aoi_polygons.append(shape(f['geometry']))

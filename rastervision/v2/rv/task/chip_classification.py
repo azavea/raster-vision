@@ -11,17 +11,19 @@ from rastervision.v2.rv import Box, TrainingData
 log = logging.getLogger(__name__)
 
 def get_train_windows(scene, chip_size):
-    windows = []
     extent = scene.raster_source.get_extent()
     stride = chip_size
     windows = extent.get_windows(chip_size, stride)
     if scene.aoi_polygons:
         windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
+    
+    train_windows = []
     for window in windows:
         chip = scene.raster_source.get_chip(window)
         if np.sum(chip.ravel()) > 0:
-            windows.append(window)
-    return windows
+            train_windows.append(window)
+    
+    return train_windows
 
 '''
 def get_predict_windows(chip_size, extent):
@@ -106,7 +108,7 @@ class ChipClassification(Task):
                 # Shuffle data so the first N samples which are displayed in
                 # Tensorboard are more diverse.
                 data.shuffle()
-                return backend.process_scene_data(scene, data, self.tmp_dir)
+                return backend.process_scene_data(scene, data)
 
         def _process_scenes(scenes, split):
             return [_process_scene(s.build(class_config, self.tmp_dir), split)
@@ -114,9 +116,8 @@ class ChipClassification(Task):
 
         train_results = _process_scenes(config.dataset.train_scenes, TRAIN)
         valid_results = _process_scenes(
-            config.dataset.validation_scenes_scenes, VALIDATION)
-        self.backend.process_sceneset_results(
-            train_results, valid_results, self.tmp_dir)
+            config.dataset.validation_scenes, VALIDATION)
+        backend.process_sceneset_results(train_results, valid_results)
 
     def train(self):
         backend = self.config.backend.build(self.config, self.tmp_dir)

@@ -21,6 +21,8 @@ class PyTorchChipClassificationConfig(BackendConfig):
             self.learner.test_mode = task.debug
             self.learner.data.colors = task.dataset.class_config.colors
             self.learner.data.labels = task.dataset.class_config.names
+            self.learner.output_uri = task.train_uri
+            self.learner.data.uri = task.chip_uri
 
         self.learner.update()
 

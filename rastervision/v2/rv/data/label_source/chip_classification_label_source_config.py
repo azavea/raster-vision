@@ -25,4 +25,6 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
 
     def update(self, task=None, scene=None):
         super().update(task, scene)
+        if self.cell_sz is None and task is not None:
+            self.cell_sz = task.train_chip_sz
         self.vector_source.update(task, scene)
