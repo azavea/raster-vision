@@ -104,7 +104,7 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes,
         ImageFolder(valid_dir, classes=class_names))
 
     if rare_classes != []:
-        targets = [target[1] for target in train_ds.orig_dataset.imgs]
+        targets = [target for _, target in train_ds.orig_dataset.imgs]
         train_sample_weights = calculate_oversampling_weights(
             targets, rare_classes, desired_prob)
         num_train_samples = len(train_ds)
