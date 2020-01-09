@@ -78,8 +78,7 @@ def get_config(runner, test=False):
     model = ModelConfig(backbone='resnet50')
     solver = SolverConfig(lr=2e-4, num_epochs=3, batch_sz=8, one_cycle=True)
     data = ClassificationDataConfig(
-        data_format='image_folder',
-        labels=['building', 'no_building'])
+        data_format='image_folder')
     learner = ClassificationLearnerConfig(
         model=model, solver=solver, data=data, test_mode=test)
     backend = PyTorchChipClassificationConfig(learner=learner)

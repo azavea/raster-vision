@@ -32,8 +32,8 @@ class SolverConfig(Config):
 class DataConfig(Config):
     uri: str = None
     data_format: str = None
-    labels: List[str] = []
     class_names: List[str] = []
+    class_colors: List[str] = []
     img_sz: int = 256
     num_workers: int = 4
 
