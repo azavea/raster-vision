@@ -6,9 +6,8 @@ from rastervision.v2.core.pipeline import Pipeline
 class PipelineConfig(Config):
     root_uri: str
 
-    def get_pipeline(self):
-        return Pipeline
-
+    def build(self, tmp_dir):
+        return Pipeline(self, tmp_dir)
 
 def get_config(runner):
     return PipelineConfig(root_uri='/opt/data/')

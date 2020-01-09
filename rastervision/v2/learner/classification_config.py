@@ -11,7 +11,8 @@ class ClassificationDataConfig(DataConfig):
 class ClassificationLearnerConfig(LearnerConfig):
     data: ClassificationDataConfig
 
-    def get_learner(self):
+    def build(self, tmp_dir, model_path=None):
         from rastervision.v2.learner.classification_learner import (
             ClassificationLearner)
-        return ClassificationLearner
+        return ClassificationLearner(self, tmp_dir, model_path=model_path)
+

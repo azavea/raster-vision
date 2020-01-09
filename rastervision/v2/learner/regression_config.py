@@ -25,7 +25,7 @@ class RegressionLearnerConfig(LearnerConfig):
     model: RegressionModelConfig
     data: RegressionDataConfig
 
-    def get_learner(self):
+    def build(self, tmp_dir, model_path=None):
         from rastervision.v2.learner.regression_learner import (
             RegressionLearner)
-        return RegressionLearner
+        return RegressionLearner(self, tmp_dir, model_path=model_path)

@@ -314,7 +314,7 @@ class Learner(ABC):
         config_path = join(model_bundle_dir, 'config.json')
         model_path = join(model_bundle_dir, 'model.pth')
         cfg = build_config(file_to_json(config_path))
-        return cfg.get_learner()(cfg, tmp_dir, model_path=model_path)
+        return cfg.build(tmp_dir, model_path=model_path)
 
     def save_model_bundle(self):
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')

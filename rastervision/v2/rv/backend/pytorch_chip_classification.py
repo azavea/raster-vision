@@ -83,13 +83,13 @@ class PyTorchChipClassification(Backend):
         upload_or_copy(group_path, group_uri)
 
     def train(self):
-        learner = self.learner_cfg.get_learner()(self.learner_cfg, self.tmp_dir)
+        learner = self.learner_cfg.build(self.tmp_dir)
         learner.main()
 
     def load_model(self):
         # TODO make this part of learner config
         model_bundle_path = join(self.learner_cfg.output_uri, 'model-bundle.zip')
-        self.learner = self.learner_cfg.get_learner().from_model_bundle(
+        self.learner = self.learner_cfg.build_from_model_bundle(
             model_bundle_path, self.tmp_dir)
 
     def predict(self, chips, windows):

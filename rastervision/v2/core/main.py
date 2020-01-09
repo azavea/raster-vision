@@ -44,6 +44,9 @@ def main(profile, verbose):
 @click.option('--splits', '-s', default=1)
 def run(runner, cfg_path, commands, arg, splits):
     """Run commands within pipelines using runner named RUNNER."""
+    tmp_dir_obj = _rv_config.get_tmp_dir()
+    tmp_dir = tmp_dir_obj.name
+
     cfg_module = importlib.import_module(cfg_path)
     args = dict(arg)
 
@@ -71,7 +74,7 @@ def run(runner, cfg_path, commands, arg, splits):
         cfg_json_uri = join(cfg.root_uri, 'pipeline.json')
         json_to_file(cfg_dict, cfg_json_uri)
 
-        pipeline = cfg.get_pipeline()
+        pipeline = cfg.build(tmp_dir)
         if not commands:
             commands = pipeline.commands
 
@@ -85,7 +88,7 @@ def _run_command(cfg_json_uri, command, split_ind, num_splits):
 
     pipeline_cfg_dict = file_to_json(cfg_json_uri)
     cfg = build_config(pipeline_cfg_dict)
-    pipeline = cfg.get_pipeline()(cfg, tmp_dir)
+    pipeline = cfg.build(tmp_dir)
 
     # TODO generalize this to work outside batch
     if split_ind is None:

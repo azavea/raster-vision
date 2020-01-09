@@ -73,10 +73,11 @@ class LearnerConfig(Config):
         self.solver.update(learner=self)
         self.data.update(learner=self)
 
-    def get_learner():
-        from rastervision.v2.learner.learner import Learner
-        return Learner
+    def build(self, tmp_dir, model_path=None):
+        raise NotImplementedError()
 
+    def build_from_model_bundle(self, model_bundle_path, tmp_dir):
+        return Learner.from_model_bundle(model_bundle_path, tmp_dir)
 
 @register_config('learner_pipeline')
 class LearnerPipelineConfig(PipelineConfig):
@@ -90,6 +91,6 @@ class LearnerPipelineConfig(PipelineConfig):
 
         self.learner.update()
 
-    def get_pipeline(self):
+    def build(self, tmp_dir):
         from rastervision.v2.learner.learner_pipeline import LearnerPipeline
-        return LearnerPipeline
+        return LearnerPipeline(self, tmp_dir)

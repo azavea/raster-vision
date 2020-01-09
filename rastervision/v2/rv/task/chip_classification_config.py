@@ -6,9 +6,9 @@ from rastervision.v2.rv.evaluation import ChipClassificationEvaluatorConfig
 
 @register_config('chip_classification')
 class ChipClassificationConfig(TaskConfig):
-    def get_pipeline(self):
+    def build(self, tmp_dir):
         from rastervision.v2.rv.task.chip_classification import ChipClassification
-        return ChipClassification
+        return ChipClassification(self, tmp_dir)
 
     def get_default_label_store(self, scene):
         return ChipClassificationGeoJSONStoreConfig()
