@@ -1,5 +1,6 @@
 # flake8: noqa
 
+
 def boxes_to_geojson(boxes,
                      class_ids,
                      crs_transformer,
