@@ -3,11 +3,12 @@ import uuid
 import zipfile
 import glob
 
-from rastervision.v2.core.filesystem import (
-    get_local_path, make_dir, upload_or_copy)
+from rastervision.v2.core.filesystem import (get_local_path, make_dir,
+                                             upload_or_copy)
 from rastervision.v2.rv.data.label import ChipClassificationLabels
 from rastervision.v2.rv.backend import Backend
 from rastervision.v2.rv.utils.misc import save_img
+
 
 class PyTorchChipClassification(Backend):
     def __init__(self, task_cfg, learner_cfg, tmp_dir):

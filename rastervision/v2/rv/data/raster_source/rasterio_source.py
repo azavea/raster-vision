@@ -16,7 +16,6 @@ from rastervision.v2.rv.data.crs_transformer import RasterioCRSTransformer
 from rastervision.v2.rv.data.raster_source import RasterSource
 from rastervision.v2.rv.data import (ActivateMixin, ActivationError)
 
-
 log = logging.getLogger(__name__)
 wgs84 = pyproj.Proj({'init': 'epsg:4326'})
 wgs84_proj4 = '+init=epsg:4326'

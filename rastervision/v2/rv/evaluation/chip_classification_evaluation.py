@@ -1,8 +1,8 @@
 import numpy as np
 from sklearn import metrics
 
-from rastervision.v2.rv.evaluation import (
-    ClassificationEvaluation, ClassEvaluationItem)
+from rastervision.v2.rv.evaluation import (ClassificationEvaluation,
+                                           ClassEvaluationItem)
 
 
 class ChipClassificationEvaluation(ClassificationEvaluation):

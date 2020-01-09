@@ -41,11 +41,13 @@ class Registry():
     def add_config(self, type_hint, config_cls):
         if type_hint in self.configs:
             raise RegistryError(
-                'There is already a config registered for type_hint {}'.format(type_hint))
+                'There is already a config registered for type_hint {}'.format(
+                    type_hint))
         self.configs[type_hint] = config_cls
 
     def add_config_upgraders(self, type_hint, version, upgraders):
         if type_hint in self.config_upgraders:
             raise RegistryError(
-                'There are already config upgraders registered for type_hint {}'.format(type_hint))
+                'There are already config upgraders registered for type_hint {}'.
+                format(type_hint))
         self.config_upgraders[type_hint] = (version, upgraders)

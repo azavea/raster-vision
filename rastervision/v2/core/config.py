@@ -5,13 +5,8 @@ from typing_extensions import Literal
 
 from rastervision.v2.core import _registry
 
-class ConfigError(Exception):
-    pass
-
 
 def register_config(type_hint, version=0, upgraders=None):
-
-
     def _register_config(cls):
         if version > 0:
             cls = create_model(
@@ -61,7 +56,8 @@ def upgrade_config(x):
         if type_hint is not None:
             version = new_x.get('version')
             if version is not None:
-                curr_version, upgraders = _registry.get_config_upgrader(type_hint)
+                curr_version, upgraders = _registry.get_config_upgrader(
+                    type_hint)
                 for upgrader in upgraders[version:]:
                     new_x = upgrader.upgrade(new_x)
                 new_x['version'] = curr_version

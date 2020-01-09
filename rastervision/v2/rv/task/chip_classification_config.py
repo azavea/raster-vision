@@ -4,6 +4,7 @@ from rastervision.v2.rv.data.label_store import (
     ChipClassificationGeoJSONStoreConfig)
 from rastervision.v2.rv.evaluation import ChipClassificationEvaluatorConfig
 
+
 @register_config('chip_classification')
 class ChipClassificationConfig(TaskConfig):
     def build(self, tmp_dir):

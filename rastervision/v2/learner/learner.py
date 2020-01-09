@@ -19,14 +19,15 @@ import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR
 
-from rastervision.v2.core.filesystem import (sync_to_dir, json_to_file, file_to_json,
-                                      make_dir, zipdir, download_if_needed,
-                                      sync_from_dir, get_local_path, unzip)
+from rastervision.v2.core.filesystem import (
+    sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
+    download_if_needed, sync_from_dir, get_local_path, unzip)
 
 from rastervision.v2.core.config import build_config
 from rastervision.v2.learner.learner_config import LearnerConfig
 
 log = logging.getLogger(__name__)
+
 
 class Learner(ABC):
     def __init__(self, cfg: LearnerConfig, tmp_dir, model_path=None):
@@ -423,7 +424,8 @@ class Learner(ABC):
         self.on_train_start()
 
         if self.start_epoch > 0 and self.start_epoch <= self.cfg.solver.num_epochs:
-            log.info('Resuming training from epoch {}'.format(self.start_epoch))
+            log.info('Resuming training from epoch {}'.format(
+                self.start_epoch))
 
         for epoch in range(self.start_epoch, self.cfg.solver.num_epochs):
             log.info('epoch: {}'.format(epoch))

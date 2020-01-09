@@ -7,14 +7,13 @@ log = logging.getLogger(__name__)
 AWS_BATCH = 'aws_batch'
 
 
-def submit_job(
-        cmd,
-        debug=False,
-        profile=False,
-        attempts=5,
-        parent_job_ids=None,
-        num_array_jobs=None,
-        use_gpu=False):
+def submit_job(cmd,
+               debug=False,
+               profile=False,
+               attempts=5,
+               parent_job_ids=None,
+               num_array_jobs=None,
+               use_gpu=False):
     batch_config = _rv_config.get_subconfig('AWS_BATCH')
     job_queue = batch_config('cpu_job_queue')
     job_def = batch_config('cpu_job_definition')
@@ -65,8 +64,7 @@ class AWSBatchRunner():
         parent_job_ids = []
         for command in commands:
             cmd = [
-                'python', '-m',
-                'rastervision.v2 run_command', cfg_json_uri,
+                'python', '-m', 'rastervision.v2 run_command', cfg_json_uri,
                 command
             ]
             num_array_jobs = None

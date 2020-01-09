@@ -9,6 +9,7 @@ from rastervision.v2.rv.data.label_store import LabelStoreConfig
 from rastervision.v2.rv.data.scene import Scene
 from rastervision.v2.rv.data.vector_source import GeoJSONVectorSourceConfig
 
+
 @register_config('scene')
 class SceneConfig(Config):
     id: str
@@ -22,8 +23,8 @@ class SceneConfig(Config):
         crs_transformer = raster_source.get_crs_transformer()
         extent = raster_source.get_extent()
 
-        label_source = self.label_source.build(
-            class_config, crs_transformer, extent)
+        label_source = self.label_source.build(class_config, crs_transformer,
+                                               extent)
         label_store = self.label_store.build(class_config, crs_transformer)
 
         aoi_polygons = None
@@ -36,8 +37,11 @@ class SceneConfig(Config):
                     aoi_polygons.append(shape(f['geometry']))
 
         return Scene(
-            self.id, raster_source, ground_truth_label_source=label_source,
-            prediction_label_store=label_store, aoi_polygons=aoi_polygons)
+            self.id,
+            raster_source,
+            ground_truth_label_source=label_source,
+            prediction_label_store=label_store,
+            aoi_polygons=aoi_polygons)
 
     def update(self, task=None):
         super().update()

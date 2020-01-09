@@ -3,15 +3,14 @@ from os.path import join
 
 from rastervision.v2.rv.task import ChipClassificationConfig
 from rastervision.v2.rv.backend import PyTorchChipClassificationConfig
-from rastervision.v2.rv.data import (
-    DatasetConfig, ClassConfig, SceneConfig, ChipClassificationLabelSourceConfig,
-    GeoJSONVectorSourceConfig, RasterioSourceConfig)
-from rastervision.v2.learner import (
-    ClassificationLearnerConfig, ClassificationDataConfig,
-    SolverConfig, ModelConfig)
-from rastervision.v2.examples.utils import (
-    get_scene_info, str_to_bool, save_image_crop)
-
+from rastervision.v2.rv.data import (DatasetConfig, ClassConfig, SceneConfig,
+                                     ChipClassificationLabelSourceConfig,
+                                     GeoJSONVectorSourceConfig,
+                                     RasterioSourceConfig)
+from rastervision.v2.learner import (ClassificationLearnerConfig,
+                                     ClassificationDataConfig, SolverConfig,
+                                     ModelConfig)
+from rastervision.v2.examples.utils import (get_scene_info, save_image_crop)
 
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 
@@ -24,7 +23,8 @@ def get_config(runner, test=False):
     else:
         raw_uri = 's3://spacenet-dataset/'
         processed_uri = 's3://raster-vision-lf-dev/examples/spacenet/rio/processed-data'
-        root_uri = 's3://raster-vision-lf-dev/examples/test-output/rio-chip-classification'
+        root_uri = ('s3://raster-vision-lf-dev/examples/test-output/'
+                    'rio-chip-classification')
 
     debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
@@ -38,16 +38,20 @@ def get_config(runner, test=False):
         (raster_uri, label_uri) = scene_info
         raster_uri = join(raw_uri, raster_uri)
         label_uri = join(processed_uri, label_uri)
-        label_crop_uri = join(processed_uri, 'crops', os.path.basename(label_uri))
+        label_crop_uri = join(processed_uri, 'crops',
+                              os.path.basename(label_uri))
         aoi_uri = join(raw_uri, aoi_path)
 
         if test:
-            crop_uri = join(
-                processed_uri, 'crops', os.path.basename(raster_uri))
+            crop_uri = join(processed_uri, 'crops',
+                            os.path.basename(raster_uri))
             save_image_crop(
-                raster_uri, crop_uri, label_uri=label_uri,
+                raster_uri,
+                crop_uri,
+                label_uri=label_uri,
                 label_crop_uri=label_crop_uri,
-                size=600, min_features=20)
+                size=600,
+                min_features=20)
             raster_uri = crop_uri
 
         id = os.path.splitext(os.path.basename(raster_uri))[0]
@@ -72,18 +76,21 @@ def get_config(runner, test=False):
     class_config = ClassConfig(
         names=['building', 'no_building'], colors=['red', 'black'])
     dataset = DatasetConfig(
-        class_config=class_config, train_scenes=train_scenes,
+        class_config=class_config,
+        train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
     model = ModelConfig(backbone='resnet50')
     solver = SolverConfig(lr=2e-4, num_epochs=3, batch_sz=8, one_cycle=True)
-    data = ClassificationDataConfig(
-        data_format='image_folder')
+    data = ClassificationDataConfig(data_format='image_folder')
     learner = ClassificationLearnerConfig(
         model=model, solver=solver, data=data, test_mode=test)
     backend = PyTorchChipClassificationConfig(learner=learner)
 
     config = ChipClassificationConfig(
-        root_uri=root_uri, dataset=dataset, backend=backend,
-        train_chip_sz=200, debug=debug)
+        root_uri=root_uri,
+        dataset=dataset,
+        backend=backend,
+        train_chip_sz=200,
+        debug=debug)
     return config

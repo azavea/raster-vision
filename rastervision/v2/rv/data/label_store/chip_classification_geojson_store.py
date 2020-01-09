@@ -4,8 +4,7 @@ from rastervision.v2.rv.data.label_store import LabelStore
 from rastervision.v2.rv.data.label_store.utils import boxes_to_geojson
 from rastervision.v2.rv.data.label_source import (
     ChipClassificationLabelSourceConfig)
-from rastervision.v2.rv.data.vector_source import (
-    GeoJSONVectorSourceConfig)
+from rastervision.v2.rv.data.vector_source import (GeoJSONVectorSourceConfig)
 
 
 class ChipClassificationGeoJSONStore(LabelStore):

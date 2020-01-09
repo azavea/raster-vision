@@ -8,6 +8,7 @@ from rastervision.v2.rv.task import TRAIN, VALIDATION
 
 log = logging.getLogger(__name__)
 
+
 class Task(Pipeline):
     commands = ['analyze', 'chip', 'train', 'predict', 'eval']
     split_commands = ['analyze', 'chip', 'predict']
@@ -51,7 +52,8 @@ class Task(Pipeline):
         def _process_scene(scene, split):
             with scene.activate():
                 data = TrainingData()
-                log.info('Making {} chips for scene: {}'.format(split, scene.id))
+                log.info('Making {} chips for scene: {}'.format(
+                    split, scene.id))
                 windows = self.get_train_windows(scene)
                 for window in windows:
                     chip = scene.raster_source.get_chip(window)
@@ -63,8 +65,10 @@ class Task(Pipeline):
                 return backend.process_scene_data(scene, data)
 
         def _process_scenes(scenes, split):
-            return [_process_scene(s.build(class_cfg, self.tmp_dir), split)
-                    for s in dataset.train_scenes]
+            return [
+                _process_scene(s.build(class_cfg, self.tmp_dir), split)
+                for s in dataset.train_scenes
+            ]
 
         train_results = _process_scenes(dataset.train_scenes, TRAIN)
         valid_results = _process_scenes(dataset.validation_scenes, VALIDATION)
@@ -106,12 +110,15 @@ class Task(Pipeline):
                     label_store = scene.prediction_label_store
                     label_store.save(labels)
 
-        
-        _predict([s.build(class_config, self.tmp_dir)
-                  for s in dataset.validation_scenes])
+        _predict([
+            s.build(class_config, self.tmp_dir)
+            for s in dataset.validation_scenes
+        ])
         if dataset.test_scenes:
-            _predict([s.build(class_config, self.tmp_dir)
-                      for s in dataset.test_scenes])
+            _predict([
+                s.build(class_config, self.tmp_dir)
+                for s in dataset.test_scenes
+            ])
 
     def predict_scene(self, scene, backend):
         """Predict on a single scene, and return the labels."""
@@ -150,9 +157,12 @@ class Task(Pipeline):
 
     def eval(self):
         class_config = self.config.dataset.class_config
-        scenes = [s.build(class_config, self.tmp_dir)
-                  for s in self.config.dataset.validation_scenes]
+        scenes = [
+            s.build(class_config, self.tmp_dir)
+            for s in self.config.dataset.validation_scenes
+        ]
         evaluators = [e.build(class_config) for e in self.config.evaluators]
         for evaluator in evaluators:
-            log.info('Running evaluator: {}...'.format(type(evaluator).__name__))
+            log.info('Running evaluator: {}...'.format(
+                type(evaluator).__name__))
             evaluator.process(scenes, self.tmp_dir)

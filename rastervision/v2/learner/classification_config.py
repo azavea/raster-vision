@@ -15,4 +15,3 @@ class ClassificationLearnerConfig(LearnerConfig):
         from rastervision.v2.learner.classification_learner import (
             ClassificationLearner)
         return ClassificationLearner(self, tmp_dir, model_path=model_path)
-

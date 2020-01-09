@@ -1,8 +1,8 @@
 from typing import List
 
 from rastervision.v2.core.config import register_config
-from rastervision.v2.learner.learner_config import (
-    LearnerConfig, DataConfig, ModelConfig)
+from rastervision.v2.learner.learner_config import (LearnerConfig, DataConfig,
+                                                    ModelConfig)
 
 
 @register_config('regression_model')
@@ -11,7 +11,8 @@ class RegressionModelConfig(ModelConfig):
 
     def update(self, learner=None):
         if learner is not None and self.output_multiplier is None:
-            self.model.output_multiplier = [1.0] * len(learner.data.class_names)
+            self.model.output_multiplier = [1.0] * len(
+                learner.data.class_names)
 
 
 @register_config('regression_data')

@@ -4,8 +4,8 @@ import urllib
 import urllib.request
 from datetime import datetime
 
-from rastervision.v2.core.filesystem import (
-    FileSystem, NotReadableError, NotWritableError)
+from rastervision.v2.core.filesystem import (FileSystem, NotReadableError,
+                                             NotWritableError)
 from urllib.parse import urlparse
 
 

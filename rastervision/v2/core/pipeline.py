@@ -2,6 +2,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 class Pipeline():
     commands = ['test_cpu', 'test_gpu']
     split_commands = ['test_cpu']

@@ -4,6 +4,7 @@ from rastervision.v2.rv.evaluation.classification_evaluator_config import (
 from rastervision.v2.rv.evaluation.chip_classification_evaluator import (
     ChipClassificationEvaluator)
 
+
 @register_config('chip_classification_evaluator')
 class ChipClassificationEvaluatorConfig(ClassificationEvaluatorConfig):
     def build(self, class_config):

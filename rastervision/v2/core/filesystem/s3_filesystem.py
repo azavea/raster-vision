@@ -4,8 +4,8 @@ import subprocess
 from datetime import datetime
 from urllib.parse import urlparse
 
-from rastervision.v2.core.filesystem import (
-    FileSystem, NotReadableError, NotWritableError)
+from rastervision.v2.core.filesystem import (FileSystem, NotReadableError,
+                                             NotWritableError)
 
 
 # Code from https://alexwlchan.net/2017/07/listing-s3-keys/

@@ -1,7 +1,6 @@
 from typing import Optional
 
-from rastervision.v2.rv.data.vector_source import (
-    VectorSourceConfig)
+from rastervision.v2.rv.data.vector_source import (VectorSourceConfig)
 from rastervision.v2.rv.data.label_source import (
     LabelSourceConfig, ChipClassificationLabelSource)
 from rastervision.v2.core.config import register_config
@@ -21,7 +20,6 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
             self, vector_source, class_config, crs_transformer, extent=extent)
-
 
     def update(self, task=None, scene=None):
         super().update(task, scene)

@@ -19,7 +19,7 @@ from torchvision.transforms import (Compose, ToTensor, Resize, ColorJitter,
 from PIL import Image
 
 from rastervision.v2.core.filesystem import (download_if_needed, list_paths,
-                                      get_local_path)
+                                             get_local_path)
 from rastervision.v2.learner.learner import Learner
 
 
@@ -76,7 +76,8 @@ class RegressionLearner(Learner):
         backbone = self.cfg.model.backbone
         out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
-            self.cfg.data.class_names.index(l) for l in self.cfg.data.pos_labels
+            self.cfg.data.class_names.index(l)
+            for l in self.cfg.data.pos_labels
         ]
         model = RegressionModel(
             backbone, out_features, pos_out_inds=pos_out_inds)
@@ -128,7 +129,9 @@ class RegressionLearner(Learner):
                 if cfg.overfit_mode:
                     train_ds.append(
                         ImageRegressionDataset(
-                            train_dir, cfg.data.class_names, transform=transform))
+                            train_dir,
+                            cfg.data.class_names,
+                            transform=transform))
                 else:
                     train_ds.append(
                         ImageRegressionDataset(

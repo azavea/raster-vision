@@ -1,5 +1,5 @@
-from rastervision.v2.rv.evaluation import (
-    ClassificationEvaluator, ChipClassificationEvaluation)
+from rastervision.v2.rv.evaluation import (ClassificationEvaluator,
+                                           ChipClassificationEvaluation)
 
 
 class ChipClassificationEvaluator(ClassificationEvaluator):

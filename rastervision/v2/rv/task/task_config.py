@@ -7,6 +7,7 @@ from rastervision.v2.rv.backend import BackendConfig
 from rastervision.v2.rv.evaluation import EvaluatorConfig
 from rastervision.v2.core.config import register_config
 
+
 @register_config('task')
 class TaskConfig(PipelineConfig):
     dataset: DatasetConfig

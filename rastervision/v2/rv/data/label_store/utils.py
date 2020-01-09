@@ -1,4 +1,9 @@
-def boxes_to_geojson(boxes, class_ids, crs_transformer, class_config,
+# flake8: noqa
+
+def boxes_to_geojson(boxes,
+                     class_ids,
+                     crs_transformer,
+                     class_config,
                      scores=None):
     """Convert boxes and associated data into a GeoJSON dict.
 

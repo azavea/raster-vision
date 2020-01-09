@@ -2,7 +2,6 @@
 import logging
 import importlib
 import json
-
 '''
 root_logger = logging.getLogger('rastervision.v2')
 sh = logging.StreamHandler()
@@ -23,16 +22,14 @@ from rastervision.v2.core.verbosity import Verbosity
 
 loaded_plugins = []
 
-def load_builtins():
-    from rastervision.v2.core.runner import (
-        InProcessRunner, INPROCESS, AWSBatchRunner, AWS_BATCH)
-    from rastervision.v2.core.filesystem import (
-        HttpFileSystem, S3FileSystem, LocalFileSystem)
 
-    _registry.runners = {
-        INPROCESS: InProcessRunner,
-        AWS_BATCH: AWSBatchRunner
-    }
+def load_builtins():
+    from rastervision.v2.core.runner import (InProcessRunner, INPROCESS,
+                                             AWSBatchRunner, AWS_BATCH)
+    from rastervision.v2.core.filesystem import (HttpFileSystem, S3FileSystem,
+                                                 LocalFileSystem)
+
+    _registry.runners = {INPROCESS: InProcessRunner, AWS_BATCH: AWSBatchRunner}
 
     _registry.filesystems = [
         HttpFileSystem,
@@ -74,9 +71,9 @@ def system_init(profile=None, verbosity=Verbosity.NORMAL):
                 if register_plugin:
                     register_plugin(_registry)
 
+
 load_builtins()
 system_init()
-
 '''
 from rastervision.v2.core.config import *
 from rastervision.v2.core.pipeline import *

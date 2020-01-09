@@ -4,8 +4,8 @@ import copy
 
 from pydantic.error_wrappers import ValidationError
 
-from rastervision.v2.core.config import (
-    Config, register_config, build_config, upgrade_config, Upgrader)
+from rastervision.v2.core.config import (Config, register_config, build_config,
+                                         upgrade_config, Upgrader)
 
 
 class AConfig(Config):

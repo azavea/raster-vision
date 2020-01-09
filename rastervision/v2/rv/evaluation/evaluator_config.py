@@ -3,6 +3,7 @@ from os.path import join
 
 from rastervision.v2.core.config import register_config, Config
 
+
 @register_config('evaluator')
 class EvaluatorConfig(Config):
     output_uri: Optional[str] = None

@@ -8,7 +8,6 @@ from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
 
 from rastervision.v2.core.verbosity import Verbosity
 
-
 log = logging.getLogger(__name__)
 
 
@@ -24,8 +23,11 @@ class RVConfig:
                  tmp_dir=None,
                  verbosity=Verbosity.NORMAL):
         self.reset(
-            profile=profile, rv_home=rv_home, config_overrides=config_overrides,
-            tmp_dir=tmp_dir, verbosity=verbosity)
+            profile=profile,
+            rv_home=rv_home,
+            config_overrides=config_overrides,
+            tmp_dir=tmp_dir,
+            verbosity=verbosity)
 
     def reset(self,
               profile=None,
@@ -36,7 +38,7 @@ class RVConfig:
         self.verbosity = verbosity
 
         # Set logging level
-        root_log = logging.getLogger('rastervision.v2')
+        root_log = logging.getLogger('rastervision')
         if self.verbosity >= Verbosity.VERBOSE:
             root_log.setLevel(logging.DEBUG)
         elif self.verbosity >= Verbosity.NORMAL:
@@ -177,9 +179,8 @@ class RVConfig:
         # If the profile is not default, and there is no config that exists,
         # then throw an error.
         if not any(results_that_exist) and profile != RVConfig.DEFAULT_PROFILE:
-            raise rv.ConfigError('Configuration Profile {} not found. '
-                                 'Checked: {}'.format(profile,
-                                                      ', '.join(result)))
+            raise Exception('Configuration Profile {} not found. '
+                            'Checked: {}'.format(profile, ', '.join(result)))
 
         return results_that_exist
 

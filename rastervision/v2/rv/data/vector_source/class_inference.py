@@ -7,15 +7,17 @@ from rastervision.v2.rv.data.vector_source.label_maker.filter import (
 class ClassInference():
     """Infers missing class_ids from GeoJSON features."""
 
-    def __init__(self, class_config=None, class_id_to_filter=None, default_class_id=0):
+    def __init__(self,
+                 class_config=None,
+                 class_id_to_filter=None,
+                 default_class_id=0):
         self.class_config = class_config
         self.class_id_to_filter = class_id_to_filter
         self.default_class_id = default_class_id
 
         if self.class_id_to_filter is not None:
             self.class_id_to_filter = {}
-            for class_id, filter_exp in self.class_id_to_filter.items(
-            ):
+            for class_id, filter_exp in self.class_id_to_filter.items():
                 self.class_id_to_filter[class_id] = create_filter(filter_exp)
 
     def infer_class_id(self, feature):

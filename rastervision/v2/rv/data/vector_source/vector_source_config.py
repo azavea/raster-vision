@@ -2,6 +2,7 @@ from typing import Dict, Optional
 
 from rastervision.v2.core.config import Config, register_config
 
+
 @register_config('vector_source')
 class VectorSourceConfig(Config):
     default_class_id: int = 0

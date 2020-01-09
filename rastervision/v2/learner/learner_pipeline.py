@@ -11,4 +11,3 @@ class LearnerPipeline(Pipeline):
         learner_cfg = self.config.learner
         learner = learner_cfg.build(learner_cfg, self.tmp_dir)
         learner.main()
-

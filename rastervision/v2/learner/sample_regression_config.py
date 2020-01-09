@@ -2,8 +2,8 @@ from os.path import join
 
 from rastervision.v2.learner.regression.config import (
     RegressionLearnerConfig, RegressionDataConfig, RegressionModelConfig)
-from rastervision.v2.learner.learner_config import (
-    LearnerPipelineConfig, SolverConfig)
+from rastervision.v2.learner.learner_config import (LearnerPipelineConfig,
+                                                    SolverConfig)
 
 
 def get_config(runner, test=False):

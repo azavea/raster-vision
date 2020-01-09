@@ -84,6 +84,7 @@ class LearnerConfig(Config):
         from rastervision.v2.learner import Learner
         return Learner.from_model_bundle(model_bundle_path, tmp_dir)
 
+
 @register_config('learner_pipeline')
 class LearnerPipelineConfig(PipelineConfig):
     learner: LearnerConfig

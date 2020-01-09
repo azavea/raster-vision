@@ -3,12 +3,10 @@ import logging
 import numpy as np
 
 from rastervision.v2.rv.task.task import Task
-from rastervision.v2.rv.task.chip_classification_config import (
-    ChipClassificationConfig)
-from rastervision.v2.rv.task import TRAIN, VALIDATION
-from rastervision.v2.rv import Box, TrainingData
+from rastervision.v2.rv import Box
 
 log = logging.getLogger(__name__)
+
 
 def get_train_windows(scene, chip_size):
     train_windows = []
@@ -22,6 +20,7 @@ def get_train_windows(scene, chip_size):
         if np.sum(chip.ravel()) > 0:
             train_windows.append(window)
     return train_windows
+
 
 class ChipClassification(Task):
     def get_train_windows(self, scene):

@@ -7,10 +7,8 @@ import importlib
 
 import click
 
-from rastervision.v2.core import (
-    _registry, _rv_config, system_init)
-from rastervision.v2.core.filesystem import (
-    file_to_json, json_to_file)
+from rastervision.v2.core import (_registry, _rv_config, system_init)
+from rastervision.v2.core.filesystem import (file_to_json, json_to_file)
 from rastervision.v2.core.config import build_config
 
 log = logging.getLogger(__name__)
@@ -34,8 +32,7 @@ def main(profile, verbose):
     system_init(profile=profile, verbosity=verbose + 1)
 
 
-@main.command(
-    'run', short_help='Run sequence of commands within pipeline(s).')
+@main.command('run', short_help='Run sequence of commands within pipeline(s).')
 @click.argument('runner')
 @click.argument('cfg_path')
 @click.argument('commands', nargs=-1)

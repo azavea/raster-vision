@@ -10,9 +10,8 @@ import shapely
 
 from rastervision.core import Box
 from rastervision.data import RasterioCRSTransformer, GeoJSONVectorSource
-from rastervision.utils.files import (
-    file_to_str, file_exists, get_local_path, upload_or_copy, make_dir,
-    file_to_json, json_to_file)
+from rastervision.utils.files import (file_to_str, file_exists, get_local_path,
+                                      upload_or_copy, make_dir, json_to_file)
 from rastervision.filesystem import S3FileSystem
 
 
@@ -33,8 +32,12 @@ def get_scene_info(csv_uri):
     return list(reader)
 
 
-def save_image_crop(image_uri, image_crop_uri, label_uri=None, label_crop_uri=None,
-                    size=600, min_features=10):
+def save_image_crop(image_uri,
+                    image_crop_uri,
+                    label_uri=None,
+                    label_crop_uri=None,
+                    size=600,
+                    min_features=10):
     """Save a crop of an image to use for testing.
 
     If label_uri is set, the crop needs to cover >= min_features.
@@ -61,7 +64,8 @@ def save_image_crop(image_uri, image_crop_uri, label_uri=None, label_crop_uri=No
             extent = Box(0, 0, h, w)
             windows = extent.get_windows(size, size)
             if label_uri is not None:
-                crs_transformer = RasterioCRSTransformer.from_dataset(im_dataset)
+                crs_transformer = RasterioCRSTransformer.from_dataset(
+                    im_dataset)
                 vs = GeoJSONVectorSource(label_uri, crs_transformer)
                 geojson = vs.get_geojson()
                 geoms = []
@@ -79,14 +83,19 @@ def save_image_crop(image_uri, image_crop_uri, label_uri=None, label_crop_uri=No
                     w_polys = tree.query(w.to_shapely())
                     use_window = len(w_polys) >= min_features
                     if use_window and label_crop_uri is not None:
-                        print('Saving test crop labels to {}...'.format(label_crop_uri))
+                        print('Saving test crop labels to {}...'.format(
+                            label_crop_uri))
 
                         label_crop_features = [
                             mapping(shapely.ops.transform(p2m, wp))
-                            for wp in w_polys]
+                            for wp in w_polys
+                        ]
                         label_crop_json = {
-                            'type': 'FeatureCollection',
-                            'features': [{'geometry': f} for f in label_crop_features]
+                            'type':
+                            'FeatureCollection',
+                            'features': [{
+                                'geometry': f
+                            } for f in label_crop_features]
                         }
                         json_to_file(label_crop_json, label_crop_uri)
 

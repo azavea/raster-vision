@@ -108,10 +108,7 @@ def transform_geojson(geojson,
 class VectorSource(ABC):
     """A source of vector data."""
 
-    def __init__(self,
-                 vs_config,
-                 class_config,
-                 crs_transformer):
+    def __init__(self, vs_config, class_config, crs_transformer):
         self.vs_config = vs_config
         self.class_config = class_config
         self.crs_transformer = crs_transformer
