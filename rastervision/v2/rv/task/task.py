@@ -1,6 +1,5 @@
 import logging
 
-import click
 import numpy as np
 
 from rastervision.v2.core.pipeline import Pipeline
@@ -155,6 +154,5 @@ class Task(Pipeline):
                   for s in self.config.dataset.validation_scenes]
         evaluators = [e.build(class_config) for e in self.config.evaluators]
         for evaluator in evaluators:
-            msg = 'Running evaluator: {}...'.format(type(evaluator).__name__)
-            click.echo(click.style(msg, fg='green'))
+            log.info('Running evaluator: {}...'.format(type(evaluator).__name__))
             evaluator.process(scenes, self.tmp_dir)

@@ -19,8 +19,8 @@ class PyTorchChipClassificationConfig(BackendConfig):
         if task is not None:
             self.learner.data.img_sz = task.train_chip_sz
             self.learner.test_mode = task.debug
-            self.learner.data.colors = task.dataset.class_config.colors
-            self.learner.data.labels = task.dataset.class_config.names
+            self.learner.data.class_colors = task.dataset.class_config.colors
+            self.learner.data.class_names = task.dataset.class_config.names
             self.learner.output_uri = task.train_uri
             self.learner.data.uri = task.chip_uri
 

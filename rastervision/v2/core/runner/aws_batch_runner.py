@@ -1,7 +1,9 @@
 import uuid
+import logging
 
 from rastervision.v2.core import _rv_config
 
+log = logging.getLogger(__name__)
 AWS_BATCH = 'aws_batch'
 
 
@@ -52,8 +54,9 @@ def submit_job(
 
     job_id = client.submit_job(**kwargs)['jobId']
     msg = 'submitted job with jobName={} and jobId={}'.format(job_name, job_id)
-    print(cmd_list)
-    print(msg)
+    log.info(msg)
+    log.info(cmd_list)
+
     return job_id
 
 

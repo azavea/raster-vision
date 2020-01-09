@@ -96,11 +96,13 @@ def _run_command(cfg_json_uri, command, split_ind, num_splits):
     command_fn = getattr(pipeline, command)
 
     if num_splits > 1:
-        print('Running {} command split {}/{}...'.format(
-            command, split_ind + 1, num_splits))
+        msg = 'Running {} command split {}/{}...'.format(
+            command, split_ind + 1, num_splits)
+        click.echo(click.style(msg, fg='green'))
         command_fn(split_ind=split_ind, num_splits=num_splits)
     else:
-        print('Running {} command...'.format(command))
+        msg = 'Running {} command...'.format(command)
+        click.echo(click.style(msg, fg='green'))
         command_fn()
 
 

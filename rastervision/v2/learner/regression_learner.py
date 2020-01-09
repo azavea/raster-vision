@@ -74,9 +74,9 @@ class RegressionModel(nn.Module):
 class RegressionLearner(Learner):
     def build_model(self):
         backbone = self.cfg.model.backbone
-        out_features = len(self.cfg.data.labels)
+        out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
-            self.cfg.data.labels.index(l) for l in self.cfg.data.pos_labels
+            self.cfg.data.class_names.index(l) for l in self.cfg.data.pos_labels
         ]
         model = RegressionModel(
             backbone, out_features, pos_out_inds=pos_out_inds)
@@ -128,21 +128,21 @@ class RegressionLearner(Learner):
                 if cfg.overfit_mode:
                     train_ds.append(
                         ImageRegressionDataset(
-                            train_dir, cfg.data.labels, transform=transform))
+                            train_dir, cfg.data.class_names, transform=transform))
                 else:
                     train_ds.append(
                         ImageRegressionDataset(
                             train_dir,
-                            cfg.data.labels,
+                            cfg.data.class_names,
                             transform=aug_transform))
 
             if isdir(valid_dir):
                 valid_ds.append(
                     ImageRegressionDataset(
-                        valid_dir, cfg.data.labels, transform=transform))
+                        valid_dir, cfg.data.class_names, transform=transform))
                 test_ds.append(
                     ImageRegressionDataset(
-                        valid_dir, cfg.data.labels, transform=transform))
+                        valid_dir, cfg.data.class_names, transform=transform))
 
         train_ds, valid_ds, test_ds = \
             ConcatDataset(train_ds), ConcatDataset(valid_ds), ConcatDataset(test_ds)
@@ -194,7 +194,7 @@ class RegressionLearner(Learner):
         metric_names = [
             'epoch', 'train_time', 'valid_time', 'train_loss', 'val_loss'
         ]
-        for label in self.cfg.data.labels:
+        for label in self.cfg.data.class_names:
             metric_names.extend([
                 '{}_abs_error'.format(label),
                 '{}_scaled_abs_error'.format(label)
@@ -215,7 +215,7 @@ class RegressionLearner(Learner):
             torch.abs(out - y) / self.target_medians).sum(dim=0)
 
         metrics = {'val_loss': val_loss}
-        for ind, label in enumerate(self.cfg.data.labels):
+        for ind, label in enumerate(self.cfg.data.class_names):
             metrics['{}_abs_error'.format(label)] = abs_error[ind]
             metrics['{}_scaled_abs_error'.format(label)] = scaled_abs_error[
                 ind]
@@ -244,14 +244,14 @@ class RegressionLearner(Learner):
         y, out = self.predict_dataloader(
             self.get_dataloader(split), return_x=False)
         # make scatter plot
-        num_labels = len(self.cfg.data.labels)
+        num_labels = len(self.cfg.data.class_names)
         ncols = num_labels
         nrows = 1
         fig = plt.figure(
             constrained_layout=True, figsize=(5 * ncols, 5 * nrows))
         grid = gridspec.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
 
-        for label_ind, label in enumerate(self.cfg.data.labels):
+        for label_ind, label in enumerate(self.cfg.data.class_names):
             ax = fig.add_subplot(grid[label_ind])
             ax.scatter(
                 y[:, label_ind], out[:, label_ind], c='blue', alpha=0.02)
@@ -266,7 +266,7 @@ class RegressionLearner(Learner):
             constrained_layout=True, figsize=(5 * ncols, 5 * nrows))
         grid = gridspec.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
 
-        for label_ind, label in enumerate(self.cfg.data.labels):
+        for label_ind, label in enumerate(self.cfg.data.class_names):
             ax = fig.add_subplot(grid[label_ind])
             errs = torch.abs(y[:, label_ind] - out[:, label_ind])
             ax.hist(errs, bins=100, density=True)

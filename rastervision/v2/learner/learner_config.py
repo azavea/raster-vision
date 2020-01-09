@@ -33,7 +33,7 @@ class DataConfig(Config):
     uri: str = None
     data_format: str = None
     labels: List[str] = []
-    colors: List[str] = []
+    class_names: List[str] = []
     img_sz: int = 256
     num_workers: int = 4
 
@@ -77,6 +77,7 @@ class LearnerConfig(Config):
         raise NotImplementedError()
 
     def build_from_model_bundle(self, model_bundle_path, tmp_dir):
+        from rastervision.v2.learner import Learner
         return Learner.from_model_bundle(model_bundle_path, tmp_dir)
 
 @register_config('learner_pipeline')

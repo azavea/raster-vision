@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 import shutil
 import os
 import math
+import logging
 
 import click
 import matplotlib
@@ -17,6 +18,7 @@ import matplotlib.gridspec as gridspec
 import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR
+
 from rastervision.v2.core.filesystem import (sync_to_dir, json_to_file, file_to_json,
                                       make_dir, zipdir, download_if_needed,
                                       sync_from_dir, get_local_path, unzip)
@@ -24,6 +26,7 @@ from rastervision.v2.core.filesystem import (sync_to_dir, json_to_file, file_to_
 from rastervision.v2.core.config import build_config
 from rastervision.v2.learner.learner_config import LearnerConfig
 
+log = logging.getLogger(__name__)
 
 class Learner(ABC):
     def __init__(self, cfg: LearnerConfig, tmp_dir, model_path=None):
@@ -48,7 +51,7 @@ class Learner(ABC):
                     'Model could not be found at {}'.format(model_path))
             self.model.eval()
         else:
-            print(self.cfg)
+            log.info(self.cfg)
 
             self.train_ds = None
             self.train_dl = None
@@ -120,11 +123,11 @@ class Learner(ABC):
 
     def log_data_stats(self):
         if self.train_ds:
-            print('train_ds: {} items'.format(len(self.train_ds)))
+            log.info('train_ds: {} items'.format(len(self.train_ds)))
         if self.valid_ds:
-            print('valid_ds: {} items'.format(len(self.valid_ds)))
+            log.info('valid_ds: {} items'.format(len(self.valid_ds)))
         if self.test_ds:
-            print('test_ds: {} items'.format(len(self.test_ds)))
+            log.info('test_ds: {} items'.format(len(self.test_ds)))
 
     def build_optimizer(self):
         return optim.Adam(self.model.parameters(), lr=self.cfg.solver.lr)
@@ -162,7 +165,7 @@ class Learner(ABC):
             'avg_f1', 'avg_precision', 'avg_recall'
         ]
 
-        for label in self.cfg.data.labels:
+        for label in self.cfg.data.class_names:
             metric_names.extend([
                 '{}_f1'.format(label), '{}_precision'.format(label),
                 '{}_recall'.format(label)
@@ -284,7 +287,7 @@ class Learner(ABC):
         plt.close()
 
     def plot_predictions(self, split):
-        print('Plotting predictions...')
+        log.info('Plotting predictions...')
         dl = self.get_dataloader(split)
         output_path = join(self.output_dir, '{}_preds.png'.format(split))
         x, y, z = self.predict_dataloader(dl, one_batch=True)
@@ -343,7 +346,7 @@ class Learner(ABC):
 
     def load_checkpoint(self):
         if isfile(self.last_model_path):
-            print('Loading checkpoint from {}'.format(self.last_model_path))
+            log.info('Loading checkpoint from {}'.format(self.last_model_path))
             self.model.load_state_dict(
                 torch.load(self.last_model_path, map_location=self.device))
 
@@ -410,8 +413,8 @@ class Learner(ABC):
                 self.opt.step()
 
                 if (step + 1) % 25 == 0:
-                    print('\nstep: {}'.format(step))
-                    print('train_loss: {}'.format(loss))
+                    log.info('\nstep: {}'.format(step))
+                    log.info('train_loss: {}'.format(loss))
 
         torch.save(self.model.state_dict(), self.last_model_path)
 
@@ -419,18 +422,16 @@ class Learner(ABC):
         self.on_train_start()
 
         if self.start_epoch > 0 and self.start_epoch <= self.cfg.solver.num_epochs:
-            print('Resuming training from epoch {}'.format(self.start_epoch))
+            log.info('Resuming training from epoch {}'.format(self.start_epoch))
 
         for epoch in range(self.start_epoch, self.cfg.solver.num_epochs):
-            print('----------------------------------------')
-            print('epoch: {}'.format(epoch), flush=True)
+            log.info('epoch: {}'.format(epoch))
             train_metrics = self.train_epoch()
             if self.epoch_scheduler:
                 self.epoch_scheduler.step()
             valid_metrics = self.validate_epoch(self.valid_dl)
             metrics = dict(epoch=epoch, **train_metrics, **valid_metrics)
-            print('metrics: {}'.format(metrics), flush=True)
-            print()
+            log.info('metrics: {}'.format(metrics))
 
             self.on_epoch_end(epoch, metrics)
 
@@ -458,10 +459,10 @@ class Learner(ABC):
             self.sync_to_cloud()
 
     def eval_model(self, split):
-        print('Evaluating on {} set...'.format(split))
+        log.info('Evaluating on {} set...'.format(split))
         dl = self.get_dataloader(split)
         metrics = self.validate_epoch(dl)
-        print('metrics: {}'.format(metrics))
+        log.info('metrics: {}'.format(metrics))
         json_to_file(metrics,
                      join(self.output_dir, '{}_metrics.json'.format(split)))
         self.plot_predictions(split)

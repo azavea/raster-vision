@@ -24,7 +24,7 @@ class ClassificationLearner(Learner):
     def build_model(self):
         model = getattr(models, self.cfg.model.backbone)(pretrained=True)
         in_features = model.fc.in_features
-        num_labels = len(self.cfg.data.labels)
+        num_labels = len(self.cfg.data.class_names)
         model.fc = nn.Linear(in_features, num_labels)
         return model
 
@@ -32,7 +32,7 @@ class ClassificationLearner(Learner):
         cfg = self.cfg
         batch_sz = cfg.solver.batch_sz
         num_workers = cfg.data.num_workers
-        label_names = cfg.data.labels
+        label_names = cfg.data.class_names
 
         # download and unzip data
         if cfg.data.data_format == 'image_folder':
@@ -139,7 +139,7 @@ class ClassificationLearner(Learner):
         out = self.model(x)
         val_loss = F.cross_entropy(out, y, reduction='sum')
 
-        num_labels = len(self.cfg.data.labels)
+        num_labels = len(self.cfg.data.class_names)
         out = self.post_forward(out)
         conf_mat = compute_conf_mat(out, y, num_labels)
 
@@ -150,7 +150,7 @@ class ClassificationLearner(Learner):
         val_loss = torch.stack([o['val_loss']
                                 for o in outputs]).sum() / num_samples
         conf_mat_metrics = compute_conf_mat_metrics(conf_mat,
-                                                    self.cfg.data.labels)
+                                                    self.cfg.data.class_names)
 
         metrics = {'val_loss': val_loss.item()}
         metrics.update(conf_mat_metrics)
@@ -165,8 +165,8 @@ class ClassificationLearner(Learner):
         if x.shape[2] == 1:
             x = torch.cat([x for _ in range(3)], dim=2)
         ax.imshow(x)
-        title = 'true: {}'.format(self.cfg.data.labels[y])
+        title = 'true: {}'.format(self.cfg.data.class_names[y])
         if z is not None:
-            title += ' / pred: {}'.format(self.cfg.data.labels[z])
+            title += ' / pred: {}'.format(self.cfg.data.class_names[z])
         ax.set_title(title, fontsize=8)
         ax.axis('off')
