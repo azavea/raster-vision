@@ -1,4 +1,4 @@
-from os.path import join, isfile
+from os.path import join, isfile, basename
 import csv
 import warnings
 warnings.filterwarnings('ignore')  # noqa
@@ -73,7 +73,8 @@ class Learner(ABC):
             self.config_path = join(self.output_dir, 'config.json')
             self.train_state_path = join(self.output_dir, 'train-state.json')
             self.log_path = join(self.output_dir, 'log.csv')
-            self.model_bundle_path = join(self.output_dir, 'model-bundle.zip')
+            model_bundle_fn = basename(cfg.get_model_bundle_uri())
+            self.model_bundle_path = join(self.output_dir, model_bundle_fn)
             self.metric_names = self.build_metric_names()
 
             json_to_file(self.cfg.dict(), self.config_path)

@@ -87,10 +87,8 @@ class PyTorchChipClassification(Backend):
         learner.main()
 
     def load_model(self):
-        # TODO make this part of learner config
-        model_bundle_path = join(self.learner_cfg.output_uri, 'model-bundle.zip')
         self.learner = self.learner_cfg.build_from_model_bundle(
-            model_bundle_path, self.tmp_dir)
+            self.learner_cfg.get_model_bundle_uri(), self.tmp_dir)
 
     def predict(self, chips, windows):
         if self.learner is None:

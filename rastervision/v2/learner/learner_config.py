@@ -1,4 +1,5 @@
 from typing import List
+from os.path import join
 
 from rastervision.v2.core.pipeline_config import PipelineConfig
 from rastervision.v2.core.config import Config, register_config
@@ -75,6 +76,9 @@ class LearnerConfig(Config):
 
     def build(self, tmp_dir, model_path=None):
         raise NotImplementedError()
+
+    def get_model_bundle_uri(self):
+        return join(self.output_uri, 'model-bundle.zip')
 
     def build_from_model_bundle(self, model_bundle_path, tmp_dir):
         from rastervision.v2.learner import Learner
