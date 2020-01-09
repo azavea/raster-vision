@@ -4,16 +4,43 @@ from os.path import join
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.sampler import WeightedRandomSampler
 from albumentations.core.composition import Compose
 from albumentations.augmentations.transforms import (
     Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
     GaussNoise, RGBShift, ToGray)
 
 from rastervision.backend.torch_utils.data import DataBunch
-from rastervision.backend.torch_utils.chip_classification.folder import (
-    ImageFolder)
+from rastervision.backend.torch_utils.chip_classification.folder import ImageFolder
 
 log = logging.getLogger(__name__)
+
+
+def calculate_oversampling_weights(targets, rare_classes, desired_prob):
+    '''
+    Calculates weights tensor for oversampling
+
+    args:
+        targets: (list) containing the class labels/targets/y-data
+        rare classes: (list) of ints of the class labels that should be oversamples
+        desired prob: (float) a single probability that the rare classes should
+            have.
+    returns:
+        (tensor) with weights per index, e.g [0.5,0.1,0.9]
+    '''
+
+    chip_idx = []
+    for idx, target in enumerate(targets):
+        if target in rare_classes:
+            chip_idx.append(idx)
+
+    rare_weight = desired_prob / len(chip_idx)
+    common_weight = (1.0 - desired_prob) / (len(targets) - len(chip_idx))
+
+    weights = torch.full((len(targets), ), common_weight)
+    weights[chip_idx] = rare_weight
+
+    return weights
 
 
 class AlbumentationDataset(Dataset):
@@ -42,7 +69,8 @@ class AlbumentationDataset(Dataset):
         return len(self.orig_dataset)
 
 
-def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
+def build_databunch(data_dir, img_sz, batch_sz, class_names, rare_classes,
+                    desired_prob, augmentors):
     num_workers = 4
 
     train_dir = join(data_dir, 'train')
@@ -74,13 +102,28 @@ def build_databunch(data_dir, img_sz, batch_sz, class_names, augmentors):
     valid_ds = AlbumentationDataset(
         ImageFolder(valid_dir, classes=class_names))
 
+    if rare_classes != []:
+        targets = [target for _, target in train_ds.orig_dataset.imgs]
+        train_sample_weights = calculate_oversampling_weights(
+            targets, rare_classes, desired_prob)
+        num_train_samples = len(train_ds)
+        train_sampler = WeightedRandomSampler(
+            weights=train_sample_weights,
+            num_samples=num_train_samples,
+            replacement=True)
+        shuffle = False
+    else:
+        train_sampler = None
+        shuffle = True
+
     train_dl = DataLoader(
         train_ds,
-        shuffle=True,
+        shuffle=shuffle,
         batch_size=batch_sz,
         num_workers=num_workers,
         drop_last=True,
-        pin_memory=True)
+        pin_memory=True,
+        sampler=train_sampler)
     valid_dl = DataLoader(
         valid_ds,
         batch_size=batch_sz,
