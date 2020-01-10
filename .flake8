@@ -9,4 +9,6 @@ max-line-length = 90
 # W503: flake8 reports this as incorrect, and scripts/format_code
 # changes code to it, so let format_code win.
 
-ignore = E127,W503
+# E701 and E704 are triggering due to "x: type" syntax in Configs
+
+ignore = E127,W503,E701,E704

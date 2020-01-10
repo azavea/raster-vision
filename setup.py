@@ -72,5 +72,6 @@ setup(
     entry_points='''
         [console_scripts]
         rastervision=rastervision.cli.main:main
+        rastervision2=rastervision.v2.core.main:main
     ''',
 )
