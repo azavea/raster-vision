@@ -129,6 +129,11 @@ class TestGetLocalPath(unittest.TestCase):
         path = get_local_path(uri, download_dir)
         self.assertEqual(path, '/download_dir/http/bucket/my/file.txt')
 
+        # simulate a zxy tile URI
+        uri = 'http://bucket/10/25/53?auth=426753'
+        path = get_local_path(uri, download_dir)
+        self.assertEqual(path, '/download_dir/http/bucket/10/25/53')
+
 
 class TestFileToStr(unittest.TestCase):
     """Test file_to_str and str_to_file."""

@@ -28,7 +28,7 @@ Now we can run a console in the the Docker container by doing
    > docker run --rm -it -p 6006:6006 \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_EXP_DIR}:/opt/data \
-        quay.io/azavea/raster-vision:cpu-0.10 /bin/bash
+        quay.io/azavea/raster-vision:pytorch-0.10 /bin/bash
 
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with
              Docker containers.
@@ -286,8 +286,7 @@ For example, to perform semantic segmentation using a MobileNet-based DeepLab mo
 
 .. code-block:: console
 
-   > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/predict_package.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif predictions.tif
-
+   > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/predict_package.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif prediction.tif
 This will perform a prediction on the image ``1929.tif`` using the provided prediction package, and will produce a file called ``predictions.tif`` that contains the predictions.
 Notice that the prediction package and the input raster are transparently downloaded via HTTP.
 The input image (false color) and predictions are reproduced below.

@@ -8,6 +8,7 @@ Features
 ~~~~~~~~~~
 
 - Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#859 <https://github.com/azavea/raster-vision/pull/859>`__
+- Updated the Quickstart doc with pytorch docker image and model `#863 <https://github.com/azavea/raster-vision/pull/863>`__
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
@@ -18,6 +19,7 @@ Bug Fixes
 - Ensure randint args are ints `#849 <https://github.com/azavea/raster-vision/pull/849>`__
 - The augmentors were not serialized properly for the chip command  `#857 <https://github.com/azavea/raster-vision/pull/857>`__
 - Fix problems with pretrained flag `#860 <https://github.com/azavea/raster-vision/pull/860>`__
+- Correctly get_local_path for some zxy tile URIS `#865 <https://github.com/azavea/raster-vision/pull/865>`__
 
 Raster Vision 0.10
 ------------------
