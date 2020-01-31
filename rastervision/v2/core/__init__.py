@@ -38,22 +38,6 @@ def load_builtins():
         'attempts']
 
 
-def load_conf_list(s):
-    """Loads a list of items from the config.
-
-    Lists should be comma separated.
-
-    This takes into account that previous versions of Raster Vision
-    allowed for a `[ "module" ]` like syntax, even though that didn't
-    work for multi-value lists.
-    """
-    try:
-        # A comma separated list of values will be transformed to
-        # having a list-like string, with ' instead of ". Replacing
-        # single quotes with double quotes lets us parse it as a JSON list.
-        return json.loads(s.replace("'", '"'))
-    except json.JSONDecodeError:
-        return list(map(lambda x: x.strip(), s.split(',')))
 
 
 def system_init(rv_config_dict=None, profile=None, verbosity=None):
@@ -62,17 +46,15 @@ def system_init(rv_config_dict=None, profile=None, verbosity=None):
 
     _rv_config.reset(
         config_overrides=rv_config_dict, profile=profile, verbosity=verbosity)
+    plugin_modules = _rv_config.get_plugin_modules()
 
-    plugin_config = _rv_config.get_subconfig('PLUGINS')
-    if plugin_config:
-        plugin_modules = load_conf_list(plugin_config('modules'))
-        for pm in plugin_modules:
-            if pm not in loaded_plugins:
-                loaded_plugins.append(pm)
-                pm = importlib.import_module(pm)
-                register_plugin = getattr(pm, 'register_plugin', None)
-                if register_plugin:
-                    register_plugin(_registry)
+    for pm in plugin_modules:
+        if pm not in loaded_plugins:
+            loaded_plugins.append(pm)
+            pm = importlib.import_module(pm)
+            register_plugin = getattr(pm, 'register_plugin', None)
+            if register_plugin:
+                register_plugin(_registry)
 
 
 load_builtins()

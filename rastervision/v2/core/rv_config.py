@@ -2,6 +2,7 @@ import os
 import tempfile
 from pathlib import Path
 import logging
+import json
 
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
                              ConfigIniEnv, ConfigOSEnv)
@@ -9,6 +10,25 @@ from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
 from rastervision.v2.core.verbosity import Verbosity
 
 log = logging.getLogger(__name__)
+
+
+def load_conf_list(s):
+    """Loads a list of items from the config.
+
+    Lists should be comma separated.
+
+    This takes into account that previous versions of Raster Vision
+    allowed for a `[ "module" ]` like syntax, even though that didn't
+    work for multi-value lists.
+    """
+    try:
+        # A comma separated list of values will be transformed to
+        # having a list-like string, with ' instead of ". Replacing
+        # single quotes with double quotes lets us parse it as a JSON list.
+        return json.loads(s.replace("'", '"'))
+    except json.JSONDecodeError:
+        return list(map(lambda x: x.strip(), s.split(',')))
+
 
 class RVConfig:
     DEFAULT_PROFILE = 'default'
@@ -67,7 +87,7 @@ class RVConfig:
         self.config = ConfigManager(
             [
                 ConfigDictEnv(config_overrides),
-                ConfigOSEnv()
+                ConfigOSEnv(),
                 ConfigIniEnv(config_file_locations),
             ],
             doc='Check https://docs.rastervision.io/ for docs.')
@@ -183,3 +203,10 @@ class RVConfig:
                 config_dict[namespace + '_' + key] = \
                     self.get_subconfig(namespace)(key)
         return config_dict
+
+    def get_plugin_modules(self):
+        plugin_config = self.get_subconfig('PLUGINS')
+        if plugin_config:
+            plugin_modules = plugin_config('modules', default='')
+            return load_conf_list(plugin_modules) if plugin_modules != '' else []
+        return []
