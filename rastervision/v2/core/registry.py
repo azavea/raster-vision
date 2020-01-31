@@ -11,6 +11,7 @@ class Registry():
         self.filesystems = []
         self.configs = {}
         self.config_upgraders = {}
+        self.rv_config_schema = {}
 
     def get_runner(self, runner_type):
         runner = self.runners.get(runner_type)

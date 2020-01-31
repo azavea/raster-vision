@@ -18,12 +18,35 @@ def print_error(msg):
     click.echo(click.style(msg, fg='red'), err=True)
 
 
+def convert_bool_args(args):
+    new_args = {}
+    for k, v in args.items():
+        if v.lower() == 'true':
+            v = True
+        elif v.lower() == 'false':
+            v = False
+        new_args[k] = v
+    return new_args
+
+
+def get_configs(cfg_module, runner, args):
+    _get_config = getattr(cfg_module, 'get_config', None)
+    _get_configs = _get_config
+    if _get_config is None:
+        _get_configs = getattr(cfg_module, 'get_configs', None)
+    cfgs = _get_configs(runner, **args)
+    if not isinstance(cfgs, list):
+        cfgs = [cfgs]
+    return cfgs
+
+
 @click.group()
+@click.pass_context
 @click.option(
     '--profile', '-p', help='Sets the configuration profile name to use.')
 @click.option(
     '-v', '--verbose', help='Sets the output to  be verbose.', count=True)
-def main(profile, verbose):
+def main(ctx, profile, verbose):
     # Make sure current directory is on PYTHON_PATH
     # so that we can run against modules in current dir.
     sys.path.append(os.curdir)
@@ -46,27 +69,12 @@ def run(runner, cfg_path, commands, arg, splits):
 
     cfg_module = importlib.import_module(cfg_path)
     args = dict(arg)
-
-    get_config = getattr(cfg_module, 'get_config', None)
-    get_configs = get_config
-    if get_config is None:
-        get_configs = getattr(cfg_module, 'get_configs', None)
-
-    new_args = {}
-    for k, v in args.items():
-        if v.lower() == 'true':
-            v = True
-        elif v.lower() == 'false':
-            v = False
-        new_args[k] = v
-    args = new_args
-
-    cfgs = get_configs(runner, **args)
-    if not isinstance(cfgs, list):
-        cfgs = [cfgs]
+    args = convert_bool_args(args)
+    cfgs = get_configs(cfg_module, runner, args)
 
     for cfg in cfgs:
         cfg.update()
+        cfg.rv_config = _rv_config.get_config_dict(_registry.rv_config_schema)
         cfg_dict = cfg.dict()
         cfg_json_uri = join(cfg.root_uri, 'pipeline.json')
         json_to_file(cfg_dict, cfg_json_uri)
@@ -79,11 +87,16 @@ def run(runner, cfg_path, commands, arg, splits):
         runner.run(cfg_json_uri, pipeline, commands, num_splits=splits)
 
 
-def _run_command(cfg_json_uri, command, split_ind, num_splits):
+def _run_command(cfg_json_uri, command, split_ind, num_splits, profile=None,
+                 verbose=None):
     tmp_dir_obj = _rv_config.get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
 
     pipeline_cfg_dict = file_to_json(cfg_json_uri)
+    rv_config_dict = pipeline_cfg_dict.get('rv_config')
+    system_init(
+        rv_config_dict=rv_config_dict, profile=profile, verbosity=verbose)
+
     cfg = build_config(pipeline_cfg_dict)
     pipeline = cfg.build(tmp_dir)
 
@@ -105,12 +118,16 @@ def _run_command(cfg_json_uri, command, split_ind, num_splits):
 
 @main.command(
     'run_command', short_help='Run an individual command within a pipeline.')
+@click.pass_context
 @click.argument('cfg_json_uri')
 @click.argument('command')
 @click.option('--split-ind')
 @click.option('--num-splits', default=1)
-def run_command(cfg_json_uri, command, split_ind, num_splits):
-    _run_command(cfg_json_uri, command, split_ind, num_splits)
+def run_command(ctx, cfg_json_uri, command, split_ind, num_splits):
+    profile = ctx.parent.params.get('profile')
+    verbose = ctx.parent.params.get('verbose')
+    _run_command(cfg_json_uri, command, split_ind, num_splits,
+                 profile=profile, verbose=verbose)
 
 
 if __name__ == '__main__':

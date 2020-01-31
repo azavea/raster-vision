@@ -2,15 +2,6 @@
 import logging
 import importlib
 import json
-'''
-root_logger = logging.getLogger('rastervision.v2')
-sh = logging.StreamHandler()
-sh.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    '%(asctime)s:%(name)s: %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S')
-sh.setFormatter(formatter)
-root_logger.addHandler(sh)
-'''
 
 from rastervision.v2.core.registry import Registry
 _registry = Registry()
@@ -38,6 +29,14 @@ def load_builtins():
         LocalFileSystem
     ]
 
+    import rastervision.v2.core.pipeline_config
+
+    _registry.rv_config_schema['plugins'] = ['modules']
+    _registry.rv_config_schema['aws_s3'] = ['requester_pays']
+    _registry.rv_config_schema['aws_batch'] = [
+        'job_queue', 'job_definition', 'cpu_job_queue', 'cpu_job_definition',
+        'attempts']
+
 
 def load_conf_list(s):
     """Loads a list of items from the config.
@@ -57,8 +56,12 @@ def load_conf_list(s):
         return list(map(lambda x: x.strip(), s.split(',')))
 
 
-def system_init(profile=None, verbosity=Verbosity.NORMAL):
-    _rv_config.reset(profile=profile, verbosity=verbosity)
+def system_init(rv_config_dict=None, profile=None, verbosity=None):
+    if verbosity is None:
+        verbosity = Verbosity.NORMAL
+
+    _rv_config.reset(
+        config_overrides=rv_config_dict, profile=profile, verbosity=verbosity)
 
     plugin_config = _rv_config.get_subconfig('PLUGINS')
     if plugin_config:
@@ -74,8 +77,3 @@ def system_init(profile=None, verbosity=Verbosity.NORMAL):
 
 load_builtins()
 system_init()
-'''
-from rastervision.v2.core.config import *
-from rastervision.v2.core.pipeline import *
-from rastervision.v2.core.pipeline_config import *
-'''

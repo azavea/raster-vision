@@ -10,7 +10,6 @@ from rastervision.v2.core.verbosity import Verbosity
 
 log = logging.getLogger(__name__)
 
-
 class RVConfig:
     DEFAULT_PROFILE = 'default'
 
@@ -65,26 +64,13 @@ class RVConfig:
 
         config_file_locations = self._discover_config_file_locations(profile)
 
-        help_doc = ('Check https://docs.rastervision.io/ for docs.')
         self.config = ConfigManager(
-            # Specify one or more configuration environments in
-            # the order they should be checked
             [
-                # Allow overrides
                 ConfigDictEnv(config_overrides),
-
-                # Looks in OS environment first
-                ConfigOSEnv(),
-
-                # Look for an .env file
-                ConfigEnvFileEnv('.env'),
-
-                # Looks in INI files in order specified
+                ConfigOSEnv()
                 ConfigIniEnv(config_file_locations),
             ],
-
-            # Make it easy for users to find your configuration docs
-            doc=help_doc)
+            doc='Check https://docs.rastervision.io/ for docs.')
 
     @staticmethod
     def get_tmp_dir():
@@ -189,3 +175,11 @@ class RVConfig:
 
     def get_verbosity(self):
         return self.verbosity
+
+    def get_config_dict(self, rv_config_schema):
+        config_dict = {}
+        for namespace, keys in rv_config_schema.items():
+            for key in keys:
+                config_dict[namespace + '_' + key] = \
+                    self.get_subconfig(namespace)(key)
+        return config_dict
