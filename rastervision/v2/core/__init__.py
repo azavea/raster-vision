@@ -38,8 +38,6 @@ def load_builtins():
         'attempts']
 
 
-
-
 def system_init(rv_config_dict=None, profile=None, verbosity=None):
     if verbosity is None:
         verbosity = Verbosity.NORMAL

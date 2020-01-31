@@ -1,16 +1,20 @@
 import logging
+from os.path import join
+import tempfile
 
 import numpy as np
 
 from rastervision.v2.core.pipeline import Pipeline
 from rastervision.v2.rv import TrainingData
 from rastervision.v2.rv.task import TRAIN, VALIDATION
+from rastervision.v2.core.filesystem.utils import download_or_copy, zipdir, get_local_path, upload_or_copy
+
 
 log = logging.getLogger(__name__)
 
 
 class Task(Pipeline):
-    commands = ['analyze', 'chip', 'train', 'predict', 'eval']
+    commands = ['analyze', 'chip', 'train', 'predict', 'eval', 'bundle']
     split_commands = ['analyze', 'chip', 'predict']
     gpu_commands = ['train', 'predict']
 
@@ -166,3 +170,18 @@ class Task(Pipeline):
             log.info('Running evaluator: {}...'.format(
                 type(evaluator).__name__))
             evaluator.process(scenes, self.tmp_dir)
+
+    def bundle(self):
+        with tempfile.TemporaryDirectory(dir=self.tmp_dir) as tmp_dir:
+            for fn in self.config.backend.get_bundle_filenames():
+                download_or_copy(
+                    join(self.config.train_uri, fn),
+                    join(tmp_dir, fn))
+
+                download_or_copy(
+                    self.config.get_config_uri(), join(tmp_dir, 'pipeline.json'))
+
+            model_bundle_uri = join(self.config.bundle_uri, 'model-bundle.zip')
+            model_bundle_path = get_local_path(model_bundle_uri, self.tmp_dir)
+            zipdir(tmp_dir, model_bundle_path)
+            upload_or_copy(model_bundle_path, model_bundle_uri)

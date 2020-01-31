@@ -74,9 +74,10 @@ def run(runner, cfg_path, commands, arg, splits):
 
     for cfg in cfgs:
         cfg.update()
+        # TODO move to update?
         cfg.rv_config = _rv_config.get_config_dict(_registry.rv_config_schema)
         cfg_dict = cfg.dict()
-        cfg_json_uri = join(cfg.root_uri, 'pipeline.json')
+        cfg_json_uri = cfg.get_config_uri()
         json_to_file(cfg_dict, cfg_json_uri)
 
         pipeline = cfg.build(tmp_dir)
@@ -129,6 +130,8 @@ def run_command(ctx, cfg_json_uri, command, split_ind, num_splits):
     _run_command(cfg_json_uri, command, split_ind, num_splits,
                  profile=profile, verbose=verbose)
 
+# TODO remove after switching to namespace-based plugin registration
+import rastervision.v2.rv.cli
 
 if __name__ == '__main__':
     main()

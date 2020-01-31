@@ -25,3 +25,6 @@ class PyTorchChipClassificationConfig(BackendConfig):
 
     def build(self, task, tmp_dir):
         return PyTorchChipClassification(task, self.learner, tmp_dir)
+
+    def get_bundle_filenames(self):
+        return ['model-bundle.zip']

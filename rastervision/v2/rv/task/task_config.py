@@ -24,6 +24,7 @@ class TaskConfig(PipelineConfig):
     train_uri: str = None
     predict_uri: str = None
     eval_uri: str = None
+    bundle_uri: str = None
 
     def update(self):
         super().update()
@@ -38,6 +39,8 @@ class TaskConfig(PipelineConfig):
             self.predict_uri = join(self.root_uri, 'predict')
         if self.eval_uri is None:
             self.eval_uri = join(self.root_uri, 'eval')
+        if self.bundle_uri is None:
+            self.bundle_uri = join(self.root_uri, 'bundle')
 
         self.dataset.update(task=self)
         self.backend.update(task=self)
