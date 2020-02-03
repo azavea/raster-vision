@@ -23,9 +23,12 @@ class SceneConfig(Config):
         crs_transformer = raster_source.get_crs_transformer()
         extent = raster_source.get_extent()
 
-        label_source = self.label_source.build(class_config, crs_transformer,
-                                               extent)
-        label_store = self.label_store.build(class_config, crs_transformer)
+        label_source = (
+            self.label_source.build(class_config, crs_transformer, extent)
+            if self.label_source is not None else None)
+        label_store = (
+            self.label_store.build(class_config, crs_transformer)
+            if self.label_store is not None else None)
 
         aoi_polygons = None
         if self.aoi_uris is not None:

@@ -18,6 +18,11 @@ class Task(Pipeline):
     split_commands = ['analyze', 'chip', 'predict']
     gpu_commands = ['train', 'predict']
 
+    def __init__(self, config, tmp_dir):
+        super().__init__(config, tmp_dir)
+
+        self.backend = None
+
     def analyze(self, split_ind=0, num_splits=1):
         pass
 
@@ -102,15 +107,18 @@ class Task(Pipeline):
         raise NotImplementedError()
 
     def predict(self, split_ind=0, num_splits=1):
-        backend = self.config.backend.build(self.config, self.tmp_dir)
-        backend.load_model()
+        # Cache backend so subsquent calls will be faster.
+        if self.backend is None:
+            self.backend = self.config.backend.build(self.config, self.tmp_dir)
+            self.backend.load_model()
+
         class_config = self.config.dataset.class_config
         dataset = self.config.dataset.get_split_config(split_ind, num_splits)
 
         def _predict(scenes):
             for scene in scenes:
                 with scene.activate():
-                    labels = self.predict_scene(scene, backend)
+                    labels = self.predict_scene(scene, self.backend)
                     label_store = scene.prediction_label_store
                     label_store.save(labels)
 
