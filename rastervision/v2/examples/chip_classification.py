@@ -9,7 +9,7 @@ from rastervision.v2.rv.data import (DatasetConfig, ClassConfig, SceneConfig,
                                      RasterioSourceConfig)
 from rastervision.v2.learner import (ClassificationLearnerConfig,
                                      ClassificationDataConfig, SolverConfig,
-                                     ModelConfig)
+                                     ModelConfig, ClassificationModelConfig)
 from rastervision.v2.examples.utils import (get_scene_info, save_image_crop)
 
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
@@ -82,12 +82,9 @@ def get_config(runner, test=False):
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    model = ModelConfig(backbone='resnet50')
+    model = ClassificationModelConfig(backbone='resnet50')
     solver = SolverConfig(lr=2e-4, num_epochs=3, batch_sz=8, one_cycle=True)
-    data = ClassificationDataConfig(data_format='image_folder')
-    learner = ClassificationLearnerConfig(
-        model=model, solver=solver, data=data, test_mode=test)
-    backend = PyTorchChipClassificationConfig(learner=learner)
+    backend = PyTorchChipClassificationConfig(model=model, solver=solver)
 
     config = ChipClassificationConfig(
         root_uri=root_uri,
