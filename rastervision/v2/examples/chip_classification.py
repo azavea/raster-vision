@@ -38,13 +38,14 @@ def get_config(runner, test=False):
         (raster_uri, label_uri) = scene_info
         raster_uri = join(raw_uri, raster_uri)
         label_uri = join(processed_uri, label_uri)
-        label_crop_uri = join(processed_uri, 'crops',
-                              os.path.basename(label_uri))
         aoi_uri = join(raw_uri, aoi_path)
 
         if test:
             crop_uri = join(processed_uri, 'crops',
                             os.path.basename(raster_uri))
+            label_crop_uri = join(processed_uri, 'crops',
+                                os.path.basename(label_uri))
+
             save_image_crop(
                 raster_uri,
                 crop_uri,
@@ -53,12 +54,13 @@ def get_config(runner, test=False):
                 size=600,
                 min_features=20)
             raster_uri = crop_uri
+            label_uri = label_crop_uri
 
         id = os.path.splitext(os.path.basename(raster_uri))[0]
         raster_source = RasterioSourceConfig(
             channel_order=[0, 1, 2], uris=[raster_uri])
         label_source = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=label_crop_uri),
+            vector_source=GeoJSONVectorSourceConfig(uri=label_uri),
             ioa_thresh=0.5,
             use_intersection_over_cell=False,
             pick_min_class_id=True,
