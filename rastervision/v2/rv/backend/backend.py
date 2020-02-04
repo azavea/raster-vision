@@ -1,5 +1,13 @@
 from abc import ABC, abstractmethod
 
+from rastervision.v2.rv.data_sample import DataSample
+
+
+class SampleWriter(ABC):
+    @abstractmethod
+    def write_sample(sample: DataSample):
+        pass
+
 
 class Backend(ABC):
     """Functionality for a specific implementation of an MLTask.
@@ -9,28 +17,7 @@ class Backend(ABC):
     """
 
     @abstractmethod
-    def process_scene_data(self, scene, data):
-        """Process each scene's training data
-
-        Args:
-            scene: Scene
-            data: TrainingData
-
-        Returns:
-            backend-specific data-structures consumed by backend's
-            process_sceneset_results
-        """
-        pass
-
-    @abstractmethod
-    def process_sceneset_results(self, training_results, validation_results):
-        """After all scenes have been processed, process the resultset
-
-        Args:
-            training_results: dependent on the ml_backend's process_scene_data
-            validation_results: dependent on the ml_backend's
-                process_scene_data
-        """
+    def get_sample_writer(self):
         pass
 
     @abstractmethod

@@ -5,9 +5,10 @@ import tempfile
 import numpy as np
 
 from rastervision.v2.core.pipeline import Pipeline
-from rastervision.v2.rv import TrainingData
+from rastervision.v2.rv import DataSample
 from rastervision.v2.rv.task import TRAIN, VALIDATION
-from rastervision.v2.core.filesystem.utils import download_or_copy, zipdir, get_local_path, upload_or_copy
+from rastervision.v2.core.filesystem.utils import (
+    download_or_copy, zipdir, get_local_path, upload_or_copy)
 
 
 log = logging.getLogger(__name__)
@@ -56,32 +57,32 @@ class Task(Pipeline):
         cfg = self.config
         backend = cfg.backend.build(cfg, self.tmp_dir)
         dataset = cfg.dataset.get_split_config(split_ind, num_splits)
+        if not dataset.train_scenes and not dataset.validation_scenes:
+            return
+
         class_cfg = dataset.class_config
+        with backend.get_sample_writer() as writer:
+            def _process_scene(scene, split):
+                with scene.activate():
+                    log.info('Making {} chips for scene: {}'.format(
+                        split, scene.id))
+                    windows = self.get_train_windows(scene)
+                    for window in windows:
+                        chip = scene.raster_source.get_chip(window)
+                        labels = self.get_train_labels(window, scene)
+                        sample = DataSample(
+                            chip=chip, window=window, labels=labels,
+                            scene_id=str(scene.id), is_train=split == TRAIN)
+                        writer.write_sample(sample)
 
-        def _process_scene(scene, split):
-            with scene.activate():
-                data = TrainingData()
-                log.info('Making {} chips for scene: {}'.format(
-                    split, scene.id))
-                windows = self.get_train_windows(scene)
-                for window in windows:
-                    chip = scene.raster_source.get_chip(window)
-                    labels = self.get_train_labels(window, scene)
-                    data.append(chip, window, labels)
-                # Shuffle data so the first N samples which are displayed in
-                # Tensorboard are more diverse.
-                data.shuffle()
-                return backend.process_scene_data(scene, data)
+            def _process_scenes(scenes, split):
+                return [
+                    _process_scene(s.build(class_cfg, self.tmp_dir), split)
+                    for s in scenes
+                ]
 
-        def _process_scenes(scenes, split):
-            return [
-                _process_scene(s.build(class_cfg, self.tmp_dir), split)
-                for s in dataset.train_scenes
-            ]
-
-        train_results = _process_scenes(dataset.train_scenes, TRAIN)
-        valid_results = _process_scenes(dataset.validation_scenes, VALIDATION)
-        backend.process_sceneset_results(train_results, valid_results)
+            _process_scenes(dataset.train_scenes, TRAIN)
+            _process_scenes(dataset.validation_scenes, VALIDATION)
 
     def train(self):
         backend = self.config.backend.build(self.config, self.tmp_dir)
