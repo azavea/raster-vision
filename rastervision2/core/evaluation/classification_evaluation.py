@@ -8,7 +8,7 @@ from rastervision2.pipeline.filesystem import str_to_file
 
 
 class ClassificationEvaluation(ABC):
-    """Base class for evaluating predictions for tasks that have classes.
+    """Base class for evaluating predictions for pipelines that have classes.
 
     Evaluations can be keyed, for instance, if evaluations happen per class.
     """

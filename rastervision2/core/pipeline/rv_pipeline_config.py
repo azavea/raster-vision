@@ -8,8 +8,8 @@ from rastervision2.core.evaluation import EvaluatorConfig
 from rastervision2.pipeline.config import register_config
 
 
-@register_config('task')
-class TaskConfig(PipelineConfig):
+@register_config('rv_pipeline')
+class RVPipelineConfig(PipelineConfig):
     dataset: DatasetConfig
     backend: BackendConfig
     evaluators: List[EvaluatorConfig] = []
@@ -42,12 +42,12 @@ class TaskConfig(PipelineConfig):
         if self.bundle_uri is None:
             self.bundle_uri = join(self.root_uri, 'bundle')
 
-        self.dataset.update(task=self)
-        self.backend.update(task=self)
+        self.dataset.update(pipeline=self)
+        self.backend.update(pipeline=self)
         if not self.evaluators:
             self.evaluators.append(self.get_default_evaluator())
         for evaluator in self.evaluators:
-            evaluator.update(task=self)
+            evaluator.update(pipeline=self)
 
     def get_default_label_store(self, scene):
         raise NotImplementedError()

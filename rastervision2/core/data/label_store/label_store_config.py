@@ -6,5 +6,5 @@ class LabelStoreConfig(Config):
     def build(self, class_config, crs_transformer):
         pass
 
-    def update(self, task=None, scene=None):
+    def update(self, pipeline=None, scene=None):
         pass

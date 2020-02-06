@@ -14,6 +14,6 @@ class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
         return ChipClassificationGeoJSONStore(self.uri, class_config,
                                               crs_transformer)
 
-    def update(self, task=None, scene=None):
-        if self.uri is None and task is not None and scene is not None:
-            self.uri = join(task.predict_uri, '{}.json'.format(scene.id))
+    def update(self, pipeline=None, scene=None):
+        if self.uri is None and pipeline is not None and scene is not None:
+            self.uri = join(pipeline.predict_uri, '{}.json'.format(scene.id))

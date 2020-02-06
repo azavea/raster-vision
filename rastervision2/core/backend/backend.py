@@ -10,10 +10,10 @@ class SampleWriter(ABC):
 
 
 class Backend(ABC):
-    """Functionality for a specific implementation of an MLTask.
+    """Functionality for a specific implementation of an MLRVPipeline.
 
     This should be subclassed to provide a bridge to third party ML libraries.
-    There is a many-to-one relationship from backends to tasks.
+    There is a many-to-one relationship from backends to pipelines.
     """
 
     @abstractmethod

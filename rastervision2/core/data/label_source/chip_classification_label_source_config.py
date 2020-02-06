@@ -21,8 +21,8 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         return ChipClassificationLabelSource(
             self, vector_source, class_config, crs_transformer, extent=extent)
 
-    def update(self, task=None, scene=None):
-        super().update(task, scene)
-        if self.cell_sz is None and task is not None:
-            self.cell_sz = task.train_chip_sz
-        self.vector_source.update(task, scene)
+    def update(self, pipeline=None, scene=None):
+        super().update(pipeline, scene)
+        if self.cell_sz is None and pipeline is not None:
+            self.cell_sz = pipeline.train_chip_sz
+        self.vector_source.update(pipeline, scene)

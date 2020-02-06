@@ -6,7 +6,7 @@ import numpy as np
 
 from rastervision2.pipeline.pipeline import Pipeline
 from rastervision2.core import DataSample
-from rastervision2.core.task import TRAIN, VALIDATION
+from rastervision2.core.pipeline import TRAIN, VALIDATION
 from rastervision2.pipeline.filesystem.utils import (
     download_or_copy, zipdir, get_local_path, upload_or_copy)
 
@@ -14,7 +14,7 @@ from rastervision2.pipeline.filesystem.utils import (
 log = logging.getLogger(__name__)
 
 
-class Task(Pipeline):
+class RVPipeline(Pipeline):
     commands = ['analyze', 'chip', 'train', 'predict', 'eval', 'bundle']
     split_commands = ['analyze', 'chip', 'predict']
     gpu_commands = ['train', 'predict']

@@ -26,5 +26,5 @@ class VectorSourceConfig(Config):
     def build(self, class_config, crs_transformer):
         raise NotImplementedError()
 
-    def update(self, task=None, scene=None):
+    def update(self, pipeline=None, scene=None):
         pass

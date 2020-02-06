@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from rastervision2.core.task.task import Task
+from rastervision2.core.pipeline.rv_pipeline import RVPipeline
 from rastervision2.core import Box
 
 log = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ def get_train_windows(scene, chip_size):
     return train_windows
 
 
-class ChipClassification(Task):
+class ChipClassification(RVPipeline):
     def get_train_windows(self, scene):
         return get_train_windows(scene, self.config.train_chip_sz)
 

@@ -1,14 +1,14 @@
 from rastervision2.pipeline.config import register_config
-from rastervision2.core.task import TaskConfig
+from rastervision2.core.pipeline import RVPipelineConfig
 from rastervision2.core.data.label_store import (
     ChipClassificationGeoJSONStoreConfig)
 from rastervision2.core.evaluation import ChipClassificationEvaluatorConfig
 
 
 @register_config('chip_classification')
-class ChipClassificationConfig(TaskConfig):
+class ChipClassificationConfig(RVPipelineConfig):
     def build(self, tmp_dir):
-        from rastervision2.core.task.chip_classification import ChipClassification
+        from rastervision2.core.pipeline.chip_classification import ChipClassification
         return ChipClassification(self, tmp_dir)
 
     def get_default_label_store(self, scene):

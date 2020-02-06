@@ -13,17 +13,17 @@ class DatasetConfig(Config):
     validation_scenes: List[SceneConfig]
     test_scenes: Optional[List[SceneConfig]] = None
 
-    def update(self, task=None):
+    def update(self, pipeline=None):
         super().update()
 
-        self.class_config.update(task=task)
+        self.class_config.update(pipeline=pipeline)
         for s in self.train_scenes:
-            s.update(task=task)
+            s.update(pipeline=pipeline)
         for s in self.validation_scenes:
-            s.update(task=task)
+            s.update(pipeline=pipeline)
         if self.test_scenes is not None:
             for s in self.test_scenes:
-                s.update(task=task)
+                s.update(pipeline=pipeline)
 
     def get_split_config(self, split_ind, num_splits):
         new_cfg = self.copy()

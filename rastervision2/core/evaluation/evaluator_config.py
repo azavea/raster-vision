@@ -8,6 +8,6 @@ from rastervision2.pipeline.config import register_config, Config
 class EvaluatorConfig(Config):
     output_uri: Optional[str] = None
 
-    def update(self, task=None):
-        if task is not None and self.output_uri is None:
-            self.output_uri = join(task.eval_uri, 'eval.json')
+    def update(self, pipeline=None):
+        if pipeline is not None and self.output_uri is None:
+            self.output_uri = join(pipeline.eval_uri, 'eval.json')

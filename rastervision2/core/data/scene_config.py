@@ -46,12 +46,12 @@ class SceneConfig(Config):
             prediction_label_store=label_store,
             aoi_polygons=aoi_polygons)
 
-    def update(self, task=None):
+    def update(self, pipeline=None):
         super().update()
 
-        self.raster_source.update(task=task, scene=self)
-        self.label_source.update(task=task, scene=self)
-        if self.label_store is None and task is not None:
-            self.label_store = task.get_default_label_store(scene=self)
+        self.raster_source.update(pipeline=pipeline, scene=self)
+        self.label_source.update(pipeline=pipeline, scene=self)
+        if self.label_store is None and pipeline is not None:
+            self.label_store = pipeline.get_default_label_store(scene=self)
         if self.label_store is not None:
-            self.label_store.update(task=task, scene=self)
+            self.label_store.update(pipeline=pipeline, scene=self)

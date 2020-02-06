@@ -8,5 +8,5 @@ class ClassConfig(Config):
     names: List[str]
     colors: List[str]
 
-    def update(self, task=None):
+    def update(self, pipeline=None):
         pass

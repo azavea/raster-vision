@@ -14,22 +14,22 @@ class PyTorchChipClassificationConfig(BackendConfig):
     model: ClassificationModelConfig
     solver: SolverConfig
 
-    def get_learner_config(self, task):
+    def get_learner_config(self, pipeline):
         data = ClassificationDataConfig()
-        data.uri = task.chip_uri
-        data.class_names = task.dataset.class_config.names
-        data.class_colors = task.dataset.class_config.colors
-        data.img_sz = task.train_chip_sz
+        data.uri = pipeline.chip_uri
+        data.class_names = pipeline.dataset.class_config.names
+        data.class_colors = pipeline.dataset.class_config.colors
+        data.img_sz = pipeline.train_chip_sz
 
         learner = ClassificationLearnerConfig(
             data=data, model=self.model, solver=self.solver,
-            test_mode=task.debug, output_uri=task.train_uri)
+            test_mode=pipeline.debug, output_uri=pipeline.train_uri)
         learner.update()
         return learner
 
-    def build(self, task, tmp_dir):
-        learner = self.get_learner_config(task)
-        return PyTorchChipClassification(task, learner, tmp_dir)
+    def build(self, pipeline, tmp_dir):
+        learner = self.get_learner_config(pipeline)
+        return PyTorchChipClassification(pipeline, learner, tmp_dir)
 
     def get_bundle_filenames(self):
         return ['model-bundle.zip']

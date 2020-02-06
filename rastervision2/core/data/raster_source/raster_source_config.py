@@ -10,5 +10,5 @@ class RasterSourceConfig(Config):
     def build(self, tmp_dir):
         raise NotImplementedError()
 
-    def update(self, task=None, scene=None):
+    def update(self, pipeline=None, scene=None):
         pass

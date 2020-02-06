@@ -9,7 +9,7 @@ from rastervision2.core.predictor import *
 # registry.
 import rastervision2.core.backend
 import rastervision2.core.data
-import rastervision2.core.task
+import rastervision2.core.pipeline
 import rastervision2.core.evaluation
 import rastervision2.core.cli
 

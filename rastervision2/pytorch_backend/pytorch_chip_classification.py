@@ -59,17 +59,17 @@ class PyTorchChipClassificationSampleWriter(SampleWriter):
 
 
 class PyTorchChipClassification(Backend):
-    def __init__(self, task_cfg, learner_cfg, tmp_dir):
-        self.task_cfg = task_cfg
+    def __init__(self, pipeline_cfg, learner_cfg, tmp_dir):
+        self.pipeline_cfg = pipeline_cfg
         self.learner_cfg = learner_cfg
         self.tmp_dir = tmp_dir
         self.learner = None
 
     def get_sample_writer(self):
         output_uri = join(
-            self.task_cfg.chip_uri, '{}.zip'.format(str(uuid.uuid4())))
+            self.pipeline_cfg.chip_uri, '{}.zip'.format(str(uuid.uuid4())))
         return PyTorchChipClassificationSampleWriter(
-            output_uri, self.task_cfg.dataset.class_config, self.tmp_dir)
+            output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 
     def train(self):
         learner = self.learner_cfg.build(self.tmp_dir)

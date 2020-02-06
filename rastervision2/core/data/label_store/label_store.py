@@ -13,7 +13,7 @@ class LabelStore(ABC, ActivateMixin):
 
         Args:
            labels - Labels to be saved, the type of which will be dependant on the type
-                    of task.
+                    of pipeline.
         """
         pass
 
