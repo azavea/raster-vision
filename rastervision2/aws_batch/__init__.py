@@ -1,7 +1,6 @@
 # flake8: noqa
 
-from rastervision2.aws_batch.aws_batch_runner import (
-    AWSBatchRunner, AWS_BATCH)
+from rastervision2.aws_batch.aws_batch_runner import *
 
 def register_plugin(registry):
     registry.add_runner(AWS_BATCH, AWSBatchRunner)

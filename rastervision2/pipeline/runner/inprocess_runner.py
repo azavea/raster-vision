@@ -1,9 +1,10 @@
 from rastervision2.pipeline.main import _run_command
+from rastervision2.pipeline.runner.runner import Runner
 
 INPROCESS = 'inprocess'
 
 
-class InProcessRunner():
+class InProcessRunner(Runner):
     def run(self, cfg_json_uri, pipeline, commands, num_splits=1):
         for command in commands:
             if command in pipeline.split_commands and num_splits > 1:

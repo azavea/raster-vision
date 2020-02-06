@@ -90,8 +90,8 @@ def run(runner, cfg_path, commands, arg, splits):
         runner.run(cfg_json_uri, pipeline, commands, num_splits=splits)
 
 
-def _run_command(cfg_json_uri, command, split_ind, num_splits, profile=None,
-                 verbose=Verbosity.NORMAL):
+def _run_command(cfg_json_uri, command, split_ind=None, num_splits=None,
+                 runner=None, profile=None, verbose=Verbosity.NORMAL):
     tmp_dir_obj = rv_config.get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
 
@@ -103,12 +103,13 @@ def _run_command(cfg_json_uri, command, split_ind, num_splits, profile=None,
     cfg = build_config(pipeline_cfg_dict)
     pipeline = cfg.build(tmp_dir)
 
-    # TODO generalize this to work outside batch
-    if split_ind is None:
-        split_ind = int(os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX', 0))
+    if num_splits is not None and split_ind is None and runner is not None:
+        runner = registry.get_runner(runner)
+        split_ind = runner.get_split_ind()
+
     command_fn = getattr(pipeline, command)
 
-    if num_splits > 1:
+    if num_splits is not None and num_splits > 1:
         msg = 'Running {} command split {}/{}...'.format(
             command, split_ind + 1, num_splits)
         click.echo(click.style(msg, fg='green'))
@@ -125,12 +126,14 @@ def _run_command(cfg_json_uri, command, split_ind, num_splits, profile=None,
 @click.argument('cfg_json_uri')
 @click.argument('command')
 @click.option('--split-ind')
-@click.option('--num-splits', default=1)
-def run_command(ctx, cfg_json_uri, command, split_ind, num_splits):
+@click.option('--num-splits')
+@click.option('--runner', type=str)
+def run_command(ctx, cfg_json_uri, command, split_ind, num_splits, runner):
     profile = ctx.parent.params.get('profile')
     verbose = ctx.parent.params.get('verbose')
-    _run_command(cfg_json_uri, command, split_ind, num_splits,
-                 profile=profile, verbose=verbose)
+    _run_command(cfg_json_uri, command, split_ind=split_ind,
+                 num_splits=num_splits,
+                 runner=runner, profile=profile, verbose=verbose)
 
 
 if __name__ == '__main__':

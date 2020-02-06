@@ -1,4 +1,4 @@
 # flake8: noqa
 
-from rastervision2.pipeline.runner.inprocess_runner import (InProcessRunner,
-                                                          INPROCESS)
+from rastervision2.pipeline.runner.inprocess_runner import *
+from rastervision2.pipeline.runner.runner import *

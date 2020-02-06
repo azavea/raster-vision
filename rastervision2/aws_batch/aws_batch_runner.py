@@ -1,7 +1,9 @@
 import uuid
 import logging
+import os
 
 from rastervision2.pipeline import rv_config
+from rastervision2.pipeline.runner import Runner
 
 log = logging.getLogger(__name__)
 AWS_BATCH = 'aws_batch'
@@ -59,14 +61,13 @@ def submit_job(cmd,
     return job_id
 
 
-class AWSBatchRunner():
+class AWSBatchRunner(Runner):
     def run(self, cfg_json_uri, pipeline, commands, num_splits=1):
         parent_job_ids = []
         for command in commands:
             cmd = [
-                'python', '-m', 'rastervision2.pipeline run_command', cfg_json_uri,
-                command
-            ]
+                'python', '-m', 'rastervision2.pipeline run_command',
+                '--runner', AWS_BATCH, cfg_json_uri, command]
             num_array_jobs = None
             if command in pipeline.split_commands and num_splits > 1:
                 num_array_jobs = num_splits
@@ -81,3 +82,6 @@ class AWSBatchRunner():
                 num_array_jobs=num_array_jobs,
                 use_gpu=use_gpu)
             parent_job_ids = [job_id]
+
+    def get_split_ind(self):
+        return int(os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX', 0))
