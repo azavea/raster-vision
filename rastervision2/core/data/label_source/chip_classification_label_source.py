@@ -60,7 +60,7 @@ def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
 
     # Infer class id for cell.
     if len(class_ids) == 0:
-        class_id = (None if background_class_id == 0 else background_class_id)
+        class_id = background_class_id
     elif pick_min_class_id:
         class_id = min(class_ids)
     else:

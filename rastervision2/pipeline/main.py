@@ -1,13 +1,12 @@
 """Raster Vision main program"""
 import sys
 import os
-from os.path import join
 import logging
 import importlib
 
 import click
 
-from rastervision2.pipeline import (registry, rv_config, Verbosity)
+from rastervision2.pipeline import (registry, rv_config)
 from rastervision2.pipeline.filesystem import (file_to_json, json_to_file)
 from rastervision2.pipeline.config import build_config
 
@@ -41,21 +40,20 @@ def get_configs(cfg_module, runner, args):
         cfgs = [cfgs]
     return cfgs
 
-
 @click.group()
 @click.pass_context
 @click.option(
     '--profile', '-p', help='Sets the configuration profile name to use.')
 @click.option(
     '-v', '--verbose', help='Sets the output to  be verbose.', count=True)
-def main(ctx, profile, verbose):
+@click.option('--tmpdir', help='Root of temporary directories to use.')
+def main(ctx, profile, verbose, tmpdir):
     # Make sure current directory is on PYTHON_PATH
     # so that we can run against modules in current dir.
     sys.path.append(os.curdir)
 
     # Initialize configuration
-    rv_config.reset(profile=profile, verbosity=verbose + 1)
-
+    rv_config.reset(profile=profile, verbosity=verbose + 1, tmp_dir=tmpdir)
 
 @main.command('run', short_help='Run sequence of commands within pipeline(s).')
 @click.argument('runner')
@@ -76,7 +74,6 @@ def run(runner, cfg_path, commands, arg, splits):
 
     for cfg in cfgs:
         cfg.update()
-        # TODO move to update?
         cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
         cfg_dict = cfg.dict()
         cfg_json_uri = cfg.get_config_uri()
@@ -91,20 +88,22 @@ def run(runner, cfg_path, commands, arg, splits):
 
 
 def _run_command(cfg_json_uri, command, split_ind=None, num_splits=None,
-                 runner=None, profile=None, verbose=Verbosity.NORMAL):
-    tmp_dir_obj = rv_config.get_tmp_dir()
-    tmp_dir = tmp_dir_obj.name
-
+                 runner=None):
     pipeline_cfg_dict = file_to_json(cfg_json_uri)
     rv_config_dict = pipeline_cfg_dict.get('rv_config')
     rv_config.reset(
-        config_overrides=rv_config_dict, profile=profile, verbosity=verbose)
+        config_overrides=rv_config_dict,
+        verbosity=rv_config.verbosity,
+        tmp_dir=rv_config.tmp_dir)
+
+    tmp_dir_obj = rv_config.get_tmp_dir()
+    tmp_dir = tmp_dir_obj.name
 
     cfg = build_config(pipeline_cfg_dict)
     pipeline = cfg.build(tmp_dir)
 
     if num_splits is not None and split_ind is None and runner is not None:
-        runner = registry.get_runner(runner)
+        runner = registry.get_runner(runner)()
         split_ind = runner.get_split_ind()
 
     command_fn = getattr(pipeline, command)
@@ -125,15 +124,12 @@ def _run_command(cfg_json_uri, command, split_ind=None, num_splits=None,
 @click.pass_context
 @click.argument('cfg_json_uri')
 @click.argument('command')
-@click.option('--split-ind')
-@click.option('--num-splits')
+@click.option('--split-ind', type=int)
+@click.option('--num-splits', type=int)
 @click.option('--runner', type=str)
 def run_command(ctx, cfg_json_uri, command, split_ind, num_splits, runner):
-    profile = ctx.parent.params.get('profile')
-    verbose = ctx.parent.params.get('verbose')
     _run_command(cfg_json_uri, command, split_ind=split_ind,
-                 num_splits=num_splits,
-                 runner=runner, profile=profile, verbose=verbose)
+                 num_splits=num_splits, runner=runner)
 
 
 if __name__ == '__main__':

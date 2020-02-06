@@ -53,7 +53,8 @@ class PyTorchChipClassificationSampleWriter(SampleWriter):
         class_name = self.class_config.names[class_id]
         class_dir = join(self.sample_dir, split_name, class_name)
         make_dir(class_dir)
-        chip_path = join(class_dir, '{}-{}.png'.format(sample.scene_id, self.sample_ind))
+        chip_path = join(
+            class_dir, '{}-{}.png'.format(sample.scene_id, self.sample_ind))
         save_img(sample.chip, chip_path)
         self.sample_ind += 1
 

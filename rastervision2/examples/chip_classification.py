@@ -58,11 +58,12 @@ def get_config(runner, test=False):
         raster_source = RasterioSourceConfig(
             channel_order=[0, 1, 2], uris=[raster_uri])
         label_source = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=label_uri),
+            vector_source=GeoJSONVectorSourceConfig(
+                uri=label_uri, default_class_id=1),
             ioa_thresh=0.5,
             use_intersection_over_cell=False,
-            pick_min_class_id=True,
-            background_class_id=1,
+            pick_min_class_id=False,
+            background_class_id=0,
             infer_cells=True)
 
         return SceneConfig(
@@ -74,7 +75,7 @@ def get_config(runner, test=False):
     train_scenes = [make_scene(info) for info in train_scene_info]
     val_scenes = [make_scene(info) for info in val_scene_info]
     class_config = ClassConfig(
-        names=['building', 'no_building'], colors=['red', 'black'])
+        names=['no_building', 'building'], colors=['black', 'red'])
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=train_scenes,

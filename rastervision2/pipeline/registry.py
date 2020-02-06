@@ -101,8 +101,10 @@ class Registry():
                 register_plugin(self)
 
     def load_builtins(self):
-        from rastervision2.pipeline.runner import (InProcessRunner, INPROCESS)
-        from rastervision2.pipeline.filesystem import (HttpFileSystem, LocalFileSystem)
+        from rastervision2.pipeline.runner import (
+            InProcessRunner, INPROCESS)
+        from rastervision2.pipeline.filesystem import (
+            HttpFileSystem, LocalFileSystem)
 
         self.add_runner(INPROCESS, InProcessRunner)
         self.add_filesystem(HttpFileSystem)

@@ -39,9 +39,10 @@ class Predictor():
 
         config_path = join(bundle_dir, 'pipeline.json')
         config_dict = file_to_json(config_path)
-        rv_config = config_dict.get('rv_config')
         rv_config.reset(
-            config_overrides=rv_config, verbosity=rv_config.verbosity)
+            config_overrides=config_dict.get('rv_config'),
+            verbosity=rv_config.verbosity,
+            tmp_dir=rv_config.tmp_dir)
 
         self.pipeline = build_config(config_dict).build(tmp_dir)
         self.scene = None
