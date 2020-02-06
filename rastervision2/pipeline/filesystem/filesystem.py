@@ -1,7 +1,7 @@
 from abc import (ABC, abstractmethod)
 from datetime import datetime
 
-from rastervision2.pipeline import _registry
+from rastervision2.pipeline import registry
 
 
 class NotReadableError(Exception):
@@ -19,7 +19,7 @@ class ProtobufParseException(Exception):
 class FileSystem(ABC):
     @staticmethod
     def get_file_system(uri, mode='r'):
-        return _registry.get_file_system(uri, mode)
+        return registry.get_file_system(uri, mode)
 
     @staticmethod
     @abstractmethod

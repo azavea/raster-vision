@@ -7,5 +7,5 @@ class Verbosity:
 
     @staticmethod
     def get():
-        from rastervision2.pipeline import _rv_config
-        return _rv_config.get_verbosity()
+        from rastervision2.pipeline import rv_config
+        return rv_config.get_verbosity()

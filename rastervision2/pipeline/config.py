@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel, create_model
 from typing_extensions import Literal
 
-from rastervision2.pipeline import _registry
+from rastervision2.pipeline import registry
 
 
 def register_config(type_hint, version=0, upgraders=None):
@@ -23,7 +23,7 @@ def register_config(type_hint, version=0, upgraders=None):
                 cls.__name__,
                 type_hint=(Literal[type_hint], type_hint),
                 __base__=cls)
-        _registry.add_config(
+        registry.add_config(
             type_hint, cls, version=version, upgraders=upgraders)
         return cls
 
@@ -37,7 +37,7 @@ def build_config(x):
             new_x[k] = build_config(v)
         type_hint = new_x.get('type_hint')
         if type_hint is not None:
-            config_cls = _registry.get_config(type_hint)
+            config_cls = registry.get_config(type_hint)
             new_x = config_cls(**new_x)
         return new_x
     elif isinstance(x, list):
@@ -55,7 +55,7 @@ def upgrade_config(x):
         if type_hint is not None:
             version = new_x.get('version')
             if version is not None:
-                curr_version, upgraders = _registry.get_config_upgraders(
+                curr_version, upgraders = registry.get_config_upgraders(
                     type_hint)
                 for upgrader in upgraders[version:]:
                     new_x = upgrader.upgrade(new_x)

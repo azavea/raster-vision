@@ -4,9 +4,6 @@ class RegistryError(Exception):
 
 class Registry():
     def __init__(self):
-        self.reset()
-
-    def reset(self):
         self.runners = {}
         self.filesystems = []
         self.configs = {}
@@ -78,3 +75,38 @@ class Registry():
 
     def get_rv_config_schema(self):
         return self.rv_config_schema
+
+    def load_plugins(self):
+        import importlib
+        import pkgutil
+        import rastervision2
+
+        # From https://packaging.python.org/guides/creating-and-discovering-plugins/#using-namespace-packages
+        def iter_namespace(ns_pkg):
+            # Specifying the second argument (prefix) to iter_modules makes the
+            # returned name an absolute name instead of a relative one. This allows
+            # import_module to work without having to do additional modification to
+            # the name.
+            return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + ".")
+
+        discovered_plugins = {
+            name: importlib.import_module(name)
+            for finder, name, ispkg
+            in iter_namespace(rastervision2)
+        }
+
+        for name, module in discovered_plugins.items():
+            register_plugin = getattr(module, 'register_plugin', None)
+            if register_plugin:
+                register_plugin(self)
+
+    def load_builtins(self):
+        from rastervision2.pipeline.runner import (InProcessRunner, INPROCESS)
+        from rastervision2.pipeline.filesystem import (HttpFileSystem, LocalFileSystem)
+
+        self.add_runner(INPROCESS, InProcessRunner)
+        self.add_filesystem(HttpFileSystem)
+        self.add_filesystem(LocalFileSystem)
+
+        # import so register_config decorators are called
+        import rastervision2.pipeline.pipeline_config

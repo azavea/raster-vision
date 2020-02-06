@@ -1,6 +1,6 @@
 import click
 
-from rastervision2.pipeline import _rv_config
+from rastervision2.pipeline import rv_config
 from rastervision2.pipeline.main import main
 from rastervision2.core.predictor import Predictor
 
@@ -55,6 +55,6 @@ def predict(ctx, model_bundle, image_uri, output_uri, channel_order):
             int(channel_ind) for channel_ind in channel_order.split(' ')
         ]
 
-    with _rv_config.get_tmp_dir() as tmp_dir:
+    with rv_config.get_tmp_dir() as tmp_dir:
         predictor = Predictor(model_bundle, tmp_dir, channel_order)
         predictor.predict([image_uri], output_uri)

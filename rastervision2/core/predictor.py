@@ -1,7 +1,7 @@
 from os.path import join
 import zipfile
 
-from rastervision2.pipeline import _rv_config
+from rastervision2.pipeline import rv_config
 from rastervision2.pipeline.config import build_config
 from rastervision2.pipeline.filesystem.utils import (
     download_if_needed, make_dir, file_to_json)
@@ -40,8 +40,8 @@ class Predictor():
         config_path = join(bundle_dir, 'pipeline.json')
         config_dict = file_to_json(config_path)
         rv_config = config_dict.get('rv_config')
-        _rv_config.reset(
-            config_overrides=rv_config, verbosity=_rv_config.verbosity)
+        rv_config.reset(
+            config_overrides=rv_config, verbosity=rv_config.verbosity)
 
         self.pipeline = build_config(config_dict).build(tmp_dir)
         self.scene = None

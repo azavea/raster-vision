@@ -7,7 +7,7 @@ import importlib
 
 import click
 
-from rastervision2.pipeline import (_registry, _rv_config, Verbosity)
+from rastervision2.pipeline import (registry, rv_config, Verbosity)
 from rastervision2.pipeline.filesystem import (file_to_json, json_to_file)
 from rastervision2.pipeline.config import build_config
 
@@ -54,7 +54,7 @@ def main(ctx, profile, verbose):
     sys.path.append(os.curdir)
 
     # Initialize configuration
-    _rv_config.reset(profile=profile, verbosity=verbose + 1)
+    rv_config.reset(profile=profile, verbosity=verbose + 1)
 
 
 @main.command('run', short_help='Run sequence of commands within pipeline(s).')
@@ -66,7 +66,7 @@ def main(ctx, profile, verbose):
 @click.option('--splits', '-s', default=1)
 def run(runner, cfg_path, commands, arg, splits):
     """Run commands within pipelines using runner named RUNNER."""
-    tmp_dir_obj = _rv_config.get_tmp_dir()
+    tmp_dir_obj = rv_config.get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
 
     cfg_module = importlib.import_module(cfg_path)
@@ -77,7 +77,7 @@ def run(runner, cfg_path, commands, arg, splits):
     for cfg in cfgs:
         cfg.update()
         # TODO move to update?
-        cfg.rv_config = _rv_config.get_config_dict(_registry.rv_config_schema)
+        cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
         cfg_dict = cfg.dict()
         cfg_json_uri = cfg.get_config_uri()
         json_to_file(cfg_dict, cfg_json_uri)
@@ -86,18 +86,18 @@ def run(runner, cfg_path, commands, arg, splits):
         if not commands:
             commands = pipeline.commands
 
-        runner = _registry.get_runner(runner)()
+        runner = registry.get_runner(runner)()
         runner.run(cfg_json_uri, pipeline, commands, num_splits=splits)
 
 
 def _run_command(cfg_json_uri, command, split_ind, num_splits, profile=None,
                  verbose=Verbosity.NORMAL):
-    tmp_dir_obj = _rv_config.get_tmp_dir()
+    tmp_dir_obj = rv_config.get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
 
     pipeline_cfg_dict = file_to_json(cfg_json_uri)
     rv_config_dict = pipeline_cfg_dict.get('rv_config')
-    _rv_config.reset(
+    rv_config.reset(
         config_overrides=rv_config_dict, profile=profile, verbosity=verbose)
 
     cfg = build_config(pipeline_cfg_dict)
