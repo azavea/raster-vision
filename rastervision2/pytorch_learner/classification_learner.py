@@ -2,22 +2,27 @@ import warnings
 warnings.filterwarnings('ignore')  # noqa
 from os.path import join, isfile, isdir
 import zipfile
+import logging
 
 import torch
 from torchvision import models
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Subset, ConcatDataset
-from torchvision.transforms import (Compose, ToTensor, Resize, ColorJitter,
-                                    RandomVerticalFlip, RandomHorizontalFlip)
+from albumentations.core.composition import Compose
+from albumentations.augmentations.transforms import (
+    Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
+    GaussNoise, RGBShift, ToGray, Resize)
 
 from rastervision.backend.torch_utils.chip_classification.folder import (
     ImageFolder)
 from rastervision2.pipeline.filesystem import (download_if_needed, list_paths,
                                                get_local_path)
 from rastervision2.pytorch_learner.learner import Learner
-from rastervision2.pytorch_learner.metrics import (compute_conf_mat_metrics,
-                                                   compute_conf_mat)
+from rastervision2.pytorch_learner.utils import (
+    compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
+
+log = logging.getLogger(__name__)
 
 
 class ClassificationLearner(Learner):
@@ -54,44 +59,60 @@ class ClassificationLearner(Learner):
                     data_dirs.append(data_dir)
                     zipf.extractall(data_dir)
 
+        transform = Compose(
+            [Resize(cfg.data.img_sz, cfg.data.img_sz)])
+
+        augmentors_dict = {
+            'Blur': Blur(),
+            'RandomRotate90': RandomRotate90(),
+            'HorizontalFlip': HorizontalFlip(),
+            'VerticalFlip': VerticalFlip(),
+            'GaussianBlur': GaussianBlur(),
+            'GaussNoise': GaussNoise(),
+            'RGBShift': RGBShift(),
+            'ToGray': ToGray()
+        }
+        aug_transforms = [Resize(cfg.data.img_sz, cfg.data.img_sz)]
+        for augmentor in cfg.data.augmentors:
+            try:
+                aug_transforms.append(augmentors_dict[augmentor])
+            except KeyError as e:
+                log.warning('{0} is an unknown augmentor. Continuing without {0}. \
+                    Known augmentors are: {1}'
+                            .format(e, list(augmentors_dict.keys())))
+        aug_transform = Compose(aug_transforms)
+
         train_ds, valid_ds, test_ds = [], [], []
         for data_dir in data_dirs:
             train_dir = join(data_dir, 'train')
             valid_dir = join(data_dir, 'valid')
 
             # build datasets
-            transform = Compose(
-                [Resize((cfg.data.img_sz, cfg.data.img_sz)),
-                 ToTensor()])
-            aug_transform = Compose([
-                RandomHorizontalFlip(),
-                RandomVerticalFlip(),
-                ColorJitter(0.1, 0.1, 0.1, 0.1),
-                Resize((cfg.data.img_sz, cfg.data.img_sz)),
-                ToTensor()
-            ])
-
             if isdir(train_dir):
                 if cfg.overfit_mode:
                     train_ds.append(
-                        ImageFolder(
-                            train_dir,
-                            transform=transform,
-                            classes=label_names))
+                        AlbumentationsDataset(
+                            ImageFolder(
+                                train_dir, classes=label_names),
+                            transform=transform))
                 else:
                     train_ds.append(
-                        ImageFolder(
-                            train_dir,
-                            transform=aug_transform,
-                            classes=label_names))
+                        AlbumentationsDataset(
+                            ImageFolder(
+                                train_dir, classes=label_names),
+                            transform=aug_transform))
 
             if isdir(valid_dir):
                 valid_ds.append(
-                    ImageFolder(
-                        valid_dir, transform=transform, classes=label_names))
+                    AlbumentationsDataset(
+                        ImageFolder(
+                            valid_dir, classes=label_names),
+                        transform=transform))
                 test_ds.append(
-                    ImageFolder(
-                        valid_dir, transform=transform, classes=label_names))
+                    AlbumentationsDataset(
+                        ImageFolder(
+                            valid_dir, classes=label_names),
+                        transform=transform))
 
         train_ds, valid_ds, test_ds = \
             ConcatDataset(train_ds), ConcatDataset(valid_ds), ConcatDataset(test_ds)

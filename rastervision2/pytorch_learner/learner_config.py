@@ -37,6 +37,8 @@ class DataConfig(Config):
     class_colors: List[str] = []
     img_sz: int = 256
     num_workers: int = 4
+    augmentors: List[str] = [
+        'RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 
     def update(self, learner=None):
         pass
