@@ -9,6 +9,8 @@ import shutil
 import os
 import math
 import logging
+from subprocess import Popen
+import numbers
 
 import click
 import matplotlib
@@ -18,11 +20,12 @@ import matplotlib.gridspec as gridspec
 import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR
+from torch.utils.tensorboard import SummaryWriter
 
 from rastervision2.pipeline.filesystem import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, sync_from_dir, get_local_path, unzip)
-
+from rastervision2.core.utils.misc import terminate_at_exit
 from rastervision2.pipeline.config import build_config
 from rastervision2.pytorch_learner.learner_config import LearnerConfig
 
@@ -88,8 +91,10 @@ class Learner(ABC):
                 self.train_ds) // self.cfg.solver.batch_sz
             self.step_scheduler = self.build_step_scheduler()
             self.epoch_scheduler = self.build_epoch_scheduler()
+            self.setup_tensorboard()
 
     def main(self):
+        self.run_tensorboard()
         cfg = self.cfg
         self.log_data_stats()
         if not cfg.predict_mode:
@@ -106,6 +111,7 @@ class Learner(ABC):
             self.eval_model('train')
         self.eval_model('test')
         self.sync_to_cloud()
+        self.stop_tensorboard()
 
     def sync_to_cloud(self):
         if self.cfg.output_uri.startswith('s3://'):
@@ -114,6 +120,26 @@ class Learner(ABC):
     def sync_from_cloud(self):
         if self.cfg.output_uri.startswith('s3://'):
             sync_from_dir(self.cfg.output_uri, self.output_dir)
+
+    def setup_tensorboard(self):
+        self.tb_writer = None
+        if self.cfg.log_tensorboard:
+            self.tb_log_dir = join(self.output_dir, 'tb-logs')
+            make_dir(self.tb_log_dir)
+            self.tb_writer = SummaryWriter(log_dir=self.tb_log_dir)
+
+    def run_tensorboard(self):
+        if self.cfg.run_tensorboard:
+            log.info('Starting tensorboard process')
+            self.tb_process = Popen(
+                ['tensorboard', '--logdir={}'.format(self.tb_log_dir)])
+            terminate_at_exit(self.tb_process)
+
+    def stop_tensorboard(self):
+        if self.cfg.log_tensorboard:
+            self.tb_writer.close()
+            if self.cfg.run_tensorboard:
+                self.tb_process.terminate()
 
     @abstractmethod
     def build_model(self):
@@ -455,6 +481,13 @@ class Learner(ABC):
             log_writer = csv.writer(log_file)
             row = [metrics[k] for k in self.metric_names]
             log_writer.writerow(row)
+
+        if self.cfg.log_tensorboard:
+            for key, val in metrics.items():
+                if isinstance(val, numbers.Number):
+                    self.tb_writer.add_scalar(key, val, curr_epoch)
+            for name, param in self.model.named_parameters():
+                self.tb_writer.add_histogram(name, param, curr_epoch)
 
         torch.save(self.model.state_dict(), self.last_model_path)
 

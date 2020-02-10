@@ -53,6 +53,8 @@ class LearnerConfig(Config):
     overfit_mode: bool = False
     eval_train: bool = False
     save_model_bundle: bool = True
+    log_tensorboard: bool = True
+    run_tensorboard: bool = False
 
     output_uri: str = None
 

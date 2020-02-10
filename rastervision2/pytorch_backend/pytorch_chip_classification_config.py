@@ -12,6 +12,8 @@ from rastervision2.pytorch_backend.pytorch_chip_classification import (
 class PyTorchChipClassificationConfig(BackendConfig):
     model: ClassificationModelConfig
     solver: SolverConfig
+    log_tensorboard: bool = True
+    run_tensorboard: bool = False
 
     def get_learner_config(self, pipeline):
         data = ClassificationDataConfig()
@@ -25,7 +27,9 @@ class PyTorchChipClassificationConfig(BackendConfig):
             model=self.model,
             solver=self.solver,
             test_mode=pipeline.debug,
-            output_uri=pipeline.train_uri)
+            output_uri=pipeline.train_uri,
+            log_tensorboard=self.log_tensorboard,
+            run_tensorboard=self.run_tensorboard)
         learner.update()
         return learner
 
