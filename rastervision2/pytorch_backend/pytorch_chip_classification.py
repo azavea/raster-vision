@@ -2,7 +2,8 @@ from os.path import join
 import uuid
 import tempfile
 
-from rastervision2.pipeline.filesystem import (make_dir, upload_or_copy, zipdir)
+from rastervision2.pipeline.filesystem import (make_dir, upload_or_copy,
+                                               zipdir)
 from rastervision2.core.data.label import ChipClassificationLabels
 from rastervision2.core.backend import Backend, SampleWriter
 from rastervision2.core.utils.misc import save_img
@@ -53,8 +54,8 @@ class PyTorchChipClassificationSampleWriter(SampleWriter):
         class_name = self.class_config.names[class_id]
         class_dir = join(self.sample_dir, split_name, class_name)
         make_dir(class_dir)
-        chip_path = join(
-            class_dir, '{}-{}.png'.format(sample.scene_id, self.sample_ind))
+        chip_path = join(class_dir, '{}-{}.png'.format(sample.scene_id,
+                                                       self.sample_ind))
         save_img(sample.chip, chip_path)
         self.sample_ind += 1
 
@@ -67,8 +68,8 @@ class PyTorchChipClassification(Backend):
         self.learner = None
 
     def get_sample_writer(self):
-        output_uri = join(
-            self.pipeline_cfg.chip_uri, '{}.zip'.format(str(uuid.uuid4())))
+        output_uri = join(self.pipeline_cfg.chip_uri, '{}.zip'.format(
+            str(uuid.uuid4())))
         return PyTorchChipClassificationSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 

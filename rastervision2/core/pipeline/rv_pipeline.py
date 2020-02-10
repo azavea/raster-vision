@@ -10,7 +10,6 @@ from rastervision2.core.pipeline import TRAIN, VALIDATION
 from rastervision2.pipeline.filesystem.utils import (
     download_or_copy, zipdir, get_local_path, upload_or_copy)
 
-
 log = logging.getLogger(__name__)
 
 
@@ -62,6 +61,7 @@ class RVPipeline(Pipeline):
 
         class_cfg = dataset.class_config
         with backend.get_sample_writer() as writer:
+
             def _process_scene(scene, split):
                 with scene.activate():
                     log.info('Making {} chips for scene: {}'.format(
@@ -71,8 +71,11 @@ class RVPipeline(Pipeline):
                         chip = scene.raster_source.get_chip(window)
                         labels = self.get_train_labels(window, scene)
                         sample = DataSample(
-                            chip=chip, window=window, labels=labels,
-                            scene_id=str(scene.id), is_train=split == TRAIN)
+                            chip=chip,
+                            window=window,
+                            labels=labels,
+                            scene_id=str(scene.id),
+                            is_train=split == TRAIN)
                         writer.write_sample(sample)
 
             def _process_scenes(scenes, split):
@@ -184,11 +187,10 @@ class RVPipeline(Pipeline):
         with tempfile.TemporaryDirectory(dir=self.tmp_dir) as tmp_dir:
             for fn in self.config.backend.get_bundle_filenames():
                 download_or_copy(
-                    join(self.config.train_uri, fn),
-                    join(tmp_dir, fn))
+                    join(self.config.train_uri, fn), join(tmp_dir, fn))
 
-                download_or_copy(
-                    self.config.get_config_uri(), join(tmp_dir, 'pipeline.json'))
+                download_or_copy(self.config.get_config_uri(),
+                                 join(tmp_dir, 'pipeline.json'))
 
             model_bundle_uri = join(self.config.bundle_uri, 'model-bundle.zip')
             model_bundle_path = get_local_path(model_bundle_uri, self.tmp_dir)

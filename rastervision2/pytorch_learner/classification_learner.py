@@ -14,10 +14,10 @@ from torchvision.transforms import (Compose, ToTensor, Resize, ColorJitter,
 from rastervision.backend.torch_utils.chip_classification.folder import (
     ImageFolder)
 from rastervision2.pipeline.filesystem import (download_if_needed, list_paths,
-                                             get_local_path)
+                                               get_local_path)
 from rastervision2.pytorch_learner.learner import Learner
 from rastervision2.pytorch_learner.metrics import (compute_conf_mat_metrics,
-                                             compute_conf_mat)
+                                                   compute_conf_mat)
 
 
 class ClassificationLearner(Learner):

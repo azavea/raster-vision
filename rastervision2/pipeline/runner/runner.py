@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+
 class Runner():
     @abstractmethod
     def run(self, cfg_json_uri, pipeline, commands, num_splits=1):

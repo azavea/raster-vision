@@ -1,7 +1,7 @@
 import click
 
 from rastervision2.pipeline import rv_config
-from rastervision2.pipeline.main import main
+from rastervision2.pipeline.cli import main
 from rastervision2.core.predictor import Predictor
 
 

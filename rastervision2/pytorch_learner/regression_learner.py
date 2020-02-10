@@ -19,7 +19,7 @@ from torchvision.transforms import (Compose, ToTensor, Resize, ColorJitter,
 from PIL import Image
 
 from rastervision2.pipeline.filesystem import (download_if_needed, list_paths,
-                                             get_local_path)
+                                               get_local_path)
 from rastervision2.pytorch_learner.learner import Learner
 
 

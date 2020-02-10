@@ -26,7 +26,8 @@ class Registry():
         if runner:
             return runner
         else:
-            raise RegistryError('{} is not a registered runner.'.format(runner_type))
+            raise RegistryError(
+                '{} is not a registered runner.'.format(runner_type))
 
     def get_file_system(self, uri: str, mode: str = 'r'):
         for fs in self.filesystems:
@@ -81,18 +82,17 @@ class Registry():
         import pkgutil
         import rastervision2
 
-        # From https://packaging.python.org/guides/creating-and-discovering-plugins/#using-namespace-packages
+        # From https://packaging.python.org/guides/creating-and-discovering-plugins/#using-namespace-packages  # noqa
         def iter_namespace(ns_pkg):
             # Specifying the second argument (prefix) to iter_modules makes the
             # returned name an absolute name instead of a relative one. This allows
             # import_module to work without having to do additional modification to
             # the name.
-            return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + ".")
+            return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + '.')
 
         discovered_plugins = {
             name: importlib.import_module(name)
-            for finder, name, ispkg
-            in iter_namespace(rastervision2)
+            for finder, name, ispkg in iter_namespace(rastervision2)
         }
 
         for name, module in discovered_plugins.items():
@@ -101,14 +101,13 @@ class Registry():
                 register_plugin(self)
 
     def load_builtins(self):
-        from rastervision2.pipeline.runner import (
-            InProcessRunner, INPROCESS)
-        from rastervision2.pipeline.filesystem import (
-            HttpFileSystem, LocalFileSystem)
+        from rastervision2.pipeline.runner import (InProcessRunner, INPROCESS)
+        from rastervision2.pipeline.filesystem import (HttpFileSystem,
+                                                       LocalFileSystem)
 
         self.add_runner(INPROCESS, InProcessRunner)
         self.add_filesystem(HttpFileSystem)
         self.add_filesystem(LocalFileSystem)
 
         # import so register_config decorators are called
-        import rastervision2.pipeline.pipeline_config
+        import rastervision2.pipeline.pipeline_config  # noqa

@@ -1,7 +1,6 @@
 # flake8: noqa
 
-from rastervision2.aws_s3.s3_filesystem import (
-    AWS_S3, S3FileSystem)
+from rastervision2.aws_s3.s3_filesystem import (AWS_S3, S3FileSystem)
 
 
 def register_plugin(registry):

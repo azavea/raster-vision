@@ -1,8 +1,8 @@
 from typing import List
 
 from rastervision2.pipeline.config import register_config
-from rastervision2.pytorch_learner.learner_config import (LearnerConfig, DataConfig,
-                                                    ModelConfig)
+from rastervision2.pytorch_learner.learner_config import (
+    LearnerConfig, DataConfig, ModelConfig)
 
 
 @register_config('regression_model')

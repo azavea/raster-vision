@@ -40,6 +40,7 @@ def get_configs(cfg_module, runner, args):
         cfgs = [cfgs]
     return cfgs
 
+
 @click.group()
 @click.pass_context
 @click.option(
@@ -54,6 +55,7 @@ def main(ctx, profile, verbose, tmpdir):
 
     # Initialize configuration
     rv_config.reset(profile=profile, verbosity=verbose + 1, tmp_dir=tmpdir)
+
 
 @main.command('run', short_help='Run sequence of commands within pipeline(s).')
 @click.argument('runner')
@@ -87,7 +89,10 @@ def run(runner, cfg_path, commands, arg, splits):
         runner.run(cfg_json_uri, pipeline, commands, num_splits=splits)
 
 
-def _run_command(cfg_json_uri, command, split_ind=None, num_splits=None,
+def _run_command(cfg_json_uri,
+                 command,
+                 split_ind=None,
+                 num_splits=None,
                  runner=None):
     pipeline_cfg_dict = file_to_json(cfg_json_uri)
     rv_config_dict = pipeline_cfg_dict.get('rv_config')
@@ -128,8 +133,12 @@ def _run_command(cfg_json_uri, command, split_ind=None, num_splits=None,
 @click.option('--num-splits', type=int)
 @click.option('--runner', type=str)
 def run_command(ctx, cfg_json_uri, command, split_ind, num_splits, runner):
-    _run_command(cfg_json_uri, command, split_ind=split_ind,
-                 num_splits=num_splits, runner=runner)
+    _run_command(
+        cfg_json_uri,
+        command,
+        split_ind=split_ind,
+        num_splits=num_splits,
+        runner=runner)
 
 
 if __name__ == '__main__':

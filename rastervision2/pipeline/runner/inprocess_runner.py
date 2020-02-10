@@ -1,4 +1,4 @@
-from rastervision2.pipeline.main import _run_command
+from rastervision2.pipeline.cli import _run_command
 from rastervision2.pipeline.runner.runner import Runner
 
 INPROCESS = 'inprocess'

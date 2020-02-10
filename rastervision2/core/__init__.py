@@ -13,5 +13,6 @@ import rastervision2.core.pipeline
 import rastervision2.core.evaluation
 import rastervision2.core.cli
 
+
 def register_plugin(registry):
     pass

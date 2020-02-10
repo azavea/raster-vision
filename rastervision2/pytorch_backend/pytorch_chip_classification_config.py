@@ -3,8 +3,7 @@ from rastervision2.core.backend import BackendConfig
 from rastervision2.pytorch_learner.classification_config import (
     ClassificationModelConfig, ClassificationLearnerConfig,
     ClassificationDataConfig)
-from rastervision2.pytorch_learner.learner_config import (
-    SolverConfig)
+from rastervision2.pytorch_learner.learner_config import (SolverConfig)
 from rastervision2.pytorch_backend.pytorch_chip_classification import (
     PyTorchChipClassification)
 
@@ -22,8 +21,11 @@ class PyTorchChipClassificationConfig(BackendConfig):
         data.img_sz = pipeline.train_chip_sz
 
         learner = ClassificationLearnerConfig(
-            data=data, model=self.model, solver=self.solver,
-            test_mode=pipeline.debug, output_uri=pipeline.train_uri)
+            data=data,
+            model=self.model,
+            solver=self.solver,
+            test_mode=pipeline.debug,
+            output_uri=pipeline.train_uri)
         learner.update()
         return learner
 

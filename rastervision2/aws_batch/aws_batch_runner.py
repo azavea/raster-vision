@@ -66,8 +66,9 @@ class AWSBatchRunner(Runner):
         parent_job_ids = []
         for command in commands:
             cmd = [
-                'python', '-m', 'rastervision2.pipeline.main run_command',
-                cfg_json_uri, command, '--runner', AWS_BATCH]
+                'python', '-m', 'rastervision2.pipeline.cli run_command',
+                cfg_json_uri, command, '--runner', AWS_BATCH
+            ]
             num_array_jobs = None
             if command in pipeline.split_commands and num_splits > 1:
                 num_array_jobs = num_splits

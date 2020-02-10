@@ -2,8 +2,8 @@ from os.path import join
 
 from rastervision2.pytorch_learner.classification_config import (
     ClassificationLearnerConfig, ClassificationDataConfig)
-from rastervision2.pytorch_learner.learner_config import (LearnerPipelineConfig,
-                                                    SolverConfig, ModelConfig)
+from rastervision2.pytorch_learner.learner_config import (
+    LearnerPipelineConfig, SolverConfig, ModelConfig)
 
 
 def get_config(runner, test=False):

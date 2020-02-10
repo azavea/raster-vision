@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 import json
 
-from everett.manager import (ConfigManager, ConfigDictEnv, ConfigEnvFileEnv,
+from everett.manager import (ConfigManager, ConfigDictEnv,
                              ConfigIniEnv, ConfigOSEnv)
 
 from rastervision2.pipeline.verbosity import Verbosity
@@ -157,8 +157,7 @@ class RVConfig:
                 os.makedirs(tmp_dir, exist_ok=True)
             # Check that it is actually a directory
             if not os.path.isdir(tmp_dir):
-                raise Exception(
-                    '{} is not a directory.'.format(tmp_dir))
+                raise Exception('{} is not a directory.'.format(tmp_dir))
             # Can we interact with directory?
             Path.touch(Path(os.path.join(tmp_dir, '.can_touch')))
             # All checks have passed by this point

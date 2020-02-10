@@ -4,11 +4,11 @@ import subprocess
 from datetime import datetime
 from urllib.parse import urlparse
 
-from rastervision2.pipeline.filesystem import (
-    FileSystem, NotReadableError, NotWritableError)
-
+from rastervision2.pipeline.filesystem import (FileSystem, NotReadableError,
+                                               NotWritableError)
 
 AWS_S3 = 'aws_s3'
+
 
 # Code from https://alexwlchan.net/2017/07/listing-s3-keys/
 def get_matching_s3_objects(bucket, prefix='', suffix='',

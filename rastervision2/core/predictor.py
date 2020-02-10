@@ -3,18 +3,15 @@ import zipfile
 
 from rastervision2.pipeline import rv_config
 from rastervision2.pipeline.config import build_config
-from rastervision2.pipeline.filesystem.utils import (
-    download_if_needed, make_dir, file_to_json)
+from rastervision2.pipeline.filesystem.utils import (download_if_needed,
+                                                     make_dir, file_to_json)
 from rastervision2.core.data.raster_source import ChannelOrderError
 
 
 class Predictor():
     """Class for making predictions based off of a model bundle."""
 
-    def __init__(self,
-                 model_bundle_uri,
-                 tmp_dir,
-                 channel_order=None):
+    def __init__(self, model_bundle_uri, tmp_dir, channel_order=None):
         """Creates a new Predictor.
 
         Args:
@@ -48,15 +45,18 @@ class Predictor():
         self.scene = None
 
         if not hasattr(self.pipeline, 'predict'):
-            raise Exception('pipeline in model bundle must have predict method')
+            raise Exception(
+                'pipeline in model bundle must have predict method')
 
         self.scene = self.pipeline.config.dataset.validation_scenes[0]
 
         if not hasattr(self.scene.raster_source, 'uris'):
-            raise Exception('raster_source in model bundle must have uris as field')
+            raise Exception(
+                'raster_source in model bundle must have uris as field')
 
         if not hasattr(self.scene.label_store, 'uri'):
-            raise Exception('label_store in model bundle must have uri as field')
+            raise Exception(
+                'label_store in model bundle must have uri as field')
 
         self.scene.label_source = None
         self.scene.aoi_uris = None
