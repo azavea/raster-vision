@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from rastervision2.pipeline.config import Config, register_config
 
@@ -6,9 +6,9 @@ from rastervision2.pipeline.config import Config, register_config
 @register_config('vector_source')
 class VectorSourceConfig(Config):
     default_class_id: int = 0
-    class_id_to_filter: Optional[Dict] = None
-    line_bufs: Optional[Dict] = None
-    point_bufs: Optional[Dict] = None
+    class_id_to_filter: Optional[Dict[int, Optional[Dict]]] = None
+    line_bufs: Optional[Dict[int, Union[int, float, None]]] = None
+    point_bufs: Optional[Dict[int, Union[int, float, None]]] = None
 
     def has_null_class_bufs(self):
         if self.point_bufs is not None:

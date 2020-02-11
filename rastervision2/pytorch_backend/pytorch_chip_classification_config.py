@@ -1,9 +1,12 @@
+from typing import List
+
 from rastervision2.pipeline.config import register_config
 from rastervision2.core.backend import BackendConfig
 from rastervision2.pytorch_learner.classification_config import (
     ClassificationModelConfig, ClassificationLearnerConfig,
     ClassificationDataConfig)
-from rastervision2.pytorch_learner.learner_config import (SolverConfig)
+from rastervision2.pytorch_learner.learner_config import (
+    SolverConfig, default_augmentors)
 from rastervision2.pytorch_backend.pytorch_chip_classification import (
     PyTorchChipClassification)
 
@@ -14,6 +17,7 @@ class PyTorchChipClassificationConfig(BackendConfig):
     solver: SolverConfig
     log_tensorboard: bool = True
     run_tensorboard: bool = False
+    augmentors: List[str] = default_augmentors
 
     def get_learner_config(self, pipeline):
         data = ClassificationDataConfig()
@@ -21,6 +25,7 @@ class PyTorchChipClassificationConfig(BackendConfig):
         data.class_names = pipeline.dataset.class_config.names
         data.class_colors = pipeline.dataset.class_config.colors
         data.img_sz = pipeline.train_chip_sz
+        data.augmentors = self.augmentors
 
         learner = ClassificationLearnerConfig(
             data=data,

@@ -4,6 +4,8 @@ from rastervision2.pipeline.config import register_config
 from rastervision2.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig)
 
+data_formats = ['csv']
+
 
 @register_config('regression_model')
 class RegressionModelConfig(ModelConfig):
@@ -17,9 +19,11 @@ class RegressionModelConfig(ModelConfig):
 
 @register_config('regression_data')
 class RegressionDataConfig(DataConfig):
-    pos_labels: List[str] = []
+    pos_class_names: List[str] = []
     data_format: str = 'csv'
 
+    def validate_data_format(self):
+        self.validate_list('data_format', data_formats)
 
 @register_config('regression_learner')
 class RegressionLearnerConfig(LearnerConfig):
