@@ -113,9 +113,9 @@ class VectorSource(ABC):
         self.class_config = class_config
         self.crs_transformer = crs_transformer
         self.class_inference = ClassInference(
+            vs_config.default_class_id,
             class_config=class_config,
-            class_id_to_filter=vs_config.class_id_to_filter,
-            default_class_id=vs_config.default_class_id)
+            class_id_to_filter=vs_config.class_id_to_filter)
         self.geojson = None
 
     def get_geojson(self, to_map_coords=False):

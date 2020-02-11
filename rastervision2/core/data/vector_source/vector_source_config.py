@@ -5,7 +5,7 @@ from rastervision2.pipeline.config import Config, register_config
 
 @register_config('vector_source')
 class VectorSourceConfig(Config):
-    default_class_id: int = 0
+    default_class_id: Optional[int]
     class_id_to_filter: Optional[Dict[int, Optional[Dict]]] = None
     line_bufs: Optional[Dict[int, Union[int, float, None]]] = None
     point_bufs: Optional[Dict[int, Union[int, float, None]]] = None
