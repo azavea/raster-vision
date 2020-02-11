@@ -32,6 +32,7 @@ else
     find . -name '*.py' -and -not -name '*_pb2.py' -print0 | xargs -0 $UNIFY
 
     echo "Running yapf..."
+    yapf -ipr -e "$SRC_DIR/rastervision2"
     yapf -ipr -e "*tfod_utils*" -e "*_pb2.py" "$SRC_DIR/rastervision"
     yapf -ipr -e "*_pb2.py" "$SRC_DIR/tests"
     yapf -ipr -e "*_pb2.py" "$SRC_DIR/integration_tests"
