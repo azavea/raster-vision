@@ -14,13 +14,13 @@ from albumentations.augmentations.transforms import (
     Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
     GaussNoise, RGBShift, ToGray, Resize)
 
-from rastervision.backend.torch_utils.chip_classification.folder import (
-    ImageFolder)
 from rastervision2.pipeline.filesystem import (download_if_needed, list_paths,
                                                get_local_path)
 from rastervision2.pytorch_learner.learner import Learner
 from rastervision2.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
+from rastervision2.pytorch_learner.image_folder import (
+    ImageFolder)
 
 log = logging.getLogger(__name__)
 
