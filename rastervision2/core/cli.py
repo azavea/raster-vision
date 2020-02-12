@@ -43,10 +43,18 @@ class OptionEatAll(click.Option):
 @click.argument('image_uri')
 @click.argument('output_uri')
 @click.option(
+    '--update-stats',
+    '-a',
+    is_flag=True,
+    help=('Run an analysis on this individual image, as '
+          'opposed to using any analysis like statistics '
+          'that exist in the prediction package'))
+@click.option(
     '--channel-order',
     cls=OptionEatAll,
     help='List of indices comprising channel_order. Example: 2 1 0')
-def predict(ctx, model_bundle, image_uri, output_uri, channel_order):
+def predict(ctx, model_bundle, image_uri, output_uri, update_stats,
+            channel_order):
     """Make predictions on the images at IMAGE_URI
     using MODEL_BUNDLE and store the prediction output at OUTPUT_URI.
     """
@@ -56,5 +64,6 @@ def predict(ctx, model_bundle, image_uri, output_uri, channel_order):
         ]
 
     with rv_config.get_tmp_dir() as tmp_dir:
-        predictor = Predictor(model_bundle, tmp_dir, channel_order)
+        predictor = Predictor(
+            model_bundle, tmp_dir, update_stats, channel_order)
         predictor.predict([image_uri], output_uri)

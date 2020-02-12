@@ -6,12 +6,14 @@ from rastervision2.pipeline.config import build_config
 from rastervision2.pipeline.filesystem.utils import (download_if_needed,
                                                      make_dir, file_to_json)
 from rastervision2.core.data.raster_source import ChannelOrderError
+from rastervision2.core.analyzer import StatsAnalyzerConfig
 
 
 class Predictor():
     """Class for making predictions based off of a model bundle."""
 
-    def __init__(self, model_bundle_uri, tmp_dir, channel_order=None):
+    def __init__(self, model_bundle_uri, tmp_dir, update_stats=False,
+                 channel_order=None):
         """Creates a new Predictor.
 
         Args:
@@ -26,6 +28,7 @@ class Predictor():
                 package will be used.
         """
         self.tmp_dir = tmp_dir
+        self.update_stats = update_stats
         self.model_loaded = False
 
         bundle_path = download_if_needed(model_bundle_uri, tmp_dir)
@@ -58,8 +61,17 @@ class Predictor():
             raise Exception(
                 'label_store in model bundle must have uri as field')
 
+        for t in self.scene.raster_source.transformers:
+            t.update_root(bundle_dir)
+
+        if self.update_stats:
+            stats_analyzer = StatsAnalyzerConfig(
+                output_uri=join(bundle_dir, 'stats.json'))
+            self.pipeline.config.analyzers = [stats_analyzer]
+
         self.scene.label_source = None
         self.scene.aoi_uris = None
+        self.pipeline.config.dataset.train_scenes = [self.scene]
         self.pipeline.config.dataset.validation_scenes = [self.scene]
         self.pipeline.config.dataset.test_scenes = None
         if channel_order is not None:
@@ -77,6 +89,8 @@ class Predictor():
         try:
             self.scene.raster_source.uris = image_uris
             self.scene.label_store.uri = label_uri
+            if self.update_stats:
+                self.pipeline.analyze()
             self.pipeline.predict()
         except ChannelOrderError:
             raise ValueError(
