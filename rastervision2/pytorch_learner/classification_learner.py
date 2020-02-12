@@ -19,8 +19,7 @@ from rastervision2.pipeline.filesystem import (download_if_needed, list_paths,
 from rastervision2.pytorch_learner.learner import Learner
 from rastervision2.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
-from rastervision2.pytorch_learner.image_folder import (
-    ImageFolder)
+from rastervision2.pytorch_learner.image_folder import (ImageFolder)
 
 log = logging.getLogger(__name__)
 
@@ -59,8 +58,7 @@ class ClassificationLearner(Learner):
                     data_dirs.append(data_dir)
                     zipf.extractall(data_dir)
 
-        transform = Compose(
-            [Resize(cfg.data.img_sz, cfg.data.img_sz)])
+        transform = Compose([Resize(cfg.data.img_sz, cfg.data.img_sz)])
 
         augmentors_dict = {
             'Blur': Blur(),
@@ -77,9 +75,10 @@ class ClassificationLearner(Learner):
             try:
                 aug_transforms.append(augmentors_dict[augmentor])
             except KeyError as e:
-                log.warning('{0} is an unknown augmentor. Continuing without {0}. \
-                    Known augmentors are: {1}'
-                            .format(e, list(augmentors_dict.keys())))
+                log.warning(
+                    '{0} is an unknown augmentor. Continuing without {0}. \
+                    Known augmentors are: {1}'.format(
+                        e, list(augmentors_dict.keys())))
         aug_transform = Compose(aug_transforms)
 
         train_ds, valid_ds, test_ds = [], [], []
@@ -92,26 +91,22 @@ class ClassificationLearner(Learner):
                 if cfg.overfit_mode:
                     train_ds.append(
                         AlbumentationsDataset(
-                            ImageFolder(
-                                train_dir, classes=label_names),
+                            ImageFolder(train_dir, classes=label_names),
                             transform=transform))
                 else:
                     train_ds.append(
                         AlbumentationsDataset(
-                            ImageFolder(
-                                train_dir, classes=label_names),
+                            ImageFolder(train_dir, classes=label_names),
                             transform=aug_transform))
 
             if isdir(valid_dir):
                 valid_ds.append(
                     AlbumentationsDataset(
-                        ImageFolder(
-                            valid_dir, classes=label_names),
+                        ImageFolder(valid_dir, classes=label_names),
                         transform=transform))
                 test_ds.append(
                     AlbumentationsDataset(
-                        ImageFolder(
-                            valid_dir, classes=label_names),
+                        ImageFolder(valid_dir, classes=label_names),
                         transform=transform))
 
         train_ds, valid_ds, test_ds = \

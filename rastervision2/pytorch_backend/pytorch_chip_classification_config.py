@@ -5,8 +5,8 @@ from rastervision2.core.backend import BackendConfig
 from rastervision2.pytorch_learner.classification_config import (
     ClassificationModelConfig, ClassificationLearnerConfig,
     ClassificationDataConfig)
-from rastervision2.pytorch_learner.learner_config import (
-    SolverConfig, default_augmentors)
+from rastervision2.pytorch_learner.learner_config import (SolverConfig,
+                                                          default_augmentors)
 from rastervision2.pytorch_backend.pytorch_chip_classification import (
     PyTorchChipClassification)
 

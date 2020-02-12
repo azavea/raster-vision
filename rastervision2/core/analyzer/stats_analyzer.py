@@ -13,6 +13,5 @@ class StatsAnalyzer(Analyzer):
     def process(self, scenes, tmp_dir):
         stats = RasterStats()
         stats.compute(
-            [s.raster_source for s in scenes],
-            sample_prob=self.sample_prob)
+            [s.raster_source for s in scenes], sample_prob=self.sample_prob)
         stats.save(self.stats_uri)

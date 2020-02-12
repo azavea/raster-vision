@@ -64,6 +64,6 @@ def predict(ctx, model_bundle, image_uri, output_uri, update_stats,
         ]
 
     with rv_config.get_tmp_dir() as tmp_dir:
-        predictor = Predictor(
-            model_bundle, tmp_dir, update_stats, channel_order)
+        predictor = Predictor(model_bundle, tmp_dir, update_stats,
+                              channel_order)
         predictor.predict([image_uri], output_uri)

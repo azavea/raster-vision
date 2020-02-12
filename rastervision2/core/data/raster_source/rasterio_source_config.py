@@ -11,9 +11,8 @@ class RasterioSourceConfig(RasterSourceConfig):
     y_shift: float = 0.0
 
     def build(self, tmp_dir, use_transformers=True):
-        raster_transformers = (
-            [rt.build() for rt in self.transformers]
-            if use_transformers else [])
+        raster_transformers = ([rt.build() for rt in self.transformers]
+                               if use_transformers else [])
 
         return RasterioSource(
             self.uris,

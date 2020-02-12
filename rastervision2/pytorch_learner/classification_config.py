@@ -17,6 +17,7 @@ class ClassificationDataConfig(DataConfig):
 class ClassificationModelConfig(ModelConfig):
     pass
 
+
 @register_config('classification_learner')
 class ClassificationLearnerConfig(LearnerConfig):
     data: ClassificationDataConfig

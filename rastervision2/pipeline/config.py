@@ -93,8 +93,9 @@ class Config(BaseModel):
             if issubclass(klass, Config):
                 klass.validate_config(self)
 
-        child_configs = [x for x in self.__dict__.values()
-                         if isinstance(x, Config)]
+        child_configs = [
+            x for x in self.__dict__.values() if isinstance(x, Config)
+        ]
         for c in child_configs:
             c.recursive_validate_config()
 

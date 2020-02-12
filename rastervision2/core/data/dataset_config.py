@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List
 
 from rastervision2.pipeline.config import Config, register_config
 from rastervision2.core.data.scene_config import SceneConfig

@@ -3,18 +3,23 @@ from os.path import join
 import importlib
 
 from rastervision2.pipeline.pipeline_config import PipelineConfig
-from rastervision2.pipeline.config import (
-    Config, register_config, ConfigError)
+from rastervision2.pipeline.config import (Config, register_config,
+                                           ConfigError)
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
-augmentors = ['Blur', 'RandomRotate90', 'HorizontalFlip', 'VerticalFlip',
-              'GaussianBlur', 'GaussNoise', 'RGBShift', 'ToGray']
+augmentors = [
+    'Blur', 'RandomRotate90', 'HorizontalFlip', 'VerticalFlip', 'GaussianBlur',
+    'GaussNoise', 'RGBShift', 'ToGray'
+]
+
 
 def get_torchvision_backbones():
     backbones = []
     # This may need to be updated after upgrading torchvision.
-    packages = ['alexnet', 'densenet', 'googlenet', 'inception', 'mnasnet',
-                'mobilenet', 'resnet', 'shufflenetv2', 'squeezenet', 'vgg']
+    packages = [
+        'alexnet', 'densenet', 'googlenet', 'inception', 'mnasnet',
+        'mobilenet', 'resnet', 'shufflenetv2', 'squeezenet', 'vgg'
+    ]
     for package in packages:
         module = importlib.import_module(
             'torchvision.models.{}'.format(package))

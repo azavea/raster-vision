@@ -4,8 +4,8 @@ from pathlib import Path
 import logging
 import json
 
-from everett.manager import (ConfigManager, ConfigDictEnv,
-                             ConfigIniEnv, ConfigOSEnv)
+from everett.manager import (ConfigManager, ConfigDictEnv, ConfigIniEnv,
+                             ConfigOSEnv)
 
 from rastervision2.pipeline.verbosity import Verbosity
 

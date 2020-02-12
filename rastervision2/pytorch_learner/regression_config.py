@@ -25,6 +25,7 @@ class RegressionDataConfig(DataConfig):
     def validate_data_format(self):
         self.validate_list('data_format', data_formats)
 
+
 @register_config('regression_learner')
 class RegressionLearnerConfig(LearnerConfig):
     model: RegressionModelConfig

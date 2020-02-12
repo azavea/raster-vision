@@ -3,8 +3,7 @@ from typing import Optional
 from rastervision2.core.data.vector_source import (VectorSourceConfig)
 from rastervision2.core.data.label_source import (
     LabelSourceConfig, ChipClassificationLabelSource)
-from rastervision2.pipeline.config import (
-    register_config, ConfigError)
+from rastervision2.pipeline.config import (register_config, ConfigError)
 
 
 @register_config('chip_classification_label_source')

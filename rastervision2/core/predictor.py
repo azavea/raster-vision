@@ -12,7 +12,10 @@ from rastervision2.core.analyzer import StatsAnalyzerConfig
 class Predictor():
     """Class for making predictions based off of a model bundle."""
 
-    def __init__(self, model_bundle_uri, tmp_dir, update_stats=False,
+    def __init__(self,
+                 model_bundle_uri,
+                 tmp_dir,
+                 update_stats=False,
                  channel_order=None):
         """Creates a new Predictor.
 
