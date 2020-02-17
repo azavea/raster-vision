@@ -8,9 +8,9 @@ class ClassInference():
     """Infers missing class_ids from GeoJSON features."""
 
     def __init__(self,
+                 default_class_id,
                  class_config=None,
-                 class_id_to_filter=None,
-                 default_class_id=0):
+                 class_id_to_filter=None):
         self.class_config = class_config
         self.class_id_to_filter = class_id_to_filter
         self.default_class_id = default_class_id

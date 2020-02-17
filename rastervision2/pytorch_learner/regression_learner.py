@@ -77,7 +77,7 @@ class RegressionLearner(Learner):
         out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
             self.cfg.data.class_names.index(l)
-            for l in self.cfg.data.pos_labels
+            for l in self.cfg.data.pos_class_names
         ]
         model = RegressionModel(
             backbone, out_features, pos_out_inds=pos_out_inds)

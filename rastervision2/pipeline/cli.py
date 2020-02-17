@@ -77,6 +77,8 @@ def run(runner, cfg_path, commands, arg, splits):
     for cfg in cfgs:
         cfg.update()
         cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
+        cfg.recursive_validate_config()
+
         cfg_dict = cfg.dict()
         cfg_json_uri = cfg.get_config_uri()
         json_to_file(cfg_dict, cfg_json_uri)

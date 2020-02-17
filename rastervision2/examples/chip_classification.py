@@ -6,6 +6,7 @@ from os.path import join
 from rastervision2.core.pipeline import *
 from rastervision2.core.backend import *
 from rastervision2.core.data import *
+from rastervision2.core.analyzer import *
 from rastervision2.pytorch_backend import *
 from rastervision2.pytorch_learner import *
 from rastervision2.examples.utils import get_scene_info, save_image_crop
@@ -27,6 +28,9 @@ def get_config(runner, test=False):
     debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
+    log_tensorboard = True
+    run_tensorboard = True
+
     if test:
         debug = True
         train_scene_info = train_scene_info[0:1]
@@ -82,8 +86,13 @@ def get_config(runner, test=False):
         validation_scenes=val_scenes)
 
     model = ClassificationModelConfig(backbone='resnet50')
-    solver = SolverConfig(lr=2e-4, num_epochs=3, batch_sz=8, one_cycle=True)
-    backend = PyTorchChipClassificationConfig(model=model, solver=solver)
+    solver = SolverConfig(
+        lr=2e-4, num_epochs=3, test_num_epochs=3, batch_sz=8, one_cycle=True)
+    backend = PyTorchChipClassificationConfig(
+        model=model,
+        solver=solver,
+        log_tensorboard=log_tensorboard,
+        run_tensorboard=run_tensorboard)
 
     config = ChipClassificationConfig(
         root_uri=root_uri,

@@ -2,9 +2,11 @@ from os.path import join
 from typing import List
 
 from rastervision2.pipeline.pipeline_config import PipelineConfig
-from rastervision2.core.data import DatasetConfig
+from rastervision2.core.data import DatasetConfig, StatsTransformerConfig
+from rastervision2.core.analyzer import StatsAnalyzerConfig
 from rastervision2.core.backend import BackendConfig
 from rastervision2.core.evaluation import EvaluatorConfig
+from rastervision2.core.analyzer import AnalyzerConfig
 from rastervision2.pipeline.config import register_config
 
 
@@ -13,6 +15,7 @@ class RVPipelineConfig(PipelineConfig):
     dataset: DatasetConfig
     backend: BackendConfig
     evaluators: List[EvaluatorConfig] = []
+    analyzers: List[AnalyzerConfig] = []
 
     debug: bool = False
     train_chip_sz: int = 200
@@ -48,6 +51,26 @@ class RVPipelineConfig(PipelineConfig):
             self.evaluators.append(self.get_default_evaluator())
         for evaluator in self.evaluators:
             evaluator.update(pipeline=self)
+
+        self._insert_analyzers()
+        for analyzer in self.analyzers:
+            analyzer.update(pipeline=self)
+
+    def _insert_analyzers(self):
+        has_stats_transformer = False
+        for s in self.dataset.get_all_scenes():
+            for t in s.raster_source.transformers:
+                if isinstance(t, StatsTransformerConfig):
+                    has_stats_transformer = True
+
+        has_stats_analyzer = False
+        for a in self.analyzers:
+            if isinstance(a, StatsAnalyzerConfig):
+                has_stats_analyzer = True
+                break
+
+        if has_stats_transformer and not has_stats_analyzer:
+            self.analyzers.append(StatsAnalyzerConfig())
 
     def get_default_label_store(self, scene):
         raise NotImplementedError()

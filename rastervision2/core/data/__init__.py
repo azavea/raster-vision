@@ -12,3 +12,4 @@ from rastervision2.core.data.scene_config import *
 from rastervision2.core.data.dataset import *
 from rastervision2.core.data.dataset_config import *
 from rastervision2.core.data.class_config import *
+from rastervision2.core.data.raster_transformer import *

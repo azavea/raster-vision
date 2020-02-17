@@ -73,9 +73,44 @@ class Upgrader(ABC):
         pass
 
 
+class ConfigError(ValueError):
+    pass
+
+
 class Config(BaseModel):
     class Config:
         extra = 'forbid'
 
     def update(self):
         pass
+
+    def validate_config(self):
+        pass
+
+    def recursive_validate_config(self):
+        class_hierarchy = type(self).mro()
+        for klass in class_hierarchy:
+            if issubclass(klass, Config):
+                klass.validate_config(self)
+
+        child_configs = [
+            x for x in self.__dict__.values() if isinstance(x, Config)
+        ]
+        for c in child_configs:
+            c.recursive_validate_config()
+
+    def validate_list(self, field, valid_options):
+        val = getattr(self, field)
+        if isinstance(val, list):
+            for v in val:
+                if v not in valid_options:
+                    raise ConfigError('{} is not a valid option for {}'.format(
+                        v, field))
+        else:
+            if val not in valid_options:
+                raise ConfigError('{} is not a valid option for {}'.format(
+                    val, field))
+
+    def validate_nonneg(self, field):
+        if getattr(self, field) < 0:
+            raise ConfigError('{} cannot be negative'.format(field))

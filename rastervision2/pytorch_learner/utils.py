@@ -1,4 +1,6 @@
 import torch
+from torch.utils.data import Dataset
+import numpy as np
 
 
 def compute_conf_mat(out, y, num_labels):
@@ -37,3 +39,29 @@ def compute_conf_mat_metrics(conf_mat, label_names, eps=1e-6):
             '{}_f1'.format(label): f1[ind].item(),
         })
     return metrics
+
+
+class AlbumentationsDataset(Dataset):
+    """An adapter to use arbitrary datasets with albumentations transforms."""
+
+    def __init__(self, orig_dataset, transform=None):
+        """Constructor.
+
+        Args:
+            orig_dataset: (Dataset) which is assumed to return PIL Image objects
+                and not perform any transforms of its own
+            transform: (albumentations.core.transforms_interface.ImageOnlyTransform)
+        """
+        self.orig_dataset = orig_dataset
+        self.transform = transform
+
+    def __getitem__(self, ind):
+        x, y = self.orig_dataset[ind]
+        x = np.array(x)
+        if self.transform:
+            x = self.transform(image=x)['image']
+        x = torch.tensor(x).permute(2, 0, 1).float() / 255.0
+        return x, y
+
+    def __len__(self):
+        return len(self.orig_dataset)

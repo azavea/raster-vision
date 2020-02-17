@@ -1,8 +1,34 @@
 from typing import List
 from os.path import join
+import importlib
 
 from rastervision2.pipeline.pipeline_config import PipelineConfig
-from rastervision2.pipeline.config import Config, register_config
+from rastervision2.pipeline.config import (Config, register_config,
+                                           ConfigError)
+
+default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
+augmentors = [
+    'Blur', 'RandomRotate90', 'HorizontalFlip', 'VerticalFlip', 'GaussianBlur',
+    'GaussNoise', 'RGBShift', 'ToGray'
+]
+
+
+def get_torchvision_backbones():
+    backbones = []
+    # This may need to be updated after upgrading torchvision.
+    packages = [
+        'alexnet', 'densenet', 'googlenet', 'inception', 'mnasnet',
+        'mobilenet', 'resnet', 'shufflenetv2', 'squeezenet', 'vgg'
+    ]
+    for package in packages:
+        module = importlib.import_module(
+            'torchvision.models.{}'.format(package))
+        backbones.extend(module.__all__)
+
+    return backbones
+
+
+backbones = get_torchvision_backbones()
 
 
 @register_config('model')
@@ -12,6 +38,12 @@ class ModelConfig(Config):
 
     def update(self, learner=None):
         pass
+
+    def validate_backbone(self):
+        self.validate_list('backbone', backbones)
+
+    def validate_config(self):
+        self.validate_backbone()
 
 
 @register_config('solver')
@@ -28,6 +60,14 @@ class SolverConfig(Config):
     def update(self, learner=None):
         pass
 
+    def validate_config(self):
+        self.validate_nonneg('lr')
+        self.validate_nonneg('num_epochs')
+        self.validate_nonneg('test_num_epochs')
+        self.validate_nonneg('overfit_num_steps')
+        self.validate_nonneg('sync_interval')
+        self.validate_nonneg('batch_sz')
+
 
 @register_config('data')
 class DataConfig(Config):
@@ -37,9 +77,25 @@ class DataConfig(Config):
     class_colors: List[str] = []
     img_sz: int = 256
     num_workers: int = 4
+    augmentors: List[str] = default_augmentors
 
     def update(self, learner=None):
         pass
+
+    def validate_augmentors(self):
+        self.validate_list('augmentors', augmentors)
+
+    def validate_data_format(self):
+        raise NotImplementedError()
+
+    def validate_config(self):
+        if len(self.class_names) != len(self.class_colors):
+            raise ConfigError('len(class_names) must equal len(class_colors')
+
+        self.validate_nonneg('img_sz')
+        self.validate_nonneg('num_workers')
+        self.validate_augmentors()
+        self.validate_data_format()
 
 
 @register_config('learner')
@@ -53,7 +109,8 @@ class LearnerConfig(Config):
     overfit_mode: bool = False
     eval_train: bool = False
     save_model_bundle: bool = True
-
+    log_tensorboard: bool = True
+    run_tensorboard: bool = False
     output_uri: str = None
 
     def update(self):
@@ -73,6 +130,11 @@ class LearnerConfig(Config):
         self.model.update(learner=self)
         self.solver.update(learner=self)
         self.data.update(learner=self)
+
+    def validate_config(self):
+        if self.run_tensorboard and not self.log_tensorboard:
+            raise ConfigError(
+                'Cannot run_tensorboard if log_tensorboard is False')
 
     def build(self, tmp_dir, model_path=None):
         raise NotImplementedError()

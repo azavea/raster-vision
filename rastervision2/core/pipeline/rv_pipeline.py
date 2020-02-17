@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 class RVPipeline(Pipeline):
     commands = ['analyze', 'chip', 'train', 'predict', 'eval', 'bundle']
-    split_commands = ['analyze', 'chip', 'predict']
+    split_commands = ['chip', 'predict']
     gpu_commands = ['train', 'predict']
 
     def __init__(self, config, tmp_dir):
@@ -23,8 +23,17 @@ class RVPipeline(Pipeline):
 
         self.backend = None
 
-    def analyze(self, split_ind=0, num_splits=1):
-        pass
+    def analyze(self):
+        class_config = self.config.dataset.class_config
+        scenes = [
+            s.build(class_config, self.tmp_dir, use_transformers=False)
+            for s in self.config.dataset.train_scenes
+        ]
+        analyzers = [a.build() for a in self.config.analyzers]
+        for analyzer in analyzers:
+            log.info('Running analyzers: {}...'.format(
+                type(analyzer).__name__))
+            analyzer.process(scenes, self.tmp_dir)
 
     def get_train_windows(self, scene):
         """Return the training windows for a Scene.
@@ -111,7 +120,8 @@ class RVPipeline(Pipeline):
         raise NotImplementedError()
 
     def predict(self, split_ind=0, num_splits=1):
-        # Cache backend so subsquent calls will be faster.
+        # Cache backend so subsquent calls will be faster. This is useful for
+        # the predictor.
         if self.backend is None:
             self.backend = self.config.backend.build(self.config, self.tmp_dir)
             self.backend.load_model()
@@ -189,8 +199,13 @@ class RVPipeline(Pipeline):
                 download_or_copy(
                     join(self.config.train_uri, fn), join(tmp_dir, fn))
 
-                download_or_copy(self.config.get_config_uri(),
-                                 join(tmp_dir, 'pipeline.json'))
+            for a in self.config.analyzers:
+                for fn in a.get_bundle_filenames():
+                    download_or_copy(
+                        join(self.config.analyze_uri, fn), join(tmp_dir, fn))
+
+            download_or_copy(self.config.get_config_uri(),
+                             join(tmp_dir, 'pipeline.json'))
 
             model_bundle_uri = join(self.config.bundle_uri, 'model-bundle.zip')
             model_bundle_path = get_local_path(model_bundle_uri, self.tmp_dir)
