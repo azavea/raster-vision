@@ -83,7 +83,7 @@ class RegressionLearner(Learner):
             backbone, out_features, pos_out_inds=pos_out_inds)
         return model
 
-    def build_data(self):
+    def setup_data(self):
         cfg = self.cfg
         batch_sz = cfg.solver.batch_sz
         num_workers = cfg.data.num_workers

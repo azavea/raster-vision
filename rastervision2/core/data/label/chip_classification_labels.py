@@ -88,7 +88,7 @@ class ChipClassificationLabels(Labels):
         return labels
 
     def get_cells(self):
-        """Return list of all cells (list of Box)."""
+        """Return list of all cells (list    of Box)."""
         return [
             Box.from_npbox(box_tup)
             for box_tup in self.cell_to_class_id.keys()

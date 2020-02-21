@@ -100,9 +100,6 @@ class DatasetFolder(VisionDataset):
         _classes, _class_to_idx = self._find_classes(self.root)
 
         if classes is not None:
-            if set(classes) != set(_classes):
-                raise RuntimeError(
-                    'classes must contain all class folders present in root')
             class_to_idx = dict(zip(classes, range(len(classes))))
         else:
             classes = _classes

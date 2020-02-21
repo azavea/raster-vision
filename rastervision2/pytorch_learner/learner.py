@@ -11,6 +11,7 @@ import math
 import logging
 from subprocess import Popen
 import numbers
+import zipfile
 
 import click
 import matplotlib
@@ -21,10 +22,15 @@ import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR
 from torch.utils.tensorboard import SummaryWriter
+from torch.utils.data import DataLoader, Subset
+from albumentations.augmentations.transforms import (
+    Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
+    GaussNoise, RGBShift, ToGray, Resize)
+from albumentations.core.composition import Compose
 
 from rastervision2.pipeline.filesystem import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
-    download_if_needed, sync_from_dir, get_local_path, unzip)
+    download_if_needed, sync_from_dir, get_local_path, unzip, list_paths)
 from rastervision2.core.utils.misc import terminate_at_exit
 from rastervision2.pipeline.config import build_config
 from rastervision2.pytorch_learner.learner_config import LearnerConfig
@@ -85,7 +91,7 @@ class Learner(ABC):
             self.load_init_weights()
             self.load_checkpoint()
             self.opt = self.build_optimizer()
-            self.build_data()
+            self.setup_data()
             self.start_epoch = self.get_start_epoch()
             self.steps_per_epoch = len(
                 self.train_ds) // self.cfg.solver.batch_sz
@@ -145,9 +151,93 @@ class Learner(ABC):
     def build_model(self):
         pass
 
-    @abstractmethod
-    def build_data(self):
-        pass
+    def unzip_data(self):
+        cfg = self.cfg
+        if cfg.data.uri.startswith('s3://') or cfg.data.uri.startswith('/'):
+            data_uri = cfg.data.uri
+        else:
+            data_uri = join(cfg.base_uri, cfg.data.uri)
+
+        data_dirs = []
+        zip_uris = [data_uri] if data_uri.endswith('.zip') else list_paths(
+            data_uri, 'zip')
+        for zip_ind, zip_uri in enumerate(zip_uris):
+            zip_path = get_local_path(zip_uri, self.data_cache_dir)
+            if not isfile(zip_path):
+                zip_path = download_if_needed(zip_uri, self.data_cache_dir)
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                data_dir = join(self.tmp_dir, 'data', str(zip_ind))
+                data_dirs.append(data_dir)
+                zipf.extractall(data_dir)
+
+        return data_dirs
+
+    def get_data_transforms(self):
+        cfg = self.cfg
+        transform = Compose([Resize(cfg.data.img_sz, cfg.data.img_sz)])
+
+        augmentors_dict = {
+            'Blur': Blur(),
+            'RandomRotate90': RandomRotate90(),
+            'HorizontalFlip': HorizontalFlip(),
+            'VerticalFlip': VerticalFlip(),
+            'GaussianBlur': GaussianBlur(),
+            'GaussNoise': GaussNoise(),
+            'RGBShift': RGBShift(),
+            'ToGray': ToGray()
+        }
+        aug_transforms = []
+        for augmentor in cfg.data.augmentors:
+            try:
+                aug_transforms.append(augmentors_dict[augmentor])
+            except KeyError as e:
+                log.warning(
+                    '{0} is an unknown augmentor. Continuing without {0}. \
+                    Known augmentors are: {1}'.format(
+                        e, list(augmentors_dict.keys())))
+        aug_transforms.append(Resize(cfg.data.img_sz, cfg.data.img_sz))
+        aug_transform = Compose(aug_transforms)
+
+        return transform, aug_transform
+
+    def setup_data(self):
+        cfg = self.cfg
+        batch_sz = self.cfg.solver.batch_sz
+        num_workers = self.cfg.data.num_workers
+
+        train_ds, valid_ds, test_ds = self.get_datasets()
+        if cfg.overfit_mode:
+            train_ds = Subset(train_ds, range(batch_sz))
+            valid_ds = train_ds
+            test_ds = train_ds
+        elif cfg.test_mode:
+            train_ds = Subset(train_ds, range(batch_sz))
+            valid_ds = Subset(valid_ds, range(batch_sz))
+            test_ds = Subset(test_ds, range(batch_sz))
+
+        train_dl = DataLoader(
+            train_ds,
+            shuffle=True,
+            batch_size=batch_sz,
+            num_workers=num_workers,
+            pin_memory=True)
+        valid_dl = DataLoader(
+            valid_ds,
+            shuffle=True,
+            batch_size=batch_sz,
+            num_workers=num_workers,
+            pin_memory=True)
+        test_dl = DataLoader(
+            test_ds,
+            shuffle=True,
+            batch_size=batch_sz,
+            num_workers=num_workers,
+            pin_memory=True)
+
+        self.train_ds, self.valid_ds, self.test_ds = (train_ds, valid_ds,
+                                                      test_ds)
+        self.train_dl, self.valid_dl, self.test_dl = (train_dl, valid_dl,
+                                                      test_dl)
 
     def log_data_stats(self):
         if self.train_ds:
@@ -241,7 +331,7 @@ class Learner(ABC):
         with torch.no_grad():
             out = self.model(x)
             if not raw_out:
-                out = self.post_forward(out)
+                out = self.prob_to_pred(self.post_forward(out))
         out = out.cpu()
         return out
 
@@ -268,7 +358,7 @@ class Learner(ABC):
         with torch.no_grad():
             for x, y in dl:
                 x = x.to(self.device)
-                z = self.post_forward(self.model(x))
+                z = self.prob_to_pred(self.post_forward(self.model(x)))
                 x = x.cpu()
                 z = z.cpu()
                 if one_batch:

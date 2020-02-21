@@ -32,12 +32,34 @@ def get_scene_info(csv_uri):
     return list(reader)
 
 
+def crop_image(image_uri, window, crop_uri):
+    im_dataset = rasterio.open(image_uri)
+    rasterio_window = window.rasterio_format()
+    im = im_dataset.read(window=rasterio_window)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        crop_path = get_local_path(crop_uri, tmp_dir)
+        make_dir(crop_path, use_dirname=True)
+
+        meta = im_dataset.meta
+        meta['width'], meta['height'] = window.get_width(), window.get_height()
+        meta['transform'] = rasterio.windows.transform(
+            rasterio_window, im_dataset.transform)
+
+        with rasterio.open(crop_path, 'w', **meta) as dst:
+            dst.colorinterp = im_dataset.colorinterp
+            dst.write(im)
+
+        upload_or_copy(crop_path, crop_uri)
+
+
 def save_image_crop(image_uri,
                     image_crop_uri,
                     label_uri=None,
                     label_crop_uri=None,
                     size=600,
-                    min_features=10):
+                    min_features=10,
+                    vector_labels=True):
     """Save a crop of an image to use for testing.
 
     If label_uri is set, the crop needs to cover >= min_features.
@@ -45,7 +67,8 @@ def save_image_crop(image_uri,
     Args:
         image_uri: URI of original image
         image_crop_uri: URI of cropped image to save
-        label_uri: optional URI of GeoJSON file
+        label_uri: optional URI of label file
+        label_crop_uri: optional URI of cropped labels to save
         size: height and width of crop
 
     Raises:
@@ -63,7 +86,7 @@ def save_image_crop(image_uri,
 
             extent = Box(0, 0, h, w)
             windows = extent.get_windows(size, size)
-            if label_uri is not None:
+            if label_uri and vector_labels:
                 crs_transformer = RasterioCRSTransformer.from_dataset(
                     im_dataset)
                 vs = GeoJSONVectorSource(label_uri, crs_transformer)
@@ -79,7 +102,7 @@ def save_image_crop(image_uri,
 
             for w in windows:
                 use_window = True
-                if label_uri is not None:
+                if label_uri and vector_labels:
                     w_polys = tree.query(w.to_shapely())
                     use_window = len(w_polys) >= min_features
                     if use_window and label_crop_uri is not None:
@@ -100,23 +123,11 @@ def save_image_crop(image_uri,
                         json_to_file(label_crop_json, label_crop_uri)
 
                 if use_window:
-                    w = w.rasterio_format()
-                    im = im_dataset.read(window=w)
+                    crop_image(image_uri, w, image_crop_uri)
 
-                    with tempfile.TemporaryDirectory() as tmp_dir:
-                        crop_path = get_local_path(image_crop_uri, tmp_dir)
-                        make_dir(crop_path, use_dirname=True)
+                    if not vector_labels and label_uri and label_crop_uri:
+                        crop_image(label_uri, w, label_crop_uri)
 
-                        meta = im_dataset.meta
-                        meta['width'], meta['height'] = size, size
-                        meta['transform'] = rasterio.windows.transform(
-                            w, im_dataset.transform)
-
-                        with rasterio.open(crop_path, 'w', **meta) as dst:
-                            dst.colorinterp = im_dataset.colorinterp
-                            dst.write(im)
-
-                        upload_or_copy(crop_path, image_crop_uri)
                     break
 
             if not use_window:

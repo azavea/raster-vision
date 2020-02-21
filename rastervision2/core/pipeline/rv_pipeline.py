@@ -61,6 +61,9 @@ class RVPipeline(Pipeline):
         """
         raise NotImplementedError()
 
+    def process_sample(self, sample):
+        return sample
+
     def chip(self, split_ind=0, num_splits=1):
         cfg = self.config
         backend = cfg.backend.build(cfg, self.tmp_dir)
@@ -71,7 +74,7 @@ class RVPipeline(Pipeline):
         class_cfg = dataset.class_config
         with backend.get_sample_writer() as writer:
 
-            def _process_scene(scene, split):
+            def chip_scene(scene, split):
                 with scene.activate():
                     log.info('Making {} chips for scene: {}'.format(
                         split, scene.id))
@@ -85,20 +88,20 @@ class RVPipeline(Pipeline):
                             labels=labels,
                             scene_id=str(scene.id),
                             is_train=split == TRAIN)
+                        sample = self.process_sample(sample)
                         writer.write_sample(sample)
 
-            def _process_scenes(scenes, split):
-                return [
-                    _process_scene(s.build(class_cfg, self.tmp_dir), split)
-                    for s in scenes
-                ]
-
-            _process_scenes(dataset.train_scenes, TRAIN)
-            _process_scenes(dataset.validation_scenes, VALIDATION)
+            for s in dataset.train_scenes:
+                chip_scene(s.build(class_cfg, self.tmp_dir), TRAIN)
+            for s in dataset.validation_scenes:
+                chip_scene(s.build(class_cfg, self.tmp_dir), VALIDATION)
 
     def train(self):
         backend = self.config.backend.build(self.config, self.tmp_dir)
         backend.train()
+
+    def post_process_batch(self, windows, chips, labels):
+        return labels
 
     def post_process_predictions(self, labels, scene):
         """Runs a post-processing step on labels at end of prediction.
@@ -106,7 +109,7 @@ class RVPipeline(Pipeline):
         Returns:
             Labels
         """
-        raise NotImplementedError()
+        return labels
 
     def get_predict_windows(self, extent):
         """Return windows to compute predictions for.
@@ -117,7 +120,8 @@ class RVPipeline(Pipeline):
         Returns:
             list of Boxes
         """
-        raise NotImplementedError()
+        chip_sz = stride = self.config.predict_chip_sz
+        return extent.get_windows(chip_sz, stride)
 
     def predict(self, split_ind=0, num_splits=1):
         # Cache backend so subsquent calls will be faster. This is useful for
@@ -155,12 +159,15 @@ class RVPipeline(Pipeline):
 
         windows = self.get_predict_windows(raster_source.get_extent())
 
-        def predict_batch(predict_chips, predict_windows):
+        def predict_batch(chips, windows):
             nonlocal labels
-            new_labels = backend.predict(
-                np.array(predict_chips), predict_windows)
-            labels += new_labels
-            print('.' * len(predict_chips), end='', flush=True)
+            chips = np.array(chips)
+            batch_labels = backend.predict(chips, windows)
+            batch_labels = self.post_process_batch(windows, chips,
+                                                   batch_labels)
+            labels += batch_labels
+
+            print('.' * len(chips), end='')
 
         batch_chips, batch_windows = [], []
         for window in windows:

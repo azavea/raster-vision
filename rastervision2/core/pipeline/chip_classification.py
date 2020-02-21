@@ -28,11 +28,3 @@ class ChipClassification(RVPipeline):
 
     def get_train_labels(self, window, scene):
         return scene.ground_truth_label_source.get_labels(window=window)
-
-    def post_process_predictions(self, labels, scene):
-        return labels
-
-    def get_predict_windows(self, extent):
-        chip_sz = self.config.train_chip_sz
-        stride = chip_sz
-        return extent.get_windows(chip_sz, stride)
