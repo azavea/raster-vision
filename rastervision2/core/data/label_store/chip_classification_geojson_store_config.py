@@ -10,7 +10,7 @@ from rastervision2.pipeline.config import register_config
 class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
     uri: Optional[str] = None
 
-    def build(self, class_config, crs_transformer):
+    def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
         return ChipClassificationGeoJSONStore(self.uri, class_config,
                                               crs_transformer)
 

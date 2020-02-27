@@ -1,21 +1,14 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
-from os.path import join, isfile, isdir
-import zipfile
+from os.path import join, isdir
 import logging
 
 import torch
 from torchvision import models
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, Subset, ConcatDataset
-from albumentations.core.composition import Compose
-from albumentations.augmentations.transforms import (
-    Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
-    GaussNoise, RGBShift, ToGray, Resize)
+from torch.utils.data import ConcatDataset
 
-from rastervision2.pipeline.filesystem import (download_if_needed, list_paths,
-                                               get_local_path)
 from rastervision2.pytorch_learner.learner import Learner
 from rastervision2.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
@@ -32,54 +25,15 @@ class ClassificationLearner(Learner):
         model.fc = nn.Linear(in_features, num_labels)
         return model
 
-    def build_data(self):
+    def get_datasets(self):
         cfg = self.cfg
-        batch_sz = cfg.solver.batch_sz
-        num_workers = cfg.data.num_workers
-        label_names = cfg.data.class_names
+        class_names = cfg.data.class_names
 
         # download and unzip data
         if cfg.data.data_format == 'image_folder':
-            if cfg.data.uri.startswith('s3://') or cfg.data.uri.startswith(
-                    '/'):
-                data_uri = cfg.data.uri
-            else:
-                data_uri = join(cfg.base_uri, cfg.data.uri)
+            data_dirs = self.unzip_data()
 
-            data_dirs = []
-            zip_uris = [data_uri] if data_uri.endswith('.zip') else list_paths(
-                data_uri, 'zip')
-            for zip_ind, zip_uri in enumerate(zip_uris):
-                zip_path = get_local_path(zip_uri, self.data_cache_dir)
-                if not isfile(zip_path):
-                    zip_path = download_if_needed(zip_uri, self.data_cache_dir)
-                with zipfile.ZipFile(zip_path, 'r') as zipf:
-                    data_dir = join(self.tmp_dir, 'data', str(zip_ind))
-                    data_dirs.append(data_dir)
-                    zipf.extractall(data_dir)
-
-        transform = Compose([Resize(cfg.data.img_sz, cfg.data.img_sz)])
-
-        augmentors_dict = {
-            'Blur': Blur(),
-            'RandomRotate90': RandomRotate90(),
-            'HorizontalFlip': HorizontalFlip(),
-            'VerticalFlip': VerticalFlip(),
-            'GaussianBlur': GaussianBlur(),
-            'GaussNoise': GaussNoise(),
-            'RGBShift': RGBShift(),
-            'ToGray': ToGray()
-        }
-        aug_transforms = [Resize(cfg.data.img_sz, cfg.data.img_sz)]
-        for augmentor in cfg.data.augmentors:
-            try:
-                aug_transforms.append(augmentors_dict[augmentor])
-            except KeyError as e:
-                log.warning(
-                    '{0} is an unknown augmentor. Continuing without {0}. \
-                    Known augmentors are: {1}'.format(
-                        e, list(augmentors_dict.keys())))
-        aug_transform = Compose(aug_transforms)
+        transform, aug_transform = self.get_data_transforms()
 
         train_ds, valid_ds, test_ds = [], [], []
         for data_dir in data_dirs:
@@ -91,72 +45,41 @@ class ClassificationLearner(Learner):
                 if cfg.overfit_mode:
                     train_ds.append(
                         AlbumentationsDataset(
-                            ImageFolder(train_dir, classes=label_names),
+                            ImageFolder(train_dir, classes=class_names),
                             transform=transform))
                 else:
                     train_ds.append(
                         AlbumentationsDataset(
-                            ImageFolder(train_dir, classes=label_names),
+                            ImageFolder(train_dir, classes=class_names),
                             transform=aug_transform))
 
             if isdir(valid_dir):
                 valid_ds.append(
                     AlbumentationsDataset(
-                        ImageFolder(valid_dir, classes=label_names),
+                        ImageFolder(valid_dir, classes=class_names),
                         transform=transform))
                 test_ds.append(
                     AlbumentationsDataset(
-                        ImageFolder(valid_dir, classes=label_names),
+                        ImageFolder(valid_dir, classes=class_names),
                         transform=transform))
 
         train_ds, valid_ds, test_ds = \
             ConcatDataset(train_ds), ConcatDataset(valid_ds), ConcatDataset(test_ds)
 
-        if cfg.overfit_mode:
-            train_ds = Subset(train_ds, range(batch_sz))
-            valid_ds = train_ds
-            test_ds = train_ds
-        elif cfg.test_mode:
-            train_ds = Subset(train_ds, range(batch_sz))
-            valid_ds = Subset(valid_ds, range(batch_sz))
-            test_ds = Subset(test_ds, range(batch_sz))
-
-        train_dl = DataLoader(
-            train_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True)
-        valid_dl = DataLoader(
-            valid_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True)
-        test_dl = DataLoader(
-            test_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True)
-
-        self.train_ds, self.valid_ds, self.test_ds = (train_ds, valid_ds,
-                                                      test_ds)
-        self.train_dl, self.valid_dl, self.test_dl = (train_dl, valid_dl,
-                                                      test_dl)
+        return train_ds, valid_ds, test_ds
 
     def train_step(self, batch, batch_nb):
         x, y = batch
-        out = self.model(x)
-        return {'train_loss': F.cross_entropy(out, y, reduction='sum')}
+        out = self.post_forward(self.model(x))
+        return {'train_loss': F.cross_entropy(out, y)}
 
     def validate_step(self, batch, batch_nb):
         x, y = batch
-        out = self.model(x)
-        val_loss = F.cross_entropy(out, y, reduction='sum')
+        out = self.post_forward(self.model(x))
+        val_loss = F.cross_entropy(out, y)
 
         num_labels = len(self.cfg.data.class_names)
-        out = self.post_forward(out)
+        out = self.prob_to_pred(out)
         conf_mat = compute_conf_mat(out, y, num_labels)
 
         return {'val_loss': val_loss, 'conf_mat': conf_mat}
@@ -173,7 +96,7 @@ class ClassificationLearner(Learner):
 
         return metrics
 
-    def post_forward(self, x):
+    def prob_to_pred(self, x):
         return x.argmax(-1)
 
     def plot_xyz(self, ax, x, y, z=None):
