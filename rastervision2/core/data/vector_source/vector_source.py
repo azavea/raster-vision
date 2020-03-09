@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from shapely.geometry import shape, mapping
-import shapely
+from shapely.ops import transform
 
 from rastervision2.core.data.vector_source.class_inference import (
     ClassInference)
@@ -31,7 +31,7 @@ def transform_geojson(geojson,
         def m2p(x, y, z=None):
             return crs_transformer.map_to_pixel((x, y))
 
-        geom = shapely.ops.transform(m2p, geom)
+        geom = transform(m2p, geom)
 
         # Split GeometryCollection into list of geoms.
         geoms = [geom]
@@ -89,7 +89,7 @@ def transform_geojson(geojson,
             def p2m(x, y, z=None):
                 return crs_transformer.pixel_to_map((x, y))
 
-            geoms = [shapely.ops.transform(p2m, g) for g in geoms]
+            geoms = [transform(p2m, g) for g in geoms]
 
         for g in geoms:
             new_f = {

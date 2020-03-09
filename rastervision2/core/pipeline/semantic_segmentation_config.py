@@ -57,3 +57,8 @@ class SemanticSegmentationConfig(RVPipelineConfig):
 
     def get_default_evaluator(self):
         return SemanticSegmentationEvaluatorConfig()
+
+    def update(self):
+        super().update()
+
+        self.dataset.class_config.ensure_null_class()

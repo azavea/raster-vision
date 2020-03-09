@@ -72,7 +72,6 @@ class SemanticSegmentationLearner(Learner):
             train_dir = join(data_dir, 'train')
             valid_dir = join(data_dir, 'valid')
 
-            # build datasets
             if isdir(train_dir):
                 if cfg.overfit_mode:
                     train_ds.append(

@@ -172,9 +172,15 @@ class Learner(ABC):
 
         return data_dirs
 
+    def get_bbox_params(self):
+        return None
+
     def get_data_transforms(self):
         cfg = self.cfg
-        transform = Compose([Resize(cfg.data.img_sz, cfg.data.img_sz)])
+        bbox_params = self.get_bbox_params()
+        transform = Compose(
+            [Resize(cfg.data.img_sz, cfg.data.img_sz)],
+            bbox_params=bbox_params)
 
         augmentors_dict = {
             'Blur': Blur(),
@@ -196,9 +202,12 @@ class Learner(ABC):
                     Known augmentors are: {1}'.format(
                         e, list(augmentors_dict.keys())))
         aug_transforms.append(Resize(cfg.data.img_sz, cfg.data.img_sz))
-        aug_transform = Compose(aug_transforms)
+        aug_transform = Compose(aug_transforms, bbox_params=bbox_params)
 
         return transform, aug_transform
+
+    def get_collate_fn(self):
+        return None
 
     def setup_data(self):
         cfg = self.cfg
@@ -215,24 +224,28 @@ class Learner(ABC):
             valid_ds = Subset(valid_ds, range(batch_sz))
             test_ds = Subset(test_ds, range(batch_sz))
 
+        collate_fn = self.get_collate_fn()
         train_dl = DataLoader(
             train_ds,
             shuffle=True,
             batch_size=batch_sz,
             num_workers=num_workers,
-            pin_memory=True)
+            pin_memory=True,
+            collate_fn=collate_fn)
         valid_dl = DataLoader(
             valid_ds,
             shuffle=True,
             batch_size=batch_sz,
             num_workers=num_workers,
-            pin_memory=True)
+            pin_memory=True,
+            collate_fn=collate_fn)
         test_dl = DataLoader(
             test_ds,
             shuffle=True,
             batch_size=batch_sz,
             num_workers=num_workers,
-            pin_memory=True)
+            pin_memory=True,
+            collate_fn=collate_fn)
 
         self.train_ds, self.valid_ds, self.test_ds = (train_ds, valid_ds,
                                                       test_ds)
@@ -315,6 +328,9 @@ class Learner(ABC):
     def post_forward(self, x):
         return x
 
+    def prob_to_pred(self, x):
+        return x
+
     def to_batch(self, x):
         if x.ndim == 3:
             x = x.unsqueeze(0)
@@ -327,13 +343,16 @@ class Learner(ABC):
         x = self.to_batch(x)
         if normalize:
             x = self.normalize_input(x)
-        x = x.to(self.device)
+        x = self.to_device(x, self.device)
         with torch.no_grad():
             out = self.model(x)
             if not raw_out:
                 out = self.prob_to_pred(self.post_forward(out))
-        out = out.cpu()
+        out = self.to_device(out, 'cpu')
         return out
+
+    def output_to_numpy(self, out):
+        return out.numpy()
 
     def numpy_predict(self, x, raw_out=False):
         """Make a prediction using a TF-formatted (ie. channels last) numpy array.
@@ -349,7 +368,7 @@ class Learner(ABC):
         x = self.to_batch(x)
         x = x.permute((0, 3, 1, 2))
         out = self.predict(x, normalize=True, raw_out=raw_out)
-        return out.numpy()
+        return self.output_to_numpy(out)
 
     def predict_dataloader(self, dl, one_batch=False, return_x=True):
         self.model.eval()
@@ -357,10 +376,10 @@ class Learner(ABC):
         xs, ys, zs = [], [], []
         with torch.no_grad():
             for x, y in dl:
-                x = x.to(self.device)
+                x = self.to_device(x, self.device)
                 z = self.prob_to_pred(self.post_forward(self.model(x)))
-                x = x.cpu()
-                z = z.cpu()
+                x = self.to_device(x, 'cpu')
+                z = self.to_device(z, 'cpu')
                 if one_batch:
                     return x, y, z
                 if return_x:
@@ -468,6 +487,12 @@ class Learner(ABC):
             self.model.load_state_dict(
                 torch.load(self.last_model_path, map_location=self.device))
 
+    def to_device(self, x, device):
+        if isinstance(x, list):
+            return [_x.to(device) for _x in x]
+        else:
+            return x.to(device)
+
     def train_epoch(self):
         start = time.time()
         self.model.train()
@@ -475,8 +500,8 @@ class Learner(ABC):
         outputs = []
         with click.progressbar(self.train_dl, label='Training') as bar:
             for batch_ind, (x, y) in enumerate(bar):
-                x = x.to(self.device)
-                y = y.to(self.device)
+                x = self.to_device(x, self.device)
+                y = self.to_device(y, self.device)
                 batch = (x, y)
                 self.opt.zero_grad()
                 output = self.train_step(batch, batch_ind)
@@ -501,8 +526,8 @@ class Learner(ABC):
         with torch.no_grad():
             with click.progressbar(dl, label='Validating') as bar:
                 for batch_ind, (x, y) in enumerate(bar):
-                    x = x.to(self.device)
-                    y = y.to(self.device)
+                    x = self.to_device(x, self.device)
+                    y = self.to_device(y, self.device)
                     batch = (x, y)
                     output = self.validate_step(batch, batch_ind)
                     outputs.append(output)
@@ -518,8 +543,8 @@ class Learner(ABC):
         self.on_overfit_start()
 
         x, y = next(iter(self.train_dl))
-        x = x.to(self.device)
-        y = y.to(self.device)
+        x = self.to_device(x, self.device)
+        y = self.to_device(y, self.device)
         batch = (x, y)
 
         with click.progressbar(

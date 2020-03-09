@@ -55,8 +55,12 @@ def get_config(runner, test=False):
             label_crop_uri = join(processed_uri, 'crops',
                                   os.path.basename(label_uri))
             save_image_crop(
-                raster_uri, crop_uri, label_uri=label_uri,
-                label_crop_uri=label_crop_uri, size=600, vector_labels=False)
+                raster_uri,
+                crop_uri,
+                label_uri=label_uri,
+                label_crop_uri=label_crop_uri,
+                size=600,
+                vector_labels=False)
             raster_uri = crop_uri
             label_uri = label_crop_uri
 

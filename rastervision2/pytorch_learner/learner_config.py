@@ -52,7 +52,7 @@ class SolverConfig(Config):
     num_epochs: int = 10
     test_num_epochs: int = 2
     overfit_num_steps: int = 1
-    sync_interval: int = 5
+    sync_interval: int = 1
     batch_sz: int = 32
     one_cycle: bool = True
     multi_stage: List = []

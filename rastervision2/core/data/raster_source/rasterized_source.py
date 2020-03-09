@@ -4,7 +4,7 @@ from rasterio.features import rasterize
 import numpy as np
 from shapely.geometry import shape
 from shapely.strtree import STRtree
-import shapely
+from shapely.ops import transform
 
 from rastervision2.core import Box
 from rastervision2.core.data import (ActivateMixin, ActivationError)
@@ -29,8 +29,7 @@ def geoms_to_raster(str_tree, rasterizer_config, window, extent):
     def to_window_frame(x, y, z=None):
         return (x - window.xmin, y - window.ymin)
 
-    shapes = [(shapely.ops.transform(to_window_frame, s), c)
-              for s, c in shapes]
+    shapes = [(transform(to_window_frame, s), c) for s, c in shapes]
     log.debug('# of shapes in window: {}'.format(len(shapes)))
 
     out_shape = (window.get_height(), window.get_width())
@@ -53,7 +52,7 @@ def geoms_to_raster(str_tree, rasterizer_config, window, extent):
     if valid_window.is_empty:
         raster[:, :] = 0
     else:
-        vw = shapely.ops.transform(to_window_frame, valid_window)
+        vw = transform(to_window_frame, valid_window)
         vw = Box.from_shapely(vw).to_int()
         new_raster = np.zeros(out_shape)
         new_raster[vw.ymin:vw.ymax, vw.xmin:vw.xmax] = \

@@ -2,7 +2,7 @@ from rastervision2.core.data.label import Labels
 
 import numpy as np
 from rasterio.features import rasterize
-import shapely
+from shapely.ops import transform
 
 from rastervision2.core.box import Box
 
@@ -71,8 +71,7 @@ class SemanticSegmentationLabels(Labels):
                         def transform_shape(x, y, z=None):
                             return (x - window.xmin, y - window.ymin)
 
-                        window_aoi = shapely.ops.transform(
-                            transform_shape, window_aoi)
+                        window_aoi = transform(transform_shape, window_aoi)
                         window_aois.append(window_aoi)
 
                 # If window does't overlap with any AOI, then it won't be in

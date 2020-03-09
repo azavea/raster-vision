@@ -1,7 +1,4 @@
-# flake8: noqa
-
-
-def boxes_to_geojson(boxes,
+def boxes_to_geojson(boxes,  # noqa
                      class_ids,
                      crs_transformer,
                      class_config,
@@ -26,7 +23,7 @@ def boxes_to_geojson(boxes,
         polygon = [list(crs_transformer.pixel_to_map(p)) for p in polygon]
 
         class_id = int(class_ids[box_ind])
-        class_name = class_config.names[class_id]
+        class_name = class_config.get_name(class_id)
 
         feature = {
             'type': 'Feature',

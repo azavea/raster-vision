@@ -73,6 +73,7 @@ def run(runner, cfg_path, commands, arg, splits):
     args = dict(arg)
     args = convert_bool_args(args)
     cfgs = get_configs(cfg_module, runner, args)
+    runner = registry.get_runner(runner)()
 
     for cfg in cfgs:
         cfg.update()
@@ -87,7 +88,6 @@ def run(runner, cfg_path, commands, arg, splits):
         if not commands:
             commands = pipeline.commands
 
-        runner = registry.get_runner(runner)()
         runner.run(cfg_json_uri, pipeline, commands, num_splits=splits)
 
 
