@@ -10,7 +10,7 @@ import numpy as np
 import rasterio
 from rasterio.enums import (ColorInterp, MaskFlags)
 
-from rastervision2.pipeline.filesystem import download_if_needed
+from rastervision2.pipeline.file_system import download_if_needed
 from rastervision2.core.box import Box
 from rastervision2.core.data.crs_transformer import RasterioCRSTransformer
 from rastervision2.core.data.raster_source import RasterSource

@@ -3,7 +3,7 @@ import shutil
 from datetime import datetime, timezone
 import glob
 
-from rastervision2.pipeline.filesystem import (FileSystem, NotReadableError)
+from rastervision2.pipeline.file_system import (FileSystem, NotReadableError)
 
 
 def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
@@ -34,6 +34,8 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
 
 
 class LocalFileSystem(FileSystem):
+    """A FileSystem for interacting with the local file system."""
+
     @staticmethod
     def matches_uri(uri: str, mode: str) -> bool:
         return True
@@ -69,14 +71,13 @@ class LocalFileSystem(FileSystem):
             content_file.write(data)
 
     @staticmethod
-    def sync_from_dir(src_dir_uri: str,
-                      dest_dir_uri: str,
+    def sync_from_dir(src_dir_uri: str, dst_dir: str,
                       delete: bool = False) -> None:
-        if src_dir_uri == dest_dir_uri:
+        if src_dir_uri == dst_dir:
             return
 
         if delete:
-            shutil.rmtree(dest_dir_uri)
+            shutil.rmtree(dst_dir)
 
         # https://stackoverflow.com/a/15824216/841563
         def recursive_overwrite(src, dest):
@@ -89,12 +90,12 @@ class LocalFileSystem(FileSystem):
             else:
                 shutil.copyfile(src, dest)
 
-        recursive_overwrite(src_dir_uri, dest_dir_uri)
+        recursive_overwrite(src_dir_uri, dst_dir)
 
     @staticmethod
-    def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
+    def sync_to_dir(src_dir: str, dst_dir_uri: str,
                     delete: bool = False) -> None:
-        LocalFileSystem.sync_from_dir(src_dir_uri, dest_dir_uri, delete)
+        LocalFileSystem.sync_from_dir(src_dir, dst_dir_uri, delete)
 
     @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
@@ -103,10 +104,8 @@ class LocalFileSystem(FileSystem):
             shutil.copyfile(src_path, dst_uri)
 
     @staticmethod
-    def copy_from(uri: str, path: str) -> None:
-        not_found = not os.path.isfile(path)
-        if not_found:
-            raise NotReadableError('Could not read {}'.format(uri))
+    def copy_from(src_uri: str, dst_path: str) -> None:
+        LocalFileSystem.copy_to(src_uri, dst_path)
 
     @staticmethod
     def local_path(uri: str, download_dir: str) -> None:

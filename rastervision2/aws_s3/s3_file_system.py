@@ -4,8 +4,8 @@ import subprocess
 from datetime import datetime
 from urllib.parse import urlparse
 
-from rastervision2.pipeline.filesystem import (FileSystem, NotReadableError,
-                                               NotWritableError)
+from rastervision2.pipeline.file_system import (FileSystem, NotReadableError,
+                                                NotWritableError)
 
 AWS_S3 = 'aws_s3'
 
@@ -69,11 +69,21 @@ def get_matching_s3_keys(bucket, prefix='', suffix='', request_payer='None'):
 
 
 class S3FileSystem(FileSystem):
+    """A FileSystem for interacting with files stored on AWS S3.
+
+    Uses Everett configuration of form:
+    ```
+    [AWS_S3]
+    requester_pays=True
+    ```
+
+    """
+
     @staticmethod
     def get_request_payer():
         # Import here to avoid circular reference.
         from rastervision2.pipeline import rv_config
-        s3_config = rv_config.get_subconfig('AWS_S3')
+        s3_config = rv_config.get_namespace_config('AWS_S3')
 
         # 'None' needs the quotes because boto3 cannot handle None.
         return ('requester' if s3_config(
@@ -168,24 +178,20 @@ class S3FileSystem(FileSystem):
                 raise NotWritableError('Could not write {}'.format(uri)) from e
 
     @staticmethod
-    def sync_from_dir(src_dir_uri: str,
-                      dest_dir_uri: str,
+    def sync_from_dir(src_dir_uri: str, dst_dir: str,
                       delete: bool = False) -> None:  # pragma: no cover
-        command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
-        if delete:
-            command.append('--delete')
-        subprocess.run(command)
-
-    @staticmethod
-    def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
-                    delete: bool = False) -> None:  # pragma: no cover
-        command = ['aws', 's3', 'sync', src_dir_uri, dest_dir_uri]
+        command = ['aws', 's3', 'sync', src_dir_uri, dst_dir]
         if delete:
             command.append('--delete')
         request_payer = S3FileSystem.get_request_payer()
         if request_payer:
             command.append('--request-payer')
         subprocess.run(command)
+
+    @staticmethod
+    def sync_to_dir(src_dir: str, dst_dir_uri: str,
+                    delete: bool = False) -> None:  # pragma: no cover
+        S3FileSystem.sync_from_dir(src_dir, dst_dir_uri, delete=delete)
 
     @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
@@ -203,21 +209,21 @@ class S3FileSystem(FileSystem):
             S3FileSystem.sync_to_dir(src_path, dst_uri, delete=True)
 
     @staticmethod
-    def copy_from(uri: str, path: str) -> None:
+    def copy_from(src_uri: str, dst_path: str) -> None:
         import botocore
 
         s3 = S3FileSystem.get_session().client('s3')
         request_payer = S3FileSystem.get_request_payer()
 
-        parsed_uri = urlparse(uri)
+        parsed_uri = urlparse(src_uri)
         try:
             s3.download_file(
                 parsed_uri.netloc,
                 parsed_uri.path[1:],
-                path,
+                dst_path,
                 ExtraArgs={'RequestPayer': request_payer})
         except botocore.exceptions.ClientError:
-            raise NotReadableError('Could not read {}'.format(uri))
+            raise NotReadableError('Could not read {}'.format(src_uri))
 
     @staticmethod
     def local_path(uri: str, download_dir: str) -> None:
