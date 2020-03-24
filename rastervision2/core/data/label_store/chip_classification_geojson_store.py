@@ -1,4 +1,4 @@
-from rastervision2.pipeline.filesystem import json_to_file
+from rastervision2.pipeline.file_system import json_to_file
 from rastervision2.core.data.label import ChipClassificationLabels
 from rastervision2.core.data.label_store import LabelStore
 from rastervision2.core.data.label_store.utils import boxes_to_geojson

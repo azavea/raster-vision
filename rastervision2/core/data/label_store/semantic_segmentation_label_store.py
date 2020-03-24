@@ -1,8 +1,8 @@
 import numpy as np
 import rasterio
 
-from rastervision2.pipeline.filesystem import (get_local_path, make_dir,
-                                               upload_or_copy, file_exists)
+from rastervision2.pipeline.file_system import (get_local_path, make_dir,
+                                                upload_or_copy, file_exists)
 from rastervision2.core.data.label import SemanticSegmentationLabels
 from rastervision2.core.data.label_store import LabelStore
 from rastervision2.core.data.label_source import SegmentationClassTransformer

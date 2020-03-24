@@ -3,8 +3,8 @@ import zipfile
 
 from rastervision2.pipeline import rv_config
 from rastervision2.pipeline.config import build_config
-from rastervision2.pipeline.filesystem.utils import (download_if_needed,
-                                                     make_dir, file_to_json)
+from rastervision2.pipeline.file_system.utils import (download_if_needed,
+                                                      make_dir, file_to_json)
 from rastervision2.core.data.raster_source import ChannelOrderError
 from rastervision2.core.analyzer import StatsAnalyzerConfig
 
@@ -42,10 +42,7 @@ class Predictor():
 
         config_path = join(bundle_dir, 'pipeline.json')
         config_dict = file_to_json(config_path)
-        rv_config.reset(
-            config_overrides=config_dict.get('rv_config'),
-            verbosity=rv_config.verbosity,
-            tmp_dir=rv_config.tmp_dir)
+        rv_config.set_everett_config(config_dict.get('rv_config'))
 
         self.pipeline = build_config(config_dict).build(tmp_dir)
         self.scene = None

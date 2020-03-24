@@ -7,7 +7,7 @@ import numpy as np
 from rastervision2.pipeline.pipeline import Pipeline
 from rastervision2.core import DataSample
 from rastervision2.core.pipeline import TRAIN, VALIDATION
-from rastervision2.pipeline.filesystem.utils import (
+from rastervision2.pipeline.file_system.utils import (
     download_or_copy, zipdir, get_local_path, upload_or_copy)
 
 log = logging.getLogger(__name__)

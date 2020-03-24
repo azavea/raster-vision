@@ -2,7 +2,7 @@ import json
 
 import numpy as np
 
-from rastervision2.pipeline.filesystem import str_to_file, file_to_str
+from rastervision2.pipeline.file_system import str_to_file, file_to_str
 
 chip_sz = 300
 

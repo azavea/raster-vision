@@ -4,7 +4,7 @@ import copy
 import json
 
 from rastervision2.core.evaluation import ClassEvaluationItem
-from rastervision2.pipeline.filesystem import str_to_file
+from rastervision2.pipeline.file_system import str_to_file
 
 
 class ClassificationEvaluation(ABC):

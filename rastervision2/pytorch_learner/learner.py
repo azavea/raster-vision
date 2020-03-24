@@ -28,7 +28,7 @@ from albumentations.augmentations.transforms import (
     GaussNoise, RGBShift, ToGray, Resize)
 from albumentations.core.composition import Compose
 
-from rastervision2.pipeline.filesystem import (
+from rastervision2.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, sync_from_dir, get_local_path, unzip, list_paths)
 from rastervision2.core.utils.misc import terminate_at_exit

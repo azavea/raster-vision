@@ -1,6 +1,7 @@
 import uuid
 import logging
 import os
+from typing import List, Optional
 
 from rastervision2.pipeline import rv_config
 from rastervision2.pipeline.runner import Runner
@@ -9,14 +10,29 @@ log = logging.getLogger(__name__)
 AWS_BATCH = 'aws_batch'
 
 
-def submit_job(cmd,
-               debug=False,
-               profile=False,
-               attempts=5,
-               parent_job_ids=None,
-               num_array_jobs=None,
-               use_gpu=False):
-    batch_config = rv_config.get_subconfig('AWS_BATCH')
+def submit_job(cmd: List[str],
+               debug: bool = False,
+               profile: str = False,
+               attempts: int = 5,
+               parent_job_ids: List[str] = None,
+               num_array_jobs: Optional[int] = None,
+               use_gpu: bool = False) -> str:
+    """Submit a job to run on AWS Batch.
+
+    Args:
+        cmd: a command to run in the Docker container for the remote job
+        debug: if True, run the command using a ptvsd wrapper which sets up a remote
+            VS Code Python debugger server
+        profile: if True, run the command using kernprof, a line profiler
+        attempts: the number of times to try running the command which is useful
+            in case of failure.
+        parent_job_ids: optional list of parent Batch job ids. The job created by this
+            will only run after the parent jobs complete successfully.
+        num_array_jobs: if set, make this a Batch array job with size equal to
+            num_array_jobs
+        use_gpu: if True, run the job in a GPU-enabled queue
+    """
+    batch_config = rv_config.get_namespace_config('AWS_BATCH')
     job_queue = batch_config('cpu_job_queue')
     job_def = batch_config('cpu_job_definition')
     if use_gpu:
@@ -62,6 +78,20 @@ def submit_job(cmd,
 
 
 class AWSBatchRunner(Runner):
+    """Runs pipelines remotely using AWS Batch.
+
+    Requires Everett configuration of form:
+
+    ```
+    [AWS_BATCH]
+    job_queue=
+    job_definition=
+    cpu_job_queue=
+    cpu_job_definition=
+    attempts=
+    ```
+    """
+
     def run(self, cfg_json_uri, pipeline, commands, num_splits=1):
         parent_job_ids = []
         for command in commands:

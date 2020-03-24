@@ -5,6 +5,11 @@ INPROCESS = 'inprocess'
 
 
 class InProcessRunner(Runner):
+    """Runs each command sequentially within a single process.
+
+    Useful for testing and debugging.
+    """
+
     def run(self, cfg_json_uri, pipeline, commands, num_splits=1):
         for command in commands:
             if command in pipeline.split_commands and num_splits > 1:

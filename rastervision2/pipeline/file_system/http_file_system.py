@@ -4,12 +4,14 @@ import urllib
 import urllib.request
 from datetime import datetime
 
-from rastervision2.pipeline.filesystem import (FileSystem, NotReadableError,
-                                               NotWritableError)
+from rastervision2.pipeline.file_system import (FileSystem, NotReadableError,
+                                                NotWritableError)
 from urllib.parse import urlparse
 
 
 class HttpFileSystem(FileSystem):
+    """A FileSystem for downloading files over HTTP."""
+
     @staticmethod
     def matches_uri(uri: str, mode: str) -> bool:
         parsed_uri = urlparse(uri)
@@ -44,13 +46,12 @@ class HttpFileSystem(FileSystem):
         raise NotWritableError('Could not write {}'.format(uri))
 
     @staticmethod
-    def sync_to_dir(src_dir_uri: str, dest_dir_uri: str,
+    def sync_to_dir(src_dir: str, dst_dir_uri: str,
                     delete: bool = False) -> None:
-        raise NotWritableError('Could not write {}'.format(dest_dir_uri))
+        raise NotWritableError('Could not write {}'.format(dst_dir_uri))
 
     @staticmethod
-    def sync_from_dir(src_dir_uri: str,
-                      dest_dir_uri: str,
+    def sync_from_dir(src_dir_uri: str, dst_dir: str,
                       delete: bool = False) -> None:
         raise NotReadableError(
             'Cannot read directory from HTTP {}'.format(src_dir_uri))
@@ -60,13 +61,13 @@ class HttpFileSystem(FileSystem):
         raise NotWritableError('Could not write {}'.format(dst_uri))
 
     @staticmethod
-    def copy_from(uri: str, path: str) -> None:
-        with urllib.request.urlopen(uri) as response:
-            with open(path, 'wb') as out_file:
+    def copy_from(src_uri: str, dst_path: str) -> None:
+        with urllib.request.urlopen(src_uri) as response:
+            with open(dst_path, 'wb') as out_file:
                 try:
                     shutil.copyfileobj(response, out_file)
                 except Exception:  # pragma: no cover
-                    raise NotReadableError('Could not read {}'.format(uri))
+                    raise NotReadableError('Could not read {}'.format(src_uri))
 
     @staticmethod
     def local_path(uri: str, download_dir: str) -> None:
