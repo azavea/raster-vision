@@ -1,7 +1,10 @@
 import logging
-from typing import List
+from typing import List, TYPE_CHECKING
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from rastervision2.pipeline.pipeline_config import PipelineConfig  # noqa
 
 
 class Pipeline():
@@ -26,8 +29,7 @@ class Pipeline():
     split_commands: List[str] = ['test_cpu']
     gpu_commands: List[str] = ['test_gpu']
 
-    def __init__(self, config: 'rastervision2.pipeline.PipelineConfig',
-                 tmp_dir: str):
+    def __init__(self, config: 'PipelineConfig', tmp_dir: str):
         """Constructor
 
         Args:

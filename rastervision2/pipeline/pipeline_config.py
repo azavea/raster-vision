@@ -1,8 +1,11 @@
 from os.path import join
+from typing import TYPE_CHECKING
 
 from rastervision2.pipeline.config import Config
 from rastervision2.pipeline.config import register_config
-from rastervision2.pipeline.pipeline import Pipeline
+
+if TYPE_CHECKING:
+    from rastervision2.pipeline.pipeline import Pipeline  # noqa
 
 
 @register_config('pipeline')
@@ -25,7 +28,7 @@ class PipelineConfig(Config):
         """Get URI of serialized version of this PipelineConfig."""
         return join(self.root_uri, 'pipeline.json')
 
-    def build(self, tmp_dir: str) -> Pipeline:
+    def build(self, tmp_dir: str) -> 'Pipeline':
         """Return a pipeline based on this configuration.
 
         Subclasses should override this to return an instance of the
@@ -34,4 +37,5 @@ class PipelineConfig(Config):
         Args:
             tmp_dir: root of any temporary directory to pass to pipeline
         """
+        from rastervision2.pipeline.pipeline import Pipeline  # noqa
         return Pipeline(self, tmp_dir)

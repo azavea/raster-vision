@@ -3,7 +3,7 @@
 import os
 from os.path import join
 
-from rastervision2.core.pipeline import *
+from rastervision2.core.rv_pipeline import *
 from rastervision2.core.backend import *
 from rastervision2.core.data import *
 from rastervision2.core.analyzer import *
@@ -30,6 +30,8 @@ def get_config(runner, test=False):
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
     log_tensorboard = True
     run_tensorboard = True
+    class_config = ClassConfig(
+        names=['no_building', 'building'], colors=['black', 'red'])
 
     if test:
         debug = True
@@ -54,7 +56,8 @@ def get_config(runner, test=False):
                 label_uri=label_uri,
                 label_crop_uri=label_crop_uri,
                 size=600,
-                min_features=20)
+                min_features=20,
+                class_config=class_config)
             raster_uri = crop_uri
             label_uri = label_crop_uri
 
@@ -78,8 +81,6 @@ def get_config(runner, test=False):
 
     train_scenes = [make_scene(info) for info in train_scene_info]
     val_scenes = [make_scene(info) for info in val_scene_info]
-    class_config = ClassConfig(
-        names=['no_building', 'building'], colors=['black', 'red'])
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=train_scenes,

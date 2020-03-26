@@ -12,6 +12,7 @@ import logging
 from subprocess import Popen
 import numbers
 import zipfile
+from typing import Optional, List, Tuple
 
 import click
 import matplotlib
@@ -19,13 +20,15 @@ matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Subset, Dataset
 from albumentations.augmentations.transforms import (
     Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
     GaussNoise, RGBShift, ToGray, Resize)
+from albumentations import BboxParams, BasicTransform
 from albumentations.core.composition import Compose
 
 from rastervision2.pipeline.file_system import (
@@ -39,10 +42,31 @@ log = logging.getLogger(__name__)
 
 
 class Learner(ABC):
-    def __init__(self, cfg: LearnerConfig, tmp_dir, model_path=None):
+    """Abstract training and prediction routines for a model.
+
+    This can be subclassed to handle different computer vision tasks. If a model_path
+    is passed to the constructor, the Learner can only be used for prediction (ie. only
+    predict and numpy_predict should be called). Otherwise, the Learner can be used for
+    training and prediction, and the main entrypoint to training a model is the main
+    method.
+    """
+
+    def __init__(self,
+                 cfg: LearnerConfig,
+                 tmp_dir: str,
+                 model_path: Optional[str] = None):
+        """Constructor.
+
+        Args:
+            cfg: configuration
+            tmp_dir: root of temp dirs
+            model_path: a local path to model weights. If provided, the model is loaded
+                and it is assumed that this Learner will be used for prediction only.
+        """
         self.cfg = cfg
         self.tmp_dir = tmp_dir
 
+        # TODO make cache dirs configurable
         torch_cache_dir = '/opt/data/torch-cache'
         os.environ['TORCH_HOME'] = torch_cache_dir
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -63,6 +87,7 @@ class Learner(ABC):
         else:
             log.info(self.cfg)
 
+            # ds = dataset, dl = dataloader
             self.train_ds = None
             self.train_dl = None
             self.valid_ds = None
@@ -100,6 +125,11 @@ class Learner(ABC):
             self.setup_tensorboard()
 
     def main(self):
+        """Main training sequence.
+
+        This plots the dataset, runs a training and validation loop (which will resume if
+        interrupted), logs stats, plots predictions, and syncs results to the cloud.
+        """
         self.run_tensorboard()
         cfg = self.cfg
         self.log_data_stats()
@@ -120,14 +150,17 @@ class Learner(ABC):
         self.stop_tensorboard()
 
     def sync_to_cloud(self):
+        """Sync any output to the cloud at output_uri."""
         if self.cfg.output_uri.startswith('s3://'):
             sync_to_dir(self.output_dir, self.cfg.output_uri)
 
     def sync_from_cloud(self):
+        """Sync any previous output in the cloud to output_dir."""
         if self.cfg.output_uri.startswith('s3://'):
             sync_from_dir(self.cfg.output_uri, self.output_dir)
 
     def setup_tensorboard(self):
+        """Setup for logging stats to TB."""
         self.tb_writer = None
         if self.cfg.log_tensorboard:
             self.tb_log_dir = join(self.output_dir, 'tb-logs')
@@ -135,6 +168,7 @@ class Learner(ABC):
             self.tb_writer = SummaryWriter(log_dir=self.tb_log_dir)
 
     def run_tensorboard(self):
+        """Run TB server serving logged stats."""
         if self.cfg.run_tensorboard:
             log.info('Starting tensorboard process')
             self.tb_process = Popen(
@@ -142,16 +176,23 @@ class Learner(ABC):
             terminate_at_exit(self.tb_process)
 
     def stop_tensorboard(self):
+        """Stop TB logging and server if it's running."""
         if self.cfg.log_tensorboard:
             self.tb_writer.close()
             if self.cfg.run_tensorboard:
                 self.tb_process.terminate()
 
     @abstractmethod
-    def build_model(self):
+    def build_model(self) -> nn.Module:
+        """Build a PyTorch model."""
         pass
 
-    def unzip_data(self):
+    def unzip_data(self) -> List[str]:
+        """Unzip dataset zip files.
+
+        Returns:
+            paths to directories that each contain contents of one zip file
+        """
         cfg = self.cfg
         if cfg.data.uri.startswith('s3://') or cfg.data.uri.startswith('/'):
             data_uri = cfg.data.uri
@@ -172,10 +213,17 @@ class Learner(ABC):
 
         return data_dirs
 
-    def get_bbox_params(self):
+    def get_bbox_params(self) -> Optional[BboxParams]:
+        """Returns BboxParams used by albumentations for data augmentation."""
         return None
 
-    def get_data_transforms(self):
+    def get_data_transforms(self) -> Tuple[BasicTransform, BasicTransform]:
+        """Get albumentations transform objects for data augmentation.
+
+        Returns:
+           1st tuple arg: a transform that doesn't do any data augmentation
+           2nd tuple arg: a transform with data augmentation
+        """
         cfg = self.cfg
         bbox_params = self.get_bbox_params()
         transform = Compose(
@@ -206,10 +254,21 @@ class Learner(ABC):
 
         return transform, aug_transform
 
-    def get_collate_fn(self):
+    def get_collate_fn(self) -> Optional[callable]:
+        """Returns a custom collate_fn to use in DataLoader.
+
+        None is returned if default collate_fn should be used.
+
+        See https://pytorch.org/docs/stable/data.html#working-with-collate-fn
+        """
         return None
 
+    def get_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
+        """Returns train, validation, and test DataSets."""
+        raise NotImplementedError()
+
     def setup_data(self):
+        """Set the the DataSet and DataLoaders for train, validation, and test sets."""
         cfg = self.cfg
         batch_sz = self.cfg.solver.batch_sz
         num_workers = self.cfg.data.num_workers
@@ -253,6 +312,7 @@ class Learner(ABC):
                                                       test_dl)
 
     def log_data_stats(self):
+        """Log stats about each DataSet."""
         if self.train_ds:
             log.info('train_ds: {} items'.format(len(self.train_ds)))
         if self.valid_ds:
@@ -260,7 +320,8 @@ class Learner(ABC):
         if self.test_ds:
             log.info('test_ds: {} items'.format(len(self.test_ds)))
 
-    def build_optimizer(self):
+    def build_optimizer(self) -> optim.Optimizer:
+        """Returns optimizer."""
         return optim.Adam(self.model.parameters(), lr=self.cfg.solver.lr)
 
     def build_step_scheduler(self):

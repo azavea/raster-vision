@@ -2,8 +2,8 @@ import logging
 
 import numpy as np
 
-from rastervision2.core.pipeline.rv_pipeline import RVPipeline
-from rastervision2.core import Box
+from rastervision2.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision2.core.box import Box
 
 log = logging.getLogger(__name__)
 

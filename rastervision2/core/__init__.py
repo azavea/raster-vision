@@ -1,5 +1,6 @@
 # flake8: noqa
 
+import rastervision2.pipeline
 from rastervision2.core.box import *
 from rastervision2.core.data_sample import *
 from rastervision2.core.predictor import *
@@ -10,7 +11,7 @@ from rastervision2.core.raster_stats import *
 # registry.
 import rastervision2.core.backend
 import rastervision2.core.data
-import rastervision2.core.pipeline
+import rastervision2.core.rv_pipeline
 import rastervision2.core.evaluation
 import rastervision2.core.cli
 

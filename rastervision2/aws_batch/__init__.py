@@ -1,5 +1,6 @@
 # flake8: noqa
 
+import rastervision2.pipeline
 from rastervision2.aws_batch.aws_batch_runner import *
 
 

@@ -37,7 +37,15 @@ class Config(BaseModel):
 
         Subclasses should override this to provide complex default behavior, for
         example, setting default values as a function of the values of other
-        fields.
+        fields. The arguments to this method will vary depending on the type of Config.
+        """
+        pass
+
+    def build(self):
+        """Build an instance of the corresponding type of object using this config.
+
+        For example, BackendConfig will build a Backend object. The arguments to this
+        method will vary depending on the type of Config.
         """
         pass
 

@@ -9,9 +9,11 @@ from shapely.geometry import shape, mapping
 from shapely.ops import transform
 
 from rastervision2.core import Box
-from rastervision2.core.data import RasterioCRSTransformer, GeoJSONVectorSource
-from rastervision2.pipeline.file_system import (
-    file_to_str, file_exists, get_local_path, upload_or_copy, make_dir, json_to_file)
+from rastervision2.core.data import (RasterioCRSTransformer,
+                                     GeoJSONVectorSourceConfig)
+from rastervision2.pipeline.file_system import (file_to_str, file_exists,
+                                                get_local_path, upload_or_copy,
+                                                make_dir, json_to_file)
 from rastervision2.aws_s3 import S3FileSystem
 
 
@@ -59,7 +61,8 @@ def save_image_crop(image_uri,
                     label_crop_uri=None,
                     size=600,
                     min_features=10,
-                    vector_labels=True):
+                    vector_labels=True,
+                    class_config=None):
     """Save a crop of an image to use for testing.
 
     If label_uri is set, the crop needs to cover >= min_features.
@@ -89,7 +92,8 @@ def save_image_crop(image_uri,
             if label_uri and vector_labels:
                 crs_transformer = RasterioCRSTransformer.from_dataset(
                     im_dataset)
-                vs = GeoJSONVectorSource(label_uri, crs_transformer)
+                geojson_vs_config = GeoJSONVectorSourceConfig(uri=label_uri)
+                vs = geojson_vs_config.build(class_config, crs_transformer)
                 geojson = vs.get_geojson()
                 geoms = []
                 for f in geojson['features']:
