@@ -1,4 +1,9 @@
-from typing import List, Type
+from typing import List, Type, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from rastervision2.pipeline.runner import Runner  # noqa
+    from rastervision2.pipeline.file_system import FileSystem  # noqa
+    from rastervision2.pipeline.config import Upgrader, Config  # noqa
 
 
 class RegistryError(Exception):
@@ -16,8 +21,7 @@ class Registry():
         self.config_upgraders = {}
         self.rv_config_schema = {}
 
-    def add_runner(self, runner_name: str,
-                   runner: Type['rastervision2.pipeline.runner.Runner']):
+    def add_runner(self, runner_name: str, runner: Type['Runner']):
         """Add a Runner.
 
         Args:
@@ -31,8 +35,7 @@ class Registry():
 
         self.runners[runner_name] = runner
 
-    def get_runner(self, runner_name: str
-                   ) -> Type['rastervision2.pipeline.runner.Runner']:  # noqa
+    def get_runner(self, runner_name: str) -> Type['Runner']:  # noqa
         """Return a Runner class based on its name."""
         runner = self.runners.get(runner_name)
         if runner:
@@ -41,9 +44,7 @@ class Registry():
             raise RegistryError(
                 '{} is not a registered runner.'.format(runner_name))
 
-    def add_file_system(
-            self,
-            file_system: 'rastervision2.pipeline.file_system.FileSystem'):
+    def add_file_system(self, file_system: 'FileSystem'):
         """Add a FileSystem.
 
         Args:
@@ -51,9 +52,8 @@ class Registry():
         """
         self.file_systems.append(file_system)
 
-    def get_file_system(
-            self, uri: str, mode: str = 'r'
-    ) -> Type['rastervision2.pipeline.file_system.FileSystem']:  # noqa
+    def get_file_system(self, uri: str,
+                        mode: str = 'r') -> Type['FileSystem']:  # noqa
         """Get a FileSystem used to handle the file type of a URI.
 
         Args:
@@ -75,9 +75,9 @@ class Registry():
 
     def add_config(self,
                    type_hint: str,
-                   config: Type['rastervision2.pipeline.Config'],
+                   config: Type['Config'],
                    version: int = 0,
-                   upgraders: List['rastervision2.pipeline.Upgrader'] = None):
+                   upgraders: List['Upgrader'] = None):
         """Add a Config.
 
         Args:
@@ -101,8 +101,7 @@ class Registry():
                 format(type_hint))
         self.config_upgraders[type_hint] = (version, upgraders)
 
-    def get_config(self,
-                   type_hint: str) -> Type['rastervision2.pipeline.Config']:
+    def get_config(self, type_hint: str) -> Type['Config']:
         """Get a Config class associated with a type_hint."""
         config = self.configs.get(type_hint)
         if config:
@@ -111,9 +110,7 @@ class Registry():
             raise RegistryError(
                 '{} is not a registered config type hint.'.format(type_hint))
 
-    def get_config_upgraders(
-            self,
-            type_hint: str) -> List['rastervision2.pipeline.Upgrader']:  # noqa
+    def get_config_upgraders(self, type_hint: str) -> List['Upgrader']:  # noqa
         """Get config upgraders associated with type_hint."""
         out = self.config_upgraders.get(type_hint)
         if out:

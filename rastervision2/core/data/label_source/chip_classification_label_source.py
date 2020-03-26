@@ -4,7 +4,7 @@ from shapely.geometry import shape
 
 from rastervision2.core.data import ChipClassificationLabels
 from rastervision2.core.data.label_source import LabelSource
-from rastervision2.core import Box
+from rastervision2.core.box import Box
 
 
 def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,

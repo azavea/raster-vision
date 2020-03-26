@@ -3,7 +3,7 @@
 import os
 from os.path import join
 
-from rastervision2.core.pipeline import *
+from rastervision2.core.rv_pipeline import *
 from rastervision2.core.backend import *
 from rastervision2.core.data import *
 from rastervision2.core.analyzer import *

@@ -5,16 +5,29 @@ from rastervision2.pipeline.file_system import (make_dir, upload_or_copy,
                                                 zipdir)
 from rastervision2.core.backend import Backend, SampleWriter
 from rastervision2.core.data_sample import DataSample
+from rastervision2.core.data import ClassConfig
+from rastervision2.core.rv_pipeline import RVPipelineConfig
+from rastervision2.pytorch_learner import LearnerConfig, Learner
 
 
 class PyTorchLearnerSampleWriter(SampleWriter):
-    def __init__(self, output_uri, class_config, tmp_dir_root):
+    def __init__(self, output_uri: str, class_config: ClassConfig,
+                 tmp_dir: str):
+        """Constructor.
+
+        Args:
+            output_uri: URI of directory where zip file of chips should be placed
+            class_config: used to convert class ids to names which may be needed for some
+                training data formats
+            tmp_dir: local directory which is root of any temporary directories that
+                are created
+        """
         self.output_uri = output_uri
         self.class_config = class_config
-        self.tmp_dir_root = tmp_dir_root
+        self.tmp_dir = tmp_dir
 
     def __enter__(self):
-        self.tmp_dir_obj = tempfile.TemporaryDirectory(dir=self.tmp_dir_root)
+        self.tmp_dir_obj = tempfile.TemporaryDirectory(dir=self.tmp_dir)
         self.sample_dir = join(self.tmp_dir_obj.name, 'samples')
         make_dir(self.sample_dir)
         self.sample_ind = 0
@@ -23,7 +36,7 @@ class PyTorchLearnerSampleWriter(SampleWriter):
 
     def __exit__(self, type, value, traceback):
         """
-        This writes a zip file for a group of scenes at {chip_uri}/{uuid}.zip.
+        This writes a zip file for a group of scenes at {output_uri}/{uuid}.zip.
 
         This method is called once per instance of the chip command.
         A number of instances of the chip command can run simultaneously to
@@ -36,11 +49,15 @@ class PyTorchLearnerSampleWriter(SampleWriter):
         self.tmp_dir_obj.cleanup()
 
     def write_sample(self, sample: DataSample):
+        """Write a single sample to disk."""
         raise NotImplementedError()
 
 
 class PyTorchLearnerBackend(Backend):
-    def __init__(self, pipeline_cfg, learner_cfg, tmp_dir):
+    """Backend that uses the rastervision2.pytorch_learner package to train models."""
+
+    def __init__(self, pipeline_cfg: RVPipelineConfig,
+                 learner_cfg: LearnerConfig, tmp_dir: str):
         self.pipeline_cfg = pipeline_cfg
         self.learner_cfg = learner_cfg
         self.tmp_dir = tmp_dir
@@ -51,7 +68,7 @@ class PyTorchLearnerBackend(Backend):
         learner.main()
 
     def load_model(self):
-        self.learner = self.learner_cfg.build_from_model_bundle(
+        self.learner = Learner.from_model_bundle(
             self.learner_cfg.get_model_bundle_uri(), self.tmp_dir)
 
     def get_sample_writer(self):

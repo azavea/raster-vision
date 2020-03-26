@@ -6,6 +6,7 @@ from rastervision2.core.data import Labels
 
 
 class DataSample(BaseModel):
+    """A chip and labels along with metadata."""
     chip: ndarray
     window: Box
     labels: Labels

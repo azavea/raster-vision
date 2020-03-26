@@ -3,8 +3,8 @@ from typing import List
 
 import numpy as np
 
-from rastervision2.core.pipeline.rv_pipeline import RVPipeline
-from rastervision2.core import Box
+from rastervision2.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision2.core.box import Box
 
 log = logging.getLogger(__name__)
 
@@ -88,7 +88,8 @@ class SemanticSegmentation(RVPipeline):
     def get_train_labels(self, window, scene):
         return scene.ground_truth_label_source.get_labels(window=window)
 
-    def process_sample(self, sample):
+    def post_process_sample(self, sample):
+        # Use null label for each pixel with NODATA.
         img = sample.chip
         label_arr = sample.labels.get_label_arr(sample.window)
         null_class_id = self.config.dataset.class_config.get_null_class_id()
