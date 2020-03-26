@@ -1,5 +1,6 @@
 # flake8: noqa
 
+import rastervision2.pipeline
 from rastervision2.aws_s3.s3_file_system import (AWS_S3, S3FileSystem)
 
 

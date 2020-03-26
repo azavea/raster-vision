@@ -1,5 +1,6 @@
 # flake8: noqa
 
+import rastervision2.pipeline
 from rastervision2.pytorch_learner.learner_config import *
 from rastervision2.pytorch_learner.learner import *
 from rastervision2.pytorch_learner.classification_config import *
