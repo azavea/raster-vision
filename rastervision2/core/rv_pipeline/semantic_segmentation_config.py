@@ -13,7 +13,7 @@ class SemanticSegmentationChipOptions(Config):
     """
     Chipping options for semantic segmentation.
 
-    Args:
+    Attributes:
         window_method: Window method to use for chipping. Options are:
             random_sample, sliding
         target_class_ids: list of class ids considered as targets (ie. those
