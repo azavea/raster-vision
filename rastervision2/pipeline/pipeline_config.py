@@ -26,7 +26,7 @@ class PipelineConfig(Config):
 
     def get_config_uri(self) -> str:
         """Get URI of serialized version of this PipelineConfig."""
-        return join(self.root_uri, 'pipeline.json')
+        return join(self.root_uri, 'pipeline-config.json')
 
     def build(self, tmp_dir: str) -> 'Pipeline':
         """Return a pipeline based on this configuration.

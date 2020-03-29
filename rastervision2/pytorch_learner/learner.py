@@ -112,7 +112,7 @@ class Learner(ABC):
                 make_dir(self.output_dir)
 
             self.last_model_path = join(self.output_dir, 'last-model.pth')
-            self.config_path = join(self.output_dir, 'config.json')
+            self.config_path = join(self.output_dir, 'learner-config.json')
             self.train_state_path = join(self.output_dir, 'train-state.json')
             self.log_path = join(self.output_dir, 'log.csv')
             model_bundle_fn = basename(cfg.get_model_bundle_uri())
@@ -663,7 +663,7 @@ class Learner(ABC):
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
         shutil.copyfile(self.config_path, join(model_bundle_dir,
-                                               'config.json'))
+                                               'learner-config.json'))
         zipdir(model_bundle_dir, self.model_bundle_path)
 
     def get_start_epoch(self) -> int:
