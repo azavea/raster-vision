@@ -28,7 +28,7 @@ Now we can run a console in the the Docker container by doing
    > docker run --rm -it -p 6006:6006 \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_OUT_DIR}:/opt/data/output \
-        quay.io/azavea/raster-vision:pytorch-latest /bin/bash
+        quay.io/azavea/raster-vision:pytorch-0.11 /bin/bash
 
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with Docker containers.
 
@@ -173,6 +173,8 @@ train on a lot more data for a lot longer for the model to become good at this t
 
 Model Bundles
 ----------------
+
+TODO: update model bundle
 
 To immediately use Raster Vision with a fully trained model, one can make use of the pretrained models in our `Model Zoo <https://github.com/azavea/raster-vision-examples#model-zoo>`_. However, be warned that these models probably won't work well on imagery taken in a different city, with a different ground sampling distance, or different sensor.
 
