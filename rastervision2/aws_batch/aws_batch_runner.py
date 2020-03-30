@@ -34,10 +34,10 @@ def submit_job(cmd: List[str],
     """
     batch_config = rv_config.get_namespace_config('AWS_BATCH')
     job_queue = batch_config('cpu_job_queue')
-    job_def = batch_config('cpu_job_definition')
+    job_def = batch_config('cpu_job_def')
     if use_gpu:
-        job_queue = batch_config('job_queue')
-        job_def = batch_config('job_definition')
+        job_queue = batch_config('gpu_job_queue')
+        job_def = batch_config('gpu_job_def')
 
     import boto3
     client = boto3.client('batch')
@@ -84,10 +84,10 @@ class AWSBatchRunner(Runner):
 
     ```
     [AWS_BATCH]
-    job_queue=
-    job_definition=
     cpu_job_queue=
-    cpu_job_definition=
+    cpu_job_def=
+    gpu_job_queue=
+    gpu_job_def=
     attempts=
     ```
     """
