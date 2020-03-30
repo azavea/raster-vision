@@ -12,7 +12,7 @@ import logging
 from subprocess import Popen
 import numbers
 import zipfile
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 
 import click
 import matplotlib
@@ -20,9 +20,10 @@ matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import torch
+from torch import Tensor
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim.lr_scheduler import CyclicLR, MultiStepLR
+from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, Subset, Dataset
 from albumentations.augmentations.transforms import (
@@ -30,6 +31,7 @@ from albumentations.augmentations.transforms import (
     GaussNoise, RGBShift, ToGray, Resize)
 from albumentations import BboxParams, BasicTransform
 from albumentations.core.composition import Compose
+import numpy as np
 
 from rastervision2.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
@@ -40,6 +42,8 @@ from rastervision2.pytorch_learner.learner_config import LearnerConfig
 
 log = logging.getLogger(__name__)
 
+MetricDict = Dict[str, float]
+
 
 class Learner(ABC):
     """Abstract training and prediction routines for a model.
@@ -47,8 +51,11 @@ class Learner(ABC):
     This can be subclassed to handle different computer vision tasks. If a model_path
     is passed to the constructor, the Learner can only be used for prediction (ie. only
     predict and numpy_predict should be called). Otherwise, the Learner can be used for
-    training and prediction, and the main entrypoint to training a model is the main
-    method.
+    training using the main() method.
+
+    Note that the validation set is used to validate at the end of each epoch, and the
+    test set is only used at the end of training. It's possible to set these to the same
+    dataset if desired.
     """
 
     def __init__(self,
@@ -105,7 +112,7 @@ class Learner(ABC):
                 make_dir(self.output_dir)
 
             self.last_model_path = join(self.output_dir, 'last-model.pth')
-            self.config_path = join(self.output_dir, 'config.json')
+            self.config_path = join(self.output_dir, 'learner-config.json')
             self.train_state_path = join(self.output_dir, 'train-state.json')
             self.log_path = join(self.output_dir, 'log.csv')
             model_bundle_fn = basename(cfg.get_model_bundle_uri())
@@ -324,7 +331,12 @@ class Learner(ABC):
         """Returns optimizer."""
         return optim.Adam(self.model.parameters(), lr=self.cfg.solver.lr)
 
-    def build_step_scheduler(self):
+    def build_step_scheduler(self) -> _LRScheduler:
+        """Returns an LR scheduler that changes the LR each step.
+
+        This is used to implement the "one cycle" schedule popularized by
+        fastai.
+        """
         scheduler = None
         cfg = self.cfg
         if cfg.solver.one_cycle and cfg.solver.num_epochs > 1:
@@ -342,7 +354,11 @@ class Learner(ABC):
                 step_scheduler.step()
         return scheduler
 
-    def build_epoch_scheduler(self):
+    def build_epoch_scheduler(self) -> _LRScheduler:
+        """Returns an LR scheduler tha changes the LR each epoch.
+
+        This is used to divide the LR by 10 at certain epochs.
+        """
         scheduler = None
         if self.cfg.solver.multi_stage:
             scheduler = MultiStepLR(
@@ -351,7 +367,8 @@ class Learner(ABC):
                 scheduler.step()
         return scheduler
 
-    def build_metric_names(self):
+    def build_metric_names(self) -> List[str]:
+        """Returns names of metrics used to validate model at each epoch."""
         metric_names = [
             'epoch', 'train_time', 'valid_time', 'train_loss', 'val_loss',
             'avg_f1', 'avg_precision', 'avg_recall'
@@ -365,42 +382,108 @@ class Learner(ABC):
         return metric_names
 
     @abstractmethod
-    def train_step(self, x, y):
+    def train_step(self, batch: any, batch_ind: int) -> MetricDict:
+        """Compute loss for a single training batch.
+
+        Args:
+            batch: batch data needed to compute loss
+            batch_ind: index of batch within epoch
+
+        Returns:
+            dict with 'train_loss' as key and possibly other losses
+        """
         pass
 
     @abstractmethod
-    def validate_step(self, x, y):
+    def validate_step(self, batch: any, batch_ind: int) -> MetricDict:
+        """Compute metrics on validation batch.
+
+        Args:
+            batch: batch data needed to compute validation metrics
+            batch_ind: index of batch within epoch
+
+        Returns:
+            dict with metric names mapped to metric values
+        """
         pass
 
-    def train_end(self, outputs, num_samples):
+    def train_end(self, outputs: List[MetricDict], num_samples: int) -> MetricDict:
+        """Aggregate the ouput of train_step at the end of the epoch.
+
+        Args:
+            outputs: a list of outputs of train_step
+            num_samples: total number of training samples processed in epoch
+        """
         metrics = {}
         for k in outputs[0].keys():
             metrics[k] = torch.stack([o[k] for o in outputs
                                       ]).sum().item() / num_samples
         return metrics
 
-    def validate_end(self, outputs, num_samples):
+    def validate_end(self, outputs: List[MetricDict], num_samples: int) -> MetricDict:
+        """Aggregate the ouput of validate_step at the end of the epoch.
+
+        Args:
+            outputs: a list of outputs of validate_step
+            num_samples: total number of validation samples processed in epoch
+        """
         metrics = {}
         for k in outputs[0].keys():
             metrics[k] = torch.stack([o[k] for o in outputs
                                       ]).sum().item() / num_samples
         return metrics
 
-    def post_forward(self, x):
+    def post_forward(self, x: any) -> any:
+        """Post process output of call to model().
+
+        Useful for when predictions are inside a structure returned by model().
+        """
         return x
 
-    def prob_to_pred(self, x):
+    def prob_to_pred(self, x: Tensor) -> Tensor:
+        """Convert a Tensor with prediction probabilities to class ids.
+
+        The class ids should be the classes with the maximum probability.
+        """
         return x
 
-    def to_batch(self, x):
+    def to_batch(self, x: Tensor) -> Tensor:
+        """Ensure that image array has batch dimension.
+
+        Args:
+            x: assumed to be either image or batch of images
+
+        Returns:
+            x with extra batch dimension of length 1 if needed
+        """
         if x.ndim == 3:
             x = x.unsqueeze(0)
         return x
 
-    def normalize_input(self, x):
+    def normalize_input(self, x: Tensor) -> Tensor:
+        """Normalize an input image to have values between 0 and 1.
+
+        Args:
+            x: an image or batch of images assumed to be in uint8 format
+
+        Returns:
+            the same tensor that has been scaled to [0-1].
+
+        """
         return x.float() / 255.0
 
-    def predict(self, x, normalize=False, raw_out=False):
+    def predict(self, x: Tensor, normalize: bool = False, raw_out: bool = False) -> any:
+        """Make prediction for an image or batch of images.
+
+        Args:
+            x: image or batch of images
+            normalize: if True, call normalize_input() on x before passing into model
+            raw_out: if True, return prediction probabilities
+
+        Returns:
+            the predictions, in probability form if raw_out is True, in class_id form
+                otherwise
+        """
         x = self.to_batch(x)
         if normalize:
             x = self.normalize_input(x)
@@ -412,18 +495,26 @@ class Learner(ABC):
         out = self.to_device(out, 'cpu')
         return out
 
-    def output_to_numpy(self, out):
+    def output_to_numpy(self, out: any) -> any:
+        """Convert output of model to numpy format.
+
+        Args:
+            out: the output of the model in PyTorch format
+
+        Returns: the output of the model in numpy format
+        """
         return out.numpy()
 
-    def numpy_predict(self, x, raw_out=False):
-        """Make a prediction using a TF-formatted (ie. channels last) numpy array.
+    def numpy_predict(self, x: np.ndarray, raw_out: bool = False) -> any:
+        """Make a prediction using an image or batch of images in numpy format.
 
         Args:
             x: (ndarray) of shape [height, width, channels] or
-                [batch_sz, height, width, channels]
+                [batch_sz, height, width, channels] in uint8 format
+            raw_out: if True, return prediction probabilities
 
         Returns:
-            ndarray of shape [batch_sz, num_features]
+            predictions using numpy arrays
         """
         x = torch.tensor(x)
         x = self.to_batch(x)
@@ -431,7 +522,20 @@ class Learner(ABC):
         out = self.predict(x, normalize=True, raw_out=raw_out)
         return self.output_to_numpy(out)
 
-    def predict_dataloader(self, dl, one_batch=False, return_x=True):
+    def predict_dataloader(self, dl: DataLoader, one_batch: bool = False,
+                           return_x: bool = True):
+        """Make predictions over all batches in a DataLoader.
+
+        Args:
+            dl: the DataLoader
+            one_batch: if True, just makes predictions over the first batch
+            return_x: if True, returns all the inputs in addition to the predictions and
+                targets
+
+        Returns:
+            if return_x: (x, y, z) ie. all images, labels, predictions for dl
+            else: (y, z) ie. all labels, predictions for dl
+        """
         self.model.eval()
 
         xs, ys, zs = [], [], []
@@ -452,7 +556,12 @@ class Learner(ABC):
             return torch.cat(xs), torch.cat(ys), torch.cat(zs)
         return torch.cat(ys), torch.cat(zs)
 
-    def get_dataloader(self, split):
+    def get_dataloader(self, split: str) -> DataLoader:
+        """Get the DataLoader for a split.
+
+        Args:
+            split: a split name which can be train, valid, or test
+        """
         if split == 'train':
             return self.train_dl
         elif split == 'valid':
@@ -463,10 +572,26 @@ class Learner(ABC):
             raise ValueError('{} is not a valid split'.format(split))
 
     @abstractmethod
-    def plot_xyz(self, ax, x, y, z=None):
+    def plot_xyz(self, ax, x: Tensor, y, z=None):
+        """Plot image, ground truth labels, and predicted labels.
+
+        Args:
+            ax: matplotlib axis on which to plot
+            x: image
+            y: ground truth labels
+            z: optional predicted labels
+        """
         pass
 
-    def plot_batch(self, x, y, output_path, z=None):
+    def plot_batch(self, x: Tensor, y, output_path: str, z=None):
+        """Plot a whole batch in a grid using plot_xyz.
+
+        Args:
+            x: batch of images
+            y: ground truth labels
+            output_path: local path where to save plot image
+            z: optional predicted labels
+        """
         batch_sz = x.shape[0]
         ncols = nrows = math.ceil(math.sqrt(batch_sz))
         fig = plt.figure(
@@ -484,18 +609,27 @@ class Learner(ABC):
         plt.savefig(output_path)
         plt.close()
 
-    def plot_predictions(self, split):
+    def plot_predictions(self, split: str):
+        """Plot predictions for a split.
+
+        Uses the first batch for the corresponding DataLoader.
+
+        Args:
+            split: dataset split. Can be train, valid, or test.
+        """
         log.info('Plotting predictions...')
         dl = self.get_dataloader(split)
         output_path = join(self.output_dir, '{}_preds.png'.format(split))
         x, y, z = self.predict_dataloader(dl, one_batch=True)
         self.plot_batch(x, y, output_path, z=z)
 
-    def plot_dataloader(self, dl, output_path):
+    def plot_dataloader(self, dl: DataLoader, output_path: str):
+        """Plot images and ground truth labels for a DataLoader."""
         x, y = next(iter(dl))
         self.plot_batch(x, y, output_path)
 
     def plot_dataloaders(self):
+        """Plot images and ground truth labels for all DataLoaders."""
         if self.train_dl:
             self.plot_dataloader(
                 self.train_dl, join(self.output_dir, 'dataloaders/train.png'))
@@ -507,26 +641,36 @@ class Learner(ABC):
                                  join(self.output_dir, 'dataloaders/test.png'))
 
     @staticmethod
-    def from_model_bundle(model_bundle_uri, tmp_dir):
+    def from_model_bundle(model_bundle_uri: str, tmp_dir: str):
+        """Create a Learner from a model bundle."""
         model_bundle_path = download_if_needed(model_bundle_uri, tmp_dir)
         model_bundle_dir = join(tmp_dir, 'model-bundle')
         unzip(model_bundle_path, model_bundle_dir)
 
-        config_path = join(model_bundle_dir, 'config.json')
+        config_path = join(model_bundle_dir, 'learner-config.json')
         model_path = join(model_bundle_dir, 'model.pth')
         cfg = build_config(file_to_json(config_path))
         return cfg.build(tmp_dir, model_path=model_path)
 
     def save_model_bundle(self):
+        """Save a model bundle.
+
+        This is a zip file with the model weights in .pth format and a serialized
+        copy of the LearningConfig, which allows for making predictions in the future.
+        """
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
         make_dir(model_bundle_dir)
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
         shutil.copyfile(self.config_path, join(model_bundle_dir,
-                                               'config.json'))
+                                               'learner-config.json'))
         zipdir(model_bundle_dir, self.model_bundle_path)
 
-    def get_start_epoch(self):
+    def get_start_epoch(self) -> int:
+        """Get start epoch.
+
+        If training was interrupted, this returns the last complete epoch + 1.
+        """
         start_epoch = 0
         if isfile(self.log_path):
             with open(self.log_path) as log_file:
@@ -536,6 +680,7 @@ class Learner(ABC):
         return start_epoch
 
     def load_init_weights(self):
+        """Load the weights to initialize model."""
         if self.cfg.model.init_weights:
             weights_path = download_if_needed(self.cfg.model.init_weights,
                                               self.tmp_dir)
@@ -543,18 +688,29 @@ class Learner(ABC):
                 torch.load(weights_path, map_location=self.device))
 
     def load_checkpoint(self):
+        """Load last weights from previous run if available."""
         if isfile(self.last_model_path):
             log.info('Loading checkpoint from {}'.format(self.last_model_path))
             self.model.load_state_dict(
                 torch.load(self.last_model_path, map_location=self.device))
 
-    def to_device(self, x, device):
+    def to_device(self, x: any, device: str) -> any:
+        """Load Tensors onto a device.
+
+        Args:
+            x: some object with Tensors in it
+            device: 'cpu' or 'cuda'
+
+        Returns:
+            x but with any Tensors in it on the device
+        """
         if isinstance(x, list):
             return [_x.to(device) for _x in x]
         else:
             return x.to(device)
 
-    def train_epoch(self):
+    def train_epoch(self) -> MetricDict:
+        """Train for a single epoch."""
         start = time.time()
         self.model.train()
         num_samples = 0
@@ -579,7 +735,8 @@ class Learner(ABC):
         metrics['train_time'] = str(train_time)
         return metrics
 
-    def validate_epoch(self, dl):
+    def validate_epoch(self, dl: DataLoader) -> MetricDict:
+        """Validate for a single epoch."""
         start = time.time()
         self.model.eval()
         num_samples = 0
@@ -601,6 +758,7 @@ class Learner(ABC):
         return metrics
 
     def overfit(self):
+        """Optimize model using the same batch repeatedly."""
         self.on_overfit_start()
 
         x, y = next(iter(self.train_dl))
@@ -623,6 +781,7 @@ class Learner(ABC):
         torch.save(self.model.state_dict(), self.last_model_path)
 
     def train(self):
+        """Training loop that will attempt to resume training if appropriate."""
         self.on_train_start()
 
         if self.start_epoch > 0 and self.start_epoch <= self.cfg.solver.num_epochs:
@@ -641,12 +800,18 @@ class Learner(ABC):
             self.on_epoch_end(epoch, metrics)
 
     def on_overfit_start(self):
+        """Hook that is called at start of overfit routine."""
         pass
 
     def on_train_start(self):
+        """Hook that is called at start of train routine."""
         pass
 
     def on_epoch_end(self, curr_epoch, metrics):
+        """Hook that is called at end of epoch.
+
+        Writes metrics to CSV and TB, and saves model.
+        """
         if not isfile(self.log_path):
             with open(self.log_path, 'w') as log_file:
                 log_writer = csv.writer(log_file)
@@ -670,7 +835,14 @@ class Learner(ABC):
         if (curr_epoch + 1) % self.cfg.solver.sync_interval == 0:
             self.sync_to_cloud()
 
-    def eval_model(self, split):
+    def eval_model(self, split: str):
+        """Evaluate model using a particular dataset split.
+
+        Gets validation metrics and saves them along with prediction plots.
+
+        Args:
+            split: the dataset split to use: train, valid, or test.
+        """
         log.info('Evaluating on {} set...'.format(split))
         dl = self.get_dataloader(split)
         metrics = self.validate_epoch(dl)

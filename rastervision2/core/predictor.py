@@ -40,7 +40,7 @@ class Predictor():
         with zipfile.ZipFile(bundle_path, 'r') as bundle_zip:
             bundle_zip.extractall(path=bundle_dir)
 
-        config_path = join(bundle_dir, 'pipeline.json')
+        config_path = join(bundle_dir, 'pipeline-config.json')
         config_dict = file_to_json(config_path)
         rv_config.set_everett_config(config_dict.get('rv_config'))
 

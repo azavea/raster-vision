@@ -68,12 +68,12 @@ class ClassificationLearner(Learner):
 
         return train_ds, valid_ds, test_ds
 
-    def train_step(self, batch, batch_nb):
+    def train_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
         return {'train_loss': F.cross_entropy(out, y)}
 
-    def validate_step(self, batch, batch_nb):
+    def validate_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
         val_loss = F.cross_entropy(out, y)

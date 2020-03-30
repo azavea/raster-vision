@@ -15,7 +15,7 @@ class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
 
     def build(self, class_config, crs_transformer, extent, tmp_dir):
         if isinstance(self.raster_source, RasterizedSourceConfig):
-            rs = self.raster_Source.build(class_config, crs_transformer,
+            rs = self.raster_source.build(class_config, crs_transformer,
                                           extent)
         else:
             rs = self.raster_source.build(tmp_dir)

@@ -75,12 +75,12 @@ class ObjectDetectionLearner(Learner):
 
         return train_ds, valid_ds, test_ds
 
-    def train_step(self, batch, batch_nb):
+    def train_step(self, batch, batch_ind):
         x, y = batch
         loss_dict = self.model(x, y)
         return {'train_loss': loss_dict['total_loss']}
 
-    def validate_step(self, batch, batch_nb):
+    def validate_step(self, batch, batch_ind):
         x, y = batch
         outs = self.model(x)
         ys = self.to_device(y, 'cpu')

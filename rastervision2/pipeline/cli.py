@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 import importlib
+import importlib.util
 from typing import List, Dict, Optional, Tuple
 from types import ModuleType
 
@@ -106,8 +107,9 @@ def run(runner: str, cfg_module: str, commands: List[str],
 
     Args:
         runner: name of runner to use
-        cfg_module: name of module with `get_configs` function that returns
-            PipelineConfigs
+        cfg_module: the module with `get_configs` function that returns
+            PipelineConfigs. This can either be a Python module path or a local path to
+            a .py file.
         commands: names of commands to run within pipeline. The order in which
             to run them is based on the Pipeline.commands attribute. If this is
             omitted, all commands will be run.
@@ -115,7 +117,21 @@ def run(runner: str, cfg_module: str, commands: List[str],
     tmp_dir_obj = rv_config.get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
 
-    cfg_module = importlib.import_module(cfg_module)
+    is_module = True
+    try:
+        cfg_module = importlib.import_module(cfg_module)
+    except ModuleNotFoundError:
+        is_module = False
+
+    if not is_module:
+        # From https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
+        spec = importlib.util.spec_from_file_location('module.name', cfg_module)
+        if spec:
+            cfg_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(cfg_module)
+        else:
+            raise Exception('Module cannot be found at {}'.format(cfg_module))
+
     args = dict(arg)
     args = convert_bool_args(args)
     cfgs = get_configs(cfg_module, runner, args)

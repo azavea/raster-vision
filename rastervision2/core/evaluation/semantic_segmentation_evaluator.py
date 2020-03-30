@@ -65,7 +65,7 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
             if hasattr(label_source, 'raster_source') and hasattr(
                     label_source.raster_source, 'vector_source') and hasattr(
                         label_store, 'vector_output'):
-                gt_geojson = label_source.source.vector_source.get_geojson()
+                gt_geojson = label_source.raster_source.vector_source.get_geojson()
                 for vo in label_store.vector_output:
                     pred_geojson_uri = vo.uri
                     mode = vo.mode
