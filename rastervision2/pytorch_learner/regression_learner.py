@@ -1,8 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
-from os.path import join, isfile, isdir
+from os.path import join, isdir
 import csv
-import zipfile
 
 import matplotlib
 matplotlib.use('Agg')  # noqa
@@ -13,18 +12,15 @@ import torch
 from torchvision import models
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset
-from torchvision.transforms import (Compose, ToTensor, Resize, ColorJitter,
-                                    RandomVerticalFlip, RandomHorizontalFlip)
+from torch.utils.data import Dataset, ConcatDataset
 from PIL import Image
 
-from rastervision2.pipeline.file_system import (download_if_needed, list_paths,
-                                                get_local_path)
 from rastervision2.pytorch_learner.learner import Learner
+from rastervision2.pytorch_learner.utils import AlbumentationsDataset
 
 
 class ImageRegressionDataset(Dataset):
-    def __init__(self, data_dir, labels, transform=None):
+    def __init__(self, data_dir, class_names, transform=None):
         self.data_dir = data_dir
         self.transform = transform
 
@@ -32,7 +28,7 @@ class ImageRegressionDataset(Dataset):
         with open(labels_path, 'r') as labels_file:
             labels_reader = csv.reader(labels_file, skipinitialspace=True)
             header = next(labels_reader)
-            self.output_inds = [header.index(col) for col in labels]
+            self.output_inds = [header.index(col) for col in class_names]
             self.labels = list(labels_reader)[1:]
         self.img_dir = join(data_dir, 'img')
 
@@ -83,105 +79,48 @@ class RegressionLearner(Learner):
             backbone, out_features, pos_out_inds=pos_out_inds)
         return model
 
-    def setup_data(self):
+    def get_datasets(self):
         cfg = self.cfg
-        batch_sz = cfg.solver.batch_sz
-        num_workers = cfg.data.num_workers
+        data_dirs = self.unzip_data()
+        transform, aug_transform = self.get_data_transforms()
 
-        # download and unzip data
-        if cfg.data.uri.startswith('s3://') or cfg.data.uri.startswith('/'):
-            data_uri = cfg.data.uri
-        else:
-            data_uri = join(cfg.base_uri, cfg.data.uri)
-
-        data_dirs = []
-        zip_uris = [data_uri] if data_uri.endswith('.zip') else list_paths(
-            data_uri, 'zip')
-        for zip_ind, zip_uri in enumerate(zip_uris):
-            zip_path = get_local_path(zip_uri, self.data_cache_dir)
-            if not isfile(zip_path):
-                zip_path = download_if_needed(zip_uri, self.data_cache_dir)
-            with zipfile.ZipFile(zip_path, 'r') as zipf:
-                data_dir = join(self.tmp_dir, 'data', str(zip_ind))
-                data_dirs.append(data_dir)
-                zipf.extractall(data_dir)
-
-        # build datasets -- one per zip file and then merge them into a single dataset
-        train_ds = []
-        valid_ds = []
-        test_ds = []
+        train_ds, valid_ds, test_ds = [], [], []
         for data_dir in data_dirs:
             train_dir = join(data_dir, 'train')
             valid_dir = join(data_dir, 'valid')
 
-            transform = Compose(
-                [Resize((cfg.data.img_sz, cfg.data.img_sz)),
-                 ToTensor()])
-            aug_transform = Compose([
-                RandomHorizontalFlip(),
-                RandomVerticalFlip(),
-                ColorJitter(0.1, 0.1, 0.1, 0.1),
-                Resize((cfg.data.img_sz, cfg.data.img_sz)),
-                ToTensor()
-            ])
-
             if isdir(train_dir):
                 if cfg.overfit_mode:
                     train_ds.append(
-                        ImageRegressionDataset(
-                            train_dir,
-                            cfg.data.class_names,
+                        AlbumentationsDataset(
+                            ImageRegressionDataset(
+                                train_dir,
+                                cfg.data.class_names),
                             transform=transform))
                 else:
                     train_ds.append(
-                        ImageRegressionDataset(
-                            train_dir,
-                            cfg.data.class_names,
+                        AlbumentationsDataset(
+                            ImageRegressionDataset(
+                                train_dir,
+                                cfg.data.class_names),
                             transform=aug_transform))
 
             if isdir(valid_dir):
                 valid_ds.append(
-                    ImageRegressionDataset(
-                        valid_dir, cfg.data.class_names, transform=transform))
+                    AlbumentationsDataset(
+                        ImageRegressionDataset(
+                            valid_dir, cfg.data.class_names),
+                        transform=transform))
                 test_ds.append(
-                    ImageRegressionDataset(
-                        valid_dir, cfg.data.class_names, transform=transform))
+                    AlbumentationsDataset(
+                        ImageRegressionDataset(
+                            valid_dir, cfg.data.class_names),
+                        transform=transform))
 
         train_ds, valid_ds, test_ds = \
             ConcatDataset(train_ds), ConcatDataset(valid_ds), ConcatDataset(test_ds)
 
-        if cfg.overfit_mode:
-            train_ds = Subset(train_ds, range(batch_sz))
-            valid_ds = train_ds
-            test_ds = train_ds
-        elif cfg.test_mode:
-            train_ds = Subset(train_ds, range(batch_sz))
-            valid_ds = Subset(valid_ds, range(batch_sz))
-            test_ds = Subset(test_ds, range(batch_sz))
-
-        train_dl = DataLoader(
-            train_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True)
-        valid_dl = DataLoader(
-            valid_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True)
-        test_dl = DataLoader(
-            test_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True)
-
-        self.train_ds, self.valid_ds, self.test_ds = (train_ds, valid_ds,
-                                                      test_ds)
-        self.train_dl, self.valid_dl, self.test_dl = (train_dl, valid_dl,
-                                                      test_dl)
+        return train_ds, valid_ds, test_ds
 
     def on_overfit_start(self):
         self.on_train_start()
@@ -204,14 +143,14 @@ class RegressionLearner(Learner):
             ])
         return metric_names
 
-    def train_step(self, batch, batch_nb):
+    def train_step(self, batch, batch_ind):
         x, y = batch
-        out = self.model(x)
+        out = self.post_forward(self.model(x))
         return {'train_loss': F.l1_loss(out, y, reduction='sum')}
 
     def validate_step(self, batch, batch_nb):
         x, y = batch
-        out = self.model(x)
+        out = self.post_forward(self.model(x))
         val_loss = F.l1_loss(out, y, reduction='sum')
         abs_error = torch.abs(out - y).sum(dim=0)
         scaled_abs_error = (
@@ -224,6 +163,9 @@ class RegressionLearner(Learner):
                 ind]
 
         return metrics
+
+    def prob_to_pred(self, x):
+        return x
 
     def plot_xyz(self, ax, x, y, z=None):
         x = x.permute(1, 2, 0)

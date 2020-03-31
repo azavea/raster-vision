@@ -7,6 +7,15 @@ from rastervision2.pytorch_learner.learner_config import (
 data_formats = ['csv']
 
 
+@register_config('regression_data')
+class RegressionDataConfig(DataConfig):
+    pos_class_names: List[str] = []
+    data_format: str = 'csv'
+
+    def validate_data_format(self):
+        self.validate_list('data_format', data_formats)
+
+
 @register_config('regression_model')
 class RegressionModelConfig(ModelConfig):
     output_multiplier: List[float] = None
@@ -15,15 +24,6 @@ class RegressionModelConfig(ModelConfig):
         if learner is not None and self.output_multiplier is None:
             self.model.output_multiplier = [1.0] * len(
                 learner.data.class_names)
-
-
-@register_config('regression_data')
-class RegressionDataConfig(DataConfig):
-    pos_class_names: List[str] = []
-    data_format: str = 'csv'
-
-    def validate_data_format(self):
-        self.validate_list('data_format', data_formats)
 
 
 @register_config('regression_learner')

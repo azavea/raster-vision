@@ -29,7 +29,6 @@ class ClassificationLearner(Learner):
         cfg = self.cfg
         class_names = cfg.data.class_names
 
-        # download and unzip data
         if cfg.data.data_format == 'image_folder':
             data_dirs = self.unzip_data()
 
@@ -40,7 +39,6 @@ class ClassificationLearner(Learner):
             train_dir = join(data_dir, 'train')
             valid_dir = join(data_dir, 'valid')
 
-            # build datasets
             if isdir(train_dir):
                 if cfg.overfit_mode:
                     train_ds.append(

@@ -3,7 +3,8 @@ from os.path import join
 from rastervision2.pytorch_learner.regression.config import (
     RegressionLearnerConfig, RegressionDataConfig, RegressionModelConfig)
 from rastervision2.pytorch_learner.learner_config import (
-    LearnerPipelineConfig, SolverConfig)
+    SolverConfig)
+from rastervision2.pytorch_learner.learner_pipeline_config import LearnerPipelineConfig
 
 
 def get_config(runner, test=False):

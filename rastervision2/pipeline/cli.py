@@ -35,8 +35,6 @@ def convert_bool_args(args: dict) -> dict:
             v = True
         elif v.lower() == 'false':
             v = False
-        else:
-            raise ValueError('value of {} must be True or False'.format(k))
         new_args[k] = v
     return new_args
 
