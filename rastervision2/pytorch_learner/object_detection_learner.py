@@ -119,3 +119,6 @@ class ObjectDetectionLearner(Learner):
 
     def plot_xyz(self, ax, x, y, z=None):
         plot_xyz(ax, x, y, self.cfg.data.class_names, z=z)
+
+    def prob_to_pred(self, x):
+        return x

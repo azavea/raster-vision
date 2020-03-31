@@ -1,8 +1,6 @@
 from rastervision2.pipeline.pipeline import Pipeline
 from rastervision2.pytorch_learner import LearnerConfig
 
-LEARNER_PIPELINE = 'learner_pipeline'
-
 
 class LearnerPipeline(Pipeline):
     """Simple Pipeline that is a wrapper around Learner.main()

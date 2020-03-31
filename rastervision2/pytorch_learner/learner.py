@@ -445,7 +445,7 @@ class Learner(ABC):
 
         The class ids should be the classes with the maximum probability.
         """
-        return x
+        raise NotImplementedError()
 
     def to_batch(self, x: Tensor) -> Tensor:
         """Ensure that image array has batch dimension.

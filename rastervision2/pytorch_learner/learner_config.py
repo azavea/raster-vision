@@ -132,9 +132,6 @@ class DataConfig(Config):
         raise NotImplementedError()
 
     def validate_config(self):
-        if len(self.class_names) != len(self.class_colors):
-            raise ConfigError('len(class_names) must equal len(class_colors')
-
         self.validate_nonneg('img_sz')
         self.validate_nonneg('num_workers')
         self.validate_augmentors()
