@@ -1,0 +1,53 @@
+.underline {
+  text-decoration: underline;
+}
+
+body, pre, code {
+  font-family: "Menlo", "Ubuntu Mono", "Consolas", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", monospace;
+  font-size: 16px;
+}
+
+div.body {
+    padding: 0px 75px;
+}
+
+@media only screen and (max-width: 767px) {
+    div.body {
+        min-height: 0px;
+        padding: 0px;
+    }
+}
+
+div.admonition, div.topic {
+  padding: 15px;
+  font-size: 14px;
+}
+
+div.admonition p.admonition-title,
+div.topic p.topic-title {
+  font-weight: bold;
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  padding: 0;
+  line-height: 1;
+  display: inline;
+}
+
+div.admonition, div.note {
+  background-color: #fffff0;
+  border-color: #f0f0a8;
+}
+
+/* override table width restrictions */
+@media screen and (min-width: 767px) {
+
+   .wy-table-responsive table td {
+      /* !important prevents the common CSS stylesheets from overriding
+         this as on RTD they are loaded after this stylesheet */
+      white-space: normal !important;
+   }
+
+   .wy-table-responsive {
+      overflow: visible !important;
+   }
+}

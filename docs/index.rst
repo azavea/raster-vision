@@ -213,7 +213,6 @@ This is the documentation for a major refactor of RV, and is a work in progress.
    rv2/setup
    rv2/cli
    rv2/architecture
-   rv2/customization
 
 RV2 API Reference
 ------------------
