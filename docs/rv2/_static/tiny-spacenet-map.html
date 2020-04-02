@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+
+	<title>Quick Start - Leaflet</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+
+    </head>
+    <body>
+
+
+
+        <div id="mapid" style="text-align=center; width: 725px; height: 500px;"></div>
+        <script>
+
+	 var map = L.map('mapid').setView([36.19586519989999, -115.3013751], 18);
+
+         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	     maxZoom: 19,
+	     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+         }).addTo(map);
+
+	 L.tileLayer('https://tiles.rasterfoundry.com/900b9cf4-4157-4e8c-9bfe-30fc69b4875a/{z}/{x}/{y}/?tag=1539884992367', {
+	     maxZoom: 20,
+	     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+			  '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+			  'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+	     id: 'mapbox.streets'
+	 }).addTo(map);
+
+         $.getJSON("tiny-spacenet-labels.geojson",function(data){
+             L.geoJson(data).addTo(map);
+         });
+
+        </script>
+
+
+
+    </body>
+</html>

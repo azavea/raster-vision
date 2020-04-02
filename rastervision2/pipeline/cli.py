@@ -4,7 +4,6 @@ import logging
 import importlib
 import importlib.util
 from typing import List, Dict, Optional, Tuple
-from types import ModuleType
 
 import click
 
@@ -39,7 +38,7 @@ def convert_bool_args(args: dict) -> dict:
     return new_args
 
 
-def get_configs(cfg_module: ModuleType, runner: str, args: Dict[str, any]
+def get_configs(cfg_module_path: str, runner: str, args: Dict[str, any]
                 ) -> List['rastervision2.pipeline.PipelineConfig']:  # noqa
     """Get PipelineConfigs from a module.
 
@@ -47,15 +46,30 @@ def get_configs(cfg_module: ModuleType, runner: str, args: Dict[str, any]
     to get a list of PipelineConfigs.
 
     Args:
-        cfg_module: a module with a get_config(s) function
+        cfg_module_path: the module with `get_configs` function that returns
+            PipelineConfigs. This can either be a Python module path or a local path to
+            a .py file.
         runner: name of the runner
         args: CLI args to pass to the get_config(s) function that comes from
             the --args option
     """
+    if cfg_module_path.endswith('.py'):
+        # From https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
+        spec = importlib.util.spec_from_file_location('module.name',
+                                                      cfg_module_path)
+        cfg_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cfg_module)
+    else:
+        cfg_module = importlib.import_module(cfg_module_path)
+
     _get_config = getattr(cfg_module, 'get_config', None)
     _get_configs = _get_config
     if _get_config is None:
         _get_configs = getattr(cfg_module, 'get_configs', None)
+    if _get_configs is None:
+        raise Exception(
+            'There must be a get_config or get_configs function in {}.'.format(
+                cfg_module_path))
     cfgs = _get_configs(runner, **args)
     if not isinstance(cfgs, list):
         cfgs = [cfgs]
@@ -114,21 +128,6 @@ def run(runner: str, cfg_module: str, commands: List[str],
     """
     tmp_dir_obj = rv_config.get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
-
-    is_module = True
-    try:
-        cfg_module = importlib.import_module(cfg_module)
-    except ModuleNotFoundError:
-        is_module = False
-
-    if not is_module:
-        # From https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
-        spec = importlib.util.spec_from_file_location('module.name', cfg_module)
-        if spec:
-            cfg_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(cfg_module)
-        else:
-            raise Exception('Module cannot be found at {}'.format(cfg_module))
 
     args = dict(arg)
     args = convert_bool_args(args)

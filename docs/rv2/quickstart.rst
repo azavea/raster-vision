@@ -28,7 +28,7 @@ Now we can run a console in the the Docker container by doing
    > docker run --rm -it -p 6006:6006 \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_OUT_DIR}:/opt/data/output \
-        quay.io/azavea/raster-vision:pytorch-latest /bin/bash
+        quay.io/azavea/raster-vision:pytorch-0.11 /bin/bash
 
 .. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with Docker containers.
 
@@ -38,7 +38,7 @@ The Data
 .. raw:: html
 
          <div style="position: relative; padding-bottom: 56.25%; overflow: hidden; max-width: 100%;">
-             <iframe src="../_static/tiny-spacenet-map.html" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+             <iframe src="_static/tiny-spacenet-map.html" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
          </div>
 
 Configuring a semantic segmentation pipeline
@@ -46,7 +46,7 @@ Configuring a semantic segmentation pipeline
 
 Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to write a function called ``get_config`` that returns a ``SemanticSegmentationConfig`` object. This object's type is a subclass of ``PipelineConfig``, and configures a semantic segmentation pipeline which analyzes the imagery, creates training chips, trains a model, makes predictions on validation scenes, evaluates the predictions, and saves a model bundle.
 
-.. click:example::
+.. code-block:: python
 
     # tiny_spacenet.py
 
@@ -174,6 +174,8 @@ train on a lot more data for a lot longer for the model to become good at this t
 Model Bundles
 ----------------
 
+TODO: update model bundle
+
 To immediately use Raster Vision with a fully trained model, one can make use of the pretrained models in our `Model Zoo <https://github.com/azavea/raster-vision-examples#model-zoo>`_. However, be warned that these models probably won't work well on imagery taken in a different city, with a different ground sampling distance, or different sensor.
 
 For example, to use a Resnet50-DeepLab model that has been trained to do building segmentation on Las Vegas, one can type:
@@ -185,11 +187,11 @@ This will perform a prediction on the image ``1929.tif`` using the provided pred
 Notice that the prediction package and the input raster are transparently downloaded via HTTP.
 The input image (false color) and predictions are reproduced below.
 
-.. image:: ../img/vegas/1929.png
+.. image:: img/vegas/1929.png
   :width: 333
   :alt: The input image
 
-.. image:: ../img/vegas/predictions.png
+.. image:: img/vegas/predictions.png
   :width: 333
   :alt: The predictions
 

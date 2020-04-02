@@ -93,28 +93,26 @@ class RegressionLearner(Learner):
                 if cfg.overfit_mode:
                     train_ds.append(
                         AlbumentationsDataset(
-                            ImageRegressionDataset(
-                                train_dir,
-                                cfg.data.class_names),
+                            ImageRegressionDataset(train_dir,
+                                                   cfg.data.class_names),
                             transform=transform))
                 else:
                     train_ds.append(
                         AlbumentationsDataset(
-                            ImageRegressionDataset(
-                                train_dir,
-                                cfg.data.class_names),
+                            ImageRegressionDataset(train_dir,
+                                                   cfg.data.class_names),
                             transform=aug_transform))
 
             if isdir(valid_dir):
                 valid_ds.append(
                     AlbumentationsDataset(
-                        ImageRegressionDataset(
-                            valid_dir, cfg.data.class_names),
+                        ImageRegressionDataset(valid_dir,
+                                               cfg.data.class_names),
                         transform=transform))
                 test_ds.append(
                     AlbumentationsDataset(
-                        ImageRegressionDataset(
-                            valid_dir, cfg.data.class_names),
+                        ImageRegressionDataset(valid_dir,
+                                               cfg.data.class_names),
                         transform=transform))
 
         train_ds, valid_ds, test_ds = \

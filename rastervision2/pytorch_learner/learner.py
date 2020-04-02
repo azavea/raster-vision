@@ -407,7 +407,8 @@ class Learner(ABC):
         """
         pass
 
-    def train_end(self, outputs: List[MetricDict], num_samples: int) -> MetricDict:
+    def train_end(self, outputs: List[MetricDict],
+                  num_samples: int) -> MetricDict:
         """Aggregate the ouput of train_step at the end of the epoch.
 
         Args:
@@ -420,7 +421,8 @@ class Learner(ABC):
                                       ]).sum().item() / num_samples
         return metrics
 
-    def validate_end(self, outputs: List[MetricDict], num_samples: int) -> MetricDict:
+    def validate_end(self, outputs: List[MetricDict],
+                     num_samples: int) -> MetricDict:
         """Aggregate the ouput of validate_step at the end of the epoch.
 
         Args:
@@ -472,7 +474,10 @@ class Learner(ABC):
         """
         return x.float() / 255.0
 
-    def predict(self, x: Tensor, normalize: bool = False, raw_out: bool = False) -> any:
+    def predict(self,
+                x: Tensor,
+                normalize: bool = False,
+                raw_out: bool = False) -> any:
         """Make prediction for an image or batch of images.
 
         Args:
@@ -522,7 +527,9 @@ class Learner(ABC):
         out = self.predict(x, normalize=True, raw_out=raw_out)
         return self.output_to_numpy(out)
 
-    def predict_dataloader(self, dl: DataLoader, one_batch: bool = False,
+    def predict_dataloader(self,
+                           dl: DataLoader,
+                           one_batch: bool = False,
                            return_x: bool = True):
         """Make predictions over all batches in a DataLoader.
 
@@ -662,8 +669,8 @@ class Learner(ABC):
         make_dir(model_bundle_dir)
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
-        shutil.copyfile(self.config_path, join(model_bundle_dir,
-                                               'learner-config.json'))
+        shutil.copyfile(self.config_path,
+                        join(model_bundle_dir, 'learner-config.json'))
         zipdir(model_bundle_dir, self.model_bundle_path)
 
     def get_start_epoch(self) -> int:
