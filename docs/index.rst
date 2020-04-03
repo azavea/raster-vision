@@ -223,7 +223,7 @@ method, this part of the documentation is for you.
 .. toctree::
    :maxdepth: 10
 
-   rv2_api
+   rv2/api
 
 CHANGELOG
 ---------

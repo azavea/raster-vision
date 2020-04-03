@@ -1,3 +1,5 @@
+.. _rv2_api:
+
 API Reference
 =============
 
@@ -8,8 +10,5 @@ This API documentation is not exhaustive, but covers most of the public API that
 PipelineConfig
 ----------------
 
-.. autoclass:: rastervision2.pipeline.pipeline_config.PipelineConfig
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members:
+RVPipelineConfig
+----------------
