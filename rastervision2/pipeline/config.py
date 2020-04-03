@@ -202,7 +202,7 @@ def register_config(type_hint: str, version: int = 0, upgraders=None):
 
     def _register_config(cls):
         if version > 0:
-            cls = create_model(
+            new_cls = create_model(
                 cls.__name__,
                 version=(Literal[version], version),
                 type_hint=(Literal[type_hint], type_hint),
@@ -212,12 +212,14 @@ def register_config(type_hint: str, version: int = 0, upgraders=None):
                     'If version > 0, must supply list of upgraders with length'
                     ' equal to version.')
         else:
-            cls = create_model(
+            new_cls = create_model(
                 cls.__name__,
                 type_hint=(Literal[type_hint], type_hint),
                 __base__=cls)
         registry.add_config(
-            type_hint, cls, version=version, upgraders=upgraders)
-        return cls
+            type_hint, new_cls, version=version, upgraders=upgraders)
+
+        new_cls.__doc__ = cls.__doc__
+        return new_cls
 
     return _register_config
