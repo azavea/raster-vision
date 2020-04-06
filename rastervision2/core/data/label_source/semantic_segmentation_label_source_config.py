@@ -12,9 +12,11 @@ from rastervision2.pipeline.config import (register_config, Field)
 class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
     raster_source: Union[RasterSourceConfig, RasterizedSourceConfig] = Field(
         ..., description='The labels in the form of rasters.')
-    rgb_class_config: Optional[ClassConfig] = Field(None, description=(
-        'If set, will infer the class_ids for the labels using the colors field. This '
-        'assumes the labels are stored as RGB rasters.'))
+    rgb_class_config: Optional[ClassConfig] = Field(
+        None,
+        description=
+        ('If set, will infer the class_ids for the labels using the colors field. This '
+         'assumes the labels are stored as RGB rasters.'))
 
     def build(self, class_config, crs_transformer, extent, tmp_dir):
         if isinstance(self.raster_source, RasterizedSourceConfig):

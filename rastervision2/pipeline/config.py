@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from pydantic import BaseModel, create_model, Field
+from pydantic import BaseModel, create_model
 from typing_extensions import Literal
 
 from rastervision2.pipeline import registry
@@ -38,10 +38,12 @@ class Config(BaseModel):
         for _, field in cls.__fields__.items():
             if field.name != 'type_hint':
                 desc = field.field_info.description or ''
-                summary += '\t{} ({}): {}'.format(field.name, field._type_display(), desc)
+                summary += '\t{} ({}): {}'.format(field.name,
+                                                  field._type_display(), desc)
                 if not field.required:
                     summary += '{} Defaults to {}.'.format(
-                        '.' if desc and not desc.endswith('.') else '', repr(field.default))
+                        '.' if desc and not desc.endswith('.') else '',
+                        repr(field.default))
                 summary += '\n'
         return summary
 
@@ -232,7 +234,8 @@ def register_config(type_hint: str, version: int = 0, upgraders=None):
         registry.add_config(
             type_hint, new_cls, version=version, upgraders=upgraders)
 
-        new_cls.__doc__ = (cls.__doc__ or '') + '\n\n' + cls.get_field_summary()
+        new_cls.__doc__ = (cls.__doc__
+                           or '') + '\n\n' + cls.get_field_summary()
         return new_cls
 
     return _register_config

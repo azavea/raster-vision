@@ -1,6 +1,6 @@
 from typing import List
 
-from rastervision2.pipeline.config import Config, register_config, Field
+from rastervision2.pipeline.config import Config, register_config
 from rastervision2.core.data.scene_config import SceneConfig
 from rastervision2.core.data.class_config import ClassConfig
 from rastervision2.core.utils.misc import split_into_groups

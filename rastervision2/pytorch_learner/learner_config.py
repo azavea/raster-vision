@@ -38,9 +38,12 @@ class ModelConfig(Config):
     """Config related to models."""
     backbone: str = Field(
         'resnet18', description='name of torchvision.models backbone to use')
-    init_weights: Optional[str] = Field(None, description=(
-        'URI of PyTorch model weights used to initialize model. If None, '
-        'will use Imagenet pretrained model weights provided by torchvision.'))
+    init_weights: Optional[str] = Field(
+        None,
+        description=(
+            'URI of PyTorch model weights used to initialize model. If None, '
+            'will use Imagenet pretrained model weights provided by torchvision.'
+        ))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
@@ -57,19 +60,25 @@ class SolverConfig(Config):
     """Config related to solver aka optimizer."""
     lr: float = Field(1e-4, description='Learning rate.')
     num_epochs: int = Field(
-        10, description='Number of epochs (ie. sweeps through the whole training set).')
-    test_num_epochs: int = Field(2, description='Number of epochs to use in test mode.')
-    test_batch_sz: int = Field(4, description='Batch size to use in test mode.')
+        10,
+        description=
+        'Number of epochs (ie. sweeps through the whole training set).')
+    test_num_epochs: int = Field(
+        2, description='Number of epochs to use in test mode.')
+    test_batch_sz: int = Field(
+        4, description='Batch size to use in test mode.')
     overfit_num_steps: int = Field(
         1, description='Number of optimizer steps to use in overfit mode.')
     sync_interval: int = Field(
         1, description='The interval in epochs for each sync to the cloud.')
     batch_sz: int = Field(32, description='Batch size.')
-    one_cycle: bool = Field(True, description=(
-        'If True, use triangular LR scheduler with a single cycle across all '
-        'epochs with start and end LR being lr/10 and the peak being lr.'))
-    multi_stage: List = Field([], description=(
-        'List of epoch indices at which to divide LR by 10.'))
+    one_cycle: bool = Field(
+        True,
+        description=
+        ('If True, use triangular LR scheduler with a single cycle across all '
+         'epochs with start and end LR being lr/10 and the peak being lr.'))
+    multi_stage: List = Field(
+        [], description=('List of epoch indices at which to divide LR by 10.'))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
@@ -87,22 +96,31 @@ class SolverConfig(Config):
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
     # TODO shouldn't this be required?
-    uri: Optional[str] = Field(None, description=(
-        'URI of the dataset. This can be a zip file, or a directory which contains '
-        'a set of zip files.'))
-    data_format: Optional[str] = Field(None, description='Name of dataset format.')
+    uri: Optional[str] = Field(
+        None,
+        description=
+        ('URI of the dataset. This can be a zip file, or a directory which contains '
+         'a set of zip files.'))
+    data_format: Optional[str] = Field(
+        None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
     # TODO make this optional
-    class_colors: List[str] = Field([], description='Colors used to display classes.')
-    img_sz: int = Field(256, description=(
-        'Length of a side of each image in pixels. This is the size to transform '
-        'it to during training, not the size in the raw dataset.'))
+    class_colors: List[str] = Field(
+        [], description='Colors used to display classes.')
+    img_sz: int = Field(
+        256,
+        description=
+        ('Length of a side of each image in pixels. This is the size to transform '
+         'it to during training, not the size in the raw dataset.'))
     num_workers: int = Field(
-        4, description='Number of workers to use when DataLoader makes batches.')
+        4,
+        description='Number of workers to use when DataLoader makes batches.')
     # TODO support setting parameters of augmentors?
-    augmentors: List[str] = Field(default_augmentors, description=(
-        'Names of albumentations augmentors to use for training batches. '
-        'Choices include: ' + str(augmentors)))
+    augmentors: List[str] = Field(
+        default_augmentors,
+        description=(
+            'Names of albumentations augmentors to use for training batches. '
+            'Choices include: ' + str(augmentors)))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
@@ -128,29 +146,40 @@ class LearnerConfig(Config):
     data: DataConfig
 
     predict_mode: bool = Field(
-        False, description='If True, skips training, loads model, and does final eval.')
+        False,
+        description='If True, skips training, loads model, and does final eval.'
+    )
     test_mode: bool = Field(
-        False, description=(
-            'If True, uses test_num_epochs, test_batch_sz, truncated datasets with '
-            'only a single batch, image_sz that is cut in half, and num_workers = 0. '
-            'This is useful for testing that code runs correctly on CPU without '
-            'multithreading before running full job on GPU.'))
-    overfit_mode: bool = Field(False, description=(
-        'If True, uses half image size, and instead of doing epoch-based training, '
-        'optimizes the model using a single batch repeatedly for '
-        'overfit_num_steps number of steps.'))
-    eval_train: bool = Field(False, description=(
-        'If True, runs final evaluation on training set (in addition to test set). '
-        'Useful for debugging.'))
-    save_model_bundle: bool = Field(True, description=(
-        'If True, saves a model bundle at the end of training which '
-        'is zip file with model and this LearnerConfig which can be used to make '
-        'predictions on new images at a later time.'))
+        False,
+        description=
+        ('If True, uses test_num_epochs, test_batch_sz, truncated datasets with '
+         'only a single batch, image_sz that is cut in half, and num_workers = 0. '
+         'This is useful for testing that code runs correctly on CPU without '
+         'multithreading before running full job on GPU.'))
+    overfit_mode: bool = Field(
+        False,
+        description=
+        ('If True, uses half image size, and instead of doing epoch-based training, '
+         'optimizes the model using a single batch repeatedly for '
+         'overfit_num_steps number of steps.'))
+    eval_train: bool = Field(
+        False,
+        description=
+        ('If True, runs final evaluation on training set (in addition to test set). '
+         'Useful for debugging.'))
+    save_model_bundle: bool = Field(
+        True,
+        description=
+        ('If True, saves a model bundle at the end of training which '
+         'is zip file with model and this LearnerConfig which can be used to make '
+         'predictions on new images at a later time.'))
     log_tensorboard: bool = Field(
-        True, description='Save Tensorboard log files at the end of each epoch.')
+        True,
+        description='Save Tensorboard log files at the end of each epoch.')
     run_tensorboard: bool = Field(
         False, description='run Tensorboard server during training')
-    output_uri: Optional[str] = Field(None, description='URI of where to save output')
+    output_uri: Optional[str] = Field(
+        None, description='URI of where to save output')
 
     def update(self):
         super().update()

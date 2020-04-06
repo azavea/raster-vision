@@ -9,8 +9,10 @@ from rastervision2.core.analyzer import AnalyzerConfig
 class StatsAnalyzerConfig(AnalyzerConfig):
     output_uri: Optional[str] = Field(None, description='URI for output')
     sample_prob: float = Field(
-        0.1, description=(
-            'The probability of using a random window for computing statistics.'))
+        0.1,
+        description=(
+            'The probability of using a random window for computing statistics.'
+        ))
 
     def update(self, pipeline=None):
         if pipeline is not None and self.output_uri is None:

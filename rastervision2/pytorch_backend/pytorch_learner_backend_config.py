@@ -2,9 +2,9 @@ from typing import List
 
 from rastervision2.pipeline.config import register_config, Field
 from rastervision2.core.backend import BackendConfig
-from rastervision2.pytorch_learner.learner_config import (SolverConfig, ModelConfig,
-                                                          default_augmentors,
-                                                          augmentors as augmentor_list)
+from rastervision2.pytorch_learner.learner_config import (
+    SolverConfig, ModelConfig, default_augmentors, augmentors as
+    augmentor_list)
 
 
 @register_config('pytorch_learner_backend')
@@ -14,9 +14,11 @@ class PyTorchLearnerBackendConfig(BackendConfig):
     log_tensorboard: bool = Field(
         True, description='If True, log events to Tensorboard log files.')
     run_tensorboard: bool = Field(
-        False, description='If True, run Tensorboard server pointing at log files.')
+        False,
+        description='If True, run Tensorboard server pointing at log files.')
     augmentors: List[str] = Field(
-        default_augmentors, description=(
+        default_augmentors,
+        description=(
             'Names of albumentations augmentors to use for training batches. '
             'Choices include: ' + str(augmentor_list)))
 
