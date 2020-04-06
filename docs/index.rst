@@ -201,30 +201,6 @@ method, this part of the documentation is for you.
 
    api
 
-RV2 Documentation
-==================
-
-This is the documentation for a major refactor of RV, and is a work in progress.
-
-.. toctree::
-   :maxdepth: 2
-
-   rv2/quickstart
-   rv2/setup
-   rv2/cli
-   rv2/architecture
-
-RV2 API Reference
-------------------
-
-If you are looking for information on a specific function, class, or
-method, this part of the documentation is for you.
-
-.. toctree::
-   :maxdepth: 10
-
-   rv2/api
-
 CHANGELOG
 ---------
 
