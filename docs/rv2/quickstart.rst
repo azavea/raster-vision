@@ -1,14 +1,14 @@
-.. _quickstart:
+.. _rv2_quickstart:
 
 Quickstart
 ==========
 
 In this Quickstart, we'll train a semantic segmentation model on `SpaceNet <https://spacenetchallenge.github.io/datasets/datasetHomePage.html>`_ data. Don't get too excited - we'll only be training for a very short time on a very small training set! So the model that is created here will be pretty much worthless. But! These steps will show how Raster Vision pipelines are set up and run, so when you are ready to run against a lot of training data for a longer time on a GPU, you'll know what you have to do. Also, we'll show how to make predictions on the data using a model we've already trained on GPUs to show what you can expect to get out of Raster Vision.
 
-For the Quickstart we are going to be using one of the published :ref:`docker containers`
+For the Quickstart we are going to be using one of the published :ref:`rv2_docker images`
 as it has an environment with all necessary dependencies already installed.
 
-.. seealso:: It is also possible to install Raster Vision using ``pip``, but it can be time-consuming and error-prone to install all the necessary dependencies. See :ref:`install raster vision` for more details.
+.. seealso:: It is also possible to install Raster Vision using ``pip``, but it can be time-consuming and error-prone to install all the necessary dependencies. See :ref:`rv2_install raster vision` for more details.
 
 .. note:: This Quickstart requires a Docker installation. We have tested this with Docker 18, although you may be able to use a lower version. See `Get Started with Docker <https://www.docker.com/get-started>`_ for installation instructions.
 
@@ -23,14 +23,14 @@ holding experiment output. Make sure these directories exist:
 
 Now we can run a console in the the Docker container by doing
 
-.. code-block:: terminal
+.. code-block:: console
 
    > docker run --rm -it -p 6006:6006 \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_OUT_DIR}:/opt/data/output \
         quay.io/azavea/raster-vision:pytorch-0.11 /bin/bash
 
-.. seealso:: See :ref:`docker containers` for more information about setting up Raster Vision with Docker containers.
+.. seealso:: See :ref:`rv2_docker images` for more information about setting up Raster Vision with Docker images.
 
 The Data
 --------
@@ -195,7 +195,7 @@ The input image (false color) and predictions are reproduced below.
   :width: 333
   :alt: The predictions
 
-.. seealso:: You can read more about the :ref:`model bundle` concept and the :ref:`predict cli command` CLI command in the documentation.
+.. seealso:: You can read more about the :ref:`rv2_model bundle` concept and the :ref:`rv2_predict cli command` CLI command in the documentation.
 
 
 Next Steps

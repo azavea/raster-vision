@@ -196,7 +196,8 @@ def _run_command(cfg_json_uri: str,
     'run_command', short_help='Run an individual command within a pipeline.')
 @click.argument('cfg_json_uri')
 @click.argument('command')
-@click.option('--split-ind', type=int, help='The process index of a split command')
+@click.option(
+    '--split-ind', type=int, help='The process index of a split command')
 @click.option(
     '--num-splits',
     type=int,

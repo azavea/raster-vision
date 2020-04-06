@@ -38,7 +38,7 @@ The pipelines include running the following commands:
 * **TRAIN**: Train a model using a "backend" such as PyTorch.
 * **PREDICT**: Make predictions using trained models on validation and test data.
 * **EVAL**: Derive evaluation metrics such as F1 score, precision and recall against the model's predictions on validation datasets.
-* **BUNDLE**: Bundle the trained model into a :ref:`model bundle`, which can be deployed in batch processes, live servers, and other workflows.
+* **BUNDLE**: Bundle the trained model into a :ref:`rv2_model bundle`, which can be deployed in batch processes, live servers, and other workflows.
 
 Pipelines are configured using a compositional, programmatic approach that makes configuration easy to read, reuse
 and maintain.
@@ -126,9 +126,9 @@ on AWS Batch by running:
 
    > rastervision2 run aws_batch -p tiny_spacenet.py
 
-See the :ref:`quickstart` for a more complete description of using this example.
+See the :ref:`rv2_quickstart` for a more complete description of using this example.
 
-.. _documentation:
+.. _rv2_documentation:
 
 Documentation
 ==================

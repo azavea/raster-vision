@@ -6,8 +6,8 @@ Command Line Interface
 .. currentmodule:: rastervision2
 
 The Raster Vision command line utility, ``rastervision2``, is installed with a ``pip install`` of
-``rastervision``, which is installed by default in the :ref:`docker containers`.
-It has subcommands, with some top level options:
+``rastervision``, which is installed by default in the :ref:`rv2_docker images`.
+It has a main command, with some top level options, and several subcommands.
 
 .. code-block:: terminal
 
@@ -30,10 +30,10 @@ It has subcommands, with some top level options:
     run          Run sequence of commands within pipeline(s).
     run_command  Run an individual command within a pipeline.
 
-Commands
---------
+Subcommands
+------------
 
-.. _run cli command:
+.. _rv2_run cli command:
 
 run
 ^^^
@@ -69,15 +69,15 @@ Some specific parameters to call out:
 -\\-splits
 ~~~~~~~~~~
 
-Use ``-s N`` or ``--splits N``, where ``N`` is the number of splits to create, to parallelize commands that can be split into parallelizable chunks. See :ref:`parallelizing commands` for more information.
+Use ``-s N`` or ``--splits N``, where ``N`` is the number of splits to create, to parallelize commands that can be split into parallelizable chunks. See :ref:`rv2_parallelizing commands` for more information.
 
-.. _predict cli command:
+.. _rv2_predict cli command:
 
 run_command
 ^^^^^^^^^^^
 
 The ``run_command`` is used to run a specific command from a serialized pipeline configuration.
-This is likely only useful to people writing :ref:`pipeline runner` that want to run
+This is likely only useful to people writing :ref:`rv2_pipeline runner` that want to run
 commands remotely from serialzed ``PipelineConfig`` JSON.
 
 .. code-block:: terminal
@@ -98,7 +98,7 @@ commands remotely from serialzed ``PipelineConfig`` JSON.
 predict
 ^^^^^^^
 
-Use ``predict`` to make predictions on new imagery given a :ref:`model bundle`.
+Use ``predict`` to make predictions on new imagery given a :ref:`rv2_model bundle`.
 
 .. code-block:: terminal
 
