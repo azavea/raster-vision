@@ -115,16 +115,16 @@ def main(ctx: click.Context, profile: Optional[str], verbose: int,
     help='Number of splits to run in parallel for splittable commands')
 def run(runner: str, cfg_module: str, commands: List[str],
         arg: List[Tuple[str, str]], splits: int):
-    """Subcommand to run commands within pipelines using runner named RUNNER.
+    """Run COMMANDS within pipelines in CFG_MODULE using RUNNER.
 
-    Args:
-        runner: name of runner to use
-        cfg_module: the module with `get_configs` function that returns
-            PipelineConfigs. This can either be a Python module path or a local path to
-            a .py file.
-        commands: names of commands to run within pipeline. The order in which
-            to run them is based on the Pipeline.commands attribute. If this is
-            omitted, all commands will be run.
+    RUNNER: name of the Runner to use
+
+    CFG_MODULE: the module with `get_configs` function that returns PipelineConfigs.
+    This can either be a Python module path or a local path to a .py file.
+
+    COMMANDS: space separated sequence of commands to run within pipeline. The order in
+    which to run them is based on the Pipeline.commands attribute. If this is omitted,
+    all commands will be run.
     """
     tmp_dir_obj = rv_config.get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
@@ -196,20 +196,15 @@ def _run_command(cfg_json_uri: str,
     'run_command', short_help='Run an individual command within a pipeline.')
 @click.argument('cfg_json_uri')
 @click.argument('command')
-@click.option('--split-ind', type=int, help='The index of a split command')
+@click.option('--split-ind', type=int, help='The process index of a split command')
 @click.option(
     '--num-splits',
     type=int,
-    help='The number of splits to use if command is split')
+    help='The number of processes to use for running splittable commands')
 @click.option('--runner', type=str, help='Name of runner to use')
 def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
                 num_splits: Optional[int], runner: str):
-    """Run a single command using a serialized PipelineConfig.
-
-    Args:
-        cfg_json_uri: URI of a JSON file with a serialized PipelineConfig
-        command: name of command to run
-    """
+    """Run a single COMMAND using a serialized PipelineConfig in CFG_JSON_URI."""
     _run_command(
         cfg_json_uri,
         command,
