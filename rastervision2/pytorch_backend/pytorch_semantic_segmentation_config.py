@@ -1,23 +1,16 @@
-from typing import List
-
 from rastervision2.pipeline.config import register_config
-from rastervision2.core.backend import BackendConfig
+from rastervision2.pytorch_backend.pytorch_learner_backend_config import (
+    PyTorchLearnerBackendConfig)
 from rastervision2.pytorch_learner.semantic_segmentation_learner_config import (
     SemanticSegmentationModelConfig, SemanticSegmentationLearnerConfig,
     SemanticSegmentationDataConfig)
-from rastervision2.pytorch_learner.learner_config import (SolverConfig,
-                                                          default_augmentors)
 from rastervision2.pytorch_backend.pytorch_semantic_segmentation import (
     PyTorchSemanticSegmentation)
 
 
 @register_config('pytorch_semantic_segmentation_backend')
-class PyTorchSemanticSegmentationConfig(BackendConfig):
+class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
     model: SemanticSegmentationModelConfig
-    solver: SolverConfig
-    log_tensorboard: bool = True
-    run_tensorboard: bool = False
-    augmentors: List[str] = default_augmentors
 
     def get_learner_config(self, pipeline):
         data = SemanticSegmentationDataConfig()
@@ -41,6 +34,3 @@ class PyTorchSemanticSegmentationConfig(BackendConfig):
     def build(self, pipeline, tmp_dir):
         learner = self.get_learner_config(pipeline)
         return PyTorchSemanticSegmentation(pipeline, learner, tmp_dir)
-
-    def get_bundle_filenames(self):
-        return ['model-bundle.zip']

@@ -1,23 +1,17 @@
-from typing import List
-
 from rastervision2.pipeline.config import register_config
-from rastervision2.core.backend import BackendConfig
+from rastervision2.pytorch_backend.pytorch_learner_backend_config import (
+    PyTorchLearnerBackendConfig)
 from rastervision2.pytorch_learner.classification_learner_config import (
     ClassificationModelConfig, ClassificationLearnerConfig,
     ClassificationDataConfig)
-from rastervision2.pytorch_learner.learner_config import (SolverConfig,
-                                                          default_augmentors)
+
 from rastervision2.pytorch_backend.pytorch_chip_classification import (
     PyTorchChipClassification)
 
 
 @register_config('pytorch_chip_classification_backend')
-class PyTorchChipClassificationConfig(BackendConfig):
+class PyTorchChipClassificationConfig(PyTorchLearnerBackendConfig):
     model: ClassificationModelConfig
-    solver: SolverConfig
-    log_tensorboard: bool = True
-    run_tensorboard: bool = False
-    augmentors: List[str] = default_augmentors
 
     def get_learner_config(self, pipeline):
         data = ClassificationDataConfig()
@@ -41,6 +35,3 @@ class PyTorchChipClassificationConfig(BackendConfig):
     def build(self, pipeline, tmp_dir):
         learner = self.get_learner_config(pipeline)
         return PyTorchChipClassification(pipeline, learner, tmp_dir)
-
-    def get_bundle_filenames(self):
-        return ['model-bundle.zip']
