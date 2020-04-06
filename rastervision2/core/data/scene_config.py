@@ -40,8 +40,11 @@ class SceneConfig(Config):
         if self.aoi_uris is not None:
             aoi_polygons = []
             for uri in self.aoi_uris:
-                aoi_geojson = GeoJSONVectorSourceConfig(uri=uri).build(
-                    class_config, crs_transformer).get_geojson()
+                # Set default class id to 0 to avoid deleting features. If it was
+                # set to None, they would all be deleted.
+                aoi_geojson = GeoJSONVectorSourceConfig(
+                    uri=uri, default_class_id=0).build(
+                        class_config, crs_transformer).get_geojson()
                 for f in aoi_geojson['features']:
                     aoi_polygons.append(shape(f['geometry']))
 
