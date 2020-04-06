@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from shapely.geometry import shape
 
-from rastervision2.pipeline.config import Config, register_config
+from rastervision2.pipeline.config import Config, register_config, Field
 from rastervision2.core.data.raster_source import RasterSourceConfig
 from rastervision2.core.data.label_source import LabelSourceConfig
 from rastervision2.core.data.label_store import LabelStoreConfig
@@ -16,7 +16,10 @@ class SceneConfig(Config):
     raster_source: RasterSourceConfig
     label_source: LabelSourceConfig
     label_store: Optional[LabelStoreConfig] = None
-    aoi_uris: Optional[List[str]] = None
+    aoi_uris: Optional[List[str]] = Field(None, description=(
+        'List of URIs of GeoJSON files that define the AOIs for the scene. Each polygon'
+        'defines an AOI which is a piece of the scene that is assumed to be fully '
+        'labeled and usable for training or validation.'))
 
     def build(self, class_config, tmp_dir, use_transformers=True):
         raster_source = self.raster_source.build(

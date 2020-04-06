@@ -1,14 +1,18 @@
 from typing import List, Optional
 
 from rastervision2.pipeline.config import (Config, register_config,
-                                           ConfigError)
+                                           ConfigError, Field)
 
 
 @register_config('class_config')
 class ClassConfig(Config):
-    names: List[str]
-    colors: List[str]
-    null_class: Optional[str] = None
+    """Configures the class names that are being predicted."""
+    names: List[str] = Field(..., description='Names of classes.')
+    colors: List[str] = Field(..., description='Colors used to visualize classes.')
+    null_class: Optional[str] = Field(None, description=(
+        'Optional name of class in `names` to use as the null class. This is used in '
+        'semantic segmentation to represent the label for imagery pixels that are NODATA '
+        'or that are missing a label.'))
 
     def get_class_id(self, name):
         return self.names.index(name)
