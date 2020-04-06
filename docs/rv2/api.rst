@@ -3,6 +3,8 @@
 API Reference
 ========================
 
+This currently just contains references for ``Config`` classes related to chip classification and semantic segmentation.
+
 rastervision2.pipeline
 ------------------------
 

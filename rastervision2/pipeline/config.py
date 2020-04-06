@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, create_model, Field  # noqa
 from typing_extensions import Literal
 
 from rastervision2.pipeline import registry

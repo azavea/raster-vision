@@ -1,7 +1,9 @@
+.. _rv2_setup:
+
 Setup
 =====
 
-.. _docker containers:
+.. _rv2_docker images:
 
 Docker Images
 -----------------
@@ -68,7 +70,7 @@ This script also has options for forwarding AWS credentials, running Jupyter not
 
     All arguments after above options are passed to 'docker run'.
 
-.. _install raster vision:
+.. _rv2_install raster vision:
 
 Installing via pip
 ------------------------
@@ -98,14 +100,12 @@ To circumvent a problem installing pyproj with Python 3.7, you may also have to 
   > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
   > pip install rastervision==0.11.0
 
-.. _raster vision config:
+.. _rv2_raster vision config:
 
 Raster Vision Configuration
 ---------------------------
 
-Raster Vision is configured via the `everett <https://everett.readthedocs.io/en/latest/index.html>`_ library.
-
-Raster Vision will look for configuration in the following locations, in this order:
+Raster Vision is configured via the `everett <https://everett.readthedocs.io/en/latest/index.html>`_ library, and will look for configuration in the following locations, in this order:
 
 * Environment Variables
 * A ``.env`` file in the working directory that holds environment variables.
@@ -126,14 +126,12 @@ profile: if you had two profiles (the ``default`` and one named ``myprofile``), 
    > ls ~/.rastervision
    default    myprofile
 
-Use the ``rastervision --profile`` option in the :ref:`cli` to set the profile.
+Use the ``rastervision2 --profile`` option in the :ref:`rv2_cli` to set the profile.
 
 Configuration File Sections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _rv config section:
-
-.. _s3 config section:
+.. _rv2_s3 config:
 
 AWS_S3
 ^^^^^^
@@ -145,12 +143,12 @@ AWS_S3
 
 * ``requester_pays`` - Set to True if you would like to allow using `requester pays <https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html>`_ S3 buckets. The default value is False.
 
-Other Sections
-~~~~~~~~~~~~~~
+Other
+^^^^^^
 
 Other configurations are documented elsewhere:
 
-* :ref:`aws batch config section`
+* :ref:`rv2_aws batch config`
 
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
@@ -159,12 +157,11 @@ Any INI file option can also be stated in the environment. Just prepend the sect
 
 In addition to those environment variables that match the INI file values, there are the following environment variable options:
 
-* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a Docker container setup that mounts large network storage into a specific directory inside the Docker container. The tmp_dir can also be set on :ref:`cli` as a root option.
+* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a Docker container setup that mounts large network storage into a specific directory inside the Docker container. The tmp_dir can also be set on :ref:`rv2_cli` as a root option.
 * ``RV_CONFIG`` - Optional path to the specific Raster Vision Configuration file. These configurations will override  configurations that exist in configurations files in the default locations, but will not cause those configurations to be ignored.
 * ``RV_CONFIG_DIR`` - Optional path to the directory that contains Raster Vision configuration. Defaults to ``${HOME}/.rastervision``
 
-
-.. _running on gpu:
+.. _rv2_running on gpu:
 
 Running on a machine with GPUs
 ------------------------------
@@ -200,7 +197,7 @@ One way to check this is to make sure PyTorch can see the GPU(s). To do this, op
     torch.cuda.is_available()
     torch.cuda.get_device_name(0)
 
-This should print out console output that looks something like:
+This should print out something like:
 
 .. code-block:: console
 
@@ -213,19 +210,20 @@ If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-i
 
     > watch -d -n 0.5 nvidia-smi
 
-.. _aws batch setup:
+.. _rv2_aws batch setup:
 
 Setting up AWS Batch
 --------------------
 
 To run Raster Vision using AWS Batch, you'll need to setup your AWS account with a specific set of Batch resources, which you can do using the CloudFormation template in the `Raster Vision AWS Batch repository <https://github.com/azavea/raster-vision-aws>`_.
 
-.. _aws batch config section:
+.. _rv2_aws batch config:
 
-AWS Batch Configuration Section
+AWS Batch Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After creating the resources on AWS, set the corresponding configuration in your :ref:`raster vision config`:
+After creating the resources on AWS, set the following configuration in your :ref:`rv2_raster vision config`.
+Check the AWS Batch console to see the names of the resources that were created, as they vary depending on how CloudFormation was configured.
 
 .. code:: ini
 
@@ -236,13 +234,11 @@ After creating the resources on AWS, set the corresponding configuration in your
     cpu_job_def=RasterVisionHostedPyTorchCpuJobDefinition
     attempts=5
 
-* ``cpu_job_queue`` - Job Queue to submit CPU-only jobs to.
-* ``gpu_job_queue`` - Job Queue to submit GPU Batch jobs to.
-* ``cpu_job_def`` - The Job Definition that defines the Batch jobs to run on CPU only.
-* ``gpu_job_def`` - The Job Definition that defines the Batch jobs to run on GPU.
+* ``gpu_job_queue`` - job queue for GPU jobs
+* ``gpu_job_def`` - job definition that defines the GPU Batch jobs
+* ``cpu_job_queue`` - job queue for CPU-only jobs
+* ``cpu_job_def`` - job definition that defines the CPU-only Batch jobs
 * ``attempts`` - Optional number of attempts to retry failed jobs. It is good to set this to > 1 since Batch often kills jobs for no apparent reason.
 
-Check the AWS Batch console to see the names of the resources that were created, as they vary depending on how CloudFormation was configured.
-
 .. seealso::
-   For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws batch`.
+   For more information about how Raster Vision uses AWS Batch, see the section: :ref:`rv2_aws batch`.
