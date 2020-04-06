@@ -11,4 +11,7 @@ max-line-length = 90
 
 # E701 and E704 are triggering due to "x: type" syntax in Configs
 
-ignore = E127,W503,E701,E704
+# E251 is triggering because of Field(description=()) syntax after yapf inserts a
+# new line after the =
+
+ignore = E127,W503,E701,E704,E251

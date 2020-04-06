@@ -3,12 +3,13 @@ from os.path import join
 
 from rastervision2.core.data.label_store import (
     LabelStoreConfig, ChipClassificationGeoJSONStore)
-from rastervision2.pipeline.config import register_config
+from rastervision2.pipeline.config import register_config, Field
 
 
 @register_config('chip_classification_geojson_store')
 class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
-    uri: Optional[str] = None
+    uri: Optional[str] = Field(
+        None, description='URI of GeoJSON file with predictions.')
 
     def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
         return ChipClassificationGeoJSONStore(self.uri, class_config,

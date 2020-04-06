@@ -8,7 +8,7 @@ from rastervision2.core.analyzer import StatsAnalyzerConfig
 from rastervision2.core.backend import BackendConfig
 from rastervision2.core.evaluation import EvaluatorConfig
 from rastervision2.core.analyzer import AnalyzerConfig
-from rastervision2.pipeline.config import register_config
+from rastervision2.pipeline.config import register_config, Field
 
 if TYPE_CHECKING:
     from rastervision2.core.backend.backend import Backend  # noqa
@@ -16,39 +16,38 @@ if TYPE_CHECKING:
 
 @register_config('rv_pipeline')
 class RVPipelineConfig(PipelineConfig):
-    """Config for RVPipeline.
+    """Config for RVPipeline."""
+    dataset: DatasetConfig = Field(
+        ...,
+        description=
+        'Dataset containing train, validation, and optional test scenes.')
+    backend: BackendConfig = Field(
+        ..., description='Backend to use for interfacing with ML library.')
+    evaluators: List[EvaluatorConfig] = Field(
+        [], description='Evaluators to run during analyzer command.')
+    analyzers: List[AnalyzerConfig] = Field(
+        [], description='Analyzers to run during analyzer command.')
 
-    Attributes:
-        dataset: dataset containing train, validation, and optional test scenes
-        backend: backend to use for interfacing with ML library
-        evaluators: evaluators to run during analyzer command
-        analyzers: analyzers to run during analyzer command
-        debug: if True, use debug mode
-        train_chip_sz: size of training chips in pixels
-        predict_chip_sz: size of predictions chips in pixels
-        analyze_uri: URI of directory for output of analyze command
-        chip_uri: URI of directory for output of chip command
-        train_uri: URI of directory for output of train command
-        predict_uri: URI of directory for output of predict command
-        eval_uri: URI of directory for output of eval command
-        bundle_uri: URI of directory for output of bundle command
-    """
-    dataset: DatasetConfig
-    backend: BackendConfig
-    evaluators: List[EvaluatorConfig] = []
-    analyzers: List[AnalyzerConfig] = []
+    debug: bool = Field(False, description='If True, use debug mode.')
+    train_chip_sz: int = Field(
+        200, description='Size of training chips in pixels.')
+    predict_chip_sz: int = Field(
+        800, description='Size of predictions chips in pixels.')
+    predict_batch_sz: int = Field(
+        8, description='Batch size to use during prediction.')
 
-    debug: bool = False
-    train_chip_sz: int = 200
-    predict_chip_sz: int = 800
-    predict_batch_sz: int = 8
-
-    analyze_uri: Optional[str] = None
-    chip_uri: Optional[str] = None
-    train_uri: Optional[str] = None
-    predict_uri: Optional[str] = None
-    eval_uri: Optional[str] = None
-    bundle_uri: Optional[str] = None
+    analyze_uri: Optional[str] = Field(
+        None, description='URI for output of analyze.')
+    chip_uri: Optional[str] = Field(
+        None, description='URI for output of chip.')
+    train_uri: Optional[str] = Field(
+        None, description='URI for output of train.')
+    predict_uri: Optional[str] = Field(
+        None, description='URI for output of predict.')
+    eval_uri: Optional[str] = Field(
+        None, description='URI for output of eval.')
+    bundle_uri: Optional[str] = Field(
+        None, description='URI for output of bundle.')
 
     def update(self):
         super().update()

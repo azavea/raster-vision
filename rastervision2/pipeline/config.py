@@ -18,7 +18,6 @@ class Config(BaseModel):
     This adds some extra methods to Pydantic BaseModel.
     See https://pydantic-docs.helpmanual.io/
 
-
     The general idea is that configuration schemas can be defined by
     subclassing this and adding class attributes with types and
     default values for each field. Configs can be defined hierarchically,
@@ -31,6 +30,22 @@ class Config(BaseModel):
     # exist in the schema, which helps avoid a command source of bugs.
     class Config:
         extra = 'forbid'
+
+    @classmethod
+    def get_field_summary(cls: type) -> str:
+        """Returns class attributes PyDoc summarizing all Config fields."""
+        summary = 'Attributes:\n'
+        for _, field in cls.__fields__.items():
+            if field.name != 'type_hint':
+                desc = field.field_info.description or ''
+                summary += '\t{} ({}): {}'.format(field.name,
+                                                  field._type_display(), desc)
+                if not field.required:
+                    summary += '{} Defaults to {}.'.format(
+                        '.' if desc and not desc.endswith('.') else '',
+                        repr(field.default))
+                summary += '\n'
+        return summary
 
     def update(self):
         """Update any fields before validation.
@@ -202,7 +217,7 @@ def register_config(type_hint: str, version: int = 0, upgraders=None):
 
     def _register_config(cls):
         if version > 0:
-            cls = create_model(
+            new_cls = create_model(
                 cls.__name__,
                 version=(Literal[version], version),
                 type_hint=(Literal[type_hint], type_hint),
@@ -212,12 +227,15 @@ def register_config(type_hint: str, version: int = 0, upgraders=None):
                     'If version > 0, must supply list of upgraders with length'
                     ' equal to version.')
         else:
-            cls = create_model(
+            new_cls = create_model(
                 cls.__name__,
                 type_hint=(Literal[type_hint], type_hint),
                 __base__=cls)
         registry.add_config(
-            type_hint, cls, version=version, upgraders=upgraders)
-        return cls
+            type_hint, new_cls, version=version, upgraders=upgraders)
+
+        new_cls.__doc__ = (cls.__doc__
+                           or '') + '\n\n' + cls.get_field_summary()
+        return new_cls
 
     return _register_config

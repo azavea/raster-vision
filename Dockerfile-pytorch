@@ -9,6 +9,13 @@ COPY scripts/rastervision /usr/local/bin/
 COPY rastervision /opt/src/rastervision
 COPY rastervision2 /opt/src/rastervision2
 COPY scripts /opt/src/scripts/
+
+# Added so that entrypoints from setup.py will be installed, which is needed for
+# rastervision2 to work correctly as a CLI script.
+COPY . /opt/src/repo/
+RUN pip install /opt/src/repo/
+RUN rm -r /opt/src/repo/
+
 RUN /opt/src/scripts/compile
 
 CMD ["bash"]

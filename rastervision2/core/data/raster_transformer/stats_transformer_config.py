@@ -1,7 +1,7 @@
 from typing import Optional
 from os.path import join, basename
 
-from rastervision2.pipeline.config import register_config
+from rastervision2.pipeline.config import register_config, Field
 from rastervision2.core.data.raster_transformer.raster_transformer_config import (  # noqa
     RasterTransformerConfig)
 from rastervision2.core.data.raster_transformer.stats_transformer import (  # noqa
@@ -11,7 +11,8 @@ from rastervision2.core.raster_stats import RasterStats
 
 @register_config('stats_transformer')
 class StatsTransformerConfig(RasterTransformerConfig):
-    stats_uri: Optional[str] = None
+    stats_uri: Optional[str] = Field(
+        None, description='The URI of the output of the StatsAnalyzer.')
 
     def update(self, pipeline=None, scene=None):
         if pipeline is not None:

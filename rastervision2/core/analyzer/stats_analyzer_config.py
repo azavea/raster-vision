@@ -1,14 +1,18 @@
 from typing import Optional
 from os.path import join
 
-from rastervision2.pipeline.config import register_config, ConfigError
+from rastervision2.pipeline.config import register_config, ConfigError, Field
 from rastervision2.core.analyzer import AnalyzerConfig
 
 
 @register_config('stats_analyzer')
 class StatsAnalyzerConfig(AnalyzerConfig):
-    output_uri: Optional[str] = None
-    sample_prob: float = 0.1
+    output_uri: Optional[str] = Field(None, description='URI for output')
+    sample_prob: float = Field(
+        0.1,
+        description=(
+            'The probability of using a random window for computing statistics.'
+        ))
 
     def update(self, pipeline=None):
         if pipeline is not None and self.output_uri is None:
