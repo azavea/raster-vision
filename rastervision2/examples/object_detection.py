@@ -16,11 +16,11 @@ def get_config(runner, test=False, output_dir='output'):
     if runner in ['inprocess']:
         raw_uri = '/opt/data/raw-data/isprs-potsdam'
         processed_uri = '/opt/data/examples/cowc-potsdam/processed-data'
-        root_uri = '/opt/data/examples/cowc-potsdam/local-output'
+        root_uri = '/opt/data/examples/cowc-potsdam-od'
     else:
         raw_uri = 's3://raster-vision-raw-data/isprs-potsdam'
         processed_uri = 's3://raster-vision-lf-dev/examples/cowc-potsdam/processed-data'
-        root_uri = 's3://raster-vision-lf-dev/examples/cowc-potsdam/remote-output'
+        root_uri = 's3://raster-vision-lf-dev/examples/cowc-potsdam-od'
     root_uri = join(root_uri, output_dir)
 
     train_ids = [

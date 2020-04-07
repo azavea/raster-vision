@@ -18,12 +18,11 @@ def get_config(runner, test=False, output_dir='output'):
     if runner in ['inprocess']:
         raw_uri = '/opt/data/raw-data/spacenet-dataset'
         processed_uri = '/opt/data/examples/spacenet/rio/processed-data'
-        root_uri = '/opt/data/examples/test-output/rio-chip-classification'
+        root_uri = '/opt/data/examples/spacenet-rio-cc'
     else:
         raw_uri = 's3://spacenet-dataset/'
         processed_uri = 's3://raster-vision-lf-dev/examples/spacenet/rio/processed-data'
-        root_uri = ('s3://raster-vision-lf-dev/examples/test-output/'
-                    'rio-chip-classification')
+        root_uri = 's3://raster-vision-lf-dev/examples/spacenet-rio-cc'
     root_uri = join(root_uri, output_dir)
 
     debug = False
@@ -89,7 +88,7 @@ def get_config(runner, test=False, output_dir='output'):
 
     model = ClassificationModelConfig(backbone='resnet50')
     solver = SolverConfig(
-        lr=2e-4, num_epochs=3, test_num_epochs=3, batch_sz=8, one_cycle=True)
+        lr=1e-4, num_epochs=20, test_num_epochs=3, batch_sz=32, one_cycle=True)
     backend = PyTorchChipClassificationConfig(
         model=model,
         solver=solver,

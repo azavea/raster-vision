@@ -32,7 +32,7 @@ class RVPipelineConfig(PipelineConfig):
     train_chip_sz: int = Field(
         200, description='Size of training chips in pixels.')
     predict_chip_sz: int = Field(
-        800, description='Size of predictions chips in pixels.')
+        200, description='Size of predictions chips in pixels.')
     predict_batch_sz: int = Field(
         8, description='Batch size to use during prediction.')
 
