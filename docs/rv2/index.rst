@@ -144,6 +144,7 @@ usage patterns.
    cli
    architecture
    api
+   bootstrap
 
 CHANGELOG
 ---------

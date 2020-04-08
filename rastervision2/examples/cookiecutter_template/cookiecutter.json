@@ -1,0 +1,5 @@
+{
+    "project_name": "my_project",
+    "docker_image": "my_project",
+    "parent_docker_image": "quay.io/azavea/raster-vision:pytorch-latest"
+}
