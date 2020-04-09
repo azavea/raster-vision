@@ -5,7 +5,7 @@ FROM {{cookiecutter.parent_docker_image}}
 # at /opt/src/{project_name}.
 WORKDIR /opt/src/{{cookiecutter.project_name}}/
 COPY rastervision2 /opt/src/{{cookiecutter.project_name}}/rastervision2
-COPY rastervision2 /opt/src/{{cookiecutter.project_name}}/rastervision2
+COPY configs /opt/src/{{cookiecutter.project_name}}/configs
 COPY scripts /opt/src/{{cookiecutter.project_name}}/scripts
 ENV PYTHONPATH=/opt/src/{{cookiecutter.project_name}}:$PYTHONPATH
 
