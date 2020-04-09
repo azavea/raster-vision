@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+function usage() {
+    echo -n \
+        "Usage: $(basename "$0")
+Build Docker image.
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+    if [ "${1:-}" = "--help" ]; then
+        usage
+    else
+        echo "Building {{cookiecutter.docker_image}} Docker image"
+        docker build -t {{cookiecutter.docker_image}} -f Dockerfile .
+    fi
+fi

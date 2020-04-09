@@ -1,0 +1,11 @@
+# Assumes that env var {{cookiecutter.caps_project_name}}_ECR_IMAGE is set.
+
+AWS_REGION="us-east-1"
+IMAGE_NAME="{{cookiecutter.docker_image}}"
+ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+
+aws ecr get-login --no-include-email --region ${AWS_REGION} | bash;
+docker tag ${IMAGE_NAME} \
+	${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${{cookiecutter.caps_project_name}}_ECR_IMAGE
+docker push \
+	${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${{cookiecutter.caps_project_name}}_ECR_IMAGE
