@@ -19,7 +19,7 @@ ENV GDAL_DATA=/usr/share/gdal/2.2/
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 # Install protoc
-RUN wget -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip && \
+RUN wget -q -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip && \
     unzip /tmp/protoc3.zip -d /tmp/protoc3 && \
     mv /tmp/protoc3/bin/* /usr/local/bin/ && \
     mv /tmp/protoc3/include/* /usr/local/include/ && \
@@ -27,7 +27,7 @@ RUN wget -O /tmp/protoc3.zip https://github.com/google/protobuf/releases/downloa
     rm /tmp/protoc3.zip
 
 # Install Python 3.6
-RUN curl -o ~/miniconda.sh -O  https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh && \
      chmod +x ~/miniconda.sh && \
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh
@@ -39,7 +39,7 @@ ENV PYTHONPATH=/opt/src:$PYTHONPATH
 
 # Install Tippecanoe
 RUN cd /tmp && \
-    wget https://github.com/mapbox/tippecanoe/archive/1.32.5.zip && \
+    wget -q https://github.com/mapbox/tippecanoe/archive/1.32.5.zip && \
     unzip 1.32.5.zip && \
     cd tippecanoe-1.32.5 && \
     make && \
