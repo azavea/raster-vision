@@ -17,7 +17,7 @@
 
 ### Setup
 
-* If using Batch, create a new job definition stack using the CloudFormation template. This is needed because there should be a CPU and GPU job def for each project / user pair. These job definitions will point to an ECR repo:tag used to store your Docker image used when running remotely.
+* If using Batch, create a new job definition stack using the [CloudFormation template](https://github.com/azavea/raster-vision-aws#deploy-new-job-definitions). This is needed because there should be a CPU and GPU job def for each project / user pair. These job definitions will point to an ECR repo:tag used to store your Docker image used when running remotely.
 * Create a Raster Vision profile file in `~/.rastervision` with the job definitions that were created along with the job queues which already exist.
 * Set the {{cookiecutter.caps_project_name}}_ECR_IMAGE environment variable to the ECR repo with the namespace tag you used in the previous step, ie. `repo:useridProjectName`. This env var needs to be set to run the `docker/ecr_publish` script.
 
