@@ -5,7 +5,7 @@ import os
 import json
 import io
 import re
-from setuptools import (setup, find_packages)
+from setuptools import (setup, find_namespace_packages)
 from imp import load_source
 
 __version__ = load_source('rastervision.version',
@@ -64,7 +64,7 @@ setup(
     ],
     keywords=
     'raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
-    packages=find_packages(exclude=['integration_tests*', 'tests*']),
+    packages=find_namespace_packages(exclude=['integration_tests*', 'tests*']),
     include_package_data=True,
     install_requires=install_requires,
     extras_require=extras_require,
