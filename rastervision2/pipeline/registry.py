@@ -108,7 +108,10 @@ class Registry():
             return config
         else:
             raise RegistryError(
-                '{} is not a registered config type hint.'.format(type_hint))
+                ('{} is not a registered config type hint.'
+                 'This may be because you forgot to use the register_config decorator, '
+                 'or forgot to import the module in the top-level __init__.py file for '
+                 'the plugin.').format(type_hint))
 
     def get_config_upgraders(self, type_hint: str) -> List['Upgrader']:  # noqa
         """Get config upgraders associated with type_hint."""
