@@ -1,9 +1,10 @@
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, Union, Tuple, TYPE_CHECKING
 from os.path import join
 import importlib
 
 from rastervision2.pipeline.config import (Config, register_config,
                                            ConfigError, Field)
+from rastervision2.core.data.utils import color_to_triple
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
@@ -104,9 +105,8 @@ class DataConfig(Config):
     data_format: Optional[str] = Field(
         None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
-    # TODO make this optional
-    class_colors: List[str] = Field(
-        [], description='Colors used to display classes.')
+    class_colors: Union[None, List[str], List[Tuple]] = Field(
+        None, description='Colors used to display classes.')
     img_sz: int = Field(
         256,
         description=
@@ -123,7 +123,8 @@ class DataConfig(Config):
             'Choices include: ' + str(augmentors)))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
-        pass
+        if not self.class_colors:
+            self.class_colors = [color_to_triple() for _ in self.class_names]
 
     def validate_augmentors(self):
         self.validate_list('augmentors', augmentors)

@@ -30,8 +30,7 @@ def get_config(runner, test=False, output_dir='output'):
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
     log_tensorboard = True
     run_tensorboard = True
-    class_config = ClassConfig(
-        names=['no_building', 'building'], colors=['black', 'red'])
+    class_config = ClassConfig(names=['no_building', 'building'])
 
     if test:
         debug = True

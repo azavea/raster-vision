@@ -60,7 +60,7 @@ def get_config(runner, test=False, output_dir='output'):
         return SceneConfig(
             id=id, raster_source=raster_source, label_source=label_source)
 
-    class_config = ClassConfig(names=['vehicle'], colors=['red'])
+    class_config = ClassConfig(names=['vehicle'])
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=[make_scene(id) for id in train_ids],

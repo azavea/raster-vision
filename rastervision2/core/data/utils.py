@@ -1,12 +1,14 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 import numpy as np
 from PIL import ImageColor
 
 
-def color_to_triple(color: str) -> Tuple[int, int, int]:
+def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
     """Given a PIL ImageColor string, return a triple of integers
     representing the red, green, and blue values.
+
+    If color is None, return a random color.
 
     Args:
          color: A PIL ImageColor string
