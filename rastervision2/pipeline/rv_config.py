@@ -185,7 +185,9 @@ class RVConfig:
                 ConfigOSEnv(),
                 ConfigIniEnv(config_file_locations),
             ],
-            doc='Check https://docs.rastervision.io/ for docs.')
+            doc=('Check https://docs.rastervision.io/ for docs. '
+                 'Switch to the version being run and search for Raster Vision '
+                 'Configuration.'))
 
     def get_namespace_config(self, namespace: str) -> Dict[str, str]:
         """Get the key-val pairs associated with a namespace."""

@@ -129,6 +129,7 @@ We can now run the pipeline by invoking the following command inside the contain
 
 .. code-block:: console
 
+   > export AWS_BATCH_CPU_JOB_DEF="" AWS_BATCH_CPU_JOB_QUEUE="" AWS_BATCH_GPU_JOB_DEF="" AWS_BATCH_GPU_JOB_QUEUE="" AWS_BATCH_ATTEMPTS="" AWS_S3_REQUESTER_PAYS="False"
    > python -m rastervision2.pipeline.cli run inprocess code/tiny_spacenet.py
 
 Seeing Results
