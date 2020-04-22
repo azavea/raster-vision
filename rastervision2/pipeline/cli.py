@@ -10,6 +10,7 @@ import click
 from rastervision2.pipeline import (registry, rv_config)
 from rastervision2.pipeline.file_system import (file_to_json, json_to_file)
 from rastervision2.pipeline.config import build_config
+from rastervision2.pipeline.pipeline_config import PipelineConfig
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +74,12 @@ def get_configs(cfg_module_path: str, runner: str, args: Dict[str, any]
     cfgs = _get_configs(runner, **args)
     if not isinstance(cfgs, list):
         cfgs = [cfgs]
+
+    for cfg in cfgs:
+        if not issubclass(type(cfg), PipelineConfig):
+            raise Exception(
+                ('All objects returned by get_configs in {} must be '
+                 'PipelineConfigs.').format(cfg_module_path))
     return cfgs
 
 
