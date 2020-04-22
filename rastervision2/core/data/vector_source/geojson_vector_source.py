@@ -10,4 +10,11 @@ class GeoJSONVectorSource(VectorSource):
 
     def _get_geojson(self):
         geojson = json.loads(file_to_str(self.vs_config.uri))
+        if 'crs' in geojson:
+            raise Exception((
+                'The GeoJSON file at {} contains a CRS field which is not '
+                'allowed by the current GeoJSON standard or by Raster Vision. '
+                'All coordinates are expected to be in EPSG:4326 CRS.'.).format(
+                    self.vs_config.uri))
+
         return self.class_inference.transform_geojson(geojson)
