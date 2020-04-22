@@ -55,7 +55,7 @@ def get_config(runner, test=False, output_dir='output'):
 
         label_source = ObjectDetectionLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=label_uri, default_class_id=0))
+                uri=label_uri, default_class_id=0, ignore_crs_field=True))
 
         return SceneConfig(
             id=id, raster_source=raster_source, label_source=label_source)

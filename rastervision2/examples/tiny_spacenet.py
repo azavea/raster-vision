@@ -41,7 +41,7 @@ def get_config(runner):
         label_source = SemanticSegmentationLabelSourceConfig(
             raster_source=RasterizedSourceConfig(
                 vector_source=GeoJSONVectorSourceConfig(
-                    uri=label_uri, default_class_id=0),
+                    uri=label_uri, default_class_id=0, ignore_crs_field=True),
                 rasterizer_config=RasterizerConfig(background_class_id=1)))
         return SceneConfig(
             id=scene_id,
