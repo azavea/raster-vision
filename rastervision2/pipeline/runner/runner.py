@@ -10,7 +10,6 @@ class Runner():
     This can be subclassed to provide the ability to run on different cloud
     providers, etc.
     """
-
     @abstractmethod
     def run(self,
             cfg_json_uri: str,

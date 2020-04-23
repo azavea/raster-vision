@@ -209,7 +209,7 @@ def _run_command(cfg_json_uri: str,
     '--num-splits',
     type=int,
     help='The number of processes to use for running splittable commands')
-@click.option('--runner', type=str, help='Name of runner to use')
+@click.option('--runner', type=str, help='Name of runner to use', default='inprocess')
 def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
                 num_splits: Optional[int], runner: str):
     """Run a single COMMAND using a serialized PipelineConfig in CFG_JSON_URI."""

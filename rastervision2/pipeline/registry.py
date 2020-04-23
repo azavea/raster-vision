@@ -139,11 +139,13 @@ class Registry():
 
     def load_builtins(self):
         """Add all builtin resources."""
-        from rastervision2.pipeline.runner import (InProcessRunner, INPROCESS)
+        from rastervision2.pipeline.runner import (
+            InProcessRunner, INPROCESS, LocalRunner, LOCAL)
         from rastervision2.pipeline.file_system import (HttpFileSystem,
                                                         LocalFileSystem)
 
         self.add_runner(INPROCESS, InProcessRunner)
+        self.add_runner(LOCAL, LocalRunner)
         self.add_file_system(HttpFileSystem)
         self.add_file_system(LocalFileSystem)
 
