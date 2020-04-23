@@ -1,6 +1,6 @@
 from typing import List
 
-from rastervision2.pipeline.config import Config, register_config
+from rastervision2.pipeline.config import Config, register_config, ConfigError
 from rastervision2.pipeline.utils import split_into_groups
 from rastervision2.core.data.scene_config import SceneConfig
 from rastervision2.core.data.class_config import ClassConfig
@@ -24,6 +24,11 @@ class DatasetConfig(Config):
         if self.test_scenes is not None:
             for s in self.test_scenes:
                 s.update(pipeline=pipeline)
+
+    def validate_config(self):
+        ids = [s.id for s in self.get_all_scenes()]
+        if len(set(ids)) != len(ids):
+            raise ConfigError('All scene ids must be unique.')
 
     def get_split_config(self, split_ind, num_splits):
         new_cfg = self.copy()
