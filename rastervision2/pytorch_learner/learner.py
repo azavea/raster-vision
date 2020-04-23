@@ -36,7 +36,7 @@ import numpy as np
 from rastervision2.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, sync_from_dir, get_local_path, unzip, list_paths)
-from rastervision2.core.utils.misc import terminate_at_exit
+from rastervision2.pipeline.utils import terminate_at_exit
 from rastervision2.pipeline.config import build_config
 from rastervision2.pytorch_learner.learner_config import LearnerConfig
 

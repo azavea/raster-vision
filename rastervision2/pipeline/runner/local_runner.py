@@ -4,7 +4,7 @@ from os.path import dirname, join
 
 from rastervision2.pipeline.runner.runner import Runner
 from rastervision2.pipeline.file_system import str_to_file
-from rastervision2.core.utils.misc import (terminate_at_exit)
+from rastervision2.pipeline.utils import (terminate_at_exit)
 
 LOCAL = 'local'
 
