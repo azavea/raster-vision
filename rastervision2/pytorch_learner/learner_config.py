@@ -4,7 +4,8 @@ import importlib
 
 from rastervision2.pipeline.config import (Config, register_config,
                                            ConfigError, Field)
-from rastervision2.core.data.utils import color_to_triple
+from rastervision2.pytorch_learner.utils import color_to_triple
+
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
