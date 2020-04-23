@@ -5,12 +5,22 @@ import logging
 import json
 from typing import Optional, List, Dict
 
+from everett import NO_VALUE
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigIniEnv,
                              ConfigOSEnv)
 
 from rastervision2.pipeline.verbosity import Verbosity
 
 log = logging.getLogger(__name__)
+
+
+class LocalEnv(object):
+    def get(self, key, namespace=None):
+        if isinstance(namespace, list):
+            if 'aws_batch' in namespace or 'aws_s3' in namespace:
+                return ''
+        else:
+            return NO_VALUE
 
 
 def load_conf_list(s):
@@ -177,13 +187,18 @@ class RVConfig:
             rv_home = os.path.join(home, '.rastervision')
         self.rv_home = rv_home
 
-        config_file_locations = self._discover_config_file_locations(profile)
+        if self.profile == 'local':
+            config_ini_env = LocalEnv()
+        else:
+            config_file_locations = self._discover_config_file_locations(
+                self.profile)
+            config_ini_env = ConfigIniEnv(config_file_locations)
 
         self.config = ConfigManager(
             [
                 ConfigDictEnv(config_overrides),
                 ConfigOSEnv(),
-                ConfigIniEnv(config_file_locations),
+                config_ini_env,
             ],
             doc='Check https://docs.rastervision.io/ for docs.')
 

@@ -152,6 +152,8 @@ profile: if you had two profiles (the ``default`` and one named ``myprofile``), 
 
 Use the ``rastervision --profile`` option in the :ref:`cli` to set the profile.
 
+(Please note that the profile name ``local`` is reserved.)
+
 Configuration File Sections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
