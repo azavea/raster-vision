@@ -145,6 +145,9 @@ def run(runner: str, cfg_module: str, commands: List[str],
         cfg.update()
         cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
         cfg.recursive_validate_config()
+        # This is to run the validation again to check any fields that may have changed
+        # after the Config was constructed, possibly by the update method.
+        build_config(cfg.dict())
 
         cfg_dict = cfg.dict()
         cfg_json_uri = cfg.get_config_uri()

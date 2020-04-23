@@ -65,7 +65,11 @@ class Config(BaseModel):
         pass
 
     def validate_config(self):
-        """Do application-specific validation after built-in Pydantic runs."""
+        """Validate fields that should be checked after update is called.
+
+        This is to complement the builtin validation that Pydantic performs at the time
+        of object construction.
+        """
         pass
 
     def recursive_validate_config(self):
