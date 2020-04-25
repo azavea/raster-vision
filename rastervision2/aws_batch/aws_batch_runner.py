@@ -16,7 +16,9 @@ def submit_job(cmd: List[str],
                attempts: int = 5,
                parent_job_ids: List[str] = None,
                num_array_jobs: Optional[int] = None,
-               use_gpu: bool = False) -> str:
+               use_gpu: bool = False,
+               job_queue: Optional[str] = None,
+               job_def: Optional[str] = None) -> str:
     """Submit a job to run on AWS Batch.
 
     Args:
@@ -31,13 +33,22 @@ def submit_job(cmd: List[str],
         num_array_jobs: if set, make this a Batch array job with size equal to
             num_array_jobs
         use_gpu: if True, run the job in a GPU-enabled queue
+        job_queue: if set, use this job queue
+        job_def: if set, use this job definition
     """
     batch_config = rv_config.get_namespace_config('AWS_BATCH')
-    job_queue = batch_config('cpu_job_queue')
-    job_def = batch_config('cpu_job_def')
-    if use_gpu:
-        job_queue = batch_config('gpu_job_queue')
-        job_def = batch_config('gpu_job_def')
+
+    if job_queue is None:
+        if use_gpu:
+            job_queue = batch_config('gpu_job_queue')
+        else:
+            job_queue = batch_config('cpu_job_queue')
+
+    if job_def is None:
+        if use_gpu:
+            job_def = batch_config('gpu_job_def')
+        else:
+            job_def = batch_config('cpu_job_def')
 
     import boto3
     client = boto3.client('batch')
@@ -94,7 +105,28 @@ class AWSBatchRunner(Runner):
 
     def run(self, cfg_json_uri, pipeline, commands, num_splits=1):
         parent_job_ids = []
+
+        # pipeline-specific job queue
+        if hasattr(pipeline, 'job_queue'):
+            job_queue = pipeline.job_queue
+        else:
+            job_queue = None
+
+        # pipeline-specific job definition
+        if hasattr(pipeline, 'job_def'):
+            job_def = pipeline.job_def
+        else:
+            job_def = None
+
         for command in commands:
+            # command-specific job queue, job definition
+            if hasattr(pipeline, command):
+                fn = getattr(pipeline, command)
+                if hasattr(fn, 'job_def'):
+                    job_def = fn.job_def
+                if hasattr(fn, 'job_queue'):
+                    job_queue = fn.job_queue
+
             cmd = [
                 'python', '-m', 'rastervision2.pipeline.cli run_command',
                 cfg_json_uri, command, '--runner', AWS_BATCH
@@ -111,7 +143,9 @@ class AWSBatchRunner(Runner):
                 cmd,
                 parent_job_ids=parent_job_ids,
                 num_array_jobs=num_array_jobs,
-                use_gpu=use_gpu)
+                use_gpu=use_gpu,
+                job_queue=job_queue,
+                job_def=job_def)
             parent_job_ids = [job_id]
 
     def get_split_ind(self):
