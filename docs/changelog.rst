@@ -10,6 +10,7 @@ Features
 - Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#859 <https://github.com/azavea/raster-vision/pull/859>`__
 - Updated the Quickstart doc with pytorch docker image and model `#863 <https://github.com/azavea/raster-vision/pull/863>`__
 - Added the possibility to deal with class imbalances through oversampling. `#868 <https://github.com/azavea/raster-vision/pull/868>`
+- Added trivial local profile `#903 <https://github.com/azavea/raster-vision/pull/903>`
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
