@@ -85,7 +85,7 @@ def get_config(runner, test=False, output_dir='output'):
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    model = ClassificationModelConfig(backbone='resnet50')
+    model = ClassificationModelConfig(backbone=Backbone.resnet50)
     solver = SolverConfig(
         lr=1e-4, num_epochs=20, test_num_epochs=3, batch_sz=32, one_cycle=True)
     backend = PyTorchChipClassificationConfig(

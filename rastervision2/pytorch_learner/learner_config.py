@@ -1,6 +1,9 @@
 from typing import List, Optional, Union, Tuple, TYPE_CHECKING
 from os.path import join
 import importlib
+from enum import Enum
+
+from pydantic import PositiveFloat, PositiveInt
 
 from rastervision2.pipeline.config import (Config, register_config,
                                            ConfigError, Field)
@@ -33,13 +36,14 @@ def get_torchvision_backbones():
 
 
 backbones = get_torchvision_backbones()
+Backbone = Enum('Backbone', ' '.join(backbones))
 
 
 @register_config('model')
 class ModelConfig(Config):
     """Config related to models."""
-    backbone: str = Field(
-        'resnet18', description='name of torchvision.models backbone to use')
+    backbone: Backbone = Field(
+        Backbone.resnet18, description='The torchvision.models backbone to use.')
     init_weights: Optional[str] = Field(
         None,
         description=(
@@ -50,30 +54,27 @@ class ModelConfig(Config):
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
 
-    def validate_backbone(self):
-        self.validate_list('backbone', backbones)
-
-    def validate_config(self):
-        self.validate_backbone()
+    def get_backbone_str(self):
+        return self.backbone.name
 
 
 @register_config('solver')
 class SolverConfig(Config):
     """Config related to solver aka optimizer."""
-    lr: float = Field(1e-4, description='Learning rate.')
-    num_epochs: int = Field(
+    lr: PositiveFloat = Field(1e-4, description='Learning rate.')
+    num_epochs: PositiveInt = Field(
         10,
         description=
         'Number of epochs (ie. sweeps through the whole training set).')
-    test_num_epochs: int = Field(
+    test_num_epochs: PositiveInt = Field(
         2, description='Number of epochs to use in test mode.')
-    test_batch_sz: int = Field(
+    test_batch_sz: PositiveInt = Field(
         4, description='Batch size to use in test mode.')
-    overfit_num_steps: int = Field(
+    overfit_num_steps: PositiveInt = Field(
         1, description='Number of optimizer steps to use in overfit mode.')
-    sync_interval: int = Field(
+    sync_interval: PositiveInt = Field(
         1, description='The interval in epochs for each sync to the cloud.')
-    batch_sz: int = Field(32, description='Batch size.')
+    batch_sz: PositiveInt = Field(32, description='Batch size.')
     one_cycle: bool = Field(
         True,
         description=
@@ -84,14 +85,6 @@ class SolverConfig(Config):
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
-
-    def validate_config(self):
-        self.validate_nonneg('lr')
-        self.validate_nonneg('num_epochs')
-        self.validate_nonneg('test_num_epochs')
-        self.validate_nonneg('overfit_num_steps')
-        self.validate_nonneg('sync_interval')
-        self.validate_nonneg('batch_sz')
 
 
 @register_config('data')
@@ -108,7 +101,7 @@ class DataConfig(Config):
     class_names: List[str] = Field([], description='Names of classes.')
     class_colors: Union[None, List[str], List[Tuple]] = Field(
         None, description='Colors used to display classes.')
-    img_sz: int = Field(
+    img_sz: PositiveInt = Field(
         256,
         description=
         ('Length of a side of each image in pixels. This is the size to transform '
@@ -130,14 +123,8 @@ class DataConfig(Config):
     def validate_augmentors(self):
         self.validate_list('augmentors', augmentors)
 
-    def validate_data_format(self):
-        raise NotImplementedError()
-
     def validate_config(self):
-        self.validate_nonneg('img_sz')
-        self.validate_nonneg('num_workers')
         self.validate_augmentors()
-        self.validate_data_format()
 
 
 @register_config('learner')

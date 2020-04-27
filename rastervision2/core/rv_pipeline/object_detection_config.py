@@ -1,16 +1,20 @@
+from enum import Enum
+
 from rastervision2.pipeline.config import register_config, Config
 from rastervision2.core.rv_pipeline import RVPipelineConfig
 from rastervision2.core.data.label_store import ObjectDetectionGeoJSONStoreConfig
 from rastervision2.core.evaluation import ObjectDetectionEvaluatorConfig
 
-window_methods = ['chip']
+
+class ObjectDetectionWindowMethod(Enum):
+    chip = 1
 
 
 @register_config('object_detection_chip_options')
 class ObjectDetectionChipOptions(Config):
     neg_ratio: float = 1.0
     ioa_thresh: float = 0.8
-    window_method: str = 'chip'
+    window_method: ObjectDetectionWindowMethod = ObjectDetectionWindowMethod.chip
     label_buffer: float = 0.0
 
 

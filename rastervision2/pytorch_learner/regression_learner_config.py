@@ -1,19 +1,19 @@
 from typing import List
+from enum import Enum
 
 from rastervision2.pipeline.config import register_config
 from rastervision2.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig)
 
-data_formats = ['csv']
+
+class DataFormat(Enum):
+    csv = 1
 
 
 @register_config('regression_data')
 class RegressionDataConfig(DataConfig):
     pos_class_names: List[str] = []
-    data_format: str = 'csv'
-
-    def validate_data_format(self):
-        self.validate_list('data_format', data_formats)
+    data_format: DataFormat = DataFormat.csv
 
 
 @register_config('regression_model')

@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional
 
 from rastervision2.pipeline.config import (Config, register_config,
                                            ConfigError, Field)
@@ -9,7 +9,7 @@ from rastervision2.core.data.utils import color_to_triple
 class ClassConfig(Config):
     """Configures the class names that are being predicted."""
     names: List[str] = Field(..., description='Names of classes.')
-    colors: Union[None, List[Tuple], List[str]] = Field(
+    colors: Optional[List[str]] = Field(
         None, description=(
             'Colors used to visualize classes. If None, will use random colors.'))
     null_class: Optional[str] = Field(

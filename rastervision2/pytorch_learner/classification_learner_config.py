@@ -1,16 +1,17 @@
+from enum import Enum
+
 from rastervision2.pipeline.config import register_config
 from rastervision2.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig)
 
-data_formats = ['image_folder']
+
+class DataFormat(Enum):
+    image_folder = 1
 
 
 @register_config('classification_data')
 class ClassificationDataConfig(DataConfig):
-    data_format: str = 'image_folder'
-
-    def validate_data_format(self):
-        self.validate_list('data_format', data_formats)
+    data_format: DataFormat = DataFormat.image_folder
 
 
 @register_config('classification_model')

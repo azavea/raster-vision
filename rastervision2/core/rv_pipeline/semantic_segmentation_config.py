@@ -1,21 +1,24 @@
 from typing import (List, Optional)
+from enum import Enum
 
 from rastervision2.pipeline.config import register_config, Config, Field
 from rastervision2.core.rv_pipeline import RVPipelineConfig
 from rastervision2.core.data import SemanticSegmentationLabelStoreConfig
 from rastervision2.core.evaluation import SemanticSegmentationEvaluatorConfig
 
-window_methods = ['sliding', 'random_sample']
+
+class SemanticSegmentationWindowMethod(Enum):
+    sliding = 1
+    random_sample = 2
 
 
 @register_config('semantic_segmentation_chip_options')
 class SemanticSegmentationChipOptions(Config):
     """Chipping options for semantic segmentation."""
-    window_method: str = Field(
-        'sliding',
+    window_method: SemanticSegmentationWindowMethod = Field(
+        SemanticSegmentationWindowMethod.sliding,
         description=
-        ('Window method to use for chipping. Options are: random_sample, sliding.'
-         ))
+        ('Window method to use for chipping.'))
     target_class_ids: Optional[List[int]] = Field(
         None,
         description=
@@ -45,9 +48,6 @@ class SemanticSegmentationChipOptions(Config):
         description=
         ('Stride of windows across image. Defaults to half the chip size. Applies to '
          'the sliding_window method.'))
-
-    def validate_config(self):
-        self.validate_list('window_method', window_methods)
 
 
 @register_config('semantic_segmentation')

@@ -110,18 +110,6 @@ class Config(BaseModel):
                 raise ConfigError('{} is not a valid option for {}'.format(
                     val, field))
 
-    def validate_nonneg(self, field: str):
-        """Validate that value of field is non-negative.
-
-        Args:
-            field: name of field to validate
-
-        Raises:
-            ConfigError if field is invalid
-        """
-        if getattr(self, field) < 0:
-            raise ConfigError('{} cannot be negative'.format(field))
-
 
 def build_config(x: Union[dict, List[Union[dict, Config]], Config]
                  ) -> Union[Config, List[Config]]:  # noqa

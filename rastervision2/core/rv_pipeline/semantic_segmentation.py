@@ -5,6 +5,8 @@ import numpy as np
 
 from rastervision2.core.rv_pipeline.rv_pipeline import RVPipeline
 from rastervision2.core.box import Box
+from rastervision2.core.rv_pipeline.semantic_segmentation_config import (
+    SemanticSegmentationWindowMethod)
 
 log = logging.getLogger(__name__)
 
@@ -38,10 +40,10 @@ def get_train_windows(scene, class_config, chip_size,
             windows = filt_windows
         return windows
 
-    if co.window_method == 'sliding':
+    if co.window_method == SemanticSegmentationWindowMethod.sliding:
         stride = co.stride or int(round(chip_size / 2))
         windows = list(filter_windows((extent.get_windows(chip_size, stride))))
-    elif co.window_method == 'random_sample':
+    elif co.window_method == SemanticSegmentationWindowMethod.random_sample:
         target_class_ids = co.target_class_ids or list(
             range(len(class_config)))
         windows = []

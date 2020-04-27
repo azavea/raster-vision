@@ -3,6 +3,8 @@ import logging
 import numpy as np
 
 from rastervision2.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision2.core.rv_pipeline.object_detection_config import (
+    ObjectDetectionWindowMethod)
 from rastervision2.core.box import Box
 from rastervision2.core.data.label import ObjectDetectionLabels
 
@@ -92,7 +94,7 @@ def get_train_windows(scene, chip_opts, chip_size):
         return windows
 
     window_method = chip_opts.window_method
-    if window_method == 'sliding':
+    if window_method == ObjectDetectionWindowMethod.sliding:
         stride = chip_size
         return list(
             filter_windows((raster_source.get_extent().get_windows(

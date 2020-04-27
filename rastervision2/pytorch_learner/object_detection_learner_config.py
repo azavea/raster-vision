@@ -1,16 +1,17 @@
+from enum import Enum
+
 from rastervision2.pipeline.config import register_config
 from rastervision2.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig)
 
-data_formats = ['default']
+
+class DataFormat(Enum):
+    default = 1
 
 
 @register_config('object_detection_data')
 class ObjectDetectionDataConfig(DataConfig):
-    data_format: str = 'default'
-
-    def validate_data_format(self):
-        self.validate_list('data_format', data_formats)
+    data_format: DataFormat = DataFormat.default
 
 
 @register_config('object_detection_model')
