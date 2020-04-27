@@ -2,14 +2,18 @@ from typing import List, Optional
 
 from rastervision2.pipeline.config import (Config, register_config,
                                            ConfigError, Field)
+from rastervision2.core.data.utils import color_to_triple
 
 
 @register_config('class_config')
 class ClassConfig(Config):
     """Configures the class names that are being predicted."""
     names: List[str] = Field(..., description='Names of classes.')
-    colors: List[str] = Field(
-        ..., description='Colors used to visualize classes.')
+    colors: Optional[List[str]] = Field(
+        None,
+        description=(
+            'Colors used to visualize classes. If None, will use random colors.'
+        ))
     null_class: Optional[str] = Field(
         None,
         description=
@@ -32,13 +36,15 @@ class ClassConfig(Config):
         return dict([(self.colors[i], i) for i in range(len(self.colors))])
 
     def ensure_null_class(self):
+        """Add a null class if one isn't set."""
         if self.null_class is None:
             self.null_class = 'null'
             self.names.append('null')
             self.colors.append('black')
 
     def update(self, pipeline=None):
-        pass
+        if not self.colors:
+            self.colors = [color_to_triple() for _ in self.names]
 
     def validate_config(self):
         if self.null_class is not None and self.null_class not in self.names:

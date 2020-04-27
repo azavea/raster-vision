@@ -13,13 +13,15 @@ from rastervision2.pytorch_learner.learner import Learner
 from rastervision2.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
 from rastervision2.pytorch_learner.image_folder import (ImageFolder)
+from rastervision2.pytorch_learner.classification_learner_config import DataFormat
 
 log = logging.getLogger(__name__)
 
 
 class ClassificationLearner(Learner):
     def build_model(self):
-        model = getattr(models, self.cfg.model.backbone)(pretrained=True)
+        model = getattr(models,
+                        self.cfg.model.get_backbone_str())(pretrained=True)
         in_features = model.fc.in_features
         num_labels = len(self.cfg.data.class_names)
         model.fc = nn.Linear(in_features, num_labels)
@@ -29,7 +31,7 @@ class ClassificationLearner(Learner):
         cfg = self.cfg
         class_names = cfg.data.class_names
 
-        if cfg.data.data_format == 'image_folder':
+        if cfg.data.data_format == DataFormat.image_folder:
             data_dirs = self.unzip_data()
 
         transform, aug_transform = self.get_data_transforms()

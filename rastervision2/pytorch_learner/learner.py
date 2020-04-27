@@ -35,9 +35,10 @@ import numpy as np
 
 from rastervision2.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
-    download_if_needed, sync_from_dir, get_local_path, unzip, list_paths)
-from rastervision2.core.utils.misc import terminate_at_exit
-from rastervision2.pipeline.config import build_config
+    download_if_needed, sync_from_dir, get_local_path, unzip, list_paths,
+    str_to_file)
+from rastervision2.pipeline.utils import terminate_at_exit
+from rastervision2.pipeline.config import build_config, ConfigError
 from rastervision2.pytorch_learner.learner_config import LearnerConfig
 
 log = logging.getLogger(__name__)
@@ -119,7 +120,7 @@ class Learner(ABC):
             self.model_bundle_path = join(self.output_dir, model_bundle_fn)
             self.metric_names = self.build_metric_names()
 
-            json_to_file(self.cfg.dict(), self.config_path)
+            str_to_file(self.cfg.json(), self.config_path)
             self.load_init_weights()
             self.load_checkpoint()
             self.opt = self.build_optimizer()
@@ -281,6 +282,16 @@ class Learner(ABC):
         num_workers = self.cfg.data.num_workers
 
         train_ds, valid_ds, test_ds = self.get_datasets()
+        if len(train_ds) < batch_sz:
+            raise ConfigError(
+                'Training dataset has fewer elements than batch size.')
+        if len(valid_ds) < batch_sz:
+            raise ConfigError(
+                'Validation dataset has fewer elements than batch size.')
+        if len(test_ds) < batch_sz:
+            raise ConfigError(
+                'Test dataset has fewer elements than batch size.')
+
         if cfg.overfit_mode:
             train_ds = Subset(train_ds, range(batch_sz))
             valid_ds = train_ds

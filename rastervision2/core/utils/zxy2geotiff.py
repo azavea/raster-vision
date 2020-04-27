@@ -10,7 +10,7 @@ import pyproj
 
 from rastervision2.pipeline.file_system import (download_if_needed,
                                                 get_local_path, upload_or_copy)
-from rastervision.command.aux.cogify_command import create_cog
+from rastervision2.core.utils.cog import create_cog
 
 
 def lnglat2merc(lng, lat):

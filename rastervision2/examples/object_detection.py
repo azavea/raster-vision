@@ -55,12 +55,12 @@ def get_config(runner, test=False, output_dir='output'):
 
         label_source = ObjectDetectionLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=label_uri, default_class_id=0))
+                uri=label_uri, default_class_id=0, ignore_crs_field=True))
 
         return SceneConfig(
             id=id, raster_source=raster_source, label_source=label_source)
 
-    class_config = ClassConfig(names=['vehicle'], colors=['red'])
+    class_config = ClassConfig(names=['vehicle'])
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=[make_scene(id) for id in train_ids],
@@ -70,7 +70,7 @@ def get_config(runner, test=False, output_dir='output'):
         merge_thresh=0.5, score_thresh=0.9)
 
     backend = PyTorchObjectDetectionConfig(
-        model=ObjectDetectionModelConfig(backbone='resnet18'),
+        model=ObjectDetectionModelConfig(backbone=Backbone.resnet18),
         solver=SolverConfig(
             lr=1e-4,
             num_epochs=10,

@@ -8,6 +8,7 @@ from rastervision2.pipeline.config import register_config, Field
 @register_config('geojson_vector_source')
 class GeoJSONVectorSourceConfig(VectorSourceConfig):
     uri: str = Field(..., description='The URI of a GeoJSON file.')
+    ignore_crs_field: bool = False
 
     def build(self, class_config, crs_transformer):
         return GeoJSONVectorSource(self, class_config, crs_transformer)

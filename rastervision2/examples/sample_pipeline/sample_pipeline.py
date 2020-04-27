@@ -5,7 +5,7 @@ from rastervision2.pipeline.pipeline import Pipeline
 from rastervision2.pipeline.file_system import str_to_file, file_to_str
 from rastervision2.pipeline.pipeline_config import PipelineConfig
 from rastervision2.pipeline.config import register_config
-from rastervision2.core.utils.misc import split_into_groups
+from rastervision2.pipeline.utils import split_into_groups
 
 
 # Each Config needs to be registered with a type hint which is used for

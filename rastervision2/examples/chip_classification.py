@@ -30,8 +30,7 @@ def get_config(runner, test=False, output_dir='output'):
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
     log_tensorboard = True
     run_tensorboard = True
-    class_config = ClassConfig(
-        names=['no_building', 'building'], colors=['black', 'red'])
+    class_config = ClassConfig(names=['no_building', 'building'])
 
     if test:
         debug = True
@@ -66,7 +65,7 @@ def get_config(runner, test=False, output_dir='output'):
             channel_order=[0, 1, 2], uris=[raster_uri])
         label_source = ChipClassificationLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=label_uri, default_class_id=1),
+                uri=label_uri, default_class_id=1, ignore_crs_field=True),
             ioa_thresh=0.5,
             use_intersection_over_cell=False,
             pick_min_class_id=False,
@@ -86,7 +85,7 @@ def get_config(runner, test=False, output_dir='output'):
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    model = ClassificationModelConfig(backbone='resnet50')
+    model = ClassificationModelConfig(backbone=Backbone.resnet50)
     solver = SolverConfig(
         lr=1e-4, num_epochs=20, test_num_epochs=3, batch_sz=32, one_cycle=True)
     backend = PyTorchChipClassificationConfig(

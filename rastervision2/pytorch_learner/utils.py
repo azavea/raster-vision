@@ -1,6 +1,31 @@
+from typing import Tuple, Optional
+
 import torch
 from torch.utils.data import Dataset
 import numpy as np
+from PIL import ImageColor
+
+
+def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
+    """Given a PIL ImageColor string, return a triple of integers
+    representing the red, green, and blue values.
+
+    If color is None, return a random color.
+
+    Args:
+         color: A PIL ImageColor string
+
+    Returns:
+         An triple of integers
+
+    """
+    if color is None:
+        r = np.random.randint(0, 0x100)
+        g = np.random.randint(0, 0x100)
+        b = np.random.randint(0, 0x100)
+        return (r, g, b)
+    else:
+        return ImageColor.getrgb(color)
 
 
 def compute_conf_mat(out, y, num_labels):

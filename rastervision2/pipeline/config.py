@@ -65,7 +65,11 @@ class Config(BaseModel):
         pass
 
     def validate_config(self):
-        """Do application-specific validation after built-in Pydantic runs."""
+        """Validate fields that should be checked after update is called.
+
+        This is to complement the builtin validation that Pydantic performs at the time
+        of object construction.
+        """
         pass
 
     def recursive_validate_config(self):
@@ -105,18 +109,6 @@ class Config(BaseModel):
             if val not in valid_options:
                 raise ConfigError('{} is not a valid option for {}'.format(
                     val, field))
-
-    def validate_nonneg(self, field: str):
-        """Validate that value of field is non-negative.
-
-        Args:
-            field: name of field to validate
-
-        Raises:
-            ConfigError if field is invalid
-        """
-        if getattr(self, field) < 0:
-            raise ConfigError('{} cannot be negative'.format(field))
 
 
 def build_config(x: Union[dict, List[Union[dict, Config]], Config]

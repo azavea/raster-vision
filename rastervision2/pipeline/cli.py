@@ -8,8 +8,9 @@ from typing import List, Dict, Optional, Tuple
 import click
 
 from rastervision2.pipeline import (registry, rv_config)
-from rastervision2.pipeline.file_system import (file_to_json, json_to_file)
+from rastervision2.pipeline.file_system import (file_to_json, str_to_file)
 from rastervision2.pipeline.config import build_config
+from rastervision2.pipeline.pipeline_config import PipelineConfig
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +74,12 @@ def get_configs(cfg_module_path: str, runner: str, args: Dict[str, any]
     cfgs = _get_configs(runner, **args)
     if not isinstance(cfgs, list):
         cfgs = [cfgs]
+
+    for cfg in cfgs:
+        if not issubclass(type(cfg), PipelineConfig):
+            raise Exception(
+                ('All objects returned by get_configs in {} must be '
+                 'PipelineConfigs.').format(cfg_module_path))
     return cfgs
 
 
@@ -138,10 +145,13 @@ def run(runner: str, cfg_module: str, commands: List[str],
         cfg.update()
         cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
         cfg.recursive_validate_config()
+        # This is to run the validation again to check any fields that may have changed
+        # after the Config was constructed, possibly by the update method.
+        build_config(cfg.dict())
 
-        cfg_dict = cfg.dict()
+        cfg_json = cfg.json()
         cfg_json_uri = cfg.get_config_uri()
-        json_to_file(cfg_dict, cfg_json_uri)
+        str_to_file(cfg_json, cfg_json_uri)
 
         pipeline = cfg.build(tmp_dir)
         if not commands:
@@ -202,7 +212,8 @@ def _run_command(cfg_json_uri: str,
     '--num-splits',
     type=int,
     help='The number of processes to use for running splittable commands')
-@click.option('--runner', type=str, help='Name of runner to use')
+@click.option(
+    '--runner', type=str, help='Name of runner to use', default='inprocess')
 def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
                 num_splits: Optional[int], runner: str):
     """Run a single COMMAND using a serialized PipelineConfig in CFG_JSON_URI."""

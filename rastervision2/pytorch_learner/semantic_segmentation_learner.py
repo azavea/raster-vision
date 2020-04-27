@@ -14,9 +14,8 @@ from torchvision import models
 from PIL import Image
 
 from rastervision2.pytorch_learner.learner import Learner
-from rastervision2.pytorch_learner.utils import (compute_conf_mat_metrics,
-                                                 compute_conf_mat)
-from rastervision2.core.data.utils import color_to_triple
+from rastervision2.pytorch_learner.utils import (
+    compute_conf_mat_metrics, compute_conf_mat, color_to_triple)
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ class SemanticSegmentationLearner(Learner):
     def build_model(self):
         model = models.segmentation.segmentation._segm_resnet(
             'deeplabv3',
-            self.cfg.model.backbone,
+            self.cfg.model.get_backbone_str(),
             len(self.cfg.data.class_names),
             False,
             pretrained_backbone=True)
@@ -62,9 +61,7 @@ class SemanticSegmentationLearner(Learner):
     def get_datasets(self):
         cfg = self.cfg
 
-        if cfg.data.data_format == 'default':
-            data_dirs = self.unzip_data()
-
+        data_dirs = self.unzip_data()
         transform, aug_transform = self.get_data_transforms()
 
         train_ds, valid_ds, test_ds = [], [], []

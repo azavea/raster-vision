@@ -153,7 +153,7 @@ Other configurations are documented elsewhere:
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-Any INI file option can also be stated in the environment. Just prepend the section name to the setting name, e.g. ``RV_MODEL_DEFAULTS_URI``.
+Any profile file option can also be stated in the environment. Just prepend the section name to the setting name, e.g. ``export AWS_S3_REQUESTER_PAYS="False"``.
 
 In addition to those environment variables that match the INI file values, there are the following environment variable options:
 

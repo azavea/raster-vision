@@ -41,7 +41,7 @@ def submit_job(cmd: List[str],
 
     import boto3
     client = boto3.client('batch')
-    job_name = 'ffda-{}'.format(uuid.uuid4())
+    job_name = 'raster-vision-{}'.format(uuid.uuid4())
 
     cmd_list = cmd.split(' ')
     if debug:
