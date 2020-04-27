@@ -14,8 +14,8 @@ from torchvision import models
 from PIL import Image
 
 from rastervision2.pytorch_learner.learner import Learner
-from rastervision2.pytorch_learner.utils import (compute_conf_mat_metrics,
-                                                 compute_conf_mat, color_to_triple)
+from rastervision2.pytorch_learner.utils import (
+    compute_conf_mat_metrics, compute_conf_mat, color_to_triple)
 
 log = logging.getLogger(__name__)
 

@@ -20,7 +20,8 @@ log = logging.getLogger(__name__)
 
 class ClassificationLearner(Learner):
     def build_model(self):
-        model = getattr(models, self.cfg.model.get_backbone_str())(pretrained=True)
+        model = getattr(models,
+                        self.cfg.model.get_backbone_str())(pretrained=True)
         in_features = model.fc.in_features
         num_labels = len(self.cfg.data.class_names)
         model.fc = nn.Linear(in_features, num_labels)

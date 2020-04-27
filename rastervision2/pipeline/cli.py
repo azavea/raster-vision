@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Tuple
 import click
 
 from rastervision2.pipeline import (registry, rv_config)
-from rastervision2.pipeline.file_system import (file_to_json, json_to_file, str_to_file)
+from rastervision2.pipeline.file_system import (file_to_json, str_to_file)
 from rastervision2.pipeline.config import build_config
 from rastervision2.pipeline.pipeline_config import PipelineConfig
 
@@ -212,7 +212,8 @@ def _run_command(cfg_json_uri: str,
     '--num-splits',
     type=int,
     help='The number of processes to use for running splittable commands')
-@click.option('--runner', type=str, help='Name of runner to use', default='inprocess')
+@click.option(
+    '--runner', type=str, help='Name of runner to use', default='inprocess')
 def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
                 num_splits: Optional[int], runner: str):
     """Run a single COMMAND using a serialized PipelineConfig in CFG_JSON_URI."""

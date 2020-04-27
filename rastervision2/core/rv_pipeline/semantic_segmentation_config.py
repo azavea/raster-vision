@@ -17,8 +17,7 @@ class SemanticSegmentationChipOptions(Config):
     """Chipping options for semantic segmentation."""
     window_method: SemanticSegmentationWindowMethod = Field(
         SemanticSegmentationWindowMethod.sliding,
-        description=
-        ('Window method to use for chipping.'))
+        description=('Window method to use for chipping.'))
     target_class_ids: Optional[List[int]] = Field(
         None,
         description=

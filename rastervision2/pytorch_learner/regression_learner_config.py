@@ -22,8 +22,7 @@ class RegressionModelConfig(ModelConfig):
 
     def update(self, learner=None):
         if learner is not None and self.output_multiplier is None:
-            self.output_multiplier = [1.0] * len(
-                learner.data.class_names)
+            self.output_multiplier = [1.0] * len(learner.data.class_names)
 
 
 @register_config('regression_learner')

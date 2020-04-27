@@ -14,6 +14,7 @@ class LocalRunner(Runner):
 
     This is implemented by generating a Makefile and then running it using make.
     """
+
     def run(self, cfg_json_uri, pipeline, commands, num_splits=1):
         num_commands = 0
         for command in commands:
@@ -50,8 +51,9 @@ class LocalRunner(Runner):
                 makefile += '{}: '.format(curr_command_ind)
                 makefile += ' '.join([str(ci) for ci in prev_command_inds])
                 makefile += '\n'
-                invocation = ('python -m rastervision2.pipeline.cli run_command '
-                              '{} {}'.format(cfg_json_uri, command))
+                invocation = (
+                    'python -m rastervision2.pipeline.cli run_command '
+                    '{} {}'.format(cfg_json_uri, command))
                 makefile += '\t{}\n\n'.format(invocation)
                 curr_command_inds.append(curr_command_ind)
                 curr_command_ind += 1

@@ -10,8 +10,10 @@ class ClassConfig(Config):
     """Configures the class names that are being predicted."""
     names: List[str] = Field(..., description='Names of classes.')
     colors: Optional[List[str]] = Field(
-        None, description=(
-            'Colors used to visualize classes. If None, will use random colors.'))
+        None,
+        description=(
+            'Colors used to visualize classes. If None, will use random colors.'
+        ))
     null_class: Optional[str] = Field(
         None,
         description=

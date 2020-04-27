@@ -107,11 +107,11 @@ class Registry():
         if config:
             return config
         else:
-            raise RegistryError(
-                ('{} is not a registered config type hint.'
-                 'This may be because you forgot to use the register_config decorator, '
-                 'or forgot to import the module in the top-level __init__.py file for '
-                 'the plugin.').format(type_hint))
+            raise RegistryError((
+                '{} is not a registered config type hint.'
+                'This may be because you forgot to use the register_config decorator, '
+                'or forgot to import the module in the top-level __init__.py file for '
+                'the plugin.').format(type_hint))
 
     def get_config_upgraders(self, type_hint: str) -> List['Upgrader']:  # noqa
         """Get config upgraders associated with type_hint."""
@@ -139,8 +139,8 @@ class Registry():
 
     def load_builtins(self):
         """Add all builtin resources."""
-        from rastervision2.pipeline.runner import (
-            InProcessRunner, INPROCESS, LocalRunner, LOCAL)
+        from rastervision2.pipeline.runner import (InProcessRunner, INPROCESS,
+                                                   LocalRunner, LOCAL)
         from rastervision2.pipeline.file_system import (HttpFileSystem,
                                                         LocalFileSystem)
 

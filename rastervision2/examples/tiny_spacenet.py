@@ -63,7 +63,8 @@ def get_config(runner):
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
     chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.random_sample, chips_per_scene=10)
+        window_method=SemanticSegmentationWindowMethod.random_sample,
+        chips_per_scene=10)
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,

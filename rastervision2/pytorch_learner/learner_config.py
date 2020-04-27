@@ -9,7 +9,6 @@ from rastervision2.pipeline.config import (Config, register_config,
                                            ConfigError, Field)
 from rastervision2.pytorch_learner.utils import color_to_triple
 
-
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
     'Blur', 'RandomRotate90', 'HorizontalFlip', 'VerticalFlip', 'GaussianBlur',
@@ -43,7 +42,8 @@ Backbone = Enum('Backbone', ' '.join(backbones))
 class ModelConfig(Config):
     """Config related to models."""
     backbone: Backbone = Field(
-        Backbone.resnet18, description='The torchvision.models backbone to use.')
+        Backbone.resnet18,
+        description='The torchvision.models backbone to use.')
     init_weights: Optional[str] = Field(
         None,
         description=(

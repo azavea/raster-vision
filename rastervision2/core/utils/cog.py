@@ -1,7 +1,8 @@
 import os
 from subprocess import Popen
 
-from rastervision2.pipeline.file_system import (download_or_copy, upload_or_copy)
+from rastervision2.pipeline.file_system import (download_or_copy,
+                                                upload_or_copy)
 
 COGIFY = 'COGIFY'
 
