@@ -1,8 +1,9 @@
 from enum import Enum
 
-from rastervision2.pipeline.config import register_config
+from rastervision2.pipeline.config import register_config, Field, validator
 from rastervision2.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig)
+from rastervision2.pytorch_learner.learner_config import Backbone
 
 
 class DataFormat(Enum):
@@ -16,7 +17,18 @@ class SemanticSegmentationDataConfig(DataConfig):
 
 @register_config('semantic_segmentation_model')
 class SemanticSegmentationModelConfig(ModelConfig):
-    pass
+    backbone: Backbone = Field(
+        Backbone.resnet50,
+        description=(
+            'The torchvision.models backbone to use. At the moment only '
+            'resnet50 or resnet101 will work.'))
+
+    @validator('backbone')
+    def only_valid_backbones(cls, v):
+        if v not in [Backbone.resnet50, Backbone.resnet101]:
+            raise ValueError('The only valid backbones for DeepLabv3 are resnet50 '
+                             'and resnet101.')
+        return v
 
 
 @register_config('semantic_segmentation_learner')

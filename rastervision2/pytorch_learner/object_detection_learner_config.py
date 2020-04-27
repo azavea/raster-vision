@@ -1,8 +1,8 @@
 from enum import Enum
 
-from rastervision2.pipeline.config import register_config
+from rastervision2.pipeline.config import register_config, Field, validator
 from rastervision2.pytorch_learner.learner_config import (
-    LearnerConfig, DataConfig, ModelConfig)
+    LearnerConfig, DataConfig, ModelConfig, Backbone)
 
 
 class DataFormat(Enum):
@@ -16,7 +16,17 @@ class ObjectDetectionDataConfig(DataConfig):
 
 @register_config('object_detection_model')
 class ObjectDetectionModelConfig(ModelConfig):
-    pass
+    backbone: Backbone = Field(
+        Backbone.resnet50,
+        description=(
+            'The torchvision.models backbone to use. At the moment only '
+            'resnet50 will work.'))
+
+    @validator('backbone')
+    def only_valid_backbones(cls, v):
+        if v not in [Backbone.resnet50]:
+            raise ValueError('The only valid backbone for Faster-RCNN is resnet50.')
+        return v
 
 
 @register_config('object_detection_learner')
