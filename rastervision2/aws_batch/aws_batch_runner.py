@@ -1,6 +1,7 @@
-import uuid
 import logging
 import os
+import uuid
+from inspect import signature
 from typing import List, Optional
 
 from rastervision2.pipeline import rv_config
@@ -119,6 +120,15 @@ class AWSBatchRunner(Runner):
             job_def = None
 
         for command in commands:
+
+            # detect external command
+            if hasattr(pipeline, command):
+                fn = getattr(pipeline, command)
+                params = signature(fn).parameters
+                external = hasattr(fn, 'external') and len(params) == 0
+            else:
+                external = False
+
             # command-specific job queue, job definition
             if hasattr(pipeline, command):
                 fn = getattr(pipeline, command)
@@ -127,16 +137,23 @@ class AWSBatchRunner(Runner):
                 if hasattr(fn, 'job_queue'):
                     job_queue = fn.job_queue
 
-            cmd = [
-                'python', '-m', 'rastervision2.pipeline.cli run_command',
-                cfg_json_uri, command, '--runner', AWS_BATCH
-            ]
+            if not external:
+                cmd = [
+                    'python', '-m', 'rastervision2.pipeline.cli run_command',
+                    cfg_json_uri, command, '--runner', AWS_BATCH
+                ]
+            else:
+                cmd = fn()
+
             num_array_jobs = None
-            if command in pipeline.split_commands and num_splits > 1:
-                num_array_jobs = num_splits
-                if num_splits > 1:
-                    cmd += ['--num-splits', str(num_splits)]
             use_gpu = command in pipeline.gpu_commands
+
+            if not external:
+                if command in pipeline.split_commands and num_splits > 1:
+                    num_array_jobs = num_splits
+                    if num_splits > 1:
+                        cmd += ['--num-splits', str(num_splits)]
+
             cmd = ' '.join(cmd)
 
             job_id = submit_job(

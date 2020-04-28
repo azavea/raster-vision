@@ -12,6 +12,7 @@ Features
 - Added the possibility to deal with class imbalances through oversampling. `#868 <https://github.com/azavea/raster-vision/pull/868>`
 - Added trivial local profile `#903 <https://github.com/azavea/raster-vision/pull/903>`
 - Added ability to run external commands in `inprocess` runner `#912 <https://github.com/azavea/raster-vision/pull/912>`
+- Added ability to run external commands in `aws_batch` runner `#911 <https://github.com/azavea/raster-vision/pull/911>`
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
