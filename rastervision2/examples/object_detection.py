@@ -70,7 +70,7 @@ def get_config(runner, test=False, output_dir='output'):
         merge_thresh=0.5, score_thresh=0.9)
 
     backend = PyTorchObjectDetectionConfig(
-        model=ObjectDetectionModelConfig(backbone=Backbone.resnet18),
+        model=ObjectDetectionModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(
             lr=1e-4,
             num_epochs=10,

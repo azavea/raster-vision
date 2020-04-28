@@ -35,7 +35,44 @@ def get_torchvision_backbones():
 
 
 backbones = get_torchvision_backbones()
-Backbone = Enum('Backbone', ' '.join(backbones))
+
+
+class Backbone(Enum):
+    alexnet = 1
+    densenet121 = 2
+    densenet169 = 3
+    densenet201 = 4
+    densenet161 = 5
+    googlenet = 6
+    inception_v3 = 7
+    mnasnet0_5 = 8
+    mnasnet0_75 = 9
+    mnasnet1_0 = 10
+    mnasnet1_3 = 11
+    mobilenet_v2 = 12
+    resnet18 = 13
+    resnet34 = 14
+    resnet50 = 15
+    resnet101 = 16
+    resnet152 = 17
+    resnext50_32x4d = 18
+    resnext101_32x8d = 19
+    wide_resnet50_2 = 20
+    wide_resnet101_2 = 21
+    shufflenet_v2_x0_5 = 22
+    shufflenet_v2_x1_0 = 23
+    shufflenet_v2_x1_5 = 24
+    shufflenet_v2_x2_0 = 25
+    squeezenet1_0 = 26
+    squeezenet1_1 = 27
+    vgg11 = 28
+    vgg11_bn = 29
+    vgg13 = 30
+    vgg13_bn = 31
+    vgg16 = 32
+    vgg16_bn = 33
+    vgg19_bn = 34
+    vgg19 = 35
 
 
 @register_config('model')

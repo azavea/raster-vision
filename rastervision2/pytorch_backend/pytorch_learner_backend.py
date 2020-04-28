@@ -7,7 +7,8 @@ from rastervision2.core.backend import Backend, SampleWriter
 from rastervision2.core.data_sample import DataSample
 from rastervision2.core.data import ClassConfig
 from rastervision2.core.rv_pipeline import RVPipelineConfig
-from rastervision2.pytorch_learner import LearnerConfig, Learner
+from rastervision2.pytorch_learner.learner_config import LearnerConfig
+from rastervision2.pytorch_learner.learner import Learner
 
 
 class PyTorchLearnerSampleWriter(SampleWriter):

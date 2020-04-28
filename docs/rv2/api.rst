@@ -61,6 +61,10 @@ rv_pipeline
 
 .. autoclass:: rastervision2.core.rv_pipeline.ChipClassificationConfig
 
+.. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationWindowMethod
+    :members:
+    :undoc-members:
+
 .. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationChipOptions
 
 .. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationConfig
@@ -75,10 +79,18 @@ rastervision2.pytorch_backend
 rastervision2.pytorch_learner
 -------------------------------
 
+.. autoclass:: rastervision2.pytorch_learner.Backbone
+    :members:
+    :undoc-members:
+
 .. autoclass:: rastervision2.pytorch_learner.SolverConfig
 
 Classification
 ~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision2.pytorch_learner.ClassificationDataFormat
+    :members:
+    :undoc-members:
 
 .. autoclass:: rastervision2.pytorch_learner.ClassificationDataConfig
 
@@ -88,6 +100,10 @@ Classification
 
 Semantic Segmentation
 ~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision2.pytorch_learner.SemanticSegmentationDataFormat
+    :members:
+    :undoc-members:
 
 .. autoclass:: rastervision2.pytorch_learner.SemanticSegmentationDataConfig
 

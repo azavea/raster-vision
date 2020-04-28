@@ -94,7 +94,7 @@ def get_train_windows(scene, chip_opts, chip_size):
         return windows
 
     window_method = chip_opts.window_method
-    if window_method == ObjectDetectionWindowMethod.sliding:
+    if window_method == ObjectDetectionWindowMethod.chip:
         stride = chip_size
         return list(
             filter_windows((raster_source.get_extent().get_windows(

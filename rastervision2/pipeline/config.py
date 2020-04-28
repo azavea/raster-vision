@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from pydantic import BaseModel, create_model, Field  # noqa
+from pydantic import BaseModel, create_model, Field, validator  # noqa
 from typing_extensions import Literal
 
 from rastervision2.pipeline import registry
@@ -199,6 +199,7 @@ def register_config(type_hint: str, version: int = 0, upgraders=None):
     version. This is useful for backward compatibility.
     3) adds a constant `type_hint` field to the Config which is set to
     type_hint
+    4) generates PyDocs based on Pydantic fields
 
     Args:
         type_hint: a type hint used to deserialize Configs. Needs to be unique
