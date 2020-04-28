@@ -5,13 +5,13 @@ from rastervision2.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig, Backbone)
 
 
-class DataFormat(Enum):
+class ObjectDetectionDataFormat(Enum):
     default = 1
 
 
 @register_config('object_detection_data')
 class ObjectDetectionDataConfig(DataConfig):
-    data_format: DataFormat = DataFormat.default
+    data_format: ObjectDetectionDataFormat = ObjectDetectionDataFormat.default
 
 
 @register_config('object_detection_model')

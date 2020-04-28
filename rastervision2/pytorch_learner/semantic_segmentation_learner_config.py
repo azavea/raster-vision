@@ -6,13 +6,13 @@ from rastervision2.pytorch_learner.learner_config import (
 from rastervision2.pytorch_learner.learner_config import Backbone
 
 
-class DataFormat(Enum):
+class SemanticSegmentationDataFormat(Enum):
     default = 1
 
 
 @register_config('semantic_segmentation_data')
 class SemanticSegmentationDataConfig(DataConfig):
-    data_format: DataFormat = DataFormat.default
+    data_format: SemanticSegmentationDataFormat = SemanticSegmentationDataFormat.default
 
 
 @register_config('semantic_segmentation_model')

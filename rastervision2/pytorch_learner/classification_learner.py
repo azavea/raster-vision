@@ -13,7 +13,8 @@ from rastervision2.pytorch_learner.learner import Learner
 from rastervision2.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
 from rastervision2.pytorch_learner.image_folder import (ImageFolder)
-from rastervision2.pytorch_learner.classification_learner_config import DataFormat
+from rastervision2.pytorch_learner.classification_learner_config import (
+    ClassificationDataFormat)
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class ClassificationLearner(Learner):
         cfg = self.cfg
         class_names = cfg.data.class_names
 
-        if cfg.data.data_format == DataFormat.image_folder:
+        if cfg.data.data_format == ClassificationDataFormat.image_folder:
             data_dirs = self.unzip_data()
 
         transform, aug_transform = self.get_data_transforms()

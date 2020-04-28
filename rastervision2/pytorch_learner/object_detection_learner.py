@@ -11,7 +11,8 @@ from albumentations import BboxParams
 from rastervision2.pytorch_learner.learner import Learner
 from rastervision2.pytorch_learner.object_detection_utils import (
     MyFasterRCNN, CocoDataset, compute_coco_eval, collate_fn, plot_xyz)
-from rastervision2.pytorch_learner.object_detection_learner_config import DataFormat
+from rastervision2.pytorch_learner.object_detection_learner_config import (
+    ObjectDetectionDataFormat)
 
 log = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class ObjectDetectionLearner(Learner):
     def get_datasets(self):
         cfg = self.cfg
 
-        if cfg.data.data_format == DataFormat.default:
+        if cfg.data.data_format == ObjectDetectionDataFormat.default:
             data_dirs = self.unzip_data()
 
         transform, aug_transform = self.get_data_transforms()

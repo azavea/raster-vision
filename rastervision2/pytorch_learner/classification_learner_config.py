@@ -5,13 +5,13 @@ from rastervision2.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig)
 
 
-class DataFormat(Enum):
+class ClassificationDataFormat(Enum):
     image_folder = 1
 
 
 @register_config('classification_data')
 class ClassificationDataConfig(DataConfig):
-    data_format: DataFormat = DataFormat.image_folder
+    data_format: ClassificationDataFormat = ClassificationDataFormat.image_folder
 
 
 @register_config('classification_model')
