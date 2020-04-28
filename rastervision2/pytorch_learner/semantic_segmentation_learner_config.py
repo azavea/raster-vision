@@ -26,8 +26,9 @@ class SemanticSegmentationModelConfig(ModelConfig):
     @validator('backbone')
     def only_valid_backbones(cls, v):
         if v not in [Backbone.resnet50, Backbone.resnet101]:
-            raise ValueError('The only valid backbones for DeepLabv3 are resnet50 '
-                             'and resnet101.')
+            raise ValueError(
+                'The only valid backbones for DeepLabv3 are resnet50 '
+                'and resnet101.')
         return v
 
 

@@ -25,7 +25,8 @@ class ObjectDetectionModelConfig(ModelConfig):
     @validator('backbone')
     def only_valid_backbones(cls, v):
         if v not in [Backbone.resnet50]:
-            raise ValueError('The only valid backbone for Faster-RCNN is resnet50.')
+            raise ValueError(
+                'The only valid backbone for Faster-RCNN is resnet50.')
         return v
 
 
