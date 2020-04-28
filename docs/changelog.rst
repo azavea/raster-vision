@@ -11,6 +11,7 @@ Features
 - Updated the Quickstart doc with pytorch docker image and model `#863 <https://github.com/azavea/raster-vision/pull/863>`__
 - Added the possibility to deal with class imbalances through oversampling. `#868 <https://github.com/azavea/raster-vision/pull/868>`
 - Added trivial local profile `#903 <https://github.com/azavea/raster-vision/pull/903>`
+- Added ability to run external commands in `inprocess` runner `#912 <https://github.com/azavea/raster-vision/pull/912>`
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
