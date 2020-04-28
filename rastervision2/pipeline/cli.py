@@ -56,7 +56,7 @@ def get_configs(cfg_module_path: str, runner: str, args: Dict[str, any]
     """
     if cfg_module_path.endswith('.py'):
         # From https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
-        spec = importlib.util.spec_from_file_location('module.name',
+        spec = importlib.util.spec_from_file_location('rastervision2.pipeline',
                                                       cfg_module_path)
         cfg_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cfg_module)
