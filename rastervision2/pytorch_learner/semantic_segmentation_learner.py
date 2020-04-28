@@ -51,12 +51,13 @@ class SemanticSegmentationDataset(Dataset):
 class SemanticSegmentationLearner(Learner):
     def build_model(self):
         # TODO support FCN option
+        pretrained = self.cfg.model.pretrained
         model = models.segmentation.segmentation._segm_resnet(
             'deeplabv3',
             self.cfg.model.get_backbone_str(),
             len(self.cfg.data.class_names),
             False,
-            pretrained_backbone=True)
+            pretrained_backbone=pretrained)
         return model
 
     def get_datasets(self):

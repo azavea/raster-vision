@@ -20,11 +20,12 @@ log = logging.getLogger(__name__)
 class ObjectDetectionLearner(Learner):
     def build_model(self):
         # TODO we shouldn't need to pass the image size here
+        pretrained = self.cfg.model.pretrained
         model = MyFasterRCNN(
             self.cfg.model.get_backbone_str(),
             len(self.cfg.data.class_names),
             self.cfg.data.img_sz,
-            pretrained=True)
+            pretrained=pretrained)
         return model
 
     def build_metric_names(self):

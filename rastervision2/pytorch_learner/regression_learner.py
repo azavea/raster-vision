@@ -69,6 +69,7 @@ class RegressionModel(nn.Module):
 
 class RegressionLearner(Learner):
     def build_model(self):
+        pretrained = self.cfg.model.pretrained
         backbone = self.cfg.model.get_backbone_str()
         out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
@@ -76,7 +77,7 @@ class RegressionLearner(Learner):
             for l in self.cfg.data.pos_class_names
         ]
         model = RegressionModel(
-            backbone, out_features, pos_out_inds=pos_out_inds)
+            backbone, out_features, pretrained=pretrained, pos_out_inds=pos_out_inds)
         return model
 
     def get_datasets(self):
