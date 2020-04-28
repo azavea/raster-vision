@@ -1,10 +1,11 @@
-from subprocess import Popen
 import sys
+from inspect import signature
 from os.path import dirname, join
+from subprocess import Popen
 
-from rastervision2.pipeline.runner.runner import Runner
 from rastervision2.pipeline.file_system import str_to_file
-from rastervision2.pipeline.utils import (terminate_at_exit)
+from rastervision2.pipeline.runner.runner import Runner
+from rastervision2.pipeline.utils import terminate_at_exit
 
 LOCAL = 'local'
 
@@ -34,8 +35,17 @@ class LocalRunner(Runner):
         prev_command_inds = []
         curr_command_ind = 0
         for command in commands:
+
+            # detect external command
+            if hasattr(pipeline, command):
+                fn = getattr(pipeline, command)
+                params = signature(fn).parameters
+                external = hasattr(fn, 'external') and len(params) == 0
+            else:
+                external = False
+
             curr_command_inds = []
-            if command in pipeline.split_commands and num_splits > 1:
+            if not external and command in pipeline.split_commands and num_splits > 1:
                 for split_ind in range(num_splits):
                     makefile += '{}: '.format(curr_command_ind)
                     makefile += ' '.join([str(ci) for ci in prev_command_inds])
@@ -51,9 +61,12 @@ class LocalRunner(Runner):
                 makefile += '{}: '.format(curr_command_ind)
                 makefile += ' '.join([str(ci) for ci in prev_command_inds])
                 makefile += '\n'
-                invocation = (
-                    'python -m rastervision2.pipeline.cli run_command '
-                    '{} {}'.format(cfg_json_uri, command))
+                if not external:
+                    invocation = (
+                        'python -m rastervision2.pipeline.cli run_command '
+                        '{} {}'.format(cfg_json_uri, command))
+                else:
+                    invocation = (' '.join(fn()))
                 makefile += '\t{}\n\n'.format(invocation)
                 curr_command_inds.append(curr_command_ind)
                 curr_command_ind += 1
