@@ -1,12 +1,15 @@
+from datetime import datetime
 import os
-import stat
-import time
 from pathlib import Path
+import time
+from typing import (List, Optional)
+from urllib.parse import urlparse
 
-from rastervision2.pipeline.file_system import (FileSystem, NotReadableError, NotWritableError)
+from rastervision2.pipeline.file_system import FileSystem
 
 from osgeo import gdal
-from rasterio.path import (Path, UnparsedPath, parse_path)
+from rasterio.path import (UnparsedPath, parse_path)
+
 
 class VsiFileSystem(FileSystem):
     """A FileSystem to access files over any protocol supported by GDAL's VSI"""
@@ -19,9 +22,9 @@ class VsiFileSystem(FileSystem):
         archive_content = uri.rfind('!')
         if archive_content == -1:
             # regular URI
-            if scheme=='http' or scheme=='https' or scheme=='ftp':
+            if scheme == 'http' or scheme == 'https' or scheme == 'ftp':
                 return '/vsicurl/{}'.format(uri)
-            elif scheme=='s3' or scheme=='gs':
+            elif scheme == 's3' or scheme == 'gs':
                 return '/vsi{}/{}{}'.format(scheme, parsed.netloc, parsed.path)
             else:
                 # assume file schema
@@ -30,11 +33,16 @@ class VsiFileSystem(FileSystem):
             archive_target = uri.find(':')
             assert archive_target != -1
 
-            if scheme in ['zip','tar','gzip']:
-                return '/vsi{}/{}/{}'.format(scheme, VsiFileSystem.uri_to_vsi_path(uri[archive_target+1:archive_content]), uri[archive_content+1:])
+            if scheme in ['zip', 'tar', 'gzip']:
+                return '/vsi{}/{}/{}'.format(
+                    scheme,
+                    VsiFileSystem.uri_to_vsi_path(
+                        uri[archive_target + 1:archive_content]),
+                    uri[archive_content + 1:])
             else:
-                raise ValueError('Attempted access into archive with unsupported scheme "{}"'.format(scheme))
-
+                raise ValueError(
+                    'Attempted access into archive with unsupported scheme "{}"'.format(
+                        scheme))
 
     @staticmethod
     def matches_uri(uri: str, mode: str) -> bool:
@@ -56,13 +64,11 @@ class VsiFileSystem(FileSystem):
                 else:
                     return False
             elif mode == 'w':
-                return True # this may fail for vsicurl?
+                return True  # this may fail for vsicurl?
             else:
                 raise ValueError('Unrecognized mode string: {}'.format(mode))
 
-
     @staticmethod
-    @abstractmethod
     def file_exists(uri: str, include_dir: bool = True) -> bool:
         """Check if a file exists.
 
@@ -80,11 +86,6 @@ class VsiFileSystem(FileSystem):
             return file_stats and not file_stats.IsDirectory()
 
     @staticmethod
-    def read_str(uri: str) -> str:
-        """Read contents of URI to a string."""
-        read_bytes(uri).decode("UTF-8")
-
-    @staticmethod
     def read_bytes_vsi(vsipath: str) -> bytes:
         try:
             handle = gdal.VSIFOpenL(vsipath, 'rb')
@@ -100,9 +101,9 @@ class VsiFileSystem(FileSystem):
         return VsiFileSystem.read_bytes_vsi(vsipath)
 
     @staticmethod
-    def write_str(uri: str, data: str):
-        """Write string in data to URI."""
-        write_bytes(uri, data.encode())
+    def read_str(uri: str) -> str:
+        """Read contents of URI to a string."""
+        VsiFileSystem.read_bytes(uri).decode("UTF-8")
 
     @staticmethod
     def write_bytes_vsi(vsipath: str, data: bytes):
@@ -117,6 +118,11 @@ class VsiFileSystem(FileSystem):
         """Write bytes in data to URI."""
         vsipath = VsiFileSystem.uri_to_vsi_path(uri)
         VsiFileSystem.write_bytes_vsi(vsipath, data)
+
+    @staticmethod
+    def write_str(uri: str, data: str):
+        """Write string in data to URI."""
+        VsiFileSystem.write_bytes(uri, data.encode())
 
     @staticmethod
     def sync_to_dir(src_dir: str, dst_dir_uri: str, delete: bool = False):
@@ -150,7 +156,8 @@ class VsiFileSystem(FileSystem):
                 gdal.Unlink(vsipath)
 
         src = Path(src_dir)
-        assert src.exists() and src.is_dir(), "Local source ({}) must be a directory".format(src_dir)
+        assert src.exists() and src.is_dir(), \
+            "Local source ({}) must be a directory".format(src_dir)
 
         work(src, vsipath)
 
@@ -177,7 +184,8 @@ class VsiFileSystem(FileSystem):
                 if gdal.VSIStatL(item_vsi_src).IsDirectory():
                     work(item_vsi_src, target)
                 else:
-                    assert not target.exists() or delete, "Target location may not exist if delete=False"
+                    assert not target.exists() or delete, \
+                        "Target location must not exist if delete=False"
                     VsiFileSystem.copy_from_vsi(item_vsi_src, str(target))
 
         vsipath = VsiFileSystem.uri_to_vi_path(src_dir_uri)
@@ -198,13 +206,13 @@ class VsiFileSystem(FileSystem):
         """
         with open(src_path, 'rb') as f:
             buf = f.read()
-        write_bytes(dst_uri, buf)
+        VsiFileSystem.write_bytes(dst_uri, buf)
 
     @staticmethod
     def copy_to_vsi(src_path: str, dst_vsi: str):
         with open(src_path, 'rb') as f:
             buf = f.read()
-        write_bytes_vsi(dst_vsi, buf)
+        VsiFileSystem.write_bytes_vsi(dst_vsi, buf)
 
     @staticmethod
     def copy_from(src_uri: str, dst_path: str):
@@ -216,13 +224,13 @@ class VsiFileSystem(FileSystem):
             src_uri: uri of source that can be copied from by this FileSystem
             dst_path: local path to destination file
         """
-        buf = read_bytes(src_uri)
+        buf = VsiFileSystem.read_bytes(src_uri)
         with open(dst_path, 'wb') as f:
             f.write(buf)
 
     @staticmethod
     def copy_from_vsi(src_vsi: str, dst_path: str):
-        buf = read_bytes_vsi(src_vsi)
+        buf = VsiFileSystem.read_bytes_vsi(src_vsi)
         with open(dst_path, 'wb') as f:
             f.write(buf)
 
@@ -267,6 +275,6 @@ class VsiFileSystem(FileSystem):
         vsipath = VsiFileSystem.uri_to_vsi_path(uri)
         items = gdal.ReadDir(vsipath)
         ext = ext if ext else ''
-        return [os.path.join(vsipath, item) # This may not work for windows paths
+        return [os.path.join(vsipath, item)  # This may not work for windows paths
                 for item
                 in filter(lambda x: x.endswith(ext), items)]
