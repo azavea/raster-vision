@@ -6,14 +6,10 @@ RUN apt-get update && apt-get install -y software-properties-common python-softw
 RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get update && \
     apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
-                       gdal-bin=2.2.* \
                        jq=1.5* \
                        build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
                        libopencv-dev=2.4.* python-opencv=2.4.* unzip curl && \
     apt-get autoremove && apt-get autoclean && apt-get clean
-
-# Setup GDAL_DATA directory, rasterio needs it.
-ENV GDAL_DATA=/usr/share/gdal/2.2/
 
 # See https://github.com/mapbox/rasterio/issues/1289
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
@@ -32,7 +28,10 @@ RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
-RUN conda install -y python=3.6
+RUN conda install -y python=3.6 && conda install -c conda-forge -y gdal=3.0.4
+
+# Setup GDAL_DATA directory, rasterio needs it.
+ENV GDAL_DATA=/opt/conda/share/gdal/
 
 WORKDIR /opt/src/
 ENV PYTHONPATH=/opt/src:$PYTHONPATH
