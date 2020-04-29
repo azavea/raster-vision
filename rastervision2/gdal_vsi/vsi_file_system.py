@@ -112,6 +112,11 @@ class VsiFileSystem(FileSystem):
         VsiFileSystem.write_bytes(uri, data.encode())
 
     @staticmethod
+    def write_str(uri: str, data: str):
+        """Write string in data to URI."""
+        VsiFileSystem.write_bytes(uri, data.encode())
+
+    @staticmethod
     def sync_to_dir(src_dir: str, dst_dir_uri: str, delete: bool = False):
         """Syncs a local source directory to a destination directory.
 
