@@ -35,7 +35,9 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         False,
         description='If True, infers a grid of cells based on the cell_sz.')
     cell_sz: Optional[int] = Field(
-        None, description='Size of a cell to use in pixels.')
+        None, description=(
+            'Size of a cell to use in pixels. If None, and this Config is part '
+            'of an RVPipeline, this field will be set from RVPipeline.train_chip_sz.'))
 
     def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
         vector_source = self.vector_source.build(class_config, crs_transformer)
