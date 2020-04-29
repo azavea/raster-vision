@@ -17,7 +17,7 @@ class VsiFileSystem(FileSystem):
     @staticmethod
     def uri_to_vsi_path(uri: str) -> str:
         parsed = urlparse(uri)
-        scheme = parsed.scheme
+        scheme = parsed.scheme.split('+')[0]
 
         archive_content = uri.rfind('!')
         if archive_content == -1:
@@ -30,7 +30,7 @@ class VsiFileSystem(FileSystem):
                 # assume file schema
                 return os.path.abspath(os.path.join(parsed.netloc, parsed.path))
         else:
-            archive_target = uri.find(':')
+            archive_target = uri.find('+')
             assert archive_target != -1
 
             if scheme in ['zip', 'tar', 'gzip']:
@@ -56,15 +56,14 @@ class VsiFileSystem(FileSystem):
         if isinstance(parsed, UnparsedPath):
             return False
         else:
-            vsi_path = VsiFileSystem.uri_to_vsi_path(uri)
-            file_stats = gdal.VSIStatL(vsi_path)
+            try:
+                vsi_path = VsiFileSystem.uri_to_vsi_path(uri)
+            except:
+                return False
             if mode == 'r':
-                if file_stats:
-                    return not file_stats.IsDirectory()
-                else:
-                    return False
+                return True
             elif mode == 'w':
-                return True  # this may fail for vsicurl?
+                return '/vsicurl/' not in vsi_path
             else:
                 raise ValueError('Unrecognized mode string: {}'.format(mode))
 
@@ -81,9 +80,9 @@ class VsiFileSystem(FileSystem):
         vsi_path = VsiFileSystem.uri_to_vsi_path(uri)
         file_stats = gdal.VSIStatL(vsi_path)
         if include_dir:
-            True if file_stats else False
+            return True if file_stats else False
         else:
-            return file_stats and not file_stats.IsDirectory()
+            return True if file_stats and not file_stats.IsDirectory() else False
 
     @staticmethod
     def read_bytes_vsi(vsipath: str) -> bytes:
