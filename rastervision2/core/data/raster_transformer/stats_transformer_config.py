@@ -12,9 +12,10 @@ from rastervision2.core.raster_stats import RasterStats
 @register_config('stats_transformer')
 class StatsTransformerConfig(RasterTransformerConfig):
     stats_uri: Optional[str] = Field(
-        None, description=(
-            'The URI of the output of the StatsAnalyzer. If None, and this Config is '
-            'inside an RVPipeline, then this field will be auto-generated.'))
+        None,
+        description=
+        ('The URI of the output of the StatsAnalyzer. If None, and this Config is '
+         'inside an RVPipeline, then this field will be auto-generated.'))
 
     def update(self, pipeline=None, scene=None):
         if pipeline is not None:

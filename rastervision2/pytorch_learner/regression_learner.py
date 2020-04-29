@@ -77,7 +77,10 @@ class RegressionLearner(Learner):
             for l in self.cfg.data.pos_class_names
         ]
         model = RegressionModel(
-            backbone, out_features, pretrained=pretrained, pos_out_inds=pos_out_inds)
+            backbone,
+            out_features,
+            pretrained=pretrained,
+            pos_out_inds=pos_out_inds)
         return model
 
     def get_datasets(self):

@@ -82,13 +82,14 @@ class ModelConfig(Config):
         Backbone.resnet18,
         description='The torchvision.models backbone to use.')
     pretrained: bool = Field(
-        True, description=(
-            'If True, use ImageNet weights. If False, use random initialization.'))
+        True,
+        description=(
+            'If True, use ImageNet weights. If False, use random initialization.'
+        ))
     init_weights: Optional[str] = Field(
         None,
-        description=(
-            'URI of PyTorch model weights used to initialize model. '
-            'If set, this supercedes the pretrained option.'))
+        description=('URI of PyTorch model weights used to initialize model. '
+                     'If set, this supercedes the pretrained option.'))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass

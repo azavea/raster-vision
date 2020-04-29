@@ -7,9 +7,11 @@ from rastervision2.core.analyzer import AnalyzerConfig
 
 @register_config('stats_analyzer')
 class StatsAnalyzerConfig(AnalyzerConfig):
-    output_uri: Optional[str] = Field(None, description=(
-        'URI for output. If None and this is part of an RVPipeline, this is '
-        'auto-generated.'))
+    output_uri: Optional[str] = Field(
+        None,
+        description=(
+            'URI for output. If None and this is part of an RVPipeline, this is '
+            'auto-generated.'))
     sample_prob: float = Field(
         0.1,
         description=(

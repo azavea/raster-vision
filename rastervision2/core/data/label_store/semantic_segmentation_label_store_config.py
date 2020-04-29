@@ -8,9 +8,11 @@ from rastervision2.pipeline.config import register_config, Config, Field
 
 @register_config('vector_output')
 class VectorOutputConfig(Config):
-    uri: Optional[str] = Field(None, description=(
-        'URI of vector output. If None, and this Config is part of a SceneConfig and '
-        'RVPipeline, this field will be auto-generated.'))
+    uri: Optional[str] = Field(
+        None,
+        description=
+        ('URI of vector output. If None, and this Config is part of a SceneConfig and '
+         'RVPipeline, this field will be auto-generated.'))
     class_id: int = Field(
         ...,
         description='The prediction class that is to turned into vectors.')
@@ -71,7 +73,8 @@ class BuildingVectorOutputConfig(VectorOutputConfig):
 @register_config('semantic_segmentation_label_store')
 class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
     uri: Optional[str] = Field(
-        None, description=(
+        None,
+        description=(
             'URI of file with predictions. If None, and this Config is part of '
             'a SceneConfig inside an RVPipelineConfig, this fiend will be '
             'auto-generated.'))

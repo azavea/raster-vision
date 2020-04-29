@@ -24,13 +24,15 @@ class RVPipelineConfig(PipelineConfig):
     backend: BackendConfig = Field(
         ..., description='Backend to use for interfacing with ML library.')
     evaluators: List[EvaluatorConfig] = Field(
-        [], description=(
+        [],
+        description=(
             'Evaluators to run during analyzer command. If list is empty '
             'the default evaluator is added.'))
     analyzers: List[AnalyzerConfig] = Field(
-        [], description=(
-            'Analyzers to run during analyzer command. A StatsAnalyzer will be added '
-            'automatically if any scenes have a RasterTransformer.'))
+        [],
+        description=
+        ('Analyzers to run during analyzer command. A StatsAnalyzer will be added '
+         'automatically if any scenes have a RasterTransformer.'))
 
     debug: bool = Field(False, description='If True, use debug mode.')
     train_chip_sz: int = Field(
@@ -41,17 +43,27 @@ class RVPipelineConfig(PipelineConfig):
         8, description='Batch size to use during prediction.')
 
     analyze_uri: Optional[str] = Field(
-        None, description='URI for output of analyze. If None, will be auto-generated.')
+        None,
+        description=
+        'URI for output of analyze. If None, will be auto-generated.')
     chip_uri: Optional[str] = Field(
-        None, description='URI for output of chip. If None, will be auto-generated.')
+        None,
+        description='URI for output of chip. If None, will be auto-generated.')
     train_uri: Optional[str] = Field(
-        None, description='URI for output of train. If None, will be auto-generated.')
+        None,
+        description='URI for output of train. If None, will be auto-generated.'
+    )
     predict_uri: Optional[str] = Field(
-        None, description='URI for output of predict. If None, will be auto-generated.')
+        None,
+        description=
+        'URI for output of predict. If None, will be auto-generated.')
     eval_uri: Optional[str] = Field(
-        None, description='URI for output of eval. If None, will be auto-generated.')
+        None,
+        description='URI for output of eval. If None, will be auto-generated.')
     bundle_uri: Optional[str] = Field(
-        None, description='URI for output of bundle. If None, will be auto-generated.')
+        None,
+        description='URI for output of bundle. If None, will be auto-generated.'
+    )
 
     def update(self):
         super().update()

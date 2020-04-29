@@ -9,9 +9,11 @@ from rastervision2.pipeline.config import register_config, Field
 @register_config('chip_classification_geojson_store')
 class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
     uri: Optional[str] = Field(
-        None, description=(
-            'URI of GeoJSON file with predictions. If None, and this Config is part of '
-            'a SceneConfig inside an RVPipelineConfig, it will be auto-generated.'))
+        None,
+        description=
+        ('URI of GeoJSON file with predictions. If None, and this Config is part of '
+         'a SceneConfig inside an RVPipelineConfig, it will be auto-generated.'
+         ))
 
     def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
         return ChipClassificationGeoJSONStore(self.uri, class_config,
