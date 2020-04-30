@@ -14,6 +14,7 @@ Features
 - Added ability to run external commands in `inprocess` runner `#912 <https://github.com/azavea/raster-vision/pull/912>`
 - Added ability to run external commands in `aws_batch` runner `#911 <https://github.com/azavea/raster-vision/pull/911>`
 - Added ability to run external commands in `local` runner `#913 <https://github.com/azavea/raster-vision/pull/913>`
+- Added ability to use internal commands in derivative custom pipelines `#914 <https://github.com/azavea/raster-vision/pull/914>`
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
