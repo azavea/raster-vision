@@ -109,15 +109,15 @@ class AWSBatchRunner(Runner):
 
         # pipeline-specific job queue
         if hasattr(pipeline, 'job_queue'):
-            job_queue = pipeline.job_queue
+            pipeline_job_queue = pipeline.job_queue
         else:
-            job_queue = None
+            pipeline_job_queue = None
 
         # pipeline-specific job definition
         if hasattr(pipeline, 'job_def'):
-            job_def = pipeline.job_def
+            pipeline_job_def = pipeline.job_def
         else:
-            job_def = None
+            pipeline_job_def = None
 
         for command in commands:
 
@@ -130,6 +130,8 @@ class AWSBatchRunner(Runner):
                 external = False
 
             # command-specific job queue, job definition
+            job_def = pipeline_job_def
+            job_queue = pipeline_job_queue
             if hasattr(pipeline, command):
                 fn = getattr(pipeline, command)
                 if hasattr(fn, 'job_def'):
@@ -164,6 +166,9 @@ class AWSBatchRunner(Runner):
                 job_queue=job_queue,
                 job_def=job_def)
             parent_job_ids = [job_id]
+
+            job_queue = None
+            job_def = None
 
     def get_split_ind(self):
         return int(os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX', 0))
