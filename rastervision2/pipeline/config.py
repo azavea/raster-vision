@@ -131,7 +131,19 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
             new_x[k] = build_config(v)
         type_hint = new_x.get('type_hint')
         if type_hint is not None:
-            config_cls = registry.get_config(type_hint)
+            try:
+                # Try to use the given type hint
+                config_cls = registry.get_config(type_hint)
+            except:
+                # If that fails, downgrade to fallback type
+                type_hint = new_x.get('fallback_type_hint')
+                config_cls = registry.get_config(type_hint)
+                new_x['type_hint'] = type_hint
+                permitted_keys = config_cls().__dict__.keys()
+                current_keys = set(new_x.keys())
+                for k in current_keys:
+                    if k not in permitted_keys:
+                        del new_x[k]
             new_x = config_cls(**new_x)
         return new_x
     elif isinstance(x, list):
