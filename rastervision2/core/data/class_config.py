@@ -11,15 +11,18 @@ class ClassConfig(Config):
     names: List[str] = Field(..., description='Names of classes.')
     colors: Optional[List[Union[Tuple, str]]] = Field(
         None,
-        description=(
-            'Colors used to visualize classes. Can be color strings accepted by '
-            'matplotlib or RGB tuples. If None, will use random colors.'))
+        description=
+        ('Colors used to visualize classes. Can be color strings accepted by '
+         'matplotlib or RGB tuples. If None, a random color will be auto-generated '
+         'for each class.'))
     null_class: Optional[str] = Field(
         None,
         description=
         ('Optional name of class in `names` to use as the null class. This is used in '
          'semantic segmentation to represent the label for imagery pixels that are '
-         'NODATA or that are missing a label.'))
+         'NODATA or that are missing a label. If None, and this Config is part of a '
+         'SemanticSegmentationConfig, a null class will be added automatically.'
+         ))
 
     def get_class_id(self, name):
         return self.names.index(name)

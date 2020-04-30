@@ -11,7 +11,10 @@ from rastervision2.core.evaluation.semantic_segmentation_evaluator import (
 @register_config('semantic_segmentation_evaluator')
 class SemanticSegmentationEvaluatorConfig(ClassificationEvaluatorConfig):
     vector_output_uri: Optional[str] = Field(
-        None, description='URI of evaluation of vector output.')
+        None,
+        description=
+        ('URI of evaluation of vector output. If None, and this Config is part of '
+         'an RVPipeline, then this field will be auto-generated.'))
 
     def build(self, class_config):
         return SemanticSegmentationEvaluator(class_config, self.output_uri,

@@ -8,7 +8,11 @@ from rastervision2.pipeline.config import register_config, Config, Field
 
 @register_config('vector_output')
 class VectorOutputConfig(Config):
-    uri: Optional[str] = Field(None, description='URI of vector output')
+    uri: Optional[str] = Field(
+        None,
+        description=
+        ('URI of vector output. If None, and this Config is part of a SceneConfig and '
+         'RVPipeline, this field will be auto-generated.'))
     class_id: int = Field(
         ...,
         description='The prediction class that is to turned into vectors.')
@@ -17,6 +21,12 @@ class VectorOutputConfig(Config):
         description=
         ('Radius of the structural element used to remove high-frequency signals from '
          'the image.'))
+
+    def update(self, pipeline=None, scene=None):
+        if pipeline and scene:
+            self.uri = join(
+                pipeline.root_uri, 'predict', '{}-{}-{}.json'.format(
+                    scene.id, self.class_id, self.get_mode()))
 
     def get_mode(self):
         raise NotImplementedError()
@@ -62,7 +72,12 @@ class BuildingVectorOutputConfig(VectorOutputConfig):
 
 @register_config('semantic_segmentation_label_store')
 class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
-    uri: Optional[str] = Field(None, description='URI of predictions.')
+    uri: Optional[str] = Field(
+        None,
+        description=(
+            'URI of file with predictions. If None, and this Config is part of '
+            'a SceneConfig inside an RVPipelineConfig, this fiend will be '
+            'auto-generated.'))
     vector_output: List[VectorOutputConfig] = []
     rgb: bool = Field(
         False,
@@ -85,7 +100,5 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
                 self.uri = join(pipeline.predict_uri,
                                 '{}.tif'.format(scene.id))
 
-            for vo in self.vector_output:
-                vo.uri = join(
-                    pipeline.root_uri, 'predict', '{}-{}-{}.json'.format(
-                        scene.id, vo.class_id, vo.get_mode()))
+        for vo in self.vector_output:
+            vo.update(pipeline, scene)
