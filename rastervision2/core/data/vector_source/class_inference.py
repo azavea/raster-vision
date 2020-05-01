@@ -17,7 +17,7 @@ class ClassInference():
 
         if self.class_id_to_filter is not None:
             self.class_id_to_filter = {}
-            for class_id, filter_exp in self.class_id_to_filter.items():
+            for class_id, filter_exp in class_id_to_filter.items():
                 self.class_id_to_filter[class_id] = create_filter(filter_exp)
 
     def infer_class_id(self, feature):
