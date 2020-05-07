@@ -130,12 +130,11 @@ class SolverConfig(Config):
 @register_config('data')
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
-    # TODO shouldn't this be required?
-    uri: Optional[str] = Field(
+    uri: Union[None, str, List[str]] = Field(
         None,
         description=
-        ('URI of the dataset. This can be a zip file, or a directory which contains '
-         'a set of zip files.'))
+        ('URI of the dataset. This can be a zip file, a list of zip files, or a '
+         'directory which contains a set of zip files.'))
     data_format: Optional[str] = Field(
         None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
