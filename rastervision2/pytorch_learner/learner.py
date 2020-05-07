@@ -202,14 +202,20 @@ class Learner(ABC):
             paths to directories that each contain contents of one zip file
         """
         cfg = self.cfg
-        if cfg.data.uri.startswith('s3://') or cfg.data.uri.startswith('/'):
-            data_uri = cfg.data.uri
-        else:
-            data_uri = join(cfg.base_uri, cfg.data.uri)
-
         data_dirs = []
-        zip_uris = [data_uri] if data_uri.endswith('.zip') else list_paths(
-            data_uri, 'zip')
+
+        if isinstance(cfg.data.uri, list):
+            zip_uris = cfg.data.uri
+        else:
+            if cfg.data.uri.startswith('s3://') or cfg.data.uri.startswith(
+                    '/'):
+                data_uri = cfg.data.uri
+            else:
+                data_uri = join(cfg.base_uri, cfg.data.uri)
+            zip_uris = ([data_uri]
+                        if data_uri.endswith('.zip') else list_paths(
+                            data_uri, 'zip'))
+
         for zip_ind, zip_uri in enumerate(zip_uris):
             zip_path = get_local_path(zip_uri, self.data_cache_dir)
             if not isfile(zip_path):
