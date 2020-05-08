@@ -4,6 +4,7 @@ from rastervision2.pipeline.config import Config, register_config, Field
 
 ClassFilter = Sequence[Union[str, 'ClassFilter']]
 
+
 @register_config('vector_source')
 class VectorSourceConfig(Config):
     default_class_id: Optional[int] = Field(
