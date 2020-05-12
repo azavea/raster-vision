@@ -37,7 +37,7 @@ def submit_job(cmd: List[str],
         job_queue: if set, use this job queue
         job_def: if set, use this job definition
     """
-    batch_config = rv_config.get_namespace_config('AWS_BATCH')
+    batch_config = rv_config.get_namespace_config(AWS_BATCH)
 
     if job_queue is None:
         if use_gpu:
