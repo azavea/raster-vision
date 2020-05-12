@@ -1,6 +1,8 @@
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Sequence, Union
 
 from rastervision2.pipeline.config import Config, register_config, Field
+
+ClassFilter = Sequence[Union[str, 'ClassFilter']]
 
 
 @register_config('vector_source')
@@ -11,7 +13,7 @@ class VectorSourceConfig(Config):
         ('The default class_id to use if class cannot be inferred using other '
          'mechanisms. If a feature defaults to a class_id of None, then that feature '
          'will be deleted.'))
-    class_id_to_filter: Optional[Dict[int, Optional[Dict]]] = Field(
+    class_id_to_filter: Optional[Dict[int, Optional[ClassFilter]]] = Field(
         None,
         description=(
             'Map from class_id to JSON filter used to infer missing class_ids. The '
