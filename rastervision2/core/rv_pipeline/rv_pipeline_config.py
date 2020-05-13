@@ -92,6 +92,9 @@ class RVPipelineConfig(PipelineConfig):
         for analyzer in self.analyzers:
             analyzer.update(pipeline=self)
 
+    def get_model_bundle_uri(self):
+        return join(self.bundle_uri, 'model-bundle.zip')
+
     def _insert_analyzers(self):
         # Inserts StatsAnalyzer if it's needed because a RasterSource has a
         # StatsTransformer, but there isn't a StatsAnalyzer in the list of Analyzers.
