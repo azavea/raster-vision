@@ -105,18 +105,20 @@ and maintain.
             ])
 
         # Use the PyTorch backend for the SemanticSegmentation pipeline.
-        train_chip_sz = 300
+        chip_sz = 300
         backend = PyTorchSemanticSegmentationConfig(
             model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
             solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
         chip_options = SemanticSegmentationChipOptions(
-            window_method=SemanticSegmentationWindowMethod.random_sample, chips_per_scene=10)
+            window_method=SemanticSegmentationWindowMethod.random_sample,
+            chips_per_scene=10)
 
         return SemanticSegmentationConfig(
             root_uri=root_uri,
             dataset=dataset,
             backend=backend,
-            train_chip_sz=train_chip_sz,
+            train_chip_sz=chip_sz,
+            predict_chip_sz=chip_sz,
             chip_options=chip_options)
 
 

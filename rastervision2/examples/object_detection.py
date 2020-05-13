@@ -61,6 +61,7 @@ def get_config(runner, test=False, output_dir='output'):
             id=id, raster_source=raster_source, label_source=label_source)
 
     class_config = ClassConfig(names=['vehicle'])
+    chip_sz = 300
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=[make_scene(id) for id in train_ids],
@@ -85,6 +86,7 @@ def get_config(runner, test=False, output_dir='output'):
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
-        train_chip_sz=300,
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz,
         chip_options=chip_options,
         predict_options=predict_options)

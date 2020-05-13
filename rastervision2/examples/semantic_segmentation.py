@@ -94,9 +94,9 @@ def get_config(runner, test=False, output_dir='output'):
         class_config=class_config,
         train_scenes=[make_scene(id) for id in train_ids],
         validation_scenes=[make_scene(id) for id in val_ids])
-    train_chip_sz = 300
+    chip_sz = 300
     chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding, stride=300)
+        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
 
     backend = PyTorchSemanticSegmentationConfig(
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
@@ -114,5 +114,6 @@ def get_config(runner, test=False, output_dir='output'):
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
-        train_chip_sz=train_chip_sz,
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz,
         chip_options=chip_options)

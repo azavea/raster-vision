@@ -78,6 +78,7 @@ def get_config(runner, test=False, output_dir='output'):
             label_source=label_source,
             aoi_uris=[aoi_uri])
 
+    chip_sz = 200
     train_scenes = [make_scene(info) for info in train_scene_info]
     val_scenes = [make_scene(info) for info in val_scene_info]
     dataset = DatasetConfig(
@@ -99,5 +100,6 @@ def get_config(runner, test=False, output_dir='output'):
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
-        train_chip_sz=200)
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz)
     return config
