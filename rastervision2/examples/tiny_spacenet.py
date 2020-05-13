@@ -71,5 +71,4 @@ def get_config(runner):
         dataset=dataset,
         backend=backend,
         train_chip_sz=train_chip_sz,
-        chip_options=chip_options,
-        debug=False)
+        chip_options=chip_options)

@@ -21,6 +21,12 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         description=(
             'Names of albumentations augmentors to use for training batches. '
             'Choices include: ' + str(augmentor_list)))
+    test_mode: bool = Field(
+        False,
+        description=
+        ('This field is passed along to the LearnerConfig which is returned by '
+         'get_learner_config(). For more info, see the docs for'
+         'pytorch_learner.learner_config.LearnerConfig.test_mode.'))
 
     def get_bundle_filenames(self):
         return ['model-bundle.zip']

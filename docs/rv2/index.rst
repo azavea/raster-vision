@@ -117,8 +117,7 @@ and maintain.
             dataset=dataset,
             backend=backend,
             train_chip_sz=train_chip_sz,
-            chip_options=chip_options,
-            debug=False)
+            chip_options=chip_options)
 
 
 Raster Vision uses a ``unittest``-like method for executing pipelines. For instance, if the

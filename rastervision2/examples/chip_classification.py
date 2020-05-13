@@ -92,12 +92,12 @@ def get_config(runner, test=False, output_dir='output'):
         model=model,
         solver=solver,
         log_tensorboard=log_tensorboard,
-        run_tensorboard=run_tensorboard)
+        run_tensorboard=run_tensorboard,
+        test_mode=test)
 
     config = ChipClassificationConfig(
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
-        train_chip_sz=200,
-        debug=debug)
+        train_chip_sz=200)
     return config

@@ -34,7 +34,6 @@ class RVPipelineConfig(PipelineConfig):
         ('Analyzers to run during analyzer command. A StatsAnalyzer will be added '
          'automatically if any scenes have a RasterTransformer.'))
 
-    debug: bool = Field(False, description='If True, use debug mode.')
     train_chip_sz: int = Field(
         200, description='Size of training chips in pixels.')
     predict_chip_sz: int = Field(

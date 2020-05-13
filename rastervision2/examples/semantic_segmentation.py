@@ -107,12 +107,12 @@ def get_config(runner, test=False, output_dir='output'):
             batch_sz=8,
             one_cycle=True),
         log_tensorboard=True,
-        run_tensorboard=False)
+        run_tensorboard=False,
+        test_mode=test)
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
         train_chip_sz=train_chip_sz,
-        chip_options=chip_options,
-        debug=test)
+        chip_options=chip_options)

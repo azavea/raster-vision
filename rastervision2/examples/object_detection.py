@@ -78,7 +78,8 @@ def get_config(runner, test=False, output_dir='output'):
             batch_sz=16,
             one_cycle=True),
         log_tensorboard=True,
-        run_tensorboard=False)
+        run_tensorboard=False,
+        test_mode=test)
 
     return ObjectDetectionConfig(
         root_uri=root_uri,
@@ -86,5 +87,4 @@ def get_config(runner, test=False, output_dir='output'):
         backend=backend,
         train_chip_sz=300,
         chip_options=chip_options,
-        predict_options=predict_options,
-        debug=test)
+        predict_options=predict_options)

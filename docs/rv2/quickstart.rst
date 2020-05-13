@@ -120,8 +120,7 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
             dataset=dataset,
             backend=backend,
             train_chip_sz=train_chip_sz,
-            chip_options=chip_options,
-            debug=False)
+            chip_options=chip_options)
 
 
 Running the pipeline
