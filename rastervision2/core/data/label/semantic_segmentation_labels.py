@@ -23,11 +23,13 @@ class SemanticSegmentationLabels(Labels):
         return self
 
     def __eq__(self, other):
-        if set(self.get_windows()) != set(other.get_windows()):
+        self_windows = set([w.tuple_format() for w in self.get_windows()])
+        other_windows = set([w.tuple_format() for w in other.get_windows()])
+        if self_windows != other_windows:
             return False
 
         for w in self.get_windows():
-            if not self.get_label_arr(w).equal(other.get_label_arr):
+            if not np.array_equal(self.get_label_arr(w), other.get_label_arr(w)):
                 return False
 
         return True
