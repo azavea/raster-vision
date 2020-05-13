@@ -238,7 +238,7 @@ class RVPipeline(Pipeline):
             download_or_copy(self.config.get_config_uri(),
                              join(tmp_dir, 'pipeline-config.json'))
 
-            model_bundle_uri = join(self.config.bundle_uri, 'model-bundle.zip')
+            model_bundle_uri = self.config.get_model_bundle_uri()
             model_bundle_path = get_local_path(model_bundle_uri, self.tmp_dir)
             zipdir(tmp_dir, model_bundle_path)
             upload_or_copy(model_bundle_path, model_bundle_uri)
