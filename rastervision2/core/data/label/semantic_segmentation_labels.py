@@ -29,7 +29,8 @@ class SemanticSegmentationLabels(Labels):
             return False
 
         for w in self.get_windows():
-            if not np.array_equal(self.get_label_arr(w), other.get_label_arr(w)):
+            if not np.array_equal(
+                    self.get_label_arr(w), other.get_label_arr(w)):
                 return False
 
         return True

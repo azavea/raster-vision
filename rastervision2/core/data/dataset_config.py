@@ -32,7 +32,8 @@ class DatasetConfig(Config):
 
         ids = [s.id for s in self.validation_scenes + self.test_scenes]
         if len(set(ids)) != len(ids):
-            raise ConfigError('All validation and test scene ids must be unique.')
+            raise ConfigError(
+                'All validation and test scene ids must be unique.')
 
     def get_split_config(self, split_ind, num_splits):
         new_cfg = self.copy()
