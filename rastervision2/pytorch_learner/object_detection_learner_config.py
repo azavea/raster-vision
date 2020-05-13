@@ -19,14 +19,16 @@ class ObjectDetectionModelConfig(ModelConfig):
     backbone: Backbone = Field(
         Backbone.resnet50,
         description=(
-            'The torchvision.models backbone to use. At the moment only '
-            'resnet50 will work.'))
+            'The torchvision.models backbone to use, which must be in the resnet* '
+            'family.'))
 
     @validator('backbone')
     def only_valid_backbones(cls, v):
-        if v not in [Backbone.resnet50]:
+        if v not in [Backbone.resnet18, Backbone.resnet34, Backbone.resnet50,
+                     Backbone.resnet101, Backbone.resnet152]:
             raise ValueError(
-                'The only valid backbone for Faster-RCNN is resnet50.')
+                'The backbone for Faster-RCNN must be in the resnet* '
+                'family.')
         return v
 
 
