@@ -104,6 +104,25 @@ def main(ctx: click.Context, profile: Optional[str], verbose: int,
     rv_config.set_everett_config(profile=profile)
 
 
+def _run_pipeline(cfg, runner, tmp_dir, splits=1, commands=None):
+    cfg.update()
+    cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
+    cfg.recursive_validate_config()
+    # This is to run the validation again to check any fields that may have changed
+    # after the Config was constructed, possibly by the update method.
+    build_config(cfg.dict())
+
+    cfg_json = cfg.json()
+    cfg_json_uri = cfg.get_config_uri()
+    str_to_file(cfg_json, cfg_json_uri)
+
+    pipeline = cfg.build(tmp_dir)
+    if not commands:
+        commands = pipeline.commands
+
+    runner.run(cfg_json_uri, pipeline, commands, num_splits=splits)
+
+
 @main.command('run', short_help='Run sequence of commands within pipeline(s).')
 @click.argument('runner')
 @click.argument('cfg_module')
@@ -142,22 +161,7 @@ def run(runner: str, cfg_module: str, commands: List[str],
     runner = registry.get_runner(runner)()
 
     for cfg in cfgs:
-        cfg.update()
-        cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
-        cfg.recursive_validate_config()
-        # This is to run the validation again to check any fields that may have changed
-        # after the Config was constructed, possibly by the update method.
-        build_config(cfg.dict())
-
-        cfg_json = cfg.json()
-        cfg_json_uri = cfg.get_config_uri()
-        str_to_file(cfg_json, cfg_json_uri)
-
-        pipeline = cfg.build(tmp_dir)
-        if not commands:
-            commands = pipeline.commands
-
-        runner.run(cfg_json_uri, pipeline, commands, num_splits=splits)
+        _run_pipeline(cfg, runner, tmp_dir, splits, commands)
 
 
 def _run_command(cfg_json_uri: str,
