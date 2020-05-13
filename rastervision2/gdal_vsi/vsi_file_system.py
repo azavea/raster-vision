@@ -83,11 +83,12 @@ class VsiFileSystem(FileSystem):
 
     @staticmethod
     def read_bytes(vsipath: str) -> bytes:
+        stats = gdal.VSIStatL(vsipath)
+        if not stats or stats.IsDirectory():
+            raise FileNotFoundError('{} does not exist'.format(vsipath))
+
         try:
             handle = gdal.VSIFOpenL(vsipath, 'rb')
-            stats = gdal.VSIStatL(vsipath)
-            if not stats or stats.IsDirectory():
-                raise FileNotFoundError('{} does not exist'.format(vsipath))
             return gdal.VSIFReadL(1, stats.size, handle)
         finally:
             gdal.VSIFCloseL(handle)
