@@ -1,0 +1,29 @@
+{"overall": [
+    {
+        "count_error": 245,
+        "gt_count": 90000,
+        "f1": 0.9986370337403689,
+        "class_id": 0,
+        "precision": 1.0,
+        "recall": 0.9972777777777778,
+        "class_name": "red"
+    },
+    {
+        "count_error": 245,
+        "gt_count": 270000,
+        "f1": 0.9995465020499957,
+        "class_id": 1,
+        "precision": 0.9990934152343244,
+        "recall": 1.0,
+        "class_name": "green"
+    },
+    {
+        "count_error": 245.0,
+        "gt_count": 360000,
+        "f1": 0.999319134972589,
+        "class_id": null,
+        "precision": 0.9993200614257433,
+        "recall": 0.9993194444444444,
+        "class_name": "average"
+    }
+]}
