@@ -44,6 +44,7 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
     def process(self, scenes, tmp_dir):
         evaluation = self.create_evaluation()
         vect_evaluation = self.create_evaluation()
+        null_class_id = self.class_config.get_null_class_id()
 
         for scene in scenes:
             log.info('Computing evaluation for scene {}...'.format(scene.id))
@@ -56,8 +57,9 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
                 if scene.aoi_polygons:
                     # Filter labels based on AOI.
                     ground_truth = ground_truth.filter_by_aoi(
-                        scene.aoi_polygons)
-                    predictions = predictions.filter_by_aoi(scene.aoi_polygons)
+                        scene.aoi_polygons, null_class_id)
+                    predictions = predictions.filter_by_aoi(
+                        scene.aoi_polygons, null_class_id)
                 scene_evaluation = self.create_evaluation()
                 scene_evaluation.compute(ground_truth, predictions)
                 evaluation.merge(scene_evaluation, scene_id=scene.id)
