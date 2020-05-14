@@ -1,0 +1,44 @@
+{
+    "per_scene": {
+        "0": [
+            {
+                "recall": 1.0,
+                "class_id": 0,
+                "gt_count": 3,
+                "precision": 1.0,
+                "f1": 1.0,
+                "class_name": "vector-polygons-one",
+                "count_error": 0
+            },
+            {
+                "recall": 1.0,
+                "class_id": null,
+                "gt_count": 3,
+                "precision": 1.0,
+                "f1": 1.0,
+                "class_name": "average",
+                "count_error": 0
+            }
+        ]
+    },
+    "overall": [
+        {
+            "recall": 1.0,
+            "class_id": 0,
+            "gt_count": 3,
+            "precision": 1.0,
+            "f1": 1.0,
+            "class_name": "vector-polygons-one",
+            "count_error": 0
+        },
+        {
+            "recall": 1.0,
+            "class_id": null,
+            "gt_count": 3,
+            "precision": 1.0,
+            "f1": 1.0,
+            "class_name": "average",
+            "count_error": 0
+        }
+    ]
+}

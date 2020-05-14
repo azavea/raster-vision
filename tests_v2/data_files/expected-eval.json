@@ -1,0 +1,172 @@
+{
+    "overall": [
+        {
+            "precision": 1,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "count_error": 50,
+            "gt_count": 100,
+            "conf_mat": [
+                50,
+                50,
+                0
+            ],
+            "class_id": 0,
+            "class_name": "one"
+        },
+        {
+            "precision": 1,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "count_error": 50,
+            "gt_count": 100,
+            "conf_mat": [
+                50,
+                50,
+                0
+            ],
+            "class_id": 1,
+            "class_name": "two"
+        },
+        {
+            "precision": 1,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "count_error": 50,
+            "gt_count": 200,
+            "conf_mat": [
+                [
+                    0,
+                    0,
+                    0
+                ],
+                [
+                    50,
+                    50,
+                    0
+                ],
+                [
+                    50,
+                    50,
+                    0
+                ]
+            ],
+            "class_id": null,
+            "class_name": "average"
+        }
+    ],
+    "per_scene": {
+        "0": [
+            {
+                "precision": 1,
+                "recall": 0.5,
+                "f1": 0.6666666666666666,
+                "count_error": 50,
+                "gt_count": 100,
+                "conf_mat": [
+                    50,
+                    50,
+                    0
+                ],
+                "class_id": 0,
+                "class_name": "one"
+            },
+            {
+                "precision": 0,
+                "recall": null,
+                "f1": null,
+                "count_error": 50,
+                "gt_count": 0,
+                "conf_mat": [
+                    0,
+                    0,
+                    0
+                ],
+                "class_id": 1,
+                "class_name": "two"
+            },
+            {
+                "precision": 1,
+                "recall": 0.5,
+                "f1": 0.6666666666666666,
+                "count_error": 50,
+                "gt_count": 100,
+                "conf_mat": [
+                    [
+                        0,
+                        0,
+                        0
+                    ],
+                    [
+                        50,
+                        50,
+                        0
+                    ],
+                    [
+                        0,
+                        0,
+                        0
+                    ]
+                ],
+                "class_id": null,
+                "class_name": "average"
+            }
+        ],
+        "1": [
+            {
+                "precision": 0,
+                "recall": null,
+                "f1": null,
+                "count_error": 50,
+                "gt_count": 0,
+                "conf_mat": [
+                    0,
+                    0,
+                    0
+                ],
+                "class_id": 0,
+                "class_name": "one"
+            },
+            {
+                "precision": 1,
+                "recall": 0.5,
+                "f1": 0.6666666666666666,
+                "count_error": 50,
+                "gt_count": 100,
+                "conf_mat": [
+                    50,
+                    50,
+                    0
+                ],
+                "class_id": 1,
+                "class_name": "two"
+            },
+            {
+                "precision": 1,
+                "recall": 0.5,
+                "f1": 0.6666666666666666,
+                "count_error": 50,
+                "gt_count": 100,
+                "conf_mat": [
+                    [
+                        0,
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        0,
+                        0
+                    ],
+                    [
+                        50,
+                        50,
+                        0
+                    ]
+                ],
+                "class_id": null,
+                "class_name": "average"
+            }
+        ]
+    }
+}
