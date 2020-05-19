@@ -138,7 +138,7 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
             gt_count = len(gt)
             class_name = 'vector-{}-{}'.format(
                 mode,
-                self.class_map.get_by_id(class_id).name)
+                self.class_config.names[class_id])
 
             evaluation_item = ClassEvaluationItem(precision, recall, f1,
                                                   count_error, gt_count,
