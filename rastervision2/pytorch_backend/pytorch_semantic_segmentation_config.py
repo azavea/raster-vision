@@ -24,7 +24,7 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
             data=data,
             model=self.model,
             solver=self.solver,
-            test_mode=pipeline.debug,
+            test_mode=self.test_mode,
             output_uri=pipeline.train_uri,
             log_tensorboard=self.log_tensorboard,
             run_tensorboard=self.run_tensorboard)

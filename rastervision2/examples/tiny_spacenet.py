@@ -58,7 +58,7 @@ def get_config(runner):
         ])
 
     # Use the PyTorch backend for the SemanticSegmentation pipeline.
-    train_chip_sz = 300
+    chip_sz = 300
     backend = PyTorchSemanticSegmentationConfig(
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
@@ -70,6 +70,6 @@ def get_config(runner):
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
-        train_chip_sz=train_chip_sz,
-        chip_options=chip_options,
-        debug=False)
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz,
+        chip_options=chip_options)

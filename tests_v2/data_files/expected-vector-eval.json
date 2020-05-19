@@ -1,0 +1,73 @@
+{
+    "overall": [
+        {
+            "precision": 0.8333333333333334,
+            "recall": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "count_error": 2,
+            "gt_count": 6,
+            "class_id": 0,
+            "class_name": "vector-polygons-one"
+        },
+        {
+            "precision": 0.8571428571428571,
+            "recall": 0.75,
+            "f1": 0.7999999999999999,
+            "count_error": 3,
+            "gt_count": 8,
+            "class_id": 1,
+            "class_name": "vector-polygons-two"
+        },
+        {
+            "precision": 0.846938775510204,
+            "recall": 0.7857142857142857,
+            "f1": 0.8142857142857143,
+            "count_error": 2.571428571428571,
+            "gt_count": 14,
+            "class_id": null,
+            "class_name": "average"
+        }
+    ],
+    "per_scene": {
+        "0": [
+            {
+                "precision": 0.8333333333333334,
+                "recall": 0.8333333333333334,
+                "f1": 0.8333333333333334,
+                "count_error": 2,
+                "gt_count": 6,
+                "class_id": 0,
+                "class_name": "vector-polygons-one"
+            },
+            {
+                "precision": 0.8333333333333334,
+                "recall": 0.8333333333333334,
+                "f1": 0.8333333333333334,
+                "count_error": 2,
+                "gt_count": 6,
+                "class_id": null,
+                "class_name": "average"
+            }
+        ],
+        "1": [
+            {
+                "precision": 0.8571428571428571,
+                "recall": 0.75,
+                "f1": 0.7999999999999999,
+                "count_error": 3,
+                "gt_count": 8,
+                "class_id": 1,
+                "class_name": "vector-polygons-two"
+            },
+            {
+                "precision": 0.8571428571428571,
+                "recall": 0.75,
+                "f1": 0.7999999999999999,
+                "count_error": 3,
+                "gt_count": 8,
+                "class_id": null,
+                "class_name": "average"
+            }
+        ]
+    }
+}

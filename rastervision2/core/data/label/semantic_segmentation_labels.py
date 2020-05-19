@@ -44,30 +44,20 @@ class SemanticSegmentationLabels(Labels):
     def get_label_arr(self, window):
         return self.window_to_label_arr[window.tuple_format()]
 
-    def filter_by_aoi(self, aoi_polygons):
-        """Get the label array for a window.
-
-        Args:
-            window: Box
-            extent: a Box representing the extent of the corresponding Scene
-
-        Returns:
-            np.ndarray of class_ids with zeros filled in outside the AOIs and
-            clipped to the clip_extent
-        """
+    def filter_by_aoi(self, aoi_polygons, null_class_id):
         new_labels = SemanticSegmentationLabels()
 
         for window in self.get_windows():
             window_geom = window.to_shapely()
             label_arr = self.get_label_arr(window)
 
-            if not self.aoi_polygons:
+            if not aoi_polygons:
                 return self
             else:
                 # For each aoi_polygon, intersect with window, and put in window frame of
                 # reference.
                 window_aois = []
-                for aoi in self.aoi_polygons:
+                for aoi in aoi_polygons:
                     window_aoi = aoi.intersection(window_geom)
                     if not window_aoi.is_empty:
 
@@ -87,7 +77,7 @@ class SemanticSegmentationLabels(Labels):
                         out_shape=label_arr.shape,
                         fill=1,
                         dtype=np.uint8)
-                    label_arr[mask.astype(np.bool)] = 0
+                    label_arr[mask.astype(np.bool)] = null_class_id
                     new_labels.set_label_arr(window, label_arr)
 
         return new_labels

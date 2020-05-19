@@ -12,11 +12,11 @@ class StatsAnalyzerConfig(AnalyzerConfig):
         description=(
             'URI for output. If None and this is part of an RVPipeline, this is '
             'auto-generated.'))
-    sample_prob: float = Field(
+    sample_prob: Optional[float] = Field(
         0.1,
         description=(
-            'The probability of using a random window for computing statistics.'
-        ))
+            'The probability of using a random window for computing statistics. '
+            'If None, will use a sliding window.'))
 
     def update(self, pipeline=None):
         if pipeline is not None and self.output_uri is None:

@@ -4,7 +4,7 @@ from shapely.geometry import shape, mapping
 from shapely.strtree import STRtree
 
 from rastervision2.core.data import ActivateMixin
-from rastervision2.core.data.vector_source import GeoJSONVectorSource
+from rastervision2.core.data.vector_source import GeoJSONVectorSourceConfig
 from rastervision2.core.evaluation import (ClassificationEvaluator,
                                            SemanticSegmentationEvaluation)
 
@@ -44,6 +44,7 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
     def process(self, scenes, tmp_dir):
         evaluation = self.create_evaluation()
         vect_evaluation = self.create_evaluation()
+        null_class_id = self.class_config.get_null_class_id()
 
         for scene in scenes:
             log.info('Computing evaluation for scene {}...'.format(scene.id))
@@ -56,8 +57,9 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
                 if scene.aoi_polygons:
                     # Filter labels based on AOI.
                     ground_truth = ground_truth.filter_by_aoi(
-                        scene.aoi_polygons)
-                    predictions = predictions.filter_by_aoi(scene.aoi_polygons)
+                        scene.aoi_polygons, null_class_id)
+                    predictions = predictions.filter_by_aoi(
+                        scene.aoi_polygons, null_class_id)
                 scene_evaluation = self.create_evaluation()
                 scene_evaluation.compute(ground_truth, predictions)
                 evaluation.merge(scene_evaluation, scene_id=scene.id)
@@ -69,10 +71,11 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
                 )
                 for vo in label_store.vector_output:
                     pred_geojson_uri = vo.uri
-                    mode = vo.mode
+                    mode = vo.get_mode()
                     class_id = vo.class_id
-                    pred_geojson_source = GeoJSONVectorSource(
-                        pred_geojson_uri,
+                    pred_geojson_source = GeoJSONVectorSourceConfig(
+                        uri=pred_geojson_uri, default_class_id=None).build(
+                        self.class_config,
                         scene.raster_source.get_crs_transformer())
                     pred_geojson = pred_geojson_source.get_geojson()
 
