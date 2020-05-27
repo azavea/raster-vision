@@ -29,12 +29,12 @@ class ClassificationLearner(Learner):
         model.fc = nn.Linear(in_features, num_labels)
         return model
 
-    def get_datasets(self):
+    def _get_datasets(self, uri):
         cfg = self.cfg
         class_names = cfg.data.class_names
 
         if cfg.data.data_format == ClassificationDataFormat.image_folder:
-            data_dirs = self.unzip_data()
+            data_dirs = self.unzip_data(uri)
 
         transform, aug_transform = self.get_data_transforms()
 
