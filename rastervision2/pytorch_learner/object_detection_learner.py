@@ -40,11 +40,11 @@ class ObjectDetectionLearner(Learner):
     def get_collate_fn(self):
         return collate_fn
 
-    def get_datasets(self):
+    def _get_datasets(self, uri):
         cfg = self.cfg
 
         if cfg.data.data_format == ObjectDetectionDataFormat.default:
-            data_dirs = self.unzip_data()
+            data_dirs = self.unzip_data(uri)
 
         transform, aug_transform = self.get_data_transforms()
 

@@ -12,7 +12,9 @@ import logging
 from subprocess import Popen
 import numbers
 import zipfile
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Union
+import random
+import uuid
 
 import click
 import matplotlib
@@ -25,7 +27,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader, Subset, Dataset
+from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset
 from albumentations.augmentations.transforms import (
     Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
     GaussNoise, RGBShift, ToGray, Resize)
@@ -195,8 +197,12 @@ class Learner(ABC):
         """Build a PyTorch model."""
         pass
 
-    def unzip_data(self) -> List[str]:
+    def unzip_data(self, uri: Union[str, List[str]]) -> List[str]:
         """Unzip dataset zip files.
+
+        Args:
+            uri: a list of URIs of zip files or the URI of a directory containing
+                zip files
 
         Returns:
             paths to directories that each contain contents of one zip file
@@ -204,14 +210,14 @@ class Learner(ABC):
         cfg = self.cfg
         data_dirs = []
 
-        if isinstance(cfg.data.uri, list):
-            zip_uris = cfg.data.uri
+        if isinstance(uri, list):
+            zip_uris = uri
         else:
-            if cfg.data.uri.startswith('s3://') or cfg.data.uri.startswith(
-                    '/'):
-                data_uri = cfg.data.uri
+            # TODO generalize this to work with any file system
+            if uri.startswith('s3://') or uri.startswith('/'):
+                data_uri = uri
             else:
-                data_uri = join(cfg.base_uri, cfg.data.uri)
+                data_uri = join(cfg.base_uri, uri)
             zip_uris = ([data_uri]
                         if data_uri.endswith('.zip') else list_paths(
                             data_uri, 'zip'))
@@ -221,7 +227,7 @@ class Learner(ABC):
             if not isfile(zip_path):
                 zip_path = download_if_needed(zip_uri, self.data_cache_dir)
             with zipfile.ZipFile(zip_path, 'r') as zipf:
-                data_dir = join(self.tmp_dir, 'data', str(zip_ind))
+                data_dir = join(self.tmp_dir, 'data', str(uuid.uuid4()), str(zip_ind))
                 data_dirs.append(data_dir)
                 zipf.extractall(data_dir)
 
@@ -277,9 +283,41 @@ class Learner(ABC):
         """
         return None
 
+    def _get_datasets(self, uri: Union[str, List[str]]) -> Tuple[Dataset, Dataset, Dataset]:  # noqa
+        """Gets Datasets for a single group of chips.
+
+        This should be overridden for each Learner subclass.
+
+        Args:
+            uri: a list of URIs of zip files or the URI of a directory containing
+                zip files
+
+        Returns:
+            train, validation, and test DataSets."""
+        raise NotImplementedError()
+
     def get_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
         """Returns train, validation, and test DataSets."""
-        raise NotImplementedError()
+        if self.cfg.data.group_uris:
+            train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
+            for group_uri in self.cfg.data.group_uris:
+                train_ds, valid_ds, test_ds = self._get_datasets(group_uri)
+                group_train_sz = self.cfg.data.group_train_sz
+                if group_train_sz is not None:
+                    train_inds = list(range(len(train_ds)))
+                    random.shuffle(train_inds)
+                    train_inds = train_inds[0:group_train_sz]
+                    train_ds = Subset(train_ds, train_inds)
+                train_ds_lst.append(train_ds)
+                valid_ds_lst.append(valid_ds)
+                test_ds_lst.append(test_ds)
+
+            train_ds, valid_ds, test_ds = (
+                ConcatDataset(train_ds_lst), ConcatDataset(valid_ds_lst),
+                ConcatDataset(test_ds_lst))
+            return train_ds, valid_ds, test_ds
+        else:
+            return self._get_datasets(self.cfg.data.uri)
 
     def setup_data(self):
         """Set the the DataSet and DataLoaders for train, validation, and test sets."""
@@ -306,6 +344,12 @@ class Learner(ABC):
             train_ds = Subset(train_ds, range(batch_sz))
             valid_ds = Subset(valid_ds, range(batch_sz))
             test_ds = Subset(test_ds, range(batch_sz))
+
+        if cfg.data.train_sz is not None:
+            train_inds = list(range(len(train_ds)))
+            random.shuffle(train_inds)
+            train_inds = train_inds[0:cfg.data.train_sz]
+            train_ds = Subset(train_ds, train_inds)
 
         collate_fn = self.get_collate_fn()
         train_dl = DataLoader(
