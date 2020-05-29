@@ -6,7 +6,7 @@ from rastervision2.pytorch_learner.learner_config import (
 
 
 class ObjectDetectionDataFormat(Enum):
-    default = 1
+    coco = 'coco'
 
 
 @register_config('object_detection_data')

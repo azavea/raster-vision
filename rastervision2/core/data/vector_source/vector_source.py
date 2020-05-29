@@ -1,10 +1,16 @@
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
 
 from rastervision2.core.data.vector_source.class_inference import (
     ClassInference)
+
+if TYPE_CHECKING:
+    from rastervision2.core.data.vector_source.vector_source_config import VectorSourceConfig  # noqa
+    from rastervision2.core.data.class_config import ClassConfig  # noqa
+    from rastervision2.core.data.crs_transformer import CRSTransformer  # noqa
 
 
 def transform_geojson(geojson,
@@ -108,7 +114,8 @@ def transform_geojson(geojson,
 class VectorSource(ABC):
     """A source of vector data."""
 
-    def __init__(self, vs_config, class_config, crs_transformer):
+    def __init__(self, vs_config: 'VectorSourceConfig',
+                 class_config: 'ClassConfig', crs_transformer: 'CRSTransformer'):
         self.vs_config = vs_config
         self.class_config = class_config
         self.crs_transformer = crs_transformer

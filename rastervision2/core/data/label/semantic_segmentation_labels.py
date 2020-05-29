@@ -8,8 +8,7 @@ from rastervision2.core.box import Box
 
 
 class SemanticSegmentationLabels(Labels):
-    """A set of spatially referenced semantic segmentation labels.
-    """
+    """A set of spatially referenced semantic segmentation labels."""
 
     def __init__(self):
         self.window_to_label_arr = {}

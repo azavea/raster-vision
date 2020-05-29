@@ -3,8 +3,6 @@
 API Reference
 ========================
 
-This currently just contains references for ``Config`` classes related to chip classification and semantic segmentation.
-
 rastervision2.pipeline
 ------------------------
 
@@ -31,6 +29,8 @@ data
 
 .. autoclass:: rastervision2.core.data.label_source.SemanticSegmentationLabelSourceConfig
 
+.. autoclass:: rastervision2.core.data.label_source.ObjectDetectionLabelSourceConfig
+
 .. autoclass:: rastervision2.core.data.label_store.ChipClassificationGeoJSONStoreConfig
 
 .. autoclass:: rastervision2.core.data.label_store.PolygonVectorOutputConfig
@@ -38,6 +38,8 @@ data
 .. autoclass:: rastervision2.core.data.label_store.BuildingVectorOutputConfig
 
 .. autoclass:: rastervision2.core.data.label_store.SemanticSegmentationLabelStoreConfig
+
+.. autoclass:: rastervision2.core.data.label_store.ObjectDetectionGeoJSONStoreConfig
 
 .. autoclass:: rastervision2.core.data.raster_source.RasterioSourceConfig
 
@@ -56,18 +58,26 @@ evaluation
 
 .. autoclass:: rastervision2.core.evaluation.SemanticSegmentationEvaluatorConfig
 
+.. autoclass:: rastervision2.core.evaluation.ObjectDetectionEvaluatorConfig
+
 rv_pipeline
 ~~~~~~~~~~~~~
 
 .. autoclass:: rastervision2.core.rv_pipeline.ChipClassificationConfig
 
 .. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationWindowMethod
-    :members:
-    :undoc-members:
 
 .. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationChipOptions
 
 .. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationConfig
+
+.. autoclass:: rastervision2.core.rv_pipeline.ObjectDetectionWindowMethod
+
+.. autoclass:: rastervision2.core.rv_pipeline.ObjectDetectionChipOptions
+
+.. autoclass:: rastervision2.core.rv_pipeline.ObjectDetectionPredictOptions
+
+.. autoclass:: rastervision2.core.rv_pipeline.ObjectDetectionConfig
 
 rastervision2.pytorch_backend
 -------------------------------
@@ -75,6 +85,8 @@ rastervision2.pytorch_backend
 .. autoclass:: rastervision2.pytorch_backend.PyTorchChipClassificationConfig
 
 .. autoclass:: rastervision2.pytorch_backend.PyTorchSemanticSegmentationConfig
+
+.. autoclass:: rastervision2.pytorch_backend.PyTorchObjectDetectionConfig
 
 rastervision2.pytorch_learner
 -------------------------------
@@ -110,3 +122,16 @@ Semantic Segmentation
 .. autoclass:: rastervision2.pytorch_learner.SemanticSegmentationModelConfig
 
 .. autoclass:: rastervision2.pytorch_learner.SemanticSegmentationLearnerConfig
+
+Object Detection
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision2.pytorch_learner.ObjectDetectionDataFormat
+    :members:
+    :undoc-members:
+
+.. autoclass:: rastervision2.pytorch_learner.ObjectDetectionDataConfig
+
+.. autoclass:: rastervision2.pytorch_learner.ObjectDetectionModelConfig
+
+.. autoclass:: rastervision2.pytorch_learner.ObjectDetectionLearnerConfig

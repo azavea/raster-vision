@@ -7,6 +7,7 @@ class ActivationError(Exception):
 
 class ActivateMixin:
     """Defines a mixin for data that can activate and deactivate.
+
     These methods can open and close files, download files, and do
     whatever has to be done to make the entity usable, and cleanup
     after the entity is not needed anymore.

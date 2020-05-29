@@ -8,6 +8,7 @@ from rastervision2.core.data.class_config import ClassConfig
 
 @register_config('dataset')
 class DatasetConfig(Config):
+    """Config for a Dataset comprising the scenes for train, valid, and test splits."""
     class_config: ClassConfig
     train_scenes: List[SceneConfig]
     validation_scenes: List[SceneConfig]

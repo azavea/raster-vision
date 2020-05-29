@@ -8,6 +8,7 @@ from rastervision2.pipeline.config import register_config, Config, Field
 
 @register_config('vector_output')
 class VectorOutputConfig(Config):
+    """Config for vectorized semantic segmentation predictions."""
     uri: Optional[str] = Field(
         None,
         description=
@@ -34,13 +35,14 @@ class VectorOutputConfig(Config):
 
 @register_config('polygon_vector_output')
 class PolygonVectorOutputConfig(VectorOutputConfig):
+    """Config for vectorized semantic segmentation predictions."""
     def get_mode(self):
         return 'polygons'
 
 
 @register_config('building_vector_output')
 class BuildingVectorOutputConfig(VectorOutputConfig):
-    """Options useful for vectorization of building predictions.
+    """Config for vectorized semantic segmentation predictions.
 
     Intended to break up clusters of buildings.
     """
@@ -72,6 +74,11 @@ class BuildingVectorOutputConfig(VectorOutputConfig):
 
 @register_config('semantic_segmentation_label_store')
 class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
+    """Config for storage for semantic segmentation predictions.
+
+    Stores class raster as GeoTIFF, and can optionally vectorizes predictions and stores
+    them in GeoJSON files.
+    """
     uri: Optional[str] = Field(
         None,
         description=(

@@ -3,6 +3,8 @@ from rastervision2.core.data.label_source import LabelSource
 
 
 class ObjectDetectionLabelSource(LabelSource):
+    """A read-only label source for object detection."""
+
     def __init__(self, vector_source, extent=None):
         """Constructor.
 

@@ -1,10 +1,18 @@
 import numpy as np
 from shapely.strtree import STRtree
 from shapely.geometry import shape
+from typing import TYPE_CHECKING
 
-from rastervision2.core.data import ChipClassificationLabels
-from rastervision2.core.data.label_source import LabelSource
-from rastervision2.core.box import Box
+from rastervision2.core.data.label import ChipClassificationLabels
+from rastervision2.core.data.label_source.label_source import LabelSource
+
+if TYPE_CHECKING:
+    from rastervision2.core.data.vector_source import VectorSource  # noqa
+    from rastervision2.core.data.class_config import ClassConfig  # noqa
+    from rastervision2.core.data.crs_transformer import CRSTransformer  # noqa
+    from rastervision2.core.data.label_source.chip_classification_label_source_config import (  # noqa
+        ChipClassificationLabelSourceConfig)  # noqa
+    from rastervision2.core.box import Box  # noqa
 
 
 def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
@@ -153,13 +161,18 @@ class ChipClassificationLabelSource(LabelSource):
     """
 
     def __init__(self,
-                 label_source_config,
-                 vector_source,
-                 class_config,
-                 crs_transformer,
-                 extent=None):
-        # extent is only needed if infer_cells is True or if it is False and
-        # you want to filter cells by extent
+                 label_source_config: 'ChipClassificationLabelSourceConfig',
+                 vector_source: 'VectorSource',
+                 class_config: 'ClassConfig',
+                 crs_transformer: 'CRSTransformer',
+                 extent: 'Box' = None):
+        """Constructs a LabelSource for chip classification.
+
+        Args:
+            extent: Box used to filter the labels by extent or compute grid. This is
+                only needed if infer_cells is True or if it is False and you want to
+                filter cells by extent
+        """
         cfg = label_source_config
         geojson = vector_source.get_geojson()
 
@@ -171,7 +184,7 @@ class ChipClassificationLabelSource(LabelSource):
         else:
             self.labels = read_labels(geojson, extent)
 
-    def get_labels(self, window=None):
+    def get_labels(self, window: 'Box' = None):
         if window is None:
             return self.labels
         return self.labels.get_singleton_labels(window)

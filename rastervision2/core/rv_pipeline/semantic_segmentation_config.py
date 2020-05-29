@@ -8,8 +8,15 @@ from rastervision2.core.evaluation import SemanticSegmentationEvaluatorConfig
 
 
 class SemanticSegmentationWindowMethod(Enum):
-    sliding = 1
-    random_sample = 2
+    """Enum for window methods
+
+    Attributes:
+        sliding: use a sliding window
+        random_sample: randomly sample windows
+    """
+
+    sliding = 'sliding'
+    random_sample = 'random_sample'
 
 
 @register_config('semantic_segmentation_chip_options')

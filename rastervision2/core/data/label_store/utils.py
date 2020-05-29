@@ -11,6 +11,7 @@ def boxes_to_geojson(  # noqa
         class_ids: list of int (one for each box)
         crs_transformer: CRSTransformer used to convert pixel coords to map
             coords in the GeoJSON
+        class_config: ClassConfig
         scores: optional list of score or scores.
                 If floats (one for each box), property name will be "score".
                 If lists of floats, property name will be "scores".
