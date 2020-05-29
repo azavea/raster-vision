@@ -10,6 +10,7 @@ from rastervision2.pipeline.config import (register_config, Field)
 
 @register_config('semantic_segmentation_label_source')
 class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
+    """Config for a read-only label source for semantic segmentation."""
     raster_source: Union[RasterSourceConfig, RasterizedSourceConfig] = Field(
         ..., description='The labels in the form of rasters.')
     rgb_class_config: Optional[ClassConfig] = Field(

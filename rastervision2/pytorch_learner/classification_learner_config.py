@@ -6,7 +6,7 @@ from rastervision2.pytorch_learner.learner_config import (
 
 
 class ClassificationDataFormat(Enum):
-    image_folder = 1
+    image_folder = 'image_folder'
 
 
 @register_config('classification_data')

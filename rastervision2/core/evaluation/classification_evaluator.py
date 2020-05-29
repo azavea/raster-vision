@@ -8,8 +8,7 @@ log = logging.getLogger(__name__)
 
 
 class ClassificationEvaluator(Evaluator):
-    """Evaluates predictions for a set of scenes.
-    """
+    """Evaluates predictions for a set of scenes."""
 
     def __init__(self, class_config, output_uri):
         self.class_config = class_config

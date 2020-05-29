@@ -6,15 +6,17 @@ from rastervision2.pipeline.file_system import json_to_file
 
 
 class ObjectDetectionGeoJSONStore(LabelStore):
+    """Storage for object detection predictions."""
+
     def __init__(self, uri, class_config, crs_transformer):
-        """Construct LabelStore backed by a GeoJSON file for object detection labels.
+        """Constructor.
 
         Args:
             uri: uri of GeoJSON file containing labels
+            class_config: ClassConfig used to infer class_ids from class_name
+                (or label) field
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
-            class_map: ClassMap used to infer class_ids from class_name
-                (or label) field
         """
         self.uri = uri
         self.crs_transformer = crs_transformer

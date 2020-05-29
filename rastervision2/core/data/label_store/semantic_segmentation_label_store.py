@@ -10,6 +10,11 @@ from rastervision2.core.data.raster_source import RasterioSourceConfig
 
 
 class SemanticSegmentationLabelStore(LabelStore):
+    """Storage for semantic segmentation predictions.
+
+    Stores class raster as GeoTIFF, and can optionally vectorizes predictions and stores
+    them in GeoJSON files.
+    """
     def __init__(self,
                  uri,
                  extent,
@@ -24,8 +29,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             extent: (Box) The extent of the scene
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
-            vector_output: (None or array of dicts) containing vectorifiction
-                configuration information
+            vector_output: (None or array of VectorOutputConfig) containing
+                vectorifiction configuration information
             class_config: (ClassConfig) with color values used to convert
                 class ids to RGB value
         """

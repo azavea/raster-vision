@@ -7,6 +7,8 @@ from rastervision2.core.analyzer import AnalyzerConfig
 
 @register_config('stats_analyzer')
 class StatsAnalyzerConfig(AnalyzerConfig):
+    """Config for an Analyzer that computes imagery statistics of scenes."""
+
     output_uri: Optional[str] = Field(
         None,
         description=(

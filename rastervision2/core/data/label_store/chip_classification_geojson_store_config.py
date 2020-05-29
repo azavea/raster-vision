@@ -8,6 +8,8 @@ from rastervision2.pipeline.config import register_config, Field
 
 @register_config('chip_classification_geojson_store')
 class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
+    """Config for storage for chip classification predictions."""
+
     uri: Optional[str] = Field(
         None,
         description=
