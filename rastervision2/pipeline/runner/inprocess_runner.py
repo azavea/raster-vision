@@ -20,7 +20,7 @@ class InProcessRunner(Runner):
             if hasattr(pipeline, command):
                 fn = getattr(pipeline, command)
                 params = signature(fn).parameters
-                external = hasattr(fn, 'external') and len(params) == 0
+                external = hasattr(fn, 'external') and len(params) in {0, 1}
             else:
                 external = False
 
@@ -32,5 +32,14 @@ class InProcessRunner(Runner):
                 else:
                     _run_command(cfg_json_uri, command, 0, 1)
             else:
-                cmd = fn()
-                subprocess.run(cmd, check=True)
+                if len(params) == 0:
+                    # No-parameter external command
+                    cmds = [fn()]
+                elif len(params) == 1:
+                    # One-paramater (split) external command
+                    cmds = fn(num_splits)
+                else:
+                    # No command
+                    cmds = []
+                for cmd in cmds:
+                    subprocess.run(cmd, check=True)
