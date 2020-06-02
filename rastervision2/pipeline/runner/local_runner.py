@@ -40,36 +40,53 @@ class LocalRunner(Runner):
             if hasattr(pipeline, command):
                 fn = getattr(pipeline, command)
                 params = signature(fn).parameters
-                external = hasattr(fn, 'external') and len(params) == 0
+                external = hasattr(fn, 'external') and len(params) in {0, 1}
             else:
                 external = False
 
             curr_command_inds = []
-            if not external and command in pipeline.split_commands and num_splits > 1:
-                for split_ind in range(num_splits):
+            if not external:
+                if command in pipeline.split_commands and num_splits > 1:
+                    for split_ind in range(num_splits):
+                        makefile += '{}: '.format(curr_command_ind)
+                        makefile += ' '.join(
+                            [str(ci) for ci in prev_command_inds])
+                        makefile += '\n'
+                        invocation = (
+                            'python -m rastervision2.pipeline.cli run_command '
+                            '{} {} --split-ind {} --num-splits {}').format(
+                                cfg_json_uri, command, split_ind, num_splits)
+                        makefile += '\t{}\n\n'.format(invocation)
+                        curr_command_inds.append(curr_command_ind)
+                        curr_command_ind += 1
+                else:
                     makefile += '{}: '.format(curr_command_ind)
                     makefile += ' '.join([str(ci) for ci in prev_command_inds])
                     makefile += '\n'
                     invocation = (
                         'python -m rastervision2.pipeline.cli run_command '
-                        '{} {} --split-ind {} --num-splits {}').format(
-                            cfg_json_uri, command, split_ind, num_splits)
+                        '{} {}'.format(cfg_json_uri, command))
                     makefile += '\t{}\n\n'.format(invocation)
                     curr_command_inds.append(curr_command_ind)
                     curr_command_ind += 1
             else:
-                makefile += '{}: '.format(curr_command_ind)
-                makefile += ' '.join([str(ci) for ci in prev_command_inds])
-                makefile += '\n'
-                if not external:
-                    invocation = (
-                        'python -m rastervision2.pipeline.cli run_command '
-                        '{} {}'.format(cfg_json_uri, command))
+                if len(params) == 0:
+                    # No-parameter external command
+                    cmds = [fn()]
+                elif len(params) == 1:
+                    # One-paramater (split) external command
+                    cmds = fn(num_splits)
                 else:
-                    invocation = (' '.join(fn()))
-                makefile += '\t{}\n\n'.format(invocation)
-                curr_command_inds.append(curr_command_ind)
-                curr_command_ind += 1
+                    # No command
+                    cmds = []
+                for cmd in cmds:
+                    makefile += '{}: '.format(curr_command_ind)
+                    makefile += ' '.join([str(ci) for ci in prev_command_inds])
+                    makefile += '\n'
+                    invocation = (' '.join(cmd))
+                    makefile += '\t{}\n\n'.format(invocation)
+                    curr_command_inds.append(curr_command_ind)
+                    curr_command_ind += 1
 
             prev_command_inds = curr_command_inds
 

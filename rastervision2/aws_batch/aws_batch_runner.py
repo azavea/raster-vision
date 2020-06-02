@@ -125,7 +125,7 @@ class AWSBatchRunner(Runner):
             if hasattr(pipeline, command):
                 fn = getattr(pipeline, command)
                 params = signature(fn).parameters
-                external = hasattr(fn, 'external') and len(params) == 0
+                external = hasattr(fn, 'external') and len(params) in {0, 1}
             else:
                 external = False
 
@@ -139,22 +139,26 @@ class AWSBatchRunner(Runner):
                 if hasattr(fn, 'job_queue'):
                     job_queue = fn.job_queue
 
+            num_array_jobs = None
+            use_gpu = command in pipeline.gpu_commands
+
             if not external:
                 cmd = [
                     'python', '-m', 'rastervision2.pipeline.cli run_command',
                     cfg_json_uri, command, '--runner', AWS_BATCH
                 ]
-            else:
-                cmd = fn()
-
-            num_array_jobs = None
-            use_gpu = command in pipeline.gpu_commands
-
-            if not external:
                 if command in pipeline.split_commands and num_splits > 1:
                     num_array_jobs = num_splits
-                    if num_splits > 1:
-                        cmd += ['--num-splits', str(num_splits)]
+                    cmd += ['--num-splits', str(num_splits)]
+            else:
+                if command in pipeline.split_commands and num_splits > 1 and len(
+                        params) == 1:
+                    cmd = fn(-num_splits)
+                    num_array_jobs = num_splits
+                elif len(params) == 1:
+                    cmd = fn(1)[0]
+                else:
+                    cmd = fn()
 
             cmd = ' '.join(cmd)
 
