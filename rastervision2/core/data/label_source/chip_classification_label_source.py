@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from rastervision2.core.data.label import ChipClassificationLabels
 from rastervision2.core.data.label_source.label_source import LabelSource
+from rastervision2.core.box import Box
 
 if TYPE_CHECKING:
     from rastervision2.core.data.vector_source import VectorSource  # noqa
@@ -12,7 +13,6 @@ if TYPE_CHECKING:
     from rastervision2.core.data.crs_transformer import CRSTransformer  # noqa
     from rastervision2.core.data.label_source.chip_classification_label_source_config import (  # noqa
         ChipClassificationLabelSourceConfig)  # noqa
-    from rastervision2.core.box import Box  # noqa
 
 
 def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
