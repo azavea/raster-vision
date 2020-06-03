@@ -143,9 +143,12 @@ usage patterns.
 .. toctree::
    :maxdepth: 3
 
+   why
    quickstart
    setup
+   config
    cli
+   runners
    architecture
    api
    bootstrap
