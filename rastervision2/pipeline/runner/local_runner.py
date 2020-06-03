@@ -73,9 +73,13 @@ class LocalRunner(Runner):
                 if len(params) == 0:
                     # No-parameter external command
                     cmds = [fn()]
-                elif len(params) == 1:
-                    # One-paramater (split) external command
+                elif len(params) == 1 and command in pipeline.split_commands:
+                    # One-paramater split external command
                     cmds = fn(num_splits)
+                elif len(params
+                         ) == 1 and command not in pipeline.split_commands:
+                    # One-paramater unsplit external command
+                    cmds = fn(1)
                 else:
                     # No command
                     cmds = []
