@@ -6,14 +6,10 @@ RUN apt-get update && apt-get install -y software-properties-common python-softw
 RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get update && \
     apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
-                       gdal-bin=2.2.* \
                        jq=1.5* \
                        build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
                        libopencv-dev=2.4.* python-opencv=2.4.* unzip curl && \
     apt-get autoremove && apt-get autoclean && apt-get clean
-
-# Setup GDAL_DATA directory, rasterio needs it.
-ENV GDAL_DATA=/usr/share/gdal/2.2/
 
 # See https://github.com/mapbox/rasterio/issues/1289
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
@@ -32,7 +28,13 @@ RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
+ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 RUN conda install -y python=3.6
+RUN python -m pip install --upgrade pip
+RUN conda install -y -c conda-forge gdal=3.0.4
+
+# Setup GDAL_DATA directory, rasterio needs it.
+ENV GDAL_DATA=/opt/conda/lib/python3.6/site-packages/rasterio/gdal_data/
 
 WORKDIR /opt/src/
 ENV PYTHONPATH=/opt/src:$PYTHONPATH
@@ -43,7 +45,9 @@ RUN cd /tmp && \
     unzip 1.32.5.zip && \
     cd tippecanoe-1.32.5 && \
     make && \
-    make install
+    make install && \
+    cd /tmp && \
+    rm -rf tippecanoe-1.32.5
 
 # Install requirements-dev.txt
 COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
@@ -73,3 +77,4 @@ RUN pip install -r optional-requirements.txt
 # Needed for click to work
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
+ENV PROJ_LIB /opt/conda/share/proj/
