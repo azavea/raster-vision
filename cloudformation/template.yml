@@ -1,0 +1,657 @@
+Description: A CloudFormation template for deploying Raster Vision Batch jobs to AWS.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Project Metadata
+        Parameters:
+          - Prefix
+      - Label:
+          default: Required Parameters
+        Parameters:
+          - VPC
+          - SubnetIds
+          - KeyName
+      - Label:
+          default: Instance Types (Advanced)
+        Parameters:
+          - GpuInstanceTypes
+          - CpuInstanceTypes
+      - Label:
+          default: Batch Compute Parameters (Advanced)
+        Parameters:
+          - MinimumVCPUs
+          - DesiredVCPUs
+          - MaximumVCPUs
+          - CidrRange
+          - SpotFleetBidPercentage
+      - Label:
+          default: Container Image Parameters (Advanced)
+        Parameters:
+          - TFGpuRepositoryName
+          - TFCpuRepositoryName
+          - PyTorchRepositoryName
+          - ImageTag
+          - GPUInstanceVCPUs
+          - GPUInstanceMemory
+          - GPUInstanceStorage
+          - CPUInstanceVCPUs
+          - CPUInstanceMemory
+          - CPUInstanceStorage
+    ParameterLabels:
+      Prefix:
+        default: Prefix
+      KeyName:
+        default: SSH Key Name
+      SpotFleetBidPercentage:
+        default: Spot Fleet Bid Percentage
+      MinimumVCPUs:
+        default: Minimum vCPU Count
+      DesiredVCPUs:
+        default: Desired vCPU Count
+      MaximumVCPUs:
+        default: Maximum vCPU Count
+      CidrRange:
+        default: CIDR Range
+      GpuInstanceTypes:
+        default: Instance Types (GPU)
+      CpuInstanceTypes:
+        default: Instance Types (CPU)
+      GPUInstanceVCPUs:
+        default: GPU vCPU Limit
+      GPUInstanceMemory:
+        default: GPU Memory Limit
+      GPUInstanceStorage:
+        default: GPU Instance Storage
+      CPUInstanceVCPUs:
+        default: CPU vCPU Limit
+      CPUInstanceMemory:
+        default: CPU Memory Limit
+      CPUInstanceStorage:
+        default: CPU Instance Storage
+      TFCpuRepositoryName:
+        default: Repository Name (Tensorflow CPU)
+      TFGpuRepositoryName:
+        default: Repository Name (Tensorflow GPU)
+      PyTorchRepositoryName:
+        default: Repository Name (PyTorch)
+      ImageTag:
+        default: Image Tag
+      VPC:
+        default: VPC
+      SubnetIds:
+        default: Subnets
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: ""
+    Description: >
+      Optional lowercase identifier to use for namespacing your resources (e.g.
+      RasterVisionIamRole becomes yournameRasterVisionIamRole). You need to do this if you
+      are setting up multiple RV stacks within one account.
+    MaxLength: 12
+    AllowedPattern: ^[a-z0-9]*$
+    ConstraintDescription: must only contain lowercase letters and numbers
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: An Amazon EC2 key pair name to use for SSH access to the cluster
+
+  SpotFleetBidPercentage:
+    Type: Number
+    Default: 60
+    Description: >
+      Minimum percentage that a Spot Instance price must be when compared with
+      the On-Demand price for that instance type before instances are launched
+
+  MinimumVCPUs:
+    Type: Number
+    Default: 0
+    Description: The minimum number of EC2 vCPUs that an environment should maintain
+
+  DesiredVCPUs:
+    Type: Number
+    Default: 0
+    Description: The desired number of EC2 vCPUS in the compute environment
+
+  MaximumVCPUs:
+    Type: Number
+    Default: 80
+    Description: The maximum number of EC2 vCPUs that an environment can reach
+
+  CidrRange:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: >
+      Restrict inbound traffic to your EC2 instance to requests coming from
+      a specific CIDR range
+    # Pattern taken from: https://www.regexpal.com/94836
+    AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+    ConstraintDescription: must be a valid IPv4 address or CIDR range
+
+  GpuInstanceTypes:
+    Type: List<String>
+    Default: p3.2xlarge
+    Description: >
+      A comma-separated list of GPU-enabled instance types
+
+  CpuInstanceTypes:
+    Type: List<String>
+    Default: r5
+    Description: >
+      A comma-separated list of CPU-enabled instance types
+
+  GPUInstanceVCPUs:
+    Type: Number
+    Default: 8
+    Description: Number of vCPUs reserved for the container by the task definition for GPU instances (4 should be used for P2 instances)
+
+  GPUInstanceMemory:
+    Type: Number
+    Default: 55000
+    Description: The hard limit (in MB) of memory to present to the container for GPU instances (40000 should be used for P2 instances)
+
+  GPUInstanceStorage:
+    Type: Number
+    Default: 200
+    Description: The amount of EBS storage (in GB) to use for the GPU instance root volume.
+
+  CPUInstanceVCPUs:
+    Type: Number
+    Default: 1
+    Description: Number of vCPUs reserved for the container by the task definition for CPU instances
+
+  CPUInstanceMemory:
+    Type: Number
+    Default: 6000
+    Description: The hard limit (in MB) of memory to present to the container for CPU instances
+
+  CPUInstanceStorage:
+    Type: Number
+    Default: 200
+    Description: The amount of EBS storage (in GB) to use for the CPU instance root volume.
+
+  TFGpuRepositoryName:
+    Type: String
+    Default: ""
+    Description: >
+      (Optional) Specifies the name of an ECR repository to create for use in
+      pushing and pulling container images -- if empty, pulls the latest
+      TF GPU-based Raster Vision container image from Quay.io instead
+
+  TFCpuRepositoryName:
+    Type: String
+    Default: ""
+    Description: >
+      (Optional) Specifies the name of an ECR repository to create for use in
+      pushing and pulling CPU-enabled images -- if empty, pulls the latest
+      TF CPU-based Raster Vision container image from Quay.io instead
+
+  PyTorchRepositoryName:
+    Type: String
+    Default: ""
+    Description: >
+      (Optional) Specifies the name of an ECR repository to create for use in
+      pushing and pulling images -- if empty, pulls the latest
+      PyTorch-based Raster Vision container image from Quay.io instead
+
+  ImageTag:
+    Type: String
+    Default: ""
+    Description: >
+      (Optional) Tag of the CPU and GPU container image to retrieve from ECR -- required
+      if CpuRepositoryName or GpuRepositoryName is not empty
+
+  VPC:
+    Type: AWS::EC2::VPC::Id
+    Description: Virtual Private Cloud in which to launch Batch instances
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: >
+      A list of IDs of subnets in which to launch Batch instances (all subnets
+      must exist in the VPC you selected)
+
+Conditions:
+  UseHostedTFGpuImage: !Equals [!Ref TFGpuRepositoryName, ""]
+  UseCustomTFGpuImage: !Not [!Equals [!Ref TFGpuRepositoryName, ""]]
+  UseHostedTFCpuImage: !Equals [!Ref TFCpuRepositoryName, ""]
+  UseCustomTFCpuImage: !Not [!Equals [!Ref TFCpuRepositoryName, ""]]
+  UseHostedPyTorchImage: !Equals [!Ref PyTorchRepositoryName, ""]
+  UseCustomPyTorchImage: !Not [!Equals [!Ref PyTorchRepositoryName, ""]]
+
+Resources:
+  BatchServiceIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["", [!Ref Prefix, "RasterVisionBatchRole"]]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - batch.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+
+  SpotFleetIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["", [!Ref Prefix, "RasterVisionSpotFleetRole"]]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - spotfleet.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+
+  BatchInstanceIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["", [!Ref Prefix, "RasterVisionInstanceRole"]]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  BatchInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref BatchInstanceIAMRole
+      InstanceProfileName:
+        !Join ["", [!Ref Prefix, "RasterVisionInstanceProfile"]]
+
+  ContainerInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: !Join ["", [!Ref Prefix, "RasterVisionSecurityGroup"]]
+      GroupDescription:
+        !Join ["", ["Security group for ", !Ref Prefix, " (Raster Vision)"]]
+      SecurityGroupIngress:
+        - FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+          CidrIp: !Ref CidrRange
+        - FromPort: 6006
+          ToPort: 6006
+          IpProtocol: tcp
+          CidrIp: !Ref CidrRange
+      SecurityGroupEgress:
+        - FromPort: 0
+          ToPort: 65535
+          IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Join ["", [!Ref Prefix, "RasterVisionSecurityGroup"]]
+
+  TFGpuRepository:
+    Type: AWS::ECR::Repository
+    Condition: UseCustomTFGpuImage
+    Properties:
+      RepositoryName: !Ref TFGpuRepositoryName
+
+  TFCpuRepository:
+    Type: AWS::ECR::Repository
+    Condition: UseCustomTFCpuImage
+    Properties:
+      RepositoryName: !Ref TFCpuRepositoryName
+
+  PyTorchRepository:
+    Type: AWS::ECR::Repository
+    Condition: UseCustomPyTorchImage
+    Properties:
+      RepositoryName: !Ref PyTorchRepositoryName
+
+  GpuLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Join ["", [!Ref Prefix, "RasterVisionGpuLaunchTemplate"]]
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeType: gp2
+              VolumeSize: !Ref GPUInstanceStorage
+
+  GpuComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ComputeEnvironmentName:
+        !Join ["", [!Ref Prefix, "RasterVisionGpuComputeEnvironment"]]
+      Type: Managed
+      State: ENABLED
+      ServiceRole: !Ref BatchServiceIAMRole
+      ComputeResources:
+        Type: SPOT
+        BidPercentage: !Ref SpotFleetBidPercentage
+        Ec2KeyPair: !Ref KeyName
+        MinvCpus: !Ref MinimumVCPUs
+        DesiredvCpus: !Ref DesiredVCPUs
+        MaxvCpus: !Ref MaximumVCPUs
+        SpotIamFleetRole: !Ref SpotFleetIAMRole
+        InstanceRole: !Ref BatchInstanceProfile
+        InstanceTypes: !Ref GpuInstanceTypes
+        SecurityGroupIds:
+          - !Ref ContainerInstanceSecurityGroup
+        Subnets: !Ref SubnetIds
+        LaunchTemplate:
+          LaunchTemplateId: !Ref GpuLaunchTemplate
+        Tags:
+          Name: !Join ["", [!Ref Prefix, "RasterVisionGpuComputeEnvironment"]]
+          ComputeEnvironment: Raster Vision
+
+  CpuLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Join ["", [!Ref Prefix, "RasterVisionCpuLaunchTemplate"]]
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeType: gp2
+              VolumeSize: !Ref CPUInstanceStorage
+
+  CpuComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ComputeEnvironmentName:
+        !Join ["", [!Ref Prefix, "RasterVisionCpuComputeEnvironment"]]
+      Type: Managed
+      State: ENABLED
+      ServiceRole: !Ref BatchServiceIAMRole
+      ComputeResources:
+        Type: SPOT
+        BidPercentage: !Ref SpotFleetBidPercentage
+        Ec2KeyPair: !Ref KeyName
+        MinvCpus: !Ref MinimumVCPUs
+        DesiredvCpus: !Ref DesiredVCPUs
+        MaxvCpus: !Ref MaximumVCPUs
+        SpotIamFleetRole: !Ref SpotFleetIAMRole
+        InstanceRole: !Ref BatchInstanceProfile
+        InstanceTypes: !Ref CpuInstanceTypes
+        SecurityGroupIds:
+          - !Ref ContainerInstanceSecurityGroup
+        Subnets: !Ref SubnetIds
+        LaunchTemplate:
+          LaunchTemplateId: !Ref CpuLaunchTemplate
+        Tags:
+          Name: !Join ["", [!Ref Prefix, "RasterVisionCpuComputeEnvironment"]]
+          ComputeEnvironment: Raster Vision
+
+  GpuJobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      JobQueueName: !Join ["", [!Ref Prefix, "RasterVisionGpuJobQueue"]]
+      Priority: 1
+      State: ENABLED
+      ComputeEnvironmentOrder:
+        - ComputeEnvironment: !Ref GpuComputeEnvironment
+          Order: 1
+
+  CpuJobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      JobQueueName: !Join ["", [!Ref Prefix, "RasterVisionCpuJobQueue"]]
+      Priority: 1
+      State: ENABLED
+      ComputeEnvironmentOrder:
+        - ComputeEnvironment: !Ref CpuComputeEnvironment
+          Order: 1
+
+  CustomTFGpuJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Condition: UseCustomTFGpuImage
+    Properties:
+      Type: Container
+      JobDefinitionName:
+        !Join ["", [!Ref Prefix, "RasterVisionCustomTFGpuJobDefinition"]]
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${TFGpuRepositoryName}:${ImageTag}"
+        Vcpus: !Ref GPUInstanceVCPUs
+        ResourceRequirements:
+          - Type: "GPU"
+            Value: "1"
+        Memory: !Ref GPUInstanceMemory
+        Volumes:
+          - Host:
+              SourcePath: /home/ec2-user
+            Name: home
+          - Host:
+              SourcePath: /dev/shm
+            Name: shm
+        MountPoints:
+          - ContainerPath: /opt/data
+            ReadOnly: false
+            SourceVolume: home
+          - ContainerPath: /dev/shm
+            ReadOnly: false
+            SourceVolume: shm
+        ReadonlyRootFilesystem: false
+        Privileged: true
+
+  HostedTFGpuJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Condition: UseHostedTFGpuImage
+    Properties:
+      Type: Container
+      JobDefinitionName:
+        !Join ["", [!Ref Prefix, "RasterVisionHostedTFGpuJobDefinition"]]
+      ContainerProperties:
+        Image: quay.io/azavea/raster-vision:tf-gpu-latest
+        Vcpus: !Ref GPUInstanceVCPUs
+        ResourceRequirements:
+          - Type: "GPU"
+            Value: "1"
+        Memory: !Ref GPUInstanceMemory
+        Volumes:
+          - Host:
+              SourcePath: /home/ec2-user
+            Name: home
+          - Host:
+              SourcePath: /dev/shm
+            Name: shm
+        MountPoints:
+          - ContainerPath: /opt/data
+            ReadOnly: false
+            SourceVolume: home
+          - ContainerPath: /dev/shm
+            ReadOnly: false
+            SourceVolume: shm
+        ReadonlyRootFilesystem: false
+        Privileged: true
+
+  CustomTFCpuJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Condition: UseCustomTFCpuImage
+    Properties:
+      Type: Container
+      JobDefinitionName:
+        !Join ["", [!Ref Prefix, "RasterVisionCustomTFCpuJobDefinition"]]
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${TFCpuRepositoryName}:${ImageTag}"
+        Vcpus: !Ref CPUInstanceVCPUs
+        Memory: !Ref CPUInstanceMemory
+        Volumes:
+          - Host:
+              SourcePath: /home/ec2-user
+            Name: home
+          - Host:
+              SourcePath: /dev/shm
+            Name: shm
+        MountPoints:
+          - ContainerPath: /opt/data
+            ReadOnly: false
+            SourceVolume: home
+          - ContainerPath: /dev/shm
+            ReadOnly: false
+            SourceVolume: shm
+        ReadonlyRootFilesystem: false
+        Privileged: true
+
+  HostedTFCpuJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Condition: UseHostedTFCpuImage
+    Properties:
+      Type: Container
+      JobDefinitionName:
+        !Join ["", [!Ref Prefix, "RasterVisionHostedTFCpuJobDefinition"]]
+      ContainerProperties:
+        Image: quay.io/azavea/raster-vision:tf-cpu-latest
+        Vcpus: !Ref CPUInstanceVCPUs
+        Memory: !Ref CPUInstanceMemory
+        Volumes:
+          - Host:
+              SourcePath: /home/ec2-user
+            Name: home
+          - Host:
+              SourcePath: /dev/shm
+            Name: shm
+        MountPoints:
+          - ContainerPath: /opt/data
+            ReadOnly: false
+            SourceVolume: home
+          - ContainerPath: /dev/shm
+            ReadOnly: false
+            SourceVolume: shm
+        ReadonlyRootFilesystem: false
+        Privileged: true
+
+  CustomPyTorchCpuJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Condition: UseCustomPyTorchImage
+    Properties:
+      Type: Container
+      JobDefinitionName:
+        !Join ["", [!Ref Prefix, "RasterVisionCustomPyTorchCpuJobDefinition"]]
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PyTorchRepositoryName}:${ImageTag}"
+        Vcpus: !Ref CPUInstanceVCPUs
+        Memory: !Ref CPUInstanceMemory
+        Volumes:
+          - Host:
+              SourcePath: /home/ec2-user
+            Name: home
+          - Host:
+              SourcePath: /dev/shm
+            Name: shm
+        MountPoints:
+          - ContainerPath: /opt/data
+            ReadOnly: false
+            SourceVolume: home
+          - ContainerPath: /dev/shm
+            ReadOnly: false
+            SourceVolume: shm
+        ReadonlyRootFilesystem: false
+        Privileged: true
+
+  HostedPyTorchJobCpuDefinition:
+    Type: AWS::Batch::JobDefinition
+    Condition: UseHostedPyTorchImage
+    Properties:
+      Type: Container
+      JobDefinitionName:
+        !Join ["", [!Ref Prefix, "RasterVisionHostedPyTorchCpuJobDefinition"]]
+      ContainerProperties:
+        Image: quay.io/azavea/raster-vision:pytorch-latest
+        Vcpus: !Ref CPUInstanceVCPUs
+        Memory: !Ref CPUInstanceMemory
+        Volumes:
+          - Host:
+              SourcePath: /home/ec2-user
+            Name: home
+          - Host:
+              SourcePath: /dev/shm
+            Name: shm
+        MountPoints:
+          - ContainerPath: /opt/data
+            ReadOnly: false
+            SourceVolume: home
+          - ContainerPath: /dev/shm
+            ReadOnly: false
+            SourceVolume: shm
+        ReadonlyRootFilesystem: false
+        Privileged: true
+
+  CustomPyTorchGpuJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Condition: UseCustomPyTorchImage
+    Properties:
+      Type: Container
+      JobDefinitionName:
+        !Join ["", [!Ref Prefix, "RasterVisionCustomPyTorchGpuJobDefinition"]]
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PyTorchRepositoryName}:${ImageTag}"
+        Vcpus: !Ref GPUInstanceVCPUs
+        ResourceRequirements:
+          - Type: "GPU"
+            Value: "1"
+        Memory: !Ref GPUInstanceMemory
+        Volumes:
+          - Host:
+              SourcePath: /home/ec2-user
+            Name: home
+          - Host:
+              SourcePath: /dev/shm
+            Name: shm
+        MountPoints:
+          - ContainerPath: /opt/data
+            ReadOnly: false
+            SourceVolume: home
+          - ContainerPath: /dev/shm
+            ReadOnly: false
+            SourceVolume: shm
+        ReadonlyRootFilesystem: false
+        Privileged: true
+
+  HostedPyTorchJobGpuDefinition:
+    Type: AWS::Batch::JobDefinition
+    Condition: UseHostedPyTorchImage
+    Properties:
+      Type: Container
+      JobDefinitionName:
+        !Join ["", [!Ref Prefix, "RasterVisionHostedPyTorchGpuJobDefinition"]]
+      ContainerProperties:
+        Image: quay.io/azavea/raster-vision:pytorch-latest
+        Vcpus: !Ref GPUInstanceVCPUs
+        ResourceRequirements:
+          - Type: "GPU"
+            Value: "1"
+        Memory: !Ref GPUInstanceMemory
+        Volumes:
+          - Host:
+              SourcePath: /home/ec2-user
+            Name: home
+          - Host:
+              SourcePath: /dev/shm
+            Name: shm
+        MountPoints:
+          - ContainerPath: /opt/data
+            ReadOnly: false
+            SourceVolume: home
+          - ContainerPath: /dev/shm
+            ReadOnly: false
+            SourceVolume: shm
+        ReadonlyRootFilesystem: false
+        Privileged: true

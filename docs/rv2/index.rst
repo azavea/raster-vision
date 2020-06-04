@@ -150,6 +150,7 @@ usage patterns.
    api
    bootstrap
    examples
+   batch
 
 CHANGELOG
 ---------

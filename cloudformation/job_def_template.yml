@@ -1,0 +1,111 @@
+Description: A CloudFormation template for deploying Batch job definitions for a specific Raster Vision project and user.
+
+Metadata:
+    AWS::CloudFormation::Interface:
+      ParameterLabels:
+        Namespace:
+          default: Namespace
+        RepositoryName:
+          default: ECR Repository Name
+        GPUInstanceVCPUs:
+          default: GPU vCPU Limit
+        GPUInstanceMemory:
+          default: GPU Memory Limit
+        CPUInstanceVCPUs:
+          default: CPU vCPU Limit
+        CPUInstanceMemory:
+          default: CPU Memory Limit
+
+Parameters:
+    Namespace:
+      Type: String
+      Default: ""
+      Description: >
+        Identifier for namespacing created resources. Best practice is to use a camel-cased
+        combination of your user id and the project name, ie. useridProjectName.
+      AllowedPattern: ^[A-Za-z0-9]*$
+      ConstraintDescription: must only contain letters and numbers
+
+    RepositoryName:
+      Type: String
+      Default: ""
+      Description: >
+        Specifies the name of the ECR repository to use for pushing and pulling images. If you are at Azavea and in doubt, raster-vision-team is a good choice.
+
+    GPUInstanceVCPUs:
+      Type: Number
+      Default: 8
+      Description: Number of vCPUs reserved for the container by the task definition for GPU instances (4 should be used for P2 instances)
+
+    GPUInstanceMemory:
+      Type: Number
+      Default: 55000
+      Description: The hard limit (in MB) of memory to present to the container for GPU instances (40000 should be used for P2 instances)
+
+    CPUInstanceVCPUs:
+      Type: Number
+      Default: 1
+      Description: Number of vCPUs reserved for the container by the task definition for CPU instances
+
+    CPUInstanceMemory:
+      Type: Number
+      Default: 6000
+      Description: The hard limit (in MB) of memory to present to the container for CPU instances
+
+Resources:
+    CpuJobDefinition:
+      Type: AWS::Batch::JobDefinition
+      Properties:
+        Type: Container
+        JobDefinitionName:
+          !Join ["", [!Ref Namespace, "CpuJobDefinition"]]
+        ContainerProperties:
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryName}:${Namespace}"
+          Vcpus: !Ref CPUInstanceVCPUs
+          Memory: !Ref CPUInstanceMemory
+          Volumes:
+            - Host:
+                SourcePath: /home/ec2-user
+              Name: home
+            - Host:
+                SourcePath: /dev/shm
+              Name: shm
+          MountPoints:
+            - ContainerPath: /opt/data
+              ReadOnly: false
+              SourceVolume: home
+            - ContainerPath: /dev/shm
+              ReadOnly: false
+              SourceVolume: shm
+          ReadonlyRootFilesystem: false
+          Privileged: true
+
+    GpuJobDefinition:
+      Type: AWS::Batch::JobDefinition
+      Properties:
+        Type: Container
+        JobDefinitionName:
+          !Join ["", [!Ref Namespace, "GpuJobDefinition"]]
+        ContainerProperties:
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryName}:${Namespace}"
+          Vcpus: !Ref GPUInstanceVCPUs
+          ResourceRequirements:
+            - Type: "GPU"
+              Value: "1"
+          Memory: !Ref GPUInstanceMemory
+          Volumes:
+            - Host:
+                SourcePath: /home/ec2-user
+              Name: home
+            - Host:
+                SourcePath: /dev/shm
+              Name: shm
+          MountPoints:
+            - ContainerPath: /opt/data
+              ReadOnly: false
+              SourceVolume: home
+            - ContainerPath: /dev/shm
+              ReadOnly: false
+              SourceVolume: shm
+          ReadonlyRootFilesystem: false
+          Privileged: true
