@@ -1,9 +1,10 @@
 from enum import Enum
+from typing import Optional
 
-from rastervision2.pipeline.config import register_config, Field, validator
-from rastervision2.pytorch_learner.learner_config import (
-    LearnerConfig, DataConfig, ModelConfig)
-from rastervision2.pytorch_learner.learner_config import Backbone
+from rastervision2.pipeline.config import Field, register_config, validator
+from rastervision2.pytorch_learner.learner_config import (Backbone, DataConfig,
+                                                          LearnerConfig,
+                                                          ModelConfig)
 
 
 class SemanticSegmentationDataFormat(Enum):
@@ -35,7 +36,7 @@ class SemanticSegmentationModelConfig(ModelConfig):
 @register_config('semantic_segmentation_learner')
 class SemanticSegmentationLearnerConfig(LearnerConfig):
     data: SemanticSegmentationDataConfig
-    model: SemanticSegmentationModelConfig
+    model: Optional[SemanticSegmentationModelConfig]
 
     def build(self, tmp_dir, model_path=None):
         from rastervision2.pytorch_learner.semantic_segmentation_learner import (
