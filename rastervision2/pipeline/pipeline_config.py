@@ -1,5 +1,5 @@
 from os.path import join
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Dict
 
 from rastervision2.pipeline.config import Config, Field
 from rastervision2.pipeline.config import register_config
@@ -22,6 +22,7 @@ class PipelineConfig(Config):
         'run in remote environment with the local RVConfig. This should '
         'not be set explicitly by users -- it is only used by the runner '
         'when running a remote pipeline.')
+    plugin_versions: Optional[Dict] = None
 
     def get_config_uri(self) -> str:
         """Get URI of serialized version of this PipelineConfig."""

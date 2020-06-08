@@ -1,8 +1,13 @@
 from os.path import join
 import zipfile
 
+<<<<<<< HEAD
 from rastervision2.pipeline import rv_config
 from rastervision2.pipeline.config import build_config
+=======
+from rastervision2.pipeline import rv_config, registry
+from rastervision2.pipeline.config import (build_config, upgrade_config, ConfigError)
+>>>>>>> 24f6621... fixup upgrader
 from rastervision2.pipeline.file_system.utils import (download_if_needed,
                                                       make_dir, file_to_json)
 from rastervision2.core.data.raster_source import ChannelOrderError
@@ -44,6 +49,12 @@ class Predictor():
         config_dict = file_to_json(config_path)
         rv_config.set_everett_config(
             config_overrides=config_dict.get('rv_config'))
+        plugin_versions = config_dict.get('plugin_versions')
+        if plugin_versions is None:
+            raise ConfigError(
+                'Configuration is missing plugin_version field so is not backward '
+                'compatible.')
+        config_dict = upgrade_config(config_dict, plugin_versions)
 
         self.pipeline = build_config(config_dict).build(tmp_dir)
         self.scene = None

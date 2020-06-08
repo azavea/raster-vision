@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
+import inspect
 
 from pydantic import BaseModel, create_model, Field, validator  # noqa
 from typing_extensions import Literal
 
 from rastervision2.pipeline import registry
+from rastervision2.pipeline.file_system import str_to_file
 
 
 class ConfigError(ValueError):
@@ -111,6 +113,15 @@ class Config(BaseModel):
                     val, field))
 
 
+def save_pipeline_config(cfg, output_uri):
+    from rastervision2.pipeline import rv_config
+
+    cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
+    cfg.plugin_versions = registry.plugin_versions
+    cfg_json = cfg.json()
+    str_to_file(cfg_json, output_uri)
+
+
 def build_config(x: Union[dict, List[Union[dict, Config]], Config]
                  ) -> Union[Config, List[Config]]:  # noqa
     """Build a Config from various types of input.
@@ -179,7 +190,7 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
         return x
 
 
-def upgrade_config(x: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
+def upgrade_config(x: Union[dict, List[dict]], plugin_versions) -> Union[dict, List[dict]]:
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored
@@ -196,75 +207,54 @@ def upgrade_config(x: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
     if isinstance(x, dict):
         new_x = {}
         for k, v in x.items():
-            new_x[k] = upgrade_config(v)
+            new_x[k] = upgrade_config(v, plugin_versions)
         type_hint = new_x.get('type_hint')
         if type_hint is not None:
-            version = new_x.get('version')
-            if version is not None:
-                curr_version, upgraders = registry.get_config_upgraders(
-                    type_hint)
-                for upgrader in upgraders[version:]:
-                    new_x = upgrader.upgrade(new_x)
-                new_x['version'] = curr_version
+            type_hint_lineage = registry.get_type_hint_lineage(type_hint)
+            for th in type_hint_lineage:
+                plugin = registry.get_plugin(th)
+                old_version = plugin_versions[plugin]
+                curr_version = registry.get_plugin_version(plugin)
+                upgrader = registry.get_upgrader(th)
+                if upgrader:
+                    for version in range(old_version, curr_version):
+                        new_x = upgrader(new_x, version)
         return new_x
     elif isinstance(x, list):
-        return [upgrade_config(v) for v in x]
+        return [upgrade_config(v, plugin_versions) for v in x]
     else:
         return x
 
 
-class Upgrader(ABC):
-    """Upgrades a config from one version to the next."""
-
-    @abstractmethod
-    def upgrade(self, config: dict) -> dict:
-        """Returns upgraded version of config.
-
-        Args:
-            config: dict representation of a serialized Config
-        """
-        pass
+def get_plugin(cls) -> str:
+    cls_module = inspect.getmodule(cls)
+    return 'rastervision2.' + cls_module.__name__.split('.')[1]
 
 
-def register_config(type_hint: str, version: int = 0, upgraders=None):
+def register_config(type_hint: str, plugin=None, upgrader=None):
     """Class decorator used to register Config classes with registry.
 
     All Configs must be registered! Registering a Config does the following:
     1) associates Config classes with type_hints, which is
     necessary for polymorphic deserialization. See build_config() for more
     details.
-    2) associates Configs with the current version number and a
-    list of Upgraders which can be applied to upgrade a Config to the current
-    version. This is useful for backward compatibility.
-    3) adds a constant `type_hint` field to the Config which is set to
+    2) adds a constant `type_hint` field to the Config which is set to
     type_hint
-    4) generates PyDocs based on Pydantic fields
+    3) generates PyDocs based on Pydantic fields
 
     Args:
         type_hint: a type hint used to deserialize Configs. Needs to be unique
             across all registered Configs.
-        version: the current version number of the Config.
-        upgraders: a list of upgraders, one for each version.
     """
 
     def _register_config(cls):
-        if version > 0:
-            new_cls = create_model(
-                cls.__name__,
-                version=(Literal[version], version),
-                type_hint=(Literal[type_hint], type_hint),
-                __base__=cls)
-            if upgraders is None or len(upgraders) != version:
-                raise ValueError(
-                    'If version > 0, must supply list of upgraders with length'
-                    ' equal to version.')
-        else:
-            new_cls = create_model(
-                cls.__name__,
-                type_hint=(Literal[type_hint], type_hint),
-                __base__=cls)
+        new_cls = create_model(
+            cls.__name__,
+            type_hint=(Literal[type_hint], type_hint),
+            __base__=cls)
+        _plugin = plugin or get_plugin(cls)
         registry.add_config(
-            type_hint, new_cls, version=version, upgraders=upgraders)
+            type_hint, new_cls, _plugin, upgrader)
 
         new_cls.__doc__ = (cls.__doc__
                            or '') + '\n\n' + cls.get_field_summary()

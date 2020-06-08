@@ -10,4 +10,4 @@ from rastervision2.pytorch_backend.pytorch_object_detection import *
 
 
 def register_plugin(registry):
-    pass
+    registry.set_plugin_version('rastervision2.pytorch_backend', 0)

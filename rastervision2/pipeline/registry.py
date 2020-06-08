@@ -1,4 +1,5 @@
 from typing import List, Type, TYPE_CHECKING
+import inspect
 
 if TYPE_CHECKING:
     from rastervision2.pipeline.runner import Runner  # noqa
@@ -18,8 +19,27 @@ class Registry():
         self.runners = {}
         self.file_systems = []
         self.configs = {}
-        self.config_upgraders = {}
         self.rv_config_schema = {}
+
+        self.plugin_versions = {}
+        self.type_hint_lineages = {}
+        self.type_hint_to_plugin = {}
+        self.type_hint_to_upgrader = {}
+
+    def set_plugin_version(self, plugin: str, version: int):
+        self.plugin_versions[plugin] = version
+
+    def get_type_hint_lineage(self, type_hint):
+        return self.type_hint_lineages[type_hint]
+
+    def get_plugin_version(self, plugin):
+        return self.plugin_versions[plugin]
+
+    def get_plugin(self, type_hint):
+        return self.type_hint_to_plugin[type_hint]
+
+    def get_upgrader(self, type_hint):
+        return self.type_hint_to_upgrader.get(type_hint)
 
     def add_runner(self, runner_name: str, runner: Type['Runner']):
         """Add a Runner.
@@ -76,17 +96,14 @@ class Registry():
     def add_config(self,
                    type_hint: str,
                    config: Type['Config'],
-                   version: int = 0,
-                   upgraders: List['Upgrader'] = None):
+                   plugin: str,
+                   upgrader=None):
         """Add a Config.
 
         Args:
             type_hint: the type hint used for deserialization of dict to
                 an instance of config
             config: Config class
-            version: the current version of the Config
-            upgraders: a sequence of Upgraders that go from version 0 to
-                version
         """
         if type_hint in self.configs:
             raise RegistryError(
@@ -94,12 +111,9 @@ class Registry():
                     type_hint))
 
         self.configs[type_hint] = config
-
-        if type_hint in self.config_upgraders:
-            raise RegistryError(
-                'There are already config upgraders registered for type_hint {}'.
-                format(type_hint))
-        self.config_upgraders[type_hint] = (version, upgraders)
+        self.type_hint_to_plugin[type_hint] = plugin
+        if upgrader:
+            self.type_hint_to_upgrader[type_hint] = upgrader
 
     def get_config(self, type_hint: str) -> Type['Config']:
         """Get a Config class associated with a type_hint."""
@@ -112,16 +126,6 @@ class Registry():
                 'This may be because you forgot to use the register_config decorator, '
                 'or forgot to import the module in the top-level __init__.py file for '
                 'the plugin.').format(type_hint))
-
-    def get_config_upgraders(self, type_hint: str) -> List['Upgrader']:  # noqa
-        """Get config upgraders associated with type_hint."""
-        out = self.config_upgraders.get(type_hint)
-        if out:
-            return out
-        else:
-            raise RegistryError(
-                '{} is not a registered config upgrader type hint.'.format(
-                    type_hint))
 
     def add_rv_config_schema(self, config_section: str,
                              config_fields: List[str]):
@@ -152,6 +156,7 @@ class Registry():
         # import so register_config decorators are called
         # TODO can we get rid of this now?
         import rastervision2.pipeline.pipeline_config  # noqa
+        self.set_plugin_version('rastervision2.pipeline', 0)
 
     def load_plugins(self):
         """Discover all plugins and register their resources.
@@ -180,3 +185,14 @@ class Registry():
             register_plugin = getattr(module, 'register_plugin', None)
             if register_plugin:
                 register_plugin(self)
+
+        config_class_to_type_hint = {}
+        for type_hint, config_class in self.configs.items():
+            config_class_to_type_hint[config_class] = type_hint
+
+        for type_hint, config_class in self.configs.items():
+            lineage = inspect.getmro(config_class)
+            th_lineage = [config_class_to_type_hint[cc] for cc in lineage
+                          if config_class_to_type_hint.get(cc)]
+            th_lineage.reverse()
+            self.type_hint_lineages[type_hint] = th_lineage
