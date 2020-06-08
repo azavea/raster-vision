@@ -19,60 +19,42 @@ if TYPE_CHECKING:
     from rastervision2.pytorch_learner.learner import Learner  # noqa
 
 
-def get_torchvision_backbones():
-    backbones = []
-    # This may need to be updated after upgrading torchvision.
-    packages = [
-        'alexnet', 'densenet', 'googlenet', 'inception', 'mnasnet',
-        'mobilenet', 'resnet', 'shufflenetv2', 'squeezenet', 'vgg'
-    ]
-    for package in packages:
-        module = importlib.import_module(
-            'torchvision.models.{}'.format(package))
-        backbones.extend(module.__all__)
-
-    return backbones
-
-
-backbones = get_torchvision_backbones()
-
-
 class Backbone(Enum):
-    alexnet = 'alexnet'
-    densenet121 = 'densenet121'
-    densenet169 = 'densenet169'
-    densenet201 = 'densenet201'
-    densenet161 = 'densenet161'
-    googlenet = 'googlenet'
-    inception_v3 = 'inception_v3'
-    mnasnet0_5 = 'mnasnet0_5'
-    mnasnet0_75 = 'mnasnet0_75'
-    mnasnet1_0 = 'mnasnet1_0'
-    mnasnet1_3 = 'mnasnet1_3'
-    mobilenet_v2 = 'mobilenet_v2'
-    resnet18 = 'resnet18'
-    resnet34 = 'resnet34'
-    resnet50 = 'resnet50'
-    resnet101 = 'resnet101'
-    resnet152 = 'resnet152'
-    resnext50_32x4d = 'resnext50_32x4d'
-    resnext101_32x8d = 'resnext101_32x8d'
-    wide_resnet50_2 = 'wide_resnet50_2'
-    wide_resnet101_2 = 'wide_resnet101_2'
-    shufflenet_v2_x0_5 = 'shufflenet_v2_x0_5'
-    shufflenet_v2_x1_0 = 'shufflenet_v2_x1_0'
-    shufflenet_v2_x1_5 = 'shufflenet_v2_x1_5'
-    shufflenet_v2_x2_0 = 'shufflenet_v2_x2_0'
-    squeezenet1_0 = 'squeezenet1_0'
-    squeezenet1_1 = 'squeezenet1_1'
-    vgg11 = 'vgg11'
-    vgg11_bn = 'vgg11_bn'
-    vgg13 = 'vgg13'
-    vgg13_bn = 'vgg13_bn'
-    vgg16 = 'vgg16'
-    vgg16_bn = 'vgg16_bn'
-    vgg19_bn = 'vgg19_bn'
-    vgg19 = 'vgg19'
+    alexnet = 1
+    densenet121 = 2
+    densenet169 = 3
+    densenet201 = 4
+    densenet161 = 5
+    googlenet = 6
+    inception_v3 = 7
+    mnasnet0_5 = 8
+    mnasnet0_75 = 9
+    mnasnet1_0 = 10
+    mnasnet1_3 = 11
+    mobilenet_v2 = 12
+    resnet18 = 13
+    resnet34 = 14
+    resnet50 = 15
+    resnet101 = 16
+    resnet152 = 17
+    resnext50_32x4d = 18
+    resnext101_32x8d = 19
+    wide_resnet50_2 = 20
+    wide_resnet101_2 = 21
+    shufflenet_v2_x0_5 = 22
+    shufflenet_v2_x1_0 = 23
+    shufflenet_v2_x1_5 = 24
+    shufflenet_v2_x2_0 = 25
+    squeezenet1_0 = 26
+    squeezenet1_1 = 27
+    vgg11 = 28
+    vgg11_bn = 29
+    vgg13 = 30
+    vgg13_bn = 31
+    vgg16 = 32
+    vgg16_bn = 33
+    vgg19_bn = 34
+    vgg19 = 35
 
 
 @register_config('model')
