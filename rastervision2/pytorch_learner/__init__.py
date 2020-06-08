@@ -16,4 +16,4 @@ from rastervision2.pytorch_learner.object_detection_learner import *
 
 
 def register_plugin(registry):
-    registry.set_plugin_version('rastervision2.pytorch_learner', 0)
+    registry.set_plugin_version('rastervision2.pytorch_learner', 1)
