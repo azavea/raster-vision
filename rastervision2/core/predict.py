@@ -36,9 +36,7 @@ class OptionEatAll(click.Option):
         return retval
 
 
-@main.command(
-    'predict', short_help='Use a model bundle to predict on new images.')
-@click.pass_context
+@click.command()
 @click.argument('model_bundle')
 @click.argument('image_uri')
 @click.argument('output_uri')
@@ -53,7 +51,7 @@ class OptionEatAll(click.Option):
     '--channel-order',
     cls=OptionEatAll,
     help='List of indices comprising channel_order. Example: 2 1 0')
-def predict(ctx, model_bundle, image_uri, output_uri, update_stats,
+def predict(model_bundle, image_uri, output_uri, update_stats,
             channel_order):
     """Make predictions on the images at IMAGE_URI
     using MODEL_BUNDLE and store the prediction output at OUTPUT_URI.
@@ -67,3 +65,7 @@ def predict(ctx, model_bundle, image_uri, output_uri, update_stats,
         predictor = Predictor(model_bundle, tmp_dir, update_stats,
                               channel_order)
         predictor.predict([image_uri], output_uri)
+
+
+if __name__ == '__main__':
+    predict()

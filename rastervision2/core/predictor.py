@@ -1,17 +1,16 @@
 from os.path import join
 import zipfile
+import logging
 
-<<<<<<< HEAD
-from rastervision2.pipeline import rv_config
-from rastervision2.pipeline.config import build_config
-=======
 from rastervision2.pipeline import rv_config, registry
 from rastervision2.pipeline.config import (build_config, upgrade_config, ConfigError)
->>>>>>> 24f6621... fixup upgrader
 from rastervision2.pipeline.file_system.utils import (download_if_needed,
                                                       make_dir, file_to_json)
 from rastervision2.core.data.raster_source import ChannelOrderError
 from rastervision2.core.analyzer import StatsAnalyzerConfig
+
+
+log = logging.getLogger(__name__)
 
 
 class Predictor():
