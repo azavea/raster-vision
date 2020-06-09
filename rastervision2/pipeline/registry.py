@@ -178,6 +178,20 @@ class Registry():
         import rastervision2.pipeline.pipeline_config  # noqa
         self.set_plugin_version('rastervision2.pipeline', 0)
 
+    def update_config_info(self):
+        config_class_to_type_hint = {}
+        for type_hint, config_class in self.configs.items():
+            config_class_to_type_hint[config_class] = type_hint
+
+        for type_hint, config_class in self.configs.items():
+            lineage = inspect.getmro(config_class)
+            th_lineage = [
+                config_class_to_type_hint[cc] for cc in lineage
+                if config_class_to_type_hint.get(cc)
+            ]
+            th_lineage.reverse()
+            self.type_hint_to_lineage[type_hint] = th_lineage
+
     def load_plugins(self):
         """Discover all plugins and register their resources.
 
@@ -206,15 +220,4 @@ class Registry():
             if register_plugin:
                 register_plugin(self)
 
-        config_class_to_type_hint = {}
-        for type_hint, config_class in self.configs.items():
-            config_class_to_type_hint[config_class] = type_hint
-
-        for type_hint, config_class in self.configs.items():
-            lineage = inspect.getmro(config_class)
-            th_lineage = [
-                config_class_to_type_hint[cc] for cc in lineage
-                if config_class_to_type_hint.get(cc)
-            ]
-            th_lineage.reverse()
-            self.type_hint_lineages[type_hint] = th_lineage
+        self.update_config_info()

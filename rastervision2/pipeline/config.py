@@ -9,7 +9,7 @@ from rastervision2.pipeline.file_system import str_to_file
 from rastervision2.pipeline import rv_config
 
 if TYPE_CHECKING:
-    from rastervision2.pipeline.pipeline_config import PipelineConfig
+    from rastervision2.pipeline.pipeline_config import PipelineConfig  # noqa
 
 
 class ConfigError(ValueError):
