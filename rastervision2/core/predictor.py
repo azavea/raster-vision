@@ -48,12 +48,7 @@ class Predictor():
         config_dict = file_to_json(config_path)
         rv_config.set_everett_config(
             config_overrides=config_dict.get('rv_config'))
-        plugin_versions = config_dict.get('plugin_versions')
-        if plugin_versions is None:
-            raise ConfigError(
-                'Configuration is missing plugin_version field so is not backward '
-                'compatible.')
-        config_dict = upgrade_config(config_dict, plugin_versions)
+        config_dict = upgrade_config(config_dict)
 
         self.pipeline = build_config(config_dict).build(tmp_dir)
         self.scene = None

@@ -720,12 +720,7 @@ class Learner(ABC):
         model_path = join(model_bundle_dir, 'model.pth')
 
         config_dict = file_to_json(config_path)
-        plugin_versions = config_dict.get('plugin_versions')
-        if plugin_versions is None:
-            raise ConfigError(
-                'Configuration is missing plugin_version field so is not backward '
-                'compatible.')
-        config_dict = upgrade_config(config_dict, plugin_versions)
+        config_dict = upgrade_config(config_dict)
 
         cfg = build_config(config_dict)
         return cfg.learner.build(tmp_dir, model_path=model_path)

@@ -1,4 +1,4 @@
-from typing import List, Type, TYPE_CHECKING
+from typing import List, Type, TYPE_CHECKING, Optional, Callable
 import inspect
 
 if TYPE_CHECKING:
@@ -22,23 +22,43 @@ class Registry():
         self.rv_config_schema = {}
 
         self.plugin_versions = {}
-        self.type_hint_lineages = {}
+        self.type_hint_to_lineage = {}
         self.type_hint_to_plugin = {}
         self.type_hint_to_upgrader = {}
 
     def set_plugin_version(self, plugin: str, version: int):
+        """Set the latest version of a plugin.
+
+        Args:
+            plugin: module path of plugin (eg. rastervision2.core)
+            version: a non-negative integer version number that should be incremented
+                each time a config schema changes
+        """
         self.plugin_versions[plugin] = version
 
-    def get_type_hint_lineage(self, type_hint):
-        return self.type_hint_lineages[type_hint]
+    def get_type_hint_lineage(self, type_hint: str) -> List[str]:
+        """Get the lineage for a type hint.
 
-    def get_plugin_version(self, plugin):
+        Returns:
+            List of type hints of all Config classes in the subclass is-a "lineage" from
+            Config to the class with type hint type_hint.
+        """
+        return self.type_hint_to_lineage[type_hint]
+
+    def get_plugin_version(self, plugin: str) -> int:
+        """Get latest version of plugin.
+
+        Args:
+            plugin: the module path of the plugin
+        """
         return self.plugin_versions[plugin]
 
-    def get_plugin(self, type_hint):
+    def get_plugin(self, type_hint: str) -> str:
+        """Get module path of plugin when Config class with type_hint is defined."""
         return self.type_hint_to_plugin[type_hint]
 
-    def get_upgrader(self, type_hint):
+    def get_upgrader(self, type_hint: str) -> Optional[Callable]:
+        """Get function that upgrades config dicts for type_hint."""
         return self.type_hint_to_upgrader.get(type_hint)
 
     def add_runner(self, runner_name: str, runner: Type['Runner']):

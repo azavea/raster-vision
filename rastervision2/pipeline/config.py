@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import List, Union, Optional, Callable, Dict
 import inspect
 
 from pydantic import BaseModel, create_model, Field, validator  # noqa
@@ -7,6 +7,8 @@ from typing_extensions import Literal
 
 from rastervision2.pipeline import registry
 from rastervision2.pipeline.file_system import str_to_file
+from rastervision2.pipeline.pipeline_config import PipelineConfig
+from rastervision2.pipeline import rv_config
 
 
 class ConfigError(ValueError):
@@ -113,9 +115,11 @@ class Config(BaseModel):
                     val, field))
 
 
-def save_pipeline_config(cfg, output_uri):
-    from rastervision2.pipeline import rv_config
+def save_pipeline_config(cfg: PipelineConfig, output_uri: str):
+    """Save a PipelineConfig to JSON file.
 
+    Inject rv_config and plugin_versions before saving.
+    """
     cfg.rv_config = rv_config.get_config_dict(registry.rv_config_schema)
     cfg.plugin_versions = registry.plugin_versions
     cfg_json = cfg.json()
@@ -190,7 +194,8 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
         return x
 
 
-def upgrade_config(x: Union[dict, List[dict]], plugin_versions) -> Union[dict, List[dict]]:
+def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]) ->
+        Union[dict, List[dict]]:
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored
@@ -199,6 +204,7 @@ def upgrade_config(x: Union[dict, List[dict]], plugin_versions) -> Union[dict, L
     Args:
         x: serialized Config(s) which are potentially of a
             non-current version
+        plugin_versions: dict mapping from plugin module name to the latest version
 
     Returns:
         the corresponding serialized Config(s) that have been upgraded to the
@@ -207,7 +213,7 @@ def upgrade_config(x: Union[dict, List[dict]], plugin_versions) -> Union[dict, L
     if isinstance(x, dict):
         new_x = {}
         for k, v in x.items():
-            new_x[k] = upgrade_config(v, plugin_versions)
+            new_x[k] = _upgrade_config(v, plugin_versions)
         type_hint = new_x.get('type_hint')
         if type_hint is not None:
             type_hint_lineage = registry.get_type_hint_lineage(type_hint)
@@ -221,21 +227,48 @@ def upgrade_config(x: Union[dict, List[dict]], plugin_versions) -> Union[dict, L
                         new_x = upgrader(new_x, version)
         return new_x
     elif isinstance(x, list):
-        return [upgrade_config(v, plugin_versions) for v in x]
+        return [_upgrade_config(v, plugin_versions) for v in x]
     else:
         return x
 
 
-def get_plugin(cls) -> str:
-    cls_module = inspect.getmodule(cls)
+def upgrade_config(x: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
+    """Upgrade serialized Config(s) to the latest version.
+
+    Used to implement backward compatibility of Configs using upgraders stored
+    in the registry.
+
+    Args:
+        x: serialized PipelineConfig(s) which are potentially of a
+            non-current version
+
+    Returns:
+        the corresponding serialized PipelineConfig(s) that have been upgraded to the
+            current version
+    """
+    plugin_versions = config_dict.get('plugin_versions')
+    if plugin_versions is None:
+        raise ConfigError(
+            'Configuration is missing plugin_version field so is not backward '
+            'compatible.')
+    return _upgrade_config(config_dict, plugin_versions)
+
+
+def get_plugin(config_cls) -> str:
+    """Infer the module path of the plugin where a Config class is defined.
+
+    This only works correctly if the plugin is in a module under rastervision2.
+    """
+    cls_module = inspect.getmodule(config_cls)
     return 'rastervision2.' + cls_module.__name__.split('.')[1]
 
 
-def register_config(type_hint: str, plugin=None, upgrader=None):
+def register_config(type_hint: str, plugin: Optional[str]=None,
+                    upgrader: Optional[Callable]=None):
     """Class decorator used to register Config classes with registry.
 
     All Configs must be registered! Registering a Config does the following:
-    1) associates Config classes with type_hints, which is
+    1) associates Config classes with type_hint, plugin, and upgrader, which is
     necessary for polymorphic deserialization. See build_config() for more
     details.
     2) adds a constant `type_hint` field to the Config which is set to
@@ -245,6 +278,12 @@ def register_config(type_hint: str, plugin=None, upgrader=None):
     Args:
         type_hint: a type hint used to deserialize Configs. Needs to be unique
             across all registered Configs.
+        plugin: the module path of the plugin where the Config is defined. This
+            will be inferred if omitted.
+        upgrader: a function of the form upgrade(config_dict, version) which returns the
+            corresponding config dict of version = version + 1. This can be useful
+            for maintaining backward compatibility by allowing old configs using an
+            outdated schema to be upgraded to the current schema.
     """
 
     def _register_config(cls):
