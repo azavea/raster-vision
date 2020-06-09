@@ -15,13 +15,14 @@ class VectorSourceConfig(Config):
          'will be deleted.'))
     class_id_to_filter: Optional[Dict[int, Optional[ClassFilter]]] = Field(
         None,
-        description=(
-            'Map from class_id to JSON filter used to infer missing class_ids. '
-            'Each key should be a class id, and its value should be a boolean '
-            'expression which is run against the property field for each feature.'
-            'This allows matching different features to different class ids based on '
-            'its properties. The expression schema is that described by '
-            'https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter'))
+        description=
+        ('Map from class_id to JSON filter used to infer missing class_ids. '
+         'Each key should be a class id, and its value should be a boolean '
+         'expression which is run against the property field for each feature.'
+         'This allows matching different features to different class ids based on '
+         'its properties. The expression schema is that described by '
+         'https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter'
+         ))
     line_bufs: Optional[Dict[int, Union[int, float, None]]] = Field(
         None,
         description=

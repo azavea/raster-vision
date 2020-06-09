@@ -1,6 +1,5 @@
 from typing import List, Optional, Union, Tuple, TYPE_CHECKING
 from os.path import join
-import importlib
 from enum import Enum
 
 from pydantic import PositiveFloat, PositiveInt
@@ -165,17 +164,22 @@ class DataConfig(Config):
         ('URI of the dataset. This can be a zip file, a list of zip files, or a '
          'directory which contains a set of zip files.'))
     train_sz: Optional[int] = Field(
-        None, description=(
-            'If set, the number of training images to use. If fewer images exist, '
-            'then an exception will be raised.'))
-    group_uris: Union[None, List[Union[str, List[str]]]] = Field(None, description=(
-        'This can be set instead of uri in order to specify groups of chips. Each '
-        'element in the list is expected to be an object of the same form accepted by '
-        'the uri field. The purpose of separating chips into groups is to be able to '
-        'use the group_train_sz field.'))
-    group_train_sz: Optional[int] = Field(None, description=(
-        'If group_uris is set, this can be used to specify the number of chips to use '
-        'per group.'))
+        None,
+        description=
+        ('If set, the number of training images to use. If fewer images exist, '
+         'then an exception will be raised.'))
+    group_uris: Union[None, List[Union[str, List[str]]]] = Field(
+        None,
+        description=
+        ('This can be set instead of uri in order to specify groups of chips. Each '
+         'element in the list is expected to be an object of the same form accepted by '
+         'the uri field. The purpose of separating chips into groups is to be able to '
+         'use the group_train_sz field.'))
+    group_train_sz: Optional[int] = Field(
+        None,
+        description=
+        ('If group_uris is set, this can be used to specify the number of chips to use '
+         'per group.'))
     data_format: Optional[str] = Field(
         None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')

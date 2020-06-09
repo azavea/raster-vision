@@ -15,6 +15,7 @@ class SemanticSegmentationLabelStore(LabelStore):
     Stores class raster as GeoTIFF, and can optionally vectorizes predictions and stores
     them in GeoJSON files.
     """
+
     def __init__(self,
                  uri,
                  extent,

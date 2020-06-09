@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Tuple
 import click
 
 from rastervision2.pipeline import (registry, rv_config)
-from rastervision2.pipeline.file_system import (file_to_json, str_to_file)
+from rastervision2.pipeline.file_system import (file_to_json)
 from rastervision2.pipeline.config import build_config, save_pipeline_config
 from rastervision2.pipeline.pipeline_config import PipelineConfig
 

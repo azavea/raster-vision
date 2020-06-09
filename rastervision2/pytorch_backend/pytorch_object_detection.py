@@ -11,6 +11,7 @@ from rastervision2.pytorch_backend.pytorch_learner_backend import (
 
 class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
     """Writes data in COCO format."""
+
     def __enter__(self):
         super().__enter__()
 

@@ -75,8 +75,8 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
                     class_id = vo.class_id
                     pred_geojson_source = GeoJSONVectorSourceConfig(
                         uri=pred_geojson_uri, default_class_id=None).build(
-                        self.class_config,
-                        scene.raster_source.get_crs_transformer())
+                            self.class_config,
+                            scene.raster_source.get_crs_transformer())
                     pred_geojson = pred_geojson_source.get_geojson()
 
                     if scene.aoi_polygons:

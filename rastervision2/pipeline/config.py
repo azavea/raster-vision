@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from typing import List, Union, Optional, Callable, Dict
 import inspect
 
@@ -194,8 +193,8 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
         return x
 
 
-def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]) ->
-        Union[dict, List[dict]]:
+def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
+                    ) -> Union[dict, List[dict]]:  # noqa
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored
@@ -232,14 +231,14 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int])
         return x
 
 
-def upgrade_config(x: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
+def upgrade_config(config_dict: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored
     in the registry.
 
     Args:
-        x: serialized PipelineConfig(s) which are potentially of a
+        config_dict: serialized PipelineConfig(s) which are potentially of a
             non-current version
 
     Returns:
@@ -263,8 +262,9 @@ def get_plugin(config_cls) -> str:
     return 'rastervision2.' + cls_module.__name__.split('.')[1]
 
 
-def register_config(type_hint: str, plugin: Optional[str]=None,
-                    upgrader: Optional[Callable]=None):
+def register_config(type_hint: str,
+                    plugin: Optional[str] = None,
+                    upgrader: Optional[Callable] = None):
     """Class decorator used to register Config classes with registry.
 
     All Configs must be registered! Registering a Config does the following:
@@ -292,8 +292,7 @@ def register_config(type_hint: str, plugin: Optional[str]=None,
             type_hint=(Literal[type_hint], type_hint),
             __base__=cls)
         _plugin = plugin or get_plugin(cls)
-        registry.add_config(
-            type_hint, new_cls, _plugin, upgrader)
+        registry.add_config(type_hint, new_cls, _plugin, upgrader)
 
         new_cls.__doc__ = (cls.__doc__
                            or '') + '\n\n' + cls.get_field_summary()

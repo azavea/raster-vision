@@ -1,5 +1,6 @@
 # flake8: noqa
 
+
 def register_plugin(registry):
     registry.set_plugin_version('rastervision2.core', 0)
 
@@ -10,6 +11,7 @@ def register_plugin(registry):
     import rastervision2.core.data
     import rastervision2.core.rv_pipeline
     import rastervision2.core.evaluation
+
 
 import rastervision2.pipeline
 from rastervision2.core.box import *

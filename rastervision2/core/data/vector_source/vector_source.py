@@ -115,7 +115,8 @@ class VectorSource(ABC):
     """A source of vector data."""
 
     def __init__(self, vs_config: 'VectorSourceConfig',
-                 class_config: 'ClassConfig', crs_transformer: 'CRSTransformer'):
+                 class_config: 'ClassConfig',
+                 crs_transformer: 'CRSTransformer'):
         self.vs_config = vs_config
         self.class_config = class_config
         self.crs_transformer = crs_transformer

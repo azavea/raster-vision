@@ -228,7 +228,8 @@ class Learner(ABC):
             if not isfile(zip_path):
                 zip_path = download_if_needed(zip_uri, self.data_cache_dir)
             with zipfile.ZipFile(zip_path, 'r') as zipf:
-                data_dir = join(self.tmp_dir, 'data', str(uuid.uuid4()), str(zip_ind))
+                data_dir = join(self.tmp_dir, 'data', str(uuid.uuid4()),
+                                str(zip_ind))
                 data_dirs.append(data_dir)
                 zipf.extractall(data_dir)
 
@@ -284,7 +285,8 @@ class Learner(ABC):
         """
         return None
 
-    def _get_datasets(self, uri: Union[str, List[str]]) -> Tuple[Dataset, Dataset, Dataset]:  # noqa
+    def _get_datasets(self, uri: Union[str, List[str]]
+                      ) -> Tuple[Dataset, Dataset, Dataset]:  # noqa
         """Gets Datasets for a single group of chips.
 
         This should be overridden for each Learner subclass.
@@ -313,9 +315,9 @@ class Learner(ABC):
                 valid_ds_lst.append(valid_ds)
                 test_ds_lst.append(test_ds)
 
-            train_ds, valid_ds, test_ds = (
-                ConcatDataset(train_ds_lst), ConcatDataset(valid_ds_lst),
-                ConcatDataset(test_ds_lst))
+            train_ds, valid_ds, test_ds = (ConcatDataset(train_ds_lst),
+                                           ConcatDataset(valid_ds_lst),
+                                           ConcatDataset(test_ds_lst))
             return train_ds, valid_ds, test_ds
         else:
             return self._get_datasets(self.cfg.data.uri)
@@ -738,7 +740,8 @@ class Learner(ABC):
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
         pipeline_cfg = LearnerPipelineConfig(learner=self.cfg)
-        save_pipeline_config(pipeline_cfg, join(model_bundle_dir, 'pipeline-config.json'))
+        save_pipeline_config(pipeline_cfg,
+                             join(model_bundle_dir, 'pipeline-config.json'))
         zipdir(model_bundle_dir, self.model_bundle_path)
 
     def get_start_epoch(self) -> int:

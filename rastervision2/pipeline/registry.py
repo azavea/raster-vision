@@ -212,7 +212,9 @@ class Registry():
 
         for type_hint, config_class in self.configs.items():
             lineage = inspect.getmro(config_class)
-            th_lineage = [config_class_to_type_hint[cc] for cc in lineage
-                          if config_class_to_type_hint.get(cc)]
+            th_lineage = [
+                config_class_to_type_hint[cc] for cc in lineage
+                if config_class_to_type_hint.get(cc)
+            ]
             th_lineage.reverse()
             self.type_hint_lineages[type_hint] = th_lineage

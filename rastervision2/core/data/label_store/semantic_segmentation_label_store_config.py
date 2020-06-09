@@ -36,6 +36,7 @@ class VectorOutputConfig(Config):
 @register_config('polygon_vector_output')
 class PolygonVectorOutputConfig(VectorOutputConfig):
     """Config for vectorized semantic segmentation predictions."""
+
     def get_mode(self):
         return 'polygons'
 

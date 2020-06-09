@@ -1,7 +1,6 @@
 import click
 
 from rastervision2.pipeline import rv_config
-from rastervision2.pipeline.cli import main
 from rastervision2.core.predictor import Predictor
 
 
@@ -51,8 +50,7 @@ class OptionEatAll(click.Option):
     '--channel-order',
     cls=OptionEatAll,
     help='List of indices comprising channel_order. Example: 2 1 0')
-def predict(model_bundle, image_uri, output_uri, update_stats,
-            channel_order):
+def predict(model_bundle, image_uri, output_uri, update_stats, channel_order):
     """Make predictions on the images at IMAGE_URI
     using MODEL_BUNDLE and store the prediction output at OUTPUT_URI.
     """

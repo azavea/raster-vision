@@ -23,10 +23,11 @@ class PipelineConfig(Config):
         'not be set explicitly by users -- it is only used by the runner '
         'when running a remote pipeline.')
     plugin_versions: Optional[Dict[str, int]] = Field(
-        None, description=(
-            'Used to store a mapping of plugin module paths to the latest '
-            'version number. This should not be set explicitly by users -- it is set '
-            'automatically when serializing and saving the config to disk.'))
+        None,
+        description=
+        ('Used to store a mapping of plugin module paths to the latest '
+         'version number. This should not be set explicitly by users -- it is set '
+         'automatically when serializing and saving the config to disk.'))
 
     def get_config_uri(self) -> str:
         """Get URI of serialized version of this PipelineConfig."""
