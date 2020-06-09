@@ -6,26 +6,26 @@ from rastervision2.pytorch_backend.pytorch_learner_backend_config import \
     PyTorchLearnerBackendConfig
 from rastervision2.pytorch_backend.pytorch_semantic_segmentation import \
     PyTorchSemanticSegmentation
-from rastervision2.pytorch_backend.research_architecture_backend import \
+from rastervision2.research_backend.research_architecture_backend import \
     ResearchArchitectureBackend
 from rastervision2.pytorch_learner.learner_config import (ModelConfig,
                                                           SolverConfig)
 from rastervision2.pytorch_learner.learner_config import \
     augmentors as augmentor_list
 from rastervision2.pytorch_learner.learner_config import default_augmentors
-from rastervision2.pytorch_learner.research_architecture_learner_config import (
-    ResearchArchitectureDataConfig, ResearchArchitectureLearnerConfig)
+from rastervision2.research_backend.research_architecture_learner_config import (ResearchArchitectureDataConfig, ResearchArchitectureLearnerConfig)
 
 
 @register_config('research_architecture')
 class ResearchArchitectureConfig(BackendConfig):
     architecture: str
-    channels: int
+    pretrained: bool
+    bands: int
     solver: SolverConfig
     augmentors: List[str] = Field(
         default_augmentors,
         description=(
-            'Names of augmentors to use for training batches. '
+            'Names of albumentations augmentors to use for training batches. '
             'Choices include: ' + str(augmentor_list)))
 
     def get_learner_config(self, pipeline):
@@ -37,6 +37,9 @@ class ResearchArchitectureConfig(BackendConfig):
         data.augmentors = self.augmentors
 
         learner = ResearchArchitectureLearnerConfig(
+            architecture=self.architecture,
+            pretrained=self.pretrained,
+            bands=self.bands,
             data=data,
             solver=self.solver,
             test_mode=False,

@@ -13,10 +13,13 @@ class ResearchArchitectureDataConfig(DataConfig):
 
 @register_config('research_architecture_learner')
 class ResearchArchitectureLearnerConfig(LearnerConfig):
+    architecture: str
+    pretrained: bool
+    bands: int
+    model: ModelConfig = ModelConfig()
     data: ResearchArchitectureDataConfig
-    model: Optional[ModelConfig] = None
 
     def build(self, tmp_dir, model_path=None):
-        from rastervision2.pytorch_learner.research_architecture_learner import (ResearchArchitectureLearner)
+        from rastervision2.research_backend.research_architecture_learner import (ResearchArchitectureLearner)
         return ResearchArchitectureLearner(
             self, tmp_dir, model_path=model_path)
