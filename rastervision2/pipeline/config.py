@@ -1,4 +1,4 @@
-from typing import List, Union, Optional, Callable, Dict
+from typing import List, Union, Optional, Callable, Dict, TYPE_CHECKING
 import inspect
 
 from pydantic import BaseModel, create_model, Field, validator  # noqa
@@ -6,8 +6,10 @@ from typing_extensions import Literal
 
 from rastervision2.pipeline import registry
 from rastervision2.pipeline.file_system import str_to_file
-from rastervision2.pipeline.pipeline_config import PipelineConfig
 from rastervision2.pipeline import rv_config
+
+if TYPE_CHECKING:
+    from rastervision2.pipeline.pipeline_config import PipelineConfig
 
 
 class ConfigError(ValueError):
@@ -114,7 +116,7 @@ class Config(BaseModel):
                     val, field))
 
 
-def save_pipeline_config(cfg: PipelineConfig, output_uri: str):
+def save_pipeline_config(cfg: 'PipelineConfig', output_uri: str):
     """Save a PipelineConfig to JSON file.
 
     Inject rv_config and plugin_versions before saving.
