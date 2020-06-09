@@ -235,7 +235,8 @@ class LearnerConfig(Config):
             self.data.img_sz = self.data.img_sz // 2
             self.data.num_workers = 0
 
-        self.model.update(learner=self)
+        if self.model is not None:
+            self.model.update(learner=self)
         self.solver.update(learner=self)
         self.data.update(learner=self)
 

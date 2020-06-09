@@ -1,24 +1,24 @@
 from typing import List, Optional
 
 from rastervision2.core.backend import BackendConfig
-from rastervision2.pipeline.config import register_config, Field
+from rastervision2.pipeline.config import Field, register_config
 from rastervision2.pytorch_backend.pytorch_learner_backend_config import \
     PyTorchLearnerBackendConfig
 from rastervision2.pytorch_backend.pytorch_semantic_segmentation import \
     PyTorchSemanticSegmentation
 from rastervision2.pytorch_backend.research_architecture_backend import \
     ResearchArchitectureBackend
-from rastervision2.pytorch_learner.semantic_segmentation_learner_config import (
-    SemanticSegmentationDataConfig, SemanticSegmentationLearnerConfig,
-    SemanticSegmentationModelConfig)
-from rastervision2.pytorch_learner.learner_config import (
-    SolverConfig, ModelConfig, default_augmentors, augmentors as
-    augmentor_list)
+from rastervision2.pytorch_learner.learner_config import (ModelConfig,
+                                                          SolverConfig)
+from rastervision2.pytorch_learner.learner_config import \
+    augmentors as augmentor_list
+from rastervision2.pytorch_learner.learner_config import default_augmentors
+from rastervision2.pytorch_learner.research_architecture_learner_config import (
+    ResearchArchitectureDataConfig, ResearchArchitectureLearnerConfig)
 
 
 @register_config('research_architecture')
 class ResearchArchitectureConfig(BackendConfig):
-    model: Optional[ModelConfig]
     architecture: str
     channels: int
     solver: SolverConfig
@@ -29,16 +29,15 @@ class ResearchArchitectureConfig(BackendConfig):
             'Choices include: ' + str(augmentor_list)))
 
     def get_learner_config(self, pipeline):
-        data = SemanticSegmentationDataConfig()
+        data = ResearchArchitectureDataConfig()
         data.uri = pipeline.chip_uri
         data.class_names = pipeline.dataset.class_config.names
         data.class_colors = pipeline.dataset.class_config.colors
         data.img_sz = pipeline.train_chip_sz
         data.augmentors = self.augmentors
 
-        learner = SemanticSegmentationLearnerConfig(
+        learner = ResearchArchitectureLearnerConfig(
             data=data,
-            model=self.model,
             solver=self.solver,
             test_mode=False,
             output_uri=pipeline.train_uri,

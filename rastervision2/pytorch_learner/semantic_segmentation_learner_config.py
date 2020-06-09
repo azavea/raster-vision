@@ -36,7 +36,7 @@ class SemanticSegmentationModelConfig(ModelConfig):
 @register_config('semantic_segmentation_learner')
 class SemanticSegmentationLearnerConfig(LearnerConfig):
     data: SemanticSegmentationDataConfig
-    model: Optional[SemanticSegmentationModelConfig]
+    model: SemanticSegmentationModelConfig
 
     def build(self, tmp_dir, model_path=None):
         from rastervision2.pytorch_learner.semantic_segmentation_learner import (
