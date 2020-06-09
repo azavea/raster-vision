@@ -1,33 +1,23 @@
-import warnings
-warnings.filterwarnings('ignore')  # noqa
-from os.path import join, isdir, basename
-import logging
-import glob
-import requests
-import boto3
-from urllib.parse import urlparse
 import codecs
+import logging
+from urllib.parse import urlparse
 
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')  # noqa
-import torch
-from torch.utils.data import Dataset, ConcatDataset
+import boto3
+import requests
+import torch  # noqa
 import torch.nn.functional as F
-from torchvision import models
-from PIL import Image
-import torchvision
-
-from rastervision2.pytorch_learner.learner import Learner
-from rastervision2.pytorch_learner.utils import (
-    compute_conf_mat_metrics, compute_conf_mat, color_to_triple)
-
-from rastervision2.pytorch_learner.semantic_segmentation_learner import SemanticSegmentationLearner
+import torchvision  # noqa
+from rastervision2.pytorch_learner.semantic_segmentation_learner import \
+    SemanticSegmentationLearner
 
 log = logging.getLogger(__name__)
 
 
-def make_model(band_count, input_stride=1, class_count=1, divisor=1, pretrained=False):
+def make_model(band_count,
+               input_stride=1,
+               class_count=1,
+               divisor=1,
+               pretrained=False):
     raise NotImplementedError()
 
 
@@ -48,11 +38,11 @@ def read_text(uri: str) -> str:
 
 
 class ResearchArchitectureLearner(SemanticSegmentationLearner):
-
     def build_model(self):
         pretrained = self.cfg.pretrained
         uri = self.cfg.architecture
         bands = self.cfg.bands
+        resolution_divisor = self.cfg.resolution_divisor
 
         arch_str = read_text(uri)
         arch_code = compile(arch_str, uri, 'exec')
@@ -62,11 +52,28 @@ class ResearchArchitectureLearner(SemanticSegmentationLearner):
             bands,
             input_stride=1,
             class_count=len(self.cfg.data.class_names),
-            divisor=1,
-            pretrained=pretrained
-        )
+            divisor=resolution_divisor,
+            pretrained=pretrained)
         return model
 
-    def post_forward(self, pred):
-        pred_seg = pred.get('seg', pred.get('out', None))
-        return pred_seg
+    def train_step(self, batch, batch_ind):
+        x, y = batch
+        x = self.model(x)
+        seg = x.get('seg', x.get('out', None))
+        aux = x.get('aux', None)
+        if seg is not None and aux is not None:
+            return {
+                'train_loss':
+                F.cross_entropy(seg, y) * .4 * F.cross_entropy(aux, y)
+            }
+        elif seg is not None and aux is None:
+            return {'train_loss': F.cross_entropy(seg, y)}
+        else:
+            raise NotImplementedError()
+
+    def post_forward(self, x):
+        seg = x.get('seg', x.get('out', None))
+        return seg
+
+    def prob_to_pred(self, x):
+        return x.argmax(1)

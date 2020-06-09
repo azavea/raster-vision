@@ -1,19 +1,16 @@
-from typing import List, Optional
+from typing import List
 
 from rastervision2.core.backend import BackendConfig
 from rastervision2.pipeline.config import Field, register_config
-from rastervision2.pytorch_backend.pytorch_learner_backend_config import \
-    PyTorchLearnerBackendConfig
 from rastervision2.pytorch_backend.pytorch_semantic_segmentation import \
     PyTorchSemanticSegmentation
-from rastervision2.research_backend.research_architecture_backend import \
-    ResearchArchitectureBackend
-from rastervision2.pytorch_learner.learner_config import (ModelConfig,
-                                                          SolverConfig)
+from rastervision2.pytorch_learner.learner_config import (
+    DataConfig, SolverConfig)
 from rastervision2.pytorch_learner.learner_config import \
     augmentors as augmentor_list
 from rastervision2.pytorch_learner.learner_config import default_augmentors
-from rastervision2.research_backend.research_architecture_learner_config import (ResearchArchitectureDataConfig, ResearchArchitectureLearnerConfig)
+from rastervision2.research_backend.research_architecture_learner_config import (
+    ResearchArchitectureLearnerConfig)
 
 
 @register_config('research_architecture')
@@ -21,6 +18,7 @@ class ResearchArchitectureConfig(BackendConfig):
     architecture: str
     pretrained: bool
     bands: int
+    resolution_divisor: int
     solver: SolverConfig
     augmentors: List[str] = Field(
         default_augmentors,
@@ -29,7 +27,7 @@ class ResearchArchitectureConfig(BackendConfig):
             'Choices include: ' + str(augmentor_list)))
 
     def get_learner_config(self, pipeline):
-        data = ResearchArchitectureDataConfig()
+        data = DataConfig()
         data.uri = pipeline.chip_uri
         data.class_names = pipeline.dataset.class_config.names
         data.class_colors = pipeline.dataset.class_config.colors
@@ -40,6 +38,7 @@ class ResearchArchitectureConfig(BackendConfig):
             architecture=self.architecture,
             pretrained=self.pretrained,
             bands=self.bands,
+            resolution_divisor=self.resolution_divisor,
             data=data,
             solver=self.solver,
             test_mode=False,
@@ -55,6 +54,3 @@ class ResearchArchitectureConfig(BackendConfig):
 
     def get_bundle_filenames(self) -> List[str]:
         raise NotImplementedError()
-
-    def update(self, pipeline: Optional['RVPipeline'] = None):  # noqa
-        pass

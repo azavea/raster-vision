@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 from rastervision2.pipeline.config import Field, register_config, validator
 from rastervision2.pytorch_learner.learner_config import (Backbone, DataConfig,
