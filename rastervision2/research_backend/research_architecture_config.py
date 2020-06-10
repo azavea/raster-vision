@@ -53,4 +53,4 @@ class ResearchArchitectureConfig(BackendConfig):
         return PyTorchSemanticSegmentation(pipeline, learner, tmp_dir)
 
     def get_bundle_filenames(self) -> List[str]:
-        raise NotImplementedError()
+        return ['model-bundle.zip']
