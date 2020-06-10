@@ -8,6 +8,11 @@ from rastervision2.pipeline.config import (register_config, ConfigError, Field)
 
 @register_config('chip_classification_label_source')
 class ChipClassificationLabelSourceConfig(LabelSourceConfig):
+    """Config for a source of labels for chip classification.
+
+    This can be provided explicitly as a grid of cells, or a grid of cells can be
+    inferred from arbitrary polygons.
+    """
     vector_source: VectorSourceConfig
     ioa_thresh: Optional[float] = Field(
         None,

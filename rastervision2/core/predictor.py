@@ -1,12 +1,15 @@
 from os.path import join
 import zipfile
+import logging
 
 from rastervision2.pipeline import rv_config
-from rastervision2.pipeline.config import build_config
+from rastervision2.pipeline.config import (build_config, upgrade_config)
 from rastervision2.pipeline.file_system.utils import (download_if_needed,
                                                       make_dir, file_to_json)
 from rastervision2.core.data.raster_source import ChannelOrderError
 from rastervision2.core.analyzer import StatsAnalyzerConfig
+
+log = logging.getLogger(__name__)
 
 
 class Predictor():
@@ -44,6 +47,7 @@ class Predictor():
         config_dict = file_to_json(config_path)
         rv_config.set_everett_config(
             config_overrides=config_dict.get('rv_config'))
+        config_dict = upgrade_config(config_dict)
 
         self.pipeline = build_config(config_dict).build(tmp_dir)
         self.scene = None

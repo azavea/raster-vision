@@ -7,7 +7,7 @@ from rastervision2.pytorch_learner.learner_config import (
 
 
 class RegressionDataFormat(Enum):
-    csv = 1
+    csv = 'csv'
 
 
 @register_config('regression_data')

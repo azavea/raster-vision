@@ -40,7 +40,8 @@ from rastervision2.pipeline.file_system import (
     download_if_needed, sync_from_dir, get_local_path, unzip, list_paths,
     str_to_file)
 from rastervision2.pipeline.utils import terminate_at_exit
-from rastervision2.pipeline.config import build_config, ConfigError
+from rastervision2.pipeline.config import (
+    build_config, ConfigError, upgrade_config, save_pipeline_config)
 from rastervision2.pytorch_learner.learner_config import LearnerConfig
 
 log = logging.getLogger(__name__)
@@ -227,7 +228,8 @@ class Learner(ABC):
             if not isfile(zip_path):
                 zip_path = download_if_needed(zip_uri, self.data_cache_dir)
             with zipfile.ZipFile(zip_path, 'r') as zipf:
-                data_dir = join(self.tmp_dir, 'data', str(uuid.uuid4()), str(zip_ind))
+                data_dir = join(self.tmp_dir, 'data', str(uuid.uuid4()),
+                                str(zip_ind))
                 data_dirs.append(data_dir)
                 zipf.extractall(data_dir)
 
@@ -283,7 +285,8 @@ class Learner(ABC):
         """
         return None
 
-    def _get_datasets(self, uri: Union[str, List[str]]) -> Tuple[Dataset, Dataset, Dataset]:  # noqa
+    def _get_datasets(self, uri: Union[str, List[str]]
+                      ) -> Tuple[Dataset, Dataset, Dataset]:  # noqa
         """Gets Datasets for a single group of chips.
 
         This should be overridden for each Learner subclass.
@@ -312,9 +315,9 @@ class Learner(ABC):
                 valid_ds_lst.append(valid_ds)
                 test_ds_lst.append(test_ds)
 
-            train_ds, valid_ds, test_ds = (
-                ConcatDataset(train_ds_lst), ConcatDataset(valid_ds_lst),
-                ConcatDataset(test_ds_lst))
+            train_ds, valid_ds, test_ds = (ConcatDataset(train_ds_lst),
+                                           ConcatDataset(valid_ds_lst),
+                                           ConcatDataset(test_ds_lst))
             return train_ds, valid_ds, test_ds
         else:
             return self._get_datasets(self.cfg.data.uri)
@@ -715,10 +718,14 @@ class Learner(ABC):
         model_bundle_dir = join(tmp_dir, 'model-bundle')
         unzip(model_bundle_path, model_bundle_dir)
 
-        config_path = join(model_bundle_dir, 'learner-config.json')
+        config_path = join(model_bundle_dir, 'pipeline-config.json')
         model_path = join(model_bundle_dir, 'model.pth')
-        cfg = build_config(file_to_json(config_path))
-        return cfg.build(tmp_dir, model_path=model_path)
+
+        config_dict = file_to_json(config_path)
+        config_dict = upgrade_config(config_dict)
+
+        cfg = build_config(config_dict)
+        return cfg.learner.build(tmp_dir, model_path=model_path)
 
     def save_model_bundle(self):
         """Save a model bundle.
@@ -726,12 +733,15 @@ class Learner(ABC):
         This is a zip file with the model weights in .pth format and a serialized
         copy of the LearningConfig, which allows for making predictions in the future.
         """
+        from rastervision2.pytorch_learner.learner_pipeline_config import (
+            LearnerPipelineConfig)
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
         make_dir(model_bundle_dir)
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
-        shutil.copyfile(self.config_path,
-                        join(model_bundle_dir, 'learner-config.json'))
+        pipeline_cfg = LearnerPipelineConfig(learner=self.cfg)
+        save_pipeline_config(pipeline_cfg,
+                             join(model_bundle_dir, 'pipeline-config.json'))
         zipdir(model_bundle_dir, self.model_bundle_path)
 
     def get_start_epoch(self) -> int:

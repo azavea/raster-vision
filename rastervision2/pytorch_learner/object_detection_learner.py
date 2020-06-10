@@ -43,7 +43,7 @@ class ObjectDetectionLearner(Learner):
     def _get_datasets(self, uri):
         cfg = self.cfg
 
-        if cfg.data.data_format == ObjectDetectionDataFormat.default:
+        if cfg.data.data_format == ObjectDetectionDataFormat.coco:
             data_dirs = self.unzip_data(uri)
 
         transform, aug_transform = self.get_data_transforms()

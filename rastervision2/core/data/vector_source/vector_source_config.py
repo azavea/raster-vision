@@ -11,15 +11,18 @@ class VectorSourceConfig(Config):
         ...,
         description=
         ('The default class_id to use if class cannot be inferred using other '
-         'mechanisms. If a feature defaults to a class_id of None, then that feature '
+         'mechanisms. If a feature has an inferred class_id of None, then it '
          'will be deleted.'))
     class_id_to_filter: Optional[Dict[int, Optional[ClassFilter]]] = Field(
         None,
-        description=(
-            'Map from class_id to JSON filter used to infer missing class_ids. The '
-            'filter schema is according to '
-            'https://github.com/mapbox/mapbox-gl-js/blob/c9900db279db776f493ce8b6749966cedc2d6b8a/src/style-spec/feature_filter/index.js.'  # noqa
-        ))
+        description=
+        ('Map from class_id to JSON filter used to infer missing class_ids. '
+         'Each key should be a class id, and its value should be a boolean '
+         'expression which is run against the property field for each feature.'
+         'This allows matching different features to different class ids based on '
+         'its properties. The expression schema is that described by '
+         'https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter'
+         ))
     line_bufs: Optional[Dict[int, Union[int, float, None]]] = Field(
         None,
         description=

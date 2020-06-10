@@ -13,7 +13,7 @@ import rastervision2.core.backend
 import rastervision2.core.data
 import rastervision2.core.rv_pipeline
 import rastervision2.core.evaluation
-import rastervision2.core.cli
+import rastervision2.core.predict
 
 
 def register_plugin(registry):

@@ -34,7 +34,8 @@ class VsiFileSystem(FileSystem):
                 return '/vsi{}/{}{}'.format(scheme, parsed.netloc, parsed.path)
             else:
                 # assume file schema
-                return os.path.abspath(os.path.join(parsed.netloc, parsed.path))
+                return os.path.abspath(
+                    os.path.join(parsed.netloc, parsed.path))
         else:
             archive_target = uri.find('+')
             assert archive_target != -1
@@ -47,8 +48,8 @@ class VsiFileSystem(FileSystem):
                     uri[archive_content + 1:])
             else:
                 raise ValueError(
-                    'Attempted access into archive with unsupported scheme "{}"'.format(
-                        scheme))
+                    'Attempted access into archive with unsupported scheme "{}"'.
+                    format(scheme))
 
     @staticmethod
     def matches_uri(vsipath: str, mode: str) -> bool:
@@ -60,7 +61,8 @@ class VsiFileSystem(FileSystem):
         """
         if mode == 'r' and vsipath.startswith('/vsi'):
             return True
-        elif mode == 'w' and vsipath.startswith('/vsi') and '/vsicurl/' not in vsipath:
+        elif mode == 'w' and vsipath.startswith(
+                '/vsi') and '/vsicurl/' not in vsipath:
             return True
         else:
             return False
@@ -79,7 +81,8 @@ class VsiFileSystem(FileSystem):
         if include_dir:
             return True if file_stats else False
         else:
-            return True if file_stats and not file_stats.IsDirectory() else False
+            return True if file_stats and not file_stats.IsDirectory(
+            ) else False
 
     @staticmethod
     def read_bytes(vsipath: str) -> bytes:
@@ -96,7 +99,7 @@ class VsiFileSystem(FileSystem):
     @staticmethod
     def read_str(uri: str) -> str:
         """Read contents of URI to a string."""
-        return VsiFileSystem.read_bytes(uri).decode("UTF-8")
+        return VsiFileSystem.read_bytes(uri).decode('UTF-8')
 
     @staticmethod
     def write_bytes(vsipath: str, data: bytes):
@@ -123,6 +126,7 @@ class VsiFileSystem(FileSystem):
                 FileSystem
             delete: True if the destination should be deleted first.
         """
+
         def work(src, vsi_dest):
             gdal.Mkdir(vsi_dest, 0o777)
 
@@ -135,7 +139,7 @@ class VsiFileSystem(FileSystem):
 
         stats = gdal.VSIStatL(dst_dir_uri)
         if stats:
-            assert delete, "Cannot overwrite existing files if delete=False"
+            assert delete, 'Cannot overwrite existing files if delete=False'
             if stats.IsDirectory():
                 gdal.RmdirRecursive(dst_dir_uri)
             else:
@@ -143,7 +147,7 @@ class VsiFileSystem(FileSystem):
 
         src = Path(src_dir)
         assert src.exists() and src.is_dir(), \
-            "Local source ({}) must be a directory".format(src_dir)
+            'Local source ({}) must be a directory'.format(src_dir)
 
         work(src, dst_dir_uri)
 
@@ -158,9 +162,11 @@ class VsiFileSystem(FileSystem):
             dst_dir: A local destination directory
             delete: True if the destination should be deleted first.
         """
+
         def work(vsi_src, dest):
             if dest.exists():
-                assert dest.is_dir(), "Local target ({}) must be a directory".format(dest)
+                assert dest.is_dir(
+                ), 'Local target ({}) must be a directory'.format(dest)
             else:
                 dest.mkdir()
 
@@ -171,11 +177,11 @@ class VsiFileSystem(FileSystem):
                     work(item_vsi_src, target)
                 else:
                     assert not target.exists() or delete, \
-                        "Target location must not exist if delete=False"
+                        'Target location must not exist if delete=False'
                     VsiFileSystem.copy_from(item_vsi_src, str(target))
 
         stats = gdal.VSIStatL(src_dir_uri)
-        assert stats and stats.IsDirectory(), "Source must be a directory"
+        assert stats and stats.IsDirectory(), 'Source must be a directory'
 
         work(src_dir_uri, Path(dst_dir))
 
@@ -245,6 +251,7 @@ class VsiFileSystem(FileSystem):
         """
         items = gdal.ReadDir(vsipath)
         ext = ext if ext else ''
-        return [os.path.join(vsipath, item)  # This may not work for windows paths
-                for item
-                in filter(lambda x: x.endswith(ext), items)]
+        return [
+            os.path.join(vsipath, item)  # This may not work for windows paths
+            for item in filter(lambda x: x.endswith(ext), items)
+        ]

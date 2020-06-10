@@ -8,6 +8,8 @@ from rastervision2.pipeline.config import register_config, Field
 
 @register_config('object_detection_geojson_store')
 class ObjectDetectionGeoJSONStoreConfig(LabelStoreConfig):
+    """Config for storage for object detection predictions."""
+
     uri: Optional[str] = Field(
         None,
         description=

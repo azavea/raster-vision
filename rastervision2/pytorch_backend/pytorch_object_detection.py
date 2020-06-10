@@ -10,6 +10,8 @@ from rastervision2.pytorch_backend.pytorch_learner_backend import (
 
 
 class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
+    """Writes data in COCO format."""
+
     def __enter__(self):
         super().__enter__()
 
@@ -31,6 +33,7 @@ class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
         return self
 
     def __exit__(self, type, value, traceback):
+        """This writes label files in COCO format to (train|valid)/labels.json"""
         for split in ['train', 'valid']:
             if len(self.splits[split]['images']) > 0:
                 split_dir = join(self.sample_dir, split)

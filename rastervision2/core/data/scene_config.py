@@ -12,6 +12,7 @@ from rastervision2.core.data.vector_source import GeoJSONVectorSourceConfig
 
 @register_config('scene')
 class SceneConfig(Config):
+    """Config for a Scene which comprises the raster data and labels for an AOI."""
     id: str
     raster_source: RasterSourceConfig
     label_source: LabelSourceConfig
