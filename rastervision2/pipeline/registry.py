@@ -1,5 +1,6 @@
 from typing import List, Type, TYPE_CHECKING, Optional, Callable
 import inspect
+from click import Command
 
 if TYPE_CHECKING:
     from rastervision2.pipeline.runner import Runner  # noqa
@@ -22,9 +23,18 @@ class Registry():
         self.rv_config_schema = {}
 
         self.plugin_versions = {}
+        self.plugin_commands = []
         self.type_hint_to_lineage = {}
         self.type_hint_to_plugin = {}
         self.type_hint_to_upgrader = {}
+
+    def add_plugin_command(self, cmd: Command):
+        """Add a click command contributed by a plugin."""
+        self.plugin_commands.append(cmd)
+
+    def get_plugin_commands(self) -> List[Command]:
+        """Get the click commands contributed by plugins."""
+        return self.plugin_commands
 
     def set_plugin_version(self, plugin: str, version: int):
         """Set the latest version of a plugin.

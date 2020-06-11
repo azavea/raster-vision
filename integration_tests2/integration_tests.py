@@ -8,11 +8,11 @@ import importlib
 import click
 import numpy as np
 
-from rastervision2.core import Predictor
 from rastervision2.pipeline import rv_config, Verbosity
 from rastervision2.pipeline.file_system import file_to_json
 from rastervision2.pipeline.runner import InProcessRunner
 from rastervision2.pipeline.cli import _run_pipeline
+from rastervision2.core import Predictor
 
 chip_classification = 'chip_classification'
 object_detection = 'object_detection'

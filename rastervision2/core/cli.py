@@ -35,7 +35,7 @@ class OptionEatAll(click.Option):
         return retval
 
 
-@click.command()
+@click.command('predict', short_help='Use a model bundle to predict on new images.')
 @click.argument('model_bundle')
 @click.argument('image_uri')
 @click.argument('output_uri')
@@ -63,7 +63,3 @@ def predict(model_bundle, image_uri, output_uri, update_stats, channel_order):
         predictor = Predictor(model_bundle, tmp_dir, update_stats,
                               channel_order)
         predictor.predict([image_uri], output_uri)
-
-
-if __name__ == '__main__':
-    predict()
