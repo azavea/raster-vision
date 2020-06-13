@@ -16,5 +16,5 @@ Run integration tests.
 if [ "${1:-}" = "--help" ]; then
     usage
 else
-    python -m integration_tests ${@:1}
+    python -m integration_tests2 ${@:1}
 fi

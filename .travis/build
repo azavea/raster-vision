@@ -6,9 +6,4 @@ source .travis/env
 if [ "$IMAGE_TYPE" = "pytorch" ]; then
     docker build --build-arg CUDA_VERSION="10.0" -t raster-vision-cuda-10.0 -f Dockerfile .;
     docker build -t ${PYTORCH_IMAGE} -f Dockerfile-pytorch .;
-else
-    docker build --build-arg CUDA_VERSION="9.0" -t raster-vision-cuda-9.0 -f Dockerfile .;
-    docker build -t raster-vision-tf -f Dockerfile-tf .;
-    docker build -t ${TF_CPU_IMAGE} -f Dockerfile-tf-cpu .;
-    docker build -t ${TF_GPU_IMAGE} -f Dockerfile-tf-gpu .;
 fi
