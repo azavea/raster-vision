@@ -4,18 +4,14 @@ CHANGELOG
 Raster Vision 0.11
 -------------------
 
+This is the final release of the existing framework and has relatively few changes. The next release will introduce a major refactoring of the framework.
+
 Features
 ~~~~~~~~~~
 
 - Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#859 <https://github.com/azavea/raster-vision/pull/859>`__
 - Updated the Quickstart doc with pytorch docker image and model `#863 <https://github.com/azavea/raster-vision/pull/863>`__
 - Added the possibility to deal with class imbalances through oversampling. `#868 <https://github.com/azavea/raster-vision/pull/868>`
-- Added trivial local profile `#903 <https://github.com/azavea/raster-vision/pull/903>`
-- Added ability to run external commands in `inprocess` runner `#912 <https://github.com/azavea/raster-vision/pull/912>`
-- Added ability to run external commands in `aws_batch` runner `#911 <https://github.com/azavea/raster-vision/pull/911>`
-- Added ability to run external commands in `local` runner `#913 <https://github.com/azavea/raster-vision/pull/913>`
-- Added ability to use internal commands in derivative custom pipelines `#914 <https://github.com/azavea/raster-vision/pull/914>`
-- Added ability to use or not use AWS Batch's array job functionality with split external commands `#924 <https://github.com/azavea/raster-vision/pull/924>`
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
@@ -27,6 +23,9 @@ Bug Fixes
 - The augmentors were not serialized properly for the chip command  `#857 <https://github.com/azavea/raster-vision/pull/857>`__
 - Fix problems with pretrained flag `#860 <https://github.com/azavea/raster-vision/pull/860>`__
 - Correctly get_local_path for some zxy tile URIS `#865 <https://github.com/azavea/raster-vision/pull/865>`__
+- Upgrade Tensorboard and flush log after each epoch `#943 <https://github.com/azavea/raster-vision/pull/943>`__
+- Fix polygon prediction upload bug `#938 <https://github.com/azavea/raster-vision/pull/938>`__ and `#942 <https://github.com/azavea/raster-vision/pull/942>`__
+- Fix bug in Box.get_windows `#939 <https://github.com/azavea/raster-vision/pull/939>`__
 
 Raster Vision 0.10
 ------------------
