@@ -4,7 +4,7 @@ CHANGELOG
 Raster Vision 0.11
 -------------------
 
-This is the final release of the existing framework and has relatively few changes. The next release will introduce a major refactoring of the framework.
+This is the final release of the existing framework, and has relatively few changes. The next release will introduce a major refactoring of the framework.
 
 Features
 ~~~~~~~~~~
