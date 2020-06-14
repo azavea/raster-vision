@@ -16,5 +16,9 @@ Run integration tests.
 if [ "${1:-}" = "--help" ]; then
     usage
 else
-    python -m integration_tests2 ${@:1}
+    # setting these env vars is a kludge to allow this to run in CI where there is no
+    # profile set. in the future we should have a mechanism for default values for
+    # everett fields.
+    AWS_BATCH_CPU_JOB_DEF="" AWS_BATCH_CPU_JOB_QUEUE="" AWS_BATCH_GPU_JOB_DEF="" AWS_BATCH_GPU_JOB_QUEUE="" AWS_BATCH_ATTEMPTS="" AWS_S3_REQUESTER_PAYS="False" \
+        python -m integration_tests2 ${@:1}
 fi
