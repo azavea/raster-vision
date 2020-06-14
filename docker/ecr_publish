@@ -1,0 +1,11 @@
+# Expects RV_ECR_IMAGE env var to be set to <ecr_repo_name>:<tag_name>
+
+IMAGE_NAME="raster-vision-pytorch:latest"
+ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+AWS_REGION="us-east-1"
+
+aws ecr get-login --no-include-email --region ${AWS_REGION} | bash;
+docker tag ${IMAGE_NAME} \
+	${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${RV_ECR_IMAGE}
+docker push \
+	${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${RV_ECR_IMAGE}
