@@ -55,8 +55,8 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             sync_interval=300)
     else:
         pretrained_uri = (
-            's3://raster-vision-lf-dev/integration_tests/chip_classification/output/'
-            'train/last-model.pth')
+            'https://github.com/azavea/raster-vision-data/releases/download/v0.12/'
+            'chip-classification.pth')
         model = ClassificationModelConfig(
             backbone=Backbone.resnet18, init_weights=pretrained_uri)
         solver = SolverConfig(
