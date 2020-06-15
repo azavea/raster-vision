@@ -196,8 +196,8 @@ class RVConfig:
 
         self.config = ConfigManager(
             [
-                ConfigDictEnv(config_overrides),
                 ConfigOSEnv(),
+                ConfigDictEnv(config_overrides),
                 config_ini_env,
             ],
             doc=(
