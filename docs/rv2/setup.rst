@@ -227,7 +227,7 @@ Check the AWS Batch console to see the names of the resources that were created,
 
 .. code:: ini
 
-    [AWS_BATCH]
+    [BATCH]
     gpu_job_queue=RasterVisionGpuJobQueue
     gpu_job_def=RasterVisionHostedPyTorchGpuJobDefinition
     cpu_job_queue=RasterVisionCpuJobQueue

@@ -128,7 +128,7 @@ on AWS Batch by running:
 
 .. code:: shell
 
-   > rastervision2 run aws_batch -p tiny_spacenet.py
+   > rastervision2 run batch -p tiny_spacenet.py
 
 See the :ref:`rv2_quickstart` for a more complete description of using this example.
 

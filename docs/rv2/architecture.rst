@@ -97,7 +97,7 @@ In order to run this, we need a separate Python file with a ``get_config()`` fun
         # plays a similar role as a typical "config file" used in other systems.
         # It's different in that it can have loops, conditionals, local variables,
         # etc. The runner argument is the name of the runner used to run the
-        # pipeline (eg. local or aws_batch). Any other arguments are passed from
+        # pipeline (eg. local or batch). Any other arguments are passed from
         # the CLI using the -a option.
         names = ['alice', 'bob', 'susan']
 
@@ -122,7 +122,7 @@ Assuming this config file is at ``my_config.py``, we can invoke the Raster Visio
     hello bob!
     hello susan!
 
-This uses the ``inprocess`` runner, which executes all the commands in a single process locally, and uses the ``LocalFileSystem`` to read and write files. Using the ``aws_batch`` and ``aws_s3`` plugins, it's possible to use the ``aws_batch`` runner to run commands in parallel and using GPUs in the cloud using AWS Batch, and read and write files to AWS S3.
+This uses the ``inprocess`` runner, which executes all the commands in a single process locally, and uses the ``LocalFileSystem`` to read and write files. Using the ``aws_batch`` and ``aws_s3`` plugins, it's possible to use the ``batch`` runner to run commands in parallel and using GPUs in the cloud using AWS Batch, and read and write files to AWS S3.
 
 The ``-s 2`` option says to use two splits for splittable commands, and the ``-a root_uri /opt/data/sample-pipeline`` option says to pass the ``root_uri`` argument to the ``get_config`` function.
 
