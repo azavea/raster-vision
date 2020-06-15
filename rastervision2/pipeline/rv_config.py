@@ -9,6 +9,7 @@ from everett import NO_VALUE
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigIniEnv,
                              ConfigOSEnv)
 
+from rastervision2.aws_batch.aws_batch_runner import AWS_BATCH
 from rastervision2.pipeline.verbosity import Verbosity
 
 log = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ log = logging.getLogger(__name__)
 class LocalEnv(object):
     def get(self, key, namespace=None):
         if isinstance(namespace, list):
-            if 'aws_batch' in namespace or 'aws_s3' in namespace:
+            if AWS_BATCH in namespace or 'aws_s3' in namespace:
                 return ''
         else:
             return NO_VALUE
