@@ -57,7 +57,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return MagicMock()
 
-MOCK_MODULES = ['pyproj', 'h5py']
+MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools']
