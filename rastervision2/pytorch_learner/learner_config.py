@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple, TYPE_CHECKING
+from typing import List, Optional, Union, Sequence, TYPE_CHECKING
 from os.path import join
 from enum import Enum
 
@@ -183,7 +183,7 @@ class DataConfig(Config):
     data_format: Optional[str] = Field(
         None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
-    class_colors: Union[None, List[str], List[Tuple]] = Field(
+    class_colors: Union[None, List[str], List[Sequence]] = Field(
         None, description='Colors used to display classes.')
     img_sz: PositiveInt = Field(
         256,
