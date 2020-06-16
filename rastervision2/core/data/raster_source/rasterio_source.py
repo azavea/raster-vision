@@ -167,7 +167,7 @@ class RasterioSource(ActivateMixin, RasterSource):
             self.image_dataset)
         self.crs = self.image_dataset.crs
         if self.crs:
-            self.proj = pyproj.Proj(self.crs)
+            self.proj = self.crs_transformer.image_proj
         else:
             self.proj = None
         self.crs = str(self.crs)
