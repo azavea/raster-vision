@@ -12,17 +12,7 @@ from rastervision2.pytorch_learner import *
 from rastervision2.examples.utils import get_scene_info, save_image_crop
 
 
-def get_config(runner, test=False, output_dir='output'):
-    if runner in ['inprocess']:
-        raw_uri = '/opt/data/raw-data/isprs-potsdam/'
-        processed_uri = '/opt/data/examples/potsdam/processed-data'
-        root_uri = '/opt/data/examples/potsdam-semseg/'
-    else:
-        raw_uri = 's3://raster-vision-raw-data/isprs-potsdam'
-        processed_uri = 's3://raster-vision-lf-dev/examples/potsdam/processed-data'
-        root_uri = 's3://raster-vision-lf-dev/examples/potsdam-semseg'
-    root_uri = join(root_uri, output_dir)
-
+def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
     train_ids = [
         '2-10', '2-11', '3-10', '3-11', '4-10', '4-11', '4-12', '5-10', '5-11',
         '5-12', '6-10', '6-11', '6-7', '6-9', '7-10', '7-11', '7-12', '7-7',
