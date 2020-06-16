@@ -233,6 +233,19 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
         return x
 
 
+def upgrade_plugin_versions(plugin_versions):
+    new_plugin_versions = {}
+    for alias, version in plugin_versions.items():
+        plugin = registry.get_plugin_from_alias(alias)
+        if plugin:
+            new_plugin_versions[plugin] = version
+        else:
+            raise ConfigError(
+                'The plugin_versions field contains an unrecognized '
+                'plugin name: {}.'.format(alias))
+    return new_plugin_versions
+
+
 def upgrade_config(config_dict: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
     """Upgrade serialized Config(s) to the latest version.
 
@@ -248,6 +261,7 @@ def upgrade_config(config_dict: Union[dict, List[dict]]) -> Union[dict, List[dic
             current version
     """
     plugin_versions = config_dict.get('plugin_versions')
+    plugin_versions = upgrade_plugin_versions(plugin_versions)
     if plugin_versions is None:
         raise ConfigError(
             'Configuration is missing plugin_version field so is not backward '
