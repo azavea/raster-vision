@@ -233,8 +233,28 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
         return x
 
 
-def upgrade_config(
-        config_dict: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
+def upgrade_plugin_versions(plugin_versions: Dict[str, int]) -> Dict[str, int]:
+    """Update the names of the plugins using the plugin aliases in the registry.
+
+    Args:
+        plugin_version: maps from plugin name to version
+
+    This allows changing the names of plugins over time and maintaining backward
+    compatibility of serialized PipelineConfigs.
+    """
+    new_plugin_versions = {}
+    for alias, version in plugin_versions.items():
+        plugin = registry.get_plugin_from_alias(alias)
+        if plugin:
+            new_plugin_versions[plugin] = version
+        else:
+            raise ConfigError(
+                'The plugin_versions field contains an unrecognized '
+                'plugin name: {}.'.format(alias))
+    return new_plugin_versions
+
+
+def upgrade_config(config_dict: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored
@@ -249,6 +269,7 @@ def upgrade_config(
             current version
     """
     plugin_versions = config_dict.get('plugin_versions')
+    plugin_versions = upgrade_plugin_versions(plugin_versions)
     if plugin_versions is None:
         raise ConfigError(
             'Configuration is missing plugin_version field so is not backward '

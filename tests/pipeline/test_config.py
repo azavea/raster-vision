@@ -56,6 +56,7 @@ class TestConfig(unittest.TestCase):
     def setUp(self):
         registry.set_plugin_version('rastervision.ab', 1)
         registry.set_plugin_version('rastervision.c', 1)
+        registry.set_plugin_aliases('rastervision.c', ['rastervision2.c'])
         registry.update_config_info()
         self.plugin_versions = registry.plugin_versions
 
@@ -118,7 +119,7 @@ class TestConfig(unittest.TestCase):
     def test_upgrade(self):
         plugin_versions_v0 = dict(self.plugin_versions)
         plugin_versions_v0['rastervision.ab'] = 0
-        plugin_versions_v0['rastervision.c'] = 0
+        plugin_versions_v0['rastervision2.c'] = 0
 
         # after upgrading: the y field in the root should get converted to x, and
         # the z field in the instances of a should get convert to x.

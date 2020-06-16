@@ -23,6 +23,7 @@ class Registry():
         self.rv_config_schema = {}
 
         self.plugin_versions = {}
+        self.alias_to_plugin = {}
         self.plugin_commands = []
         self.type_hint_to_lineage = {}
         self.type_hint_to_plugin = {}
@@ -35,6 +36,16 @@ class Registry():
     def get_plugin_commands(self) -> List[Command]:
         """Get the click commands contributed by plugins."""
         return self.plugin_commands
+
+    def set_plugin_aliases(self, plugin: str, aliases: List[str]):
+        self.alias_to_plugin[plugin] = plugin
+        for alias in aliases:
+            self.alias_to_plugin[alias] = plugin
+
+    def get_plugin_from_alias(self, alias: str) -> Optional[str]:
+        if alias in self.plugin_versions:
+            return alias
+        return self.alias_to_plugin.get(alias)
 
     def set_plugin_version(self, plugin: str, version: int):
         """Set the latest version of a plugin.
