@@ -1,8 +1,8 @@
 import numpy as np
 import rasterio
 
-from rastervision2.pipeline.file_system import (get_local_path, make_dir,
-                                                upload_or_copy, file_exists)
+from rastervision2.pipeline.file_system import (
+    get_local_path, make_dir, upload_or_copy, file_exists, str_to_file)
 from rastervision2.core.data.label import SemanticSegmentationLabels
 from rastervision2.core.data.label_store import LabelStore
 from rastervision2.core.data.label_source import SegmentationClassTransformer
@@ -140,7 +140,6 @@ class SemanticSegmentationLabelStore(LabelStore):
                 mode = vo.get_mode()
                 class_id = vo.class_id
                 class_mask = np.array(mask == class_id, dtype=np.uint8)
-                local_geojson_path = get_local_path(uri, self.tmp_dir)
 
                 def transform(x, y):
                     return self.crs_transformer.pixel_to_map((x, y))
@@ -160,11 +159,8 @@ class SemanticSegmentationLabelStore(LabelStore):
                 elif uri and mode == 'polygons':
                     geojson = vectorification.geojson_from_mask(
                         mask=class_mask, transform=transform, mode=mode)
+                str_to_file(geojson, uri)
 
-                if local_geojson_path:
-                    with open(local_geojson_path, 'w') as file_out:
-                        file_out.write(geojson)
-                        upload_or_copy(local_geojson_path, uri)
 
     def empty_labels(self):
         """Returns an empty SemanticSegmentationLabels object."""
