@@ -14,17 +14,7 @@ from rastervision2.examples.utils import get_scene_info, save_image_crop
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 
 
-def get_config(runner, test=False, output_dir='output'):
-    if runner in ['inprocess']:
-        raw_uri = '/opt/data/raw-data/spacenet-dataset'
-        processed_uri = '/opt/data/examples/spacenet/rio/processed-data'
-        root_uri = '/opt/data/examples/spacenet-rio-cc'
-    else:
-        raw_uri = 's3://spacenet-dataset/'
-        processed_uri = 's3://raster-vision-lf-dev/examples/spacenet/rio/processed-data'
-        root_uri = 's3://raster-vision-lf-dev/examples/spacenet-rio-cc'
-    root_uri = join(root_uri, output_dir)
-
+def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
     debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
