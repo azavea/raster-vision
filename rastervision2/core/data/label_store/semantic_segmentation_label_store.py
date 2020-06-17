@@ -161,7 +161,6 @@ class SemanticSegmentationLabelStore(LabelStore):
                         mask=class_mask, transform=transform, mode=mode)
                 str_to_file(geojson, uri)
 
-
     def empty_labels(self):
         """Returns an empty SemanticSegmentationLabels object."""
         return SemanticSegmentationLabels()
