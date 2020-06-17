@@ -182,6 +182,19 @@ class TestBox(unittest.TestCase):
             [window.tuple_format() for window in expected_windows])
         self.assertSetEqual(windows, expected_windows)
 
+        extent = Box(10, 10, 20, 20)
+        windows = set(
+            [window.tuple_format() for window in extent.get_windows(6, 6)])
+        expected_windows = [
+            Box.make_square(10, 10, 6),
+            Box.make_square(10, 16, 6),
+            Box.make_square(16, 10, 6),
+            Box.make_square(16, 16, 6)
+        ]
+        expected_windows = set(
+            [window.tuple_format() for window in expected_windows])
+        self.assertSetEqual(windows, expected_windows)
+
 
 if __name__ == '__main__':
     unittest.main()
