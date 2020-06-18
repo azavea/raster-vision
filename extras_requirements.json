@@ -10,7 +10,7 @@
     "pytorch": [
         "torch==1.2.0",
         "torchvision==0.4.0",
-        "tensorboard==1.14.*",
+        "tensorboard==1.15.*",
         "numpy<1.17"
     ],
     "aws": [
