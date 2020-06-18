@@ -161,6 +161,7 @@ class SemanticSegmentationRasterStore(LabelStore):
                 if denoise_radius > 0:
                     class_mask = denoise.denoise(class_mask, denoise_radius)
 
+                geojson = None
                 if uri and mode == 'buildings':
                     options = vo['building_options']
                     geojson = vectorification.geojson_from_mask(
@@ -175,7 +176,8 @@ class SemanticSegmentationRasterStore(LabelStore):
                     geojson = vectorification.geojson_from_mask(
                         mask=class_mask, transform=transform, mode=mode)
 
-                str_to_file(geojson, uri)
+                if geojson:
+                    str_to_file(geojson, uri)
 
     def empty_labels(self):
         """Returns an empty SemanticSegmentationLabels object."""
