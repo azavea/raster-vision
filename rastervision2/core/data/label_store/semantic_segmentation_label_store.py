@@ -55,12 +55,11 @@ class SemanticSegmentationLabelStore(LabelStore):
             return [self.source]
         return []
 
-    def get_labels(self, chip_size=1000):
+    def get_labels(self):
         """Get all labels.
 
         Returns:
-            SemanticSegmentationLabels with windows of size chip_size covering the
-                scene with no overlap.
+            SemanticSegmentationLabels
         """
         if self.source is None:
             raise Exception('Raster source at {} does not exist'.format(
@@ -68,12 +67,10 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         labels = SemanticSegmentationLabels()
         extent = self.source.get_extent()
-        windows = extent.get_windows(chip_size, chip_size)
-        for w in windows:
-            raw_labels = self.source.get_raw_chip(w)
-            label_arr = (np.squeeze(raw_labels) if self.class_trans is None
-                         else self.class_trans.rgb_to_class(raw_labels))
-            labels.set_label_arr(w, label_arr)
+        raw_labels = self.source.get_raw_chip(extent)
+        label_arr = (np.squeeze(raw_labels) if self.class_trans is None
+                        else self.class_trans.rgb_to_class(raw_labels))
+        labels.set_label_arr(extent, label_arr)
         return labels
 
     def save(self, labels):
