@@ -160,15 +160,16 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
         window_method=SemanticSegmentationWindowMethod.random_sample,
         stride=chip_sz,
         chips_per_scene=9,
-        negative_survival_prob=1.0,
+        negative_survival_prob=0.5,
         target_class_ids=[0],
         target_count_threshold=1000)
 
+    num_epochs = 2 if target == BUILDINGS else 8
     backend = PyTorchSemanticSegmentationConfig(
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(
             lr=1e-4,
-            num_epochs=2,
+            num_epochs=num_epochs,
             test_num_epochs=2,
             batch_sz=8,
             one_cycle=True),

@@ -6,7 +6,6 @@ from shapely.geometry import shape
 from shapely.strtree import STRtree
 from shapely.ops import transform
 
-from rastervision2.core.box import Box
 from rastervision2.core.data import (ActivateMixin, ActivationError)
 from rastervision2.core.data.raster_source import RasterSource
 
@@ -45,19 +44,6 @@ def geoms_to_raster(str_tree, rasterizer_config, window, extent):
             all_touched=all_touched)
     else:
         raster = np.full(out_shape, background_class_id, dtype=np.uint8)
-
-    # Ensure that parts of window outside of extent have zero values which are counted as
-    # the don't-care class for segmentation.
-    valid_window = window_geom.intersection(extent.to_shapely())
-    if valid_window.is_empty:
-        raster[:, :] = 0
-    else:
-        vw = transform(to_window_frame, valid_window)
-        vw = Box.from_shapely(vw).to_int()
-        new_raster = np.zeros(out_shape)
-        new_raster[vw.ymin:vw.ymax, vw.xmin:vw.xmax] = \
-            raster[vw.ymin:vw.ymax, vw.xmin:vw.xmax]
-        raster = new_raster
 
     return raster
 

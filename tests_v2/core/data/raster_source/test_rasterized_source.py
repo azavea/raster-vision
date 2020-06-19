@@ -87,9 +87,7 @@ class TestRasterizedSource(unittest.TestCase):
             chip = source.get_chip(Box.make_square(5, 5, 10))
             self.assertEqual(chip.shape, (10, 10, 1))
 
-            expected_chip = np.zeros((10, 10, 1))
-            expected_chip[0:5, 0:5, :] = self.background_class_id
-
+            expected_chip = np.full((10, 10, 1), self.background_class_id)
             np.testing.assert_array_equal(chip, expected_chip)
 
     def test_get_chip_all_touched(self):
