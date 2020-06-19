@@ -12,24 +12,24 @@ Docker images are published to `quay.io/azavea/raster-vision <https://quay.io/re
 
 .. code-block:: console
 
-   > docker run --rm -it quay.io/azavea/raster-vision:pytorch-0.10 /bin/bash
+   > docker run --rm -it quay.io/azavea/raster-vision:pytorch-0.11 /bin/bash
 
-You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <https://github.com/azavea/raster-vision/blob/0.10/docker/run>`_ script for an example usage.
+You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <https://github.com/azavea/raster-vision/blob/0.11/docker/run>`_ script for an example usage.
 
 There are Raster Vision backends for PyTorch and Tensorflow -- the Tensorflow ones are being sunsetted.
 We publish separate Docker images with the dependencies necessary for using the PyTorch and Tensorflow backends, and there are CPU and GPU variants for the Tensorflow images.
 There are also images with the `-latest` suffix for the latest commits on the ``master`` branch. The available images include:
 
-* ``quay.io/azavea/raster-vision:tf-gpu-0.10`` and ``quay.io/azavea/raster-vision:tf-gpu-latest``
-* ``quay.io/azavea/raster-vision:tf-cpu-0.10`` and ``quay.io/azavea/raster-vision:tf-cpu-latest``
-* ``quay.io/azavea/raster-vision:pytorch-0.10`` and ``quay.io/azavea/raster-vision:pytorch-latest``
+* ``quay.io/azavea/raster-vision:tf-gpu-0.11`` and ``quay.io/azavea/raster-vision:tf-gpu-latest``
+* ``quay.io/azavea/raster-vision:tf-cpu-0.11`` and ``quay.io/azavea/raster-vision:tf-cpu-latest``
+* ``quay.io/azavea/raster-vision:pytorch-0.11`` and ``quay.io/azavea/raster-vision:pytorch-latest``
 
 You can also base your own Dockerfiles off the Raster Vision image to use with your own codebase. See the Dockerfiles in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository.
 
 Docker Scripts
 ~~~~~~~~~~~~~~
 
-There are several scripts under `docker/ <https://github.com/azavea/raster-vision/tree/0.10/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code.
+There are several scripts under `docker/ <https://github.com/azavea/raster-vision/tree/0.11/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code.
 
 After cloning the repo, you can build all the Docker images using:
 
@@ -92,14 +92,14 @@ Rather than running Raster Vision from inside a Docker container, you can direct
 
 .. code-block:: console
 
-   > pip install rastervision==0.10.0
+   > pip install rastervision==0.11.0
 
-.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision==0.10.0`` if you have more than one version of Python installed.
+.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision==0.11.0`` if you have more than one version of Python installed.
 
 Troubleshooting macOS Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you encounter problems running ``pip install rastervision==0.10.0`` on macOS, you may have to manually install Cython and pyproj.
+If you encounter problems running ``pip install rastervision==0.11.0`` on macOS, you may have to manually install Cython and pyproj.
 
 To circumvent a problem installing pyproj with Python 3.7, you may also have to install that library using ``git+https``:
 
@@ -107,7 +107,7 @@ To circumvent a problem installing pyproj with Python 3.7, you may also have to 
 
   > pip install cython
   > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
-  > pip install rastervision==0.10.0
+  > pip install rastervision==0.11.0
 
 Using AWS, Tensorflow, and/or Keras
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,11 +116,11 @@ If you'd like to use AWS, PyTorch, Tensorflow and/or Keras with Raster Vision, y
 
 .. code-block:: console
 
-   > pip install rastervision[aws,pytorch,tensorflow-cpu,tensorflow-gpu]==0.10.0
+   > pip install rastervision[aws,pytorch,tensorflow-cpu,tensorflow-gpu]==0.11.0
 
 If you'd like to use Raster Vision with `Tensorflow Object Detection <https://github.com/tensorflow/models/tree/master/research/object_detection>`_ or `TensorFlow DeepLab <https://github.com/tensorflow/models/tree/master/research/deeplab>`_, you'll need to install these from `Azavea's fork <https://github.com/azavea/models/tree/AZ-v1.11-RV-v0.8.0>`_ of the models repository, since it contains some necessary changes that have not yet been merged back upstream.
 
-You will also need to install `Tippecanoe <https://github.com/mapbox/tippecanoe>`_ if you would like to do vector tile processing. For an example of setting these up, see the various `Dockerfiles  <https://github.com/azavea/raster-vision/blob/0.10/>`_.
+You will also need to install `Tippecanoe <https://github.com/mapbox/tippecanoe>`_ if you would like to do vector tile processing. For an example of setting these up, see the various `Dockerfiles  <https://github.com/azavea/raster-vision/blob/0.11/>`_.
 
 .. _raster vision config:
 
@@ -237,7 +237,7 @@ When running your Docker container, be sure to include the ``--runtime=nvidia`` 
 
 .. code-block:: console
 
-   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:pytorch-0.10 /bin/bash
+   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:pytorch-0.11 /bin/bash
 
 Ensure your setup sees the GPUS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

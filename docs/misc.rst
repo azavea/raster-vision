@@ -23,7 +23,7 @@ DNS of the machine running the training command.
 Model Defaults
 --------------
 
-Model Defaults allow you to use a single key to set default attributes into backends instead of having to explicitly state them. This is useful for, say, using a key to refer to the pretrained model weights and hyperparameter configuration of various models. Each ``Backend`` can interpret its model defaults differently. For more information, see the `rastervision/backend/model_defaults.json <https://github.com/azavea/raster-vision/blob/0.10/rastervision/backend/model_defaults.json>`_ file.
+Model Defaults allow you to use a single key to set default attributes into backends instead of having to explicitly state them. This is useful for, say, using a key to refer to the pretrained model weights and hyperparameter configuration of various models. Each ``Backend`` can interpret its model defaults differently. For more information, see the `rastervision/backend/model_defaults.json <https://github.com/azavea/raster-vision/blob/0.11/rastervision/backend/model_defaults.json>`_ file.
 
 You can set the model defaults to use a different JSON file, so that plugin backends can create model defaults or so that you can override the defaults provided by Raster Vision. See the :ref:`rv config section` Configuration Section for that config value.
 

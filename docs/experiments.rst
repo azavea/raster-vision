@@ -296,7 +296,7 @@ A ``VectorSource`` is an object that supports reading vector data like polygons 
 VectorSourceConfig
 ...................
 
-Here is an example of configuring a ``VectorTileVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/tree/0.10#spacenet-vegas-roads-and-buildings>`_.
+Here is an example of configuring a ``VectorTileVectorSource`` which uses Mapbox vector tiles as a source of labels. A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/tree/0.11#spacenet-vegas-roads-and-buildings>`_.
 
 .. code::
 
@@ -319,7 +319,7 @@ LabelSource
 
 A ``LabelSource`` is an object that allows reading ground truth labels for a scene. There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
 
-Here is an example of configuring a ``SemanticSegmentationLabelSource`` using rasterized vector data.  A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/0.10/spacenet/vegas.py>`_.
+Here is an example of configuring a ``SemanticSegmentationLabelSource`` using rasterized vector data.  A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/0.11/spacenet/vegas.py>`_.
 
 .. code::
 
