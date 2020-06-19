@@ -39,8 +39,8 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             sync_interval=300)
     else:
         pretrained_uri = (
-            's3://raster-vision-lf-dev/integration_tests/object_detection/output/train/'
-            'last-model.pth')
+            'https://github.com/azavea/raster-vision-data/releases/download/v0.12/'
+            'object-detection.pth')
         model = ObjectDetectionModelConfig(
             backbone=Backbone.resnet18, init_weights=pretrained_uri)
         solver = SolverConfig(

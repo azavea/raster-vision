@@ -20,8 +20,8 @@ else
     # use it to run the unit tests.  Otherwise, use the normal Python
     # executable.
     if ! [ -x "$(command -v coverage)" ]; then
-	    python -m unittest discover tests
+	    python -m unittest discover tests_v2
     else
-	    coverage run -m unittest discover tests
+	    coverage run -m unittest discover tests_v2
     fi
 fi

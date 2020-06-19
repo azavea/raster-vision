@@ -236,7 +236,7 @@ def main(tests, root_uri, verbose):
         tests = all_tests
 
     if verbose:
-        rv_config.set(verbosity=Verbosity.DEBUG)
+        rv_config.set_verbosity(verbosity=Verbosity.DEBUG)
 
     with rv_config.get_tmp_dir() as tmp_dir:
         if root_uri:

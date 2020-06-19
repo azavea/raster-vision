@@ -2,20 +2,7 @@
 
 source .travis/env
 
-if [ "$IMAGE_TYPE" = "tf" ]; then
-    # Check no uncompiled protobufs
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${TF_CPU_IMAGE} $(pwd)/scripts/compile
-    if [ ! -z "$(git status --porcelain)" ]; then
-        echo "Protobuf files need to be compiled. Run scripts/compile."
-        exit 1
-    fi
-
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${TF_CPU_IMAGE} rm -f $(pwd)/.coverage $(pwd)/coverage.xml
-    # We need to run the unit tests in both environments because there are some tests
-    # that are environment-specific.
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${TF_CPU_IMAGE} $(pwd)/scripts/unit_tests
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${TF_CPU_IMAGE} $(pwd)/scripts/integration_tests --use-tf
-else
+if [ "$IMAGE_TYPE" = "pytorch" ]; then
     docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} rm -f $(pwd)/.coverage $(pwd)/coverage.xml
     docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/style_tests
     docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/unit_tests

@@ -12,7 +12,6 @@ env:
     - COMMIT=${CLEAN_TRAVIS_TAG:-${TRAVIS_COMMIT:0:7}}
   matrix:
     - IMAGE_TYPE=pytorch
-    - IMAGE_TYPE=tf
 
 if: (type = pull_request) OR (tag IS present) OR (branch = master) OR (branch =~ /^feature.*/)
 

@@ -3,10 +3,5 @@ set -e
 
 FAMILY=quay.io/azavea
 
-TF_CPU_IMAGE=raster-vision-tf-cpu
-TF_GPU_IMAGE=raster-vision-tf-gpu
-TF_CPU_TAG=${FAMILY}/raster-vision:tf-cpu
-TF_GPU_TAG=${FAMILY}/raster-vision:tf-gpu
-
 PYTORCH_IMAGE=raster-vision-pytorch
 PYTORCH_TAG=${FAMILY}/raster-vision:pytorch

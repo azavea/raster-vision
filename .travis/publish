@@ -12,11 +12,6 @@ function tag_and_push() {
     if [ "$IMAGE_TYPE" = "pytorch" ]; then
         docker tag ${PYTORCH_IMAGE} "${PYTORCH_TAG}-${1}";
         docker push "${PYTORCH_TAG}-${1}";
-    else
-        docker tag ${TF_CPU_IMAGE} "${TF_CPU_TAG}-${1}";
-        docker tag ${TF_GPU_IMAGE} "${TF_GPU_TAG}-${1}";
-        docker push "${TF_CPU_TAG}-${1}";
-        docker push "${TF_GPU_TAG}-${1}";
     fi
 }
 
