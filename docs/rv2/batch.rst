@@ -10,8 +10,8 @@ AWS Account Setup
 
 In order to setup Batch using this repo, you will need to setup your AWS account so that:
 
-* you have either root access to your AWS account, or an IAM user with admin permissions. It may be possible with less permissions, but we haven't figured out how to do this yet after some experimentation.
-* you have the ability to launch P2 or P3 instances which have GPUs. In the past, it was necessary to open a support ticket to request access to these instances. You will know if this is the case if the Packer job fails when trying to launch the instance.
+* you have either root access to your AWS account, or an IAM user with admin permissions. It is probably possible with less permissions, but we haven't figured out how to do this yet after some experimentation.
+* you have the ability to launch P2 or P3 instances which have GPUs.
 * you have requested permission from AWS to use availability zones outside the USA if you would like to use them. (New AWS accounts can't launch EC2 instances in other AZs by default.) If you are in doubt, just use ``us-east-1``.
 
 AWS Credentials
@@ -57,11 +57,10 @@ To deploy AWS Batch resources using AWS CloudFormation, start by logging into yo
 Publish local Raster Vision images to ECR
 -------------------------------------------
 
-If you setup ECR repositories during the CloudFormation setup (the "advanced user" option), then you will need to follow this step, which publishes local Raster Vision images to those ECR repositories. Every time you make a change to your local Raster Vision images and want to use those on Batch, you will need to run this step.
+If you setup ECR repositories during the CloudFormation setup (the "advanced user" option), then you will need to follow this step, which publishes local Raster Vision images to those ECR repositories. Every time you make a change to your local Raster Vision images and want to use those on Batch, you will need to run these steps:
 
-Run ``./docker/build`` in the Raster Vision repo to build local copies of the Docker image.
-
-TODO: add publish script and explain env vars that need to be set
+* Run ``./docker/build`` in the Raster Vision repo to build a local copy of the Docker image.
+* Run ``./docker/ecr_publish`` in the Raster Vision repo to publish the Docker images to ECR. Note that this requires setting the ``RV_ECR_IMAGE`` environment variable to be set to ``<ecr_repo_name>:<tag_name>``.
 
 Update Raster Vision configuration
 -----------------------------------
