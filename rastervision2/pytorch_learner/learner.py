@@ -907,6 +907,7 @@ class Learner(ABC):
                     self.tb_writer.add_scalar(key, val, curr_epoch)
             for name, param in self.model.named_parameters():
                 self.tb_writer.add_histogram(name, param, curr_epoch)
+            self.tb_writer.flush()
 
         torch.save(self.model.state_dict(), self.last_model_path)
 
