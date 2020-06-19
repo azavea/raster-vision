@@ -343,6 +343,7 @@ class PyTorchObjectDetection(Backend):
                     tb_writer.add_scalar(key, val, epoch)
                 for name, param in model.named_parameters():
                     tb_writer.add_histogram(name, param, epoch)
+                tb_writer.flush()
 
             if (train_uri.startswith('s3://')
                     and (((epoch + 1) % self.train_opts.sync_interval) == 0)):

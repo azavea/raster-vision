@@ -331,6 +331,7 @@ class PyTorchSemanticSegmentation(Backend):
                 tb_writer.add_scalar('train_loss', train_loss, epoch)
                 for name, param in model.named_parameters():
                     tb_writer.add_histogram(name, param, epoch)
+                tb_writer.flush()
 
             if (train_uri.startswith('s3://')
                     and (((epoch + 1) % self.train_opts.sync_interval) == 0)):

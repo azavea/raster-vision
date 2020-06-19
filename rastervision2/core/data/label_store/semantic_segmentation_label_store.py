@@ -1,8 +1,8 @@
 import numpy as np
 import rasterio
 
-from rastervision2.pipeline.file_system import (get_local_path, make_dir,
-                                                upload_or_copy, file_exists)
+from rastervision2.pipeline.file_system import (
+    get_local_path, make_dir, upload_or_copy, file_exists, str_to_file)
 from rastervision2.core.data.label import SemanticSegmentationLabels
 from rastervision2.core.data.label_store import LabelStore
 from rastervision2.core.data.label_source import SegmentationClassTransformer
@@ -55,12 +55,11 @@ class SemanticSegmentationLabelStore(LabelStore):
             return [self.source]
         return []
 
-    def get_labels(self, chip_size=1000):
+    def get_labels(self):
         """Get all labels.
 
         Returns:
-            SemanticSegmentationLabels with windows of size chip_size covering the
-                scene with no overlap.
+            SemanticSegmentationLabels
         """
         if self.source is None:
             raise Exception('Raster source at {} does not exist'.format(
@@ -68,12 +67,10 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         labels = SemanticSegmentationLabels()
         extent = self.source.get_extent()
-        windows = extent.get_windows(chip_size, chip_size)
-        for w in windows:
-            raw_labels = self.source.get_raw_chip(w)
-            label_arr = (np.squeeze(raw_labels) if self.class_trans is None
-                         else self.class_trans.rgb_to_class(raw_labels))
-            labels.set_label_arr(w, label_arr)
+        raw_labels = self.source.get_raw_chip(extent)
+        label_arr = (np.squeeze(raw_labels) if self.class_trans is None
+                        else self.class_trans.rgb_to_class(raw_labels))
+        labels.set_label_arr(extent, label_arr)
         return labels
 
     def save(self, labels):
@@ -140,7 +137,6 @@ class SemanticSegmentationLabelStore(LabelStore):
                 mode = vo.get_mode()
                 class_id = vo.class_id
                 class_mask = np.array(mask == class_id, dtype=np.uint8)
-                local_geojson_path = get_local_path(uri, self.tmp_dir)
 
                 def transform(x, y):
                     return self.crs_transformer.pixel_to_map((x, y))
@@ -160,11 +156,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                 elif uri and mode == 'polygons':
                     geojson = vectorification.geojson_from_mask(
                         mask=class_mask, transform=transform, mode=mode)
-
-                if local_geojson_path:
-                    with open(local_geojson_path, 'w') as file_out:
-                        file_out.write(geojson)
-                        upload_or_copy(local_geojson_path, uri)
+                str_to_file(geojson, uri)
 
     def empty_labels(self):
         """Returns an empty SemanticSegmentationLabels object."""

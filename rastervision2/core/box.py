@@ -245,12 +245,9 @@ class Box():
             stride: (int) how much each window is offset from the last in pixels
 
         """
-        height = self.get_height()
-        width = self.get_width()
-
         result = []
-        for row_start in range(0, height, stride):
-            for col_start in range(0, width, stride):
+        for row_start in range(self.ymin, self.ymax, stride):
+            for col_start in range(self.xmin, self.xmax, stride):
                 result.append(Box.make_square(row_start, col_start, chip_sz))
         return result
 
