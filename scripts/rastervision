@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Run the rastervision cli
-python -m rastervision $@
+python -m rastervision.pipeline.cli $@

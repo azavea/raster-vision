@@ -30,8 +30,6 @@ Options:
 --jupyter forwards port 8888, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
 --docs runs the docs server and forwards port 8000
 --debug forwards port 3000 for use with remote debugger
---tf-gpu use raster-vision-tf-gpu image and nvidia runtime
---tf-cpu use raster-vision-tf-cpu image
 --pytorch-gpu use raster-vision-pytorch image and nvidia runtime
 
 All arguments after above options are passed to 'docker run'.
@@ -60,15 +58,6 @@ do
         ;;
         --tensorboard)
         TENSORBOARD="-p 6006:6006"
-        shift # past argument
-        ;;
-        --tf-gpu)
-        IMAGE="raster-vision-tf-gpu"
-        RUNTIME="--runtime=nvidia"
-        shift # past argument
-        ;;
-        --tf-cpu)
-        IMAGE="raster-vision-tf-cpu"
         shift # past argument
         ;;
         --pytorch-gpu)

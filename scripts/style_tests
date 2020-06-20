@@ -24,14 +24,14 @@ if [ "${1:-}" = "--help" ]; then
 else
     echo "Checking that code is consistent with flake8..."
 
-    flake8 "$SRC_DIR" --exclude ".git,*_pb2.py,build,docs,*tfod_utils*,cookiecutter_template"
+    flake8 "$SRC_DIR" --exclude ".git,build,docs,*tfod_utils*,cookiecutter_template"
 
     # Exit code of 1 if yapf has a non-empty diff
     # (ie. scripts/format_code needs to be run)
     echo "Checking that code is consistent with yapf..."
-    if !(yapf -dpr -e "*tfod_utils*" -e "*_pb2.py" "$SRC_DIR/rastervision" > /dev/null &&
-             yapf -dpr -e "*_pb2.py" "$SRC_DIR/tests" > /dev/null &&
-             yapf -dpr -e "*_pb2.py" "$SRC_DIR/integration_tests" > /dev/null); then
+    if !(yapf -dpr -e "*tfod_utils*" "$SRC_DIR/rastervision" > /dev/null &&
+             yapf -dpr "$SRC_DIR/tests" > /dev/null &&
+             yapf -dpr "$SRC_DIR/integration_tests" > /dev/null); then
         echo "Code has not been formatted by yapf. Need to run ./scripts/format_code."
         exit 1
     fi

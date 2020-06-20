@@ -21,13 +21,6 @@ then
         exit
     fi
 
-    if [ $# -eq 0 -o "${1:-}" = "--tf" ]
-    then
-        docker build --build-arg CUDA_VERSION="9.0" -t raster-vision-cuda-9.0 -f Dockerfile .
-        docker build -t raster-vision-tf -f Dockerfile-tf .
-        docker build -t raster-vision-tf-cpu -f Dockerfile-tf-cpu .
-        docker build -t raster-vision-tf-gpu -f Dockerfile-tf-gpu .
-    fi
     if [ $# -eq 0 -o "${1:-}" = "--pytorch" ]
     then
         docker build --build-arg CUDA_VERSION="10.0" -t raster-vision-cuda-10.0 -f Dockerfile .

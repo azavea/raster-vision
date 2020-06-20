@@ -10,6 +10,5 @@ COPY scripts/rastervision /usr/local/bin/
 COPY rastervision /opt/src/rastervision
 COPY rastervision /opt/src/rastervision
 COPY scripts /opt/src/scripts/
-RUN /opt/src/scripts/compile
 
 CMD ["bash"]
