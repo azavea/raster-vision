@@ -17,10 +17,9 @@ class RasterioCRSTransformer(CRSTransformer):
             map_crs: CRS code
         """
         self.map_proj = pyproj.Proj(init=map_crs)
-        self.image_proj = pyproj.Proj(image_crs.wkt)
+        self.image_proj = pyproj.Proj(image_crs)
 
-        super().__init__(image_crs.wkt, map_crs, transform)
-
+        super().__init__(image_crs, map_crs, transform)
 
     def map_to_pixel(self, map_point):
         """Transform point from map to pixel-based coordinates.
