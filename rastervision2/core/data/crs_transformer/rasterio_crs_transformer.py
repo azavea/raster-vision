@@ -21,7 +21,6 @@ class RasterioCRSTransformer(CRSTransformer):
 
         super().__init__(image_crs.wkt, map_crs, transform)
 
-
     def map_to_pixel(self, map_point):
         """Transform point from map to pixel-based coordinates.
 
