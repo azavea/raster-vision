@@ -198,7 +198,8 @@ class Registry():
         # TODO can we get rid of this now?
         import rastervision.pipeline.pipeline_config  # noqa
         self.set_plugin_version('rastervision.pipeline', 0)
-        self.set_plugin_aliases('rastervision.pipeline', ['rastervision2.pipeline'])
+        self.set_plugin_aliases('rastervision.pipeline',
+                                ['rastervision2.pipeline'])
 
     def update_config_info(self):
         config_class_to_type_hint = {}
