@@ -32,8 +32,7 @@ else
     find . -name '*.py' -print0 | xargs -0 $UNIFY
 
     echo "Running yapf..."
-    yapf -ipr "$SRC_DIR/rastervision" -e "**/cookiecutter_template/**"
-    yapf -ipr -e "*tfod_utils*" -e "$SRC_DIR/rastervision"
+    yapf -ipr "$SRC_DIR/rastervision" -e "**/cookiecutter_template/**" -e "*tfod_utils*"
     yapf -ipr "$SRC_DIR/tests"
     yapf -ipr "$SRC_DIR/integration_tests"
 fi
