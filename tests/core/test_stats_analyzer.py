@@ -3,10 +3,10 @@ import os
 
 import numpy as np
 
-from rastervision2.pipeline import rv_config
-from rastervision2.core.raster_stats import RasterStats, chip_sz
-from rastervision2.core.data import Scene
-from rastervision2.core.analyzer import StatsAnalyzerConfig
+from rastervision.pipeline import rv_config
+from rastervision.core.raster_stats import RasterStats, chip_sz
+from rastervision.core.data import Scene
+from rastervision.core.analyzer import StatsAnalyzerConfig
 from tests_v2.core.data.mock_raster_source import MockRasterSource
 
 

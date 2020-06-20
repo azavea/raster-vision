@@ -3,11 +3,11 @@ import uuid
 
 import numpy as np
 
-from rastervision2.pipeline.file_system import (make_dir)
-from rastervision2.core.data.label import SemanticSegmentationLabels
-from rastervision2.core.utils.misc import save_img
-from rastervision2.core.data_sample import DataSample
-from rastervision2.pytorch_backend.pytorch_learner_backend import (
+from rastervision.pipeline.file_system import (make_dir)
+from rastervision.core.data.label import SemanticSegmentationLabels
+from rastervision.core.utils.misc import save_img
+from rastervision.core.data_sample import DataSample
+from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
 
 

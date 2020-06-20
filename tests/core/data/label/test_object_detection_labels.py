@@ -2,11 +2,11 @@ import unittest
 
 import numpy as np
 
-from rastervision2.core.box import Box
-from rastervision2.core.data.class_config import ClassConfig
-from rastervision2.core.data.label.object_detection_labels import (
+from rastervision.core.box import Box
+from rastervision.core.data.class_config import ClassConfig
+from rastervision.core.data.label.object_detection_labels import (
     ObjectDetectionLabels)
-from rastervision2.core.data.label.tfod_utils.np_box_list import BoxList
+from rastervision.core.data.label.tfod_utils.np_box_list import BoxList
 
 
 class ObjectDetectionLabelsTest(unittest.TestCase):

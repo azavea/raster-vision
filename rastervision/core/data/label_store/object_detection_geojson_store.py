@@ -1,8 +1,8 @@
-from rastervision2.core.data.label import ObjectDetectionLabels
-from rastervision2.core.data.label_store import LabelStore
-from rastervision2.core.data.label_store.utils import boxes_to_geojson
-from rastervision2.core.data.vector_source import GeoJSONVectorSourceConfig
-from rastervision2.pipeline.file_system import json_to_file
+from rastervision.core.data.label import ObjectDetectionLabels
+from rastervision.core.data.label_store import LabelStore
+from rastervision.core.data.label_store.utils import boxes_to_geojson
+from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
+from rastervision.pipeline.file_system import json_to_file
 
 
 class ObjectDetectionGeoJSONStore(LabelStore):

@@ -3,13 +3,13 @@ from os.path import join
 
 import numpy as np
 
-from rastervision2.core import Box
-from rastervision2.core.data import (
+from rastervision.core import Box
+from rastervision.core.data import (
     IdentityCRSTransformer, RasterizedSourceConfig, RasterizerConfig,
     GeoJSONVectorSourceConfig, ClassConfig)
-from rastervision2.pipeline.file_system import json_to_file
-from rastervision2.pipeline.config import ConfigError
-from rastervision2.pipeline import rv_config
+from rastervision.pipeline.file_system import json_to_file
+from rastervision.pipeline.config import ConfigError
+from rastervision.pipeline import rv_config
 
 
 class TestRasterizedSource(unittest.TestCase):

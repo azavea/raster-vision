@@ -1,8 +1,8 @@
 from abc import (abstractmethod)
 import logging
 
-from rastervision2.core.evaluation import Evaluator
-from rastervision2.core.data import ActivateMixin
+from rastervision.core.evaluation import Evaluator
+from rastervision.core.data import ActivateMixin
 
 log = logging.getLogger(__name__)
 

@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
 
-from rastervision2.core.data.vector_source.class_inference import (
+from rastervision.core.data.vector_source.class_inference import (
     ClassInference)
 
 if TYPE_CHECKING:
-    from rastervision2.core.data.vector_source.vector_source_config import VectorSourceConfig  # noqa
-    from rastervision2.core.data.class_config import ClassConfig  # noqa
-    from rastervision2.core.data.crs_transformer import CRSTransformer  # noqa
+    from rastervision.core.data.vector_source.vector_source_config import VectorSourceConfig  # noqa
+    from rastervision.core.data.class_config import ClassConfig  # noqa
+    from rastervision.core.data.crs_transformer import CRSTransformer  # noqa
 
 
 def transform_geojson(geojson,

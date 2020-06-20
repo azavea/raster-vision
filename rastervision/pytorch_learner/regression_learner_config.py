@@ -1,8 +1,8 @@
 from typing import List
 from enum import Enum
 
-from rastervision2.pipeline.config import register_config
-from rastervision2.pytorch_learner.learner_config import (
+from rastervision.pipeline.config import register_config
+from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig)
 
 
@@ -31,6 +31,6 @@ class RegressionLearnerConfig(LearnerConfig):
     data: RegressionDataConfig
 
     def build(self, tmp_dir, model_path=None):
-        from rastervision2.pytorch_learner.regression_learner import (
+        from rastervision.pytorch_learner.regression_learner import (
             RegressionLearner)
         return RegressionLearner(self, tmp_dir, model_path=model_path)

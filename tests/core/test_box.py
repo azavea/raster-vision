@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from shapely.geometry import box as ShapelyBox
 
-from rastervision2.core.box import Box, BoxSizeError
+from rastervision.core.box import Box, BoxSizeError
 
 np.random.seed(1)
 

@@ -19,8 +19,8 @@ Example box operations that are supported:
 """
 import numpy as np
 
-from rastervision2.core.data.label.tfod_utils import np_box_list
-from rastervision2.core.data.label.tfod_utils import np_box_ops
+from rastervision.core.data.label.tfod_utils import np_box_list
+from rastervision.core.data.label.tfod_utils import np_box_ops
 
 
 class SortOrder(object):

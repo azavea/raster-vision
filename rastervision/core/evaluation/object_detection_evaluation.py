@@ -3,9 +3,9 @@ import shapely
 import shapely.strtree
 import shapely.geometry
 
-from rastervision2.core.data import ObjectDetectionLabels
-from rastervision2.core.evaluation import ClassEvaluationItem
-from rastervision2.core.evaluation import ClassificationEvaluation
+from rastervision.core.data import ObjectDetectionLabels
+from rastervision.core.evaluation import ClassEvaluationItem
+from rastervision.core.evaluation import ClassificationEvaluation
 
 
 def compute_metrics(gt_labels: ObjectDetectionLabels,

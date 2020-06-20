@@ -1,10 +1,10 @@
-from rastervision2.pipeline.config import register_config
-from rastervision2.pytorch_backend.pytorch_learner_backend_config import (
+from rastervision.pipeline.config import register_config
+from rastervision.pytorch_backend.pytorch_learner_backend_config import (
     PyTorchLearnerBackendConfig)
-from rastervision2.pytorch_learner.object_detection_learner_config import (
+from rastervision.pytorch_learner.object_detection_learner_config import (
     ObjectDetectionModelConfig, ObjectDetectionLearnerConfig,
     ObjectDetectionDataConfig)
-from rastervision2.pytorch_backend.pytorch_object_detection import (
+from rastervision.pytorch_backend.pytorch_object_detection import (
     PyTorchObjectDetection)
 
 

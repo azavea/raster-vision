@@ -7,11 +7,11 @@ import gzip
 import boto3
 from moto import mock_s3
 
-from rastervision2.pipeline.file_system import (
+from rastervision.pipeline.file_system import (
     file_to_str, str_to_file, download_if_needed, upload_or_copy,
     make_dir, get_local_path, file_exists, sync_from_dir, sync_to_dir, list_paths,
     get_cached_file, NotReadableError, NotWritableError, FileSystem)
-from rastervision2.pipeline import rv_config
+from rastervision.pipeline import rv_config
 
 LOREM = """ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
         eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
@@ -503,7 +503,7 @@ class TestGetCachedFile(unittest.TestCase):
 
     def test_remote(self):
         with patch(
-                'rastervision2.pipeline.file_system.utils.download_if_needed',
+                'rastervision.pipeline.file_system.utils.download_if_needed',
                 side_effect=download_if_needed) as patched_download:
             s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
             str_to_file(self.content_str, s3_path)

@@ -1,8 +1,8 @@
-from rastervision2.core.data.vector_source.vector_source_config import (
+from rastervision.core.data.vector_source.vector_source_config import (
     VectorSourceConfig)
-from rastervision2.core.data.vector_source.geojson_vector_source import (
+from rastervision.core.data.vector_source.geojson_vector_source import (
     GeoJSONVectorSource)
-from rastervision2.pipeline.config import register_config, Field
+from rastervision.pipeline.config import register_config, Field
 
 
 @register_config('geojson_vector_source')

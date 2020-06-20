@@ -52,11 +52,11 @@ Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.
 
     from os.path import join
 
-    from rastervision2.core.rv_pipeline import *
-    from rastervision2.core.backend import *
-    from rastervision2.core.data import *
-    from rastervision2.pytorch_backend import *
-    from rastervision2.pytorch_learner import *
+    from rastervision.core.rv_pipeline import *
+    from rastervision.core.backend import *
+    from rastervision.core.data import *
+    from rastervision.pytorch_backend import *
+    from rastervision.pytorch_learner import *
 
 
     def get_config(runner):
@@ -132,7 +132,7 @@ We can now run the pipeline by invoking the following command inside the contain
 .. code-block:: console
 
    > export BATCH_CPU_JOB_DEF="" BATCH_CPU_JOB_QUEUE="" BATCH_GPU_JOB_DEF="" BATCH_GPU_JOB_QUEUE="" BATCH_ATTEMPTS="" AWS_S3_REQUESTER_PAYS="False"
-   > python -m rastervision2.pipeline.cli run inprocess code/tiny_spacenet.py
+   > python -m rastervision.pipeline.cli run inprocess code/tiny_spacenet.py
 
 Seeing Results
 ---------------

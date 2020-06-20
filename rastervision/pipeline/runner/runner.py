@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Optional, List
 
-from rastervision2.pipeline.pipeline import Pipeline
+from rastervision.pipeline.pipeline import Pipeline
 
 
 class Runner():

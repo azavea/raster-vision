@@ -1,8 +1,8 @@
 from unittest.mock import Mock
 import numpy as np
 
-from rastervision2.core import Box
-from rastervision2.core.data import (RasterSource, IdentityCRSTransformer)
+from rastervision.core import Box
+from rastervision.core.data import (RasterSource, IdentityCRSTransformer)
 from rastervision.data import (ActivateMixin)
 
 

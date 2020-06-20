@@ -3,10 +3,10 @@ import unittest
 
 from pydantic.error_wrappers import ValidationError
 
-from rastervision2.pipeline.config import (Config, register_config, build_config,
+from rastervision.pipeline.config import (Config, register_config, build_config,
                                            upgrade_config)
-from rastervision2.pipeline.pipeline_config import (PipelineConfig)
-from rastervision2.pipeline import registry
+from rastervision.pipeline.pipeline_config import (PipelineConfig)
+from rastervision.pipeline import registry
 
 
 def a_upgrader(cfg_dict, version):
@@ -16,22 +16,22 @@ def a_upgrader(cfg_dict, version):
     return cfg_dict
 
 
-@register_config('a', plugin='rastervision2.ab', upgrader=a_upgrader)
+@register_config('a', plugin='rastervision.ab', upgrader=a_upgrader)
 class AConfig(Config):
     x: str = 'x'
 
 
-@register_config('asub1', plugin='rastervision2.ab')
+@register_config('asub1', plugin='rastervision.ab')
 class ASub1Config(AConfig):
     y: str = 'y'
 
 
-@register_config('asub2', plugin='rastervision2.ab')
+@register_config('asub2', plugin='rastervision.ab')
 class ASub2Config(AConfig):
     y: str = 'y'
 
 
-@register_config('b', plugin='rastervision2.ab')
+@register_config('b', plugin='rastervision.ab')
 class BConfig(Config):
     x: str = 'x'
 
@@ -43,7 +43,7 @@ def c_upgrader(cfg_dict, version):
     return cfg_dict
 
 
-@register_config('c', plugin='rastervision2.c', upgrader=c_upgrader)
+@register_config('c', plugin='rastervision.c', upgrader=c_upgrader)
 class CConfig(PipelineConfig):
     al: List[AConfig]
     bl: List[BConfig]
@@ -54,8 +54,8 @@ class CConfig(PipelineConfig):
 
 class TestConfig(unittest.TestCase):
     def setUp(self):
-        registry.set_plugin_version('rastervision2.ab', 1)
-        registry.set_plugin_version('rastervision2.c', 1)
+        registry.set_plugin_version('rastervision.ab', 1)
+        registry.set_plugin_version('rastervision.c', 1)
         registry.update_config_info()
         self.plugin_versions = registry.plugin_versions
 
@@ -114,8 +114,8 @@ class TestConfig(unittest.TestCase):
 
     def test_upgrade(self):
         plugin_versions_v0 = dict(self.plugin_versions)
-        plugin_versions_v0['rastervision2.ab'] = 0
-        plugin_versions_v0['rastervision2.c'] = 0
+        plugin_versions_v0['rastervision.ab'] = 0
+        plugin_versions_v0['rastervision.c'] = 0
 
         # after upgrading: the y field in the root should get converted to x, and
         # the z field in the instances of a should get convert to x.

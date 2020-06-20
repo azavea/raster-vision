@@ -9,7 +9,7 @@ from everett import NO_VALUE
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigIniEnv,
                              ConfigOSEnv)
 
-from rastervision2.pipeline.verbosity import Verbosity
+from rastervision.pipeline.verbosity import Verbosity
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class RVConfig:
     def set_verbosity(self, verbosity: Verbosity = Verbosity.NORMAL):
         """Set verbosity level for logging."""
         self.verbosity = verbosity
-        root_log = logging.getLogger('rastervision2')
+        root_log = logging.getLogger('rastervision')
         if self.verbosity >= Verbosity.VERBOSE:
             root_log.setLevel(logging.DEBUG)
         elif self.verbosity >= Verbosity.NORMAL:

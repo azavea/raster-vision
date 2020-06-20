@@ -4,12 +4,12 @@ import inspect
 from pydantic import BaseModel, create_model, Field, validator  # noqa
 from typing_extensions import Literal
 
-from rastervision2.pipeline import registry
-from rastervision2.pipeline.file_system import str_to_file
-from rastervision2.pipeline import rv_config
+from rastervision.pipeline import registry
+from rastervision.pipeline.file_system import str_to_file
+from rastervision.pipeline import rv_config
 
 if TYPE_CHECKING:
-    from rastervision2.pipeline.pipeline_config import PipelineConfig  # noqa
+    from rastervision.pipeline.pipeline_config import PipelineConfig  # noqa
 
 
 class ConfigError(ValueError):
@@ -258,10 +258,10 @@ def upgrade_config(config_dict: Union[dict, List[dict]]) -> Union[dict, List[dic
 def get_plugin(config_cls) -> str:
     """Infer the module path of the plugin where a Config class is defined.
 
-    This only works correctly if the plugin is in a module under rastervision2.
+    This only works correctly if the plugin is in a module under rastervision.
     """
     cls_module = inspect.getmodule(config_cls)
-    return 'rastervision2.' + cls_module.__name__.split('.')[1]
+    return 'rastervision.' + cls_module.__name__.split('.')[1]
 
 
 def register_config(type_hint: str,

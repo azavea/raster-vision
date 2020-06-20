@@ -1,10 +1,10 @@
 import numpy as np
 from shapely.geometry import shape
 
-from rastervision2.core.box import Box
-from rastervision2.core.data.label.labels import Labels
-from rastervision2.core.data.label.tfod_utils.np_box_list import BoxList
-from rastervision2.core.data.label.tfod_utils.np_box_list_ops import (
+from rastervision.core.box import Box
+from rastervision.core.data.label.labels import Labels
+from rastervision.core.data.label.tfod_utils.np_box_list import BoxList
+from rastervision.core.data.label.tfod_utils.np_box_list_ops import (
     prune_non_overlapping_boxes, clip_to_window, concatenate,
     non_max_suppression)
 

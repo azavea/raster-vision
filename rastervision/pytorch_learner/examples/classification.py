@@ -1,11 +1,11 @@
 from os.path import join
 
-from rastervision2.aws_batch.aws_batch_runner import AWS_BATCH
-from rastervision2.pytorch_learner.classification_learner_config import (
+from rastervision.aws_batch.aws_batch_runner import AWS_BATCH
+from rastervision.pytorch_learner.classification_learner_config import (
     ClassificationLearnerConfig, ClassificationDataConfig)
-from rastervision2.pytorch_learner.learner_config import (SolverConfig,
+from rastervision.pytorch_learner.learner_config import (SolverConfig,
                                                           ModelConfig)
-from rastervision2.pytorch_learner.learner_pipeline_config import LearnerPipelineConfig
+from rastervision.pytorch_learner.learner_pipeline_config import LearnerPipelineConfig
 
 
 def get_config(runner, test=False):

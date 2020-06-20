@@ -16,9 +16,9 @@ Codebase overview
 The pipeline package
 ----------------------
 
-The most central package in Raster Vision is ``rastervision2.pipeline``. It contains functionality for defining and configuring computational pipelines, running them in different environments using parallelism and GPUs, reading and writing to different file systems, and adding and customizing pipelines via a plugin mechanism. The rest of Raster Vision is written as a set of optional plugins. This means that it's possible to use the ``rastervision2.pipeline`` package independent of the rest of RV.
+The most central package in Raster Vision is ``rastervision.pipeline``. It contains functionality for defining and configuring computational pipelines, running them in different environments using parallelism and GPUs, reading and writing to different file systems, and adding and customizing pipelines via a plugin mechanism. The rest of Raster Vision is written as a set of optional plugins. This means that it's possible to use the ``rastervision.pipeline`` package independent of the rest of RV.
 
-In this section, we explain the most important aspects of this package through a series of examples which incrementally build on one another. The inline comments should be read as an integral part of the documentatation. The code has been lightly edited for brevity, but the full runnable code can be found in ``rastervision2.examples``.
+In this section, we explain the most important aspects of this package through a series of examples which incrementally build on one another. The inline comments should be read as an integral part of the documentatation. The code has been lightly edited for brevity, but the full runnable code can be found in ``rastervision.examples``.
 
 .. _rv2_example 1:
 
@@ -225,17 +225,17 @@ Example 3: customizing a pipeline using a plugin
 This example shows how to customize the behavior of an existing pipeline, namely the ``SamplePipeline2`` developed in :ref:`rv2_example 2`. That pipeline delegates printing messages to a ``MessageMaker`` class which is configured by ``MessageMakerConfig``. Our goal here is to make it possible to control the number of exclamation points at the end of the message. This involves modifying both the behavior in ``MessageMaker`` as well as the configuration schema in ``MesageMakerConfig``.
 
 
-We can implement this as a plugin, which contributes subclasses ``DeluxeMessageMaker`` and ``DeluxeMessageMakerConfig``. By using a plugin, we can add new behavior without modifying any of the original source code from :ref:`rv2_example 2`. In order for Raster Vision to discover a plugin, the code must be in a package under the ``rastervision2`` `namespace package <https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages>`_. In this case, the package is ``rastervision2.deluxe_message_maker``. The other thing needed to define a plugin is for the top-level ``__init__.py`` file to have a particular structure which can be seen below.
+We can implement this as a plugin, which contributes subclasses ``DeluxeMessageMaker`` and ``DeluxeMessageMakerConfig``. By using a plugin, we can add new behavior without modifying any of the original source code from :ref:`rv2_example 2`. In order for Raster Vision to discover a plugin, the code must be in a package under the ``rastervision`` `namespace package <https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages>`_. In this case, the package is ``rastervision.deluxe_message_maker``. The other thing needed to define a plugin is for the top-level ``__init__.py`` file to have a particular structure which can be seen below.
 
 .. code-block:: python
 
-    # Code from rastervision2.deluxe_message_maker.__init__.py
+    # Code from rastervision.deluxe_message_maker.__init__.py
 
     # Always need to import this first.
-    import rastervision2.pipeline
+    import rastervision.pipeline
 
     # Need to import any modules with register_config decorators.
-    import rastervision2.deluxe_message_maker.deluxe_message_maker
+    import rastervision.deluxe_message_maker.deluxe_message_maker
 
     def register_plugin(registry):
         # Can be used to manually update the registry. Useful
@@ -246,7 +246,7 @@ The code to implement the new configuration and behavior, and a sample configura
 
 .. code-block:: python
 
-    # Code from rastervision2.deluxe_message_maker.deluxe_message_maker.py
+    # Code from rastervision.deluxe_message_maker.deluxe_message_maker.py
 
     # You always need to use the register_config decorator.
     @register_config('deluxe_message_maker')

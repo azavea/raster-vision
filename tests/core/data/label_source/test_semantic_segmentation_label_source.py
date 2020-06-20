@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 
-from rastervision2.core import Box
-from rastervision2.core.data import ClassConfig, SemanticSegmentationLabelSource
+from rastervision.core import Box
+from rastervision.core.data import ClassConfig, SemanticSegmentationLabelSource
 from tests_v2.core.data.mock_raster_source import MockRasterSource
 
 

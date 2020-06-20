@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from rastervision2.pytorch_learner.utils import (
+from rastervision.pytorch_learner.utils import (
     compute_conf_mat, compute_conf_mat_metrics)
 
 

@@ -1,7 +1,7 @@
-from rastervision2.pipeline.config import register_config
-from rastervision2.core.evaluation.classification_evaluator_config import (
+from rastervision.pipeline.config import register_config
+from rastervision.core.evaluation.classification_evaluator_config import (
     ClassificationEvaluatorConfig)
-from rastervision2.core.evaluation.chip_classification_evaluator import (
+from rastervision.core.evaluation.chip_classification_evaluator import (
     ChipClassificationEvaluator)
 
 

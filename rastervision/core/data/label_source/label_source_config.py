@@ -1,4 +1,4 @@
-from rastervision2.pipeline.config import Config, register_config
+from rastervision.pipeline.config import Config, register_config
 
 
 @register_config('label_source')

@@ -1,4 +1,4 @@
-from rastervision2.core.data import CRSTransformer
+from rastervision.core.data import CRSTransformer
 
 
 class DoubleCRSTransformer(CRSTransformer):

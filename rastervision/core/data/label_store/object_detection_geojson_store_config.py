@@ -1,9 +1,9 @@
 from typing import Optional
 from os.path import join
 
-from rastervision2.core.data.label_store import (LabelStoreConfig,
+from rastervision.core.data.label_store import (LabelStoreConfig,
                                                  ObjectDetectionGeoJSONStore)
-from rastervision2.pipeline.config import register_config, Field
+from rastervision.pipeline.config import register_config, Field
 
 
 @register_config('object_detection_geojson_store')

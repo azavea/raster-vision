@@ -1,6 +1,6 @@
 import numpy as np
 
-from rastervision2.core.data.raster_transformer.raster_transformer \
+from rastervision.core.data.raster_transformer.raster_transformer \
     import RasterTransformer
 
 

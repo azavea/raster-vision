@@ -3,9 +3,9 @@ import logging
 from shapely.geometry import shape, mapping
 from shapely.strtree import STRtree
 
-from rastervision2.core.data import ActivateMixin
-from rastervision2.core.data.vector_source import GeoJSONVectorSourceConfig
-from rastervision2.core.evaluation import (ClassificationEvaluator,
+from rastervision.core.data import ActivateMixin
+from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
+from rastervision.core.evaluation import (ClassificationEvaluator,
                                            SemanticSegmentationEvaluation)
 
 log = logging.getLogger(__name__)

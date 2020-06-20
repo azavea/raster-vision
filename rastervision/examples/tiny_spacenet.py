@@ -2,11 +2,11 @@
 
 from os.path import join
 
-from rastervision2.core.rv_pipeline import *
-from rastervision2.core.backend import *
-from rastervision2.core.data import *
-from rastervision2.pytorch_backend import *
-from rastervision2.pytorch_learner import *
+from rastervision.core.rv_pipeline import *
+from rastervision.core.backend import *
+from rastervision.core.data import *
+from rastervision.pytorch_backend import *
+from rastervision.pytorch_learner import *
 
 
 def get_config(runner):

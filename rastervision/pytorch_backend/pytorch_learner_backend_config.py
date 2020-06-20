@@ -1,8 +1,8 @@
 from typing import List
 
-from rastervision2.pipeline.config import register_config, Field
-from rastervision2.core.backend import BackendConfig
-from rastervision2.pytorch_learner.learner_config import (
+from rastervision.pipeline.config import register_config, Field
+from rastervision.core.backend import BackendConfig
+from rastervision.pytorch_learner.learner_config import (
     SolverConfig, ModelConfig, default_augmentors, augmentors as
     augmentor_list)
 

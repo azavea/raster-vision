@@ -5,8 +5,8 @@ import json
 from sklearn.metrics import confusion_matrix
 import numpy as np
 
-from rastervision2.core.evaluation import ClassEvaluationItem
-from rastervision2.core.evaluation import ClassificationEvaluation
+from rastervision.core.evaluation import ClassEvaluationItem
+from rastervision.core.evaluation import ClassificationEvaluation
 
 log = logging.getLogger(__name__)
 

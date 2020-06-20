@@ -126,7 +126,7 @@ profile: if you had two profiles (the ``default`` and one named ``myprofile``), 
    > ls ~/.rastervision
    default    myprofile
 
-Use the ``rastervision2 --profile`` option in the :ref:`rv2_cli` to set the profile.
+Use the ``rastervision --profile`` option in the :ref:`rv2_cli` to set the profile.
 
 Configuration File Sections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

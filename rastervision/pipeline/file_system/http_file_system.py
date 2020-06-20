@@ -4,7 +4,7 @@ import urllib
 import urllib.request
 from datetime import datetime
 
-from rastervision2.pipeline.file_system import (FileSystem, NotReadableError,
+from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                 NotWritableError)
 from urllib.parse import urlparse
 

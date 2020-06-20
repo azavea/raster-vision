@@ -2,11 +2,11 @@
 import logging
 import json
 
-from rastervision2.pipeline.rv_config import RVConfig
-from rastervision2.pipeline.registry import Registry
-from rastervision2.pipeline.verbosity import Verbosity
+from rastervision.pipeline.rv_config import RVConfig
+from rastervision.pipeline.registry import Registry
+from rastervision.pipeline.verbosity import Verbosity
 
-root_logger = logging.getLogger('rastervision2')
+root_logger = logging.getLogger('rastervision')
 sh = logging.StreamHandler()
 sh.setLevel(logging.DEBUG)
 formatter = logging.Formatter(

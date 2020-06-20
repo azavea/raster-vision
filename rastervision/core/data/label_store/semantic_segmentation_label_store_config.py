@@ -1,9 +1,9 @@
 from typing import Optional, List
 from os.path import join
 
-from rastervision2.core.data.label_store import (
+from rastervision.core.data.label_store import (
     LabelStoreConfig, SemanticSegmentationLabelStore)
-from rastervision2.pipeline.config import register_config, Config, Field
+from rastervision.pipeline.config import register_config, Config, Field
 
 
 @register_config('vector_output')

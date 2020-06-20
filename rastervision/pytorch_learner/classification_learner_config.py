@@ -1,7 +1,7 @@
 from enum import Enum
 
-from rastervision2.pipeline.config import register_config
-from rastervision2.pytorch_learner.learner_config import (
+from rastervision.pipeline.config import register_config
+from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig)
 
 
@@ -25,6 +25,6 @@ class ClassificationLearnerConfig(LearnerConfig):
     model: ClassificationModelConfig
 
     def build(self, tmp_dir, model_path=None):
-        from rastervision2.pytorch_learner.classification_learner import (
+        from rastervision.pytorch_learner.classification_learner import (
             ClassificationLearner)
         return ClassificationLearner(self, tmp_dir, model_path=model_path)

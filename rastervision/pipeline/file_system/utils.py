@@ -9,8 +9,8 @@ import json
 import zipfile
 from typing import Optional, List
 
-from rastervision2.pipeline.file_system import FileSystem
-from rastervision2.pipeline.file_system.local_file_system import make_dir
+from rastervision.pipeline.file_system import FileSystem
+from rastervision.pipeline.file_system.local_file_system import make_dir
 
 log = logging.getLogger(__name__)
 

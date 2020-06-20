@@ -86,14 +86,14 @@ if [ -z "$RASTER_VISION_REPO" ]
 then
     RV_SRC_FLAGS=""
 else
-    RV_SRC_FLAGS="-v ${RASTER_VISION_REPO}/rastervision:/opt/src/rastervision -v ${RASTER_VISION_REPO}/rastervision2:/opt/src/rastervision2"
+    RV_SRC_FLAGS="-v ${RASTER_VISION_REPO}/rastervision:/opt/src/rastervision -v ${RASTER_VISION_REPO}/rastervision:/opt/src/rastervision"
 fi
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     docker run --shm-size 8G ${RUNTIME} ${NAME} --rm -it \
         -v "${HOME}"/.rastervision:/root/.rastervision \
-        -v ${REPO_ROOT}/rastervision2:/opt/src/{{cookiecutter.project_name}}/rastervision2 \
+        -v ${REPO_ROOT}/rastervision:/opt/src/{{cookiecutter.project_name}}/rastervision \
         -v ${REPO_ROOT}/scripts:/opt/src/{{cookiecutter.project_name}}/scripts \
         -v ${REPO_ROOT}/configs:/opt/src/{{cookiecutter.project_name}}/configs \
         -v ${DATA_DIR}:/opt/data \

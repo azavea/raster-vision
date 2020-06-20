@@ -9,11 +9,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import ConcatDataset
 
-from rastervision2.pytorch_learner.learner import Learner
-from rastervision2.pytorch_learner.utils import (
+from rastervision.pytorch_learner.learner import Learner
+from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
-from rastervision2.pytorch_learner.image_folder import (ImageFolder)
-from rastervision2.pytorch_learner.classification_learner_config import (
+from rastervision.pytorch_learner.image_folder import (ImageFolder)
+from rastervision.pytorch_learner.classification_learner_config import (
     ClassificationDataFormat)
 
 log = logging.getLogger(__name__)

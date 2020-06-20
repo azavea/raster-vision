@@ -2,12 +2,12 @@ from typing import Optional, List
 
 from shapely.geometry import shape
 
-from rastervision2.pipeline.config import Config, register_config, Field
-from rastervision2.core.data.raster_source import RasterSourceConfig
-from rastervision2.core.data.label_source import LabelSourceConfig
-from rastervision2.core.data.label_store import LabelStoreConfig
-from rastervision2.core.data.scene import Scene
-from rastervision2.core.data.vector_source import GeoJSONVectorSourceConfig
+from rastervision.pipeline.config import Config, register_config, Field
+from rastervision.core.data.raster_source import RasterSourceConfig
+from rastervision.core.data.label_source import LabelSourceConfig
+from rastervision.core.data.label_store import LabelStoreConfig
+from rastervision.core.data.scene import Scene
+from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
 
 
 @register_config('scene')

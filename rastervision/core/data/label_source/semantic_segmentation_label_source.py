@@ -2,14 +2,14 @@ from typing import (List, Optional)
 
 import numpy as np
 
-from rastervision2.core.box import Box
-from rastervision2.core.data.class_config import ClassConfig
-from rastervision2.core.data import ActivateMixin
-from rastervision2.core.data.label import SemanticSegmentationLabels
-from rastervision2.core.data.label_source.label_source import (LabelSource)
-from rastervision2.core.data.label_source.segmentation_class_transformer import (
+from rastervision.core.box import Box
+from rastervision.core.data.class_config import ClassConfig
+from rastervision.core.data import ActivateMixin
+from rastervision.core.data.label import SemanticSegmentationLabels
+from rastervision.core.data.label_source.label_source import (LabelSource)
+from rastervision.core.data.label_source.segmentation_class_transformer import (
     SegmentationClassTransformer)
-from rastervision2.core.data.raster_source import RasterSource
+from rastervision.core.data.raster_source import RasterSource
 
 
 def fill_edge(label_arr, window, extent, fill_value):

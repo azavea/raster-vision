@@ -1,4 +1,4 @@
-from rastervision2.core.data import ActivateMixin
+from rastervision.core.data import ActivateMixin
 
 
 class Scene(ActivateMixin):

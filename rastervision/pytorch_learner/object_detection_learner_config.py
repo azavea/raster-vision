@@ -1,7 +1,7 @@
 from enum import Enum
 
-from rastervision2.pipeline.config import register_config, Field, validator
-from rastervision2.pytorch_learner.learner_config import (
+from rastervision.pipeline.config import register_config, Field, validator
+from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, DataConfig, ModelConfig, Backbone)
 
 
@@ -40,6 +40,6 @@ class ObjectDetectionLearnerConfig(LearnerConfig):
     model: ObjectDetectionModelConfig
 
     def build(self, tmp_dir, model_path=None):
-        from rastervision2.pytorch_learner.object_detection_learner import (
+        from rastervision.pytorch_learner.object_detection_learner import (
             ObjectDetectionLearner)
         return ObjectDetectionLearner(self, tmp_dir, model_path=model_path)

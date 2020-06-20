@@ -4,7 +4,7 @@ from typing import List, TYPE_CHECKING
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from rastervision2.pipeline.pipeline_config import PipelineConfig  # noqa
+    from rastervision.pipeline.pipeline_config import PipelineConfig  # noqa
 
 
 class Pipeline():

@@ -10,8 +10,8 @@
 ### Usage
 
 * Get a console in the container using `docker/run --aws`
-* The code in `rastervision2/{{cookiecutter.project_name}}` contains a very simple plugin with a `TestPipeline`. You can run the test pipeline included in the source code using
- `rastervision2 run inprocess configs/test.py`
+* The code in `rastervision/{{cookiecutter.project_name}}` contains a very simple plugin with a `TestPipeline`. You can run the test pipeline included in the source code using
+ `rastervision run inprocess configs/test.py`
 
 ## Running on AWS Batch
 
@@ -25,4 +25,4 @@
 
 * Run `docker/build` and then `docker/ecr_publish` to push any changes to ECR.
 * To run the pipeline on Batch, use the `batch` runner, the `--profile` option with the Raster Vision profile you created above, and set the `root_uri` to an S3 URI. This can be done using
- `rastervision2 --profile {{cookiecutter.project_name}} run batch configs/test.py -a root_uri <s3 uri>`
+ `rastervision --profile {{cookiecutter.project_name}} run batch configs/test.py -a root_uri <s3 uri>`

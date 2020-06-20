@@ -7,7 +7,7 @@ When using Raster Vision on a new project, the best practice is to create a new 
 
 .. code-block:: console
 
-    $ cookiecutter /Users/lfishgold/projects/raster-vision/rastervision2/examples/cookiecutter_template
+    $ cookiecutter /Users/lfishgold/projects/raster-vision/rastervision/examples/cookiecutter_template
     caps_project_name [MY_PROJECT]:
     project_name [my_project]:
     docker_image [my_project]:
@@ -24,7 +24,7 @@ When using Raster Vision on a new project, the best practice is to create a new 
     │   ├── build
     │   ├── run
     │   └── ecr_publish
-    ├── rastervision2
+    ├── rastervision
     │   └── my_project
     │       ├── __init__.py
     │       ├── test_pipeline.py

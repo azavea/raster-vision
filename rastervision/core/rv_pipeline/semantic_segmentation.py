@@ -3,9 +3,9 @@ from typing import List
 
 import numpy as np
 
-from rastervision2.core.rv_pipeline.rv_pipeline import RVPipeline
-from rastervision2.core.box import Box
-from rastervision2.core.rv_pipeline.semantic_segmentation_config import (
+from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision.core.box import Box
+from rastervision.core.rv_pipeline.semantic_segmentation_config import (
     SemanticSegmentationWindowMethod)
 
 log = logging.getLogger(__name__)

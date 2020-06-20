@@ -1,6 +1,6 @@
-from rastervision2.core.data.raster_source import (RasterizedSource)
-from rastervision2.core.data.vector_source import (VectorSourceConfig)
-from rastervision2.pipeline.config import register_config, Config, Field, ConfigError
+from rastervision.core.data.raster_source import (RasterizedSource)
+from rastervision.core.data.vector_source import (VectorSourceConfig)
+from rastervision.pipeline.config import register_config, Config, Field, ConfigError
 
 
 @register_config('rasterizer')

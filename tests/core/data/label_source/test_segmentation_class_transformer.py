@@ -2,9 +2,9 @@ import unittest
 
 import numpy as np
 
-from rastervision2.core.data import SegmentationClassTransformer
-from rastervision2.core.data.utils import color_to_triple
-from rastervision2.core.data.class_config import ClassConfig
+from rastervision.core.data import SegmentationClassTransformer
+from rastervision.core.data.utils import color_to_triple
+from rastervision.core.data.class_config import ClassConfig
 
 
 class TestSegmentationClassTransformer(unittest.TestCase):

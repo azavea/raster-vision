@@ -1,8 +1,8 @@
 from typing import List
 
-from rastervision2.core.analyzer import Analyzer
-from rastervision2.core.raster_stats import RasterStats
-from rastervision2.core.data import Scene
+from rastervision.core.analyzer import Analyzer
+from rastervision.core.raster_stats import RasterStats
+from rastervision.core.data import Scene
 
 
 class StatsAnalyzer(Analyzer):

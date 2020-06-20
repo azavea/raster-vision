@@ -3,7 +3,7 @@ import copy
 
 import click
 
-from rastervision2.pipeline.file_system import file_to_str, str_to_file
+from rastervision.pipeline.file_system import file_to_str, str_to_file
 
 
 @click.command()

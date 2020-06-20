@@ -3,7 +3,7 @@ import shutil
 from datetime import datetime, timezone
 import glob
 
-from rastervision2.pipeline.file_system import (FileSystem, NotReadableError)
+from rastervision.pipeline.file_system import (FileSystem, NotReadableError)
 
 
 def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):

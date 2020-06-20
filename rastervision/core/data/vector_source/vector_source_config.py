@@ -1,6 +1,6 @@
 from typing import Dict, Optional, Union
 
-from rastervision2.pipeline.config import Config, register_config, Field
+from rastervision.pipeline.config import Config, register_config, Field
 
 
 @register_config('vector_source')

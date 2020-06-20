@@ -1,9 +1,9 @@
 from enum import Enum
 
-from rastervision2.pipeline.config import register_config, Config, Field
-from rastervision2.core.rv_pipeline import RVPipelineConfig
-from rastervision2.core.data.label_store import ObjectDetectionGeoJSONStoreConfig
-from rastervision2.core.evaluation import ObjectDetectionEvaluatorConfig
+from rastervision.pipeline.config import register_config, Config, Field
+from rastervision.core.rv_pipeline import RVPipelineConfig
+from rastervision.core.data.label_store import ObjectDetectionGeoJSONStoreConfig
+from rastervision.core.evaluation import ObjectDetectionEvaluatorConfig
 
 
 class ObjectDetectionWindowMethod(Enum):
@@ -59,7 +59,7 @@ class ObjectDetectionConfig(RVPipelineConfig):
     )
 
     def build(self, tmp_dir):
-        from rastervision2.core.rv_pipeline.object_detection import ObjectDetection
+        from rastervision.core.rv_pipeline.object_detection import ObjectDetection
         return ObjectDetection(self, tmp_dir)
 
     def get_default_label_store(self, scene):

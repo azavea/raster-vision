@@ -8,9 +8,9 @@ import rasterio
 from rasterio.windows import Window
 import pyproj
 
-from rastervision2.pipeline.file_system import (download_if_needed,
+from rastervision.pipeline.file_system import (download_if_needed,
                                                 get_local_path, upload_or_copy)
-from rastervision2.core.utils.cog import create_cog
+from rastervision.core.utils.cog import create_cog
 
 
 def lnglat2merc(lng, lat):

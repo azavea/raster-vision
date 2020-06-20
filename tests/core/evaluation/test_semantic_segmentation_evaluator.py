@@ -4,15 +4,15 @@ from os.path import join
 import numpy as np
 from shapely.geometry import shape
 
-from rastervision2.core.data import ClassConfig
-from rastervision2.core import Box
-from rastervision2.core.data import (
+from rastervision.core.data import ClassConfig
+from rastervision.core import Box
+from rastervision.core.data import (
     Scene, IdentityCRSTransformer,
     SemanticSegmentationLabelSource, RasterizedSourceConfig, RasterizerConfig,
     GeoJSONVectorSourceConfig, PolygonVectorOutputConfig)
-from rastervision2.core.evaluation import SemanticSegmentationEvaluator
-from rastervision2.pipeline import rv_config
-from rastervision2.pipeline.file_system import file_to_json
+from rastervision.core.evaluation import SemanticSegmentationEvaluator
+from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import file_to_json
 
 from tests_v2.core.data.mock_raster_source import (MockRasterSource)
 from tests_v2 import data_file_path

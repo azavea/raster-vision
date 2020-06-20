@@ -1,10 +1,10 @@
-from rastervision2.core.data.label import Labels
+from rastervision.core.data.label import Labels
 
 import numpy as np
 from rasterio.features import rasterize
 from shapely.ops import transform
 
-from rastervision2.core.box import Box
+from rastervision.core.box import Box
 
 
 class SemanticSegmentationLabels(Labels):

@@ -1,11 +1,11 @@
-from rastervision2.pipeline.config import register_config
-from rastervision2.pytorch_backend.pytorch_learner_backend_config import (
+from rastervision.pipeline.config import register_config
+from rastervision.pytorch_backend.pytorch_learner_backend_config import (
     PyTorchLearnerBackendConfig)
-from rastervision2.pytorch_learner.classification_learner_config import (
+from rastervision.pytorch_learner.classification_learner_config import (
     ClassificationModelConfig, ClassificationLearnerConfig,
     ClassificationDataConfig)
 
-from rastervision2.pytorch_backend.pytorch_chip_classification import (
+from rastervision.pytorch_backend.pytorch_chip_classification import (
     PyTorchChipClassification)
 
 

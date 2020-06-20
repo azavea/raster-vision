@@ -17,7 +17,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.patches as patches
 
-from rastervision2.pipeline.file_system import file_to_json, json_to_file
+from rastervision.pipeline.file_system import file_to_json, json_to_file
 
 
 def get_coco_gt(targets, num_class_ids):

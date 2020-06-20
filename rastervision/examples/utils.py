@@ -8,13 +8,13 @@ from shapely.strtree import STRtree
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
 
-from rastervision2.core import Box
-from rastervision2.core.data import (RasterioCRSTransformer,
+from rastervision.core import Box
+from rastervision.core.data import (RasterioCRSTransformer,
                                      GeoJSONVectorSourceConfig)
-from rastervision2.pipeline.file_system import (file_to_str, file_exists,
+from rastervision.pipeline.file_system import (file_to_str, file_exists,
                                                 get_local_path, upload_or_copy,
                                                 make_dir, json_to_file)
-from rastervision2.aws_s3 import S3FileSystem
+from rastervision.aws_s3 import S3FileSystem
 
 
 def str_to_bool(x):

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import (List, Optional)
 from urllib.parse import urlparse
 
-from rastervision2.pipeline.file_system import FileSystem
+from rastervision.pipeline.file_system import FileSystem
 
 from osgeo import gdal
 

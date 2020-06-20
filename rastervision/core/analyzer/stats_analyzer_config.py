@@ -1,8 +1,8 @@
 from typing import Optional
 from os.path import join
 
-from rastervision2.pipeline.config import register_config, ConfigError, Field
-from rastervision2.core.analyzer import AnalyzerConfig
+from rastervision.pipeline.config import register_config, ConfigError, Field
+from rastervision.core.analyzer import AnalyzerConfig
 
 
 @register_config('stats_analyzer')
@@ -29,7 +29,7 @@ class StatsAnalyzerConfig(AnalyzerConfig):
             raise ConfigError('sample_prob must be <= 1 and > 0')
 
     def build(self):
-        from rastervision2.core.analyzer import StatsAnalyzer
+        from rastervision.core.analyzer import StatsAnalyzer
         return StatsAnalyzer(self.output_uri, self.sample_prob)
 
     def get_bundle_filenames(self):

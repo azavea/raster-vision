@@ -4,9 +4,9 @@ from enum import Enum
 
 from pydantic import PositiveFloat, PositiveInt
 
-from rastervision2.pipeline.config import (Config, register_config,
+from rastervision.pipeline.config import (Config, register_config,
                                            ConfigError, Field)
-from rastervision2.pytorch_learner.utils import color_to_triple
+from rastervision.pytorch_learner.utils import color_to_triple
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
@@ -15,7 +15,7 @@ augmentors = [
 ]
 
 if TYPE_CHECKING:
-    from rastervision2.pytorch_learner.learner import Learner  # noqa
+    from rastervision.pytorch_learner.learner import Learner  # noqa
 
 
 class Backbone(Enum):

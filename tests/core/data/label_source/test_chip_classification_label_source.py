@@ -4,10 +4,10 @@ import os
 from shapely.geometry import shape
 from shapely.strtree import STRtree
 
-from rastervision2.pipeline import rv_config
-from rastervision2.pipeline.file_system import json_to_file
-from rastervision2.core.box import Box
-from rastervision2.core.data import (
+from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import json_to_file
+from rastervision.core.box import Box
+from rastervision.core.data import (
     ClassConfig, infer_cell, ChipClassificationLabelSourceConfig,
     GeoJSONVectorSourceConfig)
 

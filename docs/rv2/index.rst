@@ -1,6 +1,6 @@
 .. rst-class:: hide-header
 
-.. currentmodule:: rastervision2
+.. currentmodule:: rastervision
 
 |
 
@@ -49,11 +49,11 @@ and maintain.
 
     from os.path import join
 
-    from rastervision2.core.rv_pipeline import *
-    from rastervision2.core.backend import *
-    from rastervision2.core.data import *
-    from rastervision2.pytorch_backend import *
-    from rastervision2.pytorch_learner import *
+    from rastervision.core.rv_pipeline import *
+    from rastervision.core.backend import *
+    from rastervision.core.data import *
+    from rastervision.pytorch_backend import *
+    from rastervision.pytorch_learner import *
 
 
     def get_config(runner):
@@ -128,7 +128,7 @@ on AWS Batch by running:
 
 .. code:: shell
 
-   > rastervision2 run batch -p tiny_spacenet.py
+   > rastervision run batch -p tiny_spacenet.py
 
 See the :ref:`rv2_quickstart` for a more complete description of using this example.
 

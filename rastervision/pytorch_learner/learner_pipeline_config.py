@@ -1,6 +1,6 @@
-from rastervision2.pipeline.config import register_config
-from rastervision2.pipeline.pipeline_config import PipelineConfig
-from rastervision2.pytorch_learner import LearnerConfig
+from rastervision.pipeline.config import register_config
+from rastervision.pipeline.pipeline_config import PipelineConfig
+from rastervision.pytorch_learner import LearnerConfig
 
 
 @register_config('learner_pipeline')
@@ -16,5 +16,5 @@ class LearnerPipelineConfig(PipelineConfig):
         self.learner.update()
 
     def build(self, tmp_dir):
-        from rastervision2.pytorch_learner.learner_pipeline import LearnerPipeline
+        from rastervision.pytorch_learner.learner_pipeline import LearnerPipeline
         return LearnerPipeline(self, tmp_dir)

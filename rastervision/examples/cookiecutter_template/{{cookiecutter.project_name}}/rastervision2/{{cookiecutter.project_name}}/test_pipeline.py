@@ -1,6 +1,6 @@
 from typing import List
 
-from rastervision2.pipeline.pipeline import Pipeline
+from rastervision.pipeline.pipeline import Pipeline
 
 
 class TestPipeline(Pipeline):

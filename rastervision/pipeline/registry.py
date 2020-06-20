@@ -3,9 +3,9 @@ import inspect
 from click import Command
 
 if TYPE_CHECKING:
-    from rastervision2.pipeline.runner import Runner  # noqa
-    from rastervision2.pipeline.file_system import FileSystem  # noqa
-    from rastervision2.pipeline.config import Upgrader, Config  # noqa
+    from rastervision.pipeline.runner import Runner  # noqa
+    from rastervision.pipeline.file_system import FileSystem  # noqa
+    from rastervision.pipeline.config import Upgrader, Config  # noqa
 
 
 class RegistryError(Exception):
@@ -40,7 +40,7 @@ class Registry():
         """Set the latest version of a plugin.
 
         Args:
-            plugin: module path of plugin (eg. rastervision2.core)
+            plugin: module path of plugin (eg. rastervision.core)
             version: a non-negative integer version number that should be incremented
                 each time a config schema changes
         """
@@ -173,9 +173,9 @@ class Registry():
 
     def load_builtins(self):
         """Add all builtin resources."""
-        from rastervision2.pipeline.runner import (InProcessRunner, INPROCESS,
+        from rastervision.pipeline.runner import (InProcessRunner, INPROCESS,
                                                    LocalRunner, LOCAL)
-        from rastervision2.pipeline.file_system import (HttpFileSystem,
+        from rastervision.pipeline.file_system import (HttpFileSystem,
                                                         LocalFileSystem)
 
         self.add_runner(INPROCESS, InProcessRunner)
@@ -185,8 +185,8 @@ class Registry():
 
         # import so register_config decorators are called
         # TODO can we get rid of this now?
-        import rastervision2.pipeline.pipeline_config  # noqa
-        self.set_plugin_version('rastervision2.pipeline', 0)
+        import rastervision.pipeline.pipeline_config  # noqa
+        self.set_plugin_version('rastervision.pipeline', 0)
 
     def update_config_info(self):
         config_class_to_type_hint = {}
@@ -205,12 +205,12 @@ class Registry():
     def load_plugins(self):
         """Discover all plugins and register their resources.
 
-        Import each Python module within the rastervision2 namespace package
+        Import each Python module within the rastervision namespace package
         and call the register_plugin function at its root (if it exists).
         """
         import importlib
         import pkgutil
-        import rastervision2
+        import rastervision
 
         # From https://packaging.python.org/guides/creating-and-discovering-plugins/#using-namespace-packages  # noqa
         def iter_namespace(ns_pkg):
@@ -222,7 +222,7 @@ class Registry():
 
         discovered_plugins = {
             name: importlib.import_module(name)
-            for finder, name, ispkg in iter_namespace(rastervision2)
+            for finder, name, ispkg in iter_namespace(rastervision)
         }
 
         for name, module in discovered_plugins.items():

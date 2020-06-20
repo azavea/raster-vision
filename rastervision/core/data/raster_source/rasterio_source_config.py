@@ -1,7 +1,7 @@
 from typing import List
 
-from rastervision2.core.data.raster_source import RasterSourceConfig, RasterioSource
-from rastervision2.pipeline.config import register_config, Field
+from rastervision.core.data.raster_source import RasterSourceConfig, RasterioSource
+from rastervision.pipeline.config import register_config, Field
 
 
 @register_config('rasterio_source')

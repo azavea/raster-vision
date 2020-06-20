@@ -1,6 +1,6 @@
 import copy
 
-from rastervision2.core.data.vector_source.label_maker.filter import (
+from rastervision.core.data.vector_source.label_maker.filter import (
     create_filter)
 
 

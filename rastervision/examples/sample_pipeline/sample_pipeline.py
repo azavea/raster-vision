@@ -1,11 +1,11 @@
 from typing import List, Optional
 from os.path import join
 
-from rastervision2.pipeline.pipeline import Pipeline
-from rastervision2.pipeline.file_system import str_to_file, file_to_str
-from rastervision2.pipeline.pipeline_config import PipelineConfig
-from rastervision2.pipeline.config import register_config
-from rastervision2.pipeline.utils import split_into_groups
+from rastervision.pipeline.pipeline import Pipeline
+from rastervision.pipeline.file_system import str_to_file, file_to_str
+from rastervision.pipeline.pipeline_config import PipelineConfig
+from rastervision.pipeline.config import register_config
+from rastervision.pipeline.utils import split_into_groups
 
 
 # Each Config needs to be registered with a type hint which is used for

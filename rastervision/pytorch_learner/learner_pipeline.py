@@ -1,5 +1,5 @@
-from rastervision2.pipeline.pipeline import Pipeline
-from rastervision2.pytorch_learner import LearnerConfig
+from rastervision.pipeline.pipeline import Pipeline
+from rastervision.pytorch_learner import LearnerConfig
 
 
 class LearnerPipeline(Pipeline):

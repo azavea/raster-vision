@@ -3,13 +3,13 @@
 import os
 from os.path import join
 
-from rastervision2.core.rv_pipeline import *
-from rastervision2.core.backend import *
-from rastervision2.core.data import *
-from rastervision2.core.analyzer import *
-from rastervision2.pytorch_backend import *
-from rastervision2.pytorch_learner import *
-from rastervision2.examples.utils import get_scene_info, save_image_crop
+from rastervision.core.rv_pipeline import *
+from rastervision.core.backend import *
+from rastervision.core.data import *
+from rastervision.core.analyzer import *
+from rastervision.pytorch_backend import *
+from rastervision.pytorch_learner import *
+from rastervision.examples.utils import get_scene_info, save_image_crop
 
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 

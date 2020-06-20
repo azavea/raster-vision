@@ -2,11 +2,11 @@ import logging
 
 import numpy as np
 
-from rastervision2.core.rv_pipeline.rv_pipeline import RVPipeline
-from rastervision2.core.rv_pipeline.object_detection_config import (
+from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision.core.rv_pipeline.object_detection_config import (
     ObjectDetectionWindowMethod)
-from rastervision2.core.box import Box
-from rastervision2.core.data.label import ObjectDetectionLabels
+from rastervision.core.box import Box
+from rastervision.core.data.label import ObjectDetectionLabels
 
 log = logging.getLogger(__name__)
 

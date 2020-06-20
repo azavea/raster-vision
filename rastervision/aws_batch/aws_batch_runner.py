@@ -5,8 +5,8 @@ import uuid
 from inspect import signature
 from typing import List, Optional
 
-from rastervision2.pipeline import rv_config
-from rastervision2.pipeline.runner import Runner
+from rastervision.pipeline import rv_config
+from rastervision.pipeline.runner import Runner
 
 log = logging.getLogger(__name__)
 AWS_BATCH = 'batch'
@@ -149,7 +149,7 @@ class AWSBatchRunner(Runner):
 
             if not external:
                 cmd = [
-                    'python', '-m', 'rastervision2.pipeline.cli run_command',
+                    'python', '-m', 'rastervision.pipeline.cli run_command',
                     cfg_json_uri, command, '--runner', AWS_BATCH
                 ]
                 if command in pipeline.split_commands and num_splits > 1:

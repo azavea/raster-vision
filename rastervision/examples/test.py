@@ -5,14 +5,14 @@ from os.path import join, basename, dirname
 
 import click
 
-from rastervision2.pipeline.file_system import (
+from rastervision.pipeline.file_system import (
     list_paths, download_or_copy, file_exists, make_dir, file_to_json)
 
 
 cfg = [
     {
         'key': 'spacenet-rio-cc',
-        'module': 'rastervision2.examples.chip_classification.spacenet_rio',
+        'module': 'rastervision.examples.chip_classification.spacenet_rio',
         'local': {
             'raw_uri': '/opt/data/raw-data/spacenet-dataset',
             'processed_uri': '/opt/data/examples/spacenet/rio/processed-data',
@@ -26,7 +26,7 @@ cfg = [
     },
     {
         'key': 'isprs-potsdam-ss',
-        'module': 'rastervision2.examples.semantic_segmentation.isprs_potsdam',
+        'module': 'rastervision.examples.semantic_segmentation.isprs_potsdam',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam/',
             'processed_uri': '/opt/data/examples/potsdam/processed-data',
@@ -40,7 +40,7 @@ cfg = [
     },
     {
         'key': 'cowc-potsdam-od',
-        'module': 'rastervision2.examples.object_detection.cowc_potsdam',
+        'module': 'rastervision.examples.object_detection.cowc_potsdam',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam',
             'processed_uri': '/opt/data/examples/cowc-potsdam/processed-data',
@@ -54,7 +54,7 @@ cfg = [
     },
     {
         'key': 'spacenet-vegas-buildings-ss',
-        'module': 'rastervision2.examples.semantic_segmentation.spacenet_vegas',
+        'module': 'rastervision.examples.semantic_segmentation.spacenet_vegas',
         'local': {
             'raw_uri': 's3://spacenet-dataset/',
             'root_uri': '/opt/data/examples/spacenet-vegas-buildings-ss'
@@ -67,7 +67,7 @@ cfg = [
     },
     {
         'key': 'spacenet-vegas-roads-ss',
-        'module': 'rastervision2.examples.semantic_segmentation.spacenet_vegas',
+        'module': 'rastervision.examples.semantic_segmentation.spacenet_vegas',
         'local': {
             'raw_uri': 's3://spacenet-dataset/',
             'root_uri': '/opt/data/examples/spacenet-vegas-roads-ss'
@@ -80,7 +80,7 @@ cfg = [
     },
     {
         'key': 'xview-od',
-        'module': 'rastervision2.examples.object_detection.xview',
+        'module': 'rastervision.examples.object_detection.xview',
         'local': {
             'raw_uri': 's3://raster-vision-xview-example/raw-data',
             'processed_uri': '/opt/data/examples/xview/processed-data',
@@ -97,7 +97,7 @@ cfg = [
 
 def run_experiment(exp_cfg, output_dir, test=True, remote=False, commands=None):
     uris = exp_cfg['remote'] if remote else exp_cfg['local']
-    cmd = ['rastervision2']
+    cmd = ['rastervision']
     rv_profile = exp_cfg.get('rv_profile')
     if rv_profile is not None:
         cmd += ['-p', rv_profile]

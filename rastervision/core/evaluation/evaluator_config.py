@@ -1,7 +1,7 @@
 from typing import Optional
 from os.path import join
 
-from rastervision2.pipeline.config import register_config, Config, Field
+from rastervision.pipeline.config import register_config, Config, Field
 
 
 @register_config('evaluator')

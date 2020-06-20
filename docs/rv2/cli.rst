@@ -3,17 +3,17 @@
 Command Line Interface
 =======================
 
-.. currentmodule:: rastervision2
+.. currentmodule:: rastervision
 
-The Raster Vision command line utility, ``rastervision2``, is installed with a ``pip install`` of
+The Raster Vision command line utility, ``rastervision``, is installed with a ``pip install`` of
 ``rastervision``, which is installed by default in the :ref:`rv2_docker images`.
 It has a main command, with some top level options, and several subcommands.
 
 .. code-block:: terminal
 
-   > rastervision2 --help
+   > rastervision --help
 
-    Usage: rastervision2 [OPTIONS] COMMAND [ARGS]...
+    Usage: rastervision [OPTIONS] COMMAND [ARGS]...
 
     The main click command.
 
@@ -42,9 +42,9 @@ Run is the main interface into running pipelines.
 
 .. code-block:: terminal
 
-    > rastervision2 run --help
+    > rastervision run --help
 
-    Usage: rastervision2 run [OPTIONS] RUNNER CFG_MODULE [COMMANDS]...
+    Usage: rastervision run [OPTIONS] RUNNER CFG_MODULE [COMMANDS]...
 
     Run COMMANDS within pipelines in CFG_MODULE using RUNNER.
 
@@ -82,9 +82,9 @@ commands remotely from serialzed ``PipelineConfig`` JSON.
 
 .. code-block:: terminal
 
-    > rastervision2 run_command --help
+    > rastervision run_command --help
 
-    Usage: rastervision2 run_command [OPTIONS] CFG_JSON_URI COMMAND
+    Usage: rastervision run_command [OPTIONS] CFG_JSON_URI COMMAND
 
     Run a single COMMAND using a serialized PipelineConfig in CFG_JSON_URI.
 
@@ -102,9 +102,9 @@ Use ``predict`` to make predictions on new imagery given a :ref:`rv2_model bundl
 
 .. code-block:: terminal
 
-    > rastervision2 predict --help
+    > rastervision predict --help
 
-    Usage: rastervision2 predict [OPTIONS] MODEL_BUNDLE IMAGE_URI OUTPUT_URI
+    Usage: rastervision predict [OPTIONS] MODEL_BUNDLE IMAGE_URI OUTPUT_URI
 
     Make predictions on the images at IMAGE_URI using MODEL_BUNDLE and store
     the prediction output at OUTPUT_URI.

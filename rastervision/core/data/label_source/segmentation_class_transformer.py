@@ -1,6 +1,6 @@
 import numpy as np
 
-from rastervision2.core.data.utils import (color_to_triple, color_to_integer,
+from rastervision.core.data.utils import (color_to_triple, color_to_integer,
                                            rgb_to_int_array)
 
 

@@ -1,9 +1,9 @@
 import unittest
 
-from rastervision2.core.evaluation import ChipClassificationEvaluation
-from rastervision2.core.data.class_config import ClassConfig
-from rastervision2.core import Box
-from rastervision2.core.data.label import ChipClassificationLabels
+from rastervision.core.evaluation import ChipClassificationEvaluation
+from rastervision.core.data.class_config import ClassConfig
+from rastervision.core import Box
+from rastervision.core.data.label import ChipClassificationLabels
 
 
 class TestChipClassificationEvaluation(unittest.TestCase):

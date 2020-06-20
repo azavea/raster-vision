@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from rastervision2.pipeline.config import Config, register_config, Field
-from rastervision2.core.data.raster_transformer import RasterTransformerConfig
+from rastervision.pipeline.config import Config, register_config, Field
+from rastervision.core.data.raster_transformer import RasterTransformerConfig
 
 
 @register_config('raster_source')

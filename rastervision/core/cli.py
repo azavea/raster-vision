@@ -1,7 +1,7 @@
 import click
 
-from rastervision2.pipeline import rv_config
-from rastervision2.core.predictor import Predictor
+from rastervision.pipeline import rv_config
+from rastervision.core.predictor import Predictor
 
 
 # https://stackoverflow.com/questions/48391777/nargs-equivalent-for-options-in-click

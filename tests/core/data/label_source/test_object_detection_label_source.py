@@ -3,12 +3,12 @@ import os
 
 import numpy as np
 
-from rastervision2.core.data import (
+from rastervision.core.data import (
     ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig, ObjectDetectionLabels,
     ClassConfig)
-from rastervision2.core import Box
-from rastervision2.pipeline import rv_config
-from rastervision2.pipeline.file_system import json_to_file
+from rastervision.core import Box
+from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import json_to_file
 
 from tests_v2.core.data.mock_crs_transformer import DoubleCRSTransformer
 

@@ -3,15 +3,15 @@ from shapely.strtree import STRtree
 from shapely.geometry import shape
 from typing import TYPE_CHECKING
 
-from rastervision2.core.data.label import ChipClassificationLabels
-from rastervision2.core.data.label_source.label_source import LabelSource
-from rastervision2.core.box import Box
+from rastervision.core.data.label import ChipClassificationLabels
+from rastervision.core.data.label_source.label_source import LabelSource
+from rastervision.core.box import Box
 
 if TYPE_CHECKING:
-    from rastervision2.core.data.vector_source import VectorSource  # noqa
-    from rastervision2.core.data.class_config import ClassConfig  # noqa
-    from rastervision2.core.data.crs_transformer import CRSTransformer  # noqa
-    from rastervision2.core.data.label_source.chip_classification_label_source_config import (  # noqa
+    from rastervision.core.data.vector_source import VectorSource  # noqa
+    from rastervision.core.data.class_config import ClassConfig  # noqa
+    from rastervision.core.data.crs_transformer import CRSTransformer  # noqa
+    from rastervision.core.data.label_source.chip_classification_label_source_config import (  # noqa
         ChipClassificationLabelSourceConfig)  # noqa
 
 

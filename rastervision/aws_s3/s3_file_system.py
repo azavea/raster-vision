@@ -4,7 +4,7 @@ import subprocess
 from datetime import datetime
 from urllib.parse import urlparse
 
-from rastervision2.pipeline.file_system import (FileSystem, NotReadableError,
+from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                 NotWritableError)
 
 AWS_S3 = 'aws_s3'
@@ -82,7 +82,7 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def get_request_payer():
         # Import here to avoid circular reference.
-        from rastervision2.pipeline import rv_config
+        from rastervision.pipeline import rv_config
         s3_config = rv_config.get_namespace_config(AWS_S3)
 
         # 'None' needs the quotes because boto3 cannot handle None.

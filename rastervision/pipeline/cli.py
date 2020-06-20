@@ -7,10 +7,10 @@ from typing import List, Dict, Optional, Tuple
 
 import click
 
-from rastervision2.pipeline import (registry, rv_config)
-from rastervision2.pipeline.file_system import (file_to_json)
-from rastervision2.pipeline.config import build_config, save_pipeline_config
-from rastervision2.pipeline.pipeline_config import PipelineConfig
+from rastervision.pipeline import (registry, rv_config)
+from rastervision.pipeline.file_system import (file_to_json)
+from rastervision.pipeline.config import build_config, save_pipeline_config
+from rastervision.pipeline.pipeline_config import PipelineConfig
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def convert_bool_args(args: dict) -> dict:
 
 
 def get_configs(cfg_module_path: str, runner: str, args: Dict[str, any]
-                ) -> List['rastervision2.pipeline.PipelineConfig']:  # noqa
+                ) -> List['rastervision.pipeline.PipelineConfig']:  # noqa
     """Get PipelineConfigs from a module.
 
     Calls a get_config(s) function with some arguments from the CLI
@@ -56,7 +56,7 @@ def get_configs(cfg_module_path: str, runner: str, args: Dict[str, any]
     """
     if cfg_module_path.endswith('.py'):
         # From https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
-        spec = importlib.util.spec_from_file_location('rastervision2.pipeline',
+        spec = importlib.util.spec_from_file_location('rastervision.pipeline',
                                                       cfg_module_path)
         cfg_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cfg_module)

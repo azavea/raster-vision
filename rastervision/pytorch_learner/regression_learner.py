@@ -15,8 +15,8 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, ConcatDataset
 from PIL import Image
 
-from rastervision2.pytorch_learner.learner import Learner
-from rastervision2.pytorch_learner.utils import AlbumentationsDataset
+from rastervision.pytorch_learner.learner import Learner
+from rastervision.pytorch_learner.utils import AlbumentationsDataset
 
 
 class ImageRegressionDataset(Dataset):

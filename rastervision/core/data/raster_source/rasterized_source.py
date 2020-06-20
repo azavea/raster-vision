@@ -6,8 +6,8 @@ from shapely.geometry import shape
 from shapely.strtree import STRtree
 from shapely.ops import transform
 
-from rastervision2.core.data import (ActivateMixin, ActivationError)
-from rastervision2.core.data.raster_source import RasterSource
+from rastervision.core.data import (ActivateMixin, ActivationError)
+from rastervision.core.data.raster_source import RasterSource
 
 log = logging.getLogger(__name__)
 

@@ -3,9 +3,9 @@ from inspect import signature
 from os.path import dirname, join
 from subprocess import Popen
 
-from rastervision2.pipeline.file_system import str_to_file
-from rastervision2.pipeline.runner.runner import Runner
-from rastervision2.pipeline.utils import terminate_at_exit
+from rastervision.pipeline.file_system import str_to_file
+from rastervision.pipeline.runner.runner import Runner
+from rastervision.pipeline.utils import terminate_at_exit
 
 LOCAL = 'local'
 
@@ -53,7 +53,7 @@ class LocalRunner(Runner):
                             [str(ci) for ci in prev_command_inds])
                         makefile += '\n'
                         invocation = (
-                            'python -m rastervision2.pipeline.cli run_command '
+                            'python -m rastervision.pipeline.cli run_command '
                             '{} {} --split-ind {} --num-splits {}').format(
                                 cfg_json_uri, command, split_ind, num_splits)
                         makefile += '\t{}\n\n'.format(invocation)
@@ -64,7 +64,7 @@ class LocalRunner(Runner):
                     makefile += ' '.join([str(ci) for ci in prev_command_inds])
                     makefile += '\n'
                     invocation = (
-                        'python -m rastervision2.pipeline.cli run_command '
+                        'python -m rastervision.pipeline.cli run_command '
                         '{} {}'.format(cfg_json_uri, command))
                     makefile += '\t{}\n\n'.format(invocation)
                     curr_command_inds.append(curr_command_ind)

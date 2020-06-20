@@ -1,11 +1,11 @@
 from os.path import join, dirname, basename
 
-from rastervision2.core.rv_pipeline import ChipClassificationConfig
-from rastervision2.core.data import (
+from rastervision.core.rv_pipeline import ChipClassificationConfig
+from rastervision.core.data import (
     ClassConfig, ChipClassificationLabelSourceConfig, GeoJSONVectorSourceConfig,
     RasterioSourceConfig, StatsTransformerConfig, SceneConfig, DatasetConfig)
-from rastervision2.pytorch_backend import PyTorchChipClassificationConfig
-from rastervision2.pytorch_learner import (
+from rastervision.pytorch_backend import PyTorchChipClassificationConfig
+from rastervision.pytorch_learner import (
     Backbone, SolverConfig, ClassificationModelConfig)
 
 

@@ -3,249 +3,249 @@
 API Reference
 ========================
 
-rastervision2.pipeline
+rastervision.pipeline
 ------------------------
 
-.. autoclass:: rastervision2.pipeline.pipeline_config.PipelineConfig
+.. autoclass:: rastervision.pipeline.pipeline_config.PipelineConfig
 
-rastervision2.core
+rastervision.core
 -------------------
 
 StatsAnalyzerConfig
 ~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.analyzer.StatsAnalyzerConfig
+.. autoclass:: rastervision.core.analyzer.StatsAnalyzerConfig
 
 ClassConfig
 ~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.ClassConfig
+.. autoclass:: rastervision.core.data.ClassConfig
 
 DatasetConfig
 ~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.DatasetConfig
+.. autoclass:: rastervision.core.data.DatasetConfig
 
 SceneConfig
 ~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.SceneConfig
+.. autoclass:: rastervision.core.data.SceneConfig
 
 ChipClassificationLabelSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.label_source.ChipClassificationLabelSourceConfig
+.. autoclass:: rastervision.core.data.label_source.ChipClassificationLabelSourceConfig
 
 SemanticSegmentationLabelSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.label_source.SemanticSegmentationLabelSourceConfig
+.. autoclass:: rastervision.core.data.label_source.SemanticSegmentationLabelSourceConfig
 
 ObjectDetectionLabelSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.label_source.ObjectDetectionLabelSourceConfig
+.. autoclass:: rastervision.core.data.label_source.ObjectDetectionLabelSourceConfig
 
 ChipClassificationGeoJSONStoreConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.label_store.ChipClassificationGeoJSONStoreConfig
+.. autoclass:: rastervision.core.data.label_store.ChipClassificationGeoJSONStoreConfig
 
 PolygonVectorOutputConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.label_store.PolygonVectorOutputConfig
+.. autoclass:: rastervision.core.data.label_store.PolygonVectorOutputConfig
 
 BuildingVectorOutputConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.label_store.BuildingVectorOutputConfig
+.. autoclass:: rastervision.core.data.label_store.BuildingVectorOutputConfig
 
 SemanticSegmentationLabelStoreConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.label_store.SemanticSegmentationLabelStoreConfig
+.. autoclass:: rastervision.core.data.label_store.SemanticSegmentationLabelStoreConfig
 
 ObjectDetectionGeoJSONStoreConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.label_store.ObjectDetectionGeoJSONStoreConfig
+.. autoclass:: rastervision.core.data.label_store.ObjectDetectionGeoJSONStoreConfig
 
 RasterioSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.raster_source.RasterioSourceConfig
+.. autoclass:: rastervision.core.data.raster_source.RasterioSourceConfig
 
 RasterizedSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.raster_source.RasterizedSourceConfig
+.. autoclass:: rastervision.core.data.raster_source.RasterizedSourceConfig
 
 StatsTransformerConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.raster_transformer.StatsTransformerConfig
+.. autoclass:: rastervision.core.data.raster_transformer.StatsTransformerConfig
 
 VectorSourceConfig
 ~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.vector_source.VectorSourceConfig
+.. autoclass:: rastervision.core.data.vector_source.VectorSourceConfig
 
 GeoJSONVectorSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.data.vector_source.GeoJSONVectorSourceConfig
+.. autoclass:: rastervision.core.data.vector_source.GeoJSONVectorSourceConfig
 
 ChipClassificationEvaluatorConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.evaluation.ChipClassificationEvaluatorConfig
+.. autoclass:: rastervision.core.evaluation.ChipClassificationEvaluatorConfig
 
 SemanticSegmentationEvaluatorConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.evaluation.SemanticSegmentationEvaluatorConfig
+.. autoclass:: rastervision.core.evaluation.SemanticSegmentationEvaluatorConfig
 
 ObjectDetectionEvaluatorConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.evaluation.ObjectDetectionEvaluatorConfig
+.. autoclass:: rastervision.core.evaluation.ObjectDetectionEvaluatorConfig
 
 ChipClassificationConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.rv_pipeline.ChipClassificationConfig
+.. autoclass:: rastervision.core.rv_pipeline.ChipClassificationConfig
 
 SemanticSegmentationWindowMethod
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationWindowMethod
+.. autoclass:: rastervision.core.rv_pipeline.SemanticSegmentationWindowMethod
 
 SemanticSegmentationChipOptions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationChipOptions
+.. autoclass:: rastervision.core.rv_pipeline.SemanticSegmentationChipOptions
 
 SemanticSegmentationConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.rv_pipeline.SemanticSegmentationConfig
+.. autoclass:: rastervision.core.rv_pipeline.SemanticSegmentationConfig
 
 ObjectDetectionWindowMethod
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.rv_pipeline.ObjectDetectionWindowMethod
+.. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionWindowMethod
 
 ObjectDetectionChipOptions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.rv_pipeline.ObjectDetectionChipOptions
+.. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionChipOptions
 
 ObjectDetectionPredictOptions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.rv_pipeline.ObjectDetectionPredictOptions
+.. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionPredictOptions
 
 ObjectDetectionConfig
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.core.rv_pipeline.ObjectDetectionConfig
+.. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionConfig
 
-rastervision2.pytorch_backend
+rastervision.pytorch_backend
 -------------------------------
 
 PyTorchChipClassificationConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_backend.PyTorchChipClassificationConfig
+.. autoclass:: rastervision.pytorch_backend.PyTorchChipClassificationConfig
 
 PyTorchSemanticSegmentationConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_backend.PyTorchSemanticSegmentationConfig
+.. autoclass:: rastervision.pytorch_backend.PyTorchSemanticSegmentationConfig
 
 PyTorchObjectDetectionConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_backend.PyTorchObjectDetectionConfig
+.. autoclass:: rastervision.pytorch_backend.PyTorchObjectDetectionConfig
 
-rastervision2.pytorch_learner
+rastervision.pytorch_learner
 -------------------------------
 
 Backbone
 ~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.Backbone
+.. autoclass:: rastervision.pytorch_learner.Backbone
     :members:
     :undoc-members:
 
 SolverConfig
 ~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.SolverConfig
+.. autoclass:: rastervision.pytorch_learner.SolverConfig
 
 ClassificationDataFormat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.ClassificationDataFormat
+.. autoclass:: rastervision.pytorch_learner.ClassificationDataFormat
     :members:
     :undoc-members:
 
 ClassificationDataConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.ClassificationDataConfig
+.. autoclass:: rastervision.pytorch_learner.ClassificationDataConfig
 
 ClassificationModelConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.ClassificationModelConfig
+.. autoclass:: rastervision.pytorch_learner.ClassificationModelConfig
 
 ClassificationLearnerConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.ClassificationLearnerConfig
+.. autoclass:: rastervision.pytorch_learner.ClassificationLearnerConfig
 
 SemanticSegmentationDataFormat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.SemanticSegmentationDataFormat
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationDataFormat
     :members:
     :undoc-members:
 
 SemanticSegmentationDataConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.SemanticSegmentationDataConfig
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationDataConfig
 
 SemanticSegmentationModelConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.SemanticSegmentationModelConfig
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationModelConfig
 
 SemanticSegmentationLearnerConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.SemanticSegmentationLearnerConfig
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationLearnerConfig
 
 ObjectDetectionDataFormat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.ObjectDetectionDataFormat
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionDataFormat
     :members:
     :undoc-members:
 
 ObjectDetectionDataConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.ObjectDetectionDataConfig
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionDataConfig
 
 ObjectDetectionModelConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.ObjectDetectionModelConfig
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionModelConfig
 
 ObjectDetectionLearnerConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision2.pytorch_learner.ObjectDetectionLearnerConfig
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionLearnerConfig

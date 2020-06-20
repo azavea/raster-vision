@@ -35,14 +35,14 @@ from albumentations import BboxParams, BasicTransform
 from albumentations.core.composition import Compose
 import numpy as np
 
-from rastervision2.pipeline.file_system import (
+from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, sync_from_dir, get_local_path, unzip, list_paths,
     str_to_file)
-from rastervision2.pipeline.utils import terminate_at_exit
-from rastervision2.pipeline.config import (
+from rastervision.pipeline.utils import terminate_at_exit
+from rastervision.pipeline.config import (
     build_config, ConfigError, upgrade_config, save_pipeline_config)
-from rastervision2.pytorch_learner.learner_config import LearnerConfig
+from rastervision.pytorch_learner.learner_config import LearnerConfig
 
 log = logging.getLogger(__name__)
 
@@ -733,7 +733,7 @@ class Learner(ABC):
         This is a zip file with the model weights in .pth format and a serialized
         copy of the LearningConfig, which allows for making predictions in the future.
         """
-        from rastervision2.pytorch_learner.learner_pipeline_config import (
+        from rastervision.pytorch_learner.learner_pipeline_config import (
             LearnerPipelineConfig)
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
         make_dir(model_bundle_dir)

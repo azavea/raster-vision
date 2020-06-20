@@ -1,17 +1,17 @@
 from os.path import join
 from typing import List, TYPE_CHECKING, Optional
 
-from rastervision2.pipeline.pipeline_config import PipelineConfig
-from rastervision2.core.data import (DatasetConfig, StatsTransformerConfig,
+from rastervision.pipeline.pipeline_config import PipelineConfig
+from rastervision.core.data import (DatasetConfig, StatsTransformerConfig,
                                      LabelStoreConfig, SceneConfig)
-from rastervision2.core.analyzer import StatsAnalyzerConfig
-from rastervision2.core.backend import BackendConfig
-from rastervision2.core.evaluation import EvaluatorConfig
-from rastervision2.core.analyzer import AnalyzerConfig
-from rastervision2.pipeline.config import register_config, Field
+from rastervision.core.analyzer import StatsAnalyzerConfig
+from rastervision.core.backend import BackendConfig
+from rastervision.core.evaluation import EvaluatorConfig
+from rastervision.core.analyzer import AnalyzerConfig
+from rastervision.pipeline.config import register_config, Field
 
 if TYPE_CHECKING:
-    from rastervision2.core.backend.backend import Backend  # noqa
+    from rastervision.core.backend.backend import Backend  # noqa
 
 
 @register_config('rv_pipeline')

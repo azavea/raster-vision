@@ -5,11 +5,11 @@ import numpy as np
 import rasterio
 from rasterio.enums import ColorInterp
 
-from rastervision2.core import (RasterStats)
-from rastervision2.core.utils.misc import save_img
-from rastervision2.core.data import (
+from rastervision.core import (RasterStats)
+from rastervision.core.utils.misc import save_img
+from rastervision.core.data import (
     ChannelOrderError, RasterioSourceConfig, StatsTransformerConfig)
-from rastervision2.pipeline import rv_config
+from rastervision.pipeline import rv_config
 
 from tests_v2 import data_file_path
 

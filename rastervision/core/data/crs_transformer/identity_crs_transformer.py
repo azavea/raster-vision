@@ -1,4 +1,4 @@
-from rastervision2.core.data.crs_transformer import CRSTransformer
+from rastervision.core.data.crs_transformer import CRSTransformer
 
 
 class IdentityCRSTransformer(CRSTransformer):

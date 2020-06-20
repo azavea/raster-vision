@@ -1,10 +1,10 @@
 from typing import Optional
 from os.path import join
 
-from rastervision2.pipeline.config import register_config, Field
-from rastervision2.core.evaluation.classification_evaluator_config import (
+from rastervision.pipeline.config import register_config, Field
+from rastervision.core.evaluation.classification_evaluator_config import (
     ClassificationEvaluatorConfig)
-from rastervision2.core.evaluation.semantic_segmentation_evaluator import (
+from rastervision.core.evaluation.semantic_segmentation_evaluator import (
     SemanticSegmentationEvaluator)
 
 

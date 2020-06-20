@@ -1,4 +1,4 @@
-from rastervision2.{{cookiecutter.project_name}}.test_pipeline_config import (
+from rastervision.{{cookiecutter.project_name}}.test_pipeline_config import (
     TestPipelineConfig)
 
 

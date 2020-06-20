@@ -1,8 +1,8 @@
 import subprocess
 from inspect import signature
 
-from rastervision2.pipeline.cli import _run_command
-from rastervision2.pipeline.runner.runner import Runner
+from rastervision.pipeline.cli import _run_command
+from rastervision.pipeline.runner.runner import Runner
 
 INPROCESS = 'inprocess'
 

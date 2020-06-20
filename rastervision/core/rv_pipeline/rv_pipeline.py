@@ -5,19 +5,19 @@ from typing import TYPE_CHECKING, Optional, List
 
 import numpy as np
 
-from rastervision2.pipeline.pipeline import Pipeline
-from rastervision2.core.box import Box
-from rastervision2.core.data_sample import DataSample
-from rastervision2.core.data import Scene, Labels
-from rastervision2.core.backend import Backend
-from rastervision2.core.rv_pipeline import TRAIN, VALIDATION
-from rastervision2.pipeline.file_system.utils import (
+from rastervision.pipeline.pipeline import Pipeline
+from rastervision.core.box import Box
+from rastervision.core.data_sample import DataSample
+from rastervision.core.data import Scene, Labels
+from rastervision.core.backend import Backend
+from rastervision.core.rv_pipeline import TRAIN, VALIDATION
+from rastervision.pipeline.file_system.utils import (
     download_or_copy, zipdir, get_local_path, upload_or_copy)
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from rastervision2.core.rv_pipeline.rv_pipeline_config import RVPipelineConfig  # noqa
+    from rastervision.core.rv_pipeline.rv_pipeline_config import RVPipelineConfig  # noqa
 
 
 class RVPipeline(Pipeline):

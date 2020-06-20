@@ -4,9 +4,9 @@ from contextlib import AbstractContextManager
 
 import numpy as np
 
-from rastervision2.core.data_sample import DataSample
-from rastervision2.core.box import Box
-from rastervision2.core.data import Labels
+from rastervision.core.data_sample import DataSample
+from rastervision.core.box import Box
+from rastervision.core.data import Labels
 
 
 class SampleWriter(AbstractContextManager):

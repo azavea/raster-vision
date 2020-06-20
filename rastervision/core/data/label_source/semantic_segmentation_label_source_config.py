@@ -1,11 +1,11 @@
 from typing import Optional, Union
 
-from rastervision2.core.data.raster_source import (RasterSourceConfig,
+from rastervision.core.data.raster_source import (RasterSourceConfig,
                                                    RasterizedSourceConfig)
-from rastervision2.core.data.label_source import (
+from rastervision.core.data.label_source import (
     LabelSourceConfig, SemanticSegmentationLabelSource)
-from rastervision2.core.data.class_config import (ClassConfig)
-from rastervision2.pipeline.config import (register_config, Field)
+from rastervision.core.data.class_config import (ClassConfig)
+from rastervision.pipeline.config import (register_config, Field)
 
 
 @register_config('semantic_segmentation_label_source')

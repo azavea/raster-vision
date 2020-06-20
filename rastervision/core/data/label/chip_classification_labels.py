@@ -1,5 +1,5 @@
-from rastervision2.core.box import Box
-from rastervision2.core.data.label import Labels
+from rastervision.core.box import Box
+from rastervision.core.data.label import Labels
 
 
 class ChipClassificationLabels(Labels):

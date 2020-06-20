@@ -1,4 +1,4 @@
-from rastervision2.core.evaluation import (ClassificationEvaluator,
+from rastervision.core.evaluation import (ClassificationEvaluator,
                                            ChipClassificationEvaluation)
 
 

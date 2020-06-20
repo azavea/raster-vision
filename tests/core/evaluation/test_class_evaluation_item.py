@@ -1,6 +1,6 @@
 import unittest
 
-from rastervision2.core.evaluation import ClassEvaluationItem
+from rastervision.core.evaluation import ClassEvaluationItem
 
 
 class TestClassEvaluationItem(unittest.TestCase):

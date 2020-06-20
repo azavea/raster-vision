@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn import metrics
 
-from rastervision2.core.evaluation import (ClassificationEvaluation,
+from rastervision.core.evaluation import (ClassificationEvaluation,
                                            ClassEvaluationItem)
 
 

@@ -1,9 +1,9 @@
 from typing import List, TYPE_CHECKING
 
-from rastervision2.pipeline.config import register_config, Config
+from rastervision.pipeline.config import register_config, Config
 
 if TYPE_CHECKING:
-    from rastervision2.core.analyzer.analyzer import Analyzer  # noqa
+    from rastervision.core.analyzer.analyzer import Analyzer  # noqa
 
 
 @register_config('analyzer')

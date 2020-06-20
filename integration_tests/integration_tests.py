@@ -8,11 +8,11 @@ import importlib
 import click
 import numpy as np
 
-from rastervision2.pipeline import rv_config, Verbosity
-from rastervision2.pipeline.file_system import file_to_json
-from rastervision2.pipeline.runner import InProcessRunner
-from rastervision2.pipeline.cli import _run_pipeline
-from rastervision2.core import Predictor
+from rastervision.pipeline import rv_config, Verbosity
+from rastervision.pipeline.file_system import file_to_json
+from rastervision.pipeline.runner import InProcessRunner
+from rastervision.pipeline.cli import _run_pipeline
+from rastervision.core import Predictor
 
 chip_classification = 'chip_classification'
 object_detection = 'object_detection'
@@ -143,7 +143,7 @@ def test_model_bundle_results(pipeline, test, tmp_dir, scenes, scenes_to_uris):
         predictor_label_store = predictor_label_store.build(
             pipeline.dataset.class_config, crs_transformer, extent, tmp_dir)
 
-        from rastervision2.core.data import ActivateMixin
+        from rastervision.core.data import ActivateMixin
         with ActivateMixin.compose(scene, predictor_label_store):
             if not (predictor_label_store.get_labels() ==
                     scene.prediction_label_store.get_labels()):

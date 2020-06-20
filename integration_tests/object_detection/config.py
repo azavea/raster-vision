@@ -1,12 +1,12 @@
 from os.path import join, dirname
 
-from rastervision2.core.rv_pipeline import (
+from rastervision.core.rv_pipeline import (
     ObjectDetectionConfig, ObjectDetectionChipOptions, ObjectDetectionPredictOptions)
-from rastervision2.core.data import (
+from rastervision.core.data import (
     ClassConfig, ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig,
     RasterioSourceConfig, SceneConfig, DatasetConfig)
-from rastervision2.pytorch_backend import PyTorchObjectDetectionConfig
-from rastervision2.pytorch_learner import (
+from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
+from rastervision.pytorch_learner import (
     Backbone, SolverConfig, ObjectDetectionModelConfig)
 
 

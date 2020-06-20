@@ -5,12 +5,12 @@ import random
 import os
 from abc import abstractmethod
 
-from rastervision2.pipeline.file_system import list_paths
-from rastervision2.core.rv_pipeline import *
-from rastervision2.core.backend import *
-from rastervision2.core.data import *
-from rastervision2.pytorch_backend import *
-from rastervision2.pytorch_learner import *
+from rastervision.pipeline.file_system import list_paths
+from rastervision.core.rv_pipeline import *
+from rastervision.core.backend import *
+from rastervision.core.data import *
+from rastervision.pytorch_backend import *
+from rastervision.pytorch_learner import *
 
 BUILDINGS = 'buildings'
 ROADS = 'roads'

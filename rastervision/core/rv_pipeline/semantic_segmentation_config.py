@@ -1,10 +1,10 @@
 from typing import (List, Optional)
 from enum import Enum
 
-from rastervision2.pipeline.config import register_config, Config, Field
-from rastervision2.core.rv_pipeline import RVPipelineConfig
-from rastervision2.core.data import SemanticSegmentationLabelStoreConfig
-from rastervision2.core.evaluation import SemanticSegmentationEvaluatorConfig
+from rastervision.pipeline.config import register_config, Config, Field
+from rastervision.core.rv_pipeline import RVPipelineConfig
+from rastervision.core.data import SemanticSegmentationLabelStoreConfig
+from rastervision.core.evaluation import SemanticSegmentationEvaluatorConfig
 
 
 class SemanticSegmentationWindowMethod(Enum):
@@ -62,7 +62,7 @@ class SemanticSegmentationConfig(RVPipelineConfig):
     )
 
     def build(self, tmp_dir):
-        from rastervision2.core.rv_pipeline.semantic_segmentation import (
+        from rastervision.core.rv_pipeline.semantic_segmentation import (
             SemanticSegmentation)
         return SemanticSegmentation(self, tmp_dir)
 

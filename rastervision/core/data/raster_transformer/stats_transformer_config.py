@@ -1,12 +1,12 @@
 from typing import Optional
 from os.path import join, basename
 
-from rastervision2.pipeline.config import register_config, Field
-from rastervision2.core.data.raster_transformer.raster_transformer_config import (  # noqa
+from rastervision.pipeline.config import register_config, Field
+from rastervision.core.data.raster_transformer.raster_transformer_config import (  # noqa
     RasterTransformerConfig)
-from rastervision2.core.data.raster_transformer.stats_transformer import (  # noqa
+from rastervision.core.data.raster_transformer.stats_transformer import (  # noqa
     StatsTransformer)
-from rastervision2.core.raster_stats import RasterStats
+from rastervision.core.raster_stats import RasterStats
 
 
 @register_config('stats_transformer')

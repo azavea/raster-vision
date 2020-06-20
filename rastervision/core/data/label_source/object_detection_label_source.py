@@ -1,5 +1,5 @@
-from rastervision2.core.data.label import ObjectDetectionLabels
-from rastervision2.core.data.label_source import LabelSource
+from rastervision.core.data.label import ObjectDetectionLabels
+from rastervision.core.data.label_source import LabelSource
 
 
 class ObjectDetectionLabelSource(LabelSource):

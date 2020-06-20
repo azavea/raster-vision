@@ -1,14 +1,14 @@
 from os.path import join
 import tempfile
 
-from rastervision2.pipeline.file_system import (make_dir, upload_or_copy,
+from rastervision.pipeline.file_system import (make_dir, upload_or_copy,
                                                 zipdir)
-from rastervision2.core.backend import Backend, SampleWriter
-from rastervision2.core.data_sample import DataSample
-from rastervision2.core.data import ClassConfig
-from rastervision2.core.rv_pipeline import RVPipelineConfig
-from rastervision2.pytorch_learner.learner_config import LearnerConfig
-from rastervision2.pytorch_learner.learner import Learner
+from rastervision.core.backend import Backend, SampleWriter
+from rastervision.core.data_sample import DataSample
+from rastervision.core.data import ClassConfig
+from rastervision.core.rv_pipeline import RVPipelineConfig
+from rastervision.pytorch_learner.learner_config import LearnerConfig
+from rastervision.pytorch_learner.learner import Learner
 
 
 class PyTorchLearnerSampleWriter(SampleWriter):
@@ -55,7 +55,7 @@ class PyTorchLearnerSampleWriter(SampleWriter):
 
 
 class PyTorchLearnerBackend(Backend):
-    """Backend that uses the rastervision2.pytorch_learner package to train models."""
+    """Backend that uses the rastervision.pytorch_learner package to train models."""
 
     def __init__(self, pipeline_cfg: RVPipelineConfig,
                  learner_cfg: LearnerConfig, tmp_dir: str):

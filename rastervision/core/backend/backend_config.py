@@ -1,10 +1,10 @@
 from typing import Optional, List, TYPE_CHECKING
 
-from rastervision2.pipeline.config import Config, register_config
+from rastervision.pipeline.config import Config, register_config
 
 if TYPE_CHECKING:
-    from rastervision2.core.rv_pipeline.rv_pipeline import RVPipeline  # noqa
-    from rastervision2.core.backend.backend import Backend  # noqa
+    from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline  # noqa
+    from rastervision.core.backend.backend import Backend  # noqa
 
 
 @register_config('backend')

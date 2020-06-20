@@ -1,7 +1,7 @@
 import json
 
-from rastervision2.core.data.vector_source.vector_source import VectorSource
-from rastervision2.pipeline.file_system import file_to_str
+from rastervision.core.data.vector_source.vector_source import VectorSource
+from rastervision.pipeline.file_system import file_to_str
 
 
 class GeoJSONVectorSource(VectorSource):

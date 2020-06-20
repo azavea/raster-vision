@@ -1,14 +1,14 @@
-from rastervision2.pipeline.config import register_config, ConfigError
-from rastervision2.core.rv_pipeline import RVPipelineConfig
-from rastervision2.core.data.label_store import (
+from rastervision.pipeline.config import register_config, ConfigError
+from rastervision.core.rv_pipeline import RVPipelineConfig
+from rastervision.core.data.label_store import (
     ChipClassificationGeoJSONStoreConfig)
-from rastervision2.core.evaluation import ChipClassificationEvaluatorConfig
+from rastervision.core.evaluation import ChipClassificationEvaluatorConfig
 
 
 @register_config('chip_classification')
 class ChipClassificationConfig(RVPipelineConfig):
     def build(self, tmp_dir):
-        from rastervision2.core.rv_pipeline.chip_classification import ChipClassification
+        from rastervision.core.rv_pipeline.chip_classification import ChipClassification
         return ChipClassification(self, tmp_dir)
 
     def validate_config(self):

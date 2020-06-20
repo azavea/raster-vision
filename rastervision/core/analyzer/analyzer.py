@@ -1,7 +1,7 @@
 from typing import List
 from abc import (ABC, abstractmethod)
 
-from rastervision2.core.data import Scene
+from rastervision.core.data import Scene
 
 
 class Analyzer(ABC):

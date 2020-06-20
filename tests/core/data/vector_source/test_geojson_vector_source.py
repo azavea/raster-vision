@@ -3,10 +3,10 @@ import os
 
 from shapely.geometry import shape
 
-from rastervision2.core.data import (
+from rastervision.core.data import (
     GeoJSONVectorSourceConfig, ClassConfig, IdentityCRSTransformer)
-from rastervision2.pipeline.file_system import json_to_file
-from rastervision2.pipeline import rv_config
+from rastervision.pipeline.file_system import json_to_file
+from rastervision.pipeline import rv_config
 
 from tests_v2.core.data.mock_crs_transformer import DoubleCRSTransformer
 
