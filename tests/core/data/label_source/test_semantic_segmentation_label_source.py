@@ -4,7 +4,7 @@ import numpy as np
 
 from rastervision.core import Box
 from rastervision.core.data import ClassConfig, SemanticSegmentationLabelSource
-from tests_v2.core.data.mock_raster_source import MockRasterSource
+from tests.core.data.mock_raster_source import MockRasterSource
 
 
 class TestSemanticSegmentationLabelSource(unittest.TestCase):

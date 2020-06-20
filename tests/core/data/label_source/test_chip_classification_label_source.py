@@ -11,7 +11,7 @@ from rastervision.core.data import (
     ClassConfig, infer_cell, ChipClassificationLabelSourceConfig,
     GeoJSONVectorSourceConfig)
 
-from tests_v2.core.data.mock_crs_transformer import DoubleCRSTransformer
+from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
 
 
 class TestChipClassificationLabelSource(unittest.TestCase):

@@ -195,7 +195,7 @@ def test_model_bundle(pipeline, test, tmp_dir, check_channel_order=False):
 def run_test(test, tmp_dir):
     errors = []
     config_mod = importlib.import_module(
-        'integration_tests2.{}.config'.format(test))
+        'integration_tests.{}.config'.format(test))
     runner = 'inprocess'
     root_uri = join(tmp_dir, test)
     pipeline_cfg = config_mod.get_config(runner, root_uri)

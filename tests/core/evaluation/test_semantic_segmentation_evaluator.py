@@ -14,8 +14,8 @@ from rastervision.core.evaluation import SemanticSegmentationEvaluator
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import file_to_json
 
-from tests_v2.core.data.mock_raster_source import (MockRasterSource)
-from tests_v2 import data_file_path
+from tests.core.data.mock_raster_source import (MockRasterSource)
+from tests import data_file_path
 
 
 class TestSemanticSegmentationEvaluator(unittest.TestCase):

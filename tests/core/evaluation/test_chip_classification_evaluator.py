@@ -8,7 +8,7 @@ from rastervision.core.data import (
     ChipClassificationGeoJSONStoreConfig, RasterioSourceConfig, SceneConfig)
 from rastervision.core.evaluation import (ChipClassificationEvaluatorConfig)
 
-from tests_v2 import data_file_path
+from tests import data_file_path
 
 
 class TestChipClassificationEvaluator(unittest.TestCase):

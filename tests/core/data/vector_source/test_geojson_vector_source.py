@@ -8,7 +8,7 @@ from rastervision.core.data import (
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.pipeline import rv_config
 
-from tests_v2.core.data.mock_crs_transformer import DoubleCRSTransformer
+from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
 
 
 class TestGeoJSONVectorSource(unittest.TestCase):

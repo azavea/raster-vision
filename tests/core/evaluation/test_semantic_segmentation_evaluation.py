@@ -5,8 +5,8 @@ import numpy as np
 from rastervision.core.data import ClassConfig
 from rastervision.core.evaluation import SemanticSegmentationEvaluation
 from rastervision.core.data import SemanticSegmentationLabelSource
-from tests_v2.core.data.mock_raster_source import MockRasterSource
-from tests_v2 import data_file_path
+from tests.core.data.mock_raster_source import MockRasterSource
+from tests import data_file_path
 
 
 class TestSemanticSegmentationEvaluation(unittest.TestCase):

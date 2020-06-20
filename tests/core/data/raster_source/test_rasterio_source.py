@@ -11,7 +11,7 @@ from rastervision.core.data import (
     ChannelOrderError, RasterioSourceConfig, StatsTransformerConfig)
 from rastervision.pipeline import rv_config
 
-from tests_v2 import data_file_path
+from tests import data_file_path
 
 
 class TestRasterioSource(unittest.TestCase):

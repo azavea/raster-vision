@@ -7,7 +7,7 @@ from rastervision.pipeline import rv_config
 from rastervision.core.raster_stats import RasterStats, chip_sz
 from rastervision.core.data import Scene
 from rastervision.core.analyzer import StatsAnalyzerConfig
-from tests_v2.core.data.mock_raster_source import MockRasterSource
+from tests.core.data.mock_raster_source import MockRasterSource
 
 
 class TestStatsAnalyzer(unittest.TestCase):
