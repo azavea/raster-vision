@@ -1,6 +1,7 @@
 import logging
 from os.path import join
 import tempfile
+import shutil
 from typing import TYPE_CHECKING, Optional, List
 
 import numpy as np
@@ -12,7 +13,7 @@ from rastervision.core.data import Scene, Labels
 from rastervision.core.backend import Backend
 from rastervision.core.rv_pipeline import TRAIN, VALIDATION
 from rastervision.pipeline.file_system.utils import (
-    download_or_copy, zipdir, get_local_path, upload_or_copy)
+    download_if_needed, zipdir, get_local_path, upload_or_copy, make_dir)
 
 log = logging.getLogger(__name__)
 
@@ -226,19 +227,24 @@ class RVPipeline(Pipeline):
         predict CLI subcommand.
         """
         with tempfile.TemporaryDirectory(dir=self.tmp_dir) as tmp_dir:
+            bundle_dir = join(tmp_dir, 'bundle')
+            make_dir(bundle_dir)
+
             for fn in self.config.backend.get_bundle_filenames():
-                download_or_copy(
-                    join(self.config.train_uri, fn), join(tmp_dir, fn))
+                path = download_if_needed(
+                    join(self.config.train_uri, fn), tmp_dir)
+                shutil.copy(path, join(bundle_dir, fn))
 
             for a in self.config.analyzers:
                 for fn in a.get_bundle_filenames():
-                    download_or_copy(
-                        join(self.config.analyze_uri, fn), join(tmp_dir, fn))
+                    path = download_if_needed(
+                        join(self.config.analyze_uri, fn), tmp_dir)
+                    shutil.copy(path, join(bundle_dir, fn))
 
-            download_or_copy(self.config.get_config_uri(),
-                             join(tmp_dir, 'pipeline-config.json'))
+            path = download_if_needed(self.config.get_config_uri(), tmp_dir)
+            shutil.copy(path, join(bundle_dir, 'pipeline-config.json'))
 
             model_bundle_uri = self.config.get_model_bundle_uri()
             model_bundle_path = get_local_path(model_bundle_uri, self.tmp_dir)
-            zipdir(tmp_dir, model_bundle_path)
+            zipdir(bundle_dir, model_bundle_path)
             upload_or_copy(model_bundle_path, model_bundle_uri)
