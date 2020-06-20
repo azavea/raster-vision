@@ -7,9 +7,9 @@ from shapely.strtree import STRtree
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.box import Box
-from rastervision.core.data import (
-    ClassConfig, infer_cell, ChipClassificationLabelSourceConfig,
-    GeoJSONVectorSourceConfig)
+from rastervision.core.data import (ClassConfig, infer_cell,
+                                    ChipClassificationLabelSourceConfig,
+                                    GeoJSONVectorSourceConfig)
 
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
 
@@ -191,8 +191,8 @@ class TestChipClassificationLabelSource(unittest.TestCase):
             background_class_id=self.background_class_id,
             infer_cells=True,
             cell_sz=4)
-        source = config.build(
-            self.class_config, self.crs_transformer, extent, self.tmp_dir.name)
+        source = config.build(self.class_config, self.crs_transformer, extent,
+                              self.tmp_dir.name)
         labels = source.get_labels()
         cells = labels.get_cells()
 
@@ -213,8 +213,8 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         config = ChipClassificationLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
                 uri=self.uri, default_class_id=None))
-        source = config.build(
-            self.class_config, self.crs_transformer, extent, self.tmp_dir.name)
+        source = config.build(self.class_config, self.crs_transformer, extent,
+                              self.tmp_dir.name)
         labels = source.get_labels()
 
         cells = labels.get_cells()
@@ -231,8 +231,8 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         config = ChipClassificationLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
                 uri=self.uri, default_class_id=None))
-        source = config.build(
-            self.class_config, self.crs_transformer, extent, self.tmp_dir.name)
+        source = config.build(self.class_config, self.crs_transformer, extent,
+                              self.tmp_dir.name)
         labels = source.get_labels()
 
         cells = labels.get_cells()

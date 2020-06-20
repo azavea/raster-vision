@@ -1,5 +1,4 @@
 # flake8: noqa
-
 """Visualize imagery and predictions in QGIS.
 This script should be run in the QGIS (3.0+) Python console after
 downloading the data locally, and adjusting constants.

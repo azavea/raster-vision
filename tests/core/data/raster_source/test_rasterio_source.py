@@ -7,8 +7,8 @@ from rasterio.enums import ColorInterp
 
 from rastervision.core import (RasterStats)
 from rastervision.core.utils.misc import save_img
-from rastervision.core.data import (
-    ChannelOrderError, RasterioSourceConfig, StatsTransformerConfig)
+from rastervision.core.data import (ChannelOrderError, RasterioSourceConfig,
+                                    StatsTransformerConfig)
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path
@@ -37,8 +37,8 @@ class TestRasterioSource(unittest.TestCase):
                 count=nb_channels,
                 dtype=np.uint8,
                 nodata=1) as img_dataset:
-            im = np.random.randint(
-                0, 2, (height, width, nb_channels)).astype(np.uint8)
+            im = np.random.randint(0, 2, (height, width, nb_channels)).astype(
+                np.uint8)
             for channel in range(nb_channels):
                 img_dataset.write(im[:, :, channel], channel + 1)
 
@@ -63,12 +63,11 @@ class TestRasterioSource(unittest.TestCase):
                 width=width,
                 count=nb_channels,
                 dtype=np.uint8) as img_dataset:
-            im = np.random.randint(
-                0, 2, (height, width, nb_channels)).astype(np.uint8)
+            im = np.random.randint(0, 2, (height, width, nb_channels)).astype(
+                np.uint8)
             for channel in range(nb_channels):
                 img_dataset.write(im[:, :, channel], channel + 1)
-            img_dataset.write_mask(
-                np.zeros(im.shape[0:2]).astype(np.bool))
+            img_dataset.write_mask(np.zeros(im.shape[0:2]).astype(np.bool))
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
@@ -87,7 +86,8 @@ class TestRasterioSource(unittest.TestCase):
         img_path = data_file_path('small-rgb-tile.tif')
         channel_order = [0, 1]
 
-        config = RasterioSourceConfig(uris=[img_path], channel_order=channel_order)
+        config = RasterioSourceConfig(
+            uris=[img_path], channel_order=channel_order)
         source = config.build(tmp_dir=self.tmp_dir)
         with source.activate():
             out_chip = source.get_raw_image_array()
@@ -100,8 +100,10 @@ class TestRasterioSource(unittest.TestCase):
         channel_order = [0]
 
         config = RasterioSourceConfig(
-            uris=[img_path], channel_order=channel_order,
-            x_shift=1.0, y_shift=0.0)
+            uris=[img_path],
+            channel_order=channel_order,
+            x_shift=1.0,
+            y_shift=0.0)
         source = config.build(tmp_dir=self.tmp_dir)
 
         with source.activate():
@@ -118,8 +120,10 @@ class TestRasterioSource(unittest.TestCase):
         channel_order = [0]
 
         config = RasterioSourceConfig(
-            uris=[img_path], channel_order=channel_order,
-            x_shift=0.0, y_shift=1.0)
+            uris=[img_path],
+            channel_order=channel_order,
+            x_shift=0.0,
+            y_shift=1.0)
         source = config.build(tmp_dir=self.tmp_dir)
 
         with source.activate():
@@ -166,8 +170,7 @@ class TestRasterioSource(unittest.TestCase):
         with source.activate():
             out_chip = source.get_image_array()
             expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
-            expected_out_chip[:, :, :] *= np.array([0, 1,
-                                                    2]).astype(np.uint8)
+            expected_out_chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
             np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_channel_order_error(self):

@@ -10,10 +10,10 @@ from shapely.ops import transform
 
 from rastervision.core import Box
 from rastervision.core.data import (RasterioCRSTransformer,
-                                     GeoJSONVectorSourceConfig)
+                                    GeoJSONVectorSourceConfig)
 from rastervision.pipeline.file_system import (file_to_str, file_exists,
-                                                get_local_path, upload_or_copy,
-                                                make_dir, json_to_file)
+                                               get_local_path, upload_or_copy,
+                                               make_dir, json_to_file)
 from rastervision.aws_s3 import S3FileSystem
 
 

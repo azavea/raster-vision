@@ -1,8 +1,8 @@
 from typing import Optional, List
 from os.path import join
 
-from rastervision.core.data.label_store import (
-    LabelStoreConfig, SemanticSegmentationLabelStore)
+from rastervision.core.data.label_store import (LabelStoreConfig,
+                                                SemanticSegmentationLabelStore)
 from rastervision.pipeline.config import register_config, Config, Field
 
 

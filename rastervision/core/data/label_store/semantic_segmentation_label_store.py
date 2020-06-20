@@ -68,8 +68,8 @@ class SemanticSegmentationLabelStore(LabelStore):
         labels = SemanticSegmentationLabels()
         extent = self.source.get_extent()
         raw_labels = self.source.get_raw_chip(extent)
-        label_arr = (np.squeeze(raw_labels) if self.class_trans is None
-                        else self.class_trans.rgb_to_class(raw_labels))
+        label_arr = (np.squeeze(raw_labels) if self.class_trans is None else
+                     self.class_trans.rgb_to_class(raw_labels))
         labels.set_label_arr(extent, label_arr)
         return labels
 

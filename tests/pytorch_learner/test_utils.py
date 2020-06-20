@@ -2,8 +2,8 @@ import unittest
 
 import torch
 
-from rastervision.pytorch_learner.utils import (
-    compute_conf_mat, compute_conf_mat_metrics)
+from rastervision.pytorch_learner.utils import (compute_conf_mat,
+                                                compute_conf_mat_metrics)
 
 
 class TestComputeConfMat(unittest.TestCase):
@@ -30,9 +30,16 @@ class TestComputeConfMatMetrics(unittest.TestCase):
         conf_mat = torch.tensor([[2., 0], [0, 2]])
         metrics = compute_conf_mat_metrics(conf_mat, label_names)
         exp_metrics = {
-            'avg_precision': 1.0, 'avg_recall': 1.0, 'avg_f1': 1.0,
-            'a_precision': 1.0, 'a_recall': 1.0, 'a_f1': 1.0,
-            'b_precision': 1.0, 'b_recall': 1.0, 'b_f1': 1.0}
+            'avg_precision': 1.0,
+            'avg_recall': 1.0,
+            'avg_f1': 1.0,
+            'a_precision': 1.0,
+            'a_recall': 1.0,
+            'a_f1': 1.0,
+            'b_precision': 1.0,
+            'b_recall': 1.0,
+            'b_f1': 1.0
+        }
         self.assertDictEqual(metrics, exp_metrics)
 
     def test2(self):
@@ -40,9 +47,16 @@ class TestComputeConfMatMetrics(unittest.TestCase):
         conf_mat = torch.tensor([[0, 2.], [2, 0]])
         metrics = compute_conf_mat_metrics(conf_mat, label_names)
         exp_metrics = {
-            'avg_precision': 0.0, 'avg_recall': 0.0, 'avg_f1': 0.0,
-            'a_precision': 0.0, 'a_recall': 0.0, 'a_f1': 0.0,
-            'b_precision': 0.0, 'b_recall': 0.0, 'b_f1': 0.0}
+            'avg_precision': 0.0,
+            'avg_recall': 0.0,
+            'avg_f1': 0.0,
+            'a_precision': 0.0,
+            'a_recall': 0.0,
+            'a_f1': 0.0,
+            'b_precision': 0.0,
+            'b_recall': 0.0,
+            'b_f1': 0.0
+        }
         self.assertDictEqual(metrics, exp_metrics)
 
     def test3(self):
@@ -70,9 +84,16 @@ class TestComputeConfMatMetrics(unittest.TestCase):
         avg_f1 = f1(avg_prec, avg_rec)
 
         exp_metrics = {
-            'avg_precision': avg_prec, 'avg_recall': avg_rec, 'avg_f1': avg_f1,
-            'a_precision': a_prec, 'a_recall': a_rec, 'a_f1': a_f1,
-            'b_precision': b_prec, 'b_recall': b_rec, 'b_f1': b_f1}
+            'avg_precision': avg_prec,
+            'avg_recall': avg_rec,
+            'avg_f1': avg_f1,
+            'a_precision': a_prec,
+            'a_recall': a_rec,
+            'a_f1': a_f1,
+            'b_precision': b_prec,
+            'b_recall': b_rec,
+            'b_f1': b_f1
+        }
         self.assertDictEqual(round_dict(metrics), round_dict(exp_metrics))
 
 

@@ -1,5 +1,5 @@
 from rastervision.core.evaluation import (ClassificationEvaluator,
-                                           ChipClassificationEvaluation)
+                                          ChipClassificationEvaluation)
 
 
 class ChipClassificationEvaluator(ClassificationEvaluator):

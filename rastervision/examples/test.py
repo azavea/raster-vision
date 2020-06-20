@@ -8,7 +8,6 @@ import click
 from rastervision.pipeline.file_system import (
     list_paths, download_or_copy, file_exists, make_dir, file_to_json)
 
-
 cfg = [
     {
         'key': 'spacenet-rio-cc',
@@ -19,9 +18,12 @@ cfg = [
             'root_uri': '/opt/data/examples/spacenet-rio-cc'
         },
         'remote': {
-            'raw_uri': 's3://spacenet-dataset/',
-            'processed_uri': 's3://raster-vision-lf-dev/examples/spacenet/rio/processed-data',
-            'root_uri': 's3://raster-vision-lf-dev/examples/spacenet-rio-cc'
+            'raw_uri':
+            's3://spacenet-dataset/',
+            'processed_uri':
+            's3://raster-vision-lf-dev/examples/spacenet/rio/processed-data',
+            'root_uri':
+            's3://raster-vision-lf-dev/examples/spacenet-rio-cc'
         },
     },
     {
@@ -33,9 +35,12 @@ cfg = [
             'root_uri': '/opt/data/examples/isprs-potsdam-ss/'
         },
         'remote': {
-            'raw_uri': 's3://raster-vision-raw-data/isprs-potsdam',
-            'processed_uri': 's3://raster-vision-lf-dev/examples/potsdam/processed-data',
-            'root_uri': 's3://raster-vision-lf-dev/examples/isprs-potsdam-ss'
+            'raw_uri':
+            's3://raster-vision-raw-data/isprs-potsdam',
+            'processed_uri':
+            's3://raster-vision-lf-dev/examples/potsdam/processed-data',
+            'root_uri':
+            's3://raster-vision-lf-dev/examples/isprs-potsdam-ss'
         },
     },
     {
@@ -47,9 +52,12 @@ cfg = [
             'root_uri': '/opt/data/examples/cowc-potsdam-od'
         },
         'remote': {
-            'raw_uri': 's3://raster-vision-raw-data/isprs-potsdam',
-            'processed_uri': 's3://raster-vision-lf-dev/examples/cowc-potsdam/processed-data',
-            'root_uri': 's3://raster-vision-lf-dev/examples/cowc-potsdam-od'
+            'raw_uri':
+            's3://raster-vision-raw-data/isprs-potsdam',
+            'processed_uri':
+            's3://raster-vision-lf-dev/examples/cowc-potsdam/processed-data',
+            'root_uri':
+            's3://raster-vision-lf-dev/examples/cowc-potsdam-od'
         },
     },
     {
@@ -60,8 +68,10 @@ cfg = [
             'root_uri': '/opt/data/examples/spacenet-vegas-buildings-ss'
         },
         'remote': {
-            'raw_uri': 's3://spacenet-dataset/',
-            'root_uri': 's3://raster-vision-lf-dev/examples/spacenet-vegas-buildings-ss'
+            'raw_uri':
+            's3://spacenet-dataset/',
+            'root_uri':
+            's3://raster-vision-lf-dev/examples/spacenet-vegas-buildings-ss'
         },
         'extra_args': [['target', 'buildings']],
     },
@@ -73,8 +83,10 @@ cfg = [
             'root_uri': '/opt/data/examples/spacenet-vegas-roads-ss'
         },
         'remote': {
-            'raw_uri': 's3://spacenet-dataset/',
-            'root_uri': 's3://raster-vision-lf-dev/examples/spacenet-vegas-roads-ss'
+            'raw_uri':
+            's3://spacenet-dataset/',
+            'root_uri':
+            's3://raster-vision-lf-dev/examples/spacenet-vegas-roads-ss'
         },
         'extra_args': [['target', 'roads']],
     },
@@ -87,15 +99,19 @@ cfg = [
             'root_uri': '/opt/data/examples/xview-od'
         },
         'remote': {
-            'raw_uri': 's3://raster-vision-xview-example/raw-data',
-            'processed_uri': 's3://raster-vision-lf-dev/examples/xview/processed-data',
-            'root_uri': 's3://raster-vision-lf-dev/examples/xview-od'
+            'raw_uri':
+            's3://raster-vision-xview-example/raw-data',
+            'processed_uri':
+            's3://raster-vision-lf-dev/examples/xview/processed-data',
+            'root_uri':
+            's3://raster-vision-lf-dev/examples/xview-od'
         },
     },
 ]
 
 
-def run_experiment(exp_cfg, output_dir, test=True, remote=False, commands=None):
+def run_experiment(exp_cfg, output_dir, test=True, remote=False,
+                   commands=None):
     uris = exp_cfg['remote'] if remote else exp_cfg['local']
     cmd = ['rastervision']
     rv_profile = exp_cfg.get('rv_profile')
@@ -130,11 +146,15 @@ def collect_experiment(key, root_uri, output_dir, get_pred_package=False):
     print('\nCollecting experiment {}...\n'.format(key))
 
     if root_uri.startswith('s3://'):
-        predict_package_uris = list_paths(join(root_uri, key, 'bundle'), ext='predict_package.zip')
-        eval_json_uris = list_paths(join(root_uri, key, 'eval'), ext='eval.json')
+        predict_package_uris = list_paths(
+            join(root_uri, key, 'bundle'), ext='predict_package.zip')
+        eval_json_uris = list_paths(
+            join(root_uri, key, 'eval'), ext='eval.json')
     else:
-        predict_package_uris = glob.glob(join(root_uri, key, 'bundle', '*', 'predict_package.zip'))
-        eval_json_uris = glob.glob(join(root_uri, key, 'eval', '*', 'eval.json'))
+        predict_package_uris = glob.glob(
+            join(root_uri, key, 'bundle', '*', 'predict_package.zip'))
+        eval_json_uris = glob.glob(
+            join(root_uri, key, 'eval', '*', 'eval.json'))
 
     if len(predict_package_uris) > 1 or len(eval_json_uris) > 1:
         print('Cannot collect from key with multiple experiments!!!')
@@ -182,8 +202,12 @@ def run(output_dir, keys, test, remote, commands):
         commands = commands.split(' ')
     for exp_cfg in cfg:
         if run_all or exp_cfg['key'] in keys:
-            run_experiment(exp_cfg, output_dir, test=test, remote=remote,
-                           commands=commands)
+            run_experiment(
+                exp_cfg,
+                output_dir,
+                test=test,
+                remote=remote,
+                commands=commands)
 
 
 @test.command()

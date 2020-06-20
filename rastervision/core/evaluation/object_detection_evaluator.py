@@ -1,5 +1,5 @@
 from rastervision.core.evaluation import (ClassificationEvaluator,
-                                           ObjectDetectionEvaluation)
+                                          ObjectDetectionEvaluation)
 
 
 class ObjectDetectionEvaluator(ClassificationEvaluator):

@@ -233,7 +233,8 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
         return x
 
 
-def upgrade_config(config_dict: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
+def upgrade_config(
+        config_dict: Union[dict, List[dict]]) -> Union[dict, List[dict]]:
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored

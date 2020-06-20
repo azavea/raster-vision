@@ -3,8 +3,8 @@ import unittest
 
 from pydantic.error_wrappers import ValidationError
 
-from rastervision.pipeline.config import (Config, register_config, build_config,
-                                           upgrade_config)
+from rastervision.pipeline.config import (Config, register_config,
+                                          build_config, upgrade_config)
 from rastervision.pipeline.pipeline_config import (PipelineConfig)
 from rastervision.pipeline import registry
 
@@ -71,9 +71,12 @@ class TestConfig(unittest.TestCase):
             rv_config=None)
 
         exp_dict = {
-            'plugin_versions': self.plugin_versions,
-            'root_uri': None,
-            'rv_config': None,
+            'plugin_versions':
+            self.plugin_versions,
+            'root_uri':
+            None,
+            'rv_config':
+            None,
             'type_hint':
             'c',
             'a': {
@@ -120,9 +123,12 @@ class TestConfig(unittest.TestCase):
         # after upgrading: the y field in the root should get converted to x, and
         # the z field in the instances of a should get convert to x.
         c_dict_v0 = {
-            'plugin_versions': plugin_versions_v0,
-            'root_uri': None,
-            'rv_config': None,
+            'plugin_versions':
+            plugin_versions_v0,
+            'root_uri':
+            None,
+            'rv_config':
+            None,
             'type_hint':
             'c',
             'a': {
@@ -155,9 +161,12 @@ class TestConfig(unittest.TestCase):
         }
 
         c_dict_v1 = {
-            'plugin_versions': plugin_versions_v0,
-            'root_uri': None,
-            'rv_config': None,
+            'plugin_versions':
+            plugin_versions_v0,
+            'root_uri':
+            None,
+            'rv_config':
+            None,
             'type_hint':
             'c',
             'a': {

@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
-from rastervision.pipeline.config import (Config, register_config,
-                                           ConfigError, Field)
+from rastervision.pipeline.config import (Config, register_config, ConfigError,
+                                          Field)
 from rastervision.core.data.utils import color_to_triple
 
 

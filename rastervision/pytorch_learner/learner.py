@@ -40,8 +40,8 @@ from rastervision.pipeline.file_system import (
     download_if_needed, sync_from_dir, get_local_path, unzip, list_paths,
     str_to_file)
 from rastervision.pipeline.utils import terminate_at_exit
-from rastervision.pipeline.config import (
-    build_config, ConfigError, upgrade_config, save_pipeline_config)
+from rastervision.pipeline.config import (build_config, ConfigError,
+                                          upgrade_config, save_pipeline_config)
 from rastervision.pytorch_learner.learner_config import LearnerConfig
 
 log = logging.getLogger(__name__)

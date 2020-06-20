@@ -4,13 +4,13 @@ from rastervision.aws_batch.aws_batch_runner import AWS_BATCH
 from rastervision.pytorch_learner.classification_learner_config import (
     ClassificationLearnerConfig, ClassificationDataConfig)
 from rastervision.pytorch_learner.learner_config import (SolverConfig,
-                                                          ModelConfig)
+                                                         ModelConfig)
 from rastervision.pytorch_learner.learner_pipeline_config import LearnerPipelineConfig
 
 
 def get_config(runner, test=False):
-    base_uri = ('s3://raster-vision-lf-dev/learner/classification' if
-                runner == AWS_BATCH else '/opt/data/learner/classification')
+    base_uri = ('s3://raster-vision-lf-dev/learner/classification'
+                if runner == AWS_BATCH else '/opt/data/learner/classification')
     root_uri = join(base_uri, 'output')
     data_uri = join(base_uri, 'tiny-buildings.zip')
 

@@ -1,7 +1,7 @@
 import numpy as np
 
 from rastervision.core.data.utils import (color_to_triple, color_to_integer,
-                                           rgb_to_int_array)
+                                          rgb_to_int_array)
 
 
 class SegmentationClassTransformer():

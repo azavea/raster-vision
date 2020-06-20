@@ -25,8 +25,8 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
         label_uri = join(processed_uri, label_uri)
 
         if test:
-            crop_uri = join(
-                processed_uri, 'crops', os.path.basename(raster_uri))
+            crop_uri = join(processed_uri, 'crops',
+                            os.path.basename(raster_uri))
             save_image_crop(raster_uri, crop_uri, size=600, min_features=5)
             raster_uri = crop_uri
 

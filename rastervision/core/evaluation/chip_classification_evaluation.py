@@ -2,7 +2,7 @@ import numpy as np
 from sklearn import metrics
 
 from rastervision.core.evaluation import (ClassificationEvaluation,
-                                           ClassEvaluationItem)
+                                          ClassEvaluationItem)
 
 
 class ChipClassificationEvaluation(ClassificationEvaluation):

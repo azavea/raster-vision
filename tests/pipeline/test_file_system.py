@@ -8,8 +8,8 @@ import boto3
 from moto import mock_s3
 
 from rastervision.pipeline.file_system import (
-    file_to_str, str_to_file, download_if_needed, upload_or_copy,
-    make_dir, get_local_path, file_exists, sync_from_dir, sync_to_dir, list_paths,
+    file_to_str, str_to_file, download_if_needed, upload_or_copy, make_dir,
+    get_local_path, file_exists, sync_from_dir, sync_to_dir, list_paths,
     get_cached_file, NotReadableError, NotWritableError, FileSystem)
 from rastervision.pipeline import rv_config
 

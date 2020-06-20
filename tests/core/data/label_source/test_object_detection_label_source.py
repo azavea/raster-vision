@@ -3,9 +3,9 @@ import os
 
 import numpy as np
 
-from rastervision.core.data import (
-    ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig, ObjectDetectionLabels,
-    ClassConfig)
+from rastervision.core.data import (ObjectDetectionLabelSourceConfig,
+                                    GeoJSONVectorSourceConfig,
+                                    ObjectDetectionLabels, ClassConfig)
 from rastervision.core import Box
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
@@ -62,8 +62,8 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
             vector_source=GeoJSONVectorSourceConfig(
                 uri=self.file_path, default_class_id=None))
         extent = None
-        source = config.build(
-            self.class_config, self.crs_transformer, extent, self.tmp_dir.name)
+        source = config.build(self.class_config, self.crs_transformer, extent,
+                              self.tmp_dir.name)
         labels = source.get_labels()
 
         npboxes = np.array([[0., 0., 2., 2.], [2., 2., 4., 4.]])
@@ -79,8 +79,8 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         config = ObjectDetectionLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
                 uri=self.file_path, default_class_id=None))
-        source = config.build(
-            self.class_config, self.crs_transformer, extent, self.tmp_dir.name)
+        source = config.build(self.class_config, self.crs_transformer, extent,
+                              self.tmp_dir.name)
         labels = source.get_labels()
 
         npboxes = np.array([[0., 0., 2., 2.]])
@@ -95,8 +95,8 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         config = ObjectDetectionLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
                 uri=self.file_path, default_class_id=None))
-        source = config.build(
-            self.class_config, self.crs_transformer, extent, self.tmp_dir.name)
+        source = config.build(self.class_config, self.crs_transformer, extent,
+                              self.tmp_dir.name)
         labels = source.get_labels()
 
         npboxes = np.array([[0., 0., 2., 2.], [2., 2., 3.9, 3.9]])

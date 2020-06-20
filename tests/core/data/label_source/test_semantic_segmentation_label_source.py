@@ -14,7 +14,8 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
         null_class_id = 2
         raster_source = MockRasterSource([0], 1)
         raster_source.set_raster(data)
-        label_source = SemanticSegmentationLabelSource(raster_source, null_class_id)
+        label_source = SemanticSegmentationLabelSource(raster_source,
+                                                       null_class_id)
         with label_source.activate():
             extent = Box(0, 0, 10, 10)
             self.assertTrue(label_source.enough_target_pixels(extent, 30, [1]))
@@ -25,7 +26,8 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
         null_class_id = 2
         raster_source = MockRasterSource([0], 1)
         raster_source.set_raster(data)
-        label_source = SemanticSegmentationLabelSource(raster_source, null_class_id)
+        label_source = SemanticSegmentationLabelSource(raster_source,
+                                                       null_class_id)
         with label_source.activate():
             extent = Box(0, 0, 10, 10)
             self.assertFalse(
@@ -37,7 +39,8 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
         null_class_id = 2
         raster_source = MockRasterSource([0], 1)
         raster_source.set_raster(data)
-        label_source = SemanticSegmentationLabelSource(raster_source, null_class_id)
+        label_source = SemanticSegmentationLabelSource(raster_source,
+                                                       null_class_id)
         with label_source.activate():
             window = Box.make_square(7, 7, 3)
             labels = label_source.get_labels(window=window)
@@ -51,7 +54,8 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
         null_class_id = 2
         raster_source = MockRasterSource([0], 1)
         raster_source.set_raster(data)
-        label_source = SemanticSegmentationLabelSource(raster_source, null_class_id)
+        label_source = SemanticSegmentationLabelSource(raster_source,
+                                                       null_class_id)
         with label_source.activate():
             window = Box.make_square(7, 7, 6)
             labels = label_source.get_labels(window=window)

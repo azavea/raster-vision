@@ -229,6 +229,5 @@ def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
 for pc in registry.get_plugin_commands():
     main.add_command(pc)
 
-
 if __name__ == '__main__':
     main()

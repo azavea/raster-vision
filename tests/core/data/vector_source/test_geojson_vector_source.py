@@ -3,8 +3,8 @@ import os
 
 from shapely.geometry import shape
 
-from rastervision.core.data import (
-    GeoJSONVectorSourceConfig, ClassConfig, IdentityCRSTransformer)
+from rastervision.core.data import (GeoJSONVectorSourceConfig, ClassConfig,
+                                    IdentityCRSTransformer)
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.pipeline import rv_config
 

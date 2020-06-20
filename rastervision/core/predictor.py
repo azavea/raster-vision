@@ -5,7 +5,7 @@ import logging
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.config import (build_config, upgrade_config)
 from rastervision.pipeline.file_system.utils import (download_if_needed,
-                                                      make_dir, file_to_json)
+                                                     make_dir, file_to_json)
 from rastervision.core.data.raster_source import ChannelOrderError
 from rastervision.core.analyzer import StatsAnalyzerConfig
 

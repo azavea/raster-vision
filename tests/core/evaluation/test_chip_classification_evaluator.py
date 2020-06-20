@@ -4,8 +4,9 @@ import os
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import file_to_json
 from rastervision.core.data import (
-    ClassConfig, ChipClassificationLabelSourceConfig, GeoJSONVectorSourceConfig,
-    ChipClassificationGeoJSONStoreConfig, RasterioSourceConfig, SceneConfig)
+    ClassConfig, ChipClassificationLabelSourceConfig,
+    GeoJSONVectorSourceConfig, ChipClassificationGeoJSONStoreConfig,
+    RasterioSourceConfig, SceneConfig)
 from rastervision.core.evaluation import (ChipClassificationEvaluatorConfig)
 
 from tests import data_file_path
@@ -21,7 +22,8 @@ class TestChipClassificationEvaluator(unittest.TestCase):
                 uri=label_source_uri, default_class_id=None))
 
         label_store_uri = data_file_path('evaluator/cc-label-full.json')
-        label_store_cfg = ChipClassificationGeoJSONStoreConfig(uri=label_store_uri)
+        label_store_cfg = ChipClassificationGeoJSONStoreConfig(
+            uri=label_store_uri)
 
         raster_source_uri = data_file_path('evaluator/cc-label-img-blank.tif')
         raster_source_cfg = RasterioSourceConfig(uris=[raster_source_uri])

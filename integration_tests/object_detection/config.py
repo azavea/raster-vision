@@ -1,13 +1,14 @@
 from os.path import join, dirname
 
-from rastervision.core.rv_pipeline import (
-    ObjectDetectionConfig, ObjectDetectionChipOptions, ObjectDetectionPredictOptions)
+from rastervision.core.rv_pipeline import (ObjectDetectionConfig,
+                                           ObjectDetectionChipOptions,
+                                           ObjectDetectionPredictOptions)
 from rastervision.core.data import (
     ClassConfig, ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig,
     RasterioSourceConfig, SceneConfig, DatasetConfig)
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
-from rastervision.pytorch_learner import (
-    Backbone, SolverConfig, ObjectDetectionModelConfig)
+from rastervision.pytorch_learner import (Backbone, SolverConfig,
+                                          ObjectDetectionModelConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False):
@@ -18,8 +19,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             return join(dirname(__file__), part)
 
     class_config = ClassConfig(
-        names=['car', 'building'],
-        colors=['blue', 'red'])
+        names=['car', 'building'], colors=['blue', 'red'])
 
     def make_scene(scene_id, img_path, label_path):
         raster_source = RasterioSourceConfig(
@@ -35,7 +35,10 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
     if full_train:
         model = ObjectDetectionModelConfig(backbone=Backbone.resnet18)
         solver = SolverConfig(
-            lr=1e-4, num_epochs=300, batch_sz=8, one_cycle=True,
+            lr=1e-4,
+            num_epochs=300,
+            batch_sz=8,
+            one_cycle=True,
             sync_interval=300)
     else:
         pretrained_uri = (
@@ -44,7 +47,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         model = ObjectDetectionModelConfig(
             backbone=Backbone.resnet18, init_weights=pretrained_uri)
         solver = SolverConfig(
-            lr=1e-9, num_epochs=1, batch_sz=2, one_cycle=True, sync_interval=200)
+            lr=1e-9,
+            num_epochs=1,
+            batch_sz=2,
+            one_cycle=True,
+            sync_interval=200)
     backend = PyTorchObjectDetectionConfig(
         model=model,
         solver=solver,
@@ -53,10 +60,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         augmentors=[])
 
     scenes = [
-        make_scene(
-            'od_test', get_path('scene/image.tif'), get_path('scene/labels.json')),
-        make_scene(
-            'od_test-2', get_path('scene/image2.tif'), get_path('scene/labels2.json'))]
+        make_scene('od_test', get_path('scene/image.tif'),
+                   get_path('scene/labels.json')),
+        make_scene('od_test-2', get_path('scene/image2.tif'),
+                   get_path('scene/labels2.json'))
+    ]
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=scenes,

@@ -131,8 +131,8 @@ def test_model_bundle_results(pipeline, test, tmp_dir, scenes, scenes_to_uris):
         # via pyproj logic (in the case of rasterio crs transformer.
         scene = scene_cfg.build(pipeline.dataset.class_config, tmp_dir)
 
-        predictor_label_store_uri = join(
-            tmp_dir, test.lower(), 'predictor/{}'.format(scene_cfg.id))
+        predictor_label_store_uri = join(tmp_dir, test.lower(),
+                                         'predictor/{}'.format(scene_cfg.id))
         image_uri = scenes_to_uris[scene_cfg.id]
         predictor.predict([image_uri], predictor_label_store_uri)
 
@@ -147,10 +147,10 @@ def test_model_bundle_results(pipeline, test, tmp_dir, scenes, scenes_to_uris):
         with ActivateMixin.compose(scene, predictor_label_store):
             if not (predictor_label_store.get_labels() ==
                     scene.prediction_label_store.get_labels()):
-                e = TestError(
-                    test, ('Predictor did not produce the same labels '
-                           'as the Predict command'),
-                    'for scene {}'.format(scene_cfg.id))
+                e = TestError(test,
+                              ('Predictor did not produce the same labels '
+                               'as the Predict command'),
+                              'for scene {}'.format(scene_cfg.id))
                 errors.append(e)
 
     return errors
@@ -186,8 +186,8 @@ def test_model_bundle(pipeline, test, tmp_dir, check_channel_order=False):
                 test_model_bundle_validation(pipeline, test, tmp_dir, uris[0]))
         else:
             errors.extend(
-                test_model_bundle_results(
-                    pipeline, test, tmp_dir, scenes, scenes_to_uris))
+                test_model_bundle_results(pipeline, test, tmp_dir, scenes,
+                                          scenes_to_uris))
 
     return errors
 
@@ -207,7 +207,8 @@ def run_test(test, tmp_dir):
         _run_pipeline(pipeline_cfg, runner, tmp_dir)
     except Exception:
         errors.append(
-            TestError(test, 'raised an exception while running', traceback.format_exc()))
+            TestError(test, 'raised an exception while running',
+                      traceback.format_exc()))
         return errors
 
     # Check that the eval is similar to expected eval.
@@ -216,7 +217,8 @@ def run_test(test, tmp_dir):
     if not errors:
         errors.extend(test_model_bundle(pipeline_cfg, test, tmp_dir))
         errors.extend(
-            test_model_bundle(pipeline_cfg, test, tmp_dir, check_channel_order=True))
+            test_model_bundle(
+                pipeline_cfg, test, tmp_dir, check_channel_order=True))
 
     return errors
 

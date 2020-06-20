@@ -2,11 +2,12 @@ from os.path import join, dirname, basename
 
 from rastervision.core.rv_pipeline import ChipClassificationConfig
 from rastervision.core.data import (
-    ClassConfig, ChipClassificationLabelSourceConfig, GeoJSONVectorSourceConfig,
-    RasterioSourceConfig, StatsTransformerConfig, SceneConfig, DatasetConfig)
+    ClassConfig, ChipClassificationLabelSourceConfig,
+    GeoJSONVectorSourceConfig, RasterioSourceConfig, StatsTransformerConfig,
+    SceneConfig, DatasetConfig)
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
-from rastervision.pytorch_learner import (
-    Backbone, SolverConfig, ClassificationModelConfig)
+from rastervision.pytorch_learner import (Backbone, SolverConfig,
+                                          ClassificationModelConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False):
@@ -32,17 +33,18 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             infer_cells=True)
 
         raster_source = RasterioSourceConfig(
-            channel_order=[0, 1, 2], uris=[img_path],
+            channel_order=[0, 1, 2],
+            uris=[img_path],
             transformers=[StatsTransformerConfig()])
 
         return SceneConfig(
-            id=id,
-            raster_source=raster_source,
-            label_source=label_source)
+            id=id, raster_source=raster_source, label_source=label_source)
 
     scenes = [
         make_scene(get_path('scene/image.tif'), get_path('scene/labels.json')),
-        make_scene(get_path('scene/image2.tif'), get_path('scene/labels2.json'))]
+        make_scene(
+            get_path('scene/image2.tif'), get_path('scene/labels2.json'))
+    ]
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=scenes,
@@ -51,7 +53,10 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
     if full_train:
         model = ClassificationModelConfig(backbone=Backbone.resnet18)
         solver = SolverConfig(
-            lr=1e-4, num_epochs=300, batch_sz=8, one_cycle=True,
+            lr=1e-4,
+            num_epochs=300,
+            batch_sz=8,
+            one_cycle=True,
             sync_interval=300)
     else:
         pretrained_uri = (
@@ -60,7 +65,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         model = ClassificationModelConfig(
             backbone=Backbone.resnet18, init_weights=pretrained_uri)
         solver = SolverConfig(
-            lr=1e-9, num_epochs=1, batch_sz=2, one_cycle=True, sync_interval=200)
+            lr=1e-9,
+            num_epochs=1,
+            batch_sz=2,
+            one_cycle=True,
+            sync_interval=200)
     backend = PyTorchChipClassificationConfig(
         model=model,
         solver=solver,

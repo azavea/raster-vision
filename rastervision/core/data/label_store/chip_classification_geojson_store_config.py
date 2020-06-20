@@ -1,8 +1,8 @@
 from typing import Optional
 from os.path import join
 
-from rastervision.core.data.label_store import (
-    LabelStoreConfig, ChipClassificationGeoJSONStore)
+from rastervision.core.data.label_store import (LabelStoreConfig,
+                                                ChipClassificationGeoJSONStore)
 from rastervision.pipeline.config import register_config, Field
 
 

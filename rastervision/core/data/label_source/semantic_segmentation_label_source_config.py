@@ -1,7 +1,7 @@
 from typing import Optional, Union
 
 from rastervision.core.data.raster_source import (RasterSourceConfig,
-                                                   RasterizedSourceConfig)
+                                                  RasterizedSourceConfig)
 from rastervision.core.data.label_source import (
     LabelSourceConfig, SemanticSegmentationLabelSource)
 from rastervision.core.data.class_config import (ClassConfig)
@@ -26,4 +26,6 @@ class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
         else:
             rs = self.raster_source.build(tmp_dir)
         return SemanticSegmentationLabelSource(
-            rs, class_config.get_null_class_id(), rgb_class_config=self.rgb_class_config)
+            rs,
+            class_config.get_null_class_id(),
+            rgb_class_config=self.rgb_class_config)

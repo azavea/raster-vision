@@ -3,7 +3,7 @@ import pyproj
 from rasterio.transform import (rowcol, xy)
 
 from rastervision.core.data.crs_transformer import (CRSTransformer,
-                                                     IdentityCRSTransformer)
+                                                    IdentityCRSTransformer)
 
 
 class RasterioCRSTransformer(CRSTransformer):

@@ -7,9 +7,9 @@ from shapely.geometry import shape
 from rastervision.core.data import ClassConfig
 from rastervision.core import Box
 from rastervision.core.data import (
-    Scene, IdentityCRSTransformer,
-    SemanticSegmentationLabelSource, RasterizedSourceConfig, RasterizerConfig,
-    GeoJSONVectorSourceConfig, PolygonVectorOutputConfig)
+    Scene, IdentityCRSTransformer, SemanticSegmentationLabelSource,
+    RasterizedSourceConfig, RasterizerConfig, GeoJSONVectorSourceConfig,
+    PolygonVectorOutputConfig)
 from rastervision.core.evaluation import SemanticSegmentationEvaluator
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import file_to_json
@@ -53,7 +53,8 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
     def test_evaluator(self):
         output_uri = join(self.tmp_dir.name, 'out.json')
         scenes = [self.get_scene(0), self.get_scene(1)]
-        evaluator = SemanticSegmentationEvaluator(self.class_config, output_uri, None)
+        evaluator = SemanticSegmentationEvaluator(self.class_config,
+                                                  output_uri, None)
         evaluator.process(scenes, self.tmp_dir.name)
         eval_json = file_to_json(output_uri)
         exp_eval_json = file_to_json(data_file_path('expected-eval.json'))
@@ -71,23 +72,21 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         extent = Box.make_square(0, 0, 360)
 
         config = RasterizedSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=gt_uri, default_class_id=0),
-            rasterizer_config=RasterizerConfig(
-                background_class_id=1))
+            vector_source=GeoJSONVectorSourceConfig(
+                uri=gt_uri, default_class_id=0),
+            rasterizer_config=RasterizerConfig(background_class_id=1))
         gt_rs = config.build(self.class_config, crs_transformer, extent)
         gt_ls = SemanticSegmentationLabelSource(gt_rs, self.null_class_id)
 
         config = RasterizedSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=pred_uri, default_class_id=0),
-            rasterizer_config=RasterizerConfig(
-                background_class_id=1))
+            vector_source=GeoJSONVectorSourceConfig(
+                uri=pred_uri, default_class_id=0),
+            rasterizer_config=RasterizerConfig(background_class_id=1))
         pred_rs = config.build(self.class_config, crs_transformer, extent)
         pred_ls = SemanticSegmentationLabelSource(pred_rs, self.null_class_id)
         pred_ls.vector_output = [
             PolygonVectorOutputConfig(
-                uri=pred_uri,
-                denoise=0,
-                class_id=class_id)
+                uri=pred_uri, denoise=0, class_id=class_id)
         ]
 
         if use_aoi:
@@ -106,7 +105,8 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
             self.class_config, output_uri, vector_output_uri)
         evaluator.process(scenes, self.tmp_dir.name)
         vector_eval_json = file_to_json(vector_output_uri)
-        exp_vector_eval_json = file_to_json(data_file_path('expected-vector-eval.json'))
+        exp_vector_eval_json = file_to_json(
+            data_file_path('expected-vector-eval.json'))
 
         # NOTE:  The precision  and recall  values found  in the  file
         # `expected-vector-eval.json`  are equal to fractions of  the

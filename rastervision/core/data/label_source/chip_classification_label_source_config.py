@@ -1,8 +1,8 @@
 from typing import Optional
 
 from rastervision.core.data.vector_source import (VectorSourceConfig)
-from rastervision.core.data.label_source import (
-    LabelSourceConfig, ChipClassificationLabelSource)
+from rastervision.core.data.label_source import (LabelSourceConfig,
+                                                 ChipClassificationLabelSource)
 from rastervision.pipeline.config import (register_config, ConfigError, Field)
 
 

@@ -83,7 +83,8 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
 
         return target_count >= target_count_threshold
 
-    def get_labels(self, window: Optional[Box] = None) -> SemanticSegmentationLabels:
+    def get_labels(self,
+                   window: Optional[Box] = None) -> SemanticSegmentationLabels:
         """Get labels for a window.
 
         Args:
@@ -95,11 +96,11 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         labels = SemanticSegmentationLabels()
         window = window or self.raster_source.get_extent()
         raw_labels = self.raster_source.get_raw_chip(window)
-        label_arr = (np.squeeze(raw_labels)
-                        if self.class_transformer is None else
-                        self.class_transformer.rgb_to_class(raw_labels))
+        label_arr = (np.squeeze(raw_labels) if self.class_transformer is None
+                     else self.class_transformer.rgb_to_class(raw_labels))
 
-        label_arr = fill_edge(label_arr, window, self.raster_source.get_extent(),
+        label_arr = fill_edge(label_arr, window,
+                              self.raster_source.get_extent(),
                               self.null_class_id)
         labels.set_label_arr(window, label_arr)
         return labels

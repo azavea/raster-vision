@@ -5,7 +5,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
-                                                NotWritableError)
+                                               NotWritableError)
 
 AWS_S3 = 'aws_s3'
 

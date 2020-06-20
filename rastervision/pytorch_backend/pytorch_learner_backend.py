@@ -2,7 +2,7 @@ from os.path import join
 import tempfile
 
 from rastervision.pipeline.file_system import (make_dir, upload_or_copy,
-                                                zipdir)
+                                               zipdir)
 from rastervision.core.backend import Backend, SampleWriter
 from rastervision.core.data_sample import DataSample
 from rastervision.core.data import ClassConfig

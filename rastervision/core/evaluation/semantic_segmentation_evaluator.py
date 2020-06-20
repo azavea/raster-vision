@@ -6,7 +6,7 @@ from shapely.strtree import STRtree
 from rastervision.core.data import ActivateMixin
 from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
 from rastervision.core.evaluation import (ClassificationEvaluator,
-                                           SemanticSegmentationEvaluation)
+                                          SemanticSegmentationEvaluation)
 
 log = logging.getLogger(__name__)
 

@@ -4,12 +4,12 @@ from rastervision.core.data import (
     ClassConfig, SemanticSegmentationLabelSourceConfig,
     SemanticSegmentationLabelStoreConfig, RasterioSourceConfig, SceneConfig,
     PolygonVectorOutputConfig, DatasetConfig, BuildingVectorOutputConfig)
-from rastervision.core.rv_pipeline import (
-    SemanticSegmentationChipOptions, SemanticSegmentationWindowMethod,
-    SemanticSegmentationConfig)
+from rastervision.core.rv_pipeline import (SemanticSegmentationChipOptions,
+                                           SemanticSegmentationWindowMethod,
+                                           SemanticSegmentationConfig)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
-from rastervision.pytorch_learner import (
-    Backbone, SolverConfig, SemanticSegmentationModelConfig)
+from rastervision.pytorch_learner import (Backbone, SolverConfig,
+                                          SemanticSegmentationModelConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False):
@@ -19,9 +19,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         else:
             return join(dirname(__file__), part)
 
-    class_config = ClassConfig(
-        names=['red', 'green'],
-        colors=['red', 'green'])
+    class_config = ClassConfig(names=['red', 'green'], colors=['red', 'green'])
 
     def make_scene(id, img_path, label_path):
         raster_source = RasterioSourceConfig(
@@ -30,9 +28,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             rgb_class_config=class_config,
             raster_source=RasterioSourceConfig(uris=[label_path]))
         label_store = SemanticSegmentationLabelStoreConfig(
-            rgb=True, vector_output=[
+            rgb=True,
+            vector_output=[
                 PolygonVectorOutputConfig(class_id=0),
-                BuildingVectorOutputConfig(class_id=1)])
+                BuildingVectorOutputConfig(class_id=1)
+            ])
 
         return SceneConfig(
             id=id,
@@ -43,7 +43,10 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
     if full_train:
         model = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)
         solver = SolverConfig(
-            lr=1e-4, num_epochs=300, batch_sz=8, one_cycle=True,
+            lr=1e-4,
+            num_epochs=300,
+            batch_sz=8,
+            one_cycle=True,
             sync_interval=300)
     else:
         pretrained_uri = (
@@ -52,7 +55,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         model = SemanticSegmentationModelConfig(
             backbone=Backbone.resnet50, init_weights=pretrained_uri)
         solver = SolverConfig(
-            lr=1e-9, num_epochs=1, batch_sz=2, one_cycle=True, sync_interval=200)
+            lr=1e-9,
+            num_epochs=1,
+            batch_sz=2,
+            one_cycle=True,
+            sync_interval=200)
     backend = PyTorchSemanticSegmentationConfig(
         model=model,
         solver=solver,
@@ -61,10 +68,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         augmentors=[])
 
     scenes = [
-        make_scene(
-            'test-scene', get_path('scene/image.tif'), get_path('scene/labels.tif')),
-        make_scene(
-            'test-scene2', get_path('scene/image2.tif'), get_path('scene/labels2.tif'))]
+        make_scene('test-scene', get_path('scene/image.tif'),
+                   get_path('scene/labels.tif')),
+        make_scene('test-scene2', get_path('scene/image2.tif'),
+                   get_path('scene/labels2.tif'))
+    ]
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=scenes,

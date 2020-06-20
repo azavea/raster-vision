@@ -30,22 +30,21 @@ class SpacenetConfig(object):
             raise ValueError('{} is not a valid target.'.format(target))
 
     def get_raster_source_uri(self, id):
-        return os.path.join(
-            self.raw_uri, self.base_dir, self.raster_dir,
-            '{}{}.tif'.format(self.raster_fn_prefix, id))
+        return os.path.join(self.raw_uri, self.base_dir, self.raster_dir,
+                            '{}{}.tif'.format(self.raster_fn_prefix, id))
 
     def get_geojson_uri(self, id):
-        return os.path.join(
-            self.raw_uri, self.base_dir, self.label_dir,
-            '{}{}.geojson'.format(self.label_fn_prefix, id))
+        return os.path.join(self.raw_uri, self.base_dir, self.label_dir,
+                            '{}{}.geojson'.format(self.label_fn_prefix, id))
 
     def get_scene_ids(self):
         label_dir = os.path.join(self.raw_uri, self.base_dir, self.label_dir)
         label_paths = list_paths(label_dir, ext='.geojson')
-        label_re = re.compile(r'.*{}(\d+)\.geojson'.format(self.label_fn_prefix))
+        label_re = re.compile(r'.*{}(\d+)\.geojson'.format(
+            self.label_fn_prefix))
         scene_ids = [
-            label_re.match(label_path).group(1)
-            for label_path in label_paths]
+            label_re.match(label_path).group(1) for label_path in label_paths
+        ]
         return scene_ids
 
     @abstractmethod
@@ -67,7 +66,8 @@ class VegasRoads(SpacenetConfig):
         super().__init__(raw_uri)
 
     def get_class_config(self):
-        return ClassConfig(names=['road', 'background'], colors=['orange', 'black'])
+        return ClassConfig(
+            names=['road', 'background'], colors=['orange', 'black'])
 
     def get_class_id_to_filter(self):
         return {0: ['has', 'highway']}
@@ -83,7 +83,8 @@ class VegasBuildings(SpacenetConfig):
         super().__init__(raw_uri)
 
     def get_class_config(self):
-        return ClassConfig(names=['building', 'background'], colors=['orange', 'black'])
+        return ClassConfig(
+            names=['building', 'background'], colors=['orange', 'black'])
 
     def get_class_id_to_filter(self):
         return {0: ['has', 'building']}
@@ -101,7 +102,10 @@ def build_scene(spacenet_cfg, id, channel_order=None):
 
     # Set a line buffer to convert line strings to polygons.
     vector_source = GeoJSONVectorSourceConfig(
-        uri=label_uri, default_class_id=0, ignore_crs_field=True, line_bufs={0: 15})
+        uri=label_uri,
+        default_class_id=0,
+        ignore_crs_field=True,
+        line_bufs={0: 15})
     label_source = SemanticSegmentationLabelSourceConfig(
         raster_source=RasterizedSourceConfig(
             vector_source=vector_source,
@@ -124,7 +128,8 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
     spacenet_cfg = SpacenetConfig.create(raw_uri, target)
     scene_ids = spacenet_cfg.get_scene_ids()
     if len(scene_ids) == 0:
-        raise ValueError('No scenes found. Something is configured incorrectly.')
+        raise ValueError(
+            'No scenes found. Something is configured incorrectly.')
 
     random.seed(5678)
     scene_ids = sorted(scene_ids)
@@ -148,8 +153,12 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
     channel_order = [0, 1, 2]
 
     class_config = spacenet_cfg.get_class_config()
-    train_scenes = [build_scene(spacenet_cfg, id, channel_order) for id in train_ids]
-    val_scenes = [build_scene(spacenet_cfg, id, channel_order) for id in val_ids]
+    train_scenes = [
+        build_scene(spacenet_cfg, id, channel_order) for id in train_ids
+    ]
+    val_scenes = [
+        build_scene(spacenet_cfg, id, channel_order) for id in val_ids
+    ]
     dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=train_scenes,

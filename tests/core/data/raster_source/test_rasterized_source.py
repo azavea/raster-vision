@@ -4,9 +4,9 @@ from os.path import join
 import numpy as np
 
 from rastervision.core import Box
-from rastervision.core.data import (
-    IdentityCRSTransformer, RasterizedSourceConfig, RasterizerConfig,
-    GeoJSONVectorSourceConfig, ClassConfig)
+from rastervision.core.data import (IdentityCRSTransformer,
+                                    RasterizedSourceConfig, RasterizerConfig,
+                                    GeoJSONVectorSourceConfig, ClassConfig)
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.pipeline.config import ConfigError
 from rastervision.pipeline import rv_config
@@ -31,11 +31,13 @@ class TestRasterizedSource(unittest.TestCase):
         json_to_file(geojson, self.uri)
 
         config = RasterizedSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.uri, default_class_id=None),
+            vector_source=GeoJSONVectorSourceConfig(
+                uri=self.uri, default_class_id=None),
             rasterizer_config=RasterizerConfig(
                 background_class_id=self.background_class_id,
                 all_touched=all_touched))
-        source = config.build(self.class_config, self.crs_transformer, self.extent)
+        source = config.build(self.class_config, self.crs_transformer,
+                              self.extent)
         return source
 
     def test_get_chip(self):
@@ -123,9 +125,7 @@ class TestRasterizedSource(unittest.TestCase):
 
     def test_using_null_class_bufs(self):
         vs = GeoJSONVectorSourceConfig(
-            uri=self.uri,
-            default_class_id=None,
-            line_bufs={0: None})
+            uri=self.uri, default_class_id=None, line_bufs={0: None})
         with self.assertRaises(ConfigError):
             config = RasterizedSourceConfig(
                 vector_source=vs,

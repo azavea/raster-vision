@@ -3,7 +3,7 @@ from typing import List, TYPE_CHECKING, Optional
 
 from rastervision.pipeline.pipeline_config import PipelineConfig
 from rastervision.core.data import (DatasetConfig, StatsTransformerConfig,
-                                     LabelStoreConfig, SceneConfig)
+                                    LabelStoreConfig, SceneConfig)
 from rastervision.core.analyzer import StatsAnalyzerConfig
 from rastervision.core.backend import BackendConfig
 from rastervision.core.evaluation import EvaluatorConfig

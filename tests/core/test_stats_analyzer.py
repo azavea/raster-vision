@@ -44,7 +44,8 @@ class TestStatsAnalyzer(unittest.TestCase):
         exp_means = np.nanmean(channel_vals, axis=1)
         exp_stds = np.nanstd(channel_vals, axis=1)
 
-        analyzer_cfg = StatsAnalyzerConfig(output_uri=stats_uri, sample_prob=None)
+        analyzer_cfg = StatsAnalyzerConfig(
+            output_uri=stats_uri, sample_prob=None)
         if is_random:
             analyzer_cfg = StatsAnalyzerConfig(
                 output_uri=stats_uri, sample_prob=sample_prob)

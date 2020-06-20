@@ -35,7 +35,8 @@ class OptionEatAll(click.Option):
         return retval
 
 
-@click.command('predict', short_help='Use a model bundle to predict on new images.')
+@click.command(
+    'predict', short_help='Use a model bundle to predict on new images.')
 @click.argument('model_bundle')
 @click.argument('image_uri')
 @click.argument('output_uri')

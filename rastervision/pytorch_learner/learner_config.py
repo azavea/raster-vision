@@ -4,8 +4,8 @@ from enum import Enum
 
 from pydantic import PositiveFloat, PositiveInt
 
-from rastervision.pipeline.config import (Config, register_config,
-                                           ConfigError, Field)
+from rastervision.pipeline.config import (Config, register_config, ConfigError,
+                                          Field)
 from rastervision.pytorch_learner.utils import color_to_triple
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
@@ -184,9 +184,9 @@ class DataConfig(Config):
         None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
     class_colors: Union[None, List[str], List[List]] = Field(
-        None, description=(
-            'Colors used to display classes. '
-            'Can be color 3-tuples in list form.'))
+        None,
+        description=('Colors used to display classes. '
+                     'Can be color 3-tuples in list form.'))
     img_sz: PositiveInt = Field(
         256,
         description=
