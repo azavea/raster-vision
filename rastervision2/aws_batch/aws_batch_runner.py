@@ -9,7 +9,7 @@ from rastervision2.pipeline import rv_config
 from rastervision2.pipeline.runner import Runner
 
 log = logging.getLogger(__name__)
-AWS_BATCH = 'aws_batch'
+AWS_BATCH = 'batch'
 
 
 def submit_job(cmd: List[str],

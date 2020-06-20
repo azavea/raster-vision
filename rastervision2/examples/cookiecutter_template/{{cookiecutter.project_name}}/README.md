@@ -24,5 +24,5 @@
 ### Usage
 
 * Run `docker/build` and then `docker/ecr_publish` to push any changes to ECR.
-* To run the pipeline on Batch, use the `aws_batch` runner, the `--profile` option with the Raster Vision profile you created above, and set the `root_uri` to an S3 URI. This can be done using
- `rastervision2 --profile {{cookiecutter.project_name}} run aws_batch configs/test.py -a root_uri <s3 uri>`
+* To run the pipeline on Batch, use the `batch` runner, the `--profile` option with the Raster Vision profile you created above, and set the `root_uri` to an S3 URI. This can be done using
+ `rastervision2 --profile {{cookiecutter.project_name}} run batch configs/test.py -a root_uri <s3 uri>`

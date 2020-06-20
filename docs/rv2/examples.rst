@@ -95,13 +95,13 @@ To run the full experiment on GPUs using AWS Batch, use something like the follo
     export PROCESSED_URI="s3://mybucket/examples/spacenet/rio/processed-data"
     export ROOT_URI="s3://mybucket/examples/spacenet/rio/remote-output"
 
-    rastervision run aws_batch rastervision2.examples.chip_classification.spacenet_rio \
+    rastervision run batch rastervision2.examples.chip_classification.spacenet_rio \
         -a raw_uri $RAW_URI -a processed_uri $PROCESSED_URI -a root_uri $ROOT_URI \
         -a test False --splits 8
 
 For instructions on setting up AWS Batch resources and configuring Raster Vision to use them, see :ref:`rv2_aws batch setup`. To monitor the training process using Tensorboard, visit ``<public dns>:6006`` for the EC2 instance running the training job.
 
-If you would like to run on a local GPU, replace ``aws_batch`` with ``local``, and use local URIs. To monitor the training process using Tensorboard, visit ``localhost:6006``, assuming you used ``docker/run --tensorboard``.
+If you would like to run on a local GPU, replace ``batch`` with ``local``, and use local URIs. To monitor the training process using Tensorboard, visit ``localhost:6006``, assuming you used ``docker/run --tensorboard``.
 
 Step 5: Inspect results
 ~~~~~~~~~~~~~~~~~~~~~~~~~
