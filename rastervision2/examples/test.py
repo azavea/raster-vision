@@ -101,7 +101,7 @@ def run_experiment(exp_cfg, output_dir, test=True, remote=False, commands=None):
     rv_profile = exp_cfg.get('rv_profile')
     if rv_profile is not None:
         cmd += ['-p', rv_profile]
-    cmd += ['run', 'aws_batch' if remote else 'inprocess', exp_cfg['module']]
+    cmd += ['run', 'batch' if remote else 'inprocess', exp_cfg['module']]
     if commands is not None:
         cmd += commands
     cmd += ['-a', 'raw_uri', uris['raw_uri']]

@@ -1,6 +1,5 @@
-from rastervision2.aws_batch.aws_batch_runner import AWS_BATCH
 from rastervision2.pipeline.pipeline_config import PipelineConfig
-
+from rastervision2.aws_batch.aws_batch_runner import AWS_BATCH
 
 def get_config(runner):
     root_uri = ('s3://raster-vision-lf-dev/examples/test-output/pipeline'
