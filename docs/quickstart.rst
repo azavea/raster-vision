@@ -28,7 +28,7 @@ Now we can run a console in the the Docker container by doing
    > docker run --rm -it -p 6006:6006 \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_OUT_DIR}:/opt/data/output \
-        quay.io/azavea/raster-vision:pytorch-0.11 /bin/bash
+        quay.io/azavea/raster-vision:pytorch-0.12 /bin/bash
 
 .. seealso:: See :ref:`rv2_docker images` for more information about setting up Raster Vision with Docker images.
 
