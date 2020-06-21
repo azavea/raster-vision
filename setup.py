@@ -8,8 +8,8 @@ import re
 from setuptools import (setup, find_namespace_packages)
 from imp import load_source
 
-__version__ = load_source('rastervision.version',
-                          'rastervision/version.py').__version__
+__version__ = load_source('rastervision.pipeline.version',
+                          'rastervision/pipeline/version.py').__version__
 
 here = op.abspath(op.dirname(__file__))
 
