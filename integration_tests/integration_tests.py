@@ -1,50 +1,26 @@
 #!/usr/bin/env python
 
-from copy import deepcopy
-import json
-import os
+from os.path import join, dirname, abspath, isfile
 import math
 import traceback
+import importlib
 
 import click
 import numpy as np
 
-import rastervision as rv
+from rastervision.pipeline import rv_config, Verbosity
+from rastervision.pipeline.file_system import file_to_json
+from rastervision.pipeline.runner import InProcessRunner
+from rastervision.pipeline.cli import _run_pipeline
+from rastervision.core import Predictor
 
-from integration_tests.chip_classification_tests.experiment \
-    import ChipClassificationIntegrationTest
-from integration_tests.object_detection_tests.experiment \
-    import ObjectDetectionIntegrationTest
-from integration_tests.semantic_segmentation_tests.experiment \
-    import SemanticSegmentationIntegrationTest
-from rastervision.rv_config import RVConfig
-
-all_tests = [
-    rv.CHIP_CLASSIFICATION, rv.OBJECT_DETECTION, rv.SEMANTIC_SEGMENTATION
-]
+chip_classification = 'chip_classification'
+object_detection = 'object_detection'
+semantic_segmentation = 'semantic_segmentation'
+all_tests = [chip_classification, object_detection, semantic_segmentation]
+TEST_ROOT_DIR = dirname(abspath(__file__))
 
 np.random.seed(1234)
-if rv.backend.tf_available:
-    import tensorflow
-    tensorflow.set_random_seed(5678)
-
-# Suppress warnings and info to avoid cluttering CI log
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-TEST_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-class IntegrationTestExperimentRunner(rv.runner.LocalExperimentRunner):
-    def __init__(self, tmp_dir=None):
-        super().__init__(tmp_dir)
-
-    def _run_experiment(self, command_dag):
-        """Check serialization of all commands."""
-        for command_config in command_dag.get_sorted_commands():
-            deepcopy(
-                rv.command.CommandConfig.from_proto(command_config.to_proto()))
-
-        super()._run_experiment(command_dag)
 
 
 def console_info(msg):
@@ -72,26 +48,20 @@ class TestError():
 
 
 def get_test_dir(test):
-    return os.path.join(TEST_ROOT_DIR, test.lower().replace('-', '_'))
+    return join(TEST_ROOT_DIR, test.lower().replace('-', '_'))
 
 
 def get_expected_eval_path(test):
-    return os.path.join('{}_tests'.format(get_test_dir(test)),
-                        'expected-output/eval.json')
+    return join(get_test_dir(test), 'expected-output/eval.json')
 
 
-def get_actual_eval_path(test, temp_dir):
-    return os.path.join(temp_dir, test.lower(), 'eval/default/eval.json')
-
-
-def open_json(path):
-    with open(path, 'r') as file:
-        return json.load(file)
+def get_actual_eval_path(test, tmp_dir):
+    return join(tmp_dir, test.lower(), 'eval/eval.json')
 
 
 def check_eval_item(test, expected_item, actual_item):
     errors = []
-    f1_threshold = 0.01
+    f1_threshold = 0.05
     class_name = expected_item['class_name']
 
     expected_f1 = expected_item['f1'] or 0.0
@@ -106,15 +76,15 @@ def check_eval_item(test, expected_item, actual_item):
     return errors
 
 
-def check_eval(test, temp_dir):
+def check_eval(test, tmp_dir):
     errors = []
 
-    actual_eval_path = get_actual_eval_path(test, temp_dir)
+    actual_eval_path = get_actual_eval_path(test, tmp_dir)
     expected_eval_path = get_expected_eval_path(test)
 
-    if os.path.isfile(actual_eval_path):
-        expected_eval = open_json(expected_eval_path)['overall']
-        actual_eval = open_json(actual_eval_path)['overall']
+    if isfile(actual_eval_path):
+        expected_eval = file_to_json(expected_eval_path)['overall']
+        actual_eval = file_to_json(actual_eval_path)['overall']
 
         for expected_item in expected_eval:
             class_name = expected_item['class_name']
@@ -130,31 +100,16 @@ def check_eval(test, temp_dir):
     return errors
 
 
-def get_experiment(test, use_tf, tmp_dir):
-    if test == rv.OBJECT_DETECTION:
-        return ObjectDetectionIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()), use_tf=use_tf)
-    if test == rv.CHIP_CLASSIFICATION:
-        return ChipClassificationIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()), use_tf=use_tf)
-    if test == rv.SEMANTIC_SEGMENTATION:
-        return SemanticSegmentationIntegrationTest().exp_main(
-            os.path.join(tmp_dir, test.lower()), use_tf=use_tf)
-
-    raise Exception('Unknown test {}'.format(test))
-
-
-def test_prediction_package_validation(experiment, test, temp_dir, image_uri):
+def test_model_bundle_validation(pipeline, test, tmp_dir, image_uri):
     console_info('Checking predict command validation...')
     errors = []
-    pp = experiment.task.predict_package_uri
-    predict = rv.Predictor(pp, temp_dir, channel_order=[0, 1, 7]).predict
+    model_bundle_uri = pipeline.get_model_bundle_uri()
+    predictor = Predictor(model_bundle_uri, tmp_dir, channel_order=[0, 1, 7])
     try:
-        predict(image_uri, 'x.txt')
+        predictor.predict([image_uri], 'x.txt')
         e = TestError(test,
                       ('Predictor should have raised exception due to invalid '
-                       'channel_order, but did not.'),
-                      'in experiment {}'.format(experiment.id))
+                       'channel_order, but did not.'))
         errors.append(e)
     except ValueError:
         pass
@@ -162,66 +117,54 @@ def test_prediction_package_validation(experiment, test, temp_dir, image_uri):
     return errors
 
 
-def test_prediction_package_results(experiment, test, temp_dir, scenes,
-                                    scenes_to_uris):
-    console_info('Checking predict package produces same results...')
+def test_model_bundle_results(pipeline, test, tmp_dir, scenes, scenes_to_uris):
+    console_info('Checking model bundle produces same results...')
     errors = []
-    pp = experiment.task.predict_package_uri
-    predict = rv.Predictor(pp, temp_dir).predict
+    model_bundle_uri = pipeline.get_model_bundle_uri()
+    predictor = Predictor(model_bundle_uri, tmp_dir)
 
-    for scene_config in scenes:
+    for scene_cfg in scenes:
         # Need to write out labels and read them back,
         # otherwise the floating point precision direct box
         # coordinates will not match those from the PREDICT
         # command, which are rounded to pixel coordinates
         # via pyproj logic (in the case of rasterio crs transformer.
-        predictor_label_store_uri = os.path.join(
-            temp_dir, test.lower(), 'predictor/{}'.format(scene_config.id))
-        uri = scenes_to_uris[scene_config.id]
+        scene = scene_cfg.build(pipeline.dataset.class_config, tmp_dir)
 
-        predict(uri, predictor_label_store_uri)
-
-        scene = scene_config.create_scene(experiment.task, temp_dir)
-
-        scene_labels = scene.prediction_label_store.get_labels()
+        predictor_label_store_uri = join(tmp_dir, test.lower(),
+                                         'predictor/{}'.format(scene_cfg.id))
+        image_uri = scenes_to_uris[scene_cfg.id]
+        predictor.predict([image_uri], predictor_label_store_uri)
 
         extent = scene.raster_source.get_extent()
         crs_transformer = scene.raster_source.get_crs_transformer()
-        predictor_label_store = scene_config.label_store \
-                                       .for_prediction(
-                                           predictor_label_store_uri) \
-                                       .create_store(
-                                           experiment.task,
-                                           extent,
-                                           crs_transformer,
-                                           temp_dir)
+        predictor_label_store = scene_cfg.label_store.copy()
+        predictor_label_store.uri = predictor_label_store_uri
+        predictor_label_store = predictor_label_store.build(
+            pipeline.dataset.class_config, crs_transformer, extent, tmp_dir)
 
-        from rastervision.data import ActivateMixin
+        from rastervision.core.data import ActivateMixin
         with ActivateMixin.compose(scene, predictor_label_store):
-            if not predictor_label_store.get_labels() == scene_labels:
-                e = TestError(
-                    test, ('Predictor did not produce the same labels '
-                           'as the Predict command'),
-                    'for scene {} in experiment {}'.format(
-                        scene_config.id, experiment.id))
+            if not (predictor_label_store.get_labels() ==
+                    scene.prediction_label_store.get_labels()):
+                e = TestError(test,
+                              ('Predictor did not produce the same labels '
+                               'as the Predict command'),
+                              'for scene {}'.format(scene_cfg.id))
                 errors.append(e)
 
     return errors
 
 
-def test_prediction_package(experiment,
-                            test,
-                            temp_dir,
-                            check_channel_order=False):
-    # Check the prediction package
+def test_model_bundle(pipeline, test, tmp_dir, check_channel_order=False):
+    # Check the model bundle.
     # This will only work with raster_sources that
     # have a single URI.
     skip = False
     errors = []
-    experiment = experiment.fully_resolve()
 
     scenes_to_uris = {}
-    scenes = experiment.dataset.validation_scenes
+    scenes = pipeline.dataset.validation_scenes
     for scene in scenes:
         rs = scene.raster_source
         if hasattr(rs, 'uri'):
@@ -236,38 +179,32 @@ def test_prediction_package(experiment,
             skip = True
 
     if skip:
-        console_warning('Skipping predict package test for '
-                        'test {}, experiment {}'.format(test, experiment.id))
+        console_warning('Skipping predict package test for test {}.')
     else:
         if check_channel_order:
             errors.extend(
-                test_prediction_package_validation(experiment, test, temp_dir,
-                                                   uris[0]))
+                test_model_bundle_validation(pipeline, test, tmp_dir, uris[0]))
         else:
             errors.extend(
-                test_prediction_package_results(experiment, test, temp_dir,
-                                                scenes, scenes_to_uris))
+                test_model_bundle_results(pipeline, test, tmp_dir, scenes,
+                                          scenes_to_uris))
 
     return errors
 
 
-def run_test(test, use_tf, temp_dir):
+def run_test(test, tmp_dir):
     errors = []
-    experiment = get_experiment(test, use_tf, temp_dir)
-    commands_to_run = rv.all_commands()
-
-    # Check serialization
-    pp_uri = os.path.join(experiment.bundle_uri, 'predict_package.zip')
-    experiment.task.predict_package_uri = pp_uri
-    msg = experiment.to_proto()
-    experiment = rv.ExperimentConfig.from_proto(msg)
+    config_mod = importlib.import_module(
+        'integration_tests.{}.config'.format(test))
+    runner = 'inprocess'
+    root_uri = join(tmp_dir, test)
+    pipeline_cfg = config_mod.get_config(runner, root_uri)
+    pipeline_cfg.update()
+    runner = InProcessRunner()
 
     # Check that running doesn't raise any exceptions.
     try:
-        IntegrationTestExperimentRunner(os.path.join(temp_dir, test.lower())) \
-            .run(experiment, rerun_commands=True, splits=2,
-                 commands_to_run=commands_to_run)
-
+        _run_pipeline(pipeline_cfg, runner, tmp_dir)
     except Exception:
         errors.append(
             TestError(test, 'raised an exception while running',
@@ -275,13 +212,13 @@ def run_test(test, use_tf, temp_dir):
         return errors
 
     # Check that the eval is similar to expected eval.
-    errors.extend(check_eval(test, temp_dir))
+    errors.extend(check_eval(test, tmp_dir))
 
     if not errors:
-        errors.extend(test_prediction_package(experiment, test, temp_dir))
+        errors.extend(test_model_bundle(pipeline_cfg, test, tmp_dir))
         errors.extend(
-            test_prediction_package(
-                experiment, test, temp_dir, check_channel_order=True))
+            test_model_bundle(
+                pipeline_cfg, test, tmp_dir, check_channel_order=True))
 
     return errors
 
@@ -289,28 +226,23 @@ def run_test(test, use_tf, temp_dir):
 @click.command()
 @click.argument('tests', nargs=-1)
 @click.option(
-    '--rv_root',
+    '--root-uri',
     '-t',
     help=('Sets the rv_root directory used. '
           'If set, test will not clean this directory up.'))
 @click.option(
     '--verbose', '-v', is_flag=True, help=('Sets the logging level to DEBUG.'))
-@click.option(
-    '--use-tf', '-v', is_flag=True, help=('Run using TF-based backends.'))
-def main(tests, rv_root, verbose, use_tf):
+def main(tests, root_uri, verbose):
     """Runs RV end-to-end and checks that evaluation metrics are correct."""
     if len(tests) == 0:
         tests = all_tests
 
     if verbose:
-        rv._registry.initialize_config(
-            verbosity=rv.cli.verbosity.Verbosity.DEBUG)
+        rv_config.set_verbosity(verbosity=Verbosity.DEBUG)
 
-    tests = list(map(lambda x: x.upper(), tests))
-
-    with RVConfig.get_tmp_dir() as temp_dir:
-        if rv_root:
-            temp_dir = rv_root
+    with rv_config.get_tmp_dir() as tmp_dir:
+        if root_uri:
+            tmp_dir = root_uri
 
         errors = []
         for test in tests:
@@ -318,7 +250,7 @@ def main(tests, rv_root, verbose, use_tf):
                 print('{} is not a valid test.'.format(test))
                 return
 
-            errors.extend(run_test(test, use_tf, temp_dir))
+            errors.extend(run_test(test, tmp_dir))
 
             for error in errors:
                 print(error)

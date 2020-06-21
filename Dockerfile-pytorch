@@ -6,10 +6,9 @@ RUN pip install cython==0.28.*
 RUN pip install pycocotools==2.0.*
 
 COPY scripts/rastervision /usr/local/bin/
-COPY scripts/rastervision2 /usr/local/bin/
+COPY scripts/rastervision /usr/local/bin/
 COPY rastervision /opt/src/rastervision
-COPY rastervision2 /opt/src/rastervision2
+COPY rastervision /opt/src/rastervision
 COPY scripts /opt/src/scripts/
-RUN /opt/src/scripts/compile
 
 CMD ["bash"]

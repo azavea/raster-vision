@@ -2,9 +2,9 @@ import json
 
 import numpy as np
 
-from rastervision.utils.files import str_to_file, file_to_str
+from rastervision.pipeline.file_system import str_to_file, file_to_str
 
-chip_size = 300
+chip_sz = 300
 
 
 def parallel_variance(mean_a, count_a, var_a, mean_b, count_b, var_b):
@@ -72,7 +72,7 @@ class RasterStats():
             raster_sources: list of RasterSource
             sample_prob: (float or None) between 0 and 1
         """
-        stride = chip_size
+        stride = chip_sz
         nb_channels = raster_sources[0].num_channels
 
         def get_chip(raster_source, window):
@@ -92,7 +92,7 @@ class RasterStats():
             for raster_source in raster_sources:
                 with raster_source.activate():
                     windows = raster_source.get_extent().get_windows(
-                        chip_size, stride)
+                        chip_sz, stride)
                     for window in windows:
                         chip = get_chip(raster_source, window)
                         if chip is not None:
@@ -105,11 +105,11 @@ class RasterStats():
                     extent = raster_source.get_extent()
                     num_pixels = extent.get_width() * extent.get_height()
                     num_chips = round(
-                        sample_prob * (num_pixels / (chip_size**2)))
+                        sample_prob * (num_pixels / (chip_sz**2)))
                     num_chips = max(1, num_chips)
                     for _ in range(num_chips):
                         window = raster_source.get_extent().make_random_square(
-                            chip_size)
+                            chip_sz)
                         chip = get_chip(raster_source, window)
                         if chip is not None:
                             yield chip

@@ -71,7 +71,6 @@ setup(
     dependency_links=dependency_links,
     entry_points='''
         [console_scripts]
-        rastervision=rastervision.cli.main:main
-        rastervision2=rastervision2.pipeline.cli:main
+        rastervision=rastervision.pipeline.cli:main
     ''',
 )

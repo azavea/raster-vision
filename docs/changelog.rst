@@ -4,8 +4,6 @@ CHANGELOG
 Raster Vision 0.11
 -------------------
 
-This is the final release of the existing framework, and has relatively few changes. The next release will introduce a major refactoring of the framework.
-
 Features
 ~~~~~~~~~~
 
@@ -23,9 +21,6 @@ Bug Fixes
 - The augmentors were not serialized properly for the chip command  `#857 <https://github.com/azavea/raster-vision/pull/857>`__
 - Fix problems with pretrained flag `#860 <https://github.com/azavea/raster-vision/pull/860>`__
 - Correctly get_local_path for some zxy tile URIS `#865 <https://github.com/azavea/raster-vision/pull/865>`__
-- Upgrade Tensorboard and flush log after each epoch `#943 <https://github.com/azavea/raster-vision/pull/943>`__
-- Fix polygon prediction upload bug `#938 <https://github.com/azavea/raster-vision/pull/938>`__ and `#942 <https://github.com/azavea/raster-vision/pull/942>`__
-- Fix bug in Box.get_windows `#939 <https://github.com/azavea/raster-vision/pull/939>`__
 
 Raster Vision 0.10
 ------------------
@@ -48,7 +43,7 @@ Therefore, we are in the process of sunsetting the Tensorflow backends (which wi
 * Using the TF backends requires being in the TF container, and similar for PyTorch. There are now ``--tf-cpu``, ``--tf-gpu``, and ``--pytorch-gpu`` options for the ``./docker/run`` command. The default setting is to use the PyTorch image in the standard (CPU) Docker runtime.
 * The `raster-vision-aws <https://github.com/azavea/raster-vision-aws>`_ CloudFormation setup creates Batch resources for TF-CPU, TF-GPU, and PyTorch. It also now uses default AMIs provided by AWS, simplifying the setup process.
 * To easily switch between running TF and PyTorch jobs on Batch, we recommend creating two separate Raster Vision profiles with the Batch resources for each of them.
-* The way to use the ``ConfigBuilders`` for the new backends can be seen in the `examples repo <https://github.com/azavea/raster-vision-examples>`_ and the :ref:`backend api reference`
+* The way to use the ``ConfigBuilders`` for the new backends can be seen in the `examples repo <https://github.com/azavea/raster-vision-examples>`_ and the :ref:`rv2_backend api reference`
 
 Features
 ^^^^^^^^^^^^

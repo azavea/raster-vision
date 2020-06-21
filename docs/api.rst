@@ -1,455 +1,251 @@
+.. _rv2_api:
+
 API Reference
-=============
+========================
 
-.. module:: rastervision
+rastervision.pipeline
+------------------------
 
-This API documentation is not exhaustive, but covers most of the public API that is important to typical Raster Vision usage.
+.. autoclass:: rastervision.pipeline.pipeline_config.PipelineConfig
 
-ExperimentConfigBuilder
------------------------
-
-An ExperimentConfigBuilder is created by calling
-
-.. code::
-
-   rv.ExperimentConfig.builder()
-
-.. autoclass:: rastervision.experiment.ExperimentConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-DatasetConfigBuilder
---------------------
-
-A DatasetConfigBuilder is created by calling
-
-.. code::
-
-   rv.DatasetConfig.builder()
-
-.. autoclass:: rastervision.data.DatasetConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _task api reference:
-
-TaskConfigBuilder
------------------
-
-TaskConfigBuilders are created by calling
-
-.. code::
-
-   rv.TaskConfig.builder(TASK_TYPE)
-
-Where ``TASK_TYPE`` is one of the following:
-
-rv.CHIP_CLASSIFICATION
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.task.ChipClassificationConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.OBJECT_DETECTION
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.task.ObjectDetectionConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.SEMANTIC_SEGMENTATION
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.task.SemanticSegmentationConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _backend api reference:
-
-BackendConfig
--------------
-
-There are backends based on PyTorch and Tensorflow. Remember to use the appropriate Docker image depending on the backend. Note that the Tensorflow backends are being sunsetted.
-BackendConfigBuilders are created by calling
-
-.. code::
-
-   rv.BackendConfig.builder(BACKEND_TYPE)
-
-Where ``BACKEND_TYPE`` is one of the following:
-
-rv.PYTORCH_SEMANTIC_SEGMENTATION
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.backend.pytorch_semantic_segmentation_config.PyTorchSemanticSegmentationConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.PYTORCH_CHIP_CLASSIFICATION
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.backend.pytorch_chip_classification_config.PyTorchChipClassificationConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.PYTORCH_OBJECT_DETECTION
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.backend.pytorch_object_detection_config.PyTorchObjectDetectionConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-
-rv.KERAS_CLASSIFICATION
-~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.backend.keras_classification_config.KerasClassificationConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.TF_OBJECT_DETECTION
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.backend.tf_object_detection_config.TFObjectDetectionConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.TF_DEEPLAB
-~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.backend.tf_deeplab_config.TFDeeplabConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-SceneConfig
------------
-
-SceneConfigBuilders are created by calling
-
-.. code::
-
-   rv.SceneConfig.builder()
-
-.. autoclass:: rastervision.data.SceneConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _raster source api reference:
-
-RasterSourceConfig
-------------------
-
-RasterSourceConfigBuilders are created by calling
-
-.. code::
-
-   rv.RasterSourceConfig.builder(SOURCE_TYPE)
-
-
-Where ``SOURCE_TYPE`` is one of the following:
-
-rv.RASTERIO_SOURCE
-~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.RasterioSourceConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.RASTERIZED_SOURCE
-~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.RasterizedSourceConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _label source api reference:
-
-LabelSourceConfig
------------------
-
-LabelSourceConfigBuilders are created by calling
-
-.. code::
-
-   rv.LabelSourceConfig.builder(SOURCE_TYPE)
-
-
-Where ``SOURCE_TYPE`` is one of the following:
-
-rv.CHIP_CLASSIFICATION
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.ChipClassificationLabelSourceConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.OBJECT_DETECTION
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.ObjectDetectionLabelSourceConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.SEMANTIC_SEGMENTATION
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.SemanticSegmentationLabelSourceConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _vector source api reference:
-
-VectorSourceConfig
---------------------
-
-VectorSourceConfigBuilders are created by calling
-
-.. code::
-
-  rv.VectorSourceConfig.builder(SOURCE_TYPE)
-
-
-Where ``SOURCE_TYPE`` is one of the following:
-
-rv.GEOJSON_SOURCE
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.GeoJSONVectorSourceConfigBuilder
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :exclude-members: from_proto, validate
-
-rv.VECTOR_TILE_SOURCE
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.VectorTileVectorSourceConfigBuilder
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :exclude-members: from_proto, validate
-
-.. _label store api reference:
-
-LabelStoreConfig
------------------
-
-LabelStoreConfigBuilders are created by calling
-
-.. code::
-
-   rv.LabelStoreConfig.builder(STORE_TYPE)
-
-
-Where ``STORE_TYPE`` is one of the following:
-
-rv.CHIP_CLASSIFICATION_GEOJSON
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.ChipClassificationGeoJSONStoreConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-For ``rv.OBJECT_DETECTION``:
-
-
-rv.OBJECT_DETECTION_GEOJSON
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.ObjectDetectionGeoJSONStoreConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.SEMANTIC_SEGMENTATION_RASTER
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.SemanticSegmentationRasterStoreConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _raster transformer api reference:
-
-RasterTransformerConfig
------------------------
-
-RasterTransformerConfigBuilders are created by calling
-
-.. code::
-
-   rv.RasterTransformerConfig.builder(TRANSFORMER_TYPE)
-
-Where ``TRANSFORMER_TYPE`` is one of the following:
-
-rv.STATS_TRANSFORMER
-~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.data.StatsTransformerConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _augmentor api reference:
-
-AugmentorConfig
----------------
-
-AugmentorConfigBuilders are created by calling
-
-.. code::
-
-   rv.AugmentorConfig.builder(AUGMENTOR_TYPE)
-
-Where ``AUGMENTOR_TYPE`` is one of the following:
-
-rv.NODATA_AUGMENTOR
-~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.augmentor.NodataAugmentorConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _analyzer api reference:
-
-AnalyzerConfig
---------------
-
-AnalyzerConfigBuilders are created by calling
-
-.. code::
-
-   rv.AnalyzerConfig.builder(ANALYZER_TYPE)
-
-Where ``ANALYZER_TYPE`` is one of the following:
-
-rv.STATS_ANALYZER
-~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.analyzer.StatsAnalyzerConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _evaluator api reference:
-
-EvaluatorConfig
----------------
-
-EvaluatorConfigBuilders are created by calling
-
-.. code::
-
-   rv.EvaluatorConfig.builder(Evaluator_TYPE)
-
-Where ``Evaluator_TYPE`` is one of the following:
-
-rv.CHIP_CLASSIFICATION_EVALUATOR
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.evaluation.ChipClassificationEvaluatorConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.OBJECT_DETECTION_EVALUATOR
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.evaluation.ObjectDetectionEvaluatorConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-rv.SEMANTIC_SEGMENTATION_EVALUATOR
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: rastervision.evaluation.SemanticSegmentationEvaluatorConfigBuilder
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: from_proto, validate
-
-.. _aux command api:
-
-Aux Commands
-------------
-
-.. autoclass:: rastervision.command.aux.CogifyCommand
-
-.. _aux command options api:
-
-Aux Command Options
+rastervision.core
 -------------------
 
-.. autoclass:: rastervision.command.aux_command.AuxCommandOptions
+StatsAnalyzerConfig
+~~~~~~~~~~~~~~~~~~~~
 
-   .. automethod:: __init__
+.. autoclass:: rastervision.core.analyzer.StatsAnalyzerConfig
 
+ClassConfig
+~~~~~~~~~~~~
 
-.. _predictor api:
+.. autoclass:: rastervision.core.data.ClassConfig
 
-Predictor
----------
+DatasetConfig
+~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.Predictor
-   :members:
-   :undoc-members:
-   :inherited-members:
+.. autoclass:: rastervision.core.data.DatasetConfig
 
-   .. automethod:: __init__
+SceneConfig
+~~~~~~~~~~~~~~~
 
-.. _plugin registry api:
+.. autoclass:: rastervision.core.data.SceneConfig
 
-Plugin Registry
----------------
+ChipClassificationLabelSourceConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: rastervision.plugin.PluginRegistry
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :exclude-members: add_plugins_from_proto, get_instance, to_proto
+.. autoclass:: rastervision.core.data.label_source.ChipClassificationLabelSourceConfig
+
+SemanticSegmentationLabelSourceConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.label_source.SemanticSegmentationLabelSourceConfig
+
+ObjectDetectionLabelSourceConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.label_source.ObjectDetectionLabelSourceConfig
+
+ChipClassificationGeoJSONStoreConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.label_store.ChipClassificationGeoJSONStoreConfig
+
+PolygonVectorOutputConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.label_store.PolygonVectorOutputConfig
+
+BuildingVectorOutputConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.label_store.BuildingVectorOutputConfig
+
+SemanticSegmentationLabelStoreConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.label_store.SemanticSegmentationLabelStoreConfig
+
+ObjectDetectionGeoJSONStoreConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.label_store.ObjectDetectionGeoJSONStoreConfig
+
+RasterioSourceConfig
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_source.RasterioSourceConfig
+
+RasterizedSourceConfig
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_source.RasterizedSourceConfig
+
+StatsTransformerConfig
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_transformer.StatsTransformerConfig
+
+VectorSourceConfig
+~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.vector_source.VectorSourceConfig
+
+GeoJSONVectorSourceConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.vector_source.GeoJSONVectorSourceConfig
+
+ChipClassificationEvaluatorConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.evaluation.ChipClassificationEvaluatorConfig
+
+SemanticSegmentationEvaluatorConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.evaluation.SemanticSegmentationEvaluatorConfig
+
+ObjectDetectionEvaluatorConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.evaluation.ObjectDetectionEvaluatorConfig
+
+ChipClassificationConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.rv_pipeline.ChipClassificationConfig
+
+SemanticSegmentationWindowMethod
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.rv_pipeline.SemanticSegmentationWindowMethod
+
+SemanticSegmentationChipOptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.rv_pipeline.SemanticSegmentationChipOptions
+
+SemanticSegmentationConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.rv_pipeline.SemanticSegmentationConfig
+
+ObjectDetectionWindowMethod
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionWindowMethod
+
+ObjectDetectionChipOptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionChipOptions
+
+ObjectDetectionPredictOptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionPredictOptions
+
+ObjectDetectionConfig
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionConfig
+
+rastervision.pytorch_backend
+-------------------------------
+
+PyTorchChipClassificationConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_backend.PyTorchChipClassificationConfig
+
+PyTorchSemanticSegmentationConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_backend.PyTorchSemanticSegmentationConfig
+
+PyTorchObjectDetectionConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_backend.PyTorchObjectDetectionConfig
+
+rastervision.pytorch_learner
+-------------------------------
+
+Backbone
+~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.Backbone
+    :members:
+    :undoc-members:
+
+SolverConfig
+~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.SolverConfig
+
+ClassificationDataFormat
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ClassificationDataFormat
+    :members:
+    :undoc-members:
+
+ClassificationDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ClassificationDataConfig
+
+ClassificationModelConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ClassificationModelConfig
+
+ClassificationLearnerConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ClassificationLearnerConfig
+
+SemanticSegmentationDataFormat
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationDataFormat
+    :members:
+    :undoc-members:
+
+SemanticSegmentationDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationDataConfig
+
+SemanticSegmentationModelConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationModelConfig
+
+SemanticSegmentationLearnerConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationLearnerConfig
+
+ObjectDetectionDataFormat
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionDataFormat
+    :members:
+    :undoc-members:
+
+ObjectDetectionDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionDataConfig
+
+ObjectDetectionModelConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionModelConfig
+
+ObjectDetectionLearnerConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionLearnerConfig

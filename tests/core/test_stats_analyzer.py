@@ -3,22 +3,22 @@ import os
 
 import numpy as np
 
-from rastervision.core.raster_stats import RasterStats, chip_size
-from rastervision.data import Scene
-from tests.mock.raster_source import MockRasterSource
-import rastervision as rv
-from rastervision.rv_config import RVConfig
+from rastervision.pipeline import rv_config
+from rastervision.core.raster_stats import RasterStats, chip_sz
+from rastervision.core.data import Scene
+from rastervision.core.analyzer import StatsAnalyzerConfig
+from tests.core.data.mock_raster_source import MockRasterSource
 
 
 class TestStatsAnalyzer(unittest.TestCase):
     def setUp(self):
-        self.temp_dir = RVConfig.get_tmp_dir()
+        self.tmp_dir = rv_config.get_tmp_dir()
 
     def tearDown(self):
-        self.temp_dir.cleanup()
+        self.tmp_dir.cleanup()
 
-    def _test(self, is_random=False, is_backcompat=False):
-        stats_uri = os.path.join(self.temp_dir.name, 'stats.json')
+    def _test(self, is_random=False):
+        stats_uri = os.path.join(self.tmp_dir.name, 'stats.json')
         scenes = []
         raster_sources = []
         imgs = []
@@ -44,19 +44,13 @@ class TestStatsAnalyzer(unittest.TestCase):
         exp_means = np.nanmean(channel_vals, axis=1)
         exp_stds = np.nanstd(channel_vals, axis=1)
 
-        analyzer_builder = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER)
+        analyzer_cfg = StatsAnalyzerConfig(
+            output_uri=stats_uri, sample_prob=None)
         if is_random:
-            analyzer_builder = analyzer_builder.with_sample_prob(sample_prob)
-        analyzer_msg = analyzer_builder.with_stats_uri(stats_uri) \
-                                       .build().to_proto()
-        if is_backcompat:
-            analyzer_msg.stats_analyzer_config.stats_uri = ''
-            analyzer_msg.stats_uri = stats_uri
-
-        analyzer_config = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
-                            .from_proto(analyzer_msg).build()
-        analyzer = analyzer_config.create_analyzer()
-        analyzer.process(scenes, self.temp_dir.name)
+            analyzer_cfg = StatsAnalyzerConfig(
+                output_uri=stats_uri, sample_prob=sample_prob)
+        analyzer = analyzer_cfg.build()
+        analyzer.process(scenes, self.tmp_dir.name)
 
         stats = RasterStats.load(stats_uri)
         np.testing.assert_array_almost_equal(stats.means, exp_means, decimal=3)
@@ -66,7 +60,7 @@ class TestStatsAnalyzer(unittest.TestCase):
                 width = rs.get_extent().get_width()
                 height = rs.get_extent().get_height()
                 exp_num_chips = round(
-                    ((width * height) / (chip_size**2)) * sample_prob)
+                    ((width * height) / (chip_sz**2)) * sample_prob)
                 self.assertEqual(rs.mock._get_chip.call_count, exp_num_chips)
 
     def test_random(self):
@@ -74,9 +68,6 @@ class TestStatsAnalyzer(unittest.TestCase):
 
     def test_sliding(self):
         self._test(is_random=False)
-
-    def test_sliding_backcompat(self):
-        self._test(is_random=False, is_backcompat=True)
 
 
 if __name__ == '__main__':
