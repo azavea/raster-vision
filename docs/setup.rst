@@ -14,16 +14,16 @@ The images we publish include plugins and dependencies for using Raster Vision w
 
 .. code-block:: console
 
-   > docker run --rm -it quay.io/azavea/raster-vision:pytorch-0.11 /bin/bash
+   > docker run --rm -it quay.io/azavea/raster-vision:pytorch-0.12 /bin/bash
 
-There are also images with the `-latest` suffix for the latest commits on the ``master`` branch. You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <https://github.com/azavea/raster-vision/blob/0.11/docker/run>`_ script for an example usage.
+There are also images with the `-latest` suffix for the latest commits on the ``master`` branch. You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <https://github.com/azavea/raster-vision/blob/0.12/docker/run>`_ script for an example usage.
 
 You can also base your own Dockerfiles off the Raster Vision image to use with your own codebase. See the Dockerfiles in the `Raster Vision Examples <https://github.com/azavea/raster-vision-examples>`_ repository for an example.
 
 Docker Scripts
 ~~~~~~~~~~~~~~
 
-There are several scripts under `docker/ <https://github.com/azavea/raster-vision/tree/0.11/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code.
+There are several scripts under `docker/ <https://github.com/azavea/raster-vision/tree/0.12/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code.
 
 After cloning the repo, you can build the Docker image using:
 
@@ -81,16 +81,16 @@ Rather than running Raster Vision from inside a Docker container, you can direct
 
 .. code-block:: console
 
-   > pip install rastervision==0.11.0
+   > pip install rastervision==0.12.0
 
-.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision==0.11.0`` if you have more than one version of Python installed.
+.. note:: Raster Vision requires Python 3 or later. Use ``pip3 install rastervision==0.12.0`` if you have more than one version of Python installed.
 
-You will also need various dependencies that are not pip-installable. For an example of setting these up, see the various `Dockerfiles  <https://github.com/azavea/raster-vision/blob/0.11/>`_.
+You will also need various dependencies that are not pip-installable. For an example of setting these up, see the various `Dockerfiles  <https://github.com/azavea/raster-vision/blob/0.12/>`_.
 
 Troubleshooting macOS Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you encounter problems running ``pip install rastervision==0.11.0`` on macOS, you may have to manually install Cython and pyproj.
+If you encounter problems running ``pip install rastervision==0.12.0`` on macOS, you may have to manually install Cython and pyproj.
 
 To circumvent a problem installing pyproj with Python 3.7, you may also have to install that library using ``git+https``:
 
@@ -98,7 +98,7 @@ To circumvent a problem installing pyproj with Python 3.7, you may also have to 
 
   > pip install cython
   > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
-  > pip install rastervision==0.11.0
+  > pip install rastervision==0.12.0
 
 .. _rv2_raster vision config:
 
@@ -182,7 +182,7 @@ When running your Docker container, be sure to include the ``--runtime=nvidia`` 
 
 .. code-block:: console
 
-   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:pytorch-0.11 /bin/bash
+   > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:pytorch-0.12 /bin/bash
 
 Ensure your setup sees the GPUS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
