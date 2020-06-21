@@ -6,6 +6,9 @@ if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
+set -e
+set -x
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"

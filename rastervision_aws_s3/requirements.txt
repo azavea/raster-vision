@@ -1,0 +1,3 @@
+rastervision_pipeline==0.12.*
+boto3==1.7.*
+awscli==1.15.*

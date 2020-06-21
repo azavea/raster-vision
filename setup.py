@@ -8,10 +8,8 @@ import re
 from setuptools import (setup, find_namespace_packages)
 from imp import load_source
 
-__version__ = load_source('rastervision.pipeline.version',
-                          'rastervision/pipeline/version.py').__version__
-
 here = op.abspath(op.dirname(__file__))
+__version__ = '0.12'
 
 # get the dependencies and installs
 with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
@@ -23,9 +21,6 @@ if 'READTHEDOCS' in os.environ:
     all_reqs = list(filter(lambda r: r.split('==')[0] not in bad_reqs, all_reqs))
 
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
-dependency_links = [
-    x.strip().replace('git+', '') for x in all_reqs if 'git+' not in x
-]
 
 def replace_images(readme):
     """Replaces image links in the README with static links to
@@ -37,13 +32,9 @@ def replace_images(readme):
 
     return re.sub(r, rep, readme)
 
-# Dependencies for extras, which pertain to installing specific backends.
-with io.open(op.join(here, 'extras_requirements.json'), encoding='utf-8') as f:
-    extras_require = json.loads(f.read())
-
 # Uncomment this line if we are using a commit of mask-to-polygons
 # (as opposed to released version) to avoid error.
-del extras_require['feature-extraction']
+# del extras_require['feature-extraction']
 
 setup(
     name='rastervision',
@@ -64,11 +55,9 @@ setup(
     ],
     keywords=
     'raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
-    packages=find_namespace_packages(exclude=['integration_tests*', 'tests*']),
+    packages=[],
     include_package_data=True,
     install_requires=install_requires,
-    extras_require=extras_require,
-    dependency_links=dependency_links,
     entry_points='''
         [console_scripts]
         rastervision=rastervision.pipeline.cli:main

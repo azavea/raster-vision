@@ -4,6 +4,5 @@ set -e
 source .travis/env
 
 if [ "$IMAGE_TYPE" = "pytorch" ]; then
-    docker build --build-arg CUDA_VERSION="10.0" -t raster-vision-cuda-10.0 -f Dockerfile .;
-    docker build -t ${PYTORCH_IMAGE} -f Dockerfile-pytorch .;
+    docker build --build-arg CUDA_VERSION="10.0" -t raster-vision-pytorch -f Dockerfile .;
 fi

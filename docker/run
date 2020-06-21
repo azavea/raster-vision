@@ -101,7 +101,17 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     docker run ${RUNTIME} ${NAME} --rm -it \
         -v "${HOME}"/.rastervision:/root/.rastervision \
-        -v ${REPO_ROOT}:/opt/src \
+        -v ${REPO_ROOT}/scripts:/opt/src/scripts \
+        -v ${REPO_ROOT}/rastervision_pipeline/rastervision/pipeline:/opt/src/rastervision/pipeline \
+        -v ${REPO_ROOT}/rastervision_aws_s3/rastervision/aws_s3:/opt/src/rastervision/aws_s3 \
+        -v ${REPO_ROOT}/rastervision_aws_batch/rastervision/aws_batch:/opt/src/rastervision/aws_batch \
+        -v ${REPO_ROOT}/rastervision_core/rastervision/core:/opt/src/rastervision/core \
+        -v ${REPO_ROOT}/rastervision_pytorch_learner/rastervision/pytorch_learner:/opt/src/rastervision/pytorch_learner \
+        -v ${REPO_ROOT}/rastervision_pytorch_backend/rastervision/pytorch_backend:/opt/src/rastervision/pytorch_backend \
+        -v ${REPO_ROOT}/rastervision_examples/rastervision/examples:/opt/src/rastervision/examples \
+        -v ${REPO_ROOT}/tests:/opt/src/tests \
+        -v ${REPO_ROOT}/integration_tests:/opt/src/integration_tests \
+        -v ${REPO_ROOT}/docs:/opt/src/docs \
         -v ${RASTER_VISION_DATA_DIR}:/opt/data \
         ${TENSORBOARD} ${AWS} ${JUPYTER} ${DOCS} ${DEBUG} \
         ${IMAGE} "${CMD[@]}"

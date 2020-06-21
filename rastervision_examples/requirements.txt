@@ -1,0 +1,1 @@
+rastervision_pytorch_backend==0.12.*
