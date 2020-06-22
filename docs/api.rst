@@ -111,6 +111,8 @@ ObjectDetectionEvaluatorConfig
 
 .. autoclass:: rastervision.core.evaluation.ObjectDetectionEvaluatorConfig
 
+.. _api ChipClassificationConfig:
+
 ChipClassificationConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -125,6 +127,8 @@ SemanticSegmentationChipOptions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.rv_pipeline.SemanticSegmentationChipOptions
+
+.. _api SemanticSegmentationConfig:
 
 SemanticSegmentationConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,28 +150,40 @@ ObjectDetectionPredictOptions
 
 .. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionPredictOptions
 
+.. _api ObjectDetectionConfig:
+
 ObjectDetectionConfig
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.rv_pipeline.ObjectDetectionConfig
 
+.. _api rastervision.pytorch_backend:
+
 rastervision.pytorch_backend
 -------------------------------
+
+.. _api PyTorchChipClassificationConfig:
 
 PyTorchChipClassificationConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.pytorch_backend.PyTorchChipClassificationConfig
 
+.. _api PyTorchSemanticSegmentationConfig:
+
 PyTorchSemanticSegmentationConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.pytorch_backend.PyTorchSemanticSegmentationConfig
 
+.. _api PyTorchObjectDetectionConfig:
+
 PyTorchObjectDetectionConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.pytorch_backend.PyTorchObjectDetectionConfig
+
+.. _api rastervision.pytorch_learner:
 
 rastervision.pytorch_learner
 -------------------------------

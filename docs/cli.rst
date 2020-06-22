@@ -66,12 +66,14 @@ Run is the main interface into running pipelines.
 
 Some specific parameters to call out:
 
+.. _split cli option:
+
 -\\-splits
 ~~~~~~~~~~
 
 Use ``-s N`` or ``--splits N``, where ``N`` is the number of splits to create, to parallelize commands that can be split into parallelizable chunks. See :ref:`parallelizing commands` for more information.
 
-.. _predict cli command:
+.. _run_command cli command:
 
 run_command
 ^^^^^^^^^^^
@@ -94,6 +96,8 @@ commands remotely from serialzed ``PipelineConfig`` JSON.
                             commands
     --runner TEXT         Name of runner to use
     --help                Show this message and exit.
+
+.. _predict cli command:
 
 predict
 ^^^^^^^

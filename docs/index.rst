@@ -146,11 +146,14 @@ usage patterns.
    quickstart
    setup
    cli
-   architecture
+   pipelines
    api
    bootstrap
    examples
    batch
+   architecture
+   runners
+   misc
 
 CHANGELOG
 ---------
