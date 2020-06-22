@@ -186,8 +186,7 @@ For example, to use a Resnet50-DeepLab model that has been trained to do buildin
 .. code-block:: console
 
    > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/predict_package.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif prediction.tif
-This will perform a prediction on the image ``1929.tif`` using the provided prediction package, and will produce a file called ``predictions.tif`` that contains the predictions.
-Notice that the prediction package and the input raster are transparently downloaded via HTTP.
+This will perform a prediction on the image ``1929.tif`` using the provided prediction package, and will produce a file called ``predictions.tif`` that contains the predictions. These files are GeoTiff and you will need a GIS image viewer to open them on your device. Notice that the prediction package and the input raster are transparently downloaded via HTTP.
 The input image (false color) and predictions are reproduced below.
 
 .. image:: img/vegas/1929.png
