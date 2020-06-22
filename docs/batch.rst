@@ -65,7 +65,7 @@ If you setup ECR repositories during the CloudFormation setup (the "advanced use
 Update Raster Vision configuration
 -----------------------------------
 
-Finally, make sure to update your :ref:`rv2_aws batch setup` with the Batch resources that were created.
+Finally, make sure to update your :ref:`aws batch setup` with the Batch resources that were created.
 
 Deploy new job definitions
 -----------------------------

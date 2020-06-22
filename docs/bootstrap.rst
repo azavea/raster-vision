@@ -1,4 +1,4 @@
-.. _rv2_bootstrap:
+.. _bootstrap:
 
 Bootstrap new projects with a template
 =======================================

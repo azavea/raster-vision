@@ -1,7 +1,7 @@
 Examples
 =========
 
-This contains `examples <https://github.com/azavea/raster-vision/tree/master/rastervision/examples>`_ of using Raster Vision on open datasets. Unless otherwise stated, all commands should be run inside the Raster Vision Docker container. See :ref:`rv2_docker images` for info on how to do this.
+This contains `examples <https://github.com/azavea/raster-vision/tree/master/rastervision/examples>`_ of using Raster Vision on open datasets. Unless otherwise stated, all commands should be run inside the Raster Vision Docker container. See :ref:`docker images` for info on how to do this.
 
 How to Run an Example
 ---------------------
@@ -99,7 +99,7 @@ To run the full experiment on GPUs using AWS Batch, use something like the follo
         -a raw_uri $RAW_URI -a processed_uri $PROCESSED_URI -a root_uri $ROOT_URI \
         -a test False --splits 8
 
-For instructions on setting up AWS Batch resources and configuring Raster Vision to use them, see :ref:`rv2_aws batch setup`. To monitor the training process using Tensorboard, visit ``<public dns>:6006`` for the EC2 instance running the training job.
+For instructions on setting up AWS Batch resources and configuring Raster Vision to use them, see :ref:`aws batch setup`. To monitor the training process using Tensorboard, visit ``<public dns>:6006`` for the EC2 instance running the training job.
 
 If you would like to run on a local GPU, replace ``batch`` with ``local``, and use local URIs. To monitor the training process using Tensorboard, visit ``localhost:6006``, assuming you used ``docker/run --tensorboard``.
 
@@ -143,14 +143,14 @@ After everything completes, which should take about 1.5 hours if you're running 
 Step 6: Predict on new imagery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After running an experiment, a **model bundle** is saved into ``$root_uri/bundle/``. This can be used to make predictions on new images. See the :ref:`rv2_model zoo` section for more details.
+After running an experiment, a **model bundle** is saved into ``$root_uri/bundle/``. This can be used to make predictions on new images. See the :ref:`model zoo` section for more details.
 
 Visualization using QGIS
 -------------------------
 
-To visualize a Raster Vision experiment, you can use `QGIS <https://qgis.org/en/site/>`_ to display the imagery, ground truth, and predictions associated with each scene. Although it's possible to just drag and drop files into QGIS, it's often more convenient to write a script to do this. Here is an example of a `script <https://github.com/azavea/raster-vision/tree/master/rastervision/examples/qgis/spacenet_viz.py>`_ to visualize the results for :ref:`rv2_spacenet vegas`.
+To visualize a Raster Vision experiment, you can use `QGIS <https://qgis.org/en/site/>`_ to display the imagery, ground truth, and predictions associated with each scene. Although it's possible to just drag and drop files into QGIS, it's often more convenient to write a script to do this. Here is an example of a `script <https://github.com/azavea/raster-vision/tree/master/rastervision/examples/qgis/spacenet_viz.py>`_ to visualize the results for :ref:`spacenet vegas`.
 
-.. _rv2_spacenet vegas:
+.. _spacenet vegas:
 
 Semantic Segmentation: SpaceNet Vegas
 --------------------------------------
@@ -243,7 +243,7 @@ Roads
         }
     ]
 
-.. _rv2_potsdam semantic segmentation:
+.. _potsdam semantic segmentation:
 
 Semantic Segmentation: ISPRS Potsdam
 -------------------------------------
@@ -459,7 +459,7 @@ This `experiment <https://github.com/azavea/raster-vision/tree/master/rastervisi
 
 Data:
 
-* The imagery can only be downloaded after filling in this `request form <http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html>`_. After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip ``4_Ortho_RGBIR.zip`` into a directory, and then upload to S3 if desired. (This step uses the same imagery as :ref:`rv2_potsdam semantic segmentation`.)
+* The imagery can only be downloaded after filling in this `request form <http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html>`_. After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip ``4_Ortho_RGBIR.zip`` into a directory, and then upload to S3 if desired. (This step uses the same imagery as :ref:`potsdam semantic segmentation`.)
 * Download the `processed labels <https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip>`_ and unzip. These files were generated from the `COWC car detection dataset <https://gdo152.llnl.gov/cowc/>`_ using `some scripts <https://github.com/azavea/raster-vision/tree/master/rastervision/examples/object_detection/cowc_potsdam_data_prep/>`_. TODO: Get these scripts into runnable shape.
 
 Arguments:
@@ -540,7 +540,7 @@ Below are sample predictions and eval metrics.
         }
     ]
 
-.. _rv2_model zoo:
+.. _model zoo:
 
 Model Zoo
 ----------
