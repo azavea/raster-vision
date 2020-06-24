@@ -1,9 +1,9 @@
-.. _rv2_setup:
+.. _setup:
 
 Setup
 =====
 
-.. _rv2_docker images:
+.. _docker images:
 
 Docker Images
 -----------------
@@ -70,7 +70,7 @@ This script also has options for forwarding AWS credentials, running Jupyter not
 
     All arguments after above options are passed to 'docker run'.
 
-.. _rv2_install raster vision:
+.. _install raster vision:
 
 Installing via pip
 ------------------------
@@ -100,7 +100,7 @@ To circumvent a problem installing pyproj with Python 3.7, you may also have to 
   > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
   > pip install rastervision==0.12.0
 
-.. _rv2_raster vision config:
+.. _raster vision config:
 
 Raster Vision Configuration
 ---------------------------
@@ -126,12 +126,12 @@ profile: if you had two profiles (the ``default`` and one named ``myprofile``), 
    > ls ~/.rastervision
    default    myprofile
 
-Use the ``rastervision --profile`` option in the :ref:`rv2_cli` to set the profile.
+Use the ``rastervision --profile`` option in the :ref:`cli` to set the profile.
 
 Configuration File Sections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _rv2_s3 config:
+.. _s3 config:
 
 AWS_S3
 ^^^^^^
@@ -148,7 +148,7 @@ Other
 
 Other configurations are documented elsewhere:
 
-* :ref:`rv2_aws batch config`
+* :ref:`aws batch config`
 
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
@@ -157,11 +157,11 @@ Any profile file option can also be stated in the environment. Just prepend the 
 
 In addition to those environment variables that match the INI file values, there are the following environment variable options:
 
-* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a Docker container setup that mounts large network storage into a specific directory inside the Docker container. The tmp_dir can also be set on :ref:`rv2_cli` as a root option.
+* ``TMPDIR`` - Setting this environment variable will cause all temporary directories to be created inside this folder. This is useful, for example, when you have a Docker container setup that mounts large network storage into a specific directory inside the Docker container. The tmp_dir can also be set on :ref:`cli` as a root option.
 * ``RV_CONFIG`` - Optional path to the specific Raster Vision Configuration file. These configurations will override  configurations that exist in configurations files in the default locations, but will not cause those configurations to be ignored.
 * ``RV_CONFIG_DIR`` - Optional path to the directory that contains Raster Vision configuration. Defaults to ``${HOME}/.rastervision``
 
-.. _rv2_running on gpu:
+.. _running on gpu:
 
 Running on a machine with GPUs
 ------------------------------
@@ -210,19 +210,19 @@ If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-i
 
     > watch -d -n 0.5 nvidia-smi
 
-.. _rv2_aws batch setup:
+.. _aws batch setup:
 
 Setting up AWS Batch
 --------------------
 
 To run Raster Vision using AWS Batch, you'll need to setup your AWS account with a specific set of Batch resources, which you can do using the CloudFormation template in the `Raster Vision AWS Batch repository <https://github.com/azavea/raster-vision-aws>`_.
 
-.. _rv2_aws batch config:
+.. _aws batch config:
 
 AWS Batch Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After creating the resources on AWS, set the following configuration in your :ref:`rv2_raster vision config`.
+After creating the resources on AWS, set the following configuration in your :ref:`raster vision config`.
 Check the AWS Batch console to see the names of the resources that were created, as they vary depending on how CloudFormation was configured.
 
 .. code:: ini
@@ -241,4 +241,4 @@ Check the AWS Batch console to see the names of the resources that were created,
 * ``attempts`` - Optional number of attempts to retry failed jobs. It is good to set this to > 1 since Batch often kills jobs for no apparent reason.
 
 .. seealso::
-   For more information about how Raster Vision uses AWS Batch, see the section: :ref:`rv2_aws batch`.
+   For more information about how Raster Vision uses AWS Batch, see the section: :ref:`aws batch`.

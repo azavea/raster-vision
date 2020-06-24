@@ -1,4 +1,4 @@
-.. _rv2_cli:
+.. _cli:
 
 Command Line Interface
 =======================
@@ -6,7 +6,7 @@ Command Line Interface
 .. currentmodule:: rastervision
 
 The Raster Vision command line utility, ``rastervision``, is installed with a ``pip install`` of
-``rastervision``, which is installed by default in the :ref:`rv2_docker images`.
+``rastervision``, which is installed by default in the :ref:`docker images`.
 It has a main command, with some top level options, and several subcommands.
 
 .. code-block:: terminal
@@ -33,7 +33,7 @@ It has a main command, with some top level options, and several subcommands.
 Subcommands
 ------------
 
-.. _rv2_run cli command:
+.. _run cli command:
 
 run
 ^^^
@@ -66,18 +66,20 @@ Run is the main interface into running pipelines.
 
 Some specific parameters to call out:
 
+.. _split cli option:
+
 -\\-splits
 ~~~~~~~~~~
 
-Use ``-s N`` or ``--splits N``, where ``N`` is the number of splits to create, to parallelize commands that can be split into parallelizable chunks. See :ref:`rv2_parallelizing commands` for more information.
+Use ``-s N`` or ``--splits N``, where ``N`` is the number of splits to create, to parallelize commands that can be split into parallelizable chunks. See :ref:`parallelizing commands` for more information.
 
-.. _rv2_predict cli command:
+.. _run_command cli command:
 
 run_command
 ^^^^^^^^^^^
 
 The ``run_command`` is used to run a specific command from a serialized pipeline configuration.
-This is likely only useful to people writing :ref:`rv2_pipeline runner` that want to run
+This is likely only useful to people writing :ref:`pipeline runner` that want to run
 commands remotely from serialzed ``PipelineConfig`` JSON.
 
 .. code-block:: terminal
@@ -95,10 +97,12 @@ commands remotely from serialzed ``PipelineConfig`` JSON.
     --runner TEXT         Name of runner to use
     --help                Show this message and exit.
 
+.. _predict cli command:
+
 predict
 ^^^^^^^
 
-Use ``predict`` to make predictions on new imagery given a :ref:`rv2_model bundle`.
+Use ``predict`` to make predictions on new imagery given a :ref:`model bundle`.
 
 .. code-block:: terminal
 

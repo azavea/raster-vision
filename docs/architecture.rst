@@ -1,9 +1,9 @@
-.. _rv2_architecture:
+.. _architecture:
 
 Raster Vision Architecture
 ===========================
 
-.. _rv2_codebase overview:
+.. _codebase overview:
 
 Codebase overview
 -------------------
@@ -11,7 +11,7 @@ Codebase overview
 .. image:: img/rv-packages.png
   :alt: The dependencies between Python packages in Raster Vision
 
-.. _rv2_pipeline package:
+.. _pipeline package:
 
 The pipeline package
 ----------------------
@@ -20,7 +20,7 @@ The most central package in Raster Vision is ``rastervision.pipeline``. It conta
 
 In this section, we explain the most important aspects of this package through a series of examples which incrementally build on one another. The inline comments should be read as an integral part of the documentatation. The code has been lightly edited for brevity, but the full runnable code can be found in ``rastervision.examples``.
 
-.. _rv2_example 1:
+.. _example 1:
 
 Example 1: a simple pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,12 +126,12 @@ This uses the ``inprocess`` runner, which executes all the commands in a single 
 
 The ``-s 2`` option says to use two splits for splittable commands, and the ``-a root_uri /opt/data/sample-pipeline`` option says to pass the ``root_uri`` argument to the ``get_config`` function.
 
-.. _rv2_example 2:
+.. _example 2:
 
 Example 2: hierarchical config
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This example makes some small changes to the previous example, and shows how configurations can be built up hierarchically. However, the main purpose here is to lay the foundation for :ref:`rv2_example 3` which shows how to customize the configuration schema and behavior of this pipeline using a plugin. The changes to the previous example are highlighted with comments, but the overall effect  is to delegate making messages to a ``MessageMaker`` class with its own ``MessageMakerConfig`` including a ``greeting`` field.
+This example makes some small changes to the previous example, and shows how configurations can be built up hierarchically. However, the main purpose here is to lay the foundation for :ref:`example 3` which shows how to customize the configuration schema and behavior of this pipeline using a plugin. The changes to the previous example are highlighted with comments, but the overall effect  is to delegate making messages to a ``MessageMaker`` class with its own ``MessageMakerConfig`` including a ``greeting`` field.
 
 .. code-block:: python
 
@@ -217,15 +217,15 @@ The pipeline can then be run with the above configuration using:
     hola bob!
     hola susan!
 
-.. _rv2_example 3:
+.. _example 3:
 
 Example 3: customizing a pipeline using a plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This example shows how to customize the behavior of an existing pipeline, namely the ``SamplePipeline2`` developed in :ref:`rv2_example 2`. That pipeline delegates printing messages to a ``MessageMaker`` class which is configured by ``MessageMakerConfig``. Our goal here is to make it possible to control the number of exclamation points at the end of the message. This involves modifying both the behavior in ``MessageMaker`` as well as the configuration schema in ``MesageMakerConfig``.
+This example shows how to customize the behavior of an existing pipeline, namely the ``SamplePipeline2`` developed in :ref:`example 2`. That pipeline delegates printing messages to a ``MessageMaker`` class which is configured by ``MessageMakerConfig``. Our goal here is to make it possible to control the number of exclamation points at the end of the message. This involves modifying both the behavior in ``MessageMaker`` as well as the configuration schema in ``MesageMakerConfig``.
 
 
-We can implement this as a plugin, which contributes subclasses ``DeluxeMessageMaker`` and ``DeluxeMessageMakerConfig``. By using a plugin, we can add new behavior without modifying any of the original source code from :ref:`rv2_example 2`. In order for Raster Vision to discover a plugin, the code must be in a package under the ``rastervision`` `namespace package <https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages>`_. In this case, the package is ``rastervision.deluxe_message_maker``. The other thing needed to define a plugin is for the top-level ``__init__.py`` file to have a particular structure which can be seen below.
+We can implement this as a plugin, which contributes subclasses ``DeluxeMessageMaker`` and ``DeluxeMessageMakerConfig``. By using a plugin, we can add new behavior without modifying any of the original source code from :ref:`example 2`. In order for Raster Vision to discover a plugin, the code must be in a package under the ``rastervision`` `namespace package <https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages>`_. In this case, the package is ``rastervision.deluxe_message_maker``. The other thing needed to define a plugin is for the top-level ``__init__.py`` file to have a particular structure which can be seen below.
 
 .. code-block:: python
 
@@ -315,7 +315,7 @@ The output in ``/opt/data/sample-pipeline`` contains a ``pipeline-config.json`` 
 
 We now have a plugin that customizes an existing pipeline! Being a toy example, this may all seem like overkill. Hopefully, the real power of the ``pipeline`` package will become more apparent in subsequent sections, where we discuss the plugins that contribute the "domain logic" of Raster Vision, and how this functionality can be customized in various ways.
 
-.. _rv2_customizing rv:
+.. _customizing rv:
 
 Customizing Raster Vision
 ----------------------------
