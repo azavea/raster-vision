@@ -61,7 +61,7 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
         merge_thresh=0.5, score_thresh=0.9)
 
     backend = PyTorchObjectDetectionConfig(
-        model=ObjectDetectionModelConfig(backbone=Backbone.resnet50),
+        model=ObjectDetectionModelConfig(backbone=Backbone.resnet18),
         solver=SolverConfig(
             lr=1e-4,
             num_epochs=10,
