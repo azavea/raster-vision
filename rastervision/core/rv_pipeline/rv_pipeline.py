@@ -191,9 +191,8 @@ class RVPipeline(Pipeline):
         batch_chips, batch_windows = [], []
         for window in windows:
             chip = raster_source.get_chip(window)
-            if np.any(chip):
-                batch_chips.append(chip)
-                batch_windows.append(window)
+            batch_chips.append(chip)
+            batch_windows.append(window)
 
             # Predict on batch
             if len(batch_chips) >= self.config.predict_batch_sz:
