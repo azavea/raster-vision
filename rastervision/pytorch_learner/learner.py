@@ -407,7 +407,7 @@ class Learner(ABC):
             total_steps = cfg.solver.num_epochs * self.steps_per_epoch
             step_size_up = (cfg.solver.num_epochs // 2) * self.steps_per_epoch
             step_size_down = total_steps - step_size_up
-            step_scheduler = CyclicLR(
+            scheduler = CyclicLR(
                 self.opt,
                 base_lr=cfg.solver.lr / 10,
                 max_lr=cfg.solver.lr,
@@ -415,7 +415,7 @@ class Learner(ABC):
                 step_size_down=step_size_down,
                 cycle_momentum=False)
             for _ in range(self.start_epoch * self.steps_per_epoch):
-                step_scheduler.step()
+                scheduler.step()
         return scheduler
 
     def build_epoch_scheduler(self) -> _LRScheduler:
