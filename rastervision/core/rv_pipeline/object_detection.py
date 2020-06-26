@@ -60,7 +60,8 @@ def make_pos_windows(image_extent, label_store, chip_size, window_method,
     elif window_method == ObjectDetectionWindowMethod.image:
         return [image_extent.make_copy()]
     else:
-        raise Exception('Window method: {} is cannot be handled.'.format(window_method))
+        raise Exception(
+            'Window method: {} is cannot be handled.'.format(window_method))
 
 
 def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
