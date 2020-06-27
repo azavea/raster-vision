@@ -59,6 +59,8 @@ COPY ./rastervision_pytorch_backend/requirements.txt /opt/src/requirements.txt
 COPY ./rastervision_examples/requirements.txt /opt/src/requirements.txt
 # Commented out because there are no dependencies after filtering out rastervision_* ones.
 # RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
+COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/requirements.txt
+RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
 
 # Install docs/requirements.txt
 COPY ./docs/requirements.txt /opt/src/docs/requirements.txt
@@ -85,6 +87,7 @@ ENV PYTHONPATH=/opt/src/rastervision_core/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pytorch_learner/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pytorch_backend/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_examples/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_gdal_vsi/:$PYTHONPATH
 
 COPY ./rastervision_pipeline/ /opt/src/rastervision_pipeline/
 COPY ./rastervision_aws_s3/ /opt/src/rastervision_aws_s3/
@@ -93,5 +96,6 @@ COPY ./rastervision_core/ /opt/src/rastervision_core/
 COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
 COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
 COPY ./rastervision_examples/ /opt/src/rastervision_examples/
+COPY ./rastervision_gdal_vsi/ /opt/src/rastervision_gdal_vsi/
 
 CMD ["bash"]
