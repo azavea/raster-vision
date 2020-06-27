@@ -1,5 +1,6 @@
 # flake8: noqa
 
+import pprint
 import subprocess
 from os.path import join, basename, dirname
 
@@ -10,8 +11,10 @@ from rastervision.pipeline.file_system import (
 
 cfg = [
     {
-        'key': 'spacenet-rio-cc',
-        'module': 'rastervision.examples.chip_classification.spacenet_rio',
+        'key':
+        'spacenet-rio-cc',
+        'module':
+        'rastervision.examples.chip_classification.spacenet_rio',
         'local': {
             'raw_uri': '/opt/data/raw-data/spacenet-dataset',
             'processed_uri': '/opt/data/examples/spacenet/rio/processed-data',
@@ -25,10 +28,14 @@ cfg = [
             'root_uri':
             's3://raster-vision-lf-dev/examples/spacenet-rio-cc'
         },
+        'sample_img':
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/013022223130_sample.tif'
     },
     {
-        'key': 'isprs-potsdam-ss',
-        'module': 'rastervision.examples.semantic_segmentation.isprs_potsdam',
+        'key':
+        'isprs-potsdam-ss',
+        'module':
+        'rastervision.examples.semantic_segmentation.isprs_potsdam',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam/',
             'processed_uri': '/opt/data/examples/potsdam/processed-data',
@@ -42,10 +49,52 @@ cfg = [
             'root_uri':
             's3://raster-vision-lf-dev/examples/isprs-potsdam-ss'
         },
+        'sample_img':
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/3_12_sample.tif'
     },
     {
-        'key': 'cowc-potsdam-od',
-        'module': 'rastervision.examples.object_detection.cowc_potsdam',
+        'key':
+        'spacenet-vegas-buildings-ss',
+        'module':
+        'rastervision.examples.semantic_segmentation.spacenet_vegas',
+        'local': {
+            'raw_uri': 's3://spacenet-dataset/',
+            'root_uri': '/opt/data/examples/spacenet-vegas-buildings-ss'
+        },
+        'remote': {
+            'raw_uri':
+            's3://spacenet-dataset/',
+            'root_uri':
+            's3://raster-vision-lf-dev/examples/spacenet-vegas-buildings-ss'
+        },
+        'extra_args': [['target', 'buildings']],
+        'sample_img':
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif'
+    },
+    {
+        'key':
+        'spacenet-vegas-roads-ss',
+        'module':
+        'rastervision.examples.semantic_segmentation.spacenet_vegas',
+        'local': {
+            'raw_uri': 's3://spacenet-dataset/',
+            'root_uri': '/opt/data/examples/spacenet-vegas-roads-ss'
+        },
+        'remote': {
+            'raw_uri':
+            's3://spacenet-dataset/',
+            'root_uri':
+            's3://raster-vision-lf-dev/examples/spacenet-vegas-roads-ss'
+        },
+        'extra_args': [['target', 'roads']],
+        'sample_img':
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/524.tif'
+    },
+    {
+        'key':
+        'cowc-potsdam-od',
+        'module':
+        'rastervision.examples.object_detection.cowc_potsdam',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam',
             'processed_uri': '/opt/data/examples/cowc-potsdam/processed-data',
@@ -59,36 +108,8 @@ cfg = [
             'root_uri':
             's3://raster-vision-lf-dev/examples/cowc-potsdam-od'
         },
-    },
-    {
-        'key': 'spacenet-vegas-buildings-ss',
-        'module': 'rastervision.examples.semantic_segmentation.spacenet_vegas',
-        'local': {
-            'raw_uri': 's3://spacenet-dataset/',
-            'root_uri': '/opt/data/examples/spacenet-vegas-buildings-ss'
-        },
-        'remote': {
-            'raw_uri':
-            's3://spacenet-dataset/',
-            'root_uri':
-            's3://raster-vision-lf-dev/examples/spacenet-vegas-buildings-ss'
-        },
-        'extra_args': [['target', 'buildings']],
-    },
-    {
-        'key': 'spacenet-vegas-roads-ss',
-        'module': 'rastervision.examples.semantic_segmentation.spacenet_vegas',
-        'local': {
-            'raw_uri': 's3://spacenet-dataset/',
-            'root_uri': '/opt/data/examples/spacenet-vegas-roads-ss'
-        },
-        'remote': {
-            'raw_uri':
-            's3://spacenet-dataset/',
-            'root_uri':
-            's3://raster-vision-lf-dev/examples/spacenet-vegas-roads-ss'
-        },
-        'extra_args': [['target', 'roads']],
+        'sample_img':
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/cowc-od/3_10_sample.tif'
     },
     {
         'key': 'xview-od',
@@ -105,13 +126,19 @@ cfg = [
             's3://raster-vision-lf-dev/examples/xview/processed-data',
             'root_uri':
             's3://raster-vision-lf-dev/examples/xview-od'
-        },
+        }
     },
 ]
 
 
-def run_experiment(exp_cfg, output_dir, test=True, remote=False,
-                   commands=None):
+def validate_keys(keys):
+    exp_keys = [exp_cfg['key'] for exp_cfg in cfg]
+    invalid_keys = set(keys).difference(exp_keys)
+    if invalid_keys:
+        raise ValueError('{} are invalid keys'.format(', '.join(invalid_keys)))
+
+
+def _run(exp_cfg, output_dir, test=True, remote=False, commands=None):
     uris = exp_cfg['remote'] if remote else exp_cfg['local']
     cmd = ['rastervision']
     rv_profile = exp_cfg.get('rv_profile')
@@ -142,47 +169,6 @@ def run_experiment(exp_cfg, output_dir, test=True, remote=False,
         exit()
 
 
-def collect_experiment(key, root_uri, output_dir, get_pred_package=False):
-    print('\nCollecting experiment {}...\n'.format(key))
-
-    if root_uri.startswith('s3://'):
-        predict_package_uris = list_paths(
-            join(root_uri, key, 'bundle'), ext='predict_package.zip')
-        eval_json_uris = list_paths(
-            join(root_uri, key, 'eval'), ext='eval.json')
-    else:
-        predict_package_uris = glob.glob(
-            join(root_uri, key, 'bundle', '*', 'predict_package.zip'))
-        eval_json_uris = glob.glob(
-            join(root_uri, key, 'eval', '*', 'eval.json'))
-
-    if len(predict_package_uris) > 1 or len(eval_json_uris) > 1:
-        print('Cannot collect from key with multiple experiments!!!')
-        return
-
-    if len(predict_package_uris) == 0 or len(eval_json_uris) == 0:
-        print('Missing output!!!')
-        return
-
-    predict_package_uri = predict_package_uris[0]
-    eval_json_uri = eval_json_uris[0]
-    make_dir(join(output_dir, key))
-    if get_pred_package:
-        download_or_copy(predict_package_uri, join(output_dir, key))
-
-    download_or_copy(eval_json_uri, join(output_dir, key))
-
-    eval_json = file_to_json(join(output_dir, key, 'eval.json'))
-    pprint.pprint(eval_json['overall'], indent=4)
-
-
-def validate_keys(keys):
-    exp_keys = [exp_cfg['key'] for exp_cfg in cfg]
-    invalid_keys = set(keys).difference(exp_keys)
-    if invalid_keys:
-        raise ValueError('{} are invalid keys'.format(', '.join(invalid_keys)))
-
-
 @click.group()
 def test():
     pass
@@ -202,7 +188,7 @@ def run(output_dir, keys, test, remote, commands):
         commands = commands.split(' ')
     for exp_cfg in cfg:
         if run_all or exp_cfg['key'] in keys:
-            run_experiment(
+            _run(
                 exp_cfg,
                 output_dir,
                 test=test,
@@ -210,30 +196,77 @@ def run(output_dir, keys, test, remote, commands):
                 commands=commands)
 
 
+def _collect(key, root_uri, output_dir, collect_dir, get_model_bundle=False):
+    print('\nCollecting experiment {}...\n'.format(key))
+
+    model_bundle_uri = join(root_uri, output_dir, 'bundle', 'model-bundle.zip')
+    eval_uri = join(root_uri, output_dir, 'eval', 'eval.json')
+
+    if not file_exists(eval_uri):
+        print('Missing eval!')
+        return
+
+    if not file_exists(model_bundle_uri):
+        print('Missing model bundle!')
+        return
+
+    make_dir(join(collect_dir, key))
+    if get_model_bundle:
+        download_or_copy(model_bundle_uri, join(collect_dir, key))
+
+    download_or_copy(eval_uri, join(collect_dir, key))
+
+    eval_json = file_to_json(join(collect_dir, key, 'eval.json'))
+    pprint.pprint(eval_json['overall'], indent=4)
+
+
 @test.command()
-@click.argument('root_uri')
 @click.argument('output_dir')
+@click.argument('collect_dir')
 @click.argument('keys', nargs=-1)
-@click.option('--get-pred-package', is_flag=True)
-def collect(root_uri, output_dir, keys, get_pred_package):
+@click.option('--remote', is_flag=True)
+@click.option('--get-model-bundle', is_flag=True)
+def collect(output_dir, collect_dir, keys, remote, get_model_bundle):
     run_all = len(keys) == 0
     validate_keys(keys)
 
     for exp_cfg in cfg:
-        key = exp_cfg['key']
-        if run_all or key in keys:
-            collect_experiment(key, root_uri, output_dir, get_pred_package)
+        if run_all or exp_cfg['key'] in keys:
+            key = exp_cfg['key']
+            uris = exp_cfg['remote'] if remote else exp_cfg['local']
+            root_uri = uris['root_uri']
+            _collect(key, root_uri, output_dir, collect_dir, get_model_bundle)
+
+
+def _predict(key, sample_img, collect_dir):
+    print('\Testing model bundle for {}...\n'.format(key))
+
+    model_bundle_uri = join(collect_dir, key, 'model-bundle.zip')
+    if not file_exists(model_bundle_uri):
+        print('Bundle does not exist!')
+        return
+
+    sample_img = download_or_copy(sample_img, join(collect_dir, key))
+    out_uri = join(collect_dir, key, 'output')
+    cmd = ['rastervision', 'predict', model_bundle_uri, sample_img, out_uri]
+    proc = subprocess.run(cmd)
+    if proc.returncode != 0:
+        print('failure!')
+        print(' '.join(cmd))
+        exit()
 
 
 @test.command()
-@click.argument('root_uri')
-def collect_eval_dir(root_uri):
-    eval_json_uris = list_paths(join(root_uri, 'eval'), ext='eval.json')
-    for eval_json_uri in eval_json_uris:
-        eval_json = file_to_json(eval_json_uri)
-        print(basename(dirname(eval_json_uri)))
-        print(eval_json['overall'][-1]['f1'])
-        print()
+@click.argument('collect_dir')
+@click.argument('keys', nargs=-1)
+def predict(collect_dir, keys):
+    run_all = len(keys) == 0
+    validate_keys(keys)
+
+    for exp_cfg in cfg:
+        if run_all or exp_cfg['key'] in keys:
+            key = exp_cfg['key']
+            _predict(key, exp_cfg['sample_img'], collect_dir)
 
 
 if __name__ == '__main__':
