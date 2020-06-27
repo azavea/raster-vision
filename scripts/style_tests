@@ -6,9 +6,6 @@ if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
-set -e
-set -x
-
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -32,7 +29,7 @@ else
     # Exit code of 1 if yapf has a non-empty diff
     # (ie. scripts/format_code needs to be run)
     echo "Checking that code is consistent with yapf..."
-    if !(yapf -dpr -e "*cookiecutter_template*" -e "*tfod_utils*" "$SRC_DIR/rastervision" > /dev/null &&
+    if !(yapf -dpr -e "*cookiecutter_template*" -e "*tfod_utils*" -e "**/conf.py" -e "**/setup.py" "$SRC_DIR" > /dev/null &&
              yapf -dpr "$SRC_DIR/tests" > /dev/null &&
              yapf -dpr "$SRC_DIR/integration_tests" > /dev/null); then
         echo "Code has not been formatted by yapf. Need to run ./scripts/format_code."
