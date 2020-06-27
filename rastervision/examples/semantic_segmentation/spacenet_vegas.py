@@ -164,16 +164,13 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    chip_sz = 300
+    train_chip_sz = 325
+    predict_chip_sz = 650
     chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.random_sample,
-        stride=chip_sz,
-        chips_per_scene=9,
-        negative_survival_prob=0.5,
-        target_class_ids=[0],
-        target_count_threshold=1000)
+        window_method=SemanticSegmentationWindowMethod.sliding,
+        stride=train_chip_sz)
+    num_epochs = 5
 
-    num_epochs = 2 if target == BUILDINGS else 8
     backend = PyTorchSemanticSegmentationConfig(
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(
@@ -190,6 +187,6 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
-        train_chip_sz=chip_sz,
-        predict_chip_sz=chip_sz,
+        train_chip_sz=train_chip_sz,
+        predict_chip_sz=predict_chip_sz,
         chip_options=chip_options)

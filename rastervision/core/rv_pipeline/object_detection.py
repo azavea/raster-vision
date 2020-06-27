@@ -53,12 +53,15 @@ def _make_label_pos_windows(image_extent, label_store, label_buffer):
 
 def make_pos_windows(image_extent, label_store, chip_size, window_method,
                      label_buffer):
-    if window_method == 'label':
+    if window_method == ObjectDetectionWindowMethod.chip:
+        return _make_chip_pos_windows(image_extent, label_store, chip_size)
+    if window_method == ObjectDetectionWindowMethod.label:
         return _make_label_pos_windows(image_extent, label_store, label_buffer)
-    elif window_method == 'image':
+    elif window_method == ObjectDetectionWindowMethod.image:
         return [image_extent.make_copy()]
     else:
-        return _make_chip_pos_windows(image_extent, label_store, chip_size)
+        raise Exception(
+            'Window method: {} is cannot be handled.'.format(window_method))
 
 
 def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
@@ -94,7 +97,7 @@ def get_train_windows(scene, chip_opts, chip_size):
         return windows
 
     window_method = chip_opts.window_method
-    if window_method == ObjectDetectionWindowMethod.chip:
+    if window_method == ObjectDetectionWindowMethod.sliding:
         stride = chip_size
         return list(
             filter_windows((raster_source.get_extent().get_windows(

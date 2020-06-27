@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 from rastervision.pipeline.config import register_config, Config, Field
 from rastervision.core.rv_pipeline import RVPipelineConfig
@@ -13,6 +14,9 @@ class ObjectDetectionWindowMethod(Enum):
         chip: the default method
     """
     chip = 'chip'
+    label = 'label'
+    image = 'image'
+    sliding = 'sliding'
 
 
 @register_config('object_detection_chip_options')
@@ -34,6 +38,7 @@ class ObjectDetectionChipOptions(Config):
          '(intersection over area) of the box with the chip is greater than ioa_thresh, '
          'it is included in the chip.'))
     window_method: ObjectDetectionWindowMethod = ObjectDetectionWindowMethod.chip
+    label_buffer: Optional[int] = None
 
 
 @register_config('object_detection_predict_options')
