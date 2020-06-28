@@ -8,6 +8,20 @@ Raster Vision Architecture
 Codebase overview
 -------------------
 
+The Raster Vision codebase is designed with modularity and flexibility in mind.
+There is a main, required package, ``rastervision.pipeline``, which contains functionality for defining and configuring computational pipelines, running them in different environments using parallelism and GPUs, reading and writing to different file systems, and adding and customizing pipelines via a plugin mechanism. In contrast, the functionality for geospatial data processing, using AWS S3 and Batch, and deep learning using PyTorch is contained in a set of optional packages that contain plugins to the ``rastervision.pipeline`` package. All plugin packages must be under the ``rastervision`` `native namespace package <https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages>`_.
+
+Each of these packages is contained in a separate ``pip`` package with its own dependencies, including dependencies on other Raster Vision packages. This means that it's possible to install and use subsets of the functionality in Raster Vision. A short summary of the packages is as follows:
+
+* ``rastervision.pipeline``: define and run pipelines
+* ``rastervision.aws_s3``: read and write files on S3
+* ``rastervision.aws_batch``: run pipelines on Batch
+* ``rastervision.core``: chip classification, object detection, and semantic segmentation pipelines that work on geospatial data along with abstractions for running with different :ref:`backends <backend>` and data formats
+* ``rastervision.pytorch_learner``: model building and training code using ``torch`` and ``torchvision``, which can be used independently of ``rastervision.core``.
+* ``rastervision.pytorch_backend``: adds backends for the pipelines in ``rastervision.core`` using ``rastervision.pytorch_learner`` to do the heavy lifting
+
+The figure below shows the packages, the dependencies between them, and important base classes within each package.
+
 .. image:: img/rv-packages.png
   :alt: The dependencies between Python packages in Raster Vision
 
@@ -16,9 +30,9 @@ Codebase overview
 The pipeline package
 ----------------------
 
-The most central package in Raster Vision is ``rastervision.pipeline``. It contains functionality for defining and configuring computational pipelines, running them in different environments using parallelism and GPUs, reading and writing to different file systems, and adding and customizing pipelines via a plugin mechanism. The rest of Raster Vision is written as a set of optional plugins. This means that it's possible to use the ``rastervision.pipeline`` package independent of the rest of RV.
+In this section, we explain the most important aspects of the ``rastervision.pipeline`` package through a series of examples which incrementally build on one another. The inline comments should be read as an integral part of the documentatation. The code has been lightly edited for brevity, but the full runnable code can be found in ``rastervision.examples``.
 
-In this section, we explain the most important aspects of this package through a series of examples which incrementally build on one another. The inline comments should be read as an integral part of the documentatation. The code has been lightly edited for brevity, but the full runnable code can be found in ``rastervision.examples``.
+
 
 .. _example 1:
 
@@ -313,7 +327,7 @@ The output in ``/opt/data/sample-pipeline`` contains a ``pipeline-config.json`` 
     }
 
 
-We now have a plugin that customizes an existing pipeline! Being a toy example, this may all seem like overkill. Hopefully, the real power of the ``pipeline`` package will become more apparent in subsequent sections, where we discuss the plugins that contribute the "domain logic" of Raster Vision, and how this functionality can be customized in various ways.
+We now have a plugin that customizes an existing pipeline! Being a toy example, this may all seem like overkill. Hopefully, the real power of the ``pipeline`` package becomes more apparent when considering the standard set of plugins distributed with Raster Vision, and how this functionality can be customized with user-created plugins.
 
 .. _customizing rv:
 
