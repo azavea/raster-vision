@@ -141,6 +141,9 @@ class ObjectDetection(RVPipeline):
             clip=True)
 
     def get_predict_windows(self, extent):
+        # Use strided windowing to ensure that each object is fully visible (ie. not
+        # cut off) within some window. This means prediction takes 4x longer for object
+        # detection :(
         chip_sz = self.config.train_chip_sz
         stride = chip_sz // 2
         return extent.get_windows(chip_sz, stride)
