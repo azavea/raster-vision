@@ -186,7 +186,7 @@ class RVPipeline(Pipeline):
                                                    batch_labels)
             labels += batch_labels
 
-            print('.' * len(chips), end='')
+            print('.' * len(chips), end='', flush=True)
 
         batch_chips, batch_windows = [], []
         for window in windows:
