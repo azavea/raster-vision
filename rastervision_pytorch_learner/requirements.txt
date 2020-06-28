@@ -1,0 +1,10 @@
+rastervision_pipeline==0.12.*
+numpy<1.17
+pillow==5.0.*
+torch==1.2.0
+torchvision==0.4.0
+tensorboard==1.15.*
+albumentations==0.4.*
+cython==0.28.*
+pycocotools==2.0.*
+future==0.18.*

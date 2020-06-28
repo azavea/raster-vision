@@ -4,7 +4,7 @@ source .travis/env
 
 if [ "$IMAGE_TYPE" = "pytorch" ]; then
     docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} rm -f $(pwd)/.coverage $(pwd)/coverage.xml
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/style_tests
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/unit_tests
-    docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} $(pwd)/scripts/integration_tests
+    docker run --rm -it ${PYTORCH_IMAGE} /opt/src/scripts/style_tests
+    docker run --rm -it ${PYTORCH_IMAGE} /opt/src/scripts/unit_tests
+    docker run --rm -it ${PYTORCH_IMAGE} /opt/src/scripts/integration_tests
 fi

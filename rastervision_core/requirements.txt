@@ -1,0 +1,10 @@
+rastervision_pipeline==0.12.*
+numpy<1.17
+shapely==1.6.*
+pillow==5.0.*
+pyproj==1.9.6
+rasterio==1.0.7
+scikit-learn==0.19.*
+imageio==2.3.*
+pystac==0.3.1
+supermercado==0.0.*

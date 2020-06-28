@@ -27,12 +27,8 @@ else
           integration_tests/* \
           docs/conf.py \
           setup.py
-
-    # Avoid calling unify on protobuf generated files.
     find . -name '*.py' -print0 | xargs -0 $UNIFY
 
     echo "Running yapf..."
-    yapf -ipr "$SRC_DIR/rastervision" -e "**/cookiecutter_template/**" -e "*tfod_utils*"
-    yapf -ipr "$SRC_DIR/tests"
-    yapf -ipr "$SRC_DIR/integration_tests"
+    yapf -ipr "$SRC_DIR" -e "**/conf.py" -e "**/setup.py" -e "**/cookiecutter_template/**" -e "*tfod_utils*"
 fi

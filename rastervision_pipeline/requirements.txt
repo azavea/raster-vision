@@ -1,0 +1,5 @@
+click==6.*
+pydantic==1.2
+typing_extensions==3.7.4.1
+everett==0.9
+six==1.11.*
