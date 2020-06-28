@@ -79,6 +79,8 @@ class Predictor():
         self.pipeline.config.dataset.train_scenes = [self.scene]
         self.pipeline.config.dataset.validation_scenes = [self.scene]
         self.pipeline.config.dataset.test_scenes = None
+        self.pipeline.config.train_uri = bundle_dir
+
         if channel_order is not None:
             self.scene.raster_source.channel_order = channel_order
 
