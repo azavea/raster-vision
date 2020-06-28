@@ -141,19 +141,19 @@ This part of the documentation guides you through all of the library's
 usage patterns.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    quickstart
    setup
    cli
-   pipelines
-   api
-   bootstrap
-   examples
-   batch
    architecture
+   pipelines
+   examples
+   bootstrap
+   batch
    runners
    misc
+   api
 
 CHANGELOG
 ---------
