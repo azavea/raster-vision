@@ -29,7 +29,7 @@ cfg = [
             's3://raster-vision-lf-dev/examples/spacenet-rio-cc'
         },
         'sample_img':
-        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/013022223130_sample.tif'
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-rio-cc/013022223130_sample.tif'
     },
     {
         'key':
@@ -50,7 +50,7 @@ cfg = [
             's3://raster-vision-lf-dev/examples/isprs-potsdam-ss'
         },
         'sample_img':
-        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/3_12_sample.tif'
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/isprs-potsdam-ss/3_12_sample.tif'
     },
     {
         'key':
@@ -69,7 +69,7 @@ cfg = [
         },
         'extra_args': [['target', 'buildings']],
         'sample_img':
-        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif'
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-buildings-ss/1929.tif'
     },
     {
         'key':
@@ -88,7 +88,7 @@ cfg = [
         },
         'extra_args': [['target', 'roads']],
         'sample_img':
-        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/524.tif'
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-roads-ss/524.tif'
     },
     {
         'key':
@@ -109,11 +109,13 @@ cfg = [
             's3://raster-vision-lf-dev/examples/cowc-potsdam-od'
         },
         'sample_img':
-        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/cowc-od/3_10_sample.tif'
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/cowc-potsdam-od/3_10_sample.tif'
     },
     {
-        'key': 'xview-od',
-        'module': 'rastervision.examples.object_detection.xview',
+        'key':
+        'xview-od',
+        'module':
+        'rastervision.examples.object_detection.xview',
         'local': {
             'raw_uri': 's3://raster-vision-xview-example/raw-data',
             'processed_uri': '/opt/data/examples/xview/processed-data',
@@ -126,7 +128,9 @@ cfg = [
             's3://raster-vision-lf-dev/examples/xview/processed-data',
             'root_uri':
             's3://raster-vision-lf-dev/examples/xview-od'
-        }
+        },
+        'sample_img':
+        'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/xview-od/1124-sample.tif'
     },
 ]
 
@@ -158,7 +162,7 @@ def _run(exp_cfg, output_dir, test=True, remote=False, commands=None):
         for k, v in extra_args:
             cmd += ['-a', str(k), str(v)]
     if remote:
-        cmd += ['--splits', '4']
+        cmd += ['--splits', '3']
 
     print('running command:')
     print(' '.join(cmd))
@@ -239,7 +243,7 @@ def collect(output_dir, collect_dir, keys, remote, get_model_bundle):
 
 
 def _predict(key, sample_img, collect_dir):
-    print('\Testing model bundle for {}...\n'.format(key))
+    print('\nTesting model bundle for {}...\n'.format(key))
 
     model_bundle_uri = join(collect_dir, key, 'model-bundle.zip')
     if not file_exists(model_bundle_uri):
@@ -247,7 +251,13 @@ def _predict(key, sample_img, collect_dir):
         return
 
     sample_img = download_or_copy(sample_img, join(collect_dir, key))
-    out_uri = join(collect_dir, key, 'output')
+
+    exts = {'cc': 'json', 'ss': 'tif', 'od': 'json'}
+    for task, ext in exts.items():
+        if key.endswith(task):
+            break
+
+    out_uri = join(collect_dir, key, 'predictions.{}'.format(ext))
     cmd = ['rastervision', 'predict', model_bundle_uri, sample_img, out_uri]
     proc = subprocess.run(cmd)
     if proc.returncode != 0:
