@@ -35,7 +35,7 @@ Deploying Batch resources
 To deploy AWS Batch resources using AWS CloudFormation, start by logging into your AWS console. Then, follow the steps below:
 
 - Navigate to ``CloudFormation > Create Stack``
-- In the ``Choose a template field``, select ``Upload a template to Amazon S3`` and upload the template in `cloudformation/template.yml <https://github.com/azavea/raster-vision/tree/master/cloudformation/template.yml>`_.
+- In the ``Choose a template field``, select ``Upload a template to Amazon S3`` and upload the template in `cloudformation/template.yml <https://github.com/azavea/raster-vision/tree/master/cloudformation/template.yml>`_. **Warning:** Some versions of Chrome fail at this step without an explanation. As a workaround, try a different version of Chrome, or Firefox. See `this thread <https://forums.aws.amazon.com/thread.jspa?messageID=946331&tstart=0>`_ for more details.
 - ``Prefix``: If you are setting up multiple RV stacks within an AWS account, you need to set a prefix for namespacing resources. Otherwise, there will be name collisions with any resources that were created as part of another stack.
 - Specify the following required parameters:
     - ``Stack Name``: The name of your CloudFormation stack
