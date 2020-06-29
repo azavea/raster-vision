@@ -4,7 +4,7 @@
 
 |
 
-.. image:: _static/raster-vision-logo-index.png
+.. image:: img/raster-vision-logo-index.png
     :align: center
     :target: https://rastervision.io
 
@@ -14,7 +14,7 @@
 vision models on satellite, aerial, and other large imagery sets (including
 oblique drone imagery). There is built-in support for chip classification, object detection, and semantic segmentation using PyTorch and Tensorflow.
 
-.. image:: _static/cv-tasks.png
+.. image:: img/cv-tasks.png
     :align: center
 
 Raster Vision allows engineers to quickly and repeatably
@@ -23,7 +23,7 @@ workflow: analyzing training data, creating training chips, training models,
 creating predictions, evaluating models, and bundling the model files and
 configuration for easy deployment.
 
-.. image:: _static/overview-raster-vision-pipeline.png
+.. image:: img/rv-pipeline-overview.png
     :align: center
 
 The input to a Raster Vision pipeline is a set of images and training data,

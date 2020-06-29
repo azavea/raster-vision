@@ -3,7 +3,7 @@ Pipelines and Commands
 
 The ``rastervision.pipeline`` package provides a general-purpose ``Pipeline`` abstraction for defining multi-stage computational pipelines that can execute in different environments. The ``rastervision.core`` and ``rastervision.pytorch_backend`` packages provide several concrete ``Pipeline`` subclasses for doing deep learning on remote sensing imagery. These include ``ChipClassification``, ``SemanticSegmentation``, and ``ObjectDetection``, which are all subclasses of ``RVPipeline``.
 
-.. image:: _static/cv-tasks.png
+.. image:: img/cv-tasks.png
     :align: center
 
 It's possible to customize these pipelines as well as create new ones from scratch, which is discussed in :ref:`customizing rv`.
@@ -18,7 +18,7 @@ In contrast, the :ref:`pipeline runner`, which actually executes the commands in
 
 The following diagram shows the hierarchy of the high level components that comprise an ``RVPipelineConfig``:
 
-.. image:: _static/rv-pipeline-config.png
+.. image:: img/rvpipeline-diagram.png
     :align: center
 
 Chip Classification
@@ -59,7 +59,7 @@ In the ``tiny_spacenet.py`` example, the ``SemanticSegmentationConfig`` is the l
 Commands
 ^^^^^^^^^
 
-.. image:: _static/overview-raster-vision-pipeline.png
+.. image:: img/rv-pipeline-overview.png
     :align: center
 
 
@@ -159,7 +159,7 @@ In our ``tiny_spacenet.py`` example, we configured the dataset with single scene
 Scene
 -------
 
-.. image:: _static/pipeline-scene.png
+.. image:: img/scene-diagram.png
     :align: center
 
 A scene is composed of the following elements:
