@@ -9,7 +9,7 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
     all_reqs = f.read().split('\n')
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 
-name='rastervision_{{cookiecutter.project_name}}'
+name='rastervision629_{{cookiecutter.project_name}}'
 version='{{cookiecutter.version}}'
 description='{{cookiecutter.description}}'
 

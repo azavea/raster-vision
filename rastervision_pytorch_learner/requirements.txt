@@ -1,4 +1,4 @@
-rastervision_pipeline==0.12.*
+rastervision629_pipeline==0.12.*
 numpy<1.17
 pillow==5.0.*
 torch==1.2.0

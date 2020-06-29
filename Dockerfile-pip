@@ -53,26 +53,7 @@ ENV PROJ_LIB /opt/conda/share/proj/
 
 RUN pip install git+git://github.com/azavea/mask-to-polygons@f1d0b623c648ba7ccb1839f74201c2b57229b006
 
-COPY ./rastervision_pipeline/ /opt/src/rastervision_pipeline/
-RUN pip install rastervision_pipeline/
-
-COPY ./rastervision_aws_s3/ /opt/src/rastervision_aws_s3/
-RUN pip install rastervision_aws_s3/
-
-COPY ./rastervision_aws_batch/ /opt/src/rastervision_aws_batch/
-RUN pip install rastervision_aws_batch/
-
-COPY ./rastervision_core/ /opt/src/rastervision_core/
-RUN pip install rastervision_core/
-
-COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
-RUN pip install rastervision_pytorch_learner/
-
-COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
-RUN pip install rastervision_pytorch_backend/
-
-COPY ./rastervision_gdal_vsi/ /opt/src/rastervision_gdal_vsi/
-RUN pip install rastervision_gdal_vsi/
+RUN pip install rastervision629 --extra-index-url https://test.pypi.org/simple/
 
 COPY ./setup.py /opt/src/setup.py
 COPY ./requirements.txt /opt/src/requirements.txt

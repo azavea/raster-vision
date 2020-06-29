@@ -9,7 +9,7 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
     all_reqs = f.read().split('\n')
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 
-name='rastervision_aws_batch'
+name='rastervision629_aws_batch'
 version='0.12'
 description='A rastervision plugin that adds an AWS Batch pipeline runner'
 
