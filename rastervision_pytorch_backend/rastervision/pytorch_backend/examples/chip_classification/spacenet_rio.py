@@ -9,7 +9,7 @@ from rastervision.core.data import *
 from rastervision.core.analyzer import *
 from rastervision.pytorch_backend import *
 from rastervision.pytorch_learner import *
-from rastervision.examples.utils import get_scene_info, save_image_crop
+from rastervision.pytorch_backend.examples.utils import get_scene_info, save_image_crop
 
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 

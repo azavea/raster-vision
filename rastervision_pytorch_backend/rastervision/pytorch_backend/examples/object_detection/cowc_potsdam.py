@@ -9,28 +9,36 @@ from rastervision.core.data import *
 from rastervision.core.analyzer import *
 from rastervision.pytorch_backend import *
 from rastervision.pytorch_learner import *
-from rastervision.examples.utils import get_scene_info, save_image_crop
+from rastervision.pytorch_backend.examples.utils import get_scene_info, save_image_crop
 
 
 def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
-    train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
-    val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
-    if test:
-        train_scene_info = train_scene_info[0:1]
-        val_scene_info = val_scene_info[0:1]
+    train_ids = [
+        '2_10', '2_11', '2_12', '2_14', '3_11', '3_13', '4_10', '5_10', '6_7',
+        '6_9'
+    ]
+    val_ids = ['2_13', '6_8', '3_10']
 
-    def make_scene(scene_info):
-        (raster_uri, label_uri) = scene_info
-        raster_uri = join(raw_uri, raster_uri)
-        label_uri = join(processed_uri, label_uri)
+    if test:
+        train_ids = train_ids[0:1]
+        val_ids = val_ids[0:1]
+
+    def make_scene(id):
+        raster_uri = join(raw_uri,
+                          '4_Ortho_RGBIR/top_potsdam_{}_RGBIR.tif'.format(id))
+        label_uri = join(processed_uri, 'labels', 'all',
+                         'top_potsdam_{}_RGBIR.json'.format(id))
 
         if test:
             crop_uri = join(processed_uri, 'crops',
                             os.path.basename(raster_uri))
-            save_image_crop(raster_uri, crop_uri, size=600, min_features=5)
+            save_image_crop(
+                raster_uri,
+                crop_uri,
+                label_uri=label_uri,
+                size=1000,
+                min_features=5)
             raster_uri = crop_uri
-
-        id = os.path.splitext(os.path.basename(raster_uri))[0]
 
         raster_source = RasterioSourceConfig(
             uris=[raster_uri], channel_order=[0, 1, 2])
@@ -42,20 +50,18 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
         return SceneConfig(
             id=id, raster_source=raster_source, label_source=label_source)
 
-    train_scenes = [make_scene(info) for info in train_scene_info]
-    val_scenes = [make_scene(info) for info in val_scene_info]
-    class_config = ClassConfig(names=['vehicle'], colors=['red'])
+    class_config = ClassConfig(names=['vehicle'])
     chip_sz = 300
     dataset = DatasetConfig(
         class_config=class_config,
-        train_scenes=train_scenes,
-        validation_scenes=val_scenes)
-    chip_options = ObjectDetectionChipOptions(neg_ratio=1.0, ioa_thresh=0.8)
+        train_scenes=[make_scene(id) for id in train_ids],
+        validation_scenes=[make_scene(id) for id in val_ids])
+    chip_options = ObjectDetectionChipOptions(neg_ratio=5.0, ioa_thresh=0.9)
     predict_options = ObjectDetectionPredictOptions(
-        merge_thresh=0.1, score_thresh=0.5)
+        merge_thresh=0.5, score_thresh=0.9)
 
     backend = PyTorchObjectDetectionConfig(
-        model=ObjectDetectionModelConfig(backbone=Backbone.resnet50),
+        model=ObjectDetectionModelConfig(backbone=Backbone.resnet18),
         solver=SolverConfig(
             lr=1e-4,
             num_epochs=10,

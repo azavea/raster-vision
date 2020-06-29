@@ -14,7 +14,7 @@ cfg = [
         'key':
         'spacenet-rio-cc',
         'module':
-        'rastervision.examples.chip_classification.spacenet_rio',
+        'rastervision.pytorch_backend.examples.chip_classification.spacenet_rio',
         'local': {
             'raw_uri': '/opt/data/raw-data/spacenet-dataset',
             'processed_uri': '/opt/data/examples/spacenet/rio/processed-data',
@@ -35,7 +35,7 @@ cfg = [
         'key':
         'isprs-potsdam-ss',
         'module':
-        'rastervision.examples.semantic_segmentation.isprs_potsdam',
+        'rastervision.pytorch_backend.examples.semantic_segmentation.isprs_potsdam',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam/',
             'processed_uri': '/opt/data/examples/potsdam/processed-data',
@@ -56,7 +56,7 @@ cfg = [
         'key':
         'spacenet-vegas-buildings-ss',
         'module':
-        'rastervision.examples.semantic_segmentation.spacenet_vegas',
+        'rastervision.pytorch_backend.examples.semantic_segmentation.spacenet_vegas',
         'local': {
             'raw_uri': 's3://spacenet-dataset/',
             'root_uri': '/opt/data/examples/spacenet-vegas-buildings-ss'
@@ -75,7 +75,7 @@ cfg = [
         'key':
         'spacenet-vegas-roads-ss',
         'module':
-        'rastervision.examples.semantic_segmentation.spacenet_vegas',
+        'rastervision.pytorch_backend.examples.semantic_segmentation.spacenet_vegas',
         'local': {
             'raw_uri': 's3://spacenet-dataset/',
             'root_uri': '/opt/data/examples/spacenet-vegas-roads-ss'
@@ -94,7 +94,7 @@ cfg = [
         'key':
         'cowc-potsdam-od',
         'module':
-        'rastervision.examples.object_detection.cowc_potsdam',
+        'rastervision.pytorch_backend.examples.object_detection.cowc_potsdam',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam',
             'processed_uri': '/opt/data/examples/cowc-potsdam/processed-data',
@@ -115,7 +115,7 @@ cfg = [
         'key':
         'xview-od',
         'module':
-        'rastervision.examples.object_detection.xview',
+        'rastervision.pytorch_backend.examples.object_detection.xview',
         'local': {
             'raw_uri': 's3://raster-vision-xview-example/raw-data',
             'processed_uri': '/opt/data/examples/xview/processed-data',
