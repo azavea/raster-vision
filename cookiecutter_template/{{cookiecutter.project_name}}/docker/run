@@ -2,6 +2,10 @@
 
 set -e
 
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DOCKER_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -86,16 +90,14 @@ if [ -z "$RASTER_VISION_REPO" ]
 then
     RV_SRC_FLAGS=""
 else
-    RV_SRC_FLAGS="-v ${RASTER_VISION_REPO}/rastervision:/opt/src/rastervision -v ${RASTER_VISION_REPO}/rastervision:/opt/src/rastervision"
+    RV_SRC_FLAGS="-v ${RASTER_VISION_REPO}:/opt/src/"
 fi
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     docker run --shm-size 8G ${RUNTIME} ${NAME} --rm -it \
         -v "${HOME}"/.rastervision:/root/.rastervision \
-        -v ${REPO_ROOT}/rastervision:/opt/src/{{cookiecutter.project_name}}/rastervision \
-        -v ${REPO_ROOT}/scripts:/opt/src/{{cookiecutter.project_name}}/scripts \
-        -v ${REPO_ROOT}/configs:/opt/src/{{cookiecutter.project_name}}/configs \
+        -v ${REPO_ROOT}/rastervision_{{cookiecutter.project_name}}:/opt/src/rastervision_{{cookiecutter.project_name}} \
         -v ${DATA_DIR}:/opt/data \
         ${RV_SRC_FLAGS} \
         ${AWS} ${JUPYTER} ${DEBUG} ${TB} \

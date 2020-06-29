@@ -2,7 +2,7 @@ from rastervision.pipeline.pipeline_config import PipelineConfig
 from rastervision.pipeline.config import register_config
 
 
-@register_config('test_pipeline_config')
+@register_config('{{cookiecutter.project_name}}.test_pipeline_config')
 class TestPipelineConfig(PipelineConfig):
     message: str = 'hello'
 
