@@ -1,4 +1,4 @@
-from rastervision.examples.sample_pipeline.sample_pipeline import (
+from rastervision.pipeline_example.sample_pipeline import (
     SamplePipelineConfig)
 
 

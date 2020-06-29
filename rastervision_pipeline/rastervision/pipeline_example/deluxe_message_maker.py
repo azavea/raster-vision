@@ -1,10 +1,10 @@
 from rastervision.pipeline.config import register_config
-from rastervision.examples.sample_pipeline2.sample_pipeline2 import (
+from rastervision.pipeline_example.sample_pipeline2 import (
     MessageMakerConfig, MessageMaker)
 
 
 # You always need to use the register_config decorator.
-@register_config('deluxe_message_maker')
+@register_config('pipeline_example.deluxe_message_maker')
 class DeluxeMessageMakerConfig(MessageMakerConfig):
     # Note that this inherits the greeting field from MessageMakerConfig.
     level: int = 1

@@ -1,6 +1,6 @@
-from rastervision.examples.sample_pipeline2.sample_pipeline2 import (
+from rastervision.pipeline_example.sample_pipeline2 import (
     SamplePipeline2Config)
-from rastervision.examples.deluxe_message_maker.deluxe_message_maker import (
+from rastervision.pipeline_example.deluxe_message_maker import (
     DeluxeMessageMakerConfig)
 
 
