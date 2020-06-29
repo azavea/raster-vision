@@ -143,6 +143,7 @@ usage patterns.
 .. toctree::
    :maxdepth: 2
 
+   why
    quickstart
    setup
    cli
@@ -154,6 +155,7 @@ usage patterns.
    runners
    misc
    api
+   CONTRIBUTING
 
 CHANGELOG
 ---------

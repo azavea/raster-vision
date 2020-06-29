@@ -25,14 +25,12 @@ The figure below shows the packages, the dependencies between them, and importan
 .. image:: img/rv-packages.png
   :alt: The dependencies between Python packages in Raster Vision
 
-.. _pipeline package:
+.. _plugins:
 
 The pipeline package
 ----------------------
 
 In this section, we explain the most important aspects of the ``rastervision.pipeline`` package through a series of examples which incrementally build on one another. The inline comments should be read as an integral part of the documentatation. The code has been lightly edited for brevity, but the full runnable code can be found in ``rastervision.examples``.
-
-
 
 .. _example 1:
 

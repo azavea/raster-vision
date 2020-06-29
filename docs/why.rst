@@ -12,12 +12,12 @@ In addition, most machine learning libraries cannot work out-of-the-box with mas
 What are the benefits of using Raster Vision?
 ----------------------------------------------
 
-* Programmatically configure workflows in a concise, modifiable, and reusable way, using abstractions such as :ref:`pipeline`, :ref:`backend`, :ref:`learner`, :ref:`dataset`, and :ref:`scene`.
+* Programmatically configure workflows in a concise, modifiable, and reusable way, using abstractions such as :ref:`pipeline <rv pipeline>`, :ref:`backend <backend>`, :ref:`dataset <dataset>`, and :ref:`scene <scene>`.
 * Let the framework handle the challenges and idiosyncrasies of doing machine learning on massive, geospatial imagery.
 * Run pipelines and individual commands from the command line that execute in parallel, locally or on AWS Batch.
 * Read files from HTTP, S3, the local filesystem, or anywhere with the pluggable :ref:`filesystem` architecture.
 * Make predictions and build inference pipelines using a single "model bundle" which includes the trained model and associated metadata.
-* Customize pipelines using the :ref:`plugins` architecture.
+* Customize pipelines using the :ref:`plugins <plugins>` architecture.
 
 Who is Raster Vision for?
 -------------------------
