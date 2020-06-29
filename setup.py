@@ -37,7 +37,7 @@ def replace_images(readme):
 # del extras_require['feature-extraction']
 
 setup(
-    name='rastervision629',
+    name='rastervision',
     version=__version__,
     description='An open source framework for deep learning '
     'on satellite and aerial imagery',

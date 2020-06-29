@@ -21,5 +21,5 @@ then
         exit
     fi
 
-    docker build --build-arg CUDA_VERSION="10.0" -t raster-vision-pytorch -f Dockerfile-pip .
+    docker build --build-arg CUDA_VERSION="10.0" -t raster-vision-pytorch -f Dockerfile .
 fi

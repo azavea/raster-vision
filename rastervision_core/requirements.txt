@@ -1,4 +1,4 @@
-rastervision629_pipeline==0.12.*
+rastervision_pipeline==0.12.*
 numpy<1.17
 shapely==1.6.*
 pillow==5.0.*

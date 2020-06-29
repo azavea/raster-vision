@@ -1,4 +1,4 @@
-rastervision629_pipeline==0.12.*
-rastervision629_core==0.12.*
-rastervision629_pytorch_learner==0.12.*
-rastervision629_aws_s3==0.12.*
+rastervision_pipeline==0.12.*
+rastervision_core==0.12.*
+rastervision_pytorch_learner==0.12.*
+rastervision_aws_s3==0.12.*
