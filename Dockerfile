@@ -43,24 +43,27 @@ RUN pip install -r requirements-dev.txt
 # Install requirements for each package.
 COPY ./rastervision_pipeline/requirements.txt /opt/src/requirements.txt
 RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
+
 COPY ./rastervision_aws_s3/requirements.txt /opt/src/requirements.txt
 RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
+
 COPY ./rastervision_aws_batch/requirements.txt /opt/src/requirements.txt
 RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
+
 COPY ./rastervision_core/requirements.txt /opt/src/requirements.txt
 RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
 # TODO make a release for this and move into requirements.txt
 RUN pip install git+git://github.com/azavea/mask-to-polygons@f1d0b623c648ba7ccb1839f74201c2b57229b006
+
 COPY ./rastervision_pytorch_learner/requirements.txt /opt/src/requirements.txt
 RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-COPY ./rastervision_pytorch_backend/requirements.txt /opt/src/requirements.txt
-# Commented out because there are no dependencies after filtering out rastervision_* ones.
-# RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-COPY ./rastervision_examples/requirements.txt /opt/src/requirements.txt
-# Commented out because there are no dependencies after filtering out rastervision_* ones.
-# RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
+
 COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/requirements.txt
 RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
+
+# Commented out because there are no non-RV deps and it will fail if uncommented.
+# COPY ./rastervision_pytorch_backend/requirements.txt /opt/src/requirements.txt
+# RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
 
 # Install docs/requirements.txt
 COPY ./docs/requirements.txt /opt/src/docs/requirements.txt
@@ -83,11 +86,10 @@ ENV PYTHONPATH=/opt/src:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pipeline/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_aws_s3/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_aws_batch/:$PYTHONPATH
+ENV PYTHONPATH=/opt/src/rastervision_gdal_vsi/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_core/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pytorch_learner/:$PYTHONPATH
 ENV PYTHONPATH=/opt/src/rastervision_pytorch_backend/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_examples/:$PYTHONPATH
-ENV PYTHONPATH=/opt/src/rastervision_gdal_vsi/:$PYTHONPATH
 
 COPY ./rastervision_pipeline/ /opt/src/rastervision_pipeline/
 COPY ./rastervision_aws_s3/ /opt/src/rastervision_aws_s3/
@@ -95,7 +97,6 @@ COPY ./rastervision_aws_batch/ /opt/src/rastervision_aws_batch/
 COPY ./rastervision_core/ /opt/src/rastervision_core/
 COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
 COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
-COPY ./rastervision_examples/ /opt/src/rastervision_examples/
 COPY ./rastervision_gdal_vsi/ /opt/src/rastervision_gdal_vsi/
 
 CMD ["bash"]
