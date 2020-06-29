@@ -9,5 +9,6 @@ import rastervision.pipeline_example.sample_pipeline
 import rastervision.pipeline_example.sample_pipeline2
 import rastervision.pipeline_example.deluxe_message_maker
 
+
 def register_plugin(registry):
     pass
