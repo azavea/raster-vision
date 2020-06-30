@@ -34,5 +34,3 @@ python:
       path: rastervision_pytorch_learner/
     - method: pip
       path: rastervision_pytorch_backend/
-    - method: pip
-      path: rastervision_examples/
