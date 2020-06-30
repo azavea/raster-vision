@@ -1,5 +1,7 @@
-Raster Vision AWS Batch Setup
-===============================
+.. _cloudformation setup:
+
+Setup AWS Batch using CloudFormation
+=====================================
 
 This describes the deployment code that sets up the necessary AWS resources to utilize the AWS Batch runner. Using Batch is advantageous because it starts and stops instances automatically and runs jobs sequentially or in parallel according to the dependencies between them. In addition, this deployment sets up distinct CPU and GPU resources and utilizes spot instances, which is more cost-effective than always using a GPU on-demand instance. Deployment is driven via the AWS console using a `CloudFormation template <https://aws.amazon.com/cloudformation/aws-cloudformation-templates/>`_.
 
@@ -66,6 +68,8 @@ Update Raster Vision configuration
 -----------------------------------
 
 Finally, make sure to update your :ref:`aws batch setup` with the Batch resources that were created.
+
+.. _cloudformation jobdefs:
 
 Deploy new job definitions
 -----------------------------
