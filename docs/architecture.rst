@@ -27,6 +27,8 @@ The figure below shows the packages, the dependencies between them, and importan
 
 .. _plugins:
 
+.. _pipelines:
+
 The pipeline package
 ----------------------
 

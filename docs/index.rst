@@ -149,12 +149,12 @@ usage patterns.
    cli
    architecture
    pipelines
+   api
    examples
    bootstrap
    batch
    runners
    misc
-   api
    CONTRIBUTING
 
 CHANGELOG

@@ -1,42 +1,39 @@
+.. _rv pipelines:
+
 Pipelines and Commands
 ========================
 
-The ``rastervision.pipeline`` package provides a general-purpose ``Pipeline`` abstraction for defining multi-stage computational pipelines that can execute in different environments. The ``rastervision.core`` and ``rastervision.pytorch_backend`` packages provide several concrete ``Pipeline`` subclasses for doing deep learning on remote sensing imagery. These include ``ChipClassification``, ``SemanticSegmentation``, and ``ObjectDetection``, which are all subclasses of ``RVPipeline``.
+In addition to providing abstract :ref:`pipeline <pipelines>` functionality, Raster Vision provides a set of concrete pipelines for deep learning on remote sensing imagery including ``ChipClassification``, ``SemanticSegmentation``, and ``ObjectDetection``. These pipelines all derive from ``RVPipeline``, and are provided by the ``rastervision.core`` package. It's possible to customize these pipelines as well as create new ones from scratch, which is discussed in :ref:`customizing rv`.
 
 .. image:: img/cv-tasks.png
     :align: center
 
-It's possible to customize these pipelines as well as create new ones from scratch, which is discussed in :ref:`customizing rv`.
-
-.. _rv pipeline:
-
-Pipeline Configuration
------------------------
-
-Pipelines are configured by constructing an instance of ``PipelineConfig``, and returning it from a ``get_configs()`` function in a Python module. Each ``PipelineConfig`` specifies the details about how the commands within the pipeline will execute (ie. which files, what methods, what hyperparameters, etc.).
-In contrast, the :ref:`pipeline runner <runners>`, which actually executes the commands in the pipeline, is specified as an argument to the :ref:`cli`. Note that it's also possible to return a list of ``PipelineConfigs`` from ``get_configs()``, which will be executed in parallel.
-
-The following diagram shows the hierarchy of the high level components that comprise an ``RVPipelineConfig``:
-
-.. image:: img/rvpipeline-diagram.png
-    :align: center
-
 Chip Classification
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 In chip classification, the goal is to divide the scene up into a grid of cells and classify each cell. This task is good for getting a rough idea of where certain objects are located, or where indiscrete "stuff" (such as grass) is located. It requires relatively low labeling effort, but also produces spatially coarse predictions. In our experience, this task trains the fastest, and is easiest to configure to get "decent" results.
 
 Object Detection
-^^^^^^^^^^^^^^^^
+-----------------
 
 In object detection, the goal is to predict a bounding box and a class around each object of interest. This task requires higher labeling effort than chip classification, but has the ability to localize and individuate objects. Object detection models require more time to train and also struggle with objects that are very close together. In theory, it is straightforward to use object detection for counting objects.
 
 Semantic Segmentation
-^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 In semantic segmentation, the goal is to predict the class of each pixel in a scene. This task requires the highest labeling effort, but also provides the most spatially precise predictions. Like object detection, these models take longer to train than chip classification models.
 
-In the ``tiny_spacenet.py`` example, the ``SemanticSegmentationConfig`` is the last thing constructed and returned.
+Configuring RVPipelines
+-------------------------
+
+Each (subclass of) ``RVPipeline`` is configured by returning an instance of (a subclass of) ``RVPipelineConfig`` from a ``get_config()`` function in a Python module. It's also possible to return a list of ``RVPipelineConfigs`` from ``get_configs()``, which will be executed in parallel.
+
+Each ``RVPipelineConfig`` object specifies the details about how the commands within the pipeline will execute (ie. which files, what methods, what hyperparameters, etc.). In contrast, the :ref:`pipeline runner <runners>`, which actually executes the commands in the pipeline, is specified as an argument to the :ref:`cli`. The following diagram shows the hierarchy of the high level components comprising an ``RVPipeline``:
+
+.. image:: img/rvpipeline-diagram.png
+    :align: center
+
+In the ``tiny_spacenet.py`` example, the ``SemanticSegmentationConfig`` is the last thing constructed and returned from the ``get_config`` function.
 
 .. code-block:: python
 
@@ -54,14 +51,15 @@ In the ``tiny_spacenet.py`` example, the ``SemanticSegmentationConfig`` is the l
         predict_chip_sz=chip_sz,
         chip_options=chip_options)
 
-.. seealso:: The :ref:`api ChipClassificationConfig`, :ref:`api ObjectDetectionConfig`, and :ref:`api SemanticSegmentationConfig` API Reference docs have more information on configuring pipelines.
+.. seealso:: The :ref:`api ChipClassificationConfig`, :ref:`api ObjectDetectionConfig`, and :ref:`api SemanticSegmentationConfig` API docs have more information on configuring pipelines.
 
 Commands
-^^^^^^^^^
+---------
+
+The ``RVPipelines`` provide a sequence of commands, which are described below.
 
 .. image:: img/rv-pipeline-overview.png
     :align: center
-
 
 ANALYZE
 ^^^^^^^
@@ -102,27 +100,18 @@ The BUNDLE command generates a model bundle from the output of the previous comm
 .. _backend:
 
 Backend
--------
+--------
 
-The collection of ``RVPipelines`` use a "backend" abstraction inspired by `Keras <https://keras.io/backend/>`_, which makes it easier to customize the code for building and training models, and allows using Raster Vision with arbitrary deep learning libraries.
-Each backend is a subclass of ``Backend`` and has methods for saving training chips, training models, and making predictions. Each ``RVPipeline`` delegates this functionality to an instance of ``Backend``. Backends are configured using a ``BackendConfig``, which is then set into the ``RVPipelineConfig``.
+The collection of ``RVPipelines`` use a "backend" abstraction inspired by `Keras <https://keras.io/backend/>`_, which makes it easier to customize the code for building and training models (including using Raster Vision with arbitrary deep learning libraries).
+Each backend is a subclass of ``Backend`` and has methods for saving training chips, training models, and making predictions, and is configured with a ``BackendConfig``.
 
 The ``rastervision.pytorch_backend`` plugin provides backends that are thin wrappers around the ``rastervision.pytorch_learner`` package, which does most of the heavy lifting of building and training models using ``torch`` and ``torchvision``. (Note that ``rastervision.pytorch_learner`` is decoupled from ``rastervision.pytorch_backend`` so that it can be used in conjunction with ``rastervision.pipeline`` to write arbitrary computer vision pipelines that have nothing to do with remote sensing.)
 
-PyTorch Chip Classification
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here are the PyTorch backends:
 
-The ``PyTorchChipClassification`` backend trains classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
-
-PyTorch Object Detection
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``PyTorchObjectDetection`` backend trains the Faster-RCNN model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
-
-PyTorch Semantic Segmentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``PyTorchSemanticSegmentation`` backend trains the DeepLabV3 model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+* The ``PyTorchChipClassification`` backend trains classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+* The ``PyTorchObjectDetection`` backend trains the Faster-RCNN model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+* The ``PyTorchSemanticSegmentation`` backend trains the DeepLabV3 model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 
 In our ``tiny_spacenet.py`` example, we configured the PyTorch semantic segmentation backend using:
 
@@ -132,14 +121,14 @@ In our ``tiny_spacenet.py`` example, we configured the PyTorch semantic segmenta
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
 
-.. seealso:: The :ref:`api rastervision.pytorch_backend` and :ref:`api rastervision.pytorch_learner` API Reference docs have more information on configuring backends.
+.. seealso:: The :ref:`api rastervision.pytorch_backend` and :ref:`api rastervision.pytorch_learner` API docs have more information on configuring backends.
 
 .. _dataset:
 
 Dataset
--------
+--------
 
-A ``Dataset`` contains the `training, validation, and test splits <https://en.wikipedia.org/wiki/Training,_test,_and_validation_sets>`_ needed to train and evaluate a model. Each dataset split is a list of scenes.
+A ``Dataset`` contains the `training, validation, and test splits <https://en.wikipedia.org/wiki/Training,_test,_and_validation_sets>`_ needed to train and evaluate a model. Each dataset split is a list of ``Scenes``.
 
 In our ``tiny_spacenet.py`` example, we configured the dataset with single scenes, though more often in real use cases you would use multiple scenes per split:
 
@@ -154,22 +143,24 @@ In our ``tiny_spacenet.py`` example, we configured the dataset with single scene
             make_scene('scene_25', val_image_uri, val_label_uri)
         ])
 
+.. seealso:: The :ref:`api DatasetConfig` API docs.
+
 .. _scene:
 
 Scene
 -------
 
-.. image:: img/scene-diagram.png
-    :align: center
-
 A scene is composed of the following elements:
 
 * *Imagery*: a :ref:`raster source` represents a large scene image, which can be made up of multiple sub-images or a single file.
-* *Ground truth labels*: a :ref:`label source` represents ground-truth task-specific labels in the form of geometries (bounding boxes for object detection or chip classification), rasters (semantic segmentation), or even numerical values (for regression tasks, not yet implemented).
+* *Ground truth labels*: a :ref:`label source` represents ground-truth task-specific labels.
 * *Predicted labels*: a :ref:`label store` determines how to store and retrieve the predictions from a scene.
-* *AOIs* (Optional): An optional list of areas of interest that describes which sections of the scene imagery are exhaustively labeled. It is important to only create training chips from parts of the scenes that have been exhaustively labeled -- in other words, that have no missing labels. In order to use scenes that only have some areas exhaustively labeled, as commonly occurs in practice, the user can specify AOIs which are polygons covering those areas.
+* *AOIs* (Optional): An optional list of areas of interest that describes which sections of the scene imagery are exhaustively labeled. It is important to only create training chips from parts of the scenes that have been exhaustively labeled -- in other words, that have no missing labels.
 
-In our ``tiny_spacenet.py`` example, we configured the train scene with a GeoTIFF URI and a GeoJSON URI.
+.. image:: img/scene-diagram.png
+    :align: center
+
+In our ``tiny_spacenet.py`` example, we configured the one training scene with a GeoTIFF URI and a GeoJSON URI.
 
 .. code-block:: python
 
@@ -188,6 +179,7 @@ In our ``tiny_spacenet.py`` example, we configured the train scene with a GeoTIF
             uris=[image_uri],
             channel_order=channel_order,
             transformers=[StatsTransformerConfig()])
+
         label_source = SemanticSegmentationLabelSourceConfig(
             raster_source=RasterizedSourceConfig(
                 vector_source=GeoJSONVectorSourceConfig(
@@ -199,6 +191,8 @@ In our ``tiny_spacenet.py`` example, we configured the train scene with a GeoTIF
             raster_source=raster_source,
             label_source=label_source)
 
+
+.. seealso:: The :ref:`api SceneConfig` API docs.
 
 .. _raster source:
 
@@ -219,12 +213,21 @@ RasterizedSource
 
 Semantic segmentation labels stored as polygons in a ``VectorSource`` can be rasterized and read using a ``RasterizedSource``. This is a slightly unusual use of a ``RasterSource`` as we're using it to read labels, and not images to use as input to a model.
 
+.. seealso:: The :ref:`api RasterioSourceConfig` and :ref:`api RasterizedSourceConfig` API docs.
+
 .. _raster transformer:
 
-Raster Transformers
+RasterTransformer
 ---------------------
 
 A ``RasterTransformer`` is a mechanism for transforming raw raster data into a form that is more suitable for being fed into a model.
+
+StatsTransformer
+^^^^^^^^^^^^^^^^^^
+
+This transformer is used to convert non-uint8 values to uint8 using statistics computed by the :ref:`stats analyzer`.
+
+.. seealso:: The :ref:`api StatsTransformerConfig` API docs.
 
 VectorSource
 ---------------
@@ -234,18 +237,19 @@ A ``VectorSource`` supports reading vector data like polygons and lines from var
 GeoJSONVectorSource
 ^^^^^^^^^^^^^^^^^^^^
 
-TODO
+This vector source reads GeoJSON files.
+
+.. seealso:: The :ref:`api GeoJSONVectorSourceConfig` API docs.
 
 .. _label source:
 
 LabelSource
 ------------
 
-A ``LabelSource`` supports reading ground truth labels for a scene. There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
+A ``LabelSource`` supports reading ground truth labels for a scene in the form of vectors or rasters.
+There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
 
-Here is an example of configuring a ``SemanticSegmentationLabelSource`` using rasterized vector data.  A complete example using this is in the `Spacenet Vegas example <https://github.com/azavea/raster-vision-examples/blob/0.11/spacenet/vegas.py>`_.
-
-TODO: example
+.. seealso:: The :ref:`api ChipClassificationLabelSourceConfig`, :ref:`api SemanticSegmentationLabelSourceConfig`, and :ref:`api ObjectDetectionLabelSourceConfig` API docs.
 
 .. _label store:
 
@@ -254,39 +258,39 @@ LabelStore
 
 A ``LabelStore`` supports reading and writing predicted labels for a scene. There are subclasses for different tasks and data formats. They are used for saving predictions and then loading them during evaluation.
 
-In the ``tiny_spacenet.py`` example, there is no explicit ``LabelStore`` configured on the validation scene, because it can be inferred from the type of ``RVPipelineConfig`` it is part of. If we wanted to state the label store explicitly, the following code would be equivalent:
+In the ``tiny_spacenet.py`` example, there is no explicit ``LabelStore`` configured on the validation scene, because it can be inferred from the type of ``RVPipelineConfig`` it is part of.
+In the ISPRS Potsdam example, the following code is used to explicitly create a ``LabelStore`` that writes out the predictions in "RGB" format, where the color of each pixel represents the class, and predictions of class 0 (ie. car) are also written out as polygons.
 
-# TODO potsdam example
+.. code-block:: python
 
-.. code::
+    label_store = SemanticSegmentationLabelStoreConfig(
+        rgb=True, vector_output=[PolygonVectorOutputConfig(class_id=0)])
 
-   val_label_store = rv.LabelStoreConfing.builder(rv.OBJECT_DETECTION_GEOJSON) \
-                                         .build()
+    scene = SceneConfig(
+        id=id,
+        raster_source=raster_source,
+        label_source=label_source,
+        label_store=label_store)
 
-   val_scene = rv.SceneConfig.builder() \
-                             .with_task(task) \
-                             .with_id('val_scene') \
-                             .with_raster_source(val_raster_source) \
-                             .with_label_source(val_label_uri) \
-                             .with_label_store(val_label_store) \
-                             .build()
-
-Notice the above example does not set the explicit URI for where the ``LabelStore`` will store it's labels.
-We could do that, but if we leave that out, Raster Vision will automatically set that path
-based on the pipeline's root directory.
+.. seealso:: The :ref:`api ChipClassificationGeoJSONStoreConfig`, :ref:`api SemanticSegmentationLabelStoreConfig`, and :ref:`api ObjectDetectionGeoJSONStoreConfig` API docs.
 
 .. _analyzer:
 
 Analyzers
 ---------
 
-Analyzers are used to gather dataset-level statistics and metrics for use in downstream processes. Currently the only analyzer available is the ``StatsAnalyzer``, which determines the distribution of values over the imagery in order to normalize values to ``uint8`` values in a ``StatsTransformer``.
+Analyzers are used to gather dataset-level statistics and metrics for use in downstream processes. Typically, you won't need to explicitly configure any.
+
+.. _stats analyzer:
+
+StatsAnalyzer
+^^^^^^^^^^^^^^
+
+Currently the only analyzer available is the ``StatsAnalyzer``, which determines the distribution of values over the imagery in order to normalize values to ``uint8`` values in a ``StatsTransformer``.
 
 .. _evaluator:
 
 Evaluators
 ----------
 
-For each computer vision task, there is an evaluator that computes metrics for a trained model. It does this by measuring the discrepancy between ground truth and predicted labels for a set of validation scenes.
-
-Normally you will not have to set any evaluators into the ``RVPipelineConfig``, as the default evaluation for that task will be chosen automatically.
+For each computer vision task, there is an evaluator that computes metrics for a trained model. It does this by measuring the discrepancy between ground truth and predicted labels for a set of validation scenes. Typically, you won't need to explicitly configure any.
