@@ -1,0 +1,11 @@
+{
+    "caps_project_name": "MY_PROJECT",
+    "project_name": "my_project",
+    "docker_image": "my_project",
+    "parent_docker_image": "quay.io/azavea/raster-vision:pytorch-0.12",
+    "version": "0.12",
+    "description": "A Raster Vision plugin",
+    "url": "https://github.com/azavea/raster-vision",
+    "author": "Azavea",
+    "author_email": "info@azavea.com"
+}

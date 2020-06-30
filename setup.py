@@ -57,9 +57,5 @@ setup(
     'raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
     packages=[],
     include_package_data=True,
-    install_requires=install_requires,
-    entry_points='''
-        [console_scripts]
-        rastervision=rastervision.pipeline.cli:main
-    ''',
+    install_requires=install_requires
 )

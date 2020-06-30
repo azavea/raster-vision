@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0")
+Publishes {{cookiecutter.docker_image}} image to ECR. Assumes that env var {{cookiecutter.caps_project_name}}_ECR_IMAGE is set to <ecr_repo_name>:<tag_name>.
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--help" ]
+    then
+        usage
+        exit
+    fi
+
+    AWS_REGION="us-east-1"
+    IMAGE_NAME="{{cookiecutter.docker_image}}"
+    ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+
+    aws ecr get-login --no-include-email --region ${AWS_REGION} | bash;
+    docker tag ${IMAGE_NAME} \
+        ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${{cookiecutter.caps_project_name}}_ECR_IMAGE
+    docker push \
+        ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${{cookiecutter.caps_project_name}}_ECR_IMAGE
+fi
