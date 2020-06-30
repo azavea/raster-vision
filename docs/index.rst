@@ -147,9 +147,9 @@ usage patterns.
    quickstart
    setup
    cli
-   architecture
    pipelines
    api
+   architecture
    examples
    bootstrap
    batch

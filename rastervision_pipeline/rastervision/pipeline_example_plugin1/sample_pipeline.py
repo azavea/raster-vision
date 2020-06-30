@@ -10,7 +10,7 @@ from rastervision.pipeline.utils import split_into_groups
 
 # Each Config needs to be registered with a type hint which is used for
 # serializing and deserializing to JSON.
-@register_config('pipeline_example.sample_pipeline')
+@register_config('pipeline_example_plugin1.sample_pipeline')
 class SamplePipelineConfig(PipelineConfig):
     # Config classes are configuration schemas. Each field is an attributes
     # with a type and optional default value.
