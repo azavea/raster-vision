@@ -5,22 +5,12 @@ import logging
 import json
 from typing import Optional, List, Dict
 
-from everett import NO_VALUE
 from everett.manager import (ConfigManager, ConfigDictEnv, ConfigIniEnv,
-                             ConfigOSEnv)
+                             ConfigOSEnv, ConfigurationMissingError)
 
 from rastervision.pipeline.verbosity import Verbosity
 
 log = logging.getLogger(__name__)
-
-
-class LocalEnv(object):
-    def get(self, key, namespace=None):
-        if isinstance(namespace, list):
-            if 'batch' in namespace or 'aws_s3' in namespace:
-                return ''
-        else:
-            return NO_VALUE
 
 
 def load_conf_list(s):
@@ -187,12 +177,9 @@ class RVConfig:
             rv_home = os.path.join(home, '.rastervision')
         self.rv_home = rv_home
 
-        if self.profile == 'local':
-            config_ini_env = LocalEnv()
-        else:
-            config_file_locations = self._discover_config_file_locations(
-                self.profile)
-            config_ini_env = ConfigIniEnv(config_file_locations)
+        config_file_locations = self._discover_config_file_locations(
+            self.profile)
+        config_ini_env = ConfigIniEnv(config_file_locations)
 
         self.config = ConfigManager(
             [
@@ -226,8 +213,12 @@ class RVConfig:
         config_dict = {}
         for namespace, keys in rv_config_schema.items():
             for key in keys:
-                config_dict[namespace + '_' + key] = \
-                    self.get_namespace_config(namespace)(key)
+                try:
+                    config_dict[namespace + '_' + key] = \
+                        self.get_namespace_config(namespace)(key)
+                except ConfigurationMissingError:
+                    pass
+
         return config_dict
 
     def _discover_config_file_locations(self, profile) -> List[str]:
