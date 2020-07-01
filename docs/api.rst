@@ -3,7 +3,7 @@
 Configuration API Reference
 ============================
 
-This contains the API used for configuring various components of Raster Vision pipelines. This serves as the lower-level companion to the discussion of :ref:`pipelines`.
+This contains the API used for configuring various components of Raster Vision pipelines. This serves as the lower-level companion to the discussion of :ref:`rv pipelines`.
 
 rastervision.pipeline
 ------------------------

@@ -99,7 +99,7 @@ html_context = {
     'project_links': [
         ProjectLink('Quickstart', 'quickstart.html'),
         ProjectLink('Documentation TOC', 'index.html#documentation'),
-        ProjectLink('API Reference TOC', 'index.html#api-reference'),
+        ProjectLink('Config API Reference', 'index.html#api'),
         ProjectLink('Project Website', 'https://rastervision.io/'),
         ProjectLink('PyPI releases', 'https://pypi.org/project/rastervision/'),
         ProjectLink('GitHub', 'https://github.com/azavea/raster-vision'),
