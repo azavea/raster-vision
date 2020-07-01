@@ -20,10 +20,12 @@ Transfer learning using models trained by RV
 
 To use a model trained by Raster Vision for transfer learning or fine tuning, you can use output of the TRAIN command of the experiment as a pretrained model of further experiments. The ``last_model.pth`` model file in the ``train`` directory can be used as a pretrained model in a new pipeline. To do so, set the ``init_weights`` field to the model file in the ``ModelConfig`` in the new pipeline.
 
+.. _model bundle:
+
 Making Predictions with Model Bundles
 ----------------------------------------
 
-To make predictions on new imagery, the :ref:`bundle command` command generates a "model bundle" which can be used with the :ref:`predict cli command` command. This loads the model and saves the predictions for a single scene. If you need to call this for a large number of scenes, consider using the ``Predictor`` class programmatically, as this will allow you to load the model once and use it many times. This can
+To make predictions on new imagery, the :ref:`bundle <bundle command>` command generates a "model bundle" which can be used with the :ref:`predict cli command` command. This loads the model and saves the predictions for a single scene. If you need to call this for a large number of scenes, consider using the ``Predictor`` class programmatically, as this will allow you to load the model once and use it many times. This can
 matter a lot if you want the time-to-prediction to be as fast as possible - the model load time can be orders of magnitudes slower than the prediction time of a loaded model.
 
 The model bundle is a zip file containing the model weights and the configuration necessary for

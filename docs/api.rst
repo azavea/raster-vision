@@ -1,7 +1,9 @@
 .. _api:
 
-API Reference
-========================
+Configuration API Reference
+============================
+
+This contains the API used for configuring various components of Raster Vision pipelines. This serves as the lower-level companion to the discussion of :ref:`rv pipelines`.
 
 rastervision.pipeline
 ------------------------
@@ -21,30 +23,42 @@ ClassConfig
 
 .. autoclass:: rastervision.core.data.ClassConfig
 
+.. _api DatasetConfig:
+
 DatasetConfig
 ~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.DatasetConfig
+
+.. _api SceneConfig:
 
 SceneConfig
 ~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.SceneConfig
 
+.. _api ChipClassificationLabelSourceConfig:
+
 ChipClassificationLabelSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.label_source.ChipClassificationLabelSourceConfig
+
+.. _api SemanticSegmentationLabelSourceConfig:
 
 SemanticSegmentationLabelSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.label_source.SemanticSegmentationLabelSourceConfig
 
+.. _api ObjectDetectionLabelSourceConfig:
+
 ObjectDetectionLabelSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.label_source.ObjectDetectionLabelSourceConfig
+
+.. _api ChipClassificationGeoJSONStoreConfig:
 
 ChipClassificationGeoJSONStoreConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,25 +75,35 @@ BuildingVectorOutputConfig
 
 .. autoclass:: rastervision.core.data.label_store.BuildingVectorOutputConfig
 
+.. _api SemanticSegmentationLabelStoreConfig:
+
 SemanticSegmentationLabelStoreConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.label_store.SemanticSegmentationLabelStoreConfig
+
+.. _api ObjectDetectionGeoJSONStoreConfig:
 
 ObjectDetectionGeoJSONStoreConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.label_store.ObjectDetectionGeoJSONStoreConfig
 
+.. _api RasterioSourceConfig:
+
 RasterioSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.raster_source.RasterioSourceConfig
 
+.. _api RasterizedSourceConfig:
+
 RasterizedSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.raster_source.RasterizedSourceConfig
+
+.. _api StatsTransformerConfig:
 
 StatsTransformerConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,6 +114,8 @@ VectorSourceConfig
 ~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.vector_source.VectorSourceConfig
+
+.. _api GeoJSONVectorSourceConfig:
 
 GeoJSONVectorSourceConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

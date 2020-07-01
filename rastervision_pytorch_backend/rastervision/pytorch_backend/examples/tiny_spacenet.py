@@ -38,10 +38,11 @@ def get_config(runner):
             uris=[image_uri],
             channel_order=channel_order,
             transformers=[StatsTransformerConfig()])
+        vector_source = GeoJSONVectorSourceConfig(
+            uri=label_uri, default_class_id=0, ignore_crs_field=True)
         label_source = SemanticSegmentationLabelSourceConfig(
             raster_source=RasterizedSourceConfig(
-                vector_source=GeoJSONVectorSourceConfig(
-                    uri=label_uri, default_class_id=0, ignore_crs_field=True),
+                vector_source=vector_source,
                 rasterizer_config=RasterizerConfig(background_class_id=1)))
         return SceneConfig(
             id=scene_id,

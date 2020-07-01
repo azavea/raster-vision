@@ -1,3 +1,5 @@
+.. _rv examples:
+
 Examples
 =========
 

@@ -8,7 +8,7 @@ from rastervision.pipeline.config import register_config, Config
 from rastervision.pipeline.utils import split_into_groups
 
 
-@register_config('pipeline_example.message_maker')
+@register_config('pipeline_example_plugin1.message_maker')
 class MessageMakerConfig(Config):
     greeting: str = 'hello'
 
@@ -25,7 +25,7 @@ class MessageMaker():
         return '{} {}!'.format(self.config.greeting, name)
 
 
-@register_config('pipeline_example.sample_pipeline2')
+@register_config('pipeline_example_plugin1.sample_pipeline2')
 class SamplePipeline2Config(PipelineConfig):
     names: List[str] = ['alice', 'bob']
     message_uris: Optional[List[str]] = None

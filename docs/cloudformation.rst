@@ -1,5 +1,7 @@
-Raster Vision AWS Batch Setup
-===============================
+.. _cloudformation setup:
+
+Setup AWS Batch using CloudFormation
+=====================================
 
 This describes the deployment code that sets up the necessary AWS resources to utilize the AWS Batch runner. Using Batch is advantageous because it starts and stops instances automatically and runs jobs sequentially or in parallel according to the dependencies between them. In addition, this deployment sets up distinct CPU and GPU resources and utilizes spot instances, which is more cost-effective than always using a GPU on-demand instance. Deployment is driven via the AWS console using a `CloudFormation template <https://aws.amazon.com/cloudformation/aws-cloudformation-templates/>`_.
 
@@ -35,7 +37,7 @@ Deploying Batch resources
 To deploy AWS Batch resources using AWS CloudFormation, start by logging into your AWS console. Then, follow the steps below:
 
 - Navigate to ``CloudFormation > Create Stack``
-- In the ``Choose a template field``, select ``Upload a template to Amazon S3`` and upload the template in `cloudformation/template.yml <https://github.com/azavea/raster-vision/tree/master/cloudformation/template.yml>`_.
+- In the ``Choose a template field``, select ``Upload a template to Amazon S3`` and upload the template in `cloudformation/template.yml <https://github.com/azavea/raster-vision/tree/master/cloudformation/template.yml>`_. **Warning:** Some versions of Chrome fail at this step without an explanation. As a workaround, try a different version of Chrome, or Firefox. See `this thread <https://forums.aws.amazon.com/thread.jspa?messageID=946331&tstart=0>`_ for more details.
 - ``Prefix``: If you are setting up multiple RV stacks within an AWS account, you need to set a prefix for namespacing resources. Otherwise, there will be name collisions with any resources that were created as part of another stack.
 - Specify the following required parameters:
     - ``Stack Name``: The name of your CloudFormation stack
@@ -66,6 +68,8 @@ Update Raster Vision configuration
 -----------------------------------
 
 Finally, make sure to update your :ref:`aws batch setup` with the Batch resources that were created.
+
+.. _cloudformation jobdefs:
 
 Deploy new job definitions
 -----------------------------

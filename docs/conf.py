@@ -99,7 +99,7 @@ html_context = {
     'project_links': [
         ProjectLink('Quickstart', 'quickstart.html'),
         ProjectLink('Documentation TOC', 'index.html#documentation'),
-        ProjectLink('API Reference TOC', 'index.html#api-reference'),
+        ProjectLink('Config API Reference', 'index.html#api'),
         ProjectLink('Project Website', 'https://rastervision.io/'),
         ProjectLink('PyPI releases', 'https://pypi.org/project/rastervision/'),
         ProjectLink('GitHub', 'https://github.com/azavea/raster-vision'),
@@ -121,8 +121,8 @@ html_sidebars = {
 }
 singlehtml_sidebars = {'index': ['project.html', 'versions.html', 'localtoc.html']}
 html_static_path = ['_static']
-html_favicon = '_static/raster-vision-icon.png'
-html_logo = '_static/raster-vision-logo.png'
+html_favicon = 'img/raster-vision-icon.png'
+html_logo = 'img/raster-vision-logo.png'
 html_title = 'Raster Vision Documentation ({})'.format(version)
 html_show_sourcelink = False
 html_domain_indices = False
