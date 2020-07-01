@@ -76,9 +76,11 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
+
+    # xxx
     model = ClassificationModelConfig(backbone=Backbone.resnet50)
     solver = SolverConfig(
-        lr=1e-4, num_epochs=20, test_num_epochs=3, batch_sz=32, one_cycle=True)
+        lr=1e-4, num_epochs=21, test_num_epochs=2, batch_sz=32, one_cycle=True)
     backend = PyTorchChipClassificationConfig(
         model=model,
         solver=solver,
