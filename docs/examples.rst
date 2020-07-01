@@ -3,7 +3,7 @@
 Examples
 =========
 
-This page contains `examples <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples>`_ of using Raster Vision on open datasets. Unless otherwise stated, all commands should be run inside the Raster Vision Docker container. See :ref:`docker images` for info on how to do this.
+This page contains `examples <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples>`_ of using Raster Vision on open datasets. Unless otherwise stated, all commands should be run inside the Raster Vision Docker container. See :ref:`docker images` for info on how to do this.
 
 How to Run an Example
 ---------------------
@@ -51,7 +51,7 @@ You'll need to do some data preprocessing, which we can do in the Jupyter notebo
 
     docker/run --jupyter [--aws]
 
-The ``--aws`` option is only needed if pulling data from S3. In Jupyter inside the browser, navigate to the `rastervision/examples/chip_classification/spacenet_rio_data_prep.ipynb <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio_data_prep.ipynb>`_ notebook. Set the URIs in the first cell and then run the rest of the notebook. Set the ``processed_uri`` to a local or S3 URI depending on where you want to run the experiment.
+The ``--aws`` option is only needed if pulling data from S3. In Jupyter inside the browser, navigate to the `rastervision/examples/chip_classification/spacenet_rio_data_prep.ipynb <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio_data_prep.ipynb>`_ notebook. Set the URIs in the first cell and then run the rest of the notebook. Set the ``processed_uri`` to a local or S3 URI depending on where you want to run the experiment.
 
 .. image:: img/examples/jupyter.png
   :width: 500
@@ -61,7 +61,7 @@ Step 3: Do a test run locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The experiment we want to run is in
-`spacenet_rio.py <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio.py>`_. To run this, first get to the Docker console using:
+`spacenet_rio.py <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio.py>`_. To run this, first get to the Docker console using:
 
 .. code-block:: terminal
 
@@ -160,7 +160,7 @@ After running an experiment, a **model bundle** is saved into ``$root_uri/bundle
 Semantic Segmentation: SpaceNet Vegas
 --------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/spacenet_vegas.py>`_ contains an example of doing semantic segmentation using the SpaceNet Vegas dataset which has labels in vector form. It allows for training a model to predict buildings or roads.  Note that for buildings, polygon output in the form of GeoJSON files will be saved to the ``predict`` directory alongside the GeoTIFF files. In addition, a vector evaluation file using SpaceNet metrics will be saved to the ``eval`` directory.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/spacenet_vegas.py>`_ contains an example of doing semantic segmentation using the SpaceNet Vegas dataset which has labels in vector form. It allows for training a model to predict buildings or roads.  Note that for buildings, polygon output in the form of GeoJSON files will be saved to the ``predict`` directory alongside the GeoTIFF files. In addition, a vector evaluation file using SpaceNet metrics will be saved to the ``eval`` directory.
 
 Arguments:
 
@@ -191,7 +191,7 @@ After training a model, the road F1 score was 0.83. More evaluation details can 
 Semantic Segmentation: ISPRS Potsdam
 -------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`_ performs semantic segmentation on the `ISPRS Potsdam dataset <http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html>`_. The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our `blog post <https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/>`_.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`_ performs semantic segmentation on the `ISPRS Potsdam dataset <http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html>`_. The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our `blog post <https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/>`_.
 
 Data:
 
@@ -211,12 +211,12 @@ After training a model, the average F1 score was 0.89. More evaluation details c
 Object Detection: COWC Potsdam Cars
 -------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam.py>`_ performs object detection on cars with the `Cars Overhead With Context <https://gdo152.llnl.gov/cowc/>`_ dataset over Potsdam, Germany.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam.py>`_ performs object detection on cars with the `Cars Overhead With Context <https://gdo152.llnl.gov/cowc/>`_ dataset over Potsdam, Germany.
 
 Data:
 
 * The imagery can only be downloaded after filling in this `request form <http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html>`_. After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip ``4_Ortho_RGBIR.zip`` into a directory, and then upload to S3 if desired. (This step uses the same imagery as :ref:`potsdam semantic segmentation`.)
-* Download the `processed labels <https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip>`_ and unzip. These files were generated from the `COWC car detection dataset <https://gdo152.llnl.gov/cowc/>`_ using `some scripts <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam_data_prep/>`_. TODO: Get these scripts into runnable shape.
+* Download the `processed labels <https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip>`_ and unzip. These files were generated from the `COWC car detection dataset <https://gdo152.llnl.gov/cowc/>`_ using `some scripts <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam_data_prep/>`_. TODO: Get these scripts into runnable shape.
 
 Arguments:
 
@@ -232,12 +232,12 @@ After training a model, the car F1 score was 0.95. More evaluation details can b
 Object Detection: xView Vehicles
 --------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/xview.py>`_ performs object detection to find vehicles using the `DIUx xView Detection Challenge <http://xviewdataset.org/>`_ dataset.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/xview.py>`_ performs object detection to find vehicles using the `DIUx xView Detection Challenge <http://xviewdataset.org/>`_ dataset.
 
 Data:
 
 * Sign up for an account for the `DIUx xView Detection Challenge <http://xviewdataset.org/>`_. Navigate to the `downloads page <https://challenge.xviewdataset.org/download-links>`_ and download the zipped training images and labels. Unzip both of these files and place their contents in a directory, and upload to S3 if desired.
-* Run the `xview-data-prep.ipynb <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/xview-data-prep.ipynb>`_ Jupyter notebook, pointing the ``raw_uri`` to the directory created above.
+* Run the `xview-data-prep.ipynb <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/xview-data-prep.ipynb>`_ Jupyter notebook, pointing the ``raw_uri`` to the directory created above.
 
 Arguments:
 
