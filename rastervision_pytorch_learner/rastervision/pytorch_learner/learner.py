@@ -38,7 +38,7 @@ import numpy as np
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, sync_from_dir, get_local_path, unzip, list_paths,
-    str_to_file)
+    str_to_file, FileSystem, LocalFileSystem)
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, ConfigError,
                                           upgrade_config, save_pipeline_config)
@@ -106,14 +106,14 @@ class Learner(ABC):
             self.test_ds = None
             self.test_dl = None
 
-            if cfg.output_uri.startswith('s3://'):
+            if FileSystem.get_file_system(cfg.output_uri) == LocalFileSystem:
+                self.output_dir = cfg.output_uri
+                make_dir(self.output_dir)
+            else:
                 self.output_dir = get_local_path(cfg.output_uri, tmp_dir)
                 make_dir(self.output_dir, force_empty=True)
                 if not cfg.overfit_mode:
                     self.sync_from_cloud()
-            else:
-                self.output_dir = cfg.output_uri
-                make_dir(self.output_dir)
 
             self.last_model_path = join(self.output_dir, 'last-model.pth')
             self.config_path = join(self.output_dir, 'learner-config.json')
@@ -162,13 +162,11 @@ class Learner(ABC):
 
     def sync_to_cloud(self):
         """Sync any output to the cloud at output_uri."""
-        if self.cfg.output_uri.startswith('s3://'):
-            sync_to_dir(self.output_dir, self.cfg.output_uri)
+        sync_to_dir(self.output_dir, self.cfg.output_uri)
 
     def sync_from_cloud(self):
         """Sync any previous output in the cloud to output_dir."""
-        if self.cfg.output_uri.startswith('s3://'):
-            sync_from_dir(self.cfg.output_uri, self.output_dir)
+        sync_from_dir(self.cfg.output_uri, self.output_dir)
 
     def setup_tensorboard(self):
         """Setup for logging stats to TB."""
@@ -208,20 +206,13 @@ class Learner(ABC):
         Returns:
             paths to directories that each contain contents of one zip file
         """
-        cfg = self.cfg
         data_dirs = []
 
         if isinstance(uri, list):
             zip_uris = uri
         else:
-            # TODO generalize this to work with any file system
-            if uri.startswith('s3://') or uri.startswith('/'):
-                data_uri = uri
-            else:
-                data_uri = join(cfg.base_uri, uri)
-            zip_uris = ([data_uri]
-                        if data_uri.endswith('.zip') else list_paths(
-                            data_uri, 'zip'))
+            zip_uris = ([uri]
+                        if uri.endswith('.zip') else list_paths(uri, 'zip'))
 
         for zip_ind, zip_uri in enumerate(zip_uris):
             zip_path = get_local_path(zip_uri, self.data_cache_dir)
