@@ -38,7 +38,7 @@ The dataset is stored on AWS S3 at ``s3://spacenet-dataset``. You will need an A
 
 Optional: to run this example with the data stored locally, first copy the data using something like the following inside the container.
 
-.. code-block:: shell
+.. code-block:: terminal
 
     aws s3 sync s3://spacenet-dataset/AOIs/AOI_1_Rio/ /opt/data/spacenet-dataset/AOIs/AOI_1_Rio/
 
@@ -47,7 +47,7 @@ Step 2: Run the Jupyter Notebook
 
 You'll need to do some data preprocessing, which we can do in the Jupyter notebook supplied.
 
-.. code-block:: shell
+.. code-block:: terminal
 
     docker/run --jupyter [--aws]
 
@@ -63,14 +63,14 @@ Step 3: Do a test run locally
 The experiment we want to run is in
 `spacenet_rio.py <https://github.com/azavea/raster-vision/tree/master/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio.py>`_. To run this, first get to the Docker console using:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     docker/run [--aws] [--gpu] [--tensorboard]
 
 The ``--aws`` option is only needed if running experiments on AWS or using data stored on S3. The ``--gpu`` option should only be used if running on a local GPU.
 The ``--tensorboard`` option should be used if running locally and you would like to view Tensorboard. The test run can be executed using something like:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     export RAW_URI="s3://spacenet-dataset/"
     export PROCESSED_URI="/opt/data/examples/spacenet/rio/processed-data"
@@ -91,7 +91,7 @@ Step 4: Run full experiment
 
 To run the full experiment on GPUs using AWS Batch, use something like the following. Note that all the URIs are on S3 since remote instances will not have access to your local file system.
 
-.. code-block:: shell
+.. code-block:: terminal
 
     export RAW_URI="s3://spacenet-dataset/"
     export PROCESSED_URI="s3://mybucket/examples/spacenet/rio/processed-data"
@@ -257,7 +257,7 @@ Model Zoo
 
 Using the Model Zoo, you can download model bundles which contain pre-trained models and meta-data, and then run them on sample test images that the model wasn't trained on.
 
-.. code-block:: shell
+.. code-block:: terminal
 
     rastervision predict <model bundle> <infile> <outfile>
 

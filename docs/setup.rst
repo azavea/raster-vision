@@ -12,7 +12,7 @@ Using the Docker images published for Raster Vision makes it easy to use a fully
 
 The images we publish include plugins and dependencies for using Raster Vision with PyTorch, and AWS S3 and Batch. These are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_.  To run the container for the latest release, run:
 
-.. code-block:: console
+.. code-block:: terminal
 
    > docker run --rm -it quay.io/azavea/raster-vision:pytorch-0.12 /bin/bash
 
@@ -27,19 +27,19 @@ There are several scripts under `docker/ <https://github.com/azavea/raster-visio
 
 After cloning the repo, you can build the Docker image using:
 
-.. code-block:: console
+.. code-block:: terminal
 
     > docker/build
 
 Before running the container, set an environment variable to a local directory in which to store data.
 
-.. code-block:: console
+.. code-block:: terminal
 
     > export RASTER_VISION_DATA_DIR="/path/to/data"
 
 To run a Bash console in the PyTorch Docker container use:
 
-.. code-block:: console
+.. code-block:: terminal
 
     > docker/run
 
@@ -47,7 +47,7 @@ This will mount the ``$RASTER_VISION_DATA_DIR`` local directory to to ``/opt/dat
 
 This script also has options for forwarding AWS credentials, and running Jupyter notebooks which can be seen below.
 
-.. code-block:: console
+.. code-block:: terminal
 
     > docker/run --help
 
@@ -81,7 +81,7 @@ Installing via pip
 
 Rather than running Raster Vision from inside a Docker container, you can directly install the library using ``pip``. However, we recommend using the Docker images since it can be difficult to install some of the dependencies.
 
-.. code-block:: console
+.. code-block:: terminal
 
    > pip install rastervision==0.12
 
@@ -94,13 +94,13 @@ Install individual pip packages
 
 Raster Vision is comprised of a required ``rastervision.pipeline`` package, and a number of optional plugin packages, as described in :ref:`codebase overview`. Each of these packages have their own dependencies, and can be installed individually. Running the following command:
 
-.. code-block:: console
+.. code-block:: terminal
 
     > pip install rastervision==0.12
 
 is equivalent to running the following sequence of commands:
 
-.. code-block:: console
+.. code-block:: terminal
 
     > pip install rastervision_pipeline==0.12
     > pip install rastervision_aws_s3==0.12
@@ -117,7 +117,7 @@ If you encounter problems running ``pip install rastervision==0.12`` on macOS, y
 
 To circumvent a problem installing pyproj with Python 3.7, you may also have to install that library using ``git+https``:
 
-.. code-block:: console
+.. code-block:: terminal
 
   > pip install cython
   > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
@@ -144,7 +144,7 @@ to determine which settings to use. The configuration file used will be named th
 profile: if you had two profiles (the ``default`` and one named ``myprofile``), your
 ``${HOME}/.rastervision`` would look like this:
 
-.. code-block:: console
+.. code-block:: terminal
 
    > ls ~/.rastervision
    default    myprofile
@@ -203,7 +203,7 @@ Use the nvidia-docker runtime
 
 When running your Docker container, be sure to include the ``--runtime=nvidia`` option, e.g.
 
-.. code-block:: console
+.. code-block:: terminal
 
    > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:pytorch-0.12 /bin/bash
 
@@ -216,7 +216,7 @@ We recommend you ensure that the GPUs are actually enabled. If you don't, you ma
 
 One way to check this is to make sure PyTorch can see the GPU(s). To do this, open up a ``python`` console and run the following:
 
-.. code-block:: console
+.. code-block:: terminal
 
     import torch
     torch.cuda.is_available()
@@ -224,14 +224,14 @@ One way to check this is to make sure PyTorch can see the GPU(s). To do this, op
 
 This should print out something like:
 
-.. code-block:: console
+.. code-block:: terminal
 
     True
     Tesla K80
 
 If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-interface>`_  installed, you can also use this command to inspect GPU utilization while the training job is running:
 
-.. code-block:: console
+.. code-block:: terminal
 
     > watch -d -n 0.5 nvidia-smi
 

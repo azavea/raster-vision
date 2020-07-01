@@ -23,7 +23,7 @@ Make Docker image
 -------------------
 The image for ``0.8`` is created automatically by Travis, but we need to manually create images for ``0.8.1``. For this you will need an account on Quay.io under the Azavea organization.
 
-.. code-block:: console
+.. code-block:: terminal
 
     docker login quay.io
 
@@ -39,20 +39,20 @@ Make release on PyPI
 ---------------------
 Once a release is created on PyPI it can't be deleted, so be careful. This step requires ``twine`` which you can install with ``pip install twine``. To store settings for PyPI you can setup a ``~/.pypirc`` file containing:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     [pypi]
     username = azavea
 
 To create the release distribution, navigate to the ``raster-vision`` repo on your local filesystem on an up-to-date branch ``0.8.``. Then run
 
-.. code-block:: console
+.. code-block:: terminal
 
     python setup.py sdist bdist_wheel
 
 The contents of the distribution will be in ``dist/``. When you are ready to upload to PyPI, run:
 
-.. code-block:: console
+.. code-block:: terminal
 
     twine upload dist/*
 

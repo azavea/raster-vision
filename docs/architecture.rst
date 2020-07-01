@@ -59,7 +59,7 @@ Finally, in order to package this code as a plugin, and make it usable within th
 
 We can invoke the Raster Vision CLI to run the pipeline using:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision run inprocess rastervision.pipeline_example_plugin1.config1 -a root_uri /opt/data/pipeline-example/1/ -s 2
 
@@ -94,7 +94,7 @@ We can configure the pipeline using:
 
 The pipeline can then be run with the above configuration using:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision run inprocess rastervision.pipeline_example_plugin1.config2 -a root_uri /opt/data/pipeline-example/2/ -s 2
 
@@ -129,7 +129,7 @@ The code to implement the new configuration and behavior, and a sample configura
 
 We can run the pipeline as follows:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision run inprocess rastervision.pipeline_example_plugin2.config3 -a root_uri /opt/data/pipeline-example/3/ -s 2
 
