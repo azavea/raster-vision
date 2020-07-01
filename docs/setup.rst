@@ -49,7 +49,7 @@ This script also has options for forwarding AWS credentials, and running Jupyter
 
 .. code-block:: console
 
-    > ./docker/run --help
+    > docker/run --help
 
     Usage: run <options> <command>
 
@@ -83,11 +83,32 @@ Rather than running Raster Vision from inside a Docker container, you can direct
 
 .. code-block:: console
 
-   > pip install rastervision==0.12.0
+   > pip install rastervision==0.12
 
 .. note:: Raster Vision requires Python 3.6 or later. Use ``pip3 install rastervision==0.12.0`` if you have more than one version of Python installed.
 
 You will also need various dependencies that are not pip-installable. For an example of setting these up, see the `Dockerfile <https://github.com/azavea/raster-vision/blob/0.12/Dockerfile>`_.
+
+Install individual pip packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Raster Vision is comprised of a required ``rastervision.pipeline`` package, and a number of optional plugin packages, as described in :ref:`codebase overview`. Each of these packages have their own dependencies, and can be installed individually. Running the following command:
+
+.. code-block:: console
+
+    > pip install rastervision==0.12
+
+is equivalent to running the following sequence of commands:
+
+.. code-block:: console
+
+    > pip install rastervision_pipeline==0.12
+    > pip install rastervision_aws_s3==0.12
+    > pip install rastervision_aws_batch==0.12
+    > pip install rastervision_core==0.12
+    > pip install rastervision_pytorch_learner==0.12
+    > pip install rastervision_pytorch_backend==0.12
+    > pip install rastervision_gdal_vsi==0.12
 
 Troubleshooting macOS Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

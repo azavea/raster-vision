@@ -5,7 +5,7 @@ Architecture and Customization
 
 .. _codebase overview:
 
-Codebase overview
+Codebase Overview
 -------------------
 
 The Raster Vision codebase is designed with modularity and flexibility in mind.
