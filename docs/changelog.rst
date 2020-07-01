@@ -1,6 +1,22 @@
 CHANGELOG
 =========
 
+Raster Vision 0.12
+-------------------
+
+* The entrypoints are at ``rastervision2.pipeline.cli`` and ``rastervision2.core.cli``, and an example pipeline configuration (for Rio) is at ``rastervision2.examples.chip_classification``.
+* The ``rastervision2.pipeline`` package has functionality for defining pipelines, running them locally and remotely, the filesystem, the RV config, registry, and Pydantic-based configuration. The main improvements here are: the ability to use this stuff independent of the rest of RV, the elimination of ``Config``, ``ConfigBuilder``, and ``Protobufs`` in favor of Pydantic dataclass-like models, and a simpler model of pipelines (formerly known as experiments) that can be extended to have other command more easily. In general, I've tried to preserve the most important features, while reducing the complexity of the code, sometimes at the expense of cutting out less important features. For examples, there is no longer the ability to automatically skip running a command, nor tree workflows. I don't think there's anything in the architecture that would make it hard to add these back in though.
+* All the other functionality has been split into optional plugins under the ``rastervision2`` namespace. By making these plugins, we can allow people to install specific things and their dependencies without having to lazily import everything like we've done in the past.
+* ``rastervision2.aws_batch`` and ``rastervision2.aws_s3`` are self-explanatory.
+* ``rastervision2.pytorch_learner`` is a "framework within a framework" for implementing supervised vision algorithms in PyTorch. It only depends on ``rastervision2.pipeline``. It factors out the common functionality across tasks into a ``Learner`` module which is extended for different CV tasks.
+* The core "geospatial ML" functionality is in ``rastervision2.core``. The formerly separate classes for ``Experiment``, ``Command``, and ``Task`` have all been combined in a set of pipeline classes which extend ``rastervision2.core.pipeline.rv_pipeline.RVPipeline``. The ``data`` package and associated extension points have a similar structure as before.
+* The ``rastervision2.pytorch_backend`` contains the PyTorch backends. These backends are now thin wrappers around calls to the ``pytorch_learner`` package. It's still possible to write a backend that uses a third party ML library though.
+* To extend RV, you can add plugins which:
+
+  * add new ``Config`` classes which extend existing ``Config`` classes (which have a ``build`` method that returns the associated domain object). This is how you use existing extension points such as ``LabelSource``.
+  * add new ``Pipeline`` classes. These can extend existing RV pipelines to override functionality or add new command. If you want to implement a workflow that involves some idiosyncratic data processing (but the usual ML) you can create a new pipeline that uses ``Learners`` that are in the ``pytorch_learner`` package.
+  * add a new ``Learner`` class in addition to a ``Pipeline`` class. If you want to implement a new ML task, you will need to extend the ``Learner`` class (if you want to use the base functionality), or just do everything from scratch.
+
 Raster Vision 0.11
 -------------------
 
