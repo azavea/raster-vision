@@ -57,7 +57,6 @@ We can now run the pipeline by invoking the following command inside the contain
 
 .. code-block:: terminal
 
-   > export BATCH_CPU_JOB_DEF="" BATCH_CPU_JOB_QUEUE="" BATCH_GPU_JOB_DEF="" BATCH_GPU_JOB_QUEUE="" BATCH_ATTEMPTS="" AWS_S3_REQUESTER_PAYS="False"
    > rastervision run local code/tiny_spacenet.py
 
 Seeing Results
