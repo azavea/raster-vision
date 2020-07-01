@@ -23,8 +23,6 @@ ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 RUN conda install -y python=3.6
 RUN python -m pip install --upgrade pip
-
-# ?
 RUN conda install -y -c conda-forge gdal=3.0.4
 
 # Setup GDAL_DATA directory, rasterio needs it.
@@ -52,8 +50,6 @@ RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
 
 COPY ./rastervision_core/requirements.txt /opt/src/requirements.txt
 RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-# TODO make a release for this and move into requirements.txt
-RUN pip install git+git://github.com/azavea/mask-to-polygons@f1d0b623c648ba7ccb1839f74201c2b57229b006
 
 COPY ./rastervision_pytorch_learner/requirements.txt /opt/src/requirements.txt
 RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
