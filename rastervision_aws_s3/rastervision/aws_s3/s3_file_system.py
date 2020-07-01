@@ -4,6 +4,8 @@ import subprocess
 from datetime import datetime
 from urllib.parse import urlparse
 
+from everett.manager import ConfigurationMissingError
+
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                NotWritableError)
 
@@ -83,11 +85,13 @@ class S3FileSystem(FileSystem):
     def get_request_payer():
         # Import here to avoid circular reference.
         from rastervision.pipeline import rv_config
-        s3_config = rv_config.get_namespace_config(AWS_S3)
-
-        # 'None' needs the quotes because boto3 cannot handle None.
-        return ('requester' if s3_config(
-            'requester_pays', parser=bool, default='False') else 'None')
+        try:
+            s3_config = rv_config.get_namespace_config(AWS_S3)
+            # 'None' needs the quotes because boto3 cannot handle None.
+            return ('requester' if s3_config(
+                'requester_pays', parser=bool, default='False') else 'None')
+        except ConfigurationMissingError:
+            return 'None'
 
     @staticmethod
     def get_session():
