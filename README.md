@@ -10,12 +10,12 @@
 [![Documentation Status](https://readthedocs.org/projects/raster-vision/badge/?version=latest)](https://docs.rastervision.io/en/latest/?badge=latest)
 
 Raster Vision is an open source Python framework for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
-* It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning workflow including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
+* It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
 ![Overview of Raster Vision workflow](docs/img/rv-pipeline-overview.png)
-* There is built-in support for chip classification, object detection, and semantic segmentation with backends using PyTorch and Tensorflow.
+* There is built-in support for chip classification, object detection, and semantic segmentation with backends using PyTorch.
 ![Examples of chip classification, object detection and semantic segmentation](docs/img/cv-tasks.png)
 * Experiments can be executed on CPUs and GPUs with built-in support for running in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
-* The framework is extensible to new data sources, tasks (eg. object detection), backends (eg. TF Object Detection API), and cloud providers.
+* The framework is extensible to new data sources, tasks (eg. instance segmentation), backends (eg. Detectron2), and cloud providers.
 
 See the [documentation](https://docs.rastervision.io) for more details.
 
@@ -24,13 +24,11 @@ See the [documentation](https://docs.rastervision.io) for more details.
 There are several ways to setup Raster Vision:
 * To build Docker images from scratch, after cloning this repo, run `docker/build`, and run the container using `docker/run`.
 * Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision). The tag for the `raster-vision` image determines what type of image it is:
-    - The `tf-cpu-*` tags are for running the Tensorflow CPU containers.
-    - The `tf-gpu-*` tags are for running the Tensorflow GPU containers.
     - The `pytorch-*` tags are for running the PyTorch containers.
     - We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:pytorch-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
 * Raster Vision can be installed directly using `pip install rastervision`. However, some of its dependencies will have to be installed manually.
 
-For more detailed instructions, see the [Setup docs](https://docs.rastervision.io/en/0.11/setup.html).
+For more detailed instructions, see the [Setup docs](https://docs.rastervision.io/en/0.12/setup.html).
 
 ### Example
 
@@ -39,124 +37,94 @@ The best way to get a feel for what Raster Vision enables is to look at an examp
 ```python
 # tiny_spacenet.py
 
-import rastervision as rv
+from os.path import join
 
-class TinySpacenetExperimentSet(rv.ExperimentSet):
-    def exp_main(self):
-        base_uri = ('https://s3.amazonaws.com/azavea-research-public-data/'
-                    'raster-vision/examples/spacenet')
-        train_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img205.tif'.format(base_uri)
-        train_label_uri = '{}/buildings_AOI_2_Vegas_img205.geojson'.format(base_uri)
-        val_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'.format(base_uri)
-        val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
-        channel_order = [0, 1, 2]
-        background_class_id = 2
-
-        # ------------- TASK -------------
-
-        task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                            .with_chip_size(300) \
-                            .with_chip_options(chips_per_scene=50) \
-                            .with_classes({
-                                'building': (1, 'red'),
-                                'background': (2, 'black')
-                            }) \
-                            .build()
-
-        # ------------- BACKEND -------------
-
-        backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
-            .with_task(task) \
-            .with_train_options(
-                batch_size=2,
-                num_epochs=1,
-                debug=True) \
-            .build()
-
-        # ------------- TRAINING -------------
-
-        train_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
-                                                   .with_uri(train_image_uri) \
-                                                   .with_channel_order(channel_order) \
-                                                   .with_stats_transformer() \
-                                                   .build()
-
-        train_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
-                                                         .with_vector_source(train_label_uri) \
-                                                         .with_rasterizer_options(background_class_id) \
-                                                         .build()
-        train_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                                                 .with_raster_source(train_label_raster_source) \
-                                                 .build()
-
-        train_scene =  rv.SceneConfig.builder() \
-                                     .with_task(task) \
-                                     .with_id('train_scene') \
-                                     .with_raster_source(train_raster_source) \
-                                     .with_label_source(train_label_source) \
-                                     .build()
-
-        # ------------- VALIDATION -------------
-
-        val_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
-                                                 .with_uri(val_image_uri) \
-                                                 .with_channel_order(channel_order) \
-                                                 .with_stats_transformer() \
-                                                 .build()
-
-        val_label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
-                                                       .with_vector_source(val_label_uri) \
-                                                       .with_rasterizer_options(background_class_id) \
-                                                       .build()
-        val_label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                                               .with_raster_source(val_label_raster_source) \
-                                               .build()
-
-        val_scene = rv.SceneConfig.builder() \
-                                  .with_task(task) \
-                                  .with_id('val_scene') \
-                                  .with_raster_source(val_raster_source) \
-                                  .with_label_source(val_label_source) \
-                                  .build()
-
-        # ------------- DATASET -------------
-
-        dataset = rv.DatasetConfig.builder() \
-                                  .with_train_scene(train_scene) \
-                                  .with_validation_scene(val_scene) \
-                                  .build()
-
-        # ------------- EXPERIMENT -------------
-
-        experiment = rv.ExperimentConfig.builder() \
-                                        .with_id('tiny-spacenet-experiment') \
-                                        .with_root_uri('/opt/data/rv') \
-                                        .with_task(task) \
-                                        .with_backend(backend) \
-                                        .with_dataset(dataset) \
-                                        .with_stats_analyzer() \
-                                        .build()
-
-        return experiment
+from rastervision.core.rv_pipeline import *
+from rastervision.core.backend import *
+from rastervision.core.data import *
+from rastervision.pytorch_backend import *
+from rastervision.pytorch_learner import *
 
 
-if __name__ == '__main__':
-    rv.main()
+def get_config(runner):
+    root_uri = '/opt/data/output/'
+    base_uri = ('https://s3.amazonaws.com/azavea-research-public-data/'
+                'raster-vision/examples/spacenet')
+    train_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img205.tif'.format(
+        base_uri)
+    train_label_uri = '{}/buildings_AOI_2_Vegas_img205.geojson'.format(
+        base_uri)
+    val_image_uri = '{}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'.format(base_uri)
+    val_label_uri = '{}/buildings_AOI_2_Vegas_img25.geojson'.format(base_uri)
+    channel_order = [0, 1, 2]
+    class_config = ClassConfig(
+        names=['building', 'background'], colors=['red', 'black'])
+
+    def make_scene(scene_id, image_uri, label_uri):
+        """
+        - StatsTransformer is used to convert uint16 values to uint8.
+        - The GeoJSON does not have a class_id property for each geom,
+          so it is inferred as 0 (ie. building) because the default_class_id
+          is set to 0.
+        - The labels are in the form of GeoJSON which needs to be rasterized
+          to use as label for semantic segmentation, so we use a RasterizedSource.
+        - The rasterizer set the background (as opposed to foreground) pixels
+          to 1 because background_class_id is set to 1.
+        """
+        raster_source = RasterioSourceConfig(
+            uris=[image_uri],
+            channel_order=channel_order,
+            transformers=[StatsTransformerConfig()])
+        vector_source = GeoJSONVectorSourceConfig(
+            uri=label_uri, default_class_id=0, ignore_crs_field=True)
+        label_source = SemanticSegmentationLabelSourceConfig(
+            raster_source=RasterizedSourceConfig(
+                vector_source=vector_source,
+                rasterizer_config=RasterizerConfig(background_class_id=1)))
+        return SceneConfig(
+            id=scene_id,
+            raster_source=raster_source,
+            label_source=label_source)
+
+    dataset = DatasetConfig(
+        class_config=class_config,
+        train_scenes=[
+            make_scene('scene_205', train_image_uri, train_label_uri)
+        ],
+        validation_scenes=[
+            make_scene('scene_25', val_image_uri, val_label_uri)
+        ])
+
+    # Use the PyTorch backend for the SemanticSegmentation pipeline.
+    chip_sz = 300
+    backend = PyTorchSemanticSegmentationConfig(
+        model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
+        solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
+    chip_options = SemanticSegmentationChipOptions(
+        window_method=SemanticSegmentationWindowMethod.random_sample,
+        chips_per_scene=10)
+
+    return SemanticSegmentationConfig(
+        root_uri=root_uri,
+        dataset=dataset,
+        backend=backend,
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz,
+        chip_options=chip_options)
+
 ```
 
 Raster Vision uses a unittest-like method for executing experiments. For instance, if the above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment using:
 
 ```bash
-> rastervision run local -p tiny_spacenet.py
+> rastervision run local tiny_spacenet.py
 ```
 
-See the [Quickstart](https://docs.rastervision.io/en/0.11/quickstart.html) for a more complete description of running this example.
+See the [Quickstart](https://docs.rastervision.io/en/0.12/quickstart.html) for a more complete description of running this example.
 
 ### Resources
 
 * [Raster Vision Documentation](https://docs.rastervision.io)
-* [raster-vision-examples](https://github.com/azavea/raster-vision-examples): A repository of examples of running RV on open datasets
-* [raster-vision-aws](https://github.com/azavea/raster-vision-aws): Deployment code for setting up AWS Batch with GPUs
 
 ### Contact and Support
 
