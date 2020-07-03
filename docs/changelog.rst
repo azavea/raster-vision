@@ -1,15 +1,71 @@
 CHANGELOG
 =========
 
+Raster Vision 0.12
+-------------------
+
+This release presents a major refactoring of Raster Vision intended to simplify the codebase, and make it more flexible and customizable.
+
+To learn about how to upgrade existing experiment configurations, perhaps the best approach is to read the `source code <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples>`_ of the :ref:`rv examples` to get a feel for the new syntax. Unfortunately, existing predict packages will not be usable with this release, and upgrading and re-running the experiments will be necessary. For more advanced users who have written plugins or custom commands, the internals have changed substantially, and we recommend reading :ref:`architecture`.
+
+Since the changes in this release are sweeping, it is difficult to enumerate a list of all changes and associated PRs. Therefore, this change log describes the changes at a high level, along with some justifications and pointers to further documentation.
+
+Simplified Configuration Schema
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We are still using a modular, programmatic approach to configuration, but have switched to using a ``Config`` base class which uses the `Pydantic <https://pydantic-docs.helpmanual.io/>`_ library. This allows us to define configuration schemas in a declarative fashion, and let the underlying library handle serialization, deserialization, and validation. In addition, this has allowed us to `DRY <https://en.wikipedia.org/wiki/Don%27t_repeat_yourself>`_ up the configuration code, eliminate the use of Protobufs, and represent configuration from plugins in the same fashion as built-in functionality. To see the difference, compare the configuration code for ``ChipClassificationLabelSource`` in 0.11 (`label_source.proto <https://github.com/azavea/raster-vision/blob/0.11/rastervision/protos/label_source.proto>`_ and `chip_classification_label_source_config.py <https://github.com/azavea/raster-vision/blob/0.11/rastervision/data/label_source/chip_classification_label_source_config.py>`_), and in 0.12 (`chip_classification_label_source_config.py <https://github.com/azavea/raster-vision/blob/0.12/rastervision_core/rastervision/core/data/label_source/chip_classification_label_source_config.py>`_).
+
+Abstracted out Pipelines
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Raster Vision includes functionality for running computational pipelines in local and remote environments, but previously, this functionality was tightly coupled with the "domain logic" of machine learning on geospatial data in the ``Experiment`` abstraction. This made it more difficult to add and modify commands, as well as use this functionality in other projects. In this release, we factored out the experiment running code into a separate :ref:`rastervision.pipeline <pipelines plugins>` package, which can be used for defining, configuring, customizing, and running arbitrary computational pipelines.
+
+Reorganization into Plugins
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The rest of Raster Vision is now written as a set of optional plugins that have  ``Pipelines`` which implement the "domain logic" of machine learning on geospatial data. Implementing everything as optional (``pip`` installable) plugins makes it easier to install subsets of Raster Vision functionality, eliminates separate code paths for built-in and plugin functionality, and provides (de facto) examples of how to write plugins. See :ref:`codebase overview` for more details.
+
+More Flexible PyTorch Backends
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The 0.10 release added PyTorch backends for chip classification, semantic segmentation, and object detection. In this release, we abstracted out the common code for training models into a flexible ``Learner`` base class with subclasses for each of the computer vision tasks. This code is in the ``rastervision.pytorch_learner`` plugin, and is used by the ``Backends`` in ``rastervision.pytorch_backend``. By decoupling ``Backends`` and ``Learners``, it is now easier to write arbitrary ``Pipelines`` and new ``Backends`` that reuse the core model training code, which can be customized by overriding methods such as ``build_model``. See :ref:`customizing rv`.
+
+Removed Tensorflow Backends
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Tensorflow backends and associated Docker images have been removed. It is too difficult to maintain backends for multiple deep learning frameworks, and PyTorch has worked well for us. Of course, it's still possible to write ``Backend`` plugins using any framework.
+
+Other Changes
+~~~~~~~~~~~~~~
+
+* For simplicity, we moved the contents of the `raster-vision-examples <https://github.com/azavea/raster-vision-examples>`_ and `raster-vision-aws <https://github.com/azavea/raster-vision-aws>`_ repos into the main repo. See :ref:`rv examples` and :ref:`cloudformation setup`.
+* To help people bootstrap new projects using RV, we added :ref:`bootstrap`.
+* All the PyTorch backends now offer data augmentation using `albumentations <https://albumentations.readthedocs.io/>`_.
+* We removed the ability to automatically skip running commands that already have output, "tree workflows", and "default providers". We also unified the ``Experiment``, ``Command``, and ``Task`` classes into a single ``Pipeline`` class which is subclassed for different computer vision (or other) tasks. These features and concepts had little utility in our experience, and presented stumbling blocks to outside contributors and plugin writers.
+* Although it's still possible to add new ``VectorSources`` and other classes for reading data, our philosophy going forward is to prefer writing pre-processing scripts to get data into the format that Raster Vision can already consume. The ``VectorTileVectorSource`` was removed since it violates this new philosophy.
+* We previously attempted to make predictions for semantic segmentation work in a streaming fashion (to avoid running out of RAM), but the implementation was buggy and complex. So we reverted to holding all predictions for a scene in RAM, and now assume that scenes are roughly < 20,000 x 20,000 pixels. This works better anyway from a parallelization standponit.
+* We switched to writing chips to disk incrementally during the ``CHIP`` command using a ``SampleWriter`` class to avoid running out of RAM.
+* The term "predict package" has been replaced with "model bundle", since it rolls off the tongue better, and ``BUNDLE`` is the name of the command that produces it.
+* Class ids are now indexed starting at 0 instead of 1, which seems more intuitive. The "null class", used for marking pixels in semantic segmentation that have not been labeled, used to be 0, and is now equal to ``len(class_ids)``.
+* The ``aws_batch`` runner was renamed ``batch`` due to a naming conflict, and the names of the configuration variables for Batch changed. See :ref:`aws batch setup`.
+
+Future Work
+~~~~~~~~~~~~
+
+The next big features we plan on developing are:
+
+* the ability to read and write data in `STAC <https://stacspec.org/>`_ format using the `label extension <https://github.com/radiantearth/stac-spec/tree/master/extensions/label>`_. This will facilitate integration with other tools such as `GroundWork <https://groundwork.azavea.com/>`_.
+* the ability to `train models on multi-band imagery <https://www.azavea.com/blog/2019/08/30/transfer-learning-from-rgb-to-multi-band-imagery/>`_, rather than having to pick a subset of three bands.
+
 Raster Vision 0.11
 -------------------
 
 Features
 ~~~~~~~~~~
 
-- Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#859 <https://github.com/azavea/raster-vision/pull/859>`__
-- Updated the Quickstart doc with pytorch docker image and model `#863 <https://github.com/azavea/raster-vision/pull/863>`__
-- Added the possibility to deal with class imbalances through oversampling. `#868 <https://github.com/azavea/raster-vision/pull/868>`
+- Added the possibility for chip classification to use data augmentors from the albumentations libary to enhance the training data. `#859 <https://github.com/azavea/raster-vision/pull/859>`_
+- Updated the Quickstart doc with pytorch docker image and model `#863 <https://github.com/azavea/raster-vision/pull/863>`_
+- Added the possibility to deal with class imbalances through oversampling. `#868 <https://github.com/azavea/raster-vision/pull/868>`_
 
 Raster Vision 0.11.0
 ~~~~~~~~~~~~~~~~~~~~~
@@ -17,10 +73,10 @@ Raster Vision 0.11.0
 Bug Fixes
 ^^^^^^^^^^
 
-- Ensure randint args are ints `#849 <https://github.com/azavea/raster-vision/pull/849>`__
-- The augmentors were not serialized properly for the chip command  `#857 <https://github.com/azavea/raster-vision/pull/857>`__
-- Fix problems with pretrained flag `#860 <https://github.com/azavea/raster-vision/pull/860>`__
-- Correctly get_local_path for some zxy tile URIS `#865 <https://github.com/azavea/raster-vision/pull/865>`__
+- Ensure randint args are ints `#849 <https://github.com/azavea/raster-vision/pull/849>`_
+- The augmentors were not serialized properly for the chip command  `#857 <https://github.com/azavea/raster-vision/pull/857>`_
+- Fix problems with pretrained flag `#860 <https://github.com/azavea/raster-vision/pull/860>`_
+- Correctly get_local_path for some zxy tile URIS `#865 <https://github.com/azavea/raster-vision/pull/865>`_
 
 Raster Vision 0.10
 ------------------

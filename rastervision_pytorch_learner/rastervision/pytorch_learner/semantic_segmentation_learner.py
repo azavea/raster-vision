@@ -141,4 +141,10 @@ class SemanticSegmentationLearner(Learner):
         colors = [tuple([_c / 255 for _c in c]) for c in colors]
         cmap = matplotlib.colors.ListedColormap(colors)
         labels = labels.numpy()
-        ax.imshow(labels, alpha=0.4, vmin=0, vmax=len(colors), cmap=cmap)
+        ax.imshow(
+            labels,
+            alpha=0.4,
+            vmin=0,
+            vmax=len(colors),
+            cmap=cmap,
+            interpolation='none')

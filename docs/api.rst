@@ -96,6 +96,11 @@ RasterioSourceConfig
 
 .. autoclass:: rastervision.core.data.raster_source.RasterioSourceConfig
 
+RasterizerConfig
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_source.RasterizerConfig
+
 .. _api RasterizedSourceConfig:
 
 RasterizedSourceConfig

@@ -5,7 +5,7 @@ Architecture and Customization
 
 .. _codebase overview:
 
-Codebase overview
+Codebase Overview
 -------------------
 
 The Raster Vision codebase is designed with modularity and flexibility in mind.
@@ -32,7 +32,7 @@ Writing pipelines and plugins
 
 In this section, we explain the most important aspects of the ``rastervision.pipeline`` package through a series of examples which incrementally build on one another. These examples show how to write custom pipelines and configuration schemas, how to customize an existing pipeline, and how to package the code as a plugin.
 
-The full source code for Examples 1 and 2 is in `rastervision.pipeline_example_plugin1 <https://github.com/azavea/raster-vision/tree/master/rastervision_pipeline/rastervision/pipeline_example_plugin1>`_ and Example 3 is in `rastervision.pipeline_example_plugin2 <https://github.com/azavea/raster-vision/tree/master/rastervision_pipeline/rastervision/pipeline_example_plugin2>`_ and they can be run from inside the RV Docker image. However, **note that new plugins are typically created in a separate repo and Docker image**, and :ref:`bootstrap` shows how to do this.
+The full source code for Examples 1 and 2 is in `rastervision.pipeline_example_plugin1 <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pipeline/rastervision/pipeline_example_plugin1>`_ and Example 3 is in `rastervision.pipeline_example_plugin2 <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pipeline/rastervision/pipeline_example_plugin2>`_ and they can be run from inside the RV Docker image. However, **note that new plugins are typically created in a separate repo and Docker image**, and :ref:`bootstrap` shows how to do this.
 
 .. _example 1:
 
@@ -59,7 +59,7 @@ Finally, in order to package this code as a plugin, and make it usable within th
 
 We can invoke the Raster Vision CLI to run the pipeline using:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision run inprocess rastervision.pipeline_example_plugin1.config1 -a root_uri /opt/data/pipeline-example/1/ -s 2
 
@@ -94,7 +94,7 @@ We can configure the pipeline using:
 
 The pipeline can then be run with the above configuration using:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision run inprocess rastervision.pipeline_example_plugin1.config2 -a root_uri /opt/data/pipeline-example/2/ -s 2
 
@@ -129,7 +129,7 @@ The code to implement the new configuration and behavior, and a sample configura
 
 We can run the pipeline as follows:
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision run inprocess rastervision.pipeline_example_plugin2.config3 -a root_uri /opt/data/pipeline-example/3/ -s 2
 

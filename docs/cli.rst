@@ -9,7 +9,7 @@ The Raster Vision command line utility, ``rastervision``, is installed with a ``
 ``rastervision``, which is installed by default in the :ref:`docker images`.
 It has a main command, with some top level options, and several subcommands.
 
-.. code-block:: shell
+.. code-block:: terminal
 
    > rastervision --help
 
@@ -40,7 +40,7 @@ run
 
 Run is the main interface into running pipelines.
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision run --help
 
@@ -81,7 +81,7 @@ run_command
 The ``run_command`` is used to run a specific command from a serialized ``PipelineConfig`` JSON file.
 This is likely only interesting to people writing :ref:`custom runners <runners>`.
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision run_command --help
 
@@ -103,7 +103,7 @@ predict
 
 Use ``predict`` to make predictions on new imagery given a :ref:`model bundle <model bundle>`.
 
-.. code-block:: shell
+.. code-block:: terminal
 
     > rastervision predict --help
 
