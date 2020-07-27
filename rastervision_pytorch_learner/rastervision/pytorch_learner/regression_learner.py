@@ -52,18 +52,23 @@ class RegressionModel(nn.Module):
                  backbone_arch,
                  out_features,
                  pretrained=True,
-                 pos_out_inds=None):
+                 pos_out_inds=None,
+                 prob_out_inds=None):
         super().__init__()
         self.backbone = getattr(models, backbone_arch)(pretrained=pretrained)
         in_features = self.backbone.fc.in_features
         self.backbone.fc = nn.Linear(in_features, out_features)
         self.pos_out_inds = pos_out_inds
+        self.prob_out_inds = prob_out_inds
 
     def forward(self, x):
         out = self.backbone(x)
         if self.pos_out_inds:
             for ind in self.pos_out_inds:
                 out[:, ind] = out[:, ind].exp()
+        if self.prob_out_inds:
+            for ind in self.prob_out_inds:
+                out[:, ind] = out[:, ind].sigmoid()
         return out
 
 
@@ -76,11 +81,16 @@ class RegressionLearner(Learner):
             self.cfg.data.class_names.index(l)
             for l in self.cfg.data.pos_class_names
         ]
+        prob_out_inds = [
+            self.cfg.data.class_names.index(l)
+            for l in self.cfg.data.prob_class_names
+        ]
         model = RegressionModel(
             backbone,
             out_features,
             pretrained=pretrained,
-            pos_out_inds=pos_out_inds)
+            pos_out_inds=pos_out_inds,
+            prob_out_inds=prob_out_inds)
         return model
 
     def _get_datasets(self, uri):

@@ -13,6 +13,7 @@ class RegressionDataFormat(Enum):
 @register_config('regression_data')
 class RegressionDataConfig(DataConfig):
     pos_class_names: List[str] = []
+    prob_class_names: List[str] = []
     data_format: RegressionDataFormat = RegressionDataFormat.csv
 
 
