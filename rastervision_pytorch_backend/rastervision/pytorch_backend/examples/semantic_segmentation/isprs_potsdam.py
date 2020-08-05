@@ -12,7 +12,7 @@ from rastervision.pytorch_learner import *
 from rastervision.pytorch_backend.examples.utils import get_scene_info, save_image_crop
 
 
-def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
+def get_config(runner, raw_uri, processed_uri, root_uri, multiband=False, test=False):
     train_ids = [
         '2-10', '2-11', '3-10', '3-11', '4-10', '4-11', '4-12', '5-10', '5-11',
         '5-12', '6-10', '6-11', '6-7', '6-9', '7-10', '7-11', '7-12', '7-7',
@@ -55,8 +55,12 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
             raster_uri = crop_uri
             label_uri = label_crop_uri
 
-        # infrared, red, green
-        channel_order = [3, 0, 1]
+        if multiband:
+            # use all 4 channels
+            channel_order = [0, 1, 2, 3]
+        else:
+            # use infrared, red, & green channels only
+            channel_order = [3, 0, 1]
         raster_source = RasterioSourceConfig(
             uris=[raster_uri], channel_order=channel_order)
 

@@ -26,11 +26,18 @@ class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
         make_dir(img_dir)
         make_dir(labels_dir)
 
-        img_path = join(img_dir, '{}-{}.png'.format(sample.scene_id,
-                                                    self.sample_ind))
+        num_channels = sample.chip.shape[-1]
+        if num_channels > 3:
+            img_name = '{}-{}.npz'.format(sample.scene_id,self.sample_ind)
+            img_path = join(img_dir, img_name)
+            np.save(img_path, sample.chip)
+        else:
+            img_name = '{}-{}.png'.format(sample.scene_id,self.sample_ind)
+            img_path = join(img_dir, img_name)
+            save_img(sample.chip, img_path)
+
         labels_path = join(
             labels_dir, '{}-{}.png'.format(sample.scene_id, self.sample_ind))
-        save_img(sample.chip, img_path)
         save_img(label_arr, labels_path)
 
         self.sample_ind += 1

@@ -48,8 +48,35 @@ class SemanticSegmentationDataset(Dataset):
         return len(self.img_paths)
 
 
+class SemanticSegmentationNumpyDataset(Dataset):
+    def __init__(self, data_dir, transform=None):
+        self.data_dir = data_dir
+        self.img_paths = glob.glob(join(data_dir, 'img', '*.npz'))
+        self.transform = transform
+
+    def __getitem__(self, ind):
+        img_path = self.img_paths[ind]
+        label_path = join(self.data_dir, 'labels', basename(img_path))
+        x = np.load(img_path)
+        y = Image.open(label_path)
+
+        y = np.array(y)
+        if self.transform is not None:
+            out = self.transform(image=x, mask=y)
+            x = out['image']
+            y = out['mask']
+
+        x = torch.from_numpy(x).permute(2, 0, 1).float() / 255.0
+        y = torch.from_numpy(y).long()
+
+        return (x, y)
+
+    def __len__(self):
+        return len(self.img_paths)
+
+
 class SemanticSegmentationLearner(Learner):
-    def build_model(self):
+    def build_model(self, input_channels=3):
         # TODO support FCN option
         pretrained = self.cfg.model.pretrained
         model = models.segmentation.segmentation._segm_resnet(
@@ -58,6 +85,8 @@ class SemanticSegmentationLearner(Learner):
             len(self.cfg.data.class_names),
             False,
             pretrained_backbone=pretrained)
+        if input_channels != 3:
+            pass
         return model
 
     def _get_datasets(self, uri):
