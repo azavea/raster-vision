@@ -192,6 +192,15 @@ class DataConfig(Config):
         description=
         ('Length of a side of each image in pixels. This is the size to transform '
          'it to during training, not the size in the raw dataset.'))
+
+    img_channels: int = Field(
+        3, description='The number of channels of the training images.')
+
+    img_format: str = Field(
+        'png', description='The filetype of the training images.')
+    label_format: str = Field(
+        'png', description='The filetype of the training labels.')
+    
     num_workers: int = Field(
         4,
         description='Number of workers to use when DataLoader makes batches.')

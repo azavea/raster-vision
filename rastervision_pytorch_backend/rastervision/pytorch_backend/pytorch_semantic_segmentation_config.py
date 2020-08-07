@@ -18,6 +18,9 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
         data.class_names = pipeline.dataset.class_config.names
         data.class_colors = pipeline.dataset.class_config.colors
         data.img_sz = pipeline.train_chip_sz
+        data.img_channels = pipeline.img_channels
+        data.img_format = pipeline.img_format
+        data.label_format = pipeline.label_format
         data.augmentors = self.augmentors
 
         learner = SemanticSegmentationLearnerConfig(
