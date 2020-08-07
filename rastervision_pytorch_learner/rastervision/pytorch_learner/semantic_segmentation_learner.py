@@ -74,7 +74,7 @@ class SemanticSegmentationDataset(Dataset):
 
 
 class SemanticSegmentationLearner(Learner):
-    def build_model(self, input_channels=3):
+    def build_model(self):
         # TODO support FCN option
         pretrained = self.cfg.model.pretrained
         model = models.segmentation.segmentation._segm_resnet(
@@ -83,8 +83,25 @@ class SemanticSegmentationLearner(Learner):
             len(self.cfg.data.class_names),
             False,
             pretrained_backbone=pretrained)
+
+        input_channels = self.cfg.data.img_channels
         if input_channels != 3:
-            pass
+            if not pretrained:
+                old_conv = model.backbone.conv1
+                new_conv = torch.nn.Conv2d(
+                    in_channels=input_channels,
+                    out_channels=old_conv.out_channels,
+                    kernel_size=old_conv.kernel_size,
+                    stride=old_conv.stride,
+                    dilation=old_conv.dilation,
+                    groups=old_conv.groups,
+                    bias=old_conv.bias
+                )
+                model.backbone.conv1 = new_conv
+            else:
+                # TODO decide how to modify a pretrained model
+                pass
+
         return model
 
     def _get_datasets(self, uri):
@@ -92,6 +109,7 @@ class SemanticSegmentationLearner(Learner):
 
         data_dirs = self.unzip_data(uri)
         transform, aug_transform = self.get_data_transforms()
+        img_fmt, label_fmt = cfg.data.img_format, cfg.data.label_format
 
         train_ds, valid_ds, test_ds = [], [], []
         for data_dir in data_dirs:
