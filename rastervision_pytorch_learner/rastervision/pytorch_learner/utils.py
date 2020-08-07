@@ -1,6 +1,7 @@
 from typing import Tuple, Optional
 
 import torch
+from torch import nn
 from torch.utils.data import Dataset
 import numpy as np
 from PIL import ImageColor
@@ -90,3 +91,31 @@ class AlbumentationsDataset(Dataset):
 
     def __len__(self):
         return len(self.orig_dataset)
+
+
+class SplitTensor(nn.Module):
+    ''' Wrapper around `torch.split` '''
+
+    def __init__(self, size_or_sizes, dim):
+        super().__init__()
+        self.size_or_sizes = size_or_sizes
+        self.dim = dim
+
+    def forward(self, X):
+        return X.split(self.size_or_sizes, dim=self.dim)
+
+class Parallel(nn.ModuleList):
+    ''' Passes inputs through multiple `nn.Module`s in parallel. Returns a tuple of outputs. '''
+    def __init__(self, *args):
+        super().__init__(args)
+
+    def forward(self, xs):
+        if isinstance(xs, torch.Tensor):
+            return tuple(m(xs) for m in self)
+        assert len(xs) == len(self)
+        return tuple(m(X) for m, X in zip(self, xs))
+
+class AddTensors(nn.Module):
+    ''' Adds all its inputs together. '''
+    def forward(self, xs):
+        return sum(xs)

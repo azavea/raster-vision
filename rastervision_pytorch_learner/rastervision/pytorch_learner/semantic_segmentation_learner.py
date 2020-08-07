@@ -17,9 +17,11 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, ConcatDataset
 from torchvision import models
 
+from rastervision.pipeline.config import ConfigError
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.utils import (
-    compute_conf_mat_metrics, compute_conf_mat, color_to_triple)
+    compute_conf_mat_metrics, compute_conf_mat, color_to_triple,
+    SplitTensor, Parallel, AddTensors)
 
 log = logging.getLogger(__name__)
 
@@ -85,22 +87,46 @@ class SemanticSegmentationLearner(Learner):
             pretrained_backbone=pretrained)
 
         input_channels = self.cfg.data.img_channels
-        if input_channels != 3:
-            if not pretrained:
-                old_conv = model.backbone.conv1
-                new_conv = torch.nn.Conv2d(
-                    in_channels=input_channels,
-                    out_channels=old_conv.out_channels,
-                    kernel_size=old_conv.kernel_size,
-                    stride=old_conv.stride,
-                    dilation=old_conv.dilation,
-                    groups=old_conv.groups,
-                    bias=old_conv.bias
-                )
-                model.backbone.conv1 = new_conv
-            else:
-                # TODO decide how to modify a pretrained model
-                pass
+        old_conv = model.backbone.conv1
+        old_conv_channels = old_conv.in_channels
+
+        if input_channels == old_conv_channels:
+            return model
+
+        if not pretrained:
+            new_conv = torch.nn.Conv2d(
+                in_channels=input_channels,
+                out_channels=old_conv.out_channels,
+                kernel_size=old_conv.kernel_size,
+                stride=old_conv.stride,
+                padding=old_conv.padding,
+                dilation=old_conv.dilation,
+                groups=old_conv.groups,
+                bias=old_conv.bias
+            )
+            model.backbone.conv1 = new_conv
+            return model
+
+        if input_channels > old_conv_channels:
+            new_conv_channels = input_channels - old_conv_channels
+            new_conv = torch.nn.Conv2d(
+                in_channels=new_conv_channels,
+                out_channels=old_conv.out_channels,
+                kernel_size=old_conv.kernel_size,
+                stride=old_conv.stride,
+                padding=old_conv.padding,
+                dilation=old_conv.dilation,
+                groups=old_conv.groups,
+                bias=old_conv.bias
+            )
+            model.backbone.conv1 = nn.Sequential(
+                SplitTensor((old_conv_channels, new_conv_channels), dim=1),
+                Parallel(old_conv, new_conv),
+                AddTensors()
+            )
+        else:
+            raise ConfigError(
+                f'Fewer input channels (={input_channels}) than what the pretrained model expects (={old_conv_channels})')
 
         return model
 
@@ -175,6 +201,21 @@ class SemanticSegmentationLearner(Learner):
 
     def plot_xyz(self, ax, x, y, z=None):
         x = x.permute(1, 2, 0)
+
+        # h, w, c = x.shape
+        # channel_groups = self.cfg.data.channel_display_groups
+        # # if not specified, just use the first 3 channels
+        # if not channel_groups:
+        #     channel_groups = [ (0, 1, 2)[: min(3, c)] ]
+
+        # for chs in channel_groups:
+        #     if len(chs) == 3:
+        #         im = x[..., chs]
+        #     elif len(chs) == 1:
+        #         im = x[..., chs].expand(-1, -1, 3)
+        #     elif len(chs) == 2:
+        #         third_channel = torch.full((h, w, 1), .5)
+        #         im = torch.cat((x, third_channel), dim=-1)
         if x.shape[2] == 1:
             x = torch.cat([x for _ in range(3)], dim=2)
         ax.imshow(x)
