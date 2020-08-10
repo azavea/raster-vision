@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Union
 
 from rastervision.pipeline.config import register_config, Field, validator
 from rastervision.pytorch_learner.learner_config import (
@@ -13,6 +14,17 @@ class SemanticSegmentationDataFormat(Enum):
 @register_config('semantic_segmentation_data')
 class SemanticSegmentationDataConfig(DataConfig):
     data_format: SemanticSegmentationDataFormat = SemanticSegmentationDataFormat.default
+
+    img_channels: int = Field(
+        3, description='The number of channels of the training images.')
+
+    img_format: str = Field(
+        'png', description='The filetype of the training images.')
+    label_format: str = Field(
+        'png', description='The filetype of the training labels.')
+
+    channel_display_groups: Union[dict, list, tuple] = Field(
+        [(0, 1, 2)], description='Groups of image channels to display together.')
 
 
 @register_config('semantic_segmentation_model')

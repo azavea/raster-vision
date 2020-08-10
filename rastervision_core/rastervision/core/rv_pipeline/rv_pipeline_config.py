@@ -40,14 +40,6 @@ class RVPipelineConfig(PipelineConfig):
         300, description='Size of predictions chips in pixels.')
     predict_batch_sz: int = Field(
         8, description='Batch size to use during prediction.')
-        
-    img_channels: int = Field(
-        3, description='The number of channels of the training images.')
-        
-    img_format: str = Field(
-        'png', description='The filetype of the training images.')
-    label_format: str = Field(
-        'png', description='The filetype of the training labels.')
 
     analyze_uri: Optional[str] = Field(
         None,
