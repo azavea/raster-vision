@@ -1,6 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
+from typing import Union, IO, Callable, List
 from os.path import join, isdir
 from pathlib import Path
 
@@ -26,32 +27,45 @@ from rastervision.pytorch_learner.utils import (
 log = logging.getLogger(__name__)
 
 
-class SemanticSegmentationDataset(Dataset):
-    def __init__(self, data_dir, img_fmt='png', label_fmt='png', transform=None):
-        self.data_dir = Path(data_dir)
+def load_np_normalized(path: Union[IO, str, Path]):
+    arr = np.load(path)
+    dtype = arr.dtype
+    if np.issubdtype(dtype, np.unsignedinteger):
+        max_val = np.iinfo(dtype).max
+        arr = arr.astype(np.float32) / max_val
+    return arr
 
+
+class SemanticSegmentationDataset(Dataset):
+    def __init__(self, data_dir: str, img_fmt: str = 'png', label_fmt: str = 'png', transform: Callable = None):
+
+        self.data_dir = Path(data_dir)
         img_dir   = self.data_dir / 'img'
         label_dir = self.data_dir / 'labels'
         
+        # collect image and label paths
         self.img_paths = list(img_dir.glob(f'*.{img_fmt}'))
         self.label_paths = [
             label_dir/f'{p.stem}.{label_fmt}' for p in self.img_paths]
 
+        # choose image loading method based on format
         if img_fmt.lower() in ('npy', 'npz'):
-            self.img_load_fn = np.load
+            self.img_load_fn = load_np_normalized
         else:
-            self.img_load_fn = lambda path: np.array(Image.open(path))
+            self.img_load_fn = lambda path: np.array(Image.open(path)) / 255.
 
+        # choose label loading method based on format
         if label_fmt.lower() in ('npy', 'npz'):
             self.label_load_fn = np.load
         else:
             self.label_load_fn = lambda path: np.array(Image.open(path))
         
         self.transform = transform
+        import IPython; IPython.embed(); exit(1)
 
-    def __getitem__(self, ind):
+    def __getitem__(self, ind: int):
 
-        img_path = self.img_paths[ind]
+        img_path   = self.img_paths[ind]
         label_path = self.label_paths[ind]
         
         x = self.img_load_fn(img_path)
@@ -66,7 +80,7 @@ class SemanticSegmentationDataset(Dataset):
             x = out['image']
             y = out['mask']
 
-        x = torch.from_numpy(x).permute(2, 0, 1).float() / 255.0
+        x = torch.from_numpy(x).permute(2, 0, 1).float()
         y = torch.from_numpy(y).long()
 
         return (x, y)
@@ -126,11 +140,11 @@ class SemanticSegmentationLearner(Learner):
             )
         else:
             raise ConfigError(
-                f'Fewer input channels (={input_channels}) than what the pretrained model expects (={old_conv_channels})')
+                f'Fewer input channels ({input_channels}) than what the pretrained model expects ({old_conv_channels})')
 
         return model
 
-    def _get_datasets(self, uri):
+    def _get_datasets(self, uri: Union[str, List[str]]):
         cfg = self.cfg
 
         data_dirs = self.unzip_data(uri)
