@@ -279,8 +279,9 @@ class SemanticSegmentationLearner(Learner):
             elif len(chs) == 1:
                 im = x[..., chs].expand(-1, -1, 3)
             elif len(chs) == 2:
+                h, w, _ = x.shape
                 third_channel = torch.full((h, w, 1), .5)
-                im = torch.cat((x, third_channel), dim=-1)
+                im = torch.cat((x[..., chs], third_channel), dim=-1)
             ax_.imshow(im)
             ax_.set_title(f'Channels: {name}')
             ax_.set_xticks([])
