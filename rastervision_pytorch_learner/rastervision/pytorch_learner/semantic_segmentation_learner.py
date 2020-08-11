@@ -1,7 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
-from typing import Union, IO, Callable, List
+from typing import Union, IO, Callable, List, Iterable, Optional
 from os.path import join, isdir
 from pathlib import Path
 
@@ -9,6 +9,8 @@ import logging
 
 import numpy as np
 import matplotlib
+from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
 matplotlib.use('Agg')  # noqa
 from PIL import Image
 
@@ -23,6 +25,8 @@ from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, color_to_triple,
     SplitTensor, Parallel, AddTensors)
+from rastervision.pipeline.file_system import make_dir
+
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +65,6 @@ class SemanticSegmentationDataset(Dataset):
             self.label_load_fn = lambda path: np.array(Image.open(path))
         
         self.transform = transform
-        import IPython; IPython.embed(); exit(1)
 
     def __getitem__(self, ind: int):
 
@@ -213,37 +216,97 @@ class SemanticSegmentationLearner(Learner):
     def prob_to_pred(self, x):
         return x.argmax(1)
 
-    def plot_xyz(self, ax, x, y, z=None):
-        x = x.permute(1, 2, 0)
+    def plot_batch(self, x: Union[torch.Tensor, np.ndarray], y: Union[torch.Tensor, np.ndarray], 
+                    output_path: str, z: Union[torch.Tensor, np.ndarray] = None):
+        """Plot a whole batch in a grid using plot_xyz.
 
-        # h, w, c = x.shape
-        # channel_groups = self.cfg.data.channel_display_groups
-        # # if not specified, just use the first 3 channels
-        # if not channel_groups:
-        #     channel_groups = [ (0, 1, 2)[: min(3, c)] ]
+        Args:
+            x: batch of images
+            y: ground truth labels
+            output_path: local path where to save plot image
+            z: optional predicted labels
+        """
+        batch_sz, c, h, w = x.shape
+        channel_groups = self.cfg.data.channel_display_groups
 
-        # for chs in channel_groups:
-        #     if len(chs) == 3:
-        #         im = x[..., chs]
-        #     elif len(chs) == 1:
-        #         im = x[..., chs].expand(-1, -1, 3)
-        #     elif len(chs) == 2:
-        #         third_channel = torch.full((h, w, 1), .5)
-        #         im = torch.cat((x, third_channel), dim=-1)
-        if x.shape[2] == 1:
-            x = torch.cat([x for _ in range(3)], dim=2)
-        ax.imshow(x)
-        ax.axis('off')
+        nrows = batch_sz
+        # one col for each group + 1 for labels + 1 for predictions
+        ncols = len(channel_groups) + 1
+        if z is not None:
+            ncols += 1
 
-        labels = z if z is not None else y
+        fig, axes = plt.subplots(
+            nrows=nrows, ncols=ncols,
+            constrained_layout=True, figsize=(3 * ncols, 3 * nrows))
+
+        for i in range(batch_sz):
+            ax = (fig, axes[i])
+            if z is None:
+                self.plot_xyz(ax, x[i], y[i])
+            else:
+                self.plot_xyz(ax, x[i], y[i], z=z[i])
+
+        make_dir(output_path, use_dirname=True)
+        plt.savefig(output_path, bbox_inches='tight')
+        plt.close()
+
+    def plot_xyz(self, ax: Iterable, x: Union[torch.Tensor, np.ndarray], 
+                y: Union[torch.Tensor, np.ndarray], z: Optional[Union[torch.Tensor, np.ndarray]] = None):
+
+        channel_groups = self.cfg.data.channel_display_groups
+        if not isinstance(channel_groups, dict):
+            channel_groups = {f'channels: {list(chs)}': chs for chs in channel_groups}
+
+        fig, ax = ax
+        img_axes = ax[: len(channel_groups)]
+        label_ax = ax[len(channel_groups)]
+        pred_ax  = ax[-1]
+
+        # (c, h, w) --> (h, w, c)
+        if isinstance(x, torch.Tensor):
+            x = x.permute(1, 2, 0)
+        else:
+            x = x.transpose(1, 2, 0)
+
+        # plot images
+        for (name, chs), ax_ in zip(channel_groups.items(), img_axes):
+            if len(chs) == 3:
+                im = x[..., chs]
+            elif len(chs) == 1:
+                im = x[..., chs].expand(-1, -1, 3)
+            elif len(chs) == 2:
+                third_channel = torch.full((h, w, 1), .5)
+                im = torch.cat((x, third_channel), dim=-1)
+            ax_.imshow(im)
+            ax_.set_title(f'Channels: {name}')
+            ax_.set_xticks([])
+            ax_.set_yticks([])
+
+        class_names = self.cfg.data.class_names
         colors = [color_to_triple(c) for c in self.cfg.data.class_colors]
         colors = [tuple([_c / 255 for _c in c]) for c in colors]
         cmap = matplotlib.colors.ListedColormap(colors)
-        labels = labels.numpy()
-        ax.imshow(
-            labels,
-            alpha=0.4,
-            vmin=0,
-            vmax=len(colors),
-            cmap=cmap,
-            interpolation='none')
+        class_legends = [mpatches.Patch(color=col, label=name) for col, name in zip(colors, class_names)]
+
+        # plot labels
+        labels = y
+        label_ax.imshow(y, vmin=0, vmax=len(colors), cmap=cmap, interpolation='none')
+        label_ax.set_title(f'Ground truth labels')
+        label_ax.set_xticks([])
+        label_ax.set_yticks([])
+                        markerscale=.5, framealpha=.6, labelspacing=.2, fontsize='xx-small', ncol=3)
+
+        # plot predictions
+        if z is not None:
+            pred_ax = ax[-1]
+            pred_ax.imshow(z, vmin=0, vmax=len(colors), cmap=cmap, interpolation='none')
+            pred_ax.set_title(f'Predicted labels')
+            pred_ax.set_xticks([])
+            pred_ax.set_yticks([])
+                           markerscale=.25, framealpha=.7, labelspacing=.2, fontsize='xx-small', ncol=3)
+
+        # add a legend to the rightmost subplot
+        legend_items = [mpatches.Patch(facecolor=col, edgecolor=(0, 0, 0), label=name)
+                                        for col, name in zip(colors, class_names)]
+        ax[-1].legend(handles=legend_items, loc='center right',
+                      bbox_to_anchor=(1.75, 0.5))

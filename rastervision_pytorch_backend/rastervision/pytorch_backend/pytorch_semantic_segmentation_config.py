@@ -22,6 +22,7 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
         data.img_format = pipeline.img_format
         data.label_format = pipeline.label_format
         data.augmentors = self.augmentors
+        data.channel_display_groups = pipeline.channel_display_groups
 
         learner = SemanticSegmentationLearnerConfig(
             data=data,
