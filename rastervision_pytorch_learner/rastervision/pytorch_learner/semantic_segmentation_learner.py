@@ -1,7 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
-from typing import Union, IO, Callable, List, Iterable, Optional
+from typing import Union, IO, Callable, List, Iterable, Optional, Tuple
 from os.path import join, isdir
 from pathlib import Path
 
@@ -31,7 +31,7 @@ from rastervision.pipeline.file_system import make_dir
 log = logging.getLogger(__name__)
 
 
-def load_np_normalized(path: Union[IO, str, Path]):
+def load_np_normalized(path: Union[IO, str, Path]) -> np.ndarray:
     arr = np.load(path)
     dtype = arr.dtype
     if np.issubdtype(dtype, np.unsignedinteger):
@@ -46,11 +46,11 @@ class SemanticSegmentationDataset(Dataset):
         self.data_dir = Path(data_dir)
         img_dir   = self.data_dir / 'img'
         label_dir = self.data_dir / 'labels'
-        
+
         # collect image and label paths
         self.img_paths = list(img_dir.glob(f'*.{img_fmt}'))
         self.label_paths = [
-            label_dir/f'{p.stem}.{label_fmt}' for p in self.img_paths]
+            label_dir / f'{p.stem}.{label_fmt}' for p in self.img_paths]
 
         # choose image loading method based on format
         if img_fmt.lower() in ('npy', 'npz'):
@@ -63,14 +63,14 @@ class SemanticSegmentationDataset(Dataset):
             self.label_load_fn = np.load
         else:
             self.label_load_fn = lambda path: np.array(Image.open(path))
-        
+
         self.transform = transform
 
-    def __getitem__(self, ind: int):
+    def __getitem__(self, ind: int) -> Tuple[torch.FloatTensor, torch.LongTensor]:
 
         img_path   = self.img_paths[ind]
         label_path = self.label_paths[ind]
-        
+
         x = self.img_load_fn(img_path)
         y = self.label_load_fn(label_path)
 
@@ -93,7 +93,7 @@ class SemanticSegmentationDataset(Dataset):
 
 
 class SemanticSegmentationLearner(Learner):
-    def build_model(self):
+    def build_model(self) -> nn.Module:
         # TODO support FCN option
         pretrained = self.cfg.model.pretrained
         model = models.segmentation.segmentation._segm_resnet(
@@ -111,6 +111,8 @@ class SemanticSegmentationLearner(Learner):
             return model
 
         if not pretrained:
+            # just replace the first conv layer with one with the correct number
+            # of input channels
             new_conv = torch.nn.Conv2d(
                 in_channels=input_channels,
                 out_channels=old_conv.out_channels,
@@ -125,6 +127,8 @@ class SemanticSegmentationLearner(Learner):
             return model
 
         if input_channels > old_conv_channels:
+            # insert a new conv layer parallel to the existing one
+            # and sum their outputs
             new_conv_channels = input_channels - old_conv_channels
             new_conv = torch.nn.Conv2d(
                 in_channels=new_conv_channels,
@@ -137,9 +141,10 @@ class SemanticSegmentationLearner(Learner):
                 bias=old_conv.bias
             )
             model.backbone.conv1 = nn.Sequential(
-                SplitTensor((old_conv_channels, new_conv_channels), dim=1),
-                Parallel(old_conv, new_conv),
-                AddTensors()
+                SplitTensor(                                        # split input along channel dim
+                    (old_conv_channels, new_conv_channels), dim=1),
+                Parallel(old_conv, new_conv),                       # each split goes to its conv layer
+                AddTensors()                                        # sum the parallel outputs
             )
         else:
             raise ConfigError(
@@ -162,18 +167,18 @@ class SemanticSegmentationLearner(Learner):
             if isdir(train_dir):
                 tf = transform if cfg.overfit_mode else aug_transform
                 ds = SemanticSegmentationDataset(
-                    train_dir, img_fmt=img_fmt, label_fmt=label_fmt, 
+                    train_dir, img_fmt=img_fmt, label_fmt=label_fmt,
                     transform=tf)
                 train_ds.append(ds)
 
             if isdir(valid_dir):
                 valid_ds.append(
                     SemanticSegmentationDataset(
-                        valid_dir, img_fmt=img_fmt, label_fmt=label_fmt, 
+                        valid_dir, img_fmt=img_fmt, label_fmt=label_fmt,
                         transform=transform))
                 test_ds.append(
                     SemanticSegmentationDataset(
-                        valid_dir, img_fmt=img_fmt, label_fmt=label_fmt, 
+                        valid_dir, img_fmt=img_fmt, label_fmt=label_fmt,
                         transform=transform))
 
         train_ds, valid_ds, test_ds = \
@@ -216,8 +221,8 @@ class SemanticSegmentationLearner(Learner):
     def prob_to_pred(self, x):
         return x.argmax(1)
 
-    def plot_batch(self, x: Union[torch.Tensor, np.ndarray], y: Union[torch.Tensor, np.ndarray], 
-                    output_path: str, z: Union[torch.Tensor, np.ndarray] = None):
+    def plot_batch(self, x: Union[torch.Tensor, np.ndarray], y: Union[torch.Tensor, np.ndarray],
+                    output_path: str, z: Union[torch.Tensor, np.ndarray] = None) -> None:
         """Plot a whole batch in a grid using plot_xyz.
 
         Args:
@@ -250,8 +255,8 @@ class SemanticSegmentationLearner(Learner):
         plt.savefig(output_path, bbox_inches='tight')
         plt.close()
 
-    def plot_xyz(self, ax: Iterable, x: Union[torch.Tensor, np.ndarray], 
-                y: Union[torch.Tensor, np.ndarray], z: Optional[Union[torch.Tensor, np.ndarray]] = None):
+    def plot_xyz(self, ax: Iterable, x: Union[torch.Tensor, np.ndarray],
+                 y: Union[torch.Tensor, np.ndarray], z: Optional[Union[torch.Tensor, np.ndarray]] = None) -> None:
 
         channel_groups = self.cfg.data.channel_display_groups
         if not isinstance(channel_groups, dict):
@@ -260,7 +265,6 @@ class SemanticSegmentationLearner(Learner):
         fig, ax = ax
         img_axes = ax[: len(channel_groups)]
         label_ax = ax[len(channel_groups)]
-        pred_ax  = ax[-1]
 
         # (c, h, w) --> (h, w, c)
         if isinstance(x, torch.Tensor):
@@ -286,15 +290,12 @@ class SemanticSegmentationLearner(Learner):
         colors = [color_to_triple(c) for c in self.cfg.data.class_colors]
         colors = [tuple([_c / 255 for _c in c]) for c in colors]
         cmap = matplotlib.colors.ListedColormap(colors)
-        class_legends = [mpatches.Patch(color=col, label=name) for col, name in zip(colors, class_names)]
 
         # plot labels
-        labels = y
         label_ax.imshow(y, vmin=0, vmax=len(colors), cmap=cmap, interpolation='none')
         label_ax.set_title(f'Ground truth labels')
         label_ax.set_xticks([])
         label_ax.set_yticks([])
-                        markerscale=.5, framealpha=.6, labelspacing=.2, fontsize='xx-small', ncol=3)
 
         # plot predictions
         if z is not None:
@@ -303,7 +304,6 @@ class SemanticSegmentationLearner(Learner):
             pred_ax.set_title(f'Predicted labels')
             pred_ax.set_xticks([])
             pred_ax.set_yticks([])
-                           markerscale=.25, framealpha=.7, labelspacing=.2, fontsize='xx-small', ncol=3)
 
         # add a legend to the rightmost subplot
         legend_items = [mpatches.Patch(facecolor=col, edgecolor=(0, 0, 0), label=name)
