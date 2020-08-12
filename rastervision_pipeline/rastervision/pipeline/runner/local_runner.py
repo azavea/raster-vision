@@ -16,7 +16,12 @@ class LocalRunner(Runner):
     This is implemented by generating a Makefile and then running it using make.
     """
 
-    def run(self, cfg_json_uri, pipeline, commands, num_splits=1, pipeline_run_name: str = 'raster-vision'):
+    def run(self,
+            cfg_json_uri,
+            pipeline,
+            commands,
+            num_splits=1,
+            pipeline_run_name: str = 'raster-vision'):
         num_commands = 0
         for command in commands:
             if command in pipeline.split_commands and num_splits > 1:
