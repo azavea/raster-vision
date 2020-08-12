@@ -104,7 +104,12 @@ def main(ctx: click.Context, profile: Optional[str], verbose: int,
     rv_config.set_everett_config(profile=profile)
 
 
-def _run_pipeline(cfg, runner, tmp_dir, splits=1, commands=None, pipeline_run_name: str = 'raster-vision'):
+def _run_pipeline(cfg,
+                  runner,
+                  tmp_dir,
+                  splits=1,
+                  commands=None,
+                  pipeline_run_name: str = 'raster-vision'):
     cfg.update()
     cfg.recursive_validate_config()
     # This is to run the validation again to check any fields that may have changed
@@ -116,8 +121,12 @@ def _run_pipeline(cfg, runner, tmp_dir, splits=1, commands=None, pipeline_run_na
     if not commands:
         commands = pipeline.commands
 
-    runner.run(cfg_json_uri, pipeline, commands, num_splits=splits,
-               pipeline_run_name=pipeline_run_name)
+    runner.run(
+        cfg_json_uri,
+        pipeline,
+        commands,
+        num_splits=splits,
+        pipeline_run_name=pipeline_run_name)
 
 
 @main.command('run', short_help='Run sequence of commands within pipeline(s).')
@@ -162,7 +171,8 @@ def run(runner: str, cfg_module: str, commands: List[str],
     runner = registry.get_runner(runner)()
 
     for cfg in cfgs:
-        _run_pipeline(cfg, runner, tmp_dir, splits, commands, pipeline_run_name)
+        _run_pipeline(cfg, runner, tmp_dir, splits, commands,
+                      pipeline_run_name)
 
 
 def _run_command(cfg_json_uri: str,

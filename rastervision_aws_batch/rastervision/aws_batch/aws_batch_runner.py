@@ -106,7 +106,12 @@ class AWSBatchRunner(Runner):
     ```
     """
 
-    def run(self, cfg_json_uri, pipeline, commands, num_splits=1, pipeline_run_name: str = 'raster-vision'):
+    def run(self,
+            cfg_json_uri,
+            pipeline,
+            commands,
+            num_splits=1,
+            pipeline_run_name: str = 'raster-vision'):
         parent_job_ids = []
 
         # pipeline-specific job queue
