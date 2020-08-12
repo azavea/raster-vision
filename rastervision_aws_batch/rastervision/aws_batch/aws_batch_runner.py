@@ -158,13 +158,13 @@ class AWSBatchRunner(Runner):
                     num_array_jobs = num_splits
                     cmd += ['--num-splits', str(num_splits)]
                 job_id = submit_job(
-                            cmd=' '.join(cmd),
-                            job_name=job_name,
-                            parent_job_ids=parent_job_ids,
-                            num_array_jobs=num_array_jobs,
-                            use_gpu=use_gpu,
-                            job_queue=job_queue,
-                            job_def=job_def)
+                    cmd=' '.join(cmd),
+                    job_name=job_name,
+                    parent_job_ids=parent_job_ids,
+                    num_array_jobs=num_array_jobs,
+                    use_gpu=use_gpu,
+                    job_queue=job_queue,
+                    job_def=job_def)
                 parent_job_ids = [job_id]
             else:
                 if command in pipeline.split_commands and num_splits > 1:
@@ -172,13 +172,13 @@ class AWSBatchRunner(Runner):
                         cmd = fn(-num_splits)
                         num_array_jobs = num_splits
                         job_id = submit_job(
-                                    cmd=' '.join(cmd),
-                                    job_name=job_name,
-                                    parent_job_ids=parent_job_ids,
-                                    num_array_jobs=num_array_jobs,
-                                    use_gpu=use_gpu,
-                                    job_queue=job_queue,
-                                    job_def=job_def)
+                            cmd=' '.join(cmd),
+                            job_name=job_name,
+                            parent_job_ids=parent_job_ids,
+                            num_array_jobs=num_array_jobs,
+                            use_gpu=use_gpu,
+                            job_queue=job_queue,
+                            job_def=job_def)
                         parent_job_ids = [job_id]
                     elif len(params) == 1 and not array_job_capable:
                         num_array_jobs = None
