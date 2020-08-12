@@ -59,10 +59,11 @@ Run is the main interface into running pipelines.
     this is omitted, all commands will be run.
 
     Options:
-    -a, --arg KEY VALUE   Arguments to pass to get_config function
-    -s, --splits INTEGER  Number of processes to run in parallel for splittable
-                          commands
-    --help                Show this message and exit.
+    -a, --arg            KEY VALUE   Arguments to pass to get_config function
+    -s, --splits         INTEGER     Number of processes to run in parallel for splittable
+                                     commands
+    --pipeline-run-name  TEXT        The name for this run of the pipeline.
+    --help                           Show this message and exit.
 
 Some specific parameters to call out:
 
