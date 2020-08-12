@@ -13,6 +13,7 @@ AWS_BATCH = 'batch'
 
 
 def submit_job(cmd: List[str],
+               job_name: str,
                debug: bool = False,
                profile: str = False,
                attempts: int = 5,
@@ -54,7 +55,6 @@ def submit_job(cmd: List[str],
 
     import boto3
     client = boto3.client('batch')
-    job_name = 'raster-vision-{}'.format(uuid.uuid4())
 
     cmd_list = cmd.split(' ')
     if debug:
@@ -106,7 +106,12 @@ class AWSBatchRunner(Runner):
     ```
     """
 
-    def run(self, cfg_json_uri, pipeline, commands, num_splits=1):
+    def run(self,
+            cfg_json_uri,
+            pipeline,
+            commands,
+            num_splits=1,
+            pipeline_run_name: str = 'raster-vision'):
         parent_job_ids = []
 
         # pipeline-specific job queue
@@ -147,6 +152,8 @@ class AWSBatchRunner(Runner):
             num_array_jobs = None
             use_gpu = command in pipeline.gpu_commands
 
+            job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
+
             if not external:
                 cmd = [
                     'python', '-m', 'rastervision.pipeline.cli run_command',
@@ -156,7 +163,8 @@ class AWSBatchRunner(Runner):
                     num_array_jobs = num_splits
                     cmd += ['--num-splits', str(num_splits)]
                 job_id = submit_job(
-                    ' '.join(cmd),
+                    cmd=' '.join(cmd),
+                    job_name=job_name,
                     parent_job_ids=parent_job_ids,
                     num_array_jobs=num_array_jobs,
                     use_gpu=use_gpu,
@@ -169,7 +177,8 @@ class AWSBatchRunner(Runner):
                         cmd = fn(-num_splits)
                         num_array_jobs = num_splits
                         job_id = submit_job(
-                            ' '.join(cmd),
+                            cmd=' '.join(cmd),
+                            job_name=job_name,
                             parent_job_ids=parent_job_ids,
                             num_array_jobs=num_array_jobs,
                             use_gpu=use_gpu,
@@ -181,7 +190,8 @@ class AWSBatchRunner(Runner):
                         new_parent_job_ids = []
                         for cmd in fn(num_splits):
                             job_id = submit_job(
-                                ' '.join(cmd),
+                                cmd=' '.join(cmd),
+                                job_name=job_name,
                                 parent_job_ids=parent_job_ids,
                                 num_array_jobs=num_array_jobs,
                                 use_gpu=use_gpu,
@@ -193,7 +203,8 @@ class AWSBatchRunner(Runner):
                         cmd = fn()
                         num_array_jobs = None
                         job_id = submit_job(
-                            ' '.join(cmd),
+                            cmd=' '.join(cmd),
+                            job_name=job_name,
                             parent_job_ids=parent_job_ids,
                             num_array_jobs=num_array_jobs,
                             use_gpu=use_gpu,
@@ -207,7 +218,8 @@ class AWSBatchRunner(Runner):
                         cmd = fn(1)[0]
                     num_array_jobs = 1
                     job_id = submit_job(
-                        ' '.join(cmd),
+                        cmd=' '.join(cmd),
+                        job_name=job_name,
                         parent_job_ids=parent_job_ids,
                         num_array_jobs=num_array_jobs,
                         use_gpu=use_gpu,

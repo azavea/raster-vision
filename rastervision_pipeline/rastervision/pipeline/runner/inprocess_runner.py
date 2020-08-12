@@ -13,7 +13,12 @@ class InProcessRunner(Runner):
     Useful for testing and debugging.
     """
 
-    def run(self, cfg_json_uri, pipeline, commands, num_splits=1):
+    def run(self,
+            cfg_json_uri,
+            pipeline,
+            commands,
+            num_splits=1,
+            pipeline_run_name: str = 'raster-vision'):
         for command in commands:
 
             # detect external command

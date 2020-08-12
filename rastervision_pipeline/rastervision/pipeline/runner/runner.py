@@ -16,7 +16,8 @@ class Runner():
             cfg_json_uri: str,
             pipeline: Pipeline,
             commands: List[str],
-            num_splits: int = 1):
+            num_splits: int = 1,
+            pipeline_run_name: str = 'raster-vision'):
         """Run commands in a Pipeline using a serialized PipelineConfig.
 
         Args:
