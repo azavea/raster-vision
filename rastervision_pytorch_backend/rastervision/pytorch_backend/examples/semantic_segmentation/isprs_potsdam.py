@@ -21,8 +21,8 @@ def get_config(runner, raw_uri, processed_uri, root_uri, multiband=False, test=F
     val_ids = ['2-12', '3-12', '6-12']
 
     if test:
-        train_ids = train_ids[0:1]
-        val_ids = val_ids[0:1]
+        train_ids = train_ids[0:2]
+        val_ids = val_ids[0:2]
 
     class_config = ClassConfig(
         names=[
@@ -32,6 +32,13 @@ def get_config(runner, raw_uri, processed_uri, root_uri, multiband=False, test=F
         colors=[
             '#ffff00', '#0000ff', '#00ffff', '#00ff00', '#ffffff', '#ff0000'
         ])
+
+    if multiband:
+        # use all 4 channels
+        channel_order = [0, 1, 2, 3]
+    else:
+        # use infrared, red, & green channels only
+        channel_order = [3, 0, 1]
 
     def make_scene(id):
         id = id.replace('-', '_')
@@ -55,12 +62,6 @@ def get_config(runner, raw_uri, processed_uri, root_uri, multiband=False, test=F
             raster_uri = crop_uri
             label_uri = label_crop_uri
 
-        if multiband:
-            # use all 4 channels
-            channel_order = [0, 1, 2, 3]
-        else:
-            # use infrared, red, & green channels only
-            channel_order = [3, 0, 1]
         raster_source = RasterioSourceConfig(
             uris=[raster_uri], channel_order=channel_order)
 
@@ -99,6 +100,7 @@ def get_config(runner, raw_uri, processed_uri, root_uri, multiband=False, test=F
             num_epochs=10,
             test_num_epochs=2,
             batch_sz=8,
+            test_batch_sz=2,
             one_cycle=True),
         log_tensorboard=True,
         run_tensorboard=False,
@@ -108,6 +110,9 @@ def get_config(runner, raw_uri, processed_uri, root_uri, multiband=False, test=F
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
+        img_channels=len(channel_order),
+        channel_display_groups={'RGB': (0, 1, 2), 'IR': (3,)},
+        img_format='npy' if multiband else 'png',
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options)
