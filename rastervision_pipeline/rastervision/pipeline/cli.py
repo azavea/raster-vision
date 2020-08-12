@@ -104,7 +104,7 @@ def main(ctx: click.Context, profile: Optional[str], verbose: int,
     rv_config.set_everett_config(profile=profile)
 
 
-def _run_pipeline(cfg, runner, tmp_dir, splits=1, commands=None):
+def _run_pipeline(cfg, runner, tmp_dir, splits=1, commands=None, pipeline_run_name: str = 'raster-vision'):
     cfg.update()
     cfg.recursive_validate_config()
     # This is to run the validation again to check any fields that may have changed
@@ -116,7 +116,8 @@ def _run_pipeline(cfg, runner, tmp_dir, splits=1, commands=None):
     if not commands:
         commands = pipeline.commands
 
-    runner.run(cfg_json_uri, pipeline, commands, num_splits=splits)
+    runner.run(cfg_json_uri, pipeline, commands, num_splits=splits,
+               pipeline_run_name=pipeline_run_name)
 
 
 @main.command('run', short_help='Run sequence of commands within pipeline(s).')
@@ -135,8 +136,12 @@ def _run_pipeline(cfg, runner, tmp_dir, splits=1, commands=None):
     '-s',
     default=1,
     help='Number of splits to run in parallel for splittable commands')
+@click.option(
+    '--pipeline-run-name',
+    default='raster-vision',
+    help='The name for this run of the pipeline.')
 def run(runner: str, cfg_module: str, commands: List[str],
-        arg: List[Tuple[str, str]], splits: int):
+        arg: List[Tuple[str, str]], splits: int, pipeline_run_name: str):
     """Run COMMANDS within pipelines in CFG_MODULE using RUNNER.
 
     RUNNER: name of the Runner to use
@@ -157,7 +162,7 @@ def run(runner: str, cfg_module: str, commands: List[str],
     runner = registry.get_runner(runner)()
 
     for cfg in cfgs:
-        _run_pipeline(cfg, runner, tmp_dir, splits, commands)
+        _run_pipeline(cfg, runner, tmp_dir, splits, commands, pipeline_run_name)
 
 
 def _run_command(cfg_json_uri: str,
