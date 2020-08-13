@@ -106,8 +106,8 @@ class SplitTensor(nn.Module):
 
 
 class Parallel(nn.ModuleList):
-    ''' Passes inputs through multiple `nn.Module`s in parallel. 
-        Returns a tuple of outputs. 
+    ''' Passes inputs through multiple `nn.Module`s in parallel.
+        Returns a tuple of outputs.
     '''
 
     def __init__(self, *args):
