@@ -104,8 +104,10 @@ class SplitTensor(nn.Module):
     def forward(self, X):
         return X.split(self.size_or_sizes, dim=self.dim)
 
+
 class Parallel(nn.ModuleList):
     ''' Passes inputs through multiple `nn.Module`s in parallel. Returns a tuple of outputs. '''
+
     def __init__(self, *args):
         super().__init__(args)
 
@@ -115,7 +117,9 @@ class Parallel(nn.ModuleList):
         assert len(xs) == len(self)
         return tuple(m(X) for m, X in zip(self, xs))
 
+
 class AddTensors(nn.Module):
     ''' Adds all its inputs together. '''
+
     def forward(self, xs):
         return sum(xs)

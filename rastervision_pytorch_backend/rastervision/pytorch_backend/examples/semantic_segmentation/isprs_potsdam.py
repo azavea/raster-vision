@@ -12,7 +12,12 @@ from rastervision.pytorch_learner import *
 from rastervision.pytorch_backend.examples.utils import get_scene_info, save_image_crop
 
 
-def get_config(runner, raw_uri, processed_uri, root_uri, multiband=False, test=False):
+def get_config(runner,
+               raw_uri,
+               processed_uri,
+               root_uri,
+               multiband=False,
+               test=False):
     train_ids = [
         '2-10', '2-11', '3-10', '3-11', '4-10', '4-11', '4-12', '5-10', '5-11',
         '5-12', '6-10', '6-11', '6-7', '6-9', '7-10', '7-11', '7-12', '7-7',
@@ -106,13 +111,20 @@ def get_config(runner, raw_uri, processed_uri, root_uri, multiband=False, test=F
         run_tensorboard=False,
         test_mode=test)
 
+    if multiband:
+        img_format = 'npy'
+        channel_display_groups = {'RGB': (0, 1, 2), 'IR': (3, )}
+    else:
+        img_format = 'png'
+        channel_display_groups = {'RGB': (0, 1, 2)}
+
     return SemanticSegmentationConfig(
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
         img_channels=len(channel_order),
-        channel_display_groups={'RGB': (0, 1, 2), 'IR': (3,)},
-        img_format='npy' if multiband else 'png',
+        channel_display_groups=channel_display_groups,
+        img_format=img_format,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options)
