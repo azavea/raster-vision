@@ -115,7 +115,7 @@ class Parallel(nn.ModuleList):
         if isinstance(xs, torch.Tensor):
             return tuple(m(xs) for m in self)
         assert len(xs) == len(self)
-        return tuple(m(X) for m, X in zip(self, xs))
+        return tuple(m(x) for m, x in zip(self, xs))
 
 
 class AddTensors(nn.Module):
