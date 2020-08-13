@@ -64,8 +64,9 @@ class SemanticSegmentationConfig(RVPipelineConfig):
     img_channels: int = Field(
         3, description='The number of channels of the training images.')
 
-    channel_display_groups: Union[dict, list, tuple] = Field(
-        [(0, 1, 2)], description='Groups of image channels to display together.')
+    channel_display_groups: Optional[Union[dict, list, tuple]] = Field(
+        None,
+        description='Groups of image channels to display together.')
 
     img_format: str = Field(
         'png', description='The filetype of the training images.')
@@ -87,3 +88,6 @@ class SemanticSegmentationConfig(RVPipelineConfig):
         super().update()
 
         self.dataset.class_config.ensure_null_class()
+
+        if self.channel_display_groups is None:
+            self.channel_display_groups = [tuple(range(self.img_channels))]
