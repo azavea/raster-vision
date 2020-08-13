@@ -65,8 +65,7 @@ class SemanticSegmentationConfig(RVPipelineConfig):
         3, description='The number of channels of the training images.')
 
     channel_display_groups: Optional[Union[dict, list, tuple]] = Field(
-        None,
-        description='Groups of image channels to display together.')
+        None, description='Groups of image channels to display together.')
 
     img_format: str = Field(
         'png', description='The filetype of the training images.')

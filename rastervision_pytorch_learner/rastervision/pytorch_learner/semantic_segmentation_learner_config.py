@@ -24,8 +24,7 @@ class SemanticSegmentationDataConfig(DataConfig):
         'png', description='The filetype of the training labels.')
 
     channel_display_groups: Optional[Union[dict, list, tuple]] = Field(
-        None,
-        description='Groups of image channels to display together.')
+        None, description='Groups of image channels to display together.')
 
     def update(self, **kwargs):
         super().update()
