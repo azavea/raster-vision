@@ -1,4 +1,5 @@
 from os.path import join
+from pathlib import Path
 import uuid
 
 import numpy as np
@@ -41,27 +42,35 @@ class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
         (train|valid)/labels/{scene_id}-{ind}.png
         """
         split_name = 'train' if sample.is_train else 'valid'
-        label_arr = sample.labels.get_label_arr(sample.window).astype(np.uint8)
 
-        img_dir = join(self.sample_dir, split_name, 'img')
-        label_dir = join(self.sample_dir, split_name, 'labels')
+        sample_dir = Path(self.sample_dir)
+        img_dir = sample_dir / split_name / 'img'
+        label_dir = sample_dir / split_name / 'labels'
+
         make_dir(img_dir)
         make_dir(label_dir)
 
-        img_fmt, label_fmt = self.img_format, self.label_format
-        num_channels = sample.chip.shape[-1]
-        if img_fmt == 'npy':
-            img_name = f'{sample.scene_id}-{self.sample_ind}.npy'
-            img_path = join(img_dir, img_name)
-            np.save(img_path, sample.chip)
-        else:
-            img_name = f'{sample.scene_id}-{self.sample_ind}.{img_fmt}'
-            img_path = join(img_dir, img_name)
-            save_img(sample.chip, img_path)
+        img = sample.chip
+        label_arr = sample.labels.get_label_arr(sample.window).astype(np.uint8)
 
-        label_name = f'{sample.scene_id}-{self.sample_ind}.{label_fmt}'
-        label_path = join(label_dir, label_name)
-        save_img(label_arr, label_path)
+        img_fmt, label_fmt = self.img_format, self.label_format
+        sample_name = f'{sample.scene_id}-{self.sample_ind}'
+
+        # write image
+        img_filename = f'{sample_name}.{img_fmt}'
+        img_path = img_dir / img_filename
+        if img_fmt == 'npy':
+            np.save(img_path, img)
+        else:
+            save_img(img, img_path)
+
+        # write labels
+        label_filename = f'{sample_name}.{label_fmt}'
+        label_path = label_dir / label_filename
+        if label_fmt == 'npy':
+            np.save(label_path, label_arr)
+        else:
+            save_img(label_arr, label_path)
 
         self.sample_ind += 1
 
