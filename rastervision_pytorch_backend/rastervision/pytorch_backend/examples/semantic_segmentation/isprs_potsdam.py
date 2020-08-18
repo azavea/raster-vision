@@ -112,19 +112,15 @@ def get_config(runner,
         test_mode=test)
 
     if multiband:
-        img_format = 'npy'
         channel_display_groups = {'RGB': (0, 1, 2), 'IR': (3, )}
     else:
-        img_format = 'png'
-        channel_display_groups = {'RGB': (0, 1, 2)}
+        channel_display_groups = None
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
-        img_channels=len(channel_order),
         channel_display_groups=channel_display_groups,
-        img_format=img_format,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options)

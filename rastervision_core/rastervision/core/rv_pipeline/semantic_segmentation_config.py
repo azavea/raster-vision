@@ -1,7 +1,9 @@
 from typing import (List, Optional, Union)
+from pydantic import PositiveInt
 from enum import Enum
 
-from rastervision.pipeline.config import register_config, Config, Field
+from rastervision.pipeline.config import (register_config, Config, ConfigError,
+                                          Field, validator)
 from rastervision.core.rv_pipeline import RVPipelineConfig
 from rastervision.core.data import SemanticSegmentationLabelStoreConfig
 from rastervision.core.evaluation import SemanticSegmentationEvaluatorConfig
@@ -61,14 +63,11 @@ class SemanticSegmentationConfig(RVPipelineConfig):
     chip_options: SemanticSegmentationChipOptions = SemanticSegmentationChipOptions(
     )
 
-    img_channels: int = Field(
-        3, description='The number of channels of the training images.')
-
     channel_display_groups: Optional[Union[dict, list, tuple]] = Field(
         None, description='Groups of image channels to display together.')
 
-    img_format: str = Field(
-        'png', description='The filetype of the training images.')
+    img_format: Optional[str] = Field(
+        None, description='The filetype of the training images.')
     label_format: str = Field(
         'png', description='The filetype of the training labels.')
 
@@ -76,6 +75,18 @@ class SemanticSegmentationConfig(RVPipelineConfig):
         from rastervision.core.rv_pipeline.semantic_segmentation import (
             SemanticSegmentation)
         return SemanticSegmentation(self, tmp_dir)
+
+    def update(self):
+        super().update()
+
+        self.dataset.class_config.ensure_null_class()
+
+        if self.img_format is None:
+            self.img_format = 'png' if self.dataset.img_channels == 3 else 'npy'
+
+        if self.channel_display_groups is None:
+            img_channels = min(3, self.dataset.img_channels)
+            self.channel_display_groups = {'Input': tuple(range(img_channels))}
 
     def get_default_label_store(self, scene):
         return SemanticSegmentationLabelStoreConfig()
