@@ -90,6 +90,10 @@ class SemanticSegmentationConfig(RVPipelineConfig):
 
     def validate_config(self):
         super().validate_config()
+
+        if self.img_format == 'png' and self.dataset.img_channels != 3:
+            raise ConfigError('img_channels must be 3 if img_format is png.')
+
         self.validate_channel_display_groups()
 
     def get_default_label_store(self, scene):
