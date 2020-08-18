@@ -130,6 +130,10 @@ class SemanticSegmentationConfig(RVPipelineConfig):
                     raise ConfigError(
                         'channel_display_groups values must be lists or tuples.'
                     )
+                if not (0 < len(v) <= 3):
+                    raise ConfigError(
+                        f'channel_display_groups[{k}]: len(group) must be 1, 2, or 3'
+                    )
                 if not (_are_ints(v) and _in_range(v, lt=img_channels)):
                     raise ConfigError(
                         f'Invalid channel indices in channel_display_groups[{k}].'
@@ -138,6 +142,10 @@ class SemanticSegmentationConfig(RVPipelineConfig):
         # validate list/tuple form
         if isinstance(groups, (list, tuple)):
             for i, grp in enumerate(groups):
+                if not (0 < len(grp) <= 3):
+                    raise ConfigError(
+                        f'channel_display_groups[{i}]: len(group) must be 1, 2, or 3'
+                    )
                 if not (_are_ints(grp) and _in_range(grp, lt=img_channels)):
                     raise ConfigError(
                         f'Invalid channel index in channel_display_groups[{i}].'
