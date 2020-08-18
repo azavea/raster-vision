@@ -1,9 +1,8 @@
 from typing import (List, Optional, Union)
-from pydantic import PositiveInt
 from enum import Enum
 
 from rastervision.pipeline.config import (register_config, Config, ConfigError,
-                                          Field, validator)
+                                          Field)
 from rastervision.core.rv_pipeline import RVPipelineConfig
 from rastervision.core.data import SemanticSegmentationLabelStoreConfig
 from rastervision.core.evaluation import SemanticSegmentationEvaluatorConfig
