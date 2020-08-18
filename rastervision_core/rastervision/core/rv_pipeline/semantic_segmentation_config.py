@@ -88,16 +88,45 @@ class SemanticSegmentationConfig(RVPipelineConfig):
             img_channels = min(3, self.dataset.img_channels)
             self.channel_display_groups = {'Input': tuple(range(img_channels))}
 
+    def validate_config(self):
+        super().validate_config()
+        self.validate_channel_display_groups()
+
     def get_default_label_store(self, scene):
         return SemanticSegmentationLabelStoreConfig()
 
     def get_default_evaluator(self):
         return SemanticSegmentationEvaluatorConfig()
 
-    def update(self):
-        super().update()
+    def validate_channel_display_groups(self):
+        def _are_ints(ints) -> bool:
+            return all(isinstance(i, int) for i in ints)
 
-        self.dataset.class_config.ensure_null_class()
+        def _in_range(inds, lt: int) -> bool:
+            return all(0 <= i < lt for i in inds)
 
-        if self.channel_display_groups is None:
-            self.channel_display_groups = [tuple(range(self.img_channels))]
+        img_channels = self.dataset.img_channels
+        groups = self.channel_display_groups
+
+        # validate dict form
+        if isinstance(groups, dict):
+            for k, v in groups.items():
+                if not isinstance(k, str):
+                    raise ConfigError(
+                        'channel_display_groups keys must be strings.')
+                if not isinstance(v, (list, tuple)):
+                    raise ConfigError(
+                        'channel_display_groups values must be lists or tuples.'
+                    )
+                if not (_are_ints(v) and _in_range(v, lt=img_channels)):
+                    raise ConfigError(
+                        f'Invalid channel indices in channel_display_groups[{k}].'
+                    )
+
+        # validate list/tuple form
+        if isinstance(groups, (list, tuple)):
+            for i, grp in enumerate(groups):
+                if not (_are_ints(grp) and _in_range(grp, lt=img_channels)):
+                    raise ConfigError(
+                        f'Invalid channel index in channel_display_groups[{i}].'
+                    )
