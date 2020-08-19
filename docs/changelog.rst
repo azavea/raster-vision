@@ -7,9 +7,7 @@ Raster Vision 0.13
 Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* It is now possible to use images with more than 3 bands for the semantic segmentation task. Raster Vision automatically modifies the PyTorch DeepLab model to accommodate the additional channels. If using a pretrained model, the pretrained weights for the RGB bands are retained. When using more than 3 bands, Raster Vision creates/consumes training/validation/prediction chips in the form of numpy arrays.
-* Improved plots of the input image, ground truth labels, and predicted labels.
-* Option to customize the plotting of individual bands of the image. For example, if using an input with bands [R, G, B, IR, Elevation], it is now possible to have it plotted as 3 images - one for RGB, one for IR, and one for Elevation.
+* Added support for multiband images `#961 <https://github.com/azavea/raster-vision/pull/961>`_
 
 
 Raster Vision 0.12
