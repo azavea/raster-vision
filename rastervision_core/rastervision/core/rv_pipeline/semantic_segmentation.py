@@ -86,10 +86,10 @@ class SemanticSegmentation(RVPipeline):
         super().__init__(config, tmp_dir)
         if self.config.dataset.img_channels is None:
             self.config.dataset.img_channels = self.get_img_channels()
-        
+
             self.config.dataset.update()
             self.config.dataset.validate_config()
-        
+
             self.config.update()
             self.config.validate_config()
 
@@ -97,7 +97,8 @@ class SemanticSegmentation(RVPipeline):
         ''' Determine img_channels from the first training scene. '''
         class_config = self.config.dataset.class_config
         scene_cfg = self.config.dataset.train_scenes[0]
-        scene = scene_cfg.build(class_config, self.tmp_dir, use_transformers=False)
+        scene = scene_cfg.build(
+            class_config, self.tmp_dir, use_transformers=False)
         with scene.activate():
             img_channels = scene.raster_source.num_channels
         return img_channels
