@@ -89,6 +89,9 @@ class SemanticSegmentationConfig(RVPipelineConfig):
 
         self.dataset.class_config.ensure_null_class()
 
+        if self.dataset.img_channels is None:
+            return
+
         if self.img_format is None:
             self.img_format = 'png' if self.dataset.img_channels == 3 else 'npy'
 
