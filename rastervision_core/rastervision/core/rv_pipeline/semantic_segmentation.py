@@ -82,6 +82,26 @@ def fill_no_data(img, label_arr, null_class_id):
 
 
 class SemanticSegmentation(RVPipeline):
+    def __init__(self, config: 'RVPipelineConfig', tmp_dir: str):
+        super().__init__(config, tmp_dir)
+        if self.config.dataset.img_channels is None:
+            self.config.dataset.img_channels = self.get_img_channels()
+        
+            self.config.dataset.update()
+            self.config.dataset.validate_config()
+        
+            self.config.update()
+            self.config.validate_config()
+
+    def get_img_channels(self):
+        ''' Determine img_channels from the first training scene. '''
+        class_config = self.config.dataset.class_config
+        scene_cfg = self.config.dataset.train_scenes[0]
+        scene = scene_cfg.build(class_config, self.tmp_dir, use_transformers=False)
+        with scene.activate():
+            img_channels = scene.raster_source.num_channels
+        return img_channels
+
     def get_train_windows(self, scene):
         return get_train_windows(scene, self.config.dataset.class_config,
                                  self.config.train_chip_sz,

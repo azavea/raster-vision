@@ -32,8 +32,9 @@ class DatasetConfig(Config):
             for s in self.test_scenes:
                 s.update(pipeline=pipeline)
 
-        self.img_channels = len(
-            self.train_scenes[0].raster_source.channel_order)
+        channel_order = self.train_scenes[0].raster_source.channel_order
+        if channel_order is not None:
+            self.img_channels = len(channel_order)
 
     def validate_config(self):
         ids = [s.id for s in self.train_scenes]

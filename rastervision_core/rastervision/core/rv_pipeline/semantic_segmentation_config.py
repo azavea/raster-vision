@@ -99,6 +99,9 @@ class SemanticSegmentationConfig(RVPipelineConfig):
     def validate_config(self):
         super().validate_config()
 
+        if self.dataset.img_channels is None:
+            return
+
         if self.img_format == 'png' and self.dataset.img_channels != 3:
             raise ConfigError('img_channels must be 3 if img_format is png.')
 
@@ -138,9 +141,8 @@ class SemanticSegmentationConfig(RVPipelineConfig):
                     raise ConfigError(
                         f'Invalid channel indices in channel_display_groups[{k}].'
                     )
-
         # validate list/tuple form
-        if isinstance(groups, (list, tuple)):
+        elif isinstance(groups, (list, tuple)):
             for i, grp in enumerate(groups):
                 if not (0 < len(grp) <= 3):
                     raise ConfigError(
