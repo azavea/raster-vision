@@ -25,7 +25,16 @@ class SemanticSegmentationDataConfig(DataConfig):
         'png', description='The filetype of the training labels.')
 
     channel_display_groups: Optional[Union[dict, list, tuple]] = Field(
-        None, description='Groups of image channels to display together.')
+        None,
+        description=
+        ('Groups of image channels to display together as a subplot '
+         'when plotting the data and predictions. '
+         'Can be a list or tuple of groups (e.g. [(0, 1, 2), (3,)]) or a dict '
+         'containing title-to-group mappings '
+         '(e.g. {"RGB": [0, 1, 2], "IR": [3]}), '
+         'where each group is a list or tuple of channel indices and title '
+         'is a string that will be used as the title of the subplot '
+         'for that group.'))
 
     def update(self, **kwargs):
         super().update()
