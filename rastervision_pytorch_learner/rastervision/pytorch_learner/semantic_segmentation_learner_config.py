@@ -17,7 +17,7 @@ class SemanticSegmentationDataConfig(DataConfig):
     data_format: SemanticSegmentationDataFormat = SemanticSegmentationDataFormat.default
 
     img_channels: PositiveInt = Field(
-        ..., description='The number of channels of the training images.')
+        3, description='The number of channels of the training images.')
 
     img_format: Optional[str] = Field(
         None, description='The filetype of the training images.')
