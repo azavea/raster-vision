@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+Raster Vision 0.13
+-------------------
+
+Features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Added support for multiband images `#972 <https://github.com/azavea/raster-vision/pull/972>`_
+
+
 Raster Vision 0.12
 -------------------
 

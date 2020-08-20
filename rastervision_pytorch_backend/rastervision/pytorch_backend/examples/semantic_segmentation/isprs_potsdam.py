@@ -12,7 +12,12 @@ from rastervision.pytorch_learner import *
 from rastervision.pytorch_backend.examples.utils import get_scene_info, save_image_crop
 
 
-def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
+def get_config(runner,
+               raw_uri,
+               processed_uri,
+               root_uri,
+               multiband=False,
+               test=False):
     train_ids = [
         '2-10', '2-11', '3-10', '3-11', '4-10', '4-11', '4-12', '5-10', '5-11',
         '5-12', '6-10', '6-11', '6-7', '6-9', '7-10', '7-11', '7-12', '7-7',
@@ -21,8 +26,8 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
     val_ids = ['2-12', '3-12', '6-12']
 
     if test:
-        train_ids = train_ids[0:1]
-        val_ids = val_ids[0:1]
+        train_ids = train_ids[0:2]
+        val_ids = val_ids[0:2]
 
     class_config = ClassConfig(
         names=[
@@ -32,6 +37,13 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
         colors=[
             '#ffff00', '#0000ff', '#00ffff', '#00ff00', '#ffffff', '#ff0000'
         ])
+
+    if multiband:
+        # use all 4 channels
+        channel_order = [0, 1, 2, 3]
+    else:
+        # use infrared, red, & green channels only
+        channel_order = [3, 0, 1]
 
     def make_scene(id):
         id = id.replace('-', '_')
@@ -55,8 +67,6 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
             raster_uri = crop_uri
             label_uri = label_crop_uri
 
-        # infrared, red, green
-        channel_order = [3, 0, 1]
         raster_source = RasterioSourceConfig(
             uris=[raster_uri], channel_order=channel_order)
 
@@ -95,15 +105,22 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
             num_epochs=10,
             test_num_epochs=2,
             batch_sz=8,
+            test_batch_sz=2,
             one_cycle=True),
         log_tensorboard=True,
         run_tensorboard=False,
         test_mode=test)
 
+    if multiband:
+        channel_display_groups = {'RGB': (0, 1, 2), 'IR': (3, )}
+    else:
+        channel_display_groups = None
+
     return SemanticSegmentationConfig(
         root_uri=root_uri,
         dataset=dataset,
         backend=backend,
+        channel_display_groups=channel_display_groups,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options)

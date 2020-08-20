@@ -49,3 +49,8 @@ def rgb_to_int_array(rgb_array):
     g = np.array(rgb_array[:, :, 1], dtype=np.uint32) * (1 << 8)
     b = np.array(rgb_array[:, :, 2], dtype=np.uint32) * (1 << 0)
     return r + g + b
+
+
+def all_equal(it: list):
+    ''' Returns true if all elements are equal to each other '''
+    return it.count(it[0]) == len(it)

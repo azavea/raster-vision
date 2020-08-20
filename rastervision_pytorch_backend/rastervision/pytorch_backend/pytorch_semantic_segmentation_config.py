@@ -13,12 +13,16 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
     model: SemanticSegmentationModelConfig
 
     def get_learner_config(self, pipeline):
-        data = SemanticSegmentationDataConfig()
-        data.uri = pipeline.chip_uri
-        data.class_names = pipeline.dataset.class_config.names
-        data.class_colors = pipeline.dataset.class_config.colors
-        data.img_sz = pipeline.train_chip_sz
-        data.augmentors = self.augmentors
+        data = SemanticSegmentationDataConfig(
+            uri=pipeline.chip_uri,
+            class_names=pipeline.dataset.class_config.names,
+            class_colors=pipeline.dataset.class_config.colors,
+            img_sz=pipeline.train_chip_sz,
+            img_channels=pipeline.dataset.img_channels,
+            img_format=pipeline.img_format,
+            label_format=pipeline.label_format,
+            augmentors=self.augmentors,
+            channel_display_groups=pipeline.channel_display_groups)
 
         learner = SemanticSegmentationLearnerConfig(
             data=data,
