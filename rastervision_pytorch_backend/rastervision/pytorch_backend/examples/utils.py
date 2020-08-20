@@ -92,7 +92,10 @@ def save_image_crop(image_uri,
             if label_uri and vector_labels:
                 crs_transformer = RasterioCRSTransformer.from_dataset(
                     im_dataset)
-                geojson_vs_config = GeoJSONVectorSourceConfig(uri=label_uri)
+                geojson_vs_config = GeoJSONVectorSourceConfig(
+                    uri=label_uri,
+                    default_class_id=0,
+                    ignore_crs_field=True)
                 vs = geojson_vs_config.build(class_config, crs_transformer)
                 geojson = vs.get_geojson()
                 geoms = []
