@@ -7,7 +7,6 @@ from typing import Optional
 import torch
 from torchvision import models
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import ConcatDataset
 
 from rastervision.pytorch_learner.learner import Learner

@@ -4,9 +4,6 @@ from enum import Enum
 from typing import List, Optional, Union, TYPE_CHECKING
 from pydantic import PositiveFloat, PositiveInt
 
-import numpy as np
-import torch
-
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field)
 from rastervision.pytorch_learner.utils import color_to_triple
