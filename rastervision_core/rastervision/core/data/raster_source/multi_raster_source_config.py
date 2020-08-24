@@ -1,60 +1,68 @@
-from typing import List, Optional, Tuple, Union
+from typing import Sequence
+from pydantic import conint
 
 import numpy as np
 
 from rastervision.pipeline.config import (Config, register_config, Field,
-                                          ConfigError)
+                                          ConfigError, validator)
 from rastervision.core.data.raster_transformer import RasterTransformerConfig
-from rastervision.core.data.raster_source import RasterSourceConfig, RasterioSourceConfig, MultiRasterSource
+from rastervision.core.data.raster_source import (RasterSourceConfig,
+                                                  MultiRasterSource)
+
+
+@register_config('sub_raster_source')
+class SubRasterSourceConfig(Config):
+    raster_source: RasterSourceConfig = Field(
+        ...,
+        description=
+        'A RasterSourceConfig that will provide some of the channels.')
+    target_channels: Sequence[conint(ge=0)] = Field(
+        ...,
+        description='Channel indices to send each of the channels in this '
+        'raster source to.')
+
+    @validator('target_channels')
+    def non_empty_target_channels(cls, v):
+        if len(v) == 0:
+            raise ConfigError('target_channels should be non-empty.')
+        return list(v)
 
 
 @register_config('multi_raster_source')
 class MultiRasterSourceConfig(RasterSourceConfig):
-    raster_sources: List[Tuple[RasterSourceConfig, Union[tuple, List[
-        int]]]] = Field(
-            ...,
-            description='List of (RasterSourceConfig, indices) pair, where '
-            'are the positions to which each channel of the raster source will '
-            'be sent.')
+    raster_sources: Sequence[SubRasterSourceConfig] = Field(
+        ..., description='List of SubRasterSourceConfig to combine.')
 
     def get_raw_channel_order(self):
-        channel_mappings = sum((list(inds) for _, inds in self.raster_sources),
-                               [])
+        channel_mappings = sum(
+            (rs.target_channels for rs in self.raster_sources), [])
         self.validate_channel_mappings(channel_mappings)
         raw_channel_order = np.argsort(channel_mappings)
 
         return raw_channel_order
 
-    def validate_channel_mappings(self, channel_mappings):
-        # ensure we have a source channel for each channel idx
-        if set(channel_mappings) != set(range(len(channel_mappings))):
+    def validate_channel_mappings(self, channel_mappings: Sequence[int]):
+        src_inds = set(range(len(channel_mappings)))
+        tgt_inds = set(channel_mappings)
+        if src_inds != tgt_inds:
             raise ConfigError(f'Missing mappings for some channels.')
 
-    def validate_config(self):
-        super().validate_config()
-
-        if len(self.raster_sources) == 0:
-            raise ConfigError(f'No raster sources provided.')
-
-        for i, (_, inds) in enumerate(self.raster_sources):
-            if len(inds) == 0:
-                raise ConfigError(
-                    f'Got no indices for raster source at index {i}.')
-            if isinstance(inds, tuple):
-                if any(not isinstance(ind, int) for ind in inds):
-                    raise ConfigError(f'Indices must be ints. Got: {ind}.')
-            if any(ind < 0 for ind in inds):
-                raise ConfigError(f'Indices must be >= 0. Got: {ind}.')
+    @validator('raster_sources')
+    def validate_raster_sources(cls, v):
+        if len(v) == 0:
+            raise ConfigError('raster_sources should be non-empty.')
+        return v
 
     def build(self, tmp_dir, use_transformers=True):
         raster_transformers = ([rt.build() for rt in self.transformers]
                                if use_transformers else [])
 
-        raster_sources = [
-            cfg.build(tmp_dir, use_transformers) for cfg, _ in self.raster_sources
+        built_raster_sources = [
+            sub_rs.raster_source.build(tmp_dir, use_transformers)
+            for sub_rs in self.raster_sources
         ]
         multi_raster_source = MultiRasterSource(
-            raster_sources=raster_sources,
+            raster_sources=built_raster_sources,
             raw_channel_order=self.get_raw_channel_order(),
             raster_transformers=raster_transformers)
         return multi_raster_source

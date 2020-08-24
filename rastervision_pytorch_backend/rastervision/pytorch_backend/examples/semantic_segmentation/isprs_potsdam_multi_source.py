@@ -1,17 +1,21 @@
 # flake8: noqa
 
-import os
-from os.path import join
 from pathlib import Path
 from functools import partial
+from typing import Tuple, Union
 
-from rastervision.core.rv_pipeline import *
-from rastervision.core.backend import *
-from rastervision.core.data import *
-from rastervision.core.analyzer import *
-from rastervision.pytorch_backend import *
-from rastervision.pytorch_learner import *
-from rastervision.pytorch_backend.examples.utils import get_scene_info, save_image_crop
+from rastervision.core.rv_pipeline import (
+    SemanticSegmentationChipOptions, SemanticSegmentationWindowMethod,
+    SemanticSegmentationConfig, DatasetConfig, SceneConfig)
+from rastervision.core.data import (
+    ClassConfig, RasterioSourceConfig, MultiRasterSourceConfig,
+    SubRasterSourceConfig, SemanticSegmentationLabelSourceConfig,
+    SemanticSegmentationLabelStoreConfig)
+from rastervision.pytorch_backend import (PyTorchSemanticSegmentationConfig,
+                                          SemanticSegmentationModelConfig)
+from rastervision.pytorch_learner import (Backbone, SolverConfig)
+from rastervision.pytorch_backend.examples.utils import (get_scene_info,
+                                                         save_image_crop)
 
 # -----------------
 # Input files
@@ -19,18 +23,17 @@ from rastervision.pytorch_backend.examples.utils import get_scene_info, save_ima
 RGBIR_DIR = '4_Ortho_RGBIR'
 ELEVATION_DIR = 'elevation'
 LABEL_DIR = '5_Labels_for_participants'
-CROP_DIR = 'crops'
 
 RGBIR_FNAME = lambda scene_id: f'top_potsdam_{scene_id}_RGBIR.tif'
 ELEVATION_FNAME = lambda scene_id: f'{scene_id}.jpg'
 LABEL_FNAME = lambda scene_id: f'top_potsdam_{scene_id}_label.tif'
 
 TRAIN_IDS = [
-    '2-10', '2-11', '3-10', '3-11', '4-10', '4-11', '4-12', '5-10', '5-11',
-    '5-12', '6-10', '6-11', '6-7', '6-9', '7-10', '7-11', '7-12', '7-7', '7-8',
-    '7-9'
+    '2_10', '2_11', '3_10', '3_11', '4_10', '4_11', '4_12', '5_10', '5_11',
+    '5_12', '6_10', '6_11', '6_7', '6_9', '7_10', '7_11', '7_12', '7_7', '7_8',
+    '7_9'
 ]
-VAL_IDS = ['2-12', '3-12', '6-12']
+VAL_IDS = ['2_12', '3_12', '6_12']
 
 # -----------------
 # Data prep
@@ -63,27 +66,34 @@ TEST_MODE_VAL_IDS = VAL_IDS[:2]
 TEST_MODE_NUM_EPOCHS = 2
 TEST_MODE_BATCH_SIZE = 2
 TEST_CROP_SIZE = 600
+TEST_CROP_DIR = 'crops'
 
 
 ####################
 # Utils
 ####################
-def make_crop(processed_uri, raster_uri, label_uri):
-    crop_uri = processed_uri / CROP_DIR / raster_uri.name
-    label_crop_uri = processed_uri / CROP_DIR / label_uri.name
+def make_crop(processed_uri: Path, raster_uri: Path,
+              label_uri: Path = None) -> Tuple[Path, Path]:
+    crop_uri = processed_uri / TEST_CROP_DIR / raster_uri.name
+    if label_uri is not None:
+        label_crop_uri = processed_uri / TEST_CROP_DIR / label_uri.name
+    else:
+        label_crop_uri = None
 
     save_image_crop(
         str(raster_uri),
         str(crop_uri),
-        label_uri=str(label_uri),
-        label_crop_uri=str(label_crop_uri),
+        label_uri=str(label_uri) if label_uri else None,
+        label_crop_uri=str(label_crop_uri) if label_uri else None,
         size=TEST_CROP_SIZE,
         vector_labels=False)
 
     return crop_uri, label_crop_uri
 
 
-def make_label_source(class_config, label_uri):
+def make_label_source(class_config, label_uri: Union[Path, str]
+                      ) -> Tuple[SemanticSegmentationLabelSourceConfig,
+                                 SemanticSegmentationLabelStoreConfig]:
     label_uri = str(label_uri)
     # Using with_rgb_class_map because label TIFFs have classes encoded as
     # RGB colors.
@@ -94,40 +104,45 @@ def make_label_source(class_config, label_uri):
     # URI will be injected by scene config.
     # Using rgb=True because we want prediction TIFFs to be in
     # RGB format.
-    label_store = SemanticSegmentationLabelStoreConfig(
-        rgb=True, vector_output=[PolygonVectorOutputConfig(class_id=0)])
+    label_store = SemanticSegmentationLabelStoreConfig(rgb=True)
 
     return label_source, label_store
 
 
-def make_multi_raster_source(rgbir_raster_uri, elevation_raster_uri):
+def make_multi_raster_source(
+        rgbir_raster_uri: Union[Path, str],
+        elevation_raster_uri: Union[Path, str]) -> MultiRasterSourceConfig:
     rgbir_raster_uri = str(rgbir_raster_uri)
     elevation_raster_uri = str(elevation_raster_uri)
 
     # create multi raster source by combining rgbir and elevation sources
-    rgbir_source = RasterioSourceConfig(uris=[rgbir_raster_uri])
-    elevation_source = RasterioSourceConfig(uris=[elevation_raster_uri])
-
+    rgbir_source = SubRasterSourceConfig(
+        raster_source=RasterioSourceConfig(uris=[rgbir_raster_uri]),
+        target_channels=[0, 1, 2, 3])
+    elevation_source = SubRasterSourceConfig(
+        raster_source=RasterioSourceConfig(uris=[elevation_raster_uri]),
+        target_channels=[4])
     raster_source = MultiRasterSourceConfig(
-        raster_sources=[
-            (rgbir_source, (0, 1, 2, 3)),
-            (elevation_source, (4, ))])
+        raster_sources=[rgbir_source, elevation_source])
 
     return raster_source
 
 
-def make_scene(raw_uri, processed_uri, class_config, test, scene_id):
-    scene_id = scene_id.replace('-', '_')
+def make_scene(raw_uri: Path,
+               processed_uri: Path,
+               class_config: ClassConfig,
+               scene_id: str,
+               test_mode=False) -> SceneConfig:
     rgbir_raster_uri = raw_uri / RGBIR_DIR / RGBIR_FNAME(scene_id)
     elevation_raster_uri = raw_uri / ELEVATION_DIR / ELEVATION_FNAME(scene_id)
     label_uri = raw_uri / LABEL_DIR / LABEL_FNAME(scene_id)
 
-    if test:
-        rgbir_raster_uri, _ = make_crop(processed_uri, rgbir_raster_uri,
-                                        label_uri)
+    if test_mode:
+        label_uri_orig = label_uri
+        rgbir_raster_uri, _ = make_crop(processed_uri, rgbir_raster_uri, None)
 
         elevation_raster_uri, label_uri = make_crop(
-            processed_uri, elevation_raster_uri, label_uri)
+            processed_uri, elevation_raster_uri, label_uri_orig)
 
     raster_source = make_multi_raster_source(rgbir_raster_uri,
                                              elevation_raster_uri)
@@ -146,7 +161,7 @@ def make_scene(raw_uri, processed_uri, class_config, test, scene_id):
 ################
 # Config
 ################
-def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
+def get_config(runner, raw_uri, processed_uri, root_uri, test: bool = False):
 
     if test:
         train_ids = TEST_MODE_TRAIN_IDS
@@ -158,29 +173,26 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
     raw_uri = Path(raw_uri)
     processed_uri = Path(processed_uri)
 
-    # ----------------------------
-    # Configure chip generation
-    # ----------------------------
-    chip_sz = CHIP_SIZE
-    chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
-
     # -------------------------------
     # Configure dataset generation
     # -------------------------------
     class_config = ClassConfig(names=CLASS_NAMES, colors=CLASS_COLORS)
 
-    _make_scene = partial(make_scene, raw_uri, processed_uri, class_config,
-                          test)
+    chip_options = SemanticSegmentationChipOptions(
+        window_method=SemanticSegmentationWindowMethod.sliding,
+        stride=CHIP_SIZE)
+
+    _make_scene = partial(
+        make_scene, raw_uri, processed_uri, class_config, test_mode=test)
+
     dataset_config = DatasetConfig(
         class_config=class_config,
-        train_scenes=[_make_scene(id) for id in train_ids],
-        validation_scenes=[_make_scene(id) for id in val_ids])
+        train_scenes=[_make_scene(scene_id) for scene_id in train_ids],
+        validation_scenes=[_make_scene(scene_id) for scene_id in val_ids])
 
     # --------------------------------------------
     # Configure PyTorch backend and training
     # --------------------------------------------
-
     model_config = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)
 
     solver_config = SolverConfig(
@@ -203,8 +215,8 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
     # -----------------------------------------------
     return SemanticSegmentationConfig(
         root_uri=root_uri,
-        train_chip_sz=chip_sz,
-        predict_chip_sz=chip_sz,
+        train_chip_sz=CHIP_SIZE,
+        predict_chip_sz=CHIP_SIZE,
         chip_options=chip_options,
         dataset=dataset_config,
         backend=backend_config,
