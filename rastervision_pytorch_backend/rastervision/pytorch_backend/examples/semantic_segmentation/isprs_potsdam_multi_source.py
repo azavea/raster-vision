@@ -72,6 +72,26 @@ TEST_CROP_DIR = 'crops'
 ####################
 # Utils
 ####################
+class UriPath(object):
+    def __init__(self, s):
+        from pathlib import Path
+        self._path = Path(s)
+
+    @property
+    def name(self):
+        return self._path.name
+
+    def __truediv__(self, val):
+        return UriPath(self._path / val)
+
+    def __repr__(self):
+        import re
+        s = str(self._path)
+        # s3:/abc --> s3://abc
+        s = re.sub(r'^([^/]+):/([^/]?)', r'\1://\2', s)
+        return s
+
+
 def make_crop(processed_uri: Path, raster_uri: Path,
               label_uri: Path = None) -> Tuple[Path, Path]:
     crop_uri = processed_uri / TEST_CROP_DIR / raster_uri.name
@@ -117,10 +137,12 @@ def make_multi_raster_source(
 
     # create multi raster source by combining rgbir and elevation sources
     rgbir_source = SubRasterSourceConfig(
-        raster_source=RasterioSourceConfig(uris=[rgbir_raster_uri]),
+        raster_source=RasterioSourceConfig(
+            uris=[rgbir_raster_uri], channel_order=[0, 1, 2, 3]),
         target_channels=[0, 1, 2, 3])
     elevation_source = SubRasterSourceConfig(
-        raster_source=RasterioSourceConfig(uris=[elevation_raster_uri]),
+        raster_source=RasterioSourceConfig(
+            uris=[elevation_raster_uri], channel_order=[0]),
         target_channels=[4])
     raster_source = MultiRasterSourceConfig(
         raster_sources=[rgbir_source, elevation_source])
@@ -170,9 +192,8 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test: bool = False):
         train_ids = TRAIN_IDS
         val_ids = VAL_IDS
 
-    raw_uri = Path(raw_uri)
-    processed_uri = Path(processed_uri)
-
+    raw_uri = UriPath(raw_uri)
+    processed_uri = UriPath(processed_uri)
     # -------------------------------
     # Configure dataset generation
     # -------------------------------

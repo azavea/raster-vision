@@ -27,7 +27,11 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                  raster_sources,
                  raw_channel_order,
                  raster_transformers=[]):
-        super().__init__([], len(raw_channel_order), raster_transformers)
+
+        num_channels = len(raw_channel_order)
+        channel_order = list(range(num_channels))
+        super().__init__(channel_order, num_channels, raster_transformers)
+
         self.raster_sources = raster_sources
         self.raw_channel_order = raw_channel_order
         self.num_channels = len(self.raw_channel_order)
