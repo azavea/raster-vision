@@ -5,21 +5,23 @@ from functools import partial
 from typing import Tuple, Union
 
 from rastervision.core.rv_pipeline import (
-    SemanticSegmentationChipOptions, SemanticSegmentationWindowMethod,
-    SemanticSegmentationConfig, DatasetConfig, SceneConfig)
+    SceneConfig, DatasetConfig, SemanticSegmentationChipOptions,
+    SemanticSegmentationWindowMethod, SemanticSegmentationConfig)
+
 from rastervision.core.data import (
     ClassConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     SubRasterSourceConfig, SemanticSegmentationLabelSourceConfig,
     SemanticSegmentationLabelStoreConfig)
+
 from rastervision.pytorch_backend import (PyTorchSemanticSegmentationConfig,
                                           SemanticSegmentationModelConfig)
 from rastervision.pytorch_learner import (Backbone, SolverConfig)
 from rastervision.pytorch_backend.examples.utils import (get_scene_info,
                                                          save_image_crop)
 
-# -----------------
-# Input files
-# -----------------
+# -----------------------
+# Input files and paths
+# -----------------------
 RGBIR_DIR = '4_Ortho_RGBIR'
 ELEVATION_DIR = 'elevation'
 LABEL_DIR = '5_Labels_for_participants'
@@ -44,7 +46,6 @@ CLASS_NAMES = [
 CLASS_COLORS = [
     '#ffff00', '#0000ff', '#00ffff', '#00ff00', '#ffffff', '#ff0000'
 ]
-
 CHIP_SIZE = 300
 
 # -----------------
@@ -56,7 +57,7 @@ BATCH_SIZE = 8
 ONE_CYCLE = True
 LOG_TENSORBOARD = True
 RUN_TENSORBOARD = False
-CHANNEL_DISPLAY_GROUPS = {'RGB': (0, 1, 2), 'IR': (3, ), 'Elevation': (4, )}
+CHANNEL_DISPLAY_GROUPS = {'RGB': [0, 1, 2], 'IR': [3], 'Elevation': [4]}
 
 # -----------------
 # Test mode settings
@@ -69,131 +70,33 @@ TEST_CROP_SIZE = 600
 TEST_CROP_DIR = 'crops'
 
 
-####################
-# Utils
-####################
-class UriPath(object):
-    def __init__(self, s):
-        from pathlib import Path
-        self._path = Path(s)
-
-    @property
-    def name(self):
-        return self._path.name
-
-    def __truediv__(self, val):
-        return UriPath(self._path / val)
-
-    def __repr__(self):
-        import re
-        s = str(self._path)
-        # s3:/abc --> s3://abc
-        s = re.sub(r'^([^/]+):/([^/]?)', r'\1://\2', s)
-        return s
-
-
-def make_crop(processed_uri: Path, raster_uri: Path,
-              label_uri: Path = None) -> Tuple[Path, Path]:
-    crop_uri = processed_uri / TEST_CROP_DIR / raster_uri.name
-    if label_uri is not None:
-        label_crop_uri = processed_uri / TEST_CROP_DIR / label_uri.name
-    else:
-        label_crop_uri = None
-
-    save_image_crop(
-        str(raster_uri),
-        str(crop_uri),
-        label_uri=str(label_uri) if label_uri else None,
-        label_crop_uri=str(label_crop_uri) if label_uri else None,
-        size=TEST_CROP_SIZE,
-        vector_labels=False)
-
-    return crop_uri, label_crop_uri
-
-
-def make_label_source(class_config, label_uri: Union[Path, str]
-                      ) -> Tuple[SemanticSegmentationLabelSourceConfig,
-                                 SemanticSegmentationLabelStoreConfig]:
-    label_uri = str(label_uri)
-    # Using with_rgb_class_map because label TIFFs have classes encoded as
-    # RGB colors.
-    label_source = SemanticSegmentationLabelSourceConfig(
-        rgb_class_config=class_config,
-        raster_source=RasterioSourceConfig(uris=[label_uri]))
-
-    # URI will be injected by scene config.
-    # Using rgb=True because we want prediction TIFFs to be in
-    # RGB format.
-    label_store = SemanticSegmentationLabelStoreConfig(rgb=True)
-
-    return label_source, label_store
-
-
-def make_multi_raster_source(
-        rgbir_raster_uri: Union[Path, str],
-        elevation_raster_uri: Union[Path, str]) -> MultiRasterSourceConfig:
-    rgbir_raster_uri = str(rgbir_raster_uri)
-    elevation_raster_uri = str(elevation_raster_uri)
-
-    # create multi raster source by combining rgbir and elevation sources
-    rgbir_source = SubRasterSourceConfig(
-        raster_source=RasterioSourceConfig(
-            uris=[rgbir_raster_uri], channel_order=[0, 1, 2, 3]),
-        target_channels=[0, 1, 2, 3])
-    elevation_source = SubRasterSourceConfig(
-        raster_source=RasterioSourceConfig(
-            uris=[elevation_raster_uri], channel_order=[0]),
-        target_channels=[4])
-    raster_source = MultiRasterSourceConfig(
-        raster_sources=[rgbir_source, elevation_source])
-
-    return raster_source
-
-
-def make_scene(raw_uri: Path,
-               processed_uri: Path,
-               class_config: ClassConfig,
-               scene_id: str,
-               test_mode=False) -> SceneConfig:
-    rgbir_raster_uri = raw_uri / RGBIR_DIR / RGBIR_FNAME(scene_id)
-    elevation_raster_uri = raw_uri / ELEVATION_DIR / ELEVATION_FNAME(scene_id)
-    label_uri = raw_uri / LABEL_DIR / LABEL_FNAME(scene_id)
-
-    if test_mode:
-        label_uri_orig = label_uri
-        rgbir_raster_uri, _ = make_crop(processed_uri, rgbir_raster_uri, None)
-
-        elevation_raster_uri, label_uri = make_crop(
-            processed_uri, elevation_raster_uri, label_uri_orig)
-
-    raster_source = make_multi_raster_source(rgbir_raster_uri,
-                                             elevation_raster_uri)
-
-    label_source, label_store = make_label_source(class_config, label_uri)
-
-    scene = SceneConfig(
-        id=scene_id,
-        raster_source=raster_source,
-        label_source=label_source,
-        label_store=label_store)
-
-    return scene
-
-
 ################
 # Config
 ################
-def get_config(runner, raw_uri, processed_uri, root_uri, test: bool = False):
+def get_config(runner, raw_uri, processed_uri, root_uri,
+               test: bool = False) -> SemanticSegmentationConfig:
+    '''Generate the pipeline config for this task. This function will be called
+    by RV, with arguments from the command line, when this example is run.
 
-    if test:
-        train_ids = TEST_MODE_TRAIN_IDS
-        val_ids = TEST_MODE_VAL_IDS
+    Args:
+        runner (Runner): Runner for the pipeline.
+        raw_uri (str): Directory where the raw data resides
+        processed_uri (str): Directory for storing processed data. 
+                             E.g. crops for testing.
+        root_uri (str): Directory where all the output will be written.
+        test (bool, optional): Whether to run in test mode. Defaults to False.
+
+    Returns:
+        SemanticSegmentationConfig: A pipeline config.
+    '''
+    if not test:
+        train_ids, val_ids = TRAIN_IDS, VAL_IDS
     else:
-        train_ids = TRAIN_IDS
-        val_ids = VAL_IDS
+        train_ids, val_ids = TEST_MODE_TRAIN_IDS, TEST_MODE_VAL_IDS
 
     raw_uri = UriPath(raw_uri)
     processed_uri = UriPath(processed_uri)
+
     # -------------------------------
     # Configure dataset generation
     # -------------------------------
@@ -234,12 +137,131 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test: bool = False):
     # -----------------------------------------------
     # Pass configurations to the pipeline config
     # -----------------------------------------------
-    return SemanticSegmentationConfig(
+    pipeline_config = SemanticSegmentationConfig(
         root_uri=root_uri,
         train_chip_sz=CHIP_SIZE,
         predict_chip_sz=CHIP_SIZE,
         chip_options=chip_options,
         dataset=dataset_config,
         backend=backend_config,
-        channel_display_groups=CHANNEL_DISPLAY_GROUPS,
-    )
+        channel_display_groups=CHANNEL_DISPLAY_GROUPS)
+
+    return pipeline_config
+
+
+####################
+# Utils
+####################
+class UriPath(object):
+    ''' Workaround for pathlib.Path converting "s3://abc to s3:/abc" '''
+
+    def __init__(self, s):
+        from pathlib import Path
+        self._path = Path(s)
+
+    @property
+    def name(self):
+        return self._path.name
+
+    @property
+    def stem(self):
+        return self._path.stem
+
+    def __truediv__(self, val):
+        return UriPath(self._path / val)
+
+    def __repr__(self):
+        import re
+        s = str(self._path)
+        # s3:/abc --> s3://abc
+        s = re.sub(r'^([^/]+):/([^/]?)', r'\1://\2', s)
+        return s
+
+
+def make_scene(raw_uri: UriPath,
+               processed_uri: UriPath,
+               class_config: ClassConfig,
+               scene_id: str,
+               test_mode=False) -> SceneConfig:
+    rgbir_raster_uri = raw_uri / RGBIR_DIR / RGBIR_FNAME(scene_id)
+    elevation_raster_uri = raw_uri / ELEVATION_DIR / ELEVATION_FNAME(scene_id)
+    label_uri = raw_uri / LABEL_DIR / LABEL_FNAME(scene_id)
+
+    if test_mode:
+        label_uri_orig = label_uri
+        rgbir_raster_uri, _ = make_crop(processed_uri, rgbir_raster_uri, None)
+
+        elevation_raster_uri, label_uri = make_crop(
+            processed_uri, elevation_raster_uri, label_uri_orig)
+
+    raster_source = make_multi_raster_source(rgbir_raster_uri,
+                                             elevation_raster_uri)
+
+    label_source, label_store = make_label_source(class_config, label_uri)
+
+    scene = SceneConfig(
+        id=scene_id,
+        raster_source=raster_source,
+        label_source=label_source,
+        label_store=label_store)
+
+    return scene
+
+
+def make_multi_raster_source(
+        rgbir_raster_uri: Union[UriPath, str],
+        elevation_raster_uri: Union[UriPath, str]) -> MultiRasterSourceConfig:
+    rgbir_raster_uri = str(rgbir_raster_uri)
+    elevation_raster_uri = str(elevation_raster_uri)
+
+    # create multi raster source by combining rgbir and elevation sources
+    rgbir_source = SubRasterSourceConfig(
+        raster_source=RasterioSourceConfig(
+            uris=[rgbir_raster_uri], channel_order=[0, 1, 2, 3]),
+        target_channels=[0, 1, 2, 3])
+    elevation_source = SubRasterSourceConfig(
+        raster_source=RasterioSourceConfig(
+            uris=[elevation_raster_uri], channel_order=[0]),
+        target_channels=[4])
+    raster_source = MultiRasterSourceConfig(
+        raster_sources=[rgbir_source, elevation_source])
+
+    return raster_source
+
+
+def make_crop(processed_uri: UriPath,
+              raster_uri: UriPath,
+              label_uri: UriPath = None) -> Tuple[UriPath, UriPath]:
+    crop_uri = processed_uri / TEST_CROP_DIR / raster_uri.name
+    if label_uri is not None:
+        label_crop_uri = processed_uri / TEST_CROP_DIR / label_uri.name
+    else:
+        label_crop_uri = None
+
+    save_image_crop(
+        str(raster_uri),
+        str(crop_uri),
+        label_uri=str(label_uri) if label_uri else None,
+        label_crop_uri=str(label_crop_uri) if label_uri else None,
+        size=TEST_CROP_SIZE,
+        vector_labels=False)
+
+    return crop_uri, label_crop_uri
+
+
+def make_label_source(class_config, label_uri: Union[UriPath, str]
+                      ) -> Tuple[SemanticSegmentationLabelSourceConfig,
+                                 SemanticSegmentationLabelStoreConfig]:
+    label_uri = str(label_uri)
+    # Using with_rgb_class_map because label TIFFs have classes encoded as
+    # RGB colors.
+    label_source = SemanticSegmentationLabelSourceConfig(
+        rgb_class_config=class_config,
+        raster_source=RasterioSourceConfig(uris=[label_uri]))
+
+    # URI will be injected by scene config.
+    # Using rgb=True because we want prediction TIFFs to be in
+    # RGB format.
+    label_store = SemanticSegmentationLabelStoreConfig(rgb=True)
+
+    return label_source, label_store
