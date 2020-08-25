@@ -39,18 +39,20 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         dtypes = [rs.get_dtype() for rs in self.raster_sources]
         if not all_equal(dtypes):
             raise MultiRasterSourceError(
-                'dtypes of all sub raster sources must be equal')
+                'dtypes of all sub raster sources must be equal. '
+                f'Got: {dtypes}')
 
         extents = [rs.get_extent() for rs in self.raster_sources]
         if not all_equal(extents):
             raise MultiRasterSourceError(
-                'extents of all sub raster sources must be equal')
+                'extents of all sub raster sources must be equal. '
+                f'Got: {extents}')
 
-        num_channels = sum(rs.num_channels for rs in self.raster_sources)
-        if num_channels != self.num_channels:
+        sub_num_channels = sum(rs.num_channels for rs in self.raster_sources)
+        if sub_num_channels != self.num_channels:
             raise MultiRasterSourceError(
-                'num_channels and channel mappings for sub raster sources do '
-                'not match')
+                f'num_channels ({self.num_channels}) != sum of num_channels '
+                f'of sub raster sources ({sub_num_channels})')
 
     def _subcomponents_to_activate(self) -> None:
         return self.raster_sources
