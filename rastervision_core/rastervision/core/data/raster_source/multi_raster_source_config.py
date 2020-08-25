@@ -27,6 +27,10 @@ class SubRasterSourceConfig(Config):
             raise ConfigError('target_channels should be non-empty.')
         return list(v)
 
+    def build(self, tmp_dir, use_transformers=True):
+        rs = self.raster_source.build(tmp_dir, use_transformers)
+        return rs
+
 
 @register_config('multi_raster_source')
 class MultiRasterSourceConfig(RasterSourceConfig):
@@ -34,18 +38,34 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         ..., description='List of SubRasterSourceConfig to combine.')
 
     def get_raw_channel_order(self):
+        # concatenate all target_channels
         channel_mappings = sum(
             (rs.target_channels for rs in self.raster_sources), [])
-        self.validate_channel_mappings(channel_mappings)
-        raw_channel_order = np.argsort(channel_mappings)
+
+        # this will be used to index the channel dim of the
+        # concatenated array to achieve the channel mappings
+        raw_channel_order = [0] * len(channel_mappings)
+        for from_idx, to_idx in enumerate(channel_mappings):
+            raw_channel_order[to_idx] = from_idx
+
+        self.validate_channel_mappings(channel_mappings, raw_channel_order)
 
         return raw_channel_order
 
-    def validate_channel_mappings(self, channel_mappings: Sequence[int]):
+    def validate_channel_mappings(self, channel_mappings: Sequence[int],
+                                  raw_channel_order: Sequence[int]):
+        # validate completeness of mappings
         src_inds = set(range(len(channel_mappings)))
         tgt_inds = set(channel_mappings)
         if src_inds != tgt_inds:
-            raise ConfigError(f'Missing mappings for some channels.')
+            raise ConfigError('Missing mappings for some channels.')
+
+        # check compatibility with channel_order, if given
+        if self.channel_order:
+            if len(self.channel_order != len(raw_channel_order)):
+                raise ConfigError(
+                    f'Channel mappings ({raw_channel_order}) and '
+                    f'channel_order ({channel_order}) are incompatible.')
 
     @validator('raster_sources')
     def validate_raster_sources(cls, v):
@@ -54,16 +74,18 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         return v
 
     def build(self, tmp_dir, use_transformers=True):
-        raster_transformers = ([rt.build() for rt in self.transformers]
-                               if use_transformers else [])
+        if use_transformers:
+            raster_transformers = [t.build() for t in self.transformers]
+        else:
+            raster_transformers = []
 
         built_raster_sources = [
-            sub_rs.raster_source.build(tmp_dir, use_transformers)
-            for sub_rs in self.raster_sources
+            rs.build(tmp_dir, use_transformers) for rs in self.raster_sources
         ]
         multi_raster_source = MultiRasterSource(
             raster_sources=built_raster_sources,
             raw_channel_order=self.get_raw_channel_order(),
+            channel_order=self.channel_order,
             raster_transformers=raster_transformers)
         return multi_raster_source
 
