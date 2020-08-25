@@ -15,7 +15,7 @@ class SubRasterSourceConfig(Config):
     raster_source: RasterSourceConfig = Field(
         ...,
         description=
-        'A RasterSourceConfig that will provide some of the channels.')
+        'A RasterSourceConfig that will provide a subset of the channels.')
     target_channels: Sequence[conint(ge=0)] = Field(
         ...,
         description='Channel indices to send each of the channels in this '
@@ -35,7 +35,7 @@ class SubRasterSourceConfig(Config):
 @register_config('multi_raster_source')
 class MultiRasterSourceConfig(RasterSourceConfig):
     raster_sources: Sequence[SubRasterSourceConfig] = Field(
-        ..., description='List of SubRasterSourceConfig to combine.')
+        ..., description='List of SubRasterSourceConfigs to combine.')
 
     def get_raw_channel_order(self):
         # concatenate all target_channels
