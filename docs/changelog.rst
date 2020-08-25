@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+Raster Vision 0.12.1
+---------------------
+
+Bug Fixes
+^^^^^^^^^^^
+
+* Add support for vector output to predict command `#980 <https://github.com/azavea/raster-vision/pull/980>`_ This also enables use of model bundles in the Model Zoo without having access to Azavea's S3 buckets.
+
 Raster Vision 0.12
 -------------------
 
