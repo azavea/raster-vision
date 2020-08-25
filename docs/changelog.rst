@@ -8,7 +8,7 @@ Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Added support for multiband images `#972 <https://github.com/azavea/raster-vision/pull/972>`_
-
+* Add support for vector output to predict command `#980 <https://github.com/azavea/raster-vision/pull/980>`_
 
 Raster Vision 0.12
 -------------------
