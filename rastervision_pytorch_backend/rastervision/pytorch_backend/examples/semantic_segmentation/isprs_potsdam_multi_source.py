@@ -214,20 +214,22 @@ def make_scene(raw_uri: UriPath,
 def make_multi_raster_source(
         rgbir_raster_uri: Union[UriPath, str],
         elevation_raster_uri: Union[UriPath, str]) -> MultiRasterSourceConfig:
+    ''' Create multi raster source by combining rgbir and elevation sources. '''
     rgbir_raster_uri = str(rgbir_raster_uri)
     elevation_raster_uri = str(elevation_raster_uri)
 
-    # create multi raster source by combining rgbir and elevation sources
-    rgbir_source = SubRasterSourceConfig(
-        raster_source=RasterioSourceConfig(
-            uris=[rgbir_raster_uri], channel_order=[0, 1, 2, 3]),
-        target_channels=[0, 1, 2, 3])
-    elevation_source = SubRasterSourceConfig(
-        raster_source=RasterioSourceConfig(
-            uris=[elevation_raster_uri], channel_order=[0]),
-        target_channels=[4])
-    raster_source = MultiRasterSourceConfig(
-        raster_sources=[rgbir_source, elevation_source])
+    rgbir_source = RasterioSourceConfig(
+        uris=[rgbir_raster_uri], channel_order=[0, 1, 2, 3])
+
+    elevation_source = RasterioSourceConfig(
+        uris=[elevation_raster_uri], channel_order=[0])
+
+    raster_source = MultiRasterSourceConfig(raster_sources=[
+        SubRasterSourceConfig(
+            raster_source=rgbir_source, target_channels=[0, 1, 2, 3]),
+        SubRasterSourceConfig(
+            raster_source=elevation_source, target_channels=[4])
+    ])
 
     return raster_source
 
