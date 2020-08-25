@@ -4,7 +4,7 @@ from pydantic import conint
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.core.data import (ActivateMixin, ActivationError)
+from rastervision.core.data import ActivateMixin
 from rastervision.core.data.raster_source import RasterSource
 from rastervision.core.data.crs_transformer import (CRSTransformer,
                                                     IdentityCRSTransformer)

@@ -1,11 +1,8 @@
 from typing import Sequence
 from pydantic import conint
 
-import numpy as np
-
 from rastervision.pipeline.config import (Config, register_config, Field,
                                           ConfigError, validator)
-from rastervision.core.data.raster_transformer import RasterTransformerConfig
 from rastervision.core.data.raster_source import (RasterSourceConfig,
                                                   MultiRasterSource)
 
@@ -65,7 +62,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
             if len(self.channel_order) != len(raw_channel_order):
                 raise ConfigError(
                     f'Channel mappings ({raw_channel_order}) and '
-                    f'channel_order ({channel_order}) are incompatible.')
+                    f'channel_order ({self.channel_order}) are incompatible.')
 
     @validator('raster_sources')
     def validate_raster_sources(cls, v):
