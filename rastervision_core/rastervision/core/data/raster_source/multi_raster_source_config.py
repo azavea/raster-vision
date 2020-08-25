@@ -62,7 +62,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
 
         # check compatibility with channel_order, if given
         if self.channel_order:
-            if len(self.channel_order != len(raw_channel_order)):
+            if len(self.channel_order) != len(raw_channel_order):
                 raise ConfigError(
                     f'Channel mappings ({raw_channel_order}) and '
                     f'channel_order ({channel_order}) are incompatible.')
