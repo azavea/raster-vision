@@ -73,7 +73,10 @@ TEST_CROP_DIR = 'crops'
 ################
 # Config
 ################
-def get_config(runner, raw_uri, processed_uri, root_uri,
+def get_config(runner,
+               raw_uri: str,
+               processed_uri: str,
+               root_uri: str,
                test: bool = False) -> SemanticSegmentationConfig:
     '''Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
