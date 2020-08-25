@@ -174,7 +174,7 @@ class UriPath(object):
         import re
         s = str(self._path)
         # s3:/abc --> s3://abc
-        s = re.sub(r'^([^/]+):/([^/]?)', r'\1://\2', s)
+        s = re.sub(r'^([^/]+):(?:/([^/]|$))', r'\1://\2', s)
         return s
 
 
