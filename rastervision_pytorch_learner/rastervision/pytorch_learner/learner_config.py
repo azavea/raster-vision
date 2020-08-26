@@ -141,8 +141,7 @@ class ModelConfig(Config):
         description=('URI of PyTorch model weights used to initialize model. '
                      'If set, this supercedes the pretrained option.'))
     torch_hub: Optional[TorchHubConfig] = Field(
-        None,
-        description='Config for loading models via torch.hub.')
+        None, description='Config for loading models via torch.hub.')
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass

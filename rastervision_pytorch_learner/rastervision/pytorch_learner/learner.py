@@ -206,7 +206,7 @@ class Learner(ABC):
         state_dict_args = self.cfg.model.torch_hub.state_dict_args
         if state_dict_args is not None:
             state_dict = torch.hub.load_state_dict_from_url(**state_dict_args)
-
+            model.load_state_dict(state_dict)
         return model
 
     def unzip_data(self, uri: Union[str, List[str]]) -> List[str]:

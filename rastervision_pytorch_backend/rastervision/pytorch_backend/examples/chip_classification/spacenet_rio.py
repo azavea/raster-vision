@@ -76,14 +76,14 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    model = ClassificationModelConfig(torch_hub=TorchHubConfig(
-        load_args = {
-            'github': 'lukemelas/EfficientNet-PyTorch',
-            'model': 'efficientnet_b0',
-            'num_classes': len(class_config.names),
-            'pretrained': 'imagenet'
-        }
-    ))
+    model = ClassificationModelConfig(
+        torch_hub=TorchHubConfig(
+            load_args={
+                'github': 'lukemelas/EfficientNet-PyTorch',
+                'model': 'efficientnet_b0',
+                'num_classes': len(class_config.names),
+                'pretrained': 'imagenet'
+            }))
     solver = SolverConfig(
         lr=1e-4, num_epochs=20, test_num_epochs=3, batch_sz=32, one_cycle=True)
     backend = PyTorchChipClassificationConfig(
