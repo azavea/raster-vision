@@ -78,7 +78,7 @@ def get_config(runner,
                processed_uri: str,
                root_uri: str,
                test: bool = False) -> SemanticSegmentationConfig:
-    '''Generate the pipeline config for this task. This function will be called
+    """Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
 
     Args:
@@ -91,7 +91,7 @@ def get_config(runner,
 
     Returns:
         SemanticSegmentationConfig: A pipeline config.
-    '''
+    """
     if not test:
         train_ids, val_ids = TRAIN_IDS, VAL_IDS
     else:
@@ -156,7 +156,7 @@ def get_config(runner,
 # Utils
 ####################
 class UriPath(object):
-    ''' Workaround for pathlib.Path converting "s3://abc to s3:/abc" '''
+    """ Workaround for pathlib.Path converting "s3://abc to s3:/abc" """
 
     def __init__(self, s):
         from pathlib import Path
@@ -214,7 +214,7 @@ def make_scene(raw_uri: UriPath,
 def make_multi_raster_source(
         rgbir_raster_uri: Union[UriPath, str],
         elevation_raster_uri: Union[UriPath, str]) -> MultiRasterSourceConfig:
-    ''' Create multi raster source by combining rgbir and elevation sources. '''
+    """ Create multi raster source by combining rgbir and elevation sources. """
     rgbir_raster_uri = str(rgbir_raster_uri)
     elevation_raster_uri = str(elevation_raster_uri)
 
