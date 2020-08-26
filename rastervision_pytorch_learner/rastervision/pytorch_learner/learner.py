@@ -25,6 +25,7 @@ import torch
 from torch import Tensor
 import torch.nn as nn
 import torch.optim as optim
+import torch.hub
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset
@@ -195,6 +196,18 @@ class Learner(ABC):
     def build_model(self) -> nn.Module:
         """Build a PyTorch model."""
         pass
+
+    def load_torch_hub_model(self) -> nn.Module:
+        """Load a model using torch.hub."""
+        # load model
+        load_args = self.cfg.model.torch_hub.load_args
+        model = torch.hub.load(**load_args)
+        # load weights
+        state_dict_args = self.cfg.model.torch_hub.state_dict_args
+        if state_dict_args is not None:
+            state_dict = torch.hub.load_state_dict_from_url(**state_dict_args)
+
+        return model
 
     def unzip_data(self, uri: Union[str, List[str]]) -> List[str]:
         """Unzip dataset zip files.

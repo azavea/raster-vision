@@ -5,7 +5,7 @@ from enum import Enum
 from pydantic import PositiveFloat, PositiveInt
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
-                                          Field)
+                                          Field, validator)
 from rastervision.pytorch_learner.utils import color_to_triple
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
@@ -103,6 +103,28 @@ def model_config_upgrader(cfg_dict, version):
     return cfg_dict
 
 
+@register_config('torch_hub')
+class TorchHubConfig(Config):
+    load_args: dict
+    state_dict_args: Optional[dict] = None
+
+    @validator('load_args')
+    def validate_load_args(cls, v):
+        if not ('github' in v):
+            ConfigError('Missing required arg: "github"')
+        if not ('model' in v):
+            ConfigError('Missing required arg: "model"')
+        return v
+
+    @validator('state_dict_args')
+    def validate_state_dict_args(cls, v):
+        if v is None:
+            return v
+        if not ('url' in v):
+            ConfigError('Missing required arg: "url"')
+        return v
+
+
 @register_config('model', upgrader=model_config_upgrader)
 class ModelConfig(Config):
     """Config related to models."""
@@ -118,6 +140,9 @@ class ModelConfig(Config):
         None,
         description=('URI of PyTorch model weights used to initialize model. '
                      'If set, this supercedes the pretrained option.'))
+    torch_hub: Optional[TorchHubConfig] = Field(
+        None,
+        description='Config for loading models via torch.hub.')
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass

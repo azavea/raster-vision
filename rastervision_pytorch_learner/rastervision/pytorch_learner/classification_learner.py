@@ -21,6 +21,9 @@ log = logging.getLogger(__name__)
 
 class ClassificationLearner(Learner):
     def build_model(self):
+        if self.cfg.model.torch_hub is not None:
+            model = self.load_torch_hub_model()
+            return model
         pretrained = self.cfg.model.pretrained
         model = getattr(
             models, self.cfg.model.get_backbone_str())(pretrained=pretrained)
