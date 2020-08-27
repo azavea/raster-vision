@@ -41,8 +41,9 @@ class PyTorchLearnerBackendConfig(BackendConfig):
     @validator('solver')
     def validate_solver_config(cls, v):
         if v.class_loss_weights is not None:
-            from rastervision.pytorch_backend import (PyTorchSemanticSegmentationConfig,
-                                                      PyTorchChipClassificationConfig)
+            from rastervision.pytorch_backend import (
+                PyTorchSemanticSegmentationConfig,
+                PyTorchChipClassificationConfig)
             if cls not in (PyTorchSemanticSegmentationConfig,
                            PyTorchChipClassificationConfig):
                 raise ConfigError(
