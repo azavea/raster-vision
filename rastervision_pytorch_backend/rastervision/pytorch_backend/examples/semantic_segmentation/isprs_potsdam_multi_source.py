@@ -11,7 +11,7 @@ from rastervision.core.rv_pipeline import (
 from rastervision.core.data import (
     ClassConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     SubRasterSourceConfig, SemanticSegmentationLabelSourceConfig,
-    SemanticSegmentationLabelStoreConfig)
+    SemanticSegmentationLabelStoreConfig, PolygonVectorOutputConfig)
 
 from rastervision.pytorch_backend import (PyTorchSemanticSegmentationConfig,
                                           SemanticSegmentationModelConfig)
@@ -254,7 +254,7 @@ def make_crop(processed_uri: UriPath,
     return crop_uri, label_crop_uri
 
 
-def make_label_source(class_config, label_uri: Union[UriPath, str]
+def make_label_source(class_config: ClassConfig, label_uri: Union[UriPath, str]
                       ) -> Tuple[SemanticSegmentationLabelSourceConfig,
                                  SemanticSegmentationLabelStoreConfig]:
     label_uri = str(label_uri)
@@ -267,6 +267,7 @@ def make_label_source(class_config, label_uri: Union[UriPath, str]
     # URI will be injected by scene config.
     # Using rgb=True because we want prediction TIFFs to be in
     # RGB format.
-    label_store = SemanticSegmentationLabelStoreConfig(rgb=True)
+    label_store = SemanticSegmentationLabelStoreConfig(
+        rgb=True, vector_output=[PolygonVectorOutputConfig(class_id=0)])
 
     return label_source, label_store

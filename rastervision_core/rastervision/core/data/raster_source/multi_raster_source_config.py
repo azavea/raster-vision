@@ -33,6 +33,10 @@ class SubRasterSourceConfig(Config):
 class MultiRasterSourceConfig(RasterSourceConfig):
     raster_sources: Sequence[SubRasterSourceConfig] = Field(
         ..., description='List of SubRasterSourceConfigs to combine.')
+    crs_source: conint(ge=0) = Field(
+        0,
+        description=
+        'Use the crs_transformer of the raster source at this index.')
 
     def get_raw_channel_order(self):
         # concatenate all target_channels
@@ -83,6 +87,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
             raster_sources=built_raster_sources,
             raw_channel_order=self.get_raw_channel_order(),
             channel_order=self.channel_order,
+            crs_source=self.crs_source,
             raster_transformers=raster_transformers)
         return multi_raster_source
 

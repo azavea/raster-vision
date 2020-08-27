@@ -19,10 +19,12 @@ class MultiRasterSource(ActivateMixin, RasterSource):
     """A RasterSource that combines multiple RasterSources by concatenting
     their output along the channel dimension (assumed to be the last dimension).
     """
+
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
                  raw_channel_order: Sequence[conint(ge=0)],
                  channel_order: Optional[Sequence[conint(ge=0)]] = None,
+                 crs_source: conint(ge=0) = 0,
                  raster_transformers: Sequence = []):
         """Constructor.
 
@@ -43,10 +45,9 @@ class MultiRasterSource(ActivateMixin, RasterSource):
 
         self.raster_sources = raster_sources
         self.raw_channel_order = list(raw_channel_order)
+        self.crs_source = crs_source
 
         self.validate_raster_sources()
-
-        self.crs_transformer = IdentityCRSTransformer()
 
     def validate_raster_sources(self) -> None:
         dtypes = [rs.get_dtype() for rs in self.raster_sources]
@@ -81,7 +82,8 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         return dtype
 
     def get_crs_transformer(self) -> CRSTransformer:
-        return self.crs_transformer
+        rs = self.raster_sources[self.crs_source]
+        return rs.get_crs_transformer()
 
     def _get_chip(self, window: Box) -> np.ndarray:
         """Return the raw chip located in the window.
