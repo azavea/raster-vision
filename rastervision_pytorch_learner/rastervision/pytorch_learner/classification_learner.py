@@ -37,7 +37,7 @@ class ClassificationLearner(Learner):
 
         loss_weights = self.cfg.solver.class_loss_weights
         if loss_weights is not None:
-            loss_weights = torch.Tensor(loss_weights, device=self.device)
+            loss_weights = torch.tensor(loss_weights, device=self.device)
             self.loss_fn = nn.CrossEntropyLoss(weight=loss_weights)
         else:
             self.loss_fn = nn.CrossEntropyLoss()
