@@ -40,13 +40,20 @@ class PyTorchLearnerBackendConfig(BackendConfig):
 
     @validator('solver')
     def validate_solver_config(cls, v):
+        from rastervision.pytorch_backend import (
+            PyTorchSemanticSegmentationConfig, PyTorchChipClassificationConfig)
+
         if v.class_loss_weights is not None:
-            from rastervision.pytorch_backend import (
-                PyTorchSemanticSegmentationConfig,
-                PyTorchChipClassificationConfig)
             if cls not in (PyTorchSemanticSegmentationConfig,
                            PyTorchChipClassificationConfig):
                 raise ConfigError(
                     'class_loss_weights is currently only supported for '
+                    'Semantic Segmentation and Chip Classification.')
+
+        if v.focal_loss_gamma is not None:
+            if cls not in (PyTorchSemanticSegmentationConfig,
+                           PyTorchChipClassificationConfig):
+                raise ConfigError(
+                    'focal_loss_gamma is currently only supported for '
                     'Semantic Segmentation and Chip Classification.')
         return v
