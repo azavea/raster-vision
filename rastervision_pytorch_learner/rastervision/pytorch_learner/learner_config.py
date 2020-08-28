@@ -154,7 +154,7 @@ class SolverConfig(Config):
         None,
         description=('Class weights for weighted loss. '
                      'If Focal Loss is used, this is used as alpha.'))
-    focal_loss_gamma: float = Field(
+    focal_loss_gamma: Optional[float] = Field(
         None,
         description=(
             'If provided, Focal Loss will be used with this as gamma.'))

@@ -193,7 +193,7 @@ class FocalLoss(nn.Module):
 
         if self.reduction == 'mean':
             loss = loss.mean()
-        if self.reduction == 'sum':
+        elif self.reduction == 'sum':
             loss = loss.sum()
 
         return loss
