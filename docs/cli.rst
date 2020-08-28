@@ -108,15 +108,17 @@ Use ``predict`` to make predictions on new imagery given a :ref:`model bundle <m
 
     > rastervision predict --help
 
-    Usage: rastervision predict [OPTIONS] MODEL_BUNDLE IMAGE_URI OUTPUT_URI
+    Usage: rastervision predict [OPTIONS] MODEL_BUNDLE IMAGE_URI LABEL_URI
 
     Make predictions on the images at IMAGE_URI using MODEL_BUNDLE and store
-    the prediction output at OUTPUT_URI.
+    the prediction output at LABEL_URI.
 
     Options:
-    -a, --update-stats    Run an analysis on this individual image, as opposed
-                            to using any analysis like statistics that exist in
-                            the prediction package
-    --channel-order TEXT  List of indices comprising channel_order. Example: 2 1
-                            0
-    --help                Show this message and exit.
+    --vector-label-uri TEXT  URI to save vectorized labels for semantic
+                            segmentation model bundles that support it
+    -a, --update-stats       Run an analysis on this individual image, as
+                            opposed to using any analysis like statistics that
+                            exist in the prediction package
+    --channel-order TEXT     List of indices comprising channel_order. Example:
+                            2 1 0
+    --help                   Show this message and exit.

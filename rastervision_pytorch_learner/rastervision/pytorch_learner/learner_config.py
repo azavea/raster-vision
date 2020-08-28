@@ -1,7 +1,7 @@
-from typing import List, Optional, Union, TYPE_CHECKING
 from os.path import join
 from enum import Enum
 
+from typing import List, Optional, Union, TYPE_CHECKING
 from pydantic import PositiveFloat, PositiveInt
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
@@ -150,6 +150,8 @@ class SolverConfig(Config):
          'epochs with start and end LR being lr/10 and the peak being lr.'))
     multi_stage: List = Field(
         [], description=('List of epoch indices at which to divide LR by 10.'))
+    class_loss_weights: Optional[Union[list, tuple]] = Field(
+        None, description=('Class weights for weighted loss.'))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
