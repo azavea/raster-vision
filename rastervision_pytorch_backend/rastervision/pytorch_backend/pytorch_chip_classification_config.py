@@ -30,6 +30,7 @@ class PyTorchChipClassificationConfig(PyTorchLearnerBackendConfig):
             log_tensorboard=self.log_tensorboard,
             run_tensorboard=self.run_tensorboard)
         learner.update()
+        learner.validate_config()
         return learner
 
     def build(self, pipeline, tmp_dir):
