@@ -6,8 +6,7 @@ import numpy as np
 from rastervision.core.box import Box
 from rastervision.core.data import ActivateMixin
 from rastervision.core.data.raster_source import RasterSource
-from rastervision.core.data.crs_transformer import (CRSTransformer,
-                                                    IdentityCRSTransformer)
+from rastervision.core.data.crs_transformer import CRSTransformer
 from rastervision.core.data.utils import all_equal
 
 
@@ -30,11 +29,11 @@ class MultiRasterSource(ActivateMixin, RasterSource):
 
         Args:
             raster_sources (Sequence[RasterSource]): Sequence of RasterSources.
-            raw_channel_order (Sequence[conint(ge=0)]): Channel ordering that 
+            raw_channel_order (Sequence[conint(ge=0)]): Channel ordering that
                 will always be applied before channel_order.
-            channel_order (Sequence[conint(ge=0)], optional): Channel ordering  
+            channel_order (Sequence[conint(ge=0)], optional): Channel ordering
                 that will be used by .get_chip(). Defaults to None.
-            raster_transformers (Sequence, optional): Sequence of transformers. 
+            raster_transformers (Sequence, optional): Sequence of transformers.
                 Defaults to [].
         """
         num_channels = len(raw_channel_order)
@@ -103,7 +102,7 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         return chip
 
     def get_chip(self, window: Box) -> np.ndarray:
-        """Return the transformed chip in the window. 
+        """Return the transformed chip in the window.
 
         Get raw chips from sub raster sources, concatenate them,
         apply raw_channel_order, followed by channel_order, followed
