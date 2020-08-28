@@ -12,7 +12,8 @@ from torch.utils.data import ConcatDataset
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.learner_config import LearnerConfig
 from rastervision.pytorch_learner.utils import (
-    compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
+    compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset,
+    FocalLoss)
 from rastervision.pytorch_learner.image_folder import (ImageFolder)
 from rastervision.pytorch_learner.classification_learner_config import (
     ClassificationDataFormat)
@@ -34,13 +35,18 @@ class ClassificationLearner(Learner):
                 and it is assumed that this Learner will be used for prediction only.
         """
         super().__init__(cfg, tmp_dir, model_path)
+        self.loss_fn = self.make_loss_fn()
 
+    def make_loss_fn(self):
         loss_weights = self.cfg.solver.class_loss_weights
         if loss_weights is not None:
             loss_weights = torch.tensor(loss_weights, device=self.device)
-            self.loss_fn = nn.CrossEntropyLoss(weight=loss_weights)
-        else:
-            self.loss_fn = nn.CrossEntropyLoss()
+
+        if self.cfg.solver.focal_loss_gamma is not None:
+            gamma = self.cfg.solver.focal_loss_gamma
+            return FocalLoss(alpha=loss_weights, gamma=gamma)
+
+        return nn.CrossEntropyLoss(weight=loss_weights)
 
     def build_model(self):
         pretrained = self.cfg.model.pretrained

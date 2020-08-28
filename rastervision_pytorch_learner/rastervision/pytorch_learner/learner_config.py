@@ -151,7 +151,13 @@ class SolverConfig(Config):
     multi_stage: List = Field(
         [], description=('List of epoch indices at which to divide LR by 10.'))
     class_loss_weights: Optional[Union[list, tuple]] = Field(
-        None, description=('Class weights for weighted loss.'))
+        None,
+        description=('Class weights for weighted loss. '
+                     'If Focal Loss is used, this is used as alpha.'))
+    focal_loss_gamma: float = Field(
+        None,
+        description=(
+            'If provided, Focal Loss will be used with this as gamma.'))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass

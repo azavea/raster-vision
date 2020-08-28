@@ -24,7 +24,7 @@ from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.learner_config import LearnerConfig
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, color_to_triple, SplitTensor,
-    Parallel, AddTensors)
+    Parallel, AddTensors, FocalLoss)
 from rastervision.pipeline.file_system import make_dir
 
 log = logging.getLogger(__name__)
@@ -111,13 +111,18 @@ class SemanticSegmentationLearner(Learner):
                 and it is assumed that this Learner will be used for prediction only.
         """
         super().__init__(cfg, tmp_dir, model_path)
+        self.loss_fn = self.make_loss_fn()
 
+    def make_loss_fn(self):
         loss_weights = self.cfg.solver.class_loss_weights
         if loss_weights is not None:
             loss_weights = torch.tensor(loss_weights, device=self.device)
-            self.loss_fn = nn.CrossEntropyLoss(weight=loss_weights)
-        else:
-            self.loss_fn = nn.CrossEntropyLoss()
+
+        if self.cfg.solver.focal_loss_gamma is not None:
+            gamma = self.cfg.solver.focal_loss_gamma
+            return FocalLoss(alpha=loss_weights, gamma=gamma)
+
+        return nn.CrossEntropyLoss(weight=loss_weights)
 
     def build_model(self) -> nn.Module:
         # TODO support FCN option
