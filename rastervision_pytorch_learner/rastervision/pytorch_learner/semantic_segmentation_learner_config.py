@@ -71,11 +71,14 @@ class SemanticSegmentationLearnerConfig(LearnerConfig):
     data: SemanticSegmentationDataConfig
     model: SemanticSegmentationModelConfig
 
-    def build(self, tmp_dir, model_path=None):
+    def build(self, tmp_dir, model_path=None, model_def_path=None):
         from rastervision.pytorch_learner.semantic_segmentation_learner import (
             SemanticSegmentationLearner)
         return SemanticSegmentationLearner(
-            self, tmp_dir, model_path=model_path)
+            self,
+            tmp_dir,
+            model_path=model_path,
+            model_def_path=model_def_path)
 
     def validate_config(self):
         super().validate_config()
