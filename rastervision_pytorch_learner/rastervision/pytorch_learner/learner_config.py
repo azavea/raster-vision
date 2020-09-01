@@ -2,7 +2,7 @@ from os.path import join
 from enum import Enum
 
 from typing import (List, Optional, Union, TYPE_CHECKING, Sequence)
-from pydantic import PositiveFloat, PositiveInt
+from pydantic import PositiveFloat, PositiveInt, constr
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field)
@@ -97,13 +97,34 @@ class Backbone(Enum):
         return mapping[x]
 
 
+NonEmptyStr = constr(strip_whitespace=True, min_length=1)
+
+
 class ExternalModelDefConfig(Config):
-    uri: Optional[str] = None
-    github_repo: Optional[str] = None
-    name: Optional[str] = None
-    model: str
-    model_args: list = []
-    model_kwargs: dict = {}
+    uri: Optional[NonEmptyStr] = Field(
+        None,
+        description=
+        'Local uri of a zip file, or local uri of a directory,
+        'or remote uri of zip file.')
+    github_repo: Optional[constr(
+        strip_whitespace=True, regex=r'.+/.+')] = Field(
+            None, description='<repo-owner>/<repo-name>[:tag]')
+    name: Optional[NonEmptyStr] = Field(
+        None,
+        description=
+        'Name of the folder in which to extract/copy the definition files.')
+    model: NonEmptyStr = Field(
+        ..., description='Entrypoint name. See docs for torch.hub.')
+    model_args: list = Field(
+        [], description='Args to pass to the entrypoint function.')
+    model_kwargs: dict = Field(
+        {}, description='Keyword args to pass to the entrypoint function.')
+
+    def validate_config(self):
+        has_uri = self.uri is not None
+        has_repo = self.github_repo is not None
+        if has_uri == has_repo:
+            raise ConfigError('Must specify one of github_repo or uri.')
 
 
 def model_config_upgrader(cfg_dict, version):
