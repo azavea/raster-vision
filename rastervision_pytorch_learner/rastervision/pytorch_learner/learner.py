@@ -70,8 +70,8 @@ class Learner(ABC):
     def __init__(self,
                  cfg: LearnerConfig,
                  tmp_dir: str,
-                 model_def_path: Optional[str] = None,
-                 model_path: Optional[str] = None):
+                 model_path: Optional[str] = None,
+                 model_def_path: Optional[str] = None):
         """Constructor.
 
         Args:

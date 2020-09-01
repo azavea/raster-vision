@@ -24,16 +24,22 @@ class ClassificationLearner(Learner):
     def __init__(self,
                  cfg: LearnerConfig,
                  tmp_dir: str,
-                 model_path: Optional[str] = None):
+                 model_path: Optional[str] = None,
+                 model_def_path: Optional[str] = None):
         """Constructor.
 
         Args:
             cfg: configuration
             tmp_dir: root of temp dirs
+            model_def_path: a local path to a directory with a hubcnf.py
             model_path: a local path to model weights. If provided, the model is loaded
                 and it is assumed that this Learner will be used for prediction only.
         """
-        super().__init__(cfg, tmp_dir, model_path)
+        super().__init__(
+            cfg,
+            tmp_dir=tmp_dir,
+            model_def_path=model_def_path,
+            model_path=model_path)
 
         loss_weights = self.cfg.solver.class_loss_weights
         if loss_weights is not None:
