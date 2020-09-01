@@ -1,7 +1,7 @@
 from os.path import join
 from enum import Enum
 
-from typing import List, Optional, Union, TYPE_CHECKING
+from typing import (List, Optional, Union, TYPE_CHECKING, Sequence)
 from pydantic import PositiveFloat, PositiveInt
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
@@ -97,6 +97,15 @@ class Backbone(Enum):
         return mapping[x]
 
 
+class ExternalModelDefConfig(Config):
+    uri: Optional[str] = None
+    github_repo: Optional[str] = None
+    name: Optional[str] = None
+    model: str
+    model_args: list = []
+    model_kwargs: dict = {}
+
+
 def model_config_upgrader(cfg_dict, version):
     if version == 0:
         cfg_dict['backbone'] = Backbone.int_to_str(cfg_dict['backbone'])
@@ -118,6 +127,8 @@ class ModelConfig(Config):
         None,
         description=('URI of PyTorch model weights used to initialize model. '
                      'If set, this supercedes the pretrained option.'))
+    external_model: Optional[ExternalModelDefConfig] = Field(
+        None, description=(''))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
@@ -281,12 +292,15 @@ class LearnerConfig(Config):
             raise ConfigError(
                 'Cannot run_tensorboard if log_tensorboard is False')
 
-    def build(self, tmp_dir: str,
+    def build(self,
+              tmp_dir: str,
+              model_def_path: Optional[str] = None,
               model_path: Optional[str] = None) -> 'Learner':
         """Returns a Learner instantiated using this Config.
 
         Args:
             tmp_dir: root of temp dirs
+            model_def_path: a local path to a directory with a hubcnf.py
             model_path: local path to model weights. If this is passed, the Learner
                 is assumed to be used to make predictions and not train a model.
         """

@@ -1,10 +1,17 @@
 from typing import Tuple, Optional
+from pathlib import Path
+import os.path
+import shutil
+from glob import glob
 
 import torch
 from torch import nn
 from torch.utils.data import Dataset
+import torch.hub
 import numpy as np
 from PIL import ImageColor
+
+from rastervision.pipeline.file_system import (download_if_needed, unzip)
 
 
 def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
@@ -125,3 +132,78 @@ class AddTensors(nn.Module):
 
     def forward(self, xs):
         return sum(xs)
+
+
+def _repo_name_to_dir(repo: str, hub_dir: str):
+    from torch.hub import _parse_repo_info
+    repo_owner, repo_name, branch = _parse_repo_info(repo)
+    normalized_br = branch.replace('/', '_')
+    dir_name = '_'.join([repo_owner, repo_name, normalized_br])
+    repo_dir = os.path.join(hub_dir, dir_name)
+    return repo_dir
+
+
+def _uri_to_dir(uri: str, hub_dir: str) -> str:
+    hubconf_dir = Path(hub_dir) / Path(uri).stem
+    return str(hubconf_dir)
+
+
+def get_hubconf_dir_from_cfg(cfg, hub_dir: str):
+    if cfg.name is not None:
+        return os.path.join(hub_dir, cfg.name)
+    if cfg.github_repo is not None:
+        return _repo_name_to_dir(cfg.github_repo, hub_dir)
+    return _uri_to_dir(cfg.uri, hub_dir)
+
+
+def torch_hub_load_github(repo: str, hub_dir: str, model: str, *args,
+                          **kwargs):
+    torch.hub.set_dir(hub_dir)
+    model = torch.hub.load(github=repo, model=model, *args, **kwargs)
+    return model
+
+
+def torch_hub_load_uri(uri: str, hubconf_dir: str, model: str, tmp_dir: str,
+                       *args, **kwargs):
+    is_zip = Path(uri).suffix.lower() == '.zip'
+    if is_zip:
+        zip_path = download_if_needed(uri, tmp_dir)
+        unzip_dir = os.path.join(tmp_dir, '_staging')
+        if os.path.isdir(unzip_dir):
+            shutil.rmtree(unzip_dir)
+        unzip(zip_path, target_dir=unzip_dir)
+
+        if os.path.isdir(hubconf_dir):
+            shutil.rmtree(hubconf_dir)
+
+        contents = list(glob(f'{unzip_dir}/*'))
+        if (len(contents) == 1) and os.path.isdir(contents[0]):
+            sub_dir = contents[0]
+            shutil.move(sub_dir, hubconf_dir)
+        else:
+            shutil.move(unzip_dir, hubconf_dir)
+    else:
+        shutil.copytree(uri, hubconf_dir)
+
+    model = torch_hub_load_local(hubconf_dir, model, *args, **kwargs)
+    return model
+
+
+def torch_hub_load_local(hubconf_dir: str, model: str, *args, **kwargs):
+    from torch.hub import (sys, import_module, MODULE_HUBCONF,
+                           _load_entry_from_hubconf)
+
+    verbose = kwargs.get('verbose', True)
+    kwargs.pop('verbose', None)
+
+    sys.path.insert(0, hubconf_dir)
+
+    hub_module = import_module(MODULE_HUBCONF,
+                               os.path.join(hubconf_dir, MODULE_HUBCONF))
+
+    entry = _load_entry_from_hubconf(hub_module, model)
+    model = entry(*args, **kwargs)
+
+    sys.path.remove(hubconf_dir)
+
+    return model
