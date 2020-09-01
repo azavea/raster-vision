@@ -104,7 +104,7 @@ class ExternalModelDefConfig(Config):
     uri: Optional[NonEmptyStr] = Field(
         None,
         description=
-        'Local uri of a zip file, or local uri of a directory,
+        'Local uri of a zip file, or local uri of a directory,'
         'or remote uri of zip file.')
     github_repo: Optional[constr(
         strip_whitespace=True, regex=r'.+/.+')] = Field(
@@ -124,7 +124,7 @@ class ExternalModelDefConfig(Config):
         has_uri = self.uri is not None
         has_repo = self.github_repo is not None
         if has_uri == has_repo:
-            raise ConfigError('Must specify one of github_repo or uri.')
+            raise ConfigError('Must specify one of github_repo and uri.')
 
 
 def model_config_upgrader(cfg_dict, version):
