@@ -42,7 +42,8 @@ from rastervision.pipeline.file_system import (
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, ConfigError,
                                           upgrade_config, save_pipeline_config)
-from rastervision.pytorch_learner.learner_config import LearnerConfig
+from rastervision.pytorch_learner.learner_config import (LearnerConfig,
+                                                         ExternalModuleConfig)
 from rastervision.pytorch_learner.utils import (
     torch_hub_load_github, torch_hub_load_uri, torch_hub_load_local,
     get_hubconf_dir_from_cfg)
@@ -199,7 +200,9 @@ class Learner(ABC):
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
         if self.cfg.model.external_model is not None:
             self.model = self.load_external_module(
-                save_dir=self.modules_dir, hubconf_dir=model_def_path)
+                extCfg=self.cfg.model.external_model,
+                save_dir=self.modules_dir,
+                hubconf_dir=model_def_path)
         else:
             self.model = self.build_model()
 
@@ -210,33 +213,35 @@ class Learner(ABC):
         """Build a PyTorch model."""
         pass
 
-    def load_external_module(self, save_dir: str,
-                             hubconf_dir: str = None) -> nn.Module:
-        extCfg = self.cfg.model.external_model
-
+    def load_external_module(self,
+                             extCfg: ExternalModuleConfig,
+                             save_dir: str,
+                             hubconf_dir: str = None,
+                             tmp_dir: str = None) -> nn.Module:
         if hubconf_dir is not None:
             module = torch_hub_load_local(hubconf_dir, extCfg.model,
                                           *extCfg.model_args,
                                           **extCfg.model_kwargs)
             return module
 
-        hubconf_dir = get_hubconf_dir_from_cfg(extCfg, hub_dir=save_dir)
+        hubconf_dir = get_hubconf_dir_from_cfg(extCfg, save_dir)
         if extCfg.github_repo is not None:
             module = torch_hub_load_github(
                 repo=extCfg.github_repo,
-                hub_dir=save_dir,
-                model=extCfg.model,
                 hubconf_dir=hubconf_dir,
-                *extCfg.model_args,
-                **extCfg.model_kwargs)
+                tmp_dir=save_dir,
+                entrypoint=extCfg.entrypoint,
+                *extCfg.entrypoint_args,
+                **extCfg.entrypoint_kwargs)
         else:
+            tmp_dir = self.tmp_dir if tmp_dir is None else tmp_dir
             module = torch_hub_load_uri(
                 uri=extCfg.uri,
                 hubconf_dir=hubconf_dir,
-                tmp_dir=self.tmp_dir,
-                model=extCfg.model,
-                *extCfg.model_args,
-                **extCfg.model_kwargs)
+                tmp_dir=tmp_dir,
+                entrypoint=extCfg.entrypoint,
+                *extCfg.entrypoint_args,
+                **extCfg.entrypoint_kwargs)
         return module
 
     def unzip_data(self, uri: Union[str, List[str]]) -> List[str]:

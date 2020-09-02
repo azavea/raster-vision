@@ -100,11 +100,10 @@ class Backbone(Enum):
 NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 
-class ExternalModelDefConfig(Config):
+class ExternalModuleConfig(Config):
     uri: Optional[NonEmptyStr] = Field(
         None,
-        description=
-        'Local uri of a zip file, or local uri of a directory,'
+        description='Local uri of a zip file, or local uri of a directory,'
         'or remote uri of zip file.')
     github_repo: Optional[constr(
         strip_whitespace=True, regex=r'.+/.+')] = Field(
@@ -113,12 +112,14 @@ class ExternalModelDefConfig(Config):
         None,
         description=
         'Name of the folder in which to extract/copy the definition files.')
-    model: NonEmptyStr = Field(
-        ..., description='Entrypoint name. See docs for torch.hub.')
-    model_args: list = Field(
-        [], description='Args to pass to the entrypoint function.')
-    model_kwargs: dict = Field(
-        {}, description='Keyword args to pass to the entrypoint function.')
+    entrypoint: NonEmptyStr = Field(
+        ...,
+        description='Name of a callable present in hubconf.py. '
+        'See docs for torch.hub for details.')
+    entrypoint_args: list = Field(
+        [], description='Args to pass to the entrypoint.')
+    entrypoint_kwargs: dict = Field(
+        {}, description='Keyword args to pass to the entrypoint.')
 
     def validate_config(self):
         has_uri = self.uri is not None
@@ -148,7 +149,7 @@ class ModelConfig(Config):
         None,
         description=('URI of PyTorch model weights used to initialize model. '
                      'If set, this supercedes the pretrained option.'))
-    external_model: Optional[ExternalModelDefConfig] = Field(
+    external_model: Optional[ExternalModuleConfig] = Field(
         None, description=(''))
 
     def update(self, learner: Optional['LearnerConfig'] = None):
