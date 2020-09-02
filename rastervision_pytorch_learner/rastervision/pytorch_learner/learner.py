@@ -196,22 +196,26 @@ class Learner(ABC):
             if self.cfg.run_tensorboard:
                 self.tb_process.terminate()
 
-    def setup_model(self, model_def_path: str = None):
+    def setup_model(self, model_def_path: str = None) -> None:
+        """Setup self.model.
+
+        Args:
+            model_def_path (str, optional): Model definition path. Will be
+            available when loading from a bundle. Defaults to None.
+        """
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
 
         extCfg = self.cfg.model.external_def
         if extCfg is not None:
             hubconf_dir_from_cfg = get_hubconf_dir_from_cfg(
-                extCfg, self.modules_dir)
+                extCfg, parent=self.modules_dir)
             if isdir(hubconf_dir_from_cfg) and not extCfg.force_reload:
                 hubconf_dir = hubconf_dir_from_cfg
             else:
                 hubconf_dir = model_def_path
 
             self.model = self.load_external_module(
-                extCfg=extCfg,
-                save_dir=self.modules_dir,
-                hubconf_dir=hubconf_dir)
+                extCfg=extCfg, hubconf_dir=hubconf_dir)
         else:
             self.model = self.build_model()
 
@@ -224,17 +228,40 @@ class Learner(ABC):
 
     def load_external_module(self,
                              extCfg: ExternalModuleConfig,
-                             save_dir: str,
+                             save_dir: str = None,
                              hubconf_dir: str = None,
                              tmp_dir: str = None) -> nn.Module:
+        """Load an external module via torch.hub.
+
+        Args:
+            extCfg (ExternalModuleConfig): Config describing the module.
+            save_dir (str, optional): The model def will be saved here.
+                Defaults to self.modules_dir.
+            hubconf_dir (str, optional): Path to existing definition.
+                If provided, the definition will not be fetched from the source
+                specified by extCfg. Defaults to None.
+            tmp_dir (str, optional): Temporary directory to use for downloads
+                etc. Defaults to self.tmp_dir.
+
+        Returns:
+            nn.Module: The module loaded via torch.hub.
+        """
         if hubconf_dir is not None:
-            module = torch_hub_load_local(hubconf_dir, extCfg.entrypoint,
-                                          *extCfg.entrypoint_args,
-                                          **extCfg.entrypoint_kwargs)
+            log.info(
+                f'Using existing model definition at: {hubconf_dir}')
+            module = torch_hub_load_local(
+                hubconf_dir=hubconf_dir,
+                entrypoint=extCfg.entrypoint,
+                *extCfg.entrypoint_args,
+                **extCfg.entrypoint_kwargs)
             return module
 
-        hubconf_dir = get_hubconf_dir_from_cfg(extCfg, save_dir)
+        save_dir = self.modules_dir if save_dir is None else save_dir
+        tmp_dir = self.tmp_dir if tmp_dir is None else tmp_dir
+
+        hubconf_dir = get_hubconf_dir_from_cfg(extCfg, parent=save_dir)
         if extCfg.github_repo is not None:
+            log.info(f'Fetching model definition from: {extCfg.github_repo}')
             module = torch_hub_load_github(
                 repo=extCfg.github_repo,
                 hubconf_dir=hubconf_dir,
@@ -243,7 +270,7 @@ class Learner(ABC):
                 *extCfg.entrypoint_args,
                 **extCfg.entrypoint_kwargs)
         else:
-            tmp_dir = self.tmp_dir if tmp_dir is None else tmp_dir
+            log.info(f'Fetching model definition from: {extCfg.uri}')
             module = torch_hub_load_uri(
                 uri=extCfg.uri,
                 hubconf_dir=hubconf_dir,
@@ -779,7 +806,9 @@ class Learner(ABC):
         extCfg = cfg.learner.model.external_def
         if extCfg is not None:
             hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
-            model_def_path = get_hubconf_dir_from_cfg(extCfg, hub_dir)
+            model_def_path = get_hubconf_dir_from_cfg(extCfg, parent=hub_dir)
+            log.info(
+                f'Using model definition found in bundle: {model_def_path}')
         else:
             model_def_path = None
 
@@ -795,6 +824,7 @@ class Learner(ABC):
         from rastervision.pytorch_learner.learner_pipeline_config import (
             LearnerPipelineConfig)
 
+        log.info('Creating bundle.')
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
         make_dir(model_bundle_dir)
 
@@ -803,6 +833,7 @@ class Learner(ABC):
 
         # copy modules into bundle
         if isdir(self.modules_dir):
+            log.info('Copying modules into bundle.')
             bundle_modules_dir = join(model_bundle_dir, MODULES_DIRNAME)
             if isdir(bundle_modules_dir):
                 shutil.rmtree(bundle_modules_dir)

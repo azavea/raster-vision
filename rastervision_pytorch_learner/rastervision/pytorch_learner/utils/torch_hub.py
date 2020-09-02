@@ -38,15 +38,16 @@ def _uri_to_dir_name(uri: str) -> str:
 
 
 def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
-    """Determine the destination directory path for a module specified
-    by an ExternalModuleConfig.
+    """Determine the destination directory name for a module specified
+    by an ExternalModuleConfig. If a parent path is provided, the dir
+    name is appended to it.
 
     Args:
         cfg (ExternalModuleConfig): an ExternalModuleConfig
         parent (str, optional): Parent path. Defaults to ''.
 
     Returns:
-        str: directory path
+        str: directory name or path
     """
     if cfg.name is not None:
         dir_name = cfg.name
@@ -67,7 +68,7 @@ def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
         repo (str): <repo-owner>/<erpo-name>[:tag]
         entrypoint (str): Name of a callable present in hubconf.py.
         hubconf_dir (str): Where the contents from the uri will finally
-        be saved to.
+            be saved to.
         tmp_dir (str): Where the repo will initially be downloaded.
         *args: Args to be passed to the entrypoint.
         **kwargs: Keyword args to be passed to the entrypoint.
@@ -98,10 +99,10 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
     Args:
         uri (str): A URI.
         hubconf_dir (str): The target directory where the contents from the uri
-        will finally be saved to.
+            will finally be saved to.
         entrypoint (str): Name of a callable present in hubconf.py.
         tmp_dir (str): Directory where the zip file will be downloaded to and
-        initially extracted.
+            initially extracted.
         *args: Args to be passed to the entrypoint.
         **kwargs: Keyword args to be passed to the entrypoint.
 
@@ -138,7 +139,7 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
 
 def torch_hub_load_local(hubconf_dir: str, entrypoint: str, *args,
                          **kwargs) -> Any:
-    """Adapted from torch.hub.load().
+    """Same as torch.hub.load(), minus the downloading part.
 
     Args:
         hubconf_dir (str): A directory containing a hubconf.py file.
