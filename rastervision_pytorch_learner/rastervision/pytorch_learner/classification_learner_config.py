@@ -29,7 +29,7 @@ class ClassificationLearnerConfig(LearnerConfig):
             ClassificationLearner)
         return ClassificationLearner(
             self,
-            tmp_dir,
+            tmp_dir=tmp_dir,
             model_path=model_path,
             model_def_path=model_def_path)
 

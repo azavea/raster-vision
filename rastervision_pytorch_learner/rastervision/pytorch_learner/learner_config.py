@@ -321,8 +321,8 @@ class LearnerConfig(Config):
 
     def build(self,
               tmp_dir: str,
-              model_def_path: Optional[str] = None,
-              model_path: Optional[str] = None) -> 'Learner':
+              model_path: Optional[str] = None,
+              model_def_path: Optional[str] = None) -> 'Learner':
         """Returns a Learner instantiated using this Config.
 
         Args:

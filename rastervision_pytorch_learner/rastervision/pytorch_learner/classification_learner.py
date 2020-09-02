@@ -38,8 +38,8 @@ class ClassificationLearner(Learner):
         super().__init__(
             cfg,
             tmp_dir=tmp_dir,
-            model_def_path=model_def_path,
-            model_path=model_path)
+            model_path=model_path,
+            model_def_path=model_def_path)
 
         loss_weights = self.cfg.solver.class_loss_weights
         if loss_weights is not None:

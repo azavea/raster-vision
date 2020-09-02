@@ -288,7 +288,7 @@ class Learner(ABC):
         """Unzip dataset zip files.
 
         Args:
-            uri: a list of URIs of zip files or the URI of a direcury containing
+            uri: a list of URIs of zip files or the URI of a directory containing
                 zip files
 
         Returns:
