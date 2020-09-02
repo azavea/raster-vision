@@ -50,3 +50,16 @@ class PyTorchLearnerBackendConfig(BackendConfig):
                     'class_loss_weights is currently only supported for '
                     'Semantic Segmentation and Chip Classification.')
         return v
+
+    @validator('model')
+    def validate_model_config(cls, v):
+        if v.external_def is not None:
+            from rastervision.pytorch_backend import (
+                PyTorchSemanticSegmentationConfig,
+                PyTorchChipClassificationConfig)
+            if cls not in (PyTorchSemanticSegmentationConfig,
+                           PyTorchChipClassificationConfig):
+                raise ConfigError(
+                    'external_def is currently only supported for '
+                    'Semantic Segmentation and Chip Classification.')
+        return v
