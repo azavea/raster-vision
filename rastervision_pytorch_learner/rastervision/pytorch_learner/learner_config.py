@@ -327,7 +327,7 @@ class LearnerConfig(Config):
 
         Args:
             tmp_dir: root of temp dirs
-            model_def_path: a local path to a directory with a hubcnf.py
+            model_def_path: a local path to a directory with a hubconf.py
             model_path: local path to model weights. If this is passed, the Learner
                 is assumed to be used to make predictions and not train a model.
         """
