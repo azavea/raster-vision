@@ -100,6 +100,7 @@ class Backbone(Enum):
 NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 
+@register_config('external-module')
 class ExternalModuleConfig(Config):
     uri: Optional[NonEmptyStr] = Field(
         None,
