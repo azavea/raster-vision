@@ -101,6 +101,8 @@ class Learner(ABC):
             if not cfg.overfit_mode:
                 self.sync_from_cloud()
 
+        self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
+
         self.setup_model(model_def_path=model_def_path)
 
         if model_path is not None:
@@ -122,15 +124,18 @@ class Learner(ABC):
             self.test_ds = None
             self.test_dl = None
 
-            self.last_model_path = join(self.output_dir, 'last-model.pth')
             self.config_path = join(self.output_dir, 'learner-config.json')
-            self.train_state_path = join(self.output_dir, 'train-state.json')
+            str_to_file(self.cfg.json(), self.config_path)
+
             self.log_path = join(self.output_dir, 'log.csv')
-            model_bundle_fn = basename(cfg.get_model_bundle_uri())
-            self.model_bundle_path = join(self.output_dir, model_bundle_fn)
+            self.train_state_path = join(self.output_dir, 'train-state.json')
+            model_bundle_fname = basename(cfg.get_model_bundle_uri())
+            self.model_bundle_path = join(self.output_dir, model_bundle_fname)
             self.metric_names = self.build_metric_names()
 
-            str_to_file(self.cfg.json(), self.config_path)
+            self.last_model_path = join(self.output_dir, 'last-model.pth')
+            self.load_checkpoint()
+
             self.opt = self.build_optimizer()
             self.setup_data()
             self.start_epoch = self.get_start_epoch()
@@ -203,8 +208,6 @@ class Learner(ABC):
             model_def_path (str, optional): Model definition path. Will be
             available when loading from a bundle. Defaults to None.
         """
-        self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
-
         extCfg = self.cfg.model.external_def
         if extCfg is not None:
             hubconf_dir_from_cfg = get_hubconf_dir_from_cfg(
@@ -220,6 +223,8 @@ class Learner(ABC):
             self.model = self.build_model()
 
         self.model.to(self.device)
+
+        self.load_init_weights()
 
     @abstractmethod
     def build_model(self) -> nn.Module:
