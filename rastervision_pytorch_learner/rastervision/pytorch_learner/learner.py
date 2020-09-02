@@ -247,8 +247,7 @@ class Learner(ABC):
             nn.Module: The module loaded via torch.hub.
         """
         if hubconf_dir is not None:
-            log.info(
-                f'Using existing model definition at: {hubconf_dir}')
+            log.info(f'Using existing model definition at: {hubconf_dir}')
             module = torch_hub_load_local(
                 hubconf_dir=hubconf_dir,
                 entrypoint=extCfg.entrypoint,
