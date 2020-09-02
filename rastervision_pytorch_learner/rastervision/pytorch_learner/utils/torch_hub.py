@@ -1,6 +1,6 @@
 from typing import Any, Optional
 from pathlib import Path
-from os.path import join, isdir, splitext
+from os.path import join, isdir
 import shutil
 from glob import glob
 
@@ -52,7 +52,7 @@ def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
     if cfg.name is not None:
         dir_name = cfg.name
     elif cfg.uri is not None:
-        dir_name = __uri_to_dir_name(cfg.uri)
+        dir_name = _uri_to_dir_name(cfg.uri)
     else:
         dir_name = _repo_name_to_dir_name(cfg.github_repo)
 
@@ -150,9 +150,6 @@ def torch_hub_load_local(hubconf_dir: str, entrypoint: str, *args,
     """
     from torch.hub import (sys, import_module, MODULE_HUBCONF,
                            _load_entry_from_hubconf)
-
-    verbose = kwargs.get('verbose', True)
-    kwargs.pop('verbose', None)
 
     sys.path.insert(0, hubconf_dir)
 

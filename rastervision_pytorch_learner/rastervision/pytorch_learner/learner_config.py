@@ -1,7 +1,7 @@
 from os.path import join
 from enum import Enum
 
-from typing import (List, Optional, Union, TYPE_CHECKING, Sequence)
+from typing import (List, Optional, Union, TYPE_CHECKING)
 from pydantic import PositiveFloat, PositiveInt, constr
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
