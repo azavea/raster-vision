@@ -43,4 +43,7 @@ class ObjectDetectionLearnerConfig(LearnerConfig):
         from rastervision.pytorch_learner.object_detection_learner import (
             ObjectDetectionLearner)
         return ObjectDetectionLearner(
-            self, tmp_dir, model_path=model_path, model_def_path=model_def_path)
+            self,
+            tmp_dir,
+            model_path=model_path,
+            model_def_path=model_def_path)
