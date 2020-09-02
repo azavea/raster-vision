@@ -121,6 +121,8 @@ class ExternalModuleConfig(Config):
         [], description='Args to pass to the entrypoint.')
     entrypoint_kwargs: dict = Field(
         {}, description='Keyword args to pass to the entrypoint.')
+    force_reload: bool = Field(
+        False, description='Force reload of the module definition.')
 
     def validate_config(self):
         has_uri = self.uri is not None

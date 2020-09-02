@@ -203,7 +203,7 @@ class Learner(ABC):
         if extCfg is not None:
             hubconf_dir_from_cfg = get_hubconf_dir_from_cfg(
                 extCfg, self.modules_dir)
-            if isdir(hubconf_dir_from_cfg):
+            if isdir(hubconf_dir_from_cfg) and not extCfg.force_reload:
                 hubconf_dir = hubconf_dir_from_cfg
             else:
                 hubconf_dir = model_def_path
