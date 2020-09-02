@@ -156,10 +156,12 @@ def get_hubconf_dir_from_cfg(cfg, hub_dir: str):
     return _uri_to_dir(cfg.uri, hub_dir)
 
 
-def torch_hub_load_github(repo: str, hub_dir: str, model: str, *args,
+def torch_hub_load_github(repo: str, hub_dir: str, model: str, hubconf_dir: str = None, *args,
                           **kwargs):
     torch.hub.set_dir(hub_dir)
     model = torch.hub.load(github=repo, model=model, *args, **kwargs)
+    if hubconf_dir is not None:
+        shutil.move(_repo_name_to_dir(repo, hub_dir), hubconf_dir)
     return model
 
 

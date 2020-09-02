@@ -226,6 +226,7 @@ class Learner(ABC):
                 repo=extCfg.github_repo,
                 hub_dir=save_dir,
                 model=extCfg.model,
+                hubconf_dir=hubconf_dir,
                 *extCfg.model_args,
                 **extCfg.model_kwargs)
         else:
