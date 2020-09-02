@@ -184,12 +184,8 @@ def get_hubconf_dir_from_cfg(cfg, parent: str = '') -> str:
     return path
 
 
-def torch_hub_load_github(repo: str,
-                          hubconf_dir: str,
-                          tmp_dir: str,
-                          entrypoint: str,
-                          *args,
-                          **kwargs) -> Any:
+def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
+                          entrypoint: str, *args, **kwargs) -> Any:
     """Load an entrypoint from a github repo using torch.hub.load().
 
     Args:
@@ -207,7 +203,7 @@ def torch_hub_load_github(repo: str,
     torch.hub.set_dir(tmp_dir)
     out = torch.hub.load(github=repo, model=entrypoint, *args, **kwargs)
 
-    orig_dir = join(tmp_dir, _repo_name_to_dir_name(repo, hub_dir))
+    orig_dir = join(tmp_dir, _repo_name_to_dir_name(repo))
     shutil.move(orig_dir, hubconf_dir)
 
     return out

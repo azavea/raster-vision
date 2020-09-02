@@ -198,11 +198,20 @@ class Learner(ABC):
 
     def setup_model(self, model_def_path: str = None):
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
-        if self.cfg.model.external_model is not None:
+
+        extCfg = self.cfg.model.external_def
+        if extCfg is not None:
+            hubconf_dir_from_cfg = get_hubconf_dir_from_cfg(
+                extCfg, self.modules_dir)
+            if isdir(hubconf_dir_from_cfg):
+                hubconf_dir = hubconf_dir_from_cfg
+            else:
+                hubconf_dir = model_def_path
+
             self.model = self.load_external_module(
-                extCfg=self.cfg.model.external_model,
+                extCfg=extCfg,
                 save_dir=self.modules_dir,
-                hubconf_dir=model_def_path)
+                hubconf_dir=hubconf_dir)
         else:
             self.model = self.build_model()
 
@@ -219,9 +228,9 @@ class Learner(ABC):
                              hubconf_dir: str = None,
                              tmp_dir: str = None) -> nn.Module:
         if hubconf_dir is not None:
-            module = torch_hub_load_local(hubconf_dir, extCfg.model,
-                                          *extCfg.model_args,
-                                          **extCfg.model_kwargs)
+            module = torch_hub_load_local(hubconf_dir, extCfg.entrypoint,
+                                          *extCfg.entrypoint_args,
+                                          **extCfg.entrypoint_kwargs)
             return module
 
         hubconf_dir = get_hubconf_dir_from_cfg(extCfg, save_dir)
@@ -767,7 +776,7 @@ class Learner(ABC):
 
         cfg = build_config(config_dict)
 
-        extCfg = cfg.learner.model.external_model
+        extCfg = cfg.learner.model.external_def
         if extCfg is not None:
             hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
             model_def_path = get_hubconf_dir_from_cfg(extCfg, hub_dir)
@@ -792,12 +801,12 @@ class Learner(ABC):
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
 
-        if self.cfg.model.external_model is not None:
-            # copy modules into bundle
-            modules_dir = join(model_bundle_dir, MODULES_DIRNAME)
-            if isdir(modules_dir):
-                shutil.rmtree(modules_dir)
-            shutil.copytree(self.modules_dir, modules_dir)
+        # copy modules into bundle
+        if isdir(self.modules_dir):
+            bundle_modules_dir = join(model_bundle_dir, MODULES_DIRNAME)
+            if isdir(bundle_modules_dir):
+                shutil.rmtree(bundle_modules_dir)
+            shutil.copytree(self.modules_dir, bundle_modules_dir)
 
         pipeline_cfg = LearnerPipelineConfig(learner=self.cfg)
         save_pipeline_config(pipeline_cfg,
