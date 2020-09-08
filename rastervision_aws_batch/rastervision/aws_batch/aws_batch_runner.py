@@ -155,10 +155,13 @@ class AWSBatchRunner(Runner):
             job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
 
             if not external:
-                cmd = [
-                    'python', '-m', 'rastervision.pipeline.cli run_command',
-                    cfg_json_uri, command, '--runner', AWS_BATCH
-                ]
+                cmd = ['python', '-m', 'rastervision.pipeline.cli']
+                if rv_config.get_verbosity() > 1:
+                    cmd.append('-' + 'v' * (rv_config.get_verbosity() - 1))
+                cmd.extend([
+                    'run_command', cfg_json_uri, command, '--runner', AWS_BATCH
+                ])
+
                 if command in pipeline.split_commands and num_splits > 1:
                     num_array_jobs = num_splits
                     cmd += ['--num-splits', str(num_splits)]
