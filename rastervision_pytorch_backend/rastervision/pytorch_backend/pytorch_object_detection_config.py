@@ -1,4 +1,5 @@
-from rastervision.pipeline.config import register_config
+from rastervision.pipeline.config import (register_config, validator,
+                                          ConfigError)
 from rastervision.pytorch_backend.pytorch_learner_backend_config import (
     PyTorchLearnerBackendConfig)
 from rastervision.pytorch_learner.object_detection_learner_config import (
@@ -34,3 +35,10 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
     def build(self, pipeline, tmp_dir):
         learner = self.get_learner_config(pipeline)
         return PyTorchObjectDetection(pipeline, learner, tmp_dir)
+
+    @validator('model')
+    def validate_model_config(cls, v):
+        if v.external_def is not None:
+            raise ConfigError('external_def is currently not supported for '
+                              'Object Detection.')
+        return v
