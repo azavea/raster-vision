@@ -108,9 +108,10 @@ class SemanticSegmentationLearner(Learner):
         Args:
             cfg: configuration
             tmp_dir: root of temp dirs
-            model_def_path: a local path to a directory with a hubcnf.py
             model_path: a local path to model weights. If provided, the model is loaded
                 and it is assumed that this Learner will be used for prediction only.
+            model_def_path: a local path to a directory with a hubconf.py. If
+                provided, the model definition is imported from here.
         """
         super().__init__(cfg, tmp_dir, model_path)
 

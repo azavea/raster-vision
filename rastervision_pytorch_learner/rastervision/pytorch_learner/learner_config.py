@@ -155,7 +155,7 @@ class ModelConfig(Config):
     external_def: Optional[ExternalModuleConfig] = Field(
         None,
         description='If specified, the model will be built from the '
-        'definition from this external source.')
+        'definition from this external source, using Torch Hub.')
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
@@ -327,9 +327,10 @@ class LearnerConfig(Config):
 
         Args:
             tmp_dir: root of temp dirs
-            model_def_path: a local path to a directory with a hubconf.py
             model_path: local path to model weights. If this is passed, the Learner
                 is assumed to be used to make predictions and not train a model.
+            model_def_path: a local path to a directory with a hubconf.py. If
+                provided, the model definition is imported from here.
         """
         raise NotImplementedError()
 
