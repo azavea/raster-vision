@@ -94,7 +94,7 @@ class AlbumentationsDataset(Dataset):
 
 
 class SplitTensor(nn.Module):
-    ''' Wrapper around `torch.split` '''
+    """ Wrapper around `torch.split` """
 
     def __init__(self, size_or_sizes, dim):
         super().__init__()
@@ -106,9 +106,9 @@ class SplitTensor(nn.Module):
 
 
 class Parallel(nn.ModuleList):
-    ''' Passes inputs through multiple `nn.Module`s in parallel.
+    """ Passes inputs through multiple `nn.Module`s in parallel.
         Returns a tuple of outputs.
-    '''
+    """
 
     def __init__(self, *args):
         super().__init__(args)
@@ -121,7 +121,7 @@ class Parallel(nn.ModuleList):
 
 
 class AddTensors(nn.Module):
-    ''' Adds all its inputs together. '''
+    """ Adds all its inputs together. """
 
     def forward(self, xs):
         return sum(xs)

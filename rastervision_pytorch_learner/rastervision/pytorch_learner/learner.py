@@ -1,4 +1,4 @@
-from os.path import join, isfile, basename
+from os.path import join, isfile, basename, isdir
 import csv
 import warnings
 warnings.filterwarnings('ignore')  # noqa
@@ -42,7 +42,13 @@ from rastervision.pipeline.file_system import (
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, ConfigError,
                                           upgrade_config, save_pipeline_config)
-from rastervision.pytorch_learner.learner_config import LearnerConfig
+from rastervision.pytorch_learner.learner_config import (LearnerConfig,
+                                                         ExternalModuleConfig)
+from rastervision.pytorch_learner.utils import (
+    torch_hub_load_github, torch_hub_load_uri, torch_hub_load_local,
+    get_hubconf_dir_from_cfg)
+
+MODULES_DIRNAME = 'modules'
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +71,8 @@ class Learner(ABC):
     def __init__(self,
                  cfg: LearnerConfig,
                  tmp_dir: str,
-                 model_path: Optional[str] = None):
+                 model_path: Optional[str] = None,
+                 model_def_path: Optional[str] = None):
         """Constructor.
 
         Args:
@@ -73,6 +80,8 @@ class Learner(ABC):
             tmp_dir: root of temp dirs
             model_path: a local path to model weights. If provided, the model is loaded
                 and it is assumed that this Learner will be used for prediction only.
+            model_def_path: a local path to a directory with a hubconf.py. If
+                provided, the model definition is imported from here.
         """
         self.cfg = cfg
         self.tmp_dir = tmp_dir
@@ -84,8 +93,18 @@ class Learner(ABC):
         self.data_cache_dir = '/opt/data/data-cache'
         make_dir(self.data_cache_dir)
 
-        self.model = self.build_model()
-        self.model.to(self.device)
+        if FileSystem.get_file_system(cfg.output_uri) == LocalFileSystem:
+            self.output_dir = cfg.output_uri
+            make_dir(self.output_dir)
+        else:
+            self.output_dir = get_local_path(cfg.output_uri, tmp_dir)
+            make_dir(self.output_dir, force_empty=True)
+            if not cfg.overfit_mode:
+                self.sync_from_cloud()
+
+        self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
+
+        self.setup_model(model_def_path=model_def_path)
 
         if model_path is not None:
             if isfile(model_path):
@@ -106,26 +125,18 @@ class Learner(ABC):
             self.test_ds = None
             self.test_dl = None
 
-            if FileSystem.get_file_system(cfg.output_uri) == LocalFileSystem:
-                self.output_dir = cfg.output_uri
-                make_dir(self.output_dir)
-            else:
-                self.output_dir = get_local_path(cfg.output_uri, tmp_dir)
-                make_dir(self.output_dir, force_empty=True)
-                if not cfg.overfit_mode:
-                    self.sync_from_cloud()
-
-            self.last_model_path = join(self.output_dir, 'last-model.pth')
             self.config_path = join(self.output_dir, 'learner-config.json')
-            self.train_state_path = join(self.output_dir, 'train-state.json')
+            str_to_file(self.cfg.json(), self.config_path)
+
             self.log_path = join(self.output_dir, 'log.csv')
-            model_bundle_fn = basename(cfg.get_model_bundle_uri())
-            self.model_bundle_path = join(self.output_dir, model_bundle_fn)
+            self.train_state_path = join(self.output_dir, 'train-state.json')
+            model_bundle_fname = basename(cfg.get_model_bundle_uri())
+            self.model_bundle_path = join(self.output_dir, model_bundle_fname)
             self.metric_names = self.build_metric_names()
 
-            str_to_file(self.cfg.json(), self.config_path)
-            self.load_init_weights()
+            self.last_model_path = join(self.output_dir, 'last-model.pth')
             self.load_checkpoint()
+
             self.opt = self.build_optimizer()
             self.setup_data()
             self.start_epoch = self.get_start_epoch()
@@ -191,10 +202,88 @@ class Learner(ABC):
             if self.cfg.run_tensorboard:
                 self.tb_process.terminate()
 
+    def setup_model(self, model_def_path: str = None) -> None:
+        """Setup self.model.
+
+        Args:
+            model_def_path (str, optional): Model definition path. Will be
+            available when loading from a bundle. Defaults to None.
+        """
+        extCfg = self.cfg.model.external_def
+        if extCfg is not None:
+            hubconf_dir_from_cfg = get_hubconf_dir_from_cfg(
+                extCfg, parent=self.modules_dir)
+            if isdir(hubconf_dir_from_cfg) and not extCfg.force_reload:
+                hubconf_dir = hubconf_dir_from_cfg
+            else:
+                hubconf_dir = model_def_path
+
+            self.model = self.load_external_module(
+                extCfg=extCfg, hubconf_dir=hubconf_dir)
+        else:
+            self.model = self.build_model()
+
+        self.model.to(self.device)
+
+        self.load_init_weights()
+
     @abstractmethod
     def build_model(self) -> nn.Module:
         """Build a PyTorch model."""
         pass
+
+    def load_external_module(self,
+                             extCfg: ExternalModuleConfig,
+                             save_dir: str = None,
+                             hubconf_dir: str = None,
+                             tmp_dir: str = None) -> nn.Module:
+        """Load an external module via torch.hub.
+
+        Args:
+            extCfg (ExternalModuleConfig): Config describing the module.
+            save_dir (str, optional): The model def will be saved here.
+                Defaults to self.modules_dir.
+            hubconf_dir (str, optional): Path to existing definition.
+                If provided, the definition will not be fetched from the source
+                specified by extCfg. Defaults to None.
+            tmp_dir (str, optional): Temporary directory to use for downloads
+                etc. Defaults to self.tmp_dir.
+
+        Returns:
+            nn.Module: The module loaded via torch.hub.
+        """
+        if hubconf_dir is not None:
+            log.info(f'Using existing model definition at: {hubconf_dir}')
+            module = torch_hub_load_local(
+                hubconf_dir=hubconf_dir,
+                entrypoint=extCfg.entrypoint,
+                *extCfg.entrypoint_args,
+                **extCfg.entrypoint_kwargs)
+            return module
+
+        save_dir = self.modules_dir if save_dir is None else save_dir
+        tmp_dir = self.tmp_dir if tmp_dir is None else tmp_dir
+
+        hubconf_dir = get_hubconf_dir_from_cfg(extCfg, parent=save_dir)
+        if extCfg.github_repo is not None:
+            log.info(f'Fetching model definition from: {extCfg.github_repo}')
+            module = torch_hub_load_github(
+                repo=extCfg.github_repo,
+                hubconf_dir=hubconf_dir,
+                tmp_dir=save_dir,
+                entrypoint=extCfg.entrypoint,
+                *extCfg.entrypoint_args,
+                **extCfg.entrypoint_kwargs)
+        else:
+            log.info(f'Fetching model definition from: {extCfg.uri}')
+            module = torch_hub_load_uri(
+                uri=extCfg.uri,
+                hubconf_dir=hubconf_dir,
+                tmp_dir=tmp_dir,
+                entrypoint=extCfg.entrypoint,
+                *extCfg.entrypoint_args,
+                **extCfg.entrypoint_kwargs)
+        return module
 
     def unzip_data(self, uri: Union[str, List[str]]) -> List[str]:
         """Unzip dataset zip files.
@@ -718,7 +807,18 @@ class Learner(ABC):
         config_dict = upgrade_config(config_dict)
 
         cfg = build_config(config_dict)
-        return cfg.learner.build(tmp_dir, model_path=model_path)
+
+        extCfg = cfg.learner.model.external_def
+        if extCfg is not None:
+            hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
+            model_def_path = get_hubconf_dir_from_cfg(extCfg, parent=hub_dir)
+            log.info(
+                f'Using model definition found in bundle: {model_def_path}')
+        else:
+            model_def_path = None
+
+        return cfg.learner.build(
+            tmp_dir, model_def_path=model_def_path, model_path=model_path)
 
     def save_model_bundle(self):
         """Save a model bundle.
@@ -728,10 +828,22 @@ class Learner(ABC):
         """
         from rastervision.pytorch_learner.learner_pipeline_config import (
             LearnerPipelineConfig)
+
+        log.info('Creating bundle.')
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
         make_dir(model_bundle_dir)
+
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
+
+        # copy modules into bundle
+        if isdir(self.modules_dir):
+            log.info('Copying modules into bundle.')
+            bundle_modules_dir = join(model_bundle_dir, MODULES_DIRNAME)
+            if isdir(bundle_modules_dir):
+                shutil.rmtree(bundle_modules_dir)
+            shutil.copytree(self.modules_dir, bundle_modules_dir)
+
         pipeline_cfg = LearnerPipelineConfig(learner=self.cfg)
         save_pipeline_config(pipeline_cfg,
                              join(model_bundle_dir, 'pipeline-config.json'))

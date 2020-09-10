@@ -14,7 +14,12 @@ from rastervision.pytorch_backend.examples.utils import get_scene_info, save_ima
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 
 
-def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
+def get_config(runner,
+               raw_uri,
+               processed_uri,
+               root_uri,
+               test=False,
+               external_model=False):
     debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
@@ -76,7 +81,21 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    model = ClassificationModelConfig(backbone=Backbone.resnet50)
+    if external_model:
+        model = ClassificationModelConfig(
+            external_def=ExternalModuleConfig(
+                github_repo='lukemelas/EfficientNet-PyTorch',
+                # uri='s3://raster-vision-ahassan/models/EfficientNet-PyTorch.zip',
+                name='efficient_net',
+                entrypoint='efficientnet_b0',
+                force_reload=False,
+                entrypoint_kwargs={
+                    'num_classes': len(class_config.names),
+                    'pretrained': 'imagenet'
+                }))
+    else:
+        model = ClassificationModelConfig(backbone=Backbone.resnet50)
+
     solver = SolverConfig(
         lr=1e-4, num_epochs=20, test_num_epochs=3, batch_sz=32, one_cycle=True)
     backend = PyTorchChipClassificationConfig(
