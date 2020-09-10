@@ -231,6 +231,11 @@ SolverConfig
 
 .. autoclass:: rastervision.pytorch_learner.SolverConfig
 
+ExternalModuleConfig
+~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ExternalModuleConfig
+
 ClassificationDataFormat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
