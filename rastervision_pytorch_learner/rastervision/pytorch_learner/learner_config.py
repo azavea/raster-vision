@@ -102,6 +102,7 @@ NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 @register_config('external-module')
 class ExternalModuleConfig(Config):
+    """Config describing an object to be loaded via Torch Hub."""
     uri: Optional[NonEmptyStr] = Field(
         None,
         description=('Local uri of a zip file, or local uri of a directory,'
@@ -118,11 +119,14 @@ class ExternalModuleConfig(Config):
         description=('Name of a callable present in hubconf.py. '
                      'See docs for torch.hub for details.'))
     entrypoint_args: list = Field(
-        [], description='Args to pass to the entrypoint.')
+        [],
+        description='Args to pass to the entrypoint. Must be serializable.')
     entrypoint_kwargs: dict = Field(
-        {}, description='Keyword args to pass to the entrypoint.')
+        {},
+        description=
+        'Keyword args to pass to the entrypoint. Must be serializable.')
     force_reload: bool = Field(
-        False, description='Force reload of the module definition.')
+        False, description='Force reload of module definition.')
 
     def validate_config(self):
         has_uri = self.uri is not None
