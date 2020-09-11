@@ -12,6 +12,7 @@ Features
 * Add support for weighted loss for classification and semantic segmentation `#977 <https://github.com/azavea/raster-vision/pull/977>`_
 * Add multi raster source `#978 <https://github.com/azavea/raster-vision/pull/978>`_
 * Add support for fetching and saving external model definitions `#985 <https://github.com/azavea/raster-vision/pull/985>`_
+* Add support for external loss definitions `#992 <https://github.com/azavea/raster-vision/pull/992>`_
 
 Raster Vision 0.12
 -------------------
