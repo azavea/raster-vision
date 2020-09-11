@@ -12,7 +12,7 @@ import logging
 from subprocess import Popen
 import numbers
 import zipfile
-from typing import Optional, List, Tuple, Dict, Union
+from typing import Optional, List, Tuple, Dict, Union, Any
 import random
 import uuid
 
@@ -72,7 +72,8 @@ class Learner(ABC):
                  cfg: LearnerConfig,
                  tmp_dir: str,
                  model_path: Optional[str] = None,
-                 model_def_path: Optional[str] = None):
+                 model_def_path: Optional[str] = None,
+                 loss_def_path: Optional[str] = None):
         """Constructor.
 
         Args:
@@ -82,6 +83,8 @@ class Learner(ABC):
                 and it is assumed that this Learner will be used for prediction only.
             model_def_path: a local path to a directory with a hubconf.py. If
                 provided, the model definition is imported from here.
+            loss_def_path: a local path to a directory with a hubconf.py. If
+                provided, the loss function definition is imported from here.
         """
         self.cfg = cfg
         self.tmp_dir = tmp_dir
@@ -137,6 +140,7 @@ class Learner(ABC):
             self.last_model_path = join(self.output_dir, 'last-model.pth')
             self.load_checkpoint()
 
+            self.setup_loss(loss_def_path=loss_def_path)
             self.opt = self.build_optimizer()
             self.setup_data()
             self.start_epoch = self.get_start_epoch()
@@ -211,20 +215,12 @@ class Learner(ABC):
         """
         extCfg = self.cfg.model.external_def
         if extCfg is not None:
-            hubconf_dir_from_cfg = get_hubconf_dir_from_cfg(
-                extCfg, parent=self.modules_dir)
-            if isdir(hubconf_dir_from_cfg) and not extCfg.force_reload:
-                hubconf_dir = hubconf_dir_from_cfg
-            else:
-                hubconf_dir = model_def_path
-
+            hubconf_dir = self._get_external_module_dir(extCfg, model_def_path)
             self.model = self.load_external_module(
                 extCfg=extCfg, hubconf_dir=hubconf_dir)
         else:
             self.model = self.build_model()
-
         self.model.to(self.device)
-
         self.load_init_weights()
 
     @abstractmethod
@@ -232,16 +228,60 @@ class Learner(ABC):
         """Build a PyTorch model."""
         pass
 
-    def load_external_module(self,
-                             extCfg: ExternalModuleConfig,
-                             save_dir: str = None,
-                             hubconf_dir: str = None,
-                             tmp_dir: str = None) -> nn.Module:
-        """Load an external module via torch.hub.
+    def setup_loss(self, loss_def_path: Optional[str] = None) -> None:
+        """Setup self.loss.
+
+        Args:
+            loss_def_path (str, optional): Loss definition path. Will be
+            available when loading from a bundle. Defaults to None.
+        """
+        extCfg = self.cfg.solver.external_loss_def
+        if extCfg is not None:
+            hubconf_dir = self._get_external_module_dir(extCfg, loss_def_path)
+            self.loss = self.load_external_module(
+                extCfg=extCfg, hubconf_dir=hubconf_dir)
+        else:
+            self.loss = self.build_loss()
+        self.loss.to(self.device)
+
+    def build_loss(self) -> nn.Module:
+        """Build a loss Callable."""
+        pass
+
+    def _get_external_module_dir(
+            self,
+            extCfg: ExternalModuleConfig,
+            existing_def_path: Optional[str] = None) -> Optional[str]:
+        """Determine correct dir, taking cfg options and existing_def_path into
+        account.
 
         Args:
             extCfg (ExternalModuleConfig): Config describing the module.
-            save_dir (str, optional): The model def will be saved here.
+            existing_def_path (str, optional): Loss definition path.
+            Will be available when loading from a bundle. Defaults to None.
+
+        Returns:
+            Optional[str]: [description]
+        """
+        dir_from_cfg = get_hubconf_dir_from_cfg(
+            extCfg, parent=self.modules_dir)
+        if isdir(dir_from_cfg) and not extCfg.force_reload:
+            return dir_from_cfg
+        return existing_def_path
+
+    def load_external_module(self,
+                             extCfg: ExternalModuleConfig,
+                             save_dir: Optional[str] = None,
+                             hubconf_dir: Optional[str] = None,
+                             tmp_dir: Optional[str] = None) -> Any:
+        """Load an external module via torch.hub.
+
+        Note: Loading a PyTorch module is the typical use case, but there are
+        no type restrictions on the object loaded through torch.hub.
+
+        Args:
+            extCfg (ExternalModuleConfig): Config describing the module.
+            save_dir (str, optional): The module def will be saved here.
                 Defaults to self.modules_dir.
             hubconf_dir (str, optional): Path to existing definition.
                 If provided, the definition will not be fetched from the source
@@ -253,7 +293,7 @@ class Learner(ABC):
             nn.Module: The module loaded via torch.hub.
         """
         if hubconf_dir is not None:
-            log.info(f'Using existing model definition at: {hubconf_dir}')
+            log.info(f'Using existing module definition at: {hubconf_dir}')
             module = torch_hub_load_local(
                 hubconf_dir=hubconf_dir,
                 entrypoint=extCfg.entrypoint,
@@ -266,7 +306,7 @@ class Learner(ABC):
 
         hubconf_dir = get_hubconf_dir_from_cfg(extCfg, parent=save_dir)
         if extCfg.github_repo is not None:
-            log.info(f'Fetching model definition from: {extCfg.github_repo}')
+            log.info(f'Fetching module definition from: {extCfg.github_repo}')
             module = torch_hub_load_github(
                 repo=extCfg.github_repo,
                 hubconf_dir=hubconf_dir,
@@ -275,7 +315,7 @@ class Learner(ABC):
                 *extCfg.entrypoint_args,
                 **extCfg.entrypoint_kwargs)
         else:
-            log.info(f'Fetching model definition from: {extCfg.uri}')
+            log.info(f'Fetching module definition from: {extCfg.uri}')
             module = torch_hub_load_uri(
                 uri=extCfg.uri,
                 hubconf_dir=hubconf_dir,
@@ -808,17 +848,28 @@ class Learner(ABC):
 
         cfg = build_config(config_dict)
 
+        hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
+        model_def_path = None
+        loss_def_path = None
+
+        # retrieve existing model definition, if available
         extCfg = cfg.learner.model.external_def
         if extCfg is not None:
-            hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
             model_def_path = get_hubconf_dir_from_cfg(extCfg, parent=hub_dir)
             log.info(
                 f'Using model definition found in bundle: {model_def_path}')
-        else:
-            model_def_path = None
+
+        # retrieve existing loss function definition, if available
+        extCfg = cfg.learner.solver.external_loss_def
+        if extCfg is not None:
+            loss_def_path = get_hubconf_dir_from_cfg(extCfg, parent=hub_dir)
+            log.info(f'Using loss definition found in bundle: {loss_def_path}')
 
         return cfg.learner.build(
-            tmp_dir, model_def_path=model_def_path, model_path=model_path)
+            tmp_dir=tmp_dir,
+            model_path=model_path,
+            model_def_path=model_def_path,
+            loss_def_path=loss_def_path)
 
     def save_model_bundle(self):
         """Save a model bundle.
