@@ -42,3 +42,15 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
             raise ConfigError('external_def is currently not supported for '
                               'Object Detection.')
         return v
+
+    @validator('solver')
+    def validate_solver_config(cls, v):
+        if v.class_loss_weights is not None:
+            raise ConfigError(
+                'class_loss_weights is currently not supported for '
+                'Object Detection.')
+        if v.external_loss_def is not None:
+            raise ConfigError(
+                'external_loss_def is currently not supported for '
+                'Object Detection.')
+        return v
