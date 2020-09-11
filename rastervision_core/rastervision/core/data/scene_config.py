@@ -60,7 +60,8 @@ class SceneConfig(Config):
         super().update()
 
         self.raster_source.update(pipeline=pipeline, scene=self)
-        self.label_source.update(pipeline=pipeline, scene=self)
+        if self.label_source is not None:
+            self.label_source.update(pipeline=pipeline, scene=self)
         if self.label_store is None and pipeline is not None:
             self.label_store = pipeline.get_default_label_store(scene=self)
         if self.label_store is not None:

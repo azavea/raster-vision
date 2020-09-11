@@ -18,7 +18,7 @@ class StatsTransformerConfig(RasterTransformerConfig):
          'inside an RVPipeline, then this field will be auto-generated.'))
 
     def update(self, pipeline=None, scene=None):
-        if pipeline is not None:
+        if pipeline is not None and self.stats_uri is None:
             self.stats_uri = join(pipeline.analyze_uri, 'stats.json')
 
     def build(self):

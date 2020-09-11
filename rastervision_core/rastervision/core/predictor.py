@@ -48,15 +48,8 @@ class Predictor():
         rv_config.set_everett_config(
             config_overrides=config_dict.get('rv_config'))
         config_dict = upgrade_config(config_dict)
-
-        self.pipeline = build_config(config_dict).build(tmp_dir)
-        self.scene = None
-
-        if not hasattr(self.pipeline, 'predict'):
-            raise Exception(
-                'pipeline in model bundle must have predict method')
-
-        self.scene = self.pipeline.config.dataset.validation_scenes[0]
+        self.config = build_config(config_dict)
+        self.scene = self.config.dataset.validation_scenes[0]
 
         if not hasattr(self.scene.raster_source, 'uris'):
             raise Exception(
@@ -72,17 +65,19 @@ class Predictor():
         if self.update_stats:
             stats_analyzer = StatsAnalyzerConfig(
                 output_uri=join(bundle_dir, 'stats.json'))
-            self.pipeline.config.analyzers = [stats_analyzer]
+            self.config.analyzers = [stats_analyzer]
 
         self.scene.label_source = None
         self.scene.aoi_uris = None
-        self.pipeline.config.dataset.train_scenes = [self.scene]
-        self.pipeline.config.dataset.validation_scenes = [self.scene]
-        self.pipeline.config.dataset.test_scenes = None
-        self.pipeline.config.train_uri = bundle_dir
+        self.config.dataset.train_scenes = [self.scene]
+        self.config.dataset.validation_scenes = [self.scene]
+        self.config.dataset.test_scenes = []
+        self.config.train_uri = bundle_dir
 
         if channel_order is not None:
             self.scene.raster_source.channel_order = channel_order
+
+        self.pipeline = None
 
     def predict(self, image_uris, label_uri, vector_label_uri=None):
         """Generate predictions for the given image.
@@ -95,6 +90,13 @@ class Predictor():
             vector_label_uri: URI to save vectorized labels for semantic segmentation
                 model bundles that support it
         """
+        if self.pipeline is None:
+            self.scene.raster_source.uris = image_uris
+            self.pipeline = self.config.build(self.tmp_dir)
+            if not hasattr(self.pipeline, 'predict'):
+                raise Exception(
+                    'pipeline in model bundle must have predict method')
+
         try:
             self.scene.raster_source.uris = image_uris
             self.scene.label_store.uri = label_uri
