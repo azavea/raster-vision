@@ -206,7 +206,7 @@ class Learner(ABC):
             if self.cfg.run_tensorboard:
                 self.tb_process.terminate()
 
-    def setup_model(self, model_def_path: str = None) -> None:
+    def setup_model(self, model_def_path: Optional[str] = None) -> None:
         """Setup self.model.
 
         Args:
@@ -568,7 +568,7 @@ class Learner(ABC):
         return metric_names
 
     @abstractmethod
-    def train_step(self, batch: any, batch_ind: int) -> MetricDict:
+    def train_step(self, batch: Any, batch_ind: int) -> MetricDict:
         """Compute loss for a single training batch.
 
         Args:
@@ -581,7 +581,7 @@ class Learner(ABC):
         pass
 
     @abstractmethod
-    def validate_step(self, batch: any, batch_ind: int) -> MetricDict:
+    def validate_step(self, batch: Any, batch_ind: int) -> MetricDict:
         """Compute metrics on validation batch.
 
         Args:
@@ -621,7 +621,7 @@ class Learner(ABC):
                                       ]).sum().item() / num_samples
         return metrics
 
-    def post_forward(self, x: any) -> any:
+    def post_forward(self, x: Any) -> Any:
         """Post process output of call to model().
 
         Useful for when predictions are inside a structure returned by model().
@@ -663,7 +663,7 @@ class Learner(ABC):
     def predict(self,
                 x: Tensor,
                 normalize: bool = False,
-                raw_out: bool = False) -> any:
+                raw_out: bool = False) -> Any:
         """Make prediction for an image or batch of images.
 
         Args:
@@ -686,7 +686,7 @@ class Learner(ABC):
         out = self.to_device(out, 'cpu')
         return out
 
-    def output_to_numpy(self, out: any) -> any:
+    def output_to_numpy(self, out: Any) -> Any:
         """Convert output of model to numpy format.
 
         Args:
@@ -696,7 +696,7 @@ class Learner(ABC):
         """
         return out.numpy()
 
-    def numpy_predict(self, x: np.ndarray, raw_out: bool = False) -> any:
+    def numpy_predict(self, x: np.ndarray, raw_out: bool = False) -> Any:
         """Make a prediction using an image or batch of images in numpy format.
 
         Args:
@@ -928,7 +928,7 @@ class Learner(ABC):
             self.model.load_state_dict(
                 torch.load(self.last_model_path, map_location=self.device))
 
-    def to_device(self, x: any, device: str) -> any:
+    def to_device(self, x: Any, device: str) -> Any:
         """Load Tensors onto a device.
 
         Args:
