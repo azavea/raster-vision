@@ -2,7 +2,6 @@ import warnings
 warnings.filterwarnings('ignore')  # noqa
 from os.path import join, isdir
 import logging
-from typing import Optional
 
 import torch
 from torchvision import models
@@ -10,7 +9,6 @@ import torch.nn as nn
 from torch.utils.data import ConcatDataset
 
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.learner_config import LearnerConfig
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
 from rastervision.pytorch_learner.image_folder import (ImageFolder)
@@ -21,34 +19,6 @@ log = logging.getLogger(__name__)
 
 
 class ClassificationLearner(Learner):
-    def __init__(self,
-                 cfg: LearnerConfig,
-                 tmp_dir: str,
-                 model_path: Optional[str] = None,
-                 model_def_path: Optional[str] = None):
-        """Constructor.
-
-        Args:
-            cfg: configuration
-            tmp_dir: root of temp dirs
-            model_path: a local path to model weights. If provided, the model is loaded
-                and it is assumed that this Learner will be used for prediction only.
-            model_def_path: a local path to a directory with a hubconf.py. If
-                provided, the model definition is imported from here.
-        """
-        super().__init__(
-            cfg,
-            tmp_dir=tmp_dir,
-            model_path=model_path,
-            model_def_path=model_def_path)
-
-        loss_weights = self.cfg.solver.class_loss_weights
-        if loss_weights is not None:
-            loss_weights = torch.tensor(loss_weights, device=self.device)
-            self.loss_fn = nn.CrossEntropyLoss(weight=loss_weights)
-        else:
-            self.loss_fn = nn.CrossEntropyLoss()
-
     def build_model(self):
         pretrained = self.cfg.model.pretrained
         model = getattr(
@@ -57,6 +27,15 @@ class ClassificationLearner(Learner):
         num_labels = len(self.cfg.data.class_names)
         model.fc = nn.Linear(in_features, num_labels)
         return model
+
+    def build_loss(self):
+        loss_weights = self.cfg.solver.class_loss_weights
+        if loss_weights is not None:
+            loss_weights = torch.tensor(loss_weights, device=self.device)
+            loss = nn.CrossEntropyLoss(weight=loss_weights)
+        else:
+            loss = nn.CrossEntropyLoss()
+        return loss
 
     def _get_datasets(self, uri):
         cfg = self.cfg
@@ -102,12 +81,12 @@ class ClassificationLearner(Learner):
     def train_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
-        return {'train_loss': self.loss_fn(out, y)}
+        return {'train_loss': self.loss(out, y)}
 
     def validate_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
-        val_loss = self.loss_fn(out, y)
+        val_loss = self.loss(out, y)
 
         num_labels = len(self.cfg.data.class_names)
         out = self.prob_to_pred(out)
