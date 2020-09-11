@@ -190,9 +190,20 @@ class SolverConfig(Config):
         [], description=('List of epoch indices at which to divide LR by 10.'))
     class_loss_weights: Optional[Union[list, tuple]] = Field(
         None, description=('Class weights for weighted loss.'))
+    external_loss_def: Optional[ExternalModuleConfig] = Field(
+        None,
+        description='If specified, the loss will be built from the definition '
+        'from this external source, using Torch Hub.')
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
+
+    def validate_config(self):
+        has_weights = self.class_loss_weights is not None
+        has_external_loss_def = self.external_loss_def is not None
+        if has_weights and has_external_loss_def:
+            raise ConfigError(
+                'class_loss_weights is not supported with external_loss_def.')
 
 
 @register_config('data')
