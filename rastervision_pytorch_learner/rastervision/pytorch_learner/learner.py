@@ -242,7 +242,9 @@ class Learner(ABC):
                 extCfg=extCfg, hubconf_dir=hubconf_dir)
         else:
             self.loss = self.build_loss()
-        self.loss.to(self.device)
+
+        if self.loss is not None and isinstance(self.loss, nn.Module):
+            self.loss.to(self.device)
 
     def build_loss(self) -> nn.Module:
         """Build a loss Callable."""
