@@ -203,12 +203,12 @@ class SemanticSegmentationLearner(Learner):
     def train_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
-        return {'train_loss': self.loss_fn(out, y)}
+        return {'train_loss': self.loss(out, y)}
 
     def validate_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
-        val_loss = self.loss_fn(out, y)
+        val_loss = self.loss(out, y)
 
         num_labels = len(self.cfg.data.class_names)
         y = y.view(-1)
