@@ -12,7 +12,7 @@ import logging
 from subprocess import Popen
 import numbers
 import zipfile
-from typing import Optional, List, Tuple, Dict, Union
+from typing import Optional, List, Tuple, Dict, Union, Any
 import random
 import uuid
 
@@ -72,7 +72,8 @@ class Learner(ABC):
                  cfg: LearnerConfig,
                  tmp_dir: str,
                  model_path: Optional[str] = None,
-                 model_def_path: Optional[str] = None):
+                 model_def_path: Optional[str] = None,
+                 loss_def_path: Optional[str] = None):
         """Constructor.
 
         Args:
@@ -82,6 +83,8 @@ class Learner(ABC):
                 and it is assumed that this Learner will be used for prediction only.
             model_def_path: a local path to a directory with a hubconf.py. If
                 provided, the model definition is imported from here.
+            loss_def_path: a local path to a directory with a hubconf.py. If
+                provided, the loss function definition is imported from here.
         """
         self.cfg = cfg
         self.tmp_dir = tmp_dir
@@ -137,6 +140,7 @@ class Learner(ABC):
             self.last_model_path = join(self.output_dir, 'last-model.pth')
             self.load_checkpoint()
 
+            self.setup_loss(loss_def_path=loss_def_path)
             self.opt = self.build_optimizer()
             self.setup_data()
             self.start_epoch = self.get_start_epoch()
@@ -202,29 +206,22 @@ class Learner(ABC):
             if self.cfg.run_tensorboard:
                 self.tb_process.terminate()
 
-    def setup_model(self, model_def_path: str = None) -> None:
+    def setup_model(self, model_def_path: Optional[str] = None) -> None:
         """Setup self.model.
 
         Args:
             model_def_path (str, optional): Model definition path. Will be
             available when loading from a bundle. Defaults to None.
         """
-        extCfg = self.cfg.model.external_def
-        if extCfg is not None:
-            hubconf_dir_from_cfg = get_hubconf_dir_from_cfg(
-                extCfg, parent=self.modules_dir)
-            if isdir(hubconf_dir_from_cfg) and not extCfg.force_reload:
-                hubconf_dir = hubconf_dir_from_cfg
-            else:
-                hubconf_dir = model_def_path
-
+        ext_cfg = self.cfg.model.external_def
+        if ext_cfg is not None:
+            hubconf_dir = self._get_external_module_dir(
+                ext_cfg, model_def_path)
             self.model = self.load_external_module(
-                extCfg=extCfg, hubconf_dir=hubconf_dir)
+                ext_cfg=ext_cfg, hubconf_dir=hubconf_dir)
         else:
             self.model = self.build_model()
-
         self.model.to(self.device)
-
         self.load_init_weights()
 
     @abstractmethod
@@ -232,20 +229,66 @@ class Learner(ABC):
         """Build a PyTorch model."""
         pass
 
-    def load_external_module(self,
-                             extCfg: ExternalModuleConfig,
-                             save_dir: str = None,
-                             hubconf_dir: str = None,
-                             tmp_dir: str = None) -> nn.Module:
-        """Load an external module via torch.hub.
+    def setup_loss(self, loss_def_path: Optional[str] = None) -> None:
+        """Setup self.loss.
 
         Args:
-            extCfg (ExternalModuleConfig): Config describing the module.
-            save_dir (str, optional): The model def will be saved here.
+            loss_def_path (str, optional): Loss definition path. Will be
+            available when loading from a bundle. Defaults to None.
+        """
+        ext_cfg = self.cfg.solver.external_loss_def
+        if ext_cfg is not None:
+            hubconf_dir = self._get_external_module_dir(ext_cfg, loss_def_path)
+            self.loss = self.load_external_module(
+                ext_cfg=ext_cfg, hubconf_dir=hubconf_dir)
+        else:
+            self.loss = self.build_loss()
+
+        if self.loss is not None and isinstance(self.loss, nn.Module):
+            self.loss.to(self.device)
+
+    def build_loss(self) -> nn.Module:
+        """Build a loss Callable."""
+        pass
+
+    def _get_external_module_dir(
+            self,
+            ext_cfg: ExternalModuleConfig,
+            existing_def_path: Optional[str] = None) -> Optional[str]:
+        """Determine correct dir, taking cfg options and existing_def_path into
+        account.
+
+        Args:
+            ext_cfg (ExternalModuleConfig): Config describing the module.
+            existing_def_path (str, optional): Loss definition path.
+            Will be available when loading from a bundle. Defaults to None.
+
+        Returns:
+            Optional[str]: [description]
+        """
+        dir_from_cfg = get_hubconf_dir_from_cfg(
+            ext_cfg, parent=self.modules_dir)
+        if isdir(dir_from_cfg) and not ext_cfg.force_reload:
+            return dir_from_cfg
+        return existing_def_path
+
+    def load_external_module(self,
+                             ext_cfg: ExternalModuleConfig,
+                             save_dir: Optional[str] = None,
+                             hubconf_dir: Optional[str] = None,
+                             tmp_dir: Optional[str] = None) -> Any:
+        """Load an external module via torch.hub.
+
+        Note: Loading a PyTorch module is the typical use case, but there are
+        no type restrictions on the object loaded through torch.hub.
+
+        Args:
+            ext_cfg (ExternalModuleConfig): Config describing the module.
+            save_dir (str, optional): The module def will be saved here.
                 Defaults to self.modules_dir.
             hubconf_dir (str, optional): Path to existing definition.
                 If provided, the definition will not be fetched from the source
-                specified by extCfg. Defaults to None.
+                specified by ext_cfg. Defaults to None.
             tmp_dir (str, optional): Temporary directory to use for downloads
                 etc. Defaults to self.tmp_dir.
 
@@ -253,36 +296,36 @@ class Learner(ABC):
             nn.Module: The module loaded via torch.hub.
         """
         if hubconf_dir is not None:
-            log.info(f'Using existing model definition at: {hubconf_dir}')
+            log.info(f'Using existing module definition at: {hubconf_dir}')
             module = torch_hub_load_local(
                 hubconf_dir=hubconf_dir,
-                entrypoint=extCfg.entrypoint,
-                *extCfg.entrypoint_args,
-                **extCfg.entrypoint_kwargs)
+                entrypoint=ext_cfg.entrypoint,
+                *ext_cfg.entrypoint_args,
+                **ext_cfg.entrypoint_kwargs)
             return module
 
         save_dir = self.modules_dir if save_dir is None else save_dir
         tmp_dir = self.tmp_dir if tmp_dir is None else tmp_dir
 
-        hubconf_dir = get_hubconf_dir_from_cfg(extCfg, parent=save_dir)
-        if extCfg.github_repo is not None:
-            log.info(f'Fetching model definition from: {extCfg.github_repo}')
+        hubconf_dir = get_hubconf_dir_from_cfg(ext_cfg, parent=save_dir)
+        if ext_cfg.github_repo is not None:
+            log.info(f'Fetching module definition from: {ext_cfg.github_repo}')
             module = torch_hub_load_github(
-                repo=extCfg.github_repo,
+                repo=ext_cfg.github_repo,
                 hubconf_dir=hubconf_dir,
                 tmp_dir=save_dir,
-                entrypoint=extCfg.entrypoint,
-                *extCfg.entrypoint_args,
-                **extCfg.entrypoint_kwargs)
+                entrypoint=ext_cfg.entrypoint,
+                *ext_cfg.entrypoint_args,
+                **ext_cfg.entrypoint_kwargs)
         else:
-            log.info(f'Fetching model definition from: {extCfg.uri}')
+            log.info(f'Fetching module definition from: {ext_cfg.uri}')
             module = torch_hub_load_uri(
-                uri=extCfg.uri,
+                uri=ext_cfg.uri,
                 hubconf_dir=hubconf_dir,
                 tmp_dir=tmp_dir,
-                entrypoint=extCfg.entrypoint,
-                *extCfg.entrypoint_args,
-                **extCfg.entrypoint_kwargs)
+                entrypoint=ext_cfg.entrypoint,
+                *ext_cfg.entrypoint_args,
+                **ext_cfg.entrypoint_kwargs)
         return module
 
     def unzip_data(self, uri: Union[str, List[str]]) -> List[str]:
@@ -528,7 +571,7 @@ class Learner(ABC):
         return metric_names
 
     @abstractmethod
-    def train_step(self, batch: any, batch_ind: int) -> MetricDict:
+    def train_step(self, batch: Any, batch_ind: int) -> MetricDict:
         """Compute loss for a single training batch.
 
         Args:
@@ -541,7 +584,7 @@ class Learner(ABC):
         pass
 
     @abstractmethod
-    def validate_step(self, batch: any, batch_ind: int) -> MetricDict:
+    def validate_step(self, batch: Any, batch_ind: int) -> MetricDict:
         """Compute metrics on validation batch.
 
         Args:
@@ -581,7 +624,7 @@ class Learner(ABC):
                                       ]).sum().item() / num_samples
         return metrics
 
-    def post_forward(self, x: any) -> any:
+    def post_forward(self, x: Any) -> Any:
         """Post process output of call to model().
 
         Useful for when predictions are inside a structure returned by model().
@@ -623,7 +666,7 @@ class Learner(ABC):
     def predict(self,
                 x: Tensor,
                 normalize: bool = False,
-                raw_out: bool = False) -> any:
+                raw_out: bool = False) -> Any:
         """Make prediction for an image or batch of images.
 
         Args:
@@ -646,7 +689,7 @@ class Learner(ABC):
         out = self.to_device(out, 'cpu')
         return out
 
-    def output_to_numpy(self, out: any) -> any:
+    def output_to_numpy(self, out: Any) -> Any:
         """Convert output of model to numpy format.
 
         Args:
@@ -656,7 +699,7 @@ class Learner(ABC):
         """
         return out.numpy()
 
-    def numpy_predict(self, x: np.ndarray, raw_out: bool = False) -> any:
+    def numpy_predict(self, x: np.ndarray, raw_out: bool = False) -> Any:
         """Make a prediction using an image or batch of images in numpy format.
 
         Args:
@@ -808,17 +851,28 @@ class Learner(ABC):
 
         cfg = build_config(config_dict)
 
-        extCfg = cfg.learner.model.external_def
-        if extCfg is not None:
-            hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
-            model_def_path = get_hubconf_dir_from_cfg(extCfg, parent=hub_dir)
+        hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
+        model_def_path = None
+        loss_def_path = None
+
+        # retrieve existing model definition, if available
+        ext_cfg = cfg.learner.model.external_def
+        if ext_cfg is not None:
+            model_def_path = get_hubconf_dir_from_cfg(ext_cfg, parent=hub_dir)
             log.info(
                 f'Using model definition found in bundle: {model_def_path}')
-        else:
-            model_def_path = None
+
+        # retrieve existing loss function definition, if available
+        ext_cfg = cfg.learner.solver.external_loss_def
+        if ext_cfg is not None:
+            loss_def_path = get_hubconf_dir_from_cfg(ext_cfg, parent=hub_dir)
+            log.info(f'Using loss definition found in bundle: {loss_def_path}')
 
         return cfg.learner.build(
-            tmp_dir, model_def_path=model_def_path, model_path=model_path)
+            tmp_dir=tmp_dir,
+            model_path=model_path,
+            model_def_path=model_def_path,
+            loss_def_path=loss_def_path)
 
     def save_model_bundle(self):
         """Save a model bundle.
@@ -877,7 +931,7 @@ class Learner(ABC):
             self.model.load_state_dict(
                 torch.load(self.last_model_path, map_location=self.device))
 
-    def to_device(self, x: any, device: str) -> any:
+    def to_device(self, x: Any, device: str) -> Any:
         """Load Tensors onto a device.
 
         Args:

@@ -24,14 +24,19 @@ class ClassificationLearnerConfig(LearnerConfig):
     data: ClassificationDataConfig
     model: ClassificationModelConfig
 
-    def build(self, tmp_dir, model_path=None, model_def_path=None):
+    def build(self,
+              tmp_dir,
+              model_path=None,
+              model_def_path=None,
+              loss_def_path=None):
         from rastervision.pytorch_learner.classification_learner import (
             ClassificationLearner)
         return ClassificationLearner(
             self,
             tmp_dir=tmp_dir,
             model_path=model_path,
-            model_def_path=model_def_path)
+            model_def_path=model_def_path,
+            loss_def_path=loss_def_path)
 
     def validate_config(self):
         super().validate_config()

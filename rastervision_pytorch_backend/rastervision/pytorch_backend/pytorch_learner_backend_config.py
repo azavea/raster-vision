@@ -1,7 +1,6 @@
 from typing import List
 
-from rastervision.pipeline.config import (register_config, Field, validator,
-                                          ConfigError)
+from rastervision.pipeline.config import register_config, Field
 from rastervision.core.backend import BackendConfig
 from rastervision.pytorch_learner.learner_config import (
     SolverConfig, ModelConfig, default_augmentors, augmentors as
@@ -37,16 +36,3 @@ class PyTorchLearnerBackendConfig(BackendConfig):
 
     def build(self, pipeline, tmp_dir):
         raise NotImplementedError()
-
-    @validator('solver')
-    def validate_solver_config(cls, v):
-        if v.class_loss_weights is not None:
-            from rastervision.pytorch_backend import (
-                PyTorchSemanticSegmentationConfig,
-                PyTorchChipClassificationConfig)
-            if cls not in (PyTorchSemanticSegmentationConfig,
-                           PyTorchChipClassificationConfig):
-                raise ConfigError(
-                    'class_loss_weights is currently only supported for '
-                    'Semantic Segmentation and Chip Classification.')
-        return v

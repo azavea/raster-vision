@@ -102,6 +102,7 @@ NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 @register_config('external-module')
 class ExternalModuleConfig(Config):
+    """Config describing an object to be loaded via Torch Hub."""
     uri: Optional[NonEmptyStr] = Field(
         None,
         description=('Local uri of a zip file, or local uri of a directory,'
@@ -118,11 +119,14 @@ class ExternalModuleConfig(Config):
         description=('Name of a callable present in hubconf.py. '
                      'See docs for torch.hub for details.'))
     entrypoint_args: list = Field(
-        [], description='Args to pass to the entrypoint.')
+        [],
+        description='Args to pass to the entrypoint. Must be serializable.')
     entrypoint_kwargs: dict = Field(
-        {}, description='Keyword args to pass to the entrypoint.')
+        {},
+        description=
+        'Keyword args to pass to the entrypoint. Must be serializable.')
     force_reload: bool = Field(
-        False, description='Force reload of the module definition.')
+        False, description='Force reload of module definition.')
 
     def validate_config(self):
         has_uri = self.uri is not None
@@ -190,9 +194,20 @@ class SolverConfig(Config):
         [], description=('List of epoch indices at which to divide LR by 10.'))
     class_loss_weights: Optional[Union[list, tuple]] = Field(
         None, description=('Class weights for weighted loss.'))
+    external_loss_def: Optional[ExternalModuleConfig] = Field(
+        None,
+        description='If specified, the loss will be built from the definition '
+        'from this external source, using Torch Hub.')
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         pass
+
+    def validate_config(self):
+        has_weights = self.class_loss_weights is not None
+        has_external_loss_def = self.external_loss_def is not None
+        if has_weights and has_external_loss_def:
+            raise ConfigError(
+                'class_loss_weights is not supported with external_loss_def.')
 
 
 @register_config('data')

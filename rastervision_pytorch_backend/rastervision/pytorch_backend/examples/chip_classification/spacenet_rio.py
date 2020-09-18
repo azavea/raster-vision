@@ -19,7 +19,8 @@ def get_config(runner,
                processed_uri,
                root_uri,
                test=False,
-               external_model=False):
+               external_model=False,
+               external_loss=False):
     debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
@@ -96,8 +97,27 @@ def get_config(runner,
     else:
         model = ClassificationModelConfig(backbone=Backbone.resnet50)
 
+    if external_loss:
+        external_loss_def = ExternalModuleConfig(
+            github_repo='AdeelH/pytorch-multi-class-focal-loss',
+            name='focal_loss',
+            entrypoint='focal_loss',
+            force_reload=False,
+            entrypoint_kwargs={
+                'alpha': [.75, .25],
+                'gamma': 2
+            })
+    else:
+        external_loss_def = None
+
     solver = SolverConfig(
-        lr=1e-4, num_epochs=20, test_num_epochs=3, batch_sz=32, one_cycle=True)
+        lr=1e-4,
+        num_epochs=20,
+        test_num_epochs=4,
+        batch_sz=32,
+        one_cycle=True,
+        external_loss_def=external_loss_def)
+
     backend = PyTorchChipClassificationConfig(
         model=model,
         solver=solver,
