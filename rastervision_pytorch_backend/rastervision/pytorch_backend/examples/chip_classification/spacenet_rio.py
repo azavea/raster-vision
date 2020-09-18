@@ -111,7 +111,7 @@ def get_config(runner,
         external_loss_def = None
 
     solver = SolverConfig(
-        lr=1e-2,
+        lr=1e-4,
         num_epochs=20,
         test_num_epochs=4,
         batch_sz=32,
