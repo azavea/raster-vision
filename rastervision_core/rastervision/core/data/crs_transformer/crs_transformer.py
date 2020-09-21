@@ -8,12 +8,12 @@ class CRSTransformer():
     """
 
     def __init__(self,
+                 transform=None,
                  image_crs: Optional[str] = None,
-                 map_crs: Optional[str] = None,
-                 transform=None):
+                 map_crs: Optional[str] = None):
+        self.transform = transform
         self.image_crs = image_crs
         self.map_crs = map_crs
-        self.transform = transform
 
     def map_to_pixel(self, map_point):
         """Transform point from map to pixel-based coordinates.

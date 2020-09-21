@@ -13,6 +13,7 @@ Features
 * Add multi raster source `#978 <https://github.com/azavea/raster-vision/pull/978>`_
 * Add support for fetching and saving external model definitions `#985 <https://github.com/azavea/raster-vision/pull/985>`_
 * Add support for external loss definitions `#992 <https://github.com/azavea/raster-vision/pull/992>`_
+* Upgrade to pyproj 2.6 `#1000 <https://github.com/azavea/raster-vision/pull/1000>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
