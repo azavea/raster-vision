@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from rastervision.pipeline.config import register_config, Field
 from rastervision.core.backend import BackendConfig
@@ -21,6 +21,8 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         description=(
             'Names of albumentations augmentors to use for training batches. '
             'Choices include: ' + str(augmentor_list)))
+    augmentation: Optional[dict] = Field(
+        None, description='An Albumentations transform serialized as a dict.')
     test_mode: bool = Field(
         False,
         description=

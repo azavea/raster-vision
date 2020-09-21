@@ -32,7 +32,7 @@ from albumentations.augmentations.transforms import (
     Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
     GaussNoise, RGBShift, ToGray, Resize)
 from albumentations import BboxParams, BasicTransform
-from albumentations.core.composition import Compose
+import albumentations as A
 import numpy as np
 
 from rastervision.pipeline.file_system import (
@@ -371,9 +371,13 @@ class Learner(ABC):
         """
         cfg = self.cfg
         bbox_params = self.get_bbox_params()
-        transform = Compose(
-            [Resize(cfg.data.img_sz, cfg.data.img_sz)],
-            bbox_params=bbox_params)
+        resize_tf = Resize(cfg.data.img_sz, cfg.data.img_sz)
+        transform = A.Compose([resize_tf], bbox_params=bbox_params)
+
+        if cfg.data.augmentation is not None:
+            aug_transform = A.from_dict(cfg.data.augmentation)
+            aug_transform = A.Compose([aug_transform, resize_tf])
+            return transform, aug_transform
 
         augmentors_dict = {
             'Blur': Blur(),
@@ -394,8 +398,8 @@ class Learner(ABC):
                     '{0} is an unknown augmentor. Continuing without {0}. \
                     Known augmentors are: {1}'.format(
                         e, list(augmentors_dict.keys())))
-        aug_transforms.append(Resize(cfg.data.img_sz, cfg.data.img_sz))
-        aug_transform = Compose(aug_transforms, bbox_params=bbox_params)
+        aug_transforms.append(resize_tf)
+        aug_transform = A.Compose(aug_transforms, bbox_params=bbox_params)
 
         return transform, aug_transform
 

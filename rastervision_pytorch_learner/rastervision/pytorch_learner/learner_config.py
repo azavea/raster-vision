@@ -256,6 +256,8 @@ class DataConfig(Config):
         description=(
             'Names of albumentations augmentors to use for training batches. '
             'Choices include: ' + str(augmentors)))
+    augmentation: Optional[dict] = Field(
+        None, description='An Albumentations transform serialized as a dict.')
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         if not self.class_colors:
