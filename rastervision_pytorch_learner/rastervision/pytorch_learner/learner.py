@@ -28,10 +28,6 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset
-from albumentations.augmentations.transforms import (
-    Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
-    GaussNoise, RGBShift, ToGray, Resize)
-from albumentations import BboxParams, BasicTransform
 import albumentations as A
 import numpy as np
 
@@ -358,11 +354,11 @@ class Learner(ABC):
 
         return data_dirs
 
-    def get_bbox_params(self) -> Optional[BboxParams]:
+    def get_bbox_params(self) -> Optional[A.BboxParams]:
         """Returns BboxParams used by albumentations for data augmentation."""
         return None
 
-    def get_data_transforms(self) -> Tuple[BasicTransform, BasicTransform]:
+    def get_data_transforms(self) -> Tuple[A.BasicTransform, A.BasicTransform]:
         """Get albumentations transform objects for data augmentation.
 
         Returns:
@@ -371,7 +367,7 @@ class Learner(ABC):
         """
         cfg = self.cfg
         bbox_params = self.get_bbox_params()
-        resize_tf = Resize(cfg.data.img_sz, cfg.data.img_sz)
+        resize_tf = A.Resize(cfg.data.img_sz, cfg.data.img_sz)
         transform = A.Compose([resize_tf], bbox_params=bbox_params)
 
         if cfg.data.augmentation is not None:
@@ -380,14 +376,14 @@ class Learner(ABC):
             return transform, aug_transform
 
         augmentors_dict = {
-            'Blur': Blur(),
-            'RandomRotate90': RandomRotate90(),
-            'HorizontalFlip': HorizontalFlip(),
-            'VerticalFlip': VerticalFlip(),
-            'GaussianBlur': GaussianBlur(),
-            'GaussNoise': GaussNoise(),
-            'RGBShift': RGBShift(),
-            'ToGray': ToGray()
+            'Blur': A.Blur(),
+            'RandomRotate90': A.RandomRotate90(),
+            'HorizontalFlip': A.HorizontalFlip(),
+            'VerticalFlip': A.VerticalFlip(),
+            'GaussianBlur': A.GaussianBlur(),
+            'GaussNoise': A.GaussNoise(),
+            'RGBShift': A.RGBShift(),
+            'ToGray': A.ToGray()
         }
         aug_transforms = []
         for augmentor in cfg.data.augmentors:
