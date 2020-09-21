@@ -270,6 +270,8 @@ class DataConfig(Config):
 
     @validator('augmentation')
     def validate_augmentation(cls, v):
+        if v is None:
+            return v
         try:
             A.from_dict(v)
         except Exception:
