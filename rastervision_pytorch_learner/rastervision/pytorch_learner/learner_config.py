@@ -4,8 +4,10 @@ from enum import Enum
 from typing import (List, Optional, Union, TYPE_CHECKING)
 from pydantic import PositiveFloat, PositiveInt, constr
 
+import albumentations as A
+
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
-                                          Field)
+                                          Field, validator)
 from rastervision.pytorch_learner.utils import color_to_triple
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
@@ -265,6 +267,14 @@ class DataConfig(Config):
 
     def validate_augmentors(self):
         self.validate_list('augmentors', augmentors)
+
+    @validator('augmentation')
+    def validate_augmentation(cls, v):
+        try:
+            A.from_dict(v)
+        except Exception:
+            raise ConfigError('The given augmentation is not unserializable.')
+        return v
 
     def validate_config(self):
         self.validate_augmentors()

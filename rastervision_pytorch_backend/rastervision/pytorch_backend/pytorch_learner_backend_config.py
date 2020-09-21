@@ -1,6 +1,9 @@
 from typing import List, Optional
 
-from rastervision.pipeline.config import register_config, Field
+import albumentations as A
+
+from rastervision.pipeline.config import (register_config, Field, validator,
+                                          ConfigError)
 from rastervision.core.backend import BackendConfig
 from rastervision.pytorch_learner.learner_config import (
     SolverConfig, ModelConfig, default_augmentors, augmentors as
@@ -38,3 +41,11 @@ class PyTorchLearnerBackendConfig(BackendConfig):
 
     def build(self, pipeline, tmp_dir):
         raise NotImplementedError()
+
+    @validator('augmentation')
+    def validate_augmentation(cls, v):
+        try:
+            A.from_dict(v)
+        except Exception:
+            raise ConfigError('The given augmentation is not unserializable.')
+        return v
