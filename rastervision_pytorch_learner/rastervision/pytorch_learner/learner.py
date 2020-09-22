@@ -367,13 +367,15 @@ class Learner(ABC):
         """
         cfg = self.cfg
         bbox_params = self.get_bbox_params()
-        resize_tf = A.Resize(cfg.data.img_sz, cfg.data.img_sz)
-        transform = A.Compose([resize_tf], bbox_params=bbox_params)
+        base_tfs = [A.Resize(cfg.data.img_sz, cfg.data.img_sz)]
+        if cfg.data.base_transform is not None:
+            base_tfs.append(A.from_dict(cfg.data.base_transform))
+        base_transform = A.Compose(base_tfs, bbox_params=bbox_params)
 
-        if cfg.data.augmentation is not None:
-            aug_transform = A.from_dict(cfg.data.augmentation)
-            aug_transform = A.Compose([aug_transform, resize_tf])
-            return transform, aug_transform
+        if cfg.data.aug_transform is not None:
+            aug_transform = A.from_dict(cfg.data.aug_transform)
+            aug_transform = A.Compose([aug_transform, base_transform])
+            return base_transform, aug_transform
 
         augmentors_dict = {
             'Blur': A.Blur(),
@@ -394,10 +396,10 @@ class Learner(ABC):
                     '{0} is an unknown augmentor. Continuing without {0}. \
                     Known augmentors are: {1}'.format(
                         e, list(augmentors_dict.keys())))
-        aug_transforms.append(resize_tf)
+        aug_transforms.append(base_transform)
         aug_transform = A.Compose(aug_transforms, bbox_params=bbox_params)
 
-        return transform, aug_transform
+        return base_transform, aug_transform
 
     def get_collate_fn(self) -> Optional[callable]:
         """Returns a custom collate_fn to use in DataLoader.

@@ -100,15 +100,18 @@ def get_config(runner,
     else:
         model = ClassificationModelConfig(backbone=Backbone.resnet50)
 
-    external_loss_def = ExternalModuleConfig(
-        github_repo='AdeelH/pytorch-multi-class-focal-loss',
-        name='focal_loss',
-        entrypoint='focal_loss',
-        force_reload=False,
-        entrypoint_kwargs={
-            'alpha': [.75, .25],
-            'gamma': 2
-        })
+    if external_loss:
+        external_loss_def = ExternalModuleConfig(
+            github_repo='AdeelH/pytorch-multi-class-focal-loss',
+            name='focal_loss',
+            entrypoint='focal_loss',
+            force_reload=False,
+            entrypoint_kwargs={
+                'alpha': [.75, .25],
+                'gamma': 2
+            })
+    else:
+        external_loss_def = None
 
     solver = SolverConfig(
         lr=1e-4,
@@ -116,38 +119,43 @@ def get_config(runner,
         test_num_epochs=4,
         batch_sz=32,
         one_cycle=True,
-        external_loss_def=external_loss_def if external_loss else None)
+        external_loss_def=external_loss_def)
 
-    aug_transform = A.Compose([
-        A.Flip(),
-        A.RandomRotate90(),
-        A.ShiftScaleRotate(p=.25),
-        A.OneOf([
-            A.ChannelShuffle(),
-            A.CLAHE(),
-            A.FancyPCA(),
-            A.HueSaturationValue(),
-            A.RGBShift(),
-            A.ToGray(),
-            A.ToSepia(),
-        ]),
-        A.OneOf([
-            A.RandomBrightness(),
-            A.RandomGamma(),
-        ]),
-        A.OneOf([
-            A.GaussNoise(),
-            A.ISONoise(),
-            A.RandomFog(),
-        ]),
-        A.OneOf([
-            A.Blur(),
-            A.MotionBlur(),
-            A.ImageCompression(),
-            A.Downscale(),
-        ]),
-        A.CoarseDropout()
-    ])
+    if augment:
+        aug_transform = A.Compose([
+            A.Flip(),
+            A.RandomRotate90(),
+            A.ShiftScaleRotate(),
+            A.OneOf([
+                A.ChannelShuffle(),
+                A.CLAHE(),
+                A.FancyPCA(),
+                A.HueSaturationValue(),
+                A.RGBShift(),
+                A.ToGray(),
+                A.ToSepia(),
+            ]),
+            A.OneOf([
+                A.RandomBrightness(),
+                A.RandomGamma(),
+            ]),
+            A.OneOf([
+                A.GaussNoise(),
+                A.ISONoise(),
+                A.RandomFog(),
+            ]),
+            A.OneOf([
+                A.Blur(),
+                A.MotionBlur(),
+                A.ImageCompression(),
+                A.Downscale(),
+            ]),
+            A.CoarseDropout()
+        ])
+        base_transform = A.Normalize()
+    else:
+        aug_transform = None
+        base_transform = None
 
     backend = PyTorchChipClassificationConfig(
         model=model,
@@ -155,7 +163,8 @@ def get_config(runner,
         log_tensorboard=log_tensorboard,
         run_tensorboard=run_tensorboard,
         test_mode=test,
-        augmentation=A.to_dict(aug_transform) if augment else None)
+        base_transform=A.to_dict(base_transform),
+        aug_transform=A.to_dict(aug_transform))
 
     config = ChipClassificationConfig(
         root_uri=root_uri,

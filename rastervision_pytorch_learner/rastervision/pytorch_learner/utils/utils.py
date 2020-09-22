@@ -86,7 +86,7 @@ class AlbumentationsDataset(Dataset):
         x = np.array(x)
         if self.transform:
             x = self.transform(image=x)['image']
-        x = torch.tensor(x).permute(2, 0, 1)
+        x = torch.from_numpy(x).permute(2, 0, 1)
         if x.dtype != torch.float32:
             x = x.float() / 255.
         return x, y

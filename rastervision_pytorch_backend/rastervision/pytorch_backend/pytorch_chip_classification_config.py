@@ -20,7 +20,8 @@ class PyTorchChipClassificationConfig(PyTorchLearnerBackendConfig):
         data.class_colors = pipeline.dataset.class_config.colors
         data.img_sz = pipeline.train_chip_sz
         data.augmentors = self.augmentors
-        data.augmentation = self.augmentation
+        data.base_transform = self.base_transform
+        data.aug_transform = self.aug_transform
 
         learner = ClassificationLearnerConfig(
             data=data,

@@ -21,11 +21,22 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         description='If True, run Tensorboard server pointing at log files.')
     augmentors: List[str] = Field(
         default_augmentors,
-        description=(
-            'Names of albumentations augmentors to use for training batches. '
-            'Choices include: ' + str(augmentor_list)))
-    augmentation: Optional[dict] = Field(
-        None, description='An Albumentations transform serialized as a dict.')
+        description='Names of albumentations augmentors to use for training '
+        f'batches. Choices include: {augmentor_list}. Alternatively, a custom '
+        'transform can be provided via the aug_transform option.')
+    base_transform: Optional[dict] = Field(
+        None,
+        description='An Albumentations transform serialized as a dict that '
+        'will be applied to all datasets: training, validation, and test. '
+        'This transformation is in addition to the resizing due to img_sz. '
+        'This is useful for, for example, applying the same normalization to '
+        'all datasets.')
+    aug_transform: Optional[dict] = Field(
+        None,
+        description='An Albumentations transform serialized as a dict that '
+        'will be applied as data augmentation to the training dataset. This '
+        'transform is applied before base_transform. If provided, the '
+        'augmentors option is ignored.')
     test_mode: bool = Field(
         False,
         description=
@@ -42,12 +53,12 @@ class PyTorchLearnerBackendConfig(BackendConfig):
     def build(self, pipeline, tmp_dir):
         raise NotImplementedError()
 
-    @validator('augmentation')
-    def validate_augmentation(cls, v):
-        if v is None:
-            return v
-        try:
-            A.from_dict(v)
-        except Exception:
-            raise ConfigError('The given augmentation is not unserializable.')
+    @validator('base_transform', 'aug_transform')
+    def validate_albumentation_transform(cls, v):
+        if v is not None:
+            try:
+                A.from_dict(v)
+            except Exception:
+                raise ConfigError('The given serialization is invalid. Use '
+                                  'A.to_dict(transform) to serialize.')
         return v

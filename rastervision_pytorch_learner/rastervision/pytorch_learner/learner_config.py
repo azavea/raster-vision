@@ -252,14 +252,24 @@ class DataConfig(Config):
     num_workers: int = Field(
         4,
         description='Number of workers to use when DataLoader makes batches.')
-    # TODO support setting parameters of augmentors?
     augmentors: List[str] = Field(
         default_augmentors,
-        description=(
-            'Names of albumentations augmentors to use for training batches. '
-            'Choices include: ' + str(augmentors)))
-    augmentation: Optional[dict] = Field(
-        None, description='An Albumentations transform serialized as a dict.')
+        description='Names of albumentations augmentors to use for training '
+        f'batches. Choices include: {augmentors}. Alternatively, a custom '
+        'transform can be provided via the aug_transform option.')
+    base_transform: Optional[dict] = Field(
+        None,
+        description='An Albumentations transform serialized as a dict that '
+        'will be applied to all datasets: training, validation, and test. '
+        'This transformation is in addition to the resizing due to img_sz. '
+        'This is useful for, for example, applying the same normalization to '
+        'all datasets.')
+    aug_transform: Optional[dict] = Field(
+        None,
+        description='An Albumentations transform serialized as a dict that '
+        'will be applied as data augmentation to the training dataset. This '
+        'transform is applied before base_transform. If provided, the '
+        'augmentors option is ignored.')
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         if not self.class_colors:
@@ -268,14 +278,14 @@ class DataConfig(Config):
     def validate_augmentors(self):
         self.validate_list('augmentors', augmentors)
 
-    @validator('augmentation')
-    def validate_augmentation(cls, v):
-        if v is None:
-            return v
-        try:
-            A.from_dict(v)
-        except Exception:
-            raise ConfigError('The given augmentation is not unserializable.')
+    @validator('base_transform', 'aug_transform')
+    def validate_albumentation_transform(cls, v):
+        if v is not None:
+            try:
+                A.from_dict(v)
+            except Exception:
+                raise ConfigError('The given serialization is invalid. Use '
+                                  'A.to_dict(transform) to serialize.')
         return v
 
     def validate_config(self):
