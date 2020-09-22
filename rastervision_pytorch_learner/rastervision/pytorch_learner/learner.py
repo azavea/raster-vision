@@ -799,6 +799,7 @@ class Learner(ABC):
         # (N, c, h, w) --> (N, h, w, c)
         x = x.permute(0, 2, 3, 1)
 
+        # apply transform, if given
         if self.cfg.data.plot_options.transform is not None:
             tf = A.from_dict(self.cfg.data.plot_options.transform)
             x = tf(image=x.numpy())['image']

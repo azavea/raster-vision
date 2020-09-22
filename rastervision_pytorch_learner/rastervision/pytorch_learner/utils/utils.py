@@ -99,7 +99,8 @@ class AlbumentationsDataset(Dataset):
         return len(self.orig_dataset)
 
 
-def validate_albumentation_transform(tf):
+def validate_albumentation_transform(tf: dict):
+    """ Validate a serialized albumentation transform. """
     if tf is not None:
         try:
             A.from_dict(tf)
