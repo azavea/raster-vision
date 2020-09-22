@@ -236,6 +236,11 @@ ExternalModuleConfig
 
 .. autoclass:: rastervision.pytorch_learner.ExternalModuleConfig
 
+PlotOptions
+~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.PlotOptions
+
 ClassificationDataFormat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
