@@ -4,7 +4,7 @@ from rastervision.pipeline.config import (register_config, Field, validator)
 from rastervision.core.backend import BackendConfig
 from rastervision.pytorch_learner.learner_config import (
     SolverConfig, ModelConfig, default_augmentors, augmentors as
-    augmentor_list)
+    augmentor_list, PlotOptions)
 from rastervision.pytorch_learner.utils import validate_albumentation_transform
 
 
@@ -41,6 +41,8 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         ('This field is passed along to the LearnerConfig which is returned by '
          'get_learner_config(). For more info, see the docs for'
          'pytorch_learner.learner_config.LearnerConfig.test_mode.'))
+    plot_options: Optional[PlotOptions] = Field(
+        PlotOptions(), description='Options to control plotting.')
 
     # validators
     _base_tf = validator(

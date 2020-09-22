@@ -211,6 +211,19 @@ class SolverConfig(Config):
                 'class_loss_weights is not supported with external_loss_def.')
 
 
+@register_config('plot_options')
+class PlotOptions(Config):
+    """Config related to plotting."""
+    transform: Optional[dict] = Field(
+        None,
+        description='An Albumentations transform serialized as a dict that '
+        'will be applied to each image before it is plotted.')
+
+    # validators
+    _tf = validator(
+        'transform', allow_reuse=True)(validate_albumentation_transform)
+
+
 @register_config('data')
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
@@ -269,6 +282,8 @@ class DataConfig(Config):
         'will be applied as data augmentation to the training dataset. This '
         'transform is applied before base_transform. If provided, the '
         'augmentors option is ignored.')
+    plot_options: Optional[PlotOptions] = Field(
+        PlotOptions(), description='Options to control plotting.')
 
     # validators
     _base_tf = validator(

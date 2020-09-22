@@ -22,6 +22,7 @@ class PyTorchChipClassificationConfig(PyTorchLearnerBackendConfig):
         data.augmentors = self.augmentors
         data.base_transform = self.base_transform
         data.aug_transform = self.aug_transform
+        data.plot_options = self.plot_options
 
         learner = ClassificationLearnerConfig(
             data=data,

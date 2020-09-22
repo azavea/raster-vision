@@ -122,6 +122,9 @@ def get_config(runner,
         external_loss_def=external_loss_def)
 
     if augment:
+        mu = np.array((0.485, 0.456, 0.406))
+        std = np.array((0.229, 0.224, 0.225))
+
         aug_transform = A.Compose([
             A.Flip(),
             A.RandomRotate90(),
@@ -150,12 +153,17 @@ def get_config(runner,
                 A.ImageCompression(),
                 A.Downscale(),
             ]),
-            A.CoarseDropout()
+            A.CoarseDropout(max_height=32, max_width=32, max_holes=5)
         ])
-        base_transform = A.Normalize()
+        base_transform = A.Normalize(mean=mu.tolist(), std=std.tolist())
+        plot_transform = A.Normalize(
+            mean=(-mu / std).tolist(),
+            std=(1 / std).tolist(),
+            max_pixel_value=1.)
     else:
         aug_transform = None
         base_transform = None
+        plot_transform = None
 
     backend = PyTorchChipClassificationConfig(
         model=model,
@@ -164,7 +172,8 @@ def get_config(runner,
         run_tensorboard=run_tensorboard,
         test_mode=test,
         base_transform=A.to_dict(base_transform),
-        aug_transform=A.to_dict(aug_transform))
+        aug_transform=A.to_dict(aug_transform),
+        plot_options=PlotOptions(transform=A.to_dict(plot_transform)))
 
     config = ChipClassificationConfig(
         root_uri=root_uri,

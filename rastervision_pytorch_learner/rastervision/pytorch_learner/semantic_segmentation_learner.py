@@ -293,9 +293,6 @@ class SemanticSegmentationLearner(Learner):
         img_axes = ax[:len(channel_groups)]
         label_ax = ax[len(channel_groups)]
 
-        # (c, h, w) --> (h, w, c)
-        x = x.permute(1, 2, 0)
-
         # plot input image(s)
         for (title, chs), ch_ax in zip(channel_groups.items(), img_axes):
             im = x[..., chs]
