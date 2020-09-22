@@ -4,11 +4,10 @@ from enum import Enum
 from typing import (List, Optional, Union, TYPE_CHECKING)
 from pydantic import PositiveFloat, PositiveInt, constr
 
-import albumentations as A
-
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, validator)
-from rastervision.pytorch_learner.utils import color_to_triple
+from rastervision.pytorch_learner.utils import (
+    color_to_triple, validate_albumentation_transform)
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
@@ -271,22 +270,18 @@ class DataConfig(Config):
         'transform is applied before base_transform. If provided, the '
         'augmentors option is ignored.')
 
+    # validators
+    _base_tf = validator(
+        'base_transform', allow_reuse=True)(validate_albumentation_transform)
+    _aug_tf = validator(
+        'aug_transform', allow_reuse=True)(validate_albumentation_transform)
+
     def update(self, learner: Optional['LearnerConfig'] = None):
         if not self.class_colors:
             self.class_colors = [color_to_triple() for _ in self.class_names]
 
     def validate_augmentors(self):
         self.validate_list('augmentors', augmentors)
-
-    @validator('base_transform', 'aug_transform')
-    def validate_albumentation_transform(cls, v):
-        if v is not None:
-            try:
-                A.from_dict(v)
-            except Exception:
-                raise ConfigError('The given serialization is invalid. Use '
-                                  'A.to_dict(transform) to serialize.')
-        return v
 
     def validate_config(self):
         self.validate_augmentors()

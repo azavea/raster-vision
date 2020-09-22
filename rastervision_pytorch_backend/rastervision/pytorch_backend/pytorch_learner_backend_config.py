@@ -1,13 +1,11 @@
 from typing import List, Optional
 
-import albumentations as A
-
-from rastervision.pipeline.config import (register_config, Field, validator,
-                                          ConfigError)
+from rastervision.pipeline.config import (register_config, Field, validator)
 from rastervision.core.backend import BackendConfig
 from rastervision.pytorch_learner.learner_config import (
     SolverConfig, ModelConfig, default_augmentors, augmentors as
     augmentor_list)
+from rastervision.pytorch_learner.utils import validate_albumentation_transform
 
 
 @register_config('pytorch_learner_backend')
@@ -44,6 +42,12 @@ class PyTorchLearnerBackendConfig(BackendConfig):
          'get_learner_config(). For more info, see the docs for'
          'pytorch_learner.learner_config.LearnerConfig.test_mode.'))
 
+    # validators
+    _base_tf = validator(
+        'base_transform', allow_reuse=True)(validate_albumentation_transform)
+    _aug_tf = validator(
+        'aug_transform', allow_reuse=True)(validate_albumentation_transform)
+
     def get_bundle_filenames(self):
         return ['model-bundle.zip']
 
@@ -52,13 +56,3 @@ class PyTorchLearnerBackendConfig(BackendConfig):
 
     def build(self, pipeline, tmp_dir):
         raise NotImplementedError()
-
-    @validator('base_transform', 'aug_transform')
-    def validate_albumentation_transform(cls, v):
-        if v is not None:
-            try:
-                A.from_dict(v)
-            except Exception:
-                raise ConfigError('The given serialization is invalid. Use '
-                                  'A.to_dict(transform) to serialize.')
-        return v

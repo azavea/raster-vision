@@ -3,8 +3,12 @@ from typing import Tuple, Optional
 import torch
 from torch import nn
 from torch.utils.data import Dataset
+
 import numpy as np
 from PIL import ImageColor
+import albumentations as A
+
+from rastervision.pipeline.config import ConfigError
 
 
 def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
@@ -93,6 +97,16 @@ class AlbumentationsDataset(Dataset):
 
     def __len__(self):
         return len(self.orig_dataset)
+
+
+def validate_albumentation_transform(tf):
+    if tf is not None:
+        try:
+            A.from_dict(tf)
+        except Exception:
+            raise ConfigError('The given serialization is invalid. Use '
+                              'A.to_dict(transform) to serialize.')
+    return tf
 
 
 class SplitTensor(nn.Module):
