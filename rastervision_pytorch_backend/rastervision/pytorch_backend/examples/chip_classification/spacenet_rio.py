@@ -127,6 +127,7 @@ def get_config(runner,
 
         aug_transform = A.Compose([
             A.Flip(),
+            A.Transpose(),
             A.RandomRotate90(),
             A.ShiftScaleRotate(),
             A.OneOf([
