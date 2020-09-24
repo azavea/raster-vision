@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 from pydantic import conint
 
 import numpy as np
@@ -19,28 +19,27 @@ class MultiRasterSource(ActivateMixin, RasterSource):
     their output along the channel dimension (assumed to be the last dimension).
     """
 
-    def __init__(
-            self,
-            raster_sources: Sequence[RasterSource],
-            raw_channel_order: Sequence[conint(ge=0)],
-            force_subchip_size_fill_value: Optional[Union[int, float]] = None,
-            force_same_dtype: bool = False,
-            channel_order: Optional[Sequence[conint(ge=0)]] = None,
-            crs_source: conint(ge=0) = 0,
-            raster_transformers: Sequence = []):
+    def __init__(self,
+                 raster_sources: Sequence[RasterSource],
+                 raw_channel_order: Sequence[conint(ge=0)],
+                 allow_different_extents: bool = None,
+                 force_same_dtype: bool = False,
+                 channel_order: Optional[Sequence[conint(ge=0)]] = None,
+                 crs_source: conint(ge=0) = 0,
+                 raster_transformers: Sequence = []):
         """Constructor.
 
         Args:
             raster_sources (Sequence[RasterSource]): Sequence of RasterSources.
             raw_channel_order (Sequence[conint(ge=0)]): Channel ordering that
                 will always be applied before channel_order.
-            force_subchip_size_fill_value (Optional[Union[int, float]]):
-                Value used to pad sub-chips so that they are all the same size as the
-                sub-chip from the first sub-source.  This is to accommodate small
-                differences in sub-raster size such those that might be caused by
-                attempting to reproject disparate sub-rasters into the same projection.
-                No special reprojection logic is triggered by this parameter.  Use with
-                caution.
+            allow_different_extents (bool):
+                When true, the sub-rasters are allowed to be of different sizes.  The
+                purpose of this flag is to allow use of rasters that cover the same area
+                but are of slightly different size (due to reprojection differences).
+                No special reprojection logic is triggered by this parameter.  It is
+                assumed that the underlying raster sources are guaranteed to supply chips
+                of the same size.  Use with caution.
             force_same_dtype (bool): If true, force all subchips to have the same dtype
                 as the first subchip.  No careful converstion is done, just a quick cast.
                 Use with caution.
@@ -55,7 +54,7 @@ class MultiRasterSource(ActivateMixin, RasterSource):
 
         super().__init__(channel_order, num_channels, raster_transformers)
 
-        self.force_subchip_size_fill_value = force_subchip_size_fill_value
+        self.allow_different_extents = allow_different_extents
         self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
         self.raw_channel_order = list(raw_channel_order)
@@ -72,12 +71,11 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                 '(carfully consider using force_same_dtype)')
 
         extents = [rs.get_extent() for rs in self.raster_sources]
-        if self.force_subchip_size_fill_value is None and not all_equal(
-                extents):
+        if not self.allow_different_extents and not all_equal(extents):
             raise MultiRasterSourceError(
                 'extents of all sub raster sources must be equal. '
                 f'Got: {extents} '
-                '(carefully consider using force_subchip_size_fill_value)')
+                '(carefully consider using allow_different_extents)')
 
         sub_num_channels = sum(rs.num_channels for rs in self.raster_sources)
         if sub_num_channels != self.num_channels:
@@ -116,20 +114,9 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         """
         chip_slices = [rs._get_chip(window) for rs in self.raster_sources]
 
-        if self.force_same_dtype is not True:
+        if self.force_same_dtype:
             for i in range(1, len(chip_slices)):
                 chip_slices[i] = chip_slices[i].astype(chip_slices[0].dtype)
-
-        if self.force_subchip_size_fill_value is not None:
-            (w1, h1, ch1) = chip_slices[0].shape
-            for i in range(1, len(chip_slices)):
-                (w2, h2, ch2) = chip_slices[i].shape
-                if w1 != w2 or h1 != h2:
-                    a = np.ndarray((w1, h1, ch2), dtype=chip_slices[i].dtype)
-                    a.fill(self.force_subchip_size_fill_value)
-                    a[0:min(w1, w2) - 1, 0:min(h1, h2) - 1, :] = chip_slices[
-                        i][0:min(w1, w2) - 1, 0:min(h1, h2) - 1, :]
-                    chip_slices[i] = a
 
         chip = np.concatenate(chip_slices, axis=-1)
         chip = chip[..., self.raw_channel_order]
@@ -153,17 +140,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         if self.force_same_dtype:
             for i in range(1, len(chip_slices)):
                 chip_slices[i] = chip_slices[i].astype(chip_slices[0].dtype)
-
-        if self.force_subchip_size_fill_value is not None:
-            (w1, h1, ch1) = chip_slices[0].shape
-            for i in range(1, len(chip_slices)):
-                (w2, h2, ch2) = chip_slices[i].shape
-                if w1 != w2 or h1 != h2:
-                    a = np.ndarray((w1, h1, ch2), dtype=chip_slices[i].dtype)
-                    a.fill(self.force_subchip_size_fill_value)
-                    a[0:min(w1, w2) - 1, 0:min(h1, h2) - 1, :] = chip_slices[
-                        i][0:min(w1, w2) - 1, 0:min(h1, h2) - 1, :]
-                    chip_slices[i] = a
 
         chip = np.concatenate(chip_slices, axis=-1)
         chip = chip[..., self.raw_channel_order]
