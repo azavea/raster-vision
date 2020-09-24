@@ -1,7 +1,7 @@
 import logging
 import math
 import os
-import pyproj
+from pyproj import Transformer
 import subprocess
 from decimal import Decimal
 import tempfile
@@ -17,8 +17,7 @@ from rastervision.core.data.raster_source import RasterSource
 from rastervision.core.data import (ActivateMixin, ActivationError)
 
 log = logging.getLogger(__name__)
-wgs84 = pyproj.Proj({'init': 'epsg:4326'})
-wgs84_proj4 = '+init=epsg:4326'
+wgs84 = 'epsg:4326'
 meters_per_degree = 111319.5
 
 
@@ -91,6 +90,7 @@ class RasterioSource(ActivateMixin, RasterSource):
         self.image_dataset = None
         self.x_shift = x_shift
         self.y_shift = y_shift
+        self.do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
 
         num_channels = None
 
@@ -165,12 +165,14 @@ class RasterioSource(ActivateMixin, RasterSource):
     def _set_crs_transformer(self):
         self.crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
-        self.crs = self.image_dataset.crs
-        if self.crs:
-            self.proj = pyproj.Proj(self.crs)
-        else:
-            self.proj = None
-        self.crs = str(self.crs)
+        crs = self.image_dataset.crs
+        self.to_wgs84 = None
+        self.from_wgs84 = None
+        if crs and self.do_shift:
+            self.to_wgs84 = Transformer.from_crs(
+                crs.wkt, wgs84, always_xy=True)
+            self.from_wgs84 = Transformer.from_crs(
+                wgs84, crs.wkt, always_xy=True)
 
     def _deactivate(self):
         self.image_dataset.close()
@@ -190,8 +192,8 @@ class RasterioSource(ActivateMixin, RasterSource):
             xmin2, ymin2 = transform * (xmin, ymin)
 
             # Transform from world coordinates to WGS84
-            if self.crs != wgs84_proj4 and self.proj:
-                lon, lat = pyproj.transform(self.proj, wgs84, xmin2, ymin2)
+            if self.to_wgs84:
+                lon, lat = self.to_wgs84.transform(xmin2, ymin2)
             else:
                 lon, lat = xmin2, ymin2
 
@@ -208,10 +210,8 @@ class RasterioSource(ActivateMixin, RasterSource):
             lat = float(Decimal(lat) + dlat)
 
             # Transform from WGS84 to world coordinates
-            if self.crs != wgs84_proj4 and self.proj:
-                xmin3, ymin3 = pyproj.transform(wgs84, self.proj, lon, lat)
-                xmin3 = int(round(xmin3))
-                ymin3 = int(round(ymin3))
+            if self.from_wgs84:
+                xmin3, ymin3 = self.from_wgs84.transform(lon, lat)
             else:
                 xmin3, ymin3 = lon, lat
 
