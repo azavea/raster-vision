@@ -1,7 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
-from typing import Union, IO, Callable, List, Iterable, Optional, Tuple
+from typing import Union, Callable, List, Iterable, Optional, Tuple
 from os.path import join, isdir
 from pathlib import Path
 
@@ -80,7 +80,7 @@ class SemanticSegmentationDataset(Dataset):
             y = out['mask']
 
         if np.issubdtype(x.dtype, np.unsignedinteger):
-            max_val = np.iinfo(dtype).max
+            max_val = np.iinfo(x.dtype).max
             x = x.astype(np.float32) / max_val
 
         x = torch.from_numpy(x).permute(2, 0, 1).float()
