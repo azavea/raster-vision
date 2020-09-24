@@ -103,14 +103,12 @@ class VsiFileSystem(FileSystem):
         try:
             with VsiFileSystem.read_handle_cache_lock:
                 if vsipath in VsiFileSystem.read_handle_cache:
-                    print(f'YES {os.getpid()} {vsipath}')
                     handle = VsiFileSystem.read_handle_cache.get(vsipath)
                     del VsiFileSystem.read_handle_cache[vsipath]
                     VsiFileSystem.read_handle_cache[vsipath] = handle
                 else:
                     (_, old_handle
                      ) = VsiFileSystem.read_handle_cache.popitem(last=False)
-                    print(f'NO {os.getpid()} {vsipath}')
                     handle = VsiFileSystem.read_handle_cache[
                         vsipath] = gdal.VSIFOpenL(vsipath, 'rb')
                 result = gdal.VSIFReadL(1, stats.size, handle)
