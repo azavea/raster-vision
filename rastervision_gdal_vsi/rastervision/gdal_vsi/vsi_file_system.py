@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from typing import (List, Optional)
 from urllib.parse import urlparse
+from collections import OrderedDict
+from threading import Lock
 
 from rastervision.pipeline.file_system import FileSystem
 
@@ -11,6 +13,13 @@ from osgeo import gdal
 
 class VsiFileSystem(FileSystem):
     """A FileSystem to access files over any protocol supported by GDAL's VSI"""
+
+    FIFO_SIZE = 64
+    read_handle_cache = OrderedDict()
+    read_handle_cache_lock = Lock()
+
+    for i in range(FIFO_SIZE):
+        read_handle_cache[i] = i
 
     @staticmethod
     def uri_to_vsi_path(uri: str) -> str:
@@ -90,11 +99,28 @@ class VsiFileSystem(FileSystem):
         if not stats or stats.IsDirectory():
             raise FileNotFoundError('{} does not exist'.format(vsipath))
 
+        handle = old_handle = None
         try:
-            handle = gdal.VSIFOpenL(vsipath, 'rb')
-            return gdal.VSIFReadL(1, stats.size, handle)
+            with VsiFileSystem.read_handle_cache_lock:
+                if vsipath in VsiFileSystem.read_handle_cache:
+                    print(f'YES {os.getpid()} {vsipath}')
+                    handle = VsiFileSystem.read_handle_cache.get(vsipath)
+                    del VsiFileSystem.read_handle_cache[vsipath]
+                    VsiFileSystem.read_handle_cache[vsipath] = handle
+                else:
+                    (_, old_handle
+                     ) = VsiFileSystem.read_handle_cache.popitem(last=False)
+                    print(f'NO {os.getpid()} {vsipath}')
+                    handle = VsiFileSystem.read_handle_cache[
+                        vsipath] = gdal.VSIFOpenL(vsipath, 'rb')
+                result = gdal.VSIFReadL(1, stats.size, handle)
         finally:
-            gdal.VSIFCloseL(handle)
+            if isinstance(handle, gdal.VSILFILE):
+                gdal.VSIFSeekL(handle, 0, 0)
+            if isinstance(old_handle, gdal.VSILFILE):
+                gdal.VSIFCloseL(old_handle)
+
+        return result
 
     @staticmethod
     def read_str(uri: str) -> str:
