@@ -28,11 +28,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset
-from albumentations.augmentations.transforms import (
-    Blur, RandomRotate90, HorizontalFlip, VerticalFlip, GaussianBlur,
-    GaussNoise, RGBShift, ToGray, Resize)
-from albumentations import BboxParams, BasicTransform
-from albumentations.core.composition import Compose
+import albumentations as A
 import numpy as np
 
 from rastervision.pipeline.file_system import (
@@ -358,11 +354,11 @@ class Learner(ABC):
 
         return data_dirs
 
-    def get_bbox_params(self) -> Optional[BboxParams]:
+    def get_bbox_params(self) -> Optional[A.BboxParams]:
         """Returns BboxParams used by albumentations for data augmentation."""
         return None
 
-    def get_data_transforms(self) -> Tuple[BasicTransform, BasicTransform]:
+    def get_data_transforms(self) -> Tuple[A.BasicTransform, A.BasicTransform]:
         """Get albumentations transform objects for data augmentation.
 
         Returns:
@@ -371,19 +367,25 @@ class Learner(ABC):
         """
         cfg = self.cfg
         bbox_params = self.get_bbox_params()
-        transform = Compose(
-            [Resize(cfg.data.img_sz, cfg.data.img_sz)],
-            bbox_params=bbox_params)
+        base_tfs = [A.Resize(cfg.data.img_sz, cfg.data.img_sz)]
+        if cfg.data.base_transform is not None:
+            base_tfs.append(A.from_dict(cfg.data.base_transform))
+        base_transform = A.Compose(base_tfs, bbox_params=bbox_params)
+
+        if cfg.data.aug_transform is not None:
+            aug_transform = A.from_dict(cfg.data.aug_transform)
+            aug_transform = A.Compose([aug_transform, base_transform])
+            return base_transform, aug_transform
 
         augmentors_dict = {
-            'Blur': Blur(),
-            'RandomRotate90': RandomRotate90(),
-            'HorizontalFlip': HorizontalFlip(),
-            'VerticalFlip': VerticalFlip(),
-            'GaussianBlur': GaussianBlur(),
-            'GaussNoise': GaussNoise(),
-            'RGBShift': RGBShift(),
-            'ToGray': ToGray()
+            'Blur': A.Blur(),
+            'RandomRotate90': A.RandomRotate90(),
+            'HorizontalFlip': A.HorizontalFlip(),
+            'VerticalFlip': A.VerticalFlip(),
+            'GaussianBlur': A.GaussianBlur(),
+            'GaussNoise': A.GaussNoise(),
+            'RGBShift': A.RGBShift(),
+            'ToGray': A.ToGray()
         }
         aug_transforms = []
         for augmentor in cfg.data.augmentors:
@@ -394,10 +396,10 @@ class Learner(ABC):
                     '{0} is an unknown augmentor. Continuing without {0}. \
                     Known augmentors are: {1}'.format(
                         e, list(augmentors_dict.keys())))
-        aug_transforms.append(Resize(cfg.data.img_sz, cfg.data.img_sz))
-        aug_transform = Compose(aug_transforms, bbox_params=bbox_params)
+        aug_transforms.append(base_transform)
+        aug_transform = A.Compose(aug_transforms, bbox_params=bbox_params)
 
-        return transform, aug_transform
+        return base_transform, aug_transform
 
     def get_collate_fn(self) -> Optional[callable]:
         """Returns a custom collate_fn to use in DataLoader.
@@ -793,6 +795,15 @@ class Learner(ABC):
         fig = plt.figure(
             constrained_layout=True, figsize=(3 * ncols, 3 * nrows))
         grid = gridspec.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
+
+        # (N, c, h, w) --> (N, h, w, c)
+        x = x.permute(0, 2, 3, 1)
+
+        # apply transform, if given
+        if self.cfg.data.plot_options.transform is not None:
+            tf = A.from_dict(self.cfg.data.plot_options.transform)
+            x = tf(image=x.numpy())['image']
+            x = torch.from_numpy(x)
 
         for i in range(batch_sz):
             ax = fig.add_subplot(grid[i])

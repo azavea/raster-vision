@@ -359,7 +359,7 @@ def resnet_fpn_backbone(backbone_name, pretrained):
 
 
 def plot_xyz(ax, x, y, class_names, z=None):
-    ax.imshow(x.permute(1, 2, 0))
+    ax.imshow(x)
     y = y if z is None else z
 
     scores = y.get_field('scores')

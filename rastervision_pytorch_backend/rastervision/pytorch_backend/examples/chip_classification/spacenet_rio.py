@@ -3,6 +3,8 @@
 import os
 from os.path import join
 
+import albumentations as A
+
 from rastervision.core.rv_pipeline import *
 from rastervision.core.backend import *
 from rastervision.core.data import *
@@ -20,7 +22,8 @@ def get_config(runner,
                root_uri,
                test=False,
                external_model=False,
-               external_loss=False):
+               external_loss=False,
+               augment=False):
     debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
@@ -118,12 +121,60 @@ def get_config(runner,
         one_cycle=True,
         external_loss_def=external_loss_def)
 
+    if augment:
+        mu = np.array((0.485, 0.456, 0.406))
+        std = np.array((0.229, 0.224, 0.225))
+
+        aug_transform = A.Compose([
+            A.Flip(),
+            A.Transpose(),
+            A.RandomRotate90(),
+            A.ShiftScaleRotate(),
+            A.OneOf([
+                A.ChannelShuffle(),
+                A.CLAHE(),
+                A.FancyPCA(),
+                A.HueSaturationValue(),
+                A.RGBShift(),
+                A.ToGray(),
+                A.ToSepia(),
+            ]),
+            A.OneOf([
+                A.RandomBrightness(),
+                A.RandomGamma(),
+            ]),
+            A.OneOf([
+                A.GaussNoise(),
+                A.ISONoise(),
+                A.RandomFog(),
+            ]),
+            A.OneOf([
+                A.Blur(),
+                A.MotionBlur(),
+                A.ImageCompression(),
+                A.Downscale(),
+            ]),
+            A.CoarseDropout(max_height=32, max_width=32, max_holes=5)
+        ])
+        base_transform = A.Normalize(mean=mu.tolist(), std=std.tolist())
+        plot_transform = A.Normalize(
+            mean=(-mu / std).tolist(),
+            std=(1 / std).tolist(),
+            max_pixel_value=1.)
+    else:
+        aug_transform = None
+        base_transform = None
+        plot_transform = None
+
     backend = PyTorchChipClassificationConfig(
         model=model,
         solver=solver,
         log_tensorboard=log_tensorboard,
         run_tensorboard=run_tensorboard,
-        test_mode=test)
+        test_mode=test,
+        base_transform=A.to_dict(base_transform),
+        aug_transform=A.to_dict(aug_transform),
+        plot_options=PlotOptions(transform=A.to_dict(plot_transform)))
 
     config = ChipClassificationConfig(
         root_uri=root_uri,

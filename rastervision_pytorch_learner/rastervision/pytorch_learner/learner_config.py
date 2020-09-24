@@ -5,8 +5,9 @@ from typing import (List, Optional, Union, TYPE_CHECKING)
 from pydantic import PositiveFloat, PositiveInt, constr
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
-                                          Field)
-from rastervision.pytorch_learner.utils import color_to_triple
+                                          Field, validator)
+from rastervision.pytorch_learner.utils import (
+    color_to_triple, validate_albumentation_transform)
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
@@ -210,6 +211,21 @@ class SolverConfig(Config):
                 'class_loss_weights is not supported with external_loss_def.')
 
 
+@register_config('plot_options')
+class PlotOptions(Config):
+    """Config related to plotting."""
+    transform: Optional[dict] = Field(
+        None,
+        description='An Albumentations transform serialized as a dict that '
+        'will be applied to each image before it is plotted. Mainly useful '
+        'for undoing any data transformation that you do not want included in '
+        'the plot, such as normalization.')
+
+    # validators
+    _tf = validator(
+        'transform', allow_reuse=True)(validate_albumentation_transform)
+
+
 @register_config('data')
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
@@ -250,12 +266,32 @@ class DataConfig(Config):
     num_workers: int = Field(
         4,
         description='Number of workers to use when DataLoader makes batches.')
-    # TODO support setting parameters of augmentors?
     augmentors: List[str] = Field(
         default_augmentors,
-        description=(
-            'Names of albumentations augmentors to use for training batches. '
-            'Choices include: ' + str(augmentors)))
+        description='Names of albumentations augmentors to use for training '
+        f'batches. Choices include: {augmentors}. Alternatively, a custom '
+        'transform can be provided via the aug_transform option.')
+    base_transform: Optional[dict] = Field(
+        None,
+        description='An Albumentations transform serialized as a dict that '
+        'will be applied to all datasets: training, validation, and test. '
+        'This transformation is in addition to the resizing due to img_sz. '
+        'This is useful for, for example, applying the same normalization to '
+        'all datasets.')
+    aug_transform: Optional[dict] = Field(
+        None,
+        description='An Albumentations transform serialized as a dict that '
+        'will be applied as data augmentation to the training dataset. This '
+        'transform is applied before base_transform. If provided, the '
+        'augmentors option is ignored.')
+    plot_options: Optional[PlotOptions] = Field(
+        PlotOptions(), description='Options to control plotting.')
+
+    # validators
+    _base_tf = validator(
+        'base_transform', allow_reuse=True)(validate_albumentation_transform)
+    _aug_tf = validator(
+        'aug_transform', allow_reuse=True)(validate_albumentation_transform)
 
     def update(self, learner: Optional['LearnerConfig'] = None):
         if not self.class_colors:

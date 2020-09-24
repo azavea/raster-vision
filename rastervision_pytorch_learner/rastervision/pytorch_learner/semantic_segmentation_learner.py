@@ -13,6 +13,7 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 matplotlib.use('Agg')  # noqa
 from PIL import Image
+import albumentations as A
 
 import torch
 from torch import nn
@@ -27,15 +28,6 @@ from rastervision.pytorch_learner.utils import (
 from rastervision.pipeline.file_system import make_dir
 
 log = logging.getLogger(__name__)
-
-
-def load_np_normalized(path: Union[IO, str, Path]) -> np.ndarray:
-    arr = np.load(path)
-    dtype = arr.dtype
-    if np.issubdtype(dtype, np.unsignedinteger):
-        max_val = np.iinfo(dtype).max
-        arr = arr.astype(np.float32) / max_val
-    return arr
 
 
 class SemanticSegmentationDataset(Dataset):
@@ -57,9 +49,9 @@ class SemanticSegmentationDataset(Dataset):
 
         # choose image loading method based on format
         if img_fmt.lower() in ('npy', 'npz'):
-            self.img_load_fn = load_np_normalized
+            self.img_load_fn = np.load
         else:
-            self.img_load_fn = lambda path: np.array(Image.open(path)) / 255.
+            self.img_load_fn = lambda path: np.array(Image.open(path))
 
         # choose label loading method based on format
         if label_fmt.lower() in ('npy', 'npz'):
@@ -86,6 +78,10 @@ class SemanticSegmentationDataset(Dataset):
             out = self.transform(image=x, mask=y)
             x = out['image']
             y = out['mask']
+
+        if np.issubdtype(x.dtype, np.unsignedinteger):
+            max_val = np.iinfo(dtype).max
+            x = x.astype(np.float32) / max_val
 
         x = torch.from_numpy(x).permute(2, 0, 1).float()
         y = torch.from_numpy(y).long()
@@ -263,6 +259,15 @@ class SemanticSegmentationLearner(Learner):
             constrained_layout=True,
             figsize=(3 * ncols, 3 * nrows))
 
+        # (N, c, h, w) --> (N, h, w, c)
+        x = x.permute(0, 2, 3, 1)
+
+        # apply transform, if given
+        if self.cfg.data.plot_options.transform is not None:
+            tf = A.from_dict(self.cfg.data.plot_options.transform)
+            x = tf(image=x.numpy())['image']
+            x = torch.from_numpy(x)
+
         for i in range(batch_sz):
             ax = (fig, axes[i])
             if z is None:
@@ -292,9 +297,6 @@ class SemanticSegmentationLearner(Learner):
         fig, ax = ax
         img_axes = ax[:len(channel_groups)]
         label_ax = ax[len(channel_groups)]
-
-        # (c, h, w) --> (h, w, c)
-        x = x.permute(1, 2, 0)
 
         # plot input image(s)
         for (title, chs), ch_ax in zip(channel_groups.items(), img_axes):
