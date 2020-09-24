@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Union
+from typing import Sequence
 from pydantic import conint
 
 from rastervision.pipeline.config import (Config, register_config, Field,
@@ -33,9 +33,8 @@ class SubRasterSourceConfig(Config):
 class MultiRasterSourceConfig(RasterSourceConfig):
     raster_sources: Sequence[SubRasterSourceConfig] = Field(
         ..., description='List of SubRasterSourceConfigs to combine.')
-    force_subchip_size_fill_value: Optional[Union[int, float]] = Field(
-        None,
-        description='Force all subchips to be same size using fill value.')
+    allow_different_extents: bool = Field(
+        False, description='Allow sub-rasters to have different extents.')
     force_same_dtype: bool = Field(
         False,
         description=
@@ -94,7 +93,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
             raster_sources=built_raster_sources,
             raw_channel_order=self.get_raw_channel_order(),
             force_same_dtype=self.force_same_dtype,
-            force_subchip_size_fill_value=self.force_subchip_size_fill_value,
+            allow_different_extents=self.allow_different_extents,
             channel_order=self.channel_order,
             crs_source=self.crs_source,
             raster_transformers=raster_transformers)
