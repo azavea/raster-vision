@@ -217,7 +217,9 @@ class PlotOptions(Config):
     transform: Optional[dict] = Field(
         None,
         description='An Albumentations transform serialized as a dict that '
-        'will be applied to each image before it is plotted.')
+        'will be applied to each image before it is plotted. Mainly useful '
+        'for undoing any data transformation that you do not want included in '
+        'the plot, such as normalization.')
 
     # validators
     _tf = validator(
