@@ -161,6 +161,9 @@ def get_config(runner,
             mean=(-mu / std).tolist(),
             std=(1 / std).tolist(),
             max_pixel_value=1.)
+        aug_transform = A.to_dict(aug_transform)
+        base_transform = A.to_dict(base_transform)
+        plot_transform = A.to_dict(plot_transform)
     else:
         aug_transform = None
         base_transform = None
@@ -172,9 +175,9 @@ def get_config(runner,
         log_tensorboard=log_tensorboard,
         run_tensorboard=run_tensorboard,
         test_mode=test,
-        base_transform=A.to_dict(base_transform),
-        aug_transform=A.to_dict(aug_transform),
-        plot_options=PlotOptions(transform=A.to_dict(plot_transform)))
+        base_transform=base_transform,
+        aug_transform=aug_transform,
+        plot_options=PlotOptions(transform=plot_transform))
 
     config = ChipClassificationConfig(
         root_uri=root_uri,
