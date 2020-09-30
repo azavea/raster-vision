@@ -15,6 +15,7 @@ Features
 * Add support for external loss definitions `#992 <https://github.com/azavea/raster-vision/pull/992>`_
 * Upgrade to pyproj 2.6 `#1000 <https://github.com/azavea/raster-vision/pull/1000>`_
 * Add support for arbitrary albumentations transforms `#1001 <https://github.com/azavea/raster-vision/pull/1001>`_
+* Make img_sz specifiable `#1012 <https://github.com/azavea/raster-vision/pull/1012>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
