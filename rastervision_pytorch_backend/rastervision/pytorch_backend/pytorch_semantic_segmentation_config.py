@@ -13,11 +13,14 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
     model: SemanticSegmentationModelConfig
 
     def get_learner_config(self, pipeline):
+        if self.img_sz is None:
+            self.img_sz = pipeline.train_chip_sz
+
         data = SemanticSegmentationDataConfig(
             uri=pipeline.chip_uri,
             class_names=pipeline.dataset.class_config.names,
             class_colors=pipeline.dataset.class_config.colors,
-            img_sz=pipeline.train_chip_sz,
+            img_sz=self.img_sz,
             img_channels=pipeline.dataset.img_channels,
             img_format=pipeline.img_format,
             label_format=pipeline.label_format,
