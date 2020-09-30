@@ -48,6 +48,9 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
 
     @validator('solver')
     def validate_solver_config(cls, v):
+        if v.ignore_last_class:
+            raise ConfigError(
+                'ignore_last_class is not supported for Object Detection.')
         if v.class_loss_weights is not None:
             raise ConfigError(
                 'class_loss_weights is currently not supported for '

@@ -96,10 +96,13 @@ class SemanticSegmentationLearner(Learner):
     def build_model(self) -> nn.Module:
         # TODO support FCN option
         pretrained = self.cfg.model.pretrained
+        out_classes = len(self.cfg.data.class_names)
+        if self.cfg.solver.ignore_last_class:
+            out_classes -= 1
         model = models.segmentation.segmentation._segm_resnet(
             'deeplabv3',
             self.cfg.model.get_backbone_str(),
-            len(self.cfg.data.class_names),
+            out_classes,
             False,
             pretrained_backbone=pretrained)
 
@@ -148,12 +151,19 @@ class SemanticSegmentationLearner(Learner):
         return model
 
     def build_loss(self):
+        args = {}
+
         loss_weights = self.cfg.solver.class_loss_weights
         if loss_weights is not None:
             loss_weights = torch.tensor(loss_weights, device=self.device)
-            loss = nn.CrossEntropyLoss(weight=loss_weights)
-        else:
-            loss = nn.CrossEntropyLoss()
+            args.update({'weight': loss_weights})
+
+        if self.cfg.solver.ignore_last_class:
+            num_classes = len(self.cfg.data.class_names)
+            args.update({'ignore_index': num_classes - 1})
+
+        loss = nn.CrossEntropyLoss(**args)
+
         return loss
 
     def _get_datasets(self, uri: Union[str, List[str]]):
