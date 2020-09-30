@@ -180,7 +180,6 @@ class RegressionLearner(Learner):
         return x
 
     def plot_xyz(self, ax, x, y, z=None):
-        x = x.permute(1, 2, 0)
         if x.shape[2] == 1:
             x = torch.cat([x for _ in range(3)], dim=2)
         ax.imshow(x)
