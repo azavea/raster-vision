@@ -82,7 +82,6 @@ Future Work
 The next big features we plan on developing are:
 
 * the ability to read and write data in `STAC <https://stacspec.org/>`_ format using the `label extension <https://github.com/radiantearth/stac-spec/tree/master/extensions/label>`_. This will facilitate integration with other tools such as `GroundWork <https://groundwork.azavea.com/>`_.
-* the ability to `train models on multi-band imagery <https://www.azavea.com/blog/2019/08/30/transfer-learning-from-rgb-to-multi-band-imagery/>`_, rather than having to pick a subset of three bands.
 
 Raster Vision 0.11
 -------------------
