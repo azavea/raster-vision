@@ -102,6 +102,7 @@ class RegressionLearner(Learner):
         for data_dir in data_dirs:
             train_dir = join(data_dir, 'train')
             valid_dir = join(data_dir, 'valid')
+            test_dir = join(data_dir, 'test')
 
             if isdir(train_dir):
                 if cfg.overfit_mode:
@@ -125,8 +126,7 @@ class RegressionLearner(Learner):
                         transform=transform))
                 test_ds.append(
                     AlbumentationsDataset(
-                        ImageRegressionDataset(valid_dir,
-                                               cfg.data.class_names),
+                        ImageRegressionDataset(test_dir, cfg.data.class_names),
                         transform=transform))
 
         train_ds, valid_ds, test_ds = \
