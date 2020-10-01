@@ -19,6 +19,7 @@ Features
 * Add ability to specify number of PyTorch reader processes `#1008 <https://github.com/azavea/raster-vision/pull/1008>`_
 * Make img_sz specifiable `#1012 <https://github.com/azavea/raster-vision/pull/1012>`_
 * Add ignore_last_class capability to segmentation `#1017 <https://github.com/azavea/raster-vision/pull/1017>`_
+* Add filtering capability to segmentation sliding window chip generation `#1018 <https://github.com/azavea/raster-vision/pull/1018>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
