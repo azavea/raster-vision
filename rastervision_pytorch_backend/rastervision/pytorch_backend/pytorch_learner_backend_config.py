@@ -43,6 +43,8 @@ class PyTorchLearnerBackendConfig(BackendConfig):
          'pytorch_learner.learner_config.LearnerConfig.test_mode.'))
     plot_options: Optional[PlotOptions] = Field(
         PlotOptions(), description='Options to control plotting.')
+    num_workers: int = Field(
+        4, description='The number of workers to use in PyTorch to read data.')
 
     # validators
     _base_tf = validator(
