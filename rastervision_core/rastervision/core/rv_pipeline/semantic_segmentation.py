@@ -40,12 +40,26 @@ def get_train_windows(scene, class_config, chip_size,
             windows = filt_windows
         return windows
 
+    def should_use_window(window):
+        if co.negative_survival_prob >= 1.0:
+            return True
+        else:
+            target_class_ids = co.target_class_ids or list(
+                range(len(class_config)))
+            is_pos = label_source.enough_target_pixels(
+                window, co.target_count_threshold, target_class_ids)
+            should_use = is_pos or (np.random.rand() <
+                                    co.negative_survival_prob)
+            return should_use
+
     if co.window_method == SemanticSegmentationWindowMethod.sliding:
         stride = co.stride or int(round(chip_size / 2))
         windows = list(filter_windows((extent.get_windows(chip_size, stride))))
+        a_window = windows[0]
+        windows = list(filter(should_use_window, windows))
+        if len(windows) == 0:
+            windows = [a_window]
     elif co.window_method == SemanticSegmentationWindowMethod.random_sample:
-        target_class_ids = co.target_class_ids or list(
-            range(len(class_config)))
         windows = []
         attempts = 0
 
@@ -60,11 +74,8 @@ def get_train_windows(scene, class_config, chip_size,
             elif attempts == co.chips_per_scene and len(windows) == 0:
                 # Ensure there is at least one window per scene.
                 windows.append(window)
-            else:
-                is_pos = label_source.enough_target_pixels(
-                    window, co.target_count_threshold, target_class_ids)
-                if is_pos or (np.random.rand() < co.negative_survival_prob):
-                    windows.append(window)
+            elif should_use_window(window):
+                windows.append(window)
 
     return windows
 
