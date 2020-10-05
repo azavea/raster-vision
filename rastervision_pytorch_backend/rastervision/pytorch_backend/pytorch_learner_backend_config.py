@@ -1,4 +1,5 @@
 from typing import List, Optional
+from pydantic import PositiveInt
 
 from rastervision.pipeline.config import (register_config, Field, validator)
 from rastervision.core.backend import BackendConfig
@@ -43,6 +44,11 @@ class PyTorchLearnerBackendConfig(BackendConfig):
          'pytorch_learner.learner_config.LearnerConfig.test_mode.'))
     plot_options: Optional[PlotOptions] = Field(
         PlotOptions(), description='Options to control plotting.')
+    img_sz: Optional[PositiveInt] = Field(
+        None,
+        description='Length of a side of each image in pixels. This is the '
+        'size to transform it to during training, not the size in the raw '
+        'dataset. Defaults to train_chip_sz in the pipeline config.')
     num_workers: int = Field(
         4, description='The number of workers to use in PyTorch to read data.')
 
