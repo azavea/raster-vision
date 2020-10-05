@@ -26,6 +26,7 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
         data.base_transform = self.base_transform
         data.aug_transform = self.aug_transform
         data.plot_options = self.plot_options
+        data.num_workers = self.num_workers
 
         learner = ObjectDetectionLearnerConfig(
             data=data,

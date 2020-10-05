@@ -49,6 +49,8 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         description='Length of a side of each image in pixels. This is the '
         'size to transform it to during training, not the size in the raw '
         'dataset. Defaults to train_chip_sz in the pipeline config.')
+    num_workers: int = Field(
+        4, description='The number of workers to use in PyTorch to read data.')
 
     # validators
     _base_tf = validator(

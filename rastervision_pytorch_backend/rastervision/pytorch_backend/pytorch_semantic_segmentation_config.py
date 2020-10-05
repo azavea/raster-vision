@@ -24,6 +24,7 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
             img_channels=pipeline.dataset.img_channels,
             img_format=pipeline.img_format,
             label_format=pipeline.label_format,
+            num_workers=self.num_workers,
             augmentors=self.augmentors,
             base_transform=self.base_transform,
             aug_transform=self.aug_transform,

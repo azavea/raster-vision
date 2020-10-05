@@ -102,6 +102,7 @@ class RegressionLearner(Learner):
         for data_dir in data_dirs:
             train_dir = join(data_dir, 'train')
             valid_dir = join(data_dir, 'valid')
+            test_dir = join(data_dir, 'test')
 
             if isdir(train_dir):
                 if cfg.overfit_mode:
@@ -125,8 +126,7 @@ class RegressionLearner(Learner):
                         transform=transform))
                 test_ds.append(
                     AlbumentationsDataset(
-                        ImageRegressionDataset(valid_dir,
-                                               cfg.data.class_names),
+                        ImageRegressionDataset(test_dir, cfg.data.class_names),
                         transform=transform))
 
         train_ds, valid_ds, test_ds = \
@@ -180,7 +180,6 @@ class RegressionLearner(Learner):
         return x
 
     def plot_xyz(self, ax, x, y, z=None):
-        x = x.permute(1, 2, 0)
         if x.shape[2] == 1:
             x = torch.cat([x for _ in range(3)], dim=2)
         ax.imshow(x)
