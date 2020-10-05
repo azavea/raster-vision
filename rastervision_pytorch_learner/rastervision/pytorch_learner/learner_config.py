@@ -195,6 +195,9 @@ class SolverConfig(Config):
         [], description=('List of epoch indices at which to divide LR by 10.'))
     class_loss_weights: Optional[Union[list, tuple]] = Field(
         None, description=('Class weights for weighted loss.'))
+    ignore_last_class: bool = Field(
+        False,
+        description=('Whether to ignore the last class during training.'))
     external_loss_def: Optional[ExternalModuleConfig] = Field(
         None,
         description='If specified, the loss will be built from the definition '
@@ -206,6 +209,11 @@ class SolverConfig(Config):
     def validate_config(self):
         has_weights = self.class_loss_weights is not None
         has_external_loss_def = self.external_loss_def is not None
+
+        if self.ignore_last_class and has_external_loss_def:
+            raise ConfigError(
+                'ignore_last_class is not supported with external_loss_def.')
+
         if has_weights and has_external_loss_def:
             raise ConfigError(
                 'class_loss_weights is not supported with external_loss_def.')

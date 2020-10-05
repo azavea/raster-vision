@@ -41,6 +41,12 @@ class ClassificationLearnerConfig(LearnerConfig):
     def validate_config(self):
         super().validate_config()
         self.validate_class_loss_weights()
+        self.validate_ignore_last_class()
+
+    def validate_ignore_last_class(self):
+        if self.solver.ignore_last_class:
+            raise ConfigError(
+                'ignore_last_class is not supported for Chip Classification.')
 
     def validate_class_loss_weights(self):
         if self.solver.class_loss_weights is None:
