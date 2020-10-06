@@ -12,6 +12,10 @@ class RasterioSourceConfig(RasterSourceConfig):
         ('List of image URIs that comprise imagery for a scene. The format of each file '
          'can be any that can be read by Rasterio/GDAL. If > 1 URI is provided, a VRT '
          'will be created to mosaic together the individual images.'))
+    allow_streaming: bool = Field(
+        False,
+        description=(
+            'Allow streaming of assets rather than always downloading.'))
     x_shift: float = Field(
         0.0,
         descriptions=
@@ -31,6 +35,7 @@ class RasterioSourceConfig(RasterSourceConfig):
             self.uris,
             raster_transformers,
             tmp_dir,
+            allow_streaming=self.allow_streaming,
             channel_order=self.channel_order,
             x_shift=self.x_shift,
             y_shift=self.y_shift)
