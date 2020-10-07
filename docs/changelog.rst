@@ -21,6 +21,7 @@ Features
 * Add ignore_last_class capability to segmentation `#1017 <https://github.com/azavea/raster-vision/pull/1017>`_
 * Add filtering capability to segmentation sliding window chip generation `#1018 <https://github.com/azavea/raster-vision/pull/1018>`_
 * Add raster transformer to remove NaNs from float rasters, add raster transformers to cast to arbitrary numpy types `#1016 <https://github.com/azavea/raster-vision/pull/1016>`_
+* Add plot options for regression `#1023 <https://github.com/azavea/raster-vision/pull/1023>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
