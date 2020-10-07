@@ -254,7 +254,6 @@ class Learner(ABC):
         if self.loss is not None and isinstance(self.loss, nn.Module):
             self.loss.to(self.device)
 
-    @abstractmethod
     def build_loss(self) -> nn.Module:
         """Build a loss Callable."""
         pass
