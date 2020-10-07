@@ -381,15 +381,25 @@ class LearnerConfig(Config):
     def build(self,
               tmp_dir: str,
               model_path: Optional[str] = None,
-              model_def_path: Optional[str] = None) -> 'Learner':
+              model_def_path: Optional[str] = None,
+              loss_def_path: Optional[str] = None,
+              training=True) -> 'Learner':
         """Returns a Learner instantiated using this Config.
 
         Args:
-            tmp_dir: root of temp dirs
-            model_path: local path to model weights. If this is passed, the Learner
-                is assumed to be used to make predictions and not train a model.
-            model_def_path: a local path to a directory with a hubconf.py. If
-                provided, the model definition is imported from here.
+            tmp_dir (str): Root of temp dirs.
+            model_path (str, optional): A local path to model weights.
+                Defaults to None.
+            model_def_path (str, optional): A local path to a directory with a
+                hubconf.py. If provided, the model definition is imported from
+                here. Defaults to None.
+            loss_def_path (str, optional): A local path to a directory with a
+                hubconf.py. If provided, the loss function definition is
+                imported from here. Defaults to None.
+            training (bool, optional): Whether the model is to be used for
+                training or prediction. If False, the model is put in eval mode
+                and the loss function, optimizer, etc. are not initialized.
+                Defaults to True.
         """
         raise NotImplementedError()
 

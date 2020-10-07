@@ -63,6 +63,10 @@ class RVPipelineConfig(PipelineConfig):
         None,
         description='URI for output of bundle. If None, will be auto-generated.'
     )
+    source_bundle_uri: Optional[str] = Field(
+        None,
+        description='If provided, the model will be loaded from this bundle '
+        'for the train stage. Useful for fine-tuning.')
 
     def update(self):
         super().update()

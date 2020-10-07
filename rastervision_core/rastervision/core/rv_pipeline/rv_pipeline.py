@@ -111,7 +111,7 @@ class RVPipeline(Pipeline):
     def train(self):
         """Train a model and save it."""
         backend = self.config.backend.build(self.config, self.tmp_dir)
-        backend.train()
+        backend.train(source_bundle_uri=self.config.source_bundle_uri)
 
     def post_process_sample(self, sample: DataSample) -> DataSample:
         """Post-process sample in pipeline-specific way.
