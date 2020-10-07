@@ -199,6 +199,14 @@ class RegressionLearner(Learner):
 
         y, out = self.predict_dataloader(
             self.get_dataloader(split), return_x=False)
+
+        max_scatter_points = self.cfg.data.plot_options.max_scatter_points
+        if y.shape[0] > max_scatter_points:
+            scatter_inds = torch.randperm(
+                y.shape[0], dtype=torch.long)[0:max_scatter_points]
+        else:
+            scatter_inds = torch.arange(0, y.shape[0], dtype=torch.long)
+
         # make scatter plot
         num_labels = len(self.cfg.data.class_names)
         ncols = num_labels
@@ -210,23 +218,29 @@ class RegressionLearner(Learner):
         for label_ind, label in enumerate(self.cfg.data.class_names):
             ax = fig.add_subplot(grid[label_ind])
             ax.scatter(
-                y[:, label_ind], out[:, label_ind], c='blue', alpha=0.02)
+                y[scatter_inds, label_ind],
+                out[scatter_inds, label_ind],
+                c='blue',
+                alpha=0.1)
             ax.set_title('{} on {} set'.format(label, split))
             ax.set_xlabel('ground truth')
             ax.set_ylabel('predictions')
         scatter_path = join(self.output_dir, '{}_scatter.png'.format(split))
         plt.savefig(scatter_path)
+        print('done scatter')
 
         # make histogram of errors
         fig = plt.figure(
             constrained_layout=True, figsize=(5 * ncols, 5 * nrows))
         grid = gridspec.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
 
+        hist_bins = self.cfg.data.plot_options.hist_bins
         for label_ind, label in enumerate(self.cfg.data.class_names):
             ax = fig.add_subplot(grid[label_ind])
-            errs = torch.abs(y[:, label_ind] - out[:, label_ind])
-            ax.hist(errs, bins=100, density=True)
+            errs = torch.abs(y[:, label_ind] - out[:, label_ind]).tolist()
+            ax.hist(errs, bins=hist_bins)
             ax.set_title('{} on {} set'.format(label, split))
             ax.set_xlabel('prediction error')
-        scatter_path = join(self.output_dir, '{}_err_hist.png'.format(split))
-        plt.savefig(scatter_path)
+        hist_path = join(self.output_dir, '{}_err_hist.png'.format(split))
+        plt.savefig(hist_path)
+        print('done hist')
