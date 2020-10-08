@@ -91,8 +91,14 @@ class VsiFileSystem(FileSystem):
             raise FileNotFoundError('{} does not exist'.format(vsipath))
 
         try:
+            retval = bytes()
             handle = gdal.VSIFOpenL(vsipath, 'rb')
-            return gdal.VSIFReadL(1, stats.size, handle)
+            bytes_left = stats.size
+            while bytes_left > 0:
+                bytes_to_read = min(bytes_left, 1 << 30)
+                retval += gdal.VSIFReadL(1, bytes_to_read, handle)
+                bytes_left -= bytes_to_read
+            return retval
         finally:
             gdal.VSIFCloseL(handle)
 
