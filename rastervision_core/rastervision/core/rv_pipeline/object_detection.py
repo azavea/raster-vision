@@ -81,7 +81,7 @@ def make_neg_windows(raster_source,
             label_store.get_labels(), window, ioa_thresh=0.2)
 
         # If no labels and not too many nodata pixels, append the chip
-        nodata_prop = (chip.sum(dim=-1) == 0).mean()
+        nodata_prop = (chip.sum(axis=-1) == 0).mean()
         if len(labels) == 0 and nodata_prop < chip_nodata_threshold:
             neg_windows.append(window)
 
