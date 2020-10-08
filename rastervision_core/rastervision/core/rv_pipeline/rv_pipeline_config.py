@@ -46,7 +46,9 @@ class RVPipelineConfig(PipelineConfig):
     chip_nodata_threshold: Proportion = Field(
         1,
         description='Discard chips where the proportion of NODATA values is '
-        'greater than or equal to this value.')
+        'greater than or equal to this value. Might result in false positives '
+        'if there are many legitimate black pixels in the chip. Use with '
+        'caution.')
 
     analyze_uri: Optional[str] = Field(
         None,

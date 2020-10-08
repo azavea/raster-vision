@@ -15,7 +15,7 @@ def get_train_windows(scene, chip_size, chip_nodata_threshold=1.):
         windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
     for window in windows:
         chip = scene.raster_source.get_chip(window)
-        if (chip == 0).mean() < chip_nodata_threshold:
+        if (chip.sum(dim=-1) == 0).mean() < chip_nodata_threshold:
             train_windows.append(window)
     return train_windows
 
