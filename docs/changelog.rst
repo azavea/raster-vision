@@ -22,6 +22,7 @@ Features
 * Add filtering capability to segmentation sliding window chip generation `#1018 <https://github.com/azavea/raster-vision/pull/1018>`_
 * Add raster transformer to remove NaNs from float rasters, add raster transformers to cast to arbitrary numpy types `#1016 <https://github.com/azavea/raster-vision/pull/1016>`_
 * Add plot options for regression `#1023 <https://github.com/azavea/raster-vision/pull/1023>`_
+* Add ability to use fewer channels w/ pretrained models `#1026 <https://github.com/azavea/raster-vision/pull/1026>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
