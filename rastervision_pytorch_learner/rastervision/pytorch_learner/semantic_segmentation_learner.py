@@ -236,7 +236,9 @@ class SemanticSegmentationLearner(Learner):
         return metrics
 
     def post_forward(self, x):
-        return x['out']
+        if isinstance(x, dict):
+            return x['out']
+        return x
 
     def prob_to_pred(self, x):
         return x.argmax(1)
