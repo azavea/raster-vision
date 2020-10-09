@@ -11,8 +11,11 @@ from rastervision.core.rv_pipeline.semantic_segmentation_config import (
 log = logging.getLogger(__name__)
 
 
-def get_train_windows(scene, class_config, chip_size,
-                      chip_options) -> List[Box]:
+def get_train_windows(scene,
+                      class_config,
+                      chip_size,
+                      chip_options,
+                      chip_nodata_threshold=1.) -> List[Box]:
     """Get training windows covering a scene.
 
     Args:
@@ -32,10 +35,14 @@ def get_train_windows(scene, class_config, chip_size,
 
             filt_windows = []
             for w in windows:
+                chip = raster_source.get_chip(w)
+                nodata_prop = (chip.sum(axis=-1) == 0).mean()
+                nodata_below_thresh = nodata_prop < chip_nodata_threshold
+
                 label_arr = label_source.get_labels(w).get_label_arr(w)
-                null_inds = (
-                    label_arr.ravel() == class_config.get_null_class_id())
-                if not np.all(null_inds):
+                null_labels = label_arr == class_config.get_null_class_id()
+
+                if not np.all(null_labels) and nodata_below_thresh:
                     filt_windows.append(w)
             windows = filt_windows
         return windows
@@ -81,14 +88,10 @@ def get_train_windows(scene, class_config, chip_size,
 
 
 def fill_no_data(img, label_arr, null_class_id):
-    # If chip has null labels, fill in those pixels with
-    # nodata.
-    null_inds = label_arr.ravel() == null_class_id
-    img_shape = img.shape
-    if np.any(null_inds):
-        img = np.reshape(img, (-1, img_shape[2]))
-        img[null_inds, :] = 0
-        img = np.reshape(img, img_shape)
+    # If chip has null labels, fill in those pixels with nodata.
+    mask = label_arr == null_class_id
+    if np.any(mask):
+        img[mask, :] = 0
     return img
 
 
@@ -115,9 +118,12 @@ class SemanticSegmentation(RVPipeline):
         return img_channels
 
     def get_train_windows(self, scene):
-        return get_train_windows(scene, self.config.dataset.class_config,
-                                 self.config.train_chip_sz,
-                                 self.config.chip_options)
+        return get_train_windows(
+            scene,
+            self.config.dataset.class_config,
+            self.config.train_chip_sz,
+            self.config.chip_options,
+            chip_nodata_threshold=self.config.chip_nodata_threshold)
 
     def get_train_labels(self, window, scene):
         return scene.ground_truth_label_source.get_labels(window=window)

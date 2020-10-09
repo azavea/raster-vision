@@ -36,6 +36,14 @@ def download_and_build_vrt(image_uris, tmp_dir):
     return image_path
 
 
+def stream_and_build_vrt(images_uris, tmp_dir):
+    log.info('Building VRT...')
+    image_paths = images_uris
+    image_path = os.path.join(tmp_dir, 'index.vrt')
+    build_vrt(image_path, image_paths)
+    return image_path
+
+
 def load_window(image_dataset, window=None, is_masked=False):
     """Load a window of an image using Rasterio.
 
@@ -69,6 +77,7 @@ class RasterioSource(ActivateMixin, RasterSource):
                  uris,
                  raster_transformers,
                  tmp_dir,
+                 allow_streaming=False,
                  channel_order=None,
                  x_shift=0.0,
                  y_shift=0.0):
@@ -91,6 +100,7 @@ class RasterioSource(ActivateMixin, RasterSource):
         self.x_shift = x_shift
         self.y_shift = y_shift
         self.do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
+        self.allow_streaming = allow_streaming
 
         num_channels = None
 
@@ -132,9 +142,15 @@ class RasterioSource(ActivateMixin, RasterSource):
         Return a single local path representing the image or a VRT of the data.
         """
         if len(self.uris) == 1:
-            return download_if_needed(self.uris[0], tmp_dir)
+            if self.allow_streaming:
+                return self.uris[0]
+            else:
+                return download_if_needed(self.uris[0], tmp_dir)
         else:
-            return download_and_build_vrt(self.uris, tmp_dir)
+            if self.allow_streaming:
+                return stream_and_build_vrt(self.uris, tmp_dir)
+            else:
+                return download_and_build_vrt(self.uris, tmp_dir)
 
     def get_crs_transformer(self):
         return self.crs_transformer
@@ -156,7 +172,7 @@ class RasterioSource(ActivateMixin, RasterSource):
             is_masked=self.is_masked)
 
     def _activate(self):
-        # Download images to temporary directory and delete it when done.
+        # Download images to temporary directory and delete them when done.
         self.image_tmp_dir = tempfile.TemporaryDirectory(dir=self.tmp_dir)
         self.imagery_path = self._download_data(self.image_tmp_dir.name)
         self.image_dataset = rasterio.open(self.imagery_path)
