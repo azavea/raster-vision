@@ -90,8 +90,8 @@ def get_train_windows(scene,
 def fill_no_data(img, label_arr, null_class_id):
     # If chip has null labels, fill in those pixels with nodata.
     mask = label_arr == null_class_id
-    if np.count_nonzero(mask) > 0:
-        img[mask] = 0
+    if np.any(mask):
+        img[mask, :] = 0
     return img
 
 
