@@ -35,12 +35,12 @@ def get_train_windows(scene,
 
             filt_windows = []
             for w in windows:
-                chip = raster_source.get_chip(window)
+                chip = raster_source.get_chip(w)
                 nodata_prop = (chip.sum(axis=-1) == 0).mean()
                 nodata_below_thresh = nodata_prop < chip_nodata_threshold
 
-                labels = label_source.get_labels(w).get_label_arr(w)
-                null_labels = labels == class_config.get_null_class_id()
+                label_arr = label_source.get_labels(w).get_label_arr(w)
+                null_labels = label_arr == class_config.get_null_class_id()
 
                 if not np.all(null_labels) and nodata_below_thresh:
                     filt_windows.append(w)
