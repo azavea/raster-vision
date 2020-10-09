@@ -1,5 +1,6 @@
 from os.path import join
 from typing import List, TYPE_CHECKING, Optional
+from pydantic import confloat
 
 from rastervision.pipeline.pipeline_config import PipelineConfig
 from rastervision.core.data import (DatasetConfig, StatsTransformerConfig,
@@ -12,6 +13,8 @@ from rastervision.pipeline.config import register_config, Field
 
 if TYPE_CHECKING:
     from rastervision.core.backend.backend import Backend  # noqa
+
+Proportion = confloat(ge=0, le=1)
 
 
 @register_config('rv_pipeline')
@@ -40,6 +43,12 @@ class RVPipelineConfig(PipelineConfig):
         300, description='Size of predictions chips in pixels.')
     predict_batch_sz: int = Field(
         8, description='Batch size to use during prediction.')
+    chip_nodata_threshold: Proportion = Field(
+        1,
+        description='Discard chips where the proportion of NODATA values is '
+        'greater than or equal to this value. Might result in false positives '
+        'if there are many legitimate black pixels in the chip. Use with '
+        'caution.')
 
     analyze_uri: Optional[str] = Field(
         None,
