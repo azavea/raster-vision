@@ -143,10 +143,13 @@ class SemanticSegmentationLearner(Learner):
                 Parallel(old_conv, new_conv),
                 # sum the parallel outputs
                 AddTensors())
+        elif input_channels < old_conv.in_channels:
+            model.backbone.conv1 = nn.Conv2d(
+                in_channels=input_channels, **old_conv_args)
+            model.backbone.conv1.weight.data[:, :input_channels] = \
+                old_conv.weight.data[:, :input_channels]
         else:
-            raise ConfigError(
-                (f'Fewer input channels ({input_channels}) than what'
-                 f'the pretrained model expects ({old_conv.in_channels})'))
+            raise ConfigError(f'Something went wrong')
 
         return model
 
