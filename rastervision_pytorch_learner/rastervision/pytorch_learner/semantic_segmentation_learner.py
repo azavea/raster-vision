@@ -146,6 +146,8 @@ class SemanticSegmentationLearner(Learner):
         elif input_channels < old_conv.in_channels:
             model.backbone.conv1 = nn.Conv2d(
                 in_channels=input_channels, **old_conv_args)
+            model.backbone.conv1.weight.data[:, :input_channels] = \
+                old_conv.weight.data[:, :input_channels]
         else:
             raise ConfigError(f'Something went wrong')
 
