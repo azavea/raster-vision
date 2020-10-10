@@ -2,6 +2,7 @@ from os.path import join
 from enum import Enum
 
 from typing import (List, Optional, Union, TYPE_CHECKING)
+from typing_extensions import Literal
 from pydantic import PositiveFloat, PositiveInt, constr
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
@@ -195,7 +196,7 @@ class SolverConfig(Config):
         [], description=('List of epoch indices at which to divide LR by 10.'))
     class_loss_weights: Optional[Union[list, tuple]] = Field(
         None, description=('Class weights for weighted loss.'))
-    ignore_last_class: bool = Field(
+    ignore_last_class: Union[bool, Literal['force']] = Field(
         False,
         description=('Whether to ignore the last class during training.'))
     external_loss_def: Optional[ExternalModuleConfig] = Field(
@@ -210,7 +211,7 @@ class SolverConfig(Config):
         has_weights = self.class_loss_weights is not None
         has_external_loss_def = self.external_loss_def is not None
 
-        if self.ignore_last_class and has_external_loss_def:
+        if self.ignore_last_class is True and has_external_loss_def:
             raise ConfigError(
                 'ignore_last_class is not supported with external_loss_def.')
 
