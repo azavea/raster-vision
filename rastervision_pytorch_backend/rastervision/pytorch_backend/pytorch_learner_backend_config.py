@@ -13,6 +13,11 @@ from rastervision.pytorch_learner.utils import validate_albumentation_transform
 class PyTorchLearnerBackendConfig(BackendConfig):
     model: ModelConfig
     solver: SolverConfig
+    predict_normalize: bool = Field(
+        True,
+        description=
+        'Whether to divide imagery by 255 (normalize) before passing to the model.'
+    )
     log_tensorboard: bool = Field(
         True, description='If True, log events to Tensorboard log files.')
     run_tensorboard: bool = Field(

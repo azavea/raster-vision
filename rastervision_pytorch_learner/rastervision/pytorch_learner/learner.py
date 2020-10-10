@@ -716,7 +716,8 @@ class Learner(ABC):
         x = torch.tensor(x)
         x = self.to_batch(x)
         x = x.permute((0, 3, 1, 2))
-        out = self.predict(x, normalize=True, raw_out=raw_out)
+        out = self.predict(
+            x, normalize=self.cfg.predict_normalize, raw_out=raw_out)
         return self.output_to_numpy(out)
 
     def predict_dataloader(self,
