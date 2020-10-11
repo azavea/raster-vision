@@ -29,6 +29,7 @@ Features
 * Allow ignore_last_class to take either a boolean or the literal 'force'; in the latter case validation of that argument is skipped so that it can be used with external loss functions `#1027 <https://github.com/azavea/raster-vision/pull/1027>`_
 * Add ability to crop raster source extent `#1030 <https://github.com/azavea/raster-vision/pull/1030>`_
 * Accept immediate geometries in SceneConfig `#1033 <https://github.com/azavea/raster-vision/pull/1033>`_
+* Only perform normalization on unsigned integer types `#1028 <https://github.com/azavea/raster-vision/pull/1028>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
