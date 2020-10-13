@@ -78,6 +78,12 @@ class SemanticSegmentationConfig(RVPipelineConfig):
         None, description='The filetype of the training images.')
     label_format: str = Field(
         'png', description='The filetype of the training labels.')
+    img_dtype: Optional[type] = Field(
+        None,
+        description='The dtype that the training images should be cast to. '
+        'Values are clipped to the max value of this dtype before casting. '
+        'Use case: the original image is uint16 but except for a few noisy '
+        'pixels, the values are all less than 256.')
 
     def build(self, tmp_dir):
         from rastervision.core.rv_pipeline.semantic_segmentation import (

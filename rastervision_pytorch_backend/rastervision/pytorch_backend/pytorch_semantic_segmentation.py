@@ -19,7 +19,8 @@ class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
                  class_config: ClassConfig,
                  tmp_dir: str,
                  img_format: str = 'png',
-                 label_format: str = 'png'):
+                 label_format: str = 'png',
+                 img_dtype: type = None):
         """Constructor.
 
         Args:
@@ -34,6 +35,7 @@ class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
         super().__init__(output_uri, class_config, tmp_dir)
         self.img_format = img_format
         self.label_format = label_format
+        self.img_dtype = img_dtype
 
     def write_sample(self, sample: DataSample):
         """
@@ -59,6 +61,14 @@ class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
         # write image
         img_filename = f'{sample_name}.{img_fmt}'
         img_path = img_dir / img_filename
+
+        if self.img_dtype is not None:
+            new_dtype = self.img_dtype
+            if np.issubdtype(new_dtype, np.unsignedinteger):
+                max_val = np.iinfo(new_dtype).max
+                img = img.clip(max=max_val)
+            img = img.astype(new_dtype)
+
         if img_fmt == 'npy':
             np.save(img_path, img)
         else:
@@ -67,6 +77,7 @@ class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
         # write labels
         label_filename = f'{sample_name}.{label_fmt}'
         label_path = label_dir / label_filename
+
         if label_fmt == 'npy':
             np.save(label_path, label_arr)
         else:
@@ -83,7 +94,8 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
             self.pipeline_cfg.dataset.class_config,
             self.tmp_dir,
             img_format=self.pipeline_cfg.img_format,
-            label_format=self.pipeline_cfg.label_format)
+            label_format=self.pipeline_cfg.label_format,
+            img_dtype=self.pipeline_cfg.img_dtype)
 
     def predict(self, chips, windows):
         if self.learner is None:
