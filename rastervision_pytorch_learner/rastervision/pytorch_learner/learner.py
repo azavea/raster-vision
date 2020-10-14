@@ -486,6 +486,7 @@ class Learner(ABC):
             train_ds,
             shuffle=True,
             batch_size=batch_sz,
+            drop_last=True,
             num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn)
