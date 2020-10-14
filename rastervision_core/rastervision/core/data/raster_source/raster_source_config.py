@@ -14,9 +14,9 @@ class RasterSourceConfig(Config):
     extent_crop: Optional[Tuple[float, float, float, float]] = Field(
         None,
         description='Relative offsets (top, left, bottom, right) for cropping '
-        'the extent of the raster source. Useful for using splitting a scene '
-        'into different datasets. E.g. (0, 0, .8, 0) for the training set and '
-        '(.8, 0, 0, 0) for the validation set will do a 80-20 split by '
+        'the extent of the raster source. Useful for splitting a scene into '
+        'different dataset splits. E.g. (0, 0, 0.8, 0) for the training set '
+        'and (0.8, 0, 0, 0) for the validation set will do a 80-20 split by '
         'height. Defaults to None i.e. no cropping.')
 
     def build(self, tmp_dir, use_transformers=True):
