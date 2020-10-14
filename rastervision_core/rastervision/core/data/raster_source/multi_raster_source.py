@@ -84,7 +84,8 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                 f'Got: {extents} '
                 '(carefully consider using allow_different_extents)')
 
-        sub_num_channels = sum(len(rs.channel_order) for rs in self.raster_sources)
+        sub_num_channels = sum(
+            len(rs.channel_order) for rs in self.raster_sources)
         if sub_num_channels != self.num_channels:
             raise MultiRasterSourceError(
                 f'num_channels ({self.num_channels}) != sum of num_channels '

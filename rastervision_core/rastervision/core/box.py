@@ -83,7 +83,7 @@ class Box():
         for boxind, box in enumerate(boxes):
             npboxes[boxind, :] = box.npbox_format()
         return npboxes
-    
+
     def __iter__(self):
         return iter(self.tuple_format())
 

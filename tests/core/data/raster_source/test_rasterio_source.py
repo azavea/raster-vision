@@ -267,13 +267,8 @@ class TestRasterioSource(unittest.TestCase):
         self.assertEqual(xmax, 256)
 
     def test_extent_crop(self):
-        img_path = data_file_path('small-rgb-tile.tif')
-        cfg_no_crop = RasterioSourceConfig(uris=[img_path])
-        rs_no_crop = cfg_no_crop.build(tmp_dir=self.tmp_dir)
-        extent_no_crop = rs_no_crop.get_extent()
-        h, w = extent_no_crop.get_height(), extent_no_crop.get_width()
-
         f = 1 / 4
+        img_path = data_file_path('small-rgb-tile.tif')
         cfg_crop = RasterioSourceConfig(
             uris=[img_path], extent_crop=(f, f, f, f))
         rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
