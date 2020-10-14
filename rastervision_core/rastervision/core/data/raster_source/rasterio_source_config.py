@@ -38,4 +38,5 @@ class RasterioSourceConfig(RasterSourceConfig):
             allow_streaming=self.allow_streaming,
             channel_order=self.channel_order,
             x_shift=self.x_shift,
-            y_shift=self.y_shift)
+            y_shift=self.y_shift,
+            extent_crop=self.extent_crop)

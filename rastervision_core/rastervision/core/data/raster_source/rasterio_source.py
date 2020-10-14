@@ -5,6 +5,7 @@ from pyproj import Transformer
 import subprocess
 from decimal import Decimal
 import tempfile
+from typing import Optional, Tuple
 
 import numpy as np
 import rasterio
@@ -73,14 +74,16 @@ def load_window(image_dataset, window=None, is_masked=False):
 
 
 class RasterioSource(ActivateMixin, RasterSource):
-    def __init__(self,
-                 uris,
-                 raster_transformers,
-                 tmp_dir,
-                 allow_streaming=False,
-                 channel_order=None,
-                 x_shift=0.0,
-                 y_shift=0.0):
+    def __init__(
+            self,
+            uris,
+            raster_transformers,
+            tmp_dir,
+            allow_streaming=False,
+            channel_order=None,
+            x_shift=0.0,
+            y_shift=0.0,
+            extent_crop: Optional[Tuple[float, float, float, float]] = None):
         """Constructor.
 
         This RasterSource can read any file that can be opened by Rasterio/GDAL
@@ -92,6 +95,10 @@ class RasterioSource(ActivateMixin, RasterSource):
 
         Args:
             channel_order: list of indices of channels to extract from raw imagery
+            extent_crop (Tuple[float, float, float, float], optional): Relative
+                offsets (top, left, bottom, right) for cropping the extent.
+                Useful for using splitting a scene into different datasets.
+                Defaults to None i.e. no cropping.
         """
         self.uris = uris
         self.tmp_dir = tmp_dir
@@ -101,6 +108,7 @@ class RasterioSource(ActivateMixin, RasterSource):
         self.y_shift = y_shift
         self.do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
         self.allow_streaming = allow_streaming
+        self.extent_crop = extent_crop
 
         num_channels = None
 
@@ -156,7 +164,13 @@ class RasterioSource(ActivateMixin, RasterSource):
         return self.crs_transformer
 
     def get_extent(self):
-        return Box(0, 0, self.height, self.width)
+        h, w = self.height, self.width
+        if self.extent_crop is not None:
+            top, left, bottom, right = self.extent_crop
+            ymin, xmin = int(h * top), int(w * left)
+            ymax, xmax = h - int(h * bottom), w - int(w * right)
+            return Box(ymin, xmin, ymax, xmax)
+        return Box(0, 0, h, w)
 
     def get_dtype(self):
         """Return the numpy.dtype of this scene"""
