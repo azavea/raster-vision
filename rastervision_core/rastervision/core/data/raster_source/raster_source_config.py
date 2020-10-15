@@ -15,7 +15,7 @@ class RasterSourceConfig(Config):
         None,
         description='Relative offsets (top, left, bottom, right) for cropping '
         'the extent of the raster source. Useful for splitting a scene into '
-        'different dataset splits. E.g. (0, 0, 0.8, 0) for the training set '
+        'different dataset splits. E.g. (0, 0, 0.2, 0) for the training set '
         'and (0.8, 0, 0, 0) for the validation set will do a 80-20 split by '
         'height. Defaults to None i.e. no cropping.')
 
