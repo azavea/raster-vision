@@ -33,18 +33,18 @@ def get_train_windows(scene,
         if scene.aoi_polygons:
             windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
 
-            filt_windows = []
-            for w in windows:
-                chip = raster_source.get_chip(w)
-                nodata_prop = (chip.sum(axis=-1) == 0).mean()
-                nodata_below_thresh = nodata_prop < chip_nodata_threshold
+        filt_windows = []
+        for w in windows:
+            chip = raster_source.get_chip(w)
+            nodata_prop = (chip.sum(axis=-1) == 0).mean()
+            nodata_below_thresh = nodata_prop < chip_nodata_threshold
 
-                label_arr = label_source.get_labels(w).get_label_arr(w)
-                null_labels = label_arr == class_config.get_null_class_id()
+            label_arr = label_source.get_labels(w).get_label_arr(w)
+            null_labels = label_arr == class_config.get_null_class_id()
 
-                if not np.all(null_labels) and nodata_below_thresh:
-                    filt_windows.append(w)
-            windows = filt_windows
+            if not np.all(null_labels) and nodata_below_thresh:
+                filt_windows.append(w)
+        windows = filt_windows
         return windows
 
     def should_use_window(window):
