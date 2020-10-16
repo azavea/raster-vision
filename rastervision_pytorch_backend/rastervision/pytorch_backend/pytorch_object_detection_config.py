@@ -35,8 +35,7 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
             test_mode=self.test_mode,
             output_uri=pipeline.train_uri,
             log_tensorboard=self.log_tensorboard,
-            run_tensorboard=self.run_tensorboard,
-            predict_normalize=self.predict_normalize)
+            run_tensorboard=self.run_tensorboard)
         learner.update()
         return learner
 

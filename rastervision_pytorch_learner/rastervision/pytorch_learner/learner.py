@@ -664,7 +664,11 @@ class Learner(ABC):
             the same tensor that has been scaled to [0-1].
 
         """
-        return x.float() / 255.0
+        if x.dtype == np.uint8 or x.dtype == np.uint16 or x.dtype == np.uint32:
+            limit = np.iinfo(x.dtype).max
+            return x.float() / float(limit)
+        else:
+            return x.float()
 
     def predict(self,
                 x: Tensor,
@@ -716,8 +720,7 @@ class Learner(ABC):
         x = torch.tensor(x)
         x = self.to_batch(x)
         x = x.permute((0, 3, 1, 2))
-        out = self.predict(
-            x, normalize=self.cfg.predict_normalize, raw_out=raw_out)
+        out = self.predict(x, normalize=True, raw_out=raw_out)
         return self.output_to_numpy(out)
 
     def predict_dataloader(self,

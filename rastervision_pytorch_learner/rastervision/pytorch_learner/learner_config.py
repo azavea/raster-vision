@@ -323,11 +323,6 @@ class LearnerConfig(Config):
     solver: SolverConfig
     data: DataConfig
 
-    predict_normalize: bool = Field(
-        True,
-        description=
-        'Whether to divide imagery by 255 (normalize) before passing to the model.'
-    )
     predict_mode: bool = Field(
         False,
         description='If True, skips training, loads model, and does final eval.'
