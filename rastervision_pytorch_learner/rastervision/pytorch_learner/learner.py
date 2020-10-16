@@ -664,11 +664,12 @@ class Learner(ABC):
             the same tensor that has been scaled to [0-1].
 
         """
-        if x.dtype == np.uint8 or x.dtype == np.uint16 or x.dtype == np.uint32:
-            limit = np.iinfo(x.dtype).max
-            return x.float() / float(limit)
+        if x.dtype == torch.uint8:
+            limit = float(np.iinfo(np.uint8).max)
         else:
-            return x.float()
+            limit = 1.0
+
+        return x.float() / limit
 
     def predict(self,
                 x: Tensor,
