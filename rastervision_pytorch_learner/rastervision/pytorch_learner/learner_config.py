@@ -213,7 +213,10 @@ class SolverConfig(Config):
 
         if self.ignore_last_class is True and has_external_loss_def:
             raise ConfigError(
-                'ignore_last_class is not supported with external_loss_def.')
+                'ignore_last_class=True is not supported with external_loss_def.  '
+                'Please carefully considering using ignore_last_class=\'force\' '
+                'and setting the external loss function to ignore the last index.'
+            )
 
         if has_weights and has_external_loss_def:
             raise ConfigError(
