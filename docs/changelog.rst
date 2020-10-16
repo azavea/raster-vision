@@ -26,6 +26,7 @@ Features
 * Remove 4GB file size limit from VSI file system, allow streaming reads `#1020 <https://github.com/azavea/raster-vision/pull/1020>`_
 * Add reclassification transformer for segmentation label rasters `#1024 <https://github.com/azavea/raster-vision/pull/1024>`_
 * Allow filtering out chips based on proportion of NODATA pixels `#1025 <https://github.com/azavea/raster-vision/pull/1025>`_
+* Allow ignore_last_class to take either a boolean or the literal 'force'; in the latter case validation of that argument is skipped so that it can be used with external loss functions `#1027 <https://github.com/azavea/raster-vision/pull/1027>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
