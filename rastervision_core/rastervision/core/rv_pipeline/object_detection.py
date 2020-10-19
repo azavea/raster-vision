@@ -1,6 +1,7 @@
 import logging
 
 from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision.core.rv_pipeline.utils import nodata_below_threshold
 from rastervision.core.rv_pipeline.object_detection_config import (
     ObjectDetectionWindowMethod)
 from rastervision.core.box import Box
@@ -81,8 +82,9 @@ def make_neg_windows(raster_source,
             label_store.get_labels(), window, ioa_thresh=0.2)
 
         # If no labels and not too many nodata pixels, append the chip
-        nodata_prop = (chip.sum(axis=-1) == 0).mean()
-        if len(labels) == 0 and nodata_prop < chip_nodata_threshold:
+        nodata_below_thresh = nodata_below_threshold(
+            chip, chip_nodata_threshold, nodata_val=0)
+        if len(labels) == 0 and nodata_below_thresh:
             neg_windows.append(window)
 
         if len(neg_windows) == nb_windows:

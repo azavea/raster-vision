@@ -4,6 +4,8 @@ from typing import List
 import numpy as np
 
 from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision.core.rv_pipeline.utils import (fill_no_data,
+                                                 nodata_below_threshold)
 from rastervision.core.box import Box
 from rastervision.core.rv_pipeline.semantic_segmentation_config import (
     SemanticSegmentationWindowMethod)
@@ -33,18 +35,18 @@ def get_train_windows(scene,
         if scene.aoi_polygons:
             windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
 
-            filt_windows = []
-            for w in windows:
-                chip = raster_source.get_chip(w)
-                nodata_prop = (chip.sum(axis=-1) == 0).mean()
-                nodata_below_thresh = nodata_prop < chip_nodata_threshold
+        filt_windows = []
+        for w in windows:
+            chip = raster_source.get_chip(w)
+            nodata_below_thresh = nodata_below_threshold(
+                chip, chip_nodata_threshold, nodata_val=0)
 
-                label_arr = label_source.get_labels(w).get_label_arr(w)
-                null_labels = label_arr == class_config.get_null_class_id()
+            label_arr = label_source.get_labels(w).get_label_arr(w)
+            null_labels = label_arr == class_config.get_null_class_id()
 
-                if not np.all(null_labels) and nodata_below_thresh:
-                    filt_windows.append(w)
-            windows = filt_windows
+            if not np.all(null_labels) and nodata_below_thresh:
+                filt_windows.append(w)
+        windows = filt_windows
         return windows
 
     def should_use_window(window):
@@ -85,14 +87,6 @@ def get_train_windows(scene,
                 windows.append(window)
 
     return windows
-
-
-def fill_no_data(img, label_arr, null_class_id):
-    # If chip has null labels, fill in those pixels with nodata.
-    mask = label_arr == null_class_id
-    if np.any(mask):
-        img[mask, :] = 0
-    return img
 
 
 class SemanticSegmentation(RVPipeline):
