@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence
 from pydantic import conint
 
 import numpy as np
@@ -19,16 +19,15 @@ class MultiRasterSource(ActivateMixin, RasterSource):
     their output along the channel dimension (assumed to be the last dimension).
     """
 
-    def __init__(
-            self,
-            raster_sources: Sequence[RasterSource],
-            raw_channel_order: Sequence[conint(ge=0)],
-            allow_different_extents: bool = False,
-            force_same_dtype: bool = False,
-            channel_order: Optional[Sequence[conint(ge=0)]] = None,
-            crs_source: conint(ge=0) = 0,
-            raster_transformers: Sequence = [],
-            extent_crop: Optional[CropOffsets] = None):
+    def __init__(self,
+                 raster_sources: Sequence[RasterSource],
+                 raw_channel_order: Sequence[conint(ge=0)],
+                 allow_different_extents: bool = False,
+                 force_same_dtype: bool = False,
+                 channel_order: Optional[Sequence[conint(ge=0)]] = None,
+                 crs_source: conint(ge=0) = 0,
+                 raster_transformers: Sequence = [],
+                 extent_crop: Optional[CropOffsets] = None):
         """Constructor.
 
         Args:

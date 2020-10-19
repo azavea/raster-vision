@@ -5,7 +5,7 @@ from pyproj import Transformer
 import subprocess
 from decimal import Decimal
 import tempfile
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import rasterio
@@ -74,16 +74,15 @@ def load_window(image_dataset, window=None, is_masked=False):
 
 
 class RasterioSource(ActivateMixin, RasterSource):
-    def __init__(
-            self,
-            uris,
-            raster_transformers,
-            tmp_dir,
-            allow_streaming=False,
-            channel_order=None,
-            x_shift=0.0,
-            y_shift=0.0,
-            extent_crop: Optional[CropOffsets] = None):
+    def __init__(self,
+                 uris,
+                 raster_transformers,
+                 tmp_dir,
+                 allow_streaming=False,
+                 channel_order=None,
+                 x_shift=0.0,
+                 y_shift=0.0,
+                 extent_crop: Optional[CropOffsets] = None):
         """Constructor.
 
         This RasterSource can read any file that can be opened by Rasterio/GDAL
