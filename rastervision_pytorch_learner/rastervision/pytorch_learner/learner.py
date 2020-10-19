@@ -654,9 +654,22 @@ class Learner(ABC):
             x = x.unsqueeze(0)
         return x
 
-    def predict(self,
-                x: Tensor,
-                raw_out: bool = False) -> Any:
+    def normalize_input(self, x: np.ndarray) -> np.ndarray:
+        """If x.dtype is a subtype of np.unsignedinteger, normalize it to
+        [0, 1] using the max possible value of that dtype. Otherwise, assume
+        it is in [0, 1] already and do nothing.
+
+        Args:
+            x (np.ndarray): an image or batch of images
+        Returns:
+            the same tensor that has been scaled to [0, 1].
+        """
+        if np.issubdtype(x.dtype, np.unsignedinteger):
+            max_val = np.iinfo(x.dtype).max
+            x = x.astype(np.float32) / max_val
+        return x
+
+    def predict(self, x: Tensor, raw_out: bool = False) -> Any:
         """Make prediction for an image or batch of images.
 
         Args:
@@ -677,7 +690,7 @@ class Learner(ABC):
         out = self.to_device(out, 'cpu')
         return out
 
-    def output_to_numpy(self, out: Any) -> Any:
+    def output_to_numpy(self, out: Tensor) -> np.ndarray:
         """Convert output of model to numpy format.
 
         Args:
@@ -687,12 +700,13 @@ class Learner(ABC):
         """
         return out.numpy()
 
-    def numpy_predict(self, x: np.ndarray, raw_out: bool = False) -> Any:
+    def numpy_predict(self, x: np.ndarray,
+                      raw_out: bool = False) -> np.ndarray:
         """Make a prediction using an image or batch of images in numpy format.
         If x.dtype is a subtype of np.unsignedinteger, it will be normalized
-        to [0, 1] using the max possible value of that dtype. If x.dtype is a
-        float, it will be assumed to be in [0, 1] already and will not be
-        normalized. Any other dtype is not guaranteed to be handled correctly.
+        to [0, 1] using the max possible value of that dtype. Otherwise, x will
+        be assumed to be in [0, 1] already and will be cast to torch.float32
+        directly.
 
         Args:
             x: (ndarray) of shape [height, width, channels] or
@@ -702,9 +716,7 @@ class Learner(ABC):
         Returns:
             predictions using numpy arrays
         """
-        if np.issubdtype(x.dtype, np.unsignedinteger):
-            max_val = np.iinfo(x.dtype).max
-            x = x.astype(np.float32) / max_val
+        x = self.normalize_input(x)
         x = torch.tensor(x)
         x = self.to_batch(x)
         x = x.permute((0, 3, 1, 2))
