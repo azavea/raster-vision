@@ -662,7 +662,7 @@ class Learner(ABC):
         Args:
             x (np.ndarray): an image or batch of images
         Returns:
-            the same tensor that has been scaled to [0, 1].
+            the same array scaled to [0, 1].
         """
         if np.issubdtype(x.dtype, np.unsignedinteger):
             max_val = np.iinfo(x.dtype).max
