@@ -90,7 +90,7 @@ class TestRasterioSource(unittest.TestCase):
 
         # test extent_crop=None
         try:
-            _ = make_cfg('small-rgb-tile.tif', extent_crop=None)
+            _ = make_cfg('small-rgb-tile.tif', extent_crop=None)  # noqa
         except Exception:
             self.fail('extent_crop=None caused an error.')
 

@@ -316,7 +316,7 @@ class TestRasterioSource(unittest.TestCase):
 
         # test extent_crop=None
         try:
-            _ = RasterioSourceConfig(uris=[img_path], extent_crop=None)
+            _ = RasterioSourceConfig(uris=[img_path], extent_crop=None)  # noqa
         except Exception:
             self.fail('extent_crop=None caused an error.')
 
