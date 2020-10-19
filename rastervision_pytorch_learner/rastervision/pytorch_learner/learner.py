@@ -654,41 +654,21 @@ class Learner(ABC):
             x = x.unsqueeze(0)
         return x
 
-    def normalize_input(self, x: Tensor) -> Tensor:
-        """Normalize an input image to have values between 0 and 1.
-
-        Args:
-            x: an image or batch of images assumed to be in uint8 format
-
-        Returns:
-            the same tensor that has been scaled to [0-1].
-
-        """
-        if x.dtype == torch.uint8:
-            limit = float(np.iinfo(np.uint8).max)
-        else:
-            limit = 1.0
-
-        return x.float() / limit
-
     def predict(self,
                 x: Tensor,
-                normalize: bool = False,
                 raw_out: bool = False) -> Any:
         """Make prediction for an image or batch of images.
 
         Args:
-            x: image or batch of images
-            normalize: if True, call normalize_input() on x before passing into model
-            raw_out: if True, return prediction probabilities
+            x (Tensor): Image or batch of images as a float Tensor with pixel
+                values normalized to [0, 1].
+            raw_out (bool): if True, return prediction probabilities
 
         Returns:
             the predictions, in probability form if raw_out is True, in class_id form
                 otherwise
         """
-        x = self.to_batch(x)
-        if normalize:
-            x = self.normalize_input(x)
+        x = self.to_batch(x).float()
         x = self.to_device(x, self.device)
         with torch.no_grad():
             out = self.model(x)
@@ -709,19 +689,26 @@ class Learner(ABC):
 
     def numpy_predict(self, x: np.ndarray, raw_out: bool = False) -> Any:
         """Make a prediction using an image or batch of images in numpy format.
+        If x.dtype is a subtype of np.unsignedinteger, it will be normalized
+        to [0, 1] using the max possible value of that dtype. If x.dtype is a
+        float, it will be assumed to be in [0, 1] already and will not be
+        normalized. Any other dtype is not guaranteed to be handled correctly.
 
         Args:
             x: (ndarray) of shape [height, width, channels] or
-                [batch_sz, height, width, channels] in uint8 format
+                [batch_sz, height, width, channels]
             raw_out: if True, return prediction probabilities
 
         Returns:
             predictions using numpy arrays
         """
+        if np.issubdtype(x.dtype, np.unsignedinteger):
+            max_val = np.iinfo(x.dtype).max
+            x = x.astype(np.float32) / max_val
         x = torch.tensor(x)
         x = self.to_batch(x)
         x = x.permute((0, 3, 1, 2))
-        out = self.predict(x, normalize=True, raw_out=raw_out)
+        out = self.predict(x, raw_out=raw_out)
         return self.output_to_numpy(out)
 
     def predict_dataloader(self,
