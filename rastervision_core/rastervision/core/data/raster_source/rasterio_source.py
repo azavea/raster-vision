@@ -14,7 +14,7 @@ from rasterio.enums import (ColorInterp, MaskFlags)
 from rastervision.pipeline.file_system import download_if_needed
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
-from rastervision.core.data.raster_source import RasterSource
+from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
 from rastervision.core.data import (ActivateMixin, ActivationError)
 
 log = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class RasterioSource(ActivateMixin, RasterSource):
             channel_order=None,
             x_shift=0.0,
             y_shift=0.0,
-            extent_crop: Optional[Tuple[float, float, float, float]] = None):
+            extent_crop: Optional[CropOffsets] = None):
         """Constructor.
 
         This RasterSource can read any file that can be opened by Rasterio/GDAL
@@ -95,7 +95,7 @@ class RasterioSource(ActivateMixin, RasterSource):
 
         Args:
             channel_order: list of indices of channels to extract from raw imagery
-            extent_crop (Tuple[float, float, float, float], optional): Relative
+            extent_crop (CropOffsets, optional): Relative
                 offsets (top, left, bottom, right) for cropping the extent.
                 Useful for using splitting a scene into different datasets.
                 Defaults to None i.e. no cropping.
