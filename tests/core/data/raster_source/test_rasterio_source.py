@@ -274,8 +274,9 @@ class TestRasterioSource(unittest.TestCase):
         cfg_crop = RasterioSourceConfig(
             uris=[img_path], extent_crop=(f, f, f, f))
         rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
-        extent_crop = rs_crop.get_extent()
 
+        # test extent box
+        extent_crop = rs_crop.get_extent()
         self.assertEqual(extent_crop.ymin, 64)
         self.assertEqual(extent_crop.xmin, 64)
         self.assertEqual(extent_crop.ymax, 192)
