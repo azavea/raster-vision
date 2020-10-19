@@ -1,7 +1,16 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, NamedTuple
 
-from rastervision.pipeline.config import Config, register_config, Field
+from rastervision.pipeline.config import (Config, register_config, Field,
+                                          validator, ConfigError)
 from rastervision.core.data.raster_transformer import RasterTransformerConfig
+from rastervision.core.utils.misc import Proportion
+
+
+class CropOffsets(NamedTuple):
+    skip_top: Proportion = 0.
+    skip_left: Proportion = 0.
+    skip_bottom: Proportion = 0.
+    skip_right: Proportion = 0.
 
 
 @register_config('raster_source')
@@ -11,13 +20,17 @@ class RasterSourceConfig(Config):
         description=
         'The sequence of channel indices to use when reading imagery.')
     transformers: List[RasterTransformerConfig] = []
-    extent_crop: Optional[Tuple[float, float, float, float]] = Field(
+    extent_crop: CropOffsets = Field(
         None,
-        description='Relative offsets (top, left, bottom, right) for cropping '
+        description='Relative offsets '
+        '(skip_top, skip_left, skip_bottom, skip_right) for cropping '
         'the extent of the raster source. Useful for splitting a scene into '
-        'different dataset splits. E.g. (0, 0, 0.2, 0) for the training set '
-        'and (0.8, 0, 0, 0) for the validation set will do a 80-20 split by '
-        'height. Defaults to None i.e. no cropping.')
+        'different dataset splits. E.g. if you want to use the top 80% of the '
+        'image for training and the bottom 20% for validation you can pass '
+        'extent_crop=CropOffsets(skip_bottom=0.20) to the raster source in '
+        'the training scene and extent_crop=CropOffsets(skip_top=0.80) to the '
+        'raster source in the validation scene. Defaults to None i.e. no '
+        'cropping.')
 
     def build(self, tmp_dir, use_transformers=True):
         raise NotImplementedError()
@@ -25,3 +38,14 @@ class RasterSourceConfig(Config):
     def update(self, pipeline=None, scene=None):
         for t in self.transformers:
             t.update(pipeline, scene)
+
+    @validator('extent_crop')
+    def validate_extent_crop(cls, v):
+        skip_top, skip_left, skip_bottom, skip_right = v
+        if skip_top + skip_bottom >= 1:
+            raise ConfigError(
+                'Invalid crop. skip_top + skip_bottom must be less than 1.')
+        if skip_left + skip_right >= 1:
+            raise ConfigError(
+                'Invalid crop. skip_left + skip_right must be less than 1.')
+        return v

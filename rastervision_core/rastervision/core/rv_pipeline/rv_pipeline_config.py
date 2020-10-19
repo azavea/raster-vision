@@ -1,10 +1,10 @@
 from os.path import join
 from typing import List, TYPE_CHECKING, Optional
-from pydantic import confloat
 
 from rastervision.pipeline.pipeline_config import PipelineConfig
 from rastervision.core.data import (DatasetConfig, StatsTransformerConfig,
                                     LabelStoreConfig, SceneConfig)
+from rastervision.core.utils.misc import Proportion
 from rastervision.core.analyzer import StatsAnalyzerConfig
 from rastervision.core.backend import BackendConfig
 from rastervision.core.evaluation import EvaluatorConfig
@@ -13,8 +13,6 @@ from rastervision.pipeline.config import register_config, Field
 
 if TYPE_CHECKING:
     from rastervision.core.backend.backend import Backend  # noqa
-
-Proportion = confloat(ge=0, le=1)
 
 
 @register_config('rv_pipeline')

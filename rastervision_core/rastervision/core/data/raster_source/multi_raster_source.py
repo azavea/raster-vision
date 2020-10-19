@@ -99,9 +99,9 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         extent = rs.get_extent()
         if self.extent_crop is not None:
             h, w = extent.get_height(), extent.get_width()
-            top, left, bottom, right = self.extent_crop
-            ymin, xmin = int(h * top), int(w * left)
-            ymax, xmax = h - int(h * bottom), w - int(w * right)
+            skip_top, skip_left, skip_bottom, skip_right = self.extent_crop
+            ymin, xmin = int(h * skip_top), int(w * skip_left)
+            ymax, xmax = h - int(h * skip_bottom), w - int(w * skip_right)
             return Box(ymin, xmin, ymax, xmax)
         return extent
 
