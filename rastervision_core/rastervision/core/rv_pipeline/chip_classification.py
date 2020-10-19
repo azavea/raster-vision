@@ -1,6 +1,7 @@
 import logging
 
 from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision.core.rv_pipeline.utils import nodata_below_threshold
 from rastervision.core.box import Box
 
 log = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ def get_train_windows(scene, chip_size, chip_nodata_threshold=1.):
         windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
     for window in windows:
         chip = scene.raster_source.get_chip(window)
-        if (chip.sum(axis=-1) == 0).mean() < chip_nodata_threshold:
+        if nodata_below_threshold(chip, chip_nodata_threshold, nodata_val=0):
             train_windows.append(window)
     return train_windows
 
