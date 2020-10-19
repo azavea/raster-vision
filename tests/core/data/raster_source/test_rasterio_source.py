@@ -313,6 +313,12 @@ class TestRasterioSource(unittest.TestCase):
             lambda: RasterioSourceConfig(uris=[img_path],
                                          extent_crop=extent_crop))
 
+        # test extent_crop=None
+        try:
+            _ = RasterioSourceConfig(uris=[img_path], extent_crop=None)
+        except Exception:
+            self.fail('extent_crop=None caused an error.')
+
 
 if __name__ == '__main__':
     unittest.main()

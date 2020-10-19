@@ -7,6 +7,15 @@ from rastervision.core.utils.misc import Proportion
 
 
 class CropOffsets(NamedTuple):
+    """Tuple of relative offsets.
+
+    Args:
+        skip_top (Proportion): Proportion of height to exclude from the top.
+        skip_left (Proportion): Proportion of width to exclude from the left.
+        skip_bottom (Proportion): Proportion of height to exclude from the
+            bottom.
+        skip_right (Proportion): Proportion of width to exclude from the right.
+    """
     skip_top: Proportion = 0.
     skip_left: Proportion = 0.
     skip_bottom: Proportion = 0.
@@ -41,6 +50,8 @@ class RasterSourceConfig(Config):
 
     @validator('extent_crop')
     def validate_extent_crop(cls, v):
+        if v is None:
+            return v
         skip_top, skip_left, skip_bottom, skip_right = v
         if skip_top + skip_bottom >= 1:
             raise ConfigError(

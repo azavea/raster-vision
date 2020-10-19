@@ -87,6 +87,12 @@ class TestRasterioSource(unittest.TestCase):
             ValidationError,
             lambda: make_cfg('small-rgb-tile.tif', extent_crop=extent_crop))
 
+        # test extent_crop=None
+        try:
+            _ = make_cfg('small-rgb-tile.tif', extent_crop=None)
+        except Exception:
+            self.fail('extent_crop=None caused an error.')
+
 
 if __name__ == '__main__':
     unittest.main()
