@@ -1,9 +1,12 @@
 import io
+from pydantic import confloat
 
 from PIL import Image
 import numpy as np
 import imageio
 import logging
+
+Proportion = confloat(ge=0, le=1)
 
 log = logging.getLogger(__name__)
 

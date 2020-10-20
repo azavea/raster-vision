@@ -195,6 +195,23 @@ class TestBox(unittest.TestCase):
             [window.tuple_format() for window in expected_windows])
         self.assertSetEqual(windows, expected_windows)
 
+    def test_unpacking(self):
+        box = Box(1, 2, 3, 4)
+        ymin, xmin, ymax, xmax = box
+        self.assertEqual((ymin, xmin, ymax, xmax), box.tuple_format())
+
+    def test_subscripting(self):
+        box = Box(1, 2, 3, 4)
+        self.assertEqual(box[0], 1)
+        self.assertEqual(box[1], 2)
+        self.assertEqual(box[2], 3)
+        self.assertEqual(box[3], 4)
+        self.assertRaises(IndexError, lambda: box[4])
+
+    def test_repr(self):
+        box = Box(1, 2, 3, 4)
+        self.assertEqual(box.__repr__(), 'Box(1, 2, 3, 4)')
+
 
 if __name__ == '__main__':
     unittest.main()
