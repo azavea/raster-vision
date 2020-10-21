@@ -111,6 +111,10 @@ class SemanticSegmentation(RVPipeline):
             img_channels = scene.raster_source.num_channels
         return img_channels
 
+    def chip(self, *args, **kwargs):
+        log.info('Chip options:', self.config.chip_options)
+        super().chip(*args, **kwargs)
+
     def get_train_windows(self, scene):
         return get_train_windows(
             scene,
