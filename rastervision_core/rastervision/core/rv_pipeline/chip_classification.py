@@ -26,7 +26,7 @@ def get_train_windows(scene: Scene,
         chip = scene.raster_source.get_chip(window)
         if nodata_below_threshold(chip, chip_nodata_threshold, nodata_val=0):
             train_windows.append(window)
-    log.info('Label and NODATA filtering: '
+    log.info('NODATA filtering: '
              f'{len(train_windows)}/{len(windows)} chips accepted')
     return train_windows
 
