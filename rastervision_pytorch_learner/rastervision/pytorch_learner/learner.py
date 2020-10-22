@@ -426,7 +426,10 @@ class Learner(ABC):
 
     def get_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
         """Returns train, validation, and test DataSets."""
-        if self.cfg.data.group_uris:
+        if self.cfg.data.group_uris is not None:
+            if self.cfg.data.uri is not None:
+                log.warn('Both DataConfig.uri and DataConfig.group_uris '
+                         'given. DataConfig.uri will be ignored.')
             train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
             for group_uri in self.cfg.data.group_uris:
                 train_ds, valid_ds, test_ds = self._get_datasets(group_uri)

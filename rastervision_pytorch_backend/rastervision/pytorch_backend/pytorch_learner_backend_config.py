@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import PositiveInt
 
 from rastervision.pipeline.config import (register_config, Field, validator)
@@ -51,6 +51,15 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         'dataset. Defaults to train_chip_sz in the pipeline config.')
     num_workers: int = Field(
         4, description='The number of workers to use in PyTorch to read data.')
+    group_uris: Optional[List[Union[str, List[str]]]] = Field(
+        None,
+        description='This is passed on to DataConfig.group_uris and takes '
+        'precedence over chip_uri in the pipeline config. See DataConfig for '
+        'details.')
+    group_train_sz: Optional[int] = Field(
+        None,
+        description='If group_uris is set, this can be used to specify the '
+        'number of chips to use per group. See DataConfig for details.')
 
     # validators
     _base_tf = validator(
