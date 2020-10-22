@@ -32,11 +32,15 @@ def get_train_windows(scene,
     label_source = scene.ground_truth_label_source
 
     def filter_windows(windows):
+        total_windows = len(windows)
+
         if scene.aoi_polygons:
             windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
+            log.info(f'AOI filtering: {len(windows)}/{total_windows} '
+                     'chips accepted')
 
         filt_windows = []
-        for w in windows:
+        for i, w in enumerate(windows):
             chip = raster_source.get_chip(w)
             nodata_below_thresh = nodata_below_threshold(
                 chip, chip_nodata_threshold, nodata_val=0)
@@ -46,6 +50,10 @@ def get_train_windows(scene,
 
             if not np.all(null_labels) and nodata_below_thresh:
                 filt_windows.append(w)
+
+            if (i + 1) % 500 == 0:
+                log.info('Label and NODATA filtering: '
+                         f'{len(filt_windows)}/{i + 1} chips accepted')
         windows = filt_windows
         return windows
 
@@ -112,7 +120,7 @@ class SemanticSegmentation(RVPipeline):
         return img_channels
 
     def chip(self, *args, **kwargs):
-        log.info('Chip options:', self.config.chip_options)
+        log.info(f'Chip options: {self.config.chip_options}')
         super().chip(*args, **kwargs)
 
     def get_train_windows(self, scene):
