@@ -45,7 +45,7 @@ def get_train_windows(scene: Scene,
                      'chips accepted')
 
         filt_windows = []
-        for i, w in enumerate(windows):
+        for w in windows:
             chip = raster_source.get_chip(w)
             nodata_below_thresh = nodata_below_threshold(
                 chip, chip_nodata_threshold, nodata_val=0)
