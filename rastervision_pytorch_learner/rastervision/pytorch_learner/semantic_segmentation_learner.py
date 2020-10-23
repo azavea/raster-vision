@@ -181,31 +181,32 @@ class SemanticSegmentationLearner(Learner):
             train_dir = join(data_dir, 'train')
             valid_dir = join(data_dir, 'valid')
 
+            _train_ds, _valid_ds, _test_ds = [], [], []
             if isdir(train_dir):
                 tf = transform if cfg.overfit_mode else aug_transform
-                ds = SemanticSegmentationDataset(
+                _train_ds = SemanticSegmentationDataset(
                     train_dir,
                     img_fmt=img_fmt,
                     label_fmt=label_fmt,
                     transform=tf)
-                train_ds.append(ds)
-
             if isdir(valid_dir):
-                valid_ds.append(
-                    SemanticSegmentationDataset(
-                        valid_dir,
-                        img_fmt=img_fmt,
-                        label_fmt=label_fmt,
-                        transform=transform))
-                test_ds.append(
-                    SemanticSegmentationDataset(
-                        valid_dir,
-                        img_fmt=img_fmt,
-                        label_fmt=label_fmt,
-                        transform=transform))
+                _valid_ds = SemanticSegmentationDataset(
+                    valid_dir,
+                    img_fmt=img_fmt,
+                    label_fmt=label_fmt,
+                    transform=transform)
+                _test_ds = SemanticSegmentationDataset(
+                    valid_dir,
+                    img_fmt=img_fmt,
+                    label_fmt=label_fmt,
+                    transform=transform)
+            train_ds.append(_train_ds)
+            valid_ds.append(_valid_ds)
+            test_ds.append(_test_ds)
 
-        train_ds, valid_ds, test_ds = \
-            ConcatDataset(train_ds), ConcatDataset(valid_ds), ConcatDataset(test_ds)
+        train_ds, valid_ds, test_ds = (ConcatDataset(train_ds),
+                                       ConcatDataset(valid_ds),
+                                       ConcatDataset(test_ds))
 
         return train_ds, valid_ds, test_ds
 
