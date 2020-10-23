@@ -5,7 +5,7 @@ from rastervision.pipeline.config import (register_config, Field, validator)
 from rastervision.core.backend import BackendConfig
 from rastervision.pytorch_learner.learner_config import (
     SolverConfig, ModelConfig, default_augmentors, augmentors as
-    augmentor_list, PlotOptions)
+    augmentor_list, PlotOptions, CountOrProportion)
 from rastervision.pytorch_learner.utils import validate_albumentation_transform
 
 
@@ -56,10 +56,11 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         description='This is passed on to DataConfig.group_uris and takes '
         'precedence over chip_uri in the pipeline config. See DataConfig for '
         'details.')
-    group_train_sz: Optional[int] = Field(
-        None,
-        description='If group_uris is set, this can be used to specify the '
-        'number of chips to use per group. See DataConfig for details.')
+    group_train_sz: Optional[Union[CountOrProportion, List[
+        CountOrProportion]]] = Field(
+            None,
+            description='If group_uris is set, this can be used to specify the '
+            'number of chips to use per group. See DataConfig for details.')
 
     # validators
     _base_tf = validator(
