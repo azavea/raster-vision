@@ -264,7 +264,7 @@ class DataConfig(Config):
             None,
             description='If group_uris is set, this can be used to specify the '
             'number of chips to use per group. Only applies to training chips. '
-            'This can either be single value that will be used for all groups or '
+            'This can either be a single value that will be used for all groups or '
             'a list of values (one for each group). If an int, the value is '
             'interpreted as the exact number of chips. If a float between 0 and '
             '1, it is interpreted as the proportion of the total number of chips '
