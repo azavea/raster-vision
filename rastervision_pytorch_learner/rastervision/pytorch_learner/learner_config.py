@@ -3,7 +3,7 @@ from enum import Enum
 
 from typing import (List, Optional, Union, TYPE_CHECKING)
 from typing_extensions import Literal
-from pydantic import PositiveFloat, PositiveInt, constr
+from pydantic import PositiveFloat, PositiveInt, constr, confloat
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, validator)
@@ -18,6 +18,10 @@ augmentors = [
 
 if TYPE_CHECKING:
     from rastervision.pytorch_learner.learner import Learner  # noqa
+
+# types
+CountOrProportion = Union[confloat(ge=0, le=1), int]
+NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 
 class Backbone(Enum):
@@ -97,9 +101,6 @@ class Backbone(Enum):
             35: 'vgg19'
         }
         return mapping[x]
-
-
-NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 
 @register_config('external-module')
@@ -241,7 +242,7 @@ class PlotOptions(Config):
 @register_config('data')
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
-    uri: Union[None, str, List[str]] = Field(
+    uri: Optional[Union[str, List[str]]] = Field(
         None,
         description=
         ('URI of the dataset. This can be a zip file, a list of zip files, or a '
@@ -251,22 +252,27 @@ class DataConfig(Config):
         description=
         ('If set, the number of training images to use. If fewer images exist, '
          'then an exception will be raised.'))
-    group_uris: Union[None, List[Union[str, List[str]]]] = Field(
+    group_uris: Optional[List[Union[str, List[str]]]] = Field(
         None,
         description=
         ('This can be set instead of uri in order to specify groups of chips. Each '
          'element in the list is expected to be an object of the same form accepted by '
          'the uri field. The purpose of separating chips into groups is to be able to '
          'use the group_train_sz field.'))
-    group_train_sz: Optional[int] = Field(
-        None,
-        description=
-        ('If group_uris is set, this can be used to specify the number of chips to use '
-         'per group.'))
+    group_train_sz: Optional[Union[CountOrProportion, List[
+        CountOrProportion]]] = Field(
+            None,
+            description='If group_uris is set, this can be used to specify the '
+            'number of chips to use per group. Only applies to training chips. '
+            'This can either be single value that will be used for all groups or '
+            'a list of values (one for each group). If an int, the value is '
+            'interpreted as the exact number of chips. If a float between 0 and '
+            '1, it is interpreted as the proportion of the total number of chips '
+            'in the group.')
     data_format: Optional[str] = Field(
         None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
-    class_colors: Union[None, List[str], List[List]] = Field(
+    class_colors: Optional[Union[List[str], List[List]]] = Field(
         None,
         description=('Colors used to display classes. '
                      'Can be color 3-tuples in list form.'))
