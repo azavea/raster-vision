@@ -1,23 +1,24 @@
 import logging
-from typing import List
+from typing import List, Sequence
 
 import numpy as np
 
+from rastervision.core.box import Box
+from rastervision.core.data import ClassConfig, Scene
 from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
 from rastervision.core.rv_pipeline.utils import (fill_no_data,
                                                  nodata_below_threshold)
-from rastervision.core.box import Box
 from rastervision.core.rv_pipeline.semantic_segmentation_config import (
-    SemanticSegmentationWindowMethod)
+    SemanticSegmentationWindowMethod, SemanticSegmentationChipOptions)
 
 log = logging.getLogger(__name__)
 
 
-def get_train_windows(scene,
-                      class_config,
-                      chip_size,
-                      chip_options,
-                      chip_nodata_threshold=1.) -> List[Box]:
+def get_train_windows(scene: Scene,
+                      class_config: ClassConfig,
+                      chip_size: int,
+                      chip_options: SemanticSegmentationChipOptions,
+                      chip_nodata_threshold: float = 1.) -> List[Box]:
     """Get training windows covering a scene.
 
     Args:
@@ -31,9 +32,17 @@ def get_train_windows(scene,
     extent = raster_source.get_extent()
     label_source = scene.ground_truth_label_source
 
-    def filter_windows(windows):
+    def filter_windows(windows: Sequence[Box]) -> List[Box]:
+        """Filter out chips that
+        (1) are outside the AOI
+        (2) only consist of null labels
+        (3) have NODATA proportion >= chip_nodata_threshold
+        """
+        total_windows = len(windows)
         if scene.aoi_polygons:
             windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
+            log.info(f'AOI filtering: {len(windows)}/{total_windows} '
+                     'chips accepted')
 
         filt_windows = []
         for w in windows:
@@ -46,10 +55,13 @@ def get_train_windows(scene,
 
             if not np.all(null_labels) and nodata_below_thresh:
                 filt_windows.append(w)
+        log.info('Label and NODATA filtering: '
+                 f'{len(filt_windows)}/{len(windows)} chips accepted')
+
         windows = filt_windows
         return windows
 
-    def should_use_window(window):
+    def should_use_window(window: Box) -> bool:
         if co.negative_survival_prob >= 1.0:
             return True
         else:
@@ -110,6 +122,10 @@ class SemanticSegmentation(RVPipeline):
         with scene.activate():
             img_channels = scene.raster_source.num_channels
         return img_channels
+
+    def chip(self, *args, **kwargs):
+        log.info(f'Chip options: {self.config.chip_options}')
+        return super().chip(*args, **kwargs)
 
     def get_train_windows(self, scene):
         return get_train_windows(
