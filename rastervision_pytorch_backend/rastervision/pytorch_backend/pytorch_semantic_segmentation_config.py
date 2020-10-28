@@ -20,6 +20,7 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
             uri=pipeline.chip_uri,
             group_uris=self.group_uris,
             group_train_sz=self.group_train_sz,
+            group_train_sz_rel=self.group_train_sz_rel,
             class_names=pipeline.dataset.class_config.names,
             class_colors=pipeline.dataset.class_config.colors,
             img_sz=self.img_sz,

@@ -433,9 +433,14 @@ class Learner(ABC):
                          'specified. Only DataConfig.group_uris will be used.')
             train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
 
-            group_sizes = self.cfg.data.group_train_sz
+            group_sizes = None
+            if self.cfg.data.group_train_sz is not None:
+                group_sizes = self.cfg.data.group_train_sz
+            elif self.cfg.data.group_train_sz_rel is not None:
+                group_sizes = self.cfg.data.group_train_sz_rel
             if not sequence_like(group_sizes):
                 group_sizes = [group_sizes] * len(self.cfg.data.group_uris)
+
             for uri, sz in zip(self.cfg.data.group_uris, group_sizes):
                 train_ds, valid_ds, test_ds = self._get_datasets(uri)
                 if sz is not None:

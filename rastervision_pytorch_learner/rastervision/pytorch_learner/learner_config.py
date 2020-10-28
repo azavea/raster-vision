@@ -4,6 +4,7 @@ from enum import Enum
 from typing import (List, Optional, Union, TYPE_CHECKING)
 from typing_extensions import Literal
 from pydantic import PositiveFloat, PositiveInt, constr, confloat
+from pydantic.utils import sequence_like
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, validator)
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from rastervision.pytorch_learner.learner import Learner  # noqa
 
 # types
-CountOrProportion = Union[confloat(ge=0, le=1), int]
+Proportion = confloat(ge=0, le=1)
 NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 
@@ -255,20 +256,24 @@ class DataConfig(Config):
     group_uris: Optional[List[Union[str, List[str]]]] = Field(
         None,
         description=
-        ('This can be set instead of uri in order to specify groups of chips. Each '
-         'element in the list is expected to be an object of the same form accepted by '
-         'the uri field. The purpose of separating chips into groups is to be able to '
-         'use the group_train_sz field.'))
-    group_train_sz: Optional[Union[CountOrProportion, List[
-        CountOrProportion]]] = Field(
-            None,
-            description='If group_uris is set, this can be used to specify the '
-            'number of chips to use per group. Only applies to training chips. '
-            'This can either be a single value that will be used for all groups or '
-            'a list of values (one for each group). If an int, the value is '
-            'interpreted as the exact number of chips. If a float between 0 and '
-            '1, it is interpreted as the proportion of the total number of chips '
-            'in the group.')
+        'This can be set instead of uri in order to specify groups of chips. '
+        'Each element in the list is expected to be an object of the same '
+        'form accepted by the uri field. The purpose of separating chips into '
+        'groups is to be able to use the group_train_sz field.')
+    group_train_sz: Optional[Union[int, List[int]]] = Field(
+        None,
+        description='If group_uris is set, this can be used to specify the '
+        'number of chips to use per group. Only applies to training chips. '
+        'This can either be a single value that will be used for all groups '
+        'or a list of values (one for each group).')
+    group_train_sz_rel: Optional[Union[Proportion, List[Proportion]]] = Field(
+        None,
+        description='Relative version of group_train_sz. Must be a float '
+        'in [0, 1]. If group_uris is set, this can be used to specify the '
+        'proportion of the total chips in each group to use per group. '
+        'Only applies to training chips. This can either be a single value '
+        'that will be used for all groups or a list of values '
+        '(one for each group).')
     data_format: Optional[str] = Field(
         None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
@@ -320,6 +325,28 @@ class DataConfig(Config):
 
     def validate_config(self):
         self.validate_augmentors()
+        self.validate_group_uris()
+
+    def validate_group_uris(self):
+        has_group_train_sz = self.group_train_sz is not None
+        has_group_train_sz_rel = self.group_train_sz_rel is not None
+        has_group_uris = self.group_uris is not None
+
+        if has_group_train_sz and has_group_train_sz_rel:
+            raise ConfigError('Only one of group_train_sz and '
+                              'group_train_sz_rel should be specified.')
+        if has_group_train_sz and not has_group_uris:
+            raise ConfigError('group_train_sz specified without group_uris.')
+        if has_group_train_sz_rel and not has_group_uris:
+            raise ConfigError(
+                'group_train_sz_rel specified without group_uris.')
+        if has_group_train_sz and sequence_like(self.group_train_sz):
+            if len(self.group_train_sz) != len(self.group_uris):
+                raise ConfigError('len(group_train_sz) != len(group_uris).')
+        if has_group_train_sz_rel and sequence_like(self.group_train_sz_rel):
+            if len(self.group_train_sz_rel) != len(self.group_uris):
+                raise ConfigError(
+                    'len(group_train_sz_rel) != len(group_uris).')
 
 
 @register_config('learner')
