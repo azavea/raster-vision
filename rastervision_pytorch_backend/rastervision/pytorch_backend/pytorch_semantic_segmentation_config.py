@@ -32,7 +32,8 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
             base_transform=self.base_transform,
             aug_transform=self.aug_transform,
             plot_options=self.plot_options,
-            channel_display_groups=pipeline.channel_display_groups)
+            channel_display_groups=pipeline.channel_display_groups,
+            preview_batch_limit=self.preview_batch_limit)
 
         learner = SemanticSegmentationLearnerConfig(
             data=data,

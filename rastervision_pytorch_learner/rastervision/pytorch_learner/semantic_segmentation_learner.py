@@ -251,7 +251,8 @@ class SemanticSegmentationLearner(Learner):
                    x: torch.Tensor,
                    y: Union[torch.Tensor, np.ndarray],
                    output_path: str,
-                   z: Optional[torch.Tensor] = None) -> None:
+                   z: Optional[torch.Tensor] = None,
+                   batch_limit: Optional[int] = None) -> None:
         """Plot a whole batch in a grid using plot_xyz.
 
         Args:
@@ -259,8 +260,11 @@ class SemanticSegmentationLearner(Learner):
             y: ground truth labels
             output_path: local path where to save plot image
             z: optional predicted labels
+            batch_limit: optional limit on (rendered) batch size
         """
         batch_sz, c, h, w = x.shape
+        batch_sz = min(batch_sz,
+                       batch_limit) if batch_limit is not None else batch_sz
         channel_groups = self.cfg.data.channel_display_groups
 
         nrows = batch_sz

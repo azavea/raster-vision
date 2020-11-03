@@ -72,6 +72,11 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         'Only applies to training chips. This can either be a single value '
         'that will be used for all groups or a list of values '
         '(one for each group).')
+    preview_batch_limit: Optional[int] = Field(
+        None,
+        description=
+        ('Optional limit on the number of items in the preview plots produced '
+         'during training.'))
 
     # validators
     _base_tf = validator(

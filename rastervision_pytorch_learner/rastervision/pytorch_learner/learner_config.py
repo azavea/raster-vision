@@ -309,6 +309,11 @@ class DataConfig(Config):
         'augmentors option is ignored.')
     plot_options: Optional[PlotOptions] = Field(
         PlotOptions(), description='Options to control plotting.')
+    preview_batch_limit: Optional[int] = Field(
+        None,
+        description=
+        ('Optional limit on the number of items in the preview plots produced '
+         'during training.'))
 
     # validators
     _base_tf = validator(
