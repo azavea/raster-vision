@@ -27,6 +27,7 @@ class PyTorchChipClassificationConfig(PyTorchLearnerBackendConfig):
         data.aug_transform = self.aug_transform
         data.plot_options = self.plot_options
         data.num_workers = self.num_workers
+        data.preview_batch_limit = self.preview_batch_limit
 
         learner = ClassificationLearnerConfig(
             data=data,
