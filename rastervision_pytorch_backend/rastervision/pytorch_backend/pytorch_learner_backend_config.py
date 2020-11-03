@@ -1,11 +1,11 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import PositiveInt
 
 from rastervision.pipeline.config import (register_config, Field, validator)
 from rastervision.core.backend import BackendConfig
 from rastervision.pytorch_learner.learner_config import (
     SolverConfig, ModelConfig, default_augmentors, augmentors as
-    augmentor_list, PlotOptions)
+    augmentor_list, PlotOptions, Proportion)
 from rastervision.pytorch_learner.utils import validate_albumentation_transform
 
 
@@ -51,6 +51,27 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         'dataset. Defaults to train_chip_sz in the pipeline config.')
     num_workers: int = Field(
         4, description='The number of workers to use in PyTorch to read data.')
+    group_uris: Optional[List[Union[str, List[str]]]] = Field(
+        None,
+        description=
+        'This can be set instead of uri in order to specify groups of chips. '
+        'Each element in the list is expected to be an object of the same '
+        'form accepted by the uri field. The purpose of separating chips into '
+        'groups is to be able to use the group_train_sz field.')
+    group_train_sz: Optional[Union[int, List[int]]] = Field(
+        None,
+        description='If group_uris is set, this can be used to specify the '
+        'number of chips to use per group. Only applies to training chips. '
+        'This can either be a single value that will be used for all groups '
+        'or a list of values (one for each group).')
+    group_train_sz_rel: Optional[Union[Proportion, List[Proportion]]] = Field(
+        None,
+        description='Relative version of group_train_sz. Must be a float '
+        'in [0, 1]. If group_uris is set, this can be used to specify the '
+        'proportion of the total chips in each group to use per group. '
+        'Only applies to training chips. This can either be a single value '
+        'that will be used for all groups or a list of values '
+        '(one for each group).')
 
     # validators
     _base_tf = validator(

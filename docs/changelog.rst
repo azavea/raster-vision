@@ -30,6 +30,7 @@ Features
 * Add ability to crop raster source extent `#1030 <https://github.com/azavea/raster-vision/pull/1030>`_
 * Accept immediate geometries in SceneConfig `#1033 <https://github.com/azavea/raster-vision/pull/1033>`_
 * Only perform normalization on unsigned integer types `#1028 <https://github.com/azavea/raster-vision/pull/1028>`_
+* Make group_uris specifiable and add group_train_sz_rel `#1035 <https://github.com/azavea/raster-vision/pull/1035>`_
 
 Bug Fixes
 ~~~~~~~~~~~~

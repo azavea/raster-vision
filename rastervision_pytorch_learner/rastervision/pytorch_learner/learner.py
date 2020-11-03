@@ -13,6 +13,7 @@ from subprocess import Popen
 import numbers
 import zipfile
 from typing import Optional, List, Tuple, Dict, Union, Any
+from pydantic.utils import sequence_like
 import random
 import uuid
 
@@ -426,16 +427,29 @@ class Learner(ABC):
 
     def get_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
         """Returns train, validation, and test DataSets."""
-        if self.cfg.data.group_uris:
+        if self.cfg.data.group_uris is not None:
+            if self.cfg.data.uri is not None:
+                log.warn('Both DataConfig.uri and DataConfig.group_uris '
+                         'specified. Only DataConfig.group_uris will be used.')
             train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
-            for group_uri in self.cfg.data.group_uris:
-                train_ds, valid_ds, test_ds = self._get_datasets(group_uri)
-                group_train_sz = self.cfg.data.group_train_sz
-                if group_train_sz is not None:
+
+            group_sizes = None
+            if self.cfg.data.group_train_sz is not None:
+                group_sizes = self.cfg.data.group_train_sz
+            elif self.cfg.data.group_train_sz_rel is not None:
+                group_sizes = self.cfg.data.group_train_sz_rel
+            if not sequence_like(group_sizes):
+                group_sizes = [group_sizes] * len(self.cfg.data.group_uris)
+
+            for uri, sz in zip(self.cfg.data.group_uris, group_sizes):
+                train_ds, valid_ds, test_ds = self._get_datasets(uri)
+                if sz is not None:
+                    if isinstance(sz, float):
+                        sz = int(len(train_ds) * sz)
                     train_inds = list(range(len(train_ds)))
                     random.seed(1234)
                     random.shuffle(train_inds)
-                    train_inds = train_inds[0:group_train_sz]
+                    train_inds = train_inds[:sz]
                     train_ds = Subset(train_ds, train_inds)
                 train_ds_lst.append(train_ds)
                 valid_ds_lst.append(valid_ds)
