@@ -8,6 +8,9 @@ from rastervision.core.data.label_source import LabelSourceConfig
 from rastervision.core.data.label_store import LabelStoreConfig
 from rastervision.core.data.scene import Scene
 from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
+from rastervision.core.data.vector_source import transform_geojson
+
+import copy
 
 
 @register_config('scene')
@@ -17,6 +20,11 @@ class SceneConfig(Config):
     raster_source: RasterSourceConfig
     label_source: LabelSourceConfig
     label_store: Optional[LabelStoreConfig] = None
+    aoi_geometries: Optional[List[dict]] = Field(
+        None,
+        description=(
+            'An array of GeoJSON geometries represented as Python dictionaries'
+        ))
     aoi_uris: Optional[List[str]] = Field(
         None,
         description=
@@ -37,9 +45,20 @@ class SceneConfig(Config):
                                               extent, tmp_dir)
                        if self.label_store is not None else None)
 
-        aoi_polygons = None
-        if self.aoi_uris is not None:
+        # Immediate AOI geometries
+        if self.aoi_geometries is not None:
             aoi_polygons = []
+            geojson = {'features': copy.deepcopy(self.aoi_geometries)}
+            aoi_geojson = transform_geojson(geojson, crs_transformer)
+            for f in aoi_geojson['features']:
+                aoi_polygons.append(shape(f['geometry']))
+        else:
+            aoi_polygons = None
+
+        # AOI geometries from files
+        if self.aoi_uris is not None:
+            if aoi_polygons is None:
+                aoi_polygons = []
             for uri in self.aoi_uris:
                 # Set default class id to 0 to avoid deleting features. If it was
                 # set to None, they would all be deleted.

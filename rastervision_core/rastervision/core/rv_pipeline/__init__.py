@@ -11,3 +11,4 @@ from rastervision.core.rv_pipeline.semantic_segmentation import *
 from rastervision.core.rv_pipeline.semantic_segmentation_config import *
 from rastervision.core.rv_pipeline.object_detection import *
 from rastervision.core.rv_pipeline.object_detection_config import *
+from rastervision.core.rv_pipeline.utils import *

@@ -2,7 +2,9 @@ from os.path import join
 from enum import Enum
 
 from typing import (List, Optional, Union, TYPE_CHECKING)
-from pydantic import PositiveFloat, PositiveInt, constr
+from typing_extensions import Literal
+from pydantic import PositiveFloat, PositiveInt, constr, confloat
+from pydantic.utils import sequence_like
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, validator)
@@ -17,6 +19,10 @@ augmentors = [
 
 if TYPE_CHECKING:
     from rastervision.pytorch_learner.learner import Learner  # noqa
+
+# types
+Proportion = confloat(ge=0, le=1)
+NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 
 class Backbone(Enum):
@@ -96,9 +102,6 @@ class Backbone(Enum):
             35: 'vgg19'
         }
         return mapping[x]
-
-
-NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 
 
 @register_config('external-module')
@@ -195,7 +198,7 @@ class SolverConfig(Config):
         [], description=('List of epoch indices at which to divide LR by 10.'))
     class_loss_weights: Optional[Union[list, tuple]] = Field(
         None, description=('Class weights for weighted loss.'))
-    ignore_last_class: bool = Field(
+    ignore_last_class: Union[bool, Literal['force']] = Field(
         False,
         description=('Whether to ignore the last class during training.'))
     external_loss_def: Optional[ExternalModuleConfig] = Field(
@@ -210,9 +213,12 @@ class SolverConfig(Config):
         has_weights = self.class_loss_weights is not None
         has_external_loss_def = self.external_loss_def is not None
 
-        if self.ignore_last_class and has_external_loss_def:
+        if self.ignore_last_class is True and has_external_loss_def:
             raise ConfigError(
-                'ignore_last_class is not supported with external_loss_def.')
+                'ignore_last_class=True is not supported with external_loss_def.  '
+                'Please carefully considering using ignore_last_class=\'force\' '
+                'and setting the external loss function to ignore the last index.'
+            )
 
         if has_weights and has_external_loss_def:
             raise ConfigError(
@@ -237,7 +243,7 @@ class PlotOptions(Config):
 @register_config('data')
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
-    uri: Union[None, str, List[str]] = Field(
+    uri: Optional[Union[str, List[str]]] = Field(
         None,
         description=
         ('URI of the dataset. This can be a zip file, a list of zip files, or a '
@@ -247,22 +253,31 @@ class DataConfig(Config):
         description=
         ('If set, the number of training images to use. If fewer images exist, '
          'then an exception will be raised.'))
-    group_uris: Union[None, List[Union[str, List[str]]]] = Field(
+    group_uris: Optional[List[Union[str, List[str]]]] = Field(
         None,
         description=
-        ('This can be set instead of uri in order to specify groups of chips. Each '
-         'element in the list is expected to be an object of the same form accepted by '
-         'the uri field. The purpose of separating chips into groups is to be able to '
-         'use the group_train_sz field.'))
-    group_train_sz: Optional[int] = Field(
+        'This can be set instead of uri in order to specify groups of chips. '
+        'Each element in the list is expected to be an object of the same '
+        'form accepted by the uri field. The purpose of separating chips into '
+        'groups is to be able to use the group_train_sz field.')
+    group_train_sz: Optional[Union[int, List[int]]] = Field(
         None,
-        description=
-        ('If group_uris is set, this can be used to specify the number of chips to use '
-         'per group.'))
+        description='If group_uris is set, this can be used to specify the '
+        'number of chips to use per group. Only applies to training chips. '
+        'This can either be a single value that will be used for all groups '
+        'or a list of values (one for each group).')
+    group_train_sz_rel: Optional[Union[Proportion, List[Proportion]]] = Field(
+        None,
+        description='Relative version of group_train_sz. Must be a float '
+        'in [0, 1]. If group_uris is set, this can be used to specify the '
+        'proportion of the total chips in each group to use per group. '
+        'Only applies to training chips. This can either be a single value '
+        'that will be used for all groups or a list of values '
+        '(one for each group).')
     data_format: Optional[str] = Field(
         None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
-    class_colors: Union[None, List[str], List[List]] = Field(
+    class_colors: Optional[Union[List[str], List[List]]] = Field(
         None,
         description=('Colors used to display classes. '
                      'Can be color 3-tuples in list form.'))
@@ -294,6 +309,11 @@ class DataConfig(Config):
         'augmentors option is ignored.')
     plot_options: Optional[PlotOptions] = Field(
         PlotOptions(), description='Options to control plotting.')
+    preview_batch_limit: Optional[int] = Field(
+        None,
+        description=
+        ('Optional limit on the number of items in the preview plots produced '
+         'during training.'))
 
     # validators
     _base_tf = validator(
@@ -310,6 +330,28 @@ class DataConfig(Config):
 
     def validate_config(self):
         self.validate_augmentors()
+        self.validate_group_uris()
+
+    def validate_group_uris(self):
+        has_group_train_sz = self.group_train_sz is not None
+        has_group_train_sz_rel = self.group_train_sz_rel is not None
+        has_group_uris = self.group_uris is not None
+
+        if has_group_train_sz and has_group_train_sz_rel:
+            raise ConfigError('Only one of group_train_sz and '
+                              'group_train_sz_rel should be specified.')
+        if has_group_train_sz and not has_group_uris:
+            raise ConfigError('group_train_sz specified without group_uris.')
+        if has_group_train_sz_rel and not has_group_uris:
+            raise ConfigError(
+                'group_train_sz_rel specified without group_uris.')
+        if has_group_train_sz and sequence_like(self.group_train_sz):
+            if len(self.group_train_sz) != len(self.group_uris):
+                raise ConfigError('len(group_train_sz) != len(group_uris).')
+        if has_group_train_sz_rel and sequence_like(self.group_train_sz_rel):
+            if len(self.group_train_sz_rel) != len(self.group_uris):
+                raise ConfigError(
+                    'len(group_train_sz_rel) != len(group_uris).')
 
 
 @register_config('learner')

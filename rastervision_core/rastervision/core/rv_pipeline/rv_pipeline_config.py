@@ -4,6 +4,7 @@ from typing import List, TYPE_CHECKING, Optional
 from rastervision.pipeline.pipeline_config import PipelineConfig
 from rastervision.core.data import (DatasetConfig, StatsTransformerConfig,
                                     LabelStoreConfig, SceneConfig)
+from rastervision.core.utils.misc import Proportion
 from rastervision.core.analyzer import StatsAnalyzerConfig
 from rastervision.core.backend import BackendConfig
 from rastervision.core.evaluation import EvaluatorConfig
@@ -40,6 +41,12 @@ class RVPipelineConfig(PipelineConfig):
         300, description='Size of predictions chips in pixels.')
     predict_batch_sz: int = Field(
         8, description='Batch size to use during prediction.')
+    chip_nodata_threshold: Proportion = Field(
+        1,
+        description='Discard chips where the proportion of NODATA values is '
+        'greater than or equal to this value. Might result in false positives '
+        'if there are many legitimate black pixels in the chip. Use with '
+        'caution.')
 
     analyze_uri: Optional[str] = Field(
         None,

@@ -91,6 +91,7 @@ class RVPipeline(Pipeline):
                     log.info('Making {} chips for scene: {}'.format(
                         split, scene.id))
                     windows = self.get_train_windows(scene)
+                    log.info(f'Writing {len(windows)} chips to disk.')
                     for window in windows:
                         chip = scene.raster_source.get_chip(window)
                         labels = self.get_train_labels(window, scene)

@@ -143,10 +143,13 @@ class SemanticSegmentationLearner(Learner):
                 Parallel(old_conv, new_conv),
                 # sum the parallel outputs
                 AddTensors())
+        elif input_channels < old_conv.in_channels:
+            model.backbone.conv1 = nn.Conv2d(
+                in_channels=input_channels, **old_conv_args)
+            model.backbone.conv1.weight.data[:, :input_channels] = \
+                old_conv.weight.data[:, :input_channels]
         else:
-            raise ConfigError(
-                (f'Fewer input channels ({input_channels}) than what'
-                 f'the pretrained model expects ({old_conv.in_channels})'))
+            raise ConfigError(f'Something went wrong')
 
         return model
 
@@ -178,31 +181,32 @@ class SemanticSegmentationLearner(Learner):
             train_dir = join(data_dir, 'train')
             valid_dir = join(data_dir, 'valid')
 
+            _train_ds, _valid_ds, _test_ds = [], [], []
             if isdir(train_dir):
                 tf = transform if cfg.overfit_mode else aug_transform
-                ds = SemanticSegmentationDataset(
+                _train_ds = SemanticSegmentationDataset(
                     train_dir,
                     img_fmt=img_fmt,
                     label_fmt=label_fmt,
                     transform=tf)
-                train_ds.append(ds)
-
             if isdir(valid_dir):
-                valid_ds.append(
-                    SemanticSegmentationDataset(
-                        valid_dir,
-                        img_fmt=img_fmt,
-                        label_fmt=label_fmt,
-                        transform=transform))
-                test_ds.append(
-                    SemanticSegmentationDataset(
-                        valid_dir,
-                        img_fmt=img_fmt,
-                        label_fmt=label_fmt,
-                        transform=transform))
+                _valid_ds = SemanticSegmentationDataset(
+                    valid_dir,
+                    img_fmt=img_fmt,
+                    label_fmt=label_fmt,
+                    transform=transform)
+                _test_ds = SemanticSegmentationDataset(
+                    valid_dir,
+                    img_fmt=img_fmt,
+                    label_fmt=label_fmt,
+                    transform=transform)
+            train_ds.append(_train_ds)
+            valid_ds.append(_valid_ds)
+            test_ds.append(_test_ds)
 
-        train_ds, valid_ds, test_ds = \
-            ConcatDataset(train_ds), ConcatDataset(valid_ds), ConcatDataset(test_ds)
+        train_ds, valid_ds, test_ds = (ConcatDataset(train_ds),
+                                       ConcatDataset(valid_ds),
+                                       ConcatDataset(test_ds))
 
         return train_ds, valid_ds, test_ds
 
@@ -236,7 +240,9 @@ class SemanticSegmentationLearner(Learner):
         return metrics
 
     def post_forward(self, x):
-        return x['out']
+        if isinstance(x, dict):
+            return x['out']
+        return x
 
     def prob_to_pred(self, x):
         return x.argmax(1)
@@ -245,7 +251,8 @@ class SemanticSegmentationLearner(Learner):
                    x: torch.Tensor,
                    y: Union[torch.Tensor, np.ndarray],
                    output_path: str,
-                   z: Optional[torch.Tensor] = None) -> None:
+                   z: Optional[torch.Tensor] = None,
+                   batch_limit: Optional[int] = None) -> None:
         """Plot a whole batch in a grid using plot_xyz.
 
         Args:
@@ -253,8 +260,11 @@ class SemanticSegmentationLearner(Learner):
             y: ground truth labels
             output_path: local path where to save plot image
             z: optional predicted labels
+            batch_limit: optional limit on (rendered) batch size
         """
         batch_sz, c, h, w = x.shape
+        batch_sz = min(batch_sz,
+                       batch_limit) if batch_limit is not None else batch_sz
         channel_groups = self.cfg.data.channel_display_groups
 
         nrows = batch_sz

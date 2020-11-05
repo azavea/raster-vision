@@ -96,7 +96,8 @@ class MultiRasterSourceConfig(RasterSourceConfig):
             allow_different_extents=self.allow_different_extents,
             channel_order=self.channel_order,
             crs_source=self.crs_source,
-            raster_transformers=raster_transformers)
+            raster_transformers=raster_transformers,
+            extent_crop=self.extent_crop)
         return multi_raster_source
 
     def update(self, pipeline=None, scene=None):

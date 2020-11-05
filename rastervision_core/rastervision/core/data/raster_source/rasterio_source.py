@@ -5,6 +5,7 @@ from pyproj import Transformer
 import subprocess
 from decimal import Decimal
 import tempfile
+from typing import Optional
 
 import numpy as np
 import rasterio
@@ -13,7 +14,7 @@ from rasterio.enums import (ColorInterp, MaskFlags)
 from rastervision.pipeline.file_system import download_if_needed
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
-from rastervision.core.data.raster_source import RasterSource
+from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
 from rastervision.core.data import (ActivateMixin, ActivationError)
 
 log = logging.getLogger(__name__)
@@ -31,6 +32,14 @@ def build_vrt(vrt_path, image_paths):
 def download_and_build_vrt(image_uris, tmp_dir):
     log.info('Building VRT...')
     image_paths = [download_if_needed(uri, tmp_dir) for uri in image_uris]
+    image_path = os.path.join(tmp_dir, 'index.vrt')
+    build_vrt(image_path, image_paths)
+    return image_path
+
+
+def stream_and_build_vrt(images_uris, tmp_dir):
+    log.info('Building VRT...')
+    image_paths = images_uris
     image_path = os.path.join(tmp_dir, 'index.vrt')
     build_vrt(image_path, image_paths)
     return image_path
@@ -69,9 +78,11 @@ class RasterioSource(ActivateMixin, RasterSource):
                  uris,
                  raster_transformers,
                  tmp_dir,
+                 allow_streaming=False,
                  channel_order=None,
                  x_shift=0.0,
-                 y_shift=0.0):
+                 y_shift=0.0,
+                 extent_crop: Optional[CropOffsets] = None):
         """Constructor.
 
         This RasterSource can read any file that can be opened by Rasterio/GDAL
@@ -83,6 +94,10 @@ class RasterioSource(ActivateMixin, RasterSource):
 
         Args:
             channel_order: list of indices of channels to extract from raw imagery
+            extent_crop (CropOffsets, optional): Relative
+                offsets (top, left, bottom, right) for cropping the extent.
+                Useful for using splitting a scene into different datasets.
+                Defaults to None i.e. no cropping.
         """
         self.uris = uris
         self.tmp_dir = tmp_dir
@@ -91,6 +106,8 @@ class RasterioSource(ActivateMixin, RasterSource):
         self.x_shift = x_shift
         self.y_shift = y_shift
         self.do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
+        self.allow_streaming = allow_streaming
+        self.extent_crop = extent_crop
 
         num_channels = None
 
@@ -132,15 +149,27 @@ class RasterioSource(ActivateMixin, RasterSource):
         Return a single local path representing the image or a VRT of the data.
         """
         if len(self.uris) == 1:
-            return download_if_needed(self.uris[0], tmp_dir)
+            if self.allow_streaming:
+                return self.uris[0]
+            else:
+                return download_if_needed(self.uris[0], tmp_dir)
         else:
-            return download_and_build_vrt(self.uris, tmp_dir)
+            if self.allow_streaming:
+                return stream_and_build_vrt(self.uris, tmp_dir)
+            else:
+                return download_and_build_vrt(self.uris, tmp_dir)
 
     def get_crs_transformer(self):
         return self.crs_transformer
 
     def get_extent(self):
-        return Box(0, 0, self.height, self.width)
+        h, w = self.height, self.width
+        if self.extent_crop is not None:
+            skip_top, skip_left, skip_bottom, skip_right = self.extent_crop
+            ymin, xmin = int(h * skip_top), int(w * skip_left)
+            ymax, xmax = h - int(h * skip_bottom), w - int(w * skip_right)
+            return Box(ymin, xmin, ymax, xmax)
+        return Box(0, 0, h, w)
 
     def get_dtype(self):
         """Return the numpy.dtype of this scene"""
@@ -156,7 +185,7 @@ class RasterioSource(ActivateMixin, RasterSource):
             is_masked=self.is_masked)
 
     def _activate(self):
-        # Download images to temporary directory and delete it when done.
+        # Download images to temporary directory and delete them when done.
         self.image_tmp_dir = tempfile.TemporaryDirectory(dir=self.tmp_dir)
         self.imagery_path = self._download_data(self.image_tmp_dir.name)
         self.image_dataset = rasterio.open(self.imagery_path)

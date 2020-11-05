@@ -5,7 +5,7 @@ import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.data import ActivateMixin
-from rastervision.core.data.raster_source import RasterSource
+from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
 from rastervision.core.data.crs_transformer import CRSTransformer
 from rastervision.core.data.utils import all_equal
 
@@ -26,7 +26,8 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                  force_same_dtype: bool = False,
                  channel_order: Optional[Sequence[conint(ge=0)]] = None,
                  crs_source: conint(ge=0) = 0,
-                 raster_transformers: Sequence = []):
+                 raster_transformers: Sequence = [],
+                 extent_crop: Optional[CropOffsets] = None):
         """Constructor.
 
         Args:
@@ -47,6 +48,10 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                 that will be used by .get_chip(). Defaults to None.
             raster_transformers (Sequence, optional): Sequence of transformers.
                 Defaults to [].
+            extent_crop (CropOffsets, optional): Relative
+                offsets (top, left, bottom, right) for cropping the extent.
+                Useful for using splitting a scene into different datasets.
+                Defaults to None i.e. no cropping.
         """
         num_channels = len(raw_channel_order)
         if not channel_order:
@@ -59,6 +64,7 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         self.raster_sources = raster_sources
         self.raw_channel_order = list(raw_channel_order)
         self.crs_source = crs_source
+        self.extent_crop = extent_crop
 
         self.validate_raster_sources()
 
@@ -77,7 +83,8 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                 f'Got: {extents} '
                 '(carefully consider using allow_different_extents)')
 
-        sub_num_channels = sum(rs.num_channels for rs in self.raster_sources)
+        sub_num_channels = sum(
+            len(rs.channel_order) for rs in self.raster_sources)
         if sub_num_channels != self.num_channels:
             raise MultiRasterSourceError(
                 f'num_channels ({self.num_channels}) != sum of num_channels '
@@ -89,6 +96,12 @@ class MultiRasterSource(ActivateMixin, RasterSource):
     def get_extent(self) -> Box:
         rs = self.raster_sources[0]
         extent = rs.get_extent()
+        if self.extent_crop is not None:
+            h, w = extent.get_height(), extent.get_width()
+            skip_top, skip_left, skip_bottom, skip_right = self.extent_crop
+            ymin, xmin = int(h * skip_top), int(w * skip_left)
+            ymax, xmax = h - int(h * skip_bottom), w - int(w * skip_right)
+            return Box(ymin, xmin, ymax, xmax)
         return extent
 
     def get_dtype(self) -> np.dtype:

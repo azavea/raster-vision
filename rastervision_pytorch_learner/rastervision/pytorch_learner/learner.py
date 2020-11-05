@@ -13,6 +13,7 @@ from subprocess import Popen
 import numbers
 import zipfile
 from typing import Optional, List, Tuple, Dict, Union, Any
+from pydantic.utils import sequence_like
 import random
 import uuid
 
@@ -92,6 +93,8 @@ class Learner(ABC):
         self.cfg = cfg
         self.tmp_dir = tmp_dir
 
+        self.preview_batch_limit = self.cfg.data.preview_batch_limit
+
         # TODO make cache dirs configurable
         torch_cache_dir = '/opt/data/torch-cache'
         os.environ['TORCH_HOME'] = torch_cache_dir
@@ -135,7 +138,7 @@ class Learner(ABC):
         cfg = self.cfg
         self.log_data_stats()
         if not cfg.predict_mode:
-            self.plot_dataloaders()
+            self.plot_dataloaders(self.preview_batch_limit)
             if cfg.overfit_mode:
                 self.overfit()
             else:
@@ -437,16 +440,29 @@ class Learner(ABC):
 
     def get_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
         """Returns train, validation, and test DataSets."""
-        if self.cfg.data.group_uris:
+        if self.cfg.data.group_uris is not None:
+            if self.cfg.data.uri is not None:
+                log.warn('Both DataConfig.uri and DataConfig.group_uris '
+                         'specified. Only DataConfig.group_uris will be used.')
             train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
-            for group_uri in self.cfg.data.group_uris:
-                train_ds, valid_ds, test_ds = self._get_datasets(group_uri)
-                group_train_sz = self.cfg.data.group_train_sz
-                if group_train_sz is not None:
+
+            group_sizes = None
+            if self.cfg.data.group_train_sz is not None:
+                group_sizes = self.cfg.data.group_train_sz
+            elif self.cfg.data.group_train_sz_rel is not None:
+                group_sizes = self.cfg.data.group_train_sz_rel
+            if not sequence_like(group_sizes):
+                group_sizes = [group_sizes] * len(self.cfg.data.group_uris)
+
+            for uri, sz in zip(self.cfg.data.group_uris, group_sizes):
+                train_ds, valid_ds, test_ds = self._get_datasets(uri)
+                if sz is not None:
+                    if isinstance(sz, float):
+                        sz = int(len(train_ds) * sz)
                     train_inds = list(range(len(train_ds)))
                     random.seed(1234)
                     random.shuffle(train_inds)
-                    train_inds = train_inds[0:group_train_sz]
+                    train_inds = train_inds[:sz]
                     train_ds = Subset(train_ds, train_inds)
                 train_ds_lst.append(train_ds)
                 valid_ds_lst.append(valid_ds)
@@ -497,6 +513,7 @@ class Learner(ABC):
             train_ds,
             shuffle=True,
             batch_size=batch_sz,
+            drop_last=True,
             num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn)
@@ -664,36 +681,34 @@ class Learner(ABC):
             x = x.unsqueeze(0)
         return x
 
-    def normalize_input(self, x: Tensor) -> Tensor:
-        """Normalize an input image to have values between 0 and 1.
+    def normalize_input(self, x: np.ndarray) -> np.ndarray:
+        """If x.dtype is a subtype of np.unsignedinteger, normalize it to
+        [0, 1] using the max possible value of that dtype. Otherwise, assume
+        it is in [0, 1] already and do nothing.
 
         Args:
-            x: an image or batch of images assumed to be in uint8 format
-
+            x (np.ndarray): an image or batch of images
         Returns:
-            the same tensor that has been scaled to [0-1].
-
+            the same array scaled to [0, 1].
         """
-        return x.float() / 255.0
+        if np.issubdtype(x.dtype, np.unsignedinteger):
+            max_val = np.iinfo(x.dtype).max
+            x = x.astype(np.float32) / max_val
+        return x
 
-    def predict(self,
-                x: Tensor,
-                normalize: bool = False,
-                raw_out: bool = False) -> Any:
+    def predict(self, x: Tensor, raw_out: bool = False) -> Any:
         """Make prediction for an image or batch of images.
 
         Args:
-            x: image or batch of images
-            normalize: if True, call normalize_input() on x before passing into model
-            raw_out: if True, return prediction probabilities
+            x (Tensor): Image or batch of images as a float Tensor with pixel
+                values normalized to [0, 1].
+            raw_out (bool): if True, return prediction probabilities
 
         Returns:
             the predictions, in probability form if raw_out is True, in class_id form
                 otherwise
         """
-        x = self.to_batch(x)
-        if normalize:
-            x = self.normalize_input(x)
+        x = self.to_batch(x).float()
         x = self.to_device(x, self.device)
         with torch.no_grad():
             out = self.model(x)
@@ -702,7 +717,7 @@ class Learner(ABC):
         out = self.to_device(out, 'cpu')
         return out
 
-    def output_to_numpy(self, out: Any) -> Any:
+    def output_to_numpy(self, out: Tensor) -> np.ndarray:
         """Convert output of model to numpy format.
 
         Args:
@@ -712,21 +727,27 @@ class Learner(ABC):
         """
         return out.numpy()
 
-    def numpy_predict(self, x: np.ndarray, raw_out: bool = False) -> Any:
+    def numpy_predict(self, x: np.ndarray,
+                      raw_out: bool = False) -> np.ndarray:
         """Make a prediction using an image or batch of images in numpy format.
+        If x.dtype is a subtype of np.unsignedinteger, it will be normalized
+        to [0, 1] using the max possible value of that dtype. Otherwise, x will
+        be assumed to be in [0, 1] already and will be cast to torch.float32
+        directly.
 
         Args:
             x: (ndarray) of shape [height, width, channels] or
-                [batch_sz, height, width, channels] in uint8 format
+                [batch_sz, height, width, channels]
             raw_out: if True, return prediction probabilities
 
         Returns:
             predictions using numpy arrays
         """
+        x = self.normalize_input(x)
         x = torch.tensor(x)
         x = self.to_batch(x)
         x = x.permute((0, 3, 1, 2))
-        out = self.predict(x, normalize=True, raw_out=raw_out)
+        out = self.predict(x, raw_out=raw_out)
         return self.output_to_numpy(out)
 
     def predict_dataloader(self,
@@ -792,7 +813,12 @@ class Learner(ABC):
         """
         pass
 
-    def plot_batch(self, x: Tensor, y, output_path: str, z=None):
+    def plot_batch(self,
+                   x: Tensor,
+                   y,
+                   output_path: str,
+                   z=None,
+                   batch_limit: Optional[int] = None):
         """Plot a whole batch in a grid using plot_xyz.
 
         Args:
@@ -800,8 +826,11 @@ class Learner(ABC):
             y: ground truth labels
             output_path: local path where to save plot image
             z: optional predicted labels
+            batch_limit: optional limit on (rendered) batch size
         """
         batch_sz = x.shape[0]
+        batch_sz = min(batch_sz,
+                       batch_limit) if batch_limit is not None else batch_sz
         ncols = nrows = math.ceil(math.sqrt(batch_sz))
         fig = plt.figure(
             constrained_layout=True, figsize=(3 * ncols, 3 * nrows))
@@ -827,36 +856,43 @@ class Learner(ABC):
         plt.savefig(output_path)
         plt.close()
 
-    def plot_predictions(self, split: str):
+    def plot_predictions(self, split: str, batch_limit: Optional[int] = None):
         """Plot predictions for a split.
 
         Uses the first batch for the corresponding DataLoader.
 
         Args:
             split: dataset split. Can be train, valid, or test.
+            batch_limit: optional limit on (rendered) batch size
         """
         log.info('Plotting predictions...')
         dl = self.get_dataloader(split)
         output_path = join(self.output_dir, '{}_preds.png'.format(split))
         x, y, z = self.predict_dataloader(dl, one_batch=True)
-        self.plot_batch(x, y, output_path, z=z)
+        self.plot_batch(x, y, output_path, z=z, batch_limit=batch_limit)
 
-    def plot_dataloader(self, dl: DataLoader, output_path: str):
+    def plot_dataloader(self,
+                        dl: DataLoader,
+                        output_path: str,
+                        batch_limit: Optional[int] = None):
         """Plot images and ground truth labels for a DataLoader."""
         x, y = next(iter(dl))
-        self.plot_batch(x, y, output_path)
+        self.plot_batch(x, y, output_path, batch_limit=batch_limit)
 
-    def plot_dataloaders(self):
+    def plot_dataloaders(self, batch_limit: Optional[int] = None):
         """Plot images and ground truth labels for all DataLoaders."""
         if self.train_dl:
             self.plot_dataloader(
-                self.train_dl, join(self.output_dir, 'dataloaders/train.png'))
+                self.train_dl, join(self.output_dir, 'dataloaders/train.png'),
+                batch_limit)
         if self.valid_dl:
             self.plot_dataloader(
-                self.valid_dl, join(self.output_dir, 'dataloaders/valid.png'))
+                self.valid_dl, join(self.output_dir, 'dataloaders/valid.png'),
+                batch_limit)
         if self.test_dl:
             self.plot_dataloader(self.test_dl,
-                                 join(self.output_dir, 'dataloaders/test.png'))
+                                 join(self.output_dir, 'dataloaders/test.png'),
+                                 batch_limit)
 
     @staticmethod
     def from_model_bundle(model_bundle_uri: str,
@@ -1116,4 +1152,4 @@ class Learner(ABC):
         log.info('metrics: {}'.format(metrics))
         json_to_file(metrics,
                      join(self.output_dir, '{}_metrics.json'.format(split)))
-        self.plot_predictions(split)
+        self.plot_predictions(split, self.preview_batch_limit)

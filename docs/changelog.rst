@@ -21,6 +21,17 @@ Features
 * Add ignore_last_class capability to segmentation `#1017 <https://github.com/azavea/raster-vision/pull/1017>`_
 * Add filtering capability to segmentation sliding window chip generation `#1018 <https://github.com/azavea/raster-vision/pull/1018>`_
 * Add raster transformer to remove NaNs from float rasters, add raster transformers to cast to arbitrary numpy types `#1016 <https://github.com/azavea/raster-vision/pull/1016>`_
+* Add plot options for regression `#1023 <https://github.com/azavea/raster-vision/pull/1023>`_
+* Add ability to use fewer channels w/ pretrained models `#1026 <https://github.com/azavea/raster-vision/pull/1026>`_
+* Remove 4GB file size limit from VSI file system, allow streaming reads `#1020 <https://github.com/azavea/raster-vision/pull/1020>`_
+* Add reclassification transformer for segmentation label rasters `#1024 <https://github.com/azavea/raster-vision/pull/1024>`_
+* Allow filtering out chips based on proportion of NODATA pixels `#1025 <https://github.com/azavea/raster-vision/pull/1025>`_
+* Allow ignore_last_class to take either a boolean or the literal 'force'; in the latter case validation of that argument is skipped so that it can be used with external loss functions `#1027 <https://github.com/azavea/raster-vision/pull/1027>`_
+* Add ability to crop raster source extent `#1030 <https://github.com/azavea/raster-vision/pull/1030>`_
+* Accept immediate geometries in SceneConfig `#1033 <https://github.com/azavea/raster-vision/pull/1033>`_
+* Only perform normalization on unsigned integer types `#1028 <https://github.com/azavea/raster-vision/pull/1028>`_
+* Make group_uris specifiable and add group_train_sz_rel `#1035 <https://github.com/azavea/raster-vision/pull/1035>`_
+* Make number of training and dataloader previews independent of batch size `#1038 <https://github.com/azavea/raster-vision/pull/1038>`_
 * Allow continuing training from a model bundle `#1022 <https://github.com/azavea/raster-vision/pull/1022>`_
 
 Bug Fixes

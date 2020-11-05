@@ -18,6 +18,9 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
 
         data = SemanticSegmentationDataConfig(
             uri=pipeline.chip_uri,
+            group_uris=self.group_uris,
+            group_train_sz=self.group_train_sz,
+            group_train_sz_rel=self.group_train_sz_rel,
             class_names=pipeline.dataset.class_config.names,
             class_colors=pipeline.dataset.class_config.colors,
             img_sz=self.img_sz,
@@ -29,7 +32,8 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
             base_transform=self.base_transform,
             aug_transform=self.aug_transform,
             plot_options=self.plot_options,
-            channel_display_groups=pipeline.channel_display_groups)
+            channel_display_groups=pipeline.channel_display_groups,
+            preview_batch_limit=self.preview_batch_limit)
 
         learner = SemanticSegmentationLearnerConfig(
             data=data,

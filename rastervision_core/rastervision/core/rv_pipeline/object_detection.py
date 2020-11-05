@@ -1,8 +1,7 @@
 import logging
 
-import numpy as np
-
 from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
+from rastervision.core.rv_pipeline.utils import nodata_below_threshold
 from rastervision.core.rv_pipeline.object_detection_config import (
     ObjectDetectionWindowMethod)
 from rastervision.core.box import Box
@@ -64,8 +63,13 @@ def make_pos_windows(image_extent, label_store, chip_size, window_method,
             'Window method: {} is cannot be handled.'.format(window_method))
 
 
-def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
-                     max_attempts, filter_windows):
+def make_neg_windows(raster_source,
+                     label_store,
+                     chip_size,
+                     nb_windows,
+                     max_attempts,
+                     filter_windows,
+                     chip_nodata_threshold=1.):
     extent = raster_source.get_extent()
     neg_windows = []
     for _ in range(max_attempts):
@@ -77,8 +81,10 @@ def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
         labels = ObjectDetectionLabels.get_overlapping(
             label_store.get_labels(), window, ioa_thresh=0.2)
 
-        # If no labels and not blank, append the chip
-        if len(labels) == 0 and np.sum(chip.ravel()) > 0:
+        # If no labels and not too many nodata pixels, append the chip
+        nodata_below_thresh = nodata_below_threshold(
+            chip, chip_nodata_threshold, nodata_val=0)
+        if len(labels) == 0 and nodata_below_thresh:
             neg_windows.append(window)
 
         if len(neg_windows) == nb_windows:
@@ -87,7 +93,7 @@ def make_neg_windows(raster_source, label_store, chip_size, nb_windows,
     return list(neg_windows)
 
 
-def get_train_windows(scene, chip_opts, chip_size):
+def get_train_windows(scene, chip_opts, chip_size, chip_nodata_threshold=1.):
     raster_source = scene.raster_source
     label_store = scene.ground_truth_label_source
 
@@ -119,17 +125,25 @@ def get_train_windows(scene, chip_opts, chip_size):
     else:
         nb_neg_windows = 100  # just make some
     max_attempts = 100 * nb_neg_windows
-    neg_windows = make_neg_windows(raster_source, label_store, chip_size,
-                                   nb_neg_windows, max_attempts,
-                                   filter_windows)
+    neg_windows = make_neg_windows(
+        raster_source,
+        label_store,
+        chip_size,
+        nb_neg_windows,
+        max_attempts,
+        filter_windows,
+        chip_nodata_threshold=chip_nodata_threshold)
 
     return pos_windows + neg_windows
 
 
 class ObjectDetection(RVPipeline):
     def get_train_windows(self, scene):
-        return get_train_windows(scene, self.config.chip_options,
-                                 self.config.train_chip_sz)
+        return get_train_windows(
+            scene,
+            self.config.chip_options,
+            self.config.train_chip_sz,
+            chip_nodata_threshold=self.config.chip_nodata_threshold)
 
     def get_train_labels(self, window, scene):
         window_labels = scene.ground_truth_label_source.get_labels(

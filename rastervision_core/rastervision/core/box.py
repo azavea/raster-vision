@@ -84,11 +84,17 @@ class Box():
             npboxes[boxind, :] = box.npbox_format()
         return npboxes
 
+    def __iter__(self):
+        return iter(self.tuple_format())
+
+    def __getitem__(self, i):
+        return self.tuple_format()[i]
+
     def __str__(self):  # pragma: no cover
         return str(self.npbox_format())
 
     def __repr__(self):  # pragma: no cover
-        return str(self)
+        return f'{type(self).__name__}{self.tuple_format()}'
 
     def geojson_coordinates(self):
         """Return Box as GeoJSON coordinates."""
