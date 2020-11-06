@@ -32,6 +32,7 @@ Features
 * Only perform normalization on unsigned integer types `#1028 <https://github.com/azavea/raster-vision/pull/1028>`_
 * Make group_uris specifiable and add group_train_sz_rel `#1035 <https://github.com/azavea/raster-vision/pull/1035>`_
 * Make number of training and dataloader previews independent of batch size `#1038 <https://github.com/azavea/raster-vision/pull/1038>`_
+* Allow continuing training from a model bundle `#1022 <https://github.com/azavea/raster-vision/pull/1022>`_
 
 Bug Fixes
 ~~~~~~~~~~~~

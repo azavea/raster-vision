@@ -64,13 +64,27 @@ class PyTorchLearnerBackend(Backend):
         self.tmp_dir = tmp_dir
         self.learner = None
 
-    def train(self):
-        learner = self.learner_cfg.build(self.tmp_dir)
+    def train(self, source_bundle_uri=None):
+        if source_bundle_uri is not None:
+            learner = self._build_learner_from_bundle(
+                bundle_uri=source_bundle_uri,
+                cfg=self.learner_cfg,
+                training=True)
+        else:
+            learner = self.learner_cfg.build(self.tmp_dir, training=True)
         learner.main()
 
     def load_model(self):
-        self.learner = Learner.from_model_bundle(
-            self.learner_cfg.get_model_bundle_uri(), self.tmp_dir)
+        self.learner = self._build_learner_from_bundle(training=False)
+
+    def _build_learner_from_bundle(self,
+                                   bundle_uri=None,
+                                   cfg=None,
+                                   training=False):
+        if bundle_uri is None:
+            bundle_uri = self.learner_cfg.get_model_bundle_uri()
+        return Learner.from_model_bundle(
+            bundle_uri, self.tmp_dir, cfg=cfg, training=training)
 
     def get_sample_writer(self):
         raise NotImplementedError()

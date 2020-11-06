@@ -70,18 +70,25 @@ class Learner(ABC):
                  tmp_dir: str,
                  model_path: Optional[str] = None,
                  model_def_path: Optional[str] = None,
-                 loss_def_path: Optional[str] = None):
+                 loss_def_path: Optional[str] = None,
+                 training: bool = True):
         """Constructor.
 
         Args:
-            cfg: configuration
-            tmp_dir: root of temp dirs
-            model_path: a local path to model weights. If provided, the model is loaded
-                and it is assumed that this Learner will be used for prediction only.
-            model_def_path: a local path to a directory with a hubconf.py. If
-                provided, the model definition is imported from here.
-            loss_def_path: a local path to a directory with a hubconf.py. If
-                provided, the loss function definition is imported from here.
+            cfg (LearnerConfig): Configuration.
+            tmp_dir (str): Root of temp dirs.
+            model_path (str, optional): A local path to model weights.
+                Defaults to None.
+            model_def_path (str, optional): A local path to a directory with a
+                hubconf.py. If provided, the model definition is imported from
+                here. Defaults to None.
+            loss_def_path (str, optional): A local path to a directory with a
+                hubconf.py. If provided, the loss function definition is
+                imported from here. Defaults to None.
+            training (bool, optional): Whether the model is to be used for
+                training or prediction. If False, the model is put in eval mode
+                and the loss function, optimizer, etc. are not initialized.
+                Defaults to True.
         """
         self.cfg = cfg
         self.tmp_dir = tmp_dir
@@ -110,44 +117,16 @@ class Learner(ABC):
 
         if model_path is not None:
             if isfile(model_path):
+                log.info(f'Loading model weights from: {model_path}')
                 self.model.load_state_dict(
                     torch.load(model_path, map_location=self.device))
             else:
                 raise Exception(
                     'Model could not be found at {}'.format(model_path))
-            self.model.eval()
+        if training:
+            self.setup_training(loss_def_path=loss_def_path)
         else:
-            log.info(self.cfg)
-
-            # ds = dataset, dl = dataloader
-            self.train_ds = None
-            self.train_dl = None
-            self.valid_ds = None
-            self.valid_dl = None
-            self.test_ds = None
-            self.test_dl = None
-
-            self.config_path = join(self.output_dir, 'learner-config.json')
-            str_to_file(self.cfg.json(), self.config_path)
-
-            self.log_path = join(self.output_dir, 'log.csv')
-            self.train_state_path = join(self.output_dir, 'train-state.json')
-            model_bundle_fname = basename(cfg.get_model_bundle_uri())
-            self.model_bundle_path = join(self.output_dir, model_bundle_fname)
-            self.metric_names = self.build_metric_names()
-
-            self.last_model_path = join(self.output_dir, 'last-model.pth')
-            self.load_checkpoint()
-
-            self.setup_loss(loss_def_path=loss_def_path)
-            self.opt = self.build_optimizer()
-            self.setup_data()
-            self.start_epoch = self.get_start_epoch()
-            self.steps_per_epoch = len(
-                self.train_ds) // self.cfg.solver.batch_sz
-            self.step_scheduler = self.build_step_scheduler()
-            self.epoch_scheduler = self.build_epoch_scheduler()
-            self.setup_tensorboard()
+            self.model.eval()
 
     def main(self):
         """Main training sequence.
@@ -173,6 +152,38 @@ class Learner(ABC):
         self.eval_model('test')
         self.sync_to_cloud()
         self.stop_tensorboard()
+
+    def setup_training(self, loss_def_path=None):
+        log.info(self.cfg)
+
+        # ds = dataset, dl = dataloader
+        self.train_ds = None
+        self.train_dl = None
+        self.valid_ds = None
+        self.valid_dl = None
+        self.test_ds = None
+        self.test_dl = None
+
+        self.config_path = join(self.output_dir, 'learner-config.json')
+        str_to_file(self.cfg.json(), self.config_path)
+
+        self.log_path = join(self.output_dir, 'log.csv')
+        self.train_state_path = join(self.output_dir, 'train-state.json')
+        model_bundle_fname = basename(self.cfg.get_model_bundle_uri())
+        self.model_bundle_path = join(self.output_dir, model_bundle_fname)
+        self.metric_names = self.build_metric_names()
+
+        self.last_model_path = join(self.output_dir, 'last-model.pth')
+        self.load_checkpoint()
+
+        self.setup_loss(loss_def_path=loss_def_path)
+        self.opt = self.build_optimizer()
+        self.setup_data()
+        self.start_epoch = self.get_start_epoch()
+        self.steps_per_epoch = len(self.train_ds) // self.cfg.solver.batch_sz
+        self.step_scheduler = self.build_step_scheduler()
+        self.epoch_scheduler = self.build_epoch_scheduler()
+        self.setup_tensorboard()
 
     def sync_to_cloud(self):
         """Sync any output to the cloud at output_uri."""
@@ -884,42 +895,49 @@ class Learner(ABC):
                                  batch_limit)
 
     @staticmethod
-    def from_model_bundle(model_bundle_uri: str, tmp_dir: str):
+    def from_model_bundle(model_bundle_uri: str,
+                          tmp_dir: str,
+                          cfg: Optional[LearnerConfig] = None,
+                          training: bool = False):
         """Create a Learner from a model bundle."""
         model_bundle_path = download_if_needed(model_bundle_uri, tmp_dir)
         model_bundle_dir = join(tmp_dir, 'model-bundle')
         unzip(model_bundle_path, model_bundle_dir)
 
-        config_path = join(model_bundle_dir, 'pipeline-config.json')
         model_path = join(model_bundle_dir, 'model.pth')
 
-        config_dict = file_to_json(config_path)
-        config_dict = upgrade_config(config_dict)
+        if cfg is None:
+            config_path = join(model_bundle_dir, 'pipeline-config.json')
 
-        cfg = build_config(config_dict)
+            config_dict = file_to_json(config_path)
+            config_dict = upgrade_config(config_dict)
+
+            cfg = build_config(config_dict)
+            cfg = cfg.learner
 
         hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
         model_def_path = None
         loss_def_path = None
 
         # retrieve existing model definition, if available
-        ext_cfg = cfg.learner.model.external_def
+        ext_cfg = cfg.model.external_def
         if ext_cfg is not None:
             model_def_path = get_hubconf_dir_from_cfg(ext_cfg, parent=hub_dir)
             log.info(
                 f'Using model definition found in bundle: {model_def_path}')
 
         # retrieve existing loss function definition, if available
-        ext_cfg = cfg.learner.solver.external_loss_def
-        if ext_cfg is not None:
+        ext_cfg = cfg.solver.external_loss_def
+        if ext_cfg is not None and training:
             loss_def_path = get_hubconf_dir_from_cfg(ext_cfg, parent=hub_dir)
             log.info(f'Using loss definition found in bundle: {loss_def_path}')
 
-        return cfg.learner.build(
+        return cfg.build(
             tmp_dir=tmp_dir,
             model_path=model_path,
             model_def_path=model_def_path,
-            loss_def_path=loss_def_path)
+            loss_def_path=loss_def_path,
+            training=training)
 
     def save_model_bundle(self):
         """Save a model bundle.
@@ -932,7 +950,7 @@ class Learner(ABC):
 
         log.info('Creating bundle.')
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
-        make_dir(model_bundle_dir)
+        make_dir(model_bundle_dir, force_empty=True)
 
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
