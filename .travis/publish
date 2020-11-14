@@ -10,11 +10,13 @@ docker login -u="$QUAY_USERNAME" -p="$QUAY_PASSWORD" quay.io
 
 function tag_and_push() {
     if [ "$IMAGE_TYPE" = "pytorch" ]; then
-        docker push ${BASE_IMAGE};
         docker tag ${PYTORCH_IMAGE} "${PYTORCH_TAG}-${1}";
         docker push "${PYTORCH_TAG}-${1}";
     fi
 }
+
+docker push ${BASE_IMAGE};
+docker push ${PYBASE_IMAGE};
 
 tag_and_push ${TAG_SUFFIX}
 

@@ -27,8 +27,3 @@ RUN conda install -y -c conda-forge gdal=3.0.4
 
 # Setup GDAL_DATA directory, rasterio needs it.
 ENV GDAL_DATA=/opt/conda/lib/python3.6/site-packages/rasterio/gdal_data/
-
-WORKDIR /opt/src/
-
-COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
-RUN pip install -r requirements-dev.txt

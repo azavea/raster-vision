@@ -1,37 +1,5 @@
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE}
-
-# Ideally we'd just pip install each package, but if we do that, then a lot of the image
-# will have to be re-built each time we make a change to source code. So, we split the
-# install into installing all the requirements first (filtering out any prefixed with
-# rastervision_*), and then copy over the source code.
-
-# Install requirements for each package.
-COPY ./rastervision_pipeline/requirements.txt /opt/src/requirements.txt
-RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-
-COPY ./rastervision_aws_s3/requirements.txt /opt/src/requirements.txt
-RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-
-COPY ./rastervision_aws_batch/requirements.txt /opt/src/requirements.txt
-RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-
-COPY ./rastervision_core/requirements.txt /opt/src/requirements.txt
-RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-
-COPY ./rastervision_pytorch_learner/requirements.txt /opt/src/requirements.txt
-RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-
-COPY ./rastervision_gdal_vsi/requirements.txt /opt/src/requirements.txt
-RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-
-# Commented out because there are no non-RV deps and it will fail if uncommented.
-# COPY ./rastervision_pytorch_backend/requirements.txt /opt/src/requirements.txt
-# RUN pip install $(grep -ivE "rastervision_*" requirements.txt)
-
-# Install docs/requirements.txt
-COPY ./docs/requirements.txt /opt/src/docs/requirements.txt
-RUN pip install -r docs/requirements.txt
+ARG PYBASE_IMAGE
+FROM ${PYBASE_IMAGE}
 
 COPY scripts /opt/src/scripts/
 COPY scripts/rastervision /usr/local/bin/rastervision
