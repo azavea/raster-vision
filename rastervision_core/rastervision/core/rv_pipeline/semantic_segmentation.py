@@ -75,11 +75,15 @@ def get_train_windows(scene: Scene,
 
     if co.window_method == SemanticSegmentationWindowMethod.sliding:
         stride = co.stride or int(round(chip_size / 2))
-        windows = list(filter_windows((extent.get_windows(chip_size, stride))))
-        a_window = windows[0]
-        windows = list(filter(should_use_window, windows))
-        if len(windows) == 0:
-            windows = [a_window]
+        unfiltered_windows = extent.get_windows(chip_size, stride)
+        windows = list(filter_windows(unfiltered_windows))
+        if len(windows) > 0:
+            a_window = windows[0]
+            windows = list(filter(should_use_window, windows))
+            if len(windows) == 0:
+                windows = [a_window]
+        elif len(windows) == 0:
+            return [unfiltered_windows[0]]
     elif co.window_method == SemanticSegmentationWindowMethod.random_sample:
         windows = []
         attempts = 0
