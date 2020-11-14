@@ -1,5 +1,11 @@
 #!/bin/bash
 
+FAMILY=quay.io/azavea
+CUDA_VERSION="10.0"
+BASE_STRING=$(cat Dockerfile.base | md5sum | cut -f1 -d' ')
+BASE_IMAGE=${FAMILY}/raster-vision:base-${BASE_STRING}-cuda${CUDA_VERSION}
+
+
 set -e
 
 if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
@@ -21,5 +27,8 @@ then
         exit
     fi
 
-    docker build --build-arg CUDA_VERSION="10.0" -t raster-vision-pytorch -f Dockerfile .
+    if ! docker pull ${BASE_IMAGE}; then
+	docker build --build-arg CUDA_VERSION=${CUDA_VERSION} -t ${BASE_IMAGE} -f Dockerfile.base .
+    fi
+    docker build --build-arg BASE_IMAGE=${BASE_IMAGE} -t raster-vision-pytorch -f Dockerfile .
 fi

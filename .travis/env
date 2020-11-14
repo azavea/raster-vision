@@ -5,3 +5,7 @@ FAMILY=quay.io/azavea
 
 PYTORCH_IMAGE=raster-vision-pytorch
 PYTORCH_TAG=${FAMILY}/raster-vision:pytorch
+
+CUDA_VERSION="10.0"
+BASE_STRING=$(cat Dockerfile.base | md5sum | cut -f1 -d' ')
+BASE_IMAGE=${FAMILY}/raster-vision:base-${BASE_STRING}-cuda${CUDA_VERSION}
