@@ -3,9 +3,10 @@
 FAMILY=quay.io/azavea
 CUDA_VERSION="10.0"
 BASE_STRING=$(cat Dockerfile.base | md5sum | cut -f1 -d' ')
-BASE_IMAGE=${FAMILY}/raster-vision:base-${BASE_STRING}-cuda${CUDA_VERSION}
+PYTORCH_IMAGE=raster-vision-pytorch
+BASE_IMAGE=${FAMILY}/${PYTORCH_IMAGE}:base-${BASE_STRING}-cuda${CUDA_VERSION}
 PYBASE_STRING=$(cat Dockerfile.base Dockerfile.pybase ./docs/requirements.txt ./requirements-dev.txt ./rastervision*/requirements.txt | md5sum | cut -f1 -d' ')
-PYBASE_IMAGE=${FAMILY}/raster-vision:pybase-${PYBASE_STRING}
+PYBASE_IMAGE=${FAMILY}/${PYTORCH_IMAGE}:pybase-${PYBASE_STRING}
 
 
 set -e
