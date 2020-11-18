@@ -1,8 +1,6 @@
-import copy
 import logging
 import os
 import uuid
-from inspect import signature
 from typing import List, Optional
 
 from rastervision.pipeline import rv_config
@@ -128,17 +126,6 @@ class AWSBatchRunner(Runner):
 
         for command in commands:
 
-            # detect external command
-            if hasattr(pipeline, command):
-                fn = getattr(pipeline, command)
-                params = signature(fn).parameters
-                external = hasattr(fn, 'external') and len(params) in {0, 1}
-                array_job_capable = hasattr(fn, 'array_job_capable') \
-                    and fn.array_job_capable
-            else:
-                external = False
-                array_job_capable = False
-
             # command-specific job queue, job definition
             job_def = pipeline_job_def
             job_queue = pipeline_job_queue
@@ -154,81 +141,24 @@ class AWSBatchRunner(Runner):
 
             job_name = f'{pipeline_run_name}-{command}-{uuid.uuid4()}'
 
-            if not external:
-                cmd = ['python', '-m', 'rastervision.pipeline.cli']
-                if rv_config.get_verbosity() > 1:
-                    cmd.append('-' + 'v' * (rv_config.get_verbosity() - 1))
-                cmd.extend([
-                    'run_command', cfg_json_uri, command, '--runner', AWS_BATCH
-                ])
+            cmd = ['python', '-m', 'rastervision.pipeline.cli']
+            if rv_config.get_verbosity() > 1:
+                cmd.append('-' + 'v' * (rv_config.get_verbosity() - 1))
+            cmd.extend(
+                ['run_command', cfg_json_uri, command, '--runner', AWS_BATCH])
 
-                if command in pipeline.split_commands and num_splits > 1:
-                    num_array_jobs = num_splits
-                    cmd += ['--num-splits', str(num_splits)]
-                job_id = submit_job(
-                    cmd=' '.join(cmd),
-                    job_name=job_name,
-                    parent_job_ids=parent_job_ids,
-                    num_array_jobs=num_array_jobs,
-                    use_gpu=use_gpu,
-                    job_queue=job_queue,
-                    job_def=job_def)
-                parent_job_ids = [job_id]
-            else:
-                if command in pipeline.split_commands and num_splits > 1:
-                    if len(params) == 1 and array_job_capable:
-                        cmd = fn(-num_splits)
-                        num_array_jobs = num_splits
-                        job_id = submit_job(
-                            cmd=' '.join(cmd),
-                            job_name=job_name,
-                            parent_job_ids=parent_job_ids,
-                            num_array_jobs=num_array_jobs,
-                            use_gpu=use_gpu,
-                            job_queue=job_queue,
-                            job_def=job_def)
-                        parent_job_ids = [job_id]
-                    elif len(params) == 1 and not array_job_capable:
-                        num_array_jobs = None
-                        new_parent_job_ids = []
-                        for cmd in fn(num_splits):
-                            job_id = submit_job(
-                                cmd=' '.join(cmd),
-                                job_name=job_name,
-                                parent_job_ids=parent_job_ids,
-                                num_array_jobs=num_array_jobs,
-                                use_gpu=use_gpu,
-                                job_queue=job_queue,
-                                job_def=job_def)
-                            new_parent_job_ids.append(job_id)
-                        parent_job_ids = copy.copy(new_parent_job_ids)
-                    elif len(params) == 0:
-                        cmd = fn()
-                        num_array_jobs = None
-                        job_id = submit_job(
-                            cmd=' '.join(cmd),
-                            job_name=job_name,
-                            parent_job_ids=parent_job_ids,
-                            num_array_jobs=num_array_jobs,
-                            use_gpu=use_gpu,
-                            job_queue=job_queue,
-                            job_def=job_def)
-                        parent_job_ids = [job_id]
-                else:
-                    if len(params) == 0:
-                        cmd = fn()
-                    elif len(params) == 1:
-                        cmd = fn(1)[0]
-                    num_array_jobs = 1
-                    job_id = submit_job(
-                        cmd=' '.join(cmd),
-                        job_name=job_name,
-                        parent_job_ids=parent_job_ids,
-                        num_array_jobs=num_array_jobs,
-                        use_gpu=use_gpu,
-                        job_queue=job_queue,
-                        job_def=job_def)
-                    parent_job_ids = [job_id]
+            if command in pipeline.split_commands and num_splits > 1:
+                num_array_jobs = num_splits
+                cmd += ['--num-splits', str(num_splits)]
+            job_id = submit_job(
+                cmd=' '.join(cmd),
+                job_name=job_name,
+                parent_job_ids=parent_job_ids,
+                num_array_jobs=num_array_jobs,
+                use_gpu=use_gpu,
+                job_queue=job_queue,
+                job_def=job_def)
+            parent_job_ids = [job_id]
 
             job_queue = None
             job_def = None
