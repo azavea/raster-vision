@@ -28,10 +28,10 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         exit
     fi
 
-    if ! docker pull ${BASE_IMAGE} && ! docker images | grep ${BASE_STRING}; then
+    if ! (docker pull ${BASE_IMAGE} || docker images | grep ${BASE_STRING}); then
 	docker build --build-arg CUDA_VERSION=${CUDA_VERSION} -t ${BASE_IMAGE} -f Dockerfile.base .
     fi
-    if ! docker pull ${PYBASE_IMAGE} && ! docker images | grep ${PYBASE_STRING}; then
+    if ! (docker pull ${PYBASE_IMAGE} || docker images | grep ${PYBASE_STRING}); then
 	docker build --build-arg BASE_IMAGE=${BASE_IMAGE} -t ${PYBASE_IMAGE} -f Dockerfile.pybase .
     fi
     docker build --build-arg PYBASE_IMAGE=${PYBASE_IMAGE} -t raster-vision-pytorch -f Dockerfile .
