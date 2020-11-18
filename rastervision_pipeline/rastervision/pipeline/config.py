@@ -147,46 +147,7 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
             new_x[k] = build_config(v)
         type_hint = new_x.get('type_hint')
         if type_hint is not None:
-            # The following try/except logic has the following
-            # motivation.  If one has an custom raster-vision pipeline
-            # but wants to be able to run internal raster-vision
-            # commands in processes or containers that do not have
-            # that pipeline loaded in (e.g. in a "stock" raster-vision
-            # container on AWS) then this code enables that.
-            #
-            # When a pipeline config is being loaded here, the first
-            # attempt is to load it using the normal `type_hint` field
-            # found within it.  If that succeeds, then everything
-            # proceeds.
-            #
-            # If the the attempt fails but the pipeline config
-            # contains a `fallback_type_hint`, then that is used,
-            # instead.
-            #
-            # What that allows one to do is create a custom pipeline,
-            # derived from a stock pipeline, and tell raster-vision to
-            # treat it as a stock pipeline -- for purposes of the
-            # present function -- if the custom pipeline has not been
-            # registered.
-            #
-            # Please see https://github.com/azavea/raster-vision/pull/914
-            try:
-                # Try to use the given type hint
-                config_cls = registry.get_config(type_hint)
-            except Exception as e:
-                # ... if that fails, try to downgrade to fallback type
-                try:
-                    type_hint = new_x.get('fallback_type_hint')
-                    config_cls = registry.get_config(type_hint)
-                    new_x['type_hint'] = type_hint
-                    permitted_keys = config_cls().__dict__.keys()
-                    current_keys = set(new_x.keys())
-                    for k in current_keys:
-                        if k not in permitted_keys:
-                            del new_x[k]
-                # ... if that fails, throw the original exception
-                except Exception:
-                    raise e
+            config_cls = registry.get_config(type_hint)
             new_x = config_cls(**new_x)
         return new_x
     elif isinstance(x, list):
