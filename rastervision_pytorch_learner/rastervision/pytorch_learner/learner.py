@@ -108,7 +108,8 @@ class Learner(ABC):
         else:
             self.output_dir = get_local_path(cfg.output_uri, tmp_dir)
             make_dir(self.output_dir, force_empty=True)
-            if not cfg.overfit_mode:
+
+            if training and not cfg.overfit_mode:
                 self.sync_from_cloud()
 
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
