@@ -1,8 +1,12 @@
+from typing import Union, Tuple, Optional, List
+from pydantic import PositiveInt as PosInt, conint
 import math
 import random
 
 import numpy as np
 from shapely.geometry import box as ShapelyBox
+
+NonNegInt = conint(ge=0)
 
 
 class BoxSizeError(ValueError):
@@ -243,18 +247,54 @@ class Box():
     def make_copy(self):
         return Box(*(self.tuple_format()))
 
-    def get_windows(self, chip_sz, stride):
-        """Return list of grid of boxes within this box.
+    def get_windows(self,
+                    chip_sz: Union[PosInt, Tuple[PosInt, PosInt]],
+                    stride: Union[PosInt, Tuple[PosInt, PosInt]],
+                    padding: Optional[Union[NonNegInt, Tuple[
+                        NonNegInt, NonNegInt]]] = None) -> List['Box']:
+        """Returns a list of boxes representing windows generated using a
+        sliding window traversal with the specified chip_sz, stride, and
+        padding.
+
+        Each of chip_sz, stride, and padding can be either a positive int or
+        a tuple `(vertical-componet, horizontal-component)` of positive ints.
+
+        Padding currently only applies to the right and bottom edges.
 
         Args:
-            chip_sz: (int) the length of each square-shaped window in pixels
-            stride: (int) how much each window is offset from the last in pixels
+            chip_sz (Union[PosInt, Tuple[PosInt, PosInt]]): Size (h, w) of the
+                windows.
+            stride (Union[PosInt, Tuple[PosInt, PosInt]]): Distance between
+                windows.
+            padding (Optional[Union[PosInt, Tuple[PosInt, PosInt]]]): Padding
+                for the right and bottom edges. Defaults to None.
 
+        Returns:
+            List[Box]: list of Box objects
         """
+        if not isinstance(chip_sz, tuple):
+            chip_sz = (chip_sz, chip_sz)
+
+        if not isinstance(stride, tuple):
+            stride = (stride, stride)
+
+        if padding is None:
+            padding = chip_sz
+        elif not isinstance(padding, tuple):
+            padding = (padding, padding)
+
+        h_padding, w_padding = padding
+        height, width = chip_sz
+        h_stride, w_stride = stride
+
+        ymax = self.ymax - height + h_padding
+        xmax = self.xmax - width + w_padding
+
         result = []
-        for row_start in range(self.ymin, self.ymax, stride):
-            for col_start in range(self.xmin, self.xmax, stride):
-                result.append(Box.make_square(row_start, col_start, chip_sz))
+        for row in range(self.ymin, ymax, h_stride):
+            for col in range(self.xmin, xmax, w_stride):
+                window = Box(row, col, row + height, col + width)
+                result.append(window)
         return result
 
     def to_dict(self):
