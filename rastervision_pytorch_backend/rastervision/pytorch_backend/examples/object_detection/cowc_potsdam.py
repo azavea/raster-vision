@@ -52,7 +52,7 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
 
     class_config = ClassConfig(names=['vehicle'])
     chip_sz = 300
-    dataset = DatasetConfig(
+    scene_dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=[make_scene(id) for id in train_ids],
         validation_scenes=[make_scene(id) for id in val_ids])
@@ -60,7 +60,11 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
     predict_options = ObjectDetectionPredictOptions(
         merge_thresh=0.5, score_thresh=0.9)
 
+    img_sz = chip_sz
+    data = ObjectDetectionImageDataConfig(img_sz=img_sz, num_workers=4)
+
     backend = PyTorchObjectDetectionConfig(
+        data=data,
         model=ObjectDetectionModelConfig(backbone=Backbone.resnet18),
         solver=SolverConfig(
             lr=1e-4,
@@ -74,7 +78,7 @@ def get_config(runner, raw_uri, processed_uri, root_uri, test=False):
 
     return ObjectDetectionConfig(
         root_uri=root_uri,
-        dataset=dataset,
+        dataset=scene_dataset,
         backend=backend,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,

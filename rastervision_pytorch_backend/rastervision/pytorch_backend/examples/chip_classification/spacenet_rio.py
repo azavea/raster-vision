@@ -11,7 +11,8 @@ from rastervision.core.data import *
 from rastervision.core.analyzer import *
 from rastervision.pytorch_backend import *
 from rastervision.pytorch_learner import *
-from rastervision.pytorch_backend.examples.utils import get_scene_info, save_image_crop
+from rastervision.pytorch_backend.examples.utils import (get_scene_info,
+                                                         save_image_crop)
 
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 
@@ -85,6 +86,9 @@ def get_config(runner,
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
+    img_sz = chip_sz
+    data = ClassificationImageDataConfig(img_sz=img_sz, num_workers=4)
+
     if external_model:
         model = ClassificationModelConfig(
             external_def=ExternalModuleConfig(
@@ -121,63 +125,13 @@ def get_config(runner,
         one_cycle=True,
         external_loss_def=external_loss_def)
 
-    if augment:
-        mu = np.array((0.485, 0.456, 0.406))
-        std = np.array((0.229, 0.224, 0.225))
-
-        aug_transform = A.Compose([
-            A.Flip(),
-            A.Transpose(),
-            A.RandomRotate90(),
-            A.ShiftScaleRotate(),
-            A.OneOf([
-                A.ChannelShuffle(),
-                A.CLAHE(),
-                A.FancyPCA(),
-                A.HueSaturationValue(),
-                A.RGBShift(),
-                A.ToGray(),
-                A.ToSepia(),
-            ]),
-            A.OneOf([
-                A.RandomBrightness(),
-                A.RandomGamma(),
-            ]),
-            A.OneOf([
-                A.GaussNoise(),
-                A.ISONoise(),
-                A.RandomFog(),
-            ]),
-            A.OneOf([
-                A.Blur(),
-                A.MotionBlur(),
-                A.ImageCompression(),
-                A.Downscale(),
-            ]),
-            A.CoarseDropout(max_height=32, max_width=32, max_holes=5)
-        ])
-        base_transform = A.Normalize(mean=mu.tolist(), std=std.tolist())
-        plot_transform = A.Normalize(
-            mean=(-mu / std).tolist(),
-            std=(1 / std).tolist(),
-            max_pixel_value=1.)
-        aug_transform = A.to_dict(aug_transform)
-        base_transform = A.to_dict(base_transform)
-        plot_transform = A.to_dict(plot_transform)
-    else:
-        aug_transform = None
-        base_transform = None
-        plot_transform = None
-
     backend = PyTorchChipClassificationConfig(
+        data=data,
         model=model,
         solver=solver,
         log_tensorboard=log_tensorboard,
         run_tensorboard=run_tensorboard,
-        test_mode=test,
-        base_transform=base_transform,
-        aug_transform=aug_transform,
-        plot_options=PlotOptions(transform=plot_transform))
+        test_mode=test)
 
     config = ChipClassificationConfig(
         root_uri=root_uri,
