@@ -46,6 +46,9 @@ class RasterSourceConfig(Config):
         'the training scene and extent_crop=CropOffsets(skip_top=0.80) to the '
         'raster source in the validation scene. Defaults to None i.e. no '
         'cropping.')
+    persist: bool = Field(
+        False,
+        description='If True, does not deactivate source once activated.')
 
     def build(self, tmp_dir, use_transformers=True):
         raise NotImplementedError()

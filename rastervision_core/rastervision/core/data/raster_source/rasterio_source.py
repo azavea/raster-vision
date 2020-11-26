@@ -82,7 +82,8 @@ class RasterioSource(ActivateMixin, RasterSource):
                  channel_order=None,
                  x_shift=0.0,
                  y_shift=0.0,
-                 extent_crop: Optional[CropOffsets] = None):
+                 extent_crop: Optional[CropOffsets] = None,
+                 persist=False):
         """Constructor.
 
         This RasterSource can read any file that can be opened by Rasterio/GDAL
@@ -98,6 +99,8 @@ class RasterioSource(ActivateMixin, RasterSource):
                 offsets (top, left, bottom, right) for cropping the extent.
                 Useful for using splitting a scene into different datasets.
                 Defaults to None i.e. no cropping.
+            persist (bool): If True, does not deactivate source once activated.
+                Defaults to False.
         """
         self.uris = uris
         self.tmp_dir = tmp_dir
@@ -108,6 +111,7 @@ class RasterioSource(ActivateMixin, RasterSource):
         self.do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
         self.allow_streaming = allow_streaming
         self.extent_crop = extent_crop
+        self.persist = persist
 
         num_channels = None
 
@@ -204,6 +208,8 @@ class RasterioSource(ActivateMixin, RasterSource):
                 wgs84, crs.wkt, always_xy=True)
 
     def _deactivate(self):
+        if self.persist:
+            return
         self.image_dataset.close()
         self.image_dataset = None
         self.image_tmp_dir.cleanup()
