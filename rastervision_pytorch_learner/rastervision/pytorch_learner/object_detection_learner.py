@@ -1,18 +1,15 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
-from os.path import join, isdir
+
 import logging
 
 import matplotlib
 matplotlib.use('Agg')  # noqa
-from torch.utils.data import ConcatDataset
 from albumentations import BboxParams
 
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.object_detection_utils import (
-    MyFasterRCNN, CocoDataset, compute_coco_eval, collate_fn, plot_xyz)
-from rastervision.pytorch_learner.object_detection_learner_config import (
-    ObjectDetectionDataFormat)
+    MyFasterRCNN, compute_coco_eval, collate_fn, plot_xyz)
 
 log = logging.getLogger(__name__)
 
@@ -39,44 +36,6 @@ class ObjectDetectionLearner(Learner):
 
     def get_collate_fn(self):
         return collate_fn
-
-    def _get_datasets(self, uri):
-        cfg = self.cfg
-
-        if cfg.data.data_format == ObjectDetectionDataFormat.coco:
-            data_dirs = self.unzip_data(uri)
-
-        transform, aug_transform = self.get_data_transforms()
-
-        train_ds, valid_ds, test_ds = [], [], []
-        for data_dir in data_dirs:
-            train_dir = join(data_dir, 'train')
-            valid_dir = join(data_dir, 'valid')
-
-            if isdir(train_dir):
-                img_dir = join(train_dir, 'img')
-                annotation_uri = join(train_dir, 'labels.json')
-                if cfg.overfit_mode:
-                    train_ds.append(
-                        CocoDataset(
-                            img_dir, annotation_uri, transform=transform))
-                else:
-                    train_ds.append(
-                        CocoDataset(
-                            img_dir, annotation_uri, transform=aug_transform))
-
-            if isdir(valid_dir):
-                img_dir = join(valid_dir, 'img')
-                annotation_uri = join(valid_dir, 'labels.json')
-                valid_ds.append(
-                    CocoDataset(img_dir, annotation_uri, transform=transform))
-                test_ds.append(
-                    CocoDataset(img_dir, annotation_uri, transform=transform))
-
-        train_ds, valid_ds, test_ds = \
-            ConcatDataset(train_ds), ConcatDataset(valid_ds), ConcatDataset(test_ds)
-
-        return train_ds, valid_ds, test_ds
 
     def train_step(self, batch, batch_ind):
         x, y = batch

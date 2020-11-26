@@ -1,9 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
-from typing import Union, Callable, List, Iterable, Optional, Tuple
-from os.path import join, isdir
-from pathlib import Path
+from typing import Union, Iterable, Optional
 
 import logging
 
@@ -12,12 +10,10 @@ import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 matplotlib.use('Agg')  # noqa
-from PIL import Image
 import albumentations as A
 
 import torch
 from torch import nn
-from torch.utils.data import Dataset, ConcatDataset
 from torchvision import models
 
 from rastervision.pipeline.config import ConfigError
@@ -28,68 +24,6 @@ from rastervision.pytorch_learner.utils import (
 from rastervision.pipeline.file_system import make_dir
 
 log = logging.getLogger(__name__)
-
-
-class SemanticSegmentationDataset(Dataset):
-    def __init__(self,
-                 data_dir: str,
-                 img_fmt: str = 'png',
-                 label_fmt: str = 'png',
-                 transform: Callable = None):
-
-        self.data_dir = Path(data_dir)
-        img_dir = self.data_dir / 'img'
-        label_dir = self.data_dir / 'labels'
-
-        # collect image and label paths
-        self.img_paths = list(img_dir.glob(f'*.{img_fmt}'))
-        self.label_paths = [
-            label_dir / f'{p.stem}.{label_fmt}' for p in self.img_paths
-        ]
-
-        # choose image loading method based on format
-        if img_fmt.lower() in ('npy', 'npz'):
-            self.img_load_fn = np.load
-        else:
-            self.img_load_fn = lambda path: np.array(Image.open(path))
-
-        # choose label loading method based on format
-        if label_fmt.lower() in ('npy', 'npz'):
-            self.label_load_fn = np.load
-        else:
-            self.label_load_fn = lambda path: np.array(Image.open(path))
-
-        self.transform = transform
-
-    def __getitem__(self,
-                    ind: int) -> Tuple[torch.FloatTensor, torch.LongTensor]:
-
-        img_path = self.img_paths[ind]
-        label_path = self.label_paths[ind]
-
-        x = self.img_load_fn(img_path)
-        y = self.label_load_fn(label_path)
-
-        if x.ndim == 2:
-            # (h, w) --> (h, w, 1)
-            x = x[..., np.newaxis]
-
-        if self.transform is not None:
-            out = self.transform(image=x, mask=y)
-            x = out['image']
-            y = out['mask']
-
-        if np.issubdtype(x.dtype, np.unsignedinteger):
-            max_val = np.iinfo(x.dtype).max
-            x = x.astype(np.float32) / max_val
-
-        x = torch.from_numpy(x).permute(2, 0, 1).float()
-        y = torch.from_numpy(y).long()
-
-        return (x, y)
-
-    def __len__(self):
-        return len(self.img_paths)
 
 
 class SemanticSegmentationLearner(Learner):
@@ -168,47 +102,6 @@ class SemanticSegmentationLearner(Learner):
         loss = nn.CrossEntropyLoss(**args)
 
         return loss
-
-    def _get_datasets(self, uri: Union[str, List[str]]):
-        cfg = self.cfg
-
-        data_dirs = self.unzip_data(uri)
-        transform, aug_transform = self.get_data_transforms()
-        img_fmt, label_fmt = cfg.data.img_format, cfg.data.label_format
-
-        train_ds, valid_ds, test_ds = [], [], []
-        for data_dir in data_dirs:
-            train_dir = join(data_dir, 'train')
-            valid_dir = join(data_dir, 'valid')
-
-            _train_ds, _valid_ds, _test_ds = [], [], []
-            if isdir(train_dir):
-                tf = transform if cfg.overfit_mode else aug_transform
-                _train_ds = SemanticSegmentationDataset(
-                    train_dir,
-                    img_fmt=img_fmt,
-                    label_fmt=label_fmt,
-                    transform=tf)
-            if isdir(valid_dir):
-                _valid_ds = SemanticSegmentationDataset(
-                    valid_dir,
-                    img_fmt=img_fmt,
-                    label_fmt=label_fmt,
-                    transform=transform)
-                _test_ds = SemanticSegmentationDataset(
-                    valid_dir,
-                    img_fmt=img_fmt,
-                    label_fmt=label_fmt,
-                    transform=transform)
-            train_ds.append(_train_ds)
-            valid_ds.append(_valid_ds)
-            test_ds.append(_test_ds)
-
-        train_ds, valid_ds, test_ds = (ConcatDataset(train_ds),
-                                       ConcatDataset(valid_ds),
-                                       ConcatDataset(test_ds))
-
-        return train_ds, valid_ds, test_ds
 
     def train_step(self, batch, batch_ind):
         x, y = batch

@@ -39,8 +39,8 @@ from rastervision.pipeline.file_system import (
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, ConfigError,
                                           upgrade_config, save_pipeline_config)
-from rastervision.pytorch_learner.learner_config import (LearnerConfig,
-                                                         ExternalModuleConfig)
+from rastervision.pytorch_learner.learner_config import (
+    LearnerConfig, ExternalModuleConfig, ImageDataConfig, GeoDataConfig)
 from rastervision.pytorch_learner.utils import (
     torch_hub_load_github, torch_hub_load_uri, torch_hub_load_local,
     get_hubconf_dir_from_cfg)
@@ -424,56 +424,112 @@ class Learner(ABC):
         """
         return None
 
-    def _get_datasets(self, uri: Union[str, List[str]]
-                      ) -> Tuple[Dataset, Dataset, Dataset]:  # noqa
+    def _get_datasets(self, uri: Optional[Union[str, List[str]]] = None
+                      ) -> Tuple[Dataset, Dataset, Dataset]:
         """Gets Datasets for a single group of chips.
 
         This should be overridden for each Learner subclass.
 
+        Returns:
+            train, validation, and test DataSets."""
+        if isinstance(self.cfg.data, ImageDataConfig):
+            return self._get_image_datasets(uri)
+
+        if isinstance(self.cfg.data, GeoDataConfig):
+            return self._get_geo_datasets()
+
+        raise TypeError('Learner.cfg.data')
+
+    def _get_image_datasets(self, uri: Union[str, List[str]]
+                            ) -> Tuple[Dataset, Dataset, Dataset]:
+        """Gets image training, validation, and test datasets from a single
+        zip file.
+
         Args:
-            uri: a list of URIs of zip files or the URI of a directory containing
-                zip files
+            uri (Union[str, List[str]]): Uri of a zip file containing the
+                images.
+
+        Returns:
+            Tuple[Dataset, Dataset, Dataset]: Training, validation, and test
+                dataSets.
+        """
+        cfg = self.cfg
+        data_dirs = self.unzip_data(uri)
+
+        train_dirs = [join(d, 'train') for d in data_dirs if isdir(d)]
+        val_dirs = [join(d, 'valid') for d in data_dirs if isdir(d)]
+
+        base_transform, aug_transform = self.get_data_transforms()
+        train_tf = aug_transform if not cfg.overfit_mode else base_transform
+        val_tf, test_tf = base_transform, base_transform
+
+        train_ds, val_ds, test_ds = cfg.data.make_datasets(
+            train_dirs=train_dirs,
+            val_dirs=val_dirs,
+            test_dirs=val_dirs,
+            train_tf=train_tf,
+            val_tf=val_tf,
+            test_tf=test_tf)
+        return train_ds, val_ds, test_ds
+
+    def _get_geo_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
+        """Gets geo datasets.
+
+        This should be overridden for each Learner subclass.
 
         Returns:
             train, validation, and test DataSets."""
-        raise NotImplementedError()
+        cfg = self.cfg
+        base_transform, aug_transform = self.get_data_transforms()
+        train_tf = aug_transform if not cfg.overfit_mode else base_transform
+        val_tf, test_tf = base_transform, base_transform
+
+        train_ds, val_ds, test_ds = cfg.data.make_datasets(
+            tmp_dir=self.tmp_dir,
+            train_tf=train_tf,
+            val_tf=val_tf,
+            test_tf=test_tf)
+        return train_ds, val_ds, test_ds
 
     def get_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
         """Returns train, validation, and test DataSets."""
-        if self.cfg.data.group_uris is not None:
-            if self.cfg.data.uri is not None:
-                log.warn('Both DataConfig.uri and DataConfig.group_uris '
-                         'specified. Only DataConfig.group_uris will be used.')
-            train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
+        cfg = self.cfg
+        if isinstance(cfg.data, GeoDataConfig):
+            return self._get_datasets()
+        if cfg.data.group_uris is None:
+            return self._get_datasets(cfg.data.uri)
 
-            group_sizes = None
-            if self.cfg.data.group_train_sz is not None:
-                group_sizes = self.cfg.data.group_train_sz
-            elif self.cfg.data.group_train_sz_rel is not None:
-                group_sizes = self.cfg.data.group_train_sz_rel
-            if not sequence_like(group_sizes):
-                group_sizes = [group_sizes] * len(self.cfg.data.group_uris)
+        if cfg.data.uri is not None:
+            log.warn('Both DataConfig.uri and DataConfig.group_uris '
+                     'specified. Only DataConfig.group_uris will be used.')
+        train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
 
-            for uri, sz in zip(self.cfg.data.group_uris, group_sizes):
-                train_ds, valid_ds, test_ds = self._get_datasets(uri)
-                if sz is not None:
-                    if isinstance(sz, float):
-                        sz = int(len(train_ds) * sz)
-                    train_inds = list(range(len(train_ds)))
-                    random.seed(1234)
-                    random.shuffle(train_inds)
-                    train_inds = train_inds[:sz]
-                    train_ds = Subset(train_ds, train_inds)
-                train_ds_lst.append(train_ds)
-                valid_ds_lst.append(valid_ds)
-                test_ds_lst.append(test_ds)
+        group_sizes = None
+        if cfg.data.group_train_sz is not None:
+            group_sizes = cfg.data.group_train_sz
+        elif cfg.data.group_train_sz_rel is not None:
+            group_sizes = cfg.data.group_train_sz_rel
+        if not sequence_like(group_sizes):
+            group_sizes = [group_sizes] * len(cfg.data.group_uris)
 
-            train_ds, valid_ds, test_ds = (ConcatDataset(train_ds_lst),
-                                           ConcatDataset(valid_ds_lst),
-                                           ConcatDataset(test_ds_lst))
-            return train_ds, valid_ds, test_ds
-        else:
-            return self._get_datasets(self.cfg.data.uri)
+        for uri, sz in zip(cfg.data.group_uris, group_sizes):
+            train_ds, valid_ds, test_ds = self._get_datasets(uri)
+            if sz is not None:
+                if isinstance(sz, float):
+                    sz = int(len(train_ds) * sz)
+                train_inds = list(range(len(train_ds)))
+                random.seed(1234)
+                random.shuffle(train_inds)
+                train_inds = train_inds[:sz]
+                train_ds = Subset(train_ds, train_inds)
+            train_ds_lst.append(train_ds)
+            valid_ds_lst.append(valid_ds)
+            test_ds_lst.append(test_ds)
+
+        train_ds, valid_ds, test_ds = (ConcatDataset(train_ds_lst),
+                                       ConcatDataset(valid_ds_lst),
+                                       ConcatDataset(test_ds_lst))
+        return train_ds, valid_ds, test_ds
 
     def setup_data(self):
         """Set the the DataSet and DataLoaders for train, validation, and test sets."""
