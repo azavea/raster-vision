@@ -8,7 +8,8 @@ from rastervision.core.data import (
     RasterioSourceConfig, SceneConfig, DatasetConfig)
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
 from rastervision.pytorch_learner import (Backbone, SolverConfig,
-                                          ObjectDetectionModelConfig)
+                                          ObjectDetectionModelConfig,
+                                          ObjectDetectionImageDataConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False):
@@ -32,6 +33,10 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             raster_source=raster_source,
             label_source=label_source)
 
+    chip_sz = 300
+    img_sz = chip_sz
+    data = ObjectDetectionImageDataConfig(img_sz=img_sz, augmentors=[])
+
     if full_train:
         model = ObjectDetectionModelConfig(backbone=Backbone.resnet18)
         solver = SolverConfig(
@@ -53,11 +58,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             one_cycle=True,
             sync_interval=200)
     backend = PyTorchObjectDetectionConfig(
+        data=data,
         model=model,
         solver=solver,
         log_tensorboard=False,
-        run_tensorboard=False,
-        augmentors=[])
+        run_tensorboard=False)
 
     scenes = [
         make_scene('od_test', get_path('scene/image.tif'),
@@ -65,7 +70,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         make_scene('od_test-2', get_path('scene/image2.tif'),
                    get_path('scene/labels2.json'))
     ]
-    dataset = DatasetConfig(
+    scene_dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=scenes,
         validation_scenes=scenes)
@@ -76,9 +81,9 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
 
     return ObjectDetectionConfig(
         root_uri=root_uri,
-        dataset=dataset,
+        dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=300,
-        predict_chip_sz=300,
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz,
         chip_options=chip_options,
         predict_options=predict_options)

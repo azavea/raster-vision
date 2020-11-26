@@ -9,7 +9,8 @@ from rastervision.core.rv_pipeline import (SemanticSegmentationChipOptions,
                                            SemanticSegmentationConfig)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (Backbone, SolverConfig,
-                                          SemanticSegmentationModelConfig)
+                                          SemanticSegmentationModelConfig,
+                                          SemanticSegmentationImageDataConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False):
@@ -40,6 +41,10 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             label_source=label_source,
             label_store=label_store)
 
+    chip_sz = 300
+    img_sz = chip_sz
+    data = SemanticSegmentationImageDataConfig(img_sz=img_sz, augmentors=[])
+
     if full_train:
         model = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)
         solver = SolverConfig(
@@ -61,11 +66,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             one_cycle=True,
             sync_interval=200)
     backend = PyTorchSemanticSegmentationConfig(
+        data=data,
         model=model,
         solver=solver,
         log_tensorboard=False,
-        run_tensorboard=False,
-        augmentors=[])
+        run_tensorboard=False)
 
     scenes = [
         make_scene('test-scene', get_path('scene/image.tif'),
@@ -73,18 +78,18 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         make_scene('test-scene2', get_path('scene/image2.tif'),
                    get_path('scene/labels2.tif'))
     ]
-    dataset = DatasetConfig(
+    scene_dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=scenes,
         validation_scenes=scenes)
 
     chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding, stride=300)
+        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,
-        dataset=dataset,
+        dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=300,
-        predict_chip_sz=300,
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz,
         chip_options=chip_options)

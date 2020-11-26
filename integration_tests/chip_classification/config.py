@@ -7,7 +7,8 @@ from rastervision.core.data import (
     SceneConfig, DatasetConfig)
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
 from rastervision.pytorch_learner import (Backbone, SolverConfig,
-                                          ClassificationModelConfig)
+                                          ClassificationModelConfig,
+                                          ClassificationImageDataConfig)
 
 
 def get_config(runner, root_uri, data_uri=None, full_train=False):
@@ -45,10 +46,14 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         make_scene(
             get_path('scene/image2.tif'), get_path('scene/labels2.json'))
     ]
-    dataset = DatasetConfig(
+    scene_dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=scenes,
         validation_scenes=scenes)
+
+    chip_sz = 200
+    img_sz = chip_sz
+    data = ClassificationImageDataConfig(img_sz=img_sz, augmentors=[])
 
     if full_train:
         model = ClassificationModelConfig(backbone=Backbone.resnet18)
@@ -71,17 +76,17 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
             one_cycle=True,
             sync_interval=200)
     backend = PyTorchChipClassificationConfig(
+        data=data,
         model=model,
         solver=solver,
         log_tensorboard=False,
-        run_tensorboard=False,
-        augmentors=[])
+        run_tensorboard=False)
 
     config = ChipClassificationConfig(
         root_uri=root_uri,
-        dataset=dataset,
+        dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=200,
-        predict_chip_sz=200)
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz)
 
     return config
