@@ -1,7 +1,8 @@
 import numpy as np
 from shapely.strtree import STRtree
 from shapely.geometry import shape
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable, Optional
+import click
 
 from rastervision.core.data.label import ChipClassificationLabels
 from rastervision.core.data.label_source.label_source import LabelSource
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 
 
 def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
-               background_class_id, pick_min_class_id):
+               background_class_id, pick_min_class_id) -> int:
     """Infer the class_id of a cell given a set of polygons.
 
     Given a cell and a set of polygons, the problem is to infer the class_id
@@ -79,9 +80,9 @@ def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
     return class_id
 
 
-def infer_labels(geojson, extent, cell_sz, ioa_thresh,
-                 use_intersection_over_cell, pick_min_class_id,
-                 background_class_id):
+def infer_labels(cells, str_tree, ioa_thresh, use_intersection_over_cell,
+                 pick_min_class_id,
+                 background_class_id) -> ChipClassificationLabels:
     """Infer ChipClassificationLabels grid from GeoJSON containing polygons.
 
     Given GeoJSON with polygons associated with class_ids, infer a grid of
@@ -90,33 +91,22 @@ def infer_labels(geojson, extent, cell_sz, ioa_thresh,
 
     Args:
         geojson: dict in normalized GeoJSON format (see VectorSource)
-        extent: Box representing the bounds of the grid
 
     Returns:
         ChipClassificationLabels
     """
     labels = ChipClassificationLabels()
-    cells = extent.get_windows(cell_sz, cell_sz)
 
-    # We need to associate class_id with each geom. Monkey-patching it onto the geom
-    # seems like a bad idea, but it's the only straightforward way of doing this
-    # that I've been able to find.
-    geoms = []
-    for f in geojson['features']:
-        g = shape(f['geometry'])
-        g.class_id = f['properties']['class_id']
-        geoms.append(g)
-    str_tree = STRtree(geoms)
-
-    for cell in cells:
-        class_id = infer_cell(cell, str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
-        labels.set_cell(cell, class_id)
+    with click.progressbar(cells, label='Inferring labels') as bar:
+        for cell in bar:
+            class_id = infer_cell(cell, str_tree, ioa_thresh,
+                                  use_intersection_over_cell,
+                                  background_class_id, pick_min_class_id)
+            labels.set_cell(cell, class_id)
     return labels
 
 
-def read_labels(geojson, extent=None):
+def read_labels(geojson, extent=None) -> ChipClassificationLabels:
     """Convert GeoJSON to ChipClassificationLabels.
 
     If the GeoJSON already contains a grid of cells, then it can be constructed
@@ -149,6 +139,19 @@ def read_labels(geojson, extent=None):
     return labels
 
 
+def make_str_tree(geojson):
+    # We need to associate class_id with each geom. Monkey-patching it onto the geom
+    # seems like a bad idea, but it's the only straightforward way of doing this
+    # that I've been able to find.
+    geoms = []
+    for f in geojson['features']:
+        g = shape(f['geometry'])
+        g.class_id = f['properties']['class_id']
+        geoms.append(g)
+    str_tree = STRtree(geoms)
+    return str_tree
+
+
 class ChipClassificationLabelSource(LabelSource):
     """A source of chip classification labels.
 
@@ -165,26 +168,101 @@ class ChipClassificationLabelSource(LabelSource):
                  vector_source: 'VectorSource',
                  class_config: 'ClassConfig',
                  crs_transformer: 'CRSTransformer',
-                 extent: 'Box' = None):
+                 extent: Optional[Box] = None,
+                 lazy: bool = False):
         """Constructs a LabelSource for chip classification.
 
         Args:
-            extent: Box used to filter the labels by extent or compute grid. This is
-                only needed if infer_cells is True or if it is False and you want to
-                filter cells by extent
+            extent (box, optional): Box used to filter the labels by extent or
+                compute grid. This is only needed if infer_cells is True or if
+                it is False and you want to filter cells by extent. Defaults to
+                None.
+            lazy (bool, optional): If True, labels are not populated during
+                initialization. Defaults to False.
         """
-        cfg = label_source_config
-        geojson = vector_source.get_geojson()
+        self.cfg = label_source_config
+        self.geojson = vector_source.get_geojson()
+        self.extent = extent
+        self.str_tree = None
 
-        if cfg.infer_cells:
-            self.labels = infer_labels(
-                geojson, extent, cfg.cell_sz, cfg.ioa_thresh,
-                cfg.use_intersection_over_cell, cfg.pick_min_class_id,
-                cfg.background_class_id)
+        self.labels = ChipClassificationLabels()
+        if not lazy:
+            self.populate_labels()
+
+    def populate_labels(self, cells: Optional[Iterable[Box]] = None) -> None:
+        """Populate self.labels by either reading or inferring.
+
+        If cfg.infer_cells is True or specific cells are given, the labels are
+        inferred. Otherwise, they are read from the geojson.
+        """
+        if self.cfg.infer_cells or cells is not None:
+            self.labels = self.infer_cells(cells=cells)
         else:
-            self.labels = read_labels(geojson, extent)
+            self.labels = read_labels(self.geojson, extent=self.extent)
 
-    def get_labels(self, window: 'Box' = None):
+    def infer_cells(self, cells: Optional[Iterable[Box]] = None
+                    ) -> ChipClassificationLabels:
+        """Infer labels for a list of cells. Only cells whose labels are not
+        already known are inferred.
+
+        Args:
+            cells (Optional[Iterable[Box]], optional): Cells whose labels are
+                to be inferred. Defaults to None.
+
+        Returns:
+            ChipClassificationLabels: labels
+        """
+        cfg = self.cfg
+        if cells is None:
+            cells = self.extent.get_windows(cfg.cell_sz, cfg.cell_sz)
+
+        known_cells = [c for c in cells if c in self.labels]
+        unknown_cells = [c for c in cells if c not in self.labels]
+
+        if self.str_tree is None:
+            self.str_tree = make_str_tree(self.geojson)
+
+        labels = infer_labels(
+            cells=unknown_cells,
+            str_tree=self.str_tree,
+            ioa_thresh=cfg.ioa_thresh,
+            use_intersection_over_cell=cfg.use_intersection_over_cell,
+            pick_min_class_id=cfg.pick_min_class_id,
+            background_class_id=cfg.background_class_id)
+
+        for cell in known_cells:
+            class_id = self.labels.get_cell_class_id(cell)
+            labels.set_cell(cell, class_id)
+
+        return labels
+
+    def infer_cell(self, cell: Optional[Box] = None) -> int:
+        """Infer and return the label for a single cell."""
+        cfg = self.cfg
+
+        if self.str_tree is None:
+            self.str_tree = make_str_tree(self.geojson)
+
+        label = infer_cell(
+            cell=cell,
+            str_tree=self.str_tree,
+            ioa_thresh=cfg.ioa_thresh,
+            use_intersection_over_cell=cfg.use_intersection_over_cell,
+            pick_min_class_id=cfg.pick_min_class_id,
+            background_class_id=cfg.background_class_id)
+        return label
+
+    def get_labels(self,
+                   window: Optional[Box] = None) -> ChipClassificationLabels:
         if window is None:
             return self.labels
         return self.labels.get_singleton_labels(window)
+
+    def __getitem__(self, window: Box) -> int:
+        """Return label for a window, inferring it if it is not already known.
+        """
+        if window in self.labels:
+            return self.labels.get_cell_class_id(window)
+        label = self.infer_cell(cell=window)
+        self.labels.set_cell(window, label)
+        return label

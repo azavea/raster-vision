@@ -113,3 +113,6 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
 
     def _deactivate(self):
         pass
+
+    def __getitem__(self, window: Box) -> np.ndarray:
+        return self.get_labels(window).get_label_arr(window)
