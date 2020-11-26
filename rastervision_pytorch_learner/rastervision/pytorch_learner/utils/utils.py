@@ -2,7 +2,6 @@ from typing import Tuple, Optional
 
 import torch
 from torch import nn
-from torch.utils.data import Dataset
 
 import numpy as np
 from PIL import ImageColor
@@ -69,34 +68,6 @@ def compute_conf_mat_metrics(conf_mat, label_names, eps=1e-6):
             '{}_f1'.format(label): f1[ind].item(),
         })
     return metrics
-
-
-class AlbumentationsDataset(Dataset):
-    """An adapter to use arbitrary datasets with albumentations transforms."""
-
-    def __init__(self, orig_dataset, transform=None):
-        """Constructor.
-
-        Args:
-            orig_dataset: (Dataset) which is assumed to return PIL Image objects
-                and not perform any transforms of its own
-            transform: (albumentations.core.transforms_interface.ImageOnlyTransform)
-        """
-        self.orig_dataset = orig_dataset
-        self.transform = transform
-
-    def __getitem__(self, ind):
-        x, y = self.orig_dataset[ind]
-        x = np.array(x)
-        if self.transform:
-            x = self.transform(image=x)['image']
-        x = torch.from_numpy(x).permute(2, 0, 1)
-        if x.dtype != torch.float32:
-            x = x.float() / 255.
-        return x, y
-
-    def __len__(self):
-        return len(self.orig_dataset)
 
 
 def validate_albumentation_transform(tf: dict):
