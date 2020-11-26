@@ -2,35 +2,51 @@ from rastervision.pipeline.config import (register_config, validator,
                                           ConfigError)
 from rastervision.pytorch_backend.pytorch_learner_backend_config import (
     PyTorchLearnerBackendConfig)
+from rastervision.pytorch_learner.learner_config import default_augmentors
 from rastervision.pytorch_learner.object_detection_learner_config import (
     ObjectDetectionModelConfig, ObjectDetectionLearnerConfig,
-    ObjectDetectionDataConfig)
+    ObjectDetectionImageDataConfig)
 from rastervision.pytorch_backend.pytorch_object_detection import (
     PyTorchObjectDetection)
 
 
-@register_config('pytorch_object_detection_backend')
+def objdet_learner_backend_config_upgrader(cfg_dict, version):
+    if version == 0:
+        fields = {
+            'augmentors': default_augmentors,
+            'group_uris': None,
+            'group_train_sz': None,
+            'group_train_sz_rel': None,
+            'num_workers': 4,
+            'img_sz': None,
+            'base_transform': None,
+            'aug_transform': None,
+            'plot_options': None,
+            'preview_batch_limit': None
+        }
+        data_cfg_dict = {
+            key: cfg_dict.pop(key, default_val)
+            for key, default_val in fields.items() if key in cfg_dict
+        }
+        if data_cfg_dict['img_sz'] is None:
+            data_cfg_dict['img_sz'] = 256
+
+        data_cfg = ObjectDetectionImageDataConfig(**data_cfg_dict)
+        data_cfg.update()
+        data_cfg.validate_config()
+        cfg_dict['data'] = data_cfg.dict()
+    return cfg_dict
+
+
+@register_config(
+    'pytorch_object_detection_backend',
+    upgrader=objdet_learner_backend_config_upgrader)
 class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
     model: ObjectDetectionModelConfig
 
     def get_learner_config(self, pipeline):
-        if self.img_sz is None:
-            self.img_sz = pipeline.train_chip_sz
-
-        data = ObjectDetectionDataConfig()
-        data.uri = pipeline.chip_uri
-        data.class_names = pipeline.dataset.class_config.names
-        data.class_colors = pipeline.dataset.class_config.colors
-        data.img_sz = self.img_sz
-        data.augmentors = self.augmentors
-        data.base_transform = self.base_transform
-        data.aug_transform = self.aug_transform
-        data.plot_options = self.plot_options
-        data.num_workers = self.num_workers
-        data.preview_batch_limit = self.preview_batch_limit
-
         learner = ObjectDetectionLearnerConfig(
-            data=data,
+            data=self.data,
             model=self.model,
             solver=self.solver,
             test_mode=self.test_mode,
