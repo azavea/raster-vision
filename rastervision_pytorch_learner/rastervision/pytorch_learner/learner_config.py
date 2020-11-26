@@ -1,13 +1,20 @@
 from os.path import join
 from enum import Enum
 
-from typing import (List, Optional, Union, TYPE_CHECKING)
+from typing import (List, Optional, Union, TYPE_CHECKING, Dict, Tuple,
+                    Iterable)
 from typing_extensions import Literal
-from pydantic import PositiveFloat, PositiveInt, constr, confloat
+from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
+                      conint)
 from pydantic.utils import sequence_like
+
+import albumentations as A
+
+from torch.utils.data import Dataset, ConcatDataset
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, validator)
+from rastervision.core.data import (Scene, DatasetConfig as SceneDatasetConfig)
 from rastervision.pytorch_learner.utils import (
     color_to_triple, validate_albumentation_transform)
 
@@ -23,6 +30,7 @@ if TYPE_CHECKING:
 # types
 Proportion = confloat(ge=0, le=1)
 NonEmptyStr = constr(strip_whitespace=True, min_length=1)
+NonNegInt = conint(ge=0)
 
 
 class Backbone(Enum):
@@ -176,19 +184,19 @@ class ModelConfig(Config):
 class SolverConfig(Config):
     """Config related to solver aka optimizer."""
     lr: PositiveFloat = Field(1e-4, description='Learning rate.')
-    num_epochs: PositiveInt = Field(
+    num_epochs: PosInt = Field(
         10,
         description=
         'Number of epochs (ie. sweeps through the whole training set).')
-    test_num_epochs: PositiveInt = Field(
+    test_num_epochs: PosInt = Field(
         2, description='Number of epochs to use in test mode.')
-    test_batch_sz: PositiveInt = Field(
+    test_batch_sz: PosInt = Field(
         4, description='Batch size to use in test mode.')
-    overfit_num_steps: PositiveInt = Field(
+    overfit_num_steps: PosInt = Field(
         1, description='Number of optimizer steps to use in overfit mode.')
-    sync_interval: PositiveInt = Field(
+    sync_interval: PosInt = Field(
         1, description='The interval in epochs for each sync to the cloud.')
-    batch_sz: PositiveInt = Field(32, description='Batch size.')
+    batch_sz: PosInt = Field(32, description='Batch size.')
     one_cycle: bool = Field(
         True,
         description=
@@ -240,52 +248,30 @@ class PlotOptions(Config):
         'transform', allow_reuse=True)(validate_albumentation_transform)
 
 
-@register_config('data')
+def data_config_upgrader(cfg_dict, version):
+    if version < 1:
+        cfg_dict['type_hint'] = 'image_data'
+    return cfg_dict
+
+
+@register_config('data', upgrader=data_config_upgrader)
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
-    uri: Optional[Union[str, List[str]]] = Field(
-        None,
-        description=
-        ('URI of the dataset. This can be a zip file, a list of zip files, or a '
-         'directory which contains a set of zip files.'))
-    train_sz: Optional[int] = Field(
-        None,
-        description=
-        ('If set, the number of training images to use. If fewer images exist, '
-         'then an exception will be raised.'))
-    group_uris: Optional[List[Union[str, List[str]]]] = Field(
-        None,
-        description=
-        'This can be set instead of uri in order to specify groups of chips. '
-        'Each element in the list is expected to be an object of the same '
-        'form accepted by the uri field. The purpose of separating chips into '
-        'groups is to be able to use the group_train_sz field.')
-    group_train_sz: Optional[Union[int, List[int]]] = Field(
-        None,
-        description='If group_uris is set, this can be used to specify the '
-        'number of chips to use per group. Only applies to training chips. '
-        'This can either be a single value that will be used for all groups '
-        'or a list of values (one for each group).')
-    group_train_sz_rel: Optional[Union[Proportion, List[Proportion]]] = Field(
-        None,
-        description='Relative version of group_train_sz. Must be a float '
-        'in [0, 1]. If group_uris is set, this can be used to specify the '
-        'proportion of the total chips in each group to use per group. '
-        'Only applies to training chips. This can either be a single value '
-        'that will be used for all groups or a list of values '
-        '(one for each group).')
-    data_format: Optional[str] = Field(
-        None, description='Name of dataset format.')
     class_names: List[str] = Field([], description='Names of classes.')
     class_colors: Optional[Union[List[str], List[List]]] = Field(
         None,
         description=('Colors used to display classes. '
                      'Can be color 3-tuples in list form.'))
-    img_sz: PositiveInt = Field(
+    img_sz: PosInt = Field(
         256,
         description=
         ('Length of a side of each image in pixels. This is the size to transform '
          'it to during training, not the size in the raw dataset.'))
+    train_sz: Optional[int] = Field(
+        None,
+        description=
+        ('If set, the number of training images to use. If fewer images exist, '
+         'then an exception will be raised.'))
     num_workers: int = Field(
         4,
         description='Number of workers to use when DataLoader makes batches.')
@@ -330,6 +316,45 @@ class DataConfig(Config):
 
     def validate_config(self):
         self.validate_augmentors()
+
+    def make_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
+        raise NotImplementedError()
+
+
+@register_config('image_data')
+class ImageDataConfig(DataConfig):
+    """Config related to dataset for training and testing."""
+    data_format: Optional[str] = Field(
+        None, description='Name of dataset format.')
+    uri: Optional[Union[str, List[str]]] = Field(
+        None,
+        description=
+        ('URI of the dataset. This can be a zip file, a list of zip files, or a '
+         'directory which contains a set of zip files.'))
+    group_uris: Optional[List[Union[str, List[str]]]] = Field(
+        None,
+        description=
+        'This can be set instead of uri in order to specify groups of chips. '
+        'Each element in the list is expected to be an object of the same '
+        'form accepted by the uri field. The purpose of separating chips into '
+        'groups is to be able to use the group_train_sz field.')
+    group_train_sz: Optional[Union[int, List[int]]] = Field(
+        None,
+        description='If group_uris is set, this can be used to specify the '
+        'number of chips to use per group. Only applies to training chips. '
+        'This can either be a single value that will be used for all groups '
+        'or a list of values (one for each group).')
+    group_train_sz_rel: Optional[Union[Proportion, List[Proportion]]] = Field(
+        None,
+        description='Relative version of group_train_sz. Must be a float '
+        'in [0, 1]. If group_uris is set, this can be used to specify the '
+        'proportion of the total chips in each group to use per group. '
+        'Only applies to training chips. This can either be a single value '
+        'that will be used for all groups or a list of values '
+        '(one for each group).')
+
+    def validate_config(self):
+        super().validate_config()
         self.validate_group_uris()
 
     def validate_group_uris(self):
@@ -352,6 +377,160 @@ class DataConfig(Config):
             if len(self.group_train_sz_rel) != len(self.group_uris):
                 raise ConfigError(
                     'len(group_train_sz_rel) != len(group_uris).')
+
+    def make_datasets(self, train_dirs: Iterable[str], val_dirs: Iterable[str],
+                      test_dirs: Iterable[str], train_tf: A.BasicTransform,
+                      val_tf: A.BasicTransform, test_tf: A.BasicTransform
+                      ) -> Tuple[Dataset, Dataset, Dataset]:
+
+        train_ds_list = [self.dir_to_dataset(d, train_tf) for d in train_dirs]
+        val_ds_list = [self.dir_to_dataset(d, val_tf) for d in val_dirs]
+        test_ds_list = [self.dir_to_dataset(d, test_tf) for d in test_dirs]
+
+        train_ds, valid_ds, test_ds = (ConcatDataset(train_ds_list),
+                                       ConcatDataset(val_ds_list),
+                                       ConcatDataset(test_ds_list))
+        return train_ds, valid_ds, test_ds
+
+    def dir_to_dataset(self, data_dir: str,
+                       transform: A.BasicTransform) -> Dataset:
+        raise NotImplementedError()
+
+
+class GeoDataWindowMethod(Enum):
+    sliding = 'sliding'
+    random = 'random'
+
+
+@register_config('geo_data_window')
+class GeoDataWindowConfig(Config):
+    method: GeoDataWindowMethod = Field(
+        GeoDataWindowMethod.sliding, description='')
+    size: Union[PosInt, Tuple[PosInt, PosInt]] = Field(
+        ...,
+        description='If method = sliding, this is the size of sliding window. '
+        'If method = random, this is the size that all the windows are '
+        'resized to before they are returned.')
+    stride: Optional[Union[PosInt, Tuple[PosInt, PosInt]]] = Field(
+        None,
+        description='Stride of sliding window. Only used if method = sliding.')
+    padding: Optional[Union[NonNegInt, Tuple[NonNegInt, NonNegInt]]] = Field(
+        None,
+        description='How many pixels are windows allowed to overflow '
+        'the edges of the raster source.')
+    size_lims: Optional[Tuple[PosInt, PosInt]] = Field(
+        None,
+        description='[min, max] interval from which window sizes will be '
+        'uniformly randomly sampled. Only used if method = random. Must '
+        'specify either size_lims or h and w lims, bu not both.')
+    h_lims: Optional[Tuple[PosInt, PosInt]] = Field(
+        None,
+        description='[min, max] interval from which window heights will be '
+        'uniformly randomly sampled. Only used if method = random.')
+    w_lims: Optional[Tuple[PosInt, PosInt]] = Field(
+        None,
+        description='[min, max] interval from which window widths will be '
+        'uniformly randomly sampled. Only used if method = random.')
+    max_windows: NonNegInt = Field(
+        10_000,
+        description='Max allowed reads from a GeoDataset. Only used if '
+        'method = random.')
+
+    def validate_config(self):
+        if self.method == GeoDataWindowMethod.sliding:
+            if self.stride is None:
+                raise ConfigError('stride must be specified if using '
+                                  'GeoDataWindowMethod.sliding')
+        elif self.method == GeoDataWindowMethod.random:
+            has_size_lims = self.size_lims is not None
+            has_h_lims = self.h_lims is not None
+            has_w_lims = self.w_lims is not None
+            if has_size_lims == (has_w_lims or has_h_lims):
+                raise ConfigError('Specify either size_lims or h and w lims.')
+            if has_h_lims != has_w_lims:
+                raise ConfigError('h_lims and w_lims must both be specified')
+
+
+@register_config('geo_data')
+class GeoDataConfig(DataConfig):
+    scene_dataset: SceneDatasetConfig
+    window_opts: Union[GeoDataWindowConfig, Dict[str, GeoDataWindowConfig]]
+
+    def validate_config(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        if isinstance(self.window_opts, dict):
+            scenes = self.scene_dataset.get_all_scenes()
+            for s in scenes:
+                if s.id not in self.window_opts:
+                    raise ConfigError(
+                        f'Window config not found for scene {s.id}')
+
+    def build_scenes(self, tmp_dir):
+        class_cfg = self.scene_dataset.class_config
+        train_scenes = [
+            s.build(class_cfg, tmp_dir, use_transformers=True)
+            for s in self.scene_dataset.train_scenes
+        ]
+        val_scenes = [
+            s.build(class_cfg, tmp_dir, use_transformers=True)
+            for s in self.scene_dataset.validation_scenes
+        ]
+        test_scenes = [
+            s.build(class_cfg, tmp_dir, use_transformers=True)
+            for s in self.scene_dataset.test_scenes
+        ]
+
+        return train_scenes, val_scenes, test_scenes
+
+    def make_datasets(self,
+                      tmp_dir: str,
+                      train_tf: Optional[A.BasicTransform] = None,
+                      val_tf: Optional[A.BasicTransform] = None,
+                      test_tf: Optional[A.BasicTransform] = None
+                      ) -> Tuple[Dataset, Dataset, Dataset]:
+        """Make training, validation, and test datasets.
+
+        Args:
+            tmp_dir (str): Temporary directory to be used for building scenes.
+            train_tf (Optional[A.BasicTransform], optional): Transform for the
+                training dataset. Defaults to None.
+            val_tf (Optional[A.BasicTransform], optional): Transform for the
+                validation dataset. Defaults to None.
+            test_tf (Optional[A.BasicTransform], optional): Transform for the
+                test dataset. Defaults to None.
+
+        Returns:
+            Tuple[Dataset, Dataset, Dataset]: PyTorch-compatiable training,
+                validation, and test datasets.
+        """
+        train_scenes, val_scenes, test_scenes = self.build_scenes(tmp_dir)
+
+        if len(test_scenes) == 0:
+            test_scenes = val_scenes
+
+        train_ds_list = [
+            self.scene_to_dataset(s, train_tf) for s in train_scenes
+        ]
+        val_ds_list = [self.scene_to_dataset(s, val_tf) for s in val_scenes]
+        test_ds_list = [self.scene_to_dataset(s, test_tf) for s in test_scenes]
+
+        for ds_list in [train_ds_list, val_ds_list, test_ds_list]:
+            if len(ds_list) == 0:
+                ds_list.append([])
+
+        train_ds = ConcatDataset(train_ds_list)
+        val_ds = ConcatDataset(val_ds_list)
+        test_ds = ConcatDataset(test_ds_list)
+
+        return train_ds, val_ds, test_ds
+
+    def scene_to_dataset(self,
+                         scene: Scene,
+                         transform: Optional[A.BasicTransform] = None
+                         ) -> Dataset:
+        """Make a dataset from a single scene.
+        """
+        raise NotImplementedError()
 
 
 @register_config('learner')
@@ -446,5 +625,5 @@ class LearnerConfig(Config):
         raise NotImplementedError()
 
     def get_model_bundle_uri(self) -> str:
-        """Returns the URI of where the model bundel is stored."""
+        """Returns the URI of where the model bundle is stored."""
         return join(self.output_uri, 'model-bundle.zip')

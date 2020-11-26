@@ -1,17 +1,56 @@
 from enum import Enum
+from typing import Union, Optional
+from os.path import join
 
-from rastervision.pipeline.config import register_config, Field, validator
+import albumentations as A
+
+from torch.utils.data import Dataset
+
+from rastervision.core.data import Scene
+from rastervision.pipeline.config import (Config, register_config, Field,
+                                          validator)
 from rastervision.pytorch_learner.learner_config import (
-    LearnerConfig, DataConfig, ModelConfig, Backbone)
+    LearnerConfig, ModelConfig, Backbone, ImageDataConfig, GeoDataConfig)
+from rastervision.pytorch_learner.dataset import ObjectDetectionImageDataset
 
 
 class ObjectDetectionDataFormat(Enum):
     coco = 'coco'
 
 
-@register_config('object_detection_data')
-class ObjectDetectionDataConfig(DataConfig):
+def objdet_data_config_upgrader(cfg_dict, version):
+    if version == 1:
+        cfg_dict['type_hint'] = 'object_detection_image_data'
+    return cfg_dict
+
+
+@register_config('object_detection_data', upgrader=objdet_data_config_upgrader)
+class ObjectDetectionDataConfig(Config):
+    pass
+
+
+@register_config('object_detection_image_data')
+class ObjectDetectionImageDataConfig(ObjectDetectionDataConfig,
+                                     ImageDataConfig):
     data_format: ObjectDetectionDataFormat = ObjectDetectionDataFormat.coco
+
+    def dir_to_dataset(self, data_dir: str,
+                       transform: A.BasicTransform) -> Dataset:
+        img_dir = join(data_dir, 'img')
+        annotation_uri = join(data_dir, 'labels.json')
+        ds = ObjectDetectionImageDataset(
+            img_dir, annotation_uri, transform=transform)
+        return ds
+
+
+@register_config('object_detection_geo_data')
+class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
+    def scene_to_dataset(self,
+                         scene: Scene,
+                         transform: Optional[A.BasicTransform] = None
+                         ) -> Dataset:
+        #  TODO
+        raise NotImplementedError()
 
 
 @register_config('object_detection_model')
@@ -36,7 +75,7 @@ class ObjectDetectionModelConfig(ModelConfig):
 
 @register_config('object_detection_learner')
 class ObjectDetectionLearnerConfig(LearnerConfig):
-    data: ObjectDetectionDataConfig
+    data: Union[ObjectDetectionImageDataConfig, ObjectDetectionGeoDataConfig]
     model: ObjectDetectionModelConfig
 
     def build(self,
