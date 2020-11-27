@@ -37,17 +37,46 @@ def get_config(runner,
                multiband: bool = False,
                external_model: bool = False,
                augment: bool = False,
+               nochip: bool = False,
                test: bool = False):
+    """Generate the pipeline config for this task. This function will be called
+    by RV, with arguments from the command line, when this example is run.
 
+    Args:
+        runner (Runner): Runner for the pipeline. Will be provided by RV.
+        raw_uri (str): Directory where the raw data resides
+        processed_uri (str): Directory for storing processed data. 
+                             E.g. crops for testing.
+        root_uri (str): Directory where all the output will be written.
+        multiband (bool, optional): If True, all 4 channels (R, G, B, & IR)
+            available in the raster source will be used. If False, only
+            IR, R, G (in that order) will be used. Defaults to False.
+        external_model (bool, optional): If True, use an external model defined
+            by the ExternalModuleConfig. Defaults to False.
+        augment (bool, optional): If True, use custom data augmentation
+            transforms. Some basic data augmentation is done even if this is
+            False. To completely disable, specify augmentors=[] is the dat
+            config. Defaults to False.
+        nochip (bool, optional): If True, read directly from the TIFF during
+            training instead of from pre-generated chips. The analyze and chip
+            commands should not be run, if this is set to True. Defaults to
+            False.
+        test (bool, optional): If True, does the following simplifications:
+            (1) Uses only the first 2 scenes
+            (2) Uses only a 600x600 crop of the scenes
+            (3) Enables test mode in the learner, which makes it use the
+                test_batch_sz and test_num_epochs, and also halves the img_sz.
+            Defaults to False.
+
+    Returns:
+        SemanticSegmentationConfig: A pipeline config.
+    """
     train_ids = TRAIN_IDS
     val_ids = VAL_IDS
 
     if test:
         train_ids = train_ids[:2]
         val_ids = val_ids[:2]
-
-    class_config = ClassConfig(names=CLASS_NAMES, colors=CLASS_COLORS)
-    class_config.ensure_null_class()
 
     if multiband:
         # use all 4 channels
@@ -60,7 +89,36 @@ def get_config(runner,
         channel_display_groups = None
         aug_transform = example_rgb_transform
 
-    def make_scene(id):
+    if augment:
+        mu, std = imagenet_stats['mean'], imagenet_stats['std']
+        mu, std = mu[channel_order], std[channel_order]
+
+        base_transform = A.Normalize(mean=mu.tolist(), std=std.tolist())
+        plot_transform = Unnormalize(mean=mu, std=std)
+
+        aug_transform = A.to_dict(aug_transform)
+        base_transform = A.to_dict(base_transform)
+        plot_transform = A.to_dict(plot_transform)
+    else:
+        aug_transform = None
+        base_transform = None
+        plot_transform = None
+
+    chip_sz = 300
+    img_sz = chip_sz
+    if nochip:
+        raster_source_persist = True
+        chip_options = SemanticSegmentationChipOptions()
+    else:
+        raster_source_persist = False
+        chip_options = SemanticSegmentationChipOptions(
+            window_method=SemanticSegmentationWindowMethod.sliding,
+            stride=chip_sz)
+
+    class_config = ClassConfig(names=CLASS_NAMES, colors=CLASS_COLORS)
+    class_config.ensure_null_class()
+
+    def make_scene(id) -> SceneConfig:
         id = id.replace('-', '_')
         raster_uri = f'{raw_uri}/4_Ortho_RGBIR/top_potsdam_{id}_RGBIR.tif'
         label_uri = f'{raw_uri}/5_Labels_for_participants/top_potsdam_{id}_label.tif'
@@ -79,13 +137,16 @@ def get_config(runner,
             label_uri = label_crop_uri
 
         raster_source = RasterioSourceConfig(
-            uris=[raster_uri], channel_order=channel_order)
+            uris=[raster_uri],
+            channel_order=channel_order,
+            persist=raster_source_persist)
 
         # Using with_rgb_class_map because label TIFFs have classes encoded as
         # RGB colors.
         label_source = SemanticSegmentationLabelSourceConfig(
             rgb_class_config=class_config,
-            raster_source=RasterioSourceConfig(uris=[label_uri]))
+            raster_source=RasterioSourceConfig(
+                uris=[label_uri], persist=raster_source_persist))
 
         # URI will be injected by scene config.
         # Using rgb=True because we want prediction TIFFs to be in
@@ -105,34 +166,43 @@ def get_config(runner,
         class_config=class_config,
         train_scenes=[make_scene(id) for id in train_ids],
         validation_scenes=[make_scene(id) for id in val_ids])
-    chip_sz = 300
-    chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
 
-    if augment:
-        mu, std = imagenet_stats['mean'], imagenet_stats['std']
-        mu, std = mu[channel_order], std[channel_order]
+    if nochip:
+        window_opts = {}
+        # set window configs for training scenes
+        for s in scene_dataset.train_scenes:
+            window_opts[s.id] = GeoDataWindowConfig(
+                # method=GeoDataWindowMethod.sliding,
+                method=GeoDataWindowMethod.random,
+                size=img_sz,
+                # size_lims=(200, 300),
+                h_lims=(200, 300),
+                w_lims=(200, 300),
+                max_windows=2209,
+            )
+        # set window configs for validation scenes
+        for s in scene_dataset.validation_scenes:
+            window_opts[s.id] = GeoDataWindowConfig(
+                method=GeoDataWindowMethod.sliding,
+                size=img_sz,
+                stride=img_sz // 2)
 
-        base_transform = A.Normalize(mean=mu.tolist(), std=std.tolist())
-        plot_transform = Unnormalize(mean=mu, std=std)
-
-        aug_transform = A.to_dict(aug_transform)
-        base_transform = A.to_dict(base_transform)
-        plot_transform = A.to_dict(plot_transform)
+        data = SemanticSegmentationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=window_opts,
+            img_sz=img_sz,
+            img_channels=len(channel_order),
+            num_workers=4,
+            channel_display_groups=channel_display_groups)
     else:
-        aug_transform = None
-        base_transform = None
-        plot_transform = None
-
-    img_sz = 256
-    data = SemanticSegmentationImageDataConfig(
-        img_sz=img_sz,
-        img_channels=len(channel_order),
-        num_workers=4,
-        channel_display_groups=channel_display_groups,
-        base_transform=base_transform,
-        aug_transform=aug_transform,
-        plot_options=PlotOptions(transform=plot_transform))
+        data = SemanticSegmentationImageDataConfig(
+            img_sz=img_sz,
+            img_channels=len(channel_order),
+            num_workers=4,
+            channel_display_groups=channel_display_groups,
+            base_transform=base_transform,
+            aug_transform=aug_transform,
+            plot_options=PlotOptions(transform=plot_transform))
 
     if external_model:
         model = SemanticSegmentationModelConfig(
@@ -144,7 +214,7 @@ def get_config(runner,
                     'name': 'resnet18',
                     'fpn_type': 'panoptic',
                     'num_classes': len(class_config.names),
-                    'fpn_channels': 128,
+                    'fpn_channels': 256,
                     'in_channels': len(channel_order),
                     'out_size': (img_sz, img_sz)
                 }))
@@ -165,7 +235,7 @@ def get_config(runner,
         run_tensorboard=False,
         test_mode=test)
 
-    return SemanticSegmentationConfig(
+    pipeline = SemanticSegmentationConfig(
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
@@ -173,3 +243,5 @@ def get_config(runner,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options)
+
+    return pipeline

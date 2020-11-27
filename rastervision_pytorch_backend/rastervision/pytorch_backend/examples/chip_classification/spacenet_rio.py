@@ -16,28 +16,67 @@ from rastervision.pytorch_backend.examples.utils import (get_scene_info,
 
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 
+CLASS_NAMES = ['no_building', 'building']
+
 
 def get_config(runner,
-               raw_uri,
-               processed_uri,
-               root_uri,
-               test=False,
-               external_model=False,
-               external_loss=False,
-               augment=False):
+               raw_uri: str,
+               processed_uri: str,
+               root_uri: str,
+               external_model: bool = False,
+               external_loss: bool = False,
+               nochip: bool = False,
+               test: bool = False) -> ChipClassificationConfig:
+    """Generate the pipeline config for this task. This function will be called
+    by RV, with arguments from the command line, when this example is run.
+
+    Args:
+        runner (Runner): Runner for the pipeline. Will be provided by RV.
+        raw_uri (str): Directory where the raw data resides
+        processed_uri (str): Directory for storing processed data. 
+                             E.g. crops for testing.
+        root_uri (str): Directory where all the output will be written.
+        external_model (bool, optional): If True, use an external model defined
+            by the ExternalModuleConfig. Defaults to False.
+        external_loss (bool, optional): If True, use an external loss defined
+            by the ExternalModuleConfig. Defaults to False.
+        augment (bool, optional): If True, use custom data augmentation
+            transforms. Some basic data augmentation is done even if this is
+            False. To completely disable, specify augmentors=[] is the dat
+            config. Defaults to False.
+        nochip (bool, optional): If True, read directly from the TIFF during
+            training instead of from pre-generated chips. The analyze and chip
+            commands should not be run, if this is set to True. Defaults to
+            False.
+        test (bool, optional): If True, does the following simplifications:
+            (1) Uses only the first 1 scene
+            (2) Uses only a 600x600 crop of the scenes
+            (3) Enables test mode in the learner, which makes it use the
+                test_batch_sz and test_num_epochs, and also halves the img_sz.
+            Defaults to False.
+
+    Returns:
+        ChipClassificationConfig: A pipeline config.
+    """
     debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
-    log_tensorboard = True
-    run_tensorboard = True
-    class_config = ClassConfig(names=['no_building', 'building'])
+    class_config = ClassConfig(names=CLASS_NAMES)
 
     if test:
         debug = True
-        train_scene_info = train_scene_info[0:1]
-        val_scene_info = val_scene_info[0:1]
+        train_scene_info = train_scene_info[:1]
+        val_scene_info = val_scene_info[:1]
 
-    def make_scene(scene_info):
+    chip_sz = 300
+    img_sz = chip_sz
+    if nochip:
+        raster_source_persist = True
+        chip_options = SemanticSegmentationChipOptions()
+    else:
+        raster_source_persist = False
+
+    def make_scene(scene_info) -> SceneConfig:
         (raster_uri, label_uri) = scene_info
         raster_uri = join(raw_uri, raster_uri)
         label_uri = join(processed_uri, label_uri)
@@ -62,7 +101,9 @@ def get_config(runner,
 
         id = os.path.splitext(os.path.basename(raster_uri))[0]
         raster_source = RasterioSourceConfig(
-            channel_order=[0, 1, 2], uris=[raster_uri])
+            channel_order=[0, 1, 2],
+            uris=[raster_uri],
+            persist=raster_source_persist)
         label_source = ChipClassificationLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
                 uri=label_uri, default_class_id=1, ignore_crs_field=True),
@@ -78,16 +119,37 @@ def get_config(runner,
             label_source=label_source,
             aoi_uris=[aoi_uri])
 
-    chip_sz = 200
     train_scenes = [make_scene(info) for info in train_scene_info]
     val_scenes = [make_scene(info) for info in val_scene_info]
-    dataset = DatasetConfig(
+    scene_dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    img_sz = chip_sz
-    data = ClassificationImageDataConfig(img_sz=img_sz, num_workers=4)
+    if nochip:
+        window_opts = {}
+        for s in train_scenes:
+            window_opts[s.id] = GeoDataWindowConfig(
+                # method=GeoDataWindowMethod.sliding,
+                method=GeoDataWindowMethod.random,
+                size=img_sz,
+                # stride=img_sz,
+                size_lims=(200, 300),
+                # h_lims=(200, 300),
+                # w_lims=(200, 300),
+                max_windows=3514,
+            )
+        for s in val_scenes:
+            window_opts[s.id] = GeoDataWindowConfig(
+                method=GeoDataWindowMethod.sliding, size=img_sz, stride=img_sz)
+
+        data = ClassificationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=window_opts,
+            img_sz=img_sz,
+            num_workers=4)
+    else:
+        data = ClassificationImageDataConfig(img_sz=img_sz, num_workers=4)
 
     if external_model:
         model = ClassificationModelConfig(
@@ -126,17 +188,13 @@ def get_config(runner,
         external_loss_def=external_loss_def)
 
     backend = PyTorchChipClassificationConfig(
-        data=data,
-        model=model,
-        solver=solver,
-        log_tensorboard=log_tensorboard,
-        run_tensorboard=run_tensorboard,
-        test_mode=test)
+        data=data, model=model, solver=solver, test_mode=test)
 
-    config = ChipClassificationConfig(
+    pipeline = ChipClassificationConfig(
         root_uri=root_uri,
-        dataset=dataset,
+        dataset=scene_dataset,
         backend=backend,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz)
-    return config
+
+    return pipeline
