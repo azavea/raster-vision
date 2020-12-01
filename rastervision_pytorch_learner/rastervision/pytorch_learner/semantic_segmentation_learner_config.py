@@ -110,6 +110,7 @@ class SemanticSegmentationGeoDataConfig(SemanticSegmentationDataConfig,
                 out_size=opts.size,
                 padding=opts.padding,
                 max_windows=opts.max_windows,
+                max_sample_attempts=opts.max_sample_attempts,
                 transform=transform)
         else:
             raise NotImplementedError()

@@ -321,3 +321,12 @@ class Box():
                     break
 
         return result
+
+    @staticmethod
+    def within_aoi(window: 'Box', aoi_polygons: list) -> bool:
+        """Check if window is within a list of AOI polygons."""
+        w = window.to_shapely()
+        for polygon in aoi_polygons:
+            if w.within(polygon):
+                return True
+        return False

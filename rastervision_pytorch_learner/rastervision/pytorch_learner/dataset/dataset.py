@@ -164,7 +164,7 @@ class SlidingWindowGeoDataset(GeoDataset):
 
     def __getitem__(self, idx: int):
         if idx >= len(self):
-            raise StopIteration
+            raise StopIteration()
         window = self.windows[idx]
         return super().__getitem__(window)
 
@@ -187,6 +187,7 @@ class RandomWindowGeoDataset(GeoDataset):
                  max_windows: Optional[NonNegInt] = None,
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None,
+                 max_sample_attempts: PosInt = 100,
                  return_window: bool = False):
         """Constructor.
 
@@ -221,6 +222,10 @@ class RandomWindowGeoDataset(GeoDataset):
                 transform. Defaults to None.
             return_window (bool, optional): Make __getitem__ return the window
                 coordinates used to generate the image. Defaults to False.
+            max_sample_attempts (NonNegInt, optional): Max attempts when trying
+                to find a window within the AOI of the scene. Only used if the
+                scene has aoi_polygons specified. StopIteratioin is raised if
+                this is exceeded. Defaults to 100.
         """
         has_size_lims = size_lims is not None
         has_h_lims = h_lims is not None
@@ -262,13 +267,17 @@ class RandomWindowGeoDataset(GeoDataset):
         self.padding = padding
         self.return_window = return_window
         self.max_windows = max_windows
+        self.max_sample_attempts = max_sample_attempts
 
         # include padding in the extent
         ymin, xmin, ymax, xmax = scene.raster_source.get_extent()
         h_padding, w_padding = self.padding
         self.extent = (ymin, xmin, ymax + h_padding, xmax + w_padding)
 
-    def get_resize_transform(self, transform, out_size):
+    def get_resize_transform(
+            self, transform: Optional[A.BasicTransform],
+            out_size: Tuple[PosInt, PosInt]) -> Union[A.Resize, A.Compose]:
+        """Get transform to use for resizing windows to out_size."""
         resize_tf = A.Resize(*out_size, always_apply=True)
         if transform is None:
             transform = resize_tf
@@ -296,16 +305,37 @@ class RandomWindowGeoDataset(GeoDataset):
         x = torch.randint(low=xmin, high=xmax - w, size=(1, )).item()
         return x, y
 
-    def sample_window(self) -> Box:
+    def _sample_window(self) -> Box:
         """Randomly sample a window with random size and location."""
         h, w = self.sample_window_size()
         x, y = self.sample_window_loc((h, w))
         window = Box(y, x, y + h, x + w)
         return window
 
+    def sample_window(self) -> Box:
+        """If scene has AOI polygons, try to find a random window that is
+        within the AOI. Otherwise, just return the first sampled window.
+
+        Raises:
+            StopIteration: If unable to find a valid window within
+                self.max_sample_attempts attempts.
+
+        Returns:
+            Box: The sampled window.
+        """
+        if not self.scene.aoi_polygons:
+            window = self._sample_window()
+            return window
+
+        for _ in range(self.max_sample_attempts):
+            window = self._sample_window()
+            if Box.within_aoi(window, self.scene.aoi_polygons):
+                return window
+        raise StopIteration('Failed to find random window within scene AOI.')
+
     def __getitem__(self, idx: int):
         if idx >= len(self):
-            raise StopIteration
+            raise StopIteration()
         window = self.sample_window()
         if self.return_window:
             return (super().__getitem__(window), window)

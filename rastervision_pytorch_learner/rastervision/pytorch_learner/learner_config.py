@@ -455,6 +455,11 @@ class GeoDataWindowConfig(Config):
         10_000,
         description='Max allowed reads from a GeoDataset. Only used if '
         'method = random.')
+    max_sample_attempts: PosInt = Field(
+        100,
+        description='Max attempts when trying to find a window within the AOI '
+        'of a scene. Only used if method = random and the scene has '
+        'aoi_polygons specified.')
 
     def validate_config(self):
         if self.method == GeoDataWindowMethod.sliding:

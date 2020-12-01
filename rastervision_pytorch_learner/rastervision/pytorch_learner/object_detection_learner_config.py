@@ -74,6 +74,7 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
                 out_size=opts.size,
                 padding=opts.padding,
                 max_windows=opts.max_windows,
+                max_sample_attempts=opts.max_sample_attempts,
                 transform=transform,
                 bbox_params=bbox_params)
         else:
