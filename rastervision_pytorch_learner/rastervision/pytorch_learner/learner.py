@@ -388,7 +388,8 @@ class Learner(ABC):
 
         if cfg.data.aug_transform is not None:
             aug_transform = A.from_dict(cfg.data.aug_transform)
-            aug_transform = A.Compose([aug_transform, base_transform])
+            aug_transform = A.Compose(
+                [aug_transform, base_transform], bbox_params=bbox_params)
             return base_transform, aug_transform
 
         augmentors_dict = {

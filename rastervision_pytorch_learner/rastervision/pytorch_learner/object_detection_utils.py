@@ -1,3 +1,4 @@
+from typing import Tuple
 from collections import defaultdict
 from os.path import join
 import tempfile
@@ -285,37 +286,28 @@ class CocoDataset(Dataset):
             bboxes.append(ann['bbox'])
             category_ids.append(ann['category_id'])
 
-    def __getitem__(self, ind):
+    def __getitem__(self, ind: int) -> Tuple[np.ndarray, BoxList]:
         img_id = self.img_ids[ind]
         ann = dict(self.id2ann[img_id])
 
         img_fn = ann['image']
         img = Image.open(join(self.img_dir, img_fn))
-        x = np.array(img)
 
-        if self.transform is None:
-            return x, ann
-
-        ann['image'] = x
-        out = self.transform(**ann)
+        ann['image'] = np.array(img)
+        if self.transform is not None:
+            out = self.transform(**ann)
+        else:
+            out = ann
 
         x = out['image']
-        x = torch.tensor(x).permute(2, 0, 1).float() / 255.0
+        boxes = np.array(out['bboxes'])
+        class_ids = np.array(out['category_id'])
 
-        b = torch.tensor(out['bboxes'])
-        if b.shape[0] == 0:
-            y = BoxList(
-                torch.empty((0, 4)), class_ids=torch.empty((0, )).long())
-        else:
-            boxes = torch.cat(
-                [
-                    b[:, 1:2], b[:, 0:1], b[:, 1:2] + b[:, 3:4],
-                    b[:, 0:1] + b[:, 2:3]
-                ],
-                dim=1)
-            class_ids = torch.tensor(out['category_id'])
-            y = BoxList(boxes, class_ids=class_ids)
-        return x, y
+        if boxes.shape[0] == 0:
+            boxes = np.empty((0, 4))
+            class_ids = np.empty((0, ), dtype=np.int64)
+
+        return x, (boxes, class_ids, 'xywh')
 
     def __len__(self):
         return len(self.id2ann)

@@ -486,8 +486,8 @@ class GeoDataConfig(DataConfig):
                       tmp_dir: str,
                       train_tf: Optional[A.BasicTransform] = None,
                       val_tf: Optional[A.BasicTransform] = None,
-                      test_tf: Optional[A.BasicTransform] = None
-                      ) -> Tuple[Dataset, Dataset, Dataset]:
+                      test_tf: Optional[A.BasicTransform] = None,
+                      **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
         """Make training, validation, and test datasets.
 
         Args:
@@ -498,6 +498,7 @@ class GeoDataConfig(DataConfig):
                 validation dataset. Defaults to None.
             test_tf (Optional[A.BasicTransform], optional): Transform for the
                 test dataset. Defaults to None.
+            kwargs: Kwargs to pass to self.scene_to_dataset()
 
         Returns:
             Tuple[Dataset, Dataset, Dataset]: PyTorch-compatiable training,
@@ -509,10 +510,14 @@ class GeoDataConfig(DataConfig):
             test_scenes = val_scenes
 
         train_ds_list = [
-            self.scene_to_dataset(s, train_tf) for s in train_scenes
+            self.scene_to_dataset(s, train_tf, **kwargs) for s in train_scenes
         ]
-        val_ds_list = [self.scene_to_dataset(s, val_tf) for s in val_scenes]
-        test_ds_list = [self.scene_to_dataset(s, test_tf) for s in test_scenes]
+        val_ds_list = [
+            self.scene_to_dataset(s, val_tf, **kwargs) for s in val_scenes
+        ]
+        test_ds_list = [
+            self.scene_to_dataset(s, test_tf, **kwargs) for s in test_scenes
+        ]
 
         for ds_list in [train_ds_list, val_ds_list, test_ds_list]:
             if len(ds_list) == 0:

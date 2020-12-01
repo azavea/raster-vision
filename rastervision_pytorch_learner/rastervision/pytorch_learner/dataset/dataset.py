@@ -218,11 +218,7 @@ class RandomWindowGeoDataset(GeoDataset):
         if out_size is not None:
             normalize, to_pytorch = True, True
             out_size = _to_tuple(out_size)
-            upsample = A.Resize(*out_size, always_apply=True)
-            if transform is None:
-                transform = upsample
-            else:
-                transform = A.Compose([transform, upsample])
+            transform = self.get_resize_transform(transform, out_size)
         else:
             normalize, to_pytorch = False, False
 
@@ -256,6 +252,14 @@ class RandomWindowGeoDataset(GeoDataset):
         ymin, xmin, ymax, xmax = scene.raster_source.get_extent()
         h_padding, w_padding = self.padding
         self.extent = (ymin, xmin, ymax + h_padding, xmax + w_padding)
+
+    def get_resize_transform(self, transform, out_size):
+        resize_tf = A.Resize(*out_size, always_apply=True)
+        if transform is None:
+            transform = resize_tf
+        else:
+            transform = A.Compose([transform, resize_tf])
+        return transform
 
     def sample_window_size(self) -> Tuple[int, int]:
         if self.size_lims is not None:

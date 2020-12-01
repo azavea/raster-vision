@@ -32,7 +32,8 @@ class ObjectDetectionLearner(Learner):
         return metric_names
 
     def get_bbox_params(self):
-        return BboxParams(format='coco', label_fields=['category_id'])
+        return BboxParams(
+            format='albumentations', label_fields=['category_id'])
 
     def get_collate_fn(self):
         return collate_fn

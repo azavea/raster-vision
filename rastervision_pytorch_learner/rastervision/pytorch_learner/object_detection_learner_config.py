@@ -10,8 +10,11 @@ from rastervision.core.data import Scene
 from rastervision.pipeline.config import (Config, register_config, Field,
                                           validator)
 from rastervision.pytorch_learner.learner_config import (
-    LearnerConfig, ModelConfig, Backbone, ImageDataConfig, GeoDataConfig)
-from rastervision.pytorch_learner.dataset import ObjectDetectionImageDataset
+    LearnerConfig, ModelConfig, Backbone, ImageDataConfig, GeoDataConfig,
+    GeoDataWindowMethod)
+from rastervision.pytorch_learner.dataset import (
+    ObjectDetectionImageDataset, ObjectDetectionSlidingWindowGeoDataset,
+    ObjectDetectionRandomWindowGeoDataset)
 
 
 class ObjectDetectionDataFormat(Enum):
@@ -45,12 +48,37 @@ class ObjectDetectionImageDataConfig(ObjectDetectionDataConfig,
 
 @register_config('object_detection_geo_data')
 class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
-    def scene_to_dataset(self,
-                         scene: Scene,
-                         transform: Optional[A.BasicTransform] = None
-                         ) -> Dataset:
-        #  TODO
-        raise NotImplementedError()
+    def scene_to_dataset(
+            self,
+            scene: Scene,
+            transform: Optional[A.BasicTransform] = None,
+            bbox_params: Optional[A.BboxParams] = None) -> Dataset:
+        if isinstance(self.window_opts, dict):
+            opts = self.window_opts[scene.id]
+        else:
+            opts = self.window_opts
+
+        if opts.method == GeoDataWindowMethod.sliding:
+            ds = ObjectDetectionSlidingWindowGeoDataset(
+                scene,
+                size=opts.size,
+                stride=opts.stride,
+                padding=opts.padding,
+                transform=transform)
+        elif opts.method == GeoDataWindowMethod.random:
+            ds = ObjectDetectionRandomWindowGeoDataset(
+                scene,
+                size_lims=opts.size_lims,
+                h_lims=opts.h_lims,
+                w_lims=opts.w_lims,
+                out_size=opts.size,
+                padding=opts.padding,
+                max_windows=opts.max_windows,
+                transform=transform,
+                bbox_params=bbox_params)
+        else:
+            raise NotImplementedError()
+        return ds
 
 
 @register_config('object_detection_model')
