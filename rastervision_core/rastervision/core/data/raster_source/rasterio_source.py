@@ -99,7 +99,7 @@ class RasterioSource(ActivateMixin, RasterSource):
                 offsets (top, left, bottom, right) for cropping the extent.
                 Useful for using splitting a scene into different datasets.
                 Defaults to None i.e. no cropping.
-            persist (bool): If True, does not deactivate source once activated.
+            persist (bool, optional): If True, does not deactivate source once activated.
                 Defaults to False.
         """
         self.uris = uris

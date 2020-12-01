@@ -51,8 +51,12 @@ def geoms_to_raster(str_tree, rasterizer_config, window, extent):
 class RasterizedSource(ActivateMixin, RasterSource):
     """A RasterSource based on the rasterization of a VectorSource."""
 
-    def __init__(self, vector_source, rasterizer_config, extent,
-                 crs_transformer):
+    def __init__(self,
+                 vector_source,
+                 rasterizer_config,
+                 extent,
+                 crs_transformer,
+                 persist: bool = False):
         """Constructor.
 
         Args:
@@ -60,12 +64,15 @@ class RasterizedSource(ActivateMixin, RasterSource):
             rasterizer_config: (RasterizerConfig)
             extent: (Box) extent of corresponding imagery RasterSource
             crs_transformer: (CRSTransformer)
+            persist (bool, optional): If True, does not deactivate source once activated.
+                Defaults to False.
         """
         self.vector_source = vector_source
         self.rasterizer_config = rasterizer_config
         self.extent = extent
         self.crs_transformer = crs_transformer
         self.activated = False
+        self.persist = persist
 
         super().__init__(channel_order=[0], num_channels=1)
 
@@ -119,5 +126,7 @@ class RasterizedSource(ActivateMixin, RasterSource):
         self.activated = True
 
     def _deactivate(self):
+        if self.persist:
+            return
         self.str_tree = None
         self.activated = False

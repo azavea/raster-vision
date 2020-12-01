@@ -23,12 +23,19 @@ class RasterizerConfig(Config):
 class RasterizedSourceConfig(Config):
     vector_source: VectorSourceConfig
     rasterizer_config: RasterizerConfig
+    persist: bool = Field(
+        False,
+        description='If True, does not deactivate source once activated.')
 
     def build(self, class_config, crs_transformer, extent):
         vector_source = self.vector_source.build(class_config, crs_transformer)
 
-        return RasterizedSource(vector_source, self.rasterizer_config, extent,
-                                crs_transformer)
+        return RasterizedSource(
+            vector_source,
+            self.rasterizer_config,
+            extent,
+            crs_transformer,
+            persist=self.persist)
 
     def validate_config(self):
         if self.vector_source.has_null_class_bufs():
