@@ -34,6 +34,7 @@ Features
 * Make number of training and dataloader previews independent of batch size `#1038 <https://github.com/azavea/raster-vision/pull/1038>`_
 * Allow continuing training from a model bundle `#1022 <https://github.com/azavea/raster-vision/pull/1022>`_
 * Allow reading directly from raster source during training without chipping `#1046 <https://github.com/azavea/raster-vision/pull/1046>`_
+* Remove external commands (obsoleted by external architectures and loss functions) `#1047 <https://github.com/azavea/raster-vision/pull/1047>`_
 
 Bug Fixes
 ~~~~~~~~~~~~

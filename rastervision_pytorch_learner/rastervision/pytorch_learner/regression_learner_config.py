@@ -108,7 +108,8 @@ class RegressionLearnerConfig(LearnerConfig):
               tmp_dir,
               model_path=None,
               model_def_path=None,
-              loss_def_path=None):
+              loss_def_path=None,
+              training=True):
         from rastervision.pytorch_learner.regression_learner import (
             RegressionLearner)
         return RegressionLearner(
@@ -116,4 +117,5 @@ class RegressionLearnerConfig(LearnerConfig):
             tmp_dir,
             model_path=model_path,
             model_def_path=model_def_path,
-            loss_def_path=loss_def_path)
+            loss_def_path=loss_def_path,
+            training=training)
