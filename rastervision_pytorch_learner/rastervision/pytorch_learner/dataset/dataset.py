@@ -73,15 +73,28 @@ class ImageDataset(AlbumentationsDataset):
 
 class GeoDataset(AlbumentationsDataset):
     """ Dataset that reads directly from a Scene
-        (i.e. and raster source and a label source).
+        (i.e. a raster source and a label source).
     """
 
     def __init__(self,
                  scene: Scene,
-                 transform=None,
-                 transform_type=None,
-                 normalize=True,
-                 to_pytorch=True):
+                 transform: Optional[A.BasicTransform] = None,
+                 transform_type: Optional[TransformType] = None,
+                 normalize: bool = True,
+                 to_pytorch: bool = True):
+        """Constructor.
+
+        Args:
+            scene (Scene): A Scene object.
+            transform (Optional[A.BasicTransform], optional): Albumentations
+                transform to apply to the windows. Defaults to None.
+            transform_type (Optional[TransformType], optional): Type of
+                transform. Defaults to None.
+            normalize (bool, optional): If True, x is normalized to [0, 1]
+                based on its data type. Defaults to True.
+            to_pytorch (bool, optional): If True, x and y are converted to
+                pytorch tensors. Defaults to True.
+        """
         self.scene = scene
         self.scene.activate()
         super().__init__(
@@ -99,6 +112,7 @@ T = TypeVar('T')
 
 
 def _to_tuple(x: T, n: int = 2) -> Tuple[T, T]:
+    """Convert to n-tuple if not already an n-tuple."""
     if isinstance(x, tuple):
         if len(x) != n:
             raise ValueError()
@@ -129,10 +143,10 @@ class SlidingWindowGeoDataset(GeoDataset):
                 How many pixels the windows are allowed to overflow the sides
                 of the raster source. If None, padding = size.
                 Defaults to None.
-            transform (Optional[A.BasicTransform]): Transform.
-                Defaults to None.
-            transform_type (Optional[TransformType]): Type of transform.
-                Defaults to None.
+            transform (Optional[A.BasicTransform], optional): Albumentations
+                transform to apply to the windows. Defaults to None.
+            transform_type (Optional[TransformType], optional): Type of
+                transform. Defaults to None.
         """
         super().__init__(scene, transform, transform_type)
         self.size = _to_tuple(size)
@@ -141,6 +155,7 @@ class SlidingWindowGeoDataset(GeoDataset):
         self.init_windows()
 
     def init_windows(self) -> None:
+        """Pre-compute windows."""
         windows = self.scene.raster_source.get_extent().get_windows(
             chip_sz=self.size, stride=self.stride, padding=self.padding)
         if len(self.scene.aoi_polygons) > 0:
@@ -175,7 +190,7 @@ class RandomWindowGeoDataset(GeoDataset):
                  return_window: bool = False):
         """Constructor.
 
-        Will sample square windows if size_lims is specified. Otherwise will
+        Will sample square windows if size_lims is specified. Otherwise, will
         sample rectangular windows with height and width sampled according to
         h_lims and w_lims.
 
@@ -200,10 +215,10 @@ class RandomWindowGeoDataset(GeoDataset):
             max_windows (Optional[NonNegInt]): Max allowed reads. Will raise
                 StopIteration on further read attempts. If None, will be set to
                 np.inf. Defaults to None.
-            transform (Optional[A.BasicTransform]): Transform.
-                Defaults to None.
-            transform_type (Optional[TransformType]): Type of transform.
-                Defaults to None.
+            transform (Optional[A.BasicTransform], optional): Albumentations
+                transform to apply to the windows. Defaults to None.
+            transform_type (Optional[TransformType], optional): Type of
+                transform. Defaults to None.
             return_window (bool, optional): Make __getitem__ return the window
                 coordinates used to generate the image. Defaults to False.
         """
@@ -262,6 +277,7 @@ class RandomWindowGeoDataset(GeoDataset):
         return transform
 
     def sample_window_size(self) -> Tuple[int, int]:
+        """Randomly sample the window size."""
         if self.size_lims is not None:
             hmin, hmax = self.size_lims
             size = torch.randint(low=hmin, high=hmax, size=(1, )).item()
@@ -273,6 +289,7 @@ class RandomWindowGeoDataset(GeoDataset):
         return h, w
 
     def sample_window_loc(self, size: Tuple[int, int]) -> Tuple[int, int]:
+        """Randomly sample coordinates of the top left corner of the window."""
         h, w = size
         ymin, xmin, ymax, xmax = self.extent
         y = torch.randint(low=ymin, high=ymax - h, size=(1, )).item()
@@ -280,6 +297,7 @@ class RandomWindowGeoDataset(GeoDataset):
         return x, y
 
     def sample_window(self) -> Box:
+        """Randomly sample a window with random size and location."""
         h, w = self.sample_window_size()
         x, y = self.sample_window_loc((h, w))
         window = Box(y, x, y + h, x + w)

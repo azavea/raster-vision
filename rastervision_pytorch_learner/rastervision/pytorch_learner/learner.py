@@ -429,8 +429,6 @@ class Learner(ABC):
                       ) -> Tuple[Dataset, Dataset, Dataset]:
         """Gets Datasets for a single group of chips.
 
-        This should be overridden for each Learner subclass.
-
         Returns:
             train, validation, and test DataSets."""
         if isinstance(self.cfg.data, ImageDataConfig):
@@ -475,8 +473,6 @@ class Learner(ABC):
 
     def _get_geo_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
         """Gets geo datasets.
-
-        This should be overridden for each Learner subclass.
 
         Returns:
             train, validation, and test DataSets."""

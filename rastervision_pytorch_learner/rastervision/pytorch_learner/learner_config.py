@@ -378,11 +378,31 @@ class ImageDataConfig(DataConfig):
                 raise ConfigError(
                     'len(group_train_sz_rel) != len(group_uris).')
 
-    def make_datasets(self, train_dirs: Iterable[str], val_dirs: Iterable[str],
-                      test_dirs: Iterable[str], train_tf: A.BasicTransform,
-                      val_tf: A.BasicTransform, test_tf: A.BasicTransform
+    def make_datasets(self,
+                      train_dirs: Iterable[str],
+                      val_dirs: Iterable[str],
+                      test_dirs: Iterable[str],
+                      train_tf: Optional[A.BasicTransform] = None,
+                      val_tf: Optional[A.BasicTransform] = None,
+                      test_tf: Optional[A.BasicTransform] = None
                       ) -> Tuple[Dataset, Dataset, Dataset]:
+        """Make training, validation, and test datasets.
 
+        Args:
+            train_dirs (str): Directories where training data is located.
+            val_dirs (str): Directories where validation data is located.
+            test_dirs (str): Directories where test data is located.
+            train_tf (Optional[A.BasicTransform], optional): Transform for the
+                training dataset. Defaults to None.
+            val_tf (Optional[A.BasicTransform], optional): Transform for the
+                validation dataset. Defaults to None.
+            test_tf (Optional[A.BasicTransform], optional): Transform for the
+                test dataset. Defaults to None.
+
+        Returns:
+            Tuple[Dataset, Dataset, Dataset]: PyTorch-compatiable training,
+                validation, and test datasets.
+        """
         train_ds_list = [self.dir_to_dataset(d, train_tf) for d in train_dirs]
         val_ds_list = [self.dir_to_dataset(d, val_tf) for d in val_dirs]
         test_ds_list = [self.dir_to_dataset(d, test_tf) for d in test_dirs]

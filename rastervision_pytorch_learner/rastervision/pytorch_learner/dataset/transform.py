@@ -21,6 +21,7 @@ class TransformType(Enum):
 def classification_transformer(inp: Tuple[Any, Any],
                                transform=Optional[A.BasicTransform]
                                ) -> Tuple[np.ndarray, np.ndarray]:
+    """Apply transform to image only."""
     x, y = inp
     x, y = np.array(x), np.array(y)
     if transform is not None:
@@ -32,6 +33,7 @@ def classification_transformer(inp: Tuple[Any, Any],
 def regression_transformer(inp: Tuple[Any, Any],
                            transform=Optional[A.BasicTransform]
                            ) -> Tuple[np.ndarray, np.ndarray]:
+    """Apply transform to image only."""
     x, y = inp
     x, y = np.array(x), np.array(y)
     if transform is not None:
