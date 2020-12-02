@@ -102,8 +102,8 @@ class GeoDataset(AlbumentationsDataset):
         #
         # Instead, we would like the source to stay activated for the entire
         # lifespan of this dataset. To achieve this, we can disable the
-        # source's ability to deactivate setting persist flag in the source
-        # (which we expect to be true for all sources in this scene).
+        # source's ability to deactivate by setting the persist flag in the
+        # source (which we expect to be true for all sources in this scene).
         # So, when the scene.activate() call below activates the sources, they
         # will stay activated even when the context manager exits.
         with self.scene.activate():
