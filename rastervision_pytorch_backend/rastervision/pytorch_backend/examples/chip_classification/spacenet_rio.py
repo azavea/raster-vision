@@ -71,10 +71,7 @@ def get_config(runner,
     chip_sz = 300
     img_sz = chip_sz
     if nochip:
-        raster_source_persist = True
         chip_options = SemanticSegmentationChipOptions()
-    else:
-        raster_source_persist = False
 
     def make_scene(scene_info) -> SceneConfig:
         (raster_uri, label_uri) = scene_info
@@ -101,9 +98,7 @@ def get_config(runner,
 
         id = os.path.splitext(os.path.basename(raster_uri))[0]
         raster_source = RasterioSourceConfig(
-            channel_order=[0, 1, 2],
-            uris=[raster_uri],
-            persist=raster_source_persist)
+            channel_order=[0, 1, 2], uris=[raster_uri])
         label_source = ChipClassificationLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
                 uri=label_uri, default_class_id=1, ignore_crs_field=True),

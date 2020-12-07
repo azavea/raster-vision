@@ -58,10 +58,8 @@ def get_config(runner,
     chip_sz = 600
     img_sz = 256
     if nochip:
-        raster_source_persist = True
         chip_options = ObjectDetectionChipOptions()
     else:
-        raster_source_persist = False
         chip_options = ObjectDetectionChipOptions(
             neg_ratio=5.0, ioa_thresh=0.9)
 
@@ -83,9 +81,7 @@ def get_config(runner,
             raster_uri = crop_uri
 
         raster_source = RasterioSourceConfig(
-            uris=[raster_uri],
-            channel_order=[0, 1, 2],
-            persist=raster_source_persist)
+            uris=[raster_uri], channel_order=[0, 1, 2])
 
         vector_source = GeoJSONVectorSourceConfig(
             uri=label_uri, default_class_id=0, ignore_crs_field=True)

@@ -107,10 +107,8 @@ def get_config(runner,
     chip_sz = 300
     img_sz = chip_sz
     if nochip:
-        raster_source_persist = True
         chip_options = SemanticSegmentationChipOptions()
     else:
-        raster_source_persist = False
         chip_options = SemanticSegmentationChipOptions(
             window_method=SemanticSegmentationWindowMethod.sliding,
             stride=chip_sz)
@@ -137,16 +135,13 @@ def get_config(runner,
             label_uri = label_crop_uri
 
         raster_source = RasterioSourceConfig(
-            uris=[raster_uri],
-            channel_order=channel_order,
-            persist=raster_source_persist)
+            uris=[raster_uri], channel_order=channel_order)
 
         # Using with_rgb_class_map because label TIFFs have classes encoded as
         # RGB colors.
         label_source = SemanticSegmentationLabelSourceConfig(
             rgb_class_config=class_config,
-            raster_source=RasterioSourceConfig(
-                uris=[label_uri], persist=raster_source_persist))
+            raster_source=RasterioSourceConfig(uris=[label_uri]))
 
         # URI will be injected by scene config.
         # Using rgb=True because we want prediction TIFFs to be in
