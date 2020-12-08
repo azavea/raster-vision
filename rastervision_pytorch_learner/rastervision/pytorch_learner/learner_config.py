@@ -490,7 +490,8 @@ class GeoDataConfig(DataConfig):
                     raise ConfigError(
                         f'Window config not found for scene {s.id}')
 
-    def build_scenes(self, tmp_dir):
+    def build_scenes(self, tmp_dir: str
+                     ) -> Tuple[List[Scene], List[Scene], List[Scene]]:
         class_cfg = self.scene_dataset.class_config
         train_scenes = [
             s.build(class_cfg, tmp_dir, use_transformers=True)
