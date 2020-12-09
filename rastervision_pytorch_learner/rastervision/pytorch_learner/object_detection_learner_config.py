@@ -11,7 +11,7 @@ from rastervision.pipeline.config import (Config, register_config, Field,
                                           validator)
 from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, ModelConfig, Backbone, ImageDataConfig, GeoDataConfig,
-    GeoDataWindowMethod)
+    GeoDataWindowMethod, GeoDataWindowConfig)
 from rastervision.pytorch_learner.dataset import (
     ObjectDetectionImageDataset, ObjectDetectionSlidingWindowGeoDataset,
     ObjectDetectionRandomWindowGeoDataset)
@@ -46,6 +46,33 @@ class ObjectDetectionImageDataConfig(ObjectDetectionDataConfig,
         return ds
 
 
+@register_config('object_detection_geo_data_window')
+class ObjectDetectionGeoDataWindowConfig(GeoDataWindowConfig):
+    ioa_thresh: float = Field(
+        0.8,
+        description='When a box is partially outside of a training chip, it '
+        'is not clear if (a clipped version) of the box should be included in '
+        'the chip. If the IOA (intersection over area) of the box with the '
+        'chip is greater than ioa_thresh, it is included in the chip. '
+        'Defaults to 0.8.')
+    clip: bool = Field(
+        False,
+        description='Clip bounding boxes to window limits when retrieving '
+        'labels for a window.')
+    neg_ratio: float = Field(
+        1.0,
+        description='The ratio of negative chips (those containing no '
+        'bounding boxes) to positive chips. This can be useful if the '
+        'statistics of the background is different in positive chips. For '
+        'example, in car detection, the positive chips will always contain '
+        'roads, but no examples of rooftops since cars tend to not be near '
+        'rooftops. Defaults to 1.0.')
+    neg_ioa_thresh: float = Field(
+        0.2,
+        description='A window will be considered negative if its max IoA with '
+        'any bounding box is less than this threshold. Defaults to 0.2.')
+
+
 @register_config('object_detection_geo_data')
 class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
     def scene_to_dataset(
@@ -76,7 +103,11 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
                 max_windows=opts.max_windows,
                 max_sample_attempts=opts.max_sample_attempts,
                 transform=transform,
-                bbox_params=bbox_params)
+                bbox_params=bbox_params,
+                ioa_thresh=opts.ioa_thresh,
+                clip=opts.clip,
+                neg_ratio=opts.neg_ratio,
+                neg_ioa_thresh=opts.neg_ioa_thresh)
         else:
             raise NotImplementedError()
         return ds

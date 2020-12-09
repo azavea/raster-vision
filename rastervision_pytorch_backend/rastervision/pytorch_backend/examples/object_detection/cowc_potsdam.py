@@ -85,12 +85,8 @@ def get_config(runner,
 
         vector_source = GeoJSONVectorSourceConfig(
             uri=label_uri, default_class_id=0, ignore_crs_field=True)
-        if nochip:
-            label_source = ObjectDetectionLabelSourceConfig(
-                vector_source=vector_source, ioa_thresh=.5, clip=True)
-        else:
-            label_source = ObjectDetectionLabelSourceConfig(
-                vector_source=vector_source)
+        label_source = ObjectDetectionLabelSourceConfig(
+            vector_source=vector_source)
 
         return SceneConfig(
             id=id, raster_source=raster_source, label_source=label_source)
@@ -105,15 +101,20 @@ def get_config(runner,
         window_opts = {}
         # set window configs for training scenes
         for s in scene_dataset.train_scenes:
-            window_opts[s.id] = GeoDataWindowConfig(
-                method=GeoDataWindowMethod.sliding,
-                # method=GeoDataWindowMethod.random,
+            window_opts[s.id] = ObjectDetectionGeoDataWindowConfig(
+                # method=GeoDataWindowMethod.sliding,
+                method=GeoDataWindowMethod.random,
                 size=img_sz,
-                stride=img_sz // 2,
-                # size_lims=(200, 300),
+                # stride=img_sz // 2,
+                size_lims=(200, 300),
                 # h_lims=(200, 300),
                 # w_lims=(200, 300),
-                # max_windows=1000,
+                max_windows=500,
+                max_sample_attempts=100,
+                ioa_thresh=0.75,
+                clip=True,
+                neg_ratio=1.,
+                neg_ioa_thresh=0.2,
             )
         # set window configs for validation scenes
         for s in scene_dataset.validation_scenes:
@@ -139,7 +140,7 @@ def get_config(runner,
             test_num_epochs=2,
             batch_sz=16,
             one_cycle=True),
-        log_tensorboard=True,
+        log_tensorboard=False,
         run_tensorboard=False,
         test_mode=test)
 

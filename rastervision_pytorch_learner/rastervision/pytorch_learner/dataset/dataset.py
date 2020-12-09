@@ -295,6 +295,18 @@ class RandomWindowGeoDataset(GeoDataset):
             transform = A.Compose([transform, resize_tf])
         return transform
 
+    @property
+    def min_size(self):
+        if self.size_lims is not None:
+            return self.size_lims[0], self.size_lims[0]
+        return self.h_lims[0], self.w_lims[0]
+
+    @property
+    def max_size(self):
+        if self.size_lims is not None:
+            return self.size_lims[1], self.size_lims[1]
+        return self.h_lims[1], self.w_lims[1]
+
     def sample_window_size(self) -> Tuple[int, int]:
         """Randomly sample the window size."""
         if self.size_lims is not None:
@@ -307,9 +319,8 @@ class RandomWindowGeoDataset(GeoDataset):
         w = torch.randint(low=wmin, high=wmax, size=(1, )).item()
         return h, w
 
-    def sample_window_loc(self, size: Tuple[int, int]) -> Tuple[int, int]:
+    def sample_window_loc(self, h: int, w: int) -> Tuple[int, int]:
         """Randomly sample coordinates of the top left corner of the window."""
-        h, w = size
         ymin, xmin, ymax, xmax = self.extent
         y = torch.randint(low=ymin, high=ymax - h, size=(1, )).item()
         x = torch.randint(low=xmin, high=xmax - w, size=(1, )).item()
@@ -318,7 +329,7 @@ class RandomWindowGeoDataset(GeoDataset):
     def _sample_window(self) -> Box:
         """Randomly sample a window with random size and location."""
         h, w = self.sample_window_size()
-        x, y = self.sample_window_loc((h, w))
+        x, y = self.sample_window_loc(h, w)
         window = Box(y, x, y + h, x + w)
         return window
 

@@ -51,6 +51,10 @@ class Box():
         """Return width of Box."""
         return self.xmax - self.xmin
 
+    @property
+    def size(self) -> Tuple[int, int]:
+        return self.get_height(), self.get_width()
+
     def get_area(self):
         """Return area of Box."""
         return self.get_height() * self.get_width()
@@ -131,6 +135,30 @@ class Box():
         rand_x = random.randint(int(lb), int(ub))
 
         return Box.make_square(rand_y, rand_x, size)
+
+    def make_random_box_container(self, out_h: int, out_w: int) -> 'Box':
+        """Return a new rectangular Box that contains this Box.
+
+        Args:
+            out_h (int): the height of the new Box
+            out_w (int): the width of the new Box
+        """
+        self_h, self_w = self.size
+
+        if out_h < self_h:  # pragma: no cover
+            raise BoxSizeError('size of random container cannot be < height')
+        if out_w < self_w:
+            raise BoxSizeError('size of random container cannot be < width')
+
+        lb = self.ymin - (out_h - self_h)
+        ub = self.ymin
+        ymin = random.randint(int(lb), int(ub))
+
+        lb = self.xmin - (out_w - self_w)
+        ub = self.xmin
+        xmin = random.randint(int(lb), int(ub))
+
+        return Box(ymin, xmin, ymin + out_h, xmin + out_w)
 
     def make_random_square(self, size):
         """Return new randomly positioned square Box that lies inside this Box.
@@ -266,8 +294,8 @@ class Box():
                 windows.
             stride (Union[PosInt, Tuple[PosInt, PosInt]]): Distance between
                 windows.
-            padding (Optional[Union[PosInt, Tuple[PosInt, PosInt]]]): Padding
-                for the right and bottom edges. Defaults to None.
+            padding (Optional[Union[PosInt, Tuple[PosInt, PosInt]]], optional):
+                Padding for the right and bottom edges. Defaults to None.
 
         Returns:
             List[Box]: list of Box objects

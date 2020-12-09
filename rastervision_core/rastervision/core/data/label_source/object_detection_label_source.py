@@ -25,18 +25,37 @@ class ObjectDetectionLabelSource(LabelSource):
             ioa_thresh (Optional[float], optional): IOA threshold to apply when
                 retieving labels for a window. Defaults to None.
             clip (bool, optional): Clip bounding boxes to window limits when
-                retrieving labels for a window. Defaults to None.
+                retrieving labels for a window. Defaults to False.
         """
         self.labels = ObjectDetectionLabels.from_geojson(
             vector_source.get_geojson(), extent=extent)
         self.ioa_thresh = ioa_thresh if ioa_thresh is not None else 1e-6
         self.clip = clip
 
-    def get_labels(self, window: Box = None) -> ObjectDetectionLabels:
+    @property
+    def ioa_thresh(self) -> float:
+        return self._ioa_thresh
+
+    @ioa_thresh.setter
+    def ioa_thresh(self, value: float):
+        self._ioa_thresh = value
+
+    @property
+    def clip(self) -> bool:
+        return self._clip
+
+    @clip.setter
+    def clip(self, value: bool):
+        self._clip = value
+
+    def get_labels(self,
+                   window: Box = None,
+                   ioa_thresh: float = 1e-6,
+                   clip: bool = False) -> ObjectDetectionLabels:
         if window is None:
             return self.labels
         return ObjectDetectionLabels.get_overlapping(
-            self.labels, window, ioa_thresh=self.ioa_thresh, clip=self.clip)
+            self.labels, window, ioa_thresh=ioa_thresh, clip=clip)
 
     def __getitem__(self, window: Box) -> Tuple[np.ndarray, np.ndarray, str]:
         """Get labels for a window.
@@ -55,7 +74,8 @@ class ObjectDetectionLabelSource(LabelSource):
         Returns:
             Tuple[np.ndarray, np.ndarray, str]: [description]
         """
-        labels = self.get_labels(window)
+        labels = self.get_labels(
+            window, ioa_thresh=self.ioa_thresh, clip=self.clip)
         class_ids = labels.get_class_ids()
         npboxes = labels.get_npboxes()
         npboxes = ObjectDetectionLabels.global_to_local(npboxes, window)
