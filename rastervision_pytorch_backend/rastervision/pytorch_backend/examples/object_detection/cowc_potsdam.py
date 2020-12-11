@@ -111,9 +111,9 @@ def get_config(runner,
                 # w_lims=(200, 300),
                 max_windows=500,
                 max_sample_attempts=100,
-                ioa_thresh=0.75,
+                ioa_thresh=0.9,
                 clip=True,
-                neg_ratio=1.,
+                neg_ratio=5.0,
                 neg_ioa_thresh=0.2,
             )
         # set window configs for validation scenes

@@ -38,7 +38,7 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
                 bbox_params to use when resizing windows. Defaults to None.
             ioa_thresh (float, optional): Minimum IoA of a bounding box with a
                 given window for it to be included in the labels for that
-                window. Defaults to 0.8.
+                window. Defaults to 0.9.
             clip (bool, optional): Clip bounding boxes to window limits when
                 retrieving labels for a window. Defaults to False.
             neg_ratio (Optional[float], optional): Ratio of sampling
@@ -54,7 +54,7 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
         """
         self.bbox_params: Optional[A.BboxParams] = kwargs.pop(
             'bbox_params', None)
-        ioa_thresh: float = kwargs.pop('ioa_thresh', 0.8)
+        ioa_thresh: float = kwargs.pop('ioa_thresh', 0.9)
         clip: bool = kwargs.pop('clip', False)
         neg_ratio: Optional[float] = kwargs.pop('neg_ratio', None)
         neg_ioa_thresh: float = kwargs.pop('neg_ioa_thresh', 0.2)
@@ -66,18 +66,20 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
         self.scene.label_source.clip = clip
 
         if neg_ratio is not None:
-            self.neg_prob = neg_ratio / (neg_ratio + 1)
+            self.neg_probability = neg_ratio / (neg_ratio + 1)
             self.neg_ioa_thresh: float = neg_ioa_thresh
 
-            # get labels for the entire scene
+            # Get labels for the entire scene.
+            # clip=True here to ensure that any window we draw around a box
+            # will always lie inside the scene.
             self.labels = self.scene.label_source.get_labels(
-                ioa_thresh=ioa_thresh, clip=clip)
+                ioa_thresh=ioa_thresh, clip=True)
             self.bboxes = self.labels.get_boxes()
             if len(self.bboxes) == 0:
                 raise ValueError(
                     'neg_ratio specified, but no bboxes found in scene.')
         else:
-            self.neg_prob = None
+            self.neg_probability = None
 
     def get_resize_transform(self, transform, out_size):
         resize_tf = A.Resize(*out_size, always_apply=True)
@@ -133,13 +135,13 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
         return window
 
     def _sample_window(self) -> Box:
-        """If self.neg_prob is specified, sample a negative or positive window
+        """If self.neg_probability is specified, sample a negative or positive window
         based on that probability. Otherwise, just use RandomWindowGeoDataset's
         default window sampling behavior.
         """
-        if self.neg_prob is None:
+        if self.neg_probability is None:
             return super()._sample_window()
 
-        if np.random.sample() < self.neg_prob:
+        if np.random.sample() < self.neg_probability:
             return self._sample_neg_window()
         return self._sample_pos_window()
