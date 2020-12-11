@@ -141,7 +141,5 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
             return super()._sample_window()
 
         if np.random.sample() < self.neg_prob:
-            self.neg_count += 1
             return self._sample_neg_window()
-        self.pos_count += 1
         return self._sample_pos_window()
