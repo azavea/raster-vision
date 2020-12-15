@@ -253,6 +253,16 @@ ClassificationDataConfig
 
 .. autoclass:: rastervision.pytorch_learner.ClassificationDataConfig
 
+ClassificationImageDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ClassificationImageDataConfig
+
+ClassificationGeoDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ClassificationGeoDataConfig
+
 ClassificationModelConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -275,6 +285,16 @@ SemanticSegmentationDataConfig
 
 .. autoclass:: rastervision.pytorch_learner.SemanticSegmentationDataConfig
 
+SemanticSegmentationImageDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationImageDataConfig
+
+SemanticSegmentationGeoDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.SemanticSegmentationGeoDataConfig
+
 SemanticSegmentationModelConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -296,6 +316,16 @@ ObjectDetectionDataConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.pytorch_learner.ObjectDetectionDataConfig
+
+ObjectDetectionImageDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionImageDataConfig
+
+ObjectDetectionGeoDataConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionGeoDataConfig
 
 ObjectDetectionModelConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

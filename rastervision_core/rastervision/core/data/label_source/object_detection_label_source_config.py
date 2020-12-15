@@ -1,7 +1,7 @@
 from rastervision.core.data.label_source import (LabelSourceConfig,
                                                  ObjectDetectionLabelSource)
-from rastervision.core.data.vector_source import (VectorSourceConfig)
-from rastervision.pipeline.config import (register_config)
+from rastervision.core.data.vector_source import VectorSourceConfig
+from rastervision.pipeline.config import register_config
 
 
 @register_config('object_detection_label_source')

@@ -159,7 +159,7 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
     val_scenes = [
         build_scene(spacenet_cfg, id, channel_order) for id in val_ids
     ]
-    dataset = DatasetConfig(
+    scene_dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
@@ -171,7 +171,12 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
         stride=train_chip_sz)
     num_epochs = 5
 
+    img_sz = train_chip_sz
+    data = SemanticSegmentationImageDataConfig(
+        img_sz=img_sz, img_channels=len(channel_order), num_workers=4)
+
     backend = PyTorchSemanticSegmentationConfig(
+        data=data,
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(
             lr=1e-4,
@@ -185,7 +190,7 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,
-        dataset=dataset,
+        dataset=scene_dataset,
         backend=backend,
         train_chip_sz=train_chip_sz,
         predict_chip_sz=predict_chip_sz,

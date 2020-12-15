@@ -13,6 +13,11 @@ class ActivateMixin:
     after the entity is not needed anymore.
     """
 
+    _stay_activated = False
+
+    def stay_activated(self):
+        self._stay_activated = True
+
     class ActivateContextManager:
         def __init__(self, activate, deactivate):
             self.activate = activate
@@ -44,8 +49,11 @@ class ActivateMixin:
             for manager in self.managers:
                 manager.__exit__(type, value, traceback)
 
-    def activate(self):
-        if hasattr(self, '_mixin_activated'):
+    def activate(self, stay_activated=False):
+        if stay_activated:
+            self.stay_activated()
+
+        if hasattr(self, '_mixin_activated') and not self._stay_activated:
             if self._mixin_activated:
                 raise ActivationError('This {} is already activated'.format(
                     type(self)))
@@ -55,16 +63,25 @@ class ActivateMixin:
             self._activate()
 
         def do_deactivate():
+            if self._stay_activated:
+                return
             self._deactivate()
             self._mixin_activated = False
 
-        a = ActivateMixin.ActivateContextManager(do_activate, do_deactivate)
+        manager = ActivateMixin.ActivateContextManager(do_activate,
+                                                       do_deactivate)
         subcomponents = self._subcomponents_to_activate()
+
+        if self._stay_activated:
+            for c in subcomponents:
+                if isinstance(c, ActivateMixin):
+                    c.stay_activated()
+
         if subcomponents:
-            return ActivateMixin.CompositeContextManager(
-                a, ActivateMixin.compose(*subcomponents))
-        else:
-            return a
+            manager = ActivateMixin.CompositeContextManager(
+                manager, ActivateMixin.compose(*subcomponents))
+
+        return manager
 
     @abstractmethod
     def _activate(self):

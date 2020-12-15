@@ -27,9 +27,6 @@ class LabelStore(ABC, ActivateMixin):
         """Produces an empty Labels"""
         pass
 
-    def _subcomponents_to_activate(self):
-        pass
-
     def _activate(self):
         pass
 

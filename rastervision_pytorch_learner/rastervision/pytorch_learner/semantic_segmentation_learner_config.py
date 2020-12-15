@@ -1,30 +1,37 @@
 from enum import Enum
-from typing import Union, Optional
+from typing import Optional, Union
 from pydantic import PositiveInt
 
-from rastervision.pipeline.config import (register_config, Field, validator,
-                                          ConfigError)
+import albumentations as A
+from torch.utils.data import Dataset
+
+from rastervision.core.data import Scene
+from rastervision.pipeline.config import (Config, register_config, Field,
+                                          validator, ConfigError)
 from rastervision.pytorch_learner.learner_config import (
-    LearnerConfig, DataConfig, ModelConfig)
-from rastervision.pytorch_learner.learner_config import Backbone
+    Backbone, LearnerConfig, ModelConfig, ImageDataConfig, GeoDataConfig,
+    GeoDataWindowMethod)
+from rastervision.pytorch_learner.dataset import (
+    SemanticSegmentationImageDataset,
+    SemanticSegmentationSlidingWindowGeoDataset,
+    SemanticSegmentationRandomWindowGeoDataset)
 
 
 class SemanticSegmentationDataFormat(Enum):
     default = 'default'
 
 
-@register_config('semantic_segmentation_data')
-class SemanticSegmentationDataConfig(DataConfig):
-    data_format: SemanticSegmentationDataFormat = SemanticSegmentationDataFormat.default
+def ss_data_config_upgrader(cfg_dict, version):
+    if version == 1:
+        cfg_dict['type_hint'] = 'semantic_segmentation_image_data'
+    return cfg_dict
 
+
+@register_config(
+    'semantic_segmentation_data', upgrader=ss_data_config_upgrader)
+class SemanticSegmentationDataConfig(Config):
     img_channels: PositiveInt = Field(
         3, description='The number of channels of the training images.')
-
-    img_format: Optional[str] = Field(
-        None, description='The filetype of the training images.')
-    label_format: str = Field(
-        'png', description='The filetype of the training labels.')
-
     channel_display_groups: Optional[Union[dict, list, tuple]] = Field(
         None,
         description=
@@ -37,16 +44,77 @@ class SemanticSegmentationDataConfig(DataConfig):
          'is a string that will be used as the title of the subplot '
          'for that group.'))
 
-    def update(self, **kwargs):
-        super().update()
-
-        if self.img_format is None:
-            self.img_format = 'png' if self.img_channels == 3 else 'npy'
-
+    def update(self):
         if self.channel_display_groups is None:
             self.channel_display_groups = {
                 'Input': tuple(range(self.img_channels))
             }
+
+
+@register_config('semantic_segmentation_image_data')
+class SemanticSegmentationImageDataConfig(SemanticSegmentationDataConfig,
+                                          ImageDataConfig):
+    data_format: SemanticSegmentationDataFormat = (
+        SemanticSegmentationDataFormat.default)
+
+    img_format: Optional[str] = Field(
+        None, description='The filetype of the training images.')
+    label_format: Optional[str] = Field(
+        None, description='The filetype of the training labels.')
+
+    def update(self, *args, **kwargs):
+        SemanticSegmentationDataConfig.update(self)
+        ImageDataConfig.update(self, *args, **kwargs)
+        if self.img_format is None:
+            self.img_format = 'png' if self.img_channels == 3 else 'npy'
+
+    def dir_to_dataset(self, data_dir: str,
+                       transform: A.BasicTransform) -> Dataset:
+        ds = SemanticSegmentationImageDataset(
+            data_dir=data_dir,
+            img_fmt=self.img_format,
+            label_fmt=self.label_format,
+            transform=transform)
+        return ds
+
+
+@register_config('semantic_segmentation_geo_data')
+class SemanticSegmentationGeoDataConfig(SemanticSegmentationDataConfig,
+                                        GeoDataConfig):
+    def update(self, *args, **kwargs):
+        SemanticSegmentationDataConfig.update(self)
+        GeoDataConfig.update(self, *args, **kwargs)
+
+    def scene_to_dataset(self,
+                         scene: Scene,
+                         transform: Optional[A.BasicTransform] = None
+                         ) -> Dataset:
+        if isinstance(self.window_opts, dict):
+            opts = self.window_opts[scene.id]
+        else:
+            opts = self.window_opts
+
+        if opts.method == GeoDataWindowMethod.sliding:
+            ds = SemanticSegmentationSlidingWindowGeoDataset(
+                scene,
+                size=opts.size,
+                stride=opts.stride,
+                padding=opts.padding,
+                transform=transform)
+        elif opts.method == GeoDataWindowMethod.random:
+            ds = SemanticSegmentationRandomWindowGeoDataset(
+                scene,
+                size_lims=opts.size_lims,
+                h_lims=opts.h_lims,
+                w_lims=opts.w_lims,
+                out_size=opts.size,
+                padding=opts.padding,
+                max_windows=opts.max_windows,
+                max_sample_attempts=opts.max_sample_attempts,
+                transform=transform)
+        else:
+            raise NotImplementedError()
+        return ds
 
 
 @register_config('semantic_segmentation_model')
@@ -68,7 +136,8 @@ class SemanticSegmentationModelConfig(ModelConfig):
 
 @register_config('semantic_segmentation_learner')
 class SemanticSegmentationLearnerConfig(LearnerConfig):
-    data: SemanticSegmentationDataConfig
+    data: Union[SemanticSegmentationImageDataConfig,
+                SemanticSegmentationGeoDataConfig]
     model: SemanticSegmentationModelConfig
 
     def build(self,

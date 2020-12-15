@@ -11,32 +11,69 @@ from rastervision.core.data import *
 from rastervision.core.analyzer import *
 from rastervision.pytorch_backend import *
 from rastervision.pytorch_learner import *
-from rastervision.pytorch_backend.examples.utils import get_scene_info, save_image_crop
+from rastervision.pytorch_backend.examples.utils import (get_scene_info,
+                                                         save_image_crop)
 
 aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 
+CLASS_NAMES = ['no_building', 'building']
+
 
 def get_config(runner,
-               raw_uri,
-               processed_uri,
-               root_uri,
-               test=False,
-               external_model=False,
-               external_loss=False,
-               augment=False):
+               raw_uri: str,
+               processed_uri: str,
+               root_uri: str,
+               external_model: bool = False,
+               external_loss: bool = False,
+               nochip: bool = False,
+               test: bool = False) -> ChipClassificationConfig:
+    """Generate the pipeline config for this task. This function will be called
+    by RV, with arguments from the command line, when this example is run.
+
+    Args:
+        runner (Runner): Runner for the pipeline. Will be provided by RV.
+        raw_uri (str): Directory where the raw data resides
+        processed_uri (str): Directory for storing processed data. 
+                             E.g. crops for testing.
+        root_uri (str): Directory where all the output will be written.
+        external_model (bool, optional): If True, use an external model defined
+            by the ExternalModuleConfig. Defaults to False.
+        external_loss (bool, optional): If True, use an external loss defined
+            by the ExternalModuleConfig. Defaults to False.
+        augment (bool, optional): If True, use custom data augmentation
+            transforms. Some basic data augmentation is done even if this is
+            False. To completely disable, specify augmentors=[] is the dat
+            config. Defaults to False.
+        nochip (bool, optional): If True, read directly from the TIFF during
+            training instead of from pre-generated chips. The analyze and chip
+            commands should not be run, if this is set to True. Defaults to
+            False.
+        test (bool, optional): If True, does the following simplifications:
+            (1) Uses only the first 1 scene
+            (2) Uses only a 600x600 crop of the scenes
+            (3) Enables test mode in the learner, which makes it use the
+                test_batch_sz and test_num_epochs, and also halves the img_sz.
+            Defaults to False.
+
+    Returns:
+        ChipClassificationConfig: A pipeline config.
+    """
     debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
-    log_tensorboard = True
-    run_tensorboard = True
-    class_config = ClassConfig(names=['no_building', 'building'])
+    class_config = ClassConfig(names=CLASS_NAMES)
 
     if test:
         debug = True
-        train_scene_info = train_scene_info[0:1]
-        val_scene_info = val_scene_info[0:1]
+        train_scene_info = train_scene_info[:1]
+        val_scene_info = val_scene_info[:1]
 
-    def make_scene(scene_info):
+    chip_sz = 300
+    img_sz = chip_sz
+    if nochip:
+        chip_options = SemanticSegmentationChipOptions()
+
+    def make_scene(scene_info) -> SceneConfig:
         (raster_uri, label_uri) = scene_info
         raster_uri = join(raw_uri, raster_uri)
         label_uri = join(processed_uri, label_uri)
@@ -77,13 +114,37 @@ def get_config(runner,
             label_source=label_source,
             aoi_uris=[aoi_uri])
 
-    chip_sz = 200
     train_scenes = [make_scene(info) for info in train_scene_info]
     val_scenes = [make_scene(info) for info in val_scene_info]
-    dataset = DatasetConfig(
+    scene_dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
+
+    if nochip:
+        window_opts = {}
+        for s in train_scenes:
+            window_opts[s.id] = GeoDataWindowConfig(
+                # method=GeoDataWindowMethod.sliding,
+                method=GeoDataWindowMethod.random,
+                size=img_sz,
+                # stride=img_sz,
+                size_lims=(200, 300),
+                # h_lims=(200, 300),
+                # w_lims=(200, 300),
+                max_windows=3514,
+            )
+        for s in val_scenes:
+            window_opts[s.id] = GeoDataWindowConfig(
+                method=GeoDataWindowMethod.sliding, size=img_sz, stride=img_sz)
+
+        data = ClassificationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=window_opts,
+            img_sz=img_sz,
+            num_workers=4)
+    else:
+        data = ClassificationImageDataConfig(img_sz=img_sz, num_workers=4)
 
     if external_model:
         model = ClassificationModelConfig(
@@ -121,68 +182,14 @@ def get_config(runner,
         one_cycle=True,
         external_loss_def=external_loss_def)
 
-    if augment:
-        mu = np.array((0.485, 0.456, 0.406))
-        std = np.array((0.229, 0.224, 0.225))
-
-        aug_transform = A.Compose([
-            A.Flip(),
-            A.Transpose(),
-            A.RandomRotate90(),
-            A.ShiftScaleRotate(),
-            A.OneOf([
-                A.ChannelShuffle(),
-                A.CLAHE(),
-                A.FancyPCA(),
-                A.HueSaturationValue(),
-                A.RGBShift(),
-                A.ToGray(),
-                A.ToSepia(),
-            ]),
-            A.OneOf([
-                A.RandomBrightness(),
-                A.RandomGamma(),
-            ]),
-            A.OneOf([
-                A.GaussNoise(),
-                A.ISONoise(),
-                A.RandomFog(),
-            ]),
-            A.OneOf([
-                A.Blur(),
-                A.MotionBlur(),
-                A.ImageCompression(),
-                A.Downscale(),
-            ]),
-            A.CoarseDropout(max_height=32, max_width=32, max_holes=5)
-        ])
-        base_transform = A.Normalize(mean=mu.tolist(), std=std.tolist())
-        plot_transform = A.Normalize(
-            mean=(-mu / std).tolist(),
-            std=(1 / std).tolist(),
-            max_pixel_value=1.)
-        aug_transform = A.to_dict(aug_transform)
-        base_transform = A.to_dict(base_transform)
-        plot_transform = A.to_dict(plot_transform)
-    else:
-        aug_transform = None
-        base_transform = None
-        plot_transform = None
-
     backend = PyTorchChipClassificationConfig(
-        model=model,
-        solver=solver,
-        log_tensorboard=log_tensorboard,
-        run_tensorboard=run_tensorboard,
-        test_mode=test,
-        base_transform=base_transform,
-        aug_transform=aug_transform,
-        plot_options=PlotOptions(transform=plot_transform))
+        data=data, model=model, solver=solver, test_mode=test)
 
-    config = ChipClassificationConfig(
+    pipeline = ChipClassificationConfig(
         root_uri=root_uri,
-        dataset=dataset,
+        dataset=scene_dataset,
         backend=backend,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz)
-    return config
+
+    return pipeline

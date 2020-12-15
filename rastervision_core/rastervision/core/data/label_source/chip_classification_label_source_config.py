@@ -45,11 +45,20 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         ('Size of a cell to use in pixels. If None, and this Config is part '
          'of an RVPipeline, this field will be set from RVPipeline.train_chip_sz.'
          ))
+    lazy: bool = Field(
+        False,
+        description='If True, labels will not be populated automatically '
+        'during initialization of the label source.')
 
     def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
-            self, vector_source, class_config, crs_transformer, extent=extent)
+            self,
+            vector_source,
+            class_config,
+            crs_transformer,
+            extent=extent,
+            lazy=self.lazy)
 
     def update(self, pipeline=None, scene=None):
         super().update(pipeline, scene)

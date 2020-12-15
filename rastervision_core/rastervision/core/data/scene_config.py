@@ -32,6 +32,21 @@ class SceneConfig(Config):
          'defines an AOI which is a piece of the scene that is assumed to be fully '
          'labeled and usable for training or validation.'))
 
+    def __repr_args__(self):
+        if self.aoi_geometries is not None:
+            # aoi_geometries can contain huge lists of coordinates that can
+            # clutter the output. So truncate the string representation of
+            # the coordinates.
+            from copy import deepcopy
+            d = deepcopy(self.__dict__)
+            for g in d['aoi_geometries']:
+                if 'coordinates' in g['geometry']:
+                    coords = g['geometry']['coordinates']
+                    g['geometry']['coordinates'] = f'{coords!r:100.100} ...'
+            return d.items()
+
+        return self.__dict__.items()
+
     def build(self, class_config, tmp_dir, use_transformers=True):
         raster_source = self.raster_source.build(
             tmp_dir, use_transformers=use_transformers)

@@ -1,4 +1,7 @@
+from typing import Any, Tuple
+
 from rastervision.core.data import ActivateMixin
+from rastervision.core.box import Box
 
 
 class Scene(ActivateMixin):
@@ -27,6 +30,19 @@ class Scene(ActivateMixin):
             self.aoi_polygons = []
         else:
             self.aoi_polygons = aoi_polygons
+
+    @property
+    def label_source(self):
+        return self.ground_truth_label_source
+
+    @property
+    def label_store(self):
+        return self.prediction_label_store
+
+    def __getitem__(self, window: Box) -> Tuple[Any, Any]:
+        x = self.raster_source[window]
+        y = self.label_source[window]
+        return x, y
 
     def _subcomponents_to_activate(self):
         return [

@@ -1,8 +1,12 @@
+from typing import Union, Tuple, Optional, List
+from pydantic import PositiveInt as PosInt, conint
 import math
 import random
 
 import numpy as np
 from shapely.geometry import box as ShapelyBox
+
+NonNegInt = conint(ge=0)
 
 
 class BoxSizeError(ValueError):
@@ -46,6 +50,10 @@ class Box():
     def get_width(self):
         """Return width of Box."""
         return self.xmax - self.xmin
+
+    @property
+    def size(self) -> Tuple[int, int]:
+        return self.get_height(), self.get_width()
 
     def get_area(self):
         """Return area of Box."""
@@ -127,6 +135,30 @@ class Box():
         rand_x = random.randint(int(lb), int(ub))
 
         return Box.make_square(rand_y, rand_x, size)
+
+    def make_random_box_container(self, out_h: int, out_w: int) -> 'Box':
+        """Return a new rectangular Box that contains this Box.
+
+        Args:
+            out_h (int): the height of the new Box
+            out_w (int): the width of the new Box
+        """
+        self_h, self_w = self.size
+
+        if out_h < self_h:  # pragma: no cover
+            raise BoxSizeError('size of random container cannot be < height')
+        if out_w < self_w:
+            raise BoxSizeError('size of random container cannot be < width')
+
+        lb = self.ymin - (out_h - self_h)
+        ub = self.ymin
+        ymin = random.randint(int(lb), int(ub))
+
+        lb = self.xmin - (out_w - self_w)
+        ub = self.xmin
+        xmin = random.randint(int(lb), int(ub))
+
+        return Box(ymin, xmin, ymin + out_h, xmin + out_w)
 
     def make_random_square(self, size):
         """Return new randomly positioned square Box that lies inside this Box.
@@ -243,18 +275,54 @@ class Box():
     def make_copy(self):
         return Box(*(self.tuple_format()))
 
-    def get_windows(self, chip_sz, stride):
-        """Return list of grid of boxes within this box.
+    def get_windows(self,
+                    chip_sz: Union[PosInt, Tuple[PosInt, PosInt]],
+                    stride: Union[PosInt, Tuple[PosInt, PosInt]],
+                    padding: Optional[Union[NonNegInt, Tuple[
+                        NonNegInt, NonNegInt]]] = None) -> List['Box']:
+        """Returns a list of boxes representing windows generated using a
+        sliding window traversal with the specified chip_sz, stride, and
+        padding.
+
+        Each of chip_sz, stride, and padding can be either a positive int or
+        a tuple `(vertical-componet, horizontal-component)` of positive ints.
+
+        Padding currently only applies to the right and bottom edges.
 
         Args:
-            chip_sz: (int) the length of each square-shaped window in pixels
-            stride: (int) how much each window is offset from the last in pixels
+            chip_sz (Union[PosInt, Tuple[PosInt, PosInt]]): Size (h, w) of the
+                windows.
+            stride (Union[PosInt, Tuple[PosInt, PosInt]]): Distance between
+                windows.
+            padding (Optional[Union[PosInt, Tuple[PosInt, PosInt]]], optional):
+                Padding for the right and bottom edges. Defaults to None.
 
+        Returns:
+            List[Box]: list of Box objects
         """
+        if not isinstance(chip_sz, tuple):
+            chip_sz = (chip_sz, chip_sz)
+
+        if not isinstance(stride, tuple):
+            stride = (stride, stride)
+
+        if padding is None:
+            padding = chip_sz
+        elif not isinstance(padding, tuple):
+            padding = (padding, padding)
+
+        h_padding, w_padding = padding
+        height, width = chip_sz
+        h_stride, w_stride = stride
+
+        ymax = self.ymax - height + h_padding
+        xmax = self.xmax - width + w_padding
+
         result = []
-        for row_start in range(self.ymin, self.ymax, stride):
-            for col_start in range(self.xmin, self.xmax, stride):
-                result.append(Box.make_square(row_start, col_start, chip_sz))
+        for row in range(self.ymin, ymax, h_stride):
+            for col in range(self.xmin, xmax, w_stride):
+                window = Box(row, col, row + height, col + width)
+                result.append(window)
         return result
 
     def to_dict(self):
@@ -281,3 +349,12 @@ class Box():
                     break
 
         return result
+
+    @staticmethod
+    def within_aoi(window: 'Box', aoi_polygons: list) -> bool:
+        """Check if window is within a list of AOI polygons."""
+        w = window.to_shapely()
+        for polygon in aoi_polygons:
+            if w.within(polygon):
+                return True
+        return False

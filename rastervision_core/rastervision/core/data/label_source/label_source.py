@@ -22,3 +22,6 @@ class LabelSource(ABC):
                 returns all labels.
         """
         pass
+
+    def __getitem__(self, window):
+        return self.get_labels(window)

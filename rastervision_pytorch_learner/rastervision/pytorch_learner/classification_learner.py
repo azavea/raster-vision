@@ -1,19 +1,15 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
-from os.path import join, isdir
+
 import logging
 
 import torch
-from torchvision import models
 import torch.nn as nn
-from torch.utils.data import ConcatDataset
+from torchvision import models
 
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.utils import (
-    compute_conf_mat_metrics, compute_conf_mat, AlbumentationsDataset)
-from rastervision.pytorch_learner.image_folder import (ImageFolder)
-from rastervision.pytorch_learner.classification_learner_config import (
-    ClassificationDataFormat)
+from rastervision.pytorch_learner.utils import (compute_conf_mat_metrics,
+                                                compute_conf_mat)
 
 log = logging.getLogger(__name__)
 
@@ -36,47 +32,6 @@ class ClassificationLearner(Learner):
         else:
             loss = nn.CrossEntropyLoss()
         return loss
-
-    def _get_datasets(self, uri):
-        cfg = self.cfg
-        class_names = cfg.data.class_names
-
-        if cfg.data.data_format == ClassificationDataFormat.image_folder:
-            data_dirs = self.unzip_data(uri)
-
-        transform, aug_transform = self.get_data_transforms()
-
-        train_ds, valid_ds, test_ds = [], [], []
-        for data_dir in data_dirs:
-            train_dir = join(data_dir, 'train')
-            valid_dir = join(data_dir, 'valid')
-
-            if isdir(train_dir):
-                if cfg.overfit_mode:
-                    train_ds.append(
-                        AlbumentationsDataset(
-                            ImageFolder(train_dir, classes=class_names),
-                            transform=transform))
-                else:
-                    train_ds.append(
-                        AlbumentationsDataset(
-                            ImageFolder(train_dir, classes=class_names),
-                            transform=aug_transform))
-
-            if isdir(valid_dir):
-                valid_ds.append(
-                    AlbumentationsDataset(
-                        ImageFolder(valid_dir, classes=class_names),
-                        transform=transform))
-                test_ds.append(
-                    AlbumentationsDataset(
-                        ImageFolder(valid_dir, classes=class_names),
-                        transform=transform))
-
-        train_ds, valid_ds, test_ds = \
-            ConcatDataset(train_ds), ConcatDataset(valid_ds), ConcatDataset(test_ds)
-
-        return train_ds, valid_ds, test_ds
 
     def train_step(self, batch, batch_ind):
         x, y = batch

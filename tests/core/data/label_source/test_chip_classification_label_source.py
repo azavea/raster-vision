@@ -242,6 +242,22 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         class_id = labels.get_cell_class_id(self.box2)
         self.assertEqual(class_id, self.class_id2)
 
+    def test_getitem(self):
+        # Extent contains both boxes.
+        extent = Box.make_square(0, 0, 8)
+
+        config = ChipClassificationLabelSourceConfig(
+            vector_source=GeoJSONVectorSourceConfig(
+                uri=self.uri, default_class_id=None))
+        source = config.build(self.class_config, self.crs_transformer, extent,
+                              self.tmp_dir.name)
+        labels = source.get_labels()
+
+        cells = labels.get_cells()
+        self.assertEqual(len(cells), 2)
+        self.assertEqual(source[cells[0]], self.class_id1)
+        self.assertEqual(source[cells[1]], self.class_id2)
+
 
 if __name__ == '__main__':
     unittest.main()

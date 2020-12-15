@@ -67,6 +67,9 @@ class RasterSource(ABC):
         """
         pass
 
+    def __getitem__(self, window):
+        return self.get_chip(window)
+
     def get_chip(self, window):
         """Return the transformed chip in the window.
 

@@ -21,6 +21,9 @@ class ChipClassificationLabels(Labels):
         result.extend(other)
         return result
 
+    def __contains__(self, cell):
+        return cell.tuple_format() in self.cell_to_class_id
+
     def filter_by_aoi(self, aoi_polygons):
         result = ChipClassificationLabels()
         for cell in self.cell_to_class_id:
