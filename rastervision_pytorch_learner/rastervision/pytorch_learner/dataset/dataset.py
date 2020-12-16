@@ -47,6 +47,8 @@ class AlbumentationsDataset(Dataset):
             self.normalize = False
             self.to_pytorch = False
 
+        self.transform_type = transform_type
+
     def __getitem__(self, key) -> Tuple[torch.Tensor, torch.Tensor]:
         val = self.orig_dataset[key]
         x, y = self.transform(val)
@@ -58,7 +60,10 @@ class AlbumentationsDataset(Dataset):
         if self.to_pytorch:
             # (H, W, C) --> (C, H, W)
             x = torch.from_numpy(x).permute(2, 0, 1).float()
-            y = torch.from_numpy(y).long()
+            if self.transform_type == TransformType.regression:
+                y = torch.from_numpy(y).float()
+            else:
+                y = torch.from_numpy(y).long()
 
         return x, y
 
