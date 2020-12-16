@@ -77,7 +77,7 @@ class RegressionLearner(Learner):
             if y.shape[0] > 10000:
                 inds = torch.randperm(y.shape[0], dtype=torch.long)[0:10000]
                 y_sample = y[inds]
-            y_sample = y_sample[:, self.cfg.model.weighted_loss_ind].numpy()
+            y_sample = y_sample[:, self.cfg.model.weighted_loss_ind].cpu().numpy()
             self.y_kde = gaussian_kde(y_sample)
             densities = self.y_kde(y_sample)
             self.min_density = densities.max() / 1000.
@@ -104,7 +104,7 @@ class RegressionLearner(Learner):
         if self.cfg.model.weighted_loss_ind is not None:
             ind = self.cfg.model.weighted_loss_ind
             weights = torch.tensor((
-                1.0 / (self.min_density + self.y_kde(y[:, ind].numpy()))),
+                1.0 / (self.min_density + self.y_kde(y[:, ind].cpu().numpy()))),
                 dtype=torch.float32).unsqueeze(1)
             loss = loss_fn(out, y, reduction='none')
             loss = (loss * weights).sum()
