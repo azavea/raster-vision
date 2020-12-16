@@ -105,7 +105,7 @@ class RegressionLearner(Learner):
             ind = self.cfg.model.weighted_loss_ind
             weights = torch.tensor((
                 1.0 / (self.min_density + self.y_kde(y[:, ind].cpu().numpy()))),
-                dtype=torch.float32).unsqueeze(1)
+                dtype=torch.float32, device=y.device).unsqueeze(1)
             loss = loss_fn(out, y, reduction='none')
             loss = (loss * weights).sum()
         else:
