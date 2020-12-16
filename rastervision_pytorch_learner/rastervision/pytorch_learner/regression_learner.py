@@ -6,6 +6,7 @@ import matplotlib
 matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from scipy.stats import gaussian_kde
 
 import torch
 from torchvision import models
@@ -71,6 +72,16 @@ class RegressionLearner(Learner):
         y = torch.cat(ys, dim=0)
         self.target_medians = y.median(dim=0).values.to(self.device)
 
+        if self.cfg.model.weighted_loss_ind is not None:
+            y_sample = y
+            if y.shape[0] > 10000:
+                inds = torch.randperm(y.shape[0], dtype=torch.long)[0:10000]
+                y_sample = y[inds]
+            y_sample = y_sample[:, self.cfg.model.weighted_loss_ind].numpy()
+            self.y_kde = gaussian_kde(y_sample)
+            densities = self.y_kde(y_sample)
+            self.min_density = densities.max() / 1000.
+
     def build_metric_names(self):
         metric_names = [
             'epoch', 'train_time', 'valid_time', 'train_loss', 'val_loss'
@@ -85,7 +96,21 @@ class RegressionLearner(Learner):
     def train_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
-        return {'train_loss': F.l1_loss(out, y, reduction='sum')}
+
+        loss_fn = F.l1_loss
+        if self.cfg.model.loss_fn == 'mse':
+            loss_fn = F.mse_loss
+
+        if self.cfg.model.weighted_loss_ind is not None:
+            ind = self.cfg.model.weighted_loss_ind
+            weights = torch.tensor((
+                1.0 / (self.min_density + self.y_kde(y[:, ind].numpy()))),
+                dtype=torch.float32).unsqueeze(1)
+            loss = loss_fn(out, y, reduction='none')
+            loss = (loss * weights).sum()
+        else:
+            loss = loss_fn(out, y, reduction='sum')
+        return {'train_loss': loss}
 
     def validate_step(self, batch, batch_nb):
         x, y = batch
@@ -154,7 +179,6 @@ class RegressionLearner(Learner):
             ax.set_ylabel('predictions')
         scatter_path = join(self.output_dir, '{}_scatter.png'.format(split))
         plt.savefig(scatter_path)
-        print('done scatter')
 
         # make histogram of errors
         fig = plt.figure(
@@ -170,4 +194,3 @@ class RegressionLearner(Learner):
             ax.set_xlabel('prediction error')
         hist_path = join(self.output_dir, '{}_err_hist.png'.format(split))
         plt.savefig(hist_path)
-        print('done hist')

@@ -94,6 +94,8 @@ class RegressionGeoDataConfig(RegressionDataConfig, GeoDataConfig):
 @register_config('regression_model')
 class RegressionModelConfig(ModelConfig):
     output_multiplier: List[float] = None
+    weighted_loss_ind: Optional[int] = None
+    loss_fn: str = 'l1'
 
     def update(self, learner=None):
         if learner is not None and self.output_multiplier is None:
