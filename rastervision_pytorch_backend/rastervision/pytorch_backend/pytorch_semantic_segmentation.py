@@ -85,12 +85,14 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
             img_format=self.pipeline_cfg.img_format,
             label_format=self.pipeline_cfg.label_format)
 
-    def predict(self, chips, windows):
+    def predict(self, scene, chips, windows) -> SemanticSegmentationLabels:
         if self.learner is None:
             self.load_model()
 
-        batch_out = self.learner.numpy_predict(chips, raw_out=False)
-        labels = SemanticSegmentationLabels()
+        raw_out = scene.label_store.smooth_output
+        batch_out = self.learner.numpy_predict(chips, raw_out=raw_out)
+
+        labels = scene.label_store.empty_labels()
         for out, window in zip(batch_out, windows):
             labels.add_window(window, out)
 
