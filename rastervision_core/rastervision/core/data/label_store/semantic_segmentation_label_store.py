@@ -65,6 +65,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         self.root_uri = uri
         self.label_uri = join(uri, 'labels.tif')
         self.score_uri = join(uri, 'scores.tif')
+        self.hits_uri = join(uri, 'pixel_hits.npy')
         self.vector_output_root_uri = join(uri, 'vector_output')
 
         self.vector_output = vector_output
@@ -143,9 +144,16 @@ class SemanticSegmentationLabelStore(LabelStore):
         score_arr = self.score_raster_source.get_chip(extent)
         # (H, W, C) --> (C, H, W)
         score_arr = score_arr.transpose(2, 0, 1)
+        hits_arr = np.load(self.hits_uri)
+
+        # convert to float
+        if score_arr.dtype == np.uint8:
+            score_arr = score_arr.astype(np.float16)
+            score_arr /= 255
 
         labels = self.empty_labels()
-        labels[extent] = score_arr
+        labels.pixel_scores = score_arr * hits_arr
+        labels.pixel_hits = hits_arr
         return labels
 
     def save(self, labels: SemanticSegmentationLabels) -> None:
@@ -179,6 +187,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             self.write_smooth_raster_output(
                 out_smooth_profile,
                 get_local_path(self.score_uri, self.tmp_dir),
+                get_local_path(self.hits_uri, self.tmp_dir),
                 labels,
                 chip_sz=self.rasterio_block_size)
 
@@ -189,7 +198,8 @@ class SemanticSegmentationLabelStore(LabelStore):
 
     def write_smooth_raster_output(self,
                                    out_smooth_profile: dict,
-                                   path: str,
+                                   scores_path: str,
+                                   hits_path: str,
                                    labels: SemanticSegmentationLabels,
                                    chip_sz: Optional[int] = None) -> None:
         dtype = np.uint8 if self.smooth_as_uint8 else np.float32
@@ -204,12 +214,12 @@ class SemanticSegmentationLabelStore(LabelStore):
             windows = labels.get_windows(chip_sz=chip_sz)
 
         # if old scores exist, combine them with the new ones
-        if self.raster_source:
+        if self.score_raster_source:
             old_labels = self.get_scores()
             labels += old_labels
 
         log.info('Writing smooth labels to disk.')
-        with rio.open(path, 'w', **out_smooth_profile) as dataset:
+        with rio.open(scores_path, 'w', **out_smooth_profile) as dataset:
             with click.progressbar(windows) as bar:
                 for window in bar:
                     window = window.intersection(self.extent)
@@ -221,6 +231,8 @@ class SemanticSegmentationLabelStore(LabelStore):
                     window = window.rasterio_format()
                     for i, class_scores in enumerate(score_arr, start=1):
                         dataset.write_band(i, class_scores, window=window)
+        # save pixel hits too
+        np.save(hits_path, labels.pixel_hits)
 
     def write_discrete_raster_output(
             self, out_smooth_profile: dict, path: str,
