@@ -97,7 +97,7 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
         return PyTorchObjectDetectionSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 
-    def predict(self, chips, windows):
+    def predict(self, scene, chips, windows):
         """Return predictions for a chip using model.
 
         Args:
