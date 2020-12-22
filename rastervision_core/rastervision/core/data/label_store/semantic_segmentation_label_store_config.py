@@ -25,9 +25,11 @@ class VectorOutputConfig(Config):
 
     def update(self, pipeline=None, scene=None):
         if pipeline and scene:
-            self.uri = join(
-                pipeline.root_uri, 'predict', '{}-{}-{}.json'.format(
-                    scene.id, self.class_id, self.get_mode()))
+            mode = self.get_mode()
+            class_id = self.class_id
+            filename = f'{mode}-{class_id}.json'
+            self.uri = join(pipeline.predict_uri, scene.id, 'vector_output',
+                            filename)
 
     def get_mode(self):
         raise NotImplementedError()
@@ -92,21 +94,42 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
         description=
         ('If True, save prediction class_ids in RGB format using the colors in '
          'class_config.'))
+    smooth_output: bool = Field(
+        False,
+        description='If True, expects labels to be continuous values '
+        'representing class scores and stores both scores and discrete '
+        'labels.')
+    smooth_as_uint8: bool = Field(
+        False,
+        description='If True, stores smooth scores as uint8, resulting in '
+        'loss of precision, but reduced file size. Only used if '
+        'smooth_output=True.')
+    rasterio_block_size: int = Field(
+        256,
+        description='blockxsize and blockysize params in rasterio.open() will '
+        'be set to this.')
 
     def build(self, class_config, crs_transformer, extent, tmp_dir):
-        return SemanticSegmentationLabelStore(
+        class_config.ensure_null_class()
+
+        label_store = SemanticSegmentationLabelStore(
             self.uri,
             extent,
             crs_transformer,
             tmp_dir,
             vector_output=self.vector_output,
-            class_config=class_config if self.rgb else None)
+            class_config=class_config,
+            save_as_rgb=self.rgb,
+            smooth_output=self.smooth_output,
+            smooth_as_uint8=self.smooth_as_uint8,
+            rasterio_block_size=self.rasterio_block_size)
+
+        return label_store
 
     def update(self, pipeline=None, scene=None):
         if pipeline is not None and scene is not None:
             if self.uri is None:
-                self.uri = join(pipeline.predict_uri,
-                                '{}.tif'.format(scene.id))
+                self.uri = join(pipeline.predict_uri, f'{scene.id}')
 
         for vo in self.vector_output:
             vo.update(pipeline, scene)

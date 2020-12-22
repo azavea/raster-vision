@@ -1,12 +1,22 @@
-import numpy as np
-import rasterio
+from typing import Optional, Sequence
+from os.path import join
+import logging
+import click
 
-from rastervision.pipeline.file_system import (
-    get_local_path, make_dir, upload_or_copy, file_exists, str_to_file)
+import numpy as np
+import rasterio as rio
+
+from rastervision.pipeline.file_system import (get_local_path, make_dir,
+                                               sync_to_dir, file_exists,
+                                               str_to_file, upload_or_copy)
+from rastervision.core.box import Box
+from rastervision.core.data import (CRSTransformer, ClassConfig)
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_store import LabelStore
 from rastervision.core.data.label_source import SegmentationClassTransformer
 from rastervision.core.data.raster_source import RasterioSourceConfig
+
+log = logging.getLogger(__name__)
 
 
 class SemanticSegmentationLabelStore(LabelStore):
@@ -16,127 +26,244 @@ class SemanticSegmentationLabelStore(LabelStore):
     them in GeoJSON files.
     """
 
-    def __init__(self,
-                 uri,
-                 extent,
-                 crs_transformer,
-                 tmp_dir,
-                 vector_output=None,
-                 class_config=None):
+    def __init__(
+            self,
+            uri: str,
+            extent: Box,
+            crs_transformer: CRSTransformer,
+            tmp_dir: str,
+            vector_output: Optional[Sequence['VectorOutputConfig']] = None,
+            class_config: ClassConfig = None,
+            save_as_rgb: bool = False,
+            smooth_output: bool = False,
+            smooth_as_uint8: bool = False,
+            rasterio_block_size: int = 256):
         """Constructor.
 
         Args:
-            uri: (str) URI of GeoTIFF file used for storing predictions as RGB values
-            extent: (Box) The extent of the scene
+            uri: (str) Path to directory where the predictions are/will be
+                stored. Smooth scores will be saved as uri/scores.tif,
+                discrete labels will be stored as uri/labels.tif, and vector
+                outputs will be saved in uri/vector_outputs/.
+            extent: (Box) The extent of the scene.
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
-            vector_output: (None or array of VectorOutputConfig) containing
-                vectorifiction configuration information
-            class_config: (ClassConfig) with color values used to convert
-                class ids to RGB value
+            vector_output: (Optional[Sequence[VectorOutputConfig]]) containing
+                vectorifiction configuration information. Defaults to None.
+            class_config: (ClassConfig) Class config.
+            save_as_rgb: (bool, optional) If True, Saves labels as an RGB
+                image, using the class-color mapping in the class_config.
+                Defaults to False.
+            smooth_output: (bool, optional) If True, expects labels to be
+                class scores and stores both scores and discrete labels.
+                Defaults to False.
+            smooth_as_uint8: (bool, optional) If True, stores smooth class
+                scores as np.uint8 (0-255) values rather than as np.float32
+                discrete labels, to help save memory/disk space.
+                Defaults to False.
         """
-        self.uri = uri
+        self.root_uri = uri
+        self.label_uri = join(uri, 'labels.tif')
+        self.score_uri = join(uri, 'scores.tif')
+        self.vector_output_root_uri = join(uri, 'vector_output')
+
         self.vector_output = vector_output
         self.extent = extent
         self.crs_transformer = crs_transformer
         self.tmp_dir = tmp_dir
-        # Note: can't name this class_transformer due to Python using that attribute
-        if class_config:
-            self.class_trans = SegmentationClassTransformer(class_config)
-        else:
-            self.class_trans = None
+        self.class_config = class_config
+        self.smooth_output = smooth_output
+        self.smooth_as_uint8 = smooth_as_uint8
+        self.rasterio_block_size = rasterio_block_size
 
-        self.source = None
-        if file_exists(uri):
-            self.source = RasterioSourceConfig(uris=[uri]).build(tmp_dir)
+        self.class_transformer = None
+        if save_as_rgb:
+            self.class_transformer = SegmentationClassTransformer(class_config)
+
+        self.label_raster_source = None
+        self.score_raster_source = None
+        if file_exists(self.label_uri):
+            cfg = RasterioSourceConfig(uris=[self.label_uri])
+            self.label_raster_source = cfg.build(tmp_dir)
+
+        if self.smooth_output:
+            if file_exists(self.score_uri):
+                cfg = RasterioSourceConfig(uris=[self.score_uri])
+                raster_source = cfg.build(tmp_dir)
+                extents_equal = raster_source.get_extent() == self.extent
+                bands_equal = raster_source.num_channels == len(class_config)
+                self_dtype = np.uint8 if self.smooth_as_uint8 else np.float32
+                dtypes_equal = raster_source.get_dtype() == self_dtype
+
+                if extents_equal and bands_equal and dtypes_equal:
+                    self.score_raster_source = raster_source
+                else:
+                    del raster_source
 
     def _subcomponents_to_activate(self):
-        if self.source is not None:
-            return [self.source]
-        return []
+        components = []
+        if self.label_raster_source is not None:
+            components.append(self.label_raster_source)
+        if self.score_raster_source is not None:
+            components.append(self.score_raster_source)
+        return components
 
-    def get_labels(self):
+    def get_labels(self) -> SemanticSegmentationLabels:
         """Get all labels.
 
         Returns:
             SemanticSegmentationLabels
         """
-        if self.source is None:
-            raise Exception('Raster source at {} does not exist'.format(
-                self.uri))
+        if self.label_raster_source is None:
+            raise Exception(
+                f'Raster source at {self.label_uri} does not exist.')
+
+        extent = self.label_raster_source.get_extent()
+        raw_labels = self.label_raster_source.get_raw_chip(extent)
+        if self.class_transformer is None:
+            label_arr = np.squeeze(raw_labels)
+        else:
+            label_arr = self.class_transformer.rgb_to_class(raw_labels)
 
         labels = SemanticSegmentationLabels()
-        extent = self.source.get_extent()
-        raw_labels = self.source.get_raw_chip(extent)
-        label_arr = (np.squeeze(raw_labels) if self.class_trans is None else
-                     self.class_trans.rgb_to_class(raw_labels))
-        labels.set_label_arr(extent, label_arr)
+        labels[extent] = label_arr
         return labels
 
-    def save(self, labels):
-        """Save.
+    def get_scores(self) -> SemanticSegmentationLabels:
+        """Get all scores.
+
+        Returns:
+            SemanticSegmentationLabels
+        """
+        if self.score_raster_source is None:
+            raise Exception(
+                f'Raster source at {self.score_uri} does not exist.')
+
+        extent = self.score_raster_source.get_extent()
+        score_arr = self.score_raster_source.get_chip(extent)
+        # (H, W, C) --> (C, H, W)
+        score_arr = score_arr.transpose(2, 0, 1)
+
+        labels = self.empty_labels()
+        labels[extent] = score_arr
+        return labels
+
+    def save(self, labels: SemanticSegmentationLabels) -> None:
+        """Save labels to disk.
+
+        More info on rasterio IO:
+        - https://github.com/mapbox/rasterio/blob/master/docs/quickstart.rst
+        - https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
 
         Args:
             labels - (SemanticSegmentationLabels) labels to be saved
         """
-        local_path = get_local_path(self.uri, self.tmp_dir)
-        make_dir(local_path, use_dirname=True)
+        local_root = get_local_path(self.root_uri, self.tmp_dir)
+        make_dir(local_root)
 
-        transform = self.crs_transformer.get_affine_transform()
-        crs = self.crs_transformer.get_image_crs()
+        out_smooth_profile = {
+            'driver': 'GTiff',
+            'height': self.extent.ymax,
+            'width': self.extent.xmax,
+            'transform': self.crs_transformer.get_affine_transform(),
+            'crs': self.crs_transformer.get_image_crs(),
+            'blockxsize': self.rasterio_block_size,
+            'blockysize': self.rasterio_block_size
+        }
 
-        band_count = 1
-        dtype = np.uint8
-        if self.class_trans:
-            band_count = 3
+        self.write_discrete_raster_output(
+            out_smooth_profile, get_local_path(self.label_uri, self.tmp_dir),
+            labels)
 
-        mask = (np.zeros((self.extent.ymax, self.extent.xmax), dtype=np.uint8)
-                if self.vector_output else None)
-
-        # https://github.com/mapbox/rasterio/blob/master/docs/quickstart.rst
-        # https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
-        with rasterio.open(
-                local_path,
-                'w',
-                driver='GTiff',
-                height=self.extent.ymax,
-                width=self.extent.xmax,
-                count=band_count,
-                dtype=dtype,
-                transform=transform,
-                crs=crs) as dataset:
-            for window in labels.get_windows():
-                label_arr = labels.get_label_arr(window)
-                window = window.intersection(self.extent)
-                label_arr = label_arr[0:window.get_height(), 0:
-                                      window.get_width()]
-
-                if mask is not None:
-                    mask[window.ymin:window.ymax, window.xmin:
-                         window.xmax] = label_arr
-
-                window = window.rasterio_format()
-                if self.class_trans:
-                    rgb_labels = self.class_trans.class_to_rgb(label_arr)
-                    for chan in range(3):
-                        dataset.write_band(
-                            chan + 1, rgb_labels[:, :, chan], window=window)
-                else:
-                    img = label_arr.astype(dtype)
-                    dataset.write_band(1, img, window=window)
-
-        upload_or_copy(local_path, self.uri)
+        if self.smooth_output:
+            self.write_smooth_raster_output(
+                out_smooth_profile,
+                get_local_path(self.score_uri, self.tmp_dir),
+                labels,
+                chip_sz=self.rasterio_block_size)
 
         if self.vector_output:
-            import mask_to_polygons.vectorification as vectorification
-            import mask_to_polygons.processing.denoise as denoise
+            self.write_vector_output(labels)
 
-            for vo in self.vector_output:
+        sync_to_dir(local_root, self.root_uri)
+
+    def write_smooth_raster_output(self,
+                                   out_smooth_profile: dict,
+                                   path: str,
+                                   labels: SemanticSegmentationLabels,
+                                   chip_sz: Optional[int] = None) -> None:
+        dtype = np.uint8 if self.smooth_as_uint8 else np.float32
+
+        out_smooth_profile.update({
+            'count': labels.num_classes,
+            'dtype': dtype,
+        })
+        if chip_sz is None:
+            windows = [self.extent]
+        else:
+            windows = labels.get_windows(chip_sz=chip_sz)
+
+        # if old scores exist, combine them with the new ones
+        if self.raster_source:
+            old_labels = self.get_scores()
+            labels += old_labels
+
+        log.info('Writing smooth labels to disk.')
+        with rio.open(path, 'w', **out_smooth_profile) as dataset:
+            with click.progressbar(windows) as bar:
+                for window in bar:
+                    window = window.intersection(self.extent)
+                    score_arr = labels.get_score_arr(window)
+                    if self.smooth_as_uint8:
+                        score_arr *= 255
+                        score_arr = np.around(score_arr, out=score_arr)
+                        score_arr = score_arr.astype(dtype)
+                    window = window.rasterio_format()
+                    for i, class_scores in enumerate(score_arr, start=1):
+                        dataset.write_band(i, class_scores, window=window)
+
+    def write_discrete_raster_output(
+            self, out_smooth_profile: dict, path: str,
+            labels: SemanticSegmentationLabels) -> None:
+
+        num_bands = 1 if self.class_transformer is None else 3
+        out_smooth_profile.update({'count': num_bands, 'dtype': np.uint8})
+
+        windows = labels.get_windows()
+
+        log.info('Writing labels to disk.')
+        with rio.open(path, 'w', **out_smooth_profile) as dataset:
+            with click.progressbar(windows) as bar:
+                for window in bar:
+                    window = window.intersection(self.extent)
+                    label_arr = labels.get_label_arr(window)
+                    window = window.rasterio_format()
+                    if self.class_transformer is None:
+                        dataset.write_band(1, label_arr, window=window)
+                    else:
+                        rgb_labels = self.class_transformer.class_to_rgb(
+                            label_arr)
+                        rgb_labels = rgb_labels.transpose(2, 0, 1)
+                        for i, band in enumerate(rgb_labels, start=1):
+                            dataset.write_band(i, band, window=window)
+
+    def write_vector_output(self, labels: SemanticSegmentationLabels) -> None:
+        import mask_to_polygons.vectorification as vectorification
+        import mask_to_polygons.processing.denoise as denoise
+
+        log.info('Writing vector output to disk.')
+        label_arr = labels.get_label_arr(self.extent)
+        with click.progressbar(self.vector_output) as bar:
+            for i, vo in enumerate(bar):
+                if vo.uri is None:
+                    log.info(f'Skipping VectorOutputConfig at index {i} '
+                             'due to missing uri.')
+                    continue
+                uri = get_local_path(vo.uri, self.tmp_dir)
                 denoise_radius = vo.denoise
-                uri = vo.uri
                 mode = vo.get_mode()
                 class_id = vo.class_id
-                class_mask = np.array(mask == class_id, dtype=np.uint8)
+                class_mask = np.array(label_arr == class_id, dtype=np.uint8)
 
                 def transform(x, y):
                     return self.crs_transformer.pixel_to_map((x, y))
@@ -144,7 +271,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                 if denoise_radius > 0:
                     class_mask = denoise.denoise(class_mask, denoise_radius)
 
-                if uri and mode == 'buildings':
+                if mode == 'buildings':
                     geojson = vectorification.geojson_from_mask(
                         mask=class_mask,
                         transform=transform,
@@ -153,11 +280,17 @@ class SemanticSegmentationLabelStore(LabelStore):
                         min_area=vo.min_area,
                         width_factor=vo.element_width_factor,
                         thickness=vo.element_thickness)
-                elif uri and mode == 'polygons':
+                elif mode == 'polygons':
                     geojson = vectorification.geojson_from_mask(
                         mask=class_mask, transform=transform, mode=mode)
-                str_to_file(geojson, uri)
 
-    def empty_labels(self):
+                str_to_file(geojson, uri)
+                upload_or_copy(uri, vo.uri)
+
+    def empty_labels(self) -> SemanticSegmentationLabels:
         """Returns an empty SemanticSegmentationLabels object."""
-        return SemanticSegmentationLabels()
+        labels = SemanticSegmentationLabels(
+            smooth=self.smooth_output,
+            extent=self.extent,
+            num_classes=len(self.class_config))
+        return labels
