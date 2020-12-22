@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Optional
 
 from rastervision.pipeline.config import register_config, Config, Field
-from rastervision.core.rv_pipeline import RVPipelineConfig
+from rastervision.core.rv_pipeline import RVPipelineConfig, PredictOptions
 from rastervision.core.data.label_store import ObjectDetectionGeoJSONStoreConfig
 from rastervision.core.evaluation import ObjectDetectionEvaluatorConfig
 
@@ -42,7 +42,7 @@ class ObjectDetectionChipOptions(Config):
 
 
 @register_config('object_detection_predict_options')
-class ObjectDetectionPredictOptions(Config):
+class ObjectDetectionPredictOptions(PredictOptions):
     merge_thresh: float = Field(
         0.5,
         description=
