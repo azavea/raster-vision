@@ -15,7 +15,7 @@ class SemanticSegmentationLabels(Labels):
     These labels can be either discrete or smooth.
 
     If smooth, they store the scores for each class, for each pixel.
-    They also store the number of "hits" (initially equal to 1) for each pixel
+    They also store the number of "hits" (initially equal to 0) for each pixel
     that are used to divide the values for that pixel to get an average.
     This allows one to do multiple updates to the same pixel
     (the hits will be automatically incremented by 1 each time)
@@ -45,7 +45,8 @@ class SemanticSegmentationLabels(Labels):
                 Only used if smooth=True. Defaults to None.
 
         Raises:
-            ValueError: [description]
+            ValueError: if num_classes and extent are not specified, but
+                smooth=True.
         """
         self.smooth = smooth
 
@@ -215,7 +216,7 @@ class SemanticSegmentationLabels(Labels):
         return avg_scores
 
     def get_label_arr(self, window: Box) -> np.ndarray:
-        """Get discret labels.
+        """Get discrete labels.
 
         If smooth, the scores are argmax'd to get discrete labels.
         """
