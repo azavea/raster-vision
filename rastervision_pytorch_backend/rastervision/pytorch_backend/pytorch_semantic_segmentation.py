@@ -92,6 +92,6 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
         batch_out = self.learner.numpy_predict(chips, raw_out=False)
         labels = SemanticSegmentationLabels()
         for out, window in zip(batch_out, windows):
-            labels.set_label_arr(window, out)
+            labels.add_window(window, out)
 
         return labels

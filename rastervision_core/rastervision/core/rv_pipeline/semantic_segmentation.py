@@ -154,8 +154,7 @@ class SemanticSegmentation(RVPipeline):
         # Fill in null class for any NODATA pixels.
         null_class_id = self.config.dataset.class_config.get_null_class_id()
         for window, chip in zip(windows, chips):
-            label_arr = labels.get_label_arr(window)
-            label_arr[np.sum(chip, axis=2) == 0] = null_class_id
-            labels.set_label_arr(window, label_arr)
+            nodata_mask = np.sum(chip, axis=2) == 0
+            labels.mask_fill(window, nodata_mask, fill_value=null_class_id)
 
         return labels

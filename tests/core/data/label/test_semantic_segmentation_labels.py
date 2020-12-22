@@ -12,8 +12,8 @@ class TestSemanticSegmentationLabels(unittest.TestCase):
         self.label_arr0 = np.random.choice([0, 1], (10, 10))
         self.label_arr1 = np.random.choice([0, 1], (10, 10))
         self.labels = SemanticSegmentationLabels()
-        self.labels.set_label_arr(self.windows[0], self.label_arr0)
-        self.labels.set_label_arr(self.windows[1], self.label_arr1)
+        self.labels[self.windows[0]] = self.label_arr0
+        self.labels[self.windows[1]] = self.label_arr1
 
     def test_get(self):
         np.testing.assert_array_equal(
