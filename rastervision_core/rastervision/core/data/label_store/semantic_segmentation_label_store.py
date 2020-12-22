@@ -98,8 +98,6 @@ class SemanticSegmentationLabelStore(LabelStore):
 
                 if extents_equal and bands_equal and dtypes_equal:
                     self.score_raster_source = raster_source
-                else:
-                    del raster_source
 
     def _subcomponents_to_activate(self):
         components = []
