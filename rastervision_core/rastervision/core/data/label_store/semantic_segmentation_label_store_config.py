@@ -117,7 +117,7 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
             extent,
             crs_transformer,
             tmp_dir,
-            vector_output=self.vector_output,
+            vector_outputs=self.vector_output,
             class_config=class_config,
             save_as_rgb=self.rgb,
             smooth_output=self.smooth_output,

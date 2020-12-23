@@ -32,7 +32,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             extent: Box,
             crs_transformer: CRSTransformer,
             tmp_dir: str,
-            vector_output: Optional[Sequence['VectorOutputConfig']] = None,
+            vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
             class_config: ClassConfig = None,
             save_as_rgb: bool = False,
             smooth_output: bool = False,
@@ -42,13 +42,13 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         Args:
             uri: (str) Path to directory where the predictions are/will be
-                stored. Smooth scores will be saved as uri/scores.tif,
-                discrete labels will be stored as uri/labels.tif, and vector
-                outputs will be saved in uri/vector_outputs/.
+                stored. Smooth scores will be saved as "uri/scores.tif",
+                discrete labels will be stored as "uri/labels.tif", and vector
+                outputs will be saved in "uri/vector_outputs/".
             extent: (Box) The extent of the scene.
             crs_transformer: (CRSTransformer)
             tmp_dir: (str) temp directory to use
-            vector_output: (Optional[Sequence[VectorOutputConfig]]) containing
+            vector_outputs: (Optional[Sequence[VectorOutputConfig]]) containing
                 vectorifiction configuration information. Defaults to None.
             class_config: (ClassConfig) Class config.
             save_as_rgb: (bool, optional) If True, Saves labels as an RGB
@@ -66,9 +66,8 @@ class SemanticSegmentationLabelStore(LabelStore):
         self.label_uri = join(uri, 'labels.tif')
         self.score_uri = join(uri, 'scores.tif')
         self.hits_uri = join(uri, 'pixel_hits.npy')
-        self.vector_output_root_uri = join(uri, 'vector_output')
 
-        self.vector_output = vector_output
+        self.vector_outputs = vector_outputs
         self.extent = extent
         self.crs_transformer = crs_transformer
         self.tmp_dir = tmp_dir
@@ -189,8 +188,8 @@ class SemanticSegmentationLabelStore(LabelStore):
                 labels,
                 chip_sz=self.rasterio_block_size)
 
-        if self.vector_output:
-            self.write_vector_output(labels)
+        if self.vector_outputs:
+            self.write_vector_outputs(labels)
 
         sync_to_dir(local_root, self.root_uri)
 
@@ -257,13 +256,45 @@ class SemanticSegmentationLabelStore(LabelStore):
                         for i, band in enumerate(rgb_labels, start=1):
                             dataset.write_band(i, band, window=window)
 
-    def write_vector_output(self, labels: SemanticSegmentationLabels) -> None:
+    def _labels_to_full_label_arr(
+            self, labels: SemanticSegmentationLabels) -> np.ndarray:
+        """Get an array of labels covering the full extent."""
+        try:
+            label_arr = labels.get_label_arr(self.extent)
+            return label_arr
+        except KeyError:
+            pass
+
+        # construct the array from individual windows
+        windows = labels.get_windows()
+
+        # value for pixels not convered by any windows
+        try:
+            default_class_id = self.class_config.get_null_class_id()
+        except ValueError:
+            # Set it to a high value so that it doesn't match any class's id.
+            # assumption: num_classes < 256
+            default_class_id = 255
+
+        label_arr = np.full(
+            self.extent.size, fill_value=default_class_id, dtype=np.uint8)
+
+        for w in windows:
+            w = w.intersection(self.extent)
+            ymin, xmin, ymax, xmax = w
+            arr = labels.get_label_arr(w)
+            label_arr[ymin:ymax, xmin:xmax] = arr
+        return label_arr
+
+    def write_vector_outputs(self, labels: SemanticSegmentationLabels) -> None:
+        """Write vectorized outputs for all configs in self.vector_outputs."""
         import mask_to_polygons.vectorification as vectorification
         import mask_to_polygons.processing.denoise as denoise
 
         log.info('Writing vector output to disk.')
-        label_arr = labels.get_label_arr(self.extent)
-        with click.progressbar(self.vector_output) as bar:
+
+        label_arr = self._labels_to_full_label_arr(labels)
+        with click.progressbar(self.vector_outputs) as bar:
             for i, vo in enumerate(bar):
                 if vo.uri is None:
                     log.info(f'Skipping VectorOutputConfig at index {i} '
@@ -272,8 +303,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                 uri = get_local_path(vo.uri, self.tmp_dir)
                 denoise_radius = vo.denoise
                 mode = vo.get_mode()
-                class_id = vo.class_id
-                class_mask = np.array(label_arr == class_id, dtype=np.uint8)
+                class_mask = (label_arr == vo.class_id).astype(np.uint8)
 
                 def transform(x, y):
                     return self.crs_transformer.pixel_to_map((x, y))
