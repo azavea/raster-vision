@@ -113,7 +113,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             SemanticSegmentationLabels
         """
         if self.label_raster_source is None:
-            raise Exception(
+            raise FileNotFoundError(
                 f'Raster source at {self.label_uri} does not exist.')
 
         extent = self.label_raster_source.get_extent()
@@ -135,7 +135,8 @@ class SemanticSegmentationLabelStore(LabelStore):
         """
         if self.score_raster_source is None:
             raise Exception(
-                f'Raster source at {self.score_uri} does not exist.')
+                f'Raster source at {self.score_uri} does not exist '
+                'or is not consistent with the current params.')
 
         extent = self.score_raster_source.get_extent()
         score_arr = self.score_raster_source.get_chip(extent)
