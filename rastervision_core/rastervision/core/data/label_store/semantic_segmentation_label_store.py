@@ -142,7 +142,12 @@ class SemanticSegmentationLabelStore(LabelStore):
         score_arr = self.score_raster_source.get_chip(extent)
         # (H, W, C) --> (C, H, W)
         score_arr = score_arr.transpose(2, 0, 1)
-        hits_arr = np.load(self.hits_uri)
+        try:
+            hits_arr = np.load(self.hits_uri)
+        except FileNotFoundError:
+            log.warn(f'Pixel hits array not found at {self.hits_uri}.'
+                     'Setting all pixels to 1.')
+            hits_arr = np.ones(score_arr.shape[-2:], dtype=np.uint8)
 
         # convert to float
         if score_arr.dtype == np.uint8:
