@@ -102,7 +102,7 @@ class SemanticSegmentationLabels(Labels):
         return self
 
     def __eq__(self, other: 'SemanticSegmentationLabels') -> bool:
-        if self.smooth == other.smooth:
+        if self.smooth != other.smooth:
             return False
 
         if not self.smooth:
@@ -123,7 +123,7 @@ class SemanticSegmentationLabels(Labels):
         coords_equal = (self.ymin, self.xmin) == (other.ymin, other.xmin)
         if not (extents_equal and coords_equal):
             return False
-        scores_equal = np.array_equal(self.pixel_scores, other.pixel_scores)
+        scores_equal = np.allclose(self.pixel_scores, other.pixel_scores)
         hits_equal = np.array_equal(self.pixel_hits, other.pixel_hits)
         return (scores_equal and hits_equal)
 
