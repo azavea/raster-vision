@@ -82,6 +82,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         self.label_raster_source = None
         self.score_raster_source = None
+
         if file_exists(self.label_uri):
             cfg = RasterioSourceConfig(uris=[self.label_uri])
             self.label_raster_source = cfg.build(tmp_dir)
@@ -182,6 +183,12 @@ class SemanticSegmentationLabelStore(LabelStore):
             'blockysize': self.rasterio_block_size
         }
 
+        # if old scores exist, combine them with the new ones
+        if self.score_raster_source:
+            log.info('Old scores found. Merging with current scores.')
+            old_labels = self.get_scores()
+            labels += old_labels
+
         self.write_discrete_raster_output(
             out_smooth_profile, get_local_path(self.label_uri, self.tmp_dir),
             labels)
@@ -215,11 +222,6 @@ class SemanticSegmentationLabelStore(LabelStore):
             windows = [self.extent]
         else:
             windows = labels.get_windows(chip_sz=chip_sz)
-
-        # if old scores exist, combine them with the new ones
-        if self.score_raster_source:
-            old_labels = self.get_scores()
-            labels += old_labels
 
         log.info('Writing smooth labels to disk.')
         with rio.open(scores_path, 'w', **out_smooth_profile) as dataset:
