@@ -9,7 +9,7 @@ class CastTransformer(RasterTransformer):
     """Removes Cast values from float raster
     """
 
-    def __init__(self, to_dtype: str = 'np.uint8'):
+    def __init__(self, to_dtype: str):
         """Construct a new CastTransformer.
 
         Args:
