@@ -17,6 +17,9 @@ class CastTransformer(RasterTransformer):
         """
         self.to_dtype = np.dtype(to_dtype)
 
+    def __repr__(self):
+        return f'CastTransformer(to_dtype="{self.to_dtype}")'
+
     def transform(self, chip: np.ndarray,
                   channel_order: Optional[list] = None) -> np.ndarray:
         """Cast chip to self.to_dtype.
