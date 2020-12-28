@@ -23,7 +23,7 @@ def classification_transformer(inp: Tuple[Any, Any],
                                ) -> Tuple[np.ndarray, np.ndarray]:
     """Apply transform to image only."""
     x, y = inp
-    x, y = np.array(x), np.array(y)
+    x, y = np.array(x), np.array(y, dtype=np.long)
     if transform is not None:
         out = transform(image=x)
         x = out['image']
@@ -35,7 +35,7 @@ def regression_transformer(inp: Tuple[Any, Any],
                            ) -> Tuple[np.ndarray, np.ndarray]:
     """Apply transform to image only."""
     x, y = inp
-    x, y = np.array(x), np.array(y)
+    x, y = np.array(x), np.array(y, dtype=np.float32)
     if transform is not None:
         out = transform(image=x)
         x = out['image']
@@ -166,7 +166,7 @@ def semantic_segmentation_transformer(inp: Tuple[Any, Any],
                                       ) -> Tuple[np.ndarray, np.ndarray]:
     """Apply transform to image and mask."""
     x, y = inp
-    x, y = np.array(x), np.array(y)
+    x, y = np.array(x), np.array(y, dtype=np.long)
     if transform is not None:
         out = transform(image=x, mask=y)
         x, y = out['image'], out['mask']

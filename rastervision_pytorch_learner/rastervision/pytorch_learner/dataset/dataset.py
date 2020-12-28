@@ -58,7 +58,7 @@ class AlbumentationsDataset(Dataset):
         if self.to_pytorch:
             # (H, W, C) --> (C, H, W)
             x = torch.from_numpy(x).permute(2, 0, 1).float()
-            y = torch.from_numpy(y).long()
+            y = torch.from_numpy(y)
 
         return x, y
 

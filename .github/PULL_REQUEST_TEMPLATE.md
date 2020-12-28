@@ -4,7 +4,6 @@ Brief description of what this PR does, and why it is needed.
 
 ### Checklist
 
-- [ ] Updated `docs/changelog.rst`
 - [ ] Added `needs-backport` label if PR is bug fix that applies to previous minor release
 - [ ] Ran scripts/format_code and committed any changes
 - [ ] Documentation updated if needed
