@@ -38,7 +38,7 @@ class PyTorchChipClassification(PyTorchLearnerBackend):
         return PyTorchChipClassificationSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 
-    def predict(self, chips, windows):
+    def predict(self, scene, chips, windows):
         if self.learner is None:
             self.load_model()
 

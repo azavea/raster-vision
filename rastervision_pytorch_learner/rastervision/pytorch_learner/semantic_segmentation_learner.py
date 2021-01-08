@@ -137,6 +137,18 @@ class SemanticSegmentationLearner(Learner):
             return x['out']
         return x
 
+    def predict(self, x: torch.Tensor, raw_out: bool = False) -> torch.Tensor:
+        x = self.to_batch(x).float()
+        x = self.to_device(x, self.device)
+        with torch.no_grad():
+            out = self.model(x)
+            out = self.post_forward(out)
+            out = out.softmax(dim=1)
+            if not raw_out:
+                out = self.prob_to_pred(out)
+        out = self.to_device(out, 'cpu')
+        return out
+
     def prob_to_pred(self, x):
         return x.argmax(1)
 

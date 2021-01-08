@@ -104,6 +104,9 @@ class Box():
     def __repr__(self):  # pragma: no cover
         return f'{type(self).__name__}{self.tuple_format()}'
 
+    def __hash__(self):
+        return hash(self.tuple_format())
+
     def geojson_coordinates(self):
         """Return Box as GeoJSON coordinates."""
         # Compass directions:

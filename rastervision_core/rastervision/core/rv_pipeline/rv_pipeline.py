@@ -182,7 +182,7 @@ class RVPipeline(Pipeline):
         def predict_batch(chips, windows):
             nonlocal labels
             chips = np.array(chips)
-            batch_labels = backend.predict(chips, windows)
+            batch_labels = backend.predict(scene, chips, windows)
             batch_labels = self.post_process_batch(windows, chips,
                                                    batch_labels)
             labels += batch_labels

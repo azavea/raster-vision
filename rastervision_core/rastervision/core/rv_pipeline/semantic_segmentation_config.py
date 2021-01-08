@@ -3,7 +3,8 @@ from enum import Enum
 
 from rastervision.pipeline.config import (register_config, Config, ConfigError,
                                           Field)
-from rastervision.core.rv_pipeline import RVPipelineConfig
+from rastervision.core.rv_pipeline.rv_pipeline_config import (RVPipelineConfig,
+                                                              PredictOptions)
 from rastervision.core.data import SemanticSegmentationLabelStoreConfig
 from rastervision.core.evaluation import SemanticSegmentationEvaluatorConfig
 
@@ -57,10 +58,22 @@ class SemanticSegmentationChipOptions(Config):
          'the sliding_window method.'))
 
 
+@register_config('semantic_segmentation_predict_options')
+class SemanticSegmentationPredictOptions(PredictOptions):
+    stride: Optional[int] = Field(
+        None,
+        description=
+        'Stride of windows across image. Allows aggregating multiple '
+        'predictions for each pixel if less than the chip size and outputting '
+        'smooth labels. Defaults to predict_chip_sz.')
+
+
 @register_config('semantic_segmentation')
 class SemanticSegmentationConfig(RVPipelineConfig):
-    chip_options: SemanticSegmentationChipOptions = SemanticSegmentationChipOptions(
-    )
+    chip_options: SemanticSegmentationChipOptions = \
+        SemanticSegmentationChipOptions()
+    predict_options: SemanticSegmentationPredictOptions = \
+        SemanticSegmentationPredictOptions()
 
     channel_display_groups: Optional[Union[dict, list, tuple]] = Field(
         None,

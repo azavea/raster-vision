@@ -9,10 +9,16 @@ from rastervision.core.analyzer import StatsAnalyzerConfig
 from rastervision.core.backend import BackendConfig
 from rastervision.core.evaluation import EvaluatorConfig
 from rastervision.core.analyzer import AnalyzerConfig
-from rastervision.pipeline.config import register_config, Field
+from rastervision.pipeline.config import (register_config, Field, Config)
 
 if TYPE_CHECKING:
     from rastervision.core.backend.backend import Backend  # noqa
+
+
+@register_config('predict_options')
+class PredictOptions(Config):
+    # TODO: predict_chip_sz and predict_batch_sz should probably be moved here
+    pass
 
 
 @register_config('rv_pipeline')

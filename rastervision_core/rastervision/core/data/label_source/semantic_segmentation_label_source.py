@@ -93,7 +93,7 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         Returns:
              SemanticSegmentationLabels
         """
-        labels = SemanticSegmentationLabels()
+        labels = SemanticSegmentationLabels.build()
         window = window or self.raster_source.get_extent()
         raw_labels = self.raster_source.get_chip(window)
         label_arr = (np.squeeze(raw_labels) if self.class_transformer is None
@@ -102,7 +102,7 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         label_arr = fill_edge(label_arr, window,
                               self.raster_source.get_extent(),
                               self.null_class_id)
-        labels.set_label_arr(window, label_arr)
+        labels[window] = label_arr
         return labels
 
     def _subcomponents_to_activate(self):
@@ -115,4 +115,4 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         pass
 
     def __getitem__(self, window: Box) -> np.ndarray:
-        return self.get_labels(window).get_label_arr(window)
+        return self.get_labels(window)[window]
