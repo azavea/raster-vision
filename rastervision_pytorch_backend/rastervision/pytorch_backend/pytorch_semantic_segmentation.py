@@ -94,6 +94,6 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
 
         labels = scene.label_store.empty_labels()
         for out, window in zip(batch_out, windows):
-            labels.add_window(window, out)
+            labels[window] = out
 
         return labels

@@ -93,7 +93,7 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         Returns:
              SemanticSegmentationLabels
         """
-        labels = SemanticSegmentationLabels()
+        labels = SemanticSegmentationLabels.build()
         window = window or self.raster_source.get_extent()
         raw_labels = self.raster_source.get_chip(window)
         label_arr = (np.squeeze(raw_labels) if self.class_transformer is None

@@ -124,7 +124,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         else:
             label_arr = self.class_transformer.rgb_to_class(raw_labels)
 
-        labels = SemanticSegmentationLabels()
+        labels = self.empty_labels()
         labels[extent] = label_arr
         return labels
 
@@ -337,7 +337,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
     def empty_labels(self) -> SemanticSegmentationLabels:
         """Returns an empty SemanticSegmentationLabels object."""
-        labels = SemanticSegmentationLabels(
+        labels = SemanticSegmentationLabels.build(
             smooth=self.smooth_output,
             extent=self.extent,
             num_classes=len(self.class_config))
