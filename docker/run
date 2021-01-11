@@ -11,6 +11,15 @@ while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DOCKER_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 REPO_ROOT="$( cd -P "$( dirname "$DOCKER_DIR" )" && pwd )"
 
+DOCKER_VERSION=$(docker version -f "{{.Server.Version}}")
+DOCKER_MAJOR=$(echo "$DOCKER_VERSION"| cut -d'.' -f 1)
+
+if [ "${DOCKER_MAJOR}" -ge 19 ]; then
+    runtime="--gpus=all"
+else
+    runtime="--runtime=nvidia"
+fi
+
 function usage() {
     echo -n \
          "Usage: $(basename "$0") <options> <command>
@@ -61,7 +70,7 @@ do
         shift # past argument
         ;;
         --gpu)
-        RUNTIME="--runtime=nvidia"
+        RUNTIME=$runtime
         shift # past argument
         ;;
         --name)
