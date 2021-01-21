@@ -9,6 +9,7 @@ import click
 from rastervision.pipeline.file_system import (
     list_paths, download_or_copy, file_exists, make_dir, file_to_json)
 
+# Configuration for the examples. Each key is the name of the example.
 cfg = [
     {
         'key':
@@ -181,10 +182,16 @@ def test():
 @test.command()
 @click.argument('output_dir')
 @click.argument('keys', nargs=-1)
-@click.option('--test', is_flag=True)
+@click.option('--test', is_flag=True, help='Do short test run')
 @click.option('--remote', is_flag=True)
-@click.option('--commands')
+@click.option(
+    '--commands', help='Space-separated string with RV commansd to run.')
 def run(output_dir, keys, test, remote, commands):
+    """Run RV on a set of examples.
+
+    Args:
+        keys: the names of the examples.
+    """
     run_all = len(keys) == 0
     validate_keys(keys)
 
@@ -231,6 +238,7 @@ def _collect(key, root_uri, output_dir, collect_dir, get_model_bundle=False):
 @click.option('--remote', is_flag=True)
 @click.option('--get-model-bundle', is_flag=True)
 def collect(output_dir, collect_dir, keys, remote, get_model_bundle):
+    """Download eval and optionally model bundle for each example."""
     run_all = len(keys) == 0
     validate_keys(keys)
 
@@ -270,6 +278,7 @@ def _predict(key, sample_img, collect_dir):
 @click.argument('collect_dir')
 @click.argument('keys', nargs=-1)
 def predict(collect_dir, keys):
+    """Test model bundles using predict command using output of collect command."""
     run_all = len(keys) == 0
     validate_keys(keys)
 
