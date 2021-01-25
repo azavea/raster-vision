@@ -173,7 +173,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         local_root = get_local_path(self.root_uri, self.tmp_dir)
         make_dir(local_root)
 
-        out_smooth_profile = {
+        out_profile = {
             'driver': 'GTiff',
             'height': self.extent.ymax,
             'width': self.extent.xmax,
@@ -190,12 +190,11 @@ class SemanticSegmentationLabelStore(LabelStore):
             labels += old_labels
 
         self.write_discrete_raster_output(
-            out_smooth_profile, get_local_path(self.label_uri, self.tmp_dir),
-            labels)
+            out_profile, get_local_path(self.label_uri, self.tmp_dir), labels)
 
         if self.smooth_output:
             self.write_smooth_raster_output(
-                out_smooth_profile,
+                out_profile,
                 get_local_path(self.score_uri, self.tmp_dir),
                 get_local_path(self.hits_uri, self.tmp_dir),
                 labels,
@@ -207,14 +206,14 @@ class SemanticSegmentationLabelStore(LabelStore):
         sync_to_dir(local_root, self.root_uri)
 
     def write_smooth_raster_output(self,
-                                   out_smooth_profile: dict,
+                                   out_profile: dict,
                                    scores_path: str,
                                    hits_path: str,
                                    labels: SemanticSegmentationLabels,
                                    chip_sz: Optional[int] = None) -> None:
         dtype = np.uint8 if self.smooth_as_uint8 else np.float32
 
-        out_smooth_profile.update({
+        out_profile.update({
             'count': labels.num_classes,
             'dtype': dtype,
         })
@@ -224,7 +223,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             windows = labels.get_windows(chip_sz=chip_sz)
 
         log.info('Writing smooth labels to disk.')
-        with rio.open(scores_path, 'w', **out_smooth_profile) as dataset:
+        with rio.open(scores_path, 'w', **out_profile) as dataset:
             with click.progressbar(windows) as bar:
                 for window in bar:
                     window, _ = self._clip_to_extent(self.extent, window)
@@ -236,16 +235,16 @@ class SemanticSegmentationLabelStore(LabelStore):
         np.save(hits_path, labels.pixel_hits)
 
     def write_discrete_raster_output(
-            self, out_smooth_profile: dict, path: str,
+            self, out_profile: dict, path: str,
             labels: SemanticSegmentationLabels) -> None:
 
         num_bands = 1 if self.class_transformer is None else 3
-        out_smooth_profile.update({'count': num_bands, 'dtype': np.uint8})
+        out_profile.update({'count': num_bands, 'dtype': np.uint8})
 
         windows = labels.get_windows()
 
         log.info('Writing labels to disk.')
-        with rio.open(path, 'w', **out_smooth_profile) as dataset:
+        with rio.open(path, 'w', **out_profile) as dataset:
             with click.progressbar(windows) as bar:
                 for window in bar:
                     label_arr = labels.get_label_arr(window)
@@ -266,7 +265,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         except KeyError:
             pass
 
-        # construct the array from individual windows
+        # we will construct the array from individual windows
         windows = labels.get_windows()
 
         # value for pixels not convered by any windows
