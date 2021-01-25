@@ -107,7 +107,7 @@ fi
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    docker run ${RUNTIME} ${NAME} --rm -it \
+    docker run ${RUNTIME} ${NAME} --rm --ipc=host -it \
         -v "${HOME}"/.rastervision:/root/.rastervision \
         -v ${REPO_ROOT}/:/opt/src/ \
         -v ${RASTER_VISION_DATA_DIR}:/opt/data \
