@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 from os.path import join
 import logging
 import click
@@ -227,7 +227,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         with rio.open(scores_path, 'w', **out_smooth_profile) as dataset:
             with click.progressbar(windows) as bar:
                 for window in bar:
-                    window = window.intersection(self.extent)
+                    window, _ = self._clip_to_extent(self.extent, window)
                     score_arr = labels.get_score_arr(window)
                     if self.smooth_as_uint8:
                         score_arr *= 255
@@ -252,8 +252,9 @@ class SemanticSegmentationLabelStore(LabelStore):
         with rio.open(path, 'w', **out_smooth_profile) as dataset:
             with click.progressbar(windows) as bar:
                 for window in bar:
-                    window = window.intersection(self.extent)
                     label_arr = labels.get_label_arr(window)
+                    window, label_arr = self._clip_to_extent(
+                        self.extent, window, label_arr)
                     window = window.rasterio_format()
                     if self.class_transformer is None:
                         dataset.write_band(1, label_arr, window=window)
@@ -288,9 +289,9 @@ class SemanticSegmentationLabelStore(LabelStore):
             self.extent.size, fill_value=default_class_id, dtype=np.uint8)
 
         for w in windows:
-            w = w.intersection(self.extent)
             ymin, xmin, ymax, xmax = w
             arr = labels.get_label_arr(w)
+            w, arr = self._clip_to_extent(self.extent, w, arr)
             label_arr[ymin:ymax, xmin:xmax] = arr
         return label_arr
 
@@ -342,3 +343,14 @@ class SemanticSegmentationLabelStore(LabelStore):
             extent=self.extent,
             num_classes=len(self.class_config))
         return labels
+
+    def _clip_to_extent(self,
+                        extent: Box,
+                        window: Box,
+                        arr: Optional[np.ndarray] = None
+                        ) -> Tuple[Box, np.ndarray]:
+        clipped_window = window.intersection(extent)
+        if arr is not None:
+            h, w = clipped_window.size
+            arr = arr[:h, :w]
+        return clipped_window, arr
