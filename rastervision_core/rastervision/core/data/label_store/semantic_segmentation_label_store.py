@@ -230,12 +230,8 @@ class SemanticSegmentationLabelStore(LabelStore):
                     window, _ = self._clip_to_extent(self.extent, window)
                     score_arr = labels.get_score_arr(window)
                     if self.smooth_as_uint8:
-                        score_arr *= 255
-                        score_arr = np.around(score_arr, out=score_arr)
-                        score_arr = score_arr.astype(dtype)
-                    window = window.rasterio_format()
-                    for i, class_scores in enumerate(score_arr, start=1):
-                        dataset.write_band(i, class_scores, window=window)
+                        score_arr = self._scores_to_uint8(score_arr)
+                    self._write_array(dataset, window, score_arr)
         # save pixel hits too
         np.save(hits_path, labels.pixel_hits)
 
@@ -255,15 +251,11 @@ class SemanticSegmentationLabelStore(LabelStore):
                     label_arr = labels.get_label_arr(window)
                     window, label_arr = self._clip_to_extent(
                         self.extent, window, label_arr)
-                    window = window.rasterio_format()
-                    if self.class_transformer is None:
-                        dataset.write_band(1, label_arr, window=window)
-                    else:
-                        rgb_labels = self.class_transformer.class_to_rgb(
+                    if self.class_transformer is not None:
+                        label_arr = self.class_transformer.class_to_rgb(
                             label_arr)
-                        rgb_labels = rgb_labels.transpose(2, 0, 1)
-                        for i, band in enumerate(rgb_labels, start=1):
-                            dataset.write_band(i, band, window=window)
+                        label_arr = label_arr.transpose(2, 0, 1)
+                    self._write_array(dataset, window, label_arr)
 
     def _labels_to_full_label_arr(
             self, labels: SemanticSegmentationLabels) -> np.ndarray:
@@ -344,6 +336,18 @@ class SemanticSegmentationLabelStore(LabelStore):
             num_classes=len(self.class_config))
         return labels
 
+    def _write_array(self, dataset: rio.DatasetReader, window: Box,
+                     arr: np.ndarray) -> None:
+        """Write array out to a rasterio dataset. Array must be of shape
+        (C, H, W).
+        """
+        window = window.rasterio_format()
+        if len(arr.shape) == 2:
+            dataset.write_band(1, arr, window=window)
+        else:
+            for i, band in enumerate(arr, start=1):
+                dataset.write_band(i, band, window=window)
+
     def _clip_to_extent(self,
                         extent: Box,
                         window: Box,
@@ -354,3 +358,10 @@ class SemanticSegmentationLabelStore(LabelStore):
             h, w = clipped_window.size
             arr = arr[:h, :w]
         return clipped_window, arr
+
+    def _scores_to_uint8(self, score_arr: np.ndarray) -> np.ndarray:
+        """Quantize scores to uint8 (0-255)."""
+        score_arr *= 255
+        score_arr = np.around(score_arr, out=score_arr)
+        score_arr = score_arr.astype(np.uint8)
+        return score_arr
