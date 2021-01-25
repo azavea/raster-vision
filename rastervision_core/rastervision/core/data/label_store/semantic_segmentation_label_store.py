@@ -351,7 +351,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                         extent: Box,
                         window: Box,
                         arr: Optional[np.ndarray] = None
-                        ) -> Tuple[Box, np.ndarray]:
+                        ) -> Tuple[Box, Optional[np.ndarray]]:
         clipped_window = window.intersection(extent)
         if arr is not None:
             h, w = clipped_window.size
