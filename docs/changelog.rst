@@ -43,6 +43,7 @@ Bug Fixes
 * Update all relevant saved URIs in config before instantiating Pipeline `#993 <https://github.com/azavea/raster-vision/pull/993>`_
 * Pass verbose flag to batch jobs `#988 <https://github.com/azavea/raster-vision/pull/988>`_
 * Fix: Ensure Integer class_id `#990 <https://github.com/azavea/raster-vision/pull/990>`_
+* Use ``--ipc=host`` by default when running the docker container `#1077 <https://github.com/azavea/raster-vision/pull/1077>`_
 
 Raster Vision 0.12
 -------------------
