@@ -1,15 +1,18 @@
 import unittest
 from os.path import join
 from pydantic import ValidationError
+from tempfile import NamedTemporaryFile
 
 import numpy as np
 import rasterio
 from rasterio.enums import ColorInterp
 
 from rastervision.core import (RasterStats)
+from rastervision.core.box import Box
 from rastervision.core.utils.misc import save_img
 from rastervision.core.data import (ChannelOrderError, RasterioSourceConfig,
-                                    StatsTransformerConfig, CropOffsets)
+                                    StatsTransformerConfig, CropOffsets,
+                                    fill_overflow)
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path
@@ -306,19 +309,61 @@ class TestRasterioSource(unittest.TestCase):
         self.assertRaises(
             ValidationError,
             lambda: RasterioSourceConfig(uris=[img_path],
-                                         extent_crop=extent_crop))
+                                            extent_crop=extent_crop))
 
         extent_crop = CropOffsets(skip_left=.5, skip_right=.5)
         self.assertRaises(
             ValidationError,
             lambda: RasterioSourceConfig(uris=[img_path],
-                                         extent_crop=extent_crop))
+                                            extent_crop=extent_crop))
 
         # test extent_crop=None
         try:
             _ = RasterioSourceConfig(uris=[img_path], extent_crop=None)  # noqa
         except Exception:
             self.fail('extent_crop=None caused an error.')
+
+    def test_fill_overflow(self):
+        extent = Box(10, 10, 90, 90)
+        window = Box(0, 0, 100, 100)
+        arr = np.ones((100, 100), dtype=np.uint8)
+        out = fill_overflow(extent, window, arr)
+        mask = np.zeros_like(arr).astype(np.bool)
+        mask[10:90, 10:90] = 1
+        self.assertTrue(np.all(out[mask] == 1))
+        self.assertTrue(np.all(out[~mask] == 0))
+
+        window = Box(0, 0, 80, 100)
+        arr = np.ones((80, 100), dtype=np.uint8)
+        out = fill_overflow(extent, window, arr)
+        mask = np.zeros((80, 100), dtype=np.bool)
+        mask[10:90, 10:90] = 1
+        self.assertTrue(np.all(out[mask] == 1))
+        self.assertTrue(np.all(out[~mask] == 0))
+
+    def test_extent_crop_overflow(self):
+        f = 1 / 10
+        arr = np.ones((100, 100), dtype=np.uint8)
+        mask = np.zeros_like(arr).astype(np.bool)
+        mask[10:90, 10:90] = 1
+        with NamedTemporaryFile('wb') as fp:
+            uri = fp.name
+            with rasterio.open(
+                    uri,
+                    'w',
+                    driver='GTiff',
+                    height=100,
+                    width=100,
+                    count=1,
+                    dtype=np.uint8) as ds:
+                ds.write_band(1, arr)
+            cfg = RasterioSourceConfig(uris=[uri], extent_crop=(f, f, f, f))
+            rs = cfg.build(tmp_dir=self.tmp_dir)
+            with rs.activate():
+                out = rs.get_chip(Box(0, 0, 100, 100))[..., 0]
+
+        self.assertTrue(np.all(out[mask] == 1))
+        self.assertTrue(np.all(out[~mask] == 0))
 
 
 if __name__ == '__main__':

@@ -73,6 +73,26 @@ def load_window(image_dataset, window=None, is_masked=False):
     return im
 
 
+def fill_overflow(extent: Box,
+                  window: Box,
+                  arr: np.ndarray,
+                  fill_value: int = 0) -> np.ndarray:
+    """Given a window and corresponding array of values, if the window
+    overflows the extent, fill the overflowing regions with fill_value.
+    """
+    top_overflow = max(0, extent.ymin - window.ymin)
+    bottom_overflow = max(0, window.ymax - extent.ymax)
+    left_overflow = max(0, extent.xmin - window.xmin)
+    right_overflow = max(0, window.xmax - extent.xmax)
+
+    h, w = arr.shape[:2]
+    arr[:top_overflow] = fill_value
+    arr[h - bottom_overflow:] = fill_value
+    arr[:, :left_overflow] = fill_value
+    arr[:, w - right_overflow:] = fill_value
+    return arr
+
+
 class RasterioSource(ActivateMixin, RasterSource):
     def __init__(self,
                  uris,
@@ -175,14 +195,17 @@ class RasterioSource(ActivateMixin, RasterSource):
         """Return the numpy.dtype of this scene"""
         return self.dtype
 
-    def _get_chip(self, window):
+    def _get_chip(self, window: Box) -> np.ndarray:
         if self.image_dataset is None:
             raise ActivationError('RasterSource must be activated before use')
         shifted_window = self._get_shifted_window(window)
-        return load_window(
+        chip = load_window(
             self.image_dataset,
             window=shifted_window.rasterio_format(),
             is_masked=self.is_masked)
+        if self.extent_crop is not None:
+            chip = fill_overflow(self.get_extent(), window, chip)
+        return chip
 
     def _activate(self):
         # Download images to temporary directory and delete them when done.
