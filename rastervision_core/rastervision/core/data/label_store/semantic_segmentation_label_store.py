@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 from os.path import join
 import logging
 import click
@@ -173,7 +173,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         local_root = get_local_path(self.root_uri, self.tmp_dir)
         make_dir(local_root)
 
-        out_smooth_profile = {
+        out_profile = {
             'driver': 'GTiff',
             'height': self.extent.ymax,
             'width': self.extent.xmax,
@@ -190,12 +190,11 @@ class SemanticSegmentationLabelStore(LabelStore):
             labels += old_labels
 
         self.write_discrete_raster_output(
-            out_smooth_profile, get_local_path(self.label_uri, self.tmp_dir),
-            labels)
+            out_profile, get_local_path(self.label_uri, self.tmp_dir), labels)
 
         if self.smooth_output:
             self.write_smooth_raster_output(
-                out_smooth_profile,
+                out_profile,
                 get_local_path(self.score_uri, self.tmp_dir),
                 get_local_path(self.hits_uri, self.tmp_dir),
                 labels,
@@ -207,14 +206,14 @@ class SemanticSegmentationLabelStore(LabelStore):
         sync_to_dir(local_root, self.root_uri)
 
     def write_smooth_raster_output(self,
-                                   out_smooth_profile: dict,
+                                   out_profile: dict,
                                    scores_path: str,
                                    hits_path: str,
                                    labels: SemanticSegmentationLabels,
                                    chip_sz: Optional[int] = None) -> None:
         dtype = np.uint8 if self.smooth_as_uint8 else np.float32
 
-        out_smooth_profile.update({
+        out_profile.update({
             'count': labels.num_classes,
             'dtype': dtype,
         })
@@ -224,45 +223,38 @@ class SemanticSegmentationLabelStore(LabelStore):
             windows = labels.get_windows(chip_sz=chip_sz)
 
         log.info('Writing smooth labels to disk.')
-        with rio.open(scores_path, 'w', **out_smooth_profile) as dataset:
+        with rio.open(scores_path, 'w', **out_profile) as dataset:
             with click.progressbar(windows) as bar:
                 for window in bar:
-                    window = window.intersection(self.extent)
+                    window, _ = self._clip_to_extent(self.extent, window)
                     score_arr = labels.get_score_arr(window)
                     if self.smooth_as_uint8:
-                        score_arr *= 255
-                        score_arr = np.around(score_arr, out=score_arr)
-                        score_arr = score_arr.astype(dtype)
-                    window = window.rasterio_format()
-                    for i, class_scores in enumerate(score_arr, start=1):
-                        dataset.write_band(i, class_scores, window=window)
+                        score_arr = self._scores_to_uint8(score_arr)
+                    self._write_array(dataset, window, score_arr)
         # save pixel hits too
         np.save(hits_path, labels.pixel_hits)
 
     def write_discrete_raster_output(
-            self, out_smooth_profile: dict, path: str,
+            self, out_profile: dict, path: str,
             labels: SemanticSegmentationLabels) -> None:
 
         num_bands = 1 if self.class_transformer is None else 3
-        out_smooth_profile.update({'count': num_bands, 'dtype': np.uint8})
+        out_profile.update({'count': num_bands, 'dtype': np.uint8})
 
         windows = labels.get_windows()
 
         log.info('Writing labels to disk.')
-        with rio.open(path, 'w', **out_smooth_profile) as dataset:
+        with rio.open(path, 'w', **out_profile) as dataset:
             with click.progressbar(windows) as bar:
                 for window in bar:
-                    window = window.intersection(self.extent)
                     label_arr = labels.get_label_arr(window)
-                    window = window.rasterio_format()
-                    if self.class_transformer is None:
-                        dataset.write_band(1, label_arr, window=window)
-                    else:
-                        rgb_labels = self.class_transformer.class_to_rgb(
+                    window, label_arr = self._clip_to_extent(
+                        self.extent, window, label_arr)
+                    if self.class_transformer is not None:
+                        label_arr = self.class_transformer.class_to_rgb(
                             label_arr)
-                        rgb_labels = rgb_labels.transpose(2, 0, 1)
-                        for i, band in enumerate(rgb_labels, start=1):
-                            dataset.write_band(i, band, window=window)
+                        label_arr = label_arr.transpose(2, 0, 1)
+                    self._write_array(dataset, window, label_arr)
 
     def _labels_to_full_label_arr(
             self, labels: SemanticSegmentationLabels) -> np.ndarray:
@@ -273,7 +265,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         except KeyError:
             pass
 
-        # construct the array from individual windows
+        # we will construct the array from individual windows
         windows = labels.get_windows()
 
         # value for pixels not convered by any windows
@@ -288,9 +280,9 @@ class SemanticSegmentationLabelStore(LabelStore):
             self.extent.size, fill_value=default_class_id, dtype=np.uint8)
 
         for w in windows:
-            w = w.intersection(self.extent)
             ymin, xmin, ymax, xmax = w
             arr = labels.get_label_arr(w)
+            w, arr = self._clip_to_extent(self.extent, w, arr)
             label_arr[ymin:ymax, xmin:xmax] = arr
         return label_arr
 
@@ -342,3 +334,33 @@ class SemanticSegmentationLabelStore(LabelStore):
             extent=self.extent,
             num_classes=len(self.class_config))
         return labels
+
+    def _write_array(self, dataset: rio.DatasetReader, window: Box,
+                     arr: np.ndarray) -> None:
+        """Write array out to a rasterio dataset. Array must be of shape
+        (C, H, W).
+        """
+        window = window.rasterio_format()
+        if len(arr.shape) == 2:
+            dataset.write_band(1, arr, window=window)
+        else:
+            for i, band in enumerate(arr, start=1):
+                dataset.write_band(i, band, window=window)
+
+    def _clip_to_extent(self,
+                        extent: Box,
+                        window: Box,
+                        arr: Optional[np.ndarray] = None
+                        ) -> Tuple[Box, Optional[np.ndarray]]:
+        clipped_window = window.intersection(extent)
+        if arr is not None:
+            h, w = clipped_window.size
+            arr = arr[:h, :w]
+        return clipped_window, arr
+
+    def _scores_to_uint8(self, score_arr: np.ndarray) -> np.ndarray:
+        """Quantize scores to uint8 (0-255)."""
+        score_arr *= 255
+        score_arr = np.around(score_arr, out=score_arr)
+        score_arr = score_arr.astype(np.uint8)
+        return score_arr
