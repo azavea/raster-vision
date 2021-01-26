@@ -95,7 +95,7 @@ fi
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    docker run --shm-size 8G ${RUNTIME} ${NAME} --rm -it \
+    docker run ${RUNTIME} ${NAME} --rm --ipc=host -it \
         -v "${HOME}"/.rastervision:/root/.rastervision \
         -v ${REPO_ROOT}/rastervision_{{cookiecutter.project_name}}:/opt/src/rastervision_{{cookiecutter.project_name}} \
         -v ${DATA_DIR}:/opt/data \
