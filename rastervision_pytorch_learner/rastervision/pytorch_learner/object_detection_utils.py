@@ -341,7 +341,12 @@ def resnet_fpn_backbone(backbone_name, pretrained):
         if 'layer2' not in name and 'layer3' not in name and 'layer4' not in name:
             parameter.requires_grad_(False)
 
-    return_layers = {'layer1': 0, 'layer2': 1, 'layer3': 2, 'layer4': 3}
+    return_layers = {
+        'layer1': '0',
+        'layer2': '1',
+        'layer3': '2',
+        'layer4': '3'
+    }
 
     out_channels = 256
     in_channels_list = get_out_channels(backbone)

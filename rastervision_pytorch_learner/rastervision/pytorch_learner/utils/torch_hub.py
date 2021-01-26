@@ -77,7 +77,7 @@ def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
         Any: The output from calling the entrypoint.
     """
     torch.hub.set_dir(tmp_dir)
-    out = torch.hub.load(github=repo, model=entrypoint, *args, **kwargs)
+    out = torch.hub.load(repo, entrypoint, *args, **kwargs)
 
     orig_dir = join(tmp_dir, _repo_name_to_dir_name(repo))
     shutil.move(orig_dir, hubconf_dir)
