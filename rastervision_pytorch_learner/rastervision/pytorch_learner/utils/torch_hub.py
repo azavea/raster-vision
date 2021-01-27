@@ -77,7 +77,7 @@ def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
         Any: The output from calling the entrypoint.
     """
     torch.hub.set_dir(tmp_dir)
-    out = torch.hub.load(repo, entrypoint, *args, **kwargs)
+    out = torch.hub.load(repo, entrypoint, *args, source='github', **kwargs)
 
     orig_dir = join(tmp_dir, _repo_name_to_dir_name(repo))
     shutil.move(orig_dir, hubconf_dir)
@@ -139,26 +139,5 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
 
 def torch_hub_load_local(hubconf_dir: str, entrypoint: str, *args,
                          **kwargs) -> Any:
-    """Same as torch.hub.load(), minus the downloading part.
-
-    Args:
-        hubconf_dir (str): A directory containing a hubconf.py file.
-        entrypoint (str): Name of a callable present in hubconf.py.
-
-    Returns:
-        Any: The output from calling the entrypoint.
-    """
-    from torch.hub import (sys, import_module, MODULE_HUBCONF,
-                           _load_entry_from_hubconf)
-
-    sys.path.insert(0, hubconf_dir)
-
-    hub_module = import_module(MODULE_HUBCONF, join(hubconf_dir,
-                                                    MODULE_HUBCONF))
-
-    entry = _load_entry_from_hubconf(hub_module, entrypoint)
-    out = entry(*args, **kwargs)
-
-    sys.path.remove(hubconf_dir)
-
-    return out
+    return torch.hub.load(
+        hubconf_dir, entrypoint, *args, source='local', **kwargs)
