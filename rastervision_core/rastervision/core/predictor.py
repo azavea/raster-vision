@@ -84,18 +84,34 @@ class Predictor():
         if channel_order is not None:
             self.scene.raster_source.channel_order = channel_order
 
-    def predict(self, image_uris, label_uri):
+    def predict(self, image_uris, label_uri, vector_label_uri=None):
         """Generate predictions for the given image.
 
         Args:
             image_uris: URIs of the images to make predictions against.
                 This can be any type of URI readable by Raster Vision
                 FileSystems.
-            label_uri: URI to save labels off into.
+            label_uri: URI to save labels off into
+            vector_label_uri: URI to save vectorized labels for semantic segmentation
+                model bundles that support it
         """
         try:
             self.scene.raster_source.uris = image_uris
             self.scene.label_store.uri = label_uri
+            if (hasattr(self.scene.label_store, 'vector_output')
+                    and self.scene.label_store.vector_output):
+                if vector_label_uri:
+                    for vo in self.scene.label_store.vector_output:
+                        vo.uri = join(
+                            vector_label_uri, '{}-{}.json'.format(
+                                vo.class_id, vo.get_mode()))
+                else:
+                    self.scene.label_store.vector_output = []
+            elif vector_label_uri:
+                log.warn(
+                    'vector_label_uri was supplied but this model bundle does not '
+                    'generate vector labels.')
+
             if self.update_stats:
                 self.pipeline.analyze()
             self.pipeline.predict()
