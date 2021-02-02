@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 import numpy as np
 from shapely.geometry import shape
 
@@ -41,6 +43,14 @@ class ObjectDetectionLabels(Labels):
     def __eq__(self, other):
         return (isinstance(other, ObjectDetectionLabels)
                 and self.to_dict() == other.to_dict())
+
+    def __setitem__(self, key: Any, preds: Dict[str, np.ndarray]):
+        boxes = preds['boxes']
+        class_ids = preds['class_ids']
+        scores = preds['scores']
+
+        new_data = {'boxes': boxes, 'classes': class_ids, 'scores': scores}
+        self.boxlist.extend_data(new_data)
 
     def assert_equal(self, expected_labels):
         np.testing.assert_array_equal(self.get_npboxes(),

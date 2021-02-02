@@ -63,6 +63,13 @@ class ObjectDetectionConfig(RVPipelineConfig):
     predict_options: ObjectDetectionPredictOptions = ObjectDetectionPredictOptions(
     )
 
+    def update(self):
+        super().update()
+        # Use strided windowing to ensure that each object is fully visible (ie. not
+        # cut off) within some window. This means prediction takes 4x longer for object
+        # detection :(
+        self.predict_options.stride //= 2
+
     def build(self, tmp_dir):
         from rastervision.core.rv_pipeline.object_detection import ObjectDetection
         return ObjectDetection(self, tmp_dir)

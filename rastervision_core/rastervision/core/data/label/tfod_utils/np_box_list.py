@@ -120,3 +120,9 @@ class BoxList(object):
                 if data[i, 0] > data[i, 2] or data[i, 1] > data[i, 3]:
                     return False
         return True
+
+    def extend_data(self, data: dict) -> None:
+        self.data = {
+            k: np.concatenate((self.data[k], v), axis=0)
+            for k, v in data.items()
+        }

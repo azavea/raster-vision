@@ -1,12 +1,19 @@
+from typing import Dict, Callable
 from os.path import join
 import uuid
 
+import click
+
 from rastervision.pipeline.file_system import (make_dir, json_to_file)
-from rastervision.core.data.label import ObjectDetectionLabels
+from rastervision.core.data import (ObjectDetectionLabels, SceneConfig,
+                                    DatasetConfig)
+from rastervision.core.rv_pipeline import (ObjectDetectionPredictOptions)
 from rastervision.core.utils.misc import save_img
 from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
-    PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
+    PyTorchLearnerSampleWriter, PyTorchLearnerBackend, chunk)
+from rastervision.pytorch_learner import (ObjectDetectionGeoDataConfig,
+                                          GeoDataWindowConfig)
 
 
 class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
@@ -97,28 +104,43 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
         return PyTorchObjectDetectionSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 
-    def predict(self, scene, chips, windows):
-        """Return predictions for a chip using model.
+    def _get_predictions(
+            self,
+            predict_options: ObjectDetectionPredictOptions,
+            hooks: Dict[str, Callable] = {}) -> ObjectDetectionLabels:
+        ds = self.learner.test_ds.datasets[0]  # index into the ConcatDataset
+        dl = self.learner.test_dl
 
-        Args:
-            chips: [[height, width, channels], ...] numpy array of chips
-            windows: List of boxes that are the windows aligned with the chips.
+        labels = ds.scene.label_store.empty_labels()
 
-        Return:
-            Labels object containing predictions
-        """
-        if self.learner is None:
-            self.load_model()
+        windows = chunk(ds.windows, n=predict_options.batch_sz)
+        preds = self.learner.iter_predictions(dl, raw_out=False)
 
-        batch_out = self.learner.numpy_predict(chips, raw_out=False)
-        labels = ObjectDetectionLabels.make_empty()
-
-        for chip_ind, out in enumerate(batch_out):
-            window = windows[chip_ind]
-            boxes = out['boxes']
-            class_ids = out['class_ids']
-            scores = out['scores']
-            boxes = ObjectDetectionLabels.local_to_global(boxes, window)
-            labels += ObjectDetectionLabels(boxes, class_ids, scores=scores)
+        it = zip(windows, preds)
+        with click.progressbar(it, length=len(dl), label='Predicting') as bar:
+            for ws, (xs, _, outs) in bar:
+                outs = self.learner.output_to_numpy(outs)
+                for w, x, out in zip(ws, xs, outs):
+                    out['boxes'] = ObjectDetectionLabels.local_to_global(
+                        out['boxes'], w)
+                    labels[w] = out
 
         return labels
+
+    def _make_pred_data_config(
+            self,
+            predict_options: ObjectDetectionPredictOptions,
+            scene_dataset: DatasetConfig,
+            window_opts: GeoDataWindowConfig,
+            scene: SceneConfig,
+            hooks: Dict[str, Callable] = {}) -> ObjectDetectionGeoDataConfig:
+        cfg = self.learner.cfg.data
+        return ObjectDetectionGeoDataConfig(
+            class_names=cfg.class_names,
+            class_colors=cfg.class_colors,
+            img_sz=cfg.img_sz,
+            num_workers=cfg.num_workers,
+            base_transform=cfg.base_transform,
+            plot_options=cfg.plot_options,
+            scene_dataset=scene_dataset,
+            window_opts=window_opts)
