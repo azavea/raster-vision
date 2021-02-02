@@ -1,3 +1,7 @@
+from typing import Tuple, Union
+
+import numpy as np
+
 from rastervision.core.box import Box
 from rastervision.core.data.label import Labels
 
@@ -22,7 +26,15 @@ class ChipClassificationLabels(Labels):
         return result
 
     def __contains__(self, cell):
-        return cell.tuple_format() in self.cell_to_class_id
+        return cell in self.cell_to_class_id
+
+    def __setitem__(self, key: Box,
+                    item: Union[int, Tuple[int, np.ndarray]]) -> None:
+        if isinstance(item, (tuple, list)):
+            class_id, score = item
+            self.set_cell(cell=key, class_id=class_id, scores=score)
+        else:
+            self.set_cell(cell=key, class_id=item)
 
     def filter_by_aoi(self, aoi_polygons):
         result = ChipClassificationLabels()
@@ -45,7 +57,7 @@ class ChipClassificationLabels(Labels):
         """
         if scores is not None:
             scores = list(map(lambda x: float(x), list(scores)))
-        self.cell_to_class_id[cell.tuple_format()] = (class_id, scores)
+        self.cell_to_class_id[cell] = (class_id, scores)
 
     def get_cell_class_id(self, cell):
         """Return class_id for a cell.
@@ -53,7 +65,7 @@ class ChipClassificationLabels(Labels):
         Args:
             cell: (Box)
         """
-        result = self.cell_to_class_id.get(cell.tuple_format())
+        result = self.cell_to_class_id.get(cell)
         if result:
             return result[0]
         else:
@@ -65,7 +77,7 @@ class ChipClassificationLabels(Labels):
         Args:
             cell: (Box)
         """
-        result = self.cell_to_class_id.get(cell.tuple_format())
+        result = self.cell_to_class_id.get(cell)
         if result:
             return result[1]
         else:
@@ -77,7 +89,7 @@ class ChipClassificationLabels(Labels):
         Args:
             cell: (Box)
         """
-        return self.cell_to_class_id.get(cell.tuple_format())
+        return self.cell_to_class_id.get(cell)
 
     def get_singleton_labels(self, cell):
         """Return Labels object representing a single cell.

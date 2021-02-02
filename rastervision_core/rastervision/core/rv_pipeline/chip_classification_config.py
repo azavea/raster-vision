@@ -1,12 +1,21 @@
 from rastervision.pipeline.config import register_config, ConfigError
-from rastervision.core.rv_pipeline import RVPipelineConfig
+from rastervision.core.rv_pipeline import RVPipelineConfig, PredictOptions
 from rastervision.core.data.label_store import (
     ChipClassificationGeoJSONStoreConfig)
 from rastervision.core.evaluation import ChipClassificationEvaluatorConfig
 
 
+@register_config('chip_classification_predict_options')
+class ChipClassificationPredictOptions(PredictOptions):
+    pass
+
+
 @register_config('chip_classification')
 class ChipClassificationConfig(RVPipelineConfig):
+
+    predict_options: ChipClassificationPredictOptions = \
+        ChipClassificationPredictOptions()
+
     def build(self, tmp_dir):
         from rastervision.core.rv_pipeline.chip_classification import ChipClassification
         return ChipClassification(self, tmp_dir)
