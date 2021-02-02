@@ -23,6 +23,8 @@ def classification_transformer(inp: Tuple[Any, Any],
                                ) -> Tuple[np.ndarray, np.ndarray]:
     """Apply transform to image only."""
     x, y = inp
+    if y is None:
+        y = [-1]
     x, y = np.array(x), np.array(y)
     if transform is not None:
         out = transform(image=x)
@@ -36,6 +38,8 @@ def regression_transformer(inp: Tuple[Any, Any],
                            ) -> Tuple[np.ndarray, np.ndarray]:
     """Apply transform to image only."""
     x, y = inp
+    if y is None:
+        y = [np.nan]
     x, y = np.array(x), np.array(y, dtype=np.float32)
     if transform is not None:
         out = transform(image=x)
@@ -123,7 +127,11 @@ def object_detection_transformer(
     Returns:
         Tuple[torch.Tensor, BoxList]: Transformed image and boxes.
     """
-    x, (boxes, class_ids, box_format) = inp
+    x, y = inp
+    if y is not None:
+        boxes, class_ids, box_format = y
+    else:
+        boxes, class_ids, box_format = np.empty((0, 4)), [], None
 
     img_size = x.shape[:2]
     if transform is not None:
@@ -134,6 +142,8 @@ def object_detection_transformer(
             boxes = yxyx_to_albu(boxes, img_size)
         elif box_format == 'xywh':  # used by ObjectDetectionImageDataset
             boxes = xywh_to_albu(boxes, img_size)
+        elif box_format is None:
+            pass
         else:
             raise NotImplementedError(f'Unknown box_format: {box_format}.')
 
@@ -167,10 +177,20 @@ def semantic_segmentation_transformer(inp: Tuple[Any, Any],
                                       ) -> Tuple[np.ndarray, np.ndarray]:
     """Apply transform to image and mask."""
     x, y = inp
-    x, y = np.array(x), np.array(y)
+    x = np.array(x)
+
+    if y is not None:
+        y = np.array(y)
+    else:
+        y = np.full((1, 1), fill_value=-1, dtype=np.long)
+
     if transform is not None:
-        out = transform(image=x, mask=y)
-        x, y = out['image'], out['mask']
+        if y is not None:
+            out = transform(image=x, mask=y)
+            x, y = out['image'], out['mask']
+        else:
+            out = transform(image=x)
+            x = out['image']
     y = y.astype(np.long)
     return x, y
 

@@ -41,7 +41,7 @@ class Scene(ActivateMixin):
 
     def __getitem__(self, window: Box) -> Tuple[Any, Any]:
         x = self.raster_source[window]
-        y = self.label_source[window]
+        y = self.label_source[window] if self.label_source else None
         return x, y
 
     def _subcomponents_to_activate(self):

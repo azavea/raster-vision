@@ -46,12 +46,9 @@ class ClassificationImageDataConfig(ClassificationDataConfig, ImageDataConfig):
 @register_config('classification_geo_data')
 class ClassificationGeoDataConfig(ClassificationDataConfig, GeoDataConfig):
     def build_scenes(self, tmp_dir: str):
-        for s in self.scene_dataset.train_scenes:
-            s.label_source.lazy = True
-        for s in self.scene_dataset.validation_scenes:
-            s.label_source.lazy = True
-        for s in self.scene_dataset.test_scenes:
-            s.label_source.lazy = True
+        for s in self.scene_dataset.get_all_scenes():
+            if s.label_source is not None:
+                s.label_source.lazy = True
         return super().build_scenes(tmp_dir=tmp_dir)
 
     def scene_to_dataset(self,
