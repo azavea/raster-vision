@@ -60,12 +60,7 @@ class SemanticSegmentationChipOptions(Config):
 
 @register_config('semantic_segmentation_predict_options')
 class SemanticSegmentationPredictOptions(PredictOptions):
-    stride: Optional[int] = Field(
-        None,
-        description=
-        'Stride of windows across image. Allows aggregating multiple '
-        'predictions for each pixel if less than the chip size and outputting '
-        'smooth labels. Defaults to predict_chip_sz.')
+    pass
 
 
 @register_config('semantic_segmentation')

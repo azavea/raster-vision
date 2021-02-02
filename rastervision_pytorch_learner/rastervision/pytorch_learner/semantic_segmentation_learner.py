@@ -1,7 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
-from typing import Union, Iterable, Optional
+from typing import Union, Iterable, Optional, Iterator, Tuple
 
 import logging
 
@@ -13,8 +13,9 @@ matplotlib.use('Agg')  # noqa
 import albumentations as A
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 from torchvision import models
+from torch.utils.data import DataLoader
 
 from rastervision.pipeline.config import ConfigError
 from rastervision.pytorch_learner.learner import Learner
@@ -148,6 +149,23 @@ class SemanticSegmentationLearner(Learner):
                 out = self.prob_to_pred(out)
         out = self.to_device(out, 'cpu')
         return out
+
+    def iter_predictions(self, dl: DataLoader, raw_out: bool = False
+                         ) -> Iterator[Tuple[Tensor, Tensor, Tensor]]:
+        self.model.eval()
+
+        with torch.no_grad():
+            for x, y in dl:
+                x = self.to_device(x, self.device)
+                out = self.model(x)
+                out = self.post_forward(out)
+                if not raw_out:
+                    out = self.prob_to_pred(out)
+                else:
+                    out = out.softmax(dim=1)
+                x = self.to_device(x, 'cpu')
+                out = self.to_device(out, 'cpu')
+                yield x, y, out
 
     def prob_to_pred(self, x):
         return x.argmax(1)

@@ -1,16 +1,22 @@
+from typing import Dict, Callable
 from os.path import join
 from pathlib import Path
 import uuid
 
 import numpy as np
+import torch.nn.functional as F
+import click
 
 from rastervision.pipeline.file_system import (make_dir)
-from rastervision.core.data import ClassConfig
+from rastervision.core.data import ClassConfig, SceneConfig, DatasetConfig
+from rastervision.core.rv_pipeline import PredictOptions
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.utils.misc import save_img
 from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
-    PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
+    PyTorchLearnerSampleWriter, PyTorchLearnerBackend, chunk)
+from rastervision.pytorch_learner import (GeoDataWindowConfig,
+                                          SemanticSegmentationGeoDataConfig)
 
 
 class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
@@ -85,15 +91,57 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
             img_format=self.pipeline_cfg.img_format,
             label_format=self.pipeline_cfg.label_format)
 
-    def predict(self, scene, chips, windows) -> SemanticSegmentationLabels:
-        if self.learner is None:
-            self.load_model()
+    def _get_predictions(self,
+                         predict_options: PredictOptions,
+                         hooks: Dict[str, Callable] = {}
+                         ) -> SemanticSegmentationLabels:
+        ds = self.learner.test_ds.datasets[0]  # index into the ConcatDataset
+        dl = self.learner.test_dl
 
-        raw_out = scene.label_store.smooth_output
-        batch_out = self.learner.numpy_predict(chips, raw_out=raw_out)
+        raw_out = ds.scene.label_store.smooth_output
+        labels = ds.scene.label_store.empty_labels()
 
-        labels = scene.label_store.empty_labels()
-        for out, window in zip(batch_out, windows):
-            labels[window] = out
+        out_size = predict_options.chip_sz
+
+        windows = chunk(ds.windows, n=predict_options.batch_sz)
+        preds = self.learner.iter_predictions(dl, raw_out=True)
+        it = zip(windows, preds)
+        with click.progressbar(it, length=len(dl), label='Predicting') as bar:
+            for ws, (xs, _, outs) in bar:
+                # resize
+                xs = F.interpolate(
+                    xs, size=out_size, mode='bilinear', align_corners=False)
+                outs = F.interpolate(
+                    outs, size=out_size, mode='bilinear', align_corners=False)
+
+                if not raw_out:
+                    outs = self.learner.prob_to_pred(outs)
+
+                outs = self.learner.output_to_numpy(outs)
+
+                for w, x, out in zip(ws, xs, outs):
+                    labels[w] = out
+                xs = xs.numpy().transpose(0, 2, 3, 1)
+                labels = hooks['post-batch'](ws, xs, labels)
 
         return labels
+
+    def _make_pred_data_config(self,
+                               predict_options: PredictOptions,
+                               scene_dataset: DatasetConfig,
+                               window_opts: GeoDataWindowConfig,
+                               scene: SceneConfig,
+                               hooks: Dict[str, Callable] = {}
+                               ) -> SemanticSegmentationGeoDataConfig:
+        cfg = self.learner.cfg.data
+        return SemanticSegmentationGeoDataConfig(
+            class_names=cfg.class_names,
+            class_colors=cfg.class_colors,
+            img_sz=cfg.img_sz,
+            num_workers=cfg.num_workers,
+            channel_display_groups=cfg.channel_display_groups,
+            img_channels=cfg.img_channels,
+            base_transform=cfg.base_transform,
+            plot_options=cfg.plot_options,
+            scene_dataset=scene_dataset,
+            window_opts=window_opts)

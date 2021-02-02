@@ -158,10 +158,3 @@ class SemanticSegmentation(RVPipeline):
             labels.mask_fill(window, nodata_mask, fill_value=null_class_id)
 
         return labels
-
-    def get_predict_windows(self, extent: Box) -> List[Box]:
-        chip_sz = self.config.predict_chip_sz
-        stride = self.config.predict_options.stride
-        if stride is None:
-            stride = chip_sz
-        return extent.get_windows(chip_sz, stride)
