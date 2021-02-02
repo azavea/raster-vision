@@ -12,7 +12,7 @@ import logging
 from subprocess import Popen
 import numbers
 import zipfile
-from typing import Optional, List, Tuple, Dict, Union, Any
+from typing import Optional, List, Tuple, Dict, Union, Any, Iterator
 from pydantic.utils import sequence_like
 import random
 import uuid
@@ -37,8 +37,8 @@ from rastervision.pipeline.file_system import (
     download_if_needed, sync_from_dir, get_local_path, unzip, list_paths,
     str_to_file, FileSystem, LocalFileSystem)
 from rastervision.pipeline.utils import terminate_at_exit
-from rastervision.pipeline.config import (build_config, ConfigError,
-                                          upgrade_config, save_pipeline_config)
+from rastervision.pipeline.config import (build_config, upgrade_config,
+                                          save_pipeline_config)
 from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, ExternalModuleConfig, ImageDataConfig, GeoDataConfig)
 from rastervision.pytorch_learner.utils import (
@@ -150,7 +150,8 @@ class Learner(ABC):
         self.load_checkpoint()
         if cfg.eval_train:
             self.eval_model('train')
-        self.eval_model('test')
+        if len(self.test_ds) > 0:
+            self.eval_model('test')
         self.sync_to_cloud()
         self.stop_tensorboard()
 
@@ -529,22 +530,13 @@ class Learner(ABC):
                                        ConcatDataset(test_ds_lst))
         return train_ds, valid_ds, test_ds
 
-    def setup_data(self):
+    def setup_data(self, training=True, overrides={}):
         """Set the the DataSet and DataLoaders for train, validation, and test sets."""
         cfg = self.cfg
-        batch_sz = self.cfg.solver.batch_sz
-        num_workers = self.cfg.data.num_workers
+        batch_sz = overrides.get('batch_sz', self.cfg.solver.batch_sz)
+        num_workers = overrides.get('num_workers', self.cfg.data.num_workers)
 
         train_ds, valid_ds, test_ds = self.get_datasets()
-        if len(train_ds) < batch_sz:
-            raise ConfigError(
-                'Training dataset has fewer elements than batch size.')
-        if len(valid_ds) < batch_sz:
-            raise ConfigError(
-                'Validation dataset has fewer elements than batch size.')
-        if len(test_ds) < batch_sz:
-            raise ConfigError(
-                'Test dataset has fewer elements than batch size.')
 
         if cfg.overfit_mode:
             train_ds = Subset(train_ds, range(batch_sz))
@@ -563,28 +555,36 @@ class Learner(ABC):
             train_ds = Subset(train_ds, train_inds)
 
         collate_fn = self.get_collate_fn()
-        train_dl = DataLoader(
-            train_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            drop_last=True,
-            num_workers=num_workers,
-            pin_memory=True,
-            collate_fn=collate_fn)
-        valid_dl = DataLoader(
-            valid_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True,
-            collate_fn=collate_fn)
-        test_dl = DataLoader(
-            test_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True,
-            collate_fn=collate_fn)
+        train_dl, valid_dl, test_dl = None, None, None
+        if len(train_ds) > 0:
+            train_dl = DataLoader(
+                train_ds,
+                shuffle=True,
+                batch_size=batch_sz,
+                drop_last=True,
+                num_workers=num_workers,
+                pin_memory=True,
+                collate_fn=collate_fn)
+        if len(valid_ds) > 0:
+            valid_dl = DataLoader(
+                valid_ds,
+                shuffle=False,
+                batch_size=batch_sz,
+                num_workers=num_workers,
+                pin_memory=True,
+                collate_fn=collate_fn)
+        if len(test_ds) > 0:
+            test_dl = DataLoader(
+                test_ds,
+                shuffle=False,
+                batch_size=batch_sz,
+                num_workers=num_workers,
+                pin_memory=True,
+                collate_fn=collate_fn)
+
+        if training and ((train_dl is None) or (valid_dl is None)):
+            raise ValueError('training and validation datasets must be '
+                             'non-empty in training mode.')
 
         self.train_ds, self.valid_ds, self.test_ds = (train_ds, valid_ds,
                                                       test_ds)
@@ -839,6 +839,21 @@ class Learner(ABC):
         if return_x:
             return torch.cat(xs), torch.cat(ys), torch.cat(zs)
         return torch.cat(ys), torch.cat(zs)
+
+    def iter_predictions(self, dl: DataLoader, raw_out: bool = False
+                         ) -> Iterator[Tuple[Tensor, Tensor, Tensor]]:
+        self.model.eval()
+
+        with torch.no_grad():
+            for x, y in dl:
+                x = self.to_device(x, self.device)
+                out = self.model(x)
+                out = self.post_forward(out)
+                if not raw_out:
+                    out = self.prob_to_pred(out)
+                x = self.to_device(x, 'cpu')
+                out = self.to_device(out, 'cpu')
+                yield x, y, out
 
     def get_dataloader(self, split: str) -> DataLoader:
         """Get the DataLoader for a split.

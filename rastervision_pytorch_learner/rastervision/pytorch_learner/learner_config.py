@@ -532,9 +532,6 @@ class GeoDataConfig(DataConfig):
         """
         train_scenes, val_scenes, test_scenes = self.build_scenes(tmp_dir)
 
-        if len(test_scenes) == 0:
-            test_scenes = val_scenes
-
         train_ds_list = [
             self.scene_to_dataset(s, train_tf, **kwargs) for s in train_scenes
         ]

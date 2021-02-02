@@ -1,14 +1,21 @@
+from typing import Dict, Callable
 from os.path import join
 import tempfile
+import gc
+from itertools import zip_longest
+
+import click
+import torch.nn.functional as F
 
 from rastervision.pipeline.file_system import (make_dir, upload_or_copy,
                                                zipdir)
 from rastervision.core.backend import Backend, SampleWriter
 from rastervision.core.data_sample import DataSample
-from rastervision.core.data import ClassConfig
-from rastervision.core.rv_pipeline import RVPipelineConfig
-from rastervision.pytorch_learner.learner_config import LearnerConfig
-from rastervision.pytorch_learner.learner import Learner
+from rastervision.core.data import (ClassConfig, SceneConfig, Labels,
+                                    DatasetConfig)
+from rastervision.core.rv_pipeline import RVPipelineConfig, PredictOptions
+from rastervision.pytorch_learner import (Learner, LearnerConfig,
+                                          GeoDataWindowConfig, GeoDataConfig)
 
 
 class PyTorchLearnerSampleWriter(SampleWriter):
@@ -54,6 +61,14 @@ class PyTorchLearnerSampleWriter(SampleWriter):
         raise NotImplementedError()
 
 
+def chunk(iterable, n):
+    """Collect data into fixed-length chunks or blocks
+    Adapted from: https://docs.python.org/3/library/itertools.html
+    """
+    args = [iter(iterable)] * n
+    return zip_longest(*args)
+
+
 class PyTorchLearnerBackend(Backend):
     """Backend that uses the rastervision.pytorch_learner package to train models."""
 
@@ -89,5 +104,70 @@ class PyTorchLearnerBackend(Backend):
     def get_sample_writer(self):
         raise NotImplementedError()
 
-    def predict(self, chips, windows):
+    def predict(self,
+                predict_options: PredictOptions,
+                scene: SceneConfig,
+                hooks: Dict[str, Callable] = {}) -> Labels:
+        if self.learner is None:
+            self.load_model()
+
+        dataset = DatasetConfig(
+            class_config=self.pipeline_cfg.dataset.class_config,
+            train_scenes=[],
+            validation_scenes=[],
+            test_scenes=[scene])
+        window_opts = GeoDataWindowConfig(
+            method='sliding',
+            size=predict_options.chip_sz,
+            stride=predict_options.stride)
+
+        self.learner.cfg.data = self._make_pred_data_config(
+            predict_options, dataset, window_opts, scene)
+        self.learner.setup_data(
+            training=False, overrides={'batch_sz': predict_options.batch_sz})
+
+        labels = self._get_predictions(predict_options, hooks)
+
+        # GeoDataset leaves scenes activated, meaning some tmp dirs might not
+        # be cleaned up. This can cause an error later if the root tmp_dir gets
+        # garbage collected before these tmp dirs do. So we pre-emptively gc
+        # them.
+        self.learner.test_dl = None
+        self.learner.test_ds = None
+        gc.collect()
+
+        return labels
+
+    def _make_pred_data_config(
+            self,
+            predict_options: PredictOptions,
+            scene_dataset: DatasetConfig,
+            window_opts: GeoDataWindowConfig,
+            scene: SceneConfig,
+            hooks: Dict[str, Callable] = {}) -> GeoDataConfig:
         raise NotImplementedError()
+
+    def _get_predictions(self,
+                         predict_options: PredictOptions,
+                         hooks: Dict[str, Callable] = {}):
+        ds = self.learner.test_ds.datasets[0]  # index into the ConcatDataset
+        dl = self.learner.test_dl
+
+        labels = ds.scene.label_store.empty_labels()
+
+        out_size = predict_options.chip_sz
+
+        windows = chunk(ds.windows, n=predict_options.batch_sz)
+        preds = self.learner.iter_predictions(dl)
+        it = zip(windows, preds)
+        with click.progressbar(it, length=len(dl), label='Predicting') as bar:
+            for ws, (xs, _, outs) in bar:
+                outs = self.learner.output_to_numpy(outs)
+                for w, out in zip(ws, outs):
+                    labels[w] = out
+                xs = F.interpolate(
+                    xs, size=out_size, mode='bilinear', align_corners=False)
+                xs = xs.numpy().transpose(0, 2, 3, 1)
+                labels = hooks['post-batch'](ws, xs, labels)
+
+        return labels

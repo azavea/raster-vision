@@ -28,3 +28,6 @@ class Labels(ABC):
     @abstractmethod
     def __eq__(self, other):
         pass
+
+    def __setitem__(self, key, item) -> None:
+        raise NotImplementedError()
