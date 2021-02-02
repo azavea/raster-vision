@@ -1,5 +1,6 @@
 from os.path import join
 from typing import List, TYPE_CHECKING, Optional
+from pydantic import PositiveInt
 
 from rastervision.pipeline.pipeline_config import PipelineConfig
 from rastervision.core.data import (DatasetConfig, StatsTransformerConfig,
@@ -17,8 +18,9 @@ if TYPE_CHECKING:
 
 @register_config('predict_options')
 class PredictOptions(Config):
-    # TODO: predict_chip_sz and predict_batch_sz should probably be moved here
-    pass
+    chip_sz: Optional[PositiveInt] = None
+    stride: Optional[PositiveInt] = None
+    batch_sz: Optional[PositiveInt] = None
 
 
 @register_config('rv_pipeline')
@@ -53,6 +55,7 @@ class RVPipelineConfig(PipelineConfig):
         'greater than or equal to this value. Might result in false positives '
         'if there are many legitimate black pixels in the chip. Use with '
         'caution.')
+    predict_options: PredictOptions = PredictOptions()
 
     analyze_uri: Optional[str] = Field(
         None,
@@ -107,6 +110,13 @@ class RVPipelineConfig(PipelineConfig):
         self._insert_analyzers()
         for analyzer in self.analyzers:
             analyzer.update(pipeline=self)
+
+        if self.predict_options.chip_sz is None:
+            self.predict_options.chip_sz = self.predict_chip_sz
+        if self.predict_options.stride is None:
+            self.predict_options.stride = self.predict_options.chip_sz
+        if self.predict_options.batch_sz is None:
+            self.predict_options.batch_sz = self.predict_batch_sz
 
     def get_model_bundle_uri(self):
         return join(self.bundle_uri, 'model-bundle.zip')

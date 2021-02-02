@@ -10,7 +10,6 @@ from rastervision.pipeline.pipeline import Pipeline
 from rastervision.core.box import Box
 from rastervision.core.data_sample import DataSample
 from rastervision.core.data import Scene, Labels
-from rastervision.core.backend import Backend
 from rastervision.core.rv_pipeline import TRAIN, VALIDATION
 from rastervision.pipeline.file_system.utils import (
     download_if_needed, zipdir, get_local_path, upload_or_copy, make_dir)
@@ -130,16 +129,7 @@ class RVPipeline(Pipeline):
         """Post-process all labels at end of prediction."""
         return labels
 
-    def get_predict_windows(self, extent: Box) -> List[Box]:
-        """Returns windows to compute predictions for.
-
-        Args:
-            extent: extent of RasterSource
-        """
-        chip_sz = stride = self.config.predict_chip_sz
-        return extent.get_windows(chip_sz, stride)
-
-    def predict(self, split_ind=0, num_splits=1):
+    def predict(self, split_ind: int = 0, num_splits: int = 1) -> None:
         """Make predictions over each validation and test scene.
 
         This uses a sliding window.
@@ -153,59 +143,21 @@ class RVPipeline(Pipeline):
         class_config = self.config.dataset.class_config
         dataset = self.config.dataset.get_split_config(split_ind, num_splits)
 
-        def _predict(scenes):
-            for scene in scenes:
+        for scenes in [dataset.validation_scenes, dataset.test_scenes]:
+            for s_cfg in scenes:
+                log.info(f'Making predictions for scene: {s_cfg.id}')
+                labels = self.predict_scene(s_cfg)
+                scene = s_cfg.build(class_config, self.tmp_dir)
                 with scene.activate():
-                    labels = self.predict_scene(scene, self.backend)
-                    label_store = scene.prediction_label_store
-                    label_store.save(labels)
+                    scene.label_store.save(labels)
 
-        _predict([
-            s.build(class_config, self.tmp_dir)
-            for s in dataset.validation_scenes
-        ])
-        if dataset.test_scenes:
-            _predict([
-                s.build(class_config, self.tmp_dir)
-                for s in dataset.test_scenes
-            ])
-
-    def predict_scene(self, scene: Scene, backend: Backend) -> Labels:
+    def predict_scene(self, scene: Scene) -> Labels:
         """Returns predictions for a single scene."""
-        log.info('Making predictions for scene')
-        raster_source = scene.raster_source
-        label_store = scene.prediction_label_store
-        labels = label_store.empty_labels()
-
-        windows = self.get_predict_windows(raster_source.get_extent())
-
-        def predict_batch(chips, windows):
-            nonlocal labels
-            chips = np.array(chips)
-            batch_labels = backend.predict(scene, chips, windows)
-            batch_labels = self.post_process_batch(windows, chips,
-                                                   batch_labels)
-            labels += batch_labels
-
-            print('.' * len(chips), end='', flush=True)
-
-        batch_chips, batch_windows = [], []
-        for window in windows:
-            chip = raster_source.get_chip(window)
-            batch_chips.append(chip)
-            batch_windows.append(window)
-
-            # Predict on batch
-            if len(batch_chips) >= self.config.predict_batch_sz:
-                predict_batch(batch_chips, batch_windows)
-                batch_chips, batch_windows = [], []
-        print()
-
-        # Predict on remaining batch
-        if len(batch_chips) > 0:
-            predict_batch(batch_chips, batch_windows)
-
-        return self.post_process_predictions(labels, scene)
+        hooks = {'post-batch': self.post_process_batch}
+        labels = self.backend.predict(self.config.predict_options, scene,
+                                      hooks)
+        labels = self.post_process_predictions(labels, scene)
+        return labels
 
     def eval(self):
         """Evaluate predictions against ground truth."""
