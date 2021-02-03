@@ -842,6 +842,19 @@ class Learner(ABC):
 
     def iter_predictions(self, dl: DataLoader, raw_out: bool = False
                          ) -> Iterator[Tuple[Tensor, Tensor, Tensor]]:
+        """Returns a generator that generates 3-tuples of the form
+        (input, target, output), where each item is batched as per the
+        batch size of the DataLoader.
+
+        Args:
+            dl (DataLoader): A dataloader.
+            raw_out (bool, optional): Return raw output scores.
+                Defaults to False.
+
+        Yields:
+            Iterator[Tuple[Tensor, Tensor, Tensor]]: 3-tuples of the form
+                (input, target, output)
+        """
         self.model.eval()
 
         with torch.no_grad():

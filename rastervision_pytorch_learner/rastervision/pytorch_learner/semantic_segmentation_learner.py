@@ -152,6 +152,7 @@ class SemanticSegmentationLearner(Learner):
 
     def iter_predictions(self, dl: DataLoader, raw_out: bool = False
                          ) -> Iterator[Tuple[Tensor, Tensor, Tensor]]:
+        """Convert logits to probabilities if raw_out=True."""
         self.model.eval()
 
         with torch.no_grad():

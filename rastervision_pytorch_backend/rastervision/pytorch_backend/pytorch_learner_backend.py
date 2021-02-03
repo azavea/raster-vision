@@ -1,4 +1,4 @@
-from typing import Dict, Callable
+from typing import Dict, Callable, Iterable
 from os.path import join
 import tempfile
 import gc
@@ -61,7 +61,7 @@ class PyTorchLearnerSampleWriter(SampleWriter):
         raise NotImplementedError()
 
 
-def chunk(iterable, n):
+def chunk(iterable: Iterable, n: int) -> Iterable:
     """Collect data into fixed-length chunks or blocks
     Adapted from: https://docs.python.org/3/library/itertools.html
     """
@@ -149,7 +149,7 @@ class PyTorchLearnerBackend(Backend):
 
     def _get_predictions(self,
                          predict_options: PredictOptions,
-                         hooks: Dict[str, Callable] = {}):
+                         hooks: Dict[str, Callable] = {}) -> Labels:
         ds = self.learner.test_ds.datasets[0]  # index into the ConcatDataset
         dl = self.learner.test_dl
 

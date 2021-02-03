@@ -130,10 +130,7 @@ class RVPipeline(Pipeline):
         return labels
 
     def predict(self, split_ind: int = 0, num_splits: int = 1) -> None:
-        """Make predictions over each validation and test scene.
-
-        This uses a sliding window.
-        """
+        """Make predictions over each validation and test scene."""
         # Cache backend so subsquent calls will be faster. This is useful for
         # the predictor.
         if self.backend is None:
