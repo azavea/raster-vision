@@ -6,5 +6,5 @@ if [ "$IMAGE_TYPE" = "pytorch" ]; then
     docker run -w $(pwd) -v $(pwd):$(pwd) --rm -it ${PYTORCH_IMAGE} rm -f $(pwd)/.coverage $(pwd)/coverage.xml
     docker run --rm -it ${PYTORCH_IMAGE} /opt/src/scripts/style_tests
     docker run --rm -it ${PYTORCH_IMAGE} /opt/src/scripts/unit_tests
-    docker run --rm -it ${PYTORCH_IMAGE} /opt/src/scripts/integration_tests
+    docker run --rm -it --ipc=host ${PYTORCH_IMAGE} /opt/src/scripts/integration_tests
 fi
