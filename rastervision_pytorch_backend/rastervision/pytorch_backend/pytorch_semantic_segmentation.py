@@ -15,8 +15,8 @@ from rastervision.core.utils.misc import save_img
 from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend, chunk)
-from rastervision.pytorch_learner import (GeoDataWindowConfig,
-                                          SemanticSegmentationGeoDataConfig)
+from rastervision.pytorch_learner import (
+    GeoDataWindowConfig, SemanticSegmentationGeoDataConfig, get_base_datasets)
 
 
 class PyTorchSemanticSegmentationSampleWriter(PyTorchLearnerSampleWriter):
@@ -95,7 +95,7 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
                          predict_options: PredictOptions,
                          hooks: Dict[str, Callable] = {}
                          ) -> SemanticSegmentationLabels:
-        ds = self.learner.test_ds.datasets[0]  # index into the ConcatDataset
+        ds = get_base_datasets(self.learner.test_ds)[0]
         dl = self.learner.test_dl
 
         raw_out = ds.scene.label_store.smooth_output

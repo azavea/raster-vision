@@ -538,21 +538,22 @@ class Learner(ABC):
 
         train_ds, valid_ds, test_ds = self.get_datasets()
 
-        if cfg.overfit_mode:
-            train_ds = Subset(train_ds, range(batch_sz))
-            valid_ds = train_ds
-            test_ds = train_ds
-        elif cfg.test_mode:
-            train_ds = Subset(train_ds, range(batch_sz))
-            valid_ds = Subset(valid_ds, range(batch_sz))
-            test_ds = Subset(test_ds, range(batch_sz))
+        if training:
+            if cfg.overfit_mode:
+                train_ds = Subset(train_ds, range(batch_sz))
+                valid_ds = train_ds
+                test_ds = train_ds
+            elif cfg.test_mode:
+                train_ds = Subset(train_ds, range(batch_sz))
+                valid_ds = Subset(valid_ds, range(batch_sz))
+                test_ds = Subset(test_ds, range(batch_sz))
 
-        if cfg.data.train_sz is not None:
-            train_inds = list(range(len(train_ds)))
-            random.seed(1234)
-            random.shuffle(train_inds)
-            train_inds = train_inds[0:cfg.data.train_sz]
-            train_ds = Subset(train_ds, train_inds)
+            if cfg.data.train_sz is not None:
+                train_inds = list(range(len(train_ds)))
+                random.seed(1234)
+                random.shuffle(train_inds)
+                train_inds = train_inds[0:cfg.data.train_sz]
+                train_ds = Subset(train_ds, train_inds)
 
         collate_fn = self.get_collate_fn()
         train_dl, valid_dl, test_dl = None, None, None

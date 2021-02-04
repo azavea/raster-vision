@@ -1,9 +1,10 @@
 import unittest
 
 import torch
+from torch.utils.data import Dataset, Subset, ConcatDataset
 
-from rastervision.pytorch_learner.utils import (compute_conf_mat,
-                                                compute_conf_mat_metrics)
+from rastervision.pytorch_learner.utils import (
+    compute_conf_mat, compute_conf_mat_metrics, get_base_datasets)
 
 
 class TestComputeConfMat(unittest.TestCase):
@@ -95,6 +96,18 @@ class TestComputeConfMatMetrics(unittest.TestCase):
             'b_f1': b_f1
         }
         self.assertDictEqual(round_dict(metrics), round_dict(exp_metrics))
+
+
+class TestOther(unittest.TestCase):
+    def test_get_base_datasets(self):
+        ds0 = Dataset()
+        ds1 = Subset(ds0, [0])
+        ds2 = ConcatDataset([ds1, ds1])
+        ds3 = Subset(ds2, [0])
+        self.assertEqual(get_base_datasets(ds0)[0], ds0)
+        self.assertEqual(get_base_datasets(ds1)[0], ds0)
+        self.assertEqual(get_base_datasets(ds2)[0], ds0)
+        self.assertEqual(get_base_datasets(ds3)[0], ds0)
 
 
 if __name__ == '__main__':

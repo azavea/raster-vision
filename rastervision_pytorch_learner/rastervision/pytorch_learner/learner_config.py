@@ -615,7 +615,6 @@ class LearnerConfig(Config):
         if self.test_mode:
             self.solver.num_epochs = self.solver.test_num_epochs
             self.solver.batch_sz = self.solver.test_batch_sz
-            self.data.img_sz = self.data.img_sz // 2
             self.data.num_workers = 0
 
         self.model.update(learner=self)

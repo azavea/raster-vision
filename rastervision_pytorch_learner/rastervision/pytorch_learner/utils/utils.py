@@ -1,7 +1,9 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union, List
+from itertools import chain
 
 import torch
 from torch import nn
+from torch.utils.data import Dataset, Subset, ConcatDataset, ChainDataset
 
 import numpy as np
 from PIL import ImageColor
@@ -113,3 +115,20 @@ class AddTensors(nn.Module):
 
     def forward(self, xs):
         return sum(xs)
+
+
+def get_base_datasets(
+        ds: Union[list, tuple, Subset, ConcatDataset, ChainDataset]
+) -> List[Dataset]:
+    """Extract the base dataset objects from inside nested collections or
+    subsets.
+    """
+    if isinstance(ds, Subset):
+        return get_base_datasets(ds.dataset)
+    if isinstance(ds, ConcatDataset):
+        return get_base_datasets(list(ds.datasets))
+    if isinstance(ds, ChainDataset):
+        return get_base_datasets(list(ds.datasets))
+    if isinstance(ds, (list, tuple)):
+        return list(chain(*[get_base_datasets(d) for d in ds]))
+    return [ds]

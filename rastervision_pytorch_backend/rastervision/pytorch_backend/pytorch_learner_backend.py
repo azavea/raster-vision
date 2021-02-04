@@ -15,7 +15,8 @@ from rastervision.core.data import (ClassConfig, SceneConfig, Labels,
                                     DatasetConfig)
 from rastervision.core.rv_pipeline import RVPipelineConfig, PredictOptions
 from rastervision.pytorch_learner import (Learner, LearnerConfig,
-                                          GeoDataWindowConfig, GeoDataConfig)
+                                          GeoDataWindowConfig, GeoDataConfig,
+                                          get_base_datasets)
 
 
 class PyTorchLearnerSampleWriter(SampleWriter):
@@ -150,7 +151,7 @@ class PyTorchLearnerBackend(Backend):
     def _get_predictions(self,
                          predict_options: PredictOptions,
                          hooks: Dict[str, Callable] = {}) -> Labels:
-        ds = self.learner.test_ds.datasets[0]  # index into the ConcatDataset
+        ds = get_base_datasets(self.learner.test_ds)[0]
         dl = self.learner.test_dl
 
         labels = ds.scene.label_store.empty_labels()

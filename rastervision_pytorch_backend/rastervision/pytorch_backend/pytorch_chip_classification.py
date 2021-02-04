@@ -12,8 +12,8 @@ from rastervision.core.utils.misc import save_img
 from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend, chunk)
-from rastervision.pytorch_learner import (ClassificationGeoDataConfig,
-                                          GeoDataWindowConfig)
+from rastervision.pytorch_learner import (
+    ClassificationGeoDataConfig, GeoDataWindowConfig, get_base_datasets)
 
 
 class PyTorchChipClassificationSampleWriter(PyTorchLearnerSampleWriter):
@@ -49,7 +49,7 @@ class PyTorchChipClassification(PyTorchLearnerBackend):
             self,
             predict_options: ChipClassificationPredictOptions,
             hooks: Dict[str, Callable] = {}) -> ChipClassificationLabels:
-        ds = self.learner.test_ds.datasets[0]  # index into the ConcatDataset
+        ds = get_base_datasets(self.learner.test_ds)[0]
         dl = self.learner.test_dl
 
         labels = ds.scene.label_store.empty_labels()
