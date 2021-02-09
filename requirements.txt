@@ -4,4 +4,4 @@ rastervision_aws_batch==0.12
 rastervision_core==0.12
 rastervision_pytorch_learner==0.12
 rastervision_pytorch_backend==0.12
-rastervision_gdal_vsi==0.12
+rastervision_gdal_vsi==0.12.1
