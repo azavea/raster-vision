@@ -239,7 +239,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             labels: SemanticSegmentationLabels) -> None:
 
         num_bands = 1 if self.class_transformer is None else 3
-        out_profile.update({'count': num_bands, 'dtype': np.uint8})
+        dtype = np.uint8
+        out_profile.update({'count': num_bands, 'dtype': dtype})
 
         windows = labels.get_windows()
 
@@ -247,7 +248,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         with rio.open(path, 'w', **out_profile) as dataset:
             with click.progressbar(windows) as bar:
                 for window in bar:
-                    label_arr = labels.get_label_arr(window)
+                    label_arr = labels.get_label_arr(window).astype(dtype)
                     window, label_arr = self._clip_to_extent(
                         self.extent, window, label_arr)
                     if self.class_transformer is not None:

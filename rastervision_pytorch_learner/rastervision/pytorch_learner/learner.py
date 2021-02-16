@@ -732,7 +732,7 @@ class Learner(ABC):
             x with extra batch dimension of length 1 if needed
         """
         if x.ndim == 3:
-            x = x.unsqueeze(0)
+            x = x[None, ...]
         return x
 
     def normalize_input(self, x: np.ndarray) -> np.ndarray:
@@ -797,9 +797,11 @@ class Learner(ABC):
         Returns:
             predictions using numpy arrays
         """
+        transform, _ = self.get_data_transforms()
         x = self.normalize_input(x)
-        x = torch.tensor(x)
         x = self.to_batch(x)
+        x = np.stack([transform(image=img)['image'] for img in x])
+        x = torch.from_numpy(x)
         x = x.permute((0, 3, 1, 2))
         out = self.predict(x, raw_out=raw_out)
         return self.output_to_numpy(out)
