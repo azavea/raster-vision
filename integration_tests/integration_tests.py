@@ -4,6 +4,7 @@ from os.path import join, dirname, abspath, isfile
 import math
 import traceback
 import importlib
+from pprint import pformat
 
 import click
 import numpy as np
@@ -18,21 +19,48 @@ chip_classification = 'chip_classification'
 object_detection = 'object_detection'
 semantic_segmentation = 'semantic_segmentation'
 all_tests = [chip_classification, object_detection, semantic_segmentation]
+test_param_sets = {
+    chip_classification: [{
+        'name': 'basic',
+        'nochip': False
+    }, {
+        'name': f'nochip',
+        'nochip': True
+    }],
+    object_detection: [{
+        'name': 'basic',
+        'nochip': False
+    }, {
+        'name': f'nochip',
+        'nochip': True
+    }],
+    semantic_segmentation: [{
+        'name': 'basic',
+        'nochip': False
+    }, {
+        'name': f'nochip',
+        'nochip': True
+    }]
+}
 TEST_ROOT_DIR = dirname(abspath(__file__))
 
 np.random.seed(1234)
 
 
-def console_info(msg):
-    click.echo(click.style(msg, fg='green'))
+def console_info(msg: str, **kwargs):
+    click.secho(msg, fg='magenta', **kwargs)
 
 
-def console_warning(msg):
-    click.echo(click.style(msg, fg='yellow'))
+def console_warning(msg: str, **kwargs):
+    click.secho(msg, fg='yellow', **kwargs)
 
 
-def console_error(msg):
-    click.echo(click.style(msg, fg='red', err=True))
+def console_error(msg: str, **kwargs):
+    click.secho(msg, fg='red', err=True, **kwargs)
+
+
+def console_success(msg: str, **kwargs):
+    click.secho(msg, fg='cyan', **kwargs)
 
 
 class TestError():
@@ -192,13 +220,18 @@ def test_model_bundle(pipeline, test, tmp_dir, check_channel_order=False):
     return errors
 
 
-def run_test(test, tmp_dir):
+def run_test(test, tmp_dir, params={}):
+    msg = f'\nRunning test: {test}'
+    console_info(msg, bold=True)
+    console_info('With params:')
+    console_info(pformat(params))
+
     errors = []
     config_mod = importlib.import_module(
         'integration_tests.{}.config'.format(test))
     runner = 'inprocess'
     root_uri = join(tmp_dir, test)
-    pipeline_cfg = config_mod.get_config(runner, root_uri)
+    pipeline_cfg = config_mod.get_config(runner, root_uri, **params)
     pipeline_cfg.update()
     runner = InProcessRunner()
 
@@ -244,22 +277,33 @@ def main(tests, root_uri, verbose):
         if root_uri:
             tmp_dir = root_uri
 
-        errors = []
+        errors = {}
         for test in tests:
             if test not in all_tests:
-                print('{} is not a valid test.'.format(test))
+                console_error(f'{test} is not a valid test.')
                 return
 
-            errors.extend(run_test(test, tmp_dir))
+            errors[test] = []
+            for params in test_param_sets[test]:
+                test_name = f'{test}: {params["name"]}'
+                errs = run_test(test_name, tmp_dir, params=params)
+                errors[test].extend(errs)
 
-            for error in errors:
+            for error in errors[test]:
                 print(error)
 
         for test in tests:
-            nb_test_errors = len(
-                list(filter(lambda error: error.test == test, errors)))
-            if nb_test_errors == 0:
-                print('{} test passed!'.format(test))
+            for params in test_param_sets[test]:
+                test_name = f'{test}: {params["name"]}'
+                test_errors = errors[test]
+                nb_test_errors = len(
+                    list(
+                        filter(lambda error: error.test == test_name,
+                               test_errors)))
+                if nb_test_errors == 0:
+                    console_success(f'{test_name}: test passed!', bold=True)
+                else:
+                    console_error(f'{test_name}: test failed!', bold=True)
 
         if errors:
             exit(1)
