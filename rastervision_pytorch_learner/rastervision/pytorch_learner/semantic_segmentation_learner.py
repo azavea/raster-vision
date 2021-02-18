@@ -170,6 +170,9 @@ class SemanticSegmentationLearner(Learner):
         batch_sz, c, h, w = x.shape
         batch_sz = min(batch_sz,
                        batch_limit) if batch_limit is not None else batch_sz
+        if batch_sz == 0:
+            return
+
         channel_groups = self.cfg.data.channel_display_groups
 
         nrows = batch_sz
@@ -183,6 +186,16 @@ class SemanticSegmentationLearner(Learner):
             ncols=ncols,
             constrained_layout=True,
             figsize=(3 * ncols, 3 * nrows))
+
+        # plt.subplots only returns a single AxesSubplot object
+        # if nrows * ncols = 1
+        if not isinstance(axes, np.ndarray):
+            axes = np.array([[axes]])
+        # plt.subplots returns a 1D array if nrows = 1 or  ncols = 1
+        if axes.ndim == 1:
+            axes = axes.reshape((nrows, ncols))
+
+        assert axes.shape == (nrows, ncols)
 
         # (N, c, h, w) --> (N, h, w, c)
         x = x.permute(0, 2, 3, 1)
@@ -227,11 +240,18 @@ class SemanticSegmentationLearner(Learner):
         for (title, chs), ch_ax in zip(channel_groups.items(), img_axes):
             im = x[..., chs]
             if len(chs) == 1:
+                # repeat single channel 3 times
                 im = im.expand(-1, -1, 3)
             elif len(chs) == 2:
+                # add a 3rd channel with all pixels set to 0.5
                 h, w, _ = x.shape
                 third_channel = torch.full((h, w, 1), fill_value=.5)
                 im = torch.cat((im, third_channel), dim=-1)
+            elif len(chs) > 3:
+                # only use the first 3 channels
+                log.warn(f'Only plotting first 3 channels of channel-group '
+                         f'{title}: {chs}.')
+                im = x[..., chs[:3]]
             ch_ax.imshow(im)
             ch_ax.set_title(title)
             ch_ax.set_xticks([])

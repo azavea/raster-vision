@@ -926,6 +926,8 @@ class Learner(ABC):
         batch_sz = x.shape[0]
         batch_sz = min(batch_sz,
                        batch_limit) if batch_limit is not None else batch_sz
+        if batch_sz == 0:
+            return
         ncols = nrows = math.ceil(math.sqrt(batch_sz))
         fig = plt.figure(
             constrained_layout=True, figsize=(3 * ncols, 3 * nrows))
