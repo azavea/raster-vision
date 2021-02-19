@@ -69,20 +69,24 @@ def log_system_details():
     # python
     log.info(f'Python version: {sys.version}')
     # nvidia GPU
-    log.info(os.popen("nvidia-smi").read())
-    log.info(os.popen("nvcc --version").read())
-    log.info('Devices')
-    call([
-        "nvidia-smi", "--format=csv",
-        "--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free"
-    ])
+    try:
+        log.info(os.popen("nvidia-smi").read())
+        log.info(os.popen("nvcc --version").read())
+        log.info('Devices')
+        call([
+            "nvidia-smi", "--format=csv",
+            "--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free"
+        ])
+    except FileNotFoundError:
+        log.info('nvidia-smi, nvcc commands not available.')
     # pytorch and CUDA
     log.info(f'PyTorch version: {torch.__version__}')
+    log.info(f'CUDA available: {torch.cuda.is_available()}')
     log.info(f'CUDA version: {torch.version.cuda}')
     log.info(f'CUDNN version: {torch.backends.cudnn.version()}')
     log.info(f'Number CUDA Devices: {torch.cuda.device_count()}')
-    log.info(f'CUDA available: {torch.cuda.is_available()}')
-    log.info(f'Active CUDA Device: GPU {torch.cuda.current_device()}')
+    if torch.cuda.is_available():
+        log.info(f'Active CUDA Device: GPU {torch.cuda.current_device()}')
 
 
 class Learner(ABC):
