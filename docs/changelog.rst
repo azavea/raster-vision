@@ -36,6 +36,7 @@ Features
 * Allow reading directly from raster source during training without chipping `#1046 <https://github.com/azavea/raster-vision/pull/1046>`_
 * Remove external commands (obsoleted by external architectures and loss functions) `#1047 <https://github.com/azavea/raster-vision/pull/1047>`_
 * Allow saving SS predictions as probabilities `#1057 <https://github.com/azavea/raster-vision/pull/1057>`_
+* Update CUDA version from 10.1 to 10.2 `#1115 <https://github.com/azavea/raster-vision/pull/1115>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
