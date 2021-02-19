@@ -7,9 +7,11 @@ import datetime
 from abc import ABC, abstractmethod
 import shutil
 import os
+import sys
 import math
 import logging
-from subprocess import Popen
+from subprocess import Popen, call
+import psutil
 import numbers
 import zipfile
 from typing import Optional, List, Tuple, Dict, Union, Any
@@ -52,6 +54,37 @@ log = logging.getLogger(__name__)
 MetricDict = Dict[str, float]
 
 
+def log_system_details():
+    """Log some system details."""
+    # CPUs
+    log.info(f'Physical CPUs: {psutil.cpu_count(logical=False)}')
+    log.info(f'Logical CPUs: {psutil.cpu_count(logical=True)}')
+    # memory usage
+    mem_stats = psutil.virtual_memory()._asdict()
+    log.info(f'Total memory: {mem_stats["total"] / 2**30: .2f} GB')
+    # disk usage
+    disk_stats = psutil.disk_usage('/opt/data')._asdict()
+    log.info(
+        f'Size of /opt/data volume: {disk_stats["total"] / 2**30: .2f} GB')
+    # python
+    log.info(f'Python version: {sys.version}')
+    # nvidia GPU
+    log.info(os.popen("nvidia-smi").read())
+    log.info(os.popen("nvcc --version").read())
+    log.info('Devices')
+    call([
+        "nvidia-smi", "--format=csv",
+        "--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free"
+    ])
+    # pytorch and CUDA
+    log.info(f'PyTorch version: {torch.__version__}')
+    log.info(f'CUDA version: {torch.version.cuda}')
+    log.info(f'CUDNN version: {torch.backends.cudnn.version()}')
+    log.info(f'Number CUDA Devices: {torch.cuda.device_count()}')
+    log.info(f'CUDA available: {torch.cuda.is_available()}')
+    log.info(f'Active CUDA Device: GPU {torch.cuda.current_device()}')
+
+
 class Learner(ABC):
     """Abstract training and prediction routines for a model.
 
@@ -90,6 +123,7 @@ class Learner(ABC):
                 and the loss function, optimizer, etc. are not initialized.
                 Defaults to True.
         """
+        log_system_details()
         self.cfg = cfg
         self.tmp_dir = tmp_dir
 
@@ -156,6 +190,7 @@ class Learner(ABC):
 
     def setup_training(self, loss_def_path=None):
         log.info(self.cfg)
+        log.info(f'Using device: {self.device}')
 
         # ds = dataset, dl = dataloader
         self.train_ds = None
