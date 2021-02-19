@@ -1080,10 +1080,12 @@ class Learner(ABC):
                 batch = (x, y)
                 self.opt.zero_grad()
                 output = self.train_step(batch, batch_ind)
-                outputs.append(output)
-                loss = output['train_loss']
-                loss.backward()
+                output['train_loss'].backward()
                 self.opt.step()
+                # detach tensors in the output, if any, to avoid memory leaks
+                for k, v in output.items():
+                    output[k] = v.detach() if isinstance(v, Tensor) else v
+                outputs.append(output)
                 if self.step_scheduler:
                     self.step_scheduler.step()
                 num_samples += x.shape[0]
