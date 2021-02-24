@@ -47,7 +47,12 @@ class RVPipeline(Pipeline):
 
     @property
     def commands(self):
-        return self.config.backend.filter_commands(ALL_COMMANDS)
+        commands = ALL_COMMANDS[:]
+        if len(self.config.analyzers) == 0 and 'analyze' in commands:
+            commands.remove('analyze')
+            click.secho("Skipping 'analyze' command...", fg='green', bold=True)
+        commands = self.config.backend.filter_commands(commands)
+        return commands
 
     @property
     def split_commands(self):
