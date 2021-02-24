@@ -14,6 +14,7 @@ import albumentations as A
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 from torchvision import models
 
 from rastervision.pipeline.config import ConfigError
@@ -148,6 +149,21 @@ class SemanticSegmentationLearner(Learner):
                 out = self.prob_to_pred(out)
         out = self.to_device(out, 'cpu')
         return out
+
+    def numpy_predict(self, x: np.ndarray,
+                      raw_out: bool = False) -> np.ndarray:
+        _, h, w, _ = x.shape
+        transform, _ = self.get_data_transforms()
+        x = self.normalize_input(x)
+        x = self.to_batch(x)
+        x = np.stack([transform(image=img)['image'] for img in x])
+        x = torch.from_numpy(x)
+        x = x.permute((0, 3, 1, 2))
+        out = self.predict(x, raw_out=True)
+        out = F.interpolate(
+            out, size=(h, w), mode='bilinear', align_corners=False)
+        out = self.prob_to_pred(out)
+        return self.output_to_numpy(out)
 
     def prob_to_pred(self, x):
         return x.argmax(1)
