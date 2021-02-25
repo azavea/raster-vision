@@ -498,6 +498,9 @@ class Learner(ABC):
         train_dirs = [join(d, 'train') for d in data_dirs if isdir(d)]
         val_dirs = [join(d, 'valid') for d in data_dirs if isdir(d)]
 
+        train_dirs = [d for d in train_dirs if isdir(d)]
+        val_dirs = [d for d in val_dirs if isdir(d)]
+
         base_transform, aug_transform = self.get_data_transforms()
         train_tf = aug_transform if not cfg.overfit_mode else base_transform
         val_tf, test_tf = base_transform, base_transform
