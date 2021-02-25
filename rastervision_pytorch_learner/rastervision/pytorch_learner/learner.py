@@ -70,12 +70,12 @@ def log_system_details():
     log.info(f'Python version: {sys.version}')
     # nvidia GPU
     try:
-        log.info(os.popen("nvcc --version").read())
-        log.info(os.popen("nvidia-smi").read())
+        log.info(os.popen('nvcc --version').read())
+        log.info(os.popen('nvidia-smi').read())
         log.info('Devices:')
         call([
-            "nvidia-smi", "--format=csv",
-            "--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free"
+            'nvidia-smi', '--format=csv',
+            '--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free'
         ])
     except FileNotFoundError:
         pass

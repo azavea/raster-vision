@@ -368,7 +368,7 @@ def _predict(exp_cfg: dict, collect_dir: str) -> None:
         exit(1)
 
     pred_dir = join(collect_dir, 'sample-predictions')
-    sample_uri = exp_cfg["sample_img"]
+    sample_uri = exp_cfg['sample_img']
     _, sample_ext = splitext(basename(sample_uri))
     sample_final_uri = join(pred_dir, f'sample-img-{key}{sample_ext}')
     if not exists(sample_final_uri):
