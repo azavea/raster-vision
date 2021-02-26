@@ -3,7 +3,7 @@
 Examples
 =========
 
-This page contains `examples <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples>`_ of using Raster Vision on open datasets. Unless otherwise stated, all commands should be run inside the Raster Vision Docker container. See :ref:`docker images` for info on how to do this.
+This page contains `examples <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples>`_ of using Raster Vision on open datasets. Unless otherwise stated, all commands should be run inside the Raster Vision Docker container. See :ref:`docker images` for info on how to do this.
 
 How to Run an Example
 ---------------------
@@ -51,7 +51,7 @@ You'll need to do some data preprocessing, which we can do in the Jupyter notebo
 
     docker/run --jupyter [--aws]
 
-The ``--aws`` option is only needed if pulling data from S3. In Jupyter inside the browser, navigate to the `rastervision/examples/chip_classification/spacenet_rio_data_prep.ipynb <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio_data_prep.ipynb>`_ notebook. Set the URIs in the first cell and then run the rest of the notebook. Set the ``processed_uri`` to a local or S3 URI depending on where you want to run the experiment.
+The ``--aws`` option is only needed if pulling data from S3. In Jupyter inside the browser, navigate to the `rastervision/examples/chip_classification/spacenet_rio_data_prep.ipynb <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio_data_prep.ipynb>`_ notebook. Set the URIs in the first cell and then run the rest of the notebook. Set the ``processed_uri`` to a local or S3 URI depending on where you want to run the experiment.
 
 .. image:: img/examples/jupyter.png
   :width: 500
@@ -61,7 +61,7 @@ Step 3: Do a test run locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The experiment we want to run is in
-`spacenet_rio.py <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio.py>`_. To run this, first get to the Docker console using:
+`spacenet_rio.py <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/chip_classification/spacenet_rio.py>`_. To run this, first get to the Docker console using:
 
 .. code-block:: terminal
 
@@ -120,27 +120,27 @@ The evaluation metrics can be found in ``$root_uri/eval/eval.json``. This is an 
 
     [
         {
-            "precision": 0.9789053042730738,
-            "recall": 0.9835711197578902,
-            "f1": 0.9812164562005311,
+            "precision": 0.9802512682554008,
+            "recall": 0.9865974924340684,
+            "f1": 0.9833968183611386,
             "count_error": 0.0,
             "gt_count": 2313.0,
             "class_id": 0,
             "class_name": "no_building"
         },
         {
-            "precision": 0.9742706598624787,
-            "recall": 0.9664613278576316,
-            "f1": 0.9702675108612148,
+            "precision": 0.9789227645464389,
+            "recall": 0.9685147159479809,
+            "f1": 0.9736038795756798,
             "count_error": 0.0,
             "gt_count": 1461.0,
             "class_id": 1,
             "class_name": "building"
         },
         {
-            "precision": 0.9771111295290676,
-            "recall": 0.9769475357710652,
-            "f1": 0.9769778740222743,
+            "precision": 0.9797369746892128,
+            "recall": 0.9795972443031267,
+            "f1": 0.9796057522335405,
             "count_error": 0.0,
             "gt_count": 3774.0,
             "class_id": null,
@@ -148,7 +148,7 @@ The evaluation metrics can be found in ``$root_uri/eval/eval.json``. This is an 
         }
     ]
 
-More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-rio-cc/eval.json>`_.
+More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-rio-cc/eval.json>`_.
 
 Step 6: Predict on new imagery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,7 +160,7 @@ After running an experiment, a **model bundle** is saved into ``$root_uri/bundle
 Semantic Segmentation: SpaceNet Vegas
 --------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/spacenet_vegas.py>`_ contains an example of doing semantic segmentation using the SpaceNet Vegas dataset which has labels in vector form. It allows for training a model to predict buildings or roads.  Note that for buildings, polygon output in the form of GeoJSON files will be saved to the ``predict`` directory alongside the GeoTIFF files. In addition, a vector evaluation file using SpaceNet metrics will be saved to the ``eval`` directory.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/spacenet_vegas.py>`_ contains an example of doing semantic segmentation using the SpaceNet Vegas dataset which has labels in vector form. It allows for training a model to predict buildings or roads.  Note that for buildings, polygon output in the form of GeoJSON files will be saved to the ``predict`` directory alongside the GeoTIFF files. In addition, a vector evaluation file using SpaceNet metrics will be saved to the ``eval`` directory.
 
 Arguments:
 
@@ -171,7 +171,7 @@ Arguments:
 Buildings
 ~~~~~~~~~~~
 
-After training a model, the building F1 score is 0.90. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-buildings-ss/eval.json>`_.
+After training a model, the building F1 score is 0.91. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/eval.json>`_.
 
 .. image:: img/examples/spacenet-vegas-buildings.png
   :width: 400
@@ -180,7 +180,7 @@ After training a model, the building F1 score is 0.90. More evaluation details c
 Roads
 ~~~~~~~~~~~
 
-After training a model, the road F1 score was 0.83. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-roads-ss/eval.json>`_.
+After training a model, the road F1 score was 0.83. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-roads-ss/eval.json>`_.
 
 .. image:: img/examples/spacenet-vegas-roads-qgis.png
   :width: 500
@@ -191,7 +191,7 @@ After training a model, the road F1 score was 0.83. More evaluation details can 
 Semantic Segmentation: ISPRS Potsdam
 -------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`_ performs semantic segmentation on the `ISPRS Potsdam dataset <http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html>`_. The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our `blog post <https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/>`_.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`_ performs semantic segmentation on the `ISPRS Potsdam dataset <http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html>`_. The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our `blog post <https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/>`_.
 
 Data:
 
@@ -202,7 +202,7 @@ Arguments:
 * ``raw_uri`` should contain ``4_Ortho_RGBIR`` and ``5_Labels_for_participants`` subdirectories.
 * ``processed_uri`` should be set to a directory which will be used to store test crops.
 
-After training a model, the average F1 score was 0.89. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/isprs-potsdam-ss/eval.json>`_.
+After training a model, the average F1 score was 0.89. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/isprs-potsdam-ss/eval.json>`_.
 
 .. image:: img/examples/potsdam-seg-predictions.png
   :width: 400
@@ -211,19 +211,19 @@ After training a model, the average F1 score was 0.89. More evaluation details c
 Object Detection: COWC Potsdam Cars
 -------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam.py>`_ performs object detection on cars with the `Cars Overhead With Context <https://gdo152.llnl.gov/cowc/>`_ dataset over Potsdam, Germany.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam.py>`_ performs object detection on cars with the `Cars Overhead With Context <https://gdo152.llnl.gov/cowc/>`_ dataset over Potsdam, Germany.
 
 Data:
 
 * The imagery can only be downloaded after filling in this `request form <http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html>`_. After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip ``4_Ortho_RGBIR.zip`` into a directory, and then upload to S3 if desired. (This step uses the same imagery as :ref:`potsdam semantic segmentation`.)
-* Download the `processed labels <https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip>`_ and unzip. These files were generated from the `COWC car detection dataset <https://gdo152.llnl.gov/cowc/>`_ using `some scripts <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam_data_prep/>`_. TODO: Get these scripts into runnable shape.
+* Download the `processed labels <https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip>`_ and unzip. These files were generated from the `COWC car detection dataset <https://gdo152.llnl.gov/cowc/>`_ using `some scripts <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam_data_prep/>`_. TODO: Get these scripts into runnable shape.
 
 Arguments:
 
 * ``raw_uri`` should point to the imagery directory created above, and should contain the ``4_Ortho_RGBIR`` subdirectory.
 * ``processed_uri`` should point to the labels directory created above. It should contain the ``labels/all`` subdirectory.
 
-After training a model, the car F1 score was 0.95. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/cowc-potsdam-od/eval.json>`_.
+After training a model, the car F1 score was 0.95. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/cowc-potsdam-od/eval.json>`_.
 
 .. image:: img/examples/cowc-potsdam.png
   :width: 400
@@ -232,19 +232,19 @@ After training a model, the car F1 score was 0.95. More evaluation details can b
 Object Detection: xView Vehicles
 --------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/xview.py>`_ performs object detection to find vehicles using the `DIUx xView Detection Challenge <http://xviewdataset.org/>`_ dataset.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/xview.py>`_ performs object detection to find vehicles using the `DIUx xView Detection Challenge <http://xviewdataset.org/>`_ dataset.
 
 Data:
 
 * Sign up for an account for the `DIUx xView Detection Challenge <http://xviewdataset.org/>`_. Navigate to the `downloads page <https://challenge.xviewdataset.org/download-links>`_ and download the zipped training images and labels. Unzip both of these files and place their contents in a directory, and upload to S3 if desired.
-* Run the `xview-data-prep.ipynb <https://github.com/azavea/raster-vision/tree/0.12/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/xview-data-prep.ipynb>`_ Jupyter notebook, pointing the ``raw_uri`` to the directory created above.
+* Run the `xview-data-prep.ipynb <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/xview-data-prep.ipynb>`_ Jupyter notebook, pointing the ``raw_uri`` to the directory created above.
 
 Arguments:
 
 * The ``raw_uri`` should point to the directory created above, and contain a labels GeoJSON file named ``xView_train.geojson``, and a directory named ``train_images``.
 * The ``processed_uri`` should point to the processed data generated by the notebook.
 
-After training a model, the vehicle F1 score was 0.60. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/xview-od/eval.json>`_.
+After training a model, the vehicle F1 score was 0.61. More evaluation details can be found `here <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/xview-od/eval.json>`_.
 
 .. image:: img/examples/xview.png
   :width: 400
@@ -278,30 +278,30 @@ When unzipped, the model bundle contains a ``model.pth`` file which can be used 
    * - SpaceNet Rio Buildings
      - Chip Classification
      - Resnet 50
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-rio-cc/model-bundle.zip>`_
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-rio-cc/013022223130_sample.tif>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-rio-cc/model-bundle.zip>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-rio-cc/sample-predictions/sample-img-spacenet-rio-cc.tif>`_
    * - SpaceNet Vegas Buildings
      - Semantic Segmentation
      - DeeplabV3 / Resnet50
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-buildings-ss/model-bundle.zip>`_
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-buildings-ss/1929.tif>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/model-bundle.zip>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/sample-predictions/sample-img-spacenet-vegas-buildings-ss.tif>`_
    * - SpaceNet Vegas Roads
      - Semantic Segmentation
      - DeeplabV3 / Resnet50
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-roads-ss/model-bundle.zip>`_
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-roads-ss/524.tif>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-roads-ss/model-bundle.zip>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-roads-ss/sample-predictions/sample-img-spacenet-vegas-roads-ss.tif>`_
    * - ISPRS Potsdam
      - Semantic Segmentation
      - DeeplabV3 / Resnet50
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/isprs-potsdam-ss/model-bundle.zip>`_
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/isprs-potsdam-ss/3_12_sample.tif>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/isprs-potsdam-ss/model-bundle.zip>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/isprs-potsdam-ss/sample-predictions/sample-img-isprs-potsdam-ss.tif>`_
    * - COWC Potsdam (Cars)
      - Object Detection
      - Faster-RCNN / Resnet18
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/cowc-potsdam-od/model-bundle.zip>`_
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/cowc-potsdam-od/3_10_sample.tif>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/cowc-potsdam-od/model-bundle.zip>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/cowc-potsdam-od/sample-predictions/sample-img-cowc-potsdam-od.tif>`_
    * - xView (Vehicles)
      - Object Detection
      - Faster-RCNN / Resnet50
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/xview-od/model_bundle.zip>`_
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/xview-od/1124-sample.tif>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/xview-od/model_bundle.zip>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/xview-od/sample-predictions/sample-img-xview-od.tif>`_
