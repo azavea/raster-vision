@@ -215,6 +215,13 @@ Semantic segmentation labels stored as polygons in a ``VectorSource`` can be ras
 
 .. seealso:: The :ref:`api RasterioSourceConfig` and :ref:`api RasterizedSourceConfig` API docs.
 
+MultiRasterSource
+^^^^^^^^^^^^^^^^^
+
+A ``RasterSource`` that combines multiple sub-``RasterSources`` by concatenting their outputs along the channel dimension (assumed to be the last dimension). This may be used, for example, to get RGB channels of a scene from one file and the elevation map of the same scene from another file, and then concatenate them together.
+
+.. seealso:: The :ref:`api MultiRasterSourceConfig` API docs.
+
 .. _raster transformer:
 
 RasterTransformer
@@ -228,6 +235,27 @@ StatsTransformer
 This transformer is used to convert non-uint8 values to uint8 using statistics computed by the :ref:`stats analyzer`.
 
 .. seealso:: The :ref:`api StatsTransformerConfig` API docs.
+
+CastTransformer
+^^^^^^^^^^^^^^^^^^
+
+This transformer is used to type-cast chips to a specific dtype. For example, to uint8.
+
+.. seealso:: The :ref:`api CastTransformerConfig` API docs.
+
+NanTransformer
+^^^^^^^^^^^^^^^^^^
+
+This transformer is used to remove NaN values from a float raster.
+
+.. seealso:: The :ref:`api NanTransformerConfig` API docs.
+
+ReclassTransformer
+^^^^^^^^^^^^^^^^^^
+
+This transformer is used to map labels in a label raster to different values.
+
+.. seealso:: The :ref:`api ReclassTransformerConfig` API docs.
 
 VectorSource
 ---------------
