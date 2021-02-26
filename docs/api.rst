@@ -108,12 +108,32 @@ RasterizedSourceConfig
 
 .. autoclass:: rastervision.core.data.raster_source.RasterizedSourceConfig
 
+MultiRasterSourceConfig
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_source.MultiRasterSourceConfig
+
 .. _api StatsTransformerConfig:
 
 StatsTransformerConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.core.data.raster_transformer.StatsTransformerConfig
+
+CastTransformerConfig
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_transformer.CastTransformerConfig
+
+NanTransformerConfig
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_transformer.NanTransformerConfig
+
+ReclassTransformer
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_transformer.ReclassTransformer
 
 VectorSourceConfig
 ~~~~~~~~~~~~~~~~~~~
@@ -236,10 +256,35 @@ ExternalModuleConfig
 
 .. autoclass:: rastervision.pytorch_learner.ExternalModuleConfig
 
+DataConfig
+~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.DataConfig
+
+ImageDataConfig
+~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ImageDataConfig
+
+GeoDataConfig
+~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.GeoDataConfig
+
+GeoDataWindowConfig
+~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.GeoDataWindowConfig
+
 PlotOptions
 ~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.pytorch_learner.PlotOptions
+
+ModelConfig
+~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ModelConfig
 
 ClassificationDataFormat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -326,6 +371,11 @@ ObjectDetectionGeoDataConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: rastervision.pytorch_learner.ObjectDetectionGeoDataConfig
+
+ObjectDetectionGeoDataWindowConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.pytorch_learner.ObjectDetectionGeoDataWindowConfig
 
 ObjectDetectionModelConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
