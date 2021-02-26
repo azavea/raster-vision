@@ -26,7 +26,7 @@ LOCAL_COLLECT_ROOT = '/opt/data/examples/collect'
 ZOO_UPLOAD_ROOT = (
     's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.13')
 SAMPLE_IMG_ROOT = (
-    's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.12')
+    's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.13')
 
 ######################
 # Default configuration for the examples.

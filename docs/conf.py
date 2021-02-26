@@ -18,7 +18,6 @@ from pallets_sphinx_themes import ProjectLink, get_version
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'Raster Vision'
@@ -26,10 +25,9 @@ copyright = '2018, Azavea'
 author = 'Azavea'
 
 # The short X.Y version
-version = '0.12'
+version = '0.13'
 # The full version, including alpha/beta/rc tags
-release = '0.12.0'
-
+release = '0.13.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -52,10 +50,12 @@ extensions = [
 import sys
 from unittest.mock import MagicMock
 
+
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
         return MagicMock()
+
 
 MOCK_MODULES = ['pyproj', 'h5py', 'osgeo', 'mask_to_polygons']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
@@ -105,8 +105,10 @@ html_context = {
         ProjectLink('Project Website', 'https://rastervision.io/'),
         ProjectLink('PyPI releases', 'https://pypi.org/project/rastervision/'),
         ProjectLink('GitHub Repo', 'https://github.com/azavea/raster-vision'),
-        ProjectLink('Gitter Channel', 'https://gitter.im/azavea/raster-vision'),
-        ProjectLink('Issue Tracker', 'https://github.com/azavea/raster-vision/issues/'),
+        ProjectLink('Gitter Channel',
+                    'https://gitter.im/azavea/raster-vision'),
+        ProjectLink('Issue Tracker',
+                    'https://github.com/azavea/raster-vision/issues/'),
         ProjectLink('CHANGELOG', 'changelog.html'),
         ProjectLink('Azavea', 'https://www.azavea.com/'),
     ],
@@ -117,9 +119,14 @@ html_context = {
 }
 html_sidebars = {
     'index': ['project.html', 'versions.html', 'searchbox.html'],
-    '**': ['project.html', 'localtoc.html', 'relations.html', 'versions.html', 'searchbox.html'],
+    '**': [
+        'project.html', 'localtoc.html', 'relations.html', 'versions.html',
+        'searchbox.html'
+    ],
 }
-singlehtml_sidebars = {'index': ['project.html', 'versions.html', 'localtoc.html']}
+singlehtml_sidebars = {
+    'index': ['project.html', 'versions.html', 'localtoc.html']
+}
 html_static_path = ['_static']
 html_favicon = 'img/raster-vision-icon.png'
 html_logo = 'img/raster-vision-logo.png'
@@ -132,7 +139,6 @@ html_experimental_html5_writer = True
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'RasterVisiondoc'
-
 
 # -- Options for LaTeX output ------------------------------------------------
 
@@ -158,20 +164,16 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'RasterVision.tex', 'Raster Vision Documentation',
-     'Azavea', 'manual'),
+    (master_doc, 'RasterVision.tex', 'Raster Vision Documentation', 'Azavea',
+     'manual'),
 ]
-
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'RasterVisoin-{}.tex', html_title,
-     [author], 'manual')
-]
-
+man_pages = [(master_doc, 'RasterVisoin-{}.tex', html_title, [author],
+              'manual')]
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -179,11 +181,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'RasterVision', 'Raster Vision Documentation',
-     author, 'RasterVision', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, 'RasterVision', 'Raster Vision Documentation', author,
+     'RasterVision', 'One line description of project.', 'Miscellaneous'),
 ]
-
 
 # -- Extension configuration -------------------------------------------------
 

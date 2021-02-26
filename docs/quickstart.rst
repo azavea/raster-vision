@@ -28,7 +28,7 @@ Now we can run a console in the the Docker container by doing
    > docker run --rm -it \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_OUT_DIR}:/opt/data/output \
-        quay.io/azavea/raster-vision:pytorch-0.12 /bin/bash
+        quay.io/azavea/raster-vision:pytorch-0.13 /bin/bash
 
 .. seealso:: See :ref:`docker images` for more information about setting up Raster Vision with Docker images.
 
@@ -108,7 +108,7 @@ For example, to use a DeepLab/Resnet50 model that has been trained to do buildin
 
 .. code-block:: terminal
 
-   > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-buildings-ss/model-bundle.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.12/spacenet-vegas-buildings-ss/1929.tif prediction.tif
+   > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/model-bundle.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/1929.tifsample-predictions/sample-img-spacenet-vegas-buildings-ss.tif prediction.tif
 
 This will make predictions on the image ``1929.tif`` using the provided model bundle, and will produce a file called ``predictions.tif``. These files are in GeoTiff format, and you will need a GIS viewer such as `QGIS <https://qgis.org/en/site/>`_ to open them correctly on your device. Notice that the prediction package and the input raster are transparently downloaded via HTTP.
 The input image (false color) and predictions are reproduced below.
