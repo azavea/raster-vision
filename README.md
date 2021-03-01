@@ -20,6 +20,7 @@ Raster Vision is an open source Python framework for building computer vision mo
 See the [documentation](https://docs.rastervision.io) for more details.
 
 
+
 ### Setup
 
 There are several ways to setup Raster Vision:
