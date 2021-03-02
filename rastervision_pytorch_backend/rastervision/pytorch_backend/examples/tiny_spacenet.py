@@ -56,6 +56,7 @@ def get_config(runner) -> SemanticSegmentationConfig:
 
     # Use the PyTorch backend for the SemanticSegmentation pipeline.
     chip_sz = 300
+
     backend = PyTorchSemanticSegmentationConfig(
         data=SemanticSegmentationGeoDataConfig(
             scene_dataset=scene_dataset,

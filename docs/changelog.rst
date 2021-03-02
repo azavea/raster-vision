@@ -4,6 +4,48 @@ CHANGELOG
 Raster Vision 0.13
 -------------------
 
+This release presents a major jump in Raster Vision's power and flexibility. The most significant changes are:
+
+Support arbitrary models and loss functions (`#985 <https://github.com/azavea/raster-vision/pull/985>`_, `#992 <https://github.com/azavea/raster-vision/pull/992>`_)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Raster Vision is no longer restricted to using the built in models and loss functions. It is now possible to import models and loss functions from a GitHub repo or a URI or a zip file as long as they interface correctly with RV's learner code. This means that you can now easily swap models in your existing training pipelines, allowing you to take advantage of the latest models or to make customizations that help with your specific task; all with minimal changes.
+
+This is made possible by PyTorch's ``hub`` module.
+
+Currently not supported for Object Detection.
+
+Support for multiband images (even with Transfer Learning) (`#972 <https://github.com/azavea/raster-vision/pull/972>`_)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is now possible to train on imagery with more than 3 channels. Raster Vision automatically modifies the model to be able to accept more than 3 channels. If using pretrained models, the pre-learned weights are retained.
+
+The model modification cannot be performed automatically when using an external model. But as long as the external model supports multiband inputs, it will work correctly with RV.
+
+Currently only supported for Semantic Segmentation.
+
+Support for reading directly from raster sources during training without chipping (`#1046 <https://github.com/azavea/raster-vision/pull/1046>`_)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is no longer necessary to go through a ``chip`` stage to produce a training dataset. You can instead provide the ``DatasetConfig`` directly to the PyTorch backend and RV will sample training chips on the fly during training. All the examples now use this as the default. Check them out to see how to use this feature.
+
+Support for arbitrary Albumentations transforms (`#1001 <https://github.com/azavea/raster-vision/pull/1001>`_)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is now possible to supply an arbitrarily complicated Albumentations transform for data augmentation. In the ``DataConfig`` subclasses, you can specify a ``base_transform`` that is applied every time (i.e. in training, validation, and prediction), an ``aug_transform`` that is only applied during training, and a ``plot_transform`` (via ``PlotOptions``) to ensure that sample images are plotted correctly (e.g. use ``plot_transform`` to rescale a normalized image to 0-1).
+
+Allow streaming reads from Rasterio sources (`#1020 <https://github.com/azavea/raster-vision/pull/1020>`_)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is now possible to stream chips from a remote ``RasterioSource`` without first downloading the entire file. To enable, set ``allow_streaming=True`` in the ``RasterioSourceConfig``.
+
+Analyze stage no longer necessary when using non-uint8 rasters (`#972 <https://github.com/azavea/raster-vision/pull/972>`_)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is no longer necessary to go through an ``analyze`` stage to be able to convert non-``uint8`` rasters to ``uint8`` chips. Chips can now be stored as ``numpy`` arrays, and will be normalized to ``float`` during training/prediction based on their specific data type. See ``spacenet_vegas.py`` for example usage.
+
+Currently only supported for Semantic Segmentation.
+
 Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -37,6 +79,8 @@ Features
 * Remove external commands (obsoleted by external architectures and loss functions) `#1047 <https://github.com/azavea/raster-vision/pull/1047>`_
 * Allow saving SS predictions as probabilities `#1057 <https://github.com/azavea/raster-vision/pull/1057>`_
 * Update CUDA version from 10.1 to 10.2 `#1115 <https://github.com/azavea/raster-vision/pull/1115>`_
+* Add integration tests for the nochip functionality `#1116 <https://github.com/azavea/raster-vision/pull/1116>`_
+* Update examples to make use of the nochip functionality by default  `#1116 <https://github.com/azavea/raster-vision/pull/1116>`_
 
 Bug Fixes
 ~~~~~~~~~~~~
