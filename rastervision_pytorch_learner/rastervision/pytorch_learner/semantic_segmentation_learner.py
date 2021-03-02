@@ -14,6 +14,7 @@ import albumentations as A
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 from torchvision import models
 
 from rastervision.pipeline.config import ConfigError
@@ -149,6 +150,21 @@ class SemanticSegmentationLearner(Learner):
         out = self.to_device(out, 'cpu')
         return out
 
+    def numpy_predict(self, x: np.ndarray,
+                      raw_out: bool = False) -> np.ndarray:
+        _, h, w, _ = x.shape
+        transform, _ = self.get_data_transforms()
+        x = self.normalize_input(x)
+        x = self.to_batch(x)
+        x = np.stack([transform(image=img)['image'] for img in x])
+        x = torch.from_numpy(x)
+        x = x.permute((0, 3, 1, 2))
+        out = self.predict(x, raw_out=True)
+        out = F.interpolate(
+            out, size=(h, w), mode='bilinear', align_corners=False)
+        out = self.prob_to_pred(out)
+        return self.output_to_numpy(out)
+
     def prob_to_pred(self, x):
         return x.argmax(1)
 
@@ -170,6 +186,9 @@ class SemanticSegmentationLearner(Learner):
         batch_sz, c, h, w = x.shape
         batch_sz = min(batch_sz,
                        batch_limit) if batch_limit is not None else batch_sz
+        if batch_sz == 0:
+            return
+
         channel_groups = self.cfg.data.channel_display_groups
 
         nrows = batch_sz
@@ -181,11 +200,20 @@ class SemanticSegmentationLearner(Learner):
         fig, axes = plt.subplots(
             nrows=nrows,
             ncols=ncols,
+            squeeze=False,
             constrained_layout=True,
             figsize=(3 * ncols, 3 * nrows))
 
+        assert axes.shape == (nrows, ncols)
+
         # (N, c, h, w) --> (N, h, w, c)
         x = x.permute(0, 2, 3, 1)
+
+        # apply transform, if given
+        if self.cfg.data.plot_options.transform is not None:
+            tf = A.from_dict(self.cfg.data.plot_options.transform)
+            x = tf(image=x.numpy())['image']
+            x = torch.from_numpy(x)
 
         # apply transform, if given
         if self.cfg.data.plot_options.transform is not None:
@@ -227,11 +255,18 @@ class SemanticSegmentationLearner(Learner):
         for (title, chs), ch_ax in zip(channel_groups.items(), img_axes):
             im = x[..., chs]
             if len(chs) == 1:
+                # repeat single channel 3 times
                 im = im.expand(-1, -1, 3)
             elif len(chs) == 2:
+                # add a 3rd channel with all pixels set to 0.5
                 h, w, _ = x.shape
                 third_channel = torch.full((h, w, 1), fill_value=.5)
                 im = torch.cat((im, third_channel), dim=-1)
+            elif len(chs) > 3:
+                # only use the first 3 channels
+                log.warn(f'Only plotting first 3 channels of channel-group '
+                         f'{title}: {chs}.')
+                im = x[..., chs[:3]]
             ch_ax.imshow(im)
             ch_ax.set_title(title)
             ch_ax.set_xticks([])

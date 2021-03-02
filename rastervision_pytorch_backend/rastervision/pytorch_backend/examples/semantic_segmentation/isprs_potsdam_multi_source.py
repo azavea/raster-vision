@@ -1,6 +1,3 @@
-# flake8: noqa
-
-from pathlib import Path
 from functools import partial
 from typing import Tuple, Union
 
@@ -15,9 +12,11 @@ from rastervision.core.data import (
 
 from rastervision.pytorch_backend import (PyTorchSemanticSegmentationConfig,
                                           SemanticSegmentationModelConfig)
-from rastervision.pytorch_learner import (Backbone, SolverConfig)
-from rastervision.pytorch_backend.examples.utils import (get_scene_info,
-                                                         save_image_crop)
+from rastervision.pytorch_backend.examples.utils import (save_image_crop)
+from rastervision.pytorch_learner import (
+    Backbone, SolverConfig, SemanticSegmentationImageDataConfig,
+    SemanticSegmentationGeoDataConfig, GeoDataWindowConfig,
+    GeoDataWindowMethod)
 
 # -----------------------
 # Input files and paths
@@ -26,9 +25,9 @@ RGBIR_DIR = '4_Ortho_RGBIR'
 ELEVATION_DIR = 'elevation'
 LABEL_DIR = '5_Labels_for_participants'
 
-RGBIR_FNAME = lambda scene_id: f'top_potsdam_{scene_id}_RGBIR.tif'
-ELEVATION_FNAME = lambda scene_id: f'{scene_id}.jpg'
-LABEL_FNAME = lambda scene_id: f'top_potsdam_{scene_id}_label.tif'
+RGBIR_FNAME = lambda scene_id: f'top_potsdam_{scene_id}_RGBIR.tif'  # noqa
+ELEVATION_FNAME = lambda scene_id: f'{scene_id}.jpg'  # noqa
+LABEL_FNAME = lambda scene_id: f'top_potsdam_{scene_id}_label.tif'  # noqa
 
 TRAIN_IDS = [
     '2_10', '2_11', '3_10', '3_11', '4_10', '4_11', '4_12', '5_10', '5_11',
@@ -47,6 +46,7 @@ CLASS_COLORS = [
     '#ffff00', '#0000ff', '#00ffff', '#00ff00', '#ffffff', '#ff0000'
 ]
 CHIP_SIZE = 300
+CHANNEL_ORDER = [0, 1, 2, 3, 4]
 
 # -----------------
 # Training
@@ -77,6 +77,7 @@ def get_config(runner,
                raw_uri: str,
                processed_uri: str,
                root_uri: str,
+               nochip: bool = True,
                test: bool = False) -> SemanticSegmentationConfig:
     """Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
@@ -84,10 +85,19 @@ def get_config(runner,
     Args:
         runner (Runner): Runner for the pipeline.
         raw_uri (str): Directory where the raw data resides
-        processed_uri (str): Directory for storing processed data. 
+        processed_uri (str): Directory for storing processed data.
                              E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
-        test (bool, optional): Whether to run in test mode. Defaults to False.
+        nochip (bool, optional): If True, read directly from the TIFF during
+            training instead of from pre-generated chips. The analyze and chip
+            commands should not be run, if this is set to True. Defaults to
+            True.
+        test (bool, optional): If True, does the following simplifications:
+            (1) Uses only the first 2 scenes
+            (2) Uses only a 600x600 crop of the scenes
+            (3) Enables test mode in the learner, which makes it use the
+                test_batch_sz and test_num_epochs, among other things.
+            Defaults to False.
 
     Returns:
         SemanticSegmentationConfig: A pipeline config.
@@ -105,17 +115,36 @@ def get_config(runner,
     # -------------------------------
     class_config = ClassConfig(names=CLASS_NAMES, colors=CLASS_COLORS)
 
-    chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding,
-        stride=CHIP_SIZE)
-
     _make_scene = partial(
         make_scene, raw_uri, processed_uri, class_config, test_mode=test)
 
     dataset_config = DatasetConfig(
         class_config=class_config,
         train_scenes=[_make_scene(scene_id) for scene_id in train_ids],
-        validation_scenes=[_make_scene(scene_id) for scene_id in val_ids])
+        validation_scenes=[_make_scene(scene_id) for scene_id in val_ids],
+        img_channels=5)
+
+    chip_options = SemanticSegmentationChipOptions(
+        window_method=SemanticSegmentationWindowMethod.sliding,
+        stride=CHIP_SIZE)
+
+    if nochip:
+        window_opts = GeoDataWindowConfig(
+            method=GeoDataWindowMethod.sliding,
+            size=CHIP_SIZE,
+            stride=chip_options.stride)
+
+        data = SemanticSegmentationGeoDataConfig(
+            scene_dataset=dataset_config,
+            window_opts=window_opts,
+            img_sz=CHIP_SIZE,
+            num_workers=4,
+            channel_display_groups=CHANNEL_DISPLAY_GROUPS)
+    else:
+        data = SemanticSegmentationImageDataConfig(
+            img_sz=CHIP_SIZE,
+            num_workers=4,
+            channel_display_groups=CHANNEL_DISPLAY_GROUPS)
 
     # --------------------------------------------
     # Configure PyTorch backend and training
@@ -131,6 +160,7 @@ def get_config(runner,
         one_cycle=ONE_CYCLE)
 
     backend_config = PyTorchSemanticSegmentationConfig(
+        data=data,
         model=model_config,
         solver=solver_config,
         log_tensorboard=LOG_TENSORBOARD,

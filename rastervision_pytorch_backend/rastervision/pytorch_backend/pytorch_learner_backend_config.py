@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 
 from rastervision.pipeline.config import (register_config, Field)
 from rastervision.core.backend import BackendConfig
 from rastervision.core.rv_pipeline import RVPipeline
 from rastervision.pytorch_learner.learner_config import (
-    SolverConfig, ModelConfig, DataConfig, ImageDataConfig)
+    SolverConfig, ModelConfig, DataConfig, ImageDataConfig, GeoDataConfig)
 
 
 @register_config('pytorch_learner_backend')
@@ -43,3 +43,9 @@ class PyTorchLearnerBackendConfig(BackendConfig):
 
     def build(self, pipeline: Optional[RVPipeline], tmp_dir: str):
         raise NotImplementedError()
+
+    def filter_commands(self, commands: List[str]) -> List[str]:
+        nochip = isinstance(self.data, GeoDataConfig)
+        if nochip and 'chip' in commands:
+            commands = [c for c in commands if c != 'chip']
+        return commands

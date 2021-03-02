@@ -4,6 +4,7 @@ import tempfile
 import shutil
 from typing import TYPE_CHECKING, Optional, List
 
+import click
 import numpy as np
 
 from rastervision.pipeline.pipeline import Pipeline
@@ -20,6 +21,10 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from rastervision.core.rv_pipeline.rv_pipeline_config import RVPipelineConfig  # noqa
 
+ALL_COMMANDS = ['analyze', 'chip', 'train', 'predict', 'eval', 'bundle']
+SPLITTABLE_COMMANDS = ['chip', 'predict']
+GPU_COMMANDS = ['train', 'predict']
+
 
 class RVPipeline(Pipeline):
     """Base class of all Raster Vision Pipelines.
@@ -34,14 +39,28 @@ class RVPipeline(Pipeline):
         - bundle: bundle containing model and any other files needed to make predictions
             using the Predictor
     """
-    commands = ['analyze', 'chip', 'train', 'predict', 'eval', 'bundle']
-    split_commands = ['chip', 'predict']
-    gpu_commands = ['train', 'predict']
 
     def __init__(self, config: 'RVPipelineConfig', tmp_dir: str):
         super().__init__(config, tmp_dir)
         self.backend: Optional['Backend'] = None
         self.config: 'RVPipelineConfig'
+
+    @property
+    def commands(self):
+        commands = ALL_COMMANDS[:]
+        if len(self.config.analyzers) == 0 and 'analyze' in commands:
+            commands.remove('analyze')
+            click.secho("Skipping 'analyze' command...", fg='green', bold=True)
+        commands = self.config.backend.filter_commands(commands)
+        return commands
+
+    @property
+    def split_commands(self):
+        return self.config.backend.filter_commands(SPLITTABLE_COMMANDS)
+
+    @property
+    def gpu_commands(self):
+        return self.config.backend.filter_commands(GPU_COMMANDS)
 
     def analyze(self):
         """Run each analyzer over training scenes."""

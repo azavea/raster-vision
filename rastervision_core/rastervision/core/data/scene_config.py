@@ -40,7 +40,7 @@ class SceneConfig(Config):
             from copy import deepcopy
             d = deepcopy(self.__dict__)
             for g in d['aoi_geometries']:
-                if 'coordinates' in g['geometry']:
+                if ('geometry' in g) and ('coordinates' in g['geometry']):
                     coords = g['geometry']['coordinates']
                     g['geometry']['coordinates'] = f'{coords!r:100.100} ...'
             return d.items()

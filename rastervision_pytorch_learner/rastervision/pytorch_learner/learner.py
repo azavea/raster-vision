@@ -70,12 +70,12 @@ def log_system_details():
     log.info(f'Python version: {sys.version}')
     # nvidia GPU
     try:
-        log.info(os.popen("nvcc --version").read())
-        log.info(os.popen("nvidia-smi").read())
+        log.info(os.popen('nvcc --version').read())
+        log.info(os.popen('nvidia-smi').read())
         log.info('Devices:')
         call([
-            "nvidia-smi", "--format=csv",
-            "--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free"
+            'nvidia-smi', '--format=csv',
+            '--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free'
         ])
     except FileNotFoundError:
         pass
@@ -497,6 +497,9 @@ class Learner(ABC):
 
         train_dirs = [join(d, 'train') for d in data_dirs if isdir(d)]
         val_dirs = [join(d, 'valid') for d in data_dirs if isdir(d)]
+
+        train_dirs = [d for d in train_dirs if isdir(d)]
+        val_dirs = [d for d in val_dirs if isdir(d)]
 
         base_transform, aug_transform = self.get_data_transforms()
         train_tf = aug_transform if not cfg.overfit_mode else base_transform
@@ -926,6 +929,8 @@ class Learner(ABC):
         batch_sz = x.shape[0]
         batch_sz = min(batch_sz,
                        batch_limit) if batch_limit is not None else batch_sz
+        if batch_sz == 0:
+            return
         ncols = nrows = math.ceil(math.sqrt(batch_sz))
         fig = plt.figure(
             constrained_layout=True, figsize=(3 * ncols, 3 * nrows))

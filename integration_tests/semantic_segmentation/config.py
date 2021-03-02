@@ -8,12 +8,14 @@ from rastervision.core.rv_pipeline import (SemanticSegmentationChipOptions,
                                            SemanticSegmentationWindowMethod,
                                            SemanticSegmentationConfig)
 from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
-from rastervision.pytorch_learner import (Backbone, SolverConfig,
-                                          SemanticSegmentationModelConfig,
-                                          SemanticSegmentationImageDataConfig)
+from rastervision.pytorch_learner import (
+    Backbone, SolverConfig, SemanticSegmentationModelConfig,
+    SemanticSegmentationImageDataConfig, SemanticSegmentationGeoDataConfig,
+    GeoDataWindowConfig, GeoDataWindowMethod)
 
 
-def get_config(runner, root_uri, data_uri=None, full_train=False):
+def get_config(runner, root_uri, data_uri=None, full_train=False,
+               nochip=False):
     def get_path(part):
         if full_train:
             return join(data_uri, part)
@@ -43,7 +45,35 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
 
     chip_sz = 300
     img_sz = chip_sz
-    data = SemanticSegmentationImageDataConfig(img_sz=img_sz, augmentors=[])
+
+    scenes = [
+        make_scene('test-scene', get_path('scene/image.tif'),
+                   get_path('scene/labels.tif')),
+        make_scene('test-scene2', get_path('scene/image2.tif'),
+                   get_path('scene/labels2.tif'))
+    ]
+    scene_dataset = DatasetConfig(
+        class_config=class_config,
+        train_scenes=scenes,
+        validation_scenes=scenes)
+
+    chip_options = SemanticSegmentationChipOptions(
+        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
+
+    if nochip:
+        window_opts = GeoDataWindowConfig(
+            method=GeoDataWindowMethod.sliding,
+            stride=chip_options.stride,
+            size=chip_sz)
+
+        data = SemanticSegmentationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=window_opts,
+            img_sz=img_sz,
+            augmentors=[])
+    else:
+        data = SemanticSegmentationImageDataConfig(
+            img_sz=img_sz, augmentors=[])
 
     if full_train:
         model = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)
@@ -71,20 +101,6 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         solver=solver,
         log_tensorboard=False,
         run_tensorboard=False)
-
-    scenes = [
-        make_scene('test-scene', get_path('scene/image.tif'),
-                   get_path('scene/labels.tif')),
-        make_scene('test-scene2', get_path('scene/image2.tif'),
-                   get_path('scene/labels2.tif'))
-    ]
-    scene_dataset = DatasetConfig(
-        class_config=class_config,
-        train_scenes=scenes,
-        validation_scenes=scenes)
-
-    chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,

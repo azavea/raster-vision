@@ -6,12 +6,14 @@ from rastervision.core.data import (
     GeoJSONVectorSourceConfig, RasterioSourceConfig, StatsTransformerConfig,
     SceneConfig, DatasetConfig)
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
-from rastervision.pytorch_learner import (Backbone, SolverConfig,
-                                          ClassificationModelConfig,
-                                          ClassificationImageDataConfig)
+from rastervision.pytorch_learner import (
+    Backbone, SolverConfig, ClassificationModelConfig,
+    ClassificationImageDataConfig, ClassificationGeoDataConfig,
+    GeoDataWindowConfig, GeoDataWindowMethod)
 
 
-def get_config(runner, root_uri, data_uri=None, full_train=False):
+def get_config(runner, root_uri, data_uri=None, full_train=False,
+               nochip=False):
     def get_path(part):
         if full_train:
             return join(data_uri, part)
@@ -53,7 +55,18 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
 
     chip_sz = 200
     img_sz = chip_sz
-    data = ClassificationImageDataConfig(img_sz=img_sz, augmentors=[])
+
+    if nochip:
+        window_opts = GeoDataWindowConfig(
+            method=GeoDataWindowMethod.sliding, stride=chip_sz, size=chip_sz)
+
+        data = ClassificationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=window_opts,
+            img_sz=img_sz,
+            augmentors=[])
+    else:
+        data = ClassificationImageDataConfig(img_sz=img_sz, augmentors=[])
 
     if full_train:
         model = ClassificationModelConfig(backbone=Backbone.resnet18)
