@@ -329,7 +329,7 @@ def _run(exp_cfg: dict,
          test: bool = True,
          remote: bool = False,
          commands: List[str] = None) -> None:
-    """Builds a command from the params in exp_cfg and otehr arguments and
+    """Builds a command from the params in exp_cfg and other arguments and
     then executes it.
     """
     uris = exp_cfg['remote'] if remote else exp_cfg['local']
@@ -509,7 +509,7 @@ def fetch_cmd_dir(root_uri: str, cmd: str, download_dir: str) -> str:
 
 def flatten_dict(d: Union[dict, list], sep: str = '.') -> dict:
     """Flatten a dict so that it does not have any nested dicts or lists.
-    Nested keys will ba concatenated using the separator, sep. For example,
+    Nested keys will be concatenated using the separator, sep. For example,
     {'a': {'b': ['x', 10]}} becomes {'a.b.0': 'x', 'a.b.1': 10}.
     This makes it simpler to compare dicts.
 
@@ -547,7 +547,7 @@ def _compare_dicts(dict_old: dict,
                    dict_new: dict,
                    float_tol: float = 1e-3,
                    exclude_keys: list = []) -> None:
-    """Compare the keys and vaues of the two dicts.
+    """Compare the keys and values of the two dicts.
 
     Args:
         dict_old (dict): A dict.
