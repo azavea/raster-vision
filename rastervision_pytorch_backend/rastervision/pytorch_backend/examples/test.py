@@ -532,6 +532,8 @@ def flatten_dict(d: Union[dict, list], sep: str = '.') -> dict:
             if isinstance(v, dict):
                 for _k, _v in v.items():
                     flat_d[f'{i}{sep}{_k}'] = _v
+            else:
+                flat_d[i] = v
     else:
         for k, v in d.items():
             v = flatten_dict(v)
