@@ -108,7 +108,7 @@ For example, to use a DeepLab/Resnet50 model that has been trained to do buildin
 
 .. code-block:: terminal
 
-   > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/model-bundle.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/1929.tifsample-predictions/sample-img-spacenet-vegas-buildings-ss.tif prediction.tif
+   > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/model-bundle.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/sample-predictions/sample-img-spacenet-vegas-buildings-ss.tif prediction
 
 This will make predictions on the image ``1929.tif`` using the provided model bundle, and will produce a file called ``predictions.tif``. These files are in GeoTiff format, and you will need a GIS viewer such as `QGIS <https://qgis.org/en/site/>`_ to open them correctly on your device. Notice that the prediction package and the input raster are transparently downloaded via HTTP.
 The input image (false color) and predictions are reproduced below.
