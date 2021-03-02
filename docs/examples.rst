@@ -292,7 +292,7 @@ When unzipped, the model bundle contains a ``model.pth`` file which can be used 
      - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-roads-ss/sample-predictions/sample-img-spacenet-vegas-roads-ss.tif>`_
    * - ISPRS Potsdam
      - Semantic Segmentation
-     - DeeplabV3 / Resnet50
+     - Panoptic FPN / Resnet50
      - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/isprs-potsdam-ss/model-bundle.zip>`_
      - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/isprs-potsdam-ss/sample-predictions/sample-img-isprs-potsdam-ss.tif>`_
    * - COWC Potsdam (Cars)
