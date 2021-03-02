@@ -24,7 +24,7 @@ The model modification cannot be performed automatically when using an external 
 
 Currently only supported for Semantic Segmentation.
 
-Support for reading directly from raster source during training without chipping (`#1046 <https://github.com/azavea/raster-vision/pull/1046>`_)
+Support for reading directly from raster sources during training without chipping (`#1046 <https://github.com/azavea/raster-vision/pull/1046>`_)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is no longer necessary to go through a ``chip`` stage to produce a training dataset. You can instead provide the ``DatasetConfig`` directly to the PyTorch backend and RV will sample training chips on the fly during training. All the examples now use this as the default. Check them out to see how to use this feature.
@@ -32,7 +32,7 @@ It is no longer necessary to go through a ``chip`` stage to produce a training d
 Support for arbitrary Albumentations transforms (`#1001 <https://github.com/azavea/raster-vision/pull/1001>`_)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is now possible to supply an arbitrarily complicated Albumentations transform for data augmentation. In the ``DataConfig`` subclasses, you can specify a ``base_transform`` that applies to every time (i.e. for training, validation, and testing), an ``aug_transform`` that is only used during training, and a ``plot_transform`` (via ``PlotOptions``) to ensure that sample images are plotted correctly (e.g. use ``plot_transform`` to rescale a normalized image to 0-1).
+It is now possible to supply an arbitrarily complicated Albumentations transform for data augmentation. In the ``DataConfig`` subclasses, you can specify a ``base_transform`` that is applied every time (i.e. in training, validation, and prediction), an ``aug_transform`` that is only applied during training, and a ``plot_transform`` (via ``PlotOptions``) to ensure that sample images are plotted correctly (e.g. use ``plot_transform`` to rescale a normalized image to 0-1).
 
 Allow streaming reads from Rasterio sources (`#1020 <https://github.com/azavea/raster-vision/pull/1020>`_)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
