@@ -97,7 +97,6 @@ def build_scene(spacenet_cfg: SpacenetConfig,
     image_uri = spacenet_cfg.get_raster_source_uri(id)
     label_uri = spacenet_cfg.get_geojson_uri(id)
 
-    # Need to use stats_transformer because imagery is uint16.
     raster_source = RasterioSourceConfig(
         uris=[image_uri], channel_order=channel_order)
 

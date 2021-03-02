@@ -24,7 +24,6 @@ def get_config(runner) -> SemanticSegmentationConfig:
     def make_scene(scene_id: str, image_uri: str,
                    label_uri: str) -> SceneConfig:
         """
-        - StatsTransformer is used to convert uint16 values to uint8.
         - The GeoJSON does not have a class_id property for each geom,
           so it is inferred as 0 (ie. building) because the default_class_id
           is set to 0.
