@@ -39,17 +39,23 @@ In the ``tiny_spacenet.py`` example, the ``SemanticSegmentationConfig`` is the l
 
     chip_sz = 300
 
-    chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.random_sample,
-        chips_per_scene=10)
+    backend = PyTorchSemanticSegmentationConfig(
+        data=SemanticSegmentationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=GeoDataWindowConfig(
+                method=GeoDataWindowMethod.random,
+                size=chip_sz,
+                size_lims=(chip_sz, chip_sz + 1),
+                max_windows=10)),
+        model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
+        solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
 
     return SemanticSegmentationConfig(
         root_uri=root_uri,
-        dataset=dataset,
+        dataset=scene_dataset,
         backend=backend,
         train_chip_sz=chip_sz,
-        predict_chip_sz=chip_sz,
-        chip_options=chip_options)
+        predict_chip_sz=chip_sz)
 
 .. seealso:: The :ref:`api ChipClassificationConfig`, :ref:`api ObjectDetectionConfig`, and :ref:`api SemanticSegmentationConfig` API docs have more information on configuring pipelines.
 
@@ -118,6 +124,13 @@ In our ``tiny_spacenet.py`` example, we configured the PyTorch semantic segmenta
 .. code-block:: python
 
     backend = PyTorchSemanticSegmentationConfig(
+        data=SemanticSegmentationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=GeoDataWindowConfig(
+                method=GeoDataWindowMethod.random,
+                size=chip_sz,
+                size_lims=(chip_sz, chip_sz + 1),
+                max_windows=10)),
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
 
@@ -134,7 +147,7 @@ In our ``tiny_spacenet.py`` example, we configured the dataset with single scene
 
 .. code-block:: python
 
-    dataset = DatasetConfig(
+    scene_dataset = DatasetConfig(
         class_config=class_config,
         train_scenes=[
             make_scene('scene_205', train_image_uri, train_label_uri)
@@ -164,28 +177,25 @@ In our ``tiny_spacenet.py`` example, we configured the one training scene with a
 
 .. code-block:: python
 
-    def make_scene(scene_id, image_uri, label_uri):
+    def make_scene(scene_id: str, image_uri: str,
+                   label_uri: str) -> SceneConfig:
         """
-        - StatsTransformer is used to convert uint16 values to uint8.
         - The GeoJSON does not have a class_id property for each geom,
-        so it is inferred as 0 (ie. building) because the default_class_id
-        is set to 0.
+          so it is inferred as 0 (ie. building) because the default_class_id
+          is set to 0.
         - The labels are in the form of GeoJSON which needs to be rasterized
-        to use as label for semantic segmentation, so we use a RasterizedSource.
+          to use as label for semantic segmentation, so we use a RasterizedSource.
         - The rasterizer set the background (as opposed to foreground) pixels
-        to 1 because background_class_id is set to 1.
+          to 1 because background_class_id is set to 1.
         """
         raster_source = RasterioSourceConfig(
-            uris=[image_uri],
-            channel_order=channel_order,
-            transformers=[StatsTransformerConfig()])
-
+            uris=[image_uri], channel_order=channel_order)
+        vector_source = GeoJSONVectorSourceConfig(
+            uri=label_uri, default_class_id=0, ignore_crs_field=True)
         label_source = SemanticSegmentationLabelSourceConfig(
             raster_source=RasterizedSourceConfig(
-                vector_source=GeoJSONVectorSourceConfig(
-                    uri=label_uri, default_class_id=0, ignore_crs_field=True),
+                vector_source=vector_source,
                 rasterizer_config=RasterizerConfig(background_class_id=1)))
-
         return SceneConfig(
             id=scene_id,
             raster_source=raster_source,
