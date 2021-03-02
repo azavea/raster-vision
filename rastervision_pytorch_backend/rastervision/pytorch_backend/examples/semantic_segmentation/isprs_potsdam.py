@@ -52,7 +52,7 @@ def get_config(runner,
             available in the raster source will be used. If False, only
             IR, R, G (in that order) will be used. Defaults to False.
         external_model (bool, optional): If True, use an external model defined
-            by the ExternalModuleConfig. Defaults to False.
+            by the ExternalModuleConfig. Defaults to True.
         augment (bool, optional): If True, use custom data augmentation
             transforms. Some basic data augmentation is done even if this is
             False. To completely disable, specify augmentors=[] is the dat
