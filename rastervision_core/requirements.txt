@@ -1,5 +1,5 @@
 rastervision_pipeline==0.13.*
-numpy<1.17
+numpy<1.21
 shapely==1.6.*
 pillow==5.0.*
 pyproj==2.6.*
