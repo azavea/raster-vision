@@ -39,6 +39,13 @@ Allow streaming reads from Rasterio sources (`#1020 <https://github.com/azavea/r
 
 It is now possible to stream chips from a remote ``RasterioSource`` without first downloading the entire file. To enable, set ``allow_streaming=True`` in the ``RasterioSourceConfig``.
 
+Analyze stage no longer necessary when using non-uint8 rasters (`#972 <https://github.com/azavea/raster-vision/pull/972>`_)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is no longer necessary to go through an ``analyze`` stage to be able to convert non-``uint8`` rasters to ``uint8`` chips. Chips can now be stored as ``numpy`` arrays, and will be normalized to ``float`` during training/prediction based on their specific data type. See ``spacenet_vegas.py`` for example usage.
+
+Currently only supported for Semantic Segmentation.
+
 Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
