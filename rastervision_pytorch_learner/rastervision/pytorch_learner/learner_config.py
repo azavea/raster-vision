@@ -440,9 +440,11 @@ class GeoDataWindowConfig(Config):
         'the edges of the raster source.')
     size_lims: Optional[Tuple[PosInt, PosInt]] = Field(
         None,
-        description='[min, max] interval from which window sizes will be '
-        'uniformly randomly sampled. Only used if method = random. Must '
-        'specify either size_lims or h and w lims, bu not both.')
+        description='[min, max) interval from which window sizes will be '
+        'uniformly randomly sampled. The upper limit is exclusive. To fix the '
+        'size to a constant value, use size_lims = (sz, sz + 1). '
+        'Only used if method = random. Must specify either size_lims or '
+        'h and w lims, but not both.')
     h_lims: Optional[Tuple[PosInt, PosInt]] = Field(
         None,
         description='[min, max] interval from which window heights will be '
