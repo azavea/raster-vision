@@ -51,9 +51,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
 
     chip_options = ObjectDetectionChipOptions(neg_ratio=1.0, ioa_thresh=1.0)
 
-    if not nochip:
-        data = ObjectDetectionImageDataConfig(img_sz=img_sz, augmentors=[])
-    else:
+    if nochip:
         window_opts = ObjectDetectionGeoDataWindowConfig(
             method=GeoDataWindowMethod.sliding,
             stride=chip_sz,
@@ -66,6 +64,8 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
             window_opts=window_opts,
             img_sz=img_sz,
             augmentors=[])
+    else:
+        data = ObjectDetectionImageDataConfig(img_sz=img_sz, augmentors=[])
 
     if full_train:
         model = ObjectDetectionModelConfig(backbone=Backbone.resnet18)

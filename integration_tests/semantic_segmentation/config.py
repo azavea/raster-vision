@@ -60,10 +60,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
     chip_options = SemanticSegmentationChipOptions(
         window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
 
-    if not nochip:
-        data = SemanticSegmentationImageDataConfig(
-            img_sz=img_sz, augmentors=[])
-    else:
+    if nochip:
         window_opts = GeoDataWindowConfig(
             method=GeoDataWindowMethod.sliding,
             stride=chip_options.stride,
@@ -74,6 +71,9 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
             window_opts=window_opts,
             img_sz=img_sz,
             augmentors=[])
+    else:
+        data = SemanticSegmentationImageDataConfig(
+            img_sz=img_sz, augmentors=[])
 
     if full_train:
         model = SemanticSegmentationModelConfig(backbone=Backbone.resnet50)

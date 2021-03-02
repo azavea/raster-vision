@@ -84,9 +84,7 @@ def get_config(runner,
 
     chip_options = ObjectDetectionChipOptions(neg_ratio=1.0, ioa_thresh=0.8)
 
-    if not nochip:
-        data = ObjectDetectionImageDataConfig(img_sz=img_sz, num_workers=4)
-    else:
+    if nochip:
         window_opts = ObjectDetectionGeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
             size=chip_sz,
@@ -101,6 +99,8 @@ def get_config(runner,
             window_opts=window_opts,
             img_sz=img_sz,
             augmentors=[])
+    else:
+        data = ObjectDetectionImageDataConfig(img_sz=img_sz, num_workers=4)
 
     predict_options = ObjectDetectionPredictOptions(
         merge_thresh=0.1, score_thresh=0.5)

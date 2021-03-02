@@ -56,9 +56,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
     chip_sz = 200
     img_sz = chip_sz
 
-    if not nochip:
-        data = ClassificationImageDataConfig(img_sz=img_sz, augmentors=[])
-    else:
+    if nochip:
         window_opts = GeoDataWindowConfig(
             method=GeoDataWindowMethod.sliding, stride=chip_sz, size=chip_sz)
 
@@ -67,6 +65,8 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
             window_opts=window_opts,
             img_sz=img_sz,
             augmentors=[])
+    else:
+        data = ClassificationImageDataConfig(img_sz=img_sz, augmentors=[])
 
     if full_train:
         model = ClassificationModelConfig(backbone=Backbone.resnet18)
