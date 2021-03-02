@@ -200,16 +200,9 @@ class SemanticSegmentationLearner(Learner):
         fig, axes = plt.subplots(
             nrows=nrows,
             ncols=ncols,
+            squeeze=False,
             constrained_layout=True,
             figsize=(3 * ncols, 3 * nrows))
-
-        # plt.subplots only returns a single AxesSubplot object
-        # if nrows * ncols = 1
-        if not isinstance(axes, np.ndarray):
-            axes = np.array([[axes]])
-        # plt.subplots returns a 1D array if nrows = 1 or  ncols = 1
-        if axes.ndim == 1:
-            axes = axes.reshape((nrows, ncols))
 
         assert axes.shape == (nrows, ncols)
 
