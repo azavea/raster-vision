@@ -30,7 +30,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset
+from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset, Sampler
 import albumentations as A
 import numpy as np
 
@@ -571,6 +571,10 @@ class Learner(ABC):
                                        ConcatDataset(test_ds_lst))
         return train_ds, valid_ds, test_ds
 
+    def get_train_sampler(self, train_ds: Dataset) -> Optional[Sampler]:
+        """Return a sampler to use for the training dataloader or None to not use any."""
+        return None
+
     def setup_data(self):
         """Set the the DataSet and DataLoaders for train, validation, and test sets."""
         cfg = self.cfg
@@ -604,15 +608,19 @@ class Learner(ABC):
             train_inds = train_inds[0:cfg.data.train_sz]
             train_ds = Subset(train_ds, train_inds)
 
+        train_sampler = self.get_train_sampler(train_ds)
+        train_shuffle = train_sampler is None
+
         collate_fn = self.get_collate_fn()
         train_dl = DataLoader(
             train_ds,
-            shuffle=True,
+            shuffle=train_shuffle,
             batch_size=batch_sz,
             drop_last=True,
             num_workers=num_workers,
             pin_memory=True,
-            collate_fn=collate_fn)
+            collate_fn=collate_fn,
+            sampler=train_sampler)
         valid_dl = DataLoader(
             valid_ds,
             shuffle=True,
