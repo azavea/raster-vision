@@ -2,10 +2,11 @@ from typing import Tuple, Optional
 
 import torch
 from torch import nn
-
 import numpy as np
 from PIL import ImageColor
 import albumentations as A
+from albumentations.core.transforms_interface import ImageOnlyTransform
+import cv2
 
 from rastervision.pipeline.config import ConfigError
 
@@ -113,3 +114,46 @@ class AddTensors(nn.Module):
 
     def forward(self, xs):
         return sum(xs)
+
+
+class MinMaxNormalize(ImageOnlyTransform):
+    """Albumentations transform that normalizes image to desired min and max values.
+
+    This will shift and scale the image appropriately to achieve the desired min and
+    max.
+    """
+
+    def __init__(
+            self,
+            min_val=0.0,
+            max_val=1.0,
+            dtype=cv2.CV_32F,
+            always_apply=False,
+            p=1.0,
+    ):
+        """Constructor.
+
+        Args:
+            min_val: the minimum value that output should have
+            max_val: the maximum value that output should have
+            dtype: the dtype of output image
+        """
+        super(MinMaxNormalize, self).__init__(always_apply, p)
+        self.min_val = min_val
+        self.max_val = max_val
+        self.dtype = dtype
+
+    def apply(self, image, **params):
+        out = cv2.normalize(
+            image,
+            None,
+            self.min_val,
+            self.max_val,
+            cv2.NORM_MINMAX,
+            dtype=self.dtype)
+        # We need to clip because sometimes values are slightly less or more than
+        # min_val and max_val due to rounding errors.
+        return np.clip(out, self.min_val, self.max_val)
+
+    def get_transform_init_args_names(self):
+        return ('min_val', 'max_val', 'dtype')

@@ -17,6 +17,7 @@ from rastervision.pipeline.config import (Config, register_config, ConfigError,
 from rastervision.core.data import (Scene, DatasetConfig as SceneDatasetConfig)
 from rastervision.pytorch_learner.utils import (
     color_to_triple, validate_albumentation_transform)
+from rastervision.pytorch_learner.utils import MinMaxNormalize
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
@@ -237,11 +238,15 @@ class SolverConfig(Config):
 class PlotOptions(Config):
     """Config related to plotting."""
     transform: Optional[dict] = Field(
-        None,
+        A.to_dict(MinMaxNormalize()),
         description='An Albumentations transform serialized as a dict that '
         'will be applied to each image before it is plotted. Mainly useful '
         'for undoing any data transformation that you do not want included in '
-        'the plot, such as normalization.')
+        'the plot, such as normalization. The default value will shift and scale the '
+        'image so the values range from 0.0 to 1.0 which is the expected range for '
+        'the plotting function. This default is useful for cases where the values after '
+        'normalization are close to zero which makes the plot difficult to see.'
+    )
 
     # validators
     _tf = validator(
