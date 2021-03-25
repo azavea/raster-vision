@@ -143,7 +143,7 @@ class MinMaxNormalize(ImageOnlyTransform):
         self.max_val = max_val
         self.dtype = dtype
 
-    def apply(self, image, **params):
+    def _apply_on_channel(self, image, **params):
         out = cv2.normalize(
             image,
             None,
@@ -154,6 +154,19 @@ class MinMaxNormalize(ImageOnlyTransform):
         # We need to clip because sometimes values are slightly less or more than
         # min_val and max_val due to rounding errors.
         return np.clip(out, self.min_val, self.max_val)
+
+    def apply(self, image, **params):
+        if image.ndim <= 2:
+            return self._apply_on_channel(image, **params)
+
+        assert image.ndim == 3
+
+        chs = [
+            self._apply_on_channel(ch, **params)
+            for ch in image.transpose(2, 0, 1)
+        ]
+        out = np.stack(chs, axis=2)
+        return out
 
     def get_transform_init_args_names(self):
         return ('min_val', 'max_val', 'dtype')

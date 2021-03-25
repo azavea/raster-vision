@@ -103,6 +103,15 @@ class TestMinMaxNormalize(unittest.TestCase):
         img = np.random.uniform(0.01, 0.02, (5, 5, 3))
         transform = MinMaxNormalize()
         out = transform(image=img)['image']
+        for i in range(3):
+            self.assertAlmostEqual(out[:, :, i].min(), 0.0, 6)
+            self.assertAlmostEqual(out[:, :, i].max(), 1.0, 6)
+            self.assertEqual(out.dtype, np.float32)
+
+    def test_tiny_floats_two_dims(self):
+        img = np.random.uniform(0.01, 0.02, (5, 5))
+        transform = MinMaxNormalize()
+        out = transform(image=img)['image']
         self.assertAlmostEqual(out.min(), 0.0, 6)
         self.assertAlmostEqual(out.max(), 1.0, 6)
         self.assertEqual(out.dtype, np.float32)
@@ -111,9 +120,10 @@ class TestMinMaxNormalize(unittest.TestCase):
         img = np.random.uniform(1, 10, (5, 5, 3)).round().astype(np.int32)
         transform = MinMaxNormalize()
         out = transform(image=img)['image']
-        self.assertAlmostEqual(out.min(), 0.0, 6)
-        self.assertAlmostEqual(out.max(), 1.0, 6)
-        self.assertEqual(out.dtype, np.float32)
+        for i in range(3):
+            self.assertAlmostEqual(out[:, :, i].min(), 0.0, 6)
+            self.assertAlmostEqual(out[:, :, i].max(), 1.0, 6)
+            self.assertEqual(out.dtype, np.float32)
 
 
 if __name__ == '__main__':
