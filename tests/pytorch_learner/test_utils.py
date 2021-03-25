@@ -1,9 +1,10 @@
 import unittest
 
 import torch
+import numpy as np
 
-from rastervision.pytorch_learner.utils import (compute_conf_mat,
-                                                compute_conf_mat_metrics)
+from rastervision.pytorch_learner.utils import (
+    compute_conf_mat, compute_conf_mat_metrics, MinMaxNormalize)
 
 
 class TestComputeConfMat(unittest.TestCase):
@@ -95,6 +96,34 @@ class TestComputeConfMatMetrics(unittest.TestCase):
             'b_f1': b_f1
         }
         self.assertDictEqual(round_dict(metrics), round_dict(exp_metrics))
+
+
+class TestMinMaxNormalize(unittest.TestCase):
+    def test_tiny_floats(self):
+        img = np.random.uniform(0.01, 0.02, (5, 5, 3))
+        transform = MinMaxNormalize()
+        out = transform(image=img)['image']
+        for i in range(3):
+            self.assertAlmostEqual(out[:, :, i].min(), 0.0, 6)
+            self.assertAlmostEqual(out[:, :, i].max(), 1.0, 6)
+            self.assertEqual(out.dtype, np.float32)
+
+    def test_tiny_floats_two_dims(self):
+        img = np.random.uniform(0.01, 0.02, (5, 5))
+        transform = MinMaxNormalize()
+        out = transform(image=img)['image']
+        self.assertAlmostEqual(out.min(), 0.0, 6)
+        self.assertAlmostEqual(out.max(), 1.0, 6)
+        self.assertEqual(out.dtype, np.float32)
+
+    def test_tiny_ints(self):
+        img = np.random.uniform(1, 10, (5, 5, 3)).round().astype(np.int32)
+        transform = MinMaxNormalize()
+        out = transform(image=img)['image']
+        for i in range(3):
+            self.assertAlmostEqual(out[:, :, i].min(), 0.0, 6)
+            self.assertAlmostEqual(out[:, :, i].max(), 1.0, 6)
+            self.assertEqual(out.dtype, np.float32)
 
 
 if __name__ == '__main__':

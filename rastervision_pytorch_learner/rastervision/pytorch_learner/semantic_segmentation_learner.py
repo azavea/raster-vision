@@ -212,14 +212,8 @@ class SemanticSegmentationLearner(Learner):
         # apply transform, if given
         if self.cfg.data.plot_options.transform is not None:
             tf = A.from_dict(self.cfg.data.plot_options.transform)
-            x = tf(image=x.numpy())['image']
-            x = torch.from_numpy(x)
-
-        # apply transform, if given
-        if self.cfg.data.plot_options.transform is not None:
-            tf = A.from_dict(self.cfg.data.plot_options.transform)
-            x = tf(image=x.numpy())['image']
-            x = torch.from_numpy(x)
+            imgs = [tf(image=img)['image'] for img in x.numpy()]
+            x = torch.from_numpy(np.stack(imgs))
 
         for i in range(batch_sz):
             ax = (fig, axes[i])
