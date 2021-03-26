@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+Raster Vision 0.13.1
+-------------------
+
+Bug Fixes
+~~~~~~~~~~~~
+
+* Fix image plot by adding default plot transform `#1144 <https://github.com/azavea/raster-vision/pull/1144>`_
+
 Raster Vision 0.13
 -------------------
 
