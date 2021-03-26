@@ -1,2 +1,2 @@
-rastervision_pipeline==0.13.*
+rastervision_pipeline==0.13.1
 gdal==3.0.4
