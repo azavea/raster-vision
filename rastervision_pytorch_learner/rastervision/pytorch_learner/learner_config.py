@@ -277,6 +277,8 @@ class DataConfig(Config):
         description=
         ('If set, the number of training images to use. If fewer images exist, '
          'then an exception will be raised.'))
+    train_sz_rel: Optional[float] = Field(
+        None, description='If set, the proportion of training images to use.')
     num_workers: int = Field(
         4,
         description='Number of workers to use when DataLoader makes batches.')
