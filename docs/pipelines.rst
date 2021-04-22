@@ -246,6 +246,14 @@ This transformer is used to convert non-uint8 values to uint8 using statistics c
 
 .. seealso:: The :ref:`api StatsTransformerConfig` API docs.
 
+MinMaxTransformer
+^^^^^^^^^^^^^^^^^^
+
+This transformer is used to scale the pixel values of each chip so that the min of each channel is 0, and the max is 255.
+This can be used as an alternative to the ``StatsTransformer``.
+
+.. seealso:: The :ref:`api MinMaxTransformerConfig` API docs.
+
 CastTransformer
 ^^^^^^^^^^^^^^^^^^
 
