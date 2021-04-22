@@ -4,7 +4,7 @@ import math
 import random
 
 import numpy as np
-from shapely.geometry import box as ShapelyBox
+from shapely.geometry import box as ShapelyBox, Polygon
 
 NonNegInt = conint(ge=0)
 
@@ -341,20 +341,29 @@ class Box():
         return cls(d['ymin'], d['xmin'], d['ymax'], d['xmax'])
 
     @staticmethod
-    def filter_by_aoi(windows, aoi_polygons):
-        """Filters windows by a list of AOI polygons"""
+    def filter_by_aoi(windows: List['Box'],
+                      aoi_polygons: List[Polygon],
+                      within: bool = True):
+        """Filters windows by a list of AOI polygons
+
+        Args:
+            within: if True, windows are only kept if they lie fully within an
+                AOI polygon. Otherwise, windows are kept if they intersect an AOI
+                polygon.
+        """
         result = []
         for window in windows:
             w = window.to_shapely()
             for polygon in aoi_polygons:
-                if w.within(polygon):
+                if ((within and w.within(polygon))
+                        or ((not within) and w.intersects(polygon))):
                     result.append(window)
                     break
 
         return result
 
     @staticmethod
-    def within_aoi(window: 'Box', aoi_polygons: list) -> bool:
+    def within_aoi(window: 'Box', aoi_polygons: List[Polygon]) -> bool:
         """Check if window is within a list of AOI polygons."""
         w = window.to_shapely()
         for polygon in aoi_polygons:
