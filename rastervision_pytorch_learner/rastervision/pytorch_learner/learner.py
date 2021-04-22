@@ -1098,7 +1098,8 @@ class Learner(ABC):
             weights_path = download_if_needed(self.cfg.model.init_weights,
                                               self.tmp_dir)
             self.model.load_state_dict(
-                torch.load(weights_path, map_location=self.device))
+                torch.load(weights_path, map_location=self.device),
+                strict=self.cfg.model.load_strict)
 
     def load_checkpoint(self):
         """Load last weights from previous run if available."""

@@ -169,6 +169,12 @@ class ModelConfig(Config):
         None,
         description=('URI of PyTorch model weights used to initialize model. '
                      'If set, this supercedes the pretrained option.'))
+    load_strict: bool = Field(
+        True,
+        description=(
+            'If True, the keys in the state dict referenced by init_weights '
+            'must match exactly. Setting this to False can be useful if you '
+            'just want to load the backbone of a model.'))
     external_def: Optional[ExternalModuleConfig] = Field(
         None,
         description='If specified, the model will be built from the '
