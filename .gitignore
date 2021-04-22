@@ -114,6 +114,3 @@ deployment/ansible/*.retry
 ./data
 ./notebooks
 .vscode/
-
-# dir that is mounted to /opt/data
-data/
