@@ -111,6 +111,6 @@ deployment/ansible/*.retry
 
 *.aux.xml
 
-./data
-./notebooks
-.vscode/
+/data/
+/notebooks/
+/.vscode/
