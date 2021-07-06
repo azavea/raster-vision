@@ -50,6 +50,9 @@ class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
         super().update(pipeline=pipeline)
         dcfg = self.data
         pcfg = pipeline
+
+        dcfg.img_channels = pcfg.dataset.img_channels
+
         if isinstance(dcfg, SemanticSegmentationImageDataConfig):
             if (dcfg.img_format is not None) and (dcfg.img_format !=
                                                   pcfg.img_format):

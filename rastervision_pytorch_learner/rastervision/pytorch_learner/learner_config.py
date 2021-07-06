@@ -17,6 +17,7 @@ from rastervision.pipeline.config import (Config, register_config, ConfigError,
 from rastervision.core.data import (Scene, DatasetConfig as SceneDatasetConfig)
 from rastervision.pytorch_learner.utils import (
     color_to_triple, validate_albumentation_transform)
+from rastervision.pytorch_learner.utils import MinMaxNormalize
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
@@ -237,11 +238,15 @@ class SolverConfig(Config):
 class PlotOptions(Config):
     """Config related to plotting."""
     transform: Optional[dict] = Field(
-        None,
+        A.to_dict(MinMaxNormalize()),
         description='An Albumentations transform serialized as a dict that '
         'will be applied to each image before it is plotted. Mainly useful '
         'for undoing any data transformation that you do not want included in '
-        'the plot, such as normalization.')
+        'the plot, such as normalization. The default value will shift and scale the '
+        'image so the values range from 0.0 to 1.0 which is the expected range for '
+        'the plotting function. This default is useful for cases where the values after '
+        'normalization are close to zero which makes the plot difficult to see.'
+    )
 
     # validators
     _tf = validator(
@@ -440,9 +445,11 @@ class GeoDataWindowConfig(Config):
         'the edges of the raster source.')
     size_lims: Optional[Tuple[PosInt, PosInt]] = Field(
         None,
-        description='[min, max] interval from which window sizes will be '
-        'uniformly randomly sampled. Only used if method = random. Must '
-        'specify either size_lims or h and w lims, bu not both.')
+        description='[min, max) interval from which window sizes will be '
+        'uniformly randomly sampled. The upper limit is exclusive. To fix the '
+        'size to a constant value, use size_lims = (sz, sz + 1). '
+        'Only used if method = random. Must specify either size_lims or '
+        'h and w lims, but not both.')
     h_lims: Optional[Tuple[PosInt, PosInt]] = Field(
         None,
         description='[min, max] interval from which window heights will be '
@@ -618,7 +625,6 @@ class LearnerConfig(Config):
         if self.test_mode:
             self.solver.num_epochs = self.solver.test_num_epochs
             self.solver.batch_sz = self.solver.test_batch_sz
-            self.data.img_sz = self.data.img_sz // 2
             self.data.num_workers = 0
 
         self.model.update(learner=self)

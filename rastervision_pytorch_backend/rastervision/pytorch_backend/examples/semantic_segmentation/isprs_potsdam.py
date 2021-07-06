@@ -35,9 +35,9 @@ def get_config(runner,
                processed_uri: str,
                root_uri: str,
                multiband: bool = False,
-               external_model: bool = False,
+               external_model: bool = True,
                augment: bool = False,
-               nochip: bool = False,
+               nochip: bool = True,
                test: bool = False):
     """Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
@@ -52,7 +52,7 @@ def get_config(runner,
             available in the raster source will be used. If False, only
             IR, R, G (in that order) will be used. Defaults to False.
         external_model (bool, optional): If True, use an external model defined
-            by the ExternalModuleConfig. Defaults to False.
+            by the ExternalModuleConfig. Defaults to True.
         augment (bool, optional): If True, use custom data augmentation
             transforms. Some basic data augmentation is done even if this is
             False. To completely disable, specify augmentors=[] is the dat
@@ -60,12 +60,12 @@ def get_config(runner,
         nochip (bool, optional): If True, read directly from the TIFF during
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
-            False.
+            True.
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 600x600 crop of the scenes
             (3) Enables test mode in the learner, which makes it use the
-                test_batch_sz and test_num_epochs, and also halves the img_sz.
+                test_batch_sz and test_num_epochs, among other things.
             Defaults to False.
 
     Returns:
@@ -103,15 +103,6 @@ def get_config(runner,
         aug_transform = None
         base_transform = None
         plot_transform = None
-
-    chip_sz = 300
-    img_sz = chip_sz
-    if nochip:
-        chip_options = SemanticSegmentationChipOptions()
-    else:
-        chip_options = SemanticSegmentationChipOptions(
-            window_method=SemanticSegmentationWindowMethod.sliding,
-            stride=chip_sz)
 
     class_config = ClassConfig(names=CLASS_NAMES, colors=CLASS_COLORS)
     class_config.ensure_null_class()
@@ -162,25 +153,27 @@ def get_config(runner,
         train_scenes=[make_scene(id) for id in train_ids],
         validation_scenes=[make_scene(id) for id in val_ids])
 
+    chip_sz = 300
+    img_sz = chip_sz
+
+    chip_options = SemanticSegmentationChipOptions(
+        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
+
     if nochip:
         window_opts = {}
         # set window configs for training scenes
         for s in scene_dataset.train_scenes:
             window_opts[s.id] = GeoDataWindowConfig(
-                # method=GeoDataWindowMethod.sliding,
-                method=GeoDataWindowMethod.random,
-                size=img_sz,
-                # size_lims=(200, 300),
-                h_lims=(200, 300),
-                w_lims=(200, 300),
-                max_windows=2209,
-            )
+                method=GeoDataWindowMethod.sliding,
+                size=chip_sz,
+                stride=chip_options.stride)
+
         # set window configs for validation scenes
         for s in scene_dataset.validation_scenes:
             window_opts[s.id] = GeoDataWindowConfig(
                 method=GeoDataWindowMethod.sliding,
-                size=img_sz,
-                stride=img_sz // 2)
+                size=chip_sz,
+                stride=chip_options.stride)
 
         data = SemanticSegmentationGeoDataConfig(
             scene_dataset=scene_dataset,
@@ -188,11 +181,13 @@ def get_config(runner,
             img_sz=img_sz,
             img_channels=len(channel_order),
             num_workers=4,
-            channel_display_groups=channel_display_groups)
+            channel_display_groups=channel_display_groups,
+            base_transform=base_transform,
+            aug_transform=aug_transform,
+            plot_options=PlotOptions(transform=plot_transform))
     else:
         data = SemanticSegmentationImageDataConfig(
             img_sz=img_sz,
-            img_channels=len(channel_order),
             num_workers=4,
             channel_display_groups=channel_display_groups,
             base_transform=base_transform,
@@ -202,11 +197,11 @@ def get_config(runner,
     if external_model:
         model = SemanticSegmentationModelConfig(
             external_def=ExternalModuleConfig(
-                github_repo='AdeelH/pytorch-fpn',
+                github_repo='AdeelH/pytorch-fpn:0.2',
                 name='fpn',
-                entrypoint='make_segm_fpn_resnet',
+                entrypoint='make_fpn_resnet',
                 entrypoint_kwargs={
-                    'name': 'resnet18',
+                    'name': 'resnet50',
                     'fpn_type': 'panoptic',
                     'num_classes': len(class_config.names),
                     'fpn_channels': 256,

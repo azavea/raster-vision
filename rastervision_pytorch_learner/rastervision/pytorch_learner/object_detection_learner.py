@@ -7,6 +7,9 @@ import matplotlib
 matplotlib.use('Agg')  # noqa
 from albumentations import BboxParams
 
+import numpy as np
+import torch
+
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.object_detection_utils import (
     MyFasterRCNN, compute_coco_eval, collate_fn, plot_xyz)
@@ -65,6 +68,20 @@ class ObjectDetectionLearner(Learner):
             coco_metrics = coco_eval.stats
             metrics = {'map': coco_metrics[0], 'map50': coco_metrics[1]}
         return metrics
+
+    def numpy_predict(self, x: np.ndarray,
+                      raw_out: bool = False) -> np.ndarray:
+        transform, _ = self.get_data_transforms()
+        x = self.normalize_input(x)
+        x = self.to_batch(x)
+        x = np.stack([
+            transform(image=img, bboxes=[], category_id=[])['image']
+            for img in x
+        ])
+        x = torch.from_numpy(x)
+        x = x.permute((0, 3, 1, 2))
+        out = self.predict(x, raw_out=raw_out)
+        return self.output_to_numpy(out)
 
     def output_to_numpy(self, out):
         numpy_out = []

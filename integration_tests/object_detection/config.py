@@ -7,12 +7,14 @@ from rastervision.core.data import (
     ClassConfig, ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig,
     RasterioSourceConfig, SceneConfig, DatasetConfig)
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
-from rastervision.pytorch_learner import (Backbone, SolverConfig,
-                                          ObjectDetectionModelConfig,
-                                          ObjectDetectionImageDataConfig)
+from rastervision.pytorch_learner import (
+    Backbone, SolverConfig, ObjectDetectionModelConfig,
+    ObjectDetectionImageDataConfig, ObjectDetectionGeoDataConfig,
+    ObjectDetectionGeoDataWindowConfig, GeoDataWindowMethod)
 
 
-def get_config(runner, root_uri, data_uri=None, full_train=False):
+def get_config(runner, root_uri, data_uri=None, full_train=False,
+               nochip=False):
     def get_path(part):
         if full_train:
             return join(data_uri, part)
@@ -35,7 +37,35 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
 
     chip_sz = 300
     img_sz = chip_sz
-    data = ObjectDetectionImageDataConfig(img_sz=img_sz, augmentors=[])
+
+    scenes = [
+        make_scene('od_test', get_path('scene/image.tif'),
+                   get_path('scene/labels.json')),
+        make_scene('od_test-2', get_path('scene/image2.tif'),
+                   get_path('scene/labels2.json'))
+    ]
+    scene_dataset = DatasetConfig(
+        class_config=class_config,
+        train_scenes=scenes,
+        validation_scenes=scenes)
+
+    chip_options = ObjectDetectionChipOptions(neg_ratio=1.0, ioa_thresh=1.0)
+
+    if nochip:
+        window_opts = ObjectDetectionGeoDataWindowConfig(
+            method=GeoDataWindowMethod.sliding,
+            stride=chip_sz,
+            size=chip_sz,
+            neg_ratio=chip_options.neg_ratio,
+            ioa_thresh=chip_options.ioa_thresh)
+
+        data = ObjectDetectionGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=window_opts,
+            img_sz=img_sz,
+            augmentors=[])
+    else:
+        data = ObjectDetectionImageDataConfig(img_sz=img_sz, augmentors=[])
 
     if full_train:
         model = ObjectDetectionModelConfig(backbone=Backbone.resnet18)
@@ -64,18 +94,6 @@ def get_config(runner, root_uri, data_uri=None, full_train=False):
         log_tensorboard=False,
         run_tensorboard=False)
 
-    scenes = [
-        make_scene('od_test', get_path('scene/image.tif'),
-                   get_path('scene/labels.json')),
-        make_scene('od_test-2', get_path('scene/image2.tif'),
-                   get_path('scene/labels2.json'))
-    ]
-    scene_dataset = DatasetConfig(
-        class_config=class_config,
-        train_scenes=scenes,
-        validation_scenes=scenes)
-
-    chip_options = ObjectDetectionChipOptions(neg_ratio=1.0, ioa_thresh=1.0)
     predict_options = ObjectDetectionPredictOptions(
         merge_thresh=0.1, score_thresh=0.5)
 

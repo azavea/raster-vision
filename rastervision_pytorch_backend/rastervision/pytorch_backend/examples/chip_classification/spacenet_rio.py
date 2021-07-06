@@ -25,7 +25,7 @@ def get_config(runner,
                root_uri: str,
                external_model: bool = False,
                external_loss: bool = False,
-               nochip: bool = False,
+               nochip: bool = True,
                test: bool = False) -> ChipClassificationConfig:
     """Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
@@ -47,31 +47,27 @@ def get_config(runner,
         nochip (bool, optional): If True, read directly from the TIFF during
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
-            False.
+            True.
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 1 scene
             (2) Uses only a 600x600 crop of the scenes
             (3) Enables test mode in the learner, which makes it use the
-                test_batch_sz and test_num_epochs, and also halves the img_sz.
+                test_batch_sz and test_num_epochs, among other things.
             Defaults to False.
 
     Returns:
         ChipClassificationConfig: A pipeline config.
     """
-    debug = False
     train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
     val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
     class_config = ClassConfig(names=CLASS_NAMES)
 
     if test:
-        debug = True
         train_scene_info = train_scene_info[:1]
         val_scene_info = val_scene_info[:1]
 
-    chip_sz = 300
+    chip_sz = 200
     img_sz = chip_sz
-    if nochip:
-        chip_options = SemanticSegmentationChipOptions()
 
     def make_scene(scene_info) -> SceneConfig:
         (raster_uri, label_uri) = scene_info
@@ -125,18 +121,14 @@ def get_config(runner,
         window_opts = {}
         for s in train_scenes:
             window_opts[s.id] = GeoDataWindowConfig(
-                # method=GeoDataWindowMethod.sliding,
-                method=GeoDataWindowMethod.random,
-                size=img_sz,
-                # stride=img_sz,
-                size_lims=(200, 300),
-                # h_lims=(200, 300),
-                # w_lims=(200, 300),
-                max_windows=3514,
-            )
+                method=GeoDataWindowMethod.sliding,
+                size=chip_sz,
+                stride=chip_sz // 2)
         for s in val_scenes:
             window_opts[s.id] = GeoDataWindowConfig(
-                method=GeoDataWindowMethod.sliding, size=img_sz, stride=img_sz)
+                method=GeoDataWindowMethod.sliding,
+                size=chip_sz,
+                stride=chip_sz // 2)
 
         data = ClassificationGeoDataConfig(
             scene_dataset=scene_dataset,
@@ -150,7 +142,6 @@ def get_config(runner,
         model = ClassificationModelConfig(
             external_def=ExternalModuleConfig(
                 github_repo='lukemelas/EfficientNet-PyTorch',
-                # uri='s3://raster-vision-ahassan/models/EfficientNet-PyTorch.zip',
                 name='efficient_net',
                 entrypoint='efficientnet_b0',
                 force_reload=False,

@@ -212,6 +212,16 @@ class TestBox(unittest.TestCase):
         box = Box(1, 2, 3, 4)
         self.assertEqual(box.__repr__(), 'Box(1, 2, 3, 4)')
 
+    def test_filter_by_aoi(self):
+        windows = [Box.make_square(0, 0, 2), Box.make_square(0, 2, 2)]
+        aoi_polygons = [Box.make_square(0, 0, 3).to_shapely()]
+
+        filt_windows = Box.filter_by_aoi(windows, aoi_polygons, within=False)
+        self.assertListEqual(filt_windows, windows)
+
+        filt_windows = Box.filter_by_aoi(windows, aoi_polygons, within=True)
+        self.assertListEqual(filt_windows, windows[0:1])
+
 
 if __name__ == '__main__':
     unittest.main()
