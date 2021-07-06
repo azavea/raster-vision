@@ -310,8 +310,10 @@ class RandomWindowGeoDataset(GeoDataset):
     def sample_window_size(self) -> Tuple[int, int]:
         """Randomly sample the window size."""
         if self.size_lims is not None:
-            hmin, hmax = self.size_lims
-            size = torch.randint(low=hmin, high=hmax, size=(1, )).item()
+            sz_min, sz_max = self.size_lims
+            if sz_max == sz_min + 1:
+                return sz_min, sz_min
+            size = torch.randint(low=sz_min, high=sz_max, size=(1, )).item()
             return size, size
         hmin, hmax = self.h_lims
         wmin, wmax = self.w_lims

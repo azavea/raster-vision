@@ -209,11 +209,11 @@ def _run_command(cfg_json_uri: str,
     if num_splits is not None and num_splits > 1:
         msg = 'Running {} command split {}/{}...'.format(
             command, split_ind + 1, num_splits)
-        click.echo(click.style(msg, fg='green'))
+        click.secho(msg, fg='green', bold=True)
         command_fn(split_ind=split_ind, num_splits=num_splits)
     else:
         msg = 'Running {} command...'.format(command)
-        click.echo(click.style(msg, fg='green'))
+        click.secho(msg, fg='green', bold=True)
         command_fn()
 
 

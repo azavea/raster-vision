@@ -9,7 +9,7 @@ from setuptools import (setup, find_namespace_packages)
 from imp import load_source
 
 here = op.abspath(op.dirname(__file__))
-__version__ = '0.12'
+__version__ = '0.13'
 
 # get the dependencies and installs
 with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
@@ -18,9 +18,11 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
 # The RTD build environment fails with the reqs in bad_reqs.
 if 'READTHEDOCS' in os.environ:
     bad_reqs = ['pyproj', 'h5py']
-    all_reqs = list(filter(lambda r: r.split('==')[0] not in bad_reqs, all_reqs))
+    all_reqs = list(
+        filter(lambda r: r.split('==')[0] not in bad_reqs, all_reqs))
 
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
+
 
 def replace_images(readme):
     """Replaces image links in the README with static links to
@@ -31,6 +33,7 @@ def replace_images(readme):
            '{}/docs/\g<2>'.format(release_branch))
 
     return re.sub(r, rep, readme)
+
 
 # Uncomment this line if we are using a commit of mask-to-polygons
 # (as opposed to released version) to avoid error.
@@ -57,5 +60,4 @@ setup(
     'raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
     packages=[],
     include_package_data=True,
-    install_requires=install_requires
-)
+    install_requires=install_requires)

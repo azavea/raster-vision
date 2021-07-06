@@ -1,5 +1,6 @@
 # flake8: noqa
 
+from typing import Optional
 import re
 import random
 import os
@@ -90,15 +91,14 @@ class VegasBuildings(SpacenetConfig):
         return {0: ['has', 'building']}
 
 
-def build_scene(spacenet_cfg, id, channel_order=None):
+def build_scene(spacenet_cfg: SpacenetConfig,
+                id: str,
+                channel_order: Optional[list] = None) -> SceneConfig:
     image_uri = spacenet_cfg.get_raster_source_uri(id)
     label_uri = spacenet_cfg.get_geojson_uri(id)
 
-    # Need to use stats_transformer because imagery is uint16.
     raster_source = RasterioSourceConfig(
-        uris=[image_uri],
-        channel_order=channel_order,
-        transformers=[StatsTransformerConfig()])
+        uris=[image_uri], channel_order=channel_order)
 
     # Set a line buffer to convert line strings to polygons.
     vector_source = GeoJSONVectorSourceConfig(
@@ -111,11 +111,8 @@ def build_scene(spacenet_cfg, id, channel_order=None):
             vector_source=vector_source,
             rasterizer_config=RasterizerConfig(background_class_id=1)))
 
-    # Generate polygon output for segmented buildings.
-    label_store = None
-    if isinstance(spacenet_cfg, VegasBuildings):
-        label_store = SemanticSegmentationLabelStoreConfig(
-            vector_output=[PolygonVectorOutputConfig(class_id=0, denoise=3)])
+    label_store = SemanticSegmentationLabelStoreConfig(
+        vector_output=[PolygonVectorOutputConfig(class_id=0, denoise=3)])
 
     return SceneConfig(
         id=id,
@@ -124,7 +121,34 @@ def build_scene(spacenet_cfg, id, channel_order=None):
         label_store=label_store)
 
 
-def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
+def get_config(runner,
+               raw_uri: str,
+               root_uri: str,
+               target: str = BUILDINGS,
+               nochip: bool = True,
+               test: bool = False) -> SemanticSegmentationConfig:
+    """Generate the pipeline config for this task. This function will be called
+    by RV, with arguments from the command line, when this example is run.
+
+    Args:
+        runner (Runner): Runner for the pipeline. Will be provided by RV.
+        raw_uri (str): Directory where the raw data resides
+        root_uri (str): Directory where all the output will be written.
+        target (str): "buildings" | "roads". Defaults to "buildings".
+        nochip (bool, optional): If True, read directly from the TIFF during
+            training instead of from pre-generated chips. The analyze and chip
+            commands should not be run, if this is set to True. Defaults to
+            True.
+        test (bool, optional): If True, does the following simplifications:
+            (1) Uses only a small subset of training and validation scenes.
+            (2) Enables test mode in the learner, which makes it use the
+                test_batch_sz and test_num_epochs, among other things.
+            Defaults to False.
+
+    Returns:
+        SemanticSegmentationConfig: An pipeline config.
+    """
+
     spacenet_cfg = SpacenetConfig.create(raw_uri, target)
     scene_ids = spacenet_cfg.get_scene_ids()
     if len(scene_ids) == 0:
@@ -138,18 +162,16 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
     # Workaround to handle scene 1000 missing on S3.
     if '1000' in scene_ids:
         scene_ids.remove('1000')
+
     split_ratio = 0.8
     num_train_ids = round(len(scene_ids) * split_ratio)
-    train_ids = scene_ids[0:num_train_ids]
+    train_ids = scene_ids[:num_train_ids]
     val_ids = scene_ids[num_train_ids:]
 
-    num_train_scenes = len(train_ids)
-    num_val_scenes = len(val_ids)
     if test:
-        num_train_scenes = 16
-        num_val_scenes = 4
-    train_ids = train_ids[0:num_train_scenes]
-    val_ids = val_ids[0:num_val_scenes]
+        train_ids = train_ids[:16]
+        val_ids = val_ids[:4]
+
     channel_order = [0, 1, 2]
 
     class_config = spacenet_cfg.get_class_config()
@@ -164,23 +186,31 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
         train_scenes=train_scenes,
         validation_scenes=val_scenes)
 
-    train_chip_sz = 325
-    predict_chip_sz = 650
-    chip_options = SemanticSegmentationChipOptions(
-        window_method=SemanticSegmentationWindowMethod.sliding,
-        stride=train_chip_sz)
-    num_epochs = 5
+    chip_sz = 325
+    img_sz = chip_sz
 
-    img_sz = train_chip_sz
-    data = SemanticSegmentationImageDataConfig(
-        img_sz=img_sz, img_channels=len(channel_order), num_workers=4)
+    chip_options = SemanticSegmentationChipOptions(
+        window_method=SemanticSegmentationWindowMethod.sliding, stride=chip_sz)
+
+    if nochip:
+        data = SemanticSegmentationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=GeoDataWindowConfig(
+                method=GeoDataWindowMethod.sliding,
+                size=chip_sz,
+                stride=chip_options.stride),
+            img_sz=img_sz,
+            num_workers=4)
+    else:
+        data = SemanticSegmentationImageDataConfig(
+            img_sz=img_sz, num_workers=4)
 
     backend = PyTorchSemanticSegmentationConfig(
         data=data,
         model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
         solver=SolverConfig(
             lr=1e-4,
-            num_epochs=num_epochs,
+            num_epochs=5,
             test_num_epochs=2,
             batch_sz=8,
             one_cycle=True),
@@ -192,6 +222,7 @@ def get_config(runner, raw_uri, root_uri, target=BUILDINGS, test=False):
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        train_chip_sz=train_chip_sz,
-        predict_chip_sz=predict_chip_sz,
+        train_chip_sz=chip_sz,
+        predict_chip_sz=chip_sz,
+        img_format='npy',
         chip_options=chip_options)

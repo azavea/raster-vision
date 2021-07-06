@@ -24,3 +24,7 @@ class BackendConfig(Config):
 
     def update(self, pipeline: Optional['RVPipeline'] = None):  # noqa
         pass
+
+    def filter_commands(self, commands: List[str]) -> List[str]:
+        """Filter out any commands that are not needed or supported."""
+        return commands

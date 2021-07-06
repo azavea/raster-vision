@@ -9,9 +9,9 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
     all_reqs = f.read().split('\n')
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 
-name='rastervision_pytorch_learner'
-version='0.12'
-description='A rastervision plugin that adds PyTorch training pipelines'
+name = 'rastervision_pytorch_learner'
+version = '0.13'
+description = 'A rastervision plugin that adds PyTorch training pipelines'
 
 setup(
     name=name,
@@ -31,5 +31,4 @@ setup(
     'raster deep-learning ml computer-vision earth-observation geospatial geospatial-processing',
     packages=find_namespace_packages(exclude=['integration_tests*', 'tests*']),
     install_requires=install_requires,
-    zip_safe=False
-)
+    zip_safe=False)

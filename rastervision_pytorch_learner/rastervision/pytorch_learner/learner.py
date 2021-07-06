@@ -7,9 +7,11 @@ import datetime
 from abc import ABC, abstractmethod
 import shutil
 import os
+import sys
 import math
 import logging
-from subprocess import Popen
+from subprocess import Popen, call
+import psutil
 import numbers
 import zipfile
 from typing import Optional, List, Tuple, Dict, Union, Any
@@ -28,7 +30,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset
+from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset, Sampler
 import albumentations as A
 import numpy as np
 
@@ -50,6 +52,41 @@ MODULES_DIRNAME = 'modules'
 log = logging.getLogger(__name__)
 
 MetricDict = Dict[str, float]
+
+
+def log_system_details():
+    """Log some system details."""
+    # CPUs
+    log.info(f'Physical CPUs: {psutil.cpu_count(logical=False)}')
+    log.info(f'Logical CPUs: {psutil.cpu_count(logical=True)}')
+    # memory usage
+    mem_stats = psutil.virtual_memory()._asdict()
+    log.info(f'Total memory: {mem_stats["total"] / 2**30: .2f} GB')
+    # disk usage
+    disk_stats = psutil.disk_usage('/opt/data')._asdict()
+    log.info(
+        f'Size of /opt/data volume: {disk_stats["total"] / 2**30: .2f} GB')
+    # python
+    log.info(f'Python version: {sys.version}')
+    # nvidia GPU
+    try:
+        log.info(os.popen('nvcc --version').read())
+        log.info(os.popen('nvidia-smi').read())
+        log.info('Devices:')
+        call([
+            'nvidia-smi', '--format=csv',
+            '--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free'
+        ])
+    except FileNotFoundError:
+        pass
+    # pytorch and CUDA
+    log.info(f'PyTorch version: {torch.__version__}')
+    log.info(f'CUDA available: {torch.cuda.is_available()}')
+    log.info(f'CUDA version: {torch.version.cuda}')
+    log.info(f'CUDNN version: {torch.backends.cudnn.version()}')
+    log.info(f'Number of CUDA devices: {torch.cuda.device_count()}')
+    if torch.cuda.is_available():
+        log.info(f'Active CUDA Device: GPU {torch.cuda.current_device()}')
 
 
 class Learner(ABC):
@@ -90,6 +127,7 @@ class Learner(ABC):
                 and the loss function, optimizer, etc. are not initialized.
                 Defaults to True.
         """
+        log_system_details()
         self.cfg = cfg
         self.tmp_dir = tmp_dir
 
@@ -156,6 +194,7 @@ class Learner(ABC):
 
     def setup_training(self, loss_def_path=None):
         log.info(self.cfg)
+        log.info(f'Using device: {self.device}')
 
         # ds = dataset, dl = dataloader
         self.train_ds = None
@@ -459,6 +498,9 @@ class Learner(ABC):
         train_dirs = [join(d, 'train') for d in data_dirs if isdir(d)]
         val_dirs = [join(d, 'valid') for d in data_dirs if isdir(d)]
 
+        train_dirs = [d for d in train_dirs if isdir(d)]
+        val_dirs = [d for d in val_dirs if isdir(d)]
+
         base_transform, aug_transform = self.get_data_transforms()
         train_tf = aug_transform if not cfg.overfit_mode else base_transform
         val_tf, test_tf = base_transform, base_transform
@@ -529,6 +571,10 @@ class Learner(ABC):
                                        ConcatDataset(test_ds_lst))
         return train_ds, valid_ds, test_ds
 
+    def get_train_sampler(self, train_ds: Dataset) -> Optional[Sampler]:
+        """Return a sampler to use for the training dataloader or None to not use any."""
+        return None
+
     def setup_data(self):
         """Set the the DataSet and DataLoaders for train, validation, and test sets."""
         cfg = self.cfg
@@ -562,15 +608,19 @@ class Learner(ABC):
             train_inds = train_inds[0:cfg.data.train_sz]
             train_ds = Subset(train_ds, train_inds)
 
+        train_sampler = self.get_train_sampler(train_ds)
+        train_shuffle = train_sampler is None
+
         collate_fn = self.get_collate_fn()
         train_dl = DataLoader(
             train_ds,
-            shuffle=True,
+            shuffle=train_shuffle,
             batch_size=batch_sz,
             drop_last=True,
             num_workers=num_workers,
             pin_memory=True,
-            collate_fn=collate_fn)
+            collate_fn=collate_fn,
+            sampler=train_sampler)
         valid_dl = DataLoader(
             valid_ds,
             shuffle=True,
@@ -732,7 +782,7 @@ class Learner(ABC):
             x with extra batch dimension of length 1 if needed
         """
         if x.ndim == 3:
-            x = x.unsqueeze(0)
+            x = x[None, ...]
         return x
 
     def normalize_input(self, x: np.ndarray) -> np.ndarray:
@@ -797,9 +847,11 @@ class Learner(ABC):
         Returns:
             predictions using numpy arrays
         """
+        transform, _ = self.get_data_transforms()
         x = self.normalize_input(x)
-        x = torch.tensor(x)
         x = self.to_batch(x)
+        x = np.stack([transform(image=img)['image'] for img in x])
+        x = torch.from_numpy(x)
         x = x.permute((0, 3, 1, 2))
         out = self.predict(x, raw_out=raw_out)
         return self.output_to_numpy(out)
@@ -885,6 +937,8 @@ class Learner(ABC):
         batch_sz = x.shape[0]
         batch_sz = min(batch_sz,
                        batch_limit) if batch_limit is not None else batch_sz
+        if batch_sz == 0:
+            return
         ncols = nrows = math.ceil(math.sqrt(batch_sz))
         fig = plt.figure(
             constrained_layout=True, figsize=(3 * ncols, 3 * nrows))
@@ -896,8 +950,8 @@ class Learner(ABC):
         # apply transform, if given
         if self.cfg.data.plot_options.transform is not None:
             tf = A.from_dict(self.cfg.data.plot_options.transform)
-            x = tf(image=x.numpy())['image']
-            x = torch.from_numpy(x)
+            imgs = [tf(image=img)['image'] for img in x.numpy()]
+            x = torch.from_numpy(np.stack(imgs))
 
         for i in range(batch_sz):
             ax = fig.add_subplot(grid[i])
@@ -1078,10 +1132,12 @@ class Learner(ABC):
                 batch = (x, y)
                 self.opt.zero_grad()
                 output = self.train_step(batch, batch_ind)
-                outputs.append(output)
-                loss = output['train_loss']
-                loss.backward()
+                output['train_loss'].backward()
                 self.opt.step()
+                # detach tensors in the output, if any, to avoid memory leaks
+                for k, v in output.items():
+                    output[k] = v.detach() if isinstance(v, Tensor) else v
+                outputs.append(output)
                 if self.step_scheduler:
                     self.step_scheduler.step()
                 num_samples += x.shape[0]

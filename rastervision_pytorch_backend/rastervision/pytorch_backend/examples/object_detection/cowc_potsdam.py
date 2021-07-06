@@ -23,7 +23,7 @@ def get_config(runner,
                raw_uri: str,
                processed_uri: str,
                root_uri: str,
-               nochip: bool,
+               nochip: bool = True,
                test: bool = False) -> ObjectDetectionConfig:
     """Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
@@ -41,8 +41,8 @@ def get_config(runner,
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 2000x2000 crop of the scenes
-            (3) Enables test mode in the learner, which makes it use the
-                test_batch_sz and test_num_epochs, and also halves the img_sz.
+            (2) Enables test mode in the learner, which makes it use the
+                test_batch_sz and test_num_epochs, among other things.
             Defaults to False.
 
     Returns:
@@ -54,14 +54,6 @@ def get_config(runner,
     if test:
         train_ids = train_ids[:2]
         val_ids = val_ids[:2]
-
-    chip_sz = 600
-    img_sz = 256
-    if nochip:
-        chip_options = ObjectDetectionChipOptions()
-    else:
-        chip_options = ObjectDetectionChipOptions(
-            neg_ratio=5.0, ioa_thresh=0.9)
 
     def make_scene(id: str) -> SceneConfig:
         raster_uri = join(raw_uri,
@@ -97,31 +89,22 @@ def get_config(runner,
         train_scenes=[make_scene(id) for id in train_ids],
         validation_scenes=[make_scene(id) for id in val_ids])
 
+    chip_sz = 300
+    img_sz = chip_sz
+
+    chip_options = ObjectDetectionChipOptions(neg_ratio=5.0, ioa_thresh=0.9)
+
     if nochip:
-        window_opts = {}
-        # set window configs for training scenes
-        for s in scene_dataset.train_scenes:
-            window_opts[s.id] = ObjectDetectionGeoDataWindowConfig(
-                # method=GeoDataWindowMethod.sliding,
-                method=GeoDataWindowMethod.random,
-                size=img_sz,
-                # stride=img_sz // 2,
-                size_lims=(200, 300),
-                # h_lims=(200, 300),
-                # w_lims=(200, 300),
-                max_windows=500,
-                max_sample_attempts=100,
-                ioa_thresh=0.9,
-                clip=True,
-                neg_ratio=5.0,
-                neg_ioa_thresh=0.2,
-            )
-        # set window configs for validation scenes
-        for s in scene_dataset.validation_scenes:
-            window_opts[s.id] = GeoDataWindowConfig(
-                method=GeoDataWindowMethod.sliding,
-                size=img_sz,
-                stride=img_sz // 2)
+        window_opts = ObjectDetectionGeoDataWindowConfig(
+            method=GeoDataWindowMethod.random,
+            size=chip_sz,
+            size_lims=(chip_sz, chip_sz + 1),
+            max_windows=500,
+            max_sample_attempts=100,
+            clip=True,
+            neg_ratio=chip_options.neg_ratio,
+            ioa_thresh=chip_options.ioa_thresh,
+            neg_ioa_thresh=0.2)
 
         data = ObjectDetectionGeoDataConfig(
             scene_dataset=scene_dataset,
