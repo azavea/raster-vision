@@ -303,5 +303,5 @@ When unzipped, the model bundle contains a ``model.pth`` file which can be used 
    * - xView (Vehicles)
      - Object Detection
      - Faster-RCNN / Resnet50
-     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/xview-od/model_bundle.zip>`_
+     - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/xview-od/model-bundle.zip>`_
      - `link <https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/xview-od/sample-predictions/sample-img-xview-od.tif>`_
