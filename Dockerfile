@@ -23,7 +23,7 @@ ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 RUN conda install -y python=3.6
 RUN python -m pip install --upgrade pip
-RUN conda install -y -c conda-forge gdal=3.0.4
+RUN conda install -y -c conda-forge gdal=3.3.1
 
 # Setup GDAL_DATA directory, rasterio needs it.
 ENV GDAL_DATA=/opt/conda/lib/python3.6/site-packages/rasterio/gdal_data/
