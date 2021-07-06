@@ -5,8 +5,9 @@ import logging
 import json
 from typing import Optional, List, Dict
 
-from everett.manager import (ConfigManager, ConfigDictEnv, ConfigIniEnv,
+from everett.manager import (ConfigManager, ConfigDictEnv,
                              ConfigOSEnv, ConfigurationMissingError)
+from everett.ext.inifile import ConfigIniEnv
 
 from rastervision.pipeline.verbosity import Verbosity
 
