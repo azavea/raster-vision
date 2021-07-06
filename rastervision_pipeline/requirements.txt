@@ -1,5 +1,5 @@
 click==8.*
-pydantic==1.2
+pydantic==1.6.2
 typing_extensions==3.10.0.0
 everett==1.0.3
 six==1.11.*
