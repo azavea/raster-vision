@@ -71,7 +71,7 @@ class TestRasterioSource(unittest.TestCase):
                 np.uint8)
             for channel in range(nb_channels):
                 img_dataset.write(im[:, :, channel], channel + 1)
-            img_dataset.write_mask(np.zeros(im.shape[0:2]).astype(np.bool))
+            img_dataset.write_mask(np.zeros(im.shape[0:2]).astype(bool))
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
@@ -328,7 +328,7 @@ class TestRasterioSource(unittest.TestCase):
         window = Box(0, 0, 100, 100)
         arr = np.ones((100, 100), dtype=np.uint8)
         out = fill_overflow(extent, window, arr)
-        mask = np.zeros_like(arr).astype(np.bool)
+        mask = np.zeros_like(arr).astype(bool)
         mask[10:90, 10:90] = 1
         self.assertTrue(np.all(out[mask] == 1))
         self.assertTrue(np.all(out[~mask] == 0))
@@ -336,7 +336,7 @@ class TestRasterioSource(unittest.TestCase):
         window = Box(0, 0, 80, 100)
         arr = np.ones((80, 100), dtype=np.uint8)
         out = fill_overflow(extent, window, arr)
-        mask = np.zeros((80, 100), dtype=np.bool)
+        mask = np.zeros((80, 100), dtype=bool)
         mask[10:90, 10:90] = 1
         self.assertTrue(np.all(out[mask] == 1))
         self.assertTrue(np.all(out[~mask] == 0))
@@ -344,7 +344,7 @@ class TestRasterioSource(unittest.TestCase):
     def test_extent_crop_overflow(self):
         f = 1 / 10
         arr = np.ones((100, 100), dtype=np.uint8)
-        mask = np.zeros_like(arr).astype(np.bool)
+        mask = np.zeros_like(arr).astype(bool)
         mask[10:90, 10:90] = 1
         with NamedTemporaryFile('wb') as fp:
             uri = fp.name

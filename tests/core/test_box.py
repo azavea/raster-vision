@@ -78,7 +78,7 @@ class TestBox(unittest.TestCase):
     def test_npbox_format(self):
         self.assertEqual(
             tuple(self.box.npbox_format()), self.box.tuple_format())
-        self.assertEqual(self.box.npbox_format().dtype, np.float)
+        self.assertEqual(self.box.npbox_format().dtype, float)
 
     def test_geojson_coordinates(self):
         nw = [self.xmin, self.ymin]

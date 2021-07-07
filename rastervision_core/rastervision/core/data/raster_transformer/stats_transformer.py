@@ -41,10 +41,10 @@ class StatsTransformer(RasterTransformer):
                 # Subtract mean and divide by std to get zscores.
                 means = np.array(self.raster_stats.means)
                 means = means[np.newaxis, np.newaxis, channel_order].astype(
-                    np.float)
+                    float)
                 stds = np.array(self.raster_stats.stds)
                 stds = stds[np.newaxis, np.newaxis, channel_order].astype(
-                    np.float)
+                    float)
 
                 # Don't transform NODATA zero values.
                 nodata = chip == 0

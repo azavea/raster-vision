@@ -81,7 +81,7 @@ class Box():
 
         """
         return np.array(
-            [self.ymin, self.xmin, self.ymax, self.xmax], dtype=np.float)
+            [self.ymin, self.xmin, self.ymax, self.xmax], dtype=float)
 
     @staticmethod
     def to_npboxes(boxes):

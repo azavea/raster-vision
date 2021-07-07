@@ -77,7 +77,7 @@ class RasterStats():
 
         def get_chip(raster_source, window):
             """Return chip or None if all values are NODATA."""
-            chip = raster_source.get_raw_chip(window).astype(np.float32)
+            chip = raster_source.get_raw_chip(window).astype(float)
             # Convert shape from [h,w,c] to [c,h*w]
             chip = np.reshape(np.transpose(chip, [2, 0, 1]), (nb_channels, -1))
 

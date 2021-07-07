@@ -53,7 +53,7 @@ class AlbumentationsDataset(Dataset):
 
         if self.normalize and np.issubdtype(x.dtype, np.unsignedinteger):
             max_val = np.iinfo(x.dtype).max
-            x = x.astype(np.float32) / max_val
+            x = x.astype(float) / max_val
 
         if self.to_pytorch:
             # (H, W, C) --> (C, H, W)

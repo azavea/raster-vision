@@ -33,7 +33,7 @@ def get_config(runner,
     Args:
         runner (Runner): Runner for the pipeline. Will be provided by RV.
         raw_uri (str): Directory where the raw data resides
-        processed_uri (str): Directory for storing processed data. 
+        processed_uri (str): Directory for storing processed data.
                              E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
         external_model (bool, optional): If True, use an external model defined
@@ -168,13 +168,14 @@ def get_config(runner,
     solver = SolverConfig(
         lr=1e-4,
         num_epochs=20,
-        test_num_epochs=4,
+        test_num_epochs=20,
         batch_sz=32,
         one_cycle=True,
         external_loss_def=external_loss_def)
 
     backend = PyTorchChipClassificationConfig(
-        data=data, model=model, solver=solver, test_mode=test)
+        data=data, model=model, solver=solver, test_mode=test, log_tensorboard=True,
+        run_tensorboard=True)
 
     pipeline = ChipClassificationConfig(
         root_uri=root_uri,
