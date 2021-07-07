@@ -169,6 +169,12 @@ class ModelConfig(Config):
         None,
         description=('URI of PyTorch model weights used to initialize model. '
                      'If set, this supercedes the pretrained option.'))
+    load_strict: bool = Field(
+        True,
+        description=(
+            'If True, the keys in the state dict referenced by init_weights '
+            'must match exactly. Setting this to False can be useful if you '
+            'just want to load the backbone of a model.'))
     external_def: Optional[ExternalModuleConfig] = Field(
         None,
         description='If specified, the model will be built from the '
@@ -277,6 +283,8 @@ class DataConfig(Config):
         description=
         ('If set, the number of training images to use. If fewer images exist, '
          'then an exception will be raised.'))
+    train_sz_rel: Optional[float] = Field(
+        None, description='If set, the proportion of training images to use.')
     num_workers: int = Field(
         4,
         description='Number of workers to use when DataLoader makes batches.')

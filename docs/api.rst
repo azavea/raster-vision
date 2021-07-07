@@ -120,6 +120,11 @@ StatsTransformerConfig
 
 .. autoclass:: rastervision.core.data.raster_transformer.StatsTransformerConfig
 
+MinMaxTransformerConfig
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: rastervision.core.data.raster_transformer.MinMaxTransformerConfig
+
 CastTransformerConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

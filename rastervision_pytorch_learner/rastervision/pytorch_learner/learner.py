@@ -601,11 +601,14 @@ class Learner(ABC):
             valid_ds = Subset(valid_ds, range(batch_sz))
             test_ds = Subset(test_ds, range(batch_sz))
 
-        if cfg.data.train_sz is not None:
+        if cfg.data.train_sz is not None or cfg.data.train_sz_rel is not None:
             train_inds = list(range(len(train_ds)))
             random.seed(1234)
             random.shuffle(train_inds)
-            train_inds = train_inds[0:cfg.data.train_sz]
+            train_sz = (cfg.data.train_sz
+                        if cfg.data.train_sz is not None else int(
+                            round(len(train_ds) * cfg.data.train_sz_rel)))
+            train_inds = train_inds[0:train_sz]
             train_ds = Subset(train_ds, train_inds)
 
         train_sampler = self.get_train_sampler(train_ds)
@@ -1095,7 +1098,8 @@ class Learner(ABC):
             weights_path = download_if_needed(self.cfg.model.init_weights,
                                               self.tmp_dir)
             self.model.load_state_dict(
-                torch.load(weights_path, map_location=self.device))
+                torch.load(weights_path, map_location=self.device),
+                strict=self.cfg.model.load_strict)
 
     def load_checkpoint(self):
         """Load last weights from previous run if available."""

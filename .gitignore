@@ -111,9 +111,6 @@ deployment/ansible/*.retry
 
 *.aux.xml
 
-./data
-./notebooks
-.vscode/
-
-# dir that is mounted to /opt/data
-data/
+/data/
+/notebooks/
+/.vscode/
