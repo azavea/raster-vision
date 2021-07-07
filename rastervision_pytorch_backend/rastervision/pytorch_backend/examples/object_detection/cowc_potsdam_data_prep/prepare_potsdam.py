@@ -20,7 +20,7 @@ def png_to_geojson(geotiff_path, label_png_path, output_path, object_half_len):
     image_dataset = rasterio.open(geotiff_path)
     label_im = np.array(Image.open(label_png_path))
 
-    point_inds = np.argwhere(label_im[:, :, 0] != 0).astype(np.float)
+    point_inds = np.argwhere(label_im[:, :, 0] != 0).astype(float)
 
     # Normalize inds
     point_inds[:, 0] /= label_im.shape[0]
@@ -42,7 +42,7 @@ def png_to_geojson(geotiff_path, label_png_path, output_path, object_half_len):
                     image_dataset.width)
 
     # Write to GeoJSON
-    boxes = np.hstack([y_min, x_min, y_max, x_max]).astype(np.float)
+    boxes = np.hstack([y_min, x_min, y_max, x_max]).astype(float)
     boxlist = BoxList(boxes)
     save_geojson(output_path, boxlist, image_dataset=image_dataset)
     return boxlist

@@ -88,7 +88,7 @@ class SemanticSegmentationLabels(Labels):
                 out_shape=label_arr.shape[-2:],
                 fill=1,
                 dtype=np.uint8)
-            mask = mask.astype(np.bool)
+            mask = mask.astype(bool)
             self.mask_fill(window, mask, null_class_id)
         else:
             del self[window]

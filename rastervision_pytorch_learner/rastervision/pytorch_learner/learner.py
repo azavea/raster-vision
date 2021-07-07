@@ -245,8 +245,10 @@ class Learner(ABC):
         """Run TB server serving logged stats."""
         if self.cfg.run_tensorboard:
             log.info('Starting tensorboard process')
-            self.tb_process = Popen(
-                ['tensorboard', '--logdir={}'.format(self.tb_log_dir)])
+            self.tb_process = Popen([
+                'tensorboard', '--bind_all',
+                '--logdir={}'.format(self.tb_log_dir)
+            ])
             terminate_at_exit(self.tb_process)
 
     def stop_tensorboard(self):
@@ -800,7 +802,7 @@ class Learner(ABC):
         """
         if np.issubdtype(x.dtype, np.unsignedinteger):
             max_val = np.iinfo(x.dtype).max
-            x = x.astype(np.float32) / max_val
+            x = x.astype(float) / max_val
         return x
 
     def predict(self, x: Tensor, raw_out: bool = False) -> Any:

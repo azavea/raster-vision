@@ -36,7 +36,7 @@ def regression_transformer(inp: Tuple[Any, Any],
                            ) -> Tuple[np.ndarray, np.ndarray]:
     """Apply transform to image only."""
     x, y = inp
-    x, y = np.array(x), np.array(y, dtype=np.float32)
+    x, y = np.array(x), np.array(y, dtype=float)
     if transform is not None:
         out = transform(image=x)
         x = out['image']
@@ -147,7 +147,7 @@ def object_detection_transformer(
     # normalize x
     if np.issubdtype(x.dtype, np.unsignedinteger):
         max_val = np.iinfo(x.dtype).max
-        x = x.astype(np.float32) / max_val
+        x = x.astype(float) / max_val
 
     # convert to pytorch
     x = torch.from_numpy(x).permute(2, 0, 1).float()

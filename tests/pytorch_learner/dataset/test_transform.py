@@ -12,12 +12,12 @@ class TestTransforms(unittest.TestCase):
             [
                 [1, 2, 3, 4],
                 [2, 3, 4, 10],
-            ], dtype=np.float32)
+            ], dtype=float)
         boxes_albu_gt = np.array(
             [
                 [.2, .1, .4, .3],
                 [.3, .2, 1., .4],
-            ], dtype=np.float32)
+            ], dtype=float)
         boxes_albu = yxyx_to_albu(boxes, (10, 10))
         self.assertTrue(np.all(boxes_albu == boxes_albu_gt))
 
@@ -29,12 +29,12 @@ class TestTransforms(unittest.TestCase):
             [
                 [1, 2, 3, 4],
                 [2, 3, 4, 10],
-            ], dtype=np.float32)
+            ], dtype=float)
         boxes_albu_gt = np.array(
             [
                 [.1, .2, .4, .6],
                 [.2, .3, .6, 1.],
-            ], dtype=np.float32)
+            ], dtype=float)
         boxes_albu = xywh_to_albu(boxes, (10, 10))
         self.assertTrue(np.all(boxes_albu == boxes_albu_gt))
 
