@@ -6,7 +6,7 @@ torch==1.7.*
 torchvision==0.8.*
 tensorboard==2.5.*
 albumentations==0.5.*
-cython==0.28.*
+cython==0.29.*
 pycocotools==2.0.*
 future==0.18.*
 psutil==5.8.*
