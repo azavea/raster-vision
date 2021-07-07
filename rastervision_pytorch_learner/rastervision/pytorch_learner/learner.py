@@ -246,7 +246,7 @@ class Learner(ABC):
         if self.cfg.run_tensorboard:
             log.info('Starting tensorboard process')
             self.tb_process = Popen(
-                ['tensorboard', '--logdir={}'.format(self.tb_log_dir)])
+                ['tensorboard', '--bind_all', '--logdir={}'.format(self.tb_log_dir)])
             terminate_at_exit(self.tb_process)
 
     def stop_tensorboard(self):
