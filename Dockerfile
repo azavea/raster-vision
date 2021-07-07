@@ -21,7 +21,7 @@ RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7
      rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
-RUN conda install -y python=3.6
+RUN conda install -y python=3.7
 RUN python -m pip install --upgrade pip
 RUN conda install -y -c conda-forge gdal=3.3.1
 
