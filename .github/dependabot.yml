@@ -3,32 +3,32 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "pip"
     directory: "/rastervision_pipeline"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "pip"
     directory: "/rastervision_aws_s3"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "pip"
     directory: "/rastervision_aws_batch"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "pip"
     directory: "/rastervision_core"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "pip"
     directory: "/rastervision_pytorch_learner"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "pip"
     directory: "/rastervision_pytorch_backend"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
   - package-ecosystem: "pip"
     directory: "/rastervision_gdal_vsi"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
