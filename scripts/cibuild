@@ -28,4 +28,16 @@ if [ "$IMAGE_TYPE" = "pytorch" ]; then
         --rm -it \
         "${PYTORCH_IMAGE}" \
         /opt/src/scripts/integration_tests
+
+    docker run \
+        -w "$(pwd)" \
+        -v "$(pwd):$(pwd)" \
+        --rm \
+        "${PYTORCH_IMAGE}" \
+        coverage xml
+    docker run \
+        -v "$(pwd)":"$(pwd)" \
+        --rm \
+        ${PYTORCH_IMAGE} \
+        codecov --root="$(pwd)" --commit="${GITHUB_SHA}"
 fi
