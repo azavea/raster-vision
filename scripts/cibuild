@@ -2,5 +2,30 @@
 set -e
 
 if [ "$IMAGE_TYPE" = "pytorch" ]; then
-    docker build --build-arg CUDA_VERSION="10.2" -t raster-vision-pytorch -f Dockerfile .;
+    PYTORCH_IMAGE=raster-vision-pytorch
+
+    docker build \
+        --build-arg CUDA_VERSION="10.2" \
+        -t "${PYTORCH_IMAGE}" \
+        -f Dockerfile \
+        .
+
+    docker run \
+        -w "$(pwd)" \
+        -v "$(pwd)":"$(pwd)" \
+        --rm -it \
+        "${PYTORCH_IMAGE}" \
+        rm -f "$(pwd)"/.coverage "$(pwd)"/coverage.xml
+    docker run \
+        --rm -it \
+        "${PYTORCH_IMAGE}" \
+        /opt/src/scripts/style_tests
+    docker run \
+        --rm -it \
+        "${PYTORCH_IMAGE}" \
+        /opt/src/scripts/unit_tests
+    docker run \
+        --rm -it \
+        "${PYTORCH_IMAGE}" \
+        /opt/src/scripts/integration_tests
 fi
