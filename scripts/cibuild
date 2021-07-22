@@ -1,21 +1,35 @@
 #!/bin/bash
+
 set -e
 
-if [ "$IMAGE_TYPE" = "pytorch" ]; then
-    PYTORCH_IMAGE=raster-vision-pytorch
+function usage() {
+    echo -n \
+        "Usage: $(basename "$0")
+Build library for integration or a release.
+"
+}
 
-    docker build \
-        --build-arg CUDA_VERSION="10.2" \
-        -t "${PYTORCH_IMAGE}" \
-        -f Dockerfile \
-        .
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    if [[ "${1:-}" == "--help" ]]; then
+        usage
+    else
+        if [ "$IMAGE_TYPE" = "pytorch" ]; then
+            PYTORCH_IMAGE=raster-vision-pytorch
 
-    ./scripts/test
+            docker build \
+                --build-arg CUDA_VERSION="10.2" \
+                -t "${PYTORCH_IMAGE}" \
+                -f Dockerfile \
+                .
 
-    # Submit test coverage report to Codecov
-    docker run \
-        -v "$(pwd):$(pwd)" \
-        --rm \
-        ${PYTORCH_IMAGE} \
-        codecov --root="$(pwd)" --commit="${GITHUB_SHA}"
+            ./scripts/test
+
+            # Submit test coverage report to Codecov
+            docker run \
+                -v "$(pwd):$(pwd)" \
+                --rm \
+                ${PYTORCH_IMAGE} \
+                codecov --root="$(pwd)" --commit="${GITHUB_SHA}"
+        fi
+    fi
 fi
