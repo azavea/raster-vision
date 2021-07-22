@@ -2,6 +2,10 @@
 
 set -e
 
+if [[ -n ${RASTER_VISION_DEBUG} ]]; then
+    set -x
+fi
+
 function usage() {
     echo -n \
         "Usage: $(basename "$0")
@@ -9,8 +13,8 @@ Build library for integration or a release.
 "
 }
 
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-    if [[ "${1:-}" == "--help" ]]; then
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    if [[ ${1:-} == "--help" ]]; then
         usage
     else
         if [ "$IMAGE_TYPE" = "pytorch" ]; then
@@ -27,8 +31,8 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
             # Submit test coverage report to Codecov
             docker run \
                 -v "$(pwd):$(pwd)" \
-                --rm \
-                ${PYTORCH_IMAGE} \
+                --rm -t \
+                "${PYTORCH_IMAGE}" \
                 codecov --root="$(pwd)" --commit="${GITHUB_SHA}"
         fi
     fi

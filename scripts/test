@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+if [[ -n ${RASTER_VISION_DEBUG} ]]; then
     set -x
 fi
 
@@ -13,8 +13,8 @@ Run linters and tests.
 "
 }
 
-if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
-    if [ "${1:-}" = "--help" ]; then
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
+    if [[ ${1:-} == "--help" ]]; then
         usage
     else
         PYTORCH_IMAGE=raster-vision-pytorch
@@ -23,21 +23,21 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         docker run \
             -w "$(pwd)" \
             -v "$(pwd):$(pwd)" \
-            --rm \
+            --rm -t \
             "${PYTORCH_IMAGE}" \
             rm -f "$(pwd)/.coverage" "$(pwd)/coverage.xml"
 
         # Execute test suites
         docker run \
-            --rm \
+            --rm -t \
             "${PYTORCH_IMAGE}" \
             /opt/src/scripts/style_tests
         docker run \
-            --rm \
+            --rm -t \
             "${PYTORCH_IMAGE}" \
             /opt/src/scripts/unit_tests
         docker run \
-            --rm \
+            --rm -t \
             "${PYTORCH_IMAGE}" \
             /opt/src/scripts/integration_tests
 
@@ -45,7 +45,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         docker run \
             -w "$(pwd)" \
             -v "$(pwd):$(pwd)" \
-            --rm \
+            --rm -t \
             "${PYTORCH_IMAGE}" \
             coverage xml
     fi
