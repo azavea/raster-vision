@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+        "Usage: $(basename "$0")
+Run linters and tests.
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+    if [ "${1:-}" = "--help" ]; then
+        usage
+    else
+        PYTORCH_IMAGE=raster-vision-pytorch
+
+        # Delete old coverage reports
+        docker run \
+            -w "$(pwd)" \
+            -v "$(pwd):$(pwd)" \
+            --rm \
+            "${PYTORCH_IMAGE}" \
+            rm -f "$(pwd)/.coverage" "$(pwd)/coverage.xml"
+
+        # Execute test suites
+        docker run \
+            --rm \
+            "${PYTORCH_IMAGE}" \
+            /opt/src/scripts/style_tests
+        docker run \
+            --rm \
+            "${PYTORCH_IMAGE}" \
+            /opt/src/scripts/unit_tests
+        docker run \
+            --rm \
+            "${PYTORCH_IMAGE}" \
+            /opt/src/scripts/integration_tests
+
+        # Create new coverage reports
+        docker run \
+            -w "$(pwd)" \
+            -v "$(pwd):$(pwd)" \
+            --rm \
+            "${PYTORCH_IMAGE}" \
+            coverage xml
+    fi
+fi

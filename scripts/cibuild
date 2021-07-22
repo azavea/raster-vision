@@ -10,33 +10,11 @@ if [ "$IMAGE_TYPE" = "pytorch" ]; then
         -f Dockerfile \
         .
 
-    docker run \
-        -w "$(pwd)" \
-        -v "$(pwd)":"$(pwd)" \
-        --rm \
-        "${PYTORCH_IMAGE}" \
-        rm -f "$(pwd)"/.coverage "$(pwd)"/coverage.xml
-    docker run \
-        --rm \
-        "${PYTORCH_IMAGE}" \
-        /opt/src/scripts/style_tests
-    docker run \
-        --rm \
-        "${PYTORCH_IMAGE}" \
-        /opt/src/scripts/unit_tests
-    docker run \
-        --rm \
-        "${PYTORCH_IMAGE}" \
-        /opt/src/scripts/integration_tests
+    ./scripts/test
 
+    # Submit test coverage report to Codecov
     docker run \
-        -w "$(pwd)" \
         -v "$(pwd):$(pwd)" \
-        --rm \
-        "${PYTORCH_IMAGE}" \
-        coverage xml
-    docker run \
-        -v "$(pwd)":"$(pwd)" \
         --rm \
         ${PYTORCH_IMAGE} \
         codecov --root="$(pwd)" --commit="${GITHUB_SHA}"
