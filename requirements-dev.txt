@@ -1,7 +1,7 @@
 flake8==3.5.*
 moto==2.0.10
-coverage==4.5.1
-codecov==2.0.15
+coverage==5.5
+codecov==2.1.11
 yapf==0.22.*
 unify==0.4
 sphinx==4.0.*

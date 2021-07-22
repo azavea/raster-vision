@@ -33,6 +33,8 @@ if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
             "${PYTORCH_IMAGE}" \
             /opt/src/scripts/style_tests
         docker run \
+            -w "$(pwd)" \
+            -v "$(pwd):$(pwd)" \
             --rm -t \
             "${PYTORCH_IMAGE}" \
             /opt/src/scripts/unit_tests
