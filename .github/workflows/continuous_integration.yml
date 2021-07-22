@@ -22,3 +22,5 @@ jobs:
       - uses: actions/checkout@v2
 
       - run: ./scripts/cibuild
+
+      - uses: codecov/codecov-action@v2

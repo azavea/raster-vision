@@ -27,13 +27,6 @@ if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
                 .
 
             ./scripts/test
-
-            # Submit test coverage report to Codecov
-            docker run \
-                -v "$(pwd):$(pwd)" \
-                --rm -t \
-                "${PYTORCH_IMAGE}" \
-                codecov --root="$(pwd)" --commit="${GITHUB_SHA}"
         fi
     fi
 fi
