@@ -20,8 +20,8 @@ jobs:
     env:
       DOCKER_BUILDKIT: 1
       IMAGE_TYPE: ${{ matrix.image_type }}
-      QUAY_USER: ${{ secrets.QUAY_IMAGES_USER }}
-      QUAY_PASSWORD: ${{ secrets.QUAY_IMAGES_PASSWORD }}
+      QUAY_USER: ${{ secrets.QUAY_RASTERVISION_USER }}
+      QUAY_PASSWORD: ${{ secrets.QUAY_RASTERVISION_PASSWORD }}
     steps:
       - uses: actions/checkout@v2
 
