@@ -17,12 +17,10 @@ if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     if [[ ${1:-} == "--help" ]]; then
         usage
     else
-        if [ "$IMAGE_TYPE" = "pytorch" ]; then
-            PYTORCH_IMAGE=raster-vision-pytorch
-
+        if [ "${IMAGE_TYPE}" = "pytorch" ]; then
             docker build \
                 --build-arg CUDA_VERSION="10.2" \
-                -t "${PYTORCH_IMAGE}" \
+                -t "raster-vision-pytorch" \
                 -f Dockerfile \
                 .
 

@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+      - "[0-9]+" # Major version only
+      - "[0-9]+.[0-9]+" # Major and minor version
+      - "[0-9]+.[0-9]+.[0-9]+" # Major, minor, and patch version
+    tags:
+      - "*"
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image_type: [pytorch]
+    env:
+      DOCKER_BUILDKIT: 1
+      IMAGE_TYPE: ${{ matrix.image_type }}
+      QUAY_USER: ${{ secrets.QUAY_IMAGES_USER }}
+      QUAY_PASSWORD: ${{ secrets.QUAY_IMAGES_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: ./scripts/cibuild
+
+      - uses: codecov/codecov-action@v2
+
+      - run: |
+          echo "GIT_BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo "GIT_COMMIT=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
+
+      - run: ./scripts/cipublish
+        if: github.ref != 'refs/heads/master'
+        env:
+          IMAGE_VERSION: ${{ env.GIT_BRANCH }}
+
+      - run: ./scripts/cipublish
+        if: github.ref == 'refs/heads/master'
+        env:
+          IMAGE_VERSION: ${{ env.GIT_COMMIT }}
+
+      - run: ./scripts/cipublish
+        if: github.ref == 'refs/heads/master'
+        env:
+          IMAGE_VERSION: latest
+
+

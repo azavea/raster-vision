@@ -1,22 +1,22 @@
 #!/bin/bash
+
 set -e
 
-source .travis/env
+if [[ -n ${RASTER_VISION_DEBUG} ]]; then
+    set -x
+fi
 
-TAG_SUFFIX=${1}
-IS_LATEST=${2}
-
-docker login -u="$QUAY_USERNAME" -p="$QUAY_PASSWORD" quay.io
-
-function tag_and_push() {
-    if [ "$IMAGE_TYPE" = "pytorch" ]; then
-        docker tag ${PYTORCH_IMAGE} "${PYTORCH_TAG}-${1}";
-        docker push "${PYTORCH_TAG}-${1}";
-    fi
+function usage() {
+    echo -n \
+        "Usage: $(basename "$0")
+Publish container images to Quay.io.
+"
 }
 
-tag_and_push ${TAG_SUFFIX}
+docker login -u="${QUAY_USER}" -p="${QUAY_PASSWORD}" quay.io
 
-if [ "$IS_LATEST" == "TRUE" ]; then
-    tag_and_push "latest"
+if [ "${IMAGE_TYPE}" = "pytorch" ]; then
+    docker tag "raster-vision-pytorch" \
+        "quay.io/azavea/raster-vision:pytorch-${IMAGE_VERSION}"
+    docker push "quay.io/azavea/raster-vision:pytorch-${IMAGE_VERSION}"
 fi
