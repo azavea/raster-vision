@@ -15,8 +15,6 @@ Publish container images to Quay.io.
 
 docker login -u="${QUAY_USER}" -p="${QUAY_PASSWORD}" quay.io
 
-if [ "${IMAGE_TYPE}" = "pytorch" ]; then
-    docker tag "raster-vision-pytorch" \
-        "quay.io/azavea/raster-vision:pytorch-${IMAGE_VERSION}"
-    docker push "quay.io/azavea/raster-vision:pytorch-${IMAGE_VERSION}"
-fi
+docker tag "raster-vision-${IMAGE_TYPE}" \
+    "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${IMAGE_VERSION}"
+docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${IMAGE_VERSION}"

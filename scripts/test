@@ -17,30 +17,33 @@ if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
     if [[ ${1:-} == "--help" ]]; then
         usage
     else
-        PYTORCH_IMAGE=raster-vision-pytorch
+        if [[ -z ${CI} ]]; then
+            # Local test suite runs against pytorch image by default
+            IMAGE_TYPE=${IMAGE_TYPE:-pytorch}
+        fi
 
         # Delete old coverage reports
         docker run \
             -w "$(pwd)" \
             -v "$(pwd):$(pwd)" \
             --rm -t \
-            "${PYTORCH_IMAGE}" \
+            "raster-vision-${IMAGE_TYPE}" \
             rm -f "$(pwd)/.coverage" "$(pwd)/coverage.xml"
 
         # Execute test suites
         docker run \
             --rm -t \
-            "${PYTORCH_IMAGE}" \
+            "raster-vision-${IMAGE_TYPE}" \
             /opt/src/scripts/style_tests
         docker run \
             -w "$(pwd)" \
             -v "$(pwd):$(pwd)" \
             --rm -t \
-            "${PYTORCH_IMAGE}" \
+            "raster-vision-${IMAGE_TYPE}" \
             /opt/src/scripts/unit_tests
         docker run \
             --rm -t \
-            "${PYTORCH_IMAGE}" \
+            "raster-vision-${IMAGE_TYPE}" \
             /opt/src/scripts/integration_tests
 
         # Create new coverage reports
@@ -48,7 +51,7 @@ if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
             -w "$(pwd)" \
             -v "$(pwd):$(pwd)" \
             --rm -t \
-            "${PYTORCH_IMAGE}" \
+            "raster-vision-${IMAGE_TYPE}" \
             coverage xml
     fi
 fi
