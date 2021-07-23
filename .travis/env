@@ -1,7 +1,0 @@
-#!/bin/bash
-set -e
-
-FAMILY=quay.io/azavea
-
-PYTORCH_IMAGE=raster-vision-pytorch
-PYTORCH_TAG=${FAMILY}/raster-vision:pytorch
