@@ -121,7 +121,7 @@ class GeoDataset(AlbumentationsDataset):
 T = TypeVar('T')
 
 
-def _to_tuple(x: T, n: int = 2) -> Tuple[T, T]:
+def _to_tuple(x: T, n: int = 2) -> Tuple[T, ...]:
     """Convert to n-tuple if not already an n-tuple."""
     if isinstance(x, tuple):
         if len(x) != n:
