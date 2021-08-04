@@ -17,41 +17,44 @@ if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
     if [[ ${1:-} == "--help" ]]; then
         usage
     else
-        if [[ -z ${CI} ]]; then
+        if [[ -n ${CI} ]]; then
+            # Execute test suites
+            docker run \
+                --rm -t \
+                "raster-vision-${IMAGE_TYPE}" \
+                /opt/src/scripts/style_tests
+            docker run \
+                -w "$(pwd)" \
+                -v "$(pwd):$(pwd)" \
+                --rm -t \
+                "raster-vision-${IMAGE_TYPE}" \
+                /opt/src/scripts/unit_tests
+            docker run \
+                --rm -t \
+                "raster-vision-${IMAGE_TYPE}" \
+                /opt/src/scripts/integration_tests
+
+            # Create new coverage reports
+            docker run \
+                -w "$(pwd)" \
+                -v "$(pwd):$(pwd)" \
+                --rm -t \
+                "raster-vision-${IMAGE_TYPE}" \
+                coverage xml
+        else
             # Local test suite runs against pytorch image by default
             IMAGE_TYPE=${IMAGE_TYPE:-pytorch}
-        fi
 
-        # Delete old coverage reports
-        docker run \
-            -w "$(pwd)" \
-            -v "$(pwd):$(pwd)" \
-            --rm -t \
-            "raster-vision-${IMAGE_TYPE}" \
-            rm -f "$(pwd)/.coverage" "$(pwd)/coverage.xml"
+            # Delete old coverage reports
+            rm -f ./.coverage ./coverage.xml
 
-        # Execute test suites
-        docker run \
-            --rm -t \
-            "raster-vision-${IMAGE_TYPE}" \
-            /opt/src/scripts/style_tests
-        docker run \
-            -w "$(pwd)" \
-            -v "$(pwd):$(pwd)" \
-            --rm -t \
-            "raster-vision-${IMAGE_TYPE}" \
-            /opt/src/scripts/unit_tests
-        docker run \
-            --rm -t \
-            "raster-vision-${IMAGE_TYPE}" \
-            /opt/src/scripts/integration_tests
+            # Execute test suites
+            ./scripts/style_tests
+            ./scripts/unit_tests
+            ./scripts/integration_tests
 
-        # Create new coverage reports
-        docker run \
-            -w "$(pwd)" \
-            -v "$(pwd):$(pwd)" \
-            --rm -t \
-            "raster-vision-${IMAGE_TYPE}" \
+            # Create new coverage reports
             coverage xml
+        fi
     fi
 fi
