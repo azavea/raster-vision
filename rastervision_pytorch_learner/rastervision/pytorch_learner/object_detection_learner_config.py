@@ -102,12 +102,13 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
                 padding=opts.padding,
                 max_windows=opts.max_windows,
                 max_sample_attempts=opts.max_sample_attempts,
-                transform=transform,
                 bbox_params=bbox_params,
                 ioa_thresh=opts.ioa_thresh,
                 clip=opts.clip,
                 neg_ratio=opts.neg_ratio,
-                neg_ioa_thresh=opts.neg_ioa_thresh)
+                neg_ioa_thresh=opts.neg_ioa_thresh,
+                efficient_aoi_sampling=opts.efficient_aoi_sampling,
+                transform=transform)
         else:
             raise NotImplementedError()
         return ds
