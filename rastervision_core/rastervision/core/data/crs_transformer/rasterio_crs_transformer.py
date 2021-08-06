@@ -1,6 +1,7 @@
 from pyproj import Transformer
 
 from rasterio.transform import (rowcol, xy)
+from rasterio import Affine
 
 from rastervision.core.data.crs_transformer import (CRSTransformer,
                                                     IdentityCRSTransformer)
@@ -18,10 +19,16 @@ class RasterioCRSTransformer(CRSTransformer):
                 string
             map_crs: CRS of the labels
         """
-        self.map2image = Transformer.from_crs(
-            map_crs, image_crs, always_xy=True)
-        self.image2map = Transformer.from_crs(
-            image_crs, map_crs, always_xy=True)
+
+        if (image_crs is None) or (image_crs == map_crs):
+            self.map2image = lambda *args, **kws: args[:2]
+            self.image2map = lambda *args, **kws: args[:2]
+        else:
+            self.map2image = Transformer.from_crs(
+                map_crs, image_crs, always_xy=True).transform
+            self.image2map = Transformer.from_crs(
+                image_crs, map_crs, always_xy=True).transform
+
         super().__init__(transform, image_crs, map_crs)
 
     def map_to_pixel(self, map_point):
@@ -33,7 +40,7 @@ class RasterioCRSTransformer(CRSTransformer):
         Returns:
             (x, y) tuple in pixel coordinates
         """
-        image_point = self.map2image.transform(*map_point)
+        image_point = self.map2image(*map_point)
         pixel_point = rowcol(self.transform, image_point[0], image_point[1])
         pixel_point = (pixel_point[1], pixel_point[0])
         return pixel_point
@@ -49,13 +56,20 @@ class RasterioCRSTransformer(CRSTransformer):
         """
         image_point = xy(self.transform, int(pixel_point[1]),
                          int(pixel_point[0]))
-        map_point = self.image2map.transform(*image_point)
+        map_point = self.image2map(*image_point)
         return map_point
 
     @classmethod
     def from_dataset(cls, dataset, map_crs='epsg:4326'):
-        if dataset.crs is None:
-            return IdentityCRSTransformer()
         transform = dataset.transform
-        image_crs = dataset.crs.wkt
+        image_crs = None if dataset.crs is None else dataset.crs.wkt
+
+        no_crs_tf = (image_crs is None) or (image_crs == map_crs)
+        no_affine_tf = (transform is None) or (transform == Affine.identity())
+        if no_crs_tf and no_affine_tf:
+            return IdentityCRSTransformer()
+
+        if transform is None:
+            transform = Affine.identity()
+
         return cls(transform, image_crs, map_crs)
