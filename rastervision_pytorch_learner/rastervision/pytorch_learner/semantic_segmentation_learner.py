@@ -34,7 +34,7 @@ class SemanticSegmentationLearner(Learner):
         out_classes = len(self.cfg.data.class_names)
         if self.cfg.solver.ignore_last_class:
             out_classes -= 1
-        model = models.segmentation.segmentation._segm_resnet(
+        model = models.segmentation.segmentation._segm_model(
             'deeplabv3',
             self.cfg.model.get_backbone_str(),
             out_classes,
