@@ -85,7 +85,7 @@ Rather than running Raster Vision from inside a Docker container, you can direct
 
    > pip install rastervision==0.13
 
-.. note:: Raster Vision requires Python 3.6 or later. Use ``pip3 install rastervision==0.13.0`` if you have more than one version of Python installed.
+.. note:: Raster Vision requires Python 3.7 or later. Use ``pip3 install rastervision==0.13.0`` if you have more than one version of Python installed.
 
 You will also need various dependencies that are not pip-installable. For an example of setting these up, see the `Dockerfile <https://github.com/azavea/raster-vision/blob/0.13/Dockerfile>`_.
 

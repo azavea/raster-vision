@@ -14,7 +14,7 @@ RUN add-apt-repository ppa:ubuntugis/ppa && \
 # See https://github.com/mapbox/rasterio/issues/1289
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
-# Install Python 3.6
+# Install Python 3.7
 RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh && \
      chmod +x ~/miniconda.sh && \
      ~/miniconda.sh -b -p /opt/conda && \
@@ -26,7 +26,7 @@ RUN python -m pip install --upgrade pip
 RUN conda install -y -c conda-forge gdal=3.0.4
 
 # Setup GDAL_DATA directory, rasterio needs it.
-ENV GDAL_DATA=/opt/conda/lib/python3.6/site-packages/rasterio/gdal_data/
+ENV GDAL_DATA=/opt/conda/lib/python3.7/site-packages/rasterio/gdal_data/
 
 WORKDIR /opt/src/
 

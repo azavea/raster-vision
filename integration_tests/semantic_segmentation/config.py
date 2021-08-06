@@ -23,6 +23,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
             return join(dirname(__file__), part)
 
     class_config = ClassConfig(names=['red', 'green'], colors=['red', 'green'])
+    class_config.ensure_null_class()
 
     def make_scene(id, img_path, label_path):
         raster_source = RasterioSourceConfig(
