@@ -2,6 +2,7 @@ from typing import Union, Optional, Tuple, Any, TypeVar
 
 import numpy as np
 import albumentations as A
+from shapely.geometry.polygon import Polygon
 
 import torch
 from torch.utils.data import Dataset
@@ -11,6 +12,7 @@ from rastervision.core.data import Scene
 from rastervision.pytorch_learner.learner_config import PosInt, NonNegInt
 from rastervision.pytorch_learner.dataset.transform import (TransformType,
                                                             TF_TYPE_TO_TF_FUNC)
+from rastervision.pytorch_learner.dataset.utils import AoiSampler
 
 
 class AlbumentationsDataset(Dataset):
@@ -198,7 +200,8 @@ class RandomWindowGeoDataset(GeoDataset):
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None,
                  max_sample_attempts: PosInt = 100,
-                 return_window: bool = False):
+                 return_window: bool = False,
+                 efficient_aoi_sampling: bool = True):
         """Constructor.
 
         Will sample square windows if size_lims is specified. Otherwise, will
@@ -230,12 +233,18 @@ class RandomWindowGeoDataset(GeoDataset):
                 transform to apply to the windows. Defaults to None.
             transform_type (Optional[TransformType], optional): Type of
                 transform. Defaults to None.
-            return_window (bool, optional): Make __getitem__ return the window
-                coordinates used to generate the image. Defaults to False.
             max_sample_attempts (NonNegInt, optional): Max attempts when trying
                 to find a window within the AOI of the scene. Only used if the
                 scene has aoi_polygons specified. StopIteratioin is raised if
                 this is exceeded. Defaults to 100.
+            return_window (bool, optional): Make __getitem__ return the window
+                coordinates used to generate the image. Defaults to False.
+            efficient_aoi_sampling (bool, optional): If the scene has AOIs,
+                sampling windows at random anywhere in the extent and then
+                checking if they fall within any of the AOIs can be very
+                inefficient. This flag enables the use of an alternate
+                algorithm that only samples window locations inside the AOIs.
+                Defaults to True.
         """
         has_size_lims = size_lims is not None
         has_h_lims = h_lims is not None
@@ -284,6 +293,16 @@ class RandomWindowGeoDataset(GeoDataset):
         h_padding, w_padding = self.padding
         self.extent = (ymin, xmin, ymax + h_padding, xmax + w_padding)
 
+        self.aoi_sampler = None
+        if self.scene.aoi_polygons and efficient_aoi_sampling:
+            # clip aoi polygons to the extent
+            ymin, xmin, ymax, xmax = self.extent
+            extent_polygon = Polygon.from_bounds(xmin, ymin, xmax, ymax)
+            self.scene.aoi_polygons = [
+                p.intersection(extent_polygon) for p in self.scene.aoi_polygons
+            ]
+            self.aoi_sampler = AoiSampler(self.scene.aoi_polygons)
+
     def get_resize_transform(
             self, transform: Optional[A.BasicTransform],
             out_size: Tuple[PosInt, PosInt]) -> Union[A.Resize, A.Compose]:
@@ -323,9 +342,13 @@ class RandomWindowGeoDataset(GeoDataset):
 
     def sample_window_loc(self, h: int, w: int) -> Tuple[int, int]:
         """Randomly sample coordinates of the top left corner of the window."""
-        ymin, xmin, ymax, xmax = self.extent
-        y = torch.randint(low=ymin, high=ymax - h, size=(1, )).item()
-        x = torch.randint(low=xmin, high=xmax - w, size=(1, )).item()
+        if not self.aoi_sampler:
+            ymin, xmin, ymax, xmax = self.extent
+            y = torch.randint(low=ymin, high=ymax - h, size=(1, )).item()
+            x = torch.randint(low=xmin, high=xmax - w, size=(1, )).item()
+        else:
+            x, y = self.aoi_sampler.sample().round().T
+            x, y = int(x.item()), int(y.item())
         return x, y
 
     def _sample_window(self) -> Box:
