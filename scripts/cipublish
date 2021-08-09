@@ -13,8 +13,14 @@ Publish container images to Quay.io.
 "
 }
 
-docker login -u="${QUAY_USER}" -p="${QUAY_PASSWORD}" quay.io
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    if [[ ${1:-} == "--help" ]]; then
+        usage
+    else
+        docker login -u="${QUAY_USER}" -p="${QUAY_PASSWORD}" quay.io
 
-docker tag "raster-vision-${IMAGE_TYPE}" \
-    "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${IMAGE_VERSION}"
-docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${IMAGE_VERSION}"
+        docker tag "raster-vision-${IMAGE_TYPE}" \
+            "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${IMAGE_VERSION}"
+        docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${IMAGE_VERSION}"
+    fi
+fi
