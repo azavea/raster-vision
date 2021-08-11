@@ -1,4 +1,3 @@
 Sphinx~=4.0.3
 Pallets-Sphinx-Themes~=1.1.0
 sphinxcontrib-programoutput==0.11
-sphinxcontrib-napoleon==0.7

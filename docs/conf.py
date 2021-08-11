@@ -43,7 +43,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'pallets_sphinx_themes',
     'sphinxcontrib.programoutput',
-    'sphinxcontrib.napoleon',
+    'sphinx.ext.napoleon',
 ]
 
 # https://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
