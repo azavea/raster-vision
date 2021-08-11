@@ -42,7 +42,6 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'pallets_sphinx_themes',
-    'sphinxcontrib.programoutput',
     'sphinx.ext.napoleon',
 ]
 
