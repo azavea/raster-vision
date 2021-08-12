@@ -1,6 +1,6 @@
 ---
 name: "\U0001F41B Bug Report"
-about: Submit a bug report to help us improve PyTorch
+about: Submit a bug report to help us improve Raster Vision
 
 ---
 
@@ -16,7 +16,7 @@ Steps to reproduce the behavior:
 1.
 1.
 
-<!-- If you have a code sample, error messages, stack traces, please provide it here as well -->
+<!-- Please provide the command executed, source of the get_config() function, error messages, and/or full stack traces if at all possible -->
 
 ## Expected behavior
 
@@ -24,24 +24,15 @@ Steps to reproduce the behavior:
 
 ## Environment
 
-Please copy and paste the output from our
-[environment collection script](https://raw.githubusercontent.com/pytorch/pytorch/master/torch/utils/collect_env.py)
-(or fill out the checklist below manually).
+Running Raster Vision directly in Windows is not supported, and we recommend that you run it from within a Docker container.
 
-You can get the script and run it with:
-```
-wget https://raw.githubusercontent.com/pytorch/pytorch/master/torch/utils/collect_env.py
-# For security purposes, please check the contents of collect_env.py before running it.
-python collect_env.py
-```
+<!-- Please fill in the following. -->
 
- - PyTorch Version (e.g., 1.0):
+ - How you installed and are running Raster Vision (pip install on local vs. inside Docker image):
+ - Raster Vision version or commit:
  - OS (e.g., Linux):
- - How you installed PyTorch (`conda`, `pip`, source):
- - Build command you used (if compiling from source):
  - Python version:
- - CUDA/cuDNN version:
- - GPU models and configuration:
+ - CUDA/cuDNN version if running on GPU:
  - Any other relevant information:
 
 ## Additional context
