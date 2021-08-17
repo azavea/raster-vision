@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n ${RASTER_VISION_DEBUG} ]]; then
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
@@ -13,11 +13,11 @@ Run linters and tests.
 "
 }
 
-if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
-    if [[ ${1:-} == "--help" ]]; then
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    if [[ "${1:-}" == "--help" ]]; then
         usage
     else
-        if [[ -n ${CI} ]]; then
+        if [[ -n "${CI}" ]]; then
             # Execute test suites
             docker run \
                 --rm -t \
