@@ -27,29 +27,8 @@ jobs:
 
       - uses: codecov/codecov-action@v2
 
-      - run: |
-          echo "GIT_BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
-          echo "GIT_COMMIT=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
-
       - run: ./scripts/cipublish
-        if: github.ref != 'refs/heads/master'
         env:
-          IMAGE_VERSION: ${{ env.GIT_BRANCH }}
           QUAY_USER: ${{ secrets.QUAY_RASTERVISION_USER }}
           QUAY_PASSWORD: ${{ secrets.QUAY_RASTERVISION_PASSWORD }}
-
-      - run: ./scripts/cipublish
-        if: github.ref == 'refs/heads/master'
-        env:
-          IMAGE_VERSION: ${{ env.GIT_COMMIT }}
-          QUAY_USER: ${{ secrets.QUAY_RASTERVISION_USER }}
-          QUAY_PASSWORD: ${{ secrets.QUAY_RASTERVISION_PASSWORD }}
-
-      - run: ./scripts/cipublish
-        if: github.ref == 'refs/heads/master'
-        env:
-          IMAGE_VERSION: latest
-          QUAY_USER: ${{ secrets.QUAY_RASTERVISION_USER }}
-          QUAY_PASSWORD: ${{ secrets.QUAY_RASTERVISION_PASSWORD }}
-
 

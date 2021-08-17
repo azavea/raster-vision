@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ -n ${RASTER_VISION_DEBUG} ]]; then
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
@@ -13,14 +13,38 @@ Publish container images to Quay.io.
 "
 }
 
-if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
-    if [[ ${1:-} == "--help" ]]; then
+if [[ -n "${GITHUB_SHA}" ]]; then
+    GITHUB_SHA="${GITHUB_SHA:0:7}"
+else
+    GITHUB_SHA="$(git rev-parse --short HEAD)"
+fi
+
+if [[ -z "${GITHUB_REF}" ]]; then
+    # We don't know where GitHub sources the value of GITHUB_REF. git-describe
+    # is close enough to be valid for publishing.
+    GITHUB_REF="$(git describe --all)"
+fi
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    if [[ "${1:-}" == "--help" ]]; then
         usage
     else
         docker login -u="${QUAY_USER}" -p="${QUAY_PASSWORD}" quay.io
 
-        docker tag "raster-vision-${IMAGE_TYPE}" \
-            "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${IMAGE_VERSION}"
-        docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${IMAGE_VERSION}"
+        if [[ "${GITHUB_REF}" == "refs/heads/master" ]]; then
+            # On master, use the current SHA and latest
+            docker tag "raster-vision-${IMAGE_TYPE}" \
+                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${GITHUB_SHA}"
+            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${GITHUB_SHA}"
+
+            docker tag "raster-vision-${IMAGE_TYPE}" \
+                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-latest"
+            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-latest"
+        else
+            # For everything else, use the branch or tag name
+            docker tag "raster-vision-${IMAGE_TYPE}" \
+                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${GITHUB_REF##*/}"
+            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${GITHUB_REF##*/}"
+        fi
     fi
 fi
