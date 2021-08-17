@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image_type: [pytorch]
+    env:
+      DOCKER_BUILDKIT: 1
+      IMAGE_TYPE: ${{ matrix.image_type }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: ./scripts/cibuild
+
+      - uses: codecov/codecov-action@v2

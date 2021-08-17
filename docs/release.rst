@@ -35,7 +35,7 @@ Minor or Major Version Release
 #. Make a PR to the ``master`` branch with the preceding updates. In the PR, there should be a link to preview the docs. Check that they are building and look correct.
 #. Make a git branch with the version as the name, and push to Github.
 #. Ensure that the docs are building correctly for the new version branch on `readthedocs <https://readthedocs.org/projects/raster-vision/>`_. You will need to have admin access on your RTD account. Once the branch is building successfully, Under Versions -> Activate a Version, you can activate the version to add it to the sidebar of the docs for the latest version. (This might require manually triggering a rebuild of the docs.) Then, under Admin -> Advanced Settings, change the default version to the new version.
-#. Travis CI is supposed to publish an image whenever there is a push to a branch with a version number as the name. If this doesn't work or you want to publish it immediately, then you can manually make a Docker image for the new version and push to Quay. For this you will need an account on Quay.io under the Azavea organization.
+#. GitHub Actions is supposed to publish an image whenever there is a push to a branch with a version number as the name. If this doesn't work or you want to publish it immediately, then you can manually make a Docker image for the new version and push to Quay. For this you will need an account on Quay.io under the Azavea organization.
 
     .. code-block:: terminal
 
@@ -98,16 +98,6 @@ Bug Fix Release
 This describes how to create a new bug fix release, using incrementing from 0.8.0 to 0.8.1 as an example. This assumes that there is already a branch for a minor release called ``0.8``.
 
 #. To create a bug fix release (version 0.8.1), we need to backport all the bug fix commits on the ``master`` branch that have been added since the last bug fix release onto the ``0.8`` branch. For each bug fix PR on ``master``, we need to create a PR against the ``0.8`` branch based on a branch of ``0.8`` that has cherry-picked the commits from the original PR. The title of the PR should start with [BACKPORT].
-#. Make and merge a PR against ``0.8`` (but not ``master``) that increments the version in each ``setup.py`` file to ``0.8.1``. Then wait for the ``0.8`` branch to be built by Travis and the ``0.8`` Docker images to be published to Quay. If that is successful, we can proceed to the next steps of actually publishing a release.
+#. Make and merge a PR against ``0.8`` (but not ``master``) that increments the version in each ``setup.py`` file to ``0.8.1``. Then wait for the ``0.8`` branch to be built by GitHub Actions and the ``0.8`` Docker images to be published to Quay. If that is successful, we can proceed to the next steps of actually publishing a release.
 #. Using the Github UI, make a new release. Use ``0.8.1`` as the tag, and the ``0.8`` branch as the target.
-#. The image for ``0.8`` is created automatically by Travis, but we need to manually create images for ``0.8.1``. For this you will need an account on Quay  under the Azavea organization.
-
-    .. code-block:: terminal
-
-        docker login quay.io
-
-        docker pull quay.io/azavea/raster-vision:pytorch-0.8
-        docker tag quay.io/azavea/raster-vision:pytorch-0.8 quay.io/azavea/raster-vision:pytorch-0.8.1
-        docker push quay.io/azavea/raster-vision:pytorch-0.8.1
-
 #. Publish the new version to PyPI. Follow the same instructions for PyPI that are listed above for minor/major version releases.

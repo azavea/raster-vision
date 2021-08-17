@@ -1,10 +1,7 @@
 [run]
 source =
-    rastervision/
+    rastervision
 omit =
-    rastervision/protos/**.py
-    rastervision/utils/filter_geojson.py
-    rastervision/utils/geojson.py
-    rastervision/utils/misc.py
-    rastervision/data/vector_source/label_maker/**.py
-    rastervision/data/label/tfod_utils/**.py
+    */rastervision_core/rastervision/core/data/vector_source/label_maker/*.py
+    */rastervision_core/rastervision/core/data/label/tfod_utils/*.py
+    */rastervision_core/rastervision/core/utils/*.py

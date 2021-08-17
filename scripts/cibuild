@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+        "Usage: $(basename "$0")
+Build library for integration or a release.
+"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    if [[ "${1:-}" == "--help" ]]; then
+        usage
+    else
+        docker build \
+            --build-arg CUDA_VERSION="10.2" \
+            -t "raster-vision-${IMAGE_TYPE}" \
+            -f Dockerfile \
+            .
+
+        ./scripts/test
+    fi
+fi
