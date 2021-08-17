@@ -168,14 +168,18 @@ def get_config(runner,
     solver = SolverConfig(
         lr=1e-4,
         num_epochs=20,
-        test_num_epochs=20,
+        test_num_epochs=4,
         batch_sz=32,
         one_cycle=True,
         external_loss_def=external_loss_def)
 
     backend = PyTorchChipClassificationConfig(
-        data=data, model=model, solver=solver, test_mode=test, log_tensorboard=True,
-        run_tensorboard=True)
+        data=data,
+        model=model,
+        solver=solver,
+        test_mode=test,
+        log_tensorboard=True,
+        run_tensorboard=False)
 
     pipeline = ChipClassificationConfig(
         root_uri=root_uri,
