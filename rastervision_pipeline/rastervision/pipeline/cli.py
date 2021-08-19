@@ -240,9 +240,11 @@ def run_command(cfg_json_uri: str, command: str, split_ind: Optional[int],
         runner=runner)
 
 
-# This has to go here and nowhere else :)
-for pc in registry.get_plugin_commands():
-    main.add_command(pc)
+def _main():
+    for pc in registry.get_plugin_commands():
+        main.add_command(pc)
+    main()
+
 
 if __name__ == '__main__':
-    main()
+    _main()
