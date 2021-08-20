@@ -475,6 +475,15 @@ class GeoDataWindowConfig(Config):
         description='Max attempts when trying to find a window within the AOI '
         'of a scene. Only used if method = random and the scene has '
         'aoi_polygons specified.')
+    efficient_aoi_sampling: bool = Field(
+        True,
+        description='If the scene has AOIs, sampling windows at random '
+        'anywhere in the extent and then checking if they fall within any of '
+        'the AOIs can be very inefficient. This flag enables the use of an '
+        'alternate algorithm that only samples window locations inside the '
+        'AOIs. Only used if method = random and the scene has aoi_polygons '
+        'specified. Defaults to True',
+    )
 
     def validate_config(self):
         if self.method == GeoDataWindowMethod.sliding:

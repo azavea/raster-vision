@@ -272,3 +272,23 @@ class RasterioSource(ActivateMixin, RasterSource):
 
             window = Box(ymin4, xmin4, ymin4 + height, xmin4 + width)
         return window
+
+    def get_transformed_window(self, window: Box,
+                               inverse: bool = False) -> Box:
+        """Apply the CRS transform to the window.
+
+        Args:
+            window (Box): A window in pixel coordinates.
+
+        Returns:
+            Box: A window in world coordinates.
+        """
+        if inverse:
+            tf = self.crs_transformer.map_to_pixel
+        else:
+            tf = self.crs_transformer.pixel_to_map
+        ymin, xmin, ymax, xmax = window
+        xmin, ymin = tf((xmin, ymin))
+        xmax, ymax = tf((xmax, ymax))
+        window = Box(ymin, xmin, ymax, xmax)
+        return window
