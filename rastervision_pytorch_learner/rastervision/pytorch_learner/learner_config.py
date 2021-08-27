@@ -443,7 +443,9 @@ class GeoDataWindowConfig(Config):
         ...,
         description='If method = sliding, this is the size of sliding window. '
         'If method = random, this is the size that all the windows are '
-        'resized to before they are returned.')
+        'resized to before they are returned. If method = random and neither '
+        'size_lims nor h_lims and w_lims have been specified, then size_lims '
+        'is set to (size, size + 1).')
     stride: Optional[Union[PosInt, Tuple[PosInt, PosInt]]] = Field(
         None,
         description='Stride of sliding window. Only used if method = sliding.')
@@ -456,8 +458,10 @@ class GeoDataWindowConfig(Config):
         description='[min, max) interval from which window sizes will be '
         'uniformly randomly sampled. The upper limit is exclusive. To fix the '
         'size to a constant value, use size_lims = (sz, sz + 1). '
-        'Only used if method = random. Must specify either size_lims or '
-        'h and w lims, but not both.')
+        'Only used if method = random. Specify either size_lims or '
+        'h_lims and w_lims, but not both. If neither size_lims nor h_lims '
+        'and w_lims have been specified, then this will be set to '
+        '(size, size + 1).')
     h_lims: Optional[Tuple[PosInt, PosInt]] = Field(
         None,
         description='[min, max] interval from which window heights will be '
@@ -498,6 +502,14 @@ class GeoDataWindowConfig(Config):
                 raise ConfigError('Specify either size_lims or h and w lims.')
             if has_h_lims != has_w_lims:
                 raise ConfigError('h_lims and w_lims must both be specified')
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+
+        has_size_lims = self.size_lims is not None
+        has_h_lims = self.h_lims is not None
+        if not (has_size_lims or has_h_lims):
+            self.size_lims = (self.size, self.size + 1)
 
 
 @register_config('geo_data')

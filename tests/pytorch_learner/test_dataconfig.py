@@ -60,7 +60,7 @@ class TestDataConfig(unittest.TestCase):
 
 
 class TestImageDataConfig(unittest.TestCase):
-    def fail_if_fails(self, fn: Callable, msg=''):
+    def assertNoError(self, fn: Callable, msg=''):
         try:
             fn()
         except Exception:
@@ -85,19 +85,19 @@ class TestImageDataConfig(unittest.TestCase):
         self.assertRaises(ConfigError, lambda: cfg.validate_config())
         # test valid configs
         cfg = ImageDataConfig(group_uris=group_uris, group_train_sz=1)
-        self.fail_if_fails(lambda: cfg.validate_config())
+        self.assertNoError(lambda: cfg.validate_config())
         cfg = ImageDataConfig(
             group_uris=group_uris, group_train_sz=[1] * len(group_uris))
-        self.fail_if_fails(lambda: cfg.validate_config())
+        self.assertNoError(lambda: cfg.validate_config())
         cfg = ImageDataConfig(group_uris=group_uris, group_train_sz_rel=.1)
-        self.fail_if_fails(lambda: cfg.validate_config())
+        self.assertNoError(lambda: cfg.validate_config())
         cfg = ImageDataConfig(
             group_uris=group_uris, group_train_sz_rel=[.1] * len(group_uris))
-        self.fail_if_fails(lambda: cfg.validate_config())
+        self.assertNoError(lambda: cfg.validate_config())
 
 
 class TestGeoDataConfig(unittest.TestCase):
-    def fail_if_fails(self, fn: Callable, msg=''):
+    def assertNoError(self, fn: Callable, msg=''):
         try:
             fn()
         except Exception:
@@ -109,7 +109,9 @@ class TestGeoDataConfig(unittest.TestCase):
         self.assertRaises(ConfigError, lambda: cfg.validate_config())
 
         cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.random, size=10)
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
+        cfg.update()
+        self.assertEqual(cfg.size_lims, (10, 11))
+        self.assertNoError(lambda: cfg.validate_config())
 
         cfg = GeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
