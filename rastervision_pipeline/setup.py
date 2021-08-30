@@ -34,6 +34,6 @@ setup(
     zip_safe=False,
     entry_points='''
         [console_scripts]
-        rastervision=rastervision.pipeline.cli:main
+        rastervision=rastervision.pipeline.cli:_main
     ''',
 )
