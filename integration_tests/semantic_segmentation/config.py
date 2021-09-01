@@ -93,7 +93,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         solver = SolverConfig(
             lr=1e-9,
             num_epochs=1,
-            batch_sz=2,
+            batch_sz=8,
             one_cycle=True,
             sync_interval=200)
     backend = PyTorchSemanticSegmentationConfig(
