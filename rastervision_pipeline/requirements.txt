@@ -1,6 +1,6 @@
 click==8.*
 pydantic==1.8.2
-typing_extensions==3.10.0.0
+typing_extensions==3.10.0.2
 everett==1.0.3
 six==1.16.*
 everett[ini]==1.0.3
