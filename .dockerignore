@@ -1,2 +1,13 @@
-./data/
+data/
+build/
+
 .git/
+.github/
+.vscode/
+
+**/__pycache__/
+**/.ipynb_checkpoints/
+**/*.pth
+
+**/build/
+**/dist/
