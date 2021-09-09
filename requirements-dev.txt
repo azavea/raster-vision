@@ -8,3 +8,4 @@ sphinx==4.0.*
 sphinx-autobuild==2021.3.*
 ptvsd==4.3.*
 jupyter==1.0.*
+shapely
