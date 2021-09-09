@@ -39,8 +39,8 @@ def setup_stac_io() -> None:
 
 
 def is_label_item(item: Item) -> bool:
-    """Resolve each extension schema into a dict, then check if has the title
-    of "Label Extension".
+    """Resolve each extension schema into a dict, then check if it has the
+    title of "Label Extension".
     """
     for ext_schema_uri in item.stac_extensions:
         schema = file_to_json(ext_schema_uri)
@@ -50,7 +50,7 @@ def is_label_item(item: Item) -> bool:
 
 
 def get_linked_image_item(label_item: Item) -> Optional[Item]:
-    """Find link in the item that have "rel" == "source" and return its
+    """Find link in the item that has "rel" == "source" and return its
     "target" item. If no such link, return None. If multiple such links,
     raise an exception."""
     links = [l for l in label_item.links if l.rel.lower() == 'source']
@@ -66,7 +66,7 @@ def parse_stac(stac_uri: str) -> List[dict]:
     """Parse a STAC catalog JSON file to extract label URIs, images URIs,
     and AOIs.
 
-    Note: This is has been tested to be compatible with STAC version 1.0.0 but
+    Note: This has been tested to be compatible with STAC version 1.0.0 but
     not any other versions.
 
     Args:
