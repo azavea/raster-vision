@@ -1,3 +1,4 @@
+from typing import List
 import csv
 from io import StringIO
 import os
@@ -144,7 +145,7 @@ def save_image_crop(image_uri,
             os.environ.update(old_environ)
 
 
-def read_stac(uri: str) -> dict:
+def read_stac(uri: str) -> List[dict]:
     """Parse the contents of a STAC catalog (downloading it first, if
     remote). If the uri is a zip file, unzip it, find catalog.json inside it
     and parse that.
@@ -158,7 +159,10 @@ def read_stac(uri: str) -> dict:
         Exception: If multiple catalog.json's are found inside the zip file.
 
     Returns:
-        dict: A dict containing the extracted contents.
+        List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
+            "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
+            Each dict corresponds to one label item and its associated image
+            assets in the STAC catalog.
     """
     uri_path = Path(uri)
     is_zip = uri_path.suffix.lower() == '.zip'

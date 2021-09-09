@@ -74,7 +74,9 @@ def parse_stac(stac_uri: str) -> List[dict]:
 
     Returns:
         List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
-            "label_bbox", "image_bbox", and "aoi_geometry".
+            "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
+            Each dict corresponds to one label item and its associated image
+            assets in the STAC catalog.
     """
     setup_stac_io()
     cat = Catalog.from_file(stac_uri)
@@ -96,7 +98,7 @@ def parse_stac(stac_uri: str) -> List[dict]:
     for label_item, image_item in zip(label_items, image_items):
         label_uri: str = list(label_item.assets.values())[0].href
         label_bbox = box(*label_item.bbox)
-        aoi_geometry = label_item.geometry
+        aoi_geometry: Optional[dict] = label_item.geometry
 
         if image_item is not None:
             image_assets = [
