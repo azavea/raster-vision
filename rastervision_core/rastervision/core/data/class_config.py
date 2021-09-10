@@ -42,8 +42,9 @@ class ClassConfig(Config):
         """Add a null class if one isn't set."""
         if self.null_class is None:
             self.null_class = 'null'
-            self.names.append('null')
-            self.colors.append('black')
+            if self.null_class not in self.names:
+                self.names.append('null')
+                self.colors.append('black')
 
     def update(self, pipeline=None):
         if not self.colors:
