@@ -24,12 +24,13 @@ class VectorOutputConfig(Config):
          'the image.'))
 
     def update(self, pipeline=None, scene=None):
-        if pipeline and scene:
-            mode = self.get_mode()
-            class_id = self.class_id
-            filename = f'{mode}-{class_id}.json'
-            self.uri = join(pipeline.predict_uri, scene.id, 'vector_output',
-                            filename)
+        if self.uri is None:
+            if pipeline and scene:
+                mode = self.get_mode()
+                class_id = self.class_id
+                filename = f'{mode}-{class_id}.json'
+                self.uri = join(pipeline.predict_uri, scene.id,
+                                'vector_output', filename)
 
     def get_mode(self):
         raise NotImplementedError()
