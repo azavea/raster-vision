@@ -1,7 +1,10 @@
+from typing import List
 import csv
 from io import StringIO
-import tempfile
 import os
+from os.path import join
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import rasterio
 from shapely.strtree import STRtree
@@ -11,9 +14,10 @@ from shapely.ops import transform
 from rastervision.core import Box
 from rastervision.core.data import (RasterioCRSTransformer,
                                     GeoJSONVectorSourceConfig)
-from rastervision.pipeline.file_system import (file_to_str, file_exists,
-                                               get_local_path, upload_or_copy,
-                                               make_dir, json_to_file)
+from rastervision.core.utils.stac import parse_stac
+from rastervision.pipeline.file_system import (
+    file_to_str, file_exists, get_local_path, upload_or_copy, make_dir,
+    json_to_file, download_if_needed, unzip)
 from rastervision.aws_s3 import S3FileSystem
 
 
@@ -39,7 +43,7 @@ def crop_image(image_uri, window, crop_uri):
     rasterio_window = window.rasterio_format()
     im = im_dataset.read(window=rasterio_window)
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    with TemporaryDirectory() as tmp_dir:
         crop_path = get_local_path(crop_uri, tmp_dir)
         make_dir(crop_path, use_dirname=True)
 
@@ -139,3 +143,42 @@ def save_image_crop(image_uri,
         finally:
             os.environ.clear()
             os.environ.update(old_environ)
+
+
+def read_stac(uri: str) -> List[dict]:
+    """Parse the contents of a STAC catalog (downloading it first, if
+    remote). If the uri is a zip file, unzip it, find catalog.json inside it
+    and parse that.
+
+    Args:
+        uri (str): Either a URI to a STAC catalog JSON file or a URI to a zip
+            file containing a STAC catalog JSON file.
+
+    Raises:
+        FileNotFoundError: If catalog.json is not found inside the zip file.
+        Exception: If multiple catalog.json's are found inside the zip file.
+
+    Returns:
+        List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
+            "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
+            Each dict corresponds to one label item and its associated image
+            assets in the STAC catalog.
+    """
+    uri_path = Path(uri)
+    is_zip = uri_path.suffix.lower() == '.zip'
+
+    with TemporaryDirectory() as tmp_dir:
+        catalog_path = download_if_needed(uri, tmp_dir)
+        if not is_zip:
+            return parse_stac(catalog_path)
+        zip_path = catalog_path
+        unzip_path = join(tmp_dir, uri_path.stem)
+        unzip(zip_path, target_dir=unzip_path)
+        catalog_paths = list(Path(unzip_path).glob('**/catalog.json'))
+        if len(catalog_paths) == 0:
+            raise FileNotFoundError(f'Unable to find "catalog.json" in {uri}.')
+        elif len(catalog_paths) > 1:
+            raise Exception(f'More than one "catalog.json" found in '
+                            f'{uri}.')
+        catalog_path = str(catalog_paths[0])
+        return parse_stac(catalog_path)
