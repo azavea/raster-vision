@@ -3,7 +3,7 @@ numpy<1.22
 shapely==1.6.*
 pillow==8.3.*
 pyproj==2.6.*
-rasterio==1.0.7
+rasterio==1.2.8
 imageio==2.3.*
 pystac==1.0.*
 mask-to-polygons==0.0.2
