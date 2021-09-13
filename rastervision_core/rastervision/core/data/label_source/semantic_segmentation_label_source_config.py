@@ -19,6 +19,10 @@ class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
         ('If set, will infer the class_ids for the labels using the colors field. This '
          'assumes the labels are stored as RGB rasters.'))
 
+    def update(self, pipeline=None, scene=None):
+        super().update()
+        self.rgb_class_config.ensure_null_class()
+
     def build(self, class_config, crs_transformer, extent, tmp_dir):
         if isinstance(self.raster_source, RasterizedSourceConfig):
             rs = self.raster_source.build(class_config, crs_transformer,

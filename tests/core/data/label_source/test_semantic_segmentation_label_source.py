@@ -3,8 +3,21 @@ import unittest
 import numpy as np
 
 from rastervision.core import Box
-from rastervision.core.data import ClassConfig, SemanticSegmentationLabelSource
+from rastervision.core.data import (
+    ClassConfig, SemanticSegmentationLabelSource,
+    SemanticSegmentationLabelSourceConfig, RasterioSourceConfig)
 from tests.core.data.mock_raster_source import MockRasterSource
+
+
+class TestSemanticSegmentationLabelSourceConfig(unittest.TestCase):
+    def test_rgb_class_config_null_class(self):
+        raster_source_cfg = RasterioSourceConfig(uris=['/abc/def.tif'])
+        rgb_class_config = ClassConfig(names=['a'], colors=['#010101'])
+        cfg = SemanticSegmentationLabelSourceConfig(
+            raster_source=raster_source_cfg, rgb_class_config=rgb_class_config)
+        cfg.update()
+        self.assertEqual(len(cfg.rgb_class_config), 2)
+        self.assertIn('null', cfg.rgb_class_config.names)
 
 
 class TestSemanticSegmentationLabelSource(unittest.TestCase):

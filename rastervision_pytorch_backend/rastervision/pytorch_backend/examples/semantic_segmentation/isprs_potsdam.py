@@ -105,7 +105,6 @@ def get_config(runner,
         plot_transform = None
 
     class_config = ClassConfig(names=CLASS_NAMES, colors=CLASS_COLORS)
-    class_config.ensure_null_class()
 
     def make_scene(id) -> SceneConfig:
         id = id.replace('-', '_')
@@ -195,6 +194,8 @@ def get_config(runner,
             plot_options=PlotOptions(transform=plot_transform))
 
     if external_model:
+        class_config.ensure_null_class()
+        num_classes = len(class_config)
         model = SemanticSegmentationModelConfig(
             external_def=ExternalModuleConfig(
                 github_repo='AdeelH/pytorch-fpn:0.2',
@@ -203,7 +204,7 @@ def get_config(runner,
                 entrypoint_kwargs={
                     'name': 'resnet50',
                     'fpn_type': 'panoptic',
-                    'num_classes': len(class_config.names),
+                    'num_classes': num_classes,
                     'fpn_channels': 256,
                     'in_channels': len(channel_order),
                     'out_size': (img_sz, img_sz)
