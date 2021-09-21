@@ -490,6 +490,8 @@ class GeoDataWindowConfig(Config):
     )
 
     def validate_config(self):
+        self.update()
+
         if self.method == GeoDataWindowMethod.sliding:
             if self.stride is None:
                 raise ConfigError('stride must be specified if using '
@@ -503,13 +505,12 @@ class GeoDataWindowConfig(Config):
             if has_h_lims != has_w_lims:
                 raise ConfigError('h_lims and w_lims must both be specified')
 
-    def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
-
-        has_size_lims = self.size_lims is not None
-        has_h_lims = self.h_lims is not None
-        if not (has_size_lims or has_h_lims):
-            self.size_lims = (self.size, self.size + 1)
+    def update(self):
+        if self.method == GeoDataWindowMethod.random:
+            has_size_lims = self.size_lims is not None
+            has_h_lims = self.h_lims is not None
+            if not (has_size_lims or has_h_lims):
+                self.size_lims = (self.size, self.size + 1)
 
 
 @register_config('geo_data')
