@@ -56,37 +56,38 @@ def transform_geojson(geojson,
         geoms = new_geoms
 
         # Buffer geoms.
-        class_id = f['properties']['class_id']
-        new_geoms = []
-        for g in geoms:
-            if g.geom_type == 'LineString':
-                line_buf = 1
-                if line_bufs is not None:
-                    line_buf = line_bufs.get(class_id, 1)
-                # If line_buf for the class_id was explicitly set as None, then
-                # don't buffer.
-                if line_buf is not None:
-                    g = g.buffer(line_buf)
-                new_geoms.append(g)
-            elif g.geom_type == 'Point':
-                point_buf = 1
-                if point_bufs is not None:
-                    point_buf = point_bufs.get(class_id, 1)
-                # If point_buf for the class_id was explicitly set as None, then
-                # don't buffer.
-                if point_buf is not None:
-                    g = g.buffer(point_buf)
-                new_geoms.append(g)
-            else:
-                # Use buffer trick to handle self-intersecting polygons. Buffer returns
-                # a MultiPolygon if there is a bowtie, so we have to convert it to a
-                # list of Polygons.
-                poly_buf = g.buffer(0)
-                if poly_buf.geom_type == 'MultiPolygon':
-                    new_geoms.extend(list(poly_buf))
+        if ('properties' in f) and ('class_id' in f['properties']):
+            class_id = f['properties']['class_id']
+            new_geoms = []
+            for g in geoms:
+                if g.geom_type == 'LineString':
+                    line_buf = 1
+                    if line_bufs is not None:
+                        line_buf = line_bufs.get(class_id, 1)
+                    # If line_buf for the class_id was explicitly set as None,
+                    # then don't buffer.
+                    if line_buf is not None:
+                        g = g.buffer(line_buf)
+                    new_geoms.append(g)
+                elif g.geom_type == 'Point':
+                    point_buf = 1
+                    if point_bufs is not None:
+                        point_buf = point_bufs.get(class_id, 1)
+                    # If point_buf for the class_id was explicitly set as None,
+                    # then don't buffer.
+                    if point_buf is not None:
+                        g = g.buffer(point_buf)
+                    new_geoms.append(g)
                 else:
-                    new_geoms.append(poly_buf)
-        geoms = new_geoms
+                    # Use buffer trick to handle self-intersecting polygons.
+                    # Buffer returns # a MultiPolygon if there is a bowtie, so
+                    # we have to convert it to a # list of Polygons.
+                    poly_buf = g.buffer(0)
+                    if poly_buf.geom_type == 'MultiPolygon':
+                        new_geoms.extend(list(poly_buf))
+                    else:
+                        new_geoms.append(poly_buf)
+            geoms = new_geoms
 
         # Convert back to map coords if desired. This is here so the QGIS plugin can
         # take the GeoJSON produced by a VectorSource and display it on a map.
@@ -101,7 +102,7 @@ def transform_geojson(geojson,
             new_f = {
                 'type': 'Feature',
                 'geometry': mapping(g),
-                'properties': f['properties']
+                'properties': f.get('properties', {})
             }
             # Have to check for empty features again which could have been introduced
             # when splitting apart multi-geoms.
