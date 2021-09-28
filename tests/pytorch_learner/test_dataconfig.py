@@ -104,23 +104,28 @@ class TestGeoDataConfig(unittest.TestCase):
             self.fail(msg)
 
     def test_window_config(self):
+        # require stride when method = sliding
         cfg = GeoDataWindowConfig(
             method=GeoDataWindowMethod.sliding, size=10, stride=None)
         self.assertRaises(ConfigError, lambda: cfg.validate_config())
 
+        # update() corrrectly initializes size_lims
         cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.random, size=10)
         cfg.update()
         self.assertEqual(cfg.size_lims, (10, 11))
         self.assertNoError(lambda: cfg.validate_config())
 
+        # update() only initializes size_lims if method = random
         cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.sliding, size=10)
         cfg.update()
         self.assertEqual(cfg.size_lims, None)
 
+        # update() called by validate_config()
         cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.random, size=10)
         self.assertNoError(lambda: cfg.validate_config())
         self.assertEqual(cfg.size_lims, (10, 11))
 
+        # only allow on of size_lims and h_lims+w_lims
         cfg = GeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
             size=10,
@@ -129,6 +134,7 @@ class TestGeoDataConfig(unittest.TestCase):
             w_lims=(10, 20))
         self.assertRaises(ConfigError, lambda: cfg.validate_config())
 
+        # require both h_lims and w_lims if either specified
         cfg = GeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
             size=10,
@@ -136,6 +142,7 @@ class TestGeoDataConfig(unittest.TestCase):
             w_lims=(10, 20))
         self.assertRaises(ConfigError, lambda: cfg.validate_config())
 
+        # require both h_lims and w_lims if either specified
         cfg = GeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
             size=10,
@@ -143,6 +150,7 @@ class TestGeoDataConfig(unittest.TestCase):
             w_lims=None)
         self.assertRaises(ConfigError, lambda: cfg.validate_config())
 
+        # only allow on of size_lims and h_lims+w_lims
         cfg = GeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
             size=10,
