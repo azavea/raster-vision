@@ -113,19 +113,20 @@ class TestGeoDataConfig(unittest.TestCase):
         self.assertEqual(cfg.size_lims, (10, 11))
         self.assertNoError(lambda: cfg.validate_config())
 
+        cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.sliding, size=10)
+        cfg.update()
+        self.assertEqual(cfg.size_lims, None)
+
+        cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.random, size=10)
+        self.assertNoError(lambda: cfg.validate_config())
+        self.assertEqual(cfg.size_lims, (10, 11))
+
         cfg = GeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
             size=10,
             size_lims=(10, 20),
             h_lims=(10, 20),
             w_lims=(10, 20))
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
-
-        cfg = GeoDataWindowConfig(
-            method=GeoDataWindowMethod.random,
-            size=10,
-            h_lims=None,
-            w_lims=None)
         self.assertRaises(ConfigError, lambda: cfg.validate_config())
 
         cfg = GeoDataWindowConfig(
