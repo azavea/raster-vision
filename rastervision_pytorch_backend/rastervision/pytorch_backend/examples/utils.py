@@ -1,8 +1,7 @@
-from typing import List
+from typing import List, Optional
 import csv
 from io import StringIO
 import os
-from os.path import join
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -145,7 +144,7 @@ def save_image_crop(image_uri,
             os.environ.update(old_environ)
 
 
-def read_stac(uri: str) -> List[dict]:
+def read_stac(uri: str, unzip_dir: Optional[str] = None) -> List[dict]:
     """Parse the contents of a STAC catalog (downloading it first, if
     remote). If the uri is a zip file, unzip it, find catalog.json inside it
     and parse that.
@@ -171,10 +170,12 @@ def read_stac(uri: str) -> List[dict]:
         catalog_path = download_if_needed(uri, tmp_dir)
         if not is_zip:
             return parse_stac(catalog_path)
+        if unzip_dir is None:
+            raise ValueError(
+                f'uri ("{uri}") is a zip file, but no unzip_dir provided.')
         zip_path = catalog_path
-        unzip_path = join(tmp_dir, uri_path.stem)
-        unzip(zip_path, target_dir=unzip_path)
-        catalog_paths = list(Path(unzip_path).glob('**/catalog.json'))
+        unzip(zip_path, target_dir=unzip_dir)
+        catalog_paths = list(Path(unzip_dir).glob('**/catalog.json'))
         if len(catalog_paths) == 0:
             raise FileNotFoundError(f'Unable to find "catalog.json" in {uri}.')
         elif len(catalog_paths) > 1:
