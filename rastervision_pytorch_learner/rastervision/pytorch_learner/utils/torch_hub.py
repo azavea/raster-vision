@@ -77,6 +77,10 @@ def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
         Any: The output from calling the entrypoint.
     """
     torch.hub.set_dir(tmp_dir)
+
+    # TODO: remove when no longer needed (#1271)
+    patch_torch_hub()
+
     out = torch.hub.load(repo, entrypoint, *args, source='github', **kwargs)
 
     orig_dir = join(tmp_dir, _repo_name_to_dir_name(repo))
@@ -141,3 +145,11 @@ def torch_hub_load_local(hubconf_dir: str, entrypoint: str, *args,
                          **kwargs) -> Any:
     return torch.hub.load(
         hubconf_dir, entrypoint, *args, source='local', **kwargs)
+
+
+def patch_torch_hub():
+    """Temporary patch for a PyTorch v1.9 bug.
+
+    See https://github.com/azavea/raster-vision/issues/1271 for details."""
+
+    torch.hub._validate_not_a_forked_repo = lambda *args, **kwargs: True
