@@ -70,17 +70,15 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
 
    > tree -L 3
     .
-    ├── analyze
-    │   └── stats.json
+    ├── Makefile
     ├── bundle
     │   └── model-bundle.zip
-    ├── chip
-    │   └── 3113ff8c-5c49-4d3c-8ca3-44d412968108.zip
     ├── eval
     │   └── eval.json
     ├── pipeline-config.json
     ├── predict
-    │   └── scene_25.tif
+    │   └── scene_25
+    │       └── labels.tif
     └── train
         ├── dataloaders
         │   ├── test.png
@@ -91,7 +89,7 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
         ├── log.csv
         ├── model-bundle.zip
         ├── tb-logs
-        │   └── events.out.tfevents.1585513048.086fdd4c5530.214.0
+        │   └── events.out.tfevents.1633298131.e9c80eb53720.32.0
         ├── test_metrics.json
         └── test_preds.png
 
