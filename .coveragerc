@@ -4,4 +4,6 @@ source =
 omit =
     */rastervision_core/rastervision/core/data/vector_source/label_maker/*.py
     */rastervision_core/rastervision/core/data/label/tfod_utils/*.py
-    */rastervision_core/rastervision/core/utils/*.py
+    */rastervision_core/rastervision/core/utils/cog.py
+    */rastervision_core/rastervision/core/utils/filter_geojson.py
+    */rastervision_core/rastervision/core/utils/misc.py
