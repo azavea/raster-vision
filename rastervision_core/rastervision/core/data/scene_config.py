@@ -1,5 +1,6 @@
 from typing import Optional, List
 
+import numpy as np
 from shapely.geometry import shape
 
 from rastervision.pipeline.config import Config, register_config, Field
@@ -9,8 +10,9 @@ from rastervision.core.data.label_store import LabelStoreConfig
 from rastervision.core.data.scene import Scene
 from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
 from rastervision.core.data.vector_source import transform_geojson
+from rastervision.core.data.utils import geometries_to_geojson
 
-import copy
+from copy import deepcopy
 
 
 @register_config('scene')
@@ -35,14 +37,14 @@ class SceneConfig(Config):
     def __repr_args__(self):
         if self.aoi_geometries is not None:
             # aoi_geometries can contain huge lists of coordinates that can
-            # clutter the output. So truncate the string representation of
-            # the coordinates.
-            from copy import deepcopy
+            # clutter the output. This makes it cleaner by only displaying the
+            # shape of the coordinates array.
             d = deepcopy(self.__dict__)
             for g in d['aoi_geometries']:
-                if ('geometry' in g) and ('coordinates' in g['geometry']):
-                    coords = g['geometry']['coordinates']
-                    g['geometry']['coordinates'] = f'{coords!r:100.100} ...'
+                if 'coordinates' in g:
+                    coords = np.array(g['coordinates'])
+                    g['coordinates'] = (
+                        f'<coordinate array of shape {coords.shape}>')
             return d.items()
 
         return self.__dict__.items()
@@ -62,11 +64,11 @@ class SceneConfig(Config):
 
         # Immediate AOI geometries
         if self.aoi_geometries is not None:
-            aoi_polygons = []
-            geojson = {'features': copy.deepcopy(self.aoi_geometries)}
+            geojson = geometries_to_geojson(deepcopy(self.aoi_geometries))
             aoi_geojson = transform_geojson(geojson, crs_transformer)
-            for f in aoi_geojson['features']:
-                aoi_polygons.append(shape(f['geometry']))
+            aoi_polygons = [
+                shape(f['geometry']) for f in aoi_geojson['features']
+            ]
         else:
             aoi_polygons = None
 
