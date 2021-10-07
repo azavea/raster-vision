@@ -22,6 +22,6 @@ else
     if ! [ -x "$(command -v coverage)" ]; then
 	    python -m unittest discover tests
     else
-	    coverage run -m unittest discover tests
+	    coverage run -m unittest discover tests -vf
     fi
 fi

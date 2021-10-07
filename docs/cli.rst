@@ -114,8 +114,6 @@ Use ``predict`` to make predictions on new imagery given a :ref:`model bundle <m
     the prediction output at LABEL_URI.
 
     Options:
-    --vector-label-uri TEXT  URI to save vectorized labels for semantic
-                            segmentation model bundles that support it
     -a, --update-stats       Run an analysis on this individual image, as
                             opposed to using any analysis like statistics that
                             exist in the prediction package

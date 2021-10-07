@@ -1,6 +1,6 @@
 from typing import Any, Optional
 from pathlib import Path
-from os.path import join, isdir
+from os.path import join, isdir, samefile
 import shutil
 from glob import glob
 
@@ -77,6 +77,10 @@ def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
         Any: The output from calling the entrypoint.
     """
     torch.hub.set_dir(tmp_dir)
+
+    # TODO: remove when no longer needed (#1271)
+    patch_torch_hub()
+
     out = torch.hub.load(repo, entrypoint, *args, source='github', **kwargs)
 
     orig_dir = join(tmp_dir, _repo_name_to_dir_name(repo))
@@ -109,7 +113,6 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
     Returns:
         Any: The output from calling the entrypoint.
     """
-    _remove_dir(hubconf_dir)
 
     uri_path = Path(uri)
     is_zip = uri_path.suffix.lower() == '.zip'
@@ -119,19 +122,24 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
         unzip_dir = join(tmp_dir, uri_path.stem)
         _remove_dir(unzip_dir)
         unzip(zip_path, target_dir=unzip_dir)
-
-        # move to hubconf_dir
         unzipped_contents = list(glob(f'{unzip_dir}/*', recursive=False))
+
+        _remove_dir(hubconf_dir)
+
         # if the top level only contains a directory
         if (len(unzipped_contents) == 1) and isdir(unzipped_contents[0]):
             sub_dir = unzipped_contents[0]
             shutil.move(sub_dir, hubconf_dir)
         else:
             shutil.move(unzip_dir, hubconf_dir)
+
         _remove_dir(unzip_dir)
+    # assume uri is local and attempt copying
     else:
-        # assume uri is local and attempt copying
-        shutil.copytree(uri, hubconf_dir)
+        # only copy if needed
+        if not samefile(uri, hubconf_dir):
+            _remove_dir(hubconf_dir)
+            shutil.copytree(uri, hubconf_dir)
 
     out = torch_hub_load_local(hubconf_dir, entrypoint, *args, **kwargs)
     return out
@@ -141,3 +149,11 @@ def torch_hub_load_local(hubconf_dir: str, entrypoint: str, *args,
                          **kwargs) -> Any:
     return torch.hub.load(
         hubconf_dir, entrypoint, *args, source='local', **kwargs)
+
+
+def patch_torch_hub():
+    """Temporary patch for a PyTorch v1.9 bug.
+
+    See https://github.com/azavea/raster-vision/issues/1271 for details."""
+
+    torch.hub._validate_not_a_forked_repo = lambda *args, **kwargs: True

@@ -162,7 +162,8 @@ class SemanticSegmentationLearner(Learner):
         out = self.predict(x, raw_out=True)
         out = F.interpolate(
             out, size=(h, w), mode='bilinear', align_corners=False)
-        out = self.prob_to_pred(out)
+        if not raw_out:
+            out = self.prob_to_pred(out)
         return self.output_to_numpy(out)
 
     def prob_to_pred(self, x):

@@ -36,7 +36,7 @@ class TestTransforms(unittest.TestCase):
                 [.2, .3, .6, 1.],
             ], dtype=float)
         boxes_albu = xywh_to_albu(boxes, (10, 10))
-        self.assertTrue(np.all(boxes_albu == boxes_albu_gt))
+        np.testing.assert_allclose(boxes_albu, boxes_albu_gt)
 
 
 if __name__ == '__main__':
