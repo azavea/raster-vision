@@ -41,12 +41,6 @@ class OptionEatAll(click.Option):
 @click.argument('image_uri')
 @click.argument('label_uri')
 @click.option(
-    '--vector-label-uri',
-    type=str,
-    help=
-    ('URI to save vectorized labels for semantic segmentation model bundles that support '
-     'it'))
-@click.option(
     '--update-stats',
     '-a',
     is_flag=True,
@@ -57,8 +51,7 @@ class OptionEatAll(click.Option):
     '--channel-order',
     cls=OptionEatAll,
     help='List of indices comprising channel_order. Example: 2 1 0')
-def predict(model_bundle, image_uri, label_uri, vector_label_uri, update_stats,
-            channel_order):
+def predict(model_bundle, image_uri, label_uri, update_stats, channel_order):
     """Make predictions on the images at IMAGE_URI
     using MODEL_BUNDLE and store the prediction output at LABEL_URI.
     """
@@ -70,5 +63,4 @@ def predict(model_bundle, image_uri, label_uri, vector_label_uri, update_stats,
     with rv_config.get_tmp_dir() as tmp_dir:
         predictor = Predictor(model_bundle, tmp_dir, update_stats,
                               channel_order)
-        predictor.predict(
-            [image_uri], label_uri, vector_label_uri=vector_label_uri)
+        predictor.predict([image_uri], label_uri)
