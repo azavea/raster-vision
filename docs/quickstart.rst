@@ -89,9 +89,11 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
         ├── log.csv
         ├── model-bundle.zip
         ├── tb-logs
-        │   └── events.out.tfevents.1633298131.e9c80eb53720.32.0
+        │   └── events.out.tfevents.1585513048.086fdd4c5530.214.0
         ├── test_metrics.json
         └── test_preds.png
+
+.. note:: The numbers in your ``events.out.tfevents`` filename will not necessarily match the ones above.
 
 The root directory contains a serialized JSON version of the configuration at ``pipeline-config.json``, and each subdirectory with a command name contains output for that command. You can see test predictions on a batch of data in ``train/test_preds.png``, and evaluation metrics in ``eval/eval.json``, but don't get too excited! We
 trained a model for 1 epoch on a tiny dataset, and the model is likely making random predictions at this point. We would need to
