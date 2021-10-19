@@ -15,6 +15,4 @@ If you want help with an error, please use the bug report template instead and f
 Low-effort posts that are unclear, lack details, or are poorly formatted might be closed without a response.
 
 ---
-<!--Do not remove the template above. -->
-
-<!-- Your question goes here. Please provide enough context that your problem and use case can be understood. -->
+<!-- Your question goes here. Please provide enough context that your use case and problem can be understood. -->
