@@ -45,7 +45,7 @@ To run a Bash console in the PyTorch Docker container use:
 
 This will mount the ``$RASTER_VISION_DATA_DIR`` local directory to to ``/opt/data/`` inside the container.
 
-.. note::
+.. warning::
 
     Users running under WSL2 in Windows will need to unset the ``NAME`` environment variable. For example, instead of
     ``docker/run``, you would run ``NAME='' docker/run``. By default, WSL2 sets a ``NAME`` variable that matches the network
