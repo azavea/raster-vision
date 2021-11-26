@@ -13,41 +13,28 @@ AWS_S3 = 'aws_s3'
 
 
 # Code from https://alexwlchan.net/2017/07/listing-s3-keys/
-def get_matching_s3_objects(bucket, prefix='', suffix='',
-                            request_payer='None'):
+def get_matching_s3_objects(bucket, **kwargs):
     """
     Generate objects in an S3 bucket.
 
     :param bucket: Name of the S3 bucket.
-    :param prefix: Only fetch objects whose key starts with
-        this prefix (optional).
-    :param suffix: Only fetch objects whose keys end with
-        this suffix (optional).
     """
     import boto3
     s3 = boto3.client('s3')
-    kwargs = {'Bucket': bucket, 'RequestPayer': request_payer}
-
-    # If the prefix is a single string (not a tuple of strings), we can
-    # do the filtering directly in the S3 API.
-    if isinstance(prefix, str):
-        kwargs['Prefix'] = prefix
+    contents_key = 'CommonPrefixes' if 'Delimiter' in kwargs else 'Contents'
 
     while True:
-
         # The S3 API response is a large blob of metadata.
         # 'Contents' contains information about the listed objects.
         resp = s3.list_objects_v2(**kwargs)
 
         try:
-            contents = resp['Contents']
+            contents = resp[contents_key]
         except KeyError:
             return
 
         for obj in contents:
-            key = obj['Key']
-            if key.startswith(prefix) and key.endswith(suffix):
-                yield obj
+            yield obj
 
         # The S3 API is paginated, returning up to 1000 keys at a time.
         # Pass the continuation token into the next response, until we
@@ -66,8 +53,16 @@ def get_matching_s3_keys(bucket, prefix='', suffix='', request_payer='None'):
     :param prefix: Only fetch keys that start with this prefix (optional).
     :param suffix: Only fetch keys that end with this suffix (optional).
     """
-    for obj in get_matching_s3_objects(bucket, prefix, suffix, request_payer):
-        yield obj['Key']
+    kwargs = {
+        'Bucket': bucket,
+        'RequestPayer': request_payer,
+        'Prefix': prefix,
+        'Delimiter': '/'
+    }
+    objs = get_matching_s3_objects(bucket, **kwargs)
+    keys = (obj['Prefix'] for obj in objs)
+    filtered_keys = (key for key in keys if key.endswith(suffix))
+    return filtered_keys
 
 
 class S3FileSystem(FileSystem):
