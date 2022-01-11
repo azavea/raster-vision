@@ -21,7 +21,8 @@ class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
 
     def update(self, pipeline=None, scene=None):
         super().update()
-        self.rgb_class_config.ensure_null_class()
+        if self.rgb_class_config:
+            self.rgb_class_config.ensure_null_class()
 
     def build(self, class_config, crs_transformer, extent, tmp_dir):
         if isinstance(self.raster_source, RasterizedSourceConfig):
