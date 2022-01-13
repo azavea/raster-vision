@@ -12,3 +12,4 @@ future==0.18.*
 psutil==5.8.*
 triangle==20200424
 opencv-python==4.1.*
+opencv-python-headless<4.3

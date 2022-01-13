@@ -12,3 +12,4 @@ scipy>=0.19.1
 joblib>=0.11
 threadpoolctl>=2.0.0
 opencv-python==4.1.*
+opencv-python-headless<4.3
