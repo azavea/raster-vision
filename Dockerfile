@@ -8,7 +8,7 @@ RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
                        jq=1.5* \
                        build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
-                       libopencv-dev=2.4.* python-opencv=2.4.* unzip curl && \
+                       unzip curl && \
     apt-get autoremove && apt-get autoclean && apt-get clean
 
 # See https://github.com/mapbox/rasterio/issues/1289
