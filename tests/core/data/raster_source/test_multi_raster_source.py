@@ -15,8 +15,8 @@ from tests import data_file_path
 def make_cfg(img_path='small-rgb-tile.tif', **kwargs):
     img_path = data_file_path(img_path)
     r_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
-    g_source = RasterioSourceConfig(uris=[img_path], channel_order=[1])
-    b_source = RasterioSourceConfig(uris=[img_path], channel_order=[2])
+    g_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
+    b_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
 
     cfg = MultiRasterSourceConfig(
         raster_sources=[
@@ -28,7 +28,7 @@ def make_cfg(img_path='small-rgb-tile.tif', **kwargs):
     return cfg
 
 
-class TestRasterioSource(unittest.TestCase):
+class TestMultiRasterSource(unittest.TestCase):
     def setUp(self):
         self.tmp_dir_obj = rv_config.get_tmp_dir()
         self.tmp_dir = self.tmp_dir_obj.name
