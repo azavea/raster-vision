@@ -5,11 +5,11 @@ from pyproj import Transformer
 import subprocess
 from decimal import Decimal
 import tempfile
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 import rasterio
-from rasterio.enums import (ColorInterp, MaskFlags)
+from rasterio.enums import (ColorInterp, MaskFlags, Resampling)
 
 from rastervision.pipeline.file_system import download_if_needed
 from rastervision.core.box import Box
@@ -45,24 +45,42 @@ def stream_and_build_vrt(images_uris, tmp_dir):
     return image_path
 
 
-def load_window(image_dataset, window=None, is_masked=False):
+def load_window(
+        image_dataset,
+        window: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+        is_masked: bool = False,
+        out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
     """Load a window of an image using Rasterio.
 
     Args:
-        image_dataset: a Rasterio dataset
-        window: ((row_start, row_stop), (col_start, col_stop)) or
-        ((y_min, y_max), (x_min, x_max))
-        is_masked: If True, read a masked array from rasterio
+        image_dataset: a Rasterio dataset.
+        window (Optional[Tuple[Tuple[int, int], Tuple[int, int]]]):
+            ((row_start, row_stop), (col_start, col_stop)) or
+            ((y_min, y_max), (x_min, x_max)). If None, reads the entire raster.
+            Defaults to None.
+        is_masked (bool): If True, read a masked array from rasterio.
+            Defaults to False.
+        out_shape (Optional[Tuple[int, int]]): (hieght, width) of the output
+            chip. If None, no resizing is done. Defaults to None.
 
     Returns:
-        np.ndarray of shape (height, width, channels) where channels is the number of
-            channels in the image_dataset.
+        np.ndarray of shape (height, width, channels) where channels is the
+            number of channels in the image_dataset.
     """
     if is_masked:
-        im = image_dataset.read(window=window, boundless=True, masked=True)
+        im = image_dataset.read(
+            window=window,
+            boundless=True,
+            masked=True,
+            out_shape=out_shape,
+            resampling=Resampling.bilinear)
         im = np.ma.filled(im, fill_value=0)
     else:
-        im = image_dataset.read(window=window, boundless=True)
+        im = image_dataset.read(
+            window=window,
+            boundless=True,
+            out_shape=out_shape,
+            resampling=Resampling.bilinear)
 
     # Handle non-zero NODATA values by setting the data to 0.
     for channel, nodata in enumerate(image_dataset.nodatavals):
@@ -195,16 +213,31 @@ class RasterioSource(ActivateMixin, RasterSource):
         """Return the numpy.dtype of this scene"""
         return self.dtype
 
-    def _get_chip(self, window: Box) -> np.ndarray:
+    def _get_chip(self,
+                  window: Box,
+                  out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
         if self.image_dataset is None:
             raise ActivationError('RasterSource must be activated before use')
         shifted_window = self._get_shifted_window(window)
         chip = load_window(
             self.image_dataset,
             window=shifted_window.rasterio_format(),
-            is_masked=self.is_masked)
+            is_masked=self.is_masked,
+            out_shape=out_shape)
         if self.extent_crop is not None:
             chip = fill_overflow(self.get_extent(), window, chip)
+        return chip
+
+    def get_chip(self, window,
+                 out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
+        chip = self._get_chip(window, out_shape=out_shape)
+
+        if self.channel_order:
+            chip = chip[:, :, self.channel_order]
+
+        for transformer in self.raster_transformers:
+            chip = transformer.transform(chip, self.channel_order)
+
         return chip
 
     def _activate(self):
