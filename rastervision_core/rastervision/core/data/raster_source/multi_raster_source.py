@@ -23,7 +23,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
                  raw_channel_order: Sequence[conint(ge=0)],
-                 allow_different_extents: bool = False,
                  force_same_dtype: bool = False,
                  channel_order: Optional[Sequence[conint(ge=0)]] = None,
                  crs_source: conint(ge=0) = 0,
@@ -35,13 +34,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
             raster_sources (Sequence[RasterSource]): Sequence of RasterSources.
             raw_channel_order (Sequence[conint(ge=0)]): Channel ordering that
                 will always be applied before channel_order.
-            allow_different_extents (bool):
-                When true, the sub-rasters are allowed to be of different sizes.  The
-                purpose of this flag is to allow use of rasters that cover the same area
-                but are of slightly different size (due to reprojection differences).
-                No special reprojection logic is triggered by this parameter.  It is
-                assumed that the underlying raster sources are guaranteed to supply chips
-                of the same size.  Use with caution.
             force_same_dtype (bool): If true, force all subchips to have the same dtype
                 as the first subchip.  No careful conversion is done, just a quick cast.
                 Use with caution.
@@ -60,7 +52,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
 
         super().__init__(channel_order, num_channels, raster_transformers)
 
-        self.allow_different_extents = allow_different_extents
         self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
         self.raw_channel_order = list(raw_channel_order)
