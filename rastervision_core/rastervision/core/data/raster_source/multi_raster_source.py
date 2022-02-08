@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Optional, Sequence, List, Tuple
 from pydantic import conint
 
 import numpy as np
@@ -108,6 +108,60 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         rs = self.raster_sources[self.crs_source]
         return rs.get_crs_transformer()
 
+    def _get_sub_chips(self, window: Box,
+                       raw: bool = False) -> List[np.ndarray]:
+        """If all extents are identical, simply retrieves chips from each sub
+        raster source. Otherwise, follows the following algorithm
+            - using pixel-coords window, get chip from first sub raster source
+            - convert window to world coords using the CRS of first sub raster
+            source
+            - for each remaining sub raster source
+                - convert world-coords window to pixel coords using the sub
+                raster source's CRS
+                - get chip from the sub raster source using this window;
+                specify `out_shape` when reading to ensure shape matches first
+                chip from first sub raster source
+
+        Args:
+            window (Box): window to read, in pixel coordinates.
+            raw (bool, optional): If True, uses RasterSource._get_chip.
+                Otherwise, RasterSource.get_chip. Defaults to False.
+
+        Returns:
+            List[np.ndarray]: List of chips from each sub raster source.
+        """
+
+        def get_chip(
+                rs: RasterSource,
+                window: Box,
+                out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+            if raw:
+                return rs._get_chip(window, out_shape=out_shape)
+            return rs.get_chip(window, out_shape=out_shape)
+
+        if self.all_extents_equal:
+            sub_chips = [get_chip(rs, window) for rs in self.raster_sources]
+        else:
+            primary_rs = self.raster_sources[0]
+            sub_chip = get_chip(primary_rs, window)
+            out_shape = sub_chip.shape[:2]
+            world_window = primary_rs.get_transformed_window(window)
+            pixel_windows = [
+                rs.get_transformed_window(world_window, inverse=True)
+                for rs in self.raster_sources[1:]
+            ]
+            sub_chips = [sub_chip] + [
+                get_chip(rs, w, out_shape=out_shape)
+                for rs, w in zip(self.raster_sources[1:], pixel_windows)
+            ]
+
+        if self.force_same_dtype:
+            dtype = sub_chips[0].dtype
+            for i in range(1, len(sub_chips)):
+                sub_chips[i] = sub_chips[i].astype(dtype)
+
+        return sub_chips
+
     def _get_chip(self, window: Box) -> np.ndarray:
         """Return the raw chip located in the window.
 
@@ -120,35 +174,16 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         Returns:
             [height, width, channels] numpy array
         """
-        if self.all_extents_equal:
-            chip_slices = [rs._get_chip(window) for rs in self.raster_sources]
-        else:
-            primary_rs = self.raster_sources[0]
-            chip_slice = primary_rs._get_chip(window)
-            out_shape = chip_slice.shape
-            world_window = primary_rs.get_transformed_window(window)
-            pixel_windows = [
-                rs.get_transformed_window(world_window, inverse=True)
-                for rs in self.raster_sources[1:]
-            ]
-            chip_slices = [chip_slice] + [
-                rs._get_chip(w, out_shape=out_shape)
-                for rs, w in zip(self.raster_sources[1:], pixel_windows)
-            ]
-
-        if self.force_same_dtype:
-            dtype = chip_slices[0].dtype
-            for i in range(1, len(chip_slices)):
-                chip_slices[i] = chip_slices[i].astype(dtype)
-
-        chip = np.concatenate(chip_slices, axis=-1)
+        sub_chips = self._get_sub_chips(window, raw=True)
+        chip = np.concatenate(sub_chips, axis=-1)
         chip = chip[..., self.raw_channel_order]
         return chip
 
     def get_chip(self, window: Box) -> np.ndarray:
         """Return the transformed chip in the window.
 
-        Get raw chips from sub raster sources, concatenate them,
+        Get processed chips from sub raster sources (with their respective
+        channel orders and transformations applied), concatenate them,
         apply raw_channel_order, followed by channel_order, followed
         by transformations.
 
@@ -158,28 +193,8 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         Returns:
             np.ndarray with shape [height, width, channels]
         """
-        if self.all_extents_equal:
-            chip_slices = [rs.get_chip(window) for rs in self.raster_sources]
-        else:
-            primary_rs = self.raster_sources[0]
-            chip_slice = primary_rs.get_chip(window)
-            out_shape = chip_slice.shape[:2]
-            world_window = primary_rs.get_transformed_window(window)
-            pixel_windows = [
-                rs.get_transformed_window(world_window, inverse=True)
-                for rs in self.raster_sources[1:]
-            ]
-            chip_slices = [chip_slice] + [
-                rs.get_chip(w, out_shape=out_shape)
-                for rs, w in zip(self.raster_sources[1:], pixel_windows)
-            ]
-
-        if self.force_same_dtype:
-            dtype = chip_slices[0].dtype
-            for i in range(1, len(chip_slices)):
-                chip_slices[i] = chip_slices[i].astype(dtype)
-
-        chip = np.concatenate(chip_slices, axis=-1)
+        sub_chips = self._get_sub_chips(window, raw=False)
+        chip = np.concatenate(sub_chips, axis=-1)
         chip = chip[..., self.raw_channel_order]
         chip = chip[..., self.channel_order]
 
