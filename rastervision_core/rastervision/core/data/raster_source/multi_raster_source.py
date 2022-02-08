@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Optional, Sequence, List, Tuple
 from pydantic import conint
 
 import numpy as np
@@ -7,6 +7,7 @@ from rastervision.core.box import Box
 from rastervision.core.data import ActivateMixin
 from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
 from rastervision.core.data.crs_transformer import CRSTransformer
+from rastervision.core.data.raster_source.rasterio_source import RasterioSource
 from rastervision.core.data.utils import all_equal
 
 
@@ -22,7 +23,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
                  raw_channel_order: Sequence[conint(ge=0)],
-                 allow_different_extents: bool = False,
                  force_same_dtype: bool = False,
                  channel_order: Optional[Sequence[conint(ge=0)]] = None,
                  crs_source: conint(ge=0) = 0,
@@ -34,13 +34,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
             raster_sources (Sequence[RasterSource]): Sequence of RasterSources.
             raw_channel_order (Sequence[conint(ge=0)]): Channel ordering that
                 will always be applied before channel_order.
-            allow_different_extents (bool):
-                When true, the sub-rasters are allowed to be of different sizes.  The
-                purpose of this flag is to allow use of rasters that cover the same area
-                but are of slightly different size (due to reprojection differences).
-                No special reprojection logic is triggered by this parameter.  It is
-                assumed that the underlying raster sources are guaranteed to supply chips
-                of the same size.  Use with caution.
             force_same_dtype (bool): If true, force all subchips to have the same dtype
                 as the first subchip.  No careful conversion is done, just a quick cast.
                 Use with caution.
@@ -59,12 +52,14 @@ class MultiRasterSource(ActivateMixin, RasterSource):
 
         super().__init__(channel_order, num_channels, raster_transformers)
 
-        self.allow_different_extents = allow_different_extents
         self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
         self.raw_channel_order = list(raw_channel_order)
         self.crs_source = crs_source
         self.extent_crop = extent_crop
+
+        self.extents = [rs.get_extent() for rs in self.raster_sources]
+        self.all_extents_equal = all_equal(self.extents)
 
         self.validate_raster_sources()
 
@@ -75,13 +70,13 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                 'dtypes of all sub raster sources must be equal. '
                 f'Got: {dtypes} '
                 '(carfully consider using force_same_dtype)')
-
-        extents = [rs.get_extent() for rs in self.raster_sources]
-        if not self.allow_different_extents and not all_equal(extents):
-            raise MultiRasterSourceError(
-                'extents of all sub raster sources must be equal. '
-                f'Got: {extents} '
-                '(carefully consider using allow_different_extents)')
+        if not self.all_extents_equal:
+            all_rasterio_sources = all(
+                isinstance(rs, RasterioSource) for rs in self.raster_sources)
+            if not all_rasterio_sources:
+                raise MultiRasterSourceError(
+                    'Non-identical extents are only supported '
+                    'for RasterioSource raster sources.')
 
         sub_num_channels = sum(
             len(rs.channel_order) for rs in self.raster_sources)
@@ -113,6 +108,60 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         rs = self.raster_sources[self.crs_source]
         return rs.get_crs_transformer()
 
+    def _get_sub_chips(self, window: Box,
+                       raw: bool = False) -> List[np.ndarray]:
+        """If all extents are identical, simply retrieves chips from each sub
+        raster source. Otherwise, follows the following algorithm
+            - using pixel-coords window, get chip from first sub raster source
+            - convert window to world coords using the CRS of first sub raster
+            source
+            - for each remaining sub raster source
+                - convert world-coords window to pixel coords using the sub
+                raster source's CRS
+                - get chip from the sub raster source using this window;
+                specify `out_shape` when reading to ensure shape matches first
+                chip from first sub raster source
+
+        Args:
+            window (Box): window to read, in pixel coordinates.
+            raw (bool, optional): If True, uses RasterSource._get_chip.
+                Otherwise, RasterSource.get_chip. Defaults to False.
+
+        Returns:
+            List[np.ndarray]: List of chips from each sub raster source.
+        """
+
+        def get_chip(
+                rs: RasterSource,
+                window: Box,
+                out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+            if raw:
+                return rs._get_chip(window, out_shape=out_shape)
+            return rs.get_chip(window, out_shape=out_shape)
+
+        if self.all_extents_equal:
+            sub_chips = [get_chip(rs, window) for rs in self.raster_sources]
+        else:
+            primary_rs = self.raster_sources[0]
+            sub_chip = get_chip(primary_rs, window)
+            out_shape = sub_chip.shape[:2]
+            world_window = primary_rs.get_transformed_window(window)
+            pixel_windows = [
+                rs.get_transformed_window(world_window, inverse=True)
+                for rs in self.raster_sources[1:]
+            ]
+            sub_chips = [sub_chip] + [
+                get_chip(rs, w, out_shape=out_shape)
+                for rs, w in zip(self.raster_sources[1:], pixel_windows)
+            ]
+
+        if self.force_same_dtype:
+            dtype = sub_chips[0].dtype
+            for i in range(1, len(sub_chips)):
+                sub_chips[i] = sub_chips[i].astype(dtype)
+
+        return sub_chips
+
     def _get_chip(self, window: Box) -> np.ndarray:
         """Return the raw chip located in the window.
 
@@ -125,20 +174,16 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         Returns:
             [height, width, channels] numpy array
         """
-        chip_slices = [rs._get_chip(window) for rs in self.raster_sources]
-
-        if self.force_same_dtype:
-            for i in range(1, len(chip_slices)):
-                chip_slices[i] = chip_slices[i].astype(chip_slices[0].dtype)
-
-        chip = np.concatenate(chip_slices, axis=-1)
+        sub_chips = self._get_sub_chips(window, raw=True)
+        chip = np.concatenate(sub_chips, axis=-1)
         chip = chip[..., self.raw_channel_order]
         return chip
 
     def get_chip(self, window: Box) -> np.ndarray:
         """Return the transformed chip in the window.
 
-        Get raw chips from sub raster sources, concatenate them,
+        Get processed chips from sub raster sources (with their respective
+        channel orders and transformations applied), concatenate them,
         apply raw_channel_order, followed by channel_order, followed
         by transformations.
 
@@ -148,13 +193,8 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         Returns:
             np.ndarray with shape [height, width, channels]
         """
-        chip_slices = [rs.get_chip(window) for rs in self.raster_sources]
-
-        if self.force_same_dtype:
-            for i in range(1, len(chip_slices)):
-                chip_slices[i] = chip_slices[i].astype(chip_slices[0].dtype)
-
-        chip = np.concatenate(chip_slices, axis=-1)
+        sub_chips = self._get_sub_chips(window, raw=False)
+        chip = np.concatenate(sub_chips, axis=-1)
         chip = chip[..., self.raw_channel_order]
         chip = chip[..., self.channel_order]
 

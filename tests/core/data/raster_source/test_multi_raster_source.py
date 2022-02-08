@@ -1,9 +1,12 @@
 import unittest
 from pydantic import ValidationError
 
-from rastervision.core.data import (RasterioSourceConfig,
-                                    MultiRasterSourceConfig,
-                                    SubRasterSourceConfig, CropOffsets)
+import numpy as np
+
+from rastervision.core.box import Box
+from rastervision.core.data import (
+    RasterioSourceConfig, MultiRasterSourceConfig, SubRasterSourceConfig,
+    CropOffsets, ReclassTransformerConfig)
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path
@@ -12,8 +15,8 @@ from tests import data_file_path
 def make_cfg(img_path='small-rgb-tile.tif', **kwargs):
     img_path = data_file_path(img_path)
     r_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
-    g_source = RasterioSourceConfig(uris=[img_path], channel_order=[1])
-    b_source = RasterioSourceConfig(uris=[img_path], channel_order=[2])
+    g_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
+    b_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
 
     cfg = MultiRasterSourceConfig(
         raster_sources=[
@@ -25,7 +28,7 @@ def make_cfg(img_path='small-rgb-tile.tif', **kwargs):
     return cfg
 
 
-class TestRasterioSource(unittest.TestCase):
+class TestMultiRasterSource(unittest.TestCase):
     def setUp(self):
         self.tmp_dir_obj = rv_config.get_tmp_dir()
         self.tmp_dir = self.tmp_dir_obj.name
@@ -93,6 +96,91 @@ class TestRasterioSource(unittest.TestCase):
             _ = make_cfg('small-rgb-tile.tif', extent_crop=None)  # noqa
         except Exception:
             self.fail('extent_crop=None caused an error.')
+
+    def test_get_chip(self):
+        # create a 3-channel raster from a 1-channel raster
+        # using a ReclassTransformer to give each channel a different value
+        # (100, 175, and 250 respectively)
+        path = data_file_path('multi_raster_source/const_100_600x600.tiff')
+        source_1 = RasterioSourceConfig(uris=[path], channel_order=[0])
+        source_2 = RasterioSourceConfig(
+            uris=[path],
+            channel_order=[0],
+            transformers=[ReclassTransformerConfig(mapping={100: 175})])
+        source_3 = RasterioSourceConfig(
+            uris=[path],
+            channel_order=[0],
+            transformers=[ReclassTransformerConfig(mapping={100: 250})])
+
+        cfg = MultiRasterSourceConfig(
+            raster_sources=[
+                SubRasterSourceConfig(
+                    raster_source=source_1, target_channels=[0]),
+                SubRasterSourceConfig(
+                    raster_source=source_2, target_channels=[1]),
+                SubRasterSourceConfig(
+                    raster_source=source_3, target_channels=[2])
+            ],
+            channel_order=[2, 1, 0],
+            transformers=[
+                ReclassTransformerConfig(mapping={
+                    100: 10,
+                    175: 17,
+                    250: 25
+                })
+            ])
+        rs = cfg.build(tmp_dir=self.tmp_dir)
+
+        with rs.activate():
+            window = Box(0, 0, 100, 100)
+
+            # sub transformers and channel_order applied
+            sub_chips = rs._get_sub_chips(window, raw=False)
+            self.assertEqual(
+                tuple(c.mean() for c in sub_chips), (100, 175, 250))
+            # sub transformers, channel_order, and transformer applied
+            chip = rs.get_chip(window)
+            self.assertEqual(
+                tuple(chip.reshape(-1, 3).mean(axis=0)), (25, 17, 10))
+
+            # none of sub transformers, channel_order, and transformer applied
+            sub_chips = rs._get_sub_chips(window, raw=True)
+            self.assertEqual(
+                tuple(c.mean() for c in sub_chips), (100, 100, 100))
+            chip = rs._get_chip(window)
+            self.assertEqual(
+                tuple(chip.reshape(-1, 3).mean(axis=0)), (100, 100, 100))
+
+    def test_nonidentical_extents_and_resolutions(self):
+        img_path_1 = data_file_path(
+            'multi_raster_source/const_100_600x600.tiff')
+        img_path_2 = data_file_path('multi_raster_source/const_175_60x60.tiff')
+        img_path_3 = data_file_path('multi_raster_source/const_250_6x6.tiff')
+        source_1 = RasterioSourceConfig(uris=[img_path_1], channel_order=[0])
+        source_2 = RasterioSourceConfig(uris=[img_path_2], channel_order=[0])
+        source_3 = RasterioSourceConfig(uris=[img_path_3], channel_order=[0])
+
+        cfg = MultiRasterSourceConfig(raster_sources=[
+            SubRasterSourceConfig(raster_source=source_1, target_channels=[0]),
+            SubRasterSourceConfig(raster_source=source_2, target_channels=[1]),
+            SubRasterSourceConfig(raster_source=source_3, target_channels=[2])
+        ])
+        rs = cfg.build(tmp_dir=self.tmp_dir)
+        with rs.activate():
+            for get_chip_fn in [rs._get_chip, rs.get_chip]:
+                ch_1_only = get_chip_fn(Box(0, 0, 10, 10))
+                self.assertEqual(
+                    tuple(ch_1_only.reshape(-1, 3).mean(axis=0)), (100, 0, 0))
+                ch_2_only = get_chip_fn(Box(0, 600, 10, 600 + 10))
+                self.assertEqual(
+                    tuple(ch_2_only.reshape(-1, 3).mean(axis=0)), (0, 175, 0))
+                ch_3_only = get_chip_fn(Box(600, 0, 600 + 10, 10))
+                self.assertEqual(
+                    tuple(ch_3_only.reshape(-1, 3).mean(axis=0)), (0, 0, 250))
+                full_img = get_chip_fn(Box(0, 0, 600, 600))
+                self.assertEqual(set(np.unique(full_img[..., 0])), {100})
+                self.assertEqual(set(np.unique(full_img[..., 1])), {0, 175})
+                self.assertEqual(set(np.unique(full_img[..., 2])), {0, 250})
 
 
 if __name__ == '__main__':

@@ -29,12 +29,17 @@ class SubRasterSourceConfig(Config):
         return rs
 
 
-@register_config('multi_raster_source')
+def multi_raster_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 0:
+        cfg_dict['allow_different_extents'] = True
+    return cfg_dict
+
+
+@register_config(
+    'multi_raster_source', upgrader=multi_raster_source_config_upgrader)
 class MultiRasterSourceConfig(RasterSourceConfig):
     raster_sources: Sequence[SubRasterSourceConfig] = Field(
         ..., description='List of SubRasterSourceConfigs to combine.')
-    allow_different_extents: bool = Field(
-        False, description='Allow sub-rasters to have different extents.')
     force_same_dtype: bool = Field(
         False,
         description=
@@ -93,7 +98,6 @@ class MultiRasterSourceConfig(RasterSourceConfig):
             raster_sources=built_raster_sources,
             raw_channel_order=self.get_raw_channel_order(),
             force_same_dtype=self.force_same_dtype,
-            allow_different_extents=self.allow_different_extents,
             channel_order=self.channel_order,
             crs_source=self.crs_source,
             raster_transformers=raster_transformers,
