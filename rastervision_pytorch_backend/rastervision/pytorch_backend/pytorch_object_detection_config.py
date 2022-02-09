@@ -62,9 +62,6 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
 
     @validator('model')
     def validate_model_config(cls, v):
-        if v.external_def is not None:
-            raise ConfigError('external_def is currently not supported for '
-                              'Object Detection.')
         return v
 
     @validator('solver')
