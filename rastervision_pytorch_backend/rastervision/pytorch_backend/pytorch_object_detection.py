@@ -113,8 +113,7 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
         batch_out = self.learner.numpy_predict(chips, raw_out=False)
         labels = ObjectDetectionLabels.make_empty()
 
-        for chip_ind, out in enumerate(batch_out):
-            window = windows[chip_ind]
+        for window, out in zip(windows, batch_out):
             boxes = out['boxes']
             class_ids = out['class_ids']
             scores = out['scores']

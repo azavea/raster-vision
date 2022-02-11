@@ -1,5 +1,5 @@
 from typing import (Any, Callable, Optional, Sequence, Tuple, Iterable, List,
-                    Union)
+                    Dict, Union)
 from collections import defaultdict
 from os.path import join
 import tempfile
@@ -9,7 +9,8 @@ from functools import reduce
 import torch
 from torch.utils.data import Dataset
 import torch.nn as nn
-from torchvision.ops import (box_convert, batched_nms, clip_boxes_to_image)
+from torchvision.ops import (box_area, box_convert, batched_nms,
+                             clip_boxes_to_image)
 import pycocotools
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
@@ -20,7 +21,8 @@ import matplotlib.patches as patches
 from rastervision.pipeline.file_system import file_to_json, json_to_file
 
 
-def get_coco_gt(targets, num_class_ids):
+def get_coco_gt(targets: Iterable['BoxList'],
+                num_class_ids: int) -> Dict[str, List[dict]]:
     images = []
     annotations = []
     ann_id = 1
@@ -32,21 +34,17 @@ def get_coco_gt(targets, num_class_ids):
             'width': 1000,
             'file_name': '{}.png'.format(img_id)
         })
-        boxes, class_ids = target.boxes, target.get_field('class_ids')
-        for box, class_id in zip(boxes, class_ids):
-            box = box.float().tolist()
-            class_id = class_id.item()
+        boxes = target.convert_boxes('xywh').float().tolist()
+        class_ids = target.get_field('class_ids').tolist()
+        areas = box_area(target.boxes).tolist()
+        for box, class_id, area in zip(boxes, class_ids, areas):
             annotations.append({
-                'id':
-                ann_id,
-                'image_id':
-                img_id,
-                'category_id':
-                class_id + 1,
-                'area': (box[2] - box[0]) * (box[3] - box[1]),
-                'bbox': [box[1], box[0], box[3] - box[1], box[2] - box[0]],
-                'iscrowd':
-                0
+                'id': ann_id,
+                'image_id': img_id,
+                'bbox': box,
+                'category_id': class_id + 1,
+                'area': area,
+                'iscrowd': 0
             })
             ann_id += 1
 
@@ -63,23 +61,18 @@ def get_coco_gt(targets, num_class_ids):
     return coco
 
 
-def get_coco_preds(outputs):
+def get_coco_preds(outputs: Iterable['BoxList']) -> List[dict]:
     preds = []
     for img_id, output in enumerate(outputs, 1):
-        for box, class_id, score in zip(output.boxes,
-                                        output.get_field('class_ids'),
-                                        output.get_field('scores')):
-            box = box.float().tolist()
-            class_id = class_id.item() + 1
-            score = score.item()
+        boxes = output.convert_boxes('xywh').float().tolist()
+        class_ids = output.get_field('class_ids').tolist()
+        scores = output.get_field('scores').tolist()
+        for box, class_id, score in zip(boxes, class_ids, scores):
             preds.append({
-                'image_id':
-                img_id,
-                'category_id':
-                class_id,
-                'bbox': [box[1], box[0], box[3] - box[1], box[2] - box[0]],
-                'score':
-                score
+                'image_id': img_id,
+                'category_id': class_id + 1,
+                'bbox': box,
+                'score': score
             })
     return preds
 
@@ -113,23 +106,13 @@ def compute_coco_eval(outputs, targets, num_class_ids):
         pycocotools.coco.unicode = None
         coco_preds = coco_gt.loadRes(preds)
 
-        ann_type = 'bbox'
-        coco_eval = COCOeval(coco_gt, coco_preds, ann_type)
+        coco_eval = COCOeval(cocoGt=coco_gt, cocoDt=coco_preds, iouType='bbox')
 
         coco_eval.evaluate()
         coco_eval.accumulate()
         coco_eval.summarize()
 
         return coco_eval
-
-
-def to_box_pixel(boxes, img_height, img_width):
-    # convert from (ymin, xmin, ymax, xmax) in range [-1,1] to
-    # range [0, h) or [0, w)
-    boxes = ((boxes + 1.0) / 2.0) * torch.tensor(
-        [[img_height, img_width, img_height, img_width]]).to(
-            device=boxes.device, dtype=torch.float)
-    return boxes
 
 
 class BoxList():
@@ -262,10 +245,11 @@ class BoxList():
         return self
 
 
-def collate_fn(data):
-    x = [d[0].unsqueeze(0) for d in data]
-    y = [d[1] for d in data]
-    return (torch.cat(x), y)
+def collate_fn(data: Iterable[Sequence]) -> Tuple[torch.Tensor, List[BoxList]]:
+    imgs = [d[0] for d in data]
+    x = torch.stack(imgs)
+    y: List[BoxList] = [d[1] for d in data]
+    return x, y
 
 
 class CocoDataset(Dataset):
