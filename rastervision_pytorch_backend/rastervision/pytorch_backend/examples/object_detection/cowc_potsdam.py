@@ -24,6 +24,7 @@ def get_config(runner,
                processed_uri: str,
                root_uri: str,
                nochip: bool = True,
+               external_model: bool = False,
                test: bool = False) -> ObjectDetectionConfig:
     """Generate the pipeline config for this task. This function will be called
     by RV, with arguments from the command line, when this example is run.
@@ -114,9 +115,50 @@ def get_config(runner,
     else:
         data = ObjectDetectionImageDataConfig(img_sz=img_sz, num_workers=4)
 
+    if external_model:
+        """This demonstrates how to use an external model for object detection,
+        but to successfully use this functionality with different settings, the
+        following things should be kept in mind:
+
+          (1) Torchvision does not expose its object detection models via
+            torch hub (https://github.com/pytorch/vision/issues/1945). So, to
+            use those, you will need to fork the torchvision repo and manually
+            add those models or corresponding factory functions to hubconf.py.
+            Example: github.com/AdeelH/vision/blob/det_hubconf_0.10/hubconf.py.
+            Further, you should ensure that the branch of the fork is the same
+            version as the version in Raster Vision's Docker image; or, if
+            using outside Docker, it should match the version of the local
+            torchvision installation.
+          (2) The external model should behave exactly like torchvision
+            object detection models. This includes, but might not be limited
+            to:
+                - Accepting targets as dicts with keys: 'boxes' and 'labels'.
+                - Accepting 1-indexed class labels.
+                - Computing losses internally and returning them in a dict
+                during training.
+                - Returning predictions as dicts with keys: 'boxes', 'labels',
+                and 'scores'.
+        """
+
+        model = ObjectDetectionModelConfig(
+            external_def=ExternalModuleConfig(
+                github_repo='AdeelH/vision:det_hubconf_0.10',
+                name='ssd',
+                entrypoint='ssd300_vgg16',
+                force_reload=True,
+                entrypoint_kwargs={
+                    # torchvision OD models need add an additional null class,
+                    # so +1 is needed here
+                    'num_classes': len(class_config.names) + 1,
+                    'pretrained': False,
+                    'pretrained_backbone': True
+                }))
+    else:
+        model = ObjectDetectionModelConfig(backbone=Backbone.resnet18)
+
     backend = PyTorchObjectDetectionConfig(
         data=data,
-        model=ObjectDetectionModelConfig(backbone=Backbone.resnet18),
+        model=model,
         solver=SolverConfig(
             lr=1e-4,
             num_epochs=10,
