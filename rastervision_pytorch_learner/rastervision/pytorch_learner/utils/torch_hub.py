@@ -1,6 +1,6 @@
 from typing import Any, Optional
 from pathlib import Path
-from os.path import join, isdir, samefile
+from os.path import join, isdir, realpath
 import shutil
 from glob import glob
 
@@ -84,6 +84,7 @@ def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
     out = torch.hub.load(repo, entrypoint, *args, source='github', **kwargs)
 
     orig_dir = join(tmp_dir, _repo_name_to_dir_name(repo))
+    _remove_dir(hubconf_dir)
     shutil.move(orig_dir, hubconf_dir)
 
     return out
@@ -137,7 +138,7 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
     # assume uri is local and attempt copying
     else:
         # only copy if needed
-        if not samefile(uri, hubconf_dir):
+        if realpath(uri) != realpath(hubconf_dir):
             _remove_dir(hubconf_dir)
             shutil.copytree(uri, hubconf_dir)
 
