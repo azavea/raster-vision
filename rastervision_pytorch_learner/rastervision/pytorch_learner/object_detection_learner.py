@@ -1,3 +1,4 @@
+from typing import Iterable, Optional
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
@@ -9,24 +10,60 @@ from albumentations import BboxParams
 
 import numpy as np
 import torch
+from torchvision.models.detection.faster_rcnn import FasterRCNN
+from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.object_detection_utils import (
-    MyFasterRCNN, compute_coco_eval, collate_fn, plot_xyz)
+    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, plot_xyz)
 
 log = logging.getLogger(__name__)
 
 
 class ObjectDetectionLearner(Learner):
-    def build_model(self):
-        # TODO we shouldn't need to pass the image size here
+    def build_model(self) -> FasterRCNN:
+        """Returns a FasterRCNN model.
+
+        Note that the model returned will have (num_classes + 2) output classes.
+        +1 for the null class (zeroth index), and another +1 (last index) for
+        backward compatibility with earlier Raster Vision versions.
+
+        Returns:
+            FasterRCNN: a FasterRCNN model.
+        """
         pretrained = self.cfg.model.pretrained
-        model = MyFasterRCNN(
-            self.cfg.model.get_backbone_str(),
-            len(self.cfg.data.class_names),
-            self.cfg.data.img_sz,
-            pretrained=pretrained)
+        img_sz = self.cfg.data.img_sz
+        num_classes = len(self.cfg.data.class_names)
+        backbone_arch = self.cfg.model.get_backbone_str()
+
+        backbone = resnet_fpn_backbone(backbone_arch, pretrained)
+        model = FasterRCNN(
+            backbone=backbone,
+            # +1 because torchvision detection models reserve 0 for the null
+            # class, another +1 for backward compatibility with earlier Raster
+            # Vision versions
+            num_classes=num_classes + 1 + 1,
+            # TODO we shouldn't need to pass the image size here
+            min_size=img_sz,
+            max_size=img_sz)
         return model
+
+    def setup_model(self, model_def_path: Optional[str] = None) -> None:
+        """Override to apply the TorchVisionODAdapter wrapper."""
+        ext_cfg = self.cfg.model.external_def
+        if ext_cfg is not None:
+            model = self.load_external_model(ext_cfg, model_def_path)
+            # this model will have 1 extra output classes that we will ignore
+            self.model = TorchVisionODAdapter(model, ignored_output_inds=[0])
+        else:
+            model = self.build_model()
+            # this model will have 2 extra output classes that we will ignore
+            num_classes = len(self.cfg.data.class_names)
+            self.model = TorchVisionODAdapter(
+                model, ignored_output_inds=[0, num_classes + 1])
+
+        self.model.to(self.device)
+        self.load_init_weights()
 
     def build_metric_names(self):
         metric_names = [
@@ -83,13 +120,12 @@ class ObjectDetectionLearner(Learner):
         out = self.predict(x, raw_out=raw_out)
         return self.output_to_numpy(out)
 
-    def output_to_numpy(self, out):
+    def output_to_numpy(self, out: Iterable[BoxList]):
         numpy_out = []
         for boxlist in out:
-            boxlist = boxlist.cpu()
             numpy_out.append({
                 'boxes':
-                boxlist.boxes.numpy(),
+                boxlist.convert_boxes('yxyx').numpy(),
                 'class_ids':
                 boxlist.get_field('class_ids').numpy(),
                 'scores':
