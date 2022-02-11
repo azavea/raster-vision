@@ -157,7 +157,7 @@ def object_detection_transformer(
     if len(boxes) == 0:
         boxes = torch.empty((0, 4)).float()
 
-    y = BoxList(boxes, class_ids=class_ids)
+    y = BoxList(boxes, format='yxyx', class_ids=class_ids)
 
     return x, y
 
