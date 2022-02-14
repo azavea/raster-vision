@@ -155,7 +155,7 @@ def download_if_needed(uri: str,
     make_dir(path, use_dirname=True)
 
     if path != uri:
-        log.debug('Downloading {} to {}'.format(uri, path))
+        log.info(f'Downloading {uri} to {path}')
 
     fs.copy_from(uri, path)
 
