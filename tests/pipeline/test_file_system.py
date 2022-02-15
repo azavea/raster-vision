@@ -239,6 +239,12 @@ class TestS3Misc(unittest.TestCase):
         self.tmp_dir.cleanup()
         self.mock_s3.stop()
 
+    def test_parse_uri(self):
+        s3_path = f's3://{self.bucket_name}/lorem1.txt'
+        fs = FileSystem.get_file_system(s3_path, 'r')
+        bucket, key = fs.parse_uri(s3_path)
+        self.assertEqual((bucket, key), (self.bucket_name, 'lorem1.txt'))
+
     def test_last_modified_s3(self):
         path = os.path.join(self.tmp_dir.name, 'lorem', 'ipsum1.txt')
         s3_path = 's3://{}/lorem1.txt'.format(self.bucket_name)
