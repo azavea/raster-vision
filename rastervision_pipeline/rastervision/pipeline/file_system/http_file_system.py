@@ -64,10 +64,7 @@ class HttpFileSystem(FileSystem):
     def file_exists(uri: str, include_dir: bool = True) -> bool:
         try:
             response = urllib.request.urlopen(uri)
-            if response.getcode() == 200:
-                return int(response.headers['content-length']) > 0
-            else:
-                return False  # pragma: no cover
+            return response.getcode() == 200
         except urllib.error.URLError:
             return False
 

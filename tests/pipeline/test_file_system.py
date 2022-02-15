@@ -406,6 +406,9 @@ class TestHttpMisc(unittest.TestCase):
         http_path = ('https://raw.githubusercontent.com/tensorflow/models/'
                      '17fa52864bfc7a7444a8b921d8a8eb1669e14ebd/README.md')
         self.assertTrue(file_exists(http_path))
+        http_path = ('https://github.com/azavea/raster-vision/archive/refs/'
+                     'heads/0.13.zip')
+        self.assertTrue(file_exists(http_path))
 
     def test_file_exists_http_false(self):
         http_path = ('https://raw.githubusercontent.com/tensorflow/models/'
