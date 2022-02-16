@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 import click
 import numpy as np
+from tqdm import tqdm
 
 from rastervision.pipeline.pipeline import Pipeline
 from rastervision.core.box import Box
@@ -107,21 +108,22 @@ class RVPipeline(Pipeline):
 
             def chip_scene(scene, split):
                 with scene.activate():
-                    log.info('Making {} chips for scene: {}'.format(
-                        split, scene.id))
                     windows = self.get_train_windows(scene)
-                    log.info(f'Writing {len(windows)} chips to disk.')
-                    for window in windows:
-                        chip = scene.raster_source.get_chip(window)
-                        labels = self.get_train_labels(window, scene)
-                        sample = DataSample(
-                            chip=chip,
-                            window=window,
-                            labels=labels,
-                            scene_id=str(scene.id),
-                            is_train=split == TRAIN)
-                        sample = self.post_process_sample(sample)
-                        writer.write_sample(sample)
+                    with tqdm(
+                            windows,
+                            desc=f'Making {split} chips from scene {scene.id}',
+                            mininterval=0.5) as bar:
+                        for window in bar:
+                            chip = scene.raster_source.get_chip(window)
+                            labels = self.get_train_labels(window, scene)
+                            sample = DataSample(
+                                chip=chip,
+                                window=window,
+                                labels=labels,
+                                scene_id=str(scene.id),
+                                is_train=split == TRAIN)
+                            sample = self.post_process_sample(sample)
+                            writer.write_sample(sample)
 
             for s in dataset.train_scenes:
                 chip_scene(s.build(class_cfg, self.tmp_dir), TRAIN)
