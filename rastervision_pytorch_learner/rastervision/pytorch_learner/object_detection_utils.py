@@ -1,27 +1,28 @@
-from typing import Tuple
+from typing import (Any, Callable, Optional, Sequence, Tuple, Iterable, List,
+                    Dict, Union)
 from collections import defaultdict
 from os.path import join
 import tempfile
+from operator import iand
+from functools import reduce
 
 import torch
 from torch.utils.data import Dataset
 import torch.nn as nn
-from torchvision.ops.boxes import batched_nms
-from torchvision.models.detection.faster_rcnn import FasterRCNN
-from torchvision.models.detection.backbone_utils import BackboneWithFPN
-from torchvision.models import resnet
-from torchvision.ops import misc as misc_nn_ops
+from torchvision.ops import (box_area, box_convert, batched_nms,
+                             clip_boxes_to_image)
+from torchvision.utils import draw_bounding_boxes
 import pycocotools
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import numpy as np
 from PIL import Image
-import matplotlib.patches as patches
 
 from rastervision.pipeline.file_system import file_to_json, json_to_file
 
 
-def get_coco_gt(targets, num_class_ids):
+def get_coco_gt(targets: Iterable['BoxList'],
+                num_class_ids: int) -> Dict[str, List[dict]]:
     images = []
     annotations = []
     ann_id = 1
@@ -33,21 +34,17 @@ def get_coco_gt(targets, num_class_ids):
             'width': 1000,
             'file_name': '{}.png'.format(img_id)
         })
-        boxes, class_ids = target.boxes, target.get_field('class_ids')
-        for box, class_id in zip(boxes, class_ids):
-            box = box.float().tolist()
-            class_id = class_id.item()
+        boxes = target.convert_boxes('xywh').float().tolist()
+        class_ids = target.get_field('class_ids').tolist()
+        areas = box_area(target.boxes).tolist()
+        for box, class_id, area in zip(boxes, class_ids, areas):
             annotations.append({
-                'id':
-                ann_id,
-                'image_id':
-                img_id,
-                'category_id':
-                class_id + 1,
-                'area': (box[2] - box[0]) * (box[3] - box[1]),
-                'bbox': [box[1], box[0], box[3] - box[1], box[2] - box[0]],
-                'iscrowd':
-                0
+                'id': ann_id,
+                'image_id': img_id,
+                'bbox': box,
+                'category_id': class_id + 1,
+                'area': area,
+                'iscrowd': 0
             })
             ann_id += 1
 
@@ -64,23 +61,18 @@ def get_coco_gt(targets, num_class_ids):
     return coco
 
 
-def get_coco_preds(outputs):
+def get_coco_preds(outputs: Iterable['BoxList']) -> List[dict]:
     preds = []
     for img_id, output in enumerate(outputs, 1):
-        for box, class_id, score in zip(output.boxes,
-                                        output.get_field('class_ids'),
-                                        output.get_field('scores')):
-            box = box.float().tolist()
-            class_id = class_id.item() + 1
-            score = score.item()
+        boxes = output.convert_boxes('xywh').float().tolist()
+        class_ids = output.get_field('class_ids').tolist()
+        scores = output.get_field('scores').tolist()
+        for box, class_id, score in zip(boxes, class_ids, scores):
             preds.append({
-                'image_id':
-                img_id,
-                'category_id':
-                class_id,
-                'bbox': [box[1], box[0], box[3] - box[1], box[2] - box[0]],
-                'score':
-                score
+                'image_id': img_id,
+                'category_id': class_id + 1,
+                'bbox': box,
+                'score': score
             })
     return preds
 
@@ -114,8 +106,7 @@ def compute_coco_eval(outputs, targets, num_class_ids):
         pycocotools.coco.unicode = None
         coco_preds = coco_gt.loadRes(preds)
 
-        ann_type = 'bbox'
-        coco_eval = COCOeval(coco_gt, coco_preds, ann_type)
+        coco_eval = COCOeval(cocoGt=coco_gt, cocoDt=coco_preds, iouType='bbox')
 
         coco_eval.evaluate()
         coco_eval.accumulate()
@@ -124,66 +115,71 @@ def compute_coco_eval(outputs, targets, num_class_ids):
         return coco_eval
 
 
-def to_box_pixel(boxes, img_height, img_width):
-    # convert from (ymin, xmin, ymax, xmax) in range [-1,1] to
-    # range [0, h) or [0, w)
-    boxes = ((boxes + 1.0) / 2.0) * torch.tensor(
-        [[img_height, img_width, img_height, img_width]]).to(
-            device=boxes.device, dtype=torch.float)
-    return boxes
-
-
 class BoxList():
-    def __init__(self, boxes, **extras):
-        """Constructor.
+    def __init__(self, boxes: torch.Tensor, format: str = 'xyxy',
+                 **extras) -> None:
+        """Representation of a list of bounding boxes and other associated
+        data. Internally, boxes are always stored in the xyxy format.
 
         Args:
-            boxes: tensor<n, 4> with order ymin, xmin, ymax, xmax in pixels coords
+            boxes: tensor<n, 4>
+            format: format of input boxes.
             extras: dict with values that are tensors with first dimension corresponding
                 to boxes first dimension
         """
-        self.boxes = boxes
         self.extras = extras
+        if format == 'xyxy':
+            self.boxes = boxes
+        elif format == 'yxyx':
+            self.boxes = boxes[:, [1, 0, 3, 2]]
+        else:
+            self.boxes = box_convert(boxes, format, 'xyxy')
 
-    def get_field(self, name):
+    def __contains__(self, key: str) -> bool:
+        return key == 'boxes' or key in self.extras
+
+    def get_field(self, name: str) -> Any:
         if name == 'boxes':
             return self.boxes
         else:
             return self.extras.get(name)
 
-    def _map_extras(self, func):
+    def _map_extras(self, func: Callable,
+                    cond: Callable = lambda k, v: True) -> dict:
         new_extras = {}
         for k, v in self.extras.items():
-            new_extras[k] = func(v)
+            if cond(k, v):
+                new_extras[k] = func(k, v)
+            else:
+                new_extras[k] = v
+
         return new_extras
 
-    def copy(self):
-        return BoxList(self.boxes.copy(),
-                       **self._map_extras(lambda x: x.copy()))
+    def copy(self) -> 'BoxList':
+        return BoxList(
+            self.boxes.copy(),
+            **self._map_extras(lambda k, v: v.copy()),
+            cond=lambda k, v: torch.is_tensor(v))
 
-    def cpu(self):
-        return BoxList(self.boxes.cpu(), **self._map_extras(lambda x: x.cpu()))
+    def to(self, *args, **kwargs) -> 'BoxList':
+        boxes = self.boxes.to(*args, **kwargs)
+        extras = self._map_extras(
+            func=lambda k, v: v.to(*args, **kwargs),
+            cond=lambda k, v: torch.is_tensor(v))
+        return BoxList(boxes, **extras)
 
-    def cuda(self):
-        return BoxList(self.boxes.cuda(),
-                       **self._map_extras(lambda x: x.cuda()))
+    def convert_boxes(self, out_fmt: str) -> torch.Tensor:
+        if out_fmt == 'yxyx':
+            boxes = self.boxes[:, [1, 0, 3, 2]]
+        else:
+            boxes = box_convert(self.boxes, 'xyxy', out_fmt)
+        return boxes
 
-    def to(self, device):
-        return self.cpu() if device == 'cpu' else self.cuda()
-
-    def xyxy(self):
-        boxes = self.boxes[:, [1, 0, 3, 2]]
-        return BoxList(boxes, **self.extras)
-
-    def yxyx(self):
-        boxes = self.boxes[:, [1, 0, 3, 2]]
-        return BoxList(boxes, **self.extras)
-
-    def __len__(self):
-        return self.boxes.shape[0]
+    def __len__(self) -> int:
+        return len(self.boxes)
 
     @staticmethod
-    def cat(box_lists):
+    def cat(box_lists: Iterable['BoxList']) -> 'BoxList':
         boxes = []
         extras = defaultdict(list)
         for bl in box_lists:
@@ -195,7 +191,7 @@ class BoxList():
             extras[k] = torch.cat(v)
         return BoxList(boxes, **extras)
 
-    def equal(self, other):
+    def equal(self, other: 'BoxList') -> bool:
         if len(other) != len(self):
             return False
 
@@ -211,31 +207,24 @@ class BoxList():
         other_tups = set([tuple([x.item() for x in row]) for row in cat_arr])
         return self_tups == other_tups
 
-    def ind_filter(self, inds):
-        new_extras = {}
-        for k, v in self.extras.items():
-            new_extras[k] = v[inds, ...]
-        return BoxList(self.boxes[inds, :], **new_extras)
+    def ind_filter(self, inds: Sequence[int]) -> 'BoxList':
+        boxes = self.boxes[inds]
+        extras = self._map_extras(
+            func=lambda k, v: v[inds], cond=lambda k, v: torch.is_tensor(v))
+        return BoxList(boxes, **extras)
 
-    def score_filter(self, score_thresh=0.25):
+    def score_filter(self, score_thresh: float = 0.25) -> 'BoxList':
         scores = self.extras.get('scores')
         if scores is not None:
             return self.ind_filter(scores > score_thresh)
         else:
             raise ValueError('must have scores as key in extras')
 
-    def clamp(self, img_height, img_width):
-        boxes = torch.stack(
-            [
-                torch.clamp(self.boxes[:, 0], 0, img_height),
-                torch.clamp(self.boxes[:, 1], 0, img_width),
-                torch.clamp(self.boxes[:, 2], 0, img_height),
-                torch.clamp(self.boxes[:, 3], 0, img_width)
-            ],
-            dim=1)
+    def clip_boxes(self, img_height: int, img_width: int) -> 'BoxList':
+        boxes = clip_boxes_to_image(self.boxes, (img_height, img_width))
         return BoxList(boxes, **self.extras)
 
-    def nms(self, iou_thresh=0.5):
+    def nms(self, iou_thresh: float = 0.5) -> torch.Tensor:
         if len(self) == 0:
             return self
 
@@ -243,22 +232,24 @@ class BoxList():
                                 self.get_field('class_ids'), iou_thresh)
         return self.ind_filter(good_inds)
 
-    def scale(self, yscale, xscale):
+    def scale(self, yscale: float, xscale: float) -> 'BoxList':
         boxes = self.boxes * torch.tensor(
             [[yscale, xscale, yscale, xscale]], device=self.boxes.device)
         return BoxList(boxes, **self.extras)
 
-    def pin_memory(self):
+    def pin_memory(self) -> 'BoxList':
         self.boxes = self.boxes.pin_memory()
         for k, v in self.extras.items():
-            self.extras[k] = v.pin_memory()
+            if torch.is_tensor(v):
+                self.extras[k] = v.pin_memory()
         return self
 
 
-def collate_fn(data):
-    x = [d[0].unsqueeze(0) for d in data]
-    y = [d[1] for d in data]
-    return (torch.cat(x), y)
+def collate_fn(data: Iterable[Sequence]) -> Tuple[torch.Tensor, List[BoxList]]:
+    imgs = [d[0] for d in data]
+    x = torch.stack(imgs)
+    y: List[BoxList] = [d[1] for d in data]
+    return x, y
 
 
 class CocoDataset(Dataset):
@@ -313,175 +304,141 @@ class CocoDataset(Dataset):
         return len(self.id2ann)
 
 
-def get_out_channels(model):
-    out = {}
+def plot_xyz(ax,
+             x: torch.Tensor,
+             y: BoxList,
+             class_names: Sequence[str],
+             class_colors: Sequence[str],
+             z: Optional[BoxList] = None) -> None:
 
-    def make_save_output(layer_name):
-        def save_output(layer, input, output):
-            out[layer_name] = output.shape[1]
-
-        return save_output
-
-    model.layer1.register_forward_hook(make_save_output('layer1'))
-    model.layer2.register_forward_hook(make_save_output('layer2'))
-    model.layer3.register_forward_hook(make_save_output('layer3'))
-    model.layer4.register_forward_hook(make_save_output('layer4'))
-
-    model(torch.empty((1, 3, 128, 128)))
-    return [out['layer1'], out['layer2'], out['layer3'], out['layer4']]
-
-
-# This fixes a bug in torchvision.
-def resnet_fpn_backbone(backbone_name, pretrained):
-    backbone = resnet.__dict__[backbone_name](
-        pretrained=pretrained, norm_layer=misc_nn_ops.FrozenBatchNorm2d)
-
-    # freeze layers
-    for name, parameter in backbone.named_parameters():
-        if 'layer2' not in name and 'layer3' not in name and 'layer4' not in name:
-            parameter.requires_grad_(False)
-
-    return_layers = {
-        'layer1': '0',
-        'layer2': '1',
-        'layer3': '2',
-        'layer4': '3'
-    }
-
-    out_channels = 256
-    in_channels_list = get_out_channels(backbone)
-    return BackboneWithFPN(backbone, return_layers, in_channels_list,
-                           out_channels)
-
-
-def plot_xyz(ax, x, y, class_names, z=None):
-    ax.imshow(x)
+    x = x.permute(2, 0, 1)
+    # convert image to uint8
+    if x.is_floating_point():
+        img = (x * 255).byte()
     y = y if z is None else z
 
-    scores = y.get_field('scores')
-    for box_ind, (box, class_id) in enumerate(
-            zip(y.boxes, y.get_field('class_ids'))):
-        rect = patches.Rectangle(
-            (box[1], box[0]),
-            box[3] - box[1],
-            box[2] - box[0],
-            linewidth=1,
-            edgecolor='cyan',
-            facecolor='none')
-        ax.add_patch(rect)
+    boxes = y.boxes
+    class_ids: np.ndarray = y.get_field('class_ids').numpy()
+    scores: Optional[torch.Tensor] = y.get_field('scores')
 
-        box_label = class_names[class_id]
+    if len(boxes) > 0:
+        box_annotations: List[str] = np.array(class_names)[class_ids].tolist()
         if scores is not None:
-            score = scores[box_ind]
-            box_label += ' {:.2f}'.format(score)
+            box_annotations = [
+                f'{l} | {s:.2f}' for l, s in zip(box_annotations, scores)
+            ]
+        box_colors: List[Union[str, Tuple[int, ...]]] = [
+            tuple(c) if not isinstance(c, str) else c
+            for c in np.array(class_colors)[class_ids]
+        ]
 
-        h, w = x.shape[1:]
-        label_height = h * 0.03
-        label_width = w * 0.15
-        rect = patches.Rectangle(
-            (box[1], box[0] - label_height),
-            label_width,
-            label_height,
-            color='cyan')
-        ax.add_patch(rect)
+        img = draw_bounding_boxes(
+            image=img,
+            boxes=boxes,
+            labels=box_annotations,
+            colors=box_colors,
+            width=2)
 
-        ax.text(box[1] + w * 0.003, box[0] - h * 0.003, box_label, fontsize=7)
-
+    ax.imshow(img.permute(1, 2, 0))
     ax.axis('off')
 
 
-class MyFasterRCNN(nn.Module):
-    """Adapter around torchvision Faster-RCNN.
+class TorchVisionODAdapter(nn.Module):
+    """Adapter for interfacing with TorchVision's object detection models.
 
-    The purpose of the adapter is to use a different input and output format
-    and inject bogus boxes to circumvent torchvision's inability to handle
-    training examples with no ground truth boxes.
+    The purpose of this adapter is:
+    1) to convert input BoxLists to dicts before feeding them into the model
+    2) to convert detections output by the model as dicts into BoxLists
+
+    Additionally, it automatically converts to/from 1-indexed class labels
+    (which is what the TorchVision models expect).
     """
 
-    def __init__(self, backbone_arch, num_class_ids, img_sz, pretrained=True):
-        super().__init__()
-
-        backbone = resnet_fpn_backbone(backbone_arch, pretrained)
-        # Add an extra null class for the bogus boxes.
-        self.null_class_id = num_class_ids
-
-        # class_ids must start at 1, and there is an extra null class, so
-        # that's why we add 2 to the num_class_ids
-        self.model = FasterRCNN(
-            backbone, num_class_ids + 2, min_size=img_sz, max_size=img_sz)
-        self.subloss_names = [
-            'total_loss', 'loss_box_reg', 'loss_classifier', 'loss_objectness',
-            'loss_rpn_box_reg'
-        ]
-        self.batch_ind = 0
-
-    def forward(self, input, targets=None):
-        """Forward pass
+    def __init__(self,
+                 model: nn.Module,
+                 ignored_output_inds: Sequence[int] = [0]) -> None:
+        """Constructor.
 
         Args:
-            input: tensor<n, 3, h, w> with batch of images
-            targets: None or list<BoxList> of length n with boxes and class_ids
+            model (nn.Module): A torchvision object detection model.
+            ignored_output_inds (Iterable[int], optional): Class labels to exclude.
+                Defaults to [0].
+        """
+        super().__init__()
+        self.model = model
+        self.ignored_output_inds = ignored_output_inds
+
+    def forward(self,
+                input: torch.Tensor,
+                targets: Optional[Iterable[BoxList]] = None
+                ) -> Union[dict, List[BoxList]]:
+        """Forward pass.
+
+        Args:
+            input (Tensor[batch_size, in_channels, in_height, in_width]): batch
+                of images.
+            targets (Optional[Iterable[BoxList]], optional): In training mode,
+                should be Iterable[BoxList]], with each BoxList having a
+                'class_ids' field. In eval mode, should be None. Defaults to
+                None.
 
         Returns:
-            if targets is None, returns list<BoxList> of length n, containing
-            boxes, class_ids, and scores for boxes with score > 0.05. Further
-            filtering based on score should be done before considering the
-            prediction "final".
-
-            if targets is a list, returns the losses as dict with keys from
-            self.subloss_names.
+            Union[dict, List[BoxList]]: In training mode,
+                returns a dict of losses. In eval mode, returns a list of
+                BoxLists containing predicted boxes, class_ids, and scores.
+                Further filtering based on score should be done before
+                considering the prediction "final".
         """
-        if targets:
-            # Add bogus background class box for each image to workaround
-            # the inability of torchvision to train on images with
-            # no ground truth boxes. This is important for being able
-            # to handle negative chips generated by RV.
-            # See https://github.com/pytorch/vision/issues/1598
+        if targets is not None:
+            # Convert each boxlist into the format expected by the torchvision
+            # models: a dict with keys, 'boxes' and 'labels'.
+            # Note: labels (class IDs) must start at 1.
+            _targets = [self.boxlist_to_model_input_dict(bl) for bl in targets]
 
-            # Note class_ids must start at 1.
-            new_targets = []
-            for x, y in zip(input, targets):
-                h, w = x.shape[1:]
-                boxes = torch.cat(
-                    [
-                        y.boxes,
-                        torch.tensor([[0., 0, h, w]], device=input.device)
-                    ],
-                    dim=0)
-                class_ids = torch.cat(
-                    [
-                        y.get_field('class_ids') + 1,
-                        torch.tensor(
-                            [self.null_class_id + 1], device=input.device),
-                    ],
-                    dim=0)
-                bl = BoxList(boxes, class_ids=class_ids)
-                new_targets.append(bl)
-            targets = new_targets
-
-            _targets = [bl.xyxy() for bl in targets]
-            _targets = [{
-                'boxes': bl.boxes,
-                'labels': bl.get_field('class_ids')
-            } for bl in _targets]
             loss_dict = self.model(input, _targets)
             loss_dict['total_loss'] = sum(list(loss_dict.values()))
 
             return loss_dict
 
-        out = self.model(input)
-        boxlists = [
-            BoxList(
-                _out['boxes'], class_ids=_out['labels'],
-                scores=_out['scores']).yxyx() for _out in out
-        ]
+        outs = self.model(input)
 
-        # Remove bogus background boxes.
-        new_boxlists = []
-        for bl in boxlists:
-            class_ids = bl.get_field('class_ids') - 1
-            non_null_inds = class_ids != self.null_class_id
-            bl = bl.ind_filter(non_null_inds)
-            bl.extras['class_ids'] -= 1
-            new_boxlists.append(bl)
-        return new_boxlists
+        boxlists = [self.model_output_dict_to_boxlist(out) for out in outs]
+
+        return boxlists
+
+    def boxlist_to_model_input_dict(self, boxlist: BoxList) -> dict:
+        """Convert BoxList to a dict compatible with torchvision detection
+        models. Also, make class labels 1-indexed.
+
+        Args:
+            boxlist (BoxList): A BoxList with a "class_ids" field.
+
+        Returns:
+            dict: A dict with keys: "boxes" and "labels".
+        """
+        return {
+            'boxes': boxlist.boxes,
+            # make class IDs 1-indexed
+            'labels': (boxlist.get_field('class_ids') + 1)
+        }
+
+    def model_output_dict_to_boxlist(self, out: dict) -> BoxList:
+        """Convert torchvision detection dict to BoxList. Also, exclude any
+        null classes and make class labels 0-indexed.
+
+        Args:
+            out (dict): A dict output by a torchvision detection model in eval
+                mode.
+
+        Returns:
+            BoxList: A BoxList with "class_ids" and "scores" fields.
+        """
+        # keep only the detections of the non-null classes
+        exclude_masks = [out['labels'] != i for i in self.ignored_output_inds]
+        mask = reduce(iand, exclude_masks)
+        boxlist = BoxList(
+            boxes=out['boxes'][mask],
+            # make class IDs 0-indexed again
+            class_ids=(out['labels'][mask] - 1),
+            scores=out['scores'][mask])
+        return boxlist

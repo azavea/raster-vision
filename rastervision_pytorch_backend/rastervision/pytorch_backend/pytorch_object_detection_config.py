@@ -62,9 +62,6 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
 
     @validator('model')
     def validate_model_config(cls, v):
-        if v.external_def is not None:
-            raise ConfigError('external_def is currently not supported for '
-                              'Object Detection.')
         return v
 
     @validator('solver')
@@ -79,5 +76,11 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
         if v.external_loss_def is not None:
             raise ConfigError(
                 'external_loss_def is currently not supported for '
-                'Object Detection.')
+                'Object Detection. Raster Vision expects object '
+                'detection models to behave like TorchVision object detection '
+                'models, and these models compute losses internally. So, if '
+                'you want to use a custom loss function, you can create a '
+                'custom model that implements that loss function and use that '
+                'model via external_model_def. See cowc_potsdam.py for an '
+                'example of how to use a custom object detection model.')
         return v

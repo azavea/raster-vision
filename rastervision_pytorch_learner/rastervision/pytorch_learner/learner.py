@@ -267,10 +267,7 @@ class Learner(ABC):
         """
         ext_cfg = self.cfg.model.external_def
         if ext_cfg is not None:
-            hubconf_dir = self._get_external_module_dir(
-                ext_cfg, model_def_path)
-            self.model = self.load_external_module(
-                ext_cfg=ext_cfg, hubconf_dir=hubconf_dir)
+            self.model = self.load_external_model(ext_cfg, model_def_path)
         else:
             self.model = self.build_model()
         self.model.to(self.device)
@@ -281,6 +278,21 @@ class Learner(ABC):
         """Build a PyTorch model."""
         pass
 
+    def load_external_model(self,
+                            ext_cfg: ExternalModuleConfig,
+                            model_def_path: Optional[str] = None) -> nn.Module:
+        """Load an external model via torch.hub.
+
+        Args:
+            ext_cfg (ExternalModuleConfig): Config describing the module.
+            model_def_path (str, optional): Model definition path. Will be
+            available when loading from a bundle. Defaults to None.
+        """
+        hubconf_dir = self._get_external_module_dir(ext_cfg, model_def_path)
+        model = self.load_external_module(
+            ext_cfg=ext_cfg, hubconf_dir=hubconf_dir)
+        return model
+
     def setup_loss(self, loss_def_path: Optional[str] = None) -> None:
         """Setup self.loss.
 
@@ -290,9 +302,7 @@ class Learner(ABC):
         """
         ext_cfg = self.cfg.solver.external_loss_def
         if ext_cfg is not None:
-            hubconf_dir = self._get_external_module_dir(ext_cfg, loss_def_path)
-            self.loss = self.load_external_module(
-                ext_cfg=ext_cfg, hubconf_dir=hubconf_dir)
+            self.loss = self.load_external_loss(ext_cfg, loss_def_path)
         else:
             self.loss = self.build_loss()
 
@@ -302,6 +312,21 @@ class Learner(ABC):
     def build_loss(self) -> nn.Module:
         """Build a loss Callable."""
         pass
+
+    def load_external_loss(self,
+                           ext_cfg: ExternalModuleConfig,
+                           loss_def_path: Optional[str] = None) -> nn.Module:
+        """Load an external loss function via torch.hub.
+
+        Args:
+            ext_cfg (ExternalModuleConfig): Config describing the module.
+            loss_def_path (str, optional): Loss definition path. Will be
+            available when loading from a bundle. Defaults to None.
+        """
+        hubconf_dir = self._get_external_module_dir(ext_cfg, loss_def_path)
+        loss = self.load_external_module(
+            ext_cfg=ext_cfg, hubconf_dir=hubconf_dir)
+        return loss
 
     def _get_external_module_dir(
             self,
