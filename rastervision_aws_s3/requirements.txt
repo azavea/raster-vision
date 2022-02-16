@@ -1,4 +1,4 @@
-boto3==1.17.*
+boto3==1.21.*
 rastervision_pipeline==0.13
 awscli==1.19.*
 tqdm==4.62
