@@ -134,7 +134,14 @@ class ObjectDetectionLearner(Learner):
         return numpy_out
 
     def plot_xyz(self, ax, x, y, z=None):
-        plot_xyz(ax, x, y, self.cfg.data.class_names, z=z)
+        data_cfg = self.cfg.data
+        plot_xyz(
+            ax,
+            x,
+            y,
+            class_names=data_cfg.class_names,
+            class_colors=data_cfg.class_colors,
+            z=z)
 
     def prob_to_pred(self, x):
         return x
