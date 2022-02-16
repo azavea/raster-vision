@@ -28,9 +28,11 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
 
     os.makedirs(directory, exist_ok=True)
 
-    if check_empty and any(os.scandir(directory)):
-        raise ValueError(
-            '{} needs to be an empty directory!'.format(directory))
+    if check_empty:
+        with os.scandir(directory) as it:
+            if any(it):
+                raise ValueError(
+                    f'{directory} needs to be an empty directory!')
 
 
 class LocalFileSystem(FileSystem):

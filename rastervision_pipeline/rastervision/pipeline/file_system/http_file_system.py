@@ -1,12 +1,55 @@
+from typing import ContextManager
 import os
+import io
 import shutil
 import urllib
 import urllib.request
+from urllib.parse import urlparse
+import requests
 from datetime import datetime
+from functools import partial
+
+from tqdm import tqdm
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                NotWritableError)
-from urllib.parse import urlparse
+
+
+def get_file_obj(uri: str, with_progress: bool = True) -> ContextManager:
+    """Returns a context manager for a file-like object that supports buffered
+    reads. If with_progress is True, wraps the read() method of the object in
+    a function that updates a tqdm progress bar.
+
+    Usage:
+    ```
+    with get_file_obj(uri) as f:
+        ...
+    ```
+
+    Adapted from https://stackoverflow.com/a/63831344/5908685.
+    """
+    r = requests.get(uri, stream=True, allow_redirects=True)
+    if r.status_code != 200:
+        r.raise_for_status()  # Will only raise for 4xx codes, so...
+        raise RuntimeError(
+            f'Request to {uri} returned status code {r.status_code}')
+    file_obj = r.raw
+    # Decompress if needed
+    file_obj.read = partial(file_obj.read, decode_content=True)
+    if not with_progress:
+        return file_obj
+    file_size = int(r.headers.get('Content-Length', 0))
+    desc = '(Unknown total file size)' if file_size == 0 else ''
+    # put a wrapper around file_obj's read() method that updates the
+    # progress bar
+    file_obj_wrapped = tqdm.wrapattr(
+        file_obj,
+        'read',
+        total=file_size,
+        desc=desc,
+        bytes=True,
+        mininterval=0.5)
+    return file_obj_wrapped
 
 
 class HttpFileSystem(FileSystem):
@@ -21,10 +64,7 @@ class HttpFileSystem(FileSystem):
     def file_exists(uri: str, include_dir: bool = True) -> bool:
         try:
             response = urllib.request.urlopen(uri)
-            if response.getcode() == 200:
-                return int(response.headers['content-length']) > 0
-            else:
-                return False  # pragma: no cover
+            return response.getcode() == 200
         except urllib.error.URLError:
             return False
 
@@ -34,8 +74,9 @@ class HttpFileSystem(FileSystem):
 
     @staticmethod
     def read_bytes(uri: str) -> bytes:
-        with urllib.request.urlopen(uri) as req:
-            return req.read()
+        with get_file_obj(uri) as in_file, io.BytesIO() as write_buffer:
+            shutil.copyfileobj(in_file, write_buffer)
+            return write_buffer.getvalue()
 
     @staticmethod
     def write_str(uri: str, data: str) -> None:
@@ -62,12 +103,9 @@ class HttpFileSystem(FileSystem):
 
     @staticmethod
     def copy_from(src_uri: str, dst_path: str) -> None:
-        with urllib.request.urlopen(src_uri) as response:
-            with open(dst_path, 'wb') as out_file:
-                try:
-                    shutil.copyfileobj(response, out_file)
-                except Exception:  # pragma: no cover
-                    raise NotReadableError('Could not read {}'.format(src_uri))
+        with get_file_obj(src_uri) as in_file, open(dst_path,
+                                                    'wb') as out_file:
+            shutil.copyfileobj(in_file, out_file)
 
     @staticmethod
     def local_path(uri: str, download_dir: str) -> None:

@@ -114,3 +114,4 @@ deployment/ansible/*.retry
 /data/
 /notebooks/
 /.vscode/
+/.history/

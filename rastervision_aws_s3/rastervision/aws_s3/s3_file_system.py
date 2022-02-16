@@ -1,3 +1,4 @@
+from typing import Tuple
 import io
 import os
 import subprocess
@@ -5,6 +6,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 from everett.manager import ConfigurationMissingError
+from tqdm import tqdm
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                NotWritableError)
@@ -70,6 +72,16 @@ def get_matching_s3_keys(bucket, prefix='', suffix='', request_payer='None'):
         yield obj['Key']
 
 
+def progressbar(total_size: int, desc: str):
+    return tqdm(
+        total=total_size,
+        desc=desc,
+        unit='B',
+        unit_scale=True,
+        unit_divisor=1024,
+        mininterval=0.5)
+
+
 class S3FileSystem(FileSystem):
     """A FileSystem for interacting with files stored on AWS S3.
 
@@ -103,6 +115,13 @@ class S3FileSystem(FileSystem):
     def matches_uri(uri: str, mode: str) -> bool:
         parsed_uri = urlparse(uri)
         return parsed_uri.scheme == 's3'
+
+    @staticmethod
+    def parse_uri(uri: str) -> Tuple[str, str]:
+        """Parse bucket name and key from an S3 URI."""
+        parsed_uri = urlparse(uri)
+        bucket, key = parsed_uri.netloc, parsed_uri.path[1:]
+        return bucket, key
 
     @staticmethod
     def file_exists(uri: str, include_dir: bool = True) -> bool:
@@ -150,15 +169,18 @@ class S3FileSystem(FileSystem):
 
         s3 = S3FileSystem.get_session().client('s3')
         request_payer = S3FileSystem.get_request_payer()
-
-        parsed_uri = urlparse(uri)
+        bucket, key = S3FileSystem.parse_uri(uri)
         with io.BytesIO() as file_buffer:
             try:
-                s3.download_fileobj(
-                    parsed_uri.netloc,
-                    parsed_uri.path[1:],
-                    file_buffer,
-                    ExtraArgs={'RequestPayer': request_payer})
+                file_size = s3.head_object(
+                    Bucket=bucket, Key=key)['ContentLength']
+                with progressbar(file_size, desc='Downloading') as bar:
+                    s3.download_fileobj(
+                        Bucket=bucket,
+                        Key=key,
+                        Fileobj=file_buffer,
+                        Callback=lambda bytes: bar.update(bytes),
+                        ExtraArgs={'RequestPayer': request_payer})
                 return file_buffer.getvalue()
             except botocore.exceptions.ClientError as e:
                 raise NotReadableError('Could not read {}'.format(uri)) from e
@@ -171,15 +193,18 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def write_bytes(uri: str, data: bytes) -> None:
         s3 = S3FileSystem.get_session().client('s3')
-
-        parsed_uri = urlparse(uri)
-        bucket = parsed_uri.netloc
-        key = parsed_uri.path[1:]
+        bucket, key = S3FileSystem.parse_uri(uri)
+        file_size = len(data)
         with io.BytesIO(data) as str_buffer:
             try:
-                s3.upload_fileobj(str_buffer, bucket, key)
+                with progressbar(file_size, desc=f'Uploading') as bar:
+                    s3.upload_fileobj(
+                        Fileobj=str_buffer,
+                        Bucket=bucket,
+                        Key=key,
+                        Callback=lambda bytes: bar.update(bytes))
             except Exception as e:
-                raise NotWritableError('Could not write {}'.format(uri)) from e
+                raise NotWritableError(f'Could not write {uri}') from e
 
     @staticmethod
     def sync_from_dir(src_dir_uri: str, dst_dir: str,
@@ -200,15 +225,18 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def copy_to(src_path: str, dst_uri: str) -> None:
         s3 = S3FileSystem.get_session().client('s3')
-
-        parsed_uri = urlparse(dst_uri)
+        bucket, key = S3FileSystem.parse_uri(dst_uri)
         if os.path.isfile(src_path):
+            file_size = os.path.getsize(src_path)
             try:
-                s3.upload_file(src_path, parsed_uri.netloc,
-                               parsed_uri.path[1:])
+                with progressbar(file_size, desc='Uploading') as bar:
+                    s3.upload_file(
+                        Filename=src_path,
+                        Bucket=bucket,
+                        Key=key,
+                        Callback=lambda bytes: bar.update(bytes))
             except Exception as e:
-                raise NotWritableError(
-                    'Could not write {}'.format(dst_uri)) from e
+                raise NotWritableError(f'Could not write {dst_uri}') from e
         else:
             S3FileSystem.sync_to_dir(src_path, dst_uri, delete=True)
 
@@ -218,16 +246,18 @@ class S3FileSystem(FileSystem):
 
         s3 = S3FileSystem.get_session().client('s3')
         request_payer = S3FileSystem.get_request_payer()
-
-        parsed_uri = urlparse(src_uri)
+        bucket, key = S3FileSystem.parse_uri(src_uri)
         try:
-            s3.download_file(
-                parsed_uri.netloc,
-                parsed_uri.path[1:],
-                dst_path,
-                ExtraArgs={'RequestPayer': request_payer})
+            file_size = s3.head_object(Bucket=bucket, Key=key)['ContentLength']
+            with progressbar(file_size, desc=f'Downloading') as bar:
+                s3.download_file(
+                    Bucket=bucket,
+                    Key=key,
+                    Filename=dst_path,
+                    Callback=lambda bytes: bar.update(bytes),
+                    ExtraArgs={'RequestPayer': request_payer})
         except botocore.exceptions.ClientError:
-            raise NotReadableError('Could not read {}'.format(src_uri))
+            raise NotReadableError(f'Could not read {src_uri}')
 
     @staticmethod
     def local_path(uri: str, download_dir: str) -> None:
@@ -238,8 +268,7 @@ class S3FileSystem(FileSystem):
 
     @staticmethod
     def last_modified(uri: str) -> datetime:
-        parsed_uri = urlparse(uri)
-        bucket, key = parsed_uri.netloc, parsed_uri.path[1:]
+        bucket, key = S3FileSystem.parse_uri(uri)
         s3 = S3FileSystem.get_session().client('s3')
         request_payer = S3FileSystem.get_request_payer()
         head_data = s3.head_object(
