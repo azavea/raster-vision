@@ -1,5 +1,7 @@
-from os.path import join
+from os.path import join, splitext
 import tempfile
+
+import numpy as np
 
 from rastervision.pipeline.file_system import (make_dir, upload_or_copy,
                                                zipdir)
@@ -7,8 +9,28 @@ from rastervision.core.backend import Backend, SampleWriter
 from rastervision.core.data_sample import DataSample
 from rastervision.core.data import ClassConfig
 from rastervision.core.rv_pipeline import RVPipelineConfig
+from rastervision.core.utils.misc import save_img
 from rastervision.pytorch_learner.learner_config import LearnerConfig
 from rastervision.pytorch_learner.learner import Learner
+
+
+def write_chip(chip: np.ndarray, path: str) -> None:
+    """Save chip as either a PNG image or a numpy array."""
+    ext = splitext(path)[-1]
+    if ext == '.npy':
+        np.save(path, chip)
+    else:
+        save_img(chip, path)
+
+
+def get_image_ext(chip: np.ndarray) -> str:
+    """Decide which format to store the image in."""
+    if len(chip.shape) not in (2, 3):
+        raise ValueError('chip shape must be (H, W) or (H, W, C)')
+    if len(chip.shape) == 2 or chip.shape[-1] == 3:
+        return 'png'
+    else:
+        return 'npy'
 
 
 class PyTorchLearnerSampleWriter(SampleWriter):
@@ -17,11 +39,12 @@ class PyTorchLearnerSampleWriter(SampleWriter):
         """Constructor.
 
         Args:
-            output_uri: URI of directory where zip file of chips should be placed
-            class_config: used to convert class ids to names which may be needed for some
-                training data formats
-            tmp_dir: local directory which is root of any temporary directories that
-                are created
+            output_uri (str): URI of directory where zip file of chips should
+                be placed.
+            class_config (ClassConfig): used to convert class ids to names
+                which may be needed for some training data formats.
+            tmp_dir (str): local directory which is root of any temporary
+                directories that are created.
         """
         self.output_uri = output_uri
         self.class_config = class_config
@@ -49,9 +72,28 @@ class PyTorchLearnerSampleWriter(SampleWriter):
         upload_or_copy(output_path, self.output_uri)
         self.tmp_dir_obj.cleanup()
 
-    def write_sample(self, sample: DataSample):
+    def write_sample(self, sample: DataSample) -> None:
         """Write a single sample to disk."""
         raise NotImplementedError()
+
+    def get_image_path(self, split_name: str, sample: DataSample) -> str:
+        """Decide the save location of the image. Also, ensure that the target
+        directory exists."""
+        img_dir = join(self.sample_dir, split_name, 'img')
+        make_dir(img_dir)
+
+        sample_name = f'{sample.scene_id}-{self.sample_ind}'
+        ext = self.get_image_ext(sample.chip)
+        img_path = join(img_dir, f'{sample_name}.{ext}')
+        return img_path
+
+    def get_image_ext(self, chip: np.ndarray) -> str:
+        """Decide which format to store the image in."""
+        return get_image_ext(chip)
+
+    def write_chip(self, chip: np.ndarray, path: str) -> None:
+        """Save chip as either a PNG image or a numpy array."""
+        write_chip(chip, path)
 
 
 class PyTorchLearnerBackend(Backend):

@@ -43,6 +43,10 @@ class SemanticSegmentationLabels(Labels):
         """Get windows, optionally parameterized by keyword args."""
         pass
 
+    @abstractmethod
+    def get_label_arr(self, window: Box) -> np.ndarray:
+        pass
+
     def filter_by_aoi(self, aoi_polygons: list, null_class_id: int,
                       **kwargs) -> 'SemanticSegmentationLabels':
         """Keep only the values that lie inside the AOI."""

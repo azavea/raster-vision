@@ -224,5 +224,4 @@ def get_config(runner,
         backend=backend,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
-        img_format='npy',
         chip_options=chip_options)
