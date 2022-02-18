@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import torch
 from torch import nn
@@ -170,3 +170,52 @@ class MinMaxNormalize(ImageOnlyTransform):
 
     def get_transform_init_args_names(self):
         return ('min_val', 'max_val', 'dtype')
+
+
+def adjust_conv_channels(old_conv: nn.Conv2d,
+                         in_channels: int,
+                         pretrained: bool = True
+                         ) -> Union[nn.Conv2d, nn.Sequential]:
+
+    if in_channels == old_conv.in_channels:
+        return old_conv
+
+    # These parameters will be the same for the new conv layer.
+    # This list should be kept up to date with the Conv2d definition.
+    old_conv_args = {
+        'out_channels': old_conv.out_channels,
+        'kernel_size': old_conv.kernel_size,
+        'stride': old_conv.stride,
+        'padding': old_conv.padding,
+        'dilation': old_conv.dilation,
+        'groups': old_conv.groups,
+        'bias': old_conv.bias is not None,
+        'padding_mode': old_conv.padding_mode
+    }
+
+    if not pretrained:
+        # simply replace the first conv layer with one with the
+        # correct number of input channels
+        new_conv = nn.Conv2d(in_channels=in_channels, **old_conv_args)
+        return new_conv
+
+    if in_channels > old_conv.in_channels:
+        # insert a new conv layer parallel to the existing one
+        # and sum their outputs
+        extra_channels = in_channels - old_conv.in_channels
+        extra_conv = nn.Conv2d(in_channels=extra_channels, **old_conv_args)
+        new_conv = nn.Sequential(
+            # split input along channel dim
+            SplitTensor((old_conv.in_channels, extra_channels), dim=1),
+            # each split goes to its respective conv layer
+            Parallel(old_conv, extra_conv),
+            # sum the parallel outputs
+            AddTensors())
+        return new_conv
+    elif in_channels < old_conv.in_channels:
+        new_conv = nn.Conv2d(in_channels=in_channels, **old_conv_args)
+        pretrained_kernels = old_conv.weight.data[:, :in_channels]
+        new_conv.weight.data[:, :in_channels] = pretrained_kernels
+        return new_conv
+    else:
+        raise ConfigError(f'Something went wrong.')
