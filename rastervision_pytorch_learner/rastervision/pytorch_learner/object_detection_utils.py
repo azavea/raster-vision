@@ -7,7 +7,6 @@ from operator import iand
 from functools import reduce
 
 import torch
-from torch.utils.data import Dataset
 import torch.nn as nn
 from torchvision.ops import (box_area, box_convert, batched_nms,
                              clip_boxes_to_image)
@@ -16,9 +15,8 @@ import pycocotools
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import numpy as np
-from PIL import Image
 
-from rastervision.pipeline.file_system import file_to_json, json_to_file
+from rastervision.pipeline.file_system import json_to_file
 
 
 def get_coco_gt(targets: Iterable['BoxList'],
@@ -250,58 +248,6 @@ def collate_fn(data: Iterable[Sequence]) -> Tuple[torch.Tensor, List[BoxList]]:
     x = torch.stack(imgs)
     y: List[BoxList] = [d[1] for d in data]
     return x, y
-
-
-class CocoDataset(Dataset):
-    def __init__(self, img_dir, annotation_uri, transform=None):
-        self.img_dir = img_dir
-        self.annotation_uri = annotation_uri
-        self.transform = transform
-
-        self.img_ids = []
-        self.id2ann = {}
-        ann_json = file_to_json(annotation_uri)
-
-        for img in ann_json['images']:
-            img_id = img['id']
-            self.img_ids.append(img_id)
-            self.id2ann[img_id] = {
-                'image': img['file_name'],
-                'bboxes': [],
-                'category_id': []
-            }
-        for ann in ann_json['annotations']:
-            img_id = ann['image_id']
-            bboxes = self.id2ann[img_id]['bboxes']
-            category_ids = self.id2ann[img_id]['category_id']
-            bboxes.append(ann['bbox'])
-            category_ids.append(ann['category_id'])
-
-    def __getitem__(self, ind: int) -> Tuple[np.ndarray, BoxList]:
-        img_id = self.img_ids[ind]
-        ann = dict(self.id2ann[img_id])
-
-        img_fn = ann['image']
-        img = Image.open(join(self.img_dir, img_fn))
-
-        ann['image'] = np.array(img)
-        if self.transform is not None:
-            out = self.transform(**ann)
-        else:
-            out = ann
-
-        x = out['image']
-        boxes = np.array(out['bboxes'])
-        class_ids = np.array(out['category_id'])
-
-        if boxes.shape[0] == 0:
-            boxes = np.empty((0, 4))
-            class_ids = np.empty((0, ), dtype=np.int64)
-
-        return x, (boxes, class_ids, 'xywh')
-
-    def __len__(self):
-        return len(self.id2ann)
 
 
 def plot_xyz(ax,
