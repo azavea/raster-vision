@@ -1,8 +1,8 @@
 from os.path import join
 from enum import Enum
 
-from typing import (List, Optional, Union, TYPE_CHECKING, Dict, Tuple,
-                    Iterable)
+from typing import (List, Optional, Sequence, Union, TYPE_CHECKING, Dict,
+                    Tuple, Iterable)
 from typing_extensions import Literal
 from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
                       conint)
@@ -253,15 +253,69 @@ class PlotOptions(Config):
         'the plotting function. This default is useful for cases where the values after '
         'normalization are close to zero which makes the plot difficult to see.'
     )
+    channel_display_groups: Optional[Union[Dict[str, Sequence[
+        NonNegInt]], Sequence[Sequence[NonNegInt]]]] = Field(
+            None,
+            description=
+            ('Groups of image channels to display together as a subplot '
+             'when plotting the data and predictions. '
+             'Can be a list or tuple of groups (e.g. [(0, 1, 2), (3,)]) or a '
+             'dict containing title-to-group mappings '
+             '(e.g. {"RGB": [0, 1, 2], "IR": [3]}), '
+             'where each group is a list or tuple of channel indices and '
+             'title is a string that will be used as the title of the subplot '
+             'for that group.'))
 
     # validators
     _tf = validator(
         'transform', allow_reuse=True)(validate_albumentation_transform)
 
+    def update(self, data_cfg: 'DataConfig'):
+        super().update()
+        if data_cfg.img_channels is not None:
+            self.channel_display_groups = (
+                self.validate_and_update_channel_display_groups(
+                    data_cfg.img_channels))
 
-def data_config_upgrader(cfg_dict, version):
-    if version < 1:
+    def validate_and_update_channel_display_groups(
+            self, img_channels: int) -> Dict[str, List[NonNegInt]]:
+
+        groups = self.channel_display_groups
+
+        if groups is None:
+            # by default, display first 3 channels as RGB
+            num_display_channels = min(3, img_channels)
+            groups = {'Input': list(range(num_display_channels))}
+        elif len(groups) == 0:
+            raise ConfigError(
+                f'channel_display_groups cannot be empty. Set to None instead.'
+            )
+        elif not isinstance(groups, dict):
+            # if in list/tuple form, convert to dict s.t.
+            # [(0, 1, 2), (4, 3, 5)] --> {
+            #   "Channels [0, 1, 2]": [0, 1, 2],
+            #   "Channels [4, 3, 5]": [4, 3, 5]
+            # }
+            groups = {f'Channels: {[*chs]}': list(chs) for chs in groups}
+        else:
+            groups = {k: list(v) for k, v in groups.items()}
+
+        if isinstance(groups, dict):
+            for k, v in groups.items():
+                if not (0 < len(v) <= 3):
+                    raise ConfigError(f'channel_display_groups[{k}]: '
+                                      'len(group) must be 1, 2, or 3')
+                if not all(0 <= i < img_channels for i in v):
+                    raise ConfigError(f'Invalid channel indices in '
+                                      f'channel_display_groups[{k}].')
+        return groups
+
+
+def data_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version < 2:
         cfg_dict['type_hint'] = 'image_data'
+    elif version < 3:
+        cfg_dict['img_channels'] = cfg_dict.get('img_channels')
     return cfg_dict
 
 
@@ -273,6 +327,8 @@ class DataConfig(Config):
         None,
         description=('Colors used to display classes. '
                      'Can be color 3-tuples in list form.'))
+    img_channels: Optional[PosInt] = Field(
+        None, description='The number of channels of the training images.')
     img_sz: PosInt = Field(
         256,
         description=
@@ -323,11 +379,13 @@ class DataConfig(Config):
     def update(self, learner: Optional['LearnerConfig'] = None):
         if not self.class_colors:
             self.class_colors = [color_to_triple() for _ in self.class_names]
+        self.plot_options.update(self)
 
     def validate_augmentors(self):
         self.validate_list('augmentors', augmentors)
 
     def validate_config(self):
+        self.validate_augmentors()
         self.validate_augmentors()
 
     def make_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
@@ -521,7 +579,7 @@ class GeoDataConfig(DataConfig):
     def validate_config(self, *args, **kwargs):
         super().validate_config(*args, **kwargs)
         if isinstance(self.window_opts, dict):
-            scenes = self.scene_dataset.get_all_scenes()
+            scenes = self.scene_dataset.all_scenes
             for s in scenes:
                 if s.id not in self.window_opts:
                     raise ConfigError(

@@ -163,7 +163,7 @@ class SemanticSegmentationLearner(Learner):
         if batch_sz == 0:
             return
 
-        channel_groups = self.cfg.data.channel_display_groups
+        channel_groups = self.cfg.data.plot_options.channel_display_groups
 
         nrows = batch_sz
         # one col for each group + 1 for labels + 1 for predictions
@@ -206,14 +206,7 @@ class SemanticSegmentationLearner(Learner):
                  y: Union[torch.Tensor, np.ndarray],
                  z: Optional[torch.Tensor] = None) -> None:
 
-        channel_groups = self.cfg.data.channel_display_groups
-
-        # make subplot titles
-        if not isinstance(channel_groups, dict):
-            channel_groups = {
-                f'Channels: {[*chs]}': chs
-                for chs in channel_groups
-            }
+        channel_groups = self.cfg.data.plot_options.channel_display_groups
 
         fig, ax = ax
         img_axes = ax[:len(channel_groups)]
