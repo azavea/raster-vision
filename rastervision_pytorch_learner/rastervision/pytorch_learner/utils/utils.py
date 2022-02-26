@@ -1,4 +1,5 @@
-from typing import Tuple, Optional, Union
+from typing import Dict, Sequence, Tuple, Optional, Union, List, Iterable
+import logging
 
 import torch
 from torch import nn
@@ -9,6 +10,8 @@ from albumentations.core.transforms_interface import ImageOnlyTransform
 import cv2
 
 from rastervision.pipeline.config import ConfigError
+
+log = logging.getLogger(__name__)
 
 
 def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
@@ -219,3 +222,36 @@ def adjust_conv_channels(old_conv: nn.Conv2d,
         return new_conv
     else:
         raise ConfigError(f'Something went wrong.')
+
+
+def plot_channel_groups(axs: Iterable,
+                        imgs: Iterable[Union[np.array, torch.Tensor]],
+                        channel_groups: dict) -> None:
+    for title, ax, img in zip(channel_groups.keys(), axs, imgs):
+        ax.imshow(img)
+        ax.set_title(title)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+
+def channel_groups_to_imgs(
+        x: torch.Tensor,
+        channel_groups: Dict[str, Sequence[int]]) -> List[torch.Tensor]:
+    imgs = []
+    for title, ch_inds in channel_groups.items():
+        img = x[..., ch_inds]
+        if len(ch_inds) == 1:
+            # repeat single channel 3 times
+            img = img.expand(-1, -1, 3)
+        elif len(ch_inds) == 2:
+            # add a 3rd channel with all pixels set to 0.5
+            h, w, _ = x.shape
+            third_channel = torch.full((h, w, 1), fill_value=.5)
+            img = torch.cat((img, third_channel), dim=-1)
+        elif len(ch_inds) > 3:
+            # only use the first 3 channels
+            log.warn(f'Only plotting first 3 channels of channel-group '
+                     f'{title}: {ch_inds}.')
+            img = x[..., ch_inds[:3]]
+        imgs.append(img)
+    return imgs

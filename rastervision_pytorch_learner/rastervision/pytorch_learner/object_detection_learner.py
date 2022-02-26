@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Sequence
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
@@ -14,9 +14,10 @@ from torchvision.models.detection.faster_rcnn import FasterRCNN
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.utils.utils import adjust_conv_channels
+from rastervision.pytorch_learner.utils.utils import (
+    adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
 from rastervision.pytorch_learner.object_detection_utils import (
-    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, plot_xyz)
+    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, draw_boxes)
 
 log = logging.getLogger(__name__)
 
@@ -161,15 +162,21 @@ class ObjectDetectionLearner(Learner):
             })
         return numpy_out
 
-    def plot_xyz(self, ax, x, y, z=None):
-        data_cfg = self.cfg.data
-        plot_xyz(
-            ax,
-            x,
-            y,
-            class_names=data_cfg.class_names,
-            class_colors=data_cfg.class_colors,
-            z=z)
+    def plot_xyz(self,
+                 axs: Sequence,
+                 x: torch.Tensor,
+                 y: BoxList,
+                 z: Optional[BoxList] = None) -> None:
+
+        y = y if z is None else z
+        channel_groups = self.cfg.data.plot_options.channel_display_groups
+
+        class_names = self.cfg.data.class_names
+        class_colors = self.cfg.data.class_colors
+
+        imgs = channel_groups_to_imgs(x, channel_groups)
+        imgs = [draw_boxes(img, y, class_names, class_colors) for img in imgs]
+        plot_channel_groups(axs, imgs, channel_groups)
 
     def prob_to_pred(self, x):
         return x

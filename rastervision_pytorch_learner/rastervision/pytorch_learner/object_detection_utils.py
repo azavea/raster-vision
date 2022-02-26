@@ -250,19 +250,10 @@ def collate_fn(data: Iterable[Sequence]) -> Tuple[torch.Tensor, List[BoxList]]:
     return x, y
 
 
-def plot_xyz(ax,
-             x: torch.Tensor,
-             y: BoxList,
-             class_names: Sequence[str],
-             class_colors: Sequence[str],
-             z: Optional[BoxList] = None) -> None:
-
-    x = x.permute(2, 0, 1)
-    # convert image to uint8
-    if x.is_floating_point():
-        img = (x * 255).byte()
-    y = y if z is None else z
-
+def draw_boxes(x: torch.Tensor, y: BoxList, class_names: Sequence[str],
+               class_colors: Sequence[str]) -> torch.Tensor:
+    """Given an image and a BoxList, draw the boxes in the BoxList on the
+    image."""
     boxes = y.boxes
     class_ids: np.ndarray = y.get_field('class_ids').numpy()
     scores: Optional[torch.Tensor] = y.get_field('scores')
@@ -278,15 +269,19 @@ def plot_xyz(ax,
             for c in np.array(class_colors)[class_ids]
         ]
 
-        img = draw_bounding_boxes(
-            image=img,
+        # convert image to uint8
+        if x.is_floating_point():
+            x = (x * 255).byte()
+        x = x.permute(2, 0, 1)
+        x = draw_bounding_boxes(
+            image=x,
             boxes=boxes,
             labels=box_annotations,
             colors=box_colors,
             width=2)
+        x = x.permute(1, 2, 0) / 255.
 
-    ax.imshow(img.permute(1, 2, 0))
-    ax.axis('off')
+    return x
 
 
 class TorchVisionODAdapter(nn.Module):
