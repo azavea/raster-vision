@@ -27,7 +27,7 @@ def classification_transformer(inp: Tuple[Any, Any],
     if transform is not None:
         out = transform(image=x)
         x = out['image']
-    y = y.astype(np.long)
+    y = y.astype(int)
     return x, y
 
 
@@ -171,7 +171,7 @@ def semantic_segmentation_transformer(inp: Tuple[Any, Any],
     if transform is not None:
         out = transform(image=x, mask=y)
         x, y = out['image'], out['mask']
-    y = y.astype(np.long)
+    y = y.astype(int)
     return x, y
 
 
