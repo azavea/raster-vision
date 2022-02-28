@@ -13,6 +13,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from rastervision.pytorch_learner.learner import Learner
+from rastervision.pytorch_learner.utils.utils import adjust_conv_channels
+from rastervision.pipeline.config import ConfigError
 
 
 class RegressionModel(nn.Module):
@@ -43,7 +45,8 @@ class RegressionModel(nn.Module):
 class RegressionLearner(Learner):
     def build_model(self):
         pretrained = self.cfg.model.pretrained
-        backbone = self.cfg.model.get_backbone_str()
+        backbone_name = self.cfg.model.get_backbone_str()
+        in_channels = self.cfg.data.img_channels
         out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
             self.cfg.data.class_names.index(l)
@@ -54,11 +57,31 @@ class RegressionLearner(Learner):
             for l in self.cfg.data.prob_class_names
         ]
         model = RegressionModel(
-            backbone,
+            backbone_name,
             out_features,
             pretrained=pretrained,
             pos_out_inds=pos_out_inds,
             prob_out_inds=prob_out_inds)
+
+        if in_channels != 3:
+            if not backbone_name.startswith('resnet'):
+                raise ConfigError(
+                    'All TorchVision backbones do not provide the same API '
+                    'for accessing the first conv layer. '
+                    'Therefore, conv layer modification to support '
+                    'arbitrary input channels is only supported for resnet '
+                    'backbones. To use other backbones, it is recommended to '
+                    'fork the TorchVision repo, define factory functions or '
+                    'subclasses that perform the necessary modifications, and '
+                    'then use the external model functionality to import it '
+                    'into Raster Vision. See spacenet_rio.py for an example '
+                    'of how to import external models. Alternatively, you can '
+                    'override this function.')
+            model.backbone.conv1 = adjust_conv_channels(
+                old_conv=model.backbone.conv1,
+                in_channels=in_channels,
+                pretrained=pretrained)
+
         return model
 
     def on_overfit_start(self):
