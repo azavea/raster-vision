@@ -1,13 +1,16 @@
+from typing import Callable
 import unittest
 
 import torch
 from torch import nn
 import numpy as np
+from matplotlib import pyplot as plt
 
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat, compute_conf_mat_metrics, MinMaxNormalize,
     adjust_conv_channels, Parallel, SplitTensor, AddTensors,
-    validate_albumentation_transform, ConfigError, A, color_to_triple)
+    validate_albumentation_transform, ConfigError, A, color_to_triple,
+    channel_groups_to_imgs, plot_channel_groups)
 
 
 class TestComputeConfMat(unittest.TestCase):
@@ -216,6 +219,12 @@ class TestAdjustConvChannels(unittest.TestCase):
 
 
 class TestOtherUtils(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception as e:
+            self.fail(msg)
+
     def test_color_to_triple(self):
         rgb = color_to_triple()
         self.assertEqual(len(rgb), 3)
@@ -233,6 +242,38 @@ class TestOtherUtils(unittest.TestCase):
         tf_dict = {'a': 1}
         self.assertRaises(ConfigError,
                           lambda: validate_albumentation_transform(tf_dict))
+
+    def test_channel_groups_to_imgs(self):
+        imgs = channel_groups_to_imgs(
+            torch.rand((100, 100, 3)), {'RGB': (0, 1, 2)})
+        self.assertEqual(len(imgs), 1)
+        self.assertEqual(imgs[0].shape, (100, 100, 3))
+
+        imgs = channel_groups_to_imgs(
+            torch.rand((100, 100, 6)), {
+                'RGB': (0, 1, 2),
+                'HSV': (3, 4, 5),
+                'RBV': (0, 2, 5)
+            })
+        self.assertEqual(len(imgs), 3)
+        self.assertTrue(all(img.shape == (100, 100, 3) for img in imgs))
+
+    def test_plot_channel_groups(self):
+        channel_groups = {'RGB': (0, 1, 2)}
+        imgs = channel_groups_to_imgs(
+            torch.rand((100, 100, 3)), channel_groups)
+        _, axs = plt.subplots(1, 1, squeeze=False)
+        self.assertNoError(
+            lambda: plot_channel_groups(axs[0], imgs, channel_groups))
+        plt.close('all')
+
+        channel_groups = {'RGB': (0, 1, 2), 'HSV': (3, 4, 5), 'RBV': (0, 2, 5)}
+        imgs = channel_groups_to_imgs(
+            torch.rand((100, 100, 6)), channel_groups)
+        _, axs = plt.subplots(1, 3, squeeze=False)
+        self.assertNoError(
+            lambda: plot_channel_groups(axs[0], imgs, channel_groups))
+        plt.close('all')
 
 
 if __name__ == '__main__':

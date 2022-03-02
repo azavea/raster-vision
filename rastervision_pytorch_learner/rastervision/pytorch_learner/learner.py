@@ -9,7 +9,7 @@ import shutil
 import os
 import sys
 import logging
-from subprocess import Popen, call
+from subprocess import Popen
 import psutil
 import numbers
 import zipfile
@@ -68,13 +68,17 @@ def log_system_details():
     log.info(f'Python version: {sys.version}')
     # nvidia GPU
     try:
-        log.info(os.popen('nvcc --version').read())
-        log.info(os.popen('nvidia-smi').read())
+        with os.popen('nvcc --version') as f:
+            log.info(f.read())
+        with os.popen('nvidia-smi') as f:
+            log.info(f.read())
         log.info('Devices:')
-        call([
+        device_query = ' '.join([
             'nvidia-smi', '--format=csv',
             '--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free'
         ])
+        with os.popen(device_query) as f:
+            log.info(f.read())
     except FileNotFoundError:
         pass
     # pytorch and CUDA
@@ -126,6 +130,7 @@ class Learner(ABC):
                 Defaults to True.
         """
         log_system_details()
+
         self.cfg = cfg
         self.tmp_dir = tmp_dir
 
