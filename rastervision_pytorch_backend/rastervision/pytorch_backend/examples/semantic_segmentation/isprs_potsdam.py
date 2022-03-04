@@ -180,10 +180,11 @@ def get_config(runner,
             img_sz=img_sz,
             img_channels=len(channel_order),
             num_workers=4,
-            channel_display_groups=channel_display_groups,
             base_transform=base_transform,
             aug_transform=aug_transform,
-            plot_options=PlotOptions(transform=plot_transform))
+            plot_options=PlotOptions(
+                transform=plot_transform,
+                channel_display_groups=channel_display_groups))
     else:
         data = SemanticSegmentationImageDataConfig(
             img_sz=img_sz,
@@ -191,7 +192,9 @@ def get_config(runner,
             channel_display_groups=channel_display_groups,
             base_transform=base_transform,
             aug_transform=aug_transform,
-            plot_options=PlotOptions(transform=plot_transform))
+            plot_options=PlotOptions(
+                transform=plot_transform,
+                channel_display_groups=channel_display_groups))
 
     if external_model:
         class_config.ensure_null_class()
@@ -230,7 +233,6 @@ def get_config(runner,
         root_uri=root_uri,
         dataset=scene_dataset,
         backend=backend,
-        channel_display_groups=channel_display_groups,
         train_chip_sz=chip_sz,
         predict_chip_sz=chip_sz,
         chip_options=chip_options)
