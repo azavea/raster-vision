@@ -1,9 +1,13 @@
-from typing import Optional, List
+from typing import TYPE_CHECKING, Optional, List
 from os.path import join
 
 from rastervision.core.data.label_store import (LabelStoreConfig,
                                                 SemanticSegmentationLabelStore)
 from rastervision.pipeline.config import register_config, Config, Field
+
+if TYPE_CHECKING:
+    from rastervision.core.data import SceneConfig  # noqa
+    from rastervision.core.rv_pipeline import RVPipelineConfig  # noqa
 
 
 @register_config('vector_output')
@@ -23,12 +27,17 @@ class VectorOutputConfig(Config):
         ('Radius of the structural element used to remove high-frequency signals from '
          'the image.'))
 
-    def update(self, pipeline=None, scene=None):
+    def update(self,
+               pipeline: Optional['RVPipelineConfig'] = None,
+               scene: Optional['SceneConfig'] = None,
+               uri_prefix: Optional[str] = None):
         if self.uri is None:
-            if pipeline and scene:
-                mode = self.get_mode()
-                class_id = self.class_id
-                filename = f'{mode}-{class_id}.json'
+            mode = self.get_mode()
+            class_id = self.class_id
+            filename = f'{mode}-{class_id}.json'
+            if uri_prefix is not None:
+                self.uri = join(uri_prefix, 'vector_output', filename)
+            elif pipeline and scene:
                 self.uri = join(pipeline.predict_uri, scene.id,
                                 'vector_output', filename)
 
@@ -127,7 +136,9 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
 
         return label_store
 
-    def update(self, pipeline=None, scene=None):
+    def update(self,
+               pipeline: Optional['RVPipelineConfig'] = None,
+               scene: Optional['SceneConfig'] = None):
         if pipeline is not None and scene is not None:
             if self.uri is None:
                 self.uri = join(pipeline.predict_uri, f'{scene.id}')
