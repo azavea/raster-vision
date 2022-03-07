@@ -244,7 +244,7 @@ class RasterioSource(ActivateMixin, RasterSource):
         # Download images to temporary directory and delete them when done.
         if self.image_tmp_dir is None:
             self.image_tmp_dir = TemporaryDirectory(dir=self.tmp_dir)
-        self.imagery_path = self._download_data(self.image_tmp_dir)
+        self.imagery_path = self._download_data(self.image_tmp_dir.name)
         self.image_dataset = rasterio.open(self.imagery_path)
         self._set_crs_transformer()
 

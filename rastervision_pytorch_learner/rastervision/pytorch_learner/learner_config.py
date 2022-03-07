@@ -386,7 +386,6 @@ class DataConfig(Config):
 
     def validate_config(self):
         self.validate_augmentors()
-        self.validate_augmentors()
 
     def make_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
         raise NotImplementedError()
