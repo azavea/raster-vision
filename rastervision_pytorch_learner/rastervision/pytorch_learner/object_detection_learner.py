@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Sequence
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
@@ -14,8 +14,10 @@ from torchvision.models.detection.faster_rcnn import FasterRCNN
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 
 from rastervision.pytorch_learner.learner import Learner
+from rastervision.pytorch_learner.utils.utils import (
+    adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
 from rastervision.pytorch_learner.object_detection_utils import (
-    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, plot_xyz)
+    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, draw_boxes)
 
 log = logging.getLogger(__name__)
 
@@ -32,11 +34,36 @@ class ObjectDetectionLearner(Learner):
             FasterRCNN: a FasterRCNN model.
         """
         pretrained = self.cfg.model.pretrained
+        backbone_arch = self.cfg.model.get_backbone_str()
         img_sz = self.cfg.data.img_sz
         num_classes = len(self.cfg.data.class_names)
-        backbone_arch = self.cfg.model.get_backbone_str()
+        in_channels = self.cfg.data.img_channels
 
         backbone = resnet_fpn_backbone(backbone_arch, pretrained)
+
+        # default values from FasterRCNN constructor
+        image_mean = [0.485, 0.456, 0.406]
+        image_std = [0.229, 0.224, 0.225]
+
+        if in_channels != 3:
+            extra_channels = in_channels - backbone.body['conv1'].in_channels
+
+            # adjust channels
+            backbone.body['conv1'] = adjust_conv_channels(
+                old_conv=backbone.body['conv1'],
+                in_channels=in_channels,
+                pretrained=pretrained)
+
+            # adjust stats
+            if extra_channels < 0:
+                image_mean = image_mean[:extra_channels]
+                image_std = image_std[:extra_channels]
+            else:
+                # arbitrarily set mean and stds of the new channels to
+                # something similar to the values of the other 3 channels
+                image_mean = image_mean + [.45] * extra_channels
+                image_std = image_std + [.225] * extra_channels
+
         model = FasterRCNN(
             backbone=backbone,
             # +1 because torchvision detection models reserve 0 for the null
@@ -45,7 +72,9 @@ class ObjectDetectionLearner(Learner):
             num_classes=num_classes + 1 + 1,
             # TODO we shouldn't need to pass the image size here
             min_size=img_sz,
-            max_size=img_sz)
+            max_size=img_sz,
+            image_mean=image_mean,
+            image_std=image_std)
         return model
 
     def setup_model(self, model_def_path: Optional[str] = None) -> None:
@@ -133,15 +162,21 @@ class ObjectDetectionLearner(Learner):
             })
         return numpy_out
 
-    def plot_xyz(self, ax, x, y, z=None):
-        data_cfg = self.cfg.data
-        plot_xyz(
-            ax,
-            x,
-            y,
-            class_names=data_cfg.class_names,
-            class_colors=data_cfg.class_colors,
-            z=z)
+    def plot_xyz(self,
+                 axs: Sequence,
+                 x: torch.Tensor,
+                 y: BoxList,
+                 z: Optional[BoxList] = None) -> None:
+
+        y = y if z is None else z
+        channel_groups = self.cfg.data.plot_options.channel_display_groups
+
+        class_names = self.cfg.data.class_names
+        class_colors = self.cfg.data.class_colors
+
+        imgs = channel_groups_to_imgs(x, channel_groups)
+        imgs = [draw_boxes(img, y, class_names, class_colors) for img in imgs]
+        plot_channel_groups(axs, imgs, channel_groups)
 
     def prob_to_pred(self, x):
         return x

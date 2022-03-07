@@ -1,26 +1,62 @@
-from typing import Optional
+from typing import Optional, Tuple, List, Dict
+from os.path import join
+from collections import defaultdict
 import logging
 
 import albumentations as A
 import numpy as np
+from torch.utils.data import Dataset
 
 from rastervision.core.box import Box
+from rastervision.pipeline.file_system import file_to_json
 from rastervision.core.data.label import ObjectDetectionLabels
-from rastervision.pytorch_learner.object_detection_utils import CocoDataset
-from rastervision.pytorch_learner.dataset import (TransformType, ImageDataset,
-                                                  SlidingWindowGeoDataset,
-                                                  RandomWindowGeoDataset)
+from rastervision.pytorch_learner.dataset import (
+    TransformType, ImageDataset, SlidingWindowGeoDataset,
+    RandomWindowGeoDataset, load_image)
 
 log = logging.getLogger(__name__)
 
 
+class CocoDataset(Dataset):
+    def __init__(self, img_dir: str, annotation_uri: str):
+        self.annotation_uri = annotation_uri
+        ann_json = file_to_json(annotation_uri)
+
+        self.img_ids: List[str] = [img['id'] for img in ann_json['images']]
+        self.img_paths = {
+            img['id']: join(img_dir, img['file_name'])
+            for img in ann_json['images']
+        }
+        self.img_anns = {id: defaultdict(list) for id in self.img_ids}
+        for ann in ann_json['annotations']:
+            img_ann = self.img_anns[ann['image_id']]
+            img_ann['bboxes'].append(ann['bbox'])
+            img_ann['category_id'].append(ann['category_id'])
+
+    def __getitem__(self, ind: int
+                    ) -> Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]]:
+        img_id = self.img_ids[ind]
+        path = self.img_paths[img_id]
+        ann: Dict[str, list] = self.img_anns[img_id]
+
+        x = load_image(path)
+        bboxes = np.array(ann['bboxes'])
+        class_ids = np.array(ann['category_id'], dtype=np.int64)
+
+        if len(bboxes) == 0:
+            bboxes = np.empty((0, 4))
+            class_ids = np.empty((0, ), dtype=np.int64)
+        return x, (bboxes, class_ids, 'xywh')
+
+    def __len__(self):
+        return len(self.img_anns)
+
+
 class ObjectDetectionImageDataset(ImageDataset):
-    def __init__(self, img_dir, annotation_uri, transform=None):
-        coco_ds = CocoDataset(img_dir, annotation_uri)
+    def __init__(self, img_dir: str, annotation_uri: str, *args, **kwargs):
+        ds = CocoDataset(img_dir, annotation_uri)
         super().__init__(
-            orig_dataset=coco_ds,
-            transform=transform,
-            transform_type=TransformType.object_detection)
+            ds, *args, **kwargs, transform_type=TransformType.object_detection)
 
 
 class ObjectDetectionSlidingWindowGeoDataset(SlidingWindowGeoDataset):

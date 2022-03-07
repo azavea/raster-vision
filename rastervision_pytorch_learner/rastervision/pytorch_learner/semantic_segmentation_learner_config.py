@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import Optional, Union
-from pydantic import PositiveInt
 
 import albumentations as A
 from torch.utils.data import Dataset
@@ -21,60 +20,52 @@ class SemanticSegmentationDataFormat(Enum):
     default = 'default'
 
 
-def ss_data_config_upgrader(cfg_dict, version):
-    if version == 1:
+def ss_data_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version < 2:
         cfg_dict['type_hint'] = 'semantic_segmentation_image_data'
+    elif version < 3:
+        try:
+            # removed in version 3
+            del cfg_dict['img_channels']
+            del cfg_dict['channel_display_groups']
+        except KeyError:
+            pass
+    return cfg_dict
+
+
+def ss_image_data_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version < 3:
+        try:
+            # removed in version 3
+            del cfg_dict['img_format']
+            del cfg_dict['label_format']
+            del cfg_dict['channel_display_groups']
+        except KeyError:
+            pass
     return cfg_dict
 
 
 @register_config(
     'semantic_segmentation_data', upgrader=ss_data_config_upgrader)
 class SemanticSegmentationDataConfig(Config):
-    img_channels: PositiveInt = Field(
-        3, description='The number of channels of the training images.')
-    channel_display_groups: Optional[Union[dict, list, tuple]] = Field(
-        None,
-        description=
-        ('Groups of image channels to display together as a subplot '
-         'when plotting the data and predictions. '
-         'Can be a list or tuple of groups (e.g. [(0, 1, 2), (3,)]) or a dict '
-         'containing title-to-group mappings '
-         '(e.g. {"RGB": [0, 1, 2], "IR": [3]}), '
-         'where each group is a list or tuple of channel indices and title '
-         'is a string that will be used as the title of the subplot '
-         'for that group.'))
-
-    def update(self):
-        if self.channel_display_groups is None:
-            self.channel_display_groups = {
-                'Input': tuple(range(self.img_channels))
-            }
+    pass
 
 
-@register_config('semantic_segmentation_image_data')
+@register_config(
+    'semantic_segmentation_image_data', upgrader=ss_image_data_config_upgrader)
 class SemanticSegmentationImageDataConfig(SemanticSegmentationDataConfig,
                                           ImageDataConfig):
     data_format: SemanticSegmentationDataFormat = (
         SemanticSegmentationDataFormat.default)
 
-    img_format: Optional[str] = Field(
-        None, description='The filetype of the training images.')
-    label_format: Optional[str] = Field(
-        None, description='The filetype of the training labels.')
-
     def update(self, *args, **kwargs):
         SemanticSegmentationDataConfig.update(self)
         ImageDataConfig.update(self, *args, **kwargs)
-        if self.img_format is None:
-            self.img_format = 'png' if self.img_channels == 3 else 'npy'
 
     def dir_to_dataset(self, data_dir: str,
                        transform: A.BasicTransform) -> Dataset:
         ds = SemanticSegmentationImageDataset(
-            data_dir=data_dir,
-            img_fmt=self.img_format,
-            label_fmt=self.label_format,
-            transform=transform)
+            data_dir=data_dir, transform=transform)
         return ds
 
 

@@ -1,10 +1,14 @@
 from typing import Optional, List
+from tempfile import TemporaryDirectory
+import logging
 
 from rastervision.pipeline.config import (register_config, Field)
 from rastervision.core.backend import BackendConfig
-from rastervision.core.rv_pipeline import RVPipeline
+from rastervision.core.rv_pipeline import RVPipelineConfig
 from rastervision.pytorch_learner.learner_config import (
     SolverConfig, ModelConfig, DataConfig, ImageDataConfig, GeoDataConfig)
+
+log = logging.getLogger(__name__)
 
 
 @register_config('pytorch_learner_backend')
@@ -27,21 +31,27 @@ class PyTorchLearnerBackendConfig(BackendConfig):
     def get_bundle_filenames(self):
         return ['model-bundle.zip']
 
-    def update(self, pipeline: Optional[RVPipeline] = None):
+    def update(self, pipeline: Optional[RVPipelineConfig] = None):
         super().update(pipeline=pipeline)
 
         if isinstance(self.data, ImageDataConfig):
             if self.data.uri is None and self.data.group_uris is None:
                 self.data.uri = pipeline.chip_uri
+
         if not self.data.class_names:
             self.data.class_names = pipeline.dataset.class_config.names
         if not self.data.class_colors:
             self.data.class_colors = pipeline.dataset.class_config.colors
 
-    def get_learner_config(self, pipeline: Optional[RVPipeline]):
+        if not self.data.img_channels:
+            self.data.img_channels = self.get_img_channels(pipeline)
+
+        self.data.update()
+
+    def get_learner_config(self, pipeline: Optional[RVPipelineConfig]):
         raise NotImplementedError()
 
-    def build(self, pipeline: Optional[RVPipeline], tmp_dir: str):
+    def build(self, pipeline: Optional[RVPipelineConfig], tmp_dir: str):
         raise NotImplementedError()
 
     def filter_commands(self, commands: List[str]) -> List[str]:
@@ -49,3 +59,25 @@ class PyTorchLearnerBackendConfig(BackendConfig):
         if nochip and 'chip' in commands:
             commands = [c for c in commands if c != 'chip']
         return commands
+
+    def get_img_channels(self, pipeline_cfg: RVPipelineConfig) -> int:
+        """Determine img_channels from scenes."""
+        all_scenes = pipeline_cfg.dataset.all_scenes
+        if len(all_scenes) == 0:
+            return 3
+        for scene_cfg in all_scenes:
+            if scene_cfg.raster_source.channel_order is not None:
+                return len(scene_cfg.raster_source.channel_order)
+        log.info(
+            'Could not determine number of image channels from '
+            'DataConfig.img_channels or RasterSourceConfig.channel_order. '
+            'Building first scene to figure it out. This might take some '
+            'time. To avoid this, specify one of the above.')
+        with TemporaryDirectory() as tmp_dir:
+            scene = all_scenes[0].build(
+                pipeline_cfg.dataset.class_config,
+                tmp_dir,
+                use_transformers=True)
+            with scene.activate():
+                img_channels = scene.raster_source.num_channels
+        return img_channels

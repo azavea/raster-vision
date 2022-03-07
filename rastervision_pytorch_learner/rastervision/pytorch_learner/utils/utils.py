@@ -1,4 +1,5 @@
-from typing import Tuple, Optional
+from typing import Dict, Sequence, Tuple, Optional, Union, List, Iterable
+import logging
 
 import torch
 from torch import nn
@@ -9,6 +10,8 @@ from albumentations.core.transforms_interface import ImageOnlyTransform
 import cv2
 
 from rastervision.pipeline.config import ConfigError
+
+log = logging.getLogger(__name__)
 
 
 def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
@@ -170,3 +173,85 @@ class MinMaxNormalize(ImageOnlyTransform):
 
     def get_transform_init_args_names(self):
         return ('min_val', 'max_val', 'dtype')
+
+
+def adjust_conv_channels(old_conv: nn.Conv2d,
+                         in_channels: int,
+                         pretrained: bool = True
+                         ) -> Union[nn.Conv2d, nn.Sequential]:
+
+    if in_channels == old_conv.in_channels:
+        return old_conv
+
+    # These parameters will be the same for the new conv layer.
+    # This list should be kept up to date with the Conv2d definition.
+    old_conv_args = {
+        'out_channels': old_conv.out_channels,
+        'kernel_size': old_conv.kernel_size,
+        'stride': old_conv.stride,
+        'padding': old_conv.padding,
+        'dilation': old_conv.dilation,
+        'groups': old_conv.groups,
+        'bias': old_conv.bias is not None,
+        'padding_mode': old_conv.padding_mode
+    }
+
+    if not pretrained:
+        # simply replace the first conv layer with one with the
+        # correct number of input channels
+        new_conv = nn.Conv2d(in_channels=in_channels, **old_conv_args)
+        return new_conv
+
+    if in_channels > old_conv.in_channels:
+        # insert a new conv layer parallel to the existing one
+        # and sum their outputs
+        extra_channels = in_channels - old_conv.in_channels
+        extra_conv = nn.Conv2d(in_channels=extra_channels, **old_conv_args)
+        new_conv = nn.Sequential(
+            # split input along channel dim
+            SplitTensor((old_conv.in_channels, extra_channels), dim=1),
+            # each split goes to its respective conv layer
+            Parallel(old_conv, extra_conv),
+            # sum the parallel outputs
+            AddTensors())
+        return new_conv
+    elif in_channels < old_conv.in_channels:
+        new_conv = nn.Conv2d(in_channels=in_channels, **old_conv_args)
+        pretrained_kernels = old_conv.weight.data[:, :in_channels]
+        new_conv.weight.data[:, :in_channels] = pretrained_kernels
+        return new_conv
+    else:
+        raise ConfigError(f'Something went wrong.')
+
+
+def plot_channel_groups(axs: Iterable,
+                        imgs: Iterable[Union[np.array, torch.Tensor]],
+                        channel_groups: dict) -> None:
+    for title, ax, img in zip(channel_groups.keys(), axs, imgs):
+        ax.imshow(img)
+        ax.set_title(title)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+
+def channel_groups_to_imgs(
+        x: torch.Tensor,
+        channel_groups: Dict[str, Sequence[int]]) -> List[torch.Tensor]:
+    imgs = []
+    for title, ch_inds in channel_groups.items():
+        img = x[..., ch_inds]
+        if len(ch_inds) == 1:
+            # repeat single channel 3 times
+            img = img.expand(-1, -1, 3)
+        elif len(ch_inds) == 2:
+            # add a 3rd channel with all pixels set to 0.5
+            h, w, _ = x.shape
+            third_channel = torch.full((h, w, 1), fill_value=.5)
+            img = torch.cat((img, third_channel), dim=-1)
+        elif len(ch_inds) > 3:
+            # only use the first 3 channels
+            log.warn(f'Only plotting first 3 channels of channel-group '
+                     f'{title}: {ch_inds}.')
+            img = x[..., ch_inds[:3]]
+        imgs.append(img)
+    return imgs

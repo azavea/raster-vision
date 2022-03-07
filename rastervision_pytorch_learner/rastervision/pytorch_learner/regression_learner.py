@@ -1,3 +1,4 @@
+from typing import Optional, Sequence
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 from os.path import join
@@ -6,13 +7,18 @@ import matplotlib
 matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from textwrap import wrap
 
+import numpy as np
 import torch
 from torchvision import models
 import torch.nn as nn
 import torch.nn.functional as F
 
 from rastervision.pytorch_learner.learner import Learner
+from rastervision.pytorch_learner.utils.utils import (
+    adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
+from rastervision.pipeline.config import ConfigError
 
 
 class RegressionModel(nn.Module):
@@ -43,7 +49,8 @@ class RegressionModel(nn.Module):
 class RegressionLearner(Learner):
     def build_model(self):
         pretrained = self.cfg.model.pretrained
-        backbone = self.cfg.model.get_backbone_str()
+        backbone_name = self.cfg.model.get_backbone_str()
+        in_channels = self.cfg.data.img_channels
         out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
             self.cfg.data.class_names.index(l)
@@ -54,11 +61,31 @@ class RegressionLearner(Learner):
             for l in self.cfg.data.prob_class_names
         ]
         model = RegressionModel(
-            backbone,
+            backbone_name,
             out_features,
             pretrained=pretrained,
             pos_out_inds=pos_out_inds,
             prob_out_inds=prob_out_inds)
+
+        if in_channels != 3:
+            if not backbone_name.startswith('resnet'):
+                raise ConfigError(
+                    'All TorchVision backbones do not provide the same API '
+                    'for accessing the first conv layer. '
+                    'Therefore, conv layer modification to support '
+                    'arbitrary input channels is only supported for resnet '
+                    'backbones. To use other backbones, it is recommended to '
+                    'fork the TorchVision repo, define factory functions or '
+                    'subclasses that perform the necessary modifications, and '
+                    'then use the external model functionality to import it '
+                    'into Raster Vision. See spacenet_rio.py for an example '
+                    'of how to import external models. Alternatively, you can '
+                    'override this function.')
+            model.backbone.conv1 = adjust_conv_channels(
+                old_conv=model.backbone.conv1,
+                in_channels=in_channels,
+                pretrained=pretrained)
+
         return model
 
     def on_overfit_start(self):
@@ -106,26 +133,72 @@ class RegressionLearner(Learner):
     def prob_to_pred(self, x):
         return x
 
-    def plot_xyz(self, ax, x, y, z=None):
-        if x.shape[2] == 1:
-            x = torch.cat([x for _ in range(3)], dim=2)
-        ax.imshow(x)
+    def get_plot_ncols(self, **kwargs) -> int:
+        ncols = len(self.cfg.data.plot_options.channel_display_groups) + 1
+        return ncols
 
-        title = 'true: '
-        for _y in y:
-            title += '{:.2f} '.format(_y)
-        if z is not None:
-            title += '\npred: '
-            for _z in z:
-                title += '{:.2f} '.format(_z)
-        ax.set_title(title)
-        ax.axis('off')
+    def plot_xyz(self,
+                 axs: Sequence,
+                 x: torch.Tensor,
+                 y: int,
+                 z: Optional[int] = None) -> None:
+
+        channel_groups = self.cfg.data.plot_options.channel_display_groups
+
+        img_axes = axs[:-1]
+        label_ax = axs[-1]
+
+        # plot image
+        imgs = channel_groups_to_imgs(x, channel_groups)
+        plot_channel_groups(img_axes, imgs, channel_groups)
+
+        # plot label
+        class_names = self.cfg.data.class_names
+        class_names = ['-\n-'.join(wrap(c, width=8)) for c in class_names]
+        if z is None:
+            # display targets as a horizontal bar plot
+            bars_gt = label_ax.barh(
+                y=class_names, width=y, color='lightgray', edgecolor='black')
+            # show values on the end of bars
+            label_ax.bar_label(bars_gt, fmt='%.3f', padding=3)
+
+            label_ax.set_title('Ground truth')
+        else:
+            # display targets and predictions as a grouped horizontal bar plot
+            bar_thickness = 0.35
+            y_tick_locs = np.arange(len(class_names))
+            bars_gt = label_ax.barh(
+                y=y_tick_locs + bar_thickness / 2,
+                width=y,
+                height=bar_thickness,
+                color='lightgray',
+                edgecolor='black',
+                label='true')
+            bars_pred = label_ax.barh(
+                y=y_tick_locs - bar_thickness / 2,
+                width=z,
+                height=bar_thickness,
+                color=plt.get_cmap('tab10')(0),
+                edgecolor='black',
+                label='pred')
+            # show values on the end of bars
+            label_ax.bar_label(bars_gt, fmt='%.3f', padding=3)
+            label_ax.bar_label(bars_pred, fmt='%.3f', padding=3)
+
+            label_ax.set_yticks(ticks=y_tick_locs, labels=class_names)
+            label_ax.legend(
+                ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0))
+
+        label_ax.xaxis.grid(linestyle='--', alpha=1)
+        label_ax.set_xlabel('Target value')
+        label_ax.spines['right'].set_visible(False)
+        label_ax.get_yaxis().tick_left()
 
     def eval_model(self, split):
         super().eval_model(split)
 
         y, out = self.predict_dataloader(
-            self.get_dataloader(split), return_x=False)
+            self.get_dataloader(split), return_x=False, raw_out=False)
 
         max_scatter_points = self.cfg.data.plot_options.max_scatter_points
         if y.shape[0] > max_scatter_points:

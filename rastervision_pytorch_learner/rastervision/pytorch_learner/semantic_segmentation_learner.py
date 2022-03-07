@@ -1,91 +1,61 @@
 import warnings
 warnings.filterwarnings('ignore')  # noqa
 
-from typing import Union, Iterable, Optional
+from typing import Sequence, Union, Optional
 
 import logging
 
 import numpy as np
 import matplotlib
-from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 matplotlib.use('Agg')  # noqa
-import albumentations as A
 
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torchvision import models
 
-from rastervision.pipeline.config import ConfigError
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.utils import (
-    compute_conf_mat_metrics, compute_conf_mat, color_to_triple, SplitTensor,
-    Parallel, AddTensors)
-from rastervision.pipeline.file_system import make_dir
+    compute_conf_mat_metrics, compute_conf_mat, color_to_triple,
+    adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
+from rastervision.pipeline.config import ConfigError
 
 log = logging.getLogger(__name__)
 
 
 class SemanticSegmentationLearner(Learner):
     def build_model(self) -> nn.Module:
-        # TODO support FCN option
         pretrained = self.cfg.model.pretrained
-        out_classes = len(self.cfg.data.class_names)
+        backbone_name = self.cfg.model.get_backbone_str()
+        num_classes = len(self.cfg.data.class_names)
+        in_channels = self.cfg.data.img_channels
         if self.cfg.solver.ignore_last_class:
-            out_classes -= 1
+            num_classes -= 1
         model = models.segmentation.segmentation._segm_model(
-            'deeplabv3',
-            self.cfg.model.get_backbone_str(),
-            out_classes,
-            False,
+            name='deeplabv3',
+            backbone_name=backbone_name,
+            num_classes=num_classes,
+            aux=False,
             pretrained_backbone=pretrained)
-
-        input_channels = self.cfg.data.img_channels
-        old_conv = model.backbone.conv1
-
-        if input_channels == old_conv.in_channels:
-            return model
-
-        # these parameters will be the same for the new conv layer
-        old_conv_args = {
-            'out_channels': old_conv.out_channels,
-            'kernel_size': old_conv.kernel_size,
-            'stride': old_conv.stride,
-            'padding': old_conv.padding,
-            'dilation': old_conv.dilation,
-            'groups': old_conv.groups,
-            'bias': old_conv.bias
-        }
-
-        if not pretrained:
-            # simply replace the first conv layer with one with the
-            # correct number of input channels
-            new_conv = nn.Conv2d(in_channels=input_channels, **old_conv_args)
-            model.backbone.conv1 = new_conv
-            return model
-
-        if input_channels > old_conv.in_channels:
-            # insert a new conv layer parallel to the existing one
-            # and sum their outputs
-            new_conv_channels = input_channels - old_conv.in_channels
-            new_conv = nn.Conv2d(
-                in_channels=new_conv_channels, **old_conv_args)
-            model.backbone.conv1 = nn.Sequential(
-                # split input along channel dim
-                SplitTensor((old_conv.in_channels, new_conv_channels), dim=1),
-                # each split goes to its respective conv layer
-                Parallel(old_conv, new_conv),
-                # sum the parallel outputs
-                AddTensors())
-        elif input_channels < old_conv.in_channels:
-            model.backbone.conv1 = nn.Conv2d(
-                in_channels=input_channels, **old_conv_args)
-            model.backbone.conv1.weight.data[:, :input_channels] = \
-                old_conv.weight.data[:, :input_channels]
-        else:
-            raise ConfigError(f'Something went wrong')
-
+        if in_channels != 3:
+            if not backbone_name.startswith('resnet'):
+                raise ConfigError(
+                    'All TorchVision backbones do not provide the same API '
+                    'for accessing the first conv layer. '
+                    'Therefore, conv layer modification to support '
+                    'arbitrary input channels is only supported for resnet '
+                    'backbones. To use other backbones, it is recommended to '
+                    'fork the TorchVision repo, define factory functions or '
+                    'subclasses that perform the necessary modifications, and '
+                    'then use the external model functionality to import it '
+                    'into Raster Vision. See isprs_potsdam.py for an example '
+                    'of how to import external models. Alternatively, you can '
+                    'override this function.')
+            model.backbone.conv1 = adjust_conv_channels(
+                old_conv=model.backbone.conv1,
+                in_channels=in_channels,
+                pretrained=pretrained)
         return model
 
     def build_loss(self):
@@ -169,121 +139,53 @@ class SemanticSegmentationLearner(Learner):
     def prob_to_pred(self, x):
         return x.argmax(1)
 
-    def plot_batch(self,
-                   x: torch.Tensor,
-                   y: Union[torch.Tensor, np.ndarray],
-                   output_path: str,
-                   z: Optional[torch.Tensor] = None,
-                   batch_limit: Optional[int] = None) -> None:
-        """Plot a whole batch in a grid using plot_xyz.
-
-        Args:
-            x: batch of images
-            y: ground truth labels
-            output_path: local path where to save plot image
-            z: optional predicted labels
-            batch_limit: optional limit on (rendered) batch size
-        """
-        batch_sz, c, h, w = x.shape
-        batch_sz = min(batch_sz,
-                       batch_limit) if batch_limit is not None else batch_sz
-        if batch_sz == 0:
-            return
-
-        channel_groups = self.cfg.data.channel_display_groups
-
-        nrows = batch_sz
-        # one col for each group + 1 for labels + 1 for predictions
-        ncols = len(channel_groups) + 1
+    def get_plot_ncols(self, **kwargs) -> int:
+        ncols = len(self.cfg.data.plot_options.channel_display_groups) + 1
+        z = kwargs['z']
         if z is not None:
             ncols += 1
-
-        fig, axes = plt.subplots(
-            nrows=nrows,
-            ncols=ncols,
-            squeeze=False,
-            constrained_layout=True,
-            figsize=(3 * ncols, 3 * nrows))
-
-        assert axes.shape == (nrows, ncols)
-
-        # (N, c, h, w) --> (N, h, w, c)
-        x = x.permute(0, 2, 3, 1)
-
-        # apply transform, if given
-        if self.cfg.data.plot_options.transform is not None:
-            tf = A.from_dict(self.cfg.data.plot_options.transform)
-            imgs = [tf(image=img)['image'] for img in x.numpy()]
-            x = torch.from_numpy(np.stack(imgs))
-
-        for i in range(batch_sz):
-            ax = (fig, axes[i])
-            if z is None:
-                self.plot_xyz(ax, x[i], y[i])
-            else:
-                self.plot_xyz(ax, x[i], y[i], z=z[i])
-
-        make_dir(output_path, use_dirname=True)
-        plt.savefig(output_path, bbox_inches='tight')
-        plt.close()
+        return ncols
 
     def plot_xyz(self,
-                 ax: Iterable,
+                 axs: Sequence,
                  x: torch.Tensor,
                  y: Union[torch.Tensor, np.ndarray],
                  z: Optional[torch.Tensor] = None) -> None:
 
-        channel_groups = self.cfg.data.channel_display_groups
+        channel_groups = self.cfg.data.plot_options.channel_display_groups
 
-        # make subplot titles
-        if not isinstance(channel_groups, dict):
-            channel_groups = {
-                f'Channels: {[*chs]}': chs
-                for chs in channel_groups
-            }
+        img_axes = axs[:len(channel_groups)]
+        label_ax = axs[len(channel_groups)]
 
-        fig, ax = ax
-        img_axes = ax[:len(channel_groups)]
-        label_ax = ax[len(channel_groups)]
+        # plot image
+        imgs = channel_groups_to_imgs(x, channel_groups)
+        plot_channel_groups(img_axes, imgs, channel_groups)
 
-        # plot input image(s)
-        for (title, chs), ch_ax in zip(channel_groups.items(), img_axes):
-            im = x[..., chs]
-            if len(chs) == 1:
-                # repeat single channel 3 times
-                im = im.expand(-1, -1, 3)
-            elif len(chs) == 2:
-                # add a 3rd channel with all pixels set to 0.5
-                h, w, _ = x.shape
-                third_channel = torch.full((h, w, 1), fill_value=.5)
-                im = torch.cat((im, third_channel), dim=-1)
-            elif len(chs) > 3:
-                # only use the first 3 channels
-                log.warn(f'Only plotting first 3 channels of channel-group '
-                         f'{title}: {chs}.')
-                im = x[..., chs[:3]]
-            ch_ax.imshow(im)
-            ch_ax.set_title(title)
-            ch_ax.set_xticks([])
-            ch_ax.set_yticks([])
-
+        # plot labels
         class_colors = self.cfg.data.class_colors
-        colors = [color_to_triple(c) for c in class_colors]
+        colors = [
+            color_to_triple(c) if isinstance(c, str) else c
+            for c in class_colors
+        ]
         colors = np.array(colors) / 255.
         cmap = matplotlib.colors.ListedColormap(colors)
 
-        # plot labels
         label_ax.imshow(
             y, vmin=0, vmax=len(colors), cmap=cmap, interpolation='none')
-        label_ax.set_title(f'Ground truth labels')
+        label_ax.set_title(f'Ground truth')
         label_ax.set_xticks([])
         label_ax.set_yticks([])
 
         # plot predictions
         if z is not None:
-            pred_ax = ax[-1]
+            pred_ax = axs[-1]
+            preds = z.argmax(dim=0)
             pred_ax.imshow(
-                z, vmin=0, vmax=len(colors), cmap=cmap, interpolation='none')
+                preds,
+                vmin=0,
+                vmax=len(colors),
+                cmap=cmap,
+                interpolation='none')
             pred_ax.set_title(f'Predicted labels')
             pred_ax.set_xticks([])
             pred_ax.set_yticks([])
@@ -294,7 +196,7 @@ class SemanticSegmentationLearner(Learner):
             mpatches.Patch(facecolor=col, edgecolor='black', label=name)
             for col, name in zip(colors, class_names)
         ]
-        ax[-1].legend(
+        axs[-1].legend(
             handles=legend_items,
             loc='center right',
             bbox_to_anchor=(1.8, 0.5))

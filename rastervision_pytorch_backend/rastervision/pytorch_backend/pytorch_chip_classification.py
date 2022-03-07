@@ -3,7 +3,6 @@ import uuid
 
 from rastervision.pipeline.file_system import (make_dir)
 from rastervision.core.data.label import ChipClassificationLabels
-from rastervision.core.utils.misc import save_img
 from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
@@ -22,19 +21,26 @@ class PyTorchChipClassificationSampleWriter(PyTorchLearnerSampleWriter):
             return
 
         split_name = 'train' if sample.is_train else 'valid'
-        class_name = self.class_config.names[class_id]
-        class_dir = join(self.sample_dir, split_name, class_name)
-        make_dir(class_dir)
-        chip_path = join(class_dir, '{}-{}.png'.format(sample.scene_id,
-                                                       self.sample_ind))
-        save_img(sample.chip, chip_path)
+        img_path = self.get_image_path(split_name, sample, class_id)
+        self.write_chip(sample.chip, img_path)
+
         self.sample_ind += 1
+
+    def get_image_path(self, split_name: str, sample: DataSample,
+                       class_id: int) -> str:
+        class_name = self.class_config.names[class_id]
+        img_dir = join(self.sample_dir, split_name, class_name)
+        make_dir(img_dir)
+
+        sample_name = f'{sample.scene_id}-{self.sample_ind}'
+        ext = self.get_image_ext(sample.chip)
+        img_path = join(img_dir, f'{sample_name}.{ext}')
+        return img_path
 
 
 class PyTorchChipClassification(PyTorchLearnerBackend):
     def get_sample_writer(self):
-        output_uri = join(self.pipeline_cfg.chip_uri, '{}.zip'.format(
-            str(uuid.uuid4())))
+        output_uri = join(self.pipeline_cfg.chip_uri, f'{uuid.uuid4()}.zip')
         return PyTorchChipClassificationSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 

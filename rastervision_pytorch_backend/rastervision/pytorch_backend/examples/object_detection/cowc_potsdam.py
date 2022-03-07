@@ -24,6 +24,7 @@ def get_config(runner,
                processed_uri: str,
                root_uri: str,
                nochip: bool = True,
+               multiband: bool = False,
                external_model: bool = False,
                test: bool = False) -> ObjectDetectionConfig:
     """Generate the pipeline config for this task. This function will be called
@@ -39,10 +40,15 @@ def get_config(runner,
             training instead of from pre-generated chips. The analyze and chip
             commands should not be run, if this is set to True. Defaults to
             False.
+        multiband (bool, optional): If True, all 4 channels (R, G, B, & IR)
+            available in the raster source will be used. If False, only
+            IR, R, G (in that order) will be used. Defaults to False.
+        external_model (bool, optional): If True, use an external model defined
+            by the ExternalModuleConfig. Defaults to True.
         test (bool, optional): If True, does the following simplifications:
             (1) Uses only the first 2 scenes
             (2) Uses only a 2000x2000 crop of the scenes
-            (2) Enables test mode in the learner, which makes it use the
+            (3) Enables test mode in the learner, which makes it use the
                 test_batch_sz and test_num_epochs, among other things.
             Defaults to False.
 
@@ -56,11 +62,17 @@ def get_config(runner,
         train_ids = train_ids[:2]
         val_ids = val_ids[:2]
 
+    if multiband:
+        channel_order = [0, 1, 2, 3]
+        channel_display_groups = {'RGB': [0, 1, 2], 'IR': [3]}
+    else:
+        channel_order = [0, 1, 2]
+        channel_display_groups = None
+
     def make_scene(id: str) -> SceneConfig:
-        raster_uri = join(raw_uri,
-                          '4_Ortho_RGBIR/top_potsdam_{}_RGBIR.tif'.format(id))
+        raster_uri = join(raw_uri, f'4_Ortho_RGBIR/top_potsdam_{id}_RGBIR.tif')
         label_uri = join(processed_uri, 'labels', 'all',
-                         'top_potsdam_{}_RGBIR.json'.format(id))
+                         f'top_potsdam_{id}_RGBIR.json')
 
         if test:
             crop_uri = join(processed_uri, 'crops',
@@ -74,7 +86,7 @@ def get_config(runner,
             raster_uri = crop_uri
 
         raster_source = RasterioSourceConfig(
-            uris=[raster_uri], channel_order=[0, 1, 2])
+            uris=[raster_uri], channel_order=channel_order)
 
         vector_source = GeoJSONVectorSourceConfig(
             uri=label_uri, default_class_id=0, ignore_crs_field=True)
@@ -94,7 +106,6 @@ def get_config(runner,
     img_sz = chip_sz
 
     chip_options = ObjectDetectionChipOptions(neg_ratio=5.0, ioa_thresh=0.9)
-
     if nochip:
         window_opts = ObjectDetectionGeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
@@ -111,9 +122,15 @@ def get_config(runner,
             scene_dataset=scene_dataset,
             window_opts=window_opts,
             img_sz=img_sz,
-            num_workers=4)
+            num_workers=4,
+            plot_options=PlotOptions(
+                channel_display_groups=channel_display_groups))
     else:
-        data = ObjectDetectionImageDataConfig(img_sz=img_sz, num_workers=4)
+        data = ObjectDetectionImageDataConfig(
+            img_sz=img_sz,
+            num_workers=4,
+            plot_options=PlotOptions(
+                channel_display_groups=channel_display_groups))
 
     if external_model:
         """This demonstrates how to use an external model for object detection,

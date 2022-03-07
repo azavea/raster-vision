@@ -1,9 +1,8 @@
-from os.path import join
+from os.path import join, basename
 import uuid
 
-from rastervision.pipeline.file_system import (make_dir, json_to_file)
+from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.data.label import ObjectDetectionLabels
-from rastervision.core.utils.misc import save_img
 from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
@@ -56,19 +55,20 @@ class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
         (train|valid)/img/{scene_id}-{ind}.png and updates
         some COCO data structures.
         """
-        split = 'train' if sample.is_train else 'valid'
-        split_dir = join(self.sample_dir, split)
-        img_dir = join(split_dir, 'img')
-        make_dir(img_dir)
-        img_fn = '{}-{}.png'.format(sample.scene_id, self.sample_ind)
-        img_path = join(img_dir, img_fn)
-        save_img(sample.chip, img_path)
+        split_name = 'train' if sample.is_train else 'valid'
 
-        images = self.splits[split]['images']
-        annotations = self.splits[split]['annotations']
+        img_path = self.get_image_path(split_name, sample)
+        self.write_chip(sample.chip, img_path)
+        self.update_coco_data(split_name, sample, img_path)
+        self.sample_ind += 1
+
+    def update_coco_data(self, split_name: str, sample: DataSample,
+                         img_path: str):
+        images = self.splits[split_name]['images']
+        annotations = self.splits[split_name]['annotations']
 
         images.append({
-            'file_name': img_fn,
+            'file_name': basename(img_path),
             'id': self.sample_ind,
             'height': sample.chip.shape[0],
             'width': sample.chip.shape[1]
@@ -87,13 +87,10 @@ class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
                 'category_id': int(class_id)
             })
 
-        self.sample_ind += 1
-
 
 class PyTorchObjectDetection(PyTorchLearnerBackend):
     def get_sample_writer(self):
-        output_uri = join(self.pipeline_cfg.chip_uri, '{}.zip'.format(
-            str(uuid.uuid4())))
+        output_uri = join(self.pipeline_cfg.chip_uri, f'{uuid.uuid4()}.zip')
         return PyTorchObjectDetectionSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 

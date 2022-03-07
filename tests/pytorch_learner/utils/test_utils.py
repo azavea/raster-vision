@@ -1,10 +1,16 @@
+from typing import Callable
 import unittest
 
 import torch
+from torch import nn
 import numpy as np
+from matplotlib import pyplot as plt
 
 from rastervision.pytorch_learner.utils import (
-    compute_conf_mat, compute_conf_mat_metrics, MinMaxNormalize)
+    compute_conf_mat, compute_conf_mat_metrics, MinMaxNormalize,
+    adjust_conv_channels, Parallel, SplitTensor, AddTensors,
+    validate_albumentation_transform, ConfigError, A, color_to_triple,
+    channel_groups_to_imgs, plot_channel_groups)
 
 
 class TestComputeConfMat(unittest.TestCase):
@@ -124,6 +130,150 @@ class TestMinMaxNormalize(unittest.TestCase):
             self.assertAlmostEqual(out[:, :, i].min(), 0.0, 6)
             self.assertAlmostEqual(out[:, :, i].max(), 1.0, 6)
             self.assertEqual(out.dtype, np.float32)
+
+
+class TestCustomModules(unittest.TestCase):
+    @torch.inference_mode()
+    def test_parallel(self):
+        m = Parallel(*[nn.Linear(1, 1) for _ in range(5)])
+        out = m([torch.randn(10, 1) for _ in range(5)])
+        self.assertEqual(len(out), 5)
+        for o in out:
+            self.assertEqual(o.shape, (10, 1))
+
+    @torch.inference_mode()
+    def test_split_tensor(self):
+        t = torch.randn(1, 2, 3, 6, 10)
+
+        m = SplitTensor((1, 2, 3), 3)
+        ts = m(t)
+        self.assertTrue(ts[0].shape, (1, 2, 3, 1, 10))
+        self.assertTrue(ts[1].shape, (1, 2, 3, 2, 10))
+        self.assertTrue(ts[2].shape, (1, 2, 3, 3, 10))
+        self.assertTrue(torch.equal(torch.cat(ts, dim=3), t))
+
+        m = SplitTensor(2, 3)
+        ts = m(t)
+        self.assertTrue(ts[0].shape, (1, 2, 3, 2, 10))
+        self.assertTrue(ts[1].shape, (1, 2, 3, 2, 10))
+        self.assertTrue(ts[2].shape, (1, 2, 3, 2, 10))
+        self.assertTrue(torch.equal(torch.cat(ts, dim=3), t))
+
+    @torch.inference_mode()
+    def test_add_tensors(self):
+        m = AddTensors()
+        ts = [torch.randn(1, 3, 100, 100) for _ in range(5)]
+        self.assertTrue(torch.equal(m(ts), sum(ts)))
+
+
+class TestAdjustConvChannels(unittest.TestCase):
+    def _test_attribs_equal(self, old_conv: nn.Conv2d, new_conv: nn.Conv2d):
+        attribs = [
+            'out_channels', 'kernel_size', 'stride', 'padding', 'dilation',
+            'groups', 'padding_mode'
+        ]
+        for a in attribs:
+            self.assertEqual(getattr(new_conv, a), getattr(old_conv, a))
+        self.assertEqual(new_conv.bias is None, old_conv.bias is None)
+
+    def test_noop(self):
+        old_conv = nn.Conv2d(3, 64, 5)
+        for pretrained in [False, True]:
+            new_conv = adjust_conv_channels(old_conv, 3, pretrained=pretrained)
+            self.assertEqual(new_conv, old_conv)
+
+    def test_channel_reduction(self):
+        old_conv = nn.Conv2d(3, 64, 5)
+        # test pretrained=False
+        new_conv = adjust_conv_channels(old_conv, 1, pretrained=False)
+        self.assertEqual(new_conv.in_channels, 1)
+        self._test_attribs_equal(old_conv, new_conv)
+        # test pretrained=True
+        new_conv = adjust_conv_channels(old_conv, 1, pretrained=True)
+        self.assertEqual(new_conv.in_channels, 1)
+        self.assertTrue(
+            torch.equal(new_conv.weight.data, old_conv.weight.data[:, :1]))
+        self._test_attribs_equal(old_conv, new_conv)
+
+    @torch.inference_mode()
+    def test_channel_expansion(self):
+        old_conv = nn.Conv2d(3, 64, 5)
+        # test pretrained=False
+        new_conv_1 = adjust_conv_channels(old_conv, 8, pretrained=False)
+        self.assertEqual(new_conv_1.in_channels, 8)
+        self._test_attribs_equal(old_conv, new_conv_1)
+        # test pretrained=True
+        new_conv_2 = adjust_conv_channels(old_conv, 8, pretrained=True)
+        self.assertIsInstance(new_conv_2, nn.Sequential)
+        self.assertIsInstance(new_conv_2[0], SplitTensor)
+        self.assertIsInstance(new_conv_2[1], Parallel)
+        self.assertIsInstance(new_conv_2[1][0], nn.Conv2d)
+        self.assertIsInstance(new_conv_2[1][1], nn.Conv2d)
+        self.assertIsInstance(new_conv_2[2], AddTensors)
+        self.assertEqual(new_conv_2[1][0], old_conv)
+        self.assertEqual(new_conv_2[1][1].in_channels, 5)
+        out_1 = new_conv_1(torch.empty(1, 8, 100, 100))
+        out_2 = new_conv_2(torch.empty(1, 8, 100, 100))
+        self.assertEqual(out_1.shape, out_2.shape)
+        self._test_attribs_equal(old_conv, new_conv_2[1][1])
+
+
+class TestOtherUtils(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception as e:
+            self.fail(msg)
+
+    def test_color_to_triple(self):
+        rgb = color_to_triple()
+        self.assertEqual(len(rgb), 3)
+        self.assertTrue(all(0 <= c < 256 for c in rgb))
+
+        rgb = color_to_triple('red')
+        self.assertEqual(len(rgb), 3)
+        self.assertEqual(rgb, (255, 0, 0))
+
+        self.assertRaises(ValueError, lambda: color_to_triple('not_a_color'))
+
+    def test_validate_albumentation_transform(self):
+        tf_dict = A.to_dict((A.Resize(10, 10)))
+        self.assertEqual(validate_albumentation_transform(tf_dict), tf_dict)
+        tf_dict = {'a': 1}
+        self.assertRaises(ConfigError,
+                          lambda: validate_albumentation_transform(tf_dict))
+
+    def test_channel_groups_to_imgs(self):
+        imgs = channel_groups_to_imgs(
+            torch.rand((100, 100, 3)), {'RGB': (0, 1, 2)})
+        self.assertEqual(len(imgs), 1)
+        self.assertEqual(imgs[0].shape, (100, 100, 3))
+
+        imgs = channel_groups_to_imgs(
+            torch.rand((100, 100, 6)), {
+                'RGB': (0, 1, 2),
+                'HSV': (3, 4, 5),
+                'RBV': (0, 2, 5)
+            })
+        self.assertEqual(len(imgs), 3)
+        self.assertTrue(all(img.shape == (100, 100, 3) for img in imgs))
+
+    def test_plot_channel_groups(self):
+        channel_groups = {'RGB': (0, 1, 2)}
+        imgs = channel_groups_to_imgs(
+            torch.rand((100, 100, 3)), channel_groups)
+        _, axs = plt.subplots(1, 1, squeeze=False)
+        self.assertNoError(
+            lambda: plot_channel_groups(axs[0], imgs, channel_groups))
+        plt.close('all')
+
+        channel_groups = {'RGB': (0, 1, 2), 'HSV': (3, 4, 5), 'RBV': (0, 2, 5)}
+        imgs = channel_groups_to_imgs(
+            torch.rand((100, 100, 6)), channel_groups)
+        _, axs = plt.subplots(1, 3, squeeze=False)
+        self.assertNoError(
+            lambda: plot_channel_groups(axs[0], imgs, channel_groups))
+        plt.close('all')
 
 
 if __name__ == '__main__':

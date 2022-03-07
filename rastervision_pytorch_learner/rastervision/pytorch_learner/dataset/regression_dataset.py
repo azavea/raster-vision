@@ -1,60 +1,52 @@
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Tuple
 from os.path import join
 import logging
 import csv
 
 import numpy as np
-from PIL import Image
-import albumentations as A
-
 from torch.utils.data import Dataset
 
-from rastervision.pytorch_learner.dataset import (ImageDataset, TransformType,
-                                                  SlidingWindowGeoDataset,
-                                                  RandomWindowGeoDataset)
+from rastervision.pytorch_learner.dataset import (
+    ImageDataset, TransformType, SlidingWindowGeoDataset,
+    RandomWindowGeoDataset, load_image)
 
 log = logging.getLogger(__name__)
 
 
 class RegressionDataReader(Dataset):
-    def __init__(self, data_dir, class_names, transform=None):
+    def __init__(self, data_dir: str, class_names: Iterable[str]):
         self.data_dir = data_dir
-        self.transform = transform
 
+        img_dir = join(data_dir, 'img')
         labels_path = join(data_dir, 'labels.csv')
+
         with open(labels_path, 'r') as labels_file:
             labels_reader = csv.reader(labels_file, skipinitialspace=True)
-            header = next(labels_reader)
-            self.output_inds = [header.index(col) for col in class_names]
-            self.labels = list(labels_reader)[1:]
-        self.img_dir = join(data_dir, 'img')
+            all_rows = list(labels_reader)
+
+        header, rows = all_rows[0], all_rows[1:]
+        class_inds = [header.index(col) for col in class_names]
+        self.targets = [[float(row[i]) for i in class_inds] for row in rows]
+        self.img_paths = [join(img_dir, row[0]) for row in rows]
 
     def __getitem__(self, ind) -> Tuple[np.ndarray, np.ndarray]:
-        label_row = self.labels[ind]
-        img_fn = label_row[0]
-
-        y = [float(label_row[i]) for i in self.output_inds]
-        y = np.array(y)
-        img = Image.open(join(self.img_dir, img_fn))
-        if self.transform:
-            img = self.transform(img)
-        return (img, y)
+        img_path = self.img_paths[ind]
+        targets = self.targets[ind]
+        x = load_image(img_path)
+        y = np.array(targets)
+        return x, y
 
     def __len__(self):
         return len(self.labels)
 
 
 class RegressionImageDataset(ImageDataset):
-    def __init__(self,
-                 data_dir: str,
-                 class_names: Iterable[str],
-                 transform: Optional[A.BasicTransform] = None):
+    def __init__(self, data_dir: str, class_names: Iterable[str], *args,
+                 **kwargs):
 
-        reader = RegressionDataReader(data_dir, class_names)
+        ds = RegressionDataReader(data_dir, class_names)
         super().__init__(
-            orig_dataset=reader,
-            transform=transform,
-            transform_type=TransformType.regression)
+            ds, *args, **kwargs, transform_type=TransformType.regression)
 
 
 class RegressionSlidingWindowGeoDataset(SlidingWindowGeoDataset):

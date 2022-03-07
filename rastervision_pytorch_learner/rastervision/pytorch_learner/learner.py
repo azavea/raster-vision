@@ -8,9 +8,8 @@ from abc import ABC, abstractmethod
 import shutil
 import os
 import sys
-import math
 import logging
-from subprocess import Popen, call
+from subprocess import Popen
 import psutil
 import numbers
 import zipfile
@@ -23,7 +22,6 @@ import click
 import matplotlib
 matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import torch
 from torch import Tensor
 import torch.nn as nn
@@ -70,13 +68,17 @@ def log_system_details():
     log.info(f'Python version: {sys.version}')
     # nvidia GPU
     try:
-        log.info(os.popen('nvcc --version').read())
-        log.info(os.popen('nvidia-smi').read())
+        with os.popen('nvcc --version') as f:
+            log.info(f.read())
+        with os.popen('nvidia-smi') as f:
+            log.info(f.read())
         log.info('Devices:')
-        call([
+        device_query = ' '.join([
             'nvidia-smi', '--format=csv',
             '--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free'
         ])
+        with os.popen(device_query) as f:
+            log.info(f.read())
     except FileNotFoundError:
         pass
     # pytorch and CUDA
@@ -128,6 +130,7 @@ class Learner(ABC):
                 Defaults to True.
         """
         log_system_details()
+
         self.cfg = cfg
         self.tmp_dir = tmp_dir
 
@@ -889,7 +892,8 @@ class Learner(ABC):
     def predict_dataloader(self,
                            dl: DataLoader,
                            one_batch: bool = False,
-                           return_x: bool = True):
+                           return_x: bool = True,
+                           raw_out: bool = True):
         """Make predictions over all batches in a DataLoader.
 
         Args:
@@ -908,8 +912,9 @@ class Learner(ABC):
         with torch.no_grad():
             for x, y in dl:
                 x = self.to_device(x, self.device)
-                z = self.prob_to_pred(self.post_forward(self.model(x)))
+                z = self.predict(x, raw_out=raw_out)
                 x = self.to_device(x, 'cpu')
+                y = self.to_device(y, 'cpu')
                 z = self.to_device(z, 'cpu')
                 if one_batch:
                     return x, y, z
@@ -938,11 +943,11 @@ class Learner(ABC):
             raise ValueError('{} is not a valid split'.format(split))
 
     @abstractmethod
-    def plot_xyz(self, ax, x: Tensor, y, z=None):
+    def plot_xyz(self, axs, x: Tensor, y, z=None):
         """Plot image, ground truth labels, and predicted labels.
 
         Args:
-            ax: matplotlib axis on which to plot
+            axs: matplotlib axes on which to plot
             x: image
             y: ground truth labels
             z: optional predicted labels
@@ -964,15 +969,12 @@ class Learner(ABC):
             z: optional predicted labels
             batch_limit: optional limit on (rendered) batch size
         """
-        batch_sz = x.shape[0]
-        batch_sz = min(batch_sz,
-                       batch_limit) if batch_limit is not None else batch_sz
-        if batch_sz == 0:
+        params = self.get_plot_params(
+            x=x, y=y, z=z, output_path=output_path, batch_limit=batch_limit)
+        if params['fig_args']['nrows'] == 0:
             return
-        ncols = nrows = math.ceil(math.sqrt(batch_sz))
-        fig = plt.figure(
-            constrained_layout=True, figsize=(3 * ncols, 3 * nrows))
-        grid = gridspec.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
+
+        fig, axs = plt.subplots(**params['fig_args'])
 
         # (N, c, h, w) --> (N, h, w, c)
         x = x.permute(0, 2, 3, 1)
@@ -983,16 +985,43 @@ class Learner(ABC):
             imgs = [tf(image=img)['image'] for img in x.numpy()]
             x = torch.from_numpy(np.stack(imgs))
 
-        for i in range(batch_sz):
-            ax = fig.add_subplot(grid[i])
+        plot_xyz_args = params['plot_xyz_args']
+        for i, row_axs in enumerate(axs):
             if z is None:
-                self.plot_xyz(ax, x[i], y[i])
+                self.plot_xyz(row_axs, x[i], y[i], **plot_xyz_args)
             else:
-                self.plot_xyz(ax, x[i], y[i], z=z[i])
+                self.plot_xyz(row_axs, x[i], y[i], z=z[i], **plot_xyz_args)
 
         make_dir(output_path, use_dirname=True)
-        plt.savefig(output_path)
+        plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
         plt.close()
+
+    def get_plot_nrows(self, **kwargs) -> int:
+        x = kwargs['x']
+        batch_limit = kwargs.get('batch_limit')
+        batch_sz, c, h, w = x.shape
+        nrows = min(batch_sz,
+                    batch_limit) if batch_limit is not None else batch_sz
+        return nrows
+
+    def get_plot_ncols(self, **kwargs) -> int:
+        ncols = len(self.cfg.data.plot_options.channel_display_groups)
+        return ncols
+
+    def get_plot_params(self, **kwargs) -> dict:
+        nrows = self.get_plot_nrows(**kwargs)
+        ncols = self.get_plot_ncols(**kwargs)
+        params = {
+            'fig_args': {
+                'nrows': nrows,
+                'ncols': ncols,
+                'constrained_layout': True,
+                'figsize': (3 * ncols, 3 * nrows),
+                'squeeze': False
+            },
+            'plot_xyz_args': {}
+        }
+        return params
 
     def plot_predictions(self, split: str, batch_limit: Optional[int] = None):
         """Plot predictions for a split.

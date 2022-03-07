@@ -1,90 +1,74 @@
-from typing import Tuple, Optional
+from typing import Tuple
 from pathlib import Path
 
 import logging
 
 import numpy as np
-from PIL import Image
-import albumentations as A
+from torch.utils.data import Dataset
 
-from rastervision.pytorch_learner.dataset import (ImageDataset, TransformType,
-                                                  SlidingWindowGeoDataset,
-                                                  RandomWindowGeoDataset)
+from rastervision.pytorch_learner.dataset import (
+    ImageDataset, TransformType, SlidingWindowGeoDataset,
+    RandomWindowGeoDataset, load_image, discover_images, ImageDatasetError)
 
 log = logging.getLogger(__name__)
 
 
-class SemanticSegmentationDataReader():
+class SemanticSegmentationDataReader(Dataset):
     """Reads semantic segmentatioin images and labels from files."""
 
-    def __init__(self,
-                 data_dir: str,
-                 img_fmt: str = 'png',
-                 label_fmt: str = 'png'):
+    def __init__(self, data_dir: str):
         """Constructor.
 
         data_dir is assumed to have an 'img' subfolder that contains image
-        files and a 'labels' subfolder that contains label files. img_fmt and
-        label_fmt specify the file format of image and label files
-        respectively.
+        files and a 'labels' subfolder that contains label files.
 
         Args:
             data_dir (str): Root directory that contains image and label files.
-            img_fmt (str, optional): File format of the image files.
-                Defaults to 'png'.
-            label_fmt (str, optional): File format of the label files.
-                Defaults to 'png'.
         """
         self.data_dir = Path(data_dir)
         img_dir = self.data_dir / 'img'
         label_dir = self.data_dir / 'labels'
 
-        # collect image and label paths
-        self.img_paths = list(img_dir.glob(f'*.{img_fmt}'))
-        self.label_paths = [
-            label_dir / f'{p.stem}.{label_fmt}' for p in self.img_paths
-        ]
+        # collect image and label paths, match them based on filename
+        img_paths = discover_images(img_dir)
+        label_paths = discover_images(label_dir)
+        self.img_paths = sorted(img_paths, key=lambda p: p.stem)
+        self.label_paths = sorted(label_paths, key=lambda p: p.stem)
+        self.validate_paths()
 
-        # choose image loading method based on format
-        if img_fmt.lower() in ('npy', 'npz'):
-            self.img_load_fn = np.load
-        else:
-            self.img_load_fn = lambda path: np.array(Image.open(path))
-
-        # choose label loading method based on format
-        if label_fmt.lower() in ('npy', 'npz'):
-            self.label_load_fn = np.load
-        else:
-            self.label_load_fn = lambda path: np.array(Image.open(path))
+    def validate_paths(self) -> None:
+        if len(self.img_paths) != len(self.label_paths):
+            raise ImageDatasetError(
+                'There should be a label file for every image file. '
+                f'Found {len(self.img_paths)} image files and '
+                f'{len(self.label_paths)} label files.')
+        for img_path, label_path in zip(self.img_paths, self.label_paths):
+            if img_path.stem != label_path.stem:
+                raise ImageDatasetError(
+                    f'Name mismatch between image file {img_path.stem} '
+                    f'and label file {label_path.stem}.')
 
     def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray]:
         img_path = self.img_paths[ind]
         label_path = self.label_paths[ind]
 
-        x = self.img_load_fn(img_path)
-        y = self.label_load_fn(label_path)
+        x = load_image(img_path)
+        y = load_image(label_path).squeeze()
 
-        if x.ndim == 2:
-            # (h, w) --> (h, w, 1)
-            x = x[..., np.newaxis]
-
-        return (x, y)
+        return x, y
 
     def __len__(self):
         return len(self.img_paths)
 
 
 class SemanticSegmentationImageDataset(ImageDataset):
-    def __init__(self,
-                 data_dir: str,
-                 img_fmt: str = 'png',
-                 label_fmt: str = 'png',
-                 transform: Optional[A.BasicTransform] = None):
+    def __init__(self, data_dir: str, *args, **kwargs):
 
-        reader = SemanticSegmentationDataReader(data_dir, img_fmt, label_fmt)
+        ds = SemanticSegmentationDataReader(data_dir)
         super().__init__(
-            orig_dataset=reader,
-            transform=transform,
+            ds,
+            *args,
+            **kwargs,
             transform_type=TransformType.semantic_segmentation)
 
 

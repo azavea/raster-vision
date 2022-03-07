@@ -1,7 +1,4 @@
-from typing import Optional
-
-from rastervision.core.rv_pipeline import RVPipeline
-from rastervision.pipeline.config import (register_config, ConfigError)
+from rastervision.pipeline.config import register_config
 from rastervision.pytorch_backend.pytorch_learner_backend_config import (
     PyTorchLearnerBackendConfig)
 from rastervision.pytorch_learner.learner_config import default_augmentors
@@ -45,31 +42,6 @@ def ss_learner_backend_config_upgrader(cfg_dict, version):
     upgrader=ss_learner_backend_config_upgrader)
 class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
     model: SemanticSegmentationModelConfig
-
-    def update(self, pipeline: Optional[RVPipeline] = None):
-        super().update(pipeline=pipeline)
-        dcfg = self.data
-        pcfg = pipeline
-
-        dcfg.img_channels = pcfg.dataset.img_channels
-
-        if isinstance(dcfg, SemanticSegmentationImageDataConfig):
-            if (dcfg.img_format is not None) and (dcfg.img_format !=
-                                                  pcfg.img_format):
-                raise ConfigError(
-                    'SemanticSegmentationImageDataConfig.img_format is '
-                    'specified and not equal to '
-                    'SemanticSegmentationConfig.img_format.')
-            if (dcfg.label_format is not None) and (dcfg.label_format !=
-                                                    pcfg.label_format):
-                raise ConfigError(
-                    'SemanticSegmentationImageDataConfig.label_format is '
-                    'specified and not equal to '
-                    'SemanticSegmentationConfig.label_format.')
-            if dcfg.img_format is None:
-                dcfg.img_format = pcfg.img_format
-            if dcfg.label_format is None:
-                dcfg.label_format = pcfg.label_format
 
     def get_learner_config(self, pipeline):
         learner = SemanticSegmentationLearnerConfig(

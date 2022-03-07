@@ -10,7 +10,6 @@ from rastervision.pipeline.config import (Config, register_config, ConfigError)
 from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, ModelConfig, ImageDataConfig, GeoDataConfig,
     GeoDataWindowMethod)
-from rastervision.pytorch_learner.image_folder import ImageFolder
 from rastervision.pytorch_learner.dataset import (
     ClassificationImageDataset, ClassificationSlidingWindowGeoDataset,
     ClassificationRandomWindowGeoDataset)
@@ -38,8 +37,7 @@ class ClassificationImageDataConfig(ClassificationDataConfig, ImageDataConfig):
     def dir_to_dataset(self, data_dir: str,
                        transform: A.BasicTransform) -> Dataset:
         ds = ClassificationImageDataset(
-            ImageFolder(data_dir, classes=self.class_names),
-            transform=transform)
+            data_dir, class_names=self.class_names, transform=transform)
         return ds
 
 

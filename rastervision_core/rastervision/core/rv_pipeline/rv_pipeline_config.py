@@ -115,7 +115,7 @@ class RVPipelineConfig(PipelineConfig):
         # Inserts StatsAnalyzer if it's needed because a RasterSource has a
         # StatsTransformer, but there isn't a StatsAnalyzer in the list of Analyzers.
         has_stats_transformer = False
-        for s in self.dataset.get_all_scenes():
+        for s in self.dataset.all_scenes:
             for t in s.raster_source.transformers:
                 if isinstance(t, StatsTransformerConfig):
                     has_stats_transformer = True
