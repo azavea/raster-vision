@@ -1,5 +1,5 @@
 flake8==3.5.*
-moto==2.0.10
+moto==3.0.6
 coverage==5.5
 codecov==2.1.11
 yapf==0.22.*

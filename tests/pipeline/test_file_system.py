@@ -23,13 +23,12 @@ LOREM = """ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
         mollit anim id est laborum.  """
 
 
+@mock_s3
 class TestMakeDir(unittest.TestCase):
     def setUp(self):
         self.lorem = LOREM
 
         # Mock S3 bucket
-        self.mock_s3 = mock_s3()
-        self.mock_s3.start()
         self.s3 = boto3.client('s3')
         self.bucket_name = 'mock_bucket'
         self.s3.create_bucket(Bucket=self.bucket_name)
@@ -39,7 +38,6 @@ class TestMakeDir(unittest.TestCase):
 
     def tearDown(self):
         self.tmp_dir.cleanup()
-        self.mock_s3.stop()
 
     def test_default_args(self):
         dir = os.path.join(self.tmp_dir.name, 'hello')
@@ -130,13 +128,12 @@ class TestGetLocalPath(unittest.TestCase):
         self.assertEqual(path, '/download_dir/http/bucket/10/25/53')
 
 
+@mock_s3
 class TestFileToStr(unittest.TestCase):
     """Test file_to_str and str_to_file."""
 
     def setUp(self):
         # Setup mock S3 bucket.
-        self.mock_s3 = mock_s3()
-        self.mock_s3.start()
         self.s3 = boto3.client('s3')
         self.bucket_name = 'mock_bucket'
         self.s3.create_bucket(Bucket=self.bucket_name)
@@ -150,7 +147,6 @@ class TestFileToStr(unittest.TestCase):
 
     def tearDown(self):
         self.tmp_dir.cleanup()
-        self.mock_s3.stop()
 
     def test_file_to_str_local(self):
         str_to_file(self.content_str, self.local_path)
@@ -175,13 +171,12 @@ class TestFileToStr(unittest.TestCase):
             file_to_str(wrong_path)
 
 
+@mock_s3
 class TestDownloadIfNeeded(unittest.TestCase):
     """Test download_if_needed and upload_or_copy and str_to_file."""
 
     def setUp(self):
         # Setup mock S3 bucket.
-        self.mock_s3 = mock_s3()
-        self.mock_s3.start()
         self.s3 = boto3.client('s3')
         self.bucket_name = 'mock_bucket'
         self.s3.create_bucket(Bucket=self.bucket_name)
@@ -195,7 +190,6 @@ class TestDownloadIfNeeded(unittest.TestCase):
 
     def tearDown(self):
         self.tmp_dir.cleanup()
-        self.mock_s3.stop()
 
     def test_download_if_needed_local(self):
         with self.assertRaises(NotReadableError):
@@ -221,13 +215,12 @@ class TestDownloadIfNeeded(unittest.TestCase):
             upload_or_copy(local_path, wrong_path)
 
 
+@mock_s3
 class TestS3Misc(unittest.TestCase):
     def setUp(self):
         self.lorem = LOREM
 
         # Mock S3 bucket
-        self.mock_s3 = mock_s3()
-        self.mock_s3.start()
         self.s3 = boto3.client('s3')
         self.bucket_name = 'mock_bucket'
         self.s3.create_bucket(Bucket=self.bucket_name)
@@ -237,7 +230,6 @@ class TestS3Misc(unittest.TestCase):
 
     def tearDown(self):
         self.tmp_dir.cleanup()
-        self.mock_s3.stop()
 
     def test_parse_uri(self):
         s3_path = f's3://{self.bucket_name}/lorem1.txt'
@@ -464,11 +456,10 @@ class TestHttpMisc(unittest.TestCase):
                           lambda: fs.write_bytes(uri, bytes([0x00, 0x01])))
 
 
+@mock_s3
 class TestGetCachedFile(unittest.TestCase):
     def setUp(self):
         # Setup mock S3 bucket.
-        self.mock_s3 = mock_s3()
-        self.mock_s3.start()
         self.s3 = boto3.client('s3')
         self.bucket_name = 'mock_bucket'
         self.s3.create_bucket(Bucket=self.bucket_name)
@@ -480,7 +471,6 @@ class TestGetCachedFile(unittest.TestCase):
 
     def tearDown(self):
         self.tmp_dir.cleanup()
-        self.mock_s3.stop()
 
     def test_local(self):
         local_path = os.path.join(self.tmp_dir.name, self.file_name)
