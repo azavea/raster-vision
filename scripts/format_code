@@ -30,5 +30,5 @@ else
     find . -name '*.py' -print0 | xargs -0 $UNIFY
 
     echo "Running yapf..."
-    yapf -ipr "$SRC_DIR" -e "**/conf.py" -e "**/setup.py" -e "**/cookiecutter_template/**" -e "*tfod_utils*"
+    yapf -ipr "$SRC_DIR" -e "*.git*" -e "*build*" -e "*cookiecutter_template*" -e "*tfod_utils*" -e "**/conf.py" -e "**/setup.py" -e "*.history*"
 fi
