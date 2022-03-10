@@ -1,14 +1,11 @@
-import warnings
-warnings.filterwarnings('ignore')  # noqa
-
 from typing import Sequence, Union, Optional
+import warnings
 
 import logging
 
 import numpy as np
 import matplotlib
 import matplotlib.patches as mpatches
-matplotlib.use('Agg')  # noqa
 
 import torch
 from torch import nn
@@ -20,6 +17,9 @@ from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, color_to_triple,
     adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
 from rastervision.pipeline.config import ConfigError
+
+warnings.filterwarnings('ignore')
+matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
 

@@ -1,11 +1,9 @@
 from typing import Iterable, Optional, Sequence
 import warnings
-warnings.filterwarnings('ignore')  # noqa
 
 import logging
 
 import matplotlib
-matplotlib.use('Agg')  # noqa
 from albumentations import BboxParams
 
 import numpy as np
@@ -18,6 +16,9 @@ from rastervision.pytorch_learner.utils.utils import (
     adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
 from rastervision.pytorch_learner.object_detection_utils import (
     BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, draw_boxes)
+
+warnings.filterwarnings('ignore')
+matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
 

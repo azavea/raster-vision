@@ -1,7 +1,6 @@
 from os.path import join, isfile, basename, isdir
 import csv
 import warnings
-warnings.filterwarnings('ignore')  # noqa
 import time
 import datetime
 from abc import ABC, abstractmethod
@@ -20,7 +19,6 @@ import uuid
 
 import click
 import matplotlib
-matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
@@ -44,6 +42,9 @@ from rastervision.pytorch_learner.learner_config import (
 from rastervision.pytorch_learner.utils import (
     torch_hub_load_github, torch_hub_load_uri, torch_hub_load_local,
     get_hubconf_dir_from_cfg)
+
+warnings.filterwarnings('ignore')
+matplotlib.use('Agg')
 
 MODULES_DIRNAME = 'modules'
 
