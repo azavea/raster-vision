@@ -14,4 +14,7 @@ max-line-length = 90
 # E251 is triggering because of Field(description=()) syntax after yapf inserts a
 # new line after the =
 
-ignore = E127,W503,E701,E704,E251
+# F722 ("syntax error in forward annotation")
+# Ignore reason: https://stackoverflow.com/a/64917499/5908685
+
+ignore = E127,W503,E701,E704,E251,F722
