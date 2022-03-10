@@ -109,7 +109,7 @@ class RVConfig:
 
         # If directory cannot be made and/or cannot be interacted
         # with, fall back to default system location.
-        except Exception as e:
+        except Exception:
             system_tmp_dir = TemporaryDirectory().name
             log.warning(
                 'Root temporary directory cannot be used: {}. Using root: {}'.

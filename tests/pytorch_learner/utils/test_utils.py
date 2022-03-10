@@ -222,7 +222,7 @@ class TestOtherUtils(unittest.TestCase):
     def assertNoError(self, fn: Callable, msg: str = ''):
         try:
             fn()
-        except Exception as e:
+        except Exception:
             self.fail(msg)
 
     def test_color_to_triple(self):

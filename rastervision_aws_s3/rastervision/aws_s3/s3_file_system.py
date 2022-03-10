@@ -149,14 +149,14 @@ class S3FileSystem(FileSystem):
                 if response['KeyCount'] == 0:
                     return S3FileSystem.file_exists(uri, include_dir=False)
                 return True
-            except botocore.exceptions.ClientError as e:
+            except botocore.exceptions.ClientError:
                 return False
         else:
             s3r = S3FileSystem.get_session().resource('s3')
             try:
                 s3r.Object(bucket, key).load(RequestPayer=request_payer)
                 return True
-            except botocore.exceptions.ClientError as e:
+            except botocore.exceptions.ClientError:
                 return False
 
     @staticmethod
