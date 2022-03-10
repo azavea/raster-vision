@@ -54,12 +54,12 @@ class RegressionLearner(Learner):
         in_channels = self.cfg.data.img_channels
         out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
-            self.cfg.data.class_names.index(l)
-            for l in self.cfg.data.pos_class_names
+            self.cfg.data.class_names.index(class_name)
+            for class_name in self.cfg.data.pos_class_names
         ]
         prob_out_inds = [
-            self.cfg.data.class_names.index(l)
-            for l in self.cfg.data.prob_class_names
+            self.cfg.data.class_names.index(class_name)
+            for class_name in self.cfg.data.prob_class_names
         ]
         model = RegressionModel(
             backbone_name,

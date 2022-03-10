@@ -53,7 +53,7 @@ def get_linked_image_item(label_item: Item) -> Optional[Item]:
     """Find link in the item that has "rel" == "source" and return its
     "target" item. If no such link, return None. If multiple such links,
     raise an exception."""
-    links = [l for l in label_item.links if l.rel.lower() == 'source']
+    links = [link for link in label_item.links if link.rel.lower() == 'source']
     if len(links) == 0:
         return None
     elif len(links) > 1:
