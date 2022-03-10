@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 from os.path import join
 import logging
 import click
@@ -15,6 +15,9 @@ from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_store import LabelStore
 from rastervision.core.data.label_source import SegmentationClassTransformer
 from rastervision.core.data.raster_source import RasterioSourceConfig
+
+if TYPE_CHECKING:
+    from rastervision.core.data import VectorOutputConfig
 
 log = logging.getLogger(__name__)
 
