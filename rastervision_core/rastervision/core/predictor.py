@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING, List, Optional
 from os.path import join
 import zipfile
 import logging
@@ -6,8 +7,14 @@ from rastervision.pipeline import rv_config
 from rastervision.pipeline.config import (build_config, upgrade_config)
 from rastervision.pipeline.file_system.utils import (download_if_needed,
                                                      make_dir, file_to_json)
-from rastervision.core.data.raster_source import ChannelOrderError
+from rastervision.core.data import (ChannelOrderError,
+                                    SemanticSegmentationLabelStoreConfig,
+                                    PolygonVectorOutputConfig)
 from rastervision.core.analyzer import StatsAnalyzerConfig
+
+if TYPE_CHECKING:
+    from rastervision.core.rv_pipeline import RVPipelineConfig  # noqa
+    from rastervision.core.data import SceneConfig  # noqa
 
 log = logging.getLogger(__name__)
 
@@ -16,10 +23,10 @@ class Predictor():
     """Class for making predictions based off of a model bundle."""
 
     def __init__(self,
-                 model_bundle_uri,
-                 tmp_dir,
-                 update_stats=False,
-                 channel_order=None):
+                 model_bundle_uri: str,
+                 tmp_dir: str,
+                 update_stats: bool = False,
+                 channel_order: Optional[List[int]] = None):
         """Creates a new Predictor.
 
         Args:
@@ -48,8 +55,8 @@ class Predictor():
         rv_config.set_everett_config(
             config_overrides=config_dict.get('rv_config'))
         config_dict = upgrade_config(config_dict)
-        self.config = build_config(config_dict)
-        self.scene = self.config.dataset.validation_scenes[0]
+        self.config: 'RVPipelineConfig' = build_config(config_dict)
+        self.scene: 'SceneConfig' = self.config.dataset.validation_scenes[0]
 
         if not hasattr(self.scene.raster_source, 'uris'):
             raise Exception(
@@ -82,7 +89,7 @@ class Predictor():
 
         self.pipeline = None
 
-    def predict(self, image_uris, label_uri):
+    def predict(self, image_uris: List[str], label_uri: str) -> None:
         """Generate predictions for the given image.
 
         Args:
@@ -98,9 +105,22 @@ class Predictor():
                 raise Exception(
                     'pipeline in model bundle must have predict method')
 
-        try:
-            self.scene.raster_source.uris = image_uris
+        self.scene.raster_source.uris = image_uris
+        self.scene.label_store.uri = label_uri
+
+        if isinstance(self.scene.label_store,
+                      SemanticSegmentationLabelStoreConfig):
+            # create vector outputs for each class without specifying URIs
+            self.scene.label_store.vector_output = [
+                PolygonVectorOutputConfig(class_id=i)
+                for i, _ in enumerate(self.config.dataset.class_config)
+            ]
+            # set URIs
             self.scene.label_store.uri = label_uri
+            for vo in self.scene.label_store.vector_output:
+                vo.update(self.config, self.scene, uri_prefix=label_uri)
+
+        try:
             if self.update_stats:
                 self.pipeline.analyze()
             self.pipeline.predict()

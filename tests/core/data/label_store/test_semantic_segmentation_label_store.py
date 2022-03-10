@@ -2,7 +2,7 @@ import unittest
 from os.path import realpath
 
 from rastervision.core.data.label_store import (
-    VectorOutputConfig, PolygonVectorOutputConfig, BuildingVectorOutputConfig,
+    PolygonVectorOutputConfig, BuildingVectorOutputConfig,
     SemanticSegmentationLabelStoreConfig)
 
 
@@ -17,7 +17,11 @@ class MockSceneConfig():
 class TestSemanticSegmentationLabelStoreConfig(unittest.TestCase):
     def test_vector_output_config(self):
         # uri not updated if no pipeline and scene
-        cfg = VectorOutputConfig(class_id=0)
+        cfg = PolygonVectorOutputConfig(class_id=0)
+        cfg.update()
+        self.assertIsNone(cfg.uri)
+
+        cfg = BuildingVectorOutputConfig(class_id=0)
         cfg.update()
         self.assertIsNone(cfg.uri)
 
