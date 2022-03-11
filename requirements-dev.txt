@@ -2,7 +2,7 @@ flake8==4.0.*
 moto==3.0.6
 coverage==5.5
 codecov==2.1.12
-yapf==0.22.*
+yapf==0.23.*
 unify==0.5
 sphinx==4.0.*
 sphinx-autobuild==2021.3.*
