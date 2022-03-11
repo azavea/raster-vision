@@ -41,12 +41,12 @@ class ClassEvaluationItem(EvaluationItem):
             self_ratio = self.gt_count / total_gt_count
             other_ratio = other.gt_count / total_gt_count
 
-            def weighted_avg(self_val, other_val):
-                if self_val is None and other_val is None:
-                    return 0.0
-                # Handle a single None value by setting them to zero.
-                return (self_ratio * (self_val or 0) +
-                        other_ratio * (other_val or 0))
+            def weighted_avg(self_val, other_val) -> float:
+                if self_val is None:
+                    self_val = 0.
+                if other_val is None:
+                    other_val = 0.
+                return (self_ratio * self_val + other_ratio * other_val)
 
             self.precision = weighted_avg(self.precision, other.precision)
             self.recall = weighted_avg(self.recall, other.recall)
