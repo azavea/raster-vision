@@ -217,7 +217,7 @@ def list_paths(uri: str, ext: str = '',
 
 def upload_or_copy(src_path: str,
                    dst_uri: str,
-                   fs: Optional[FileSystem] = None) -> List[str]:
+                   fs: Optional[FileSystem] = None) -> None:
     """Upload or copy a file.
 
     If dst_uri is local, the file is copied. Otherwise, it is uploaded.
