@@ -16,7 +16,7 @@ from rastervision.pytorch_backend.examples.utils import (save_image_crop)
 from rastervision.pytorch_learner import (
     Backbone, SolverConfig, SemanticSegmentationImageDataConfig,
     SemanticSegmentationGeoDataConfig, GeoDataWindowConfig,
-    GeoDataWindowMethod)
+    GeoDataWindowMethod, PlotOptions)
 
 # -----------------------
 # Input files and paths
@@ -121,8 +121,7 @@ def get_config(runner,
     dataset_config = DatasetConfig(
         class_config=class_config,
         train_scenes=[_make_scene(scene_id) for scene_id in train_ids],
-        validation_scenes=[_make_scene(scene_id) for scene_id in val_ids],
-        img_channels=5)
+        validation_scenes=[_make_scene(scene_id) for scene_id in val_ids])
 
     chip_options = SemanticSegmentationChipOptions(
         window_method=SemanticSegmentationWindowMethod.sliding,
@@ -139,12 +138,14 @@ def get_config(runner,
             window_opts=window_opts,
             img_sz=CHIP_SIZE,
             num_workers=4,
-            channel_display_groups=CHANNEL_DISPLAY_GROUPS)
+            plot_options=PlotOptions(
+                channel_display_groups=CHANNEL_DISPLAY_GROUPS))
     else:
         data = SemanticSegmentationImageDataConfig(
             img_sz=CHIP_SIZE,
             num_workers=4,
-            channel_display_groups=CHANNEL_DISPLAY_GROUPS)
+            plot_options=PlotOptions(
+                channel_display_groups=CHANNEL_DISPLAY_GROUPS))
 
     # --------------------------------------------
     # Configure PyTorch backend and training
@@ -176,8 +177,7 @@ def get_config(runner,
         predict_chip_sz=CHIP_SIZE,
         chip_options=chip_options,
         dataset=dataset_config,
-        backend=backend_config,
-        channel_display_groups=CHANNEL_DISPLAY_GROUPS)
+        backend=backend_config)
 
     return pipeline_config
 
