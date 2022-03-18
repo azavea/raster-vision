@@ -67,11 +67,12 @@ def get_train_windows(scene: Scene,
         else:
             target_class_ids = co.target_class_ids or list(
                 range(len(class_config)))
-            is_pos = label_source.enough_target_pixels(
+            is_positive = label_source.enough_target_pixels(
                 window, co.target_count_threshold, target_class_ids)
-            should_use = is_pos or (np.random.rand() <
-                                    co.negative_survival_prob)
-            return should_use
+            if is_positive:
+                return True
+            keep_negative = np.random.sample() < co.negative_survival_prob
+            return keep_negative
 
     if co.window_method == SemanticSegmentationWindowMethod.sliding:
         stride = co.stride or int(round(chip_size / 2))

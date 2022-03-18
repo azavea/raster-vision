@@ -1,10 +1,8 @@
 from typing import Optional, Sequence
 import warnings
-warnings.filterwarnings('ignore')  # noqa
 from os.path import join
 
 import matplotlib
-matplotlib.use('Agg')  # noqa
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from textwrap import wrap
@@ -19,6 +17,9 @@ from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.utils.utils import (
     adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
 from rastervision.pipeline.config import ConfigError
+
+warnings.filterwarnings('ignore')
+matplotlib.use('Agg')
 
 
 class RegressionModel(nn.Module):
@@ -53,12 +54,12 @@ class RegressionLearner(Learner):
         in_channels = self.cfg.data.img_channels
         out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
-            self.cfg.data.class_names.index(l)
-            for l in self.cfg.data.pos_class_names
+            self.cfg.data.class_names.index(class_name)
+            for class_name in self.cfg.data.pos_class_names
         ]
         prob_out_inds = [
-            self.cfg.data.class_names.index(l)
-            for l in self.cfg.data.prob_class_names
+            self.cfg.data.class_names.index(class_name)
+            for class_name in self.cfg.data.prob_class_names
         ]
         model = RegressionModel(
             backbone_name,

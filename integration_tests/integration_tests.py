@@ -88,9 +88,11 @@ class TestError():
         self.details = details
 
     def __str__(self):
-        return ('Error\n' + '------\n' + 'Test: {}\n'.format(self.test) +
-                'Message: {}\n'.format(self.message) + 'Details: {}'.format(
-                    str(self.details)) if self.details else '' + '\n')
+        return ('Error\n'
+                '------\n'
+                f'Test: {self.test}\n'
+                f'Message: {self.message}\n'
+                f'Details: {str(self.details)}' if self.details else '\n')
 
 
 def get_test_dir(test_id: str) -> str:
@@ -197,8 +199,9 @@ def test_model_bundle_results(pipeline, test_id: str, test_cfg: dict,
 
         from rastervision.core.data import ActivateMixin
         with ActivateMixin.compose(scene, predictor_label_store):
-            if not (predictor_label_store.get_labels() ==
-                    scene.prediction_label_store.get_labels()):
+            bundle_labels = predictor_label_store.get_labels()
+            predict_stage_labels = scene.prediction_label_store.get_labels()
+            if bundle_labels != predict_stage_labels:
                 e = TestError(test_id,
                               ('Predictor did not produce the same labels '
                                'as the Predict command'),

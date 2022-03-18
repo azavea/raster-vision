@@ -1,6 +1,5 @@
 from typing import Optional, Sequence
 import warnings
-warnings.filterwarnings('ignore')  # noqa
 
 import logging
 
@@ -8,7 +7,6 @@ import torch
 import torch.nn as nn
 from torchvision import models
 import matplotlib
-matplotlib.use('Agg')  # noqa
 from textwrap import wrap
 
 from rastervision.pytorch_learner.learner import Learner
@@ -16,6 +14,9 @@ from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, adjust_conv_channels,
     plot_channel_groups, channel_groups_to_imgs)
 from rastervision.pipeline.config import ConfigError
+
+warnings.filterwarnings('ignore')
+matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
 

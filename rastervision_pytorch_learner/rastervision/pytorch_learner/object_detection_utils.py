@@ -262,7 +262,8 @@ def draw_boxes(x: torch.Tensor, y: BoxList, class_names: Sequence[str],
         box_annotations: List[str] = np.array(class_names)[class_ids].tolist()
         if scores is not None:
             box_annotations = [
-                f'{l} | {s:.2f}' for l, s in zip(box_annotations, scores)
+                f'{ann} | {score:.2f}'
+                for ann, score in zip(box_annotations, scores)
             ]
         box_colors: List[Union[str, Tuple[int, ...]]] = [
             tuple(c) if not isinstance(c, str) else c

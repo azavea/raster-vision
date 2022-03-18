@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
@@ -18,12 +18,16 @@ def transform_geojson(geojson,
                       line_bufs=None,
                       point_bufs=None,
                       to_map_coords=False):
-    def is_empty_feat(f):
+    def is_empty_feat(f: dict) -> bool:
         # This was added to handle empty geoms which appear when using
         # OSM vector tiles.
-        return ((not f.get('geometry'))
-                or ((not f['geometry'].get('coordinates')) and
-                    (not f['geometry'].get('geometries'))))
+        g: Optional[dict] = f.get('geometry')
+        if not g:
+            return True
+        no_geometries = not g.get('geometries')
+        no_coordinates = not g.get('coordinates')
+        is_empty = no_geometries and no_coordinates
+        return is_empty
 
     new_features = []
     for f in geojson['features']:
