@@ -464,7 +464,7 @@ class Learner(ABC):
             aug_transform = deserialize_albumentation_transform(
                 cfg.data.aug_transform)
             aug_transform = A.Compose(
-                [aug_transform, base_transform], bbox_params=bbox_params)
+                [base_transform, aug_transform], bbox_params=bbox_params)
             return base_transform, aug_transform
 
         augmentors_dict = {
@@ -477,7 +477,7 @@ class Learner(ABC):
             'RGBShift': A.RGBShift(),
             'ToGray': A.ToGray()
         }
-        aug_transforms = []
+        aug_transforms = [base_transform]
         for augmentor in cfg.data.augmentors:
             try:
                 aug_transforms.append(augmentors_dict[augmentor])
@@ -485,7 +485,6 @@ class Learner(ABC):
                 log.warning(
                     f'{k} is an unknown augmentor. Continuing without {k}. '
                     f'Known augmentors are: {list(augmentors_dict.keys())}')
-        aug_transforms.append(base_transform)
         aug_transform = A.Compose(aug_transforms, bbox_params=bbox_params)
 
         return base_transform, aug_transform
