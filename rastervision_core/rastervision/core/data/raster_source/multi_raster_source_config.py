@@ -30,8 +30,12 @@ class SubRasterSourceConfig(Config):
 
 
 def multi_raster_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
-    if version == 0:
+    if version < 1:
         cfg_dict['allow_different_extents'] = True
+    if version < 2:
+        # field renamed in version 2
+        cfg_dict['primary_source_idx'] = cfg_dict['crs_source']
+        del cfg_dict['crs_source']
     return cfg_dict
 
 
@@ -44,10 +48,11 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         False,
         description=
         'Force all subchips to be of the same dtype as the first subchip.')
-    crs_source: conint(ge=0) = Field(
+    primary_source_idx: conint(ge=0) = Field(
         0,
         description=
-        'Use the crs_transformer of the raster source at this index.')
+        'Index of the raster source whose CRS, dtype, and other attributes '
+        'will override those of the other raster sources.')
 
     def get_raw_channel_order(self):
         # concatenate all target_channels
@@ -99,7 +104,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
             raw_channel_order=self.get_raw_channel_order(),
             force_same_dtype=self.force_same_dtype,
             channel_order=self.channel_order,
-            crs_source=self.crs_source,
+            primary_source_idx=self.primary_source_idx,
             raster_transformers=raster_transformers,
             extent_crop=self.extent_crop)
         return multi_raster_source
