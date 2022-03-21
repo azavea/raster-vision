@@ -32,8 +32,9 @@ import numpy as np
 
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
-    download_if_needed, sync_from_dir, get_local_path, unzip, list_paths,
-    str_to_file, FileSystem, LocalFileSystem)
+    download_if_needed, download_or_copy, sync_from_dir, get_local_path, unzip,
+    list_paths, str_to_file, FileSystem, LocalFileSystem)
+from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, ConfigError,
                                           upgrade_config, save_pipeline_config)
@@ -47,6 +48,7 @@ warnings.filterwarnings('ignore')
 matplotlib.use('Agg')
 
 MODULES_DIRNAME = 'modules'
+TRANSFORMS_DIRNAME = 'custom_albumentations_transforms'
 
 log = logging.getLogger(__name__)
 
@@ -1102,6 +1104,20 @@ class Learner(ABC):
             loss_def_path = get_hubconf_dir_from_cfg(ext_cfg, parent=hub_dir)
             log.info(f'Using loss definition found in bundle: {loss_def_path}')
 
+        # use the definition file(s) saved in the bundle
+        custom_transforms = cfg.data.get_custom_albumentations_transforms()
+        if len(custom_transforms) > 0:
+            for tf in custom_transforms:
+                # convert the relative path to a full path
+                tf_bundle_path = join(tmp_dir, tf['lambda_transforms_path'])
+                tf['lambda_transforms_path'] = tf_bundle_path
+                if not file_exists(tf['lambda_transforms_path']):
+                    raise FileNotFoundError(
+                        f'Custom transform definition file {tf_bundle_path} '
+                        'was not found inside the bundle.')
+            # config has been altered, so re-validate
+            cfg = build_config(cfg.dict())
+
         return cfg.build(
             tmp_dir=tmp_dir,
             model_path=model_path,
@@ -1122,10 +1138,22 @@ class Learner(ABC):
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
         make_dir(model_bundle_dir, force_empty=True)
 
+        self._bundle_model(model_bundle_dir)
+        self._bundle_modules(model_bundle_dir)
+        self._bundle_transforms(model_bundle_dir)
+
+        pipeline_cfg = LearnerPipelineConfig(learner=self.cfg)
+        save_pipeline_config(pipeline_cfg,
+                             join(model_bundle_dir, 'pipeline-config.json'))
+        zipdir(model_bundle_dir, self.model_bundle_path)
+
+    def _bundle_model(self, model_bundle_dir: str) -> None:
+        """Copy last saved model weights into bundle."""
         shutil.copyfile(self.last_model_path,
                         join(model_bundle_dir, 'model.pth'))
 
-        # copy modules into bundle
+    def _bundle_modules(self, model_bundle_dir: str) -> None:
+        """Copy modules into bundle."""
         if isdir(self.modules_dir):
             log.info('Copying modules into bundle.')
             bundle_modules_dir = join(model_bundle_dir, MODULES_DIRNAME)
@@ -1133,10 +1161,28 @@ class Learner(ABC):
                 shutil.rmtree(bundle_modules_dir)
             shutil.copytree(self.modules_dir, bundle_modules_dir)
 
-        pipeline_cfg = LearnerPipelineConfig(learner=self.cfg)
-        save_pipeline_config(pipeline_cfg,
-                             join(model_bundle_dir, 'pipeline-config.json'))
-        zipdir(model_bundle_dir, self.model_bundle_path)
+    def _bundle_transforms(self, model_bundle_dir: str) -> None:
+        """Copy definition files for custom albumentations transforms into
+        bundle and change the paths in the config to point to the new
+        locations. The new paths are relative and will be automatically
+        converted to full paths when loading from the bundle.
+        """
+        transforms = self.cfg.data.get_custom_albumentations_transforms()
+        if len(transforms) == 0:
+            return
+
+        bundle_transforms_dir = join(model_bundle_dir, TRANSFORMS_DIRNAME)
+        if isdir(bundle_transforms_dir):
+            shutil.rmtree(bundle_transforms_dir)
+        make_dir(bundle_transforms_dir)
+
+        for tf in transforms:
+            tf_bundle_path = download_or_copy(tf['lambda_transforms_path'],
+                                              bundle_transforms_dir)
+            # convert to a relative path
+            tf['lambda_transforms_path'] = join('model-bundle',
+                                                TRANSFORMS_DIRNAME,
+                                                basename(tf_bundle_path))
 
     def get_start_epoch(self) -> int:
         """Get start epoch.

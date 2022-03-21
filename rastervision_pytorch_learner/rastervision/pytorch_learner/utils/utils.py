@@ -83,7 +83,16 @@ def validate_albumentation_transform(tf_dict: Optional[dict]) -> dict:
     """
     if tf_dict is not None:
         try:
-            _ = deserialize_albumentation_transform(tf_dict)
+            lambda_transforms_path = tf_dict.get('lambda_transforms_path',
+                                                 None)
+            # hack: if this is being called while building the config from the
+            # bundle, skip the validation because the 'lambda_transforms_path's
+            # have not been adjusted yet
+            if (lambda_transforms_path is not None
+                    and lambda_transforms_path.startswith('model-bundle')):
+                return tf_dict
+            else:
+                _ = deserialize_albumentation_transform(tf_dict)
         except Exception:
             raise ConfigError('The given serialization is invalid. Use '
                               'A.to_dict(transform) to serialize.')
