@@ -323,7 +323,7 @@ def data_config_upgrader(cfg_dict: dict, version: int) -> dict:
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
     class_names: List[str] = Field([], description='Names of classes.')
-    class_colors: Optional[Union[List[str], List[List]]] = Field(
+    class_colors: Optional[List[Union[str, Tuple[int, int, int]]]] = Field(
         None,
         description=('Colors used to display classes. '
                      'Can be color 3-tuples in list form.'))
