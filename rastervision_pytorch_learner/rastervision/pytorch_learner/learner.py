@@ -41,7 +41,7 @@ from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, ExternalModuleConfig, ImageDataConfig, GeoDataConfig)
 from rastervision.pytorch_learner.utils import (
     torch_hub_load_github, torch_hub_load_uri, torch_hub_load_local,
-    get_hubconf_dir_from_cfg)
+    get_hubconf_dir_from_cfg, deserialize_albumentation_transform)
 
 warnings.filterwarnings('ignore')
 matplotlib.use('Agg')
@@ -454,11 +454,13 @@ class Learner(ABC):
         bbox_params = self.get_bbox_params()
         base_tfs = [A.Resize(cfg.data.img_sz, cfg.data.img_sz)]
         if cfg.data.base_transform is not None:
-            base_tfs.append(A.from_dict(cfg.data.base_transform))
+            base_tfs.append(
+                deserialize_albumentation_transform(cfg.data.base_transform))
         base_transform = A.Compose(base_tfs, bbox_params=bbox_params)
 
         if cfg.data.aug_transform is not None:
-            aug_transform = A.from_dict(cfg.data.aug_transform)
+            aug_transform = deserialize_albumentation_transform(
+                cfg.data.aug_transform)
             aug_transform = A.Compose(
                 [aug_transform, base_transform], bbox_params=bbox_params)
             return base_transform, aug_transform
@@ -477,11 +479,10 @@ class Learner(ABC):
         for augmentor in cfg.data.augmentors:
             try:
                 aug_transforms.append(augmentors_dict[augmentor])
-            except KeyError as e:
+            except KeyError as k:
                 log.warning(
-                    '{0} is an unknown augmentor. Continuing without {0}. \
-                    Known augmentors are: {1}'.format(
-                        e, list(augmentors_dict.keys())))
+                    f'{k} is an unknown augmentor. Continuing without {k}. '
+                    f'Known augmentors are: {list(augmentors_dict.keys())}')
         aug_transforms.append(base_transform)
         aug_transform = A.Compose(aug_transforms, bbox_params=bbox_params)
 
@@ -982,7 +983,8 @@ class Learner(ABC):
 
         # apply transform, if given
         if self.cfg.data.plot_options.transform is not None:
-            tf = A.from_dict(self.cfg.data.plot_options.transform)
+            tf = deserialize_albumentation_transform(
+                self.cfg.data.plot_options.transform)
             imgs = [tf(image=img)['image'] for img in x.numpy()]
             x = torch.from_numpy(np.stack(imgs))
 
