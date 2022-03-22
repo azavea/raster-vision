@@ -5,12 +5,17 @@ import torch
 from torch import nn
 import numpy as np
 from matplotlib import pyplot as plt
+import boto3
+from moto import mock_s3
 
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat, compute_conf_mat_metrics, MinMaxNormalize,
     adjust_conv_channels, Parallel, SplitTensor, AddTensors,
-    validate_albumentation_transform, ConfigError, A, color_to_triple,
-    channel_groups_to_imgs, plot_channel_groups)
+    validate_albumentation_transform, A, color_to_triple,
+    channel_groups_to_imgs, plot_channel_groups,
+    serialize_albumentation_transform, deserialize_albumentation_transform)
+from tests.data_files.lambda_transforms import lambda_transforms
+from tests import data_file_path
 
 
 class TestComputeConfMat(unittest.TestCase):
@@ -236,12 +241,45 @@ class TestOtherUtils(unittest.TestCase):
 
         self.assertRaises(ValueError, lambda: color_to_triple('not_a_color'))
 
-    def test_validate_albumentation_transform(self):
-        tf_dict = A.to_dict((A.Resize(10, 10)))
-        self.assertEqual(validate_albumentation_transform(tf_dict), tf_dict)
-        tf_dict = {'a': 1}
-        self.assertRaises(ConfigError,
-                          lambda: validate_albumentation_transform(tf_dict))
+    def test_albu_serialization_and_deserialization_no_lambda(self):
+        x = np.random.randn(20, 20, 3)
+        tf_original = A.Resize(10, 10)
+
+        # test if serizlization passes validation check
+        tf_serialized = serialize_albumentation_transform(tf_original)
+        self.assertEqual(
+            validate_albumentation_transform(tf_serialized), tf_serialized)
+
+        # test if the de-serizlized transform's output matches that of the
+        # original transform
+        tf_deserialized = deserialize_albumentation_transform(tf_serialized)
+        np.testing.assert_array_equal(
+            tf_original(image=x)['image'], tf_deserialized(image=x)['image'])
+
+    @mock_s3
+    def test_albu_serialization_and_deserialization_lambda(self):
+        x = np.random.randn(20, 20, 4)
+        tf_original = lambda_transforms['ndvi']
+
+        # mock s3 bucket to upload the lambda transforms definition file to
+        s3 = boto3.client('s3')
+        bucket_name = 'mock_bucket'
+        s3.create_bucket(Bucket=bucket_name)
+        s3_dir = f's3://{bucket_name}/'
+
+        # test if serizlization passes validation check
+        tf_serialized = serialize_albumentation_transform(
+            tf_original,
+            lambda_transforms_path=data_file_path('lambda_transforms.py'),
+            dst_dir=s3_dir)
+        self.assertEqual(
+            validate_albumentation_transform(tf_serialized), tf_serialized)
+
+        # test if the de-serizlized transform's output matches that of the
+        # original transform
+        tf_deserialized = deserialize_albumentation_transform(tf_serialized)
+        np.testing.assert_array_equal(
+            tf_original(image=x)['image'], tf_deserialized(image=x)['image'])
 
     def test_channel_groups_to_imgs(self):
         imgs = channel_groups_to_imgs(
