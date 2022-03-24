@@ -4,8 +4,8 @@ import warnings
 import logging
 
 import numpy as np
-import matplotlib
 import matplotlib.patches as mpatches
+import matplotlib.colors as mcolors
 
 import torch
 from torch import nn
@@ -19,7 +19,6 @@ from rastervision.pytorch_learner.utils import (
 from rastervision.pipeline.config import ConfigError
 
 warnings.filterwarnings('ignore')
-matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
 
@@ -171,7 +170,7 @@ class SemanticSegmentationLearner(Learner):
             for c in class_colors
         ]
         colors = np.array(colors) / 255.
-        cmap = matplotlib.colors.ListedColormap(colors)
+        cmap = mcolors.ListedColormap(colors)
 
         label_ax.imshow(
             y, vmin=0, vmax=len(colors), cmap=cmap, interpolation='none')

@@ -6,7 +6,6 @@ import logging
 import torch
 import torch.nn as nn
 from torchvision import models
-import matplotlib
 from textwrap import wrap
 
 from rastervision.pytorch_learner.learner import Learner
@@ -16,7 +15,6 @@ from rastervision.pytorch_learner.utils import (
 from rastervision.pipeline.config import ConfigError
 
 warnings.filterwarnings('ignore')
-matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
 

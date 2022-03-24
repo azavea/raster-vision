@@ -3,7 +3,6 @@ import warnings
 
 import logging
 
-import matplotlib
 from albumentations import BboxParams
 
 import numpy as np
@@ -18,7 +17,6 @@ from rastervision.pytorch_learner.object_detection_utils import (
     BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, draw_boxes)
 
 warnings.filterwarnings('ignore')
-matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
 
