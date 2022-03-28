@@ -1,4 +1,4 @@
-from typing import Union, Tuple, Optional, List
+from typing import Dict, Union, Tuple, Optional, List
 from pydantic import PositiveInt as PosInt, conint
 import math
 import random
@@ -101,8 +101,12 @@ class Box():
     def __str__(self):  # pragma: no cover
         return str(self.npbox_format())
 
-    def __repr__(self):  # pragma: no cover
-        return f'{type(self).__name__}{self.tuple_format()}'
+    def __repr__(self):
+        arg_keys = ['ymin', 'xmin', 'ymax', 'xmax']
+        arg_vals = [getattr(self, k) for k in arg_keys]
+        arg_strs = [f'{k}={v}' for k, v in zip(arg_keys, arg_vals)]
+        arg_str = ', '.join(arg_strs)
+        return f'{type(self).__name__}({arg_str})'
 
     def __hash__(self):
         return hash(self.tuple_format())
@@ -328,7 +332,7 @@ class Box():
                 result.append(window)
         return result
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, int]:
         return {
             'xmin': self.xmin,
             'ymin': self.ymin,

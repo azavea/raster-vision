@@ -210,7 +210,7 @@ class TestBox(unittest.TestCase):
 
     def test_repr(self):
         box = Box(1, 2, 3, 4)
-        self.assertEqual(box.__repr__(), 'Box(1, 2, 3, 4)')
+        self.assertEqual(box.__repr__(), 'Box(ymin=1, xmin=2, ymax=3, xmax=4)')
 
     def test_filter_by_aoi(self):
         windows = [Box.make_square(0, 0, 2), Box.make_square(0, 2, 2)]
