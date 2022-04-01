@@ -1,7 +1,7 @@
 rastervision_pipeline==0.13.*
 rastervision_core==0.13.*
 numpy<1.22
-pillow==8.3.*
+pillow==9.1.*
 torchvision==0.10.*
 torch==1.9.*
 tensorboard==2.5.*
