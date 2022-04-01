@@ -1,6 +1,7 @@
 import json
 
 import numpy as np
+from tqdm import tqdm
 
 from rastervision.pipeline.file_system import str_to_file, file_to_str
 
@@ -122,15 +123,16 @@ class RasterStats():
         chip_stream = (sliding_chip_stream()
                        if sample_prob is None else random_chip_stream())
 
-        for c in chip_stream:
-            chip_means = np.nanmean(c, axis=1)
-            chip_vars = np.nanvar(c, axis=1)
-            chip_count = np.sum(c[0] != np.nan)
+        with tqdm(chip_stream, desc='Analyzing chips') as bar:
+            for chip in bar:
+                chip_means = np.nanmean(chip, axis=1)
+                chip_vars = np.nanvar(chip, axis=1)
+                chip_count = np.sum(chip[0] != np.nan)
 
-            var = parallel_variance(chip_means, chip_count, chip_vars, mean,
-                                    count, var)
-            mean = parallel_mean(chip_means, chip_count, mean, count)
-            count += chip_count
+                var = parallel_variance(chip_means, chip_count, chip_vars,
+                                        mean, count, var)
+                mean = parallel_mean(chip_means, chip_count, mean, count)
+                count += chip_count
 
         self.means = mean
         self.stds = np.sqrt(var)
