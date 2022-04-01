@@ -1,6 +1,6 @@
 rastervision_pipeline==0.13.*
 rastervision_core==0.13.*
-numpy<1.22
+numpy<1.23
 pillow==8.3.*
 torchvision==0.10.*
 torch==1.9.*
