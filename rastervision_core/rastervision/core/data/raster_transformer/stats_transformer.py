@@ -1,23 +1,33 @@
+from typing import TYPE_CHECKING, Optional, Sequence
+
 import numpy as np
 
-from rastervision.core.data.raster_transformer.raster_transformer \
-    import RasterTransformer
+from rastervision.core.data.raster_transformer import RasterTransformer
+
+if TYPE_CHECKING:
+    from rastervision.core.raster_stats import RasterStats
 
 
 class StatsTransformer(RasterTransformer):
     """Transforms non-uint8 to uint8 values using raster_stats.
     """
 
-    def __init__(self, raster_stats=None):
+    def __init__(self, raster_stats: 'RasterStats'):
         """Construct a new StatsTransformer.
 
         Args:
             raster_stats: (RasterStats) used to transform chip to have
                 desired statistics
         """
-        self.raster_stats = raster_stats
+        # shape = (1, 1, num_channels)
+        self.means = np.array(
+            raster_stats.means, dtype=float)[np.newaxis, np.newaxis, :]
+        self.stds = np.array(
+            raster_stats.stds, dtype=float)[np.newaxis, np.newaxis, :]
 
-    def transform(self, chip, channel_order=None):
+    def transform(self,
+                  chip: np.ndarray,
+                  channel_order: Optional[Sequence[int]] = None) -> np.ndarray:
         """Transform a chip.
 
         Transforms non-uint8 to uint8 values using raster_stats.
@@ -34,34 +44,24 @@ class StatsTransformer(RasterTransformer):
 
         """
         if chip.dtype != np.uint8:
-            if self.raster_stats:
-                if channel_order is None:
-                    channel_order = np.arange(chip.shape[2])
+            if channel_order is None:
+                channel_order = np.arange(chip.shape[2])
 
-                # Subtract mean and divide by std to get zscores.
-                means = np.array(self.raster_stats.means)
-                means = means[np.newaxis, np.newaxis, channel_order].astype(
-                    float)
-                stds = np.array(self.raster_stats.stds)
-                stds = stds[np.newaxis, np.newaxis, channel_order].astype(
-                    float)
+            # Don't transform NODATA zero values.
+            nodata_mask = chip == 0
 
-                # Don't transform NODATA zero values.
-                nodata = chip == 0
+            # Subtract mean and divide by std to get zscores.
+            chip = chip.astype(float)
+            chip -= self.means[..., channel_order]
+            chip /= self.stds[..., channel_order]
 
-                chip = chip - means
-                chip = chip / stds
+            # Make zscores that fall between -3 and 3 span 0 to 255.
+            chip = np.clip(chip, -3, 3, out=chip)
+            chip += 3
+            chip /= 6
+            chip *= 255
+            chip = chip.astype(np.uint8)
 
-                # Make zscores that fall between -3 and 3 span 0 to 255.
-                chip += 3
-                chip /= 6
-
-                chip = np.clip(chip, 0, 1)
-                chip *= 255
-                chip = chip.astype(np.uint8)
-
-                chip[nodata] = 0
-            else:
-                raise ValueError('raster_stats not defined.')
+            chip[nodata_mask] = 0
 
         return chip
