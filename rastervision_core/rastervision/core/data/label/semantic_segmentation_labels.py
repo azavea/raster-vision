@@ -273,7 +273,6 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
 
     def get_label_arr(self, window: Box) -> np.ndarray:
         """Get discrete labels by argmax'ing the scoress."""
-        y0, x0, y1, x1 = self._to_local_coords(window)
         avg_scores = self.get_score_arr(window)
         labels = np.argmax(avg_scores, axis=0)
         return labels
