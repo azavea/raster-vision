@@ -6,13 +6,14 @@ import numpy as np
 from rastervision.core.box import Box
 from rastervision.core.data import (
     RasterioSourceConfig, MultiRasterSourceConfig, SubRasterSourceConfig,
-    CropOffsets, ReclassTransformerConfig)
+    CropOffsets, ReclassTransformerConfig, CastTransformerConfig)
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path
 
 
-def make_cfg(img_path='small-rgb-tile.tif', **kwargs):
+def make_cfg(img_path: str = 'small-rgb-tile.tif',
+             **kwargs) -> MultiRasterSourceConfig:
     img_path = data_file_path(img_path)
     r_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
     g_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
@@ -23,6 +24,33 @@ def make_cfg(img_path='small-rgb-tile.tif', **kwargs):
             SubRasterSourceConfig(raster_source=r_source, target_channels=[0]),
             SubRasterSourceConfig(raster_source=g_source, target_channels=[1]),
             SubRasterSourceConfig(raster_source=b_source, target_channels=[2])
+        ],
+        **kwargs)
+    return cfg
+
+
+def make_cfg_diverse(diff_dtypes: bool = False,
+                     **kwargs) -> MultiRasterSourceConfig:
+    img_paths = [
+        data_file_path('multi_raster_source/const_100_600x600.tiff'),
+        data_file_path('multi_raster_source/const_175_60x60.tiff'),
+        data_file_path('multi_raster_source/const_250_6x6.tiff')
+    ]
+    transformers = [[]] * 3
+    if diff_dtypes:
+        transformers = [
+            [],
+            [CastTransformerConfig(to_dtype='float32')],
+            [CastTransformerConfig(to_dtype='int')],
+        ]
+    rs_cfgs = [
+        RasterioSourceConfig(uris=[path], channel_order=[0], transformers=tfs)
+        for path, tfs in zip(img_paths, transformers)
+    ]
+    cfg = MultiRasterSourceConfig(
+        raster_sources=[
+            SubRasterSourceConfig(raster_source=rs_cfg, target_channels=[i])
+            for i, rs_cfg in enumerate(rs_cfgs)
         ],
         **kwargs)
     return cfg
@@ -48,6 +76,29 @@ class TestMultiRasterSource(unittest.TestCase):
         self.assertEqual(xmin, 0)
         self.assertEqual(ymax, 256)
         self.assertEqual(xmax, 256)
+
+    def test_primary_source_idx(self):
+        primary_source_idx = 2
+        non_primary_source_idx = 1
+
+        cfg = make_cfg_diverse(
+            diff_dtypes=True,
+            force_same_dtype=True,
+            primary_source_idx=primary_source_idx)
+        rs = cfg.build(tmp_dir=self.tmp_dir)
+        primary_rs = rs.raster_sources[primary_source_idx]
+        non_primary_rs = rs.raster_sources[non_primary_source_idx]
+
+        self.assertEqual(rs.get_extent(), primary_rs.get_extent())
+        self.assertNotEqual(rs.get_extent(), non_primary_rs.get_extent())
+
+        self.assertEqual(rs.get_dtype(), primary_rs.get_dtype())
+        self.assertNotEqual(rs.get_dtype(), non_primary_rs.get_dtype())
+
+        self.assertEqual(rs.get_crs_transformer().transform,
+                         primary_rs.get_crs_transformer().transform)
+        self.assertNotEqual(rs.get_crs_transformer(),
+                            non_primary_rs.get_crs_transformer())
 
     def test_extent_crop(self):
         f = 1 / 4
@@ -152,19 +203,7 @@ class TestMultiRasterSource(unittest.TestCase):
                 tuple(chip.reshape(-1, 3).mean(axis=0)), (100, 100, 100))
 
     def test_nonidentical_extents_and_resolutions(self):
-        img_path_1 = data_file_path(
-            'multi_raster_source/const_100_600x600.tiff')
-        img_path_2 = data_file_path('multi_raster_source/const_175_60x60.tiff')
-        img_path_3 = data_file_path('multi_raster_source/const_250_6x6.tiff')
-        source_1 = RasterioSourceConfig(uris=[img_path_1], channel_order=[0])
-        source_2 = RasterioSourceConfig(uris=[img_path_2], channel_order=[0])
-        source_3 = RasterioSourceConfig(uris=[img_path_3], channel_order=[0])
-
-        cfg = MultiRasterSourceConfig(raster_sources=[
-            SubRasterSourceConfig(raster_source=source_1, target_channels=[0]),
-            SubRasterSourceConfig(raster_source=source_2, target_channels=[1]),
-            SubRasterSourceConfig(raster_source=source_3, target_channels=[2])
-        ])
+        cfg = make_cfg_diverse(diff_dtypes=False)
         rs = cfg.build(tmp_dir=self.tmp_dir)
         with rs.activate():
             for get_chip_fn in [rs._get_chip, rs.get_chip]:
