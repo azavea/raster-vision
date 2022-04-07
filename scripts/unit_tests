@@ -6,6 +6,11 @@ if [[ -n "${RASTER_VISION_DEBUG}" ]]; then
     set -x
 fi
 
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+SRC_DIR="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
+
 function usage() {
     echo -n \
 "Usage: $(basename "$0")
@@ -16,12 +21,13 @@ Run all unit tests.
 if [ "${1:-}" = "--help" ]; then
     usage
 else
+    echo "Running unit tests ..."
     # If the command `coverage` exists (provided by coverage.py), then
     # use it to run the unit tests.  Otherwise, use the normal Python
     # executable.
     if ! [ -x "$(command -v coverage)" ]; then
-	    python -m unittest discover tests -vf
+	    python -m unittest discover -t "$SRC_DIR" tests -vf
     else
-	    coverage run -m unittest discover tests -vf
+	    coverage run -m unittest discover -t "$SRC_DIR" tests -vf
     fi
 fi

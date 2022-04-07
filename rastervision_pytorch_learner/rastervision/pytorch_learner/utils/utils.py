@@ -1,8 +1,11 @@
 from typing import Dict, Sequence, Tuple, Optional, Union, List, Iterable
+from tempfile import TemporaryDirectory
+from os.path import basename, join
 import logging
 
 import torch
 from torch import nn
+from torch.hub import import_module
 import numpy as np
 from PIL import ImageColor
 import albumentations as A
@@ -74,14 +77,104 @@ def compute_conf_mat_metrics(conf_mat, label_names, eps=1e-6):
     return metrics
 
 
-def validate_albumentation_transform(tf: dict):
-    """ Validate a serialized albumentation transform. """
-    if tf is not None:
+def validate_albumentation_transform(tf_dict: Optional[dict]) -> dict:
+    """ Validate a serialized albumentation transform by attempting to
+    deserialize it.
+    """
+    if tf_dict is not None:
         try:
-            A.from_dict(tf)
+            lambda_transforms_path = tf_dict.get('lambda_transforms_path',
+                                                 None)
+            # hack: if this is being called while building the config from the
+            # bundle, skip the validation because the 'lambda_transforms_path's
+            # have not been adjusted yet
+            if (lambda_transforms_path is not None
+                    and lambda_transforms_path.startswith('model-bundle')):
+                return tf_dict
+            else:
+                _ = deserialize_albumentation_transform(tf_dict)
         except Exception:
             raise ConfigError('The given serialization is invalid. Use '
                               'A.to_dict(transform) to serialize.')
+    return tf_dict
+
+
+def serialize_albumentation_transform(
+        tf: A.BasicTransform,
+        lambda_transforms_path: Optional[str] = None,
+        dst_dir: Optional[str] = None) -> dict:
+    """Serialize an albumentations transform to a dict.
+
+    If the transform includes a Lambda transform, a `lambda_transforms_path`
+    should be provided. This should be a path to a python file that defines a
+    dict named `lambda_transforms` as required by `A.from_dict()`. See
+    https://albumentations.ai/docs/examples/serialization/ for details. This
+    path is saved as a field in the returned dict so that it is available
+    at the time of deserialization.
+
+    Args:
+        tf (A.BasicTransform): The transform to serialize.
+        lambda_transforms_path (Optional[str], optional): Path to a python file
+            that defines a dict named `lambda_transforms` as required by
+            `A.from_dict()`. Defaults to None.
+        dst_dir (Optional[str], optional): Directory to copy the transforms
+            file to. Useful for copying the file to S3 when running on Batch.
+            Defaults to None.
+
+    Returns:
+        dict: The serialized transform.
+    """
+    tf_dict = A.to_dict(tf)
+
+    if lambda_transforms_path is not None:
+        if dst_dir is not None:
+            from rastervision.pipeline.file_system import upload_or_copy
+
+            filename = basename(lambda_transforms_path)
+            dst_uri = join(dst_dir, filename)
+            upload_or_copy(lambda_transforms_path, dst_uri)
+            lambda_transforms_path = dst_uri
+        # save the path in the dict so that it is available
+        # at deserialization time
+        tf_dict['lambda_transforms_path'] = lambda_transforms_path
+
+    return tf_dict
+
+
+def deserialize_albumentation_transform(tf_dict: dict) -> A.BasicTransform:
+    """Deserialize an albumentations transform serialized by
+    `serialize_albumentation_transform()`.
+
+    If the input dict contains a `lambda_transforms_path`, the
+    `lambda_transforms` dict is dynamically imported from it and passed to
+    `A.from_dict()`. See
+    https://albumentations.ai/docs/examples/serialization/ for details
+
+    Args:
+        tf_dict (dict): Serialized albumentations transform.
+
+    Returns:
+        A.BasicTransform: Deserialized transform.
+    """
+    lambda_transforms_path = tf_dict.get('lambda_transforms_path', None)
+    if lambda_transforms_path is not None:
+        from rastervision.pipeline.file_system import download_if_needed
+
+        with TemporaryDirectory() as tmp_dir:
+            filename = basename(lambda_transforms_path)
+            # download the transforms definition file into tmp_dir
+            lambda_transforms_path = download_if_needed(
+                lambda_transforms_path, tmp_dir)
+            # import it as a module
+            lambda_transforms_module = import_module(
+                name=filename, path=lambda_transforms_path)
+            # retrieve the lambda_transforms dict from the module
+            lambda_transforms: dict = getattr(lambda_transforms_module,
+                                              'lambda_transforms')
+            # de-serialize
+            tf = A.from_dict(tf_dict, nonserializable=lambda_transforms)
+    else:
+        tf = A.from_dict(tf_dict)
     return tf
 
 

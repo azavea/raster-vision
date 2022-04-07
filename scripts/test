@@ -24,8 +24,8 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
                 "raster-vision-${IMAGE_TYPE}" \
                 /opt/src/scripts/style_tests
             docker run \
-                -w "$(pwd)" \
-                -v "$(pwd):$(pwd)" \
+                -w "/opt/src" \
+                -v "$(pwd):/opt/src" \
                 --rm -t \
                 "raster-vision-${IMAGE_TYPE}" \
                 /opt/src/scripts/unit_tests
@@ -36,8 +36,8 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
             # Create new coverage reports
             docker run \
-                -w "$(pwd)" \
-                -v "$(pwd):$(pwd)" \
+                -w "/opt/src" \
+                -v "$(pwd):/opt/src" \
                 --rm -t \
                 "raster-vision-${IMAGE_TYPE}" \
                 coverage xml

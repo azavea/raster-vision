@@ -5,6 +5,7 @@ from uuid import uuid4
 import logging
 
 import numpy as np
+import torch
 
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
@@ -15,6 +16,9 @@ from rastervision.pytorch_backend import PyTorchSemanticSegmentationConfig
 from rastervision.pytorch_learner import (
     SemanticSegmentationModelConfig, SolverConfig,
     SemanticSegmentationGeoDataConfig, PlotOptions, GeoDataWindowConfig)
+from rastervision.pytorch_learner.utils import (
+    serialize_albumentation_transform)
+from tests.data_files.lambda_transforms import lambda_transforms
 from tests import data_file_path
 
 
@@ -87,11 +91,21 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
                     for _ in range(2)
                 ],
                 test_scenes=[])
+            if num_channels == 6:
+                tf = lambda_transforms['swap']
+                aug_tf = serialize_albumentation_transform(
+                    tf,
+                    lambda_transforms_path=data_file_path(
+                        'lambda_transforms.py'),
+                    dst_dir=tmp_dir)
+            else:
+                aug_tf = None
             data_cfg = SemanticSegmentationGeoDataConfig(
                 scene_dataset=dataset_cfg,
                 window_opts=GeoDataWindowConfig(size=20, stride=20),
                 class_names=class_config.names,
                 class_colors=class_config.colors,
+                aug_transform=aug_tf,
                 plot_options=PlotOptions(
                     channel_display_groups=channel_display_groups),
                 num_workers=0)
@@ -105,8 +119,13 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
             pipeline_cfg.update()
             backend = backend_cfg.build(pipeline_cfg, tmp_dir)
             learner = backend.learner_cfg.build(tmp_dir, training=True)
+
             learner.plot_dataloaders()
             learner.plot_predictions(split='valid')
+
+            torch.save(learner.model.state_dict(), learner.last_model_path)
+            learner.save_model_bundle()
+            backend.load_model()
 
 
 if __name__ == '__main__':

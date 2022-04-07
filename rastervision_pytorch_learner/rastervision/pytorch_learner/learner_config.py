@@ -323,7 +323,7 @@ def data_config_upgrader(cfg_dict: dict, version: int) -> dict:
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
     class_names: List[str] = Field([], description='Names of classes.')
-    class_colors: Optional[Union[List[str], List[List]]] = Field(
+    class_colors: Optional[List[Union[str, Tuple[int, int, int]]]] = Field(
         None,
         description=('Colors used to display classes. '
                      'Can be color 3-tuples in list form.'))
@@ -389,6 +389,24 @@ class DataConfig(Config):
 
     def make_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
         raise NotImplementedError()
+
+    def get_custom_albumentations_transforms(self) -> List[dict]:
+        """This should return all serialized albumentations transforms with
+        a 'lambda_transforms_path' field contained in this
+        config or in any of its members no matter how deeply neseted.
+
+        The pupose is to make it easier to adjust their paths all at once while
+        saving to or loading from a bundle.
+        """
+        transforms_all = [
+            self.base_transform, self.aug_transform,
+            self.plot_options.transform
+        ]
+        transforms_with_lambdas = [
+            tf for tf in transforms_all if (tf is not None) and (
+                tf.get('lambda_transforms_path') is not None)
+        ]
+        return transforms_with_lambdas
 
 
 @register_config('image_data')

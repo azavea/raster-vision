@@ -14,7 +14,7 @@ from rastervision.core.rv_pipeline import ObjectDetectionConfig
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
 from rastervision.pytorch_learner import (
     ObjectDetectionModelConfig, SolverConfig, ObjectDetectionGeoDataConfig,
-    PlotOptions, GeoDataWindowConfig)
+    PlotOptions, GeoDataWindowConfig, Backbone)
 from tests import data_file_path
 
 
@@ -92,7 +92,8 @@ class TestObjectDetectionLearner(unittest.TestCase):
                 num_workers=0)
             backend_cfg = PyTorchObjectDetectionConfig(
                 data=data_cfg,
-                model=ObjectDetectionModelConfig(pretrained=False),
+                model=ObjectDetectionModelConfig(
+                    backbone=Backbone.resnet18, pretrained=False),
                 solver=SolverConfig(),
                 log_tensorboard=False)
             pipeline_cfg = ObjectDetectionConfig(
