@@ -593,6 +593,15 @@ class GeoDataConfig(DataConfig):
     scene_dataset: SceneDatasetConfig
     window_opts: Union[GeoDataWindowConfig, Dict[str, GeoDataWindowConfig]]
 
+    def __repr_args__(self):  # pragma: no cover
+        ds = self.scene_dataset
+        ds_repr = (f'<{len(ds.train_scenes)} train_scenes, '
+                   f'{len(ds.validation_scenes)} validation_scenes, '
+                   f'{len(ds.test_scenes)} test_scenes>')
+        out = [('scene_dataset', ds_repr), ('window_opts',
+                                            str(self.window_opts))]
+        return out
+
     def validate_config(self, *args, **kwargs):
         super().validate_config(*args, **kwargs)
         if isinstance(self.window_opts, dict):
