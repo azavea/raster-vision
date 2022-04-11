@@ -1,171 +1,324 @@
 {
     "overall": [
         {
-            "precision": 1,
-            "recall": 0.5,
-            "f1": 0.6666666666666666,
-            "count_error": 50,
-            "gt_count": 100,
-            "conf_mat": [
-                50,
-                50,
-                0
-            ],
             "class_id": 0,
-            "class_name": "one"
-        },
-        {
-            "precision": 1,
-            "recall": 0.5,
-            "f1": 0.6666666666666666,
-            "count_error": 50,
-            "gt_count": 100,
-            "conf_mat": [
-                50,
-                50,
-                0
-            ],
-            "class_id": 1,
-            "class_name": "two"
-        },
-        {
-            "precision": 1,
-            "recall": 0.5,
-            "f1": 0.6666666666666666,
-            "count_error": 50,
-            "gt_count": 200,
+            "class_name": "one",
+            "gt_count": 100.0,
+            "pred_count": 100.0,
+            "count_error": 0.0,
+            "relative_frequency": 0.5,
+            "metrics": {
+                "recall": 0.5,
+                "precision": 0.5,
+                "f1": 0.5,
+                "sensitivity": 0.5,
+                "specificity": 0.5
+            },
             "conf_mat": [
                 [
-                    0,
-                    0,
-                    0
+                    50.0,
+                    50.0
                 ],
                 [
-                    50,
-                    50,
-                    0
-                ],
-                [
-                    50,
-                    50,
-                    0
+                    50.0,
+                    50.0
                 ]
-            ],
-            "class_id": null,
-            "class_name": "average"
+            ]
+        },
+        {
+            "class_id": 1,
+            "class_name": "two",
+            "gt_count": 100.0,
+            "pred_count": 100.0,
+            "count_error": 0.0,
+            "relative_frequency": 0.5,
+            "metrics": {
+                "recall": 0.5,
+                "precision": 0.5,
+                "f1": 0.5,
+                "sensitivity": 0.5,
+                "specificity": 0.5
+            },
+            "conf_mat": [
+                [
+                    50.0,
+                    50.0
+                ],
+                [
+                    50.0,
+                    50.0
+                ]
+            ]
+        },
+        {
+            "class_id": 2,
+            "class_name": "null",
+            "gt_count": 0.0,
+            "pred_count": 0.0,
+            "count_error": 0.0,
+            "relative_frequency": 0.0,
+            "metrics": {
+                "recall": null,
+                "precision": null,
+                "f1": null,
+                "sensitivity": null,
+                "specificity": 1.0
+            },
+            "conf_mat": [
+                [
+                    200.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.0
+                ]
+            ]
+        },
+        {
+            "class_name": "average",
+            "metrics": {
+                "recall": 0.5,
+                "precision": 0.5,
+                "f1": 0.5,
+                "sensitivity": 0.5,
+                "specificity": 0.5
+            },
+            "gt_count": 200.0,
+            "pred_count": 200.0,
+            "count_error": 0.0,
+            "conf_mat": [
+                [
+                    50.0,
+                    50.0,
+                    0.0
+                ],
+                [
+                    50.0,
+                    50.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            ]
         }
     ],
     "per_scene": {
         "0": [
             {
-                "precision": 1,
-                "recall": 0.5,
-                "f1": 0.6666666666666666,
-                "count_error": 50,
-                "gt_count": 100,
-                "conf_mat": [
-                    50,
-                    50,
-                    0
-                ],
                 "class_id": 0,
-                "class_name": "one"
-            },
-            {
-                "precision": 0,
-                "recall": null,
-                "f1": null,
-                "count_error": 50,
-                "gt_count": 0,
-                "conf_mat": [
-                    0,
-                    0,
-                    0
-                ],
-                "class_id": 1,
-                "class_name": "two"
-            },
-            {
-                "precision": 1,
-                "recall": 0.5,
-                "f1": 0.6666666666666666,
-                "count_error": 50,
-                "gt_count": 100,
+                "class_name": "one",
+                "gt_count": 100.0,
+                "pred_count": 50.0,
+                "count_error": 50.0,
+                "relative_frequency": 1.0,
+                "metrics": {
+                    "recall": 0.5,
+                    "precision": 1.0,
+                    "f1": 0.6666666666666666,
+                    "sensitivity": 0.5,
+                    "specificity": null
+                },
                 "conf_mat": [
                     [
-                        0,
-                        0,
-                        0
+                        0.0,
+                        0.0
                     ],
                     [
-                        50,
-                        50,
-                        0
-                    ],
-                    [
-                        0,
-                        0,
-                        0
+                        50.0,
+                        50.0
                     ]
-                ],
-                "class_id": null,
-                "class_name": "average"
+                ]
+            },
+            {
+                "class_id": 1,
+                "class_name": "two",
+                "gt_count": 0.0,
+                "pred_count": 50.0,
+                "count_error": 50.0,
+                "relative_frequency": 0.0,
+                "metrics": {
+                    "recall": null,
+                    "precision": 0.0,
+                    "f1": null,
+                    "sensitivity": null,
+                    "specificity": 0.5
+                },
+                "conf_mat": [
+                    [
+                        50.0,
+                        50.0
+                    ],
+                    [
+                        0.0,
+                        0.0
+                    ]
+                ]
+            },
+            {
+                "class_id": 2,
+                "class_name": "null",
+                "gt_count": 0.0,
+                "pred_count": 0.0,
+                "count_error": 0.0,
+                "relative_frequency": 0.0,
+                "metrics": {
+                    "recall": null,
+                    "precision": null,
+                    "f1": null,
+                    "sensitivity": null,
+                    "specificity": 1.0
+                },
+                "conf_mat": [
+                    [
+                        100.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0
+                    ]
+                ]
+            },
+            {
+                "class_name": "average",
+                "metrics": {
+                    "recall": 0.5,
+                    "precision": 1.0,
+                    "f1": 0.6666666666666666,
+                    "sensitivity": 0.5,
+                    "specificity": 0.0
+                },
+                "gt_count": 100.0,
+                "pred_count": 100.0,
+                "count_error": 100.0,
+                "conf_mat": [
+                    [
+                        50.0,
+                        50.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ]
+                ]
             }
         ],
         "1": [
             {
-                "precision": 0,
-                "recall": null,
-                "f1": null,
-                "count_error": 50,
-                "gt_count": 0,
-                "conf_mat": [
-                    0,
-                    0,
-                    0
-                ],
                 "class_id": 0,
-                "class_name": "one"
-            },
-            {
-                "precision": 1,
-                "recall": 0.5,
-                "f1": 0.6666666666666666,
-                "count_error": 50,
-                "gt_count": 100,
-                "conf_mat": [
-                    50,
-                    50,
-                    0
-                ],
-                "class_id": 1,
-                "class_name": "two"
-            },
-            {
-                "precision": 1,
-                "recall": 0.5,
-                "f1": 0.6666666666666666,
-                "count_error": 50,
-                "gt_count": 100,
+                "class_name": "one",
+                "gt_count": 0.0,
+                "pred_count": 50.0,
+                "count_error": 50.0,
+                "relative_frequency": 0.0,
+                "metrics": {
+                    "recall": null,
+                    "precision": 0.0,
+                    "f1": null,
+                    "sensitivity": null,
+                    "specificity": 0.5
+                },
                 "conf_mat": [
                     [
-                        0,
-                        0,
-                        0
+                        50.0,
+                        50.0
                     ],
                     [
-                        0,
-                        0,
-                        0
-                    ],
-                    [
-                        50,
-                        50,
-                        0
+                        0.0,
+                        0.0
                     ]
-                ],
-                "class_id": null,
-                "class_name": "average"
+                ]
+            },
+            {
+                "class_id": 1,
+                "class_name": "two",
+                "gt_count": 100.0,
+                "pred_count": 50.0,
+                "count_error": 50.0,
+                "relative_frequency": 1.0,
+                "metrics": {
+                    "recall": 0.5,
+                    "precision": 1.0,
+                    "f1": 0.6666666666666666,
+                    "sensitivity": 0.5,
+                    "specificity": null
+                },
+                "conf_mat": [
+                    [
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        50.0,
+                        50.0
+                    ]
+                ]
+            },
+            {
+                "class_id": 2,
+                "class_name": "null",
+                "gt_count": 0.0,
+                "pred_count": 0.0,
+                "count_error": 0.0,
+                "relative_frequency": 0.0,
+                "metrics": {
+                    "recall": null,
+                    "precision": null,
+                    "f1": null,
+                    "sensitivity": null,
+                    "specificity": 1.0
+                },
+                "conf_mat": [
+                    [
+                        100.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0
+                    ]
+                ]
+            },
+            {
+                "class_name": "average",
+                "metrics": {
+                    "recall": 0.5,
+                    "precision": 1.0,
+                    "f1": 0.6666666666666666,
+                    "sensitivity": 0.5,
+                    "specificity": 0.0
+                },
+                "gt_count": 100.0,
+                "pred_count": 100.0,
+                "count_error": 100.0,
+                "conf_mat": [
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        50.0,
+                        50.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0
+                    ]
+                ]
             }
         ]
     }
