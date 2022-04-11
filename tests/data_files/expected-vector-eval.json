@@ -1,72 +1,120 @@
 {
     "overall": [
         {
-            "precision": 0.8333333333333334,
-            "recall": 0.8333333333333334,
-            "f1": 0.8333333333333334,
-            "count_error": 2,
-            "gt_count": 6,
             "class_id": 0,
-            "class_name": "vector-polygons-one"
+            "class_name": "one",
+            "gt_count": 6,
+            "pred_count": 6,
+            "count_error": 0,
+            "metrics": {
+                "recall": 0.8333333333333334,
+                "precision": 0.8333333333333334,
+                "f1": 0.8333333333333334,
+                "sensitivity": 0.8333333333333334,
+                "specificity": null
+            },
+            "true_pos": 5,
+            "false_pos": 1,
+            "false_neg": 1,
+            "mode": "polygons"
         },
         {
-            "precision": 0.8571428571428571,
-            "recall": 0.75,
-            "f1": 0.7999999999999999,
-            "count_error": 3,
-            "gt_count": 8,
             "class_id": 1,
-            "class_name": "vector-polygons-two"
+            "class_name": "two",
+            "gt_count": 8,
+            "pred_count": 7,
+            "count_error": 1,
+            "metrics": {
+                "recall": 0.75,
+                "precision": 0.8571428571428571,
+                "f1": 0.7999999999999999,
+                "sensitivity": 0.75,
+                "specificity": null
+            },
+            "true_pos": 6,
+            "false_pos": 1,
+            "false_neg": 2,
+            "mode": "polygons"
         },
         {
-            "precision": 0.846938775510204,
-            "recall": 0.7857142857142857,
-            "f1": 0.8142857142857143,
-            "count_error": 2.571428571428571,
+            "class_name": "average",
+            "metrics": {
+                "recall": 0.7857142857142857,
+                "precision": 0.846938775510204,
+                "f1": 0.8142857142857143,
+                "sensitivity": 0.7857142857142857,
+                "specificity": 0.0
+            },
             "gt_count": 14,
-            "class_id": null,
-            "class_name": "average"
+            "pred_count": 13,
+            "count_error": 1
         }
     ],
     "per_scene": {
         "0": [
             {
-                "precision": 0.8333333333333334,
-                "recall": 0.8333333333333334,
-                "f1": 0.8333333333333334,
-                "count_error": 2,
-                "gt_count": 6,
                 "class_id": 0,
-                "class_name": "vector-polygons-one"
+                "class_name": "one",
+                "gt_count": 6,
+                "pred_count": 6,
+                "count_error": 0,
+                "metrics": {
+                    "recall": 0.8333333333333334,
+                    "precision": 0.8333333333333334,
+                    "f1": 0.8333333333333334,
+                    "sensitivity": 0.8333333333333334,
+                    "specificity": null
+                },
+                "true_pos": 5,
+                "false_pos": 1,
+                "false_neg": 1,
+                "mode": "polygons"
             },
             {
-                "precision": 0.8333333333333334,
-                "recall": 0.8333333333333334,
-                "f1": 0.8333333333333334,
-                "count_error": 2,
+                "class_name": "average",
+                "metrics": {
+                    "recall": 0.8333333333333334,
+                    "precision": 0.8333333333333334,
+                    "f1": 0.8333333333333334,
+                    "sensitivity": 0.8333333333333334,
+                    "specificity": 0.0
+                },
                 "gt_count": 6,
-                "class_id": null,
-                "class_name": "average"
+                "pred_count": 6,
+                "count_error": 0
             }
         ],
         "1": [
             {
-                "precision": 0.8571428571428571,
-                "recall": 0.75,
-                "f1": 0.7999999999999999,
-                "count_error": 3,
-                "gt_count": 8,
                 "class_id": 1,
-                "class_name": "vector-polygons-two"
+                "class_name": "two",
+                "gt_count": 8,
+                "pred_count": 7,
+                "count_error": 1,
+                "metrics": {
+                    "recall": 0.75,
+                    "precision": 0.8571428571428571,
+                    "f1": 0.7999999999999999,
+                    "sensitivity": 0.75,
+                    "specificity": null
+                },
+                "true_pos": 6,
+                "false_pos": 1,
+                "false_neg": 2,
+                "mode": "polygons"
             },
             {
-                "precision": 0.8571428571428571,
-                "recall": 0.75,
-                "f1": 0.7999999999999999,
-                "count_error": 3,
+                "class_name": "average",
+                "metrics": {
+                    "recall": 0.75,
+                    "precision": 0.8571428571428571,
+                    "f1": 0.7999999999999999,
+                    "sensitivity": 0.75,
+                    "specificity": 0.0
+                },
                 "gt_count": 8,
-                "class_id": null,
-                "class_name": "average"
+                "pred_count": 7,
+                "count_error": 1
             }
         ]
     }

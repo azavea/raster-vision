@@ -78,6 +78,13 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
     def test_evaluator(self):
         output_uri = join(self.tmp_dir.name, 'out.json')
         scenes = [self.get_scene(0), self.get_scene(1)]
+
+        # the mock scene returned by get_scene uses a label source in place of
+        # a label store, but an SS label store is expected to have a
+        # vector_outputs, so we add that here
+        scenes[0].label_store.vector_outputs = None
+        scenes[1].label_store.vector_outputs = None
+
         evaluator = SemanticSegmentationEvaluator(self.class_config,
                                                   output_uri, None)
         evaluator.process(scenes, self.tmp_dir.name)
@@ -109,7 +116,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
             rasterizer_config=RasterizerConfig(background_class_id=1))
         pred_rs = config.build(self.class_config, crs_transformer, extent)
         pred_ls = SemanticSegmentationLabelSource(pred_rs, self.null_class_id)
-        pred_ls.vector_output = [
+        pred_ls.vector_outputs = [
             PolygonVectorOutputConfig(
                 uri=pred_uri, denoise=0, class_id=class_id)
         ]

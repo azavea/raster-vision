@@ -53,10 +53,10 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         self.assertEqual(eval_item2.f1, 2 / 3)
 
         avg_item = eval.avg_item
-        self.assertEqual(avg_item.gt_count, 4)
-        self.assertAlmostEqual(avg_item.precision, 1.0)
-        self.assertEqual(avg_item.recall, 0.75)
-        self.assertAlmostEqual(avg_item.f1, 0.83, places=2)
+        self.assertEqual(avg_item['gt_count'], 4)
+        self.assertAlmostEqual(avg_item['metrics']['precision'], 1.0)
+        self.assertEqual(avg_item['metrics']['recall'], 0.75)
+        self.assertAlmostEqual(avg_item['metrics']['f1'], 0.83, places=2)
 
     def test_compute_no_preds(self):
         class_config = self.make_class_config()
@@ -67,21 +67,21 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         eval.compute(gt_labels, pred_labels)
         eval_item1 = eval.class_to_eval_item[0]
         self.assertEqual(eval_item1.gt_count, 2)
-        self.assertEqual(eval_item1.precision, None)
+        self.assertTrue(np.isnan(eval_item1.precision))
         self.assertEqual(eval_item1.recall, 0.0)
-        self.assertEqual(eval_item1.f1, None)
+        self.assertTrue(np.isnan(eval_item1.f1))
 
         eval_item2 = eval.class_to_eval_item[1]
         self.assertEqual(eval_item2.gt_count, 2)
-        self.assertEqual(eval_item2.precision, None)
+        self.assertTrue(np.isnan(eval_item2.precision))
         self.assertEqual(eval_item2.recall, 0.0)
-        self.assertEqual(eval_item2.f1, None)
+        self.assertTrue(np.isnan(eval_item2.f1))
 
         avg_item = eval.avg_item
-        self.assertEqual(avg_item.gt_count, 4)
-        self.assertEqual(avg_item.precision, 0.0)
-        self.assertEqual(avg_item.recall, 0.0)
-        self.assertEqual(avg_item.f1, 0.0)
+        self.assertEqual(avg_item['gt_count'], 4)
+        self.assertEqual(avg_item['metrics']['precision'], 0.0)
+        self.assertEqual(avg_item['metrics']['recall'], 0.0)
+        self.assertEqual(avg_item['metrics']['f1'], 0.0)
 
     def test_compute_no_ground_truth(self):
         class_config = self.make_class_config()
@@ -92,21 +92,21 @@ class TestObjectDetectionEvaluation(unittest.TestCase):
         eval.compute(gt_labels, pred_labels)
         eval_item1 = eval.class_to_eval_item[0]
         self.assertEqual(eval_item1.gt_count, 0)
-        self.assertEqual(eval_item1.precision, None)
-        self.assertEqual(eval_item1.recall, None)
-        self.assertEqual(eval_item1.f1, None)
+        self.assertEqual(eval_item1.precision, 0)
+        self.assertTrue(np.isnan(eval_item1.recall))
+        self.assertTrue(np.isnan(eval_item1.f1))
 
         eval_item2 = eval.class_to_eval_item[1]
         self.assertEqual(eval_item2.gt_count, 0)
-        self.assertEqual(eval_item2.precision, None)
-        self.assertEqual(eval_item2.recall, None)
-        self.assertEqual(eval_item2.f1, None)
+        self.assertEqual(eval_item2.precision, 0)
+        self.assertTrue(np.isnan(eval_item2.recall))
+        self.assertTrue(np.isnan(eval_item2.f1))
 
         avg_item = eval.avg_item
-        self.assertEqual(avg_item.gt_count, 0)
-        self.assertEqual(avg_item.precision, None)
-        self.assertEqual(avg_item.recall, None)
-        self.assertEqual(avg_item.f1, None)
+        self.assertEqual(avg_item['gt_count'], 0)
+        self.assertEqual(avg_item['metrics']['precision'], 0.0)
+        self.assertEqual(avg_item['metrics']['recall'], 0.0)
+        self.assertEqual(avg_item['metrics']['f1'], 0.0)
 
 
 if __name__ == '__main__':

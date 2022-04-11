@@ -1,44 +1,70 @@
 {
+    "overall": [
+        {
+            "class_id": 0,
+            "class_name": "one",
+            "gt_count": 3,
+            "pred_count": 3,
+            "count_error": 0,
+            "metrics": {
+                "recall": 1.0,
+                "precision": 1.0,
+                "f1": 1.0,
+                "sensitivity": 1.0,
+                "specificity": null
+            },
+            "true_pos": 3,
+            "false_pos": 0,
+            "false_neg": 0,
+            "mode": "polygons"
+        },
+        {
+            "class_name": "average",
+            "metrics": {
+                "recall": 1.0,
+                "precision": 1.0,
+                "f1": 1.0,
+                "sensitivity": 1.0,
+                "specificity": 0.0
+            },
+            "gt_count": 3,
+            "pred_count": 3,
+            "count_error": 0
+        }
+    ],
     "per_scene": {
         "0": [
             {
-                "recall": 1.0,
                 "class_id": 0,
+                "class_name": "one",
                 "gt_count": 3,
-                "precision": 1.0,
-                "f1": 1.0,
-                "class_name": "vector-polygons-one",
-                "count_error": 0
+                "pred_count": 3,
+                "count_error": 0,
+                "metrics": {
+                    "recall": 1.0,
+                    "precision": 1.0,
+                    "f1": 1.0,
+                    "sensitivity": 1.0,
+                    "specificity": null
+                },
+                "true_pos": 3,
+                "false_pos": 0,
+                "false_neg": 0,
+                "mode": "polygons"
             },
             {
-                "recall": 1.0,
-                "class_id": null,
-                "gt_count": 3,
-                "precision": 1.0,
-                "f1": 1.0,
                 "class_name": "average",
+                "metrics": {
+                    "recall": 1.0,
+                    "precision": 1.0,
+                    "f1": 1.0,
+                    "sensitivity": 1.0,
+                    "specificity": 0.0
+                },
+                "gt_count": 3,
+                "pred_count": 3,
                 "count_error": 0
             }
         ]
-    },
-    "overall": [
-        {
-            "recall": 1.0,
-            "class_id": 0,
-            "gt_count": 3,
-            "precision": 1.0,
-            "f1": 1.0,
-            "class_name": "vector-polygons-one",
-            "count_error": 0
-        },
-        {
-            "recall": 1.0,
-            "class_id": null,
-            "gt_count": 3,
-            "precision": 1.0,
-            "f1": 1.0,
-            "class_name": "average",
-            "count_error": 0
-        }
-    ]
+    }
 }
