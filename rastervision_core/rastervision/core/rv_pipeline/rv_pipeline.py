@@ -16,7 +16,8 @@ from rastervision.core.data import Scene, Labels
 from rastervision.core.backend import Backend
 from rastervision.core.rv_pipeline import TRAIN, VALIDATION
 from rastervision.pipeline.file_system.utils import (
-    download_if_needed, zipdir, get_local_path, upload_or_copy, make_dir)
+    download_if_needed, zipdir, get_local_path, upload_or_copy, make_dir,
+    sync_to_dir, file_exists)
 
 log = logging.getLogger(__name__)
 
@@ -298,11 +299,9 @@ class RVPipeline(Pipeline):
                     join(self.config.train_uri, fn), tmp_dir)
                 shutil.copy(path, join(bundle_dir, fn))
 
-            for a in self.config.analyzers:
-                for fn in a.get_bundle_filenames():
-                    path = download_if_needed(
-                        join(self.config.analyze_uri, fn), tmp_dir)
-                    shutil.copy(path, join(bundle_dir, fn))
+            if file_exists(self.config.analyze_uri, include_dir=True):
+                sync_to_dir(self.config.analyze_uri, join(
+                    bundle_dir, 'analyze'))
 
             path = download_if_needed(self.config.get_config_uri(), tmp_dir)
             shutil.copy(path, join(bundle_dir, 'pipeline-config.json'))

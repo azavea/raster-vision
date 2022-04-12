@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Optional
-from os.path import join, basename
+from os.path import join
 
 from rastervision.pipeline.config import register_config, Field
 from rastervision.core.data.raster_transformer import (RasterTransformerConfig,
@@ -33,5 +33,6 @@ class StatsTransformerConfig(RasterTransformerConfig):
     def build(self):
         return StatsTransformer(RasterStats.load(self.stats_uri))
 
-    def update_root(self, root_dir):
-        self.stats_uri = join(root_dir, basename(self.stats_uri))
+    def update_root(self, root_dir: str) -> None:
+        self.stats_uri = join(root_dir, 'analyze', 'stats', self.scene_group,
+                              'stats.json')
