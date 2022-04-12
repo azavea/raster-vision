@@ -104,7 +104,7 @@ def get_expected_eval_path(test_id: str, test_cfg: dict) -> str:
 
 
 def get_actual_eval_path(test_id: str, tmp_dir: str) -> str:
-    return join(tmp_dir, test_id, 'eval/eval.json')
+    return join(tmp_dir, test_id, 'eval/validation_scenes/eval.json')
 
 
 def check_eval_item(test_id: str, test_cfg: dict, expected_item: dict,
