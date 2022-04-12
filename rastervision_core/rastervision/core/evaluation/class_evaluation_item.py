@@ -1,84 +1,154 @@
+from typing import Optional
 import numpy as np
 
 from rastervision.core.evaluation import EvaluationItem
 
 
 class ClassEvaluationItem(EvaluationItem):
-    """Evaluation metrics for a single class (or average over classes).
+    """A wrapper around a binary (2x2) confusion matrix of the form
+        [TN FP]
+        [FN TP]
+    where TN need not necessarily be available.
 
-    None is used for values that are undefined because they involve a division
-    by zero (eg. precision when there are no predictions).
+    Exposes evaluation metrics computed from the confusion matrix as
+    properties.
     """
 
     def __init__(self,
-                 precision=None,
-                 recall=None,
-                 f1=None,
-                 count_error=None,
-                 gt_count=0,
-                 class_id=None,
-                 class_name=None,
-                 conf_mat=None):
-        self.precision = precision
-        self.recall = recall
-        self.f1 = f1
-        self.count_error = count_error
-        # Ground truth count of elements (boxes for object detection, pixels
-        # for segmentation, cells for classification).
-        self.gt_count = gt_count
-        self.conf_mat = conf_mat
+                 class_id: int,
+                 class_name: str,
+                 tp: int,
+                 fp: int,
+                 fn: int,
+                 tn: Optional[int] = None,
+                 **kwargs):
+        """Constructor.
+
+        Args:
+            class_id (int): Class ID.
+            class_name (str): Class name.
+            tp (int): True positive count.
+            fp (int): False positive count.
+            fn (int): False negative count.
+            tn (Optional[int], optional): True negative count.
+                Defaults to None.
+            **kwargs: Additional data can be provided as keyword arguments.
+                These will be included in the dict returned by to_json().
+        """
         self.class_id = class_id
         self.class_name = class_name
+        if tn is None:
+            tn = -1
+        self.conf_mat = np.array([[tn, fp], [fn, tp]])
+        self.extra_info = kwargs
 
-    def merge(self, other):
-        """Merges another item from a different scene into this one.
+    @classmethod
+    def from_multiclass_conf_mat(cls, conf_mat: np.ndarray, class_id: int,
+                                 class_name: str,
+                                 **kwargs) -> 'ClassEvaluationItem':
+        tp = conf_mat[class_id, class_id]
+        fp = conf_mat[:, class_id].sum() - tp
+        fn = conf_mat[class_id, :].sum() - tp
+        tn = conf_mat.sum() - tp - fp - fn
+        item = cls(
+            class_id=class_id,
+            class_name=class_name,
+            tp=tp,
+            fp=fp,
+            fn=fn,
+            tn=tn,
+            **kwargs)
+        return item
 
-        This is used to average metrics over scenes. Merges by taking a
-        weighted average (by gt_count) of the metrics.
-        """
-        if other.gt_count > 0:
-            total_gt_count = self.gt_count + other.gt_count
-            self_ratio = self.gt_count / total_gt_count
-            other_ratio = other.gt_count / total_gt_count
+    def merge(self, other: 'ClassEvaluationItem') -> None:
+        if self.class_id != other.class_id:
+            raise ValueError(
+                'Cannot merge evaluation items for different classes.')
+        self.conf_mat += other.conf_mat
 
-            def weighted_avg(self_val, other_val) -> float:
-                if self_val is None:
-                    self_val = 0.
-                if other_val is None:
-                    other_val = 0.
-                return (self_ratio * self_val + other_ratio * other_val)
+    @property
+    def gt_count(self) -> int:
+        return self.conf_mat[1, :].sum()
 
-            self.precision = weighted_avg(self.precision, other.precision)
-            self.recall = weighted_avg(self.recall, other.recall)
-            self.f1 = weighted_avg(self.f1, other.f1)
-            self.count_error = weighted_avg(self.count_error,
-                                            other.count_error)
-            self.gt_count = total_gt_count
+    @property
+    def pred_count(self) -> int:
+        return self.conf_mat[:, 1].sum()
 
-        if other.conf_mat is not None:
-            if self.class_name == 'average':
-                if self.conf_mat is None:
-                    # Make first row all zeros so that the array indices
-                    # correspond to valid class ids (ie. >= 1).
-                    self.conf_mat = np.concatenate(
-                        [
-                            np.zeros_like(other.conf_mat)[np.newaxis, :],
-                            np.array(other.conf_mat)[np.newaxis, :]
-                        ],
-                        axis=0)
-                else:
-                    self.conf_mat = np.concatenate(
-                        [self.conf_mat, other.conf_mat[np.newaxis, :]], axis=0)
-            else:
-                self.conf_mat += other.conf_mat
+    @property
+    def true_pos(self) -> int:
+        return self.conf_mat[1, 1]
 
-    def to_json(self):
-        new_dict = {}
-        for k, v in self.__dict__.items():
-            new_dict[k] = v.tolist() if isinstance(v, np.ndarray) else v
-        if new_dict['conf_mat'] is None:
-            del new_dict['conf_mat']
-        return new_dict
+    @property
+    def true_neg(self) -> Optional[int]:
+        tn = self.conf_mat[0, 0]
+        if tn < 0:
+            return None
+        return tn
+
+    @property
+    def false_pos(self) -> int:
+        return self.conf_mat[0, 1]
+
+    @property
+    def false_neg(self) -> int:
+        return self.conf_mat[1, 0]
+
+    @property
+    def recall(self) -> float:
+        tp = self.true_pos
+        fn = self.false_neg
+        return float(tp) / (tp + fn)
+
+    @property
+    def sensitivity(self) -> float:
+        return self.recall
+
+    @property
+    def specificity(self) -> Optional[float]:
+        if self.true_neg is None:
+            return None
+        tn = self.true_neg
+        fp = self.false_pos
+        return float(tn) / (tn + fp)
+
+    @property
+    def precision(self) -> float:
+        tp = self.true_pos
+        fp = self.false_pos
+        return float(tp) / (tp + fp)
+
+    @property
+    def f1(self) -> float:
+        precision = self.precision
+        recall = self.recall
+        return 2 * (precision * recall) / (precision + recall)
+
+    def to_json(self) -> dict:
+        out = {
+            'class_id': self.class_id,
+            'class_name': self.class_name,
+            'gt_count': self.gt_count,
+            'pred_count': self.pred_count,
+            'count_error': abs(self.gt_count - self.pred_count),
+            'relative_frequency': self.gt_count / self.conf_mat.sum(),
+            'metrics': {
+                'recall': self.recall,
+                'precision': self.precision,
+                'f1': self.f1,
+                'sensitivity': self.sensitivity,
+                'specificity': self.specificity,
+            }
+        }
+        if self.true_neg is None:
+            del out['relative_frequency']
+            out['true_pos'] = self.true_pos
+            out['false_pos'] = self.false_pos
+            out['false_neg'] = self.false_neg
+        else:
+            out['conf_mat'] = self.conf_mat.tolist()
+
+        out.update(self.extra_info)
+        return out
 
     def __repr__(self):
         return str(self.to_json())
