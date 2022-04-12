@@ -1,17 +1,33 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Iterable, Optional, Tuple
 from os.path import join
 
 from rastervision.pipeline.config import register_config, Config, Field
+
+if TYPE_CHECKING:
+    from rastervision.core.data import ClassConfig
+    from rastervision.core.rv_pipeline import RVPipelineConfig
 
 
 @register_config('evaluator')
 class EvaluatorConfig(Config):
     output_uri: Optional[str] = Field(
         None,
-        description=
-        ('URI of JSON output by evaluator. If None, and this Config is part of an '
-         'RVPipeline, then this field will be auto-generated.'))
+        description='URI of directory where evaluator output will be saved. '
+        'Evaluations for each scene-group will be save in a JSON file at '
+        '<output_uri>/<scene-group-name>/eval.json. If None, and this Config '
+        'is part of an RVPipeline, this field will be auto-generated.')
 
-    def update(self, pipeline=None):
+    def build(self,
+              class_config: 'ClassConfig',
+              scene_group: Optional[Tuple[str, Iterable[str]]] = None
+              ) -> 'EvaluatorConfig':
+        pass
+
+    def get_output_uri(self, scene_group_name: Optional[str] = None) -> str:
+        if scene_group_name is None:
+            return join(self.output_uri, 'eval.json')
+        return join(self.output_uri, scene_group_name, 'eval.json')
+
+    def update(self, pipeline: Optional['RVPipelineConfig'] = None) -> None:
         if pipeline is not None and self.output_uri is None:
-            self.output_uri = join(pipeline.eval_uri, 'eval.json')
+            self.output_uri = pipeline.eval_uri
