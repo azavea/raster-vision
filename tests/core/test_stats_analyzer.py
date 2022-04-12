@@ -1,13 +1,27 @@
 import unittest
-import os
+from os.path import join
 
 import numpy as np
 
 from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.core.raster_stats import RasterStats, chip_sz
 from rastervision.core.data import Scene
 from rastervision.core.analyzer import StatsAnalyzerConfig
 from tests.core.data.mock_raster_source import MockRasterSource
+
+
+def make_scene(i: int, is_random: bool = False) -> Scene:
+    rs = MockRasterSource([0, 1, 2], 3)
+    img = np.zeros((600, 600, 3))
+    img[:, :, 0] = 1 + i
+    img[:, :, 1] = 2 + i
+    img[:, :, 2] = 3 + i
+    if not is_random:
+        img[300:, 300:, :] = np.nan
+    rs.set_raster(img)
+    scene = Scene(str(i), rs)
+    return scene, rs, img
 
 
 class TestStatsAnalyzer(unittest.TestCase):
@@ -18,24 +32,8 @@ class TestStatsAnalyzer(unittest.TestCase):
         self.tmp_dir.cleanup()
 
     def _test(self, is_random=False):
-        stats_uri = os.path.join(self.tmp_dir.name, 'stats.json')
-        scenes = []
-        raster_sources = []
-        imgs = []
         sample_prob = 0.5
-        for i in range(3):
-            rs = MockRasterSource([0, 1, 2], 3)
-            img = np.zeros((600, 600, 3))
-            img[:, :, 0] = 1 + i
-            img[:, :, 1] = 2 + i
-            img[:, :, 2] = 3 + i
-            if not is_random:
-                img[300:, 300:, :] = np.nan
-
-            imgs.append(img)
-            rs.set_raster(img)
-            raster_sources.append(rs)
-            scenes.append(Scene(str(i), rs))
+        scenes, raster_sources, imgs = zip(*[make_scene(i) for i in range(3)])
 
         channel_vals = list(map(lambda x: np.expand_dims(x, axis=0), imgs))
         channel_vals = np.concatenate(channel_vals, axis=0)
@@ -45,14 +43,14 @@ class TestStatsAnalyzer(unittest.TestCase):
         exp_stds = np.nanstd(channel_vals, axis=1)
 
         analyzer_cfg = StatsAnalyzerConfig(
-            output_uri=stats_uri, sample_prob=None)
+            output_uri=self.tmp_dir.name, sample_prob=None)
         if is_random:
             analyzer_cfg = StatsAnalyzerConfig(
-                output_uri=stats_uri, sample_prob=sample_prob)
+                output_uri=self.tmp_dir.name, sample_prob=sample_prob)
         analyzer = analyzer_cfg.build()
         analyzer.process(scenes, self.tmp_dir.name)
 
-        stats = RasterStats.load(stats_uri)
+        stats = RasterStats.load(join(self.tmp_dir.name, 'stats.json'))
         np.testing.assert_array_almost_equal(stats.means, exp_means, decimal=3)
         np.testing.assert_array_almost_equal(stats.stds, exp_stds, decimal=3)
         if is_random:
@@ -68,6 +66,16 @@ class TestStatsAnalyzer(unittest.TestCase):
 
     def test_sliding(self):
         self._test(is_random=False)
+
+    def test_with_scene_group(self):
+        scenes, _, _ = zip(*[make_scene(i) for i in range(3)])
+
+        analyzer_cfg = StatsAnalyzerConfig(output_uri=self.tmp_dir.name)
+        analyzer = analyzer_cfg.build(scene_group=('abc', set(range(3))))
+        analyzer.process(scenes, self.tmp_dir.name)
+
+        expected_stats_path = join(self.tmp_dir.name, 'abc', 'stats.json')
+        self.assertTrue(file_exists(expected_stats_path, include_dir=False))
 
 
 if __name__ == '__main__':

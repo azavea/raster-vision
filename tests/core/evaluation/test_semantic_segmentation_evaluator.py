@@ -10,12 +10,37 @@ from rastervision.core.data import (
     Scene, IdentityCRSTransformer, SemanticSegmentationLabelSource,
     RasterizedSourceConfig, RasterizerConfig, GeoJSONVectorSourceConfig,
     PolygonVectorOutputConfig)
-from rastervision.core.evaluation import SemanticSegmentationEvaluator
+from rastervision.core.evaluation import (SemanticSegmentationEvaluator,
+                                          SemanticSegmentationEvaluatorConfig)
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import file_to_json
 
 from tests.core.data.mock_raster_source import (MockRasterSource)
 from tests import data_file_path
+
+
+class MockRVPipelineConfig:
+    eval_uri = '/abc/def/eval'
+
+
+class TestSemanticSegmentationEvaluatorConfig(unittest.TestCase):
+    def test_update(self):
+        cfg = SemanticSegmentationEvaluatorConfig(output_uri=None)
+        pipeline_cfg = MockRVPipelineConfig()
+        cfg.update(pipeline_cfg)
+        self.assertEqual(cfg.get_vector_output_uri(),
+                         f'{pipeline_cfg.eval_uri}/vector-eval.json')
+        self.assertEqual(
+            cfg.get_vector_output_uri('group1'),
+            f'{pipeline_cfg.eval_uri}/group1/vector-eval.json')
+
+    def test_get_vector_output_uri(self):
+        cfg = SemanticSegmentationEvaluatorConfig(output_uri='/abc/def')
+        self.assertEqual(cfg.get_vector_output_uri(),
+                         '/abc/def/vector-eval.json')
+        self.assertEqual(
+            cfg.get_vector_output_uri('group1'),
+            '/abc/def/group1/vector-eval.json')
 
 
 class TestSemanticSegmentationEvaluator(unittest.TestCase):
