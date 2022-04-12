@@ -1,34 +1,109 @@
-{"overall": [
-  {
-    "class_id": 1,
-    "recall": 1.0,
-    "class_name": "car",
-    "precision": 1.0,
-    "f1": 1.0,
-    "gt_count": 1.0
-  },
-  {
-    "class_id": 2,
-    "recall": 1.0,
-    "class_name": "building",
-    "precision": 1.0,
-    "f1": 1.0,
-    "gt_count": 1.0
-  },
-  {
-    "class_id": 3,
-    "recall": 1.0,
-    "class_name": "background",
-    "precision": 1.0,
-    "f1": 1.0,
-    "gt_count": 4.0
-  },
-  {
-    "class_id": null,
-    "recall": 1.0,
-    "class_name": "average",
-    "precision": 1.0,
-    "f1": 1.0,
-    "gt_count": 6.0
-  }
-]}
+{
+    "overall": [
+        {
+            "class_id": 0,
+            "class_name": "car",
+            "gt_count": 12,
+            "pred_count": 12,
+            "count_error": 0,
+            "relative_frequency": 0.21428571428571427,
+            "metrics": {
+                "recall": 1.0,
+                "precision": 1.0,
+                "f1": 1.0,
+                "sensitivity": 1.0,
+                "specificity": 1.0
+            },
+            "conf_mat": [
+                [
+                    44,
+                    0
+                ],
+                [
+                    0,
+                    12
+                ]
+            ]
+        },
+        {
+            "class_id": 1,
+            "class_name": "building",
+            "gt_count": 8,
+            "pred_count": 8,
+            "count_error": 0,
+            "relative_frequency": 0.14285714285714285,
+            "metrics": {
+                "recall": 1.0,
+                "precision": 1.0,
+                "f1": 1.0,
+                "sensitivity": 1.0,
+                "specificity": 1.0
+            },
+            "conf_mat": [
+                [
+                    48,
+                    0
+                ],
+                [
+                    0,
+                    8
+                ]
+            ]
+        },
+        {
+            "class_id": 2,
+            "class_name": "background",
+            "gt_count": 36,
+            "pred_count": 36,
+            "count_error": 0,
+            "relative_frequency": 0.6428571428571429,
+            "metrics": {
+                "recall": 1.0,
+                "precision": 1.0,
+                "f1": 1.0,
+                "sensitivity": 1.0,
+                "specificity": 1.0
+            },
+            "conf_mat": [
+                [
+                    20,
+                    0
+                ],
+                [
+                    0,
+                    36
+                ]
+            ]
+        },
+        {
+            "class_name": "average",
+            "metrics": {
+                "recall": 1.0,
+                "precision": 1.0,
+                "f1": 1.0,
+                "sensitivity": 1.0,
+                "specificity": 1.0
+            },
+            "gt_count": 56,
+            "pred_count": 56,
+            "count_error": 0,
+            "conf_mat": [
+                [
+                    12,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    8,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    36
+                ]
+            ]
+        }
+    ]
+}

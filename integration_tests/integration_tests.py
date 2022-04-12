@@ -113,14 +113,14 @@ def check_eval_item(test_id: str, test_cfg: dict, expected_item: dict,
     f1_threshold = 0.05
     class_name = expected_item['class_name']
 
-    expected_f1 = expected_item['f1'] or 0.0
-    actual_f1 = actual_item['f1'] or 0.0
+    expected_f1 = expected_item['metrics']['f1'] or 0.0
+    actual_f1 = actual_item['metrics']['f1'] or 0.0
     if math.fabs(expected_f1 - actual_f1) > f1_threshold:
         errors.append(
             TestError(
                 test_id, 'F1 scores are not close enough',
-                'for class_name: {} expected f1: {}, actual f1: {}'.format(
-                    class_name, expected_item['f1'], actual_item['f1'])))
+                f'for class "{class_name}": '
+                f'expected f1: {expected_f1}, actual f1: {actual_f1}'))
 
     return errors
 
