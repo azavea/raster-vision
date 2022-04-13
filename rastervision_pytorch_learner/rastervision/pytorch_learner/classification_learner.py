@@ -26,10 +26,14 @@ class ClassificationLearner(Learner):
         pretrained = self.cfg.model.pretrained
         num_classes = len(self.cfg.data.class_names)
         backbone_name = self.cfg.model.get_backbone_str()
+        in_channels = self.cfg.data.img_channels
+        if in_channels is None:
+            log.warn('DataConfig.img_channels is None. Defaulting to 3.')
+            in_channels = 3
 
         model = getattr(models, backbone_name)(pretrained=pretrained)
 
-        if self.cfg.data.img_channels != 3:
+        if in_channels != 3:
             if not backbone_name.startswith('resnet'):
                 raise ConfigError(
                     'All TorchVision backbones do not provide the same API '

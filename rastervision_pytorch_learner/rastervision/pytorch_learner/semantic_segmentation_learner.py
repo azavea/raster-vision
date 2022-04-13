@@ -30,6 +30,9 @@ class SemanticSegmentationLearner(Learner):
         backbone_name = self.cfg.model.get_backbone_str()
         num_classes = len(self.cfg.data.class_names)
         in_channels = self.cfg.data.img_channels
+        if in_channels is None:
+            log.warn('DataConfig.img_channels is None. Defaulting to 3.')
+            in_channels = 3
         if self.cfg.solver.ignore_last_class:
             num_classes -= 1
         model = models.segmentation.segmentation._segm_model(
