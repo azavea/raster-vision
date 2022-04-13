@@ -3,14 +3,15 @@ import unittest
 
 from rastervision.pytorch_learner import (
     DataConfig, ImageDataConfig, SemanticSegmentationDataConfig,
-    SemanticSegmentationImageDataConfig, ClassificationDataConfig,
-    ClassificationImageDataConfig, RegressionDataConfig,
-    RegressionImageDataConfig, ObjectDetectionDataConfig,
+    SemanticSegmentationImageDataConfig, SemanticSegmentationGeoDataConfig,
+    ClassificationDataConfig, ClassificationImageDataConfig,
+    RegressionDataConfig, RegressionImageDataConfig, ObjectDetectionDataConfig,
     ObjectDetectionImageDataConfig, data_config_upgrader,
     ss_data_config_upgrader, clf_data_config_upgrader,
     reg_data_config_upgrader, objdet_data_config_upgrader, GeoDataWindowConfig,
     GeoDataWindowMethod, PlotOptions, ss_image_data_config_upgrader)
 from rastervision.pipeline.config import (ConfigError, build_config)
+from rastervision.core.data import DatasetConfig, ClassConfig
 
 
 class TestDataConfigToImageDataConfigUpgrade(unittest.TestCase):
@@ -85,11 +86,31 @@ class TestSemanticSegmentationDataConfig(unittest.TestCase):
     def test_upgrader(self):
         old_cfg = SemanticSegmentationDataConfig()
         old_cfg_dict = old_cfg.dict()
-        old_cfg_dict['img_channels'] = 8
+        old_cfg_dict['channel_display_groups'] = None
         new_cfg_dict = ss_data_config_upgrader(old_cfg_dict, version=2)
-        self.assertNotIn('img_channels', new_cfg_dict)
         self.assertNotIn('channel_display_groups', new_cfg_dict)
         self.assertNoError(lambda: build_config(new_cfg_dict))
+
+
+class TestSemanticSegmentationGeoDataConfig(unittest.TestCase):
+    def test_upgrader(self):
+        scene_dataset = DatasetConfig(
+            train_scenes=[],
+            validation_scenes=[],
+            class_config=ClassConfig(names=['abc']))
+        old_cfg = SemanticSegmentationGeoDataConfig(
+            scene_dataset=scene_dataset,
+            window_opts=GeoDataWindowConfig(size=100),
+            img_channels=8)
+        old_cfg_dict = old_cfg.dict()
+        old_cfg_dict['channel_display_groups'] = None
+
+        old_cfg_dict = data_config_upgrader(old_cfg_dict, version=2)
+        new_cfg_dict = ss_data_config_upgrader(old_cfg_dict, version=2)
+
+        self.assertNotIn('channel_display_groups', new_cfg_dict)
+        new_cfg: SemanticSegmentationGeoDataConfig = build_config(new_cfg_dict)
+        self.assertEqual(new_cfg.img_channels, 8)
 
 
 class TestSemanticSegmentationImageDataConfig(unittest.TestCase):
@@ -99,7 +120,11 @@ class TestSemanticSegmentationImageDataConfig(unittest.TestCase):
         old_cfg_dict['channel_display_groups'] = None
         old_cfg_dict['img_format'] = 'npy'
         old_cfg_dict['label_format'] = 'npy'
+
+        old_cfg_dict = data_config_upgrader(old_cfg_dict, version=2)
+        old_cfg_dict = ss_data_config_upgrader(old_cfg_dict, version=2)
         new_cfg_dict = ss_image_data_config_upgrader(old_cfg_dict, version=2)
+
         self.assertNotIn('channel_display_groups', new_cfg_dict)
         self.assertNotIn('img_format', new_cfg_dict)
         self.assertNotIn('label_format', new_cfg_dict)
