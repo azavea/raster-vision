@@ -26,7 +26,6 @@ def ss_data_config_upgrader(cfg_dict: dict, version: int) -> dict:
     elif version < 3:
         try:
             # removed in version 3
-            del cfg_dict['img_channels']
             del cfg_dict['channel_display_groups']
         except KeyError:
             pass

@@ -1,6 +1,7 @@
 from typing import Optional, Sequence
 import warnings
 from os.path import join
+import logging
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -20,6 +21,8 @@ from rastervision.pipeline.config import ConfigError
 
 warnings.filterwarnings('ignore')
 matplotlib.use('Agg')
+
+log = logging.getLogger(__name__)
 
 
 class RegressionModel(nn.Module):
@@ -52,6 +55,9 @@ class RegressionLearner(Learner):
         pretrained = self.cfg.model.pretrained
         backbone_name = self.cfg.model.get_backbone_str()
         in_channels = self.cfg.data.img_channels
+        if in_channels is None:
+            log.warn('DataConfig.img_channels is None. Defaulting to 3.')
+            in_channels = 3
         out_features = len(self.cfg.data.class_names)
         pos_out_inds = [
             self.cfg.data.class_names.index(class_name)
