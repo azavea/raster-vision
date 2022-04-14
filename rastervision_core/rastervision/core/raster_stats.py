@@ -1,9 +1,14 @@
+from typing import TYPE_CHECKING, Iterator, Optional, Sequence
 import json
 
 import numpy as np
 from tqdm import tqdm
 
 from rastervision.pipeline.file_system import str_to_file, file_to_str
+
+if TYPE_CHECKING:
+    from rastervision.core.box import Box
+    from rastervision.core.data import RasterSource
 
 chip_sz = 300
 
@@ -57,7 +62,9 @@ class RasterStats():
         self.means = None
         self.stds = None
 
-    def compute(self, raster_sources, sample_prob=None):
+    def compute(self,
+                raster_sources: Sequence['RasterSource'],
+                sample_prob: Optional[float] = None) -> None:
         """Compute the mean and stds over all the raster_sources.
 
         This ignores NODATA values.
@@ -76,7 +83,8 @@ class RasterStats():
         stride = chip_sz
         nb_channels = raster_sources[0].num_channels
 
-        def get_chip(raster_source, window):
+        def get_chip(raster_source: 'RasterSource',
+                     window: 'Box') -> Optional[np.ndarray]:
             """Return chip or None if all values are NODATA."""
             chip = raster_source.get_raw_chip(window).astype(float)
             # Convert shape from [h,w,c] to [c,h*w]
@@ -88,7 +96,7 @@ class RasterStats():
                 return chip
             return None
 
-        def sliding_chip_stream():
+        def sliding_chip_stream() -> Iterator[np.ndarray]:
             """Get stream of chips using a sliding window of size 300."""
             for raster_source in raster_sources:
                 with raster_source.activate():
@@ -99,7 +107,7 @@ class RasterStats():
                         if chip is not None:
                             yield chip
 
-        def random_chip_stream():
+        def random_chip_stream() -> Iterator[np.ndarray]:
             """Get random stream of chips."""
             for raster_source in raster_sources:
                 with raster_source.activate():
@@ -137,7 +145,7 @@ class RasterStats():
         self.means = mean
         self.stds = np.sqrt(var)
 
-    def save(self, stats_uri):
+    def save(self, stats_uri: str) -> None:
         # Ensure lists
         means = list(self.means)
         stds = list(self.stds)
@@ -145,7 +153,7 @@ class RasterStats():
         str_to_file(json.dumps(stats), stats_uri)
 
     @staticmethod
-    def load(stats_uri):
+    def load(stats_uri: str) -> None:
         stats_json = json.loads(file_to_str(stats_uri))
         stats = RasterStats()
         stats.means = stats_json['means']
