@@ -30,6 +30,10 @@ ENV GDAL_DATA=/opt/conda/lib/python3.7/site-packages/rasterio/gdal_data/
 
 WORKDIR /opt/src/
 
+# needed for jupyter lab extensions
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs
+
 COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
 RUN pip install -r requirements-dev.txt
 

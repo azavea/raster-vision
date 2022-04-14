@@ -83,6 +83,12 @@ do
         CMD=(jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root --notebook-dir=/opt/notebooks)
         shift
         ;;
+        --jupyter-lab)
+        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -v ${HOME}/.jupyter:/root/.jupyter:ro -p 8888:8888"
+        # run jupyter lab in the background
+        CMD=(/bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root /opt/ & bash")
+        shift
+        ;;
         --docs)
         DOCS="-p 8000:8000"
         CMD=(/bin/bash -c "cd docs && make livehtml")
