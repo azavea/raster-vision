@@ -11,7 +11,7 @@ class MockRVPipelineConfig:
     analyze_uri = '/abc/def/analyze'
 
 
-class TestRasterTransformerConfig(unittest.TestCase):
+class TestStatsTransformerConfig(unittest.TestCase):
     def test_update(self):
         cfg = StatsTransformerConfig(stats_uri=None)
         cfg.update(MockRVPipelineConfig())
@@ -33,7 +33,7 @@ class TestRasterTransformerConfig(unittest.TestCase):
                          '/path/to/bundle/analyze/stats/group1/stats.json')
 
 
-class TestRasterTransformer(unittest.TestCase):
+class TestStatsTransformer(unittest.TestCase):
     def test_stats_transformer(self):
         raster_stats = RasterStats()
         raster_stats.means = list(np.ones((4, )))
