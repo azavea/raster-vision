@@ -18,7 +18,6 @@ import random
 import uuid
 
 import click
-import matplotlib
 import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
@@ -45,7 +44,6 @@ from rastervision.pytorch_learner.utils import (
     get_hubconf_dir_from_cfg, deserialize_albumentation_transform)
 
 warnings.filterwarnings('ignore')
-matplotlib.use('Agg')
 
 MODULES_DIRNAME = 'modules'
 TRANSFORMS_DIRNAME = 'custom_albumentations_transforms'

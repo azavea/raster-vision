@@ -3,7 +3,6 @@ import warnings
 from os.path import join
 import logging
 
-import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from textwrap import wrap
@@ -20,7 +19,6 @@ from rastervision.pytorch_learner.utils.utils import (
 from rastervision.pipeline.config import ConfigError
 
 warnings.filterwarnings('ignore')
-matplotlib.use('Agg')
 
 log = logging.getLogger(__name__)
 

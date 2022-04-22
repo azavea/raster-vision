@@ -7,6 +7,9 @@ unify==0.5
 sphinx==4.0.*
 sphinx-autobuild==2021.3.*
 ptvsd==4.3.*
-jupyter==1.0.*
 shapely==1.6.*
 scipy>=0.19.1
+seaborn==0.11.*
+jupyter==1.*
+jupyterlab==3.*
+jupyter_contrib_nbextensions==0.5.*

@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 import logging
 
 from rasterio.features import rasterize
@@ -10,6 +11,11 @@ from rastervision.core.data import (ActivateMixin, ActivationError)
 from rastervision.core.data.raster_source import RasterSource
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from rastervision.core.box import Box
+    from rastervision.core.data import (VectorSource, RasterizerConfig,
+                                        CRSTransformer)
 
 
 def geoms_to_raster(str_tree, rasterizer_config, window, extent):
@@ -51,8 +57,9 @@ def geoms_to_raster(str_tree, rasterizer_config, window, extent):
 class RasterizedSource(ActivateMixin, RasterSource):
     """A RasterSource based on the rasterization of a VectorSource."""
 
-    def __init__(self, vector_source, rasterizer_config, extent,
-                 crs_transformer):
+    def __init__(self, vector_source: 'VectorSource',
+                 rasterizer_config: 'RasterizerConfig', extent: 'Box',
+                 crs_transformer: 'CRSTransformer'):
         """Constructor.
 
         Args:
