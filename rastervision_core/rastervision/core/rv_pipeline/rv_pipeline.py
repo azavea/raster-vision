@@ -3,6 +3,7 @@ from os.path import join
 import tempfile
 import shutil
 from typing import TYPE_CHECKING, Optional, List
+from functools import lru_cache
 
 import click
 import numpy as np
@@ -15,12 +16,13 @@ from rastervision.core.data import Scene, Labels
 from rastervision.core.backend import Backend
 from rastervision.core.rv_pipeline import TRAIN, VALIDATION
 from rastervision.pipeline.file_system.utils import (
-    download_if_needed, zipdir, get_local_path, upload_or_copy, make_dir)
+    download_if_needed, zipdir, get_local_path, upload_or_copy, make_dir,
+    sync_to_dir, file_exists)
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from rastervision.core.rv_pipeline.rv_pipeline_config import RVPipelineConfig  # noqa
+    from rastervision.core.rv_pipeline import RVPipelineConfig
 
 ALL_COMMANDS = ['analyze', 'chip', 'train', 'predict', 'eval', 'bundle']
 SPLITTABLE_COMMANDS = ['chip', 'predict']
@@ -65,16 +67,31 @@ class RVPipeline(Pipeline):
 
     def analyze(self):
         """Run each analyzer over training scenes."""
-        class_config = self.config.dataset.class_config
-        scenes = [
-            s.build(class_config, self.tmp_dir, use_transformers=False)
-            for s in self.config.dataset.train_scenes
-        ]
-        analyzers = [a.build() for a in self.config.analyzers]
-        for analyzer in analyzers:
-            log.info('Running analyzers: {}...'.format(
-                type(analyzer).__name__))
-            analyzer.process(scenes, self.tmp_dir)
+        dataset = self.config.dataset
+        class_config = dataset.class_config
+
+        scene_id_to_cfg = {s.id: s for s in dataset.all_scenes}
+
+        @lru_cache(maxsize=len(dataset.all_scenes))
+        def build_scene(scene_id: str) -> Scene:
+            cfg = scene_id_to_cfg[scene_id]
+            scene = cfg.build(
+                class_config, self.tmp_dir, use_transformers=False)
+            return scene
+
+        # build and run each AnalyzerConfig for each scene group
+        for a in self.config.analyzers:
+            for group_name, group_ids in dataset.scene_groups.items():
+                if len(group_ids) == 0:
+                    log.info(f'Skipping scene group "{group_name}". '
+                             'Empty scene group.')
+                    continue
+                group_scenes = (build_scene(id) for id in group_ids)
+                analyzer = a.build(scene_group=(group_name, group_scenes))
+
+                log.info(f'Running {type(analyzer).__name__} on '
+                         f'scene group "{group_name}"...')
+                analyzer.process(group_scenes, self.tmp_dir)
 
     def get_train_windows(self, scene: Scene) -> List[Box]:
         """Return the training windows for a Scene.
@@ -230,16 +247,42 @@ class RVPipeline(Pipeline):
 
     def eval(self):
         """Evaluate predictions against ground truth."""
-        class_config = self.config.dataset.class_config
-        scenes = [
-            s.build(class_config, self.tmp_dir)
-            for s in self.config.dataset.validation_scenes
-        ]
-        evaluators = [e.build(class_config) for e in self.config.evaluators]
-        for evaluator in evaluators:
-            log.info('Running evaluator: {}...'.format(
-                type(evaluator).__name__))
-            evaluator.process(scenes, self.tmp_dir)
+        dataset = self.config.dataset
+        class_config = dataset.class_config
+        # it might make sense to make excluded_groups a field in an EvalConfig
+        # in the future
+        excluded_groups = ['train_scenes']
+
+        scene_id_to_cfg = {s.id: s for s in dataset.all_scenes}
+
+        @lru_cache(maxsize=len(dataset.all_scenes))
+        def build_scene(scene_id: str) -> Scene:
+            cfg = scene_id_to_cfg[scene_id]
+            scene = cfg.build(
+                class_config, self.tmp_dir, use_transformers=True)
+            return scene
+
+        # build and run each EvaluatorConfig for each scene group
+        for e in self.config.evaluators:
+            for group_name, group_ids in dataset.scene_groups.items():
+                if group_name in excluded_groups:
+                    continue
+                if len(group_ids) == 0:
+                    log.info(f'Skipping scene group "{group_name}". '
+                             'Empty scene group.')
+                    continue
+                group_scenes = (build_scene(id) for id in group_ids)
+                evaluator = e.build(
+                    class_config, scene_group=(group_name, group_scenes))
+
+                log.info(f'Running {type(evaluator).__name__} on '
+                         f'scene group "{group_name}"...')
+                try:
+                    evaluator.process(group_scenes, self.tmp_dir)
+                except FileNotFoundError:
+                    log.warn(f'Skipping scene group "{group_name}". '
+                             'Either labels or predictions are missing for '
+                             'some scene.')
 
     def bundle(self):
         """Save a model bundle with whatever is needed to make predictions.
@@ -256,11 +299,9 @@ class RVPipeline(Pipeline):
                     join(self.config.train_uri, fn), tmp_dir)
                 shutil.copy(path, join(bundle_dir, fn))
 
-            for a in self.config.analyzers:
-                for fn in a.get_bundle_filenames():
-                    path = download_if_needed(
-                        join(self.config.analyze_uri, fn), tmp_dir)
-                    shutil.copy(path, join(bundle_dir, fn))
+            if file_exists(self.config.analyze_uri, include_dir=True):
+                sync_to_dir(self.config.analyze_uri, join(
+                    bundle_dir, 'analyze'))
 
             path = download_if_needed(self.config.get_config_uri(), tmp_dir)
             shutil.copy(path, join(bundle_dir, 'pipeline-config.json'))

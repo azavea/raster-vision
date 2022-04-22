@@ -16,7 +16,7 @@ import rastervision.core.evaluation
 
 
 def register_plugin(registry):
-    registry.set_plugin_version('rastervision.core', 2)
+    registry.set_plugin_version('rastervision.core', 3)
     registry.set_plugin_aliases('rastervision.core', ['rastervision2.core'])
     from rastervision.core.cli import predict
     registry.add_plugin_command(predict)
