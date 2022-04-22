@@ -7,9 +7,9 @@ from rastervision.pipeline import rv_config
 from rastervision.pipeline.config import (build_config, upgrade_config)
 from rastervision.pipeline.file_system.utils import (download_if_needed,
                                                      make_dir, file_to_json)
-from rastervision.core.data import (ChannelOrderError,
-                                    SemanticSegmentationLabelStoreConfig,
-                                    PolygonVectorOutputConfig)
+from rastervision.core.data import (
+    ChannelOrderError, SemanticSegmentationLabelStoreConfig,
+    PolygonVectorOutputConfig, StatsTransformerConfig)
 from rastervision.core.analyzer import StatsAnalyzerConfig
 
 if TYPE_CHECKING:
@@ -26,7 +26,8 @@ class Predictor():
                  model_bundle_uri: str,
                  tmp_dir: str,
                  update_stats: bool = False,
-                 channel_order: Optional[List[int]] = None):
+                 channel_order: Optional[List[int]] = None,
+                 scene_group: Optional[str] = None):
         """Creates a new Predictor.
 
         Args:
@@ -67,6 +68,13 @@ class Predictor():
                 'label_store in model bundle must have uri as field')
 
         for t in self.scene.raster_source.transformers:
+            if isinstance(t, StatsTransformerConfig):
+                if scene_group is not None:
+                    t.scene_group = scene_group
+                else:
+                    log.warn(f'Using stats for scene group "{t.scene_group}". '
+                             'To use a different scene group, specify '
+                             '--scene-group <scene-group-name>.')
             t.update_root(bundle_dir)
 
         if self.update_stats:

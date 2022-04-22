@@ -59,11 +59,17 @@ class OptionEatAll(click.Option):
     # https://stackoverflow.com/questions/48391777/nargs-equivalent-for-options-in-click#comment121399899_48394004
     type=list,
     help='List of indices comprising channel_order. Example: 2 1 0')
+@click.option(
+    '--scene-group',
+    help='Name of the scene group whose stats will be used by the '
+    'StatsTransformer. Requires the stats for this scene group to be present '
+    'inside the bundle.')
 def predict(model_bundle: str,
             image_uri: str,
             label_uri: str,
             update_stats: bool = False,
-            channel_order: Optional[List[str]] = None):
+            channel_order: Optional[List[str]] = None,
+            scene_group: Optional[str] = None):
     """Make predictions on the images at IMAGE_URI
     using MODEL_BUNDLE and store the prediction output at LABEL_URI.
     """
@@ -72,5 +78,5 @@ def predict(model_bundle: str,
 
     with rv_config.get_tmp_dir() as tmp_dir:
         predictor = Predictor(model_bundle, tmp_dir, update_stats,
-                              channel_order)
+                              channel_order, scene_group)
         predictor.predict([image_uri], label_uri)
