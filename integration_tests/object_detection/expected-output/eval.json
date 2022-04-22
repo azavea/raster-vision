@@ -1,29 +1,51 @@
-{"overall": [
-    {
-        "class_id": 0,
-        "precision": 1.0,
-        "class_name": "car",
-        "f1": 1.0,
-        "recall": 1.0,
-        "count_error": 0.0,
-        "gt_count": 3
-    },
-    {
-        "class_id": 1,
-        "precision": 1.0,
-        "class_name": "building",
-        "f1": 1.0,
-        "recall": 1.0,
-        "count_error": 0.0,
-        "gt_count": 4
-    },
-    {
-        "class_id": null,
-        "precision": 1.0,
-        "class_name": "average",
-        "f1": 1.0,
-        "recall": 1.0,
-        "count_error": 0.0,
-        "gt_count": 7
-    }
-]}
+{
+	"overall": [
+		{
+			"class_id": 0,
+			"class_name": "car",
+			"gt_count": 12.0,
+			"pred_count": 12.0,
+			"count_error": 0.0,
+			"metrics": {
+				"recall": 1.0,
+				"precision": 1.0,
+				"f1": 1.0,
+				"sensitivity": 1.0,
+				"specificity": null
+			},
+			"true_pos": 12.0,
+			"false_pos": 0.0,
+			"false_neg": 0.0
+		},
+		{
+			"class_id": 1,
+			"class_name": "building",
+			"gt_count": 16.0,
+			"pred_count": 16.0,
+			"count_error": 0.0,
+			"metrics": {
+				"recall": 1.0,
+				"precision": 1.0,
+				"f1": 1.0,
+				"sensitivity": 1.0,
+				"specificity": null
+			},
+			"true_pos": 16.0,
+			"false_pos": 0.0,
+			"false_neg": 0.0
+		},
+		{
+			"class_name": "average",
+			"metrics": {
+				"recall": 1.0,
+				"precision": 1.0,
+				"f1": 1.0,
+				"sensitivity": 1.0,
+				"specificity": 0.0
+			},
+			"gt_count": 28.0,
+			"pred_count": 28.0,
+			"count_error": 0.0
+		}
+	]
+}

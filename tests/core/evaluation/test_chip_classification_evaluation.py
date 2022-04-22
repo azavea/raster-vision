@@ -49,10 +49,11 @@ class TestChipClassificationEvaluation(unittest.TestCase):
         self.assertAlmostEqual(eval_item1.f1, 2 / 3, places=2)
 
         avg_item = eval.avg_item
-        self.assertEqual(avg_item.gt_count, 3)
-        self.assertAlmostEqual(avg_item.precision, 0.83, places=2)
-        self.assertAlmostEqual(avg_item.recall, 2 / 3, places=2)
-        self.assertAlmostEqual(avg_item.f1, 2 / 3, places=2)
+        self.assertEqual(avg_item['gt_count'], 3)
+        self.assertAlmostEqual(
+            avg_item['metrics']['precision'], 0.83, places=2)
+        self.assertAlmostEqual(avg_item['metrics']['recall'], 2 / 3, places=2)
+        self.assertAlmostEqual(avg_item['metrics']['f1'], 2 / 3, places=2)
 
     def test_compute_single_pred_null(self):
         class_config = self.make_class_config()

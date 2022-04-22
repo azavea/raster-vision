@@ -45,7 +45,7 @@ class TestChipClassificationEvaluator(unittest.TestCase):
 
             overall = file_to_json(evaluator_cfg.get_output_uri())['overall']
             for item in overall:
-                self.assertEqual(item['f1'], 1.0)
+                self.assertEqual(item['metrics']['f1'], 1.0)
 
 
 if __name__ == '__main__':
