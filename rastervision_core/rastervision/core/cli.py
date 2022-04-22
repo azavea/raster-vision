@@ -1,3 +1,4 @@
+from typing import List, Optional
 import click
 
 from rastervision.pipeline import rv_config
@@ -7,25 +8,30 @@ from rastervision.core.predictor import Predictor
 # https://stackoverflow.com/questions/48391777/nargs-equivalent-for-options-in-click
 class OptionEatAll(click.Option):
     def __init__(self, *args, **kwargs):
-        self.save_other_options = kwargs.pop('save_other_options', True)
-        nargs = kwargs.pop('nargs', -1)
-        assert nargs == -1, 'nargs, if set, must be -1 not {}'.format(nargs)
-        super(OptionEatAll, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._previous_parser_process = None
         self._eat_all_parser = None
 
     def add_to_parser(self, parser, ctx):
+        def is_next_option(arg: str) -> bool:
+            for prefix in self._eat_all_parser.prefixes:
+                if arg.startswith(prefix):
+                    return True
+            return False
+
         def parser_process(value, state):
-            value = str(value)
-            while state.rargs:
-                value = '{} {}'.format(value, state.rargs.pop(0))
-            self._previous_parser_process(value, state)
+            # method to hook to the parser.process
+            values = [value]
+            # grab everything up to the next option
+            while state.rargs and not is_next_option(state.rargs[0]):
+                values.append(state.rargs.pop(0))
+            # call the actual process
+            self._previous_parser_process(values, state)
 
-        retval = super(OptionEatAll, self).add_to_parser(parser, ctx)
-
+        retval = super().add_to_parser(parser, ctx)
         for name in self.opts:
-            our_parser = parser._long_opt.get(name) or parser._short_opt.get(
-                name)
+            our_parser = (parser._long_opt.get(name)
+                          or parser._short_opt.get(name))
             if our_parser:
                 self._eat_all_parser = our_parser
                 self._previous_parser_process = our_parser.process
@@ -50,15 +56,19 @@ class OptionEatAll(click.Option):
 @click.option(
     '--channel-order',
     cls=OptionEatAll,
+    # https://stackoverflow.com/questions/48391777/nargs-equivalent-for-options-in-click#comment121399899_48394004
+    type=list,
     help='List of indices comprising channel_order. Example: 2 1 0')
-def predict(model_bundle, image_uri, label_uri, update_stats, channel_order):
+def predict(model_bundle: str,
+            image_uri: str,
+            label_uri: str,
+            update_stats: bool = False,
+            channel_order: Optional[List[str]] = None):
     """Make predictions on the images at IMAGE_URI
     using MODEL_BUNDLE and store the prediction output at LABEL_URI.
     """
     if channel_order is not None:
-        channel_order = [
-            int(channel_ind) for channel_ind in channel_order.split(' ')
-        ]
+        channel_order: List[int] = [int(i) for i in channel_order]
 
     with rv_config.get_tmp_dir() as tmp_dir:
         predictor = Predictor(model_bundle, tmp_dir, update_stats,
