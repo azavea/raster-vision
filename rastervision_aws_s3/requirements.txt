@@ -1,4 +1,4 @@
 boto3>=1.9.201
 rastervision_pipeline==0.13
-awscli==1.19.*
+awscli==1.23.*
 tqdm==4.63.1
