@@ -27,7 +27,7 @@ def ss_learner_backend_config_upgrader(cfg_dict, version):
             key: cfg_dict.pop(key, default_val)
             for key, default_val in fields.items() if key in cfg_dict
         }
-        if data_cfg_dict['img_sz'] is None:
+        if data_cfg_dict.get('img_sz') is None:
             data_cfg_dict['img_sz'] = 256
 
         data_cfg = SemanticSegmentationImageDataConfig(**data_cfg_dict)
