@@ -11,17 +11,15 @@ import logging
 from subprocess import Popen
 import psutil
 import numbers
-from typing import (Any, Callable, Dict, List, Optional, Tuple)
+from typing import (TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple)
 
 import click
 import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
 import torch.nn as nn
-import torch.optim as optim
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader, Dataset, Sampler
+from torch.utils.data import DataLoader
 import albumentations as A
 import numpy as np
 
@@ -33,9 +31,15 @@ from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
                                           save_pipeline_config)
-from rastervision.pytorch_learner.learner_config import LearnerConfig
 from rastervision.pytorch_learner.utils import (
     get_hubconf_dir_from_cfg, deserialize_albumentation_transform)
+
+if TYPE_CHECKING:
+    from torch.optim import Optimizer
+    from torch.optim.lr_scheduler import _LRScheduler
+    from torch.utils.data import Dataset, Sampler
+
+    from rastervision.pytorch_learner.learner_config import LearnerConfig
 
 warnings.filterwarnings('ignore')
 
@@ -100,7 +104,7 @@ class Learner(ABC):
     """
 
     def __init__(self,
-                 cfg: LearnerConfig,
+                 cfg: 'LearnerConfig',
                  tmp_dir: str,
                  model_path: Optional[str] = None,
                  model_def_path: Optional[str] = None,
@@ -325,7 +329,7 @@ class Learner(ABC):
         """
         return None
 
-    def get_train_sampler(self, train_ds: Dataset) -> Optional[Sampler]:
+    def get_train_sampler(self, train_ds: 'Dataset') -> Optional['Sampler']:
         """Return a sampler to use for the training dataloader or None to not use any."""
         return None
 
@@ -395,18 +399,18 @@ class Learner(ABC):
         if self.test_ds:
             log.info('test_ds: {} items'.format(len(self.test_ds)))
 
-    def build_optimizer(self) -> optim.Optimizer:
+    def build_optimizer(self) -> 'Optimizer':
         """Returns optimizer."""
         return self.cfg.solver.build_optimizer(self.model)
 
-    def build_step_scheduler(self) -> _LRScheduler:
+    def build_step_scheduler(self) -> '_LRScheduler':
         """Returns an LR scheduler that changes the LR each step."""
         return self.cfg.solver.build_step_scheduler(
             optimizer=self.opt,
             train_ds_sz=len(self.train_ds),
             last_epoch=(self.start_epoch - 1))
 
-    def build_epoch_scheduler(self) -> _LRScheduler:
+    def build_epoch_scheduler(self) -> '_LRScheduler':
         """Returns an LR scheduler that changes the LR each epoch."""
         return self.cfg.solver.build_epoch_scheduler(
             optimizer=self.opt, last_epoch=(self.start_epoch - 1))
@@ -753,7 +757,7 @@ class Learner(ABC):
     @staticmethod
     def from_model_bundle(model_bundle_uri: str,
                           tmp_dir: str,
-                          cfg: Optional[LearnerConfig] = None,
+                          cfg: Optional['LearnerConfig'] = None,
                           training: bool = False):
         """Create a Learner from a model bundle."""
         model_bundle_path = download_if_needed(model_bundle_uri, tmp_dir)
