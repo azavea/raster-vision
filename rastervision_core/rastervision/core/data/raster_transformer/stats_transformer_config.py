@@ -11,7 +11,18 @@ if TYPE_CHECKING:
     from rastervision.core.data import SceneConfig
 
 
-@register_config('stats_transformer')
+def stats_transformer_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version < 3:
+        # field added in version 3
+        # since `scene_group` cannot be None, set it to a special value so that
+        # `update_root()`, which is called by the predictor, knows to set
+        # `stats_uri` to the old location of `stats.json`.
+        cfg_dict['scene_group'] = '__N/A__'
+    return cfg_dict
+
+
+@register_config(
+    'stats_transformer', upgrader=stats_transformer_config_upgrader)
 class StatsTransformerConfig(RasterTransformerConfig):
     stats_uri: Optional[str] = Field(
         None,
@@ -34,5 +45,9 @@ class StatsTransformerConfig(RasterTransformerConfig):
         return StatsTransformer(RasterStats.load(self.stats_uri))
 
     def update_root(self, root_dir: str) -> None:
-        self.stats_uri = join(root_dir, 'analyze', 'stats', self.scene_group,
-                              'stats.json')
+        if self.scene_group == '__N/A__':
+            # backward compatibility: use old location of stats.json
+            self.stats_uri = join(root_dir, 'stats.json')
+        else:
+            self.stats_uri = join(root_dir, 'analyze', 'stats',
+                                  self.scene_group, 'stats.json')
