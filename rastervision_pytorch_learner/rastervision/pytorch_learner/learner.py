@@ -1,4 +1,5 @@
-from typing import (TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple)
+from typing import (TYPE_CHECKING, Any, Callable, Dict, List, Optional,
+                    Sequence, Tuple)
 from abc import ABC, abstractmethod
 from os.path import join, isfile, basename, isdir
 import csv
@@ -690,10 +691,11 @@ class Learner(ABC):
 
     def plot_batch(self,
                    x: Tensor,
-                   y,
-                   output_path: str,
-                   z=None,
-                   batch_limit: Optional[int] = None):
+                   y: Sequence,
+                   output_path: Optional[str] = None,
+                   z: Optional[Sequence] = None,
+                   batch_limit: Optional[int] = None,
+                   show: bool = False):
         """Plot a whole batch in a grid using plot_xyz.
 
         Args:
@@ -727,9 +729,13 @@ class Learner(ABC):
             else:
                 self.plot_xyz(row_axs, x[i], y[i], z=z[i], **plot_xyz_args)
 
-        make_dir(output_path, use_dirname=True)
-        plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
-        plt.close()
+        if show:
+            plt.show()
+        if output_path is not None:
+            make_dir(output_path, use_dirname=True)
+            plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
+
+        plt.close(fig)
 
     def get_plot_nrows(self, **kwargs) -> int:
         x = kwargs['x']
@@ -758,7 +764,10 @@ class Learner(ABC):
         }
         return params
 
-    def plot_predictions(self, split: str, batch_limit: Optional[int] = None):
+    def plot_predictions(self,
+                         split: str,
+                         batch_limit: Optional[int] = None,
+                         show: bool = False):
         """Plot predictions for a split.
 
         Uses the first batch for the corresponding DataLoader.
@@ -771,30 +780,40 @@ class Learner(ABC):
         dl = self.get_dataloader(split)
         output_path = join(self.output_dir, '{}_preds.png'.format(split))
         x, y, z = self.predict_dataloader(dl, one_batch=True)
-        self.plot_batch(x, y, output_path, z=z, batch_limit=batch_limit)
+        self.plot_batch(
+            x, y, output_path, z=z, batch_limit=batch_limit, show=show)
 
     def plot_dataloader(self,
                         dl: DataLoader,
                         output_path: str,
-                        batch_limit: Optional[int] = None):
+                        batch_limit: Optional[int] = None,
+                        show: bool = False):
         """Plot images and ground truth labels for a DataLoader."""
         x, y = next(iter(dl))
-        self.plot_batch(x, y, output_path, batch_limit=batch_limit)
+        self.plot_batch(x, y, output_path, batch_limit=batch_limit, show=show)
 
-    def plot_dataloaders(self, batch_limit: Optional[int] = None):
+    def plot_dataloaders(self,
+                         batch_limit: Optional[int] = None,
+                         show: bool = False):
         """Plot images and ground truth labels for all DataLoaders."""
         if self.train_dl:
             self.plot_dataloader(
-                self.train_dl, join(self.output_dir, 'dataloaders/train.png'),
-                batch_limit)
+                self.train_dl,
+                output_path=join(self.output_dir, 'dataloaders/train.png'),
+                batch_limit=batch_limit,
+                show=show)
         if self.valid_dl:
             self.plot_dataloader(
-                self.valid_dl, join(self.output_dir, 'dataloaders/valid.png'),
-                batch_limit)
+                self.valid_dl,
+                output_path=join(self.output_dir, 'dataloaders/valid.png'),
+                batch_limit=batch_limit,
+                show=show)
         if self.test_dl:
-            self.plot_dataloader(self.test_dl,
-                                 join(self.output_dir, 'dataloaders/test.png'),
-                                 batch_limit)
+            self.plot_dataloader(
+                self.test_dl,
+                output_path=join(self.output_dir, 'dataloaders/test.png'),
+                batch_limit=batch_limit,
+                show=show)
 
     @staticmethod
     def from_model_bundle(model_bundle_uri: str,
