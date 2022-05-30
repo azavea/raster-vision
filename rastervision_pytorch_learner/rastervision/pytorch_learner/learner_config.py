@@ -4,14 +4,15 @@ import random
 import uuid
 import logging
 
-from typing import (List, Optional, Sequence, Union, TYPE_CHECKING, Dict,
-                    Tuple, Iterable)
+from typing import (TYPE_CHECKING, Any, Dict, Iterable, List, Optional,
+                    Sequence, Tuple, Union)
 from typing_extensions import Literal
 from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
                       conint)
 from pydantic.utils import sequence_like
 
 import albumentations as A
+from torch import nn
 from torch.utils.data import Dataset, ConcatDataset, Subset
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
@@ -22,7 +23,8 @@ from rastervision.pipeline.file_system import (list_paths, download_if_needed,
 from rastervision.core.data import (Scene, DatasetConfig as SceneDatasetConfig)
 from rastervision.pytorch_learner.utils import (
     color_to_triple, validate_albumentation_transform, MinMaxNormalize,
-    deserialize_albumentation_transform)
+    deserialize_albumentation_transform, get_hubconf_dir_from_cfg,
+    torch_hub_load_local, torch_hub_load_github, torch_hub_load_uri)
 
 log = logging.getLogger(__name__)
 
@@ -154,6 +156,49 @@ class ExternalModuleConfig(Config):
         if has_uri == has_repo:
             raise ConfigError('Must specify one of github_repo and uri.')
 
+    def build(self, save_dir: str, hubconf_dir: Optional[str] = None) -> Any:
+        """Load an external module via torch.hub.
+
+        Note: Loading a PyTorch module is the typical use case, but there are
+        no type restrictions on the object loaded through torch.hub.
+
+        Args:
+            save_dir (str, optional): The module def will be saved here.
+            hubconf_dir (str, optional): Path to existing definition.
+                If provided, the definition will not be fetched from the
+                external source but instead from this dir. Defaults to None.
+
+        Returns:
+            Any: The module loaded via torch.hub.
+        """
+        if hubconf_dir is not None:
+            log.info(f'Using existing module definition at: {hubconf_dir}')
+            module = torch_hub_load_local(
+                hubconf_dir=hubconf_dir,
+                entrypoint=self.entrypoint,
+                *self.entrypoint_args,
+                **self.entrypoint_kwargs)
+            return module
+
+        hubconf_dir = get_hubconf_dir_from_cfg(self, parent=save_dir)
+        if self.github_repo is not None:
+            log.info(f'Fetching module definition from: {self.github_repo}')
+            module = torch_hub_load_github(
+                repo=self.github_repo,
+                hubconf_dir=hubconf_dir,
+                entrypoint=self.entrypoint,
+                *self.entrypoint_args,
+                **self.entrypoint_kwargs)
+        else:
+            log.info(f'Fetching module definition from: {self.uri}')
+            module = torch_hub_load_uri(
+                uri=self.uri,
+                hubconf_dir=hubconf_dir,
+                entrypoint=self.entrypoint,
+                *self.entrypoint_args,
+                **self.entrypoint_kwargs)
+        return module
+
 
 def model_config_upgrader(cfg_dict, version):
     if version == 0:
@@ -192,6 +237,60 @@ class ModelConfig(Config):
 
     def get_backbone_str(self):
         return self.backbone.name
+
+    def build(self,
+              num_classes: int,
+              in_channels: int,
+              save_dir: Optional[str] = None,
+              hubconf_dir: Optional[str] = None,
+              **kwargs) -> nn.Module:
+        """Build and return a model based on the config.
+
+        Args:
+            num_classes (int): Number of classes.
+            in_channels (int, optional): Number of channels in the images that
+                will be fed into the model. Defaults to 3.
+            save_dir (Optional[str], optional): Used for building external_def
+                if specified. Defaults to None.
+            hubconf_dir (Optional[str], optional): Used for building
+                external_def if specified. Defaults to None.
+
+        Returns:
+            nn.Module: a PyTorch nn.Module.
+        """
+        if self.external_def is not None:
+            return self.build_external_model(
+                save_dir=save_dir, hubconf_dir=hubconf_dir)
+        return self.build_default_model(num_classes, in_channels, **kwargs)
+
+    def build_default_model(self, num_classes: int, in_channels: int,
+                            **kwargs) -> nn.Module:
+        """Build and return the default model.
+
+        Args:
+            num_classes (int): Number of classes.
+            in_channels (int, optional): Number of channels in the images that
+                will be fed into the model. Defaults to 3.
+
+        Returns:
+            nn.Module: a PyTorch nn.Module.
+        """
+        raise NotImplementedError()
+
+    def build_external_model(self,
+                             save_dir: str,
+                             hubconf_dir: Optional[str] = None) -> nn.Module:
+        """Build and return an external model.
+
+        Args:
+            save_dir (str): The module def will be saved here.
+            hubconf_dir (Optional[str], optional): Path to existing definition.
+                Defaults to None.
+
+        Returns:
+            nn.Module: a PyTorch nn.Module.
+        """
+        return self.external_def.build(save_dir, hubconf_dir=hubconf_dir)
 
 
 @register_config('solver')
@@ -1038,6 +1137,17 @@ class LearnerConfig(Config):
         if self.run_tensorboard and not self.log_tensorboard:
             raise ConfigError(
                 'Cannot run_tensorboard if log_tensorboard is False')
+        self.validate_class_loss_weights()
+
+    def validate_class_loss_weights(self):
+        if self.solver.class_loss_weights is None:
+            return
+        num_weights = len(self.solver.class_loss_weights)
+        num_classes = self.data.num_classes
+        if num_weights != num_classes:
+            raise ConfigError(
+                f'class_loss_weights ({num_weights}) must be same length as '
+                f'the number of classes ({num_classes})')
 
     def build(self,
               tmp_dir: str,

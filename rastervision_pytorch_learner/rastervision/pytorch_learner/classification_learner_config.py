@@ -6,7 +6,7 @@ import albumentations as A
 from torch.utils.data import Dataset
 
 from rastervision.core.data import Scene
-from rastervision.pipeline.config import (Config, register_config, ConfigError)
+from rastervision.pipeline.config import (Config, register_config)
 from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, ModelConfig, ImageDataConfig, GeoDataConfig,
     GeoDataWindowMethod)
@@ -110,24 +110,3 @@ class ClassificationLearnerConfig(LearnerConfig):
             model_def_path=model_def_path,
             loss_def_path=loss_def_path,
             training=training)
-
-    def validate_config(self):
-        super().validate_config()
-        self.validate_class_loss_weights()
-        self.validate_ignore_last_class()
-
-    def validate_ignore_last_class(self):
-        if self.solver.ignore_last_class:
-            raise ConfigError(
-                'ignore_last_class is not supported for Chip Classification.')
-
-    def validate_class_loss_weights(self):
-        if self.solver.class_loss_weights is None:
-            return
-
-        num_weights = len(self.solver.class_loss_weights)
-        num_classes = len(self.data.class_names)
-        if num_weights != num_classes:
-            raise ConfigError(
-                f'class_loss_weights ({num_weights}) must be same length as '
-                f'the number of classes ({num_classes})')

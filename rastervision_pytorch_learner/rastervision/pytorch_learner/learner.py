@@ -258,39 +258,38 @@ class Learner(ABC):
             if self.cfg.run_tensorboard:
                 self.tb_process.terminate()
 
-    def setup_model(self, model_def_path: Optional[str] = None) -> None:
+    def setup_model(self,
+                    model_weights_path: Optional[str] = None,
+                    model_def_path: Optional[str] = None) -> None:
         """Setup self.model.
 
         Args:
             model_def_path (str, optional): Model definition path. Will be
             available when loading from a bundle. Defaults to None.
         """
-        ext_cfg = self.cfg.model.external_def
-        if ext_cfg is not None:
-            self.model = self.load_external_model(ext_cfg, model_def_path)
-        else:
-            self.model = self.build_model()
+        if self.model is not None:
+            self.model.to(self.device)
+            return
+
+        self.model = self.build_model(model_def_path=model_def_path)
+
         self.model.to(self.device)
         self.load_init_weights()
 
-    @abstractmethod
-    def build_model(self) -> nn.Module:
+    def build_model(self, model_def_path: Optional[str] = None) -> nn.Module:
         """Build a PyTorch model."""
-        pass
+        cfg = self.cfg
 
-    def load_external_model(self,
-                            ext_cfg: ExternalModuleConfig,
-                            model_def_path: Optional[str] = None) -> nn.Module:
-        """Load an external model via torch.hub.
+        in_channels = cfg.data.img_channels
+        if in_channels is None:
+            log.warn('DataConfig.img_channels is None. Defaulting to 3.')
+            in_channels = 3
 
-        Args:
-            ext_cfg (ExternalModuleConfig): Config describing the module.
-            model_def_path (str, optional): Model definition path. Will be
-            available when loading from a bundle. Defaults to None.
-        """
-        hubconf_dir = self._get_external_module_dir(ext_cfg, model_def_path)
-        model = self.load_external_module(
-            ext_cfg=ext_cfg, hubconf_dir=hubconf_dir)
+        model = cfg.model.build(
+            num_classes=cfg.data.num_classes,
+            in_channels=in_channels,
+            save_dir=self.modules_dir,
+            hubconf_dir=model_def_path)
         return model
 
     def setup_loss(self, loss_def_path: Optional[str] = None) -> None:
@@ -998,14 +997,23 @@ class Learner(ABC):
             start_epoch = last_epoch + 1
         return start_epoch
 
-    def load_init_weights(self):
+    def load_init_weights(self,
+                          model_weights_path: Optional[str] = None) -> None:
         """Load the weights to initialize model."""
-        if self.cfg.model.init_weights:
-            weights_path = download_if_needed(self.cfg.model.init_weights,
-                                              self.tmp_dir)
-            self.model.load_state_dict(
-                torch.load(weights_path, map_location=self.device),
-                strict=self.cfg.model.load_strict)
+        cfg = self.cfg
+        uri = cfg.model.init_weights
+        if model_weights_path is not None:
+            uri = model_weights_path
+
+        if uri is not None:
+            log.info(f'Loading model weights from: {uri}')
+            self.load_weights(uri=uri, strict=cfg.model.load_strict)
+
+    def load_weights(self, uri: str, **kwargs) -> None:
+        """Load model weights from a file."""
+        weights_path = download_if_needed(uri, self.tmp_dir)
+        self.model.load_state_dict(
+            torch.load(weights_path, map_location=self.device), **kwargs)
 
     def load_checkpoint(self):
         """Load last weights from previous run if available."""
