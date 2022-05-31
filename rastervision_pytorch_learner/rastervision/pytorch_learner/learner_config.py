@@ -1228,8 +1228,8 @@ class LearnerConfig(Config):
                 f'the number of classes ({num_classes})')
 
     def build(self,
-              tmp_dir: str,
-              model_path: Optional[str] = None,
+              tmp_dir: Optional[str] = None,
+              model_weights_path: Optional[str] = None,
               model_def_path: Optional[str] = None,
               loss_def_path: Optional[str] = None,
               training=True) -> 'Learner':
@@ -1237,7 +1237,7 @@ class LearnerConfig(Config):
 
         Args:
             tmp_dir (str): Root of temp dirs.
-            model_path (str, optional): A local path to model weights.
+            model_weights_path (str, optional): A local path to model weights.
                 Defaults to None.
             model_def_path (str, optional): A local path to a directory with a
                 hubconf.py. If provided, the model definition is imported from

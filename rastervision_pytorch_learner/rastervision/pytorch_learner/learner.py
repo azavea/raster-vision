@@ -1,17 +1,15 @@
+from typing import (TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple)
+from abc import ABC, abstractmethod
 from os.path import join, isfile, basename, isdir
 import csv
 import warnings
 import time
 import datetime
-from abc import ABC, abstractmethod
 import shutil
-import os
-import sys
 import logging
 from subprocess import Popen
-import psutil
 import numbers
-from typing import (TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple)
+from tempfile import TemporaryDirectory
 
 import click
 import matplotlib.pyplot as plt
@@ -53,6 +51,9 @@ MetricDict = Dict[str, float]
 
 def log_system_details():
     """Log some system details."""
+    import os
+    import sys
+    import psutil
     # CPUs
     log.info(f'Physical CPUs: {psutil.cpu_count(logical=False)}')
     log.info(f'Logical CPUs: {psutil.cpu_count(logical=True)}')
@@ -91,62 +92,101 @@ def log_system_details():
 
 
 class Learner(ABC):
-    """Abstract training and prediction routines for a model.
+    """Abstract training and prediction routines for a model. This can be
+    subclassed to handle different computer vision tasks.
 
-    This can be subclassed to handle different computer vision tasks. If a model_path
-    is passed to the constructor, the Learner can only be used for prediction (ie. only
-    predict and numpy_predict should be called). Otherwise, the Learner can be used for
-    training using the main() method.
+    The datasets, model, optimizer, and schedulers will be generated from the
+    cfg if not specified in the constructor.
 
-    Note that the validation set is used to validate at the end of each epoch, and the
-    test set is only used at the end of training. It's possible to set these to the same
-    dataset if desired.
+    If instantiated with training=False, the training apparatus (loss,
+    optimizer, scheduler, logging, etc.) will not be set up and the model will
+    be put into eval mode.
     """
 
     def __init__(self,
                  cfg: 'LearnerConfig',
-                 tmp_dir: str,
-                 model_path: Optional[str] = None,
+                 train_ds: Optional['Dataset'] = None,
+                 valid_ds: Optional['Dataset'] = None,
+                 test_ds: Optional['Dataset'] = None,
+                 model: Optional[nn.Module] = None,
+                 loss: Optional[Callable] = None,
+                 optimizer: Optional['Optimizer'] = None,
+                 epoch_scheduler: Optional['_LRScheduler'] = None,
+                 step_scheduler: Optional['_LRScheduler'] = None,
+                 tmp_dir: Optional[str] = None,
+                 model_weights_path: Optional[str] = None,
                  model_def_path: Optional[str] = None,
                  loss_def_path: Optional[str] = None,
                  training: bool = True):
-        """Constructor.
+        """COnstructor
 
         Args:
-            cfg (LearnerConfig): Configuration.
-            tmp_dir (str): Root of temp dirs.
-            model_path (str, optional): A local path to model weights.
+            cfg (LearnerConfig): LearnerConfig.
+            train_ds (Optional[Dataset], optional): The dataset to use for
+                training. If None, will be generated from cfg.data.
                 Defaults to None.
-            model_def_path (str, optional): A local path to a directory with a
-                hubconf.py. If provided, the model definition is imported from
-                here. Defaults to None.
-            loss_def_path (str, optional): A local path to a directory with a
-                hubconf.py. If provided, the loss function definition is
-                imported from here. Defaults to None.
-            training (bool, optional): Whether the model is to be used for
-                training or prediction. If False, the model is put in eval mode
-                and the loss function, optimizer, etc. are not initialized.
-                Defaults to True.
+            valid_ds (Optional[Dataset], optional): The dataset to use for
+                validation. If None, will be generated from cfg.data.
+                Defaults to None.
+            test_ds (Optional[Dataset], optional): The dataset to use for
+                testing. If None, will be generated from cfg.data.
+                Defaults to None.
+            model (Optional[nn.Module], optional): The model. If None,
+                will be generated from cfg.model. Defaults to None.
+            loss (Optional[Callable], optional): The loss function.
+                If None, will be generated from cfg.solver.
+                Defaults to None.
+            optimizer (Optional[Optimizer], optional): The optimizer.
+                If None, will be generated from cfg.solver.
+                Defaults to None.
+            epoch_scheduler (Optional[_LRScheduler], optional): The scheduler
+                that updates after each epoch. If None, will be generated from
+                cfg.solver. Defaults to None.
+            step_scheduler (Optional[_LRScheduler], optional): The scheduler
+                that updates after each optimizer-step. If None, will be
+                generated from cfg.solver. Defaults to None.
+            tmp_dir (Optional[str], optional): A temporary directory to use for
+                downloads etc. If None, will be auto-generated.
+                Defaults to None.
+            model_weights_path (Optional[str], optional): URI of model weights
+                to initialize the model with. Defaults to None.
+            model_def_path (Optional[str], optional): A local path to a
+                directory with a hubconf.py. If provided, the model definition
+                is imported from here. This is used when loading an external
+                model from a model-bundle. Defaults to None.
+            loss_def_path (Optional[str], optional): A local path to a
+                directory with a hubconf.py. If provided, the loss function
+                definition is imported from here. This is used when loading an
+                external loss function from a model-bundle. Defaults to None.
+            training (bool, optional): If False, the training apparatus (loss,
+                optimizer, scheduler, logging, etc.) will not be set up and the
+                model will be put into eval mode. If True, the training
+                apparatus will be set up and the model will be put into
+                training mode. Defaults to True.
         """
-        log_system_details()
-
         self.cfg = cfg
+        if tmp_dir is None:
+            self._tmp_dir = TemporaryDirectory()
+            tmp_dir = self._tmp_dir.name
         self.tmp_dir = tmp_dir
-
-        self.preview_batch_limit = self.cfg.data.preview_batch_limit
-
-        # TODO make cache dirs configurable
-        torch_cache_dir = '/opt/data/torch-cache'
-        os.environ['TORCH_HOME'] = torch_cache_dir
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.data_cache_dir = '/opt/data/data-cache'
-        make_dir(self.data_cache_dir)
 
-        if FileSystem.get_file_system(cfg.output_uri) == LocalFileSystem:
-            self.output_dir = cfg.output_uri
+        self.train_ds = train_ds
+        self.valid_ds = valid_ds
+        self.test_ds = test_ds
+
+        self.model = model
+        self.loss = loss
+        self.opt = optimizer
+        self.epoch_scheduler = epoch_scheduler
+        self.step_scheduler = step_scheduler
+
+        output_dir = cfg.output_uri
+        if FileSystem.get_file_system(output_dir) == LocalFileSystem:
+            self.output_dir = output_dir
             make_dir(self.output_dir)
         else:
-            self.output_dir = get_local_path(cfg.output_uri, tmp_dir)
+            self.output_dir = get_local_path(output_dir, tmp_dir)
             make_dir(self.output_dir, force_empty=True)
 
             if training and not cfg.overfit_mode:
@@ -154,18 +194,13 @@ class Learner(ABC):
 
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
 
-        self.setup_model(model_def_path=model_def_path)
+        self.setup_model(
+            model_weights_path=model_weights_path,
+            model_def_path=model_def_path)
 
-        if model_path is not None:
-            if isfile(model_path):
-                log.info(f'Loading model weights from: {model_path}')
-                self.model.load_state_dict(
-                    torch.load(model_path, map_location=self.device))
-            else:
-                raise Exception(
-                    'Model could not be found at {}'.format(model_path))
         if training:
             self.setup_training(loss_def_path=loss_def_path)
+            self.model.train()
         else:
             self.model.eval()
 
@@ -175,11 +210,15 @@ class Learner(ABC):
         This plots the dataset, runs a training and validation loop (which will resume if
         interrupted), logs stats, plots predictions, and syncs results to the cloud.
         """
-        self.run_tensorboard()
-        cfg = self.cfg
+        log_system_details()
+        log.info(self.cfg)
+        log.info(f'Using device: {self.device}')
         self.log_data_stats()
+        self.run_tensorboard()
+
+        cfg = self.cfg
         if not cfg.predict_mode:
-            self.plot_dataloaders(self.preview_batch_limit)
+            self.plot_dataloaders(self.cfg.data.preview_batch_limit)
             if cfg.overfit_mode:
                 self.overfit()
             else:
@@ -190,41 +229,38 @@ class Learner(ABC):
         self.load_checkpoint()
         if cfg.eval_train:
             self.eval_model('train')
-        self.eval_model('test')
+        self.eval_model('valid')
         self.sync_to_cloud()
         self.stop_tensorboard()
 
-    def setup_training(self, loss_def_path=None):
-        log.info(self.cfg)
-        log.info(f'Using device: {self.device}')
-
-        # ds = dataset, dl = dataloader
-        self.train_ds = None
-        self.train_dl = None
-        self.valid_ds = None
-        self.valid_dl = None
-        self.test_ds = None
-        self.test_dl = None
+    def setup_training(self, loss_def_path: Optional[str] = None) -> None:
+        cfg = self.cfg
 
         self.config_path = join(self.output_dir, 'learner-config.json')
-        str_to_file(self.cfg.json(), self.config_path)
+        str_to_file(cfg.json(), self.config_path)
 
         self.log_path = join(self.output_dir, 'log.csv')
-        self.train_state_path = join(self.output_dir, 'train-state.json')
-        model_bundle_fname = basename(self.cfg.get_model_bundle_uri())
-        self.model_bundle_path = join(self.output_dir, model_bundle_fname)
         self.metric_names = self.build_metric_names()
 
-        self.last_model_path = join(self.output_dir, 'last-model.pth')
+        # data
+        self.setup_data()
+
+        # model
+        model_bundle_fname = basename(cfg.get_model_bundle_uri())
+        self.model_bundle_path = join(self.output_dir, model_bundle_fname)
+        self.last_model_weights_path = join(self.output_dir, 'last-model.pth')
         self.load_checkpoint()
 
-        self.setup_loss(loss_def_path=loss_def_path)
-        self.opt = self.build_optimizer()
-        self.setup_data()
+        # optimization
         self.start_epoch = self.get_start_epoch()
-        self.steps_per_epoch = len(self.train_ds) // self.cfg.solver.batch_sz
-        self.step_scheduler = self.build_step_scheduler()
-        self.epoch_scheduler = self.build_epoch_scheduler()
+        self.setup_loss(loss_def_path=loss_def_path)
+        if self.opt is None:
+            self.opt = self.build_optimizer()
+        if self.step_scheduler is None:
+            self.step_scheduler = self.build_step_scheduler()
+        if self.epoch_scheduler is None:
+            self.epoch_scheduler = self.build_epoch_scheduler()
+
         self.setup_tensorboard()
 
     def sync_to_cloud(self):
@@ -336,8 +372,14 @@ class Learner(ABC):
     def setup_data(self):
         """Set the datasets and dataLoaders for train, validation, and test
         sets."""
-        if self.train_ds is None:
-            self.train_ds, self.valid_ds, self.test_ds = self.build_datasets()
+        if not all([self.train_ds, self.valid_ds, self.test_ds]):
+            train_ds, valid_ds, test_ds = self.build_datasets()
+            if self.train_ds is None:
+                self.train_ds = train_ds
+            if self.valid_ds is None:
+                self.valid_ds = valid_ds
+            if self.test_ds is None:
+                self.test_ds = test_ds
         self.train_dl, self.valid_dl, self.test_dl = self.build_dataloaders()
 
     def build_datasets(self) -> Tuple['Dataset', 'Dataset', 'Dataset']:
@@ -764,7 +806,7 @@ class Learner(ABC):
         model_bundle_dir = join(tmp_dir, 'model-bundle')
         unzip(model_bundle_path, model_bundle_dir)
 
-        model_path = join(model_bundle_dir, 'model.pth')
+        model_weights_path = join(model_bundle_dir, 'model.pth')
 
         if cfg is None:
             config_path = join(model_bundle_dir, 'pipeline-config.json')
@@ -808,7 +850,7 @@ class Learner(ABC):
 
         return cfg.build(
             tmp_dir=tmp_dir,
-            model_path=model_path,
+            model_weights_path=model_weights_path,
             model_def_path=model_def_path,
             loss_def_path=loss_def_path,
             training=training)
@@ -837,7 +879,7 @@ class Learner(ABC):
 
     def _bundle_model(self, model_bundle_dir: str) -> None:
         """Copy last saved model weights into bundle."""
-        shutil.copyfile(self.last_model_path,
+        shutil.copyfile(self.last_model_weights_path,
                         join(model_bundle_dir, 'model.pth'))
 
     def _bundle_modules(self, model_bundle_dir: str) -> None:
@@ -905,10 +947,11 @@ class Learner(ABC):
 
     def load_checkpoint(self):
         """Load last weights from previous run if available."""
-        if isfile(self.last_model_path):
-            log.info('Loading checkpoint from {}'.format(self.last_model_path))
-            self.model.load_state_dict(
-                torch.load(self.last_model_path, map_location=self.device))
+        weights_path = self.last_model_weights_path
+        if isfile(weights_path):
+            log.info(f'Loading checkpoint from {weights_path}')
+            self.load_weights(
+                uri=weights_path, strict=self.cfg.model.load_strict)
 
     def to_device(self, x: Any, device: str) -> Any:
         """Load Tensors onto a device.
@@ -996,7 +1039,7 @@ class Learner(ABC):
                     log.info('\nstep: {}'.format(step))
                     log.info('train_loss: {}'.format(loss))
 
-        torch.save(self.model.state_dict(), self.last_model_path)
+        torch.save(self.model.state_dict(), self.last_model_weights_path)
 
     def train(self):
         """Training loop that will attempt to resume training if appropriate."""
@@ -1049,7 +1092,7 @@ class Learner(ABC):
                 self.tb_writer.add_histogram(name, param, curr_epoch)
             self.tb_writer.flush()
 
-        torch.save(self.model.state_dict(), self.last_model_path)
+        torch.save(self.model.state_dict(), self.last_model_weights_path)
 
         if (curr_epoch + 1) % self.cfg.solver.sync_interval == 0:
             self.sync_to_cloud()
@@ -1068,4 +1111,4 @@ class Learner(ABC):
         log.info('metrics: {}'.format(metrics))
         json_to_file(metrics,
                      join(self.output_dir, '{}_metrics.json'.format(split)))
-        self.plot_predictions(split, self.preview_batch_limit)
+        self.plot_predictions(split, self.cfg.data.preview_batch_limit)
