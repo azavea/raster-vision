@@ -12,15 +12,16 @@ from subprocess import Popen
 import numbers
 from tempfile import TemporaryDirectory
 
-import click
+import numpy as np
+import albumentations as A
+from tqdm import tqdm
 import matplotlib.pyplot as plt
+
 import torch
 from torch import Tensor
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
-import albumentations as A
-import numpy as np
 
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
@@ -993,7 +994,7 @@ class Learner(ABC):
         self.model.train()
         num_samples = 0
         outputs = []
-        with click.progressbar(self.train_dl, label='Training') as bar:
+        with tqdm(self.train_dl, desc='Training') as bar:
             for batch_ind, (x, y) in enumerate(bar):
                 x = self.to_device(x, self.device)
                 y = self.to_device(y, self.device)
@@ -1022,7 +1023,7 @@ class Learner(ABC):
         num_samples = 0
         outputs = []
         with torch.no_grad():
-            with click.progressbar(dl, label='Validating') as bar:
+            with tqdm(dl, desc='Validating') as bar:
                 for batch_ind, (x, y) in enumerate(bar):
                     x = self.to_device(x, self.device)
                     y = self.to_device(y, self.device)
@@ -1046,9 +1047,8 @@ class Learner(ABC):
         y = self.to_device(y, self.device)
         batch = (x, y)
 
-        with click.progressbar(
-                range(self.cfg.solver.overfit_num_steps),
-                label='Overfitting') as bar:
+        num_steps = self.cfg.solver.overfit_num_steps
+        with tqdm(range(num_steps), desc='Overfitting') as bar:
             for step in bar:
                 loss = self.train_step(batch, step)['train_loss']
                 loss.backward()

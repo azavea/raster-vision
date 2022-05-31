@@ -14,3 +14,4 @@ triangle==20200424
 opencv-python==4.1.*
 opencv-python-headless<4.3
 matplotlib==3.5.*
+tqdm==4.63.1
