@@ -6,7 +6,6 @@ import logging
 
 from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
                     Optional, Sequence, Tuple, Union)
-from typing_extensions import Literal
 from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
                       conint)
 from pydantic.utils import sequence_like
@@ -295,7 +294,18 @@ class ModelConfig(Config):
         return self.external_def.build(save_dir, hubconf_dir=hubconf_dir)
 
 
-@register_config('solver')
+def solver_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version < 4:
+        # 'ignore_last_class' replaced by 'ignore_class_index' in version 4
+        ignore_last_class = cfg_dict.get('ignore_last_class')
+        if ignore_last_class is not None:
+            if ignore_last_class is not False:
+                cfg_dict['ignore_class_index'] = -1
+            del cfg_dict['ignore_last_class']
+    return cfg_dict
+
+
+@register_config('solver', upgrader=solver_config_upgrader)
 class SolverConfig(Config):
     """Config related to solver aka optimizer."""
     lr: PositiveFloat = Field(1e-4, description='Learning rate.')
@@ -321,9 +331,13 @@ class SolverConfig(Config):
         [], description=('List of epoch indices at which to divide LR by 10.'))
     class_loss_weights: Optional[Sequence[float]] = Field(
         None, description=('Class weights for weighted loss.'))
-    ignore_last_class: Union[bool, Literal['force']] = Field(
-        False,
-        description=('Whether to ignore the last class during training.'))
+    ignore_class_index: Optional[int] = Field(
+        None,
+        description='If specified, this index is ignored when computing the '
+        'loss. See pytorch documentation for nn.CrossEntropyLoss for more '
+        'details. This can also be negative, in which case it is treated as a '
+        'negative slice index i.e. -1 = last index, -2 = second-last index, '
+        'and so on.')
     external_loss_def: Optional[ExternalModuleConfig] = Field(
         None,
         description='If specified, the loss will be built from the definition '
@@ -374,8 +388,12 @@ class SolverConfig(Config):
             loss_weights = torch.tensor(loss_weights).float()
             args['weight'] = loss_weights
 
-        if self.ignore_last_class:
-            args.update({'ignore_index': num_classes - 1})
+        ignore_class_index = self.ignore_class_index
+        if ignore_class_index is not None:
+            if ignore_class_index >= 0:
+                args['ignore_index'] = ignore_class_index
+            else:
+                args['ignore_index'] = num_classes + ignore_class_index
 
         loss = nn.CrossEntropyLoss(**args)
 
