@@ -10,7 +10,7 @@ from rastervision.pytorch_learner import (
     ss_data_config_upgrader, clf_data_config_upgrader,
     reg_data_config_upgrader, objdet_data_config_upgrader, GeoDataWindowConfig,
     GeoDataWindowMethod, PlotOptions, ss_image_data_config_upgrader)
-from rastervision.pipeline.config import (ConfigError, build_config)
+from rastervision.pipeline.config import (ValidationError, build_config)
 from rastervision.core.data import DatasetConfig, ClassConfig
 
 
@@ -144,30 +144,30 @@ class TestImageDataConfig(unittest.TestCase):
         group_uris = ['a', 'b', 'c']
 
         # test missing group_uris
-        cfg = ImageDataConfig(group_train_sz=1)
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
-        cfg = ImageDataConfig(group_train_sz_rel=.5)
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
+        args = dict(group_train_sz=1)
+        self.assertRaises(ValidationError, lambda: ImageDataConfig(**args))
+        args = dict(group_train_sz_rel=.5)
+        self.assertRaises(ValidationError, lambda: ImageDataConfig(**args))
         # test both group_train_sz and group_train_sz_rel specified
-        cfg = ImageDataConfig(
+        args = dict(
             group_uris=group_uris, group_train_sz=1, group_train_sz_rel=.5)
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
+        self.assertRaises(ValidationError, lambda: ImageDataConfig(**args))
         # test length check
-        cfg = ImageDataConfig(group_uris=group_uris, group_train_sz=[1])
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
-        cfg = ImageDataConfig(group_uris=group_uris, group_train_sz_rel=[.5])
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
+        args = dict(group_uris=group_uris, group_train_sz=[1])
+        self.assertRaises(ValidationError, lambda: ImageDataConfig(**args))
+        args = dict(group_uris=group_uris, group_train_sz_rel=[.5])
+        self.assertRaises(ValidationError, lambda: ImageDataConfig(**args))
         # test valid configs
-        cfg = ImageDataConfig(group_uris=group_uris, group_train_sz=1)
-        self.assertNoError(lambda: cfg.validate_config())
-        cfg = ImageDataConfig(
+        args = dict(group_uris=group_uris, group_train_sz=1)
+        self.assertNoError(lambda: ImageDataConfig(**args))
+        args = dict(
             group_uris=group_uris, group_train_sz=[1] * len(group_uris))
-        self.assertNoError(lambda: cfg.validate_config())
-        cfg = ImageDataConfig(group_uris=group_uris, group_train_sz_rel=.1)
-        self.assertNoError(lambda: cfg.validate_config())
-        cfg = ImageDataConfig(
+        self.assertNoError(lambda: ImageDataConfig(**args))
+        args = dict(group_uris=group_uris, group_train_sz_rel=.1)
+        self.assertNoError(lambda: ImageDataConfig(**args))
+        args = dict(
             group_uris=group_uris, group_train_sz_rel=[.1] * len(group_uris))
-        self.assertNoError(lambda: cfg.validate_config())
+        self.assertNoError(lambda: ImageDataConfig(**args))
 
 
 class TestGeoDataConfig(unittest.TestCase):
@@ -178,60 +178,48 @@ class TestGeoDataConfig(unittest.TestCase):
             self.fail(msg)
 
     def test_window_config(self):
-        # require stride when method = sliding
-        cfg = GeoDataWindowConfig(
-            method=GeoDataWindowMethod.sliding, size=10, stride=None)
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
-
         # update() corrrectly initializes size_lims
-        cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.random, size=10)
-        cfg.update()
-        self.assertEqual(cfg.size_lims, (10, 11))
-        self.assertNoError(lambda: cfg.validate_config())
+        args = dict(method=GeoDataWindowMethod.random, size=10)
+        self.assertNoError(lambda: GeoDataWindowConfig(**args))
+        self.assertEqual(GeoDataWindowConfig(**args).size_lims, (10, 11))
 
         # update() only initializes size_lims if method = random
-        cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.sliding, size=10)
-        cfg.update()
-        self.assertEqual(cfg.size_lims, None)
+        args = dict(method=GeoDataWindowMethod.sliding, size=10)
+        self.assertEqual(GeoDataWindowConfig(**args).size_lims, None)
 
-        # update() called by validate_config()
-        cfg = GeoDataWindowConfig(method=GeoDataWindowMethod.random, size=10)
-        self.assertNoError(lambda: cfg.validate_config())
-        self.assertEqual(cfg.size_lims, (10, 11))
-
-        # only allow on of size_lims and h_lims+w_lims
-        cfg = GeoDataWindowConfig(
+        # only allow one of size_lims and h_lims+w_lims
+        args = dict(
             method=GeoDataWindowMethod.random,
             size=10,
             size_lims=(10, 20),
             h_lims=(10, 20),
             w_lims=(10, 20))
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
+        self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
 
         # require both h_lims and w_lims if either specified
-        cfg = GeoDataWindowConfig(
+        args = dict(
             method=GeoDataWindowMethod.random,
             size=10,
             h_lims=None,
             w_lims=(10, 20))
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
+        self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
 
         # require both h_lims and w_lims if either specified
-        cfg = GeoDataWindowConfig(
+        args = dict(
             method=GeoDataWindowMethod.random,
             size=10,
             h_lims=(10, 20),
             w_lims=None)
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
+        self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
 
-        # only allow on of size_lims and h_lims+w_lims
-        cfg = GeoDataWindowConfig(
+        # only allow one of size_lims and h_lims+w_lims
+        args = dict(
             method=GeoDataWindowMethod.random,
             size=10,
             size_lims=(10, 20),
             h_lims=(10, 20),
             w_lims=None)
-        self.assertRaises(ConfigError, lambda: cfg.validate_config())
+        self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
 
 
 class TestPlotOptions(unittest.TestCase):
@@ -243,37 +231,33 @@ class TestPlotOptions(unittest.TestCase):
 
     def test_update(self):
         # without img_channels
-        data_cfg = DataConfig()
         plot_opts = PlotOptions()
-        self.assertNoError(lambda: plot_opts.update(data_cfg))
+        self.assertNoError(lambda: plot_opts.update(img_channels=None))
 
         # with img_channels
-        data_cfg = DataConfig(img_channels=3)
         plot_opts = PlotOptions()
-        self.assertNoError(lambda: plot_opts.update(data_cfg))
+        self.assertNoError(lambda: plot_opts.update(img_channels=3))
 
     def test_channel_display_groups(self):
-        data_cfg = DataConfig(img_channels=3)
         # check error on empty dict
-        opts = PlotOptions(channel_display_groups={})
-        self.assertRaises(ConfigError, lambda: opts.update(data_cfg))
+        args = dict(channel_display_groups={})
+        self.assertRaises(ValidationError, lambda: PlotOptions(**args))
 
         # check error on empty list
-        opts = PlotOptions(channel_display_groups=[])
-        self.assertRaises(ConfigError, lambda: opts.update(data_cfg))
+        args = dict(channel_display_groups=[])
+        self.assertRaises(ValidationError, lambda: PlotOptions(**args))
 
         # check error on group of size >3
-        opts = PlotOptions(channel_display_groups={'a': list(range(4))})
-        self.assertRaises(ConfigError, lambda: opts.update(data_cfg))
-
-        # check error on out-of-range channel index
-        opts = PlotOptions(channel_display_groups={'a': [0, 1, 10]})
-        self.assertRaises(ConfigError, lambda: opts.update(data_cfg))
+        # check error on empty list
+        args = dict(channel_display_groups={'a': list(range(4))})
+        self.assertRaises(ValidationError, lambda: PlotOptions(**args))
 
         # check auto conversion to dict
-        data_cfg = DataConfig(img_channels=6)
-        opts = PlotOptions(channel_display_groups=[(0, 1, 2), (4, 3, 5)])
-        opts.update(data_cfg)
+        data_cfg = DataConfig(
+            img_channels=6,
+            plot_options=PlotOptions(channel_display_groups=[(0, 1, 2), (4, 3,
+                                                                         5)]))
+        opts = data_cfg.plot_options
         self.assertIsInstance(opts.channel_display_groups, dict)
         self.assertIn('Channels: [0, 1, 2]', opts.channel_display_groups)
         self.assertIn('Channels: [4, 3, 5]', opts.channel_display_groups)

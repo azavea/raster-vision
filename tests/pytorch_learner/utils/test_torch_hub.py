@@ -22,7 +22,6 @@ class TestTorchHubUtils(unittest.TestCase):
             self.fail(msg)
 
     def test_patch(self):
-        self.assertRaises(TypeError, torch.hub._validate_not_a_forked_repo)
         patch_torch_hub()
         self.assertNoError(torch.hub._validate_not_a_forked_repo)
 
