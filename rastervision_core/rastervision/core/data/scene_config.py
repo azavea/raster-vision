@@ -20,7 +20,7 @@ class SceneConfig(Config):
     """Config for a Scene which comprises the raster data and labels for an AOI."""
     id: str
     raster_source: RasterSourceConfig
-    label_source: LabelSourceConfig
+    label_source: Optional[LabelSourceConfig] = None
     label_store: Optional[LabelStoreConfig] = None
     aoi_geometries: Optional[List[dict]] = Field(
         None,

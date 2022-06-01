@@ -39,14 +39,16 @@ class PyTorchLearnerBackendConfig(BackendConfig):
                 self.data.uri = pipeline.chip_uri
 
         if not self.data.class_names:
-            self.data.class_names = pipeline.dataset.class_config.names
+            # We want to defer validating class_names against class_colors
+            # until we have updated both. Hence, we use Config.copy(update=)
+            # here because it does not trigger pydantic validators.
+            self.data = self.data.copy(
+                update={'class_names': pipeline.dataset.class_config.names})
         if not self.data.class_colors:
             self.data.class_colors = pipeline.dataset.class_config.colors
 
         if not self.data.img_channels:
             self.data.img_channels = self.get_img_channels(pipeline)
-
-        self.data.update()
 
     def get_learner_config(self, pipeline: Optional[RVPipelineConfig]):
         raise NotImplementedError()
