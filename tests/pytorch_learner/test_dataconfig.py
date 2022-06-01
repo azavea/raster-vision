@@ -169,6 +169,136 @@ class TestImageDataConfig(unittest.TestCase):
             group_uris=group_uris, group_train_sz_rel=[.1] * len(group_uris))
         self.assertNoError(lambda: ImageDataConfig(**args))
 
+    def test_build_cc(self):
+        from tempfile import TemporaryDirectory
+        import os
+        from os.path import join
+        import numpy as np
+        from rastervision.pytorch_backend.pytorch_learner_backend import (
+            get_image_ext, write_chip)
+        from rastervision.pipeline.file_system import zipdir
+
+        nclasses = 2
+        class_names = [f'class_{i}' for i in range(nclasses)]
+        chip_sz = 100
+        img_sz = 200
+        nchannels = 3
+        nchips = 5
+        with TemporaryDirectory() as tmp_dir:
+            # prepare data
+            data_dir = join(tmp_dir, 'data')
+            for split in ['train', 'valid']:
+                os.makedirs(join(data_dir, split))
+                for c in class_names:
+                    class_dir = join(data_dir, split, c)
+                    os.makedirs(class_dir)
+                    for i in range(nchips):
+                        chip = np.random.randint(
+                            0,
+                            256,
+                            size=(chip_sz, chip_sz, nchannels),
+                            dtype=np.uint8)
+                        ext = get_image_ext(chip)
+                        path = join(class_dir, f'{i}.{ext}')
+                        write_chip(chip, path)
+
+            # data config -- unzipped
+            data_cfg = ClassificationImageDataConfig(
+                uri=data_dir,
+                class_names=class_names,
+                img_channels=nchannels,
+                img_sz=img_sz)
+            train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
+            self.assertEqual(len(train_ds), nclasses * nchips)
+            self.assertEqual(len(val_ds), nclasses * nchips)
+            self.assertEqual(len(test_ds), 0)
+            x, y = train_ds[0]
+            self.assertEqual(x.shape, (nchannels, img_sz, img_sz))
+            self.assertIn(y, range(nclasses))
+            x, y = val_ds[0]
+            self.assertEqual(x.shape, (nchannels, img_sz, img_sz))
+            self.assertIn(y, range(nclasses))
+            del train_ds
+            del val_ds
+            del test_ds
+
+            # data config -- zipped
+            zip_path = join(tmp_dir, 'data.zip')
+            zipdir(data_dir, zip_path)
+            data_cfg = ClassificationImageDataConfig(
+                uri=zip_path,
+                class_names=class_names,
+                img_channels=nchannels,
+                img_sz=img_sz)
+            train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
+            self.assertEqual(len(train_ds), nclasses * nchips)
+            self.assertEqual(len(val_ds), nclasses * nchips)
+            self.assertEqual(len(test_ds), 0)
+            x, y = train_ds[0]
+            self.assertEqual(x.shape, (nchannels, img_sz, img_sz))
+            self.assertIn(y, range(nclasses))
+            x, y = val_ds[0]
+            self.assertEqual(x.shape, (nchannels, img_sz, img_sz))
+            self.assertIn(y, range(nclasses))
+            del train_ds
+            del val_ds
+            del test_ds
+
+    def test_build_ss(self):
+        from tempfile import TemporaryDirectory
+        import os
+        from os.path import join
+        import numpy as np
+        from rastervision.pytorch_backend.pytorch_learner_backend import (
+            write_chip)
+
+        nclasses = 2
+        class_names = [f'class_{i}' for i in range(nclasses)]
+        chip_sz = 100
+        img_sz = 200
+        nchannels = 3
+        nchips = 5
+        with TemporaryDirectory() as tmp_dir:
+            # prepare data
+            data_dir = join(tmp_dir, 'data')
+            for split in ['train', 'valid']:
+                os.makedirs(join(data_dir, split))
+                img_dir = join(data_dir, split, 'img')
+                label_dir = join(data_dir, split, 'labels')
+                os.makedirs(img_dir)
+                os.makedirs(label_dir)
+                for i in range(nchips):
+                    chip = np.random.randint(
+                        0,
+                        256,
+                        size=(chip_sz, chip_sz, nchannels),
+                        dtype=np.uint8)
+                    label = (chip[..., 0] > 128).astype(np.uint8)
+                    img_path = join(img_dir, f'{i}.npy')
+                    label_path = join(label_dir, f'{i}.npy')
+                    write_chip(chip, img_path)
+                    write_chip(label, label_path)
+
+            # data config -- unzipped
+            data_cfg = SemanticSegmentationImageDataConfig(
+                uri=data_dir,
+                class_names=class_names,
+                img_channels=nchannels,
+                img_sz=img_sz)
+            train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
+            self.assertEqual(len(train_ds), nchips)
+            self.assertEqual(len(val_ds), nchips)
+            self.assertEqual(len(test_ds), 0)
+            x, y = train_ds[0]
+            self.assertEqual(x.shape, (nchannels, img_sz, img_sz))
+            self.assertEqual(y.shape, (img_sz, img_sz))
+            x, y = val_ds[0]
+            self.assertEqual(x.shape, (nchannels, img_sz, img_sz))
+            self.assertEqual(y.shape, (img_sz, img_sz))
+            del train_ds
+            del val_ds
+            del test_ds
+
 
 class TestGeoDataConfig(unittest.TestCase):
     def assertNoError(self, fn: Callable, msg: str = ''):
@@ -220,6 +350,86 @@ class TestGeoDataConfig(unittest.TestCase):
             h_lims=(10, 20),
             w_lims=None)
         self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
+
+    def test_build_ss(self):
+        from tempfile import TemporaryDirectory
+        from uuid import uuid4
+        import numpy as np
+        from rastervision.core.data import (
+            ClassConfig, DatasetConfig, RasterioSourceConfig,
+            MultiRasterSourceConfig, SubRasterSourceConfig,
+            ReclassTransformerConfig, SceneConfig,
+            SemanticSegmentationLabelSourceConfig)
+        from tests import data_file_path
+
+        def make_scene(num_channels: int, num_classes: int) -> SceneConfig:
+            path = data_file_path('multi_raster_source/const_100_600x600.tiff')
+            rs_cfgs_img = []
+            for _ in range(num_channels):
+                rs_cfg = RasterioSourceConfig(
+                    uris=[path],
+                    channel_order=[0],
+                    transformers=[
+                        ReclassTransformerConfig(
+                            mapping={100: np.random.randint(0, 256)})
+                    ])
+                rs_cfgs_img.append(rs_cfg)
+            rs_cfg_img = MultiRasterSourceConfig(
+                raster_sources=[
+                    SubRasterSourceConfig(
+                        raster_source=rs_cfg, target_channels=[i])
+                    for i, rs_cfg in enumerate(rs_cfgs_img)
+                ],
+                channel_order=list(range(num_channels)))
+            rs_cfg_label = RasterioSourceConfig(
+                uris=[path],
+                channel_order=[0],
+                transformers=[
+                    ReclassTransformerConfig(
+                        mapping={100: np.random.randint(0, num_classes)})
+                ])
+            scene_cfg = SceneConfig(
+                id=str(uuid4()),
+                raster_source=rs_cfg_img,
+                label_source=SemanticSegmentationLabelSourceConfig(
+                    raster_source=rs_cfg_label))
+            return scene_cfg
+
+        nclasses = 2
+        nchannels = 3
+        chip_sz = 100
+        img_sz = 200
+        class_config = ClassConfig(
+            names=[f'class_{i}' for i in range(nclasses)],
+            null_class='class_0')
+        dataset_cfg = DatasetConfig(
+            class_config=class_config,
+            train_scenes=[make_scene(nchannels, nclasses) for _ in range(4)],
+            validation_scenes=[
+                make_scene(nchannels, nclasses) for _ in range(2)
+            ],
+            test_scenes=[make_scene(nchannels, nclasses) for _ in range(0)])
+        data_cfg = SemanticSegmentationGeoDataConfig(
+            scene_dataset=dataset_cfg,
+            window_opts=GeoDataWindowConfig(size=chip_sz, stride=chip_sz),
+            class_names=class_config.names,
+            class_colors=class_config.colors,
+            img_sz=img_sz,
+            num_workers=0)
+        with TemporaryDirectory() as tmp_dir:
+            train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
+            self.assertEqual(len(train_ds), 4 * (600 // chip_sz)**2)
+            self.assertEqual(len(val_ds), 2 * (600 // chip_sz)**2)
+            self.assertEqual(len(test_ds), 0 * (600 // chip_sz)**2)
+            x, y = train_ds[0]
+            self.assertEqual(x.shape, (nchannels, img_sz, img_sz))
+            self.assertEqual(y.shape, (img_sz, img_sz))
+            x, y = val_ds[0]
+            self.assertEqual(x.shape, (nchannels, img_sz, img_sz))
+            self.assertEqual(y.shape, (img_sz, img_sz))
+            del train_ds
+            del val_ds
+            del test_ds
 
 
 class TestPlotOptions(unittest.TestCase):
