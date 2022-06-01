@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 from enum import Enum
 from os.path import join
 import logging
@@ -9,7 +9,7 @@ from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 
 from rastervision.core.data import Scene
 from rastervision.pipeline.config import (Config, register_config, Field,
-                                          validator)
+                                          validator, ConfigError)
 from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, ModelConfig, Backbone, ImageDataConfig, GeoDataConfig,
     GeoDataWindowMethod, GeoDataWindowConfig)
@@ -18,6 +18,9 @@ from rastervision.pytorch_learner.dataset import (
     ObjectDetectionRandomWindowGeoDataset)
 from rastervision.pytorch_learner.utils import adjust_conv_channels
 from torchvision.models.detection.faster_rcnn import FasterRCNN
+
+if TYPE_CHECKING:
+    from rastervision.pytorch_learner.learner_config import SolverConfig
 
 log = logging.getLogger(__name__)
 
@@ -216,3 +219,24 @@ class ObjectDetectionLearnerConfig(LearnerConfig):
             model_def_path=model_def_path,
             loss_def_path=loss_def_path,
             training=training)
+
+    @validator('solver')
+    def validate_solver_config(cls, v: 'SolverConfig') -> 'SolverConfig':
+        if v.ignore_class_index is not None:
+            raise ConfigError(
+                'ignore_last_class is not supported for Object Detection.')
+        if v.class_loss_weights is not None:
+            raise ConfigError(
+                'class_loss_weights is currently not supported for '
+                'Object Detection.')
+        if v.external_loss_def is not None:
+            raise ConfigError(
+                'external_loss_def is currently not supported for '
+                'Object Detection. Raster Vision expects object '
+                'detection models to behave like TorchVision object detection '
+                'models, and these models compute losses internally. So, if '
+                'you want to use a custom loss function, you can create a '
+                'custom model that implements that loss function and use that '
+                'model via external_model_def. See cowc_potsdam.py for an '
+                'example of how to use a custom object detection model.')
+        return v
