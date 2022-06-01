@@ -1,18 +1,23 @@
-from typing import List, Optional, Union
+from typing import Iterable, List, Optional, Sequence, Union
 from enum import Enum
+import logging
 
 import albumentations as A
-
-from torch.utils.data import Dataset
+from torch import nn
+from torchvision import models
 
 from rastervision.core.data import Scene
-from rastervision.pipeline.config import (Config, register_config, Field)
+from rastervision.pipeline.config import (Config, register_config, Field,
+                                          ConfigError)
 from rastervision.pytorch_learner.learner_config import (
     LearnerConfig, ModelConfig, PlotOptions, ImageDataConfig, GeoDataConfig,
     GeoDataWindowMethod)
 from rastervision.pytorch_learner.dataset import (
     RegressionImageDataset, RegressionSlidingWindowGeoDataset,
     RegressionRandomWindowGeoDataset)
+from rastervision.pytorch_learner.utils import adjust_conv_channels
+
+log = logging.getLogger(__name__)
 
 
 class RegressionDataFormat(Enum):
@@ -48,7 +53,7 @@ class RegressionImageDataConfig(RegressionDataConfig, ImageDataConfig):
         RegressionPlotOptions(), description='Options to control plotting.')
 
     def dir_to_dataset(self, data_dir: str,
-                       transform: A.BasicTransform) -> Dataset:
+                       transform: A.BasicTransform) -> RegressionImageDataset:
         ds = RegressionImageDataset(
             data_dir, self.class_names, transform=transform)
         return ds
@@ -62,7 +67,8 @@ class RegressionGeoDataConfig(RegressionDataConfig, GeoDataConfig):
     def scene_to_dataset(self,
                          scene: Scene,
                          transform: Optional[A.BasicTransform] = None
-                         ) -> Dataset:
+                         ) -> Union[RegressionSlidingWindowGeoDataset,
+                                    RegressionRandomWindowGeoDataset]:
         if isinstance(self.window_opts, dict):
             opts = self.window_opts[scene.id]
         else:
@@ -92,6 +98,31 @@ class RegressionGeoDataConfig(RegressionDataConfig, GeoDataConfig):
         return ds
 
 
+class RegressionModel(nn.Module):
+    def __init__(self,
+                 backbone_arch,
+                 out_features,
+                 pretrained=True,
+                 pos_out_inds=None,
+                 prob_out_inds=None):
+        super().__init__()
+        self.backbone = getattr(models, backbone_arch)(pretrained=pretrained)
+        in_features = self.backbone.fc.in_features
+        self.backbone.fc = nn.Linear(in_features, out_features)
+        self.pos_out_inds = pos_out_inds
+        self.prob_out_inds = prob_out_inds
+
+    def forward(self, x):
+        out = self.backbone(x)
+        if self.pos_out_inds:
+            for ind in self.pos_out_inds:
+                out[:, ind] = out[:, ind].exp()
+        if self.prob_out_inds:
+            for ind in self.prob_out_inds:
+                out[:, ind] = out[:, ind].sigmoid()
+        return out
+
+
 @register_config('regression_model')
 class RegressionModelConfig(ModelConfig):
     output_multiplier: List[float] = None
@@ -99,6 +130,56 @@ class RegressionModelConfig(ModelConfig):
     def update(self, learner=None):
         if learner is not None and self.output_multiplier is None:
             self.output_multiplier = [1.0] * len(learner.data.class_names)
+
+    def build_default_model(
+            self,
+            num_classes: int,
+            in_channels: int,
+            class_names: Optional[Sequence[str]] = None,
+            pos_class_names: Optional[Iterable[str]] = None,
+            prob_class_names: Optional[Iterable[str]] = None) -> nn.Module:
+        pretrained = self.pretrained
+        backbone_name = self.get_backbone_str()
+        out_features = num_classes
+
+        pos_out_inds = None
+        if pos_class_names is not None:
+            pos_out_inds = [
+                class_names.index(class_name) for class_name in pos_class_names
+            ]
+        prob_out_inds = None
+        if prob_class_names is not None:
+            prob_out_inds = [
+                class_names.index(class_name)
+                for class_name in prob_class_names
+            ]
+        model = RegressionModel(
+            backbone_name,
+            out_features,
+            pretrained=pretrained,
+            pos_out_inds=pos_out_inds,
+            prob_out_inds=prob_out_inds)
+
+        if in_channels != 3:
+            if not backbone_name.startswith('resnet'):
+                raise ConfigError(
+                    'All TorchVision backbones do not provide the same API '
+                    'for accessing the first conv layer. '
+                    'Therefore, conv layer modification to support '
+                    'arbitrary input channels is only supported for resnet '
+                    'backbones. To use other backbones, it is recommended to '
+                    'fork the TorchVision repo, define factory functions or '
+                    'subclasses that perform the necessary modifications, and '
+                    'then use the external model functionality to import it '
+                    'into Raster Vision. See spacenet_rio.py for an example '
+                    'of how to import external models. Alternatively, you can '
+                    'override this function.')
+            model.backbone.conv1 = adjust_conv_channels(
+                old_conv=model.backbone.conv1,
+                in_channels=in_channels,
+                pretrained=pretrained)
+
+        return model
 
 
 @register_config('regression_learner')
@@ -108,7 +189,7 @@ class RegressionLearnerConfig(LearnerConfig):
 
     def build(self,
               tmp_dir,
-              model_path=None,
+              model_weights_path=None,
               model_def_path=None,
               loss_def_path=None,
               training=True):
@@ -117,7 +198,7 @@ class RegressionLearnerConfig(LearnerConfig):
         return RegressionLearner(
             self,
             tmp_dir,
-            model_path=model_path,
+            model_weights_path=model_weights_path,
             model_def_path=model_def_path,
             loss_def_path=loss_def_path,
             training=training)

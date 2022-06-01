@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import TYPE_CHECKING, Optional, Sequence
 import warnings
 from os.path import join
 import logging
@@ -9,88 +9,36 @@ from textwrap import wrap
 
 import numpy as np
 import torch
-from torchvision import models
-import torch.nn as nn
 import torch.nn.functional as F
 
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.utils.utils import (
-    adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
-from rastervision.pipeline.config import ConfigError
+from rastervision.pytorch_learner.utils.utils import (plot_channel_groups,
+                                                      channel_groups_to_imgs)
+
+if TYPE_CHECKING:
+    import torch.nn as nn
 
 warnings.filterwarnings('ignore')
 
 log = logging.getLogger(__name__)
 
 
-class RegressionModel(nn.Module):
-    def __init__(self,
-                 backbone_arch,
-                 out_features,
-                 pretrained=True,
-                 pos_out_inds=None,
-                 prob_out_inds=None):
-        super().__init__()
-        self.backbone = getattr(models, backbone_arch)(pretrained=pretrained)
-        in_features = self.backbone.fc.in_features
-        self.backbone.fc = nn.Linear(in_features, out_features)
-        self.pos_out_inds = pos_out_inds
-        self.prob_out_inds = prob_out_inds
-
-    def forward(self, x):
-        out = self.backbone(x)
-        if self.pos_out_inds:
-            for ind in self.pos_out_inds:
-                out[:, ind] = out[:, ind].exp()
-        if self.prob_out_inds:
-            for ind in self.prob_out_inds:
-                out[:, ind] = out[:, ind].sigmoid()
-        return out
-
-
 class RegressionLearner(Learner):
-    def build_model(self):
-        pretrained = self.cfg.model.pretrained
-        backbone_name = self.cfg.model.get_backbone_str()
-        in_channels = self.cfg.data.img_channels
-        if in_channels is None:
-            log.warn('DataConfig.img_channels is None. Defaulting to 3.')
-            in_channels = 3
-        out_features = len(self.cfg.data.class_names)
-        pos_out_inds = [
-            self.cfg.data.class_names.index(class_name)
-            for class_name in self.cfg.data.pos_class_names
-        ]
-        prob_out_inds = [
-            self.cfg.data.class_names.index(class_name)
-            for class_name in self.cfg.data.prob_class_names
-        ]
-        model = RegressionModel(
-            backbone_name,
-            out_features,
-            pretrained=pretrained,
-            pos_out_inds=pos_out_inds,
-            prob_out_inds=prob_out_inds)
-
-        if in_channels != 3:
-            if not backbone_name.startswith('resnet'):
-                raise ConfigError(
-                    'All TorchVision backbones do not provide the same API '
-                    'for accessing the first conv layer. '
-                    'Therefore, conv layer modification to support '
-                    'arbitrary input channels is only supported for resnet '
-                    'backbones. To use other backbones, it is recommended to '
-                    'fork the TorchVision repo, define factory functions or '
-                    'subclasses that perform the necessary modifications, and '
-                    'then use the external model functionality to import it '
-                    'into Raster Vision. See spacenet_rio.py for an example '
-                    'of how to import external models. Alternatively, you can '
-                    'override this function.')
-            model.backbone.conv1 = adjust_conv_channels(
-                old_conv=model.backbone.conv1,
-                in_channels=in_channels,
-                pretrained=pretrained)
-
+    def build_model(self, model_def_path: Optional[str] = None) -> 'nn.Module':
+        """Override to pass class_names, pos_class_names, and prob_class_names.
+        """
+        cfg = self.cfg
+        class_names = cfg.data.class_names
+        pos_class_names = cfg.data.pos_class_names
+        prob_class_names = cfg.data.prob_class_names
+        model = cfg.model.build(
+            num_classes=cfg.data.num_classes,
+            in_channels=cfg.data.img_channels,
+            save_dir=self.modules_dir,
+            hubconf_dir=model_def_path,
+            class_names=class_names,
+            pos_class_names=pos_class_names,
+            prob_class_names=prob_class_names)
         return model
 
     def on_overfit_start(self):
