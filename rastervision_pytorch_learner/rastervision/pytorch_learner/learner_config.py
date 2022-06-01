@@ -4,15 +4,17 @@ import random
 import uuid
 import logging
 
-from typing import (TYPE_CHECKING, Any, Dict, Iterable, List, Optional,
-                    Sequence, Tuple, Union)
+from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
+                    Optional, Sequence, Tuple, Union)
 from typing_extensions import Literal
 from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
                       conint)
 from pydantic.utils import sequence_like
 
 import albumentations as A
-from torch import nn
+import torch
+from torch import (nn, optim)
+from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.data import Dataset, ConcatDataset, Subset
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
@@ -317,7 +319,7 @@ class SolverConfig(Config):
          'epochs with start and end LR being lr/10 and the peak being lr.'))
     multi_stage: List = Field(
         [], description=('List of epoch indices at which to divide LR by 10.'))
-    class_loss_weights: Optional[Union[list, tuple]] = Field(
+    class_loss_weights: Optional[Sequence[float]] = Field(
         None, description=('Class weights for weighted loss.'))
     ignore_last_class: Union[bool, Literal['force']] = Field(
         False,
@@ -344,6 +346,82 @@ class SolverConfig(Config):
         if has_weights and has_external_loss_def:
             raise ConfigError(
                 'class_loss_weights is not supported with external_loss_def.')
+
+    def build_loss(self,
+                   num_classes: int,
+                   save_dir: Optional[str] = None,
+                   hubconf_dir: Optional[str] = None) -> Callable:
+        """Build and return a loss function based on the config.
+
+        Args:
+            num_classes (int): Number of classes.
+            save_dir (Optional[str], optional): Used for building
+                external_loss_def if specified. Defaults to None.
+            hubconf_dir (Optional[str], optional): Used for building
+                external_loss_def if specified. Defaults to None.
+
+        Returns:
+            Callable: Loss function.
+        """
+        if self.external_loss_def is not None:
+            return self.external_loss_def.build(
+                save_dir=save_dir, hubconf_dir=hubconf_dir)
+
+        args = {}
+
+        loss_weights = self.class_loss_weights
+        if loss_weights is not None:
+            loss_weights = torch.tensor(loss_weights).float()
+            args['weight'] = loss_weights
+
+        if self.ignore_last_class:
+            args.update({'ignore_index': num_classes - 1})
+
+        loss = nn.CrossEntropyLoss(**args)
+
+        return loss
+
+    def build_optimizer(self, model: nn.Module, **kwargs) -> optim.Optimizer:
+        return optim.Adam(model.parameters(), lr=self.lr, **kwargs)
+
+    def build_step_scheduler(self, optimizer: optim.Optimizer,
+                             train_ds_sz: int,
+                             **kwargs) -> Optional[_LRScheduler]:
+        """Returns an LR scheduler that changes the LR each step.
+
+        This is used to implement the "one cycle" schedule popularized by
+        fastai.
+        """
+        scheduler = None
+        if self.one_cycle and self.num_epochs > 1:
+            steps_per_epoch = max(1, train_ds_sz // self.batch_sz)
+            total_steps = self.num_epochs * steps_per_epoch
+            step_size_up = (self.num_epochs // 2) * steps_per_epoch
+            step_size_down = total_steps - step_size_up
+            scheduler = CyclicLR(
+                optimizer,
+                base_lr=self.lr / 10,
+                max_lr=self.lr,
+                step_size_up=step_size_up,
+                step_size_down=step_size_down,
+                cycle_momentum=kwargs.pop('cycle_momentum', False),
+                **kwargs)
+        return scheduler
+
+    def build_epoch_scheduler(self, optimizer: optim.Optimizer,
+                              **kwargs) -> Optional[_LRScheduler]:
+        """Returns an LR scheduler tha changes the LR each epoch.
+
+        This is used to divide the LR by 10 at certain epochs.
+        """
+        scheduler = None
+        if self.multi_stage:
+            scheduler = MultiStepLR(
+                optimizer,
+                milestones=self.multi_stage,
+                gamma=kwargs.pop('gamma', 0.1),
+                **kwargs)
+        return scheduler
 
 
 @register_config('plot_options')

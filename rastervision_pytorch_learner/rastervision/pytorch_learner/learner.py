@@ -11,7 +11,7 @@ import logging
 from subprocess import Popen
 import psutil
 import numbers
-from typing import (Any, Dict, List, Optional, Tuple)
+from typing import (Any, Callable, Dict, List, Optional, Tuple)
 
 import click
 import matplotlib.pyplot as plt
@@ -19,7 +19,7 @@ import torch
 from torch import Tensor
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
+from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, Dataset, Sampler
 import albumentations as A
@@ -33,10 +33,8 @@ from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
                                           save_pipeline_config)
-from rastervision.pytorch_learner.learner_config import (LearnerConfig,
-                                                         ExternalModuleConfig)
+from rastervision.pytorch_learner.learner_config import LearnerConfig
 from rastervision.pytorch_learner.utils import (
-    torch_hub_load_github, torch_hub_load_uri, torch_hub_load_local,
     get_hubconf_dir_from_cfg, deserialize_albumentation_transform)
 
 warnings.filterwarnings('ignore')
@@ -299,110 +297,20 @@ class Learner(ABC):
             loss_def_path (str, optional): Loss definition path. Will be
             available when loading from a bundle. Defaults to None.
         """
-        ext_cfg = self.cfg.solver.external_loss_def
-        if ext_cfg is not None:
-            self.loss = self.load_external_loss(ext_cfg, loss_def_path)
-        else:
-            self.loss = self.build_loss()
+        if self.loss is None:
+            self.loss = self.build_loss(loss_def_path=loss_def_path)
 
         if self.loss is not None and isinstance(self.loss, nn.Module):
             self.loss.to(self.device)
 
-    def build_loss(self) -> nn.Module:
+    def build_loss(self, loss_def_path: Optional[str] = None) -> Callable:
         """Build a loss Callable."""
-        pass
-
-    def load_external_loss(self,
-                           ext_cfg: ExternalModuleConfig,
-                           loss_def_path: Optional[str] = None) -> nn.Module:
-        """Load an external loss function via torch.hub.
-
-        Args:
-            ext_cfg (ExternalModuleConfig): Config describing the module.
-            loss_def_path (str, optional): Loss definition path. Will be
-            available when loading from a bundle. Defaults to None.
-        """
-        hubconf_dir = self._get_external_module_dir(ext_cfg, loss_def_path)
-        loss = self.load_external_module(
-            ext_cfg=ext_cfg, hubconf_dir=hubconf_dir)
+        cfg = self.cfg
+        loss = cfg.solver.build_loss(
+            num_classes=cfg.data.num_classes,
+            save_dir=self.modules_dir,
+            hubconf_dir=loss_def_path)
         return loss
-
-    def _get_external_module_dir(
-            self,
-            ext_cfg: ExternalModuleConfig,
-            existing_def_path: Optional[str] = None) -> Optional[str]:
-        """Determine correct dir, taking cfg options and existing_def_path into
-        account.
-
-        Args:
-            ext_cfg (ExternalModuleConfig): Config describing the module.
-            existing_def_path (str, optional): Loss definition path.
-            Will be available when loading from a bundle. Defaults to None.
-
-        Returns:
-            Optional[str]: [description]
-        """
-        dir_from_cfg = get_hubconf_dir_from_cfg(
-            ext_cfg, parent=self.modules_dir)
-        if isdir(dir_from_cfg) and not ext_cfg.force_reload:
-            return dir_from_cfg
-        return existing_def_path
-
-    def load_external_module(self,
-                             ext_cfg: ExternalModuleConfig,
-                             save_dir: Optional[str] = None,
-                             hubconf_dir: Optional[str] = None,
-                             tmp_dir: Optional[str] = None) -> Any:
-        """Load an external module via torch.hub.
-
-        Note: Loading a PyTorch module is the typical use case, but there are
-        no type restrictions on the object loaded through torch.hub.
-
-        Args:
-            ext_cfg (ExternalModuleConfig): Config describing the module.
-            save_dir (str, optional): The module def will be saved here.
-                Defaults to self.modules_dir.
-            hubconf_dir (str, optional): Path to existing definition.
-                If provided, the definition will not be fetched from the source
-                specified by ext_cfg. Defaults to None.
-            tmp_dir (str, optional): Temporary directory to use for downloads
-                etc. Defaults to self.tmp_dir.
-
-        Returns:
-            nn.Module: The module loaded via torch.hub.
-        """
-        if hubconf_dir is not None:
-            log.info(f'Using existing module definition at: {hubconf_dir}')
-            module = torch_hub_load_local(
-                hubconf_dir=hubconf_dir,
-                entrypoint=ext_cfg.entrypoint,
-                *ext_cfg.entrypoint_args,
-                **ext_cfg.entrypoint_kwargs)
-            return module
-
-        save_dir = self.modules_dir if save_dir is None else save_dir
-        tmp_dir = self.tmp_dir if tmp_dir is None else tmp_dir
-
-        hubconf_dir = get_hubconf_dir_from_cfg(ext_cfg, parent=save_dir)
-        if ext_cfg.github_repo is not None:
-            log.info(f'Fetching module definition from: {ext_cfg.github_repo}')
-            module = torch_hub_load_github(
-                repo=ext_cfg.github_repo,
-                hubconf_dir=hubconf_dir,
-                tmp_dir=save_dir,
-                entrypoint=ext_cfg.entrypoint,
-                *ext_cfg.entrypoint_args,
-                **ext_cfg.entrypoint_kwargs)
-        else:
-            log.info(f'Fetching module definition from: {ext_cfg.uri}')
-            module = torch_hub_load_uri(
-                uri=ext_cfg.uri,
-                hubconf_dir=hubconf_dir,
-                tmp_dir=tmp_dir,
-                entrypoint=ext_cfg.entrypoint,
-                *ext_cfg.entrypoint_args,
-                **ext_cfg.entrypoint_kwargs)
-        return module
 
     def get_bbox_params(self) -> Optional[A.BboxParams]:
         """Returns BboxParams used by albumentations for data augmentation."""
@@ -489,43 +397,19 @@ class Learner(ABC):
 
     def build_optimizer(self) -> optim.Optimizer:
         """Returns optimizer."""
-        return optim.Adam(self.model.parameters(), lr=self.cfg.solver.lr)
+        return self.cfg.solver.build_optimizer(self.model)
 
     def build_step_scheduler(self) -> _LRScheduler:
-        """Returns an LR scheduler that changes the LR each step.
-
-        This is used to implement the "one cycle" schedule popularized by
-        fastai.
-        """
-        scheduler = None
-        cfg = self.cfg
-        if cfg.solver.one_cycle and cfg.solver.num_epochs > 1:
-            total_steps = cfg.solver.num_epochs * self.steps_per_epoch
-            step_size_up = (cfg.solver.num_epochs // 2) * self.steps_per_epoch
-            step_size_down = total_steps - step_size_up
-            scheduler = CyclicLR(
-                self.opt,
-                base_lr=cfg.solver.lr / 10,
-                max_lr=cfg.solver.lr,
-                step_size_up=step_size_up,
-                step_size_down=step_size_down,
-                cycle_momentum=False)
-            for _ in range(self.start_epoch * self.steps_per_epoch):
-                scheduler.step()
-        return scheduler
+        """Returns an LR scheduler that changes the LR each step."""
+        return self.cfg.solver.build_step_scheduler(
+            optimizer=self.opt,
+            train_ds_sz=len(self.train_ds),
+            last_epoch=(self.start_epoch - 1))
 
     def build_epoch_scheduler(self) -> _LRScheduler:
-        """Returns an LR scheduler tha changes the LR each epoch.
-
-        This is used to divide the LR by 10 at certain epochs.
-        """
-        scheduler = None
-        if self.cfg.solver.multi_stage:
-            scheduler = MultiStepLR(
-                self.opt, milestones=self.cfg.solver.multi_stage, gamma=0.1)
-            for _ in range(self.start_epoch):
-                scheduler.step()
-        return scheduler
+        """Returns an LR scheduler that changes the LR each epoch."""
+        return self.cfg.solver.build_epoch_scheduler(
+            optimizer=self.opt, last_epoch=(self.start_epoch - 1))
 
     def build_metric_names(self) -> List[str]:
         """Returns names of metrics used to validate model at each epoch."""
