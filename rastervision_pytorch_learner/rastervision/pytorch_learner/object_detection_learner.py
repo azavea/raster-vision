@@ -1,20 +1,19 @@
-from typing import Iterable, Optional, Sequence
+from typing import TYPE_CHECKING, Iterable, Optional, Sequence
 import warnings
 
 import logging
 
-from albumentations import BboxParams
-
 import numpy as np
 import torch
-from torchvision.models.detection.faster_rcnn import FasterRCNN
-from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.utils.utils import (
-    adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
+from rastervision.pytorch_learner.utils.utils import (plot_channel_groups,
+                                                      channel_groups_to_imgs)
 from rastervision.pytorch_learner.object_detection_utils import (
     BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, draw_boxes)
+
+if TYPE_CHECKING:
+    from torch import nn
 
 warnings.filterwarnings('ignore')
 
@@ -22,74 +21,33 @@ log = logging.getLogger(__name__)
 
 
 class ObjectDetectionLearner(Learner):
-    def build_model(self) -> FasterRCNN:
-        """Returns a FasterRCNN model.
-
-        Note that the model returned will have (num_classes + 2) output classes.
-        +1 for the null class (zeroth index), and another +1 (last index) for
-        backward compatibility with earlier Raster Vision versions.
-
-        Returns:
-            FasterRCNN: a FasterRCNN model.
-        """
-        pretrained = self.cfg.model.pretrained
-        backbone_arch = self.cfg.model.get_backbone_str()
-        img_sz = self.cfg.data.img_sz
-        num_classes = len(self.cfg.data.class_names)
-        in_channels = self.cfg.data.img_channels
-        if in_channels is None:
-            log.warn('DataConfig.img_channels is None. Defaulting to 3.')
-            in_channels = 3
-
-        backbone = resnet_fpn_backbone(backbone_arch, pretrained)
-
-        # default values from FasterRCNN constructor
-        image_mean = [0.485, 0.456, 0.406]
-        image_std = [0.229, 0.224, 0.225]
-
-        if in_channels != 3:
-            extra_channels = in_channels - backbone.body['conv1'].in_channels
-
-            # adjust channels
-            backbone.body['conv1'] = adjust_conv_channels(
-                old_conv=backbone.body['conv1'],
-                in_channels=in_channels,
-                pretrained=pretrained)
-
-            # adjust stats
-            if extra_channels < 0:
-                image_mean = image_mean[:extra_channels]
-                image_std = image_std[:extra_channels]
-            else:
-                # arbitrarily set mean and stds of the new channels to
-                # something similar to the values of the other 3 channels
-                image_mean = image_mean + [.45] * extra_channels
-                image_std = image_std + [.225] * extra_channels
-
-        model = FasterRCNN(
-            backbone=backbone,
-            # +1 because torchvision detection models reserve 0 for the null
-            # class, another +1 for backward compatibility with earlier Raster
-            # Vision versions
-            num_classes=num_classes + 1 + 1,
-            # TODO we shouldn't need to pass the image size here
-            min_size=img_sz,
-            max_size=img_sz,
-            image_mean=image_mean,
-            image_std=image_std)
+    def build_model(self, model_def_path: Optional[str] = None) -> 'nn.Module':
+        """Override to pass img_sz."""
+        cfg = self.cfg
+        model = cfg.model.build(
+            num_classes=cfg.data.num_classes,
+            in_channels=cfg.data.img_channels,
+            save_dir=self.modules_dir,
+            hubconf_dir=model_def_path,
+            img_sz=cfg.data.img_sz)
         return model
 
-    def setup_model(self, model_def_path: Optional[str] = None) -> None:
+    def setup_model(self,
+                    model_weights_path: Optional[str] = None,
+                    model_def_path: Optional[str] = None) -> None:
         """Override to apply the TorchVisionODAdapter wrapper."""
-        ext_cfg = self.cfg.model.external_def
-        if ext_cfg is not None:
-            model = self.load_external_model(ext_cfg, model_def_path)
+        if self.model is not None:
+            self.model.to(self.device)
+            return
+
+        model = self.build_model(model_def_path)
+
+        if self.cfg.model.external_def is not None:
             # this model will have 1 extra output classes that we will ignore
             self.model = TorchVisionODAdapter(model, ignored_output_inds=[0])
         else:
-            model = self.build_model()
             # this model will have 2 extra output classes that we will ignore
-            num_classes = len(self.cfg.data.class_names)
+            num_classes = self.cfg.data.num_classes
             self.model = TorchVisionODAdapter(
                 model, ignored_output_inds=[0, num_classes + 1])
 
@@ -101,10 +59,6 @@ class ObjectDetectionLearner(Learner):
             'epoch', 'train_time', 'valid_time', 'train_loss', 'map', 'map50'
         ]
         return metric_names
-
-    def get_bbox_params(self):
-        return BboxParams(
-            format='albumentations', label_fields=['category_id'])
 
     def get_collate_fn(self):
         return collate_fn
@@ -139,7 +93,7 @@ class ObjectDetectionLearner(Learner):
 
     def numpy_predict(self, x: np.ndarray,
                       raw_out: bool = False) -> np.ndarray:
-        transform, _ = self.get_data_transforms()
+        transform, _ = self.cfg.data.get_data_transforms()
         x = self.normalize_input(x)
         x = self.to_batch(x)
         x = np.stack([
