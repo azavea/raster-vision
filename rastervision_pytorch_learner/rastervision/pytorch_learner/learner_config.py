@@ -1,5 +1,8 @@
-from os.path import join
+from os.path import join, isdir
 from enum import Enum
+import random
+import uuid
+import logging
 
 from typing import (List, Optional, Sequence, Union, TYPE_CHECKING, Dict,
                     Tuple, Iterable)
@@ -9,15 +12,19 @@ from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
 from pydantic.utils import sequence_like
 
 import albumentations as A
-
-from torch.utils.data import Dataset, ConcatDataset
+from torch.utils.data import Dataset, ConcatDataset, Subset
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, validator)
+from rastervision.pipeline.file_system import (list_paths, download_if_needed,
+                                               unzip, file_exists,
+                                               get_local_path, sync_from_dir)
 from rastervision.core.data import (Scene, DatasetConfig as SceneDatasetConfig)
 from rastervision.pytorch_learner.utils import (
-    color_to_triple, validate_albumentation_transform)
-from rastervision.pytorch_learner.utils import MinMaxNormalize
+    color_to_triple, validate_albumentation_transform, MinMaxNormalize,
+    deserialize_albumentation_transform)
+
+log = logging.getLogger(__name__)
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
 augmentors = [
@@ -370,6 +377,10 @@ class DataConfig(Config):
         ('Optional limit on the number of items in the preview plots produced '
          'during training.'))
 
+    @property
+    def num_classes(self):
+        return len(self.class_names)
+
     # validators
     _base_tf = validator(
         'base_transform', allow_reuse=True)(validate_albumentation_transform)
@@ -408,6 +419,77 @@ class DataConfig(Config):
         ]
         return transforms_with_lambdas
 
+    def get_bbox_params(self) -> Optional[A.BboxParams]:
+        """Returns BboxParams used by albumentations for data augmentation."""
+        return None
+
+    def get_data_transforms(self) -> Tuple[A.BasicTransform, A.BasicTransform]:
+        """Get albumentations transform objects for data augmentation.
+
+        Returns:
+           1st tuple arg: a transform that doesn't do any data augmentation
+           2nd tuple arg: a transform with data augmentation
+        """
+        bbox_params = self.get_bbox_params()
+        base_tfs = [A.Resize(self.img_sz, self.img_sz)]
+        if self.base_transform is not None:
+            base_tfs.append(
+                deserialize_albumentation_transform(self.base_transform))
+        base_transform = A.Compose(base_tfs, bbox_params=bbox_params)
+
+        if self.aug_transform is not None:
+            aug_transform = deserialize_albumentation_transform(
+                self.aug_transform)
+            aug_transform = A.Compose(
+                [base_transform, aug_transform], bbox_params=bbox_params)
+            return base_transform, aug_transform
+
+        augmentors_dict = {
+            'Blur': A.Blur(),
+            'RandomRotate90': A.RandomRotate90(),
+            'HorizontalFlip': A.HorizontalFlip(),
+            'VerticalFlip': A.VerticalFlip(),
+            'GaussianBlur': A.GaussianBlur(),
+            'GaussNoise': A.GaussNoise(),
+            'RGBShift': A.RGBShift(),
+            'ToGray': A.ToGray()
+        }
+        aug_transforms = [base_transform]
+        for augmentor in self.augmentors:
+            try:
+                aug_transforms.append(augmentors_dict[augmentor])
+            except KeyError as k:
+                log.warning(
+                    f'{k} is an unknown augmentor. Continuing without {k}. '
+                    f'Known augmentors are: {list(augmentors_dict.keys())}')
+        aug_transform = A.Compose(aug_transforms, bbox_params=bbox_params)
+
+        return base_transform, aug_transform
+
+    def build(self,
+              tmp_dir: str,
+              overfit_mode: bool = False,
+              test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+        """Build and return train, val, and test datasets."""
+        raise NotImplementedError()
+
+    def random_subset_dataset(self,
+                              ds: Dataset,
+                              size: Optional[int] = None,
+                              fraction: Optional[Proportion] = None) -> Subset:
+        if size is None and fraction is None:
+            return ds
+        if size is not None and fraction is not None:
+            raise ValueError('Specify either size or fraction but not both.')
+        if fraction is not None:
+            size = int(len(ds) * fraction)
+
+        random.seed(1234)
+        inds = list(range(len(ds)))
+        random.shuffle(inds)
+        ds = Subset(ds, inds[:size])
+        return ds
+
 
 @register_config('image_data')
 class ImageDataConfig(DataConfig):
@@ -416,9 +498,12 @@ class ImageDataConfig(DataConfig):
         None, description='Name of dataset format.')
     uri: Optional[Union[str, List[str]]] = Field(
         None,
-        description=
-        ('URI of the dataset. This can be a zip file, a list of zip files, or a '
-         'directory which contains a set of zip files.'))
+        description='One of the following:\n'
+        '(1) a URI of a directory containing "train", "valid", and '
+        '(optinally) "test" subdirectories;\n'
+        '(2) a URI of a zip file containing (1);\n'
+        '(3) a list of (2);\n'
+        '(4) a URI of a directory containing zip files containing (1).')
     group_uris: Optional[List[Union[str, List[str]]]] = Field(
         None,
         description=
@@ -495,14 +580,204 @@ class ImageDataConfig(DataConfig):
         val_ds_list = [self.dir_to_dataset(d, val_tf) for d in val_dirs]
         test_ds_list = [self.dir_to_dataset(d, test_tf) for d in test_dirs]
 
-        train_ds, valid_ds, test_ds = (ConcatDataset(train_ds_list),
-                                       ConcatDataset(val_ds_list),
-                                       ConcatDataset(test_ds_list))
-        return train_ds, valid_ds, test_ds
+        for ds_list in [train_ds_list, val_ds_list, test_ds_list]:
+            if len(ds_list) == 0:
+                ds_list.append([])
+
+        train_ds = ConcatDataset(train_ds_list)
+        val_ds = ConcatDataset(val_ds_list)
+        test_ds = ConcatDataset(test_ds_list)
+
+        return train_ds, val_ds, test_ds
 
     def dir_to_dataset(self, data_dir: str,
                        transform: A.BasicTransform) -> Dataset:
         raise NotImplementedError()
+
+    def build(self,
+              tmp_dir: str,
+              overfit_mode: bool = False,
+              test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+
+        if self.group_uris is None:
+            return self.get_datasets_from_uri(
+                self.uri,
+                tmp_dir=tmp_dir,
+                overfit_mode=overfit_mode,
+                test_mode=test_mode)
+
+        if self.uri is not None:
+            log.warn('Both DataConfig.uri and DataConfig.group_uris '
+                     'specified. Only DataConfig.group_uris will be used.')
+
+        train_ds, valid_ds, test_ds = self.get_datasets_from_group_uris(
+            self.group_uris,
+            tmp_dir=tmp_dir,
+            overfit_mode=overfit_mode,
+            test_mode=test_mode)
+
+        if self.train_sz is not None or self.train_sz_rel is not None:
+            train_ds = self.random_subset_dataset(
+                train_ds, size=self.train_sz, fraction=self.train_sz_rel)
+
+        return train_ds, valid_ds, test_ds
+
+    def get_datasets_from_uri(
+            self,
+            uri: Union[str, List[str]],
+            tmp_dir: str,
+            overfit_mode: bool = False,
+            test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+        """Gets image training, validation, and test datasets from a single
+        zip file.
+
+        Args:
+            uri (Union[str, List[str]]): Uri of a zip file containing the
+                images.
+
+        Returns:
+            Tuple[Dataset, Dataset, Dataset]: Training, validation, and test
+                dataSets.
+        """
+        data_dirs = self.get_data_dirs(uri, unzip_dir=tmp_dir)
+
+        train_dirs = [join(d, 'train') for d in data_dirs if isdir(d)]
+        val_dirs = [join(d, 'valid') for d in data_dirs if isdir(d)]
+        test_dirs = [join(d, 'test') for d in data_dirs if isdir(d)]
+
+        train_dirs = [d for d in train_dirs if isdir(d)]
+        val_dirs = [d for d in val_dirs if isdir(d)]
+        test_dirs = [d for d in test_dirs if isdir(d)]
+
+        base_transform, aug_transform = self.get_data_transforms()
+        train_tf = (aug_transform if not overfit_mode else base_transform)
+        val_tf, test_tf = base_transform, base_transform
+
+        train_ds, val_ds, test_ds = self.make_datasets(
+            train_dirs=train_dirs,
+            val_dirs=val_dirs,
+            test_dirs=test_dirs,
+            train_tf=train_tf,
+            val_tf=val_tf,
+            test_tf=test_tf)
+        return train_ds, val_ds, test_ds
+
+    def get_datasets_from_group_uris(
+            self,
+            uris: Union[str, List[str]],
+            tmp_dir: str,
+            group_train_sz: Optional[int] = None,
+            group_train_sz_rel: Optional[float] = None,
+            overfit_mode: bool = False,
+            test_mode: bool = False,
+    ) -> Tuple[Dataset, Dataset, Dataset]:
+        train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
+
+        group_sizes = None
+        if group_train_sz is not None:
+            group_sizes = group_train_sz
+        elif group_train_sz_rel is not None:
+            group_sizes = group_train_sz_rel
+        if not sequence_like(group_sizes):
+            group_sizes = [group_sizes] * len(uris)
+
+        for uri, size in zip(uris, group_sizes):
+            train_ds, valid_ds, test_ds = self.get_datasets_from_uri(
+                uri,
+                tmp_dir=tmp_dir,
+                overfit_mode=overfit_mode,
+                test_mode=test_mode)
+            if size is not None:
+                if isinstance(size, float):
+                    train_ds = self.random_subset_dataset(
+                        train_ds, fraction=size)
+                else:
+                    train_ds = self.random_subset_dataset(train_ds, size=size)
+
+            train_ds_lst.append(train_ds)
+            valid_ds_lst.append(valid_ds)
+            test_ds_lst.append(test_ds)
+
+        train_ds, valid_ds, test_ds = (ConcatDataset(train_ds_lst),
+                                       ConcatDataset(valid_ds_lst),
+                                       ConcatDataset(test_ds_lst))
+        return train_ds, valid_ds, test_ds
+
+    def get_data_dirs(self, uri: Union[str, List[str]],
+                      unzip_dir: str) -> List[str]:
+        """Extract data dirs i.e. directories containing  "train", "valid", and
+        (optinally) "test" subdirectories.
+
+        Args:
+            uri (Union[str, List[str]]): a URI or a list of URIs of one of the
+                following:
+                    (1) a URI of a directory containing "train", "valid", and
+                        (optinally) "test" subdirectories
+                    (2) a URI of a zip file containing (1)
+                    (3) a list of (2)
+                    (4) a URI of a directory containing zip files
+                        containing (1)
+
+        Returns:
+            paths to directories that each contain contents of one zip file
+        """
+
+        def is_data_dir(uri: str) -> bool:
+            if not file_exists(uri, include_dir=True):
+                return False
+            paths = list_paths(uri)
+            has_train = join(uri, 'train') in paths
+            has_val = join(uri, 'valid') in paths
+            return (has_train and has_val)
+
+        if isinstance(uri, list):
+            zip_uris = uri
+            if not all(uri.endswith('.zip') for uri in zip_uris):
+                raise ValueError('If uri is a list, all items must be URIs of '
+                                 'zip files.')
+        else:
+            # if file
+            if file_exists(uri, include_dir=False):
+                if not uri.endswith('.zip'):
+                    raise ValueError(
+                        'URI is neither a directory nor a zip file.')
+                zip_uris = [uri]
+            # if dir
+            elif file_exists(uri, include_dir=True):
+                if is_data_dir(uri):
+                    local_path = get_local_path(uri, unzip_dir)
+                    if uri != local_path:
+                        sync_from_dir(uri, local_path)
+                    return [local_path]
+                else:
+                    zip_uris = list_paths(uri, ext='zip')
+            # if non-existent
+            else:
+                raise FileNotFoundError(uri)
+
+        data_dirs = self.unzip_data(zip_uris, unzip_dir)
+        return data_dirs
+
+    def unzip_data(self, zip_uris: List[str], unzip_dir: str) -> List[str]:
+        """Unzip dataset zip files.
+
+        Args:
+            zip_uris (List[str]): a list of URIs of zip files:
+            unzip_dir (str): directory where zip files will be extrated to.
+
+        Returns:
+            paths to directories that each contain contents of one zip file
+        """
+        data_dirs = []
+
+        unzip_dir = join(unzip_dir, 'data', str(uuid.uuid4()))
+        for i, zip_uri in enumerate(zip_uris):
+            zip_path = download_if_needed(zip_uri, unzip_dir)
+            data_dir = join(unzip_dir, str(i))
+            data_dirs.append(data_dir)
+            unzip(zip_path, data_dir)
+
+        return data_dirs
 
 
 class GeoDataWindowMethod(Enum):
@@ -653,9 +928,6 @@ class GeoDataConfig(DataConfig):
         """
         train_scenes, val_scenes, test_scenes = self.build_scenes(tmp_dir)
 
-        if len(test_scenes) == 0:
-            test_scenes = val_scenes
-
         train_ds_list = [
             self.scene_to_dataset(s, train_tf, **kwargs) for s in train_scenes
         ]
@@ -683,6 +955,23 @@ class GeoDataConfig(DataConfig):
         """Make a dataset from a single scene.
         """
         raise NotImplementedError()
+
+    def build(self,
+              tmp_dir: str,
+              overfit_mode: bool = False,
+              test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
+        base_transform, aug_transform = self.get_data_transforms()
+        train_tf = (aug_transform if not overfit_mode else base_transform)
+        val_tf, test_tf = base_transform, base_transform
+
+        train_ds, val_ds, test_ds = self.make_datasets(
+            tmp_dir=tmp_dir, train_tf=train_tf, val_tf=val_tf, test_tf=test_tf)
+
+        if self.train_sz is not None or self.train_sz_rel is not None:
+            train_ds = self.random_subset_dataset(
+                train_ds, size=self.train_sz, fraction=self.train_sz_rel)
+
+        return train_ds, val_ds, test_ds
 
 
 @register_config('learner')

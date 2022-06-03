@@ -11,11 +11,7 @@ import logging
 from subprocess import Popen
 import psutil
 import numbers
-import zipfile
-from typing import Optional, List, Tuple, Dict, Union, Any
-from pydantic.utils import sequence_like
-import random
-import uuid
+from typing import (Any, Dict, List, Optional, Tuple)
 
 import click
 import matplotlib.pyplot as plt
@@ -25,20 +21,20 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR, MultiStepLR, _LRScheduler
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DataLoader, Subset, Dataset, ConcatDataset, Sampler
+from torch.utils.data import DataLoader, Dataset, Sampler
 import albumentations as A
 import numpy as np
 
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, download_or_copy, sync_from_dir, get_local_path, unzip,
-    list_paths, str_to_file, FileSystem, LocalFileSystem)
+    str_to_file, FileSystem, LocalFileSystem)
 from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
-from rastervision.pipeline.config import (build_config, ConfigError,
-                                          upgrade_config, save_pipeline_config)
-from rastervision.pytorch_learner.learner_config import (
-    LearnerConfig, ExternalModuleConfig, ImageDataConfig, GeoDataConfig)
+from rastervision.pipeline.config import (build_config, upgrade_config,
+                                          save_pipeline_config)
+from rastervision.pytorch_learner.learner_config import (LearnerConfig,
+                                                         ExternalModuleConfig)
 from rastervision.pytorch_learner.utils import (
     torch_hub_load_github, torch_hub_load_uri, torch_hub_load_local,
     get_hubconf_dir_from_cfg, deserialize_albumentation_transform)
@@ -409,83 +405,9 @@ class Learner(ABC):
                 **ext_cfg.entrypoint_kwargs)
         return module
 
-    def unzip_data(self, uri: Union[str, List[str]]) -> List[str]:
-        """Unzip dataset zip files.
-
-        Args:
-            uri: a list of URIs of zip files or the URI of a directory containing
-                zip files
-
-        Returns:
-            paths to directories that each contain contents of one zip file
-        """
-        data_dirs = []
-
-        if isinstance(uri, list):
-            zip_uris = uri
-        else:
-            zip_uris = ([uri]
-                        if uri.endswith('.zip') else list_paths(uri, 'zip'))
-
-        for zip_ind, zip_uri in enumerate(zip_uris):
-            zip_path = get_local_path(zip_uri, self.data_cache_dir)
-            if not isfile(zip_path):
-                zip_path = download_if_needed(zip_uri, self.data_cache_dir)
-            with zipfile.ZipFile(zip_path, 'r') as zipf:
-                data_dir = join(self.tmp_dir, 'data', str(uuid.uuid4()),
-                                str(zip_ind))
-                data_dirs.append(data_dir)
-                zipf.extractall(data_dir)
-
-        return data_dirs
-
     def get_bbox_params(self) -> Optional[A.BboxParams]:
         """Returns BboxParams used by albumentations for data augmentation."""
         return None
-
-    def get_data_transforms(self) -> Tuple[A.BasicTransform, A.BasicTransform]:
-        """Get albumentations transform objects for data augmentation.
-
-        Returns:
-           1st tuple arg: a transform that doesn't do any data augmentation
-           2nd tuple arg: a transform with data augmentation
-        """
-        cfg = self.cfg
-        bbox_params = self.get_bbox_params()
-        base_tfs = [A.Resize(cfg.data.img_sz, cfg.data.img_sz)]
-        if cfg.data.base_transform is not None:
-            base_tfs.append(
-                deserialize_albumentation_transform(cfg.data.base_transform))
-        base_transform = A.Compose(base_tfs, bbox_params=bbox_params)
-
-        if cfg.data.aug_transform is not None:
-            aug_transform = deserialize_albumentation_transform(
-                cfg.data.aug_transform)
-            aug_transform = A.Compose(
-                [base_transform, aug_transform], bbox_params=bbox_params)
-            return base_transform, aug_transform
-
-        augmentors_dict = {
-            'Blur': A.Blur(),
-            'RandomRotate90': A.RandomRotate90(),
-            'HorizontalFlip': A.HorizontalFlip(),
-            'VerticalFlip': A.VerticalFlip(),
-            'GaussianBlur': A.GaussianBlur(),
-            'GaussNoise': A.GaussNoise(),
-            'RGBShift': A.RGBShift(),
-            'ToGray': A.ToGray()
-        }
-        aug_transforms = [base_transform]
-        for augmentor in cfg.data.augmentors:
-            try:
-                aug_transforms.append(augmentors_dict[augmentor])
-            except KeyError as k:
-                log.warning(
-                    f'{k} is an unknown augmentor. Continuing without {k}. '
-                    f'Known augmentors are: {list(augmentors_dict.keys())}')
-        aug_transform = A.Compose(aug_transforms, bbox_params=bbox_params)
-
-        return base_transform, aug_transform
 
     def get_collate_fn(self) -> Optional[callable]:
         """Returns a custom collate_fn to use in DataLoader.
@@ -496,184 +418,66 @@ class Learner(ABC):
         """
         return None
 
-    def _get_datasets(self, uri: Optional[Union[str, List[str]]] = None
-                      ) -> Tuple[Dataset, Dataset, Dataset]:
-        """Gets Datasets for a single group of chips.
-
-        Returns:
-            train, validation, and test DataSets."""
-        if isinstance(self.cfg.data, ImageDataConfig):
-            return self._get_image_datasets(uri)
-
-        if isinstance(self.cfg.data, GeoDataConfig):
-            return self._get_geo_datasets()
-
-        raise TypeError('Learner.cfg.data')
-
-    def _get_image_datasets(self, uri: Union[str, List[str]]
-                            ) -> Tuple[Dataset, Dataset, Dataset]:
-        """Gets image training, validation, and test datasets from a single
-        zip file.
-
-        Args:
-            uri (Union[str, List[str]]): Uri of a zip file containing the
-                images.
-
-        Returns:
-            Tuple[Dataset, Dataset, Dataset]: Training, validation, and test
-                dataSets.
-        """
-        cfg = self.cfg
-        data_dirs = self.unzip_data(uri)
-
-        train_dirs = [join(d, 'train') for d in data_dirs if isdir(d)]
-        val_dirs = [join(d, 'valid') for d in data_dirs if isdir(d)]
-
-        train_dirs = [d for d in train_dirs if isdir(d)]
-        val_dirs = [d for d in val_dirs if isdir(d)]
-
-        base_transform, aug_transform = self.get_data_transforms()
-        train_tf = aug_transform if not cfg.overfit_mode else base_transform
-        val_tf, test_tf = base_transform, base_transform
-
-        train_ds, val_ds, test_ds = cfg.data.make_datasets(
-            train_dirs=train_dirs,
-            val_dirs=val_dirs,
-            test_dirs=val_dirs,
-            train_tf=train_tf,
-            val_tf=val_tf,
-            test_tf=test_tf)
-        return train_ds, val_ds, test_ds
-
-    def _get_geo_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
-        """Gets geo datasets.
-
-        Returns:
-            train, validation, and test DataSets."""
-        cfg = self.cfg
-        base_transform, aug_transform = self.get_data_transforms()
-        train_tf = aug_transform if not cfg.overfit_mode else base_transform
-        val_tf, test_tf = base_transform, base_transform
-
-        train_ds, val_ds, test_ds = cfg.data.make_datasets(
-            tmp_dir=self.tmp_dir,
-            train_tf=train_tf,
-            val_tf=val_tf,
-            test_tf=test_tf)
-        return train_ds, val_ds, test_ds
-
-    def get_datasets(self) -> Tuple[Dataset, Dataset, Dataset]:
-        """Returns train, validation, and test DataSets."""
-        cfg = self.cfg
-        if isinstance(cfg.data, GeoDataConfig):
-            return self._get_datasets()
-        if cfg.data.group_uris is None:
-            return self._get_datasets(cfg.data.uri)
-
-        if cfg.data.uri is not None:
-            log.warn('Both DataConfig.uri and DataConfig.group_uris '
-                     'specified. Only DataConfig.group_uris will be used.')
-        train_ds_lst, valid_ds_lst, test_ds_lst = [], [], []
-
-        group_sizes = None
-        if cfg.data.group_train_sz is not None:
-            group_sizes = cfg.data.group_train_sz
-        elif cfg.data.group_train_sz_rel is not None:
-            group_sizes = cfg.data.group_train_sz_rel
-        if not sequence_like(group_sizes):
-            group_sizes = [group_sizes] * len(cfg.data.group_uris)
-
-        for uri, sz in zip(cfg.data.group_uris, group_sizes):
-            train_ds, valid_ds, test_ds = self._get_datasets(uri)
-            if sz is not None:
-                if isinstance(sz, float):
-                    sz = int(len(train_ds) * sz)
-                train_inds = list(range(len(train_ds)))
-                random.seed(1234)
-                random.shuffle(train_inds)
-                train_inds = train_inds[:sz]
-                train_ds = Subset(train_ds, train_inds)
-            train_ds_lst.append(train_ds)
-            valid_ds_lst.append(valid_ds)
-            test_ds_lst.append(test_ds)
-
-        train_ds, valid_ds, test_ds = (ConcatDataset(train_ds_lst),
-                                       ConcatDataset(valid_ds_lst),
-                                       ConcatDataset(test_ds_lst))
-        return train_ds, valid_ds, test_ds
-
     def get_train_sampler(self, train_ds: Dataset) -> Optional[Sampler]:
         """Return a sampler to use for the training dataloader or None to not use any."""
         return None
 
     def setup_data(self):
-        """Set the the DataSet and DataLoaders for train, validation, and test sets."""
+        """Set the datasets and dataLoaders for train, validation, and test
+        sets."""
+        if self.train_ds is None:
+            self.train_ds, self.valid_ds, self.test_ds = self.build_datasets()
+        self.train_dl, self.valid_dl, self.test_dl = self.build_dataloaders()
+
+    def build_datasets(self) -> Tuple['Dataset', 'Dataset', 'Dataset']:
+        log.info(f'Building datasets ...')
         cfg = self.cfg
+        train_ds, val_ds, test_ds = self.cfg.data.build(
+            tmp_dir=self.tmp_dir,
+            overfit_mode=cfg.overfit_mode,
+            test_mode=cfg.test_mode)
+        return train_ds, val_ds, test_ds
+
+    def build_dataloaders(self) -> Tuple[DataLoader, DataLoader, DataLoader]:
+        """Set the DataLoaders for train, validation, and test sets."""
+
         batch_sz = self.cfg.solver.batch_sz
         num_workers = self.cfg.data.num_workers
-
-        train_ds, valid_ds, test_ds = self.get_datasets()
-        if len(train_ds) < batch_sz:
-            raise ConfigError(
-                'Training dataset has fewer elements than batch size.')
-        if len(valid_ds) < batch_sz:
-            raise ConfigError(
-                'Validation dataset has fewer elements than batch size.')
-        if len(test_ds) < batch_sz:
-            raise ConfigError(
-                'Test dataset has fewer elements than batch size.')
-
-        if cfg.overfit_mode:
-            train_ds = Subset(train_ds, range(batch_sz))
-            valid_ds = train_ds
-            test_ds = train_ds
-        elif cfg.test_mode:
-            train_ds = Subset(train_ds, range(batch_sz))
-            valid_ds = Subset(valid_ds, range(batch_sz))
-            test_ds = Subset(test_ds, range(batch_sz))
-
-        if cfg.data.train_sz is not None or cfg.data.train_sz_rel is not None:
-            train_inds = list(range(len(train_ds)))
-            random.seed(1234)
-            random.shuffle(train_inds)
-            train_sz = (cfg.data.train_sz
-                        if cfg.data.train_sz is not None else int(
-                            round(len(train_ds) * cfg.data.train_sz_rel)))
-            train_inds = train_inds[0:train_sz]
-            train_ds = Subset(train_ds, train_inds)
-
-        train_sampler = self.get_train_sampler(train_ds)
-        train_shuffle = train_sampler is None
-
         collate_fn = self.get_collate_fn()
+
+        train_sampler = self.get_train_sampler(self.train_ds)
+        train_shuffle = train_sampler is None
+        # batchnorm layers expect batch size > 1 during training
+        train_drop_last = (len(self.train_ds) % batch_sz) == 1
         train_dl = DataLoader(
-            train_ds,
-            shuffle=train_shuffle,
+            self.train_ds,
             batch_size=batch_sz,
-            drop_last=True,
+            shuffle=train_shuffle,
+            drop_last=train_drop_last,
             num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
             sampler=train_sampler)
-        valid_dl = DataLoader(
-            valid_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True,
-            collate_fn=collate_fn)
-        test_dl = DataLoader(
-            test_ds,
-            shuffle=True,
-            batch_size=batch_sz,
-            num_workers=num_workers,
-            pin_memory=True,
-            collate_fn=collate_fn)
 
-        self.train_ds, self.valid_ds, self.test_ds = (train_ds, valid_ds,
-                                                      test_ds)
-        self.train_dl, self.valid_dl, self.test_dl = (train_dl, valid_dl,
-                                                      test_dl)
+        val_dl = DataLoader(
+            self.valid_ds,
+            batch_size=batch_sz,
+            shuffle=True,
+            num_workers=num_workers,
+            collate_fn=collate_fn,
+            pin_memory=True)
+
+        test_dl = None
+        if self.test_ds is not None and len(self.test_ds) > 0:
+            test_dl = DataLoader(
+                self.test_ds,
+                batch_size=batch_sz,
+                shuffle=True,
+                num_workers=num_workers,
+                collate_fn=collate_fn,
+                pin_memory=True)
+
+        return train_dl, val_dl, test_dl
 
     def log_data_stats(self):
         """Log stats about each DataSet."""
@@ -881,7 +685,7 @@ class Learner(ABC):
         Returns:
             predictions using numpy arrays
         """
-        transform, _ = self.get_data_transforms()
+        transform, _ = self.cfg.data.get_data_transforms()
         x = self.normalize_input(x)
         x = self.to_batch(x)
         x = np.stack([transform(image=img)['image'] for img in x])
