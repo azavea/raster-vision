@@ -128,7 +128,7 @@ class ClassificationModelConfig(ModelConfig):
 @register_config('classification_learner')
 class ClassificationLearnerConfig(LearnerConfig):
     data: Union[ClassificationImageDataConfig, ClassificationGeoDataConfig]
-    model: ClassificationModelConfig
+    model: Optional[ClassificationModelConfig]
 
     def build(self,
               tmp_dir=None,

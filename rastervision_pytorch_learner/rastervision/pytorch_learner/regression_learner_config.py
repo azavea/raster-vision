@@ -184,7 +184,7 @@ class RegressionModelConfig(ModelConfig):
 
 @register_config('regression_learner')
 class RegressionLearnerConfig(LearnerConfig):
-    model: RegressionModelConfig
+    model: Optional[RegressionModelConfig]
     data: Union[RegressionImageDataConfig, RegressionGeoDataConfig]
 
     def build(self,

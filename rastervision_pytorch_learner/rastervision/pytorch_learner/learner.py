@@ -167,6 +167,11 @@ class Learner(ABC):
                 training mode. Defaults to True.
         """
         self.cfg = cfg
+
+        if model is None and cfg.model is None:
+            raise ValueError(
+                'cfg.model can only be None if a custom model is specified.')
+
         if tmp_dir is None:
             self._tmp_dir = TemporaryDirectory()
             tmp_dir = self._tmp_dir.name
@@ -842,7 +847,7 @@ class Learner(ABC):
         loss_def_path = None
 
         # retrieve existing model definition, if available
-        ext_cfg = cfg.model.external_def
+        ext_cfg = cfg.model.external_def if cfg.model is not None else None
         if ext_cfg is not None:
             model_def_path = get_hubconf_dir_from_cfg(ext_cfg, parent=hub_dir)
             log.info(
@@ -957,7 +962,10 @@ class Learner(ABC):
 
         if uri is not None:
             log.info(f'Loading model weights from: {uri}')
-            self.load_weights(uri=uri, strict=cfg.model.load_strict)
+            args = {}
+            if self.cfg.model is not None:
+                args['strict'] = self.cfg.model.load_strict
+            self.load_weights(uri=uri, **args)
 
     def load_weights(self, uri: str, **kwargs) -> None:
         """Load model weights from a file."""
@@ -970,8 +978,10 @@ class Learner(ABC):
         weights_path = self.last_model_weights_path
         if isfile(weights_path):
             log.info(f'Loading checkpoint from {weights_path}')
-            self.load_weights(
-                uri=weights_path, strict=self.cfg.model.load_strict)
+            args = {}
+            if self.cfg.model is not None:
+                args['strict'] = self.cfg.model.load_strict
+            self.load_weights(uri=weights_path, **args)
 
     def to_device(self, x: Any, device: str) -> Any:
         """Load Tensors onto a device.

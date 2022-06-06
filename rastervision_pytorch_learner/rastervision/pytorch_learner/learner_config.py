@@ -1194,7 +1194,7 @@ class GeoDataConfig(DataConfig):
 @register_config('learner')
 class LearnerConfig(Config):
     """Config for Learner."""
-    model: ModelConfig
+    model: Optional[ModelConfig]
     solver: SolverConfig
     data: DataConfig
 

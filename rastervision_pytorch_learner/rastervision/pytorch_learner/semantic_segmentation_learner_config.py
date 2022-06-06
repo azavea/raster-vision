@@ -167,7 +167,7 @@ class SemanticSegmentationModelConfig(ModelConfig):
 class SemanticSegmentationLearnerConfig(LearnerConfig):
     data: Union[SemanticSegmentationImageDataConfig,
                 SemanticSegmentationGeoDataConfig]
-    model: SemanticSegmentationModelConfig
+    model: Optional[SemanticSegmentationModelConfig]
 
     def build(self,
               tmp_dir=None,

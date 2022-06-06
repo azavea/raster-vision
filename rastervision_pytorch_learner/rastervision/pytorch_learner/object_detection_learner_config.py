@@ -202,7 +202,7 @@ class ObjectDetectionModelConfig(ModelConfig):
 @register_config('object_detection_learner')
 class ObjectDetectionLearnerConfig(LearnerConfig):
     data: Union[ObjectDetectionImageDataConfig, ObjectDetectionGeoDataConfig]
-    model: ObjectDetectionModelConfig
+    model: Optional[ObjectDetectionModelConfig]
 
     def build(self,
               tmp_dir=None,
