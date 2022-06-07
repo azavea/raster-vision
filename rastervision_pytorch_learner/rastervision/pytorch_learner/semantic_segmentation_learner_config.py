@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 from enum import Enum
 import logging
 
@@ -135,12 +135,12 @@ class SemanticSegmentationModelConfig(ModelConfig):
         pretrained = self.pretrained
         backbone_name = self.get_backbone_str()
 
-        model = models.segmentation.segmentation._segm_model(
-            name='deeplabv3',
-            backbone_name=backbone_name,
+        model_factory_func: Callable = getattr(models.segmentation,
+                                               f'deeplabv3_{backbone_name}')
+        model = model_factory_func(
             num_classes=num_classes,
-            aux=False,
-            pretrained_backbone=pretrained)
+            pretrained_backbone=pretrained,
+            aux_loss=False)
 
         if in_channels != 3:
             if not backbone_name.startswith('resnet'):
