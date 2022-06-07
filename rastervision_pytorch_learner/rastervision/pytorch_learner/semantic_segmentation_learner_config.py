@@ -184,18 +184,3 @@ class SemanticSegmentationLearnerConfig(LearnerConfig):
             model_def_path=model_def_path,
             loss_def_path=loss_def_path,
             training=training)
-
-    def validate_config(self):
-        super().validate_config()
-        self.validate_class_loss_weights()
-
-    def validate_class_loss_weights(self):
-        if self.solver.class_loss_weights is None:
-            return
-
-        num_weights = len(self.solver.class_loss_weights)
-        num_classes = len(self.data.class_names)
-        if num_weights != num_classes:
-            raise ConfigError(
-                f'class_loss_weights ({num_weights}) must be same length as '
-                f'the number of classes ({num_classes}), null class included')
