@@ -94,8 +94,9 @@ def log_system_details():
 
 
 class Learner(ABC):
-    """Abstract training and prediction routines for a model. This can be
-    subclassed to handle different computer vision tasks.
+    """Abstract training and prediction routines for a model.
+
+    This can be subclassed to handle different computer vision tasks.
 
     The datasets, model, optimizer, and schedulers will be generated from the
     cfg if not specified in the constructor.
@@ -120,7 +121,7 @@ class Learner(ABC):
                  model_def_path: Optional[str] = None,
                  loss_def_path: Optional[str] = None,
                  training: bool = True):
-        """COnstructor
+        """COnstructor.
 
         Args:
             cfg (LearnerConfig): LearnerConfig.
@@ -377,8 +378,8 @@ class Learner(ABC):
         return None
 
     def setup_data(self):
-        """Set the datasets and dataLoaders for train, validation, and test
-        sets."""
+        """Set datasets and dataLoaders for train, validation, and test sets.
+        """
         if not all([self.train_ds, self.valid_ds, self.test_ds]):
             train_ds, valid_ds, test_ds = self.build_datasets()
             if self.train_ds is None:
@@ -560,7 +561,9 @@ class Learner(ABC):
         return x
 
     def normalize_input(self, x: np.ndarray) -> np.ndarray:
-        """If x.dtype is a subtype of np.unsignedinteger, normalize it to
+        """Normalize x to [0, 1].
+
+        If x.dtype is a subtype of np.unsignedinteger, normalize it to
         [0, 1] using the max possible value of that dtype. Otherwise, assume
         it is in [0, 1] already and do nothing.
 
@@ -917,8 +920,10 @@ class Learner(ABC):
             shutil.copytree(self.modules_dir, bundle_modules_dir)
 
     def _bundle_transforms(self, model_bundle_dir: str) -> None:
-        """Copy definition files for custom albumentations transforms into
-        bundle and change the paths in the config to point to the new
+        """Copy definition files for custom transforms, if any, into bundle.
+
+        Copies definition files for custom albumentations transforms into
+        bundle and changes the paths in the config to point to the new
         locations. The new paths are relative and will be automatically
         converted to full paths when loading from the bundle.
         """

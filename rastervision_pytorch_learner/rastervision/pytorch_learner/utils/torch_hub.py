@@ -17,8 +17,9 @@ def _remove_dir(path):
 
 
 def _repo_name_to_dir_name(repo: str) -> str:
-    """Adapted from torch.hub._get_cache_or_reload(). Converts a repo name
-    to a directory name according to torch.hub's naming convention.
+    """Convert repo name to dir name per torch.hub naming conventions.
+
+    Adapted from torch.hub._get_cache_or_reload()
 
     Args:
         repo (str): <repo-owner>/<erpo-name>[:tag]
@@ -39,9 +40,9 @@ def _uri_to_dir_name(uri: str) -> str:
 
 
 def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
-    """Determine the destination directory name for a module specified
-    by an ExternalModuleConfig. If a parent path is provided, the dir
-    name is appended to it.
+    """Determine destination directory name from an ExternalModuleConfig.
+
+    If a parent path is provided, the dir name is appended to it.
 
     Args:
         cfg (ExternalModuleConfig): an ExternalModuleConfig
@@ -106,7 +107,9 @@ def torch_hub_load_github(repo: str,
 
 def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
                        tmp_dir: str, *args, **kwargs) -> Any:
-    """Load an entrypoint from:
+    """Load an entrypoint from a uri.
+
+    Load an entrypoint from:
         - a local uri of a zip file, or
         - a local uri of a directory, or
         - a remote uri of zip file.

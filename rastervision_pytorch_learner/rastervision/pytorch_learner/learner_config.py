@@ -611,7 +611,9 @@ class DataConfig(Config):
         raise NotImplementedError()
 
     def get_custom_albumentations_transforms(self) -> List[dict]:
-        """This should return all serialized albumentations transforms with
+        """Returns all custom transforms found in this config.
+
+        This should return all serialized albumentations transforms with
         a 'lambda_transforms_path' field contained in this
         config or in any of its members no matter how deeply neseted.
 
@@ -839,8 +841,7 @@ class ImageDataConfig(DataConfig):
             tmp_dir: str,
             overfit_mode: bool = False,
             test_mode: bool = False) -> Tuple[Dataset, Dataset, Dataset]:
-        """Gets image training, validation, and test datasets from a single
-        zip file.
+        """Get image train, validation, & test datasets from a single zip file.
 
         Args:
             uri (Union[str, List[str]]): Uri of a zip file containing the
@@ -916,7 +917,9 @@ class ImageDataConfig(DataConfig):
 
     def get_data_dirs(self, uri: Union[str, List[str]],
                       unzip_dir: str) -> List[str]:
-        """Extract data dirs i.e. directories containing  "train", "valid", and
+        """Extract data dirs from uri.
+
+        Data dirs are directories containing  "train", "valid", and
         (optinally) "test" subdirectories.
 
         Args:
