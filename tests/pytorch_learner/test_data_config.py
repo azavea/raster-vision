@@ -458,7 +458,6 @@ class TestPlotOptions(unittest.TestCase):
         self.assertRaises(ValidationError, lambda: PlotOptions(**args))
 
         # check error on group of size >3
-        # check error on empty list
         args = dict(channel_display_groups={'a': list(range(4))})
         self.assertRaises(ValidationError, lambda: PlotOptions(**args))
 
