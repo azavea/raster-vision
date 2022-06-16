@@ -94,7 +94,7 @@ class TestObjectDetectionLearner(unittest.TestCase):
                 data=data_cfg,
                 model=ObjectDetectionModelConfig(
                     backbone=Backbone.resnet18, pretrained=False),
-                solver=SolverConfig(),
+                solver=SolverConfig(batch_sz=8),
                 log_tensorboard=False)
             pipeline_cfg = ObjectDetectionConfig(
                 root_uri=tmp_dir, dataset=dataset_cfg, backend=backend_cfg)

@@ -1,3 +1,4 @@
+from tempfile import TemporaryDirectory
 from typing import Any, Optional
 from pathlib import Path
 from os.path import join, isdir, realpath
@@ -16,8 +17,9 @@ def _remove_dir(path):
 
 
 def _repo_name_to_dir_name(repo: str) -> str:
-    """Adapted from torch.hub._get_cache_or_reload(). Converts a repo name
-    to a directory name according to torch.hub's naming convention.
+    """Convert repo name to dir name per torch.hub naming conventions.
+
+    Adapted from torch.hub._get_cache_or_reload()
 
     Args:
         repo (str): <repo-owner>/<erpo-name>[:tag]
@@ -38,9 +40,9 @@ def _uri_to_dir_name(uri: str) -> str:
 
 
 def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
-    """Determine the destination directory name for a module specified
-    by an ExternalModuleConfig. If a parent path is provided, the dir
-    name is appended to it.
+    """Determine destination directory name from an ExternalModuleConfig.
+
+    If a parent path is provided, the dir name is appended to it.
 
     Args:
         cfg (ExternalModuleConfig): an ExternalModuleConfig
@@ -60,22 +62,32 @@ def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
     return path
 
 
-def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
-                          entrypoint: str, *args, **kwargs) -> Any:
+def torch_hub_load_github(repo: str,
+                          hubconf_dir: str,
+                          entrypoint: str,
+                          *args,
+                          tmp_dir: Optional[str] = None,
+                          **kwargs) -> Any:
     """Load an entrypoint from a github repo using torch.hub.load().
 
     Args:
         repo (str): <repo-owner>/<erpo-name>[:tag]
-        entrypoint (str): Name of a callable present in hubconf.py.
         hubconf_dir (str): Where the contents from the uri will finally
             be saved to.
-        tmp_dir (str): Where the repo will initially be downloaded.
+        entrypoint (str): Name of a callable present in hubconf.py.
         *args: Args to be passed to the entrypoint.
+        tmp_dir (Optional[str], optional): Where the repo will initially be
+            downloaded. If None, a temporary dir is used. Defaults to None.
         **kwargs: Keyword args to be passed to the entrypoint.
 
     Returns:
         Any: The output from calling the entrypoint.
     """
+    _tmp_dir = None
+    if tmp_dir is None:
+        _tmp_dir = TemporaryDirectory()
+        tmp_dir = _tmp_dir.name
+
     torch.hub.set_dir(tmp_dir)
 
     # TODO: remove when no longer needed (#1271)
@@ -87,12 +99,17 @@ def torch_hub_load_github(repo: str, hubconf_dir: str, tmp_dir: str,
     _remove_dir(hubconf_dir)
     shutil.move(orig_dir, hubconf_dir)
 
+    if _tmp_dir is not None:
+        _tmp_dir.cleanup()
+
     return out
 
 
 def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
                        tmp_dir: str, *args, **kwargs) -> Any:
-    """Load an entrypoint from:
+    """Load an entrypoint from a uri.
+
+    Load an entrypoint from:
         - a local uri of a zip file, or
         - a local uri of a directory, or
         - a remote uri of zip file.

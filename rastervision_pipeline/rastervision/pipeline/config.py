@@ -1,7 +1,9 @@
 from typing import List, Union, Optional, Callable, Dict, TYPE_CHECKING
 import inspect
 
-from pydantic import BaseModel, create_model, Field, validator  # noqa
+from pydantic import (BaseModel, create_model, Field, validator)  # noqa
+from pydantic import (ValidationError, root_validator, validate_model)  # noqa
+
 from typing_extensions import Literal
 
 from rastervision.pipeline import registry
@@ -35,6 +37,7 @@ class Config(BaseModel):
     # exist in the schema, which helps avoid a command source of bugs.
     class Config:
         extra = 'forbid'
+        validate_assignment = True
 
     @classmethod
     def get_field_summary(cls: type) -> str:
@@ -76,6 +79,19 @@ class Config(BaseModel):
         of object construction.
         """
         pass
+
+    def revalidate(self):
+        """Re-validate an instantiated Config.
+
+        Runs all Pydantic validators plus self.validate_config().
+
+        Adapted from:
+        https://github.com/samuelcolvin/pydantic/issues/1864#issuecomment-679044432
+        """
+        *_, validation_error = validate_model(self.__class__, self.__dict__)
+        if validation_error:
+            raise validation_error
+        self.validate_config()
 
     def recursive_validate_config(self):
         """Recursively validate hierarchies of Configs.

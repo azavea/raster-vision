@@ -8,15 +8,12 @@ import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
 
 import torch
-from torch import nn
 from torch.nn import functional as F
-from torchvision import models
 
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, color_to_triple,
-    adjust_conv_channels, plot_channel_groups, channel_groups_to_imgs)
-from rastervision.pipeline.config import ConfigError
+    plot_channel_groups, channel_groups_to_imgs)
 
 warnings.filterwarnings('ignore')
 
@@ -24,58 +21,6 @@ log = logging.getLogger(__name__)
 
 
 class SemanticSegmentationLearner(Learner):
-    def build_model(self) -> nn.Module:
-        pretrained = self.cfg.model.pretrained
-        backbone_name = self.cfg.model.get_backbone_str()
-        num_classes = len(self.cfg.data.class_names)
-        in_channels = self.cfg.data.img_channels
-        if in_channels is None:
-            log.warn('DataConfig.img_channels is None. Defaulting to 3.')
-            in_channels = 3
-        if self.cfg.solver.ignore_last_class:
-            num_classes -= 1
-        model = models.segmentation.segmentation._segm_model(
-            name='deeplabv3',
-            backbone_name=backbone_name,
-            num_classes=num_classes,
-            aux=False,
-            pretrained_backbone=pretrained)
-        if in_channels != 3:
-            if not backbone_name.startswith('resnet'):
-                raise ConfigError(
-                    'All TorchVision backbones do not provide the same API '
-                    'for accessing the first conv layer. '
-                    'Therefore, conv layer modification to support '
-                    'arbitrary input channels is only supported for resnet '
-                    'backbones. To use other backbones, it is recommended to '
-                    'fork the TorchVision repo, define factory functions or '
-                    'subclasses that perform the necessary modifications, and '
-                    'then use the external model functionality to import it '
-                    'into Raster Vision. See isprs_potsdam.py for an example '
-                    'of how to import external models. Alternatively, you can '
-                    'override this function.')
-            model.backbone.conv1 = adjust_conv_channels(
-                old_conv=model.backbone.conv1,
-                in_channels=in_channels,
-                pretrained=pretrained)
-        return model
-
-    def build_loss(self):
-        args = {}
-
-        loss_weights = self.cfg.solver.class_loss_weights
-        if loss_weights is not None:
-            loss_weights = torch.tensor(loss_weights, device=self.device)
-            args.update({'weight': loss_weights})
-
-        if self.cfg.solver.ignore_last_class:
-            num_classes = len(self.cfg.data.class_names)
-            args.update({'ignore_index': num_classes - 1})
-
-        loss = nn.CrossEntropyLoss(**args)
-
-        return loss
-
     def train_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
@@ -125,7 +70,7 @@ class SemanticSegmentationLearner(Learner):
     def numpy_predict(self, x: np.ndarray,
                       raw_out: bool = False) -> np.ndarray:
         _, h, w, _ = x.shape
-        transform, _ = self.get_data_transforms()
+        transform, _ = self.cfg.data.get_data_transforms()
         x = self.normalize_input(x)
         x = self.to_batch(x)
         x = np.stack([transform(image=img)['image'] for img in x])
@@ -143,7 +88,7 @@ class SemanticSegmentationLearner(Learner):
 
     def get_plot_ncols(self, **kwargs) -> int:
         ncols = len(self.cfg.data.plot_options.channel_display_groups) + 1
-        z = kwargs['z']
+        z = kwargs.get('z')
         if z is not None:
             ncols += 1
         return ncols

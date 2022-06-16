@@ -1,9 +1,9 @@
 rastervision_pipeline==0.13.*
 rastervision_core==0.13.*
 numpy<1.22
-pillow==8.3.*
-torchvision==0.10.*
-torch==1.9.*
+pillow==8.4.*
+torch==1.11.*
+torchvision==0.12.*
 tensorboard==2.5.*
 albumentations==1.1.*
 cython==0.29.*
@@ -14,3 +14,4 @@ triangle==20200424
 opencv-python==4.1.*
 opencv-python-headless<4.3
 matplotlib==3.5.*
+tqdm==4.63.1

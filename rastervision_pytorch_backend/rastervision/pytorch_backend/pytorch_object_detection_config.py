@@ -1,5 +1,4 @@
-from rastervision.pipeline.config import (register_config, validator,
-                                          ConfigError)
+from rastervision.pipeline.config import register_config
 from rastervision.pytorch_backend.pytorch_learner_backend_config import (
     PyTorchLearnerBackendConfig)
 from rastervision.pytorch_learner.learner_config import default_augmentors
@@ -59,28 +58,3 @@ class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
     def build(self, pipeline, tmp_dir):
         learner = self.get_learner_config(pipeline)
         return PyTorchObjectDetection(pipeline, learner, tmp_dir)
-
-    @validator('model')
-    def validate_model_config(cls, v):
-        return v
-
-    @validator('solver')
-    def validate_solver_config(cls, v):
-        if v.ignore_last_class:
-            raise ConfigError(
-                'ignore_last_class is not supported for Object Detection.')
-        if v.class_loss_weights is not None:
-            raise ConfigError(
-                'class_loss_weights is currently not supported for '
-                'Object Detection.')
-        if v.external_loss_def is not None:
-            raise ConfigError(
-                'external_loss_def is currently not supported for '
-                'Object Detection. Raster Vision expects object '
-                'detection models to behave like TorchVision object detection '
-                'models, and these models compute losses internally. So, if '
-                'you want to use a custom loss function, you can create a '
-                'custom model that implements that loss function and use that '
-                'model via external_model_def. See cowc_potsdam.py for an '
-                'example of how to use a custom object detection model.')
-        return v

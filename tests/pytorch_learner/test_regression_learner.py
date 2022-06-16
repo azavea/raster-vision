@@ -100,7 +100,7 @@ class TestClassificationLearner(unittest.TestCase):
                 model=RegressionModelConfig(pretrained=False),
                 solver=SolverConfig(),
                 log_tensorboard=False)
-            data_cfg.update(learner_cfg)
+
             learner = learner_cfg.build(tmp_dir, training=True)
             x = torch.rand((4, num_channels, 100, 100))
             y = torch.rand((4, num_classes))

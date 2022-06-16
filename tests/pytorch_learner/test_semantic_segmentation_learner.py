@@ -123,7 +123,8 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
             learner.plot_dataloaders()
             learner.plot_predictions(split='valid')
 
-            torch.save(learner.model.state_dict(), learner.last_model_path)
+            torch.save(learner.model.state_dict(),
+                       learner.last_model_weights_path)
             learner.save_model_bundle()
             backend.load_model()
 

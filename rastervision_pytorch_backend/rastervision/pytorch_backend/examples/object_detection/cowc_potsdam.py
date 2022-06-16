@@ -159,7 +159,7 @@ def get_config(runner,
 
         model = ObjectDetectionModelConfig(
             external_def=ExternalModuleConfig(
-                github_repo='AdeelH/vision:det_hubconf_0.10',
+                github_repo='AdeelH/vision:det_hubconf_0.12',
                 name='ssd',
                 entrypoint='ssd300_vgg16',
                 force_reload=True,

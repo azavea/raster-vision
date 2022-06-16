@@ -349,6 +349,5 @@ def unzip(zip_path: str, target_dir: str):
     Creates target_dir if needed.
     """
     make_dir(target_dir)
-    zip_ref = zipfile.ZipFile(zip_path, 'r')
-    zip_ref.extractall(target_dir)
-    zip_ref.close()
+    with zipfile.ZipFile(zip_path, 'r') as zipf:
+        zipf.extractall(target_dir)
