@@ -3,5 +3,5 @@ rastervision_aws_s3==0.13
 rastervision_aws_batch==0.13
 rastervision_core==0.13
 rastervision_pytorch_learner==0.13
-rastervision_pytorch_backend==0.13
+rastervision_pytorch_backend==0.13.1
 rastervision_gdal_vsi==0.13
