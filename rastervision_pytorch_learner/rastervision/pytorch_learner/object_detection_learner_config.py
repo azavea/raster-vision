@@ -87,12 +87,13 @@ class ObjectDetectionGeoDataWindowConfig(GeoDataWindowConfig):
 
 @register_config('object_detection_geo_data')
 class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
-    def scene_to_dataset(self,
-                         scene: Scene,
-                         transform: Optional[A.BasicTransform] = None,
-                         bbox_params: Optional[A.BboxParams] = None
-                         ) -> Union[ObjectDetectionSlidingWindowGeoDataset,
-                                    ObjectDetectionRandomWindowGeoDataset]:
+    def scene_to_dataset(
+            self,
+            scene: Scene,
+            transform: Optional[A.BasicTransform] = None,
+            bbox_params: Optional[A.BboxParams] = DEFAULT_BBOX_PARAMS
+    ) -> Union[ObjectDetectionSlidingWindowGeoDataset,
+               ObjectDetectionRandomWindowGeoDataset]:
         if isinstance(self.window_opts, dict):
             opts = self.window_opts[scene.id]
         else:
