@@ -586,7 +586,7 @@ class Learner(ABC):
         """
         x = self.to_batch(x).float()
         x = self.to_device(x, self.device)
-        with torch.no_grad():
+        with torch.inference_mode():
             out = self.model(x)
             if not raw_out:
                 out = self.prob_to_pred(self.post_forward(out))
@@ -1032,7 +1032,7 @@ class Learner(ABC):
         self.model.eval()
         num_samples = 0
         outputs = []
-        with torch.no_grad():
+        with torch.inference_mode():
             with tqdm(dl, desc='Validating') as bar:
                 for batch_ind, (x, y) in enumerate(bar):
                     x = self.to_device(x, self.device)
