@@ -13,7 +13,6 @@ import numbers
 from tempfile import TemporaryDirectory
 
 import numpy as np
-import albumentations as A
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
@@ -359,10 +358,6 @@ class Learner(ABC):
             save_dir=self.modules_dir,
             hubconf_dir=loss_def_path)
         return loss
-
-    def get_bbox_params(self) -> Optional[A.BboxParams]:
-        """Returns BboxParams used by albumentations for data augmentation."""
-        return None
 
     def get_collate_fn(self) -> Optional[callable]:
         """Returns a custom collate_fn to use in DataLoader.
