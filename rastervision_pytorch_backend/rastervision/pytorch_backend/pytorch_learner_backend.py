@@ -131,5 +131,5 @@ class PyTorchLearnerBackend(Backend):
     def get_sample_writer(self):
         raise NotImplementedError()
 
-    def predict(self, chips, windows):
+    def predict_scene(self, scene):
         raise NotImplementedError()

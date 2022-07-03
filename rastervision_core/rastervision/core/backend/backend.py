@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import TYPE_CHECKING
 from contextlib import AbstractContextManager
 
-import numpy as np
-
-from rastervision.core.data_sample import DataSample
-from rastervision.core.box import Box
-from rastervision.core.data import Labels
+if TYPE_CHECKING:
+    from rastervision.core.data_sample import DataSample
+    from rastervision.core.data import Labels, Scene
 
 
 class SampleWriter(AbstractContextManager):
@@ -17,7 +15,7 @@ class SampleWriter(AbstractContextManager):
     """
 
     @abstractmethod
-    def write_sample(self, sample: DataSample):
+    def write_sample(self, sample: 'DataSample'):
         """Writes a single sample."""
         pass
 
@@ -49,12 +47,12 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def predict(self, chips: np.ndarray, windows: List[Box]) -> Labels:
-        """Return predictions for a batch of chips using the model.
+    def predict_scene(self, scene: 'Scene', chip_sz: int,
+                      stride: int) -> 'Labels':
+        """Return predictions for an entire scene using the model.
 
         Args:
-            chips: input images of shape [height, width, channels]
-            windows: the windows corresponding to the chips in pixel coords
+            scene (Scene): Scene to run inference on.
 
         Return:
             Labels object containing predictions
