@@ -381,6 +381,8 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
                 given predictions.
         """
         labels = cls.make_empty(extent, num_classes)
-        for window, prediction in zip(windows, predictions):
+        # If predictions is tqdm-wrapped, it needs to be the first arg to zip()
+        # or the progress bar won't terminate with the correct count.
+        for prediction, window in zip(predictions, windows):
             labels[window] = prediction
         return labels
