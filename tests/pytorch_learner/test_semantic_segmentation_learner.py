@@ -78,6 +78,8 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             class_config = ClassConfig(
                 names=[f'class_{i}' for i in range(num_classes)])
+            class_config.update()
+            class_config.ensure_null_class()
             dataset_cfg = DatasetConfig(
                 class_config=class_config,
                 train_scenes=[
@@ -126,7 +128,10 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
             torch.save(learner.model.state_dict(),
                        learner.last_model_weights_path)
             learner.save_model_bundle()
-            backend.load_model()
+
+            pred_scene = dataset_cfg.validation_scenes[0].build(
+                class_config, tmp_dir)
+            _ = backend.predict_scene(pred_scene, chip_sz=100)
 
 
 if __name__ == '__main__':

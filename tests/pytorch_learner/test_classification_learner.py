@@ -6,6 +6,7 @@ from uuid import uuid4
 import logging
 
 import numpy as np
+import torch
 
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.data import (
@@ -120,6 +121,14 @@ class TestClassificationLearner(unittest.TestCase):
             learner = backend.learner_cfg.build(tmp_dir, training=True)
             learner.plot_dataloaders()
             learner.plot_predictions(split='valid')
+
+            torch.save(learner.model.state_dict(),
+                       learner.last_model_weights_path)
+            learner.save_model_bundle()
+
+            pred_scene = dataset_cfg.validation_scenes[0].build(
+                class_config, tmp_dir)
+            _ = backend.predict_scene(pred_scene, chip_sz=100)
 
 
 if __name__ == '__main__':
