@@ -1,11 +1,18 @@
+from typing import TYPE_CHECKING, Iterable, Iterator, Optional
 from os.path import join, basename
 import uuid
 
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.data.label import ObjectDetectionLabels
-from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
+from rastervision.pytorch_learner.dataset import (
+    ObjectDetectionSlidingWindowGeoDataset)
+
+if TYPE_CHECKING:
+    from rastervision.core.data import Scene
+    from rastervision.core.data_sample import DataSample
+    from rastervision.pytorch_learner.object_detection_utils import BoxList
 
 
 class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
@@ -49,7 +56,7 @@ class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
 
         super().__exit__(type, value, traceback)
 
-    def write_sample(self, sample: DataSample):
+    def write_sample(self, sample: 'DataSample'):
         """
         This writes a training or validation sample to
         (train|valid)/img/{scene_id}-{ind}.png and updates
@@ -62,7 +69,7 @@ class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
         self.update_coco_data(split_name, sample, img_path)
         self.sample_ind += 1
 
-    def update_coco_data(self, split_name: str, sample: DataSample,
+    def update_coco_data(self, split_name: str, sample: 'DataSample',
                          img_path: str):
         images = self.splits[split_name]['images']
         annotations = self.splits[split_name]['annotations']
@@ -94,27 +101,33 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
         return PyTorchObjectDetectionSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 
-    def predict(self, scene, chips, windows):
-        """Return predictions for a chip using model.
+    def predict_scene(self,
+                      scene: 'Scene',
+                      chip_sz: int,
+                      stride: Optional[int] = None) -> ObjectDetectionLabels:
+        if stride is None:
+            stride = chip_sz
 
-        Args:
-            chips: [[height, width, channels], ...] numpy array of chips
-            windows: List of boxes that are the windows aligned with the chips.
-
-        Return:
-            Labels object containing predictions
-        """
         if self.learner is None:
             self.load_model()
 
-        batch_out = self.learner.numpy_predict(chips, raw_out=False)
-        labels = ObjectDetectionLabels.make_empty()
+        # Important to use self.learner.cfg.data instead of
+        # self.learner_cfg.data because of the updates
+        # Learner.from_model_bundle() makes to the custom transforms.
+        base_tf, _ = self.learner_cfg.data.get_data_transforms()
+        ds = ObjectDetectionSlidingWindowGeoDataset(
+            scene, size=chip_sz, stride=stride, transform=base_tf)
 
-        for window, out in zip(windows, batch_out):
-            boxes = out['boxes']
-            class_ids = out['class_ids']
-            scores = out['scores']
-            boxes = ObjectDetectionLabels.local_to_global(boxes, window)
-            labels += ObjectDetectionLabels(boxes, class_ids, scores=scores)
+        predictions: Iterator[Iterable[BoxList]] = (
+            self.learner.predict_dataset(
+                ds,
+                raw_out=True,
+                numpy_out=True,
+                progress_bar=True,
+                progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
+        )
+
+        labels = ObjectDetectionLabels.from_predictions(
+            ds.windows, predictions)
 
         return labels

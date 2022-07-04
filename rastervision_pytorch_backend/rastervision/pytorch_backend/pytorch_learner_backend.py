@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING, Optional
 from os.path import join, splitext
 import tempfile
 
@@ -6,12 +7,14 @@ import numpy as np
 from rastervision.pipeline.file_system import (make_dir, upload_or_copy,
                                                zipdir)
 from rastervision.core.backend import Backend, SampleWriter
-from rastervision.core.data_sample import DataSample
-from rastervision.core.data import ClassConfig
-from rastervision.core.rv_pipeline import RVPipelineConfig
 from rastervision.core.utils.misc import save_img
-from rastervision.pytorch_learner.learner_config import LearnerConfig
 from rastervision.pytorch_learner.learner import Learner
+
+if TYPE_CHECKING:
+    from rastervision.core.data import ClassConfig, Scene
+    from rastervision.core.data_sample import DataSample
+    from rastervision.core.rv_pipeline import RVPipelineConfig
+    from rastervision.pytorch_learner.learner_config import LearnerConfig
 
 
 def write_chip(chip: np.ndarray, path: str) -> None:
@@ -34,7 +37,7 @@ def get_image_ext(chip: np.ndarray) -> str:
 
 
 class PyTorchLearnerSampleWriter(SampleWriter):
-    def __init__(self, output_uri: str, class_config: ClassConfig,
+    def __init__(self, output_uri: str, class_config: 'ClassConfig',
                  tmp_dir: str):
         """Constructor.
 
@@ -72,11 +75,11 @@ class PyTorchLearnerSampleWriter(SampleWriter):
         upload_or_copy(output_path, self.output_uri)
         self.tmp_dir_obj.cleanup()
 
-    def write_sample(self, sample: DataSample) -> None:
+    def write_sample(self, sample: 'DataSample') -> None:
         """Write a single sample to disk."""
         raise NotImplementedError()
 
-    def get_image_path(self, split_name: str, sample: DataSample) -> str:
+    def get_image_path(self, split_name: str, sample: 'DataSample') -> str:
         """Decide the save location of the image. Also, ensure that the target
         directory exists."""
         img_dir = join(self.sample_dir, split_name, 'img')
@@ -99,8 +102,8 @@ class PyTorchLearnerSampleWriter(SampleWriter):
 class PyTorchLearnerBackend(Backend):
     """Backend that uses the rastervision.pytorch_learner package to train models."""
 
-    def __init__(self, pipeline_cfg: RVPipelineConfig,
-                 learner_cfg: LearnerConfig, tmp_dir: str):
+    def __init__(self, pipeline_cfg: 'RVPipelineConfig',
+                 learner_cfg: 'LearnerConfig', tmp_dir: str):
         self.pipeline_cfg = pipeline_cfg
         self.learner_cfg = learner_cfg
         self.tmp_dir = tmp_dir
@@ -131,5 +134,8 @@ class PyTorchLearnerBackend(Backend):
     def get_sample_writer(self):
         raise NotImplementedError()
 
-    def predict_scene(self, scene):
+    def predict_scene(self,
+                      scene: 'Scene',
+                      chip_sz: int,
+                      stride: Optional[int] = None):
         raise NotImplementedError()
