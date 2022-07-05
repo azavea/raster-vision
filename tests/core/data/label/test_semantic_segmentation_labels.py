@@ -11,18 +11,19 @@ from rastervision.core.data.label import (SemanticSegmentationLabels,
 class TestSemanticSegmentationLabels(unittest.TestCase):
     def test_build(self):
         self.assertIsInstance(
-            SemanticSegmentationLabels.build(smooth=False),
+            SemanticSegmentationLabels.make_empty(smooth=False),
             SemanticSegmentationDiscreteLabels)
 
         self.assertRaises(
-            ValueError, lambda: SemanticSegmentationLabels.build(smooth=True))
+            ValueError,
+            lambda: SemanticSegmentationLabels.make_empty(smooth=True))
 
         self.assertRaises(
-            ValueError, lambda: SemanticSegmentationLabels.build(
+            ValueError, lambda: SemanticSegmentationLabels.make_empty(
                 smooth=True, extent=Box(0, 0, 10, 10)))
 
         self.assertIsInstance(
-            SemanticSegmentationLabels.build(
+            SemanticSegmentationLabels.make_empty(
                 smooth=True, extent=Box(0, 0, 10, 10), num_classes=2),
             SemanticSegmentationSmoothLabels)
 

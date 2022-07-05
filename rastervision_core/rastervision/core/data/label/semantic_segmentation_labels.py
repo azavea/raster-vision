@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Tuple, Optional, List, Any
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
 from rastervision.core.data.label import Labels
 
@@ -98,36 +98,81 @@ class SemanticSegmentationLabels(Labels):
             del self[window]
 
     @classmethod
-    def build(self,
-              smooth: bool = False,
-              extent: Optional[Box] = None,
-              num_classes: Optional[int] = None):
-        """Constructor.
+    def make_empty(cls,
+                   smooth: bool = False,
+                   extent: Optional[Box] = None,
+                   num_classes: Optional[int] = None
+                   ) -> Union['SemanticSegmentationDiscreteLabels',
+                              'SemanticSegmentationSmoothLabels']:
+        """Instantiate an empty instance.
 
         Args:
             smooth (bool, optional): If True, creates a
                 SemanticSegmentationSmoothLabels object. If False, creates a
-                SemanticSegmentationDiscreteLabels object.
+                SemanticSegmentationDiscreteLabels object. Defaults to False.
             extent (Optional[Box], optional): The extent of the region to which
                 the labels belong, in global coordinates. Only used if
                 smooth=True. Defaults to None.
             num_classes (Optional[int], optional): Number of classes.
                 Only used if smooth=True. Defaults to None.
 
+        Returns:
+            Union[SemanticSegmentationDiscreteLabels,
+            SemanticSegmentationSmoothLabels]: If smooth=True, returns a
+                SemanticSegmentationSmoothLabels. Otherwise, a
+                SemanticSegmentationDiscreteLabels.
+
         Raises:
             ValueError: if num_classes and extent are not specified, but
                 smooth=True.
         """
         if not smooth:
-            return SemanticSegmentationDiscreteLabels()
+            return SemanticSegmentationDiscreteLabels.make_empty()
         else:
             if extent is None:
                 raise ValueError('extent must be specified if smooth=True.')
             if num_classes is None:
                 raise ValueError(
                     'num_classes must be specified if smooth=True.')
-            return SemanticSegmentationSmoothLabels(
+            return SemanticSegmentationSmoothLabels.make_empty(
                 extent=extent, num_classes=num_classes)
+
+    @classmethod
+    def from_predictions(cls,
+                         windows: Iterable['Box'],
+                         predictions: Iterable[Any],
+                         smooth: bool = False,
+                         extent: Optional[Box] = None,
+                         num_classes: Optional[int] = None
+                         ) -> Union['SemanticSegmentationDiscreteLabels',
+                                    'SemanticSegmentationSmoothLabels']:
+        """Instantiate from windows and their corresponding predictions.
+
+        Args:
+            windows (Iterable[Box]): Boxes in pixel coords, specifying chips
+                in the raster.
+            predictions (Iterable[Any]): The model predictions for each chip
+                specified by the windows.
+            smooth (bool, optional): If True, creates a
+                SemanticSegmentationSmoothLabels object. If False, creates a
+                SemanticSegmentationDiscreteLabels object. Defaults to False.
+            extent (Optional[Box], optional): The extent of the region to which
+                the labels belong, in global coordinates. Only used if
+                smooth=True. Defaults to None.
+            num_classes (Optional[int], optional): Number of classes.
+                Only used if smooth=True. Defaults to None.
+
+        Returns:
+            Union[SemanticSegmentationDiscreteLabels,
+            SemanticSegmentationSmoothLabels]: If smooth=True, returns a
+                SemanticSegmentationSmoothLabels. Otherwise, a
+                SemanticSegmentationDiscreteLabels.
+        """
+        if smooth:
+            return SemanticSegmentationSmoothLabels.from_predictions(
+                windows, predictions, extent, num_classes)
+        else:
+            return super().from_predictions(windows, predictions)
 
 
 class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
@@ -176,6 +221,10 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
     def mask_fill(self, window: Box, mask: np.ndarray,
                   fill_value: Any) -> None:
         self.window_to_label_arr[window][mask] = fill_value
+
+    @classmethod
+    def make_empty(cls) -> 'SemanticSegmentationDiscreteLabels':
+        return SemanticSegmentationDiscreteLabels()
 
 
 class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
@@ -289,3 +338,49 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         self.pixel_scores[..., y0:y1, x0:x1][..., mask] = 0
         self.pixel_scores[class_id, y0:y1, x0:x1][mask] = 1
         self.pixel_hits[y0:y1, x0:x1][mask] = 1
+
+    @classmethod
+    def make_empty(cls, extent: Box,
+                   num_classes: int) -> 'SemanticSegmentationSmoothLabels':
+        """Instantiate an empty instance.
+
+        Args:
+            extent (Box): The extent of the region to which
+                the labels belong, in global coordinates. Only used if
+                smooth=True. Defaults to None.
+            num_classes (int): Number of classes.
+                Only used if smooth=True. Defaults to None.
+
+        Returns:
+            SemanticSegmentationSmoothLabels: An empty
+                SemanticSegmentationSmoothLabels instance.
+        """
+        return SemanticSegmentationSmoothLabels(
+            extent=extent, num_classes=num_classes)
+
+    @classmethod
+    def from_predictions(cls, windows: Iterable['Box'],
+                         predictions: Iterable[Any], extent: Box,
+                         num_classes: int) -> 'Labels':
+        """Instantiate from windows and their corresponding predictions.
+
+        Args:
+            windows (Iterable[Box]): Boxes in pixel coords, specifying chips
+                in the raster.
+            predictions (Iterable[Any]): The model predictions for each chip
+                specified by the windows.
+            extent (Box): The extent of the region to which
+                the labels belong, in global coordinates. Only used if
+                smooth=True. Defaults to None.
+            num_classes (int): Number of classes.
+                Only used if smooth=True. Defaults to None.
+
+        Returns:
+            SemanticSegmentationSmoothLabels: A
+                SemanticSegmentationSmoothLabels instance populated with the
+                given predictions.
+        """
+        labels = cls.make_empty(extent, num_classes)
+        for window, prediction in zip(windows, predictions):
+            labels[window] = prediction
+        return labels

@@ -353,7 +353,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             'num_classes': len(self.class_config),
         }
         args.update(**kwargs)
-        labels = SemanticSegmentationLabels.build(**args)
+        labels = SemanticSegmentationLabels.make_empty(**args)
         return labels
 
     def _write_array(self, dataset: rio.DatasetReader, window: Box,

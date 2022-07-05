@@ -1,3 +1,4 @@
+from typing import Dict
 import numpy as np
 from shapely.geometry import shape
 
@@ -42,6 +43,16 @@ class ObjectDetectionLabels(Labels):
         return (isinstance(other, ObjectDetectionLabels)
                 and self.to_dict() == other.to_dict())
 
+    def __setitem__(self, window: Box, item: Dict[str, np.ndarray]):
+        boxes = item['boxes']
+        boxes = ObjectDetectionLabels.local_to_global(boxes, window)
+        class_ids = item['class_ids']
+        scores = item.get('scores')
+
+        new_labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
+        concatenated_labels = self + new_labels
+        self.boxlist = concatenated_labels.boxlist
+
     def assert_equal(self, expected_labels):
         np.testing.assert_array_equal(self.get_npboxes(),
                                       expected_labels.get_npboxes())
@@ -73,12 +84,12 @@ class ObjectDetectionLabels(Labels):
         return ObjectDetectionLabels(
             np.array(new_boxes), np.array(new_class_ids), np.array(new_scores))
 
-    @staticmethod
-    def make_empty():
+    @classmethod
+    def make_empty(cls) -> 'ObjectDetectionLabels':
         npboxes = np.empty((0, 4))
         class_ids = np.empty((0, ))
         scores = np.empty((0, ))
-        return ObjectDetectionLabels(npboxes, class_ids, scores)
+        return cls(npboxes, class_ids, scores)
 
     @staticmethod
     def from_boxlist(boxlist):

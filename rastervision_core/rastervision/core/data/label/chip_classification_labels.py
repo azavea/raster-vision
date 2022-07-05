@@ -1,5 +1,9 @@
+from typing import TYPE_CHECKING, Optional
 from rastervision.core.box import Box
 from rastervision.core.data.label import Labels
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class ChipClassificationLabels(Labels):
@@ -23,6 +27,14 @@ class ChipClassificationLabels(Labels):
 
     def __contains__(self, cell):
         return cell.tuple_format() in self.cell_to_class_id
+
+    def __setitem__(self, window: Box, scores: 'np.ndarray'):
+        class_id = scores.argmax()
+        self.set_cell(window, class_id, scores=scores)
+
+    @classmethod
+    def make_empty(cls) -> 'ChipClassificationLabels':
+        return ChipClassificationLabels()
 
     def filter_by_aoi(self, aoi_polygons):
         result = ChipClassificationLabels()
