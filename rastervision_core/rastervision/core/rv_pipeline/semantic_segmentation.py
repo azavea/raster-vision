@@ -1,21 +1,24 @@
+from typing import TYPE_CHECKING, List, Sequence
 import logging
-from typing import List, Sequence
 
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.core.data import ClassConfig, Scene
 from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
 from rastervision.core.rv_pipeline.utils import (fill_no_data,
                                                  nodata_below_threshold)
 from rastervision.core.rv_pipeline.semantic_segmentation_config import (
     SemanticSegmentationWindowMethod, SemanticSegmentationChipOptions)
 
+if TYPE_CHECKING:
+    from rastervision.core.backend.backend import Backend
+    from rastervision.core.data import ClassConfig, Labels, Scene
+
 log = logging.getLogger(__name__)
 
 
-def get_train_windows(scene: Scene,
-                      class_config: ClassConfig,
+def get_train_windows(scene: 'Scene',
+                      class_config: 'ClassConfig',
                       chip_size: int,
                       chip_options: SemanticSegmentationChipOptions,
                       chip_nodata_threshold: float = 1.) -> List[Box]:
@@ -139,9 +142,9 @@ class SemanticSegmentation(RVPipeline):
 
         return labels
 
-    def get_predict_windows(self, extent: Box) -> List[Box]:
+    def predict_scene(self, scene: 'Scene', backend: 'Backend') -> 'Labels':
         chip_sz = self.config.predict_chip_sz
         stride = self.config.predict_options.stride
         if stride is None:
             stride = chip_sz
-        return extent.get_windows(chip_sz, stride)
+        return backend.predict_scene(scene, chip_sz=chip_sz, stride=stride)
