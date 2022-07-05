@@ -778,7 +778,7 @@ class Learner(ABC):
                 x = self.to_device(x, self.device)
                 z = self.predict(x, raw_out=raw_out)
                 x = self.to_device(x, 'cpu')
-                y = self.to_device(y, 'cpu')
+                y = self.to_device(y, 'cpu') if y is not None else y
                 z = self.to_device(z, 'cpu')
                 if batched_output:
                     yield x, y, z
@@ -1118,7 +1118,7 @@ class Learner(ABC):
             x but with any Tensors in it on the device
         """
         if isinstance(x, list):
-            return [_x.to(device) for _x in x]
+            return [_x.to(device) if _x is not None else _x for _x in x]
         else:
             return x.to(device)
 
