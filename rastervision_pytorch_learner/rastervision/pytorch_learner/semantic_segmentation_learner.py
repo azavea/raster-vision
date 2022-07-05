@@ -58,30 +58,23 @@ class SemanticSegmentationLearner(Learner):
     def predict(self, x: torch.Tensor, raw_out: bool = False) -> torch.Tensor:
         x = self.to_batch(x).float()
         x = self.to_device(x, self.device)
-        with torch.no_grad():
+
+        with torch.inference_mode():
             out = self.model(x)
             out = self.post_forward(out)
             out = out.softmax(dim=1)
-            if not raw_out:
-                out = self.prob_to_pred(out)
-        out = self.to_device(out, 'cpu')
-        return out
 
-    def numpy_predict(self, x: np.ndarray,
-                      raw_out: bool = False) -> np.ndarray:
-        _, h, w, _ = x.shape
-        transform, _ = self.cfg.data.get_data_transforms()
-        x = self.normalize_input(x)
-        x = self.to_batch(x)
-        x = np.stack([transform(image=img)['image'] for img in x])
-        x = torch.from_numpy(x)
-        x = x.permute((0, 3, 1, 2))
-        out = self.predict(x, raw_out=True)
-        out = F.interpolate(
-            out, size=(h, w), mode='bilinear', align_corners=False)
+        # ensure output is the same shape as input
+        if out.shape != x.shape:
+            h, w = x.shape[-2:]
+            out = F.interpolate(
+                out, size=(h, w), mode='bilinear', align_corners=False)
+
         if not raw_out:
             out = self.prob_to_pred(out)
-        return self.output_to_numpy(out)
+        out = self.to_device(out, 'cpu')
+
+        return out
 
     def prob_to_pred(self, x):
         return x.argmax(1)

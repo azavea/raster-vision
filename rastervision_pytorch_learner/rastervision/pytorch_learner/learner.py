@@ -1,5 +1,6 @@
-from typing import (TYPE_CHECKING, Any, Callable, Dict, List, Optional,
-                    Sequence, Tuple)
+from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterator, List,
+                    Optional, Sequence, Tuple, Union)
+from typing_extensions import Literal
 from abc import ABC, abstractmethod
 from os.path import join, isfile, basename, isdir
 import csv
@@ -628,43 +629,164 @@ class Learner(ABC):
         out = self.predict(x, raw_out=raw_out)
         return self.output_to_numpy(out)
 
-    def predict_dataloader(self,
-                           dl: DataLoader,
-                           one_batch: bool = False,
-                           return_x: bool = True,
-                           raw_out: bool = True):
-        """Make predictions over all batches in a DataLoader.
+    def predict_dataset(self,
+                        dataset: 'Dataset',
+                        return_format: Literal['xyz', 'yz', 'z'] = 'z',
+                        raw_out: bool = True,
+                        numpy_out: bool = False,
+                        dataloader_kw: dict = {},
+                        progress_bar: bool = True,
+                        progress_bar_kw: dict = {}
+                        ) -> Union[Iterator[Any], Iterator[Tuple[Any, ...]]]:
+        """Returns an iterator over predictions on the given dataset.
 
         Args:
-            dl: the DataLoader
-            one_batch: if True, just makes predictions over the first batch
-            return_x: if True, returns all the inputs in addition to the predictions and
-                targets
+            dataset (Dataset): The dataset to make predictions on.
+            return_format (Literal['xyz', 'yz', 'z'], optional): Format of the
+                return elements of the returned iterator. Must be one of:
+                'xyz', 'yz', and 'z'. If 'xyz', elements are 3-tuples of x, y,
+                and z. If 'yz', elements are 2-tuples of y and z. If 'z',
+                elements are (non-tuple) values of z. Where x = input image,
+                y = ground truth, and z = prediction. Defaults to 'z'.
+            raw_out (bool, optional): If true, return raw predicted scores.
+                Defaults to True.
+            numpy_out (bool, optional): If True, convert predictions to numpy
+                arrays before returning. Defaults to False.
+            dataloader_kw (dict): Dict with keywords passed to the DataLoader
+                constructor.
+            progress_bar (bool, optional): If True, display a progress bar.
+                Since this function returns an iterator, the progress bar won't
+                be visible until the iterator is consumed. Defaults to True.
+            progress_bar_kw (dict): Dict with keywords passed to tqdm.
+
+        Raises:
+            ValueError: If return_format is not one of the allowed values.
 
         Returns:
-            if return_x: (x, y, z) ie. all images, labels, predictions for dl
-            else: (y, z) ie. all labels, predictions for dl
+            Union[Iterator[Any], Iterator[Tuple[Any, ...]]]: If return_format
+                is 'z', the returned value is an iterator of whatever type the
+                predictions are. Otherwise, the returned value is an iterator
+                of tuples.
         """
+
+        if return_format not in {'xyz', 'yz', 'z'}:
+            raise ValueError('return_format must be one of "xyz", "yz", "z".')
+
+        dl_kw = dict(
+            collate_fn=self.get_collate_fn(),
+            batch_size=self.cfg.solver.batch_sz,
+            num_workers=self.cfg.data.num_workers,
+            shuffle=False,
+            pin_memory=True)
+        dl_kw.update(dataloader_kw)
+        dl = DataLoader(dataset, **dl_kw)
+
+        preds = self.predict_dataloader(
+            dl,
+            return_format=return_format,
+            raw_out=raw_out,
+            batched_output=False)
+
+        if numpy_out:
+            if return_format == 'z':
+                preds = (self.output_to_numpy(p) for p in preds)
+            else:
+                # only convert z
+                preds = ((*p[:-1], self.output_to_numpy(p[-1])) for p in preds)
+
+        if progress_bar:
+            pb_kw = dict(desc='Predicting', total=len(dataset))
+            pb_kw.update(progress_bar_kw)
+            preds = tqdm(preds, **pb_kw)
+
+        return preds
+
+    def predict_dataloader(
+            self,
+            dl: DataLoader,
+            batched_output: bool = True,
+            return_format: Literal['xyz', 'yz', 'z'] = 'z',
+            raw_out: bool = True,
+    ) -> Union[Iterator[Any], Iterator[Tuple[Any, ...]]]:
+        """Returns an iterator over predictions on the given dataloader.
+
+        Args:
+            dl (DataLoader): The dataloader to make predictions on.
+            batched_output (bool, optional): If True, return batches of
+                x, y, z as defined by the dataloader. If False, unroll the
+                batches into individual items. Defaults to True.
+            return_format (Literal['xyz', 'yz', 'z'], optional): Format of the
+                return elements of the returned iterator. Must be one of:
+                'xyz', 'yz', and 'z'. If 'xyz', elements are 3-tuples of x, y,
+                and z. If 'yz', elements are 2-tuples of y and z. If 'z',
+                elements are (non-tuple) values of z. Where x = input image,
+                y = ground truth, and z = prediction. Defaults to 'z'.
+            raw_out (bool, optional): If true, return raw predicted scores.
+                Defaults to True.
+
+        Raises:
+            ValueError: If return_format is not one of the allowed values.
+
+        Returns:
+            Union[Iterator[Any], Iterator[Tuple[Any, ...]]]: If return_format
+                is 'z', the returned value is an iterator of whatever type the
+                predictions are. Otherwise, the returned value is an iterator
+                of tuples.
+        """
+
+        if return_format not in {'xyz', 'yz', 'z'}:
+            raise ValueError('return_format must be one of "xyz", "yz", "z".')
+
+        preds = self._predict_dataloader(
+            dl, raw_out=raw_out, batched_output=batched_output)
+
+        if return_format == 'yz':
+            preds = ((y, z) for _, y, z in preds)
+        elif return_format == 'z':
+            preds = (z for _, _, z in preds)
+
+        return preds
+
+    def _predict_dataloader(
+            self,
+            dl: DataLoader,
+            raw_out: bool = True,
+            batched_output: bool = True) -> Iterator[Tuple[Tensor, Any, Any]]:
+        """Returns an iterator over predictions on the given dataloader.
+
+        Args:
+            dl (DataLoader): The dataloader to make predictions on.
+            batched_output (bool, optional): If True, return batches of
+                x, y, z as defined by the dataloader. If False, unroll the
+                batches into individual items. Defaults to True.
+            raw_out (bool, optional): If true, return raw predicted scores.
+                Defaults to True.
+
+        Raises:
+            ValueError: If return_format is not one of the allowed values.
+
+        Yields:
+            Iterator[Tuple[Tensor, Any, Any]]: 3-tuples of x, y, and z, which
+                might or might not be batched depending on the batched_output
+                argument.
+        """
+        model_train_state = self.model.training
         self.model.eval()
 
-        xs, ys, zs = [], [], []
-        with torch.no_grad():
+        with torch.inference_mode():
             for x, y in dl:
                 x = self.to_device(x, self.device)
                 z = self.predict(x, raw_out=raw_out)
                 x = self.to_device(x, 'cpu')
                 y = self.to_device(y, 'cpu')
                 z = self.to_device(z, 'cpu')
-                if one_batch:
-                    return x, y, z
-                if return_x:
-                    xs.append(x)
-                ys.append(y)
-                zs.append(z)
+                if batched_output:
+                    yield x, y, z
+                else:
+                    for _x, _y, _z in zip(x, y, z):
+                        yield _x, _y, _z
 
-        if return_x:
-            return torch.cat(xs), torch.cat(ys), torch.cat(zs)
-        return torch.cat(ys), torch.cat(zs)
+        self.model.train(model_train_state)
 
     def get_dataloader(self, split: str) -> DataLoader:
         """Get the DataLoader for a split.
@@ -782,8 +904,10 @@ class Learner(ABC):
         """
         log.info('Plotting predictions...')
         dl = self.get_dataloader(split)
-        output_path = join(self.output_dir, '{}_preds.png'.format(split))
-        x, y, z = self.predict_dataloader(dl, one_batch=True)
+        output_path = join(self.output_dir, f'{split}_preds.png')
+        preds = self.predict_dataloader(
+            dl, return_format='xyz', batched_output=True, raw_out=True)
+        x, y, z = next(preds)
         self.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
 

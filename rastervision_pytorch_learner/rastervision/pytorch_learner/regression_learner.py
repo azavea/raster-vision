@@ -151,7 +151,7 @@ class RegressionLearner(Learner):
         super().eval_model(split)
 
         y, out = self.predict_dataloader(
-            self.get_dataloader(split), return_x=False, raw_out=False)
+            self.get_dataloader(split), return_format='yz', raw_out=False)
 
         max_scatter_points = self.cfg.data.plot_options.max_scatter_points
         if y.shape[0] > max_scatter_points:

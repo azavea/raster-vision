@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence
+from typing import (TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence,
+                    Union)
 import warnings
 
 import logging
@@ -91,32 +92,20 @@ class ObjectDetectionLearner(Learner):
             metrics = {'map': coco_metrics[0], 'map50': coco_metrics[1]}
         return metrics
 
-    def numpy_predict(self, x: np.ndarray,
-                      raw_out: bool = False) -> np.ndarray:
-        transform, _ = self.cfg.data.get_data_transforms()
-        x = self.normalize_input(x)
-        x = self.to_batch(x)
-        x = np.stack([
-            transform(image=img, bboxes=[], category_id=[])['image']
-            for img in x
-        ])
-        x = torch.from_numpy(x)
-        x = x.permute((0, 3, 1, 2))
-        out = self.predict(x, raw_out=raw_out)
-        return self.output_to_numpy(out)
+    def output_to_numpy(
+            self, out: Iterable[BoxList]
+    ) -> Union[Dict[str, np.ndarray], List[Dict[str, np.ndarray]]]:
+        def boxlist_to_numpy(boxlist: BoxList) -> Dict[str, np.ndarray]:
+            return {
+                'boxes': boxlist.convert_boxes('yxyx').numpy(),
+                'class_ids': boxlist.get_field('class_ids').numpy(),
+                'scores': boxlist.get_field('scores').numpy()
+            }
 
-    def output_to_numpy(self, out: Iterable[BoxList]):
-        numpy_out = []
-        for boxlist in out:
-            numpy_out.append({
-                'boxes':
-                boxlist.convert_boxes('yxyx').numpy(),
-                'class_ids':
-                boxlist.get_field('class_ids').numpy(),
-                'scores':
-                boxlist.get_field('scores').numpy()
-            })
-        return numpy_out
+        if isinstance(out, BoxList):
+            return boxlist_to_numpy(out)
+        else:
+            return [boxlist_to_numpy(boxlist) for boxlist in out]
 
     def plot_xyz(self,
                  axs: Sequence,
