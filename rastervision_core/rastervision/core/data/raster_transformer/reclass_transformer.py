@@ -1,8 +1,8 @@
-from typing import Dict
-from rastervision.core.data.raster_transformer.raster_transformer \
-    import RasterTransformer
+from typing import TYPE_CHECKING, Dict, List, Optional
+from rastervision.core.data.raster_transformer import RasterTransformer
 
-import numpy as np  # noqa
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class ReclassTransformer(RasterTransformer):
@@ -17,7 +17,9 @@ class ReclassTransformer(RasterTransformer):
         """
         self.mapping = mapping
 
-    def transform(self, chip, channel_order=None):
+    def transform(self,
+                  chip: 'np.ndarray',
+                  channel_order: Optional[List[int]] = None):
         """Transform a chip.
 
         Reclassify a label raster using the given mapping.
@@ -26,6 +28,8 @@ class ReclassTransformer(RasterTransformer):
             chip: ndarray of shape [height, width, channels] This is assumed to already
                 have the channel_order applied to it if channel_order is set. In other
                 words, channels should be equal to len(channel_order).
+            channel_order: list of indices of channels that were extracted from the
+                raw imagery.
 
         Returns:
             [height, width, channels] numpy array
