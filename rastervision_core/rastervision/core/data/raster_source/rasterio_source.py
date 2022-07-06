@@ -4,8 +4,9 @@ import os
 from pyproj import Transformer
 import subprocess
 from decimal import Decimal
-from tempfile import TemporaryDirectory
+from tempfile import mkdtemp
 from typing import Optional, Tuple
+import shutil
 
 import numpy as np
 import rasterio
@@ -139,7 +140,7 @@ class RasterioSource(ActivateMixin, RasterSource):
         """
         self.uris = uris
         self.tmp_dir = tmp_dir
-        self.image_tmp_dir = TemporaryDirectory(dir=self.tmp_dir)
+        self.image_tmp_dir = None
         self.image_dataset = None
         self.x_shift = x_shift
         self.y_shift = y_shift
@@ -243,8 +244,8 @@ class RasterioSource(ActivateMixin, RasterSource):
     def _activate(self):
         # Download images to temporary directory and delete them when done.
         if self.image_tmp_dir is None:
-            self.image_tmp_dir = TemporaryDirectory(dir=self.tmp_dir)
-        self.imagery_path = self._download_data(self.image_tmp_dir.name)
+            self.image_tmp_dir = mkdtemp(dir=self.tmp_dir)
+        self.imagery_path = self._download_data(self.image_tmp_dir)
         self.image_dataset = rasterio.open(self.imagery_path)
         self._set_crs_transformer()
 
@@ -265,7 +266,7 @@ class RasterioSource(ActivateMixin, RasterSource):
             self.image_dataset.close()
             self.image_dataset = None
         if self.image_tmp_dir is not None:
-            self.image_tmp_dir.cleanup()
+            shutil.rmtree(self.image_tmp_dir, ignore_errors=True)
             self.image_tmp_dir = None
 
     def _get_shifted_window(self, window):
