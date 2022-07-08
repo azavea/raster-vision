@@ -60,7 +60,14 @@ class AlbumentationsDataset(Dataset):
         if self.to_pytorch:
             # (H, W, C) --> (C, H, W)
             x = torch.from_numpy(x).permute(2, 0, 1).float()
-            y = torch.from_numpy(y)
+            if y is not None:
+                y = torch.from_numpy(y)
+
+        if y is None:
+            # Ideally, y should be None to semantically convery the absence of
+            # any label, but PyTorch's defauult collate function doesn't handle
+            # None values.
+            y = torch.tensor(np.nan)
 
         return x, y
 

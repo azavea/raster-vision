@@ -20,26 +20,29 @@ class TransformType(Enum):
 
 def classification_transformer(inp: Tuple[Any, Any],
                                transform=Optional[A.BasicTransform]
-                               ) -> Tuple[np.ndarray, np.ndarray]:
+                               ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image only."""
     x, y = inp
-    x, y = np.array(x), np.array(y)
+    x = np.array(x)
     if transform is not None:
         out = transform(image=x)
         x = out['image']
-    y = y.astype(int)
+    if y is not None:
+        y = np.array(y, dtype=int)
     return x, y
 
 
 def regression_transformer(inp: Tuple[Any, Any],
                            transform=Optional[A.BasicTransform]
-                           ) -> Tuple[np.ndarray, np.ndarray]:
+                           ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image only."""
     x, y = inp
-    x, y = np.array(x), np.array(y, dtype=float)
+    x = np.array(x)
     if transform is not None:
         out = transform(image=x)
         x = out['image']
+    if y is not None:
+        y = np.array(y, dtype=float)
     return x, y
 
 
@@ -103,7 +106,7 @@ def albu_to_yxyx(xyxy: np.ndarray,
 def object_detection_transformer(
         inp: Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]],
         transform: Optional[A.BasicTransform] = None
-) -> Tuple[torch.Tensor, BoxList]:
+) -> Tuple[torch.Tensor, Optional[BoxList]]:
     """Apply transform to image, bounding boxes, and labels. Also perform
     normalization and conversion to pytorch tensors.
 
@@ -123,26 +126,41 @@ def object_detection_transformer(
     Returns:
         Tuple[torch.Tensor, BoxList]: Transformed image and boxes.
     """
-    x, (boxes, class_ids, box_format) = inp
-
+    x, y = inp
     img_size = x.shape[:2]
-    if transform is not None:
-        # The albumentations transform expects the bboxes to be in the
-        # Albumentations format i.e. [ymin, xmin, ymax, xmax], so we convert to
-        # that format before applying the transform.
-        if box_format == 'yxyx':  # used by ObjectDetectionGeoDataset
-            boxes = yxyx_to_albu(boxes, img_size)
-        elif box_format == 'xywh':  # used by ObjectDetectionImageDataset
-            boxes = xywh_to_albu(boxes, img_size)
-        else:
-            raise NotImplementedError(f'Unknown box_format: {box_format}.')
 
-        out = transform(image=x, bboxes=boxes, category_id=class_ids)
-        x = out['image']
-        boxes = np.array(out['bboxes']).reshape((-1, 4))
-        class_ids = np.array(out['category_id'])
-        if len(boxes) > 0:
-            boxes = albu_to_yxyx(boxes, img_size)
+    if y is not None:
+        boxes, class_ids, box_format = y
+
+    if transform is not None:
+        if y is None:
+            x = transform(image=x, bboxes=[], category_id=[])['image']
+        else:
+            # The albumentations transform expects the bboxes to be in the
+            # Albumentations format i.e. [ymin, xmin, ymax, xmax], so we convert to
+            # that format before applying the transform.
+            if box_format == 'yxyx':  # used by ObjectDetectionGeoDataset
+                boxes = yxyx_to_albu(boxes, img_size)
+            elif box_format == 'xywh':  # used by ObjectDetectionImageDataset
+                boxes = xywh_to_albu(boxes, img_size)
+            else:
+                raise NotImplementedError(f'Unknown box_format: {box_format}.')
+
+            out = transform(image=x, bboxes=boxes, category_id=class_ids)
+            x = out['image']
+            boxes = np.array(out['bboxes']).reshape((-1, 4))
+            class_ids = np.array(out['category_id'])
+            if len(boxes) > 0:
+                boxes = albu_to_yxyx(boxes, img_size)
+
+            # convert to pytorch
+            boxes = torch.from_numpy(boxes).float()
+            class_ids = torch.from_numpy(class_ids).long()
+
+            if len(boxes) == 0:
+                boxes = torch.empty((0, 4)).float()
+
+            y = BoxList(boxes, format='yxyx', class_ids=class_ids)
 
     # normalize x
     if np.issubdtype(x.dtype, np.unsignedinteger):
@@ -151,27 +169,24 @@ def object_detection_transformer(
 
     # convert to pytorch
     x = torch.from_numpy(x).permute(2, 0, 1).float()
-    boxes = torch.from_numpy(boxes).float()
-    class_ids = torch.from_numpy(class_ids).long()
-
-    if len(boxes) == 0:
-        boxes = torch.empty((0, 4)).float()
-
-    y = BoxList(boxes, format='yxyx', class_ids=class_ids)
 
     return x, y
 
 
-def semantic_segmentation_transformer(inp: Tuple[Any, Any],
-                                      transform=Optional[A.BasicTransform]
-                                      ) -> Tuple[np.ndarray, np.ndarray]:
+def semantic_segmentation_transformer(
+        inp: Tuple[Any, Any], transform=Optional[A.BasicTransform]
+) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image and mask."""
     x, y = inp
-    x, y = np.array(x), np.array(y)
+    x = np.array(x)
     if transform is not None:
-        out = transform(image=x, mask=y)
-        x, y = out['image'], out['mask']
-    y = y.astype(int)
+        if y is None:
+            x = transform(image=x)['image']
+        else:
+            y = np.array(y)
+            out = transform(image=x, mask=y)
+            x, y = out['image'], out['mask']
+            y = y.astype(int)
     return x, y
 
 

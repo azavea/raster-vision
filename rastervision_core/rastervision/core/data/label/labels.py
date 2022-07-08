@@ -1,4 +1,8 @@
-from abc import (ABC, abstractmethod)
+from typing import TYPE_CHECKING, Any, Iterable
+from abc import (ABC, abstractclassmethod, abstractmethod)
+
+if TYPE_CHECKING:
+    from rastervision.core.box import Box
 
 
 class Labels(ABC):
@@ -28,3 +32,43 @@ class Labels(ABC):
     @abstractmethod
     def __eq__(self, other):
         pass
+
+    @abstractmethod
+    def __setitem__(self, key, value):
+        pass
+
+    @abstractclassmethod
+    def make_empty(cls) -> 'Labels':
+        """Instantiate an empty instance of this class.
+
+        Returns:
+            Labels: An object of the Label subclass on which this method is
+                called.
+        """
+        pass
+
+    @classmethod
+    def from_predictions(cls, windows: Iterable['Box'],
+                         predictions: Iterable[Any]) -> 'Labels':
+        """Instantiate from windows and their corresponding predictions.
+
+        This makes no assumptions about the type or format of the predictions.
+        Subclasses should implement the __setitem__ method to correctly handle
+        the predictions.
+
+        Args:
+            windows (Iterable[Box]): Boxes in pixel coords, specifying chips
+                in the raster.
+            predictions (Iterable[Any]): The model predictions for each chip
+                specified by the windows.
+
+        Returns:
+            Labels: An object of the Label subclass on which this method is
+                called.
+        """
+        labels = cls.make_empty()
+        # If predictions is tqdm-wrapped, it needs to be the first arg to zip()
+        # or the progress bar won't terminate with the correct count.
+        for prediction, window in zip(predictions, windows):
+            labels[window] = prediction
+        return labels

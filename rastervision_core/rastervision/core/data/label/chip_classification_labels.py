@@ -1,5 +1,9 @@
+from typing import TYPE_CHECKING, Optional
 from rastervision.core.box import Box
 from rastervision.core.data.label import Labels
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class ChipClassificationLabels(Labels):
@@ -21,8 +25,16 @@ class ChipClassificationLabels(Labels):
         result.extend(other)
         return result
 
-    def __contains__(self, cell):
-        return cell.tuple_format() in self.cell_to_class_id
+    def __contains__(self, cell: Box):
+        return cell in self.cell_to_class_id
+
+    def __setitem__(self, window: Box, scores: 'np.ndarray'):
+        class_id = scores.argmax()
+        self.set_cell(window, class_id, scores=scores)
+
+    @classmethod
+    def make_empty(cls) -> 'ChipClassificationLabels':
+        return ChipClassificationLabels()
 
     def filter_by_aoi(self, aoi_polygons):
         result = ChipClassificationLabels()
@@ -35,7 +47,10 @@ class ChipClassificationLabels(Labels):
                     result.set_cell(cell_box, class_id, scores)
         return result
 
-    def set_cell(self, cell, class_id, scores=None):
+    def set_cell(self,
+                 cell: Box,
+                 class_id: int,
+                 scores: Optional['np.ndarray'] = None):
         """Set cell and its class_id.
 
         Args:
@@ -45,41 +60,41 @@ class ChipClassificationLabels(Labels):
         """
         if scores is not None:
             scores = list(map(lambda x: float(x), list(scores)))
-        self.cell_to_class_id[cell.tuple_format()] = (class_id, scores)
+        self.cell_to_class_id[cell] = (class_id, scores)
 
-    def get_cell_class_id(self, cell):
+    def get_cell_class_id(self, cell: Box):
         """Return class_id for a cell.
 
         Args:
             cell: (Box)
         """
-        result = self.cell_to_class_id.get(cell.tuple_format())
+        result = self.cell_to_class_id.get(cell)
         if result:
             return result[0]
         else:
             return None
 
-    def get_cell_scores(self, cell):
+    def get_cell_scores(self, cell: Box):
         """Return scores for a cell.
 
         Args:
             cell: (Box)
         """
-        result = self.cell_to_class_id.get(cell.tuple_format())
+        result = self.cell_to_class_id.get(cell)
         if result:
             return result[1]
         else:
             return None
 
-    def get_cell_values(self, cell):
+    def get_cell_values(self, cell: Box):
         """Return a tuple of (class_id, scores) for a cell.
 
         Args:
             cell: (Box)
         """
-        return self.cell_to_class_id.get(cell.tuple_format())
+        return self.cell_to_class_id.get(cell)
 
-    def get_singleton_labels(self, cell):
+    def get_singleton_labels(self, cell: Box):
         """Return Labels object representing a single cell.
 
         Args:

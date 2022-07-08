@@ -23,7 +23,8 @@ class ClassificationSlidingWindowGeoDataset(SlidingWindowGeoDataset):
 
     def init_windows(self):
         super().init_windows()
-        self.scene.label_source.populate_labels(cells=self.windows)
+        if self.scene.label_source is not None:
+            self.scene.label_source.populate_labels(cells=self.windows)
 
 
 class ClassificationRandomWindowGeoDataset(RandomWindowGeoDataset):

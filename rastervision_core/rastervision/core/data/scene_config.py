@@ -49,7 +49,7 @@ class SceneConfig(Config):
 
         return self.__dict__.items()
 
-    def build(self, class_config, tmp_dir, use_transformers=True):
+    def build(self, class_config, tmp_dir, use_transformers=True) -> Scene:
         raster_source = self.raster_source.build(
             tmp_dir, use_transformers=use_transformers)
         crs_transformer = raster_source.get_crs_transformer()

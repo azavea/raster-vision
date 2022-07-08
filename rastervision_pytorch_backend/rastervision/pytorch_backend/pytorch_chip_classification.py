@@ -1,15 +1,22 @@
+from typing import TYPE_CHECKING, Iterator, Optional
 from os.path import join
 import uuid
 
 from rastervision.pipeline.file_system import (make_dir)
-from rastervision.core.data.label import ChipClassificationLabels
-from rastervision.core.data_sample import DataSample
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     PyTorchLearnerSampleWriter, PyTorchLearnerBackend)
+from rastervision.pytorch_learner.dataset import (
+    ClassificationSlidingWindowGeoDataset)
+from rastervision.core.data import ChipClassificationLabels
+
+if TYPE_CHECKING:
+    from torch import Tensor
+    from rastervision.core.data import Scene
+    from rastervision.core.data_sample import DataSample
 
 
 class PyTorchChipClassificationSampleWriter(PyTorchLearnerSampleWriter):
-    def write_sample(self, sample: DataSample):
+    def write_sample(self, sample: 'DataSample'):
         """
         This writes a training or validation sample to
         (train|valid)/{class_name}/{scene_id}-{ind}.png
@@ -26,7 +33,7 @@ class PyTorchChipClassificationSampleWriter(PyTorchLearnerSampleWriter):
 
         self.sample_ind += 1
 
-    def get_image_path(self, split_name: str, sample: DataSample,
+    def get_image_path(self, split_name: str, sample: 'DataSample',
                        class_id: int) -> str:
         class_name = self.class_config.names[class_id]
         img_dir = join(self.sample_dir, split_name, class_name)
@@ -44,15 +51,32 @@ class PyTorchChipClassification(PyTorchLearnerBackend):
         return PyTorchChipClassificationSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 
-    def predict(self, scene, chips, windows):
+    def predict_scene(self,
+                      scene: 'Scene',
+                      chip_sz: int,
+                      stride: Optional[int] = None
+                      ) -> 'ChipClassificationLabels':
+        if stride is None:
+            stride = chip_sz
+
         if self.learner is None:
             self.load_model()
 
-        out = self.learner.numpy_predict(chips, raw_out=True)
-        labels = ChipClassificationLabels()
+        # Important to use self.learner.cfg.data instead of
+        # self.learner_cfg.data because of the updates
+        # Learner.from_model_bundle() makes to the custom transforms.
+        base_tf, _ = self.learner_cfg.data.get_data_transforms()
+        ds = ClassificationSlidingWindowGeoDataset(
+            scene, size=chip_sz, stride=stride, transform=base_tf)
 
-        for class_probs, window in zip(out, windows):
-            class_id = class_probs.argmax()
-            labels.set_cell(window, class_id, class_probs)
+        predictions: Iterator[Tensor] = self.learner.predict_dataset(
+            ds,
+            raw_out=True,
+            numpy_out=True,
+            progress_bar=True,
+            progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
+
+        labels = ChipClassificationLabels.from_predictions(
+            ds.windows, predictions)
 
         return labels

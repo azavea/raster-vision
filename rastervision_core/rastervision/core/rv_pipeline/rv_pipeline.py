@@ -168,15 +168,6 @@ class RVPipeline(Pipeline):
         """Post-process all labels at end of prediction."""
         return labels
 
-    def get_predict_windows(self, extent: Box) -> List[Box]:
-        """Returns windows to compute predictions for.
-
-        Args:
-            extent: extent of RasterSource
-        """
-        chip_sz = stride = self.config.predict_chip_sz
-        return extent.get_windows(chip_sz, stride)
-
     def predict(self, split_ind=0, num_splits=1):
         """Make predictions over each validation and test scene.
 
@@ -191,59 +182,17 @@ class RVPipeline(Pipeline):
         class_config = self.config.dataset.class_config
         dataset = self.config.dataset.get_split_config(split_ind, num_splits)
 
-        def _predict(scenes):
-            for scene in scenes:
-                with scene.activate():
-                    labels = self.predict_scene(scene, self.backend)
-                    label_store = scene.prediction_label_store
-                    label_store.save(labels)
-
-        _predict([
-            s.build(class_config, self.tmp_dir)
-            for s in dataset.validation_scenes
-        ])
-        if dataset.test_scenes:
-            _predict([
-                s.build(class_config, self.tmp_dir)
-                for s in dataset.test_scenes
-            ])
+        for scene_config in (dataset.validation_scenes + dataset.test_scenes):
+            scene = scene_config.build(class_config, self.tmp_dir)
+            with scene.activate():
+                labels = self.predict_scene(scene, self.backend)
+                labels = self.post_process_predictions(labels, scene)
+                scene.label_store.save(labels)
 
     def predict_scene(self, scene: Scene, backend: Backend) -> Labels:
-        """Returns predictions for a single scene."""
-        log.info('Making predictions for scene')
-        raster_source = scene.raster_source
-        label_store = scene.prediction_label_store
-        labels = label_store.empty_labels()
-
-        windows = self.get_predict_windows(raster_source.get_extent())
-
-        def predict_batch(chips, windows):
-            nonlocal labels
-            chips = np.array(chips)
-            batch_labels = backend.predict(scene, chips, windows)
-            batch_labels = self.post_process_batch(windows, chips,
-                                                   batch_labels)
-            labels += batch_labels
-
-            print('.' * len(chips), end='', flush=True)
-
-        batch_chips, batch_windows = [], []
-        for window in windows:
-            chip = raster_source.get_chip(window)
-            batch_chips.append(chip)
-            batch_windows.append(window)
-
-            # Predict on batch
-            if len(batch_chips) >= self.config.predict_batch_sz:
-                predict_batch(batch_chips, batch_windows)
-                batch_chips, batch_windows = [], []
-        print()
-
-        # Predict on remaining batch
-        if len(batch_chips) > 0:
-            predict_batch(batch_chips, batch_windows)
-
-        return self.post_process_predictions(labels, scene)
+        chip_sz = self.config.predict_chip_sz
+        stride = chip_sz
+        return backend.predict_scene(scene, chip_sz=chip_sz, stride=stride)
 
     def eval(self):
         """Evaluate predictions against ground truth."""

@@ -1,18 +1,21 @@
-from typing import Any, Tuple
+from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 from rastervision.core.data import ActivateMixin
 from rastervision.core.box import Box
+
+if TYPE_CHECKING:
+    from rastervision.core.data import (RasterSource, LabelSource, LabelStore)
 
 
 class Scene(ActivateMixin):
     """The raster data and labels associated with an area of interest."""
 
     def __init__(self,
-                 id,
-                 raster_source,
-                 ground_truth_label_source=None,
-                 prediction_label_store=None,
-                 aoi_polygons=None):
+                 id: str,
+                 raster_source: 'RasterSource',
+                 ground_truth_label_source: Optional['LabelSource'] = None,
+                 prediction_label_store: Optional['LabelStore'] = None,
+                 aoi_polygons: Optional[list] = None):
         """Construct a new Scene.
 
         Args:
@@ -32,19 +35,22 @@ class Scene(ActivateMixin):
             self.aoi_polygons = aoi_polygons
 
     @property
-    def label_source(self):
+    def label_source(self) -> 'LabelSource':
         return self.ground_truth_label_source
 
     @property
-    def label_store(self):
+    def label_store(self) -> 'LabelStore':
         return self.prediction_label_store
 
     def __getitem__(self, window: Box) -> Tuple[Any, Any]:
         x = self.raster_source[window]
-        y = self.label_source[window]
+        if self.label_source is not None:
+            y = self.label_source[window]
+        else:
+            y = None
         return x, y
 
-    def _subcomponents_to_activate(self):
+    def _subcomponents_to_activate(self) -> list:
         return [
             self.raster_source, self.ground_truth_label_source,
             self.prediction_label_store
