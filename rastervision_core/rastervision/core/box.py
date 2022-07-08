@@ -30,6 +30,8 @@ class Box():
             xmax: maximum x value
 
         """
+        ymin, ymax = sorted((ymin, ymax))
+        xmin, xmax = sorted((xmin, xmax))
         self.ymin = ymin
         self.xmin = xmin
         self.ymax = ymax
