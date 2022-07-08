@@ -634,6 +634,7 @@ class Learner(ABC):
                         return_format: Literal['xyz', 'yz', 'z'] = 'z',
                         raw_out: bool = True,
                         numpy_out: bool = False,
+                        predict_kw: dict = {},
                         dataloader_kw: dict = {},
                         progress_bar: bool = True,
                         progress_bar_kw: dict = {}
@@ -652,6 +653,9 @@ class Learner(ABC):
                 Defaults to True.
             numpy_out (bool, optional): If True, convert predictions to numpy
                 arrays before returning. Defaults to False.
+            predict_kw (dict): Dict with keywords passed to Learner.predict().
+                Useful if a Learner subclass implements a custom predict()
+                method.
             dataloader_kw (dict): Dict with keywords passed to the DataLoader
                 constructor.
             progress_bar (bool, optional): If True, display a progress bar.
@@ -685,7 +689,8 @@ class Learner(ABC):
             dl,
             return_format=return_format,
             raw_out=raw_out,
-            batched_output=False)
+            batched_output=False,
+            predict_kw=predict_kw)
 
         if numpy_out:
             if return_format == 'z':
@@ -707,6 +712,7 @@ class Learner(ABC):
             batched_output: bool = True,
             return_format: Literal['xyz', 'yz', 'z'] = 'z',
             raw_out: bool = True,
+            predict_kw: dict = {}
     ) -> Union[Iterator[Any], Iterator[Tuple[Any, ...]]]:
         """Returns an iterator over predictions on the given dataloader.
 
@@ -723,6 +729,9 @@ class Learner(ABC):
                 y = ground truth, and z = prediction. Defaults to 'z'.
             raw_out (bool, optional): If true, return raw predicted scores.
                 Defaults to True.
+            predict_kw (dict): Dict with keywords passed to Learner.predict().
+                Useful if a Learner subclass implements a custom predict()
+                method.
 
         Raises:
             ValueError: If return_format is not one of the allowed values.
@@ -738,7 +747,10 @@ class Learner(ABC):
             raise ValueError('return_format must be one of "xyz", "yz", "z".')
 
         preds = self._predict_dataloader(
-            dl, raw_out=raw_out, batched_output=batched_output)
+            dl,
+            raw_out=raw_out,
+            batched_output=batched_output,
+            predict_kw=predict_kw)
 
         if return_format == 'yz':
             preds = ((y, z) for _, y, z in preds)
@@ -751,7 +763,8 @@ class Learner(ABC):
             self,
             dl: DataLoader,
             raw_out: bool = True,
-            batched_output: bool = True) -> Iterator[Tuple[Tensor, Any, Any]]:
+            batched_output: bool = True,
+            predict_kw: dict = {}) -> Iterator[Tuple[Tensor, Any, Any]]:
         """Returns an iterator over predictions on the given dataloader.
 
         Args:
@@ -761,6 +774,9 @@ class Learner(ABC):
                 batches into individual items. Defaults to True.
             raw_out (bool, optional): If true, return raw predicted scores.
                 Defaults to True.
+            predict_kw (dict): Dict with keywords passed to Learner.predict().
+                Useful if a Learner subclass implements a custom predict()
+                method.
 
         Raises:
             ValueError: If return_format is not one of the allowed values.
@@ -776,7 +792,7 @@ class Learner(ABC):
         with torch.inference_mode():
             for x, y in dl:
                 x = self.to_device(x, self.device)
-                z = self.predict(x, raw_out=raw_out)
+                z = self.predict(x, raw_out=raw_out, **predict_kw)
                 x = self.to_device(x, 'cpu')
                 y = self.to_device(y, 'cpu') if y is not None else y
                 z = self.to_device(z, 'cpu')

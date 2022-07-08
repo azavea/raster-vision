@@ -1,4 +1,4 @@
-from typing import Sequence, Union, Optional
+from typing import Sequence, Union, Optional, Tuple
 import warnings
 
 import logging
@@ -55,7 +55,13 @@ class SemanticSegmentationLearner(Learner):
             return x['out']
         return x
 
-    def predict(self, x: torch.Tensor, raw_out: bool = False) -> torch.Tensor:
+    def predict(self,
+                x: torch.Tensor,
+                raw_out: bool = False,
+                out_shape: Optional[Tuple[int, int]] = None) -> torch.Tensor:
+        if out_shape is None:
+            out_shape = x.shape[-2:]
+
         x = self.to_batch(x).float()
         x = self.to_device(x, self.device)
 
@@ -65,10 +71,9 @@ class SemanticSegmentationLearner(Learner):
             out = out.softmax(dim=1)
 
         # ensure output is the same shape as input
-        if out.shape != x.shape:
-            h, w = x.shape[-2:]
+        if out.shape[-2:] != out_shape:
             out = F.interpolate(
-                out, size=(h, w), mode='bilinear', align_corners=False)
+                out, size=out_shape, mode='bilinear', align_corners=False)
 
         if not raw_out:
             out = self.prob_to_pred(out)
