@@ -70,7 +70,7 @@ class SemanticSegmentationLearner(Learner):
             out = self.post_forward(out)
             out = out.softmax(dim=1)
 
-        # ensure output is the same shape as input
+        # ensure correct output shape
         if out.shape[-2:] != out_shape:
             out = F.interpolate(
                 out, size=out_shape, mode='bilinear', align_corners=False)

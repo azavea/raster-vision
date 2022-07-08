@@ -121,7 +121,7 @@ class Learner(ABC):
                  model_def_path: Optional[str] = None,
                  loss_def_path: Optional[str] = None,
                  training: bool = True):
-        """COnstructor.
+        """Constructor.
 
         Args:
             cfg (LearnerConfig): LearnerConfig.
