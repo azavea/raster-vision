@@ -399,8 +399,10 @@ class SolverConfig(Config):
     def build_optimizer(self, model: nn.Module, **kwargs) -> optim.Optimizer:
         return optim.Adam(model.parameters(), lr=self.lr, **kwargs)
 
-    def build_step_scheduler(self, optimizer: optim.Optimizer,
+    def build_step_scheduler(self,
+                             optimizer: optim.Optimizer,
                              train_ds_sz: int,
+                             last_epoch: int = -1,
                              **kwargs) -> Optional[_LRScheduler]:
         """Returns an LR scheduler that changes the LR each step.
 
@@ -413,6 +415,7 @@ class SolverConfig(Config):
             total_steps = self.num_epochs * steps_per_epoch
             step_size_up = (self.num_epochs // 2) * steps_per_epoch
             step_size_down = total_steps - step_size_up
+            # Note that we don't pass in last_epoch here. See note below.
             scheduler = CyclicLR(
                 optimizer,
                 base_lr=self.lr / 10,
@@ -421,9 +424,17 @@ class SolverConfig(Config):
                 step_size_down=step_size_down,
                 cycle_momentum=kwargs.pop('cycle_momentum', False),
                 **kwargs)
+            # Note: We need this loop because trying to resume the scheduler by
+            # just passing last_epoch does not work. See:
+            # https://discuss.pytorch.org/t/a-problem-occured-when-resuming-an-optimizer/28822/2 # noqa
+            num_past_epochs = last_epoch + 1
+            for _ in range(num_past_epochs * steps_per_epoch):
+                scheduler.step()
         return scheduler
 
-    def build_epoch_scheduler(self, optimizer: optim.Optimizer,
+    def build_epoch_scheduler(self,
+                              optimizer: optim.Optimizer,
+                              last_epoch: int = -1,
                               **kwargs) -> Optional[_LRScheduler]:
         """Returns an LR scheduler tha changes the LR each epoch.
 
@@ -431,11 +442,18 @@ class SolverConfig(Config):
         """
         scheduler = None
         if self.multi_stage:
+            # Note that we don't pass in last_epoch here. See note below.
             scheduler = MultiStepLR(
                 optimizer,
                 milestones=self.multi_stage,
                 gamma=kwargs.pop('gamma', 0.1),
                 **kwargs)
+            # Note: We need this loop because trying to resume the scheduler by
+            # just passing last_epoch does not work. See:
+            # https://discuss.pytorch.org/t/a-problem-occured-when-resuming-an-optimizer/28822/2 # noqa
+            num_past_epochs = last_epoch + 1
+            for _ in range(num_past_epochs):
+                scheduler.step()
         return scheduler
 
 
