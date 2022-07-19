@@ -248,6 +248,10 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
             (num_classes, self.height, self.width), dtype=self.dtype)
         self.pixel_hits = np.zeros((self.height, self.width), dtype=np.uint8)
 
+    @property
+    def extent(self) -> Box:
+        return self.local_extent
+
     def _to_local_coords(self, window: Box) -> Tuple[int, int, int, int]:
         """Convert to coordinates of the local arrays."""
         ymin, xmin, ymax, xmax = window
