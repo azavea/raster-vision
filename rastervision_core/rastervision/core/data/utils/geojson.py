@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional
+from typing import (TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List,
+                    Optional)
 
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
@@ -56,6 +57,12 @@ def map_geoms(func: Callable, geojson: dict) -> dict:
         return feature_out
 
     return map_features(feat_func, geojson)
+
+
+def geojson_to_geoms(geojson: dict) -> Iterator['BaseGeometry']:
+    """Return the shapely geometry for each feature in the GeoJSON."""
+    geoms = (shape(f['geometry']) for f in geojson['features'])
+    return geoms
 
 
 def filter_features(func: Callable, geojson: dict) -> dict:
@@ -157,8 +164,9 @@ def simplify_polygons(geojson: dict) -> dict:
     """Simplify polygon geometries by applying .buffer(0).
 
     For Polygon geomtries, .buffer(0) can do the following:
-    1. Break up a polygon with "bowties" into multiple polygons.
-    2. Sometimes "simplify" polygons.
+    1. *Sometimes* break up a polygon with "bowties" into multiple polygons.
+        (See https://github.com/shapely/shapely/issues/599.)
+    2. *Sometimes* "simplify" polygons. See shapely documentation for buffer().
 
     Args:
         geojson (dict): A GeoJSON-like mapping of a FeatureCollection.
@@ -216,3 +224,9 @@ def buffer_geoms(geojson: dict, geom_type: str,
 
     geojson_buffered = map_geoms(buffer_geom, geojson)
     return geojson_buffered
+
+
+def all_geoms_valid(geojson: dict):
+    """Check if there are any invalid geometries in the GeoJSON."""
+    geoms = geojson_to_geoms(geojson)
+    return all(g.is_valid for g in geoms)

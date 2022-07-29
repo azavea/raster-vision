@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, Dict, Optional
 from abc import ABC, abstractmethod
+import logging
 
 from rastervision.core.data.utils import (
     remove_empty_features, split_multi_geometries, map_to_pixel_coords,
-    pixel_to_map_coords, buffer_geoms, simplify_polygons)
+    pixel_to_map_coords, buffer_geoms, simplify_polygons, all_geoms_valid)
 from rastervision.core.data.vector_source.class_inference import (
     ClassInference)
 
@@ -12,6 +13,8 @@ if TYPE_CHECKING:
         VectorSourceConfig)
     from rastervision.core.data.class_config import ClassConfig
     from rastervision.core.data.crs_transformer import CRSTransformer
+
+log = logging.getLogger(__name__)
 
 
 class VectorSource(ABC):
@@ -104,4 +107,6 @@ def transform_geojson(geojson: dict,
     geojson = simplify_polygons(geojson)
     if to_map_coords:
         geojson = pixel_to_map_coords(geojson, crs_transformer)
+    if not all_geoms_valid(geojson):
+        log.warn(f'Invalid geometries found in features in the GeoJSON.')
     return geojson
