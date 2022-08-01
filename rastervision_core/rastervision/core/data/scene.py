@@ -23,7 +23,7 @@ class Scene(ActivateMixin):
             raster_source: RasterSource for this scene
             ground_truth_label_store: optional LabelSource
             prediction_label_store: optional LabelStore
-            aoi: Optional list of AOI polygons
+            aoi: Optional list of AOI polygons in pixel coordinates
         """
         self.id = id
         self.raster_source = raster_source

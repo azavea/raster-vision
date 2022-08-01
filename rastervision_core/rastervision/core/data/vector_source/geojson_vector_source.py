@@ -1,7 +1,5 @@
-import json
-
 from rastervision.core.data.vector_source.vector_source import VectorSource
-from rastervision.pipeline.file_system import file_to_str
+from rastervision.pipeline.file_system import file_to_json
 
 
 class GeoJSONVectorSource(VectorSource):
@@ -9,7 +7,7 @@ class GeoJSONVectorSource(VectorSource):
         super().__init__(geojson_vs_config, class_config, crs_transformer)
 
     def _get_geojson(self):
-        geojson = json.loads(file_to_str(self.vs_config.uri))
+        geojson = file_to_json(self.vs_config.uri)
         if not self.vs_config.ignore_crs_field and 'crs' in geojson:
             raise Exception((
                 'The GeoJSON file at {} contains a CRS field which is not '

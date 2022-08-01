@@ -9,8 +9,8 @@ from rastervision.core.data.label_source import LabelSourceConfig
 from rastervision.core.data.label_store import LabelStoreConfig
 from rastervision.core.data.scene import Scene
 from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
-from rastervision.core.data.vector_source import transform_geojson
 from rastervision.core.data.utils import geometries_to_geojson
+from rastervision.core.data.vector_source import transform_geojson
 
 from copy import deepcopy
 

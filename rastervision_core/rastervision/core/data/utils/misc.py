@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, Iterable
+from typing import Tuple, Optional
 
 import numpy as np
 from PIL import ImageColor
@@ -54,20 +54,3 @@ def rgb_to_int_array(rgb_array):
 def all_equal(it: list):
     ''' Returns true if all elements are equal to each other '''
     return it.count(it[0]) == len(it)
-
-
-def geometry_to_feature(geometry: dict, properties: dict = {}) -> dict:
-    """Convert a serialized geometry to a serialized GeoJSON feature."""
-    alread_a_feature = 'geometry' in geometry
-    if alread_a_feature:
-        return geometry
-    return {'type': 'Feature', 'geometry': geometry, 'properties': properties}
-
-
-def geometries_to_geojson(geometries: Iterable[dict]) -> dict:
-    """Convert serialized geometries to a serialized GeoJSON FeatureCollection.
-    """
-    return {
-        'type': 'FeatureCollection',
-        'features': [geometry_to_feature(g) for g in geometries]
-    }
