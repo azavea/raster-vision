@@ -11,7 +11,7 @@ pycocotools==2.0.*
 future==0.18.*
 psutil==5.9.*
 triangle==20200424
-opencv-python==4.1.*
+opencv-python==4.6.*
 opencv-python-headless<4.3
 matplotlib==3.5.*
 tqdm==4.64.0
