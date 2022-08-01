@@ -320,7 +320,7 @@ class Learner(ABC):
         self.model = self.build_model(model_def_path=model_def_path)
 
         self.model.to(self.device)
-        self.load_init_weights()
+        self.load_init_weights(model_weights_path=model_weights_path)
 
     def build_model(self, model_def_path: Optional[str] = None) -> nn.Module:
         """Build a PyTorch model."""
