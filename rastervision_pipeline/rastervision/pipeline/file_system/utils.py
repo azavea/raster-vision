@@ -1,7 +1,6 @@
 import os
 from os.path import join
 import shutil
-import gzip
 from threading import Timer
 import time
 import logging
@@ -287,44 +286,6 @@ def str_to_file(content_str: str, uri: str, fs: Optional[FileSystem] = None):
     if not fs:
         fs = FileSystem.get_file_system(uri, 'r')
     return fs.write_str(uri, content_str)
-
-
-def get_cached_file(cache_dir: str, uri: str) -> str:
-    """Download a file and unzip it using a cache.
-
-    This downloads a file if it isn't already in the cache, and unzips
-    the file using gunzip if it hasn't already been unzipped (and the uri
-    has a .gz suffix).
-
-    Args:
-        cache_dir: dir to use for cache directory
-        uri: URI of a file that can be opened by a supported RV file system
-
-    Returns:
-        path of the (downloaded and unzipped) cached file
-    """
-    # Only download if it isn't in the cache.
-    path = get_local_path(uri, cache_dir)
-    if not os.path.isfile(path):
-        path = download_if_needed(uri, cache_dir)
-
-    # Unzip if .gz file
-    if path.endswith('.gz'):
-        # If local URI, then make ungz_path in temp cache, so it isn't unzipped
-        # alongside the original file.
-        if os.path.isfile(uri):
-            ungz_path = os.path.join(cache_dir, path)[:-3]
-        else:
-            ungz_path = path[:-3]
-
-        # Check to see if it is already unzipped before unzipping.
-        if not os.path.isfile(ungz_path):
-            with gzip.open(path, 'rb') as f_in:
-                with open(ungz_path, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-        path = ungz_path
-
-    return path
 
 
 def file_to_json(uri: str) -> dict:
