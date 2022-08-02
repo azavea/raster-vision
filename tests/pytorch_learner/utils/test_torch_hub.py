@@ -78,7 +78,6 @@ class TestTorchHubUtils(unittest.TestCase):
             loss = torch_hub_load_github(
                 repo='AdeelH/pytorch-multi-class-focal-loss:1.1',
                 hubconf_dir=hubconf_dir,
-                tmp_dir=tmp_dir,
                 entrypoint='focal_loss',
                 alpha=[.75, .25],
                 gamma=2)
@@ -102,7 +101,6 @@ class TestTorchHubUtils(unittest.TestCase):
             loss = torch_hub_load_uri(
                 uri=hubconf_dir,
                 hubconf_dir=hubconf_dir,
-                tmp_dir=tmp_dir,
                 entrypoint='focal_loss',
                 alpha=[.75, .25],
                 gamma=2)
@@ -118,7 +116,6 @@ class TestTorchHubUtils(unittest.TestCase):
                 uri=
                 'https://github.com/AdeelH/pytorch-multi-class-focal-loss/archive/refs/tags/1.1.zip',  # noqa
                 hubconf_dir=hubconf_dir,
-                tmp_dir=tmp_dir,
                 entrypoint='focal_loss',
                 alpha=[.75, .25],
                 gamma=2)

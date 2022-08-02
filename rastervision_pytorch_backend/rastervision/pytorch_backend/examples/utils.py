@@ -166,20 +166,18 @@ def read_stac(uri: str, unzip_dir: Optional[str] = None) -> List[dict]:
     uri_path = Path(uri)
     is_zip = uri_path.suffix.lower() == '.zip'
 
-    with TemporaryDirectory() as tmp_dir:
-        catalog_path = download_if_needed(uri, tmp_dir)
-        if not is_zip:
-            return parse_stac(catalog_path)
-        if unzip_dir is None:
-            raise ValueError(
-                f'uri ("{uri}") is a zip file, but no unzip_dir provided.')
-        zip_path = catalog_path
-        unzip(zip_path, target_dir=unzip_dir)
-        catalog_paths = list(Path(unzip_dir).glob('**/catalog.json'))
-        if len(catalog_paths) == 0:
-            raise FileNotFoundError(f'Unable to find "catalog.json" in {uri}.')
-        elif len(catalog_paths) > 1:
-            raise Exception(f'More than one "catalog.json" found in '
-                            f'{uri}.')
-        catalog_path = str(catalog_paths[0])
+    catalog_path = download_if_needed(uri)
+    if not is_zip:
         return parse_stac(catalog_path)
+    if unzip_dir is None:
+        raise ValueError(
+            f'uri ("{uri}") is a zip file, but no unzip_dir provided.')
+    zip_path = catalog_path
+    unzip(zip_path, target_dir=unzip_dir)
+    catalog_paths = list(Path(unzip_dir).glob('**/catalog.json'))
+    if len(catalog_paths) == 0:
+        raise FileNotFoundError(f'Unable to find "catalog.json" in {uri}.')
+    elif len(catalog_paths) > 1:
+        raise Exception(f'More than one "catalog.json" found in ' f'{uri}.')
+    catalog_path = str(catalog_paths[0])
+    return parse_stac(catalog_path)

@@ -986,7 +986,7 @@ class ImageDataConfig(DataConfig):
 
         unzip_dir = join(unzip_dir, 'data', str(uuid.uuid4()))
         for i, zip_uri in enumerate(zip_uris):
-            zip_path = download_if_needed(zip_uri, unzip_dir)
+            zip_path = download_if_needed(zip_uri)
             data_dir = join(unzip_dir, str(i))
             data_dirs.append(data_dir)
             unzip(zip_path, data_dir)

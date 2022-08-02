@@ -62,11 +62,7 @@ def get_hubconf_dir_from_cfg(cfg, parent: Optional[str] = '') -> str:
     return path
 
 
-def torch_hub_load_github(repo: str,
-                          hubconf_dir: str,
-                          entrypoint: str,
-                          *args,
-                          tmp_dir: Optional[str] = None,
+def torch_hub_load_github(repo: str, hubconf_dir: str, entrypoint: str, *args,
                           **kwargs) -> Any:
     """Load an entrypoint from a github repo using torch.hub.load().
 
@@ -76,37 +72,25 @@ def torch_hub_load_github(repo: str,
             be saved to.
         entrypoint (str): Name of a callable present in hubconf.py.
         *args: Args to be passed to the entrypoint.
-        tmp_dir (Optional[str], optional): Where the repo will initially be
-            downloaded. If None, a temporary dir is used. Defaults to None.
         **kwargs: Keyword args to be passed to the entrypoint.
 
     Returns:
         Any: The output from calling the entrypoint.
     """
-    _tmp_dir = None
-    if tmp_dir is None:
-        _tmp_dir = TemporaryDirectory()
-        tmp_dir = _tmp_dir.name
-
-    torch.hub.set_dir(tmp_dir)
-
     # TODO: remove when no longer needed (#1271)
     patch_torch_hub()
 
     out = torch.hub.load(repo, entrypoint, *args, source='github', **kwargs)
 
-    orig_dir = join(tmp_dir, _repo_name_to_dir_name(repo))
+    orig_dir = join(torch.hub.get_dir(), _repo_name_to_dir_name(repo))
     _remove_dir(hubconf_dir)
     shutil.move(orig_dir, hubconf_dir)
-
-    if _tmp_dir is not None:
-        _tmp_dir.cleanup()
 
     return out
 
 
-def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
-                       tmp_dir: str, *args, **kwargs) -> Any:
+def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str, *args,
+                       **kwargs) -> Any:
     """Load an entrypoint from a uri.
 
     Load an entrypoint from:
@@ -123,8 +107,6 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
         hubconf_dir (str): The target directory where the contents from the uri
             will finally be saved to.
         entrypoint (str): Name of a callable present in hubconf.py.
-        tmp_dir (str): Directory where the zip file will be downloaded to and
-            initially extracted.
         *args: Args to be passed to the entrypoint.
         **kwargs: Keyword args to be passed to the entrypoint.
 
@@ -136,22 +118,21 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str,
     is_zip = uri_path.suffix.lower() == '.zip'
     if is_zip:
         # unzip
-        zip_path = download_if_needed(uri, tmp_dir)
-        unzip_dir = join(tmp_dir, uri_path.stem)
-        _remove_dir(unzip_dir)
-        unzip(zip_path, target_dir=unzip_dir)
-        unzipped_contents = list(glob(f'{unzip_dir}/*', recursive=False))
+        zip_path = download_if_needed(uri)
+        with TemporaryDirectory() as tmp_dir:
+            unzip_dir = join(tmp_dir, uri_path.stem)
+            _remove_dir(unzip_dir)
+            unzip(zip_path, target_dir=unzip_dir)
+            unzipped_contents = list(glob(f'{unzip_dir}/*', recursive=False))
 
-        _remove_dir(hubconf_dir)
+            _remove_dir(hubconf_dir)
 
-        # if the top level only contains a directory
-        if (len(unzipped_contents) == 1) and isdir(unzipped_contents[0]):
-            sub_dir = unzipped_contents[0]
-            shutil.move(sub_dir, hubconf_dir)
-        else:
-            shutil.move(unzip_dir, hubconf_dir)
-
-        _remove_dir(unzip_dir)
+            # if the top level only contains a directory
+            if (len(unzipped_contents) == 1) and isdir(unzipped_contents[0]):
+                sub_dir = unzipped_contents[0]
+                shutil.move(sub_dir, hubconf_dir)
+            else:
+                shutil.move(unzip_dir, hubconf_dir)
     # assume uri is local and attempt copying
     else:
         # only copy if needed

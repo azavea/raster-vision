@@ -965,7 +965,7 @@ class Learner(ABC):
                           cfg: Optional['LearnerConfig'] = None,
                           training: bool = False):
         """Create a Learner from a model bundle."""
-        model_bundle_path = download_if_needed(model_bundle_uri, tmp_dir)
+        model_bundle_path = download_if_needed(model_bundle_uri)
         model_bundle_dir = join(tmp_dir, 'model-bundle')
         unzip(model_bundle_path, model_bundle_dir)
 
@@ -1109,7 +1109,7 @@ class Learner(ABC):
 
     def load_weights(self, uri: str, **kwargs) -> None:
         """Load model weights from a file."""
-        weights_path = download_if_needed(uri, self.tmp_dir)
+        weights_path = download_if_needed(uri)
         self.model.load_state_dict(
             torch.load(weights_path, map_location=self.device), **kwargs)
 
