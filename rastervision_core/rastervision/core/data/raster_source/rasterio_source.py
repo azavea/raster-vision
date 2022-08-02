@@ -6,7 +6,6 @@ import subprocess
 from decimal import Decimal
 from tempfile import mkdtemp
 from typing import Optional, Tuple
-import shutil
 
 import numpy as np
 import rasterio
@@ -32,7 +31,7 @@ def build_vrt(vrt_path, image_paths):
 
 def download_and_build_vrt(image_uris, tmp_dir):
     log.info('Building VRT...')
-    image_paths = [download_if_needed(uri, tmp_dir) for uri in image_uris]
+    image_paths = [download_if_needed(uri) for uri in image_uris]
     image_path = os.path.join(tmp_dir, 'index.vrt')
     build_vrt(image_path, image_paths)
     return image_path
@@ -139,8 +138,7 @@ class RasterioSource(ActivateMixin, RasterSource):
                 Defaults to None i.e. no cropping.
         """
         self.uris = uris
-        self.tmp_dir = tmp_dir
-        self.image_tmp_dir = None
+        self.tmp_dir = mkdtemp() if tmp_dir is None else tmp_dir
         self.image_dataset = None
         self.x_shift = x_shift
         self.y_shift = y_shift
@@ -191,7 +189,7 @@ class RasterioSource(ActivateMixin, RasterSource):
             if self.allow_streaming:
                 return self.uris[0]
             else:
-                return download_if_needed(self.uris[0], tmp_dir)
+                return download_if_needed(self.uris[0])
         else:
             if self.allow_streaming:
                 return stream_and_build_vrt(self.uris, tmp_dir)
@@ -242,10 +240,7 @@ class RasterioSource(ActivateMixin, RasterSource):
         return chip
 
     def _activate(self):
-        # Download images to temporary directory and delete them when done.
-        if self.image_tmp_dir is None:
-            self.image_tmp_dir = mkdtemp(dir=self.tmp_dir)
-        self.imagery_path = self._download_data(self.image_tmp_dir)
+        self.imagery_path = self._download_data(self.tmp_dir)
         self.image_dataset = rasterio.open(self.imagery_path)
         self._set_crs_transformer()
 
@@ -265,9 +260,6 @@ class RasterioSource(ActivateMixin, RasterSource):
         if self.image_dataset is not None:
             self.image_dataset.close()
             self.image_dataset = None
-        if self.image_tmp_dir is not None:
-            shutil.rmtree(self.image_tmp_dir, ignore_errors=True)
-            self.image_tmp_dir = None
 
     def _get_shifted_window(self, window):
         do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
