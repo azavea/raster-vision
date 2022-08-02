@@ -195,7 +195,11 @@ class TestDownloadIfNeeded(unittest.TestCase):
 
         str_to_file(self.content_str, self.local_path)
         upload_or_copy(self.local_path, self.local_path)
+        # with download_dir
         local_path = download_if_needed(self.local_path, self.tmp_dir.name)
+        self.assertEqual(local_path, self.local_path)
+        # without download_dir
+        local_path = download_if_needed(self.local_path)
         self.assertEqual(local_path, self.local_path)
 
     def test_download_if_needed_s3(self):
@@ -204,7 +208,12 @@ class TestDownloadIfNeeded(unittest.TestCase):
 
         str_to_file(self.content_str, self.local_path)
         upload_or_copy(self.local_path, self.s3_path)
+        # with download_dir
         local_path = download_if_needed(self.s3_path, self.tmp_dir.name)
+        content_str = file_to_str(local_path)
+        self.assertEqual(self.content_str, content_str)
+        # without download_dir
+        local_path = download_if_needed(self.s3_path)
         content_str = file_to_str(local_path)
         self.assertEqual(self.content_str, content_str)
 
