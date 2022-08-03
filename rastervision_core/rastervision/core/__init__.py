@@ -1,5 +1,13 @@
 # flake8: noqa
 
+
+def register_plugin(registry):
+    registry.set_plugin_version('rastervision.core', 3)
+    registry.set_plugin_aliases('rastervision.core', ['rastervision2.core'])
+    from rastervision.core.cli import predict
+    registry.add_plugin_command(predict)
+
+
 import rastervision.pipeline
 from rastervision.core.box import *
 from rastervision.core.data_sample import *
@@ -13,10 +21,3 @@ import rastervision.core.backend
 import rastervision.core.data
 import rastervision.core.rv_pipeline
 import rastervision.core.evaluation
-
-
-def register_plugin(registry):
-    registry.set_plugin_version('rastervision.core', 3)
-    registry.set_plugin_aliases('rastervision.core', ['rastervision2.core'])
-    from rastervision.core.cli import predict
-    registry.add_plugin_command(predict)
