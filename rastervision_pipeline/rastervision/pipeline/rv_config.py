@@ -120,6 +120,12 @@ class RVConfig:
             log.debug('Temporary directory root is: {}'.format(
                 self.tmp_dir_root))
 
+    def get_cache_dir(self) -> TemporaryDirectory:
+        """Return the cache directory."""
+        cache_dir = os.path.join(self.tmp_dir_root, 'cache')
+        os.makedirs(cache_dir, exist_ok=True)
+        return cache_dir
+
     def set_everett_config(self,
                            profile: str = None,
                            rv_home: str = None,

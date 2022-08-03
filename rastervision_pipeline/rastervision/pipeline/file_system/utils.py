@@ -9,6 +9,7 @@ import json
 import zipfile
 from typing import Optional, List
 
+from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import FileSystem
 from rastervision.pipeline.file_system.local_file_system import make_dir
 
@@ -127,39 +128,48 @@ def start_sync(src_dir: str,
 
 
 def download_if_needed(uri: str,
-                       download_dir: str,
-                       fs: Optional[FileSystem] = None) -> str:
+                       download_dir: Optional[str] = None,
+                       fs: Optional[FileSystem] = None,
+                       use_cache: bool = True) -> str:
     """Download a file into a directory if it's remote.
 
     If uri is local, there is no need to download the file.
 
     Args:
-        uri: URI of file
-        download_dir: local directory to download file into
-        fs: if supplied, use fs instead of automatically chosen FileSystem for
-            uri
+        uri (str): URI of file to download.
+        download_dir (Optional[str], optional): Local directory to download
+            file into. If None, the file will be downloaded to
+            cache dir as defined by RVConfig. Defaults to None.
+        fs (Optional[FileSystem], optional): If provided, use fs instead of
+            the automatically chosen FileSystem for uri. Defaults to None.
+        use_cache (bool, optional): If False and the file is remote, download
+            it regardless of whether it exists in cache. Defaults to True.
 
     Returns:
-        path to local file
+        str: Path to local file.
 
     Raises:
         NotReadableError if URI cannot be read from
     """
-    if uri is None:
-        return None
+    if download_dir is None:
+        download_dir = rv_config.get_cache_dir()
 
     if not fs:
         fs = FileSystem.get_file_system(uri, 'r')
 
-    path = get_local_path(uri, download_dir, fs=fs)
-    make_dir(path, use_dirname=True)
+    local_path = get_local_path(uri, download_dir, fs=fs)
+    if local_path == uri:
+        return local_path
 
-    if path != uri:
-        log.info(f'Downloading {uri} to {path}')
+    if use_cache and file_exists(local_path, include_dir=False):
+        log.info(f'Using cached file {local_path}.')
+        return local_path
 
-    fs.copy_from(uri, path)
+    log.info(f'Downloading {uri} to {local_path}...')
+    make_dir(local_path, use_dirname=True)
+    fs.copy_from(uri, local_path)
 
-    return path
+    return local_path
 
 
 def download_or_copy(uri, target_dir, fs=None) -> str:
