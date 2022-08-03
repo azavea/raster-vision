@@ -1,4 +1,4 @@
-from typing import List, Type, TYPE_CHECKING, Optional, Callable
+from typing import Iterable, List, Type, TYPE_CHECKING, Optional, Callable
 import inspect
 from click import Command
 
@@ -215,13 +215,8 @@ class Registry():
             th_lineage.reverse()
             self.type_hint_to_lineage[type_hint] = th_lineage
 
-    def load_plugins(self):
-        """Discover all plugins and register their resources.
-
-        Import each Python module within the rastervision namespace package
-        and call the register_plugin function at its root (if it exists).
-        """
-        import importlib
+    def discover_plugins(self):
+        """Discover all raster vision plugins."""
         import pkgutil
         import rastervision
 
@@ -233,12 +228,28 @@ class Registry():
             # the name.
             return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + '.')
 
-        discovered_plugins = {
-            name: importlib.import_module(name)
-            for finder, name, ispkg in iter_namespace(rastervision)
-        }
+        discovered_plugins = [
+            name for _, name, _ in iter_namespace(rastervision)
+        ]
+        return discovered_plugins
 
-        for name, module in discovered_plugins.items():
+    def load_plugins(self,
+                     plugins_names: Optional[Iterable[str]] = None) -> None:
+        """Load plugins and register their resources.
+
+        Import each Python module within the rastervision namespace package
+        and call the register_plugin function at its root (if it exists).
+        """
+        import importlib
+
+        if plugins_names is None:
+            plugins_names = self.discover_plugins()
+
+        loaded_plugins = {
+            name: importlib.import_module(name)
+            for name in plugins_names
+        }
+        for name, module in loaded_plugins.items():
             register_plugin = getattr(module, 'register_plugin', None)
             if register_plugin:
                 register_plugin(self)
