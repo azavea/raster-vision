@@ -585,9 +585,12 @@ class DataConfig(Config):
         class_names = values.get('class_names')
         class_colors = values.get('class_colors')
         if class_colors is not None:
-            if len(class_colors) != len(class_names):
-                raise ConfigError('len(class_colors) != len(class_names)')
-        else:
+            if len(class_names) != len(class_colors):
+                raise ConfigError(f'len(class_names) ({len(class_names)}) != '
+                                  f'len(class_colors) ({len(class_colors)})\n'
+                                  f'class_names: {class_names}\n'
+                                  f'class_colors: {class_colors}')
+        elif len(class_names) > 0:
             values['class_colors'] = [color_to_triple() for _ in class_names]
         return values
 

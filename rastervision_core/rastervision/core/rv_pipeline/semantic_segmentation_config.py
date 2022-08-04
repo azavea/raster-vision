@@ -92,8 +92,8 @@ class SemanticSegmentationConfig(RVPipelineConfig):
         return SemanticSegmentation(self, tmp_dir)
 
     def update(self):
-        super().update()
         self.dataset.class_config.ensure_null_class()
+        super().update()
 
     def validate_config(self):
         super().validate_config()

@@ -55,7 +55,7 @@ class Config(BaseModel):
                 summary += '\n'
         return summary
 
-    def update(self):
+    def update(self, *args, **kwargs):
         """Update any fields before validation.
 
         Subclasses should override this to provide complex default behavior, for
