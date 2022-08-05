@@ -234,7 +234,7 @@ class Registry():
         return discovered_plugins
 
     def load_plugins(self,
-                     plugins_names: Optional[Iterable[str]] = None) -> None:
+                     plugin_names: Optional[Iterable[str]] = None) -> None:
         """Load plugins and register their resources.
 
         Import each Python module within the rastervision namespace package
@@ -242,14 +242,11 @@ class Registry():
         """
         import importlib
 
-        if plugins_names is None:
-            plugins_names = self.discover_plugins()
+        if plugin_names is None:
+            plugin_names = self.discover_plugins()
 
-        loaded_plugins = {
-            name: importlib.import_module(name)
-            for name in plugins_names
-        }
-        for name, module in loaded_plugins.items():
+        for name in plugin_names:
+            module = importlib.import_module(name)
             register_plugin = getattr(module, 'register_plugin', None)
             if register_plugin:
                 register_plugin(self)
