@@ -1,10 +1,9 @@
 # flake8: noqa
 
-import rastervision.pipeline
-from rastervision.aws_batch.aws_batch_runner import *
-
 
 def register_plugin(registry):
+    from rastervision.aws_batch.aws_batch_runner import (AWS_BATCH,
+                                                         AWSBatchRunner)
     registry.set_plugin_version('rastervision.aws_batch', 0)
     registry.set_plugin_aliases('rastervision.aws_batch',
                                 ['rastervision2.aws_batch'])
@@ -13,3 +12,7 @@ def register_plugin(registry):
         'gpu_job_queue', 'gpu_job_def', 'cpu_job_queue', 'cpu_job_def',
         'attempts'
     ])
+
+
+import rastervision.pipeline
+from rastervision.aws_batch.aws_batch_runner import *

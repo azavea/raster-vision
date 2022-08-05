@@ -1,5 +1,12 @@
 # flake8: noqa
 
+
+def register_plugin(registry):
+    # Can be used to manually update the registry. Useful
+    # for adding new FileSystems and Runners.
+    pass
+
+
 # Must import pipeline package first.
 import rastervision.pipeline
 
@@ -7,9 +14,3 @@ import rastervision.pipeline
 # get called.
 import rastervision.pipeline_example_plugin1.sample_pipeline
 import rastervision.pipeline_example_plugin1.sample_pipeline2
-
-
-def register_plugin(registry):
-    # Can be used to manually update the registry. Useful
-    # for adding new FileSystems and Runners.
-    pass
