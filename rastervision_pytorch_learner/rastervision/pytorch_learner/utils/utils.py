@@ -1,5 +1,4 @@
 from typing import Dict, Sequence, Tuple, Optional, Union, List, Iterable
-from tempfile import TemporaryDirectory
 from os.path import basename, join
 import logging
 
@@ -12,6 +11,7 @@ import albumentations as A
 from albumentations.core.transforms_interface import ImageOnlyTransform
 import cv2
 
+from rastervision.pipeline import rv_config
 from rastervision.pipeline.config import ConfigError
 
 log = logging.getLogger(__name__)
@@ -160,7 +160,7 @@ def deserialize_albumentation_transform(tf_dict: dict) -> A.BasicTransform:
     if lambda_transforms_path is not None:
         from rastervision.pipeline.file_system import download_if_needed
 
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             filename = basename(lambda_transforms_path)
             # download the transforms definition file into tmp_dir
             lambda_transforms_path = download_if_needed(

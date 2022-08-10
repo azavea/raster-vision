@@ -2,7 +2,6 @@ from typing import (Any, Callable, Optional, Sequence, Tuple, Iterable, List,
                     Dict, Union)
 from collections import defaultdict
 from os.path import join
-import tempfile
 from operator import iand
 from functools import reduce
 
@@ -16,6 +15,7 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import numpy as np
 
+from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
 
 
@@ -90,7 +90,7 @@ def compute_coco_eval(outputs, targets, num_class_ids):
             {'boxes': <tensor with shape (n, 4)>,
              'class_ids': <tensor with shape (n,)>}
     """
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    with rv_config.get_tmp_dir() as tmp_dir:
         preds = get_coco_preds(outputs)
         # ap is undefined when there are no predicted boxes
         if len(preds) == 0:

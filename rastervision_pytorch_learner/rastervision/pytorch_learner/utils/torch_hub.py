@@ -1,4 +1,3 @@
-from tempfile import TemporaryDirectory
 from typing import Any, Optional
 from pathlib import Path
 from os.path import join, isdir, realpath
@@ -7,6 +6,7 @@ from glob import glob
 
 import torch.hub
 
+from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import (download_if_needed, unzip)
 
 
@@ -119,7 +119,7 @@ def torch_hub_load_uri(uri: str, hubconf_dir: str, entrypoint: str, *args,
     if is_zip:
         # unzip
         zip_path = download_if_needed(uri)
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             unzip_dir = join(tmp_dir, uri_path.stem)
             _remove_dir(unzip_dir)
             unzip(zip_path, target_dir=unzip_dir)

@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 
+from rastervision.pipeline import rv_config
 from rastervision.pytorch_learner.dataset import (
     discover_images, load_image, make_image_folder_dataset, DatasetFolder)
 from rastervision.pytorch_backend.pytorch_learner_backend import write_chip
@@ -12,7 +13,7 @@ from rastervision.pytorch_backend.pytorch_learner_backend import write_chip
 
 class TestUtils(unittest.TestCase):
     def test_discover_images(self):
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             chip = np.random.randint(
                 0, 256, size=(100, 100, 3), dtype=np.uint8)
             path_1 = join(tmp_dir, 'test.png')
@@ -32,7 +33,7 @@ class TestUtils(unittest.TestCase):
             self.assertIn(Path(path_2), paths)
 
     def test_load_image(self):
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             chip = np.random.randint(0, 256, size=(100, 100), dtype=np.uint8)
             path = join(tmp_dir, '1.png')
             write_chip(chip, path)
@@ -52,7 +53,7 @@ class TestUtils(unittest.TestCase):
             np.testing.assert_array_equal(load_image(path), chip)
 
     def test_make_image_folder_dataset(self):
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             with TemporaryDirectory(dir=tmp_dir) as dir_a, TemporaryDirectory(
                     dir=tmp_dir) as dir_b:
                 chip = np.random.randint(

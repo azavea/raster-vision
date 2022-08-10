@@ -11,7 +11,6 @@ import shutil
 import logging
 from subprocess import Popen
 import numbers
-from tempfile import TemporaryDirectory
 
 import numpy as np
 from tqdm.auto import tqdm
@@ -23,6 +22,7 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
+from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, download_or_copy, sync_from_dir, get_local_path, unzip,
@@ -174,7 +174,7 @@ class Learner(ABC):
                 'cfg.model can only be None if a custom model is specified.')
 
         if tmp_dir is None:
-            self._tmp_dir = TemporaryDirectory()
+            self._tmp_dir = rv_config.get_tmp_dir()
             tmp_dir = self._tmp_dir.name
         self.tmp_dir = tmp_dir
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'

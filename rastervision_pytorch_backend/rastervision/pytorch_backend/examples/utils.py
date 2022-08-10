@@ -3,13 +3,13 @@ import csv
 from io import StringIO
 import os
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import rasterio
 from shapely.strtree import STRtree
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
 
+from rastervision.pipeline import rv_config
 from rastervision.core import Box
 from rastervision.core.data import (RasterioCRSTransformer,
                                     GeoJSONVectorSourceConfig)
@@ -42,7 +42,7 @@ def crop_image(image_uri, window, crop_uri):
     rasterio_window = window.rasterio_format()
     im = im_dataset.read(window=rasterio_window)
 
-    with TemporaryDirectory() as tmp_dir:
+    with rv_config.get_tmp_dir() as tmp_dir:
         crop_path = get_local_path(crop_uri, tmp_dir)
         make_dir(crop_path, use_dirname=True)
 

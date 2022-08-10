@@ -1,10 +1,10 @@
 from typing import Callable
 import unittest
-from tempfile import TemporaryDirectory
 
 import torch
 from torch import nn
 
+from rastervision.pipeline import rv_config
 from rastervision.pytorch_learner import (
     Backbone, ExternalModuleConfig, SemanticSegmentationModelConfig,
     ClassificationModelConfig, ObjectDetectionModelConfig)
@@ -33,7 +33,7 @@ class TestExternalModuleConfig(unittest.TestCase):
                           lambda: ExternalModuleConfig(**args))
 
     def test_build(self):
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             cfg = ExternalModuleConfig(
                 github_repo='AdeelH/pytorch-multi-class-focal-loss:1.1',
                 entrypoint='focal_loss',
