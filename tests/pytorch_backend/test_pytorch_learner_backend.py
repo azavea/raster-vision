@@ -1,10 +1,10 @@
 import unittest
 from os.path import join
-from tempfile import TemporaryDirectory
 
 import numpy as np
 from PIL import Image
 
+from rastervision.pipeline import rv_config
 from rastervision.pytorch_backend.pytorch_learner_backend import (
     get_image_ext, write_chip)
 
@@ -23,7 +23,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(get_image_ext(chip), 'npy')
 
     def test_write_chip(self):
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             chip = np.random.randint(0, 256, size=(100, 100, 3))
             path = join(tmp_dir, 'test.png')
             write_chip(chip, path)

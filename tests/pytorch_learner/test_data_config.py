@@ -1,6 +1,7 @@
 from typing import Callable
 import unittest
 
+from rastervision.pipeline import rv_config
 from rastervision.pytorch_learner import (
     DataConfig, ImageDataConfig, SemanticSegmentationDataConfig,
     SemanticSegmentationImageDataConfig, SemanticSegmentationGeoDataConfig,
@@ -170,7 +171,6 @@ class TestImageDataConfig(unittest.TestCase):
         self.assertNoError(lambda: ImageDataConfig(**args))
 
     def test_build_cc(self):
-        from tempfile import TemporaryDirectory
         import os
         from os.path import join
         import numpy as np
@@ -184,7 +184,7 @@ class TestImageDataConfig(unittest.TestCase):
         img_sz = 200
         nchannels = 3
         nchips = 5
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             # prepare data
             data_dir = join(tmp_dir, 'data')
             for split in ['train', 'valid']:
@@ -245,7 +245,6 @@ class TestImageDataConfig(unittest.TestCase):
             del test_ds
 
     def test_build_ss(self):
-        from tempfile import TemporaryDirectory
         import os
         from os.path import join
         import numpy as np
@@ -258,7 +257,7 @@ class TestImageDataConfig(unittest.TestCase):
         img_sz = 200
         nchannels = 3
         nchips = 5
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             # prepare data
             data_dir = join(tmp_dir, 'data')
             for split in ['train', 'valid']:
@@ -352,7 +351,6 @@ class TestGeoDataConfig(unittest.TestCase):
         self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
 
     def test_build_ss(self):
-        from tempfile import TemporaryDirectory
         from uuid import uuid4
         import numpy as np
         from rastervision.core.data import (
@@ -416,7 +414,7 @@ class TestGeoDataConfig(unittest.TestCase):
             class_colors=class_config.colors,
             img_sz=img_sz,
             num_workers=0)
-        with TemporaryDirectory() as tmp_dir:
+        with rv_config.get_tmp_dir() as tmp_dir:
             train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
             self.assertEqual(len(train_ds), 4 * (600 // chip_sz)**2)
             self.assertEqual(len(val_ds), 2 * (600 // chip_sz)**2)

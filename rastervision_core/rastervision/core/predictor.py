@@ -1,20 +1,19 @@
 from typing import TYPE_CHECKING, List, Optional
 from os.path import join
-import zipfile
 import logging
 
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.config import (build_config, upgrade_config)
 from rastervision.pipeline.file_system.utils import (download_if_needed,
-                                                     make_dir, file_to_json)
+                                                     file_to_json, unzip)
 from rastervision.core.data import (
     ChannelOrderError, SemanticSegmentationLabelStoreConfig,
     PolygonVectorOutputConfig, StatsTransformerConfig)
 from rastervision.core.analyzer import StatsAnalyzerConfig
 
 if TYPE_CHECKING:
-    from rastervision.core.rv_pipeline import RVPipelineConfig  # noqa
-    from rastervision.core.data import SceneConfig  # noqa
+    from rastervision.core.rv_pipeline import RVPipelineConfig
+    from rastervision.core.data import SceneConfig
 
 log = logging.getLogger(__name__)
 
@@ -45,11 +44,9 @@ class Predictor():
         self.update_stats = update_stats
         self.model_loaded = False
 
-        bundle_path = download_if_needed(model_bundle_uri, tmp_dir)
+        bundle_path = download_if_needed(model_bundle_uri)
         bundle_dir = join(tmp_dir, 'bundle')
-        make_dir(bundle_dir)
-        with zipfile.ZipFile(bundle_path, 'r') as bundle_zip:
-            bundle_zip.extractall(path=bundle_dir)
+        unzip(bundle_path, bundle_dir)
 
         config_path = join(bundle_dir, 'pipeline-config.json')
         config_dict = file_to_json(config_path)

@@ -1,8 +1,6 @@
 import os
 import unittest
-from unittest.mock import patch
 import datetime
-import gzip
 
 import boto3
 from moto import mock_s3
@@ -10,7 +8,7 @@ from moto import mock_s3
 from rastervision.pipeline.file_system import (
     file_to_str, str_to_file, download_if_needed, upload_or_copy, make_dir,
     get_local_path, file_exists, sync_from_dir, sync_to_dir, list_paths,
-    get_cached_file, NotReadableError, NotWritableError, FileSystem)
+    NotReadableError, NotWritableError, FileSystem)
 from rastervision.pipeline import rv_config
 
 LOREM = """ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
@@ -197,7 +195,11 @@ class TestDownloadIfNeeded(unittest.TestCase):
 
         str_to_file(self.content_str, self.local_path)
         upload_or_copy(self.local_path, self.local_path)
+        # with download_dir
         local_path = download_if_needed(self.local_path, self.tmp_dir.name)
+        self.assertEqual(local_path, self.local_path)
+        # without download_dir
+        local_path = download_if_needed(self.local_path)
         self.assertEqual(local_path, self.local_path)
 
     def test_download_if_needed_s3(self):
@@ -206,7 +208,12 @@ class TestDownloadIfNeeded(unittest.TestCase):
 
         str_to_file(self.content_str, self.local_path)
         upload_or_copy(self.local_path, self.s3_path)
+        # with download_dir
         local_path = download_if_needed(self.s3_path, self.tmp_dir.name)
+        content_str = file_to_str(local_path)
+        self.assertEqual(self.content_str, content_str)
+        # without download_dir
+        local_path = download_if_needed(self.s3_path)
         content_str = file_to_str(local_path)
         self.assertEqual(self.content_str, content_str)
 
@@ -454,64 +461,6 @@ class TestHttpMisc(unittest.TestCase):
         fs = FileSystem.get_file_system(uri, 'r')
         self.assertRaises(NotWritableError,
                           lambda: fs.write_bytes(uri, bytes([0x00, 0x01])))
-
-
-@mock_s3
-class TestGetCachedFile(unittest.TestCase):
-    def setUp(self):
-        # Setup mock S3 bucket.
-        self.s3 = boto3.client('s3')
-        self.bucket_name = 'mock_bucket'
-        self.s3.create_bucket(Bucket=self.bucket_name)
-
-        self.content_str = 'hello'
-        self.file_name = 'hello.txt'
-        self.tmp_dir = rv_config.get_tmp_dir()
-        self.cache_dir = os.path.join(self.tmp_dir.name, 'cache')
-
-    def tearDown(self):
-        self.tmp_dir.cleanup()
-
-    def test_local(self):
-        local_path = os.path.join(self.tmp_dir.name, self.file_name)
-        str_to_file(self.content_str, local_path)
-
-        path = get_cached_file(self.cache_dir, local_path)
-        self.assertTrue(os.path.isfile(path))
-
-    def test_local_zip(self):
-        local_path = os.path.join(self.tmp_dir.name, self.file_name)
-        local_gz_path = local_path + '.gz'
-        with gzip.open(local_gz_path, 'wb') as f:
-            f.write(bytes(self.content_str, encoding='utf-8'))
-
-        with patch('gzip.open', side_effect=gzip.open) as patched_gzip_open:
-            path = get_cached_file(self.cache_dir, local_gz_path)
-            self.assertTrue(os.path.isfile(path))
-            self.assertNotEqual(path, local_gz_path)
-            with open(path, 'r') as f:
-                self.assertEqual(f.read(), self.content_str)
-
-            # Check that calling it again doesn't invoke the gzip.open method again.
-            path = get_cached_file(self.cache_dir, local_gz_path)
-            self.assertTrue(os.path.isfile(path))
-            self.assertNotEqual(path, local_gz_path)
-            with open(path, 'r') as f:
-                self.assertEqual(f.read(), self.content_str)
-            self.assertEqual(patched_gzip_open.call_count, 1)
-
-    def test_remote(self):
-        with patch(
-                'rastervision.pipeline.file_system.utils.download_if_needed',
-                side_effect=download_if_needed) as patched_download:
-            s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
-            str_to_file(self.content_str, s3_path)
-            path = get_cached_file(self.cache_dir, s3_path)
-            self.assertTrue(os.path.isfile(path))
-
-            # Check that calling it again doesn't invoke the download method again.
-            self.assertTrue(os.path.isfile(path))
-            self.assertEqual(patched_download.call_count, 1)
 
 
 if __name__ == '__main__':
