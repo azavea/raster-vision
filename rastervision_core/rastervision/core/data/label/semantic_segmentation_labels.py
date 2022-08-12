@@ -252,12 +252,28 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
     def extent(self) -> Box:
         return self.local_extent
 
-    def _to_local_coords(self, window: Box) -> Tuple[int, int, int, int]:
-        """Convert to coordinates of the local arrays."""
+    def _to_local_coords(self, window: Union[Box, Tuple[int, int, int, int]]
+                         ) -> Tuple[int, int, int, int]:
+        """Convert window to extent coordinates.
+
+        Args:
+            window (Union[Box, Tuple[int, int, int, int]]): A rastervision
+                Box or a 4-tuple of (ymin, xmin, ymax, xmax).
+
+        Returns:
+            Tuple[int, int, int, int]: a 4-tuple of (ymin, xmin, ymax, xmax).
+        """
         ymin, xmin, ymax, xmax = window
-        ymax = min(ymax, self.height)
-        xmax = min(xmax, self.width)
-        return (ymin - self.ymin, xmin - self.xmin, ymax, xmax)
+        # convert to extent coords
+        ymin_local, xmin_local = ymin - self.ymin, xmin - self.xmin
+        ymax_local, xmax_local = ymax - self.ymin, xmax - self.xmin
+        # clip negative values to zero
+        ymin_local, xmin_local = max(0, ymin_local), max(0, xmin_local)
+        ymax_local, xmax_local = max(0, ymax_local), max(0, xmax_local)
+        # clip max values to array bounds
+        ymax_local = min(self.height, ymax_local)
+        xmax_local = min(self.width, xmax_local)
+        return ymin_local, xmin_local, ymax_local, xmax_local
 
     def __add__(self, other) -> 'SemanticSegmentationSmoothLabels':
         """Merge self with other labels by adding the pixel scores and hits.
