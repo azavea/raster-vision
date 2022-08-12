@@ -130,8 +130,11 @@ def get_config(runner,
         # Using with_rgb_class_map because label TIFFs have classes encoded as
         # RGB colors.
         label_source = SemanticSegmentationLabelSourceConfig(
-            rgb_class_config=class_config,
-            raster_source=RasterioSourceConfig(uris=[label_uri]))
+            raster_source=RasterioSourceConfig(
+                uris=[label_uri],
+                transformers=[
+                    RGBClassTransformerConfig(class_config=class_config)
+                ]))
 
         # URI will be injected by scene config.
         # Using rgb=True because we want prediction TIFFs to be in

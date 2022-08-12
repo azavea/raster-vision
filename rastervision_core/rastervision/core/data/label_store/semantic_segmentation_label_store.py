@@ -14,7 +14,7 @@ from rastervision.core.box import Box
 from rastervision.core.data import (CRSTransformer, ClassConfig)
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_store import LabelStore
-from rastervision.core.data.label_source import SegmentationClassTransformer
+from rastervision.core.data.raster_transformer import RGBClassTransformer
 from rastervision.core.data.raster_source import RasterioSourceConfig
 
 if TYPE_CHECKING:
@@ -90,7 +90,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         self.class_transformer = None
         if save_as_rgb:
-            self.class_transformer = SegmentationClassTransformer(class_config)
+            self.class_transformer = RGBClassTransformer(class_config)
 
         self.label_raster_source = None
         self.score_raster_source = None
