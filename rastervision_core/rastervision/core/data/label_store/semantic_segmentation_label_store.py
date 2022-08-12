@@ -156,7 +156,8 @@ class SemanticSegmentationLabelStore(LabelStore):
                 'or is not consistent with the current params.')
 
         extent = self.score_raster_source.get_extent()
-        score_arr = self.score_raster_source.get_chip(extent)
+        with self.score_raster_source.activate():
+            score_arr = self.score_raster_source.get_chip(extent)
         # (H, W, C) --> (C, H, W)
         score_arr = score_arr.transpose(2, 0, 1)
         try:
@@ -245,8 +246,10 @@ class SemanticSegmentationLabelStore(LabelStore):
                 for window in bar:
                     window, _ = self._clip_to_extent(self.extent, window)
                     score_arr = labels.get_score_arr(window)
-                    if self.smooth_as_uint8:
+                    if dtype == np.uint8:
                         score_arr = self._scores_to_uint8(score_arr)
+                    else:
+                        score_arr = score_arr.astype(dtype)
                     self._write_array(dataset, window, score_arr)
         # save pixel hits too
         np.save(hits_path, labels.pixel_hits)
