@@ -1,5 +1,7 @@
+from typing import Optional
 from pyproj import Transformer
 
+import rasterio as rio
 from rasterio.transform import (rowcol, xy)
 from rasterio import Affine
 
@@ -60,9 +62,11 @@ class RasterioCRSTransformer(CRSTransformer):
         return map_point
 
     @classmethod
-    def from_dataset(cls, dataset, map_crs='epsg:4326'):
+    def from_dataset(cls, dataset, map_crs: Optional[str] = 'epsg:4326'
+                     ) -> 'RasterioCRSTransformer':
         transform = dataset.transform
         image_crs = None if dataset.crs is None else dataset.crs.wkt
+        map_crs = image_crs if map_crs is None else map_crs
 
         no_crs_tf = (image_crs is None) or (image_crs == map_crs)
         no_affine_tf = (transform is None) or (transform == Affine.identity())
@@ -73,3 +77,9 @@ class RasterioCRSTransformer(CRSTransformer):
             transform = Affine.identity()
 
         return cls(transform, image_crs, map_crs)
+
+    @classmethod
+    def from_uri(cls, uri: str, map_crs: Optional[str] = 'epsg:4326'
+                 ) -> 'RasterioCRSTransformer':
+        with rio.open(uri) as ds:
+            return cls.from_dataset(ds, map_crs=map_crs)
