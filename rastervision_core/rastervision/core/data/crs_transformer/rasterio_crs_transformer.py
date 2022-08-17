@@ -33,6 +33,26 @@ class RasterioCRSTransformer(CRSTransformer):
 
         super().__init__(transform, image_crs, map_crs)
 
+    def __repr__(self) -> str:  # pragma: no cover
+        cls_name = type(self).__name__
+
+        image_crs_str = str(self.image_crs)
+        if len(image_crs_str) > 70:
+            image_crs_str = image_crs_str[:70] + '...'
+
+        map_crs_str = str(self.image_crs)
+        if len(map_crs_str) > 70:
+            map_crs_str = map_crs_str[:70] + '...'
+
+        transform_str = (
+            '\n\t\t' + (str(self.transform).replace('\n', '\n\t\t')))
+        out = f"""{cls_name}(
+            image_crs="{image_crs_str}",
+            map_crs="{map_crs_str}",
+            transform={transform_str})
+        """
+        return out
+
     def map_to_pixel(self, map_point):
         """Transform point from map to pixel-based coordinates.
 
