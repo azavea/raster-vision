@@ -33,7 +33,7 @@ def get_train_windows(scene: 'Scene',
     co = chip_options
     raster_source = scene.raster_source
     extent = raster_source.get_extent()
-    label_source = scene.ground_truth_label_source
+    label_source = scene.label_source
 
     def filter_windows(windows: Sequence[Box]) -> List[Box]:
         """Filter out chips that
@@ -123,7 +123,7 @@ class SemanticSegmentation(RVPipeline):
             chip_nodata_threshold=self.config.chip_nodata_threshold)
 
     def get_train_labels(self, window, scene):
-        return scene.ground_truth_label_source.get_labels(window=window)
+        return scene.label_source.get_labels(window=window)
 
     def post_process_sample(self, sample):
         # Use null label for each pixel with NODATA.

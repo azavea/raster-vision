@@ -62,8 +62,8 @@ class SceneConfig(Config):
         return Scene(
             self.id,
             raster_source,
-            ground_truth_label_source=label_source,
-            prediction_label_store=label_store,
+            label_source=label_source,
+            label_store=label_store,
             aoi_polygons=aoi_polygons)
 
     def update(self, pipeline=None):

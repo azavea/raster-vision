@@ -100,7 +100,7 @@ def make_neg_windows(raster_source,
 
 def get_train_windows(scene, chip_opts, chip_size, chip_nodata_threshold=1.):
     raster_source = scene.raster_source
-    label_store = scene.ground_truth_label_source
+    label_store = scene.label_source
 
     def filter_windows(windows):
         if scene.aoi_polygons:
@@ -151,8 +151,7 @@ class ObjectDetection(RVPipeline):
             chip_nodata_threshold=self.config.chip_nodata_threshold)
 
     def get_train_labels(self, window, scene):
-        window_labels = scene.ground_truth_label_source.get_labels(
-            window=window)
+        window_labels = scene.label_source.get_labels(window=window)
         return ObjectDetectionLabels.get_overlapping(
             window_labels,
             window,

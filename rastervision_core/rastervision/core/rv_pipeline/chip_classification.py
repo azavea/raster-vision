@@ -39,4 +39,4 @@ class ChipClassification(RVPipeline):
             chip_nodata_threshold=self.config.chip_nodata_threshold)
 
     def get_train_labels(self, window: Box, scene: Scene):
-        return scene.ground_truth_label_source.get_labels(window=window)
+        return scene.label_source.get_labels(window=window)
