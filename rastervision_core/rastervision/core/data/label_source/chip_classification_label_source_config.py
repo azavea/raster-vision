@@ -53,12 +53,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
-            self,
-            vector_source,
-            class_config,
-            crs_transformer,
-            extent=extent,
-            lazy=self.lazy)
+            self, vector_source, extent=extent, lazy=self.lazy)
 
     def update(self, pipeline=None, scene=None):
         super().update(pipeline, scene)

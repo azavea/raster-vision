@@ -166,8 +166,6 @@ class ChipClassificationLabelSource(LabelSource):
     def __init__(self,
                  label_source_config: 'ChipClassificationLabelSourceConfig',
                  vector_source: 'VectorSource',
-                 class_config: 'ClassConfig',
-                 crs_transformer: 'CRSTransformer',
                  extent: Optional[Box] = None,
                  lazy: bool = False):
         """Constructs a LabelSource for chip classification.
