@@ -53,7 +53,7 @@ def map_geoms(func: Callable, geojson: dict) -> dict:
         geom_out = mapping(geom_out)
         # new feature with updated geometry
         feature_out = geometry_to_feature(geom_out,
-                                          feature_in.get('properties'))
+                                          feature_in.get('properties', {}))
         return feature_out
 
     return map_features(feat_func, geojson)
@@ -135,7 +135,8 @@ def split_multi_geometries(geojson: dict) -> dict:
         geom = shape(f['geometry'])
         split_geoms = split_geom(geom)
         for g in split_geoms:
-            new_feature = geometry_to_feature(mapping(g), f.get('properties'))
+            new_feature = geometry_to_feature(
+                mapping(g), f.get('properties', {}))
             new_features.append(new_feature)
     return features_to_geojson(new_features)
 
