@@ -3,7 +3,8 @@ from os.path import join, dirname
 from rastervision.core.data import (
     ClassConfig, SemanticSegmentationLabelSourceConfig,
     SemanticSegmentationLabelStoreConfig, RasterioSourceConfig, SceneConfig,
-    PolygonVectorOutputConfig, DatasetConfig, BuildingVectorOutputConfig)
+    PolygonVectorOutputConfig, DatasetConfig, BuildingVectorOutputConfig,
+    RGBClassTransformerConfig)
 from rastervision.core.rv_pipeline import (SemanticSegmentationChipOptions,
                                            SemanticSegmentationWindowMethod,
                                            SemanticSegmentationConfig)
@@ -28,8 +29,11 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         raster_source = RasterioSourceConfig(
             channel_order=[0, 1, 2], uris=[img_path])
         label_source = SemanticSegmentationLabelSourceConfig(
-            rgb_class_config=class_config,
-            raster_source=RasterioSourceConfig(uris=[label_path]))
+            raster_source=RasterioSourceConfig(
+                uris=[label_path],
+                transformers=[
+                    RGBClassTransformerConfig(class_config=class_config)
+                ]))
         label_store = SemanticSegmentationLabelStoreConfig(
             rgb=True,
             vector_output=[

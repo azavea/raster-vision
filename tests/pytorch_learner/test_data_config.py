@@ -10,7 +10,8 @@ from rastervision.pytorch_learner import (
     ObjectDetectionImageDataConfig, data_config_upgrader,
     ss_data_config_upgrader, clf_data_config_upgrader,
     reg_data_config_upgrader, objdet_data_config_upgrader, GeoDataWindowConfig,
-    GeoDataWindowMethod, PlotOptions, ss_image_data_config_upgrader)
+    GeoDataWindowMethod, GeoDataConfig, PlotOptions,
+    ss_image_data_config_upgrader)
 from rastervision.pipeline.config import (ValidationError, build_config)
 from rastervision.core.data import DatasetConfig, ClassConfig
 
@@ -349,6 +350,17 @@ class TestGeoDataConfig(unittest.TestCase):
             h_lims=(10, 20),
             w_lims=None)
         self.assertRaises(ValidationError, lambda: GeoDataWindowConfig(**args))
+
+    def test_get_class_info_from_class_config_if_needed(self):
+        class_config = ClassConfig(names=['bg', 'fg'])
+        scene_dataset = DatasetConfig(
+            class_config=class_config, train_scenes=[], validation_scenes=[])
+        args = dict(scene_dataset=scene_dataset, window_opts={})
+        self.assertNoError(lambda: GeoDataConfig(**args))
+
+        cfg = GeoDataConfig(**args)
+        self.assertListEqual(cfg.class_names, class_config.names)
+        self.assertListEqual(cfg.class_colors, class_config.colors)
 
     def test_build_ss(self):
         from uuid import uuid4

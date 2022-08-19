@@ -4,20 +4,12 @@ import numpy as np
 
 from rastervision.core import Box
 from rastervision.core.data import (
-    ClassConfig, SemanticSegmentationLabelSource,
-    SemanticSegmentationLabelSourceConfig, RasterioSourceConfig)
+    ClassConfig, SemanticSegmentationLabelSource, RGBClassTransformer)
 from tests.core.data.mock_raster_source import MockRasterSource
 
 
 class TestSemanticSegmentationLabelSourceConfig(unittest.TestCase):
-    def test_rgb_class_config_null_class(self):
-        raster_source_cfg = RasterioSourceConfig(uris=['/abc/def.tif'])
-        rgb_class_config = ClassConfig(names=['a'], colors=['#010101'])
-        cfg = SemanticSegmentationLabelSourceConfig(
-            raster_source=raster_source_cfg, rgb_class_config=rgb_class_config)
-        cfg.update()
-        self.assertEqual(len(cfg.rgb_class_config), 2)
-        self.assertIn('null', cfg.rgb_class_config.names)
+    pass
 
 
 class TestSemanticSegmentationLabelSource(unittest.TestCase):
@@ -81,12 +73,17 @@ class TestSemanticSegmentationLabelSource(unittest.TestCase):
         data = np.zeros((10, 10, 3), dtype=np.uint8)
         data[7:, 7:, :] = [1, 1, 1]
         null_class_id = 2
-        raster_source = MockRasterSource([0, 1, 2], 3)
-        raster_source.set_raster(data)
         rgb_class_config = ClassConfig(names=['a'], colors=['#010101'])
         rgb_class_config.ensure_null_class()
-        label_source = SemanticSegmentationLabelSource(
-            raster_source, null_class_id, rgb_class_config=rgb_class_config)
+        raster_source = MockRasterSource(
+            [0, 1, 2],
+            3,
+            raster_transformers=[
+                RGBClassTransformer(class_config=rgb_class_config)
+            ])
+        raster_source.set_raster(data)
+        label_source = SemanticSegmentationLabelSource(raster_source,
+                                                       null_class_id)
         with label_source.activate():
             window = Box.make_square(7, 7, 3)
             labels = label_source.get_labels(window=window)

@@ -21,7 +21,8 @@ from rastervision.pipeline.config import (Config, register_config, ConfigError,
 from rastervision.pipeline.file_system import (list_paths, download_if_needed,
                                                unzip, file_exists,
                                                get_local_path, sync_from_dir)
-from rastervision.core.data import (Scene, DatasetConfig as SceneDatasetConfig)
+from rastervision.core.data import (ClassConfig, Scene, DatasetConfig as
+                                    SceneDatasetConfig)
 from rastervision.pytorch_learner.utils import (
     color_to_triple, validate_albumentation_transform, MinMaxNormalize,
     deserialize_albumentation_transform, get_hubconf_dir_from_cfg,
@@ -399,8 +400,10 @@ class SolverConfig(Config):
     def build_optimizer(self, model: nn.Module, **kwargs) -> optim.Optimizer:
         return optim.Adam(model.parameters(), lr=self.lr, **kwargs)
 
-    def build_step_scheduler(self, optimizer: optim.Optimizer,
+    def build_step_scheduler(self,
+                             optimizer: optim.Optimizer,
                              train_ds_sz: int,
+                             last_epoch: int = -1,
                              **kwargs) -> Optional[_LRScheduler]:
         """Returns an LR scheduler that changes the LR each step.
 
@@ -413,6 +416,7 @@ class SolverConfig(Config):
             total_steps = self.num_epochs * steps_per_epoch
             step_size_up = (self.num_epochs // 2) * steps_per_epoch
             step_size_down = total_steps - step_size_up
+            # Note that we don't pass in last_epoch here. See note below.
             scheduler = CyclicLR(
                 optimizer,
                 base_lr=self.lr / 10,
@@ -421,9 +425,17 @@ class SolverConfig(Config):
                 step_size_down=step_size_down,
                 cycle_momentum=kwargs.pop('cycle_momentum', False),
                 **kwargs)
+            # Note: We need this loop because trying to resume the scheduler by
+            # just passing last_epoch does not work. See:
+            # https://discuss.pytorch.org/t/a-problem-occured-when-resuming-an-optimizer/28822/2 # noqa
+            num_past_epochs = last_epoch + 1
+            for _ in range(num_past_epochs * steps_per_epoch):
+                scheduler.step()
         return scheduler
 
-    def build_epoch_scheduler(self, optimizer: optim.Optimizer,
+    def build_epoch_scheduler(self,
+                              optimizer: optim.Optimizer,
+                              last_epoch: int = -1,
                               **kwargs) -> Optional[_LRScheduler]:
         """Returns an LR scheduler tha changes the LR each epoch.
 
@@ -431,11 +443,18 @@ class SolverConfig(Config):
         """
         scheduler = None
         if self.multi_stage:
+            # Note that we don't pass in last_epoch here. See note below.
             scheduler = MultiStepLR(
                 optimizer,
                 milestones=self.multi_stage,
                 gamma=kwargs.pop('gamma', 0.1),
                 **kwargs)
+            # Note: We need this loop because trying to resume the scheduler by
+            # just passing last_epoch does not work. See:
+            # https://discuss.pytorch.org/t/a-problem-occured-when-resuming-an-optimizer/28822/2 # noqa
+            num_past_epochs = last_epoch + 1
+            for _ in range(num_past_epochs):
+                scheduler.step()
         return scheduler
 
 
@@ -1108,6 +1127,15 @@ class GeoDataConfig(DataConfig):
                     raise ConfigError(
                         f'Window config not found for scene {s.id}')
         return v
+
+    @root_validator(skip_on_failure=True)
+    def get_class_info_from_class_config_if_needed(cls, values: dict) -> dict:
+        if len(values['class_names']) == 0:
+            class_config: ClassConfig = values['scene_dataset'].class_config
+            class_config.update()
+            values['class_names'] = class_config.names
+            values['class_colors'] = class_config.colors
+        return values
 
     def build_scenes(self, tmp_dir: str
                      ) -> Tuple[List[Scene], List[Scene], List[Scene]]:

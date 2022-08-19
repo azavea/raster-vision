@@ -138,6 +138,28 @@ class TestSemanticSegmentationSmoothLabels(unittest.TestCase):
         label_arr = labels.get_label_arr(self.windows[2])
         np.testing.assert_array_equal(label_arr, exp_label_arr)
 
+    def test_to_local_coords(self):
+        extent = Box(100, 100, 200, 200)
+        labels = SemanticSegmentationSmoothLabels(extent=extent, num_classes=2)
+
+        # normal window
+        box_in = (120, 150, 170, 200)
+        box_out_expected = (20, 50, 70, 100)
+        box_out_actual = labels._to_local_coords(box_in)
+        self.assertTupleEqual(box_out_actual, box_out_expected)
+
+        # window completely outside the extent
+        box_in = (0, 0, 100, 100)
+        box_out_expected = (0, 0, 0, 0)
+        box_out_actual = labels._to_local_coords(box_in)
+        self.assertTupleEqual(box_out_actual, box_out_expected)
+
+        # window completely outside the extent
+        box_in = (200, 200, 300, 300)
+        box_out_expected = (100, 100, 100, 100)
+        box_out_actual = labels._to_local_coords(box_in)
+        self.assertTupleEqual(box_out_actual, box_out_expected)
+
 
 if __name__ == '__main__':
     unittest.main()

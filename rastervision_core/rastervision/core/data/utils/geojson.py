@@ -183,7 +183,8 @@ def simplify_polygons(geojson: dict) -> dict:
         return geom
 
     geojson_buffered = map_geoms(buffer_polygon, geojson)
-    geojson_split = split_multi_geometries(geojson_buffered)
+    geojson_cleaned = remove_empty_features(geojson_buffered)
+    geojson_split = split_multi_geometries(geojson_cleaned)
     return geojson_split
 
 

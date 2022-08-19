@@ -1,5 +1,7 @@
+from typing import Optional
 from pyproj import Transformer
 
+import rasterio as rio
 from rasterio.transform import (rowcol, xy)
 from rasterio import Affine
 
@@ -31,6 +33,26 @@ class RasterioCRSTransformer(CRSTransformer):
 
         super().__init__(transform, image_crs, map_crs)
 
+    def __repr__(self) -> str:  # pragma: no cover
+        cls_name = type(self).__name__
+
+        image_crs_str = str(self.image_crs)
+        if len(image_crs_str) > 70:
+            image_crs_str = image_crs_str[:70] + '...'
+
+        map_crs_str = str(self.image_crs)
+        if len(map_crs_str) > 70:
+            map_crs_str = map_crs_str[:70] + '...'
+
+        transform_str = (
+            '\n\t\t' + (str(self.transform).replace('\n', '\n\t\t')))
+        out = f"""{cls_name}(
+            image_crs="{image_crs_str}",
+            map_crs="{map_crs_str}",
+            transform={transform_str})
+        """
+        return out
+
     def map_to_pixel(self, map_point):
         """Transform point from map to pixel-based coordinates.
 
@@ -60,9 +82,11 @@ class RasterioCRSTransformer(CRSTransformer):
         return map_point
 
     @classmethod
-    def from_dataset(cls, dataset, map_crs='epsg:4326'):
+    def from_dataset(cls, dataset, map_crs: Optional[str] = 'epsg:4326'
+                     ) -> 'RasterioCRSTransformer':
         transform = dataset.transform
         image_crs = None if dataset.crs is None else dataset.crs.wkt
+        map_crs = image_crs if map_crs is None else map_crs
 
         no_crs_tf = (image_crs is None) or (image_crs == map_crs)
         no_affine_tf = (transform is None) or (transform == Affine.identity())
@@ -73,3 +97,9 @@ class RasterioCRSTransformer(CRSTransformer):
             transform = Affine.identity()
 
         return cls(transform, image_crs, map_crs)
+
+    @classmethod
+    def from_uri(cls, uri: str, map_crs: Optional[str] = 'epsg:4326'
+                 ) -> 'RasterioCRSTransformer':
+        with rio.open(uri) as ds:
+            return cls.from_dataset(ds, map_crs=map_crs)

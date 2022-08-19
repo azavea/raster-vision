@@ -6,6 +6,7 @@ import click
 import numpy as np
 import rasterio as rio
 
+from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import (get_local_path, make_dir,
                                                sync_to_dir, file_exists,
                                                str_to_file, upload_or_copy)
@@ -13,7 +14,7 @@ from rastervision.core.box import Box
 from rastervision.core.data import (CRSTransformer, ClassConfig)
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_store import LabelStore
-from rastervision.core.data.label_source import SegmentationClassTransformer
+from rastervision.core.data.raster_transformer import RGBClassTransformer
 from rastervision.core.data.raster_source import RasterioSourceConfig
 
 if TYPE_CHECKING:
@@ -36,7 +37,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             uri: str,
             extent: Box,
             crs_transformer: CRSTransformer,
-            tmp_dir: str,
+            tmp_dir: Optional[str] = None,
             vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
             class_config: ClassConfig = None,
             save_as_rgb: bool = False,
@@ -46,23 +47,25 @@ class SemanticSegmentationLabelStore(LabelStore):
         """Constructor.
 
         Args:
-            uri: (str) Path to directory where the predictions are/will be
+            uri (str): Path to directory where the predictions are/will be
                 stored. Smooth scores will be saved as "uri/scores.tif",
                 discrete labels will be stored as "uri/labels.tif", and vector
                 outputs will be saved in "uri/vector_outputs/".
-            extent: (Box) The extent of the scene.
-            crs_transformer: (CRSTransformer)
-            tmp_dir: (str) temp directory to use
-            vector_outputs: (Optional[Sequence[VectorOutputConfig]]) containing
+            extent (Box): The extent of the scene.
+            crs_transformer (CRSTransformer): CRS transformer for correctly
+                mapping from pixel coords to map coords.
+            tmp_dir (Optional[str], optional): Temporary directory to use. If
+                None, will be auto-generated. Defaults to None.
+            vector_outputs (Optional[Sequence[VectorOutputConfig]], optional): containing
                 vectorifiction configuration information. Defaults to None.
-            class_config: (ClassConfig) Class config.
-            save_as_rgb: (bool, optional) If True, Saves labels as an RGB
+            class_config (ClassConfig): Class config.
+            save_as_rgb (bool, optional): If True, Saves labels as an RGB
                 image, using the class-color mapping in the class_config.
                 Defaults to False.
-            smooth_output: (bool, optional) If True, expects labels to be
+            smooth_output (bool, optional): If True, expects labels to be
                 class scores and stores both scores and discrete labels.
                 Defaults to False.
-            smooth_as_uint8: (bool, optional) If True, stores smooth class
+            smooth_as_uint8 (bool, optional): If True, stores smooth class
                 scores as np.uint8 (0-255) values rather than as np.float32
                 discrete labels, to help save memory/disk space.
                 Defaults to False.
@@ -72,10 +75,14 @@ class SemanticSegmentationLabelStore(LabelStore):
         self.score_uri = join(uri, 'scores.tif')
         self.hits_uri = join(uri, 'pixel_hits.npy')
 
+        self.tmp_dir = tmp_dir
+        if self.tmp_dir is None:
+            self._tmp_dir = rv_config.get_tmp_dir()
+            self.tmp_dir = self._tmp_dir.name
+
         self.vector_outputs = vector_outputs
         self.extent = extent
         self.crs_transformer = crs_transformer
-        self.tmp_dir = tmp_dir
         self.class_config = class_config
         self.smooth_output = smooth_output
         self.smooth_as_uint8 = smooth_as_uint8
@@ -83,7 +90,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         self.class_transformer = None
         if save_as_rgb:
-            self.class_transformer = SegmentationClassTransformer(class_config)
+            self.class_transformer = RGBClassTransformer(class_config)
 
         self.label_raster_source = None
         self.score_raster_source = None
@@ -103,6 +110,9 @@ class SemanticSegmentationLabelStore(LabelStore):
 
                 if extents_equal and bands_equal and dtypes_equal:
                     self.score_raster_source = raster_source
+                else:
+                    raise FileExistsError(f'{self.score_uri} already exists '
+                                          'and is incompatible.')
 
     def _subcomponents_to_activate(self):
         components = []
@@ -156,7 +166,8 @@ class SemanticSegmentationLabelStore(LabelStore):
                 'or is not consistent with the current params.')
 
         extent = self.score_raster_source.get_extent()
-        score_arr = self.score_raster_source.get_chip(extent)
+        with self.score_raster_source.activate():
+            score_arr = self.score_raster_source.get_chip(extent)
         # (H, W, C) --> (C, H, W)
         score_arr = score_arr.transpose(2, 0, 1)
         try:
@@ -245,8 +256,10 @@ class SemanticSegmentationLabelStore(LabelStore):
                 for window in bar:
                     window, _ = self._clip_to_extent(self.extent, window)
                     score_arr = labels.get_score_arr(window)
-                    if self.smooth_as_uint8:
+                    if dtype == np.uint8:
                         score_arr = self._scores_to_uint8(score_arr)
+                    else:
+                        score_arr = score_arr.astype(dtype)
                     self._write_array(dataset, window, score_arr)
         # save pixel hits too
         np.save(hits_path, labels.pixel_hits)
