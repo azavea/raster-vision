@@ -4,7 +4,7 @@ numpy<1.22
 pillow==8.4.*
 torch==1.11.*
 torchvision==0.12.*
-tensorboard==2.5.*
+tensorboard==2.10.*
 albumentations==1.2.*
 cython==0.29.*
 pycocotools==2.0.*
