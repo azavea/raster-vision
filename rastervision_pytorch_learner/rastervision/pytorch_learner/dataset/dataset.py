@@ -126,6 +126,10 @@ class GeoDataset(AlbumentationsDataset):
     def __len__(self):
         raise NotImplementedError()
 
+    @classmethod
+    def from_uris(cls, *args, **kwargs):
+        raise NotImplementedError()
+
 
 T = TypeVar('T')
 

@@ -1,8 +1,10 @@
 from typing import (TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List,
-                    Optional)
+                    Optional, Union)
 
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
+
+from rastervision.core.data.utils.misc import listify_uris
 
 if TYPE_CHECKING:
     from rastervision.core.data.crs_transformer import CRSTransformer
@@ -234,3 +236,20 @@ def all_geoms_valid(geojson: dict):
     """Check if there are any invalid geometries in the GeoJSON."""
     geoms = geojson_to_geoms(geojson)
     return all(g.is_valid for g in geoms)
+
+
+def get_polygons_from_uris(
+        uris: Union[str, List[str]],
+        crs_transformer: 'CRSTransformer') -> List['BaseGeometry']:
+    """Load and return polygons (in pixel coords) from one or more URIs."""
+
+    # use local imports to avoid circular import problems
+    from rastervision.core.data import GeoJSONVectorSource
+
+    polygons = []
+    uris = listify_uris(uris)
+    for uri in uris:
+        source = GeoJSONVectorSource(
+            uri=uri, ignore_crs_field=True, crs_transformer=crs_transformer)
+        polygons += source.get_geoms()
+    return polygons
