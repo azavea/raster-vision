@@ -180,6 +180,7 @@ class ChipClassificationLabelSource(LabelSource):
         """
         self.cfg = label_source_config
         self.geojson = vector_source.get_geojson()
+        self.validate_geojson(self.geojson)
         self.extent = extent
         self.str_tree = None
 
@@ -264,3 +265,16 @@ class ChipClassificationLabelSource(LabelSource):
         label = self.infer_cell(cell=window)
         self.labels.set_cell(window, label)
         return label
+
+    def validate_geojson(self, geojson: dict) -> None:
+        for f in geojson['features']:
+            geom_type = f.get('geometry', {}).get('type', '')
+            if 'Point' in geom_type or 'LineString' in geom_type:
+                raise ValueError(
+                    'LineStrings and Points are not supported '
+                    'in ChipClassificationLabelSource. Use BufferTransformer '
+                    'to buffer them into Polygons.')
+        for f in geojson['features']:
+            if f.get('properties', {}).get('class_id') is None:
+                raise ValueError('All GeoJSON features must have a class_id '
+                                 'field in their properties.')

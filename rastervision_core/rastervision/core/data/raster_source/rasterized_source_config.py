@@ -1,6 +1,6 @@
 from rastervision.core.data.raster_source import (RasterizedSource)
 from rastervision.core.data.vector_source import (VectorSourceConfig)
-from rastervision.pipeline.config import register_config, Config, Field, ConfigError
+from rastervision.pipeline.config import register_config, Config, Field
 
 
 @register_config('rasterizer')
@@ -29,9 +29,3 @@ class RasterizedSourceConfig(Config):
 
         return RasterizedSource(vector_source, self.rasterizer_config, extent,
                                 crs_transformer)
-
-    def validate_config(self):
-        if self.vector_source.has_null_class_bufs():
-            raise ConfigError(
-                'Setting buffer to None for a class in the vector_source is '
-                'not allowed for RasterizedSourceConfig.')
