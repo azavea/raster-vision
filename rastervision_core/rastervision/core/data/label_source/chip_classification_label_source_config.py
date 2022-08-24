@@ -8,7 +8,16 @@ from rastervision.core.data.vector_transformer import (
     ClassInferenceTransformerConfig, BufferTransformerConfig)
 
 
-@register_config('chip_classification_label_source')
+def cc_label_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version < 5:
+        # made non-optional in version 5
+        cfg_dict['ioa_thresh'] = cfg_dict.get('ioa_thresh', 0.5)
+    return cfg_dict
+
+
+@register_config(
+    'chip_classification_label_source',
+    upgrader=cc_label_source_config_upgrader)
 class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     """Config for a source of labels for chip classification.
 
@@ -16,8 +25,8 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     inferred from arbitrary polygons.
     """
     vector_source: VectorSourceConfig
-    ioa_thresh: Optional[float] = Field(
-        None,
+    ioa_thresh: float = Field(
+        0.5,
         description=
         ('Minimum IOA of a polygon and cell for that polygon to be a candidate for '
          'setting the class_id.'))
