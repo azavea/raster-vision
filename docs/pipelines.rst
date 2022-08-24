@@ -191,7 +191,9 @@ In our ``tiny_spacenet.py`` example, we configured the one training scene with a
         raster_source = RasterioSourceConfig(
             uris=[image_uri], channel_order=channel_order)
         vector_source = GeoJSONVectorSourceConfig(
-            uri=label_uri, default_class_id=0, ignore_crs_field=True)
+            uri=label_uri,
+            ignore_crs_field=True,
+            transformers=[ClassInferenceTransformerConfig(default_class_id=0)])
         label_source = SemanticSegmentationLabelSourceConfig(
             raster_source=RasterizedSourceConfig(
                 vector_source=vector_source,

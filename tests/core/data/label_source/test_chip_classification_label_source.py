@@ -198,8 +198,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None),
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri),
             ioa_thresh=0.5,
             use_intersection_over_cell=False,
             pick_min_class_id=False,
@@ -226,8 +225,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 2)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -244,8 +242,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -262,8 +259,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()

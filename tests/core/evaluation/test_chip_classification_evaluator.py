@@ -17,8 +17,7 @@ class TestChipClassificationEvaluator(unittest.TestCase):
 
         label_source_uri = data_file_path('evaluator/cc-label-filtered.json')
         label_source_cfg = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=label_source_uri, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=label_source_uri))
 
         label_store_uri = data_file_path('evaluator/cc-label-full.json')
         label_store_cfg = ChipClassificationGeoJSONStoreConfig(

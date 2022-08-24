@@ -12,7 +12,8 @@ from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     SubRasterSourceConfig, ReclassTransformerConfig, SceneConfig,
-    ChipClassificationLabelSourceConfig, GeoJSONVectorSourceConfig)
+    ChipClassificationLabelSourceConfig, GeoJSONVectorSourceConfig,
+    ClassInferenceTransformerConfig)
 from rastervision.core.rv_pipeline import ChipClassificationConfig
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
 from rastervision.pytorch_learner import (
@@ -58,7 +59,10 @@ def make_scene(num_channels: int, num_classes: int,
     uri = join(tmp_dir, 'labels.json')
     json_to_file(geojson, uri)
     label_source_cfg = ChipClassificationLabelSourceConfig(
-        vector_source=GeoJSONVectorSourceConfig(uri=uri, default_class_id=0),
+        vector_source=GeoJSONVectorSourceConfig(
+            uri=uri,
+            transformers=[ClassInferenceTransformerConfig(default_class_id=0)
+                          ]),
         background_class_id=0)
     scene_cfg = SceneConfig(
         id=str(uuid4()),

@@ -10,7 +10,8 @@ from rastervision.pipeline import rv_config
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     SubRasterSourceConfig, ReclassTransformerConfig, SceneConfig,
-    ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig)
+    ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig,
+    ClassInferenceTransformerConfig)
 from rastervision.core.rv_pipeline import ObjectDetectionConfig
 from rastervision.pytorch_backend import PyTorchObjectDetectionConfig
 from rastervision.pytorch_learner import (
@@ -41,7 +42,9 @@ def make_scene(num_channels: int, num_classes: int,
 
     label_source_cfg = ObjectDetectionLabelSourceConfig(
         vector_source=GeoJSONVectorSourceConfig(
-            uri=data_file_path('bboxes.geojson'), default_class_id=0))
+            uri=data_file_path('bboxes.geojson'),
+            transformers=[ClassInferenceTransformerConfig(
+                default_class_id=0)]))
     scene_cfg = SceneConfig(
         id=str(uuid4()),
         raster_source=rs_cfg_img,

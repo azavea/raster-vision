@@ -103,9 +103,12 @@ def build_scene(spacenet_cfg: SpacenetConfig,
     # Set a line buffer to convert line strings to polygons.
     vector_source = GeoJSONVectorSourceConfig(
         uri=label_uri,
-        default_class_id=0,
         ignore_crs_field=True,
-        line_bufs={0: 15})
+        transformers=[
+            ClassInferenceTransformerConfig(default_class_id=0),
+            BufferTransformerConfig(
+                geom_type='LineString', class_bufs={0: 15})
+        ])
     label_source = SemanticSegmentationLabelSourceConfig(
         raster_source=RasterizedSourceConfig(
             vector_source=vector_source,

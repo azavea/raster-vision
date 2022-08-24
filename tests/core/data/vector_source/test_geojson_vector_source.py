@@ -3,8 +3,9 @@ import os
 
 from shapely.geometry import shape
 
-from rastervision.core.data import (GeoJSONVectorSourceConfig, ClassConfig,
-                                    IdentityCRSTransformer)
+from rastervision.core.data import (
+    GeoJSONVectorSourceConfig, ClassConfig, IdentityCRSTransformer,
+    ClassInferenceTransformerConfig, BufferTransformerConfig)
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.pipeline import rv_config
 
@@ -21,69 +22,39 @@ class TestGeoJSONVectorSource(unittest.TestCase):
     def tearDown(self):
         self.tmp_dir.cleanup()
 
-    def _test_class_inf(self, props, exp_class_ids, default_class_id=None):
-        geojson = {
-            'type':
-            'FeatureCollection',
-            'features': [{
-                'properties': props,
-                'geometry': {
-                    'type': 'Point',
-                    'coordinates': [1, 1]
-                }
-            }]
-        }
-        json_to_file(geojson, self.uri)
-
-        class_config = ClassConfig(names=['building', 'car', 'tree'])
-        class_id_to_filter = {
-            0: ['==', 'type', 'building'],
-            1: ['any', ['==', 'type', 'car'], ['==', 'type', 'auto']]
-        }
-        vs_cfg = GeoJSONVectorSourceConfig(
-            uri=self.uri,
-            class_id_to_filter=class_id_to_filter,
-            default_class_id=default_class_id)
-        vs = vs_cfg.build(class_config, IdentityCRSTransformer())
-        trans_geojson = vs.get_geojson()
-        class_ids = [
-            f['properties']['class_id'] for f in trans_geojson['features']
-        ]
-        self.assertEqual(class_ids, exp_class_ids)
-
-    def test_class_inf_class_id(self):
-        self._test_class_inf({'class_id': 2}, [2])
-
-    def test_class_inf_label(self):
-        self._test_class_inf({'label': 'car'}, [1])
-
-    def test_class_inf_filter(self):
-        self._test_class_inf({'type': 'auto'}, [1])
-
-    def test_class_inf_default(self):
-        self._test_class_inf({}, [3], default_class_id=3)
-
-    def test_class_inf_no_default(self):
-        self._test_class_inf({}, [])
-
     def geom_to_geojson(self, geom):
         return {'type': 'FeatureCollection', 'features': [{'geometry': geom}]}
 
     def transform_geojson(self,
                           geojson,
-                          line_bufs=None,
-                          point_bufs=None,
+                          line_bufs={},
+                          point_bufs={},
                           crs_transformer=None,
                           to_map_coords=False):
         if crs_transformer is None:
             crs_transformer = IdentityCRSTransformer()
         class_config = ClassConfig(names=['building'])
         json_to_file(geojson, self.uri)
+        buf_tfs = []
+        if line_bufs is not None:
+            tf = BufferTransformerConfig(
+                geom_type='LineString', class_bufs=line_bufs)
+            buf_tfs.append(tf)
+        if point_bufs is not None:
+            tf = BufferTransformerConfig(
+                geom_type='Point', class_bufs=point_bufs)
+            buf_tfs.append(tf)
+        vector_transformers = (
+            [ClassInferenceTransformerConfig(default_class_id=0)] + buf_tfs)
         cfg = GeoJSONVectorSourceConfig(
             uri=self.uri,
-            line_bufs=line_bufs,
-            point_bufs=point_bufs,
-            default_class_id=0)
+            transformers=[
+                ClassInferenceTransformerConfig(default_class_id=0),
+                BufferTransformerConfig(
+                    geom_type='LineString', class_bufs=line_bufs),
+                BufferTransformerConfig(
+                    geom_type='Point', class_bufs=point_bufs)
+            ])
         source = cfg.build(class_config, crs_transformer)
         return source.get_geojson(to_map_coords=to_map_coords)
 

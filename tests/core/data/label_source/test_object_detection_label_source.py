@@ -74,8 +74,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
 
     def test_read_without_extent(self):
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.file_path, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
         extent = None
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
@@ -92,8 +91,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         # Extent only includes the first box.
         extent = Box.make_square(0, 0, 3)
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.file_path, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -108,8 +106,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         # Extent includes both boxes, but clips the second.
         extent = Box.make_square(0, 0, 3.9)
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.file_path, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
