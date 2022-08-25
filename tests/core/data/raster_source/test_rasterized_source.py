@@ -4,12 +4,29 @@ from os.path import join
 import numpy as np
 
 from rastervision.core import Box
-from rastervision.core.data import (IdentityCRSTransformer,
-                                    RasterizedSourceConfig, RasterizerConfig,
-                                    GeoJSONVectorSourceConfig, ClassConfig)
+from rastervision.core.data import (
+    IdentityCRSTransformer, RasterizedSourceConfig, RasterizerConfig,
+    GeoJSONVectorSourceConfig, ClassConfig, ClassInferenceTransformerConfig,
+    BufferTransformerConfig)
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.pipeline.config import ConfigError
 from rastervision.pipeline import rv_config
+
+from tests import data_file_path
+
+
+class TestRasterizedSourceConfig(unittest.TestCase):
+    def test_ensure_required_transformers(self):
+        uri = data_file_path('bboxes.geojson')
+        cfg = RasterizedSourceConfig(
+            vector_source=GeoJSONVectorSourceConfig(uri=uri),
+            rasterizer_config=RasterizerConfig(background_class_id=0))
+        tfs = cfg.vector_source.transformers
+        has_inf_tf = any(
+            isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
+        has_buf_tf = any(isinstance(tf, BufferTransformerConfig) for tf in tfs)
+        self.assertTrue(has_inf_tf)
+        self.assertTrue(has_buf_tf)
 
 
 class TestRasterizedSource(unittest.TestCase):

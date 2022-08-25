@@ -3,14 +3,29 @@ import os
 
 import numpy as np
 
-from rastervision.core.data import (ObjectDetectionLabelSourceConfig,
-                                    GeoJSONVectorSourceConfig,
-                                    ObjectDetectionLabels, ClassConfig)
+from rastervision.core.data import (
+    ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig,
+    ObjectDetectionLabels, ClassConfig, ClassInferenceTransformerConfig,
+    BufferTransformerConfig)
 from rastervision.core import Box
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
 
+from tests import data_file_path
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
+
+
+class TestObjectDetectionLabelSourceConfig(unittest.TestCase):
+    def test_ensure_required_transformers(self):
+        uri = data_file_path('bboxes.geojson')
+        cfg = ObjectDetectionLabelSourceConfig(
+            vector_source=GeoJSONVectorSourceConfig(uri=uri))
+        tfs = cfg.vector_source.transformers
+        has_inf_tf = any(
+            isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
+        has_buf_tf = any(isinstance(tf, BufferTransformerConfig) for tf in tfs)
+        self.assertTrue(has_inf_tf)
+        self.assertTrue(has_buf_tf)
 
 
 class TestObjectDetectionLabelSource(unittest.TestCase):

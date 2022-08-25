@@ -3,7 +3,9 @@ from typing import Optional
 from rastervision.core.data.vector_source import (VectorSourceConfig)
 from rastervision.core.data.label_source import (LabelSourceConfig,
                                                  ChipClassificationLabelSource)
-from rastervision.pipeline.config import register_config, Field
+from rastervision.pipeline.config import register_config, Field, validator
+from rastervision.core.data.vector_transformer import (
+    ClassInferenceTransformerConfig, BufferTransformerConfig)
 
 
 @register_config('chip_classification_label_source')
@@ -49,6 +51,28 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         False,
         description='If True, labels will not be populated automatically '
         'during initialization of the label source.')
+
+    @validator('vector_source')
+    def ensure_required_transformers(
+            cls, v: VectorSourceConfig) -> VectorSourceConfig:
+        """Add class-inference and buffer transformers if absent."""
+        tfs = v.transformers
+
+        # add class inference transformer
+        has_inf_tf = any(
+            isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
+        if not has_inf_tf:
+            tfs += [ClassInferenceTransformerConfig(default_class_id=None)]
+
+        # add buffer transformers
+        has_buf_tf = any(isinstance(tf, BufferTransformerConfig) for tf in tfs)
+        if not has_buf_tf:
+            tfs += [
+                BufferTransformerConfig(geom_type='Point', default_buf=1),
+                BufferTransformerConfig(geom_type='LineString', default_buf=1)
+            ]
+
+        return v
 
     def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
         vector_source = self.vector_source.build(class_config, crs_transformer)
