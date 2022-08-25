@@ -3,18 +3,25 @@ from rastervision.pipeline.file_system import file_to_json
 
 
 class GeoJSONVectorSource(VectorSource):
-    def __init__(self, geojson_vs_config, class_config, crs_transformer):
-        super().__init__(geojson_vs_config, class_config, crs_transformer)
+    def __init__(self,
+                 uri: str,
+                 *args,
+                 ignore_crs_field: bool = False,
+                 **kwargs):
+        self.uri = uri
+        self.ignore_crs_field = ignore_crs_field
+        super().__init__(*args, **kwargs)
 
     def _get_geojson(self):
-        geojson = file_to_json(self.vs_config.uri)
-        if not self.vs_config.ignore_crs_field and 'crs' in geojson:
-            raise Exception((
-                'The GeoJSON file at {} contains a CRS field which is not '
-                'allowed by the current GeoJSON standard or by Raster Vision. '
-                'All coordinates are expected to be in EPSG:4326 CRS. If the file uses '
-                'EPSG:4326 (ie. lat/lng on the WGS84 reference ellipsoid) and you would '
-                'like to ignore the CRS field, set ignore_crs_field=True in '
-                'GeoJSONVectorSourceConfig.').format(self.vs_config.uri))
+        geojson = file_to_json(self.uri)
+        if not self.ignore_crs_field and 'crs' in geojson:
+            raise Exception(
+                f'The GeoJSON file at {self.uri} contains a CRS field which '
+                'is not allowed by the current GeoJSON standard or by '
+                'Raster Vision. All coordinates are expected to be in '
+                'EPSG:4326 CRS. If the file uses EPSG:4326 (ie. lat/lng on '
+                'the WGS84 reference ellipsoid) and you would like to ignore '
+                'the CRS field, set ignore_crs_field=True in '
+                'GeoJSONVectorSourceConfig.')
 
-        return self.class_inference.transform_geojson(geojson)
+        return geojson

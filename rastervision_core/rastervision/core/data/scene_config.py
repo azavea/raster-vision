@@ -7,7 +7,6 @@ from rastervision.core.data.label_source import LabelSourceConfig
 from rastervision.core.data.label_store import LabelStoreConfig
 from rastervision.core.data.scene import Scene
 from rastervision.core.data.vector_source import GeoJSONVectorSource
-from rastervision.core.data.utils import geojson_to_geoms
 
 
 def scene_config_upgrader(cfg_dict: dict, version: int) -> dict:
@@ -55,11 +54,10 @@ class SceneConfig(Config):
         aoi_polygons = []
         if self.aoi_uris is not None:
             for uri in self.aoi_uris:
-                aoi_geojson = GeoJSONVectorSource(
+                aoi_polygons += GeoJSONVectorSource(
                     uri=uri,
                     ignore_crs_field=True,
-                    crs_transformer=crs_transformer).get_geojson()
-                aoi_polygons += list(geojson_to_geoms(aoi_geojson))
+                    crs_transformer=crs_transformer).get_geoms()
 
         return Scene(
             self.id,
