@@ -3,7 +3,6 @@
 
 [![Pypi](https://img.shields.io/pypi/v/rastervision.svg)](https://pypi.org/project/rastervision/)
 [![Docker Repository on Quay](https://quay.io/repository/azavea/raster-vision/status "Docker Repository on Quay")](https://quay.io/repository/azavea/raster-vision)
-[![Join the chat at https://gitter.im/azavea/raster-vision](https://badges.gitter.im/azavea/raster-vision.svg)](https://gitter.im/azavea/raster-vision?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://github.com/azavea/raster-vision/actions/workflows/release.yml/badge.svg)](https://github.com/azavea/raster-vision/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/azavea/raster-vision/branch/master/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
@@ -128,8 +127,8 @@ See the [Quickstart](https://docs.rastervision.io/en/0.13/quickstart.html) for a
 
 ### Contact and Support
 
-You can find more information and talk to developers (let us know what you're working on!) at:
-* [Gitter](https://gitter.im/azavea/raster-vision)
+You can ask questions and talk to developers (let us know what you're working on!) at:
+* [Discussion Forum](https://github.com/azavea/raster-vision/discussions)
 * [Mailing List](https://groups.google.com/forum/#!forum/raster-vision)
 
 ### Contributing
