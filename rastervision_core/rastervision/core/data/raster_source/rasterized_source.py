@@ -7,7 +7,6 @@ from shapely.geometry import shape
 from shapely.strtree import STRtree
 from shapely.ops import transform
 
-from rastervision.core.data import (ActivateMixin, ActivationError)
 from rastervision.core.data.raster_source import RasterSource
 
 log = logging.getLogger(__name__)
@@ -51,7 +50,7 @@ def geoms_to_raster(str_tree: STRtree, window: 'Box', background_class_id: int,
     return raster
 
 
-class RasterizedSource(ActivateMixin, RasterSource):
+class RasterizedSource(RasterSource):
     """A RasterSource based on the rasterization of a VectorSource."""
 
     def __init__(self,
@@ -78,7 +77,7 @@ class RasterizedSource(ActivateMixin, RasterSource):
         self.background_class_id = background_class_id
         self.extent = extent
         self.all_touched = all_touched
-        self.activated = False
+        self.str_tree = self.make_str_tree()
 
         super().__init__(
             channel_order=[0],
@@ -115,9 +114,6 @@ class RasterizedSource(ActivateMixin, RasterSource):
         Returns:
             [height, width, channels] numpy array
         """
-        if not self.activated:
-            raise ActivationError('GeoJSONSource must be activated before use')
-
         log.debug(f'Rasterizing window: {window}')
         chip = geoms_to_raster(
             self.str_tree,
@@ -128,7 +124,7 @@ class RasterizedSource(ActivateMixin, RasterSource):
         # Add third singleton dim since rasters must have >=1 channel.
         return np.expand_dims(chip, 2)
 
-    def _activate(self):
+    def make_str_tree(self) -> STRtree:
         geojson = self.vector_source.get_geojson()
         self.validate_geojson(geojson)
         geoms = []
@@ -136,8 +132,8 @@ class RasterizedSource(ActivateMixin, RasterSource):
             geom = shape(f['geometry'])
             geom.class_id = f['properties']['class_id']
             geoms.append(geom)
-        self.str_tree = STRtree(geoms)
-        self.activated = True
+        str_tree = STRtree(geoms)
+        return str_tree
 
     def validate_geojson(self, geojson: dict) -> None:
         for f in geojson['features']:
@@ -151,7 +147,3 @@ class RasterizedSource(ActivateMixin, RasterSource):
             if f.get('properties', {}).get('class_id') is None:
                 raise ValueError('All GeoJSON features must have a class_id '
                                  'field in their properties.')
-
-    def _deactivate(self):
-        self.str_tree = None
-        self.activated = False

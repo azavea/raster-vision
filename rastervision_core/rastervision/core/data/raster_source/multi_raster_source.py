@@ -4,7 +4,6 @@ from pydantic import conint
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.core.data import ActivateMixin
 from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
 from rastervision.core.data.crs_transformer import CRSTransformer
 from rastervision.core.data.raster_source.rasterio_source import RasterioSource
@@ -15,7 +14,7 @@ class MultiRasterSourceError(Exception):
     pass
 
 
-class MultiRasterSource(ActivateMixin, RasterSource):
+class MultiRasterSource(RasterSource):
     """A RasterSource that combines multiple RasterSources by concatenting
     their output along the channel dimension (assumed to be the last dimension).
     """
@@ -89,9 +88,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
             raise MultiRasterSourceError(
                 f'num_channels ({self.num_channels}) != sum of num_channels '
                 f'of sub raster sources ({sub_num_channels})')
-
-    def _subcomponents_to_activate(self) -> None:
-        return self.raster_sources
 
     def get_extent(self) -> Box:
         rs = self.raster_sources[self.primary_source_idx]

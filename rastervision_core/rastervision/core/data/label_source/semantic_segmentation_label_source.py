@@ -3,7 +3,6 @@ from typing import (List, Optional)
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.core.data import ActivateMixin
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_source.label_source import LabelSource
 from rastervision.core.data.raster_source import RasterSource
@@ -21,7 +20,7 @@ def fill_edge(label_arr, window, extent, fill_value):
     return x
 
 
-class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
+class SemanticSegmentationLabelSource(LabelSource):
     """A read-only label source for semantic segmentation."""
 
     def __init__(self, raster_source: RasterSource, null_class_id: int):
@@ -83,15 +82,6 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
                               self.null_class_id)
         labels[window] = label_arr
         return labels
-
-    def _subcomponents_to_activate(self):
-        return [self.raster_source]
-
-    def _activate(self):
-        pass
-
-    def _deactivate(self):
-        pass
 
     def __getitem__(self, window: Box) -> np.ndarray:
         return self.get_labels(window)[window]

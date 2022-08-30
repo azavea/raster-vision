@@ -1,13 +1,12 @@
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
-from rastervision.core.data import ActivateMixin
 from rastervision.core.box import Box
 
 if TYPE_CHECKING:
     from rastervision.core.data import (RasterSource, LabelSource, LabelStore)
 
 
-class Scene(ActivateMixin):
+class Scene:
     """The raster data and labels associated with an area of interest."""
 
     def __init__(self,
@@ -41,12 +40,3 @@ class Scene(ActivateMixin):
         else:
             y = None
         return x, y
-
-    def _subcomponents_to_activate(self) -> list:
-        return [self.raster_source, self.label_source, self.label_store]
-
-    def _activate(self):
-        pass
-
-    def _deactivate(self):
-        pass

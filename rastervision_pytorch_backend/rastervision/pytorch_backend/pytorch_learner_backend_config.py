@@ -80,6 +80,5 @@ class PyTorchLearnerBackendConfig(BackendConfig):
                 pipeline_cfg.dataset.class_config,
                 tmp_dir,
                 use_transformers=True)
-            with scene.activate():
-                img_channels = scene.raster_source.num_channels
+            img_channels = scene.raster_source.num_channels
         return img_channels

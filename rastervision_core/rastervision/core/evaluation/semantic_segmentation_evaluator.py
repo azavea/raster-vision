@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Iterable, Iterator, Optional
 import logging
 
-from rastervision.core.data import ActivateMixin, RasterizedSource
+from rastervision.core.data import RasterizedSource
 from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
 from rastervision.core.evaluation import (ClassificationEvaluator,
                                           SemanticSegmentationEvaluation)
@@ -45,12 +45,8 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
     def evaluate_scene(self, scene: 'Scene') -> SemanticSegmentationEvaluation:
         """Override to pass null_class_id to filter_by_aoi()."""
         null_class_id = self.class_config.get_null_class_id()
-        label_source: 'SemanticSegmentationLabelSource' = scene.label_source
-        label_store: 'SemanticSegmentationLabelStore' = scene.label_store
-
-        with ActivateMixin.compose(label_source, label_store):
-            ground_truth = label_source.get_labels()
-            predictions = label_store.get_labels()
+        ground_truth = scene.label_source.get_labels()
+        predictions = scene.label_store.get_labels()
 
         if scene.aoi_polygons:
             ground_truth = ground_truth.filter_by_aoi(scene.aoi_polygons,
@@ -75,16 +71,13 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
             raise ValueError('Cannot evaluate vector predictions: '
                              'label store does not have vector outputs.')
 
-        with ActivateMixin.compose(label_source, label_store):
-            gt_geojson = (
-                label_source.raster_source.vector_source.get_geojson())
-            if scene.aoi_polygons:
-                gt_geojson = filter_geojson_by_aoi(gt_geojson,
-                                                   scene.aoi_polygons)
-            pred_geojsons = get_class_vector_preds(scene, label_store,
-                                                   self.class_config)
-            evaluation = self.evaluate_vector_predictions(
-                gt_geojson, pred_geojsons, label_store.vector_outputs)
+        gt_geojson = (label_source.raster_source.vector_source.get_geojson())
+        if scene.aoi_polygons:
+            gt_geojson = filter_geojson_by_aoi(gt_geojson, scene.aoi_polygons)
+        pred_geojsons = get_class_vector_preds(scene, label_store,
+                                               self.class_config)
+        evaluation = self.evaluate_vector_predictions(
+            gt_geojson, pred_geojsons, label_store.vector_outputs)
         return evaluation
 
     def evaluate_vector_predictions(

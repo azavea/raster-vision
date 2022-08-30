@@ -2,8 +2,7 @@ from unittest.mock import Mock
 import numpy as np
 
 from rastervision.core import Box
-from rastervision.core.data import (RasterSource, IdentityCRSTransformer,
-                                    ActivateMixin)
+from rastervision.core.data import RasterSource, IdentityCRSTransformer
 
 
 class MockRasterSource(RasterSource):
@@ -44,9 +43,3 @@ class MockRasterSource(RasterSource):
 
     def set_raster(self, raster):
         self.set_return_vals(raster=raster)
-
-    def _activate(self):
-        pass
-
-    def _deactivate(self):
-        pass

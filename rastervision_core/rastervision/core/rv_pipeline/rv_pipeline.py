@@ -124,23 +124,22 @@ class RVPipeline(Pipeline):
         with backend.get_sample_writer() as writer:
 
             def chip_scene(scene, split):
-                with scene.activate():
-                    windows = self.get_train_windows(scene)
-                    with tqdm(
-                            windows,
-                            desc=f'Making {split} chips from scene {scene.id}',
-                            mininterval=0.5) as bar:
-                        for window in bar:
-                            chip = scene.raster_source.get_chip(window)
-                            labels = self.get_train_labels(window, scene)
-                            sample = DataSample(
-                                chip=chip,
-                                window=window,
-                                labels=labels,
-                                scene_id=str(scene.id),
-                                is_train=split == TRAIN)
-                            sample = self.post_process_sample(sample)
-                            writer.write_sample(sample)
+                windows = self.get_train_windows(scene)
+                with tqdm(
+                        windows,
+                        desc=f'Making {split} chips from scene {scene.id}',
+                        mininterval=0.5) as bar:
+                    for window in bar:
+                        chip = scene.raster_source.get_chip(window)
+                        labels = self.get_train_labels(window, scene)
+                        sample = DataSample(
+                            chip=chip,
+                            window=window,
+                            labels=labels,
+                            scene_id=str(scene.id),
+                            is_train=split == TRAIN)
+                        sample = self.post_process_sample(sample)
+                        writer.write_sample(sample)
 
             for s in dataset.train_scenes:
                 chip_scene(s.build(class_cfg, self.tmp_dir), TRAIN)
@@ -184,10 +183,9 @@ class RVPipeline(Pipeline):
 
         for scene_config in (dataset.validation_scenes + dataset.test_scenes):
             scene = scene_config.build(class_config, self.tmp_dir)
-            with scene.activate():
-                labels = self.predict_scene(scene, self.backend)
-                labels = self.post_process_predictions(labels, scene)
-                scene.label_store.save(labels)
+            labels = self.predict_scene(scene, self.backend)
+            labels = self.post_process_predictions(labels, scene)
+            scene.label_store.save(labels)
 
     def predict_scene(self, scene: Scene, backend: Backend) -> Labels:
         chip_sz = self.config.predict_chip_sz

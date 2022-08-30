@@ -48,10 +48,9 @@ class TestRasterioSource(unittest.TestCase):
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        with source.activate():
-            out_chip = source.get_image_array()
-            expected_out_chip = np.zeros((height, width, nb_channels))
-            np.testing.assert_equal(out_chip, expected_out_chip)
+        out_chip = source.get_image_array()
+        expected_out_chip = np.zeros((height, width, nb_channels))
+        np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_mask(self):
         # make geotiff filled with ones and zeros and mask the whole image
@@ -75,10 +74,9 @@ class TestRasterioSource(unittest.TestCase):
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        with source.activate():
-            out_chip = source.get_image_array()
-            expected_out_chip = np.zeros((height, width, nb_channels))
-            np.testing.assert_equal(out_chip, expected_out_chip)
+        out_chip = source.get_image_array()
+        expected_out_chip = np.zeros((height, width, nb_channels))
+        np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_get_dtype(self):
         img_path = data_file_path('small-rgb-tile.tif')
@@ -93,9 +91,8 @@ class TestRasterioSource(unittest.TestCase):
         config = RasterioSourceConfig(
             uris=[img_path], channel_order=channel_order)
         source = config.build(tmp_dir=self.tmp_dir)
-        with source.activate():
-            out_chip = source.get_raw_image_array()
-            self.assertEqual(out_chip.shape[2], 3)
+        out_chip = source.get_raw_image_array()
+        self.assertEqual(out_chip.shape[2], 3)
 
     def test_gets_raw_chip_from_uint16_transformed_proto(self):
         img_path = data_file_path('small-uint16-tile.tif')
@@ -115,10 +112,8 @@ class TestRasterioSource(unittest.TestCase):
             channel_order=channel_order,
             transformers=[transformer])
         rs = config.build(tmp_dir=self.tmp_dir)
-
-        with rs.activate():
-            out_chip = rs.get_raw_image_array()
-            self.assertEqual(out_chip.shape[2], 3)
+        out_chip = rs.get_raw_image_array()
+        self.assertEqual(out_chip.shape[2], 3)
 
     def test_uses_channel_order(self):
         img_path = join(self.tmp_dir, 'img.tif')
@@ -130,12 +125,10 @@ class TestRasterioSource(unittest.TestCase):
         config = RasterioSourceConfig(
             uris=[img_path], channel_order=channel_order)
         source = config.build(tmp_dir=self.tmp_dir)
-
-        with source.activate():
-            out_chip = source.get_image_array()
-            expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
-            expected_out_chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
-            np.testing.assert_equal(out_chip, expected_out_chip)
+        out_chip = source.get_image_array()
+        expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
+        expected_out_chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
+        np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_channel_order_error(self):
         img_path = join(self.tmp_dir, 'img.tif')
@@ -163,11 +156,10 @@ class TestRasterioSource(unittest.TestCase):
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        with source.activate():
-            out_chip = source.get_image_array()
-            expected_out_chip = np.ones((2, 2, 2)).astype(np.uint8)
-            expected_out_chip[:, :, :] *= np.array([1, 2]).astype(np.uint8)
-            np.testing.assert_equal(out_chip, expected_out_chip)
+        out_chip = source.get_image_array()
+        expected_out_chip = np.ones((2, 2, 2)).astype(np.uint8)
+        expected_out_chip[:, :, :] *= np.array([1, 2]).astype(np.uint8)
+        np.testing.assert_equal(out_chip, expected_out_chip)
 
     def test_non_geo(self):
         # Check if non-georeferenced image files can be read and CRSTransformer
@@ -178,16 +170,15 @@ class TestRasterioSource(unittest.TestCase):
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        with source.activate():
-            out_chip = source.get_image_array()
-            np.testing.assert_equal(out_chip, chip)
+        out_chip = source.get_image_array()
+        np.testing.assert_equal(out_chip, chip)
 
-            p = (3, 4)
-            out_p = source.get_crs_transformer().map_to_pixel(p)
-            np.testing.assert_equal(out_p, p)
+        p = (3, 4)
+        out_p = source.get_crs_transformer().map_to_pixel(p)
+        np.testing.assert_equal(out_p, p)
 
-            out_p = source.get_crs_transformer().pixel_to_map(p)
-            np.testing.assert_equal(out_p, p)
+        out_p = source.get_crs_transformer().pixel_to_map(p)
+        np.testing.assert_equal(out_p, p)
 
     def test_no_epsg(self):
         crs = rasterio.crs.CRS()
@@ -319,8 +310,7 @@ class TestRasterioSource(unittest.TestCase):
                 ds.write_band(1, arr)
             cfg = RasterioSourceConfig(uris=[uri], extent_crop=(f, f, f, f))
             rs = cfg.build(tmp_dir=self.tmp_dir)
-            with rs.activate():
-                out = rs.get_chip(Box(0, 0, 100, 100))[..., 0]
+            out = rs.get_chip(Box(0, 0, 100, 100))[..., 0]
 
         self.assertTrue(np.all(out[mask] == 1))
         self.assertTrue(np.all(out[~mask] == 0))

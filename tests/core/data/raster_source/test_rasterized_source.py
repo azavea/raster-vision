@@ -84,29 +84,27 @@ class TestRasterizedSource(unittest.TestCase):
         }
 
         source = self.build_source(geojson)
-        with source.activate():
-            self.assertEqual(source.get_extent(), self.extent)
-            chip = source.get_image_array()
-            self.assertEqual(chip.shape, (10, 10, 1))
+        self.assertEqual(source.get_extent(), self.extent)
+        chip = source.get_image_array()
+        self.assertEqual(chip.shape, (10, 10, 1))
 
-            expected_chip = self.background_class_id * np.ones((10, 10, 1))
-            expected_chip[0:5, 0:5, 0] = self.class_id
-            expected_chip[0:10, 6:8] = self.class_id
-            np.testing.assert_array_equal(chip, expected_chip)
+        expected_chip = self.background_class_id * np.ones((10, 10, 1))
+        expected_chip[0:5, 0:5, 0] = self.class_id
+        expected_chip[0:10, 6:8] = self.class_id
+        np.testing.assert_array_equal(chip, expected_chip)
 
     def test_get_chip_no_polygons(self):
         geojson = {'type': 'FeatureCollection', 'features': []}
 
         source = self.build_source(geojson)
-        with source.activate():
-            # Get chip that partially overlaps extent. Expect that chip has zeros
-            # outside of extent, and background_class_id otherwise.
-            self.assertEqual(source.get_extent(), self.extent)
-            chip = source.get_chip(Box.make_square(5, 5, 10))
-            self.assertEqual(chip.shape, (10, 10, 1))
+        # Get chip that partially overlaps extent. Expect that chip has zeros
+        # outside of extent, and background_class_id otherwise.
+        self.assertEqual(source.get_extent(), self.extent)
+        chip = source.get_chip(Box.make_square(5, 5, 10))
+        self.assertEqual(chip.shape, (10, 10, 1))
 
-            expected_chip = np.full((10, 10, 1), self.background_class_id)
-            np.testing.assert_array_equal(chip, expected_chip)
+        expected_chip = np.full((10, 10, 1), self.background_class_id)
+        np.testing.assert_array_equal(chip, expected_chip)
 
     def test_get_chip_all_touched(self):
         geojson = {
@@ -128,16 +126,14 @@ class TestRasterizedSource(unittest.TestCase):
 
         false_source = self.build_source(geojson, all_touched=False)
         true_source = self.build_source(geojson, all_touched=True)
-        with false_source.activate():
-            chip = false_source.get_image_array()
-            expected_chip = self.background_class_id * np.ones((10, 10, 1))
-            np.testing.assert_array_equal(chip, expected_chip)
+        chip = false_source.get_image_array()
+        expected_chip = self.background_class_id * np.ones((10, 10, 1))
+        np.testing.assert_array_equal(chip, expected_chip)
 
-        with true_source.activate():
-            chip = true_source.get_image_array()
-            expected_chip = self.background_class_id * np.ones((10, 10, 1))
-            expected_chip[0:1, 0:1, 0] = self.class_id
-            np.testing.assert_array_equal(chip, expected_chip)
+        chip = true_source.get_image_array()
+        expected_chip = self.background_class_id * np.ones((10, 10, 1))
+        expected_chip[0:1, 0:1, 0] = self.class_id
+        np.testing.assert_array_equal(chip, expected_chip)
 
 
 if __name__ == '__main__':

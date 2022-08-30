@@ -105,16 +105,6 @@ class GeoDataset(AlbumentationsDataset):
                 pytorch tensors. Defaults to True.
         """
         self.scene = scene
-        # Scene requires its raster and label sources to be activated before
-        # they can be used. However, activating and deactivating for every read
-        # could have a large overhead.
-        #
-        # Instead, we would like the source to stay activated for the entire
-        # lifespan of this dataset. To achieve this, we set stay_activated=True
-        # when activating the scene, so that once the sources are activated,
-        # they will stay activated even when the context manager exits.
-        with self.scene.activate(stay_activated=True):
-            pass
 
         super().__init__(
             orig_dataset=scene,

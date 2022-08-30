@@ -114,14 +114,6 @@ class SemanticSegmentationLabelStore(LabelStore):
                     raise FileExistsError(f'{self.score_uri} already exists '
                                           'and is incompatible.')
 
-    def _subcomponents_to_activate(self):
-        components = []
-        if self.label_raster_source is not None:
-            components.append(self.label_raster_source)
-        if self.score_raster_source is not None:
-            components.append(self.score_raster_source)
-        return components
-
     def get_labels(self) -> SemanticSegmentationLabels:
         """Get all labels.
 
@@ -166,8 +158,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                 'or is not consistent with the current params.')
 
         extent = self.score_raster_source.get_extent()
-        with self.score_raster_source.activate():
-            score_arr = self.score_raster_source.get_chip(extent)
+        score_arr = self.score_raster_source.get_chip(extent)
         # (H, W, C) --> (C, H, W)
         score_arr = score_arr.transpose(2, 0, 1)
         try:

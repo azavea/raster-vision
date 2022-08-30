@@ -3,7 +3,7 @@ from abc import (abstractmethod)
 import logging
 
 from rastervision.core.evaluation import Evaluator
-from rastervision.core.data import ActivateMixin, Labels
+from rastervision.core.data import Labels
 
 log = logging.getLogger(__name__)
 
@@ -36,12 +36,8 @@ class ClassificationEvaluator(Evaluator):
             evaluation_global.save(self.output_uri)
 
     def evaluate_scene(self, scene: 'Scene') -> 'ClassificationEvaluation':
-        label_source = scene.label_source
-        label_store = scene.label_store
-
-        with ActivateMixin.compose(label_source, label_store):
-            ground_truth = label_source.get_labels()
-            predictions = label_store.get_labels()
+        ground_truth = scene.label_source.get_labels()
+        predictions = scene.label_store.get_labels()
 
         if scene.aoi_polygons:
             ground_truth = ground_truth.filter_by_aoi(scene.aoi_polygons)

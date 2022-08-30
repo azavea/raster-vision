@@ -99,29 +99,26 @@ class RasterStats():
         def sliding_chip_stream() -> Iterator[np.ndarray]:
             """Get stream of chips using a sliding window of size 300."""
             for raster_source in raster_sources:
-                with raster_source.activate():
-                    windows = raster_source.get_extent().get_windows(
-                        chip_sz, stride)
-                    for window in windows:
-                        chip = get_chip(raster_source, window)
-                        if chip is not None:
-                            yield chip
+                windows = raster_source.get_extent().get_windows(
+                    chip_sz, stride)
+                for window in windows:
+                    chip = get_chip(raster_source, window)
+                    if chip is not None:
+                        yield chip
 
         def random_chip_stream() -> Iterator[np.ndarray]:
             """Get random stream of chips."""
             for raster_source in raster_sources:
-                with raster_source.activate():
-                    extent = raster_source.get_extent()
-                    num_pixels = extent.get_width() * extent.get_height()
-                    num_chips = round(
-                        sample_prob * (num_pixels / (chip_sz**2)))
-                    num_chips = max(1, num_chips)
-                    for _ in range(num_chips):
-                        window = raster_source.get_extent().make_random_square(
-                            chip_sz)
-                        chip = get_chip(raster_source, window)
-                        if chip is not None:
-                            yield chip
+                extent = raster_source.get_extent()
+                num_pixels = extent.get_width() * extent.get_height()
+                num_chips = round(sample_prob * (num_pixels / (chip_sz**2)))
+                num_chips = max(1, num_chips)
+                for _ in range(num_chips):
+                    window = raster_source.get_extent().make_random_square(
+                        chip_sz)
+                    chip = get_chip(raster_source, window)
+                    if chip is not None:
+                        yield chip
 
         # For each chip, compute the mean and var of that chip and then update the
         # running mean and var.

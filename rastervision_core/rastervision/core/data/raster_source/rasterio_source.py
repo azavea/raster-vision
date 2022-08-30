@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, Union
 import logging
 import os
 import subprocess
@@ -12,7 +12,6 @@ from rastervision.pipeline.file_system import download_if_needed
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
 from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
-from rastervision.core.data import (ActivateMixin, ActivationError)
 
 if TYPE_CHECKING:
     from rasterio.io import DatasetReader
@@ -27,18 +26,18 @@ def build_vrt(vrt_path, image_paths):
     subprocess.run(cmd)
 
 
-def download_and_build_vrt(image_uris, tmp_dir):
+def download_and_build_vrt(image_uris, download_dir):
     log.info('Building VRT...')
     image_paths = [download_if_needed(uri) for uri in image_uris]
-    image_path = os.path.join(tmp_dir, 'index.vrt')
+    image_path = os.path.join(download_dir, 'index.vrt')
     build_vrt(image_path, image_paths)
     return image_path
 
 
-def stream_and_build_vrt(images_uris, tmp_dir):
+def stream_and_build_vrt(images_uris, download_dir):
     log.info('Building VRT...')
     image_paths = images_uris
-    image_path = os.path.join(tmp_dir, 'index.vrt')
+    image_path = os.path.join(download_dir, 'index.vrt')
     build_vrt(image_path, image_paths)
     return image_path
 
@@ -115,11 +114,24 @@ def fill_overflow(extent: Box,
     return arr
 
 
-class RasterioSource(ActivateMixin, RasterSource):
+def get_channel_order_from_dataset(
+        image_dataset: 'DatasetReader') -> List[int]:
+    colorinterp = image_dataset.colorinterp
+    if colorinterp:
+        channel_order = [
+            i for i, color_interp in enumerate(colorinterp)
+            if color_interp != ColorInterp.alpha
+        ]
+    else:
+        channel_order = list(range(0, image_dataset.count))
+    return channel_order
+
+
+class RasterioSource(RasterSource):
     def __init__(self,
                  uris,
                  raster_transformers=[],
-                 tmp_dir: Optional[str] = None,
+                 download_dir: Optional[str] = None,
                  allow_streaming=False,
                  channel_order=None,
                  extent_crop: Optional[CropOffsets] = None):
@@ -140,58 +152,47 @@ class RasterioSource(ActivateMixin, RasterSource):
                 Defaults to None i.e. no cropping.
         """
         self.uris = uris
-        self.tmp_dir = mkdtemp() if tmp_dir is None else tmp_dir
+        self.download_dir = mkdtemp() if download_dir is None else download_dir
         self.image_dataset = None
         self.allow_streaming = allow_streaming
         self.extent_crop = extent_crop
 
-        # Activate in order to get information out of the raster
-        with self.activate():
-            num_channels_raw = self.image_dataset.count
-            if channel_order is None:
-                colorinterp = self.image_dataset.colorinterp
-                if colorinterp:
-                    channel_order = [
-                        i for i, color_interp in enumerate(colorinterp)
-                        if color_interp != ColorInterp.alpha
-                    ]
-                else:
-                    channel_order = list(range(0, num_channels_raw))
-            self.bands_to_read = [i + 1 for i in channel_order]
+        self.imagery_path = self.download_data(
+            self.download_dir, stream=self.allow_streaming)
+        self.image_dataset = rasterio.open(self.imagery_path)
+        self.crs_transformer = RasterioCRSTransformer.from_dataset(
+            self.image_dataset)
+        self.dtype = None
 
-            mask_flags = self.image_dataset.mask_flag_enums
-            self.is_masked = any(
-                [m for m in mask_flags if m != MaskFlags.all_valid])
+        self.height = self.image_dataset.height
+        self.width = self.image_dataset.width
 
-            self.height = self.image_dataset.height
-            self.width = self.image_dataset.width
+        num_channels_raw = self.image_dataset.count
+        if channel_order is None:
+            channel_order = get_channel_order_from_dataset(self.image_dataset)
+        self.bands_to_read = [i + 1 for i in channel_order]
 
-            # Get 1x1 chip and apply raster transformers to test dtype.
-            test_chip = self.get_raw_chip(Box.make_square(0, 0, 1))
-            test_chip = test_chip[:, :, channel_order]
-            for transformer in raster_transformers:
-                test_chip = transformer.transform(test_chip, channel_order)
-            self.dtype = test_chip.dtype
-
-            self._set_crs_transformer()
+        mask_flags = self.image_dataset.mask_flag_enums
+        self.is_masked = any(
+            [m for m in mask_flags if m != MaskFlags.all_valid])
 
         super().__init__(channel_order, num_channels_raw, raster_transformers)
 
-    def _download_data(self, tmp_dir):
+    def download_data(self, download_dir: str, stream: bool = False) -> str:
         """Download any data needed for this Raster Source.
 
         Return a single local path representing the image or a VRT of the data.
         """
         if len(self.uris) == 1:
-            if self.allow_streaming:
+            if stream:
                 return self.uris[0]
             else:
                 return download_if_needed(self.uris[0])
         else:
-            if self.allow_streaming:
-                return stream_and_build_vrt(self.uris, tmp_dir)
+            if stream:
+                return stream_and_build_vrt(self.uris, download_dir)
             else:
-                return download_and_build_vrt(self.uris, tmp_dir)
+                return download_and_build_vrt(self.uris, download_dir)
 
     def get_crs_transformer(self):
         return self.crs_transformer
@@ -207,14 +208,16 @@ class RasterioSource(ActivateMixin, RasterSource):
 
     def get_dtype(self):
         """Return the numpy.dtype of this scene"""
+        if self.dtype is None:
+            # Read 1x1 chip to determine dtype
+            test_chip = self.get_chip(Box.make_square(0, 0, 1))
+            self.dtype = test_chip.dtype
         return self.dtype
 
     def _get_chip(self,
                   window: Box,
                   out_shape: Optional[Tuple[int, ...]] = None,
                   bands: Optional[Sequence[int]] = None) -> np.ndarray:
-        if self.image_dataset is None:
-            raise ActivationError('RasterSource must be activated before use')
         chip = load_window(
             self.image_dataset,
             bands=bands,
@@ -231,19 +234,4 @@ class RasterioSource(ActivateMixin, RasterSource):
             window, out_shape=out_shape, bands=self.bands_to_read)
         for transformer in self.raster_transformers:
             chip = transformer.transform(chip, self.channel_order)
-
         return chip
-
-    def _set_crs_transformer(self):
-        self.crs_transformer = RasterioCRSTransformer.from_dataset(
-            self.image_dataset)
-
-    def _activate(self):
-        self.imagery_path = self._download_data(self.tmp_dir)
-        self.image_dataset = rasterio.open(self.imagery_path)
-        self._set_crs_transformer()
-
-    def _deactivate(self):
-        if self.image_dataset is not None:
-            self.image_dataset.close()
-            self.image_dataset = None

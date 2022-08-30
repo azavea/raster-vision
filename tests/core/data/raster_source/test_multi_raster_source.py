@@ -165,44 +165,39 @@ class TestMultiRasterSource(unittest.TestCase):
             ])
         rs = cfg.build(tmp_dir=self.tmp_dir)
 
-        with rs.activate():
-            window = Box(0, 0, 100, 100)
+        window = Box(0, 0, 100, 100)
 
-            # sub transformers and channel_order applied
-            sub_chips = rs._get_sub_chips(window, raw=False)
-            self.assertEqual(
-                tuple(c.mean() for c in sub_chips), (100, 175, 250))
-            # sub transformers, channel_order, and transformer applied
-            chip = rs.get_chip(window)
-            self.assertEqual(
-                tuple(chip.reshape(-1, 3).mean(axis=0)), (25, 17, 10))
+        # sub transformers and channel_order applied
+        sub_chips = rs._get_sub_chips(window, raw=False)
+        self.assertEqual(tuple(c.mean() for c in sub_chips), (100, 175, 250))
+        # sub transformers, channel_order, and transformer applied
+        chip = rs.get_chip(window)
+        self.assertEqual(tuple(chip.reshape(-1, 3).mean(axis=0)), (25, 17, 10))
 
-            # none of sub transformers, channel_order, and transformer applied
-            sub_chips = rs._get_sub_chips(window, raw=True)
-            self.assertEqual(
-                tuple(c.mean() for c in sub_chips), (100, 100, 100))
-            chip = rs._get_chip(window)
-            self.assertEqual(
-                tuple(chip.reshape(-1, 3).mean(axis=0)), (100, 100, 100))
+        # none of sub transformers, channel_order, and transformer applied
+        sub_chips = rs._get_sub_chips(window, raw=True)
+        self.assertEqual(tuple(c.mean() for c in sub_chips), (100, 100, 100))
+        chip = rs._get_chip(window)
+        self.assertEqual(
+            tuple(chip.reshape(-1, 3).mean(axis=0)), (100, 100, 100))
 
     def test_nonidentical_extents_and_resolutions(self):
         cfg = make_cfg_diverse(diff_dtypes=False)
         rs = cfg.build(tmp_dir=self.tmp_dir)
-        with rs.activate():
-            for get_chip_fn in [rs._get_chip, rs.get_chip]:
-                ch_1_only = get_chip_fn(Box(0, 0, 10, 10))
-                self.assertEqual(
-                    tuple(ch_1_only.reshape(-1, 3).mean(axis=0)), (100, 0, 0))
-                ch_2_only = get_chip_fn(Box(0, 600, 10, 600 + 10))
-                self.assertEqual(
-                    tuple(ch_2_only.reshape(-1, 3).mean(axis=0)), (0, 175, 0))
-                ch_3_only = get_chip_fn(Box(600, 0, 600 + 10, 10))
-                self.assertEqual(
-                    tuple(ch_3_only.reshape(-1, 3).mean(axis=0)), (0, 0, 250))
-                full_img = get_chip_fn(Box(0, 0, 600, 600))
-                self.assertEqual(set(np.unique(full_img[..., 0])), {100})
-                self.assertEqual(set(np.unique(full_img[..., 1])), {0, 175})
-                self.assertEqual(set(np.unique(full_img[..., 2])), {0, 250})
+        for get_chip_fn in [rs._get_chip, rs.get_chip]:
+            ch_1_only = get_chip_fn(Box(0, 0, 10, 10))
+            self.assertEqual(
+                tuple(ch_1_only.reshape(-1, 3).mean(axis=0)), (100, 0, 0))
+            ch_2_only = get_chip_fn(Box(0, 600, 10, 600 + 10))
+            self.assertEqual(
+                tuple(ch_2_only.reshape(-1, 3).mean(axis=0)), (0, 175, 0))
+            ch_3_only = get_chip_fn(Box(600, 0, 600 + 10, 10))
+            self.assertEqual(
+                tuple(ch_3_only.reshape(-1, 3).mean(axis=0)), (0, 0, 250))
+            full_img = get_chip_fn(Box(0, 0, 600, 600))
+            self.assertEqual(set(np.unique(full_img[..., 0])), {100})
+            self.assertEqual(set(np.unique(full_img[..., 1])), {0, 175})
+            self.assertEqual(set(np.unique(full_img[..., 2])), {0, 250})
 
 
 if __name__ == '__main__':
