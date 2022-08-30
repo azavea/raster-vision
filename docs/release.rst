@@ -90,7 +90,7 @@ Minor or Major Version Release
         python setup.py sdist bdist_wheel
         twine upload dist/*
 
-#. Announce new release on Gitter, and with blog post if it's a big release.
+#. Announce new release in our `forum <https://github.com/azavea/raster-vision/discussions>`_, and with blog post if it's a big release.
 
 Bug Fix Release
 -----------------
