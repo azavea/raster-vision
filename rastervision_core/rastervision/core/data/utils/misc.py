@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from PIL import ImageColor
@@ -54,3 +54,13 @@ def rgb_to_int_array(rgb_array):
 def all_equal(it: list):
     ''' Returns true if all elements are equal to each other '''
     return it.count(it[0]) == len(it)
+
+
+def listify_uris(uris: Union[str, List[str]]) -> List[str]:
+    if isinstance(uris, (list, tuple)):
+        pass
+    elif isinstance(uris, str):
+        uris = [uris]
+    else:
+        raise TypeError(f'Expected str or List[str], but got {type(uris)}.')
+    return uris

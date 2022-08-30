@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, List, Dict
+from typing import TYPE_CHECKING, Optional, Tuple, List, Dict, Union
 from os.path import join
 from collections import defaultdict
 import logging
@@ -7,13 +7,16 @@ import albumentations as A
 import numpy as np
 from torch.utils.data import Dataset
 
-from rastervision.core.box import Box
 from rastervision.pipeline.file_system import file_to_json
-from rastervision.core.data.label import ObjectDetectionLabels
+from rastervision.core.box import Box
+from rastervision.core.data import ObjectDetectionLabels
 from rastervision.pytorch_learner.dataset import (
     TransformType, ImageDataset, SlidingWindowGeoDataset,
     RandomWindowGeoDataset, load_image)
+from rastervision.core.data.utils import make_od_scene
 
+if TYPE_CHECKING:
+    from rastervision.core.data import ClassConfig
 log = logging.getLogger(__name__)
 
 
@@ -59,13 +62,78 @@ class ObjectDetectionImageDataset(ImageDataset):
             ds, *args, **kwargs, transform_type=TransformType.object_detection)
 
 
+def make_od_geodataset(cls,
+                       class_config: 'ClassConfig',
+                       image_uri: Union[str, List[str]],
+                       label_vector_uri: Optional[str] = None,
+                       aoi_uri: Union[str, List[str]] = [],
+                       label_vector_default_class_id: Optional[int] = None,
+                       image_raster_source_kw: dict = {},
+                       label_vector_source_kw: dict = {},
+                       label_source_kw: dict = {},
+                       **kwargs):
+    """Create an instance of this class from image and label URIs.
+
+    This is a convenience method. For more fine-grained control, it is
+    recommended to use the default constructor.
+
+    Args:
+        class_config (ClassConfig): The ClassConfig.
+        image_uri (Union[str, List[str]]): URI or list of URIs of GeoTIFFs to
+            use as the source of image data.
+        label_vector_uri (Optional[str], optional):  URI of GeoJSON file to use
+            as the source of segmentation label data. Defaults to None.
+        aoi_uri (Union[str, List[str]], optional): URI or list of URIs of
+            GeoJSONs that specify the area-of-interest. If provided, the
+            dataset will only access data from this area. Defaults to [].
+        label_vector_default_class_id (Optional[int], optional): If using
+            label_vector_uri and all polygons in that file belong to the same
+            class and they do not contain a `class_id` property, then use this
+            argument to map all of the polgons to the appropriate class ID.
+            See docs for ClassInferenceTransformer for more details.
+            Defaults to None.
+        image_raster_source_kw (dict, optional): Additional arguments to pass
+            to the RasterioSource used for image data. See docs for
+            RasterioSource for more details. Defaults to {}.
+        label_vector_source_kw (dict, optional): Additional arguments to pass
+            to the GeoJSONVectorSourceConfig used for label data, if
+            label_vector_uri is used. See docs for GeoJSONVectorSourceConfig
+            for more details. Defaults to {}.
+        label_source_kw (dict, optional): Additional arguments to pass
+            to the ChipClassificationLabelSourceConfig used for label data, if
+            label_vector_uri is used. See docs for
+            ChipClassificationLabelSourceConfig for more details.
+            Defaults to {}.
+        **kwargs: All other keyword args are passed to the default constructor
+            for this class.
+
+    Returns:
+        An instance of this GeoDataset subclass.
+    """
+    scene = make_od_scene(
+        class_config=class_config,
+        image_uri=image_uri,
+        label_vector_uri=label_vector_uri,
+        aoi_uri=aoi_uri,
+        label_vector_default_class_id=label_vector_default_class_id,
+        image_raster_source_kw=image_raster_source_kw,
+        label_vector_source_kw=label_vector_source_kw,
+        label_source_kw=label_source_kw)
+    ds = cls(scene, **kwargs)
+    return ds
+
+
 class ObjectDetectionSlidingWindowGeoDataset(SlidingWindowGeoDataset):
+    from_uris = classmethod(make_od_geodataset)
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args, **kwargs, transform_type=TransformType.object_detection)
 
 
 class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
+    from_uris = classmethod(make_od_geodataset)
+
     def __init__(self, *args, **kwargs):
         """Constructor.
 
