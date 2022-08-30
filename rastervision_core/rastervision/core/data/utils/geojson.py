@@ -188,8 +188,10 @@ def simplify_polygons(geojson: dict) -> dict:
     return geojson_split
 
 
-def buffer_geoms(geojson: dict, geom_type: str,
-                 class_bufs: Dict[int, Optional[float]]) -> dict:
+def buffer_geoms(geojson: dict,
+                 geom_type: str,
+                 class_bufs: Dict[int, Optional[float]] = {},
+                 default_buf: Optional[float] = 1) -> dict:
     """Buffer geometries.
 
     Geometries in features without a class_id property will be ignored.
@@ -217,7 +219,7 @@ def buffer_geoms(geojson: dict, geom_type: str,
             return geom
 
         class_id = feature['properties']['class_id']
-        buf = class_bufs.get(class_id, 1)
+        buf = class_bufs.get(class_id, default_buf)
         # If buf for the class_id was explicitly set as None, don't buffer.
         if buf is not None:
             geom = geom.buffer(buf)
