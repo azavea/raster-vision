@@ -15,9 +15,9 @@ from tests import data_file_path
 def make_cfg(img_path: str = 'small-rgb-tile.tif',
              **kwargs) -> MultiRasterSourceConfig:
     img_path = data_file_path(img_path)
-    r_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
-    g_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
-    b_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
+    r_source = RasterioSourceConfig(uris=[img_path])
+    g_source = RasterioSourceConfig(uris=[img_path])
+    b_source = RasterioSourceConfig(uris=[img_path])
 
     cfg = MultiRasterSourceConfig(
         raster_sources=[r_source, g_source, b_source], **kwargs)
@@ -39,7 +39,7 @@ def make_cfg_diverse(diff_dtypes: bool = False,
             [CastTransformerConfig(to_dtype='int')],
         ]
     rs_cfgs = [
-        RasterioSourceConfig(uris=[path], channel_order=[0], transformers=tfs)
+        RasterioSourceConfig(uris=[path], transformers=tfs)
         for path, tfs in zip(img_paths, transformers)
     ]
     cfg = MultiRasterSourceConfig(raster_sources=rs_cfgs, **kwargs)

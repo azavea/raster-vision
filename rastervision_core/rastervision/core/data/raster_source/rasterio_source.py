@@ -145,11 +145,9 @@ class RasterioSource(ActivateMixin, RasterSource):
         self.allow_streaming = allow_streaming
         self.extent_crop = extent_crop
 
-        num_channels = None
-
         # Activate in order to get information out of the raster
         with self.activate():
-            num_channels = self.image_dataset.count
+            num_channels_raw = self.image_dataset.count
             if channel_order is None:
                 colorinterp = self.image_dataset.colorinterp
                 if colorinterp:
@@ -158,8 +156,7 @@ class RasterioSource(ActivateMixin, RasterSource):
                         if color_interp != ColorInterp.alpha
                     ]
                 else:
-                    channel_order = list(range(0, num_channels))
-            self.validate_channel_order(channel_order, num_channels)
+                    channel_order = list(range(0, num_channels_raw))
             self.bands_to_read = [i + 1 for i in channel_order]
 
             mask_flags = self.image_dataset.mask_flag_enums
@@ -178,7 +175,7 @@ class RasterioSource(ActivateMixin, RasterSource):
 
             self._set_crs_transformer()
 
-        super().__init__(channel_order, num_channels, raster_transformers)
+        super().__init__(channel_order, num_channels_raw, raster_transformers)
 
     def _download_data(self, tmp_dir):
         """Download any data needed for this Raster Source.

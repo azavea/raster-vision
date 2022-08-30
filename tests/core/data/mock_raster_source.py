@@ -6,9 +6,10 @@ from rastervision.core.data import (RasterSource, IdentityCRSTransformer,
                                     ActivateMixin)
 
 
-class MockRasterSource(RasterSource, ActivateMixin):
-    def __init__(self, channel_order, num_channels, raster_transformers=[]):
-        super().__init__(channel_order, num_channels, raster_transformers)
+class MockRasterSource(RasterSource):
+    def __init__(self, channel_order, num_channels_raw,
+                 raster_transformers=[]):
+        super().__init__(channel_order, num_channels_raw, raster_transformers)
         self.mock = Mock()
         self.set_return_vals()
 

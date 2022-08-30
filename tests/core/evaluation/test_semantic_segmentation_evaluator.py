@@ -59,15 +59,15 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         # Make scene where ground truth is all set to class_id
         # and predictions are set to half 0's and half 1's
         scene_id = str(class_id)
-        rs = MockRasterSource(channel_order=[0, 1, 2], num_channels=3)
+        rs = MockRasterSource(channel_order=[0, 1, 2], num_channels_raw=3)
         rs.set_raster(np.zeros((10, 10, 3)))
 
-        gt_rs = MockRasterSource(channel_order=[0], num_channels=1)
+        gt_rs = MockRasterSource(channel_order=[0], num_channels_raw=1)
         gt_arr = np.full((10, 10, 1), class_id)
         gt_rs.set_raster(gt_arr)
         gt_ls = SemanticSegmentationLabelSource(gt_rs, self.null_class_id)
 
-        pred_rs = MockRasterSource(channel_order=[0], num_channels=1)
+        pred_rs = MockRasterSource(channel_order=[0], num_channels_raw=1)
         pred_arr = np.zeros((10, 10, 1))
         pred_arr[5:10, :, :] = 1
         pred_rs.set_raster(pred_arr)
@@ -97,7 +97,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         pred_uri = data_file_path('{}-pred-polygons.geojson'.format(class_id))
 
         scene_id = str(class_id)
-        rs = MockRasterSource(channel_order=[0, 1, 3], num_channels=3)
+        rs = MockRasterSource(channel_order=[0, 1, 2], num_channels_raw=3)
         rs.set_raster(np.zeros((10, 10, 3)))
 
         crs_transformer = IdentityCRSTransformer()

@@ -81,7 +81,7 @@ class RasterStats():
             sample_prob: (float or None) between 0 and 1
         """
         stride = chip_sz
-        nb_channels = raster_sources[0].num_channels
+        nb_channels = raster_sources[0].num_channels_raw
 
         def get_chip(raster_source: 'RasterSource',
                      window: 'Box') -> Optional[np.ndarray]:

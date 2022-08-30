@@ -46,18 +46,17 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                 Useful for using splitting a scene into different datasets.
                 Defaults to None i.e. no cropping.
         """
+        num_channels_raw = sum(rs.num_channels_raw for rs in raster_sources)
         if not channel_order:
             num_channels = sum(rs.num_channels for rs in raster_sources)
             channel_order = list(range(num_channels))
-        else:
-            num_channels = len(channel_order)
 
         # validate primary_source_idx
         if not (0 <= primary_source_idx < len(raster_sources)):
             raise IndexError('primary_source_idx must be in range '
                              '[0, len(raster_sources)].')
 
-        super().__init__(channel_order, num_channels, raster_transformers)
+        super().__init__(channel_order, num_channels_raw, raster_transformers)
 
         self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources

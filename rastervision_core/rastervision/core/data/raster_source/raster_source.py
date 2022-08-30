@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
@@ -9,12 +9,19 @@ if TYPE_CHECKING:
 
 
 class ChannelOrderError(Exception):
-    def __init__(self, channel_order, num_channels):
+    def __init__(self, channel_order: List[int], num_channels: int):
         self.channel_order = channel_order
         self.num_channels = num_channels
         msg = (f'The channel_order={str(channel_order)} contains a '
                f'channel index >= num_channels={num_channels}')
         super().__init__(msg)
+
+
+def validate_channel_order(channel_order: List[int],
+                           num_channels: int) -> None:
+    for c in channel_order:
+        if c >= num_channels:
+            raise ChannelOrderError(channel_order, num_channels)
 
 
 class RasterSource(ABC):
@@ -25,27 +32,29 @@ class RasterSource(ABC):
     """
 
     def __init__(self,
-                 channel_order: List[int],
-                 num_channels: int,
+                 channel_order: Optional[List[int]],
+                 num_channels_raw: int,
                  raster_transformers: List['RasterTransformer'] = []):
         """Construct a new RasterSource.
 
         Args:
             channel_order: list of channel indices to use when extracting chip from
                 raw imagery.
-            num_channels: Number of channels in the raw imagery before applying
+            num_channels_raw: Number of channels in the raw imagery before applying
                 channel_order.
             raster_transformers: RasterTransformers used to transform chips
                 whenever they are retrieved.
         """
+        if channel_order is None:
+            channel_order = list(range(num_channels_raw))
+        validate_channel_order(channel_order, num_channels_raw)
         self.channel_order = channel_order
-        self.num_channels = num_channels
+        self.num_channels_raw = num_channels_raw
         self.raster_transformers = raster_transformers
 
-    def validate_channel_order(self, channel_order, num_channels) -> None:
-        for c in channel_order:
-            if c >= num_channels:
-                raise ChannelOrderError(channel_order, num_channels)
+    @property
+    def num_channels(self) -> int:
+        return len(self.channel_order)
 
     @abstractmethod
     def get_extent(self) -> 'Box':
@@ -95,8 +104,7 @@ class RasterSource(ABC):
         """
         chip = self._get_chip(window)
 
-        if self.channel_order:
-            chip = chip[:, :, self.channel_order]
+        chip = chip[:, :, self.channel_order]
 
         for transformer in self.raster_transformers:
             chip = transformer.transform(chip, self.channel_order)

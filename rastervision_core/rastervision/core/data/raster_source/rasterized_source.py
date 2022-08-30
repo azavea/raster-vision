@@ -82,7 +82,7 @@ class RasterizedSource(ActivateMixin, RasterSource):
 
         super().__init__(
             channel_order=[0],
-            num_channels=1,
+            num_channels_raw=1,
             raster_transformers=raster_transformers)
 
     def get_extent(self):
