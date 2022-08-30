@@ -7,11 +7,26 @@ from shapely.strtree import STRtree
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.box import Box
-from rastervision.core.data import (ClassConfig, infer_cell,
-                                    ChipClassificationLabelSourceConfig,
-                                    GeoJSONVectorSourceConfig)
+from rastervision.core.data import (
+    ClassConfig, infer_cell, ChipClassificationLabelSourceConfig,
+    GeoJSONVectorSourceConfig, ClassInferenceTransformerConfig,
+    BufferTransformerConfig)
 
+from tests import data_file_path
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
+
+
+class TestChipClassificationLabelSourceConfig(unittest.TestCase):
+    def test_ensure_required_transformers(self):
+        uri = data_file_path('bboxes.geojson')
+        cfg = ChipClassificationLabelSourceConfig(
+            vector_source=GeoJSONVectorSourceConfig(uri=uri))
+        tfs = cfg.vector_source.transformers
+        has_inf_tf = any(
+            isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
+        has_buf_tf = any(isinstance(tf, BufferTransformerConfig) for tf in tfs)
+        self.assertTrue(has_inf_tf)
+        self.assertTrue(has_buf_tf)
 
 
 class TestChipClassificationLabelSource(unittest.TestCase):
@@ -183,8 +198,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None),
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri),
             ioa_thresh=0.5,
             use_intersection_over_cell=False,
             pick_min_class_id=False,
@@ -211,8 +225,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 2)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -229,8 +242,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -247,8 +259,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()

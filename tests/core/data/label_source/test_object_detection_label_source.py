@@ -3,14 +3,29 @@ import os
 
 import numpy as np
 
-from rastervision.core.data import (ObjectDetectionLabelSourceConfig,
-                                    GeoJSONVectorSourceConfig,
-                                    ObjectDetectionLabels, ClassConfig)
+from rastervision.core.data import (
+    ObjectDetectionLabelSourceConfig, GeoJSONVectorSourceConfig,
+    ObjectDetectionLabels, ClassConfig, ClassInferenceTransformerConfig,
+    BufferTransformerConfig)
 from rastervision.core import Box
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
 
+from tests import data_file_path
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
+
+
+class TestObjectDetectionLabelSourceConfig(unittest.TestCase):
+    def test_ensure_required_transformers(self):
+        uri = data_file_path('bboxes.geojson')
+        cfg = ObjectDetectionLabelSourceConfig(
+            vector_source=GeoJSONVectorSourceConfig(uri=uri))
+        tfs = cfg.vector_source.transformers
+        has_inf_tf = any(
+            isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
+        has_buf_tf = any(isinstance(tf, BufferTransformerConfig) for tf in tfs)
+        self.assertTrue(has_inf_tf)
+        self.assertTrue(has_buf_tf)
 
 
 class TestObjectDetectionLabelSource(unittest.TestCase):
@@ -59,8 +74,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
 
     def test_read_without_extent(self):
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.file_path, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
         extent = None
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
@@ -77,8 +91,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         # Extent only includes the first box.
         extent = Box.make_square(0, 0, 3)
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.file_path, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -93,8 +106,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         # Extent includes both boxes, but clips the second.
         extent = Box.make_square(0, 0, 3.9)
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.file_path, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()

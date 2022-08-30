@@ -4,12 +4,28 @@ from os.path import join
 import numpy as np
 
 from rastervision.core import Box
-from rastervision.core.data import (IdentityCRSTransformer,
-                                    RasterizedSourceConfig, RasterizerConfig,
-                                    GeoJSONVectorSourceConfig, ClassConfig)
+from rastervision.core.data import (
+    IdentityCRSTransformer, RasterizedSourceConfig, RasterizerConfig,
+    GeoJSONVectorSourceConfig, ClassConfig, ClassInferenceTransformerConfig,
+    BufferTransformerConfig)
 from rastervision.pipeline.file_system import json_to_file
-from rastervision.pipeline.config import ConfigError
 from rastervision.pipeline import rv_config
+
+from tests import data_file_path
+
+
+class TestRasterizedSourceConfig(unittest.TestCase):
+    def test_ensure_required_transformers(self):
+        uri = data_file_path('bboxes.geojson')
+        cfg = RasterizedSourceConfig(
+            vector_source=GeoJSONVectorSourceConfig(uri=uri),
+            rasterizer_config=RasterizerConfig(background_class_id=0))
+        tfs = cfg.vector_source.transformers
+        has_inf_tf = any(
+            isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
+        has_buf_tf = any(isinstance(tf, BufferTransformerConfig) for tf in tfs)
+        self.assertTrue(has_inf_tf)
+        self.assertTrue(has_buf_tf)
 
 
 class TestRasterizedSource(unittest.TestCase):
@@ -31,11 +47,11 @@ class TestRasterizedSource(unittest.TestCase):
         json_to_file(geojson, self.uri)
 
         config = RasterizedSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=self.uri, default_class_id=None),
+            vector_source=GeoJSONVectorSourceConfig(uri=self.uri),
             rasterizer_config=RasterizerConfig(
                 background_class_id=self.background_class_id,
                 all_touched=all_touched))
+        config.update()
         source = config.build(self.class_config, self.crs_transformer,
                               self.extent)
         return source
@@ -122,16 +138,6 @@ class TestRasterizedSource(unittest.TestCase):
             expected_chip = self.background_class_id * np.ones((10, 10, 1))
             expected_chip[0:1, 0:1, 0] = self.class_id
             np.testing.assert_array_equal(chip, expected_chip)
-
-    def test_using_null_class_bufs(self):
-        vs = GeoJSONVectorSourceConfig(
-            uri=self.uri, default_class_id=None, line_bufs={0: None})
-        with self.assertRaises(ConfigError):
-            config = RasterizedSourceConfig(
-                vector_source=vs,
-                rasterizer_config=RasterizerConfig(
-                    background_class_id=self.background_class_id))
-            config.validate_config()
 
 
 if __name__ == '__main__':

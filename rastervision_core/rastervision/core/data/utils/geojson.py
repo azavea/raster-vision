@@ -53,7 +53,7 @@ def map_geoms(func: Callable, geojson: dict) -> dict:
         geom_out = mapping(geom_out)
         # new feature with updated geometry
         feature_out = geometry_to_feature(geom_out,
-                                          feature_in.get('properties'))
+                                          feature_in.get('properties', {}))
         return feature_out
 
     return map_features(feat_func, geojson)
@@ -135,7 +135,8 @@ def split_multi_geometries(geojson: dict) -> dict:
         geom = shape(f['geometry'])
         split_geoms = split_geom(geom)
         for g in split_geoms:
-            new_feature = geometry_to_feature(mapping(g), f.get('properties'))
+            new_feature = geometry_to_feature(
+                mapping(g), f.get('properties', {}))
             new_features.append(new_feature)
     return features_to_geojson(new_features)
 
@@ -188,8 +189,10 @@ def simplify_polygons(geojson: dict) -> dict:
     return geojson_split
 
 
-def buffer_geoms(geojson: dict, geom_type: str,
-                 class_bufs: Dict[int, Optional[float]]) -> dict:
+def buffer_geoms(geojson: dict,
+                 geom_type: str,
+                 class_bufs: Dict[int, Optional[float]] = {},
+                 default_buf: Optional[float] = 1) -> dict:
     """Buffer geometries.
 
     Geometries in features without a class_id property will be ignored.
@@ -217,7 +220,7 @@ def buffer_geoms(geojson: dict, geom_type: str,
             return geom
 
         class_id = feature['properties']['class_id']
-        buf = class_bufs.get(class_id, 1)
+        buf = class_bufs.get(class_id, default_buf)
         # If buf for the class_id was explicitly set as None, don't buffer.
         if buf is not None:
             geom = geom.buffer(buf)

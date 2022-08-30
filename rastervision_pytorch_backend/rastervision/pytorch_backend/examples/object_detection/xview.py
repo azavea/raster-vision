@@ -66,7 +66,11 @@ def get_config(runner,
 
         label_source = ObjectDetectionLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=label_uri, default_class_id=0, ignore_crs_field=True))
+                uri=label_uri,
+                ignore_crs_field=True,
+                transformers=[
+                    ClassInferenceTransformerConfig(default_class_id=0)
+                ]))
 
         return SceneConfig(
             id=id, raster_source=raster_source, label_source=label_source)

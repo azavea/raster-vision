@@ -102,6 +102,9 @@ def get_class_vector_preds(scene: 'Scene',
                            class_config: 'ClassConfig') -> Iterator[dict]:
     """Returns a generator that yields pred geojsons from
     label_store.vector_outputs."""
+    from rastervision.core.data.vector_transformer import (
+        ClassInferenceTransformerConfig)
+
     class_ids = [vo.class_id for vo in label_store.vector_outputs]
     if len(set(class_ids)) < len(class_ids):
         raise ValueError('SemanticSegmentationEvaluator expects there to be '
@@ -110,7 +113,10 @@ def get_class_vector_preds(scene: 'Scene',
         pred_geojson_uri = vo.uri
         class_id = vo.class_id
         pred_geojson_source_cfg = GeoJSONVectorSourceConfig(
-            uri=pred_geojson_uri, default_class_id=class_id)
+            uri=pred_geojson_uri,
+            transformers=[
+                ClassInferenceTransformerConfig(default_class_id=class_id)
+            ])
         pred_geojson_source = pred_geojson_source_cfg.build(
             class_config, scene.raster_source.get_crs_transformer())
         pred_geojson: dict = pred_geojson_source.get_geojson()

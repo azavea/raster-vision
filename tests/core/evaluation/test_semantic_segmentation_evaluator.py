@@ -9,7 +9,7 @@ from rastervision.core import Box
 from rastervision.core.data import (
     Scene, IdentityCRSTransformer, SemanticSegmentationLabelSource,
     RasterizedSourceConfig, RasterizerConfig, GeoJSONVectorSourceConfig,
-    PolygonVectorOutputConfig)
+    PolygonVectorOutputConfig, ClassInferenceTransformerConfig)
 from rastervision.core.evaluation import (SemanticSegmentationEvaluator,
                                           SemanticSegmentationEvaluatorConfig)
 from rastervision.pipeline import rv_config
@@ -105,14 +105,20 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
 
         config = RasterizedSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=gt_uri, default_class_id=0),
+                uri=gt_uri,
+                transformers=[
+                    ClassInferenceTransformerConfig(default_class_id=0)
+                ]),
             rasterizer_config=RasterizerConfig(background_class_id=1))
         gt_rs = config.build(self.class_config, crs_transformer, extent)
         gt_ls = SemanticSegmentationLabelSource(gt_rs, self.null_class_id)
 
         config = RasterizedSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=pred_uri, default_class_id=0),
+                uri=pred_uri,
+                transformers=[
+                    ClassInferenceTransformerConfig(default_class_id=0)
+                ]),
             rasterizer_config=RasterizerConfig(background_class_id=1))
         pred_rs = config.build(self.class_config, crs_transformer, extent)
         pred_ls = SemanticSegmentationLabelSource(pred_rs, self.null_class_id)

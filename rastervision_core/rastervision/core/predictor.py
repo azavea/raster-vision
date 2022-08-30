@@ -81,7 +81,6 @@ class Predictor():
 
         self.scene.label_source = None
         self.scene.aoi_uris = None
-        self.scene.aoi_geometries = None
         self.scene.raster_source.extent_crop = None
 
         self.config.dataset.train_scenes = [self.scene]

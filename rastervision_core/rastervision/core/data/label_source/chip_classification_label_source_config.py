@@ -3,10 +3,21 @@ from typing import Optional
 from rastervision.core.data.vector_source import (VectorSourceConfig)
 from rastervision.core.data.label_source import (LabelSourceConfig,
                                                  ChipClassificationLabelSource)
-from rastervision.pipeline.config import (register_config, ConfigError, Field)
+from rastervision.pipeline.config import register_config, Field, validator
+from rastervision.core.data.vector_transformer import (
+    ClassInferenceTransformerConfig, BufferTransformerConfig)
 
 
-@register_config('chip_classification_label_source')
+def cc_label_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version < 5:
+        # made non-optional in version 5
+        cfg_dict['ioa_thresh'] = cfg_dict.get('ioa_thresh', 0.5)
+    return cfg_dict
+
+
+@register_config(
+    'chip_classification_label_source',
+    upgrader=cc_label_source_config_upgrader)
 class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     """Config for a source of labels for chip classification.
 
@@ -14,8 +25,8 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     inferred from arbitrary polygons.
     """
     vector_source: VectorSourceConfig
-    ioa_thresh: Optional[float] = Field(
-        None,
+    ioa_thresh: float = Field(
+        0.5,
         description=
         ('Minimum IOA of a polygon and cell for that polygon to be a candidate for '
          'setting the class_id.'))
@@ -50,24 +61,35 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         description='If True, labels will not be populated automatically '
         'during initialization of the label source.')
 
+    @validator('vector_source')
+    def ensure_required_transformers(
+            cls, v: VectorSourceConfig) -> VectorSourceConfig:
+        """Add class-inference and buffer transformers if absent."""
+        tfs = v.transformers
+
+        # add class inference transformer
+        has_inf_tf = any(
+            isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
+        if not has_inf_tf:
+            tfs += [ClassInferenceTransformerConfig(default_class_id=None)]
+
+        # add buffer transformers
+        has_buf_tf = any(isinstance(tf, BufferTransformerConfig) for tf in tfs)
+        if not has_buf_tf:
+            tfs += [
+                BufferTransformerConfig(geom_type='Point', default_buf=1),
+                BufferTransformerConfig(geom_type='LineString', default_buf=1)
+            ]
+
+        return v
+
     def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
-            self,
-            vector_source,
-            class_config,
-            crs_transformer,
-            extent=extent,
-            lazy=self.lazy)
+            self, vector_source, extent=extent, lazy=self.lazy)
 
     def update(self, pipeline=None, scene=None):
         super().update(pipeline, scene)
         if self.cell_sz is None and pipeline is not None:
             self.cell_sz = pipeline.train_chip_sz
         self.vector_source.update(pipeline, scene)
-
-    def validate_config(self):
-        if self.vector_source.has_null_class_bufs():
-            raise ConfigError(
-                'Setting buffer to None for a class in the vector_source is '
-                'not allowed for ChipClassificationLabelSourceConfig.')

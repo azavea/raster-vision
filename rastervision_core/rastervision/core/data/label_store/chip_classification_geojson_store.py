@@ -41,7 +41,7 @@ class ChipClassificationGeoJSONStore(LabelStore):
         json_to_file(geojson, self.uri)
 
     def get_labels(self):
-        vs = GeoJSONVectorSourceConfig(uri=self.uri, default_class_id=None)
+        vs = GeoJSONVectorSourceConfig(uri=self.uri)
         ls = ChipClassificationLabelSourceConfig(vector_source=vs).build(
             self.class_config, self.crs_transformer)
         return ls.get_labels()

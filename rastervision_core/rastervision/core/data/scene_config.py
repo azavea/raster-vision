@@ -1,53 +1,42 @@
 from typing import Optional, List
 
-import numpy as np
-from shapely.geometry import shape
-
-from rastervision.pipeline.config import Config, register_config, Field
+from rastervision.pipeline.config import (Config, ConfigError, register_config,
+                                          Field)
 from rastervision.core.data.raster_source import RasterSourceConfig
 from rastervision.core.data.label_source import LabelSourceConfig
 from rastervision.core.data.label_store import LabelStoreConfig
 from rastervision.core.data.scene import Scene
-from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
-from rastervision.core.data.utils import geometries_to_geojson
-from rastervision.core.data.vector_source import transform_geojson
-
-from copy import deepcopy
+from rastervision.core.data.vector_source import GeoJSONVectorSource
 
 
-@register_config('scene')
+def scene_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 4:
+        try:
+            # removed in version 5
+            if cfg_dict.get('aoi_geometries') is not None:
+                raise ConfigError(
+                    'SceneConfig.aoi_geometries is deprecated. '
+                    'To use this config again, manually edit it to use '
+                    'SceneConfig.aoi_uris instead.')
+            del cfg_dict['aoi_geometries']
+        except KeyError:
+            pass
+    return cfg_dict
+
+
+@register_config('scene', upgrader=scene_config_upgrader)
 class SceneConfig(Config):
-    """Config for a Scene which comprises the raster data and labels for an AOI."""
+    """Config for Scene which comprises raster data and labels for an AOI."""
     id: str
     raster_source: RasterSourceConfig
     label_source: Optional[LabelSourceConfig] = None
     label_store: Optional[LabelStoreConfig] = None
-    aoi_geometries: Optional[List[dict]] = Field(
-        None,
-        description=(
-            'An array of GeoJSON geometries represented as Python dictionaries'
-        ))
     aoi_uris: Optional[List[str]] = Field(
         None,
-        description=
-        ('List of URIs of GeoJSON files that define the AOIs for the scene. Each polygon'
-         'defines an AOI which is a piece of the scene that is assumed to be fully '
-         'labeled and usable for training or validation.'))
-
-    def __repr_args__(self):
-        if self.aoi_geometries is not None:
-            # aoi_geometries can contain huge lists of coordinates that can
-            # clutter the output. This makes it cleaner by only displaying the
-            # shape of the coordinates array.
-            d = deepcopy(self.__dict__)
-            for g in d['aoi_geometries']:
-                if 'coordinates' in g:
-                    coords = np.array(g['coordinates'])
-                    g['coordinates'] = (
-                        f'<coordinate array of shape {coords.shape}>')
-            return d.items()
-
-        return self.__dict__.items()
+        description='List of URIs of GeoJSON files that define the AOIs for '
+        'the scene. Each polygon defines an AOI which is a piece of the scene '
+        'that is assumed to be fully labeled and usable for training or '
+        'validation. The AOIs are assumed to be in EPSG:4326 coordinates.')
 
     def build(self, class_config, tmp_dir, use_transformers=True) -> Scene:
         raster_source = self.raster_source.build(
@@ -62,34 +51,19 @@ class SceneConfig(Config):
                                               extent, tmp_dir)
                        if self.label_store is not None else None)
 
-        # Immediate AOI geometries
-        if self.aoi_geometries is not None:
-            geojson = geometries_to_geojson(deepcopy(self.aoi_geometries))
-            aoi_geojson = transform_geojson(geojson, crs_transformer)
-            aoi_polygons = [
-                shape(f['geometry']) for f in aoi_geojson['features']
-            ]
-        else:
-            aoi_polygons = None
-
-        # AOI geometries from files
+        aoi_polygons = []
         if self.aoi_uris is not None:
-            if aoi_polygons is None:
-                aoi_polygons = []
             for uri in self.aoi_uris:
-                # Set default class id to 0 to avoid deleting features. If it was
-                # set to None, they would all be deleted.
-                aoi_geojson = GeoJSONVectorSourceConfig(
-                    uri=uri, default_class_id=0, ignore_crs_field=True).build(
-                        class_config, crs_transformer).get_geojson()
-                for f in aoi_geojson['features']:
-                    aoi_polygons.append(shape(f['geometry']))
+                aoi_polygons += GeoJSONVectorSource(
+                    uri=uri,
+                    ignore_crs_field=True,
+                    crs_transformer=crs_transformer).get_geoms()
 
         return Scene(
             self.id,
             raster_source,
-            ground_truth_label_source=label_source,
-            prediction_label_store=label_store,
+            label_source=label_source,
+            label_store=label_store,
             aoi_polygons=aoi_polygons)
 
     def update(self, pipeline=None):

@@ -27,8 +27,10 @@ class ObjectDetectionLabelSource(LabelSource):
             clip (bool, optional): Clip bounding boxes to window limits when
                 retrieving labels for a window. Defaults to False.
         """
+        geojson = vector_source.get_geojson()
+        self.validate_geojson(geojson)
         self.labels = ObjectDetectionLabels.from_geojson(
-            vector_source.get_geojson(), extent=extent)
+            geojson, extent=extent)
         self.ioa_thresh = ioa_thresh if ioa_thresh is not None else 1e-6
         self.clip = clip
 
@@ -80,3 +82,16 @@ class ObjectDetectionLabelSource(LabelSource):
         npboxes = labels.get_npboxes()
         npboxes = ObjectDetectionLabels.global_to_local(npboxes, window)
         return npboxes, class_ids, 'yxyx'
+
+    def validate_geojson(self, geojson: dict) -> None:
+        for f in geojson['features']:
+            geom_type = f.get('geometry', {}).get('type', '')
+            if 'Point' in geom_type or 'LineString' in geom_type:
+                raise ValueError(
+                    'LineStrings and Points are not supported '
+                    'in ChipClassificationLabelSource. Use BufferTransformer '
+                    'to buffer them into Polygons.')
+        for f in geojson['features']:
+            if f.get('properties', {}).get('class_id') is None:
+                raise ValueError('All GeoJSON features must have a class_id '
+                                 'field in their properties.')

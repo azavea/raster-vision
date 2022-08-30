@@ -28,8 +28,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         raster_source = RasterioSourceConfig(
             channel_order=[0, 1, 2], uris=[img_path])
         label_source = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(
-                uri=label_path, default_class_id=None))
+            vector_source=GeoJSONVectorSourceConfig(uri=label_path))
         return SceneConfig(
             id=scene_id,
             raster_source=raster_source,

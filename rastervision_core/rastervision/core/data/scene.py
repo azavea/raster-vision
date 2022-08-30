@@ -13,8 +13,8 @@ class Scene(ActivateMixin):
     def __init__(self,
                  id: str,
                  raster_source: 'RasterSource',
-                 ground_truth_label_source: Optional['LabelSource'] = None,
-                 prediction_label_store: Optional['LabelStore'] = None,
+                 label_source: Optional['LabelSource'] = None,
+                 label_store: Optional['LabelStore'] = None,
                  aoi_polygons: Optional[list] = None):
         """Construct a new Scene.
 
@@ -22,25 +22,17 @@ class Scene(ActivateMixin):
             id: ID for this scene
             raster_source: RasterSource for this scene
             ground_truth_label_store: optional LabelSource
-            prediction_label_store: optional LabelStore
+            label_store: optional LabelStore
             aoi: Optional list of AOI polygons in pixel coordinates
         """
         self.id = id
         self.raster_source = raster_source
-        self.ground_truth_label_source = ground_truth_label_source
-        self.prediction_label_store = prediction_label_store
+        self.label_source = label_source
+        self.label_store = label_store
         if aoi_polygons is None:
             self.aoi_polygons = []
         else:
             self.aoi_polygons = aoi_polygons
-
-    @property
-    def label_source(self) -> 'LabelSource':
-        return self.ground_truth_label_source
-
-    @property
-    def label_store(self) -> 'LabelStore':
-        return self.prediction_label_store
 
     def __getitem__(self, window: Box) -> Tuple[Any, Any]:
         x = self.raster_source[window]
@@ -51,10 +43,7 @@ class Scene(ActivateMixin):
         return x, y
 
     def _subcomponents_to_activate(self) -> list:
-        return [
-            self.raster_source, self.ground_truth_label_source,
-            self.prediction_label_store
-        ]
+        return [self.raster_source, self.label_source, self.label_store]
 
     def _activate(self):
         pass
