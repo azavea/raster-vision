@@ -13,3 +13,4 @@ from rastervision.core.data.scene_config import *
 from rastervision.core.data.dataset import *
 from rastervision.core.data.dataset_config import *
 from rastervision.core.data.raster_transformer import *
+from rastervision.core.data.vector_transformer import *
