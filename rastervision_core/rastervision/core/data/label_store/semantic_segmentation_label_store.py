@@ -136,7 +136,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                 f'Raster source at {self.label_uri} does not exist.')
 
         extent = self.label_raster_source.get_extent()
-        raw_labels = self.label_raster_source.get_raw_chip(extent)
+        raw_labels = self.label_raster_source.get_chip(extent)
         if self.class_transformer is None:
             label_arr = np.squeeze(raw_labels)
         else:

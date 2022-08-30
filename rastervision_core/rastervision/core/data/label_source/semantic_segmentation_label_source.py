@@ -52,7 +52,7 @@ class SemanticSegmentationLabelSource(LabelSource):
         Returns:
              True (the window does contain interesting pixels) or False.
         """
-        raw_labels = self.raster_source.get_raw_chip(window)
+        raw_labels = self.raster_source.get_chip(window)
         labels = np.squeeze(raw_labels)
         labels = fill_edge(labels, window, self.raster_source.get_extent(),
                            self.null_class_id)
