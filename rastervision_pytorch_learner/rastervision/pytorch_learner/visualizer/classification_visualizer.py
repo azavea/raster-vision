@@ -3,12 +3,12 @@ from textwrap import wrap
 
 import torch
 
-from rastervision.pytorch_learner.visualization.visualization import Visualization  # NOQA
+from rastervision.pytorch_learner.visualizer.visualizer import Visualizer  # NOQA
 from rastervision.pytorch_learner.utils import (
     plot_channel_groups, channel_groups_to_imgs)
 
 
-class ClassificationVisualization(Visualization):
+class ClassificationVisualizer(Visualizer):
     def get_plot_ncols(self, **kwargs) -> int:
         ncols = len(self.channel_display_groups) + 1
         return ncols

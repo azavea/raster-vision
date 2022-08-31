@@ -5,12 +5,12 @@ import numpy as np
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 
-from rastervision.pytorch_learner.visualization.visualization import Visualization  # NOQA
+from rastervision.pytorch_learner.visualizer.visualizer import Visualizer  # NOQA
 from rastervision.pytorch_learner.utils import (
     color_to_triple, plot_channel_groups, channel_groups_to_imgs)
 
 
-class SemanticSegmentationVisualization(Visualization):
+class SemanticSegmentationVisualizer(Visualizer):
     def get_plot_ncols(self, **kwargs) -> int:
         ncols = len(self.channel_display_groups) + 1
         z = kwargs.get('z')

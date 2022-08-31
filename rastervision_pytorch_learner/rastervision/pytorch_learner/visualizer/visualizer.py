@@ -13,7 +13,7 @@ from rastervision.pytorch_learner.utils import (
 RGBTuple = Tuple[int, int, int]
 
 
-class Visualization():
+class Visualizer():
     def __init__(self, 
                  class_names: Optional[List[str]] = None, 
                  class_colors: Optional[List[Union[str, RGBTuple]]] = None,
@@ -50,7 +50,7 @@ class Visualization():
         return nrows
 
     def get_plot_ncols(self, **kwargs) -> int:
-        ncols = len(channel_display_groups)
+        ncols = len(self.channel_display_groups)
         return ncols
 
     def get_plot_params(self, **kwargs) -> dict:

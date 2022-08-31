@@ -2,14 +2,14 @@ from typing import (Sequence, Optional, Union)
 
 import torch
 
-from rastervision.pytorch_learner.visualization.visualization import Visualization  # NOQA
+from rastervision.pytorch_learner.visualizer.visualizer import Visualizer  # NOQA
 from rastervision.pytorch_learner.utils import (
     plot_channel_groups, channel_groups_to_imgs)
 from rastervision.pytorch_learner.object_detection_utils import (
     BoxList, draw_boxes)
 
 
-class ObjectDetectionVisualization(Visualization):
+class ObjectDetectionVisualizer(Visualizer):
     def plot_xyz(self,
                  axs: Sequence,
                  x: torch.Tensor,
