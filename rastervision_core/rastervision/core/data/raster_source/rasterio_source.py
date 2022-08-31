@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
 import logging
 import math
 import os
@@ -5,7 +6,6 @@ from pyproj import Transformer
 import subprocess
 from decimal import Decimal
 from tempfile import mkdtemp
-from typing import Optional, Tuple
 
 import numpy as np
 import rasterio
@@ -16,6 +16,9 @@ from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
 from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
 from rastervision.core.data import (ActivateMixin, ActivationError)
+
+if TYPE_CHECKING:
+    from rasterio.io import DatasetReader
 
 log = logging.getLogger(__name__)
 wgs84 = 'epsg:4326'
@@ -46,7 +49,8 @@ def stream_and_build_vrt(images_uris, tmp_dir):
 
 
 def load_window(
-        image_dataset,
+        image_dataset: 'DatasetReader',
+        bands: Optional[Union[int, Sequence[int]]] = None,
         window: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         is_masked: bool = False,
         out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
@@ -54,6 +58,8 @@ def load_window(
 
     Args:
         image_dataset: a Rasterio dataset.
+        bands (Optional[Union[int, Sequence[int]]]): Band index or indices to
+            read. Must be 1-indexed.
         window (Optional[Tuple[Tuple[int, int], Tuple[int, int]]]):
             ((row_start, row_stop), (col_start, col_stop)) or
             ((y_min, y_max), (x_min, x_max)). If None, reads the entire raster.
@@ -67,25 +73,28 @@ def load_window(
         np.ndarray of shape (height, width, channels) where channels is the
             number of channels in the image_dataset.
     """
+    im = image_dataset.read(
+        indexes=tuple(bands),
+        window=window,
+        boundless=True,
+        masked=is_masked,
+        out_shape=out_shape,
+        resampling=Resampling.bilinear)
+
     if is_masked:
-        im = image_dataset.read(
-            window=window,
-            boundless=True,
-            masked=True,
-            out_shape=out_shape,
-            resampling=Resampling.bilinear)
         im = np.ma.filled(im, fill_value=0)
-    else:
-        im = image_dataset.read(
-            window=window,
-            boundless=True,
-            out_shape=out_shape,
-            resampling=Resampling.bilinear)
 
     # Handle non-zero NODATA values by setting the data to 0.
-    for channel, nodata in enumerate(image_dataset.nodatavals):
-        if nodata is not None and nodata != 0:
-            im[channel, im[channel] == nodata] = 0
+    if bands is None:
+        for channel, nodataval in enumerate(image_dataset.nodatavals):
+            if nodataval is not None and nodataval != 0:
+                im[channel, im[channel] == nodataval] = 0
+    else:
+        for channel, src_band in enumerate(bands):
+            src_band_0_indexed = src_band - 1
+            nodataval = image_dataset.nodatavals[src_band_0_indexed]
+            if nodataval is not None and nodataval != 0:
+                im[channel, im[channel] == nodataval] = 0
 
     im = np.transpose(im, axes=[1, 2, 0])
     return im
@@ -161,6 +170,7 @@ class RasterioSource(ActivateMixin, RasterSource):
                 else:
                     channel_order = list(range(0, num_channels))
             self.validate_channel_order(channel_order, num_channels)
+            self.bands_to_read = [i + 1 for i in channel_order]
 
             mask_flags = self.image_dataset.mask_flag_enums
             self.is_masked = any(
@@ -214,13 +224,15 @@ class RasterioSource(ActivateMixin, RasterSource):
 
     def _get_chip(self,
                   window: Box,
-                  out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
+                  out_shape: Optional[Tuple[int, ...]] = None,
+                  bands: Optional[Sequence[int]] = None) -> np.ndarray:
         if self.image_dataset is None:
             raise ActivationError('RasterSource must be activated before use')
         shifted_window = self._get_shifted_window(window)
         chip = load_window(
             self.image_dataset,
-            window=shifted_window.rasterio_format(),
+            bands=bands,
+            window=window.rasterio_format(),
             is_masked=self.is_masked,
             out_shape=out_shape)
         if self.extent_crop is not None:
@@ -229,11 +241,8 @@ class RasterioSource(ActivateMixin, RasterSource):
 
     def get_chip(self, window,
                  out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
-        chip = self._get_chip(window, out_shape=out_shape)
-
-        if self.channel_order:
-            chip = chip[:, :, self.channel_order]
-
+        chip = self._get_chip(
+            window, out_shape=out_shape, bands=self.bands_to_read)
         for transformer in self.raster_transformers:
             chip = transformer.transform(chip, self.channel_order)
 
