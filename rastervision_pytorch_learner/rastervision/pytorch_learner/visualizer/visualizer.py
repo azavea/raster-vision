@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from torch import Tensor
 import torch
+from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
 from rastervision.pipeline.file_system import make_dir
@@ -29,6 +30,12 @@ class Visualizer():
         self.class_colors = class_colors
         self.transform = transform
         self.channel_display_groups = channel_display_groups
+
+    def get_batch(self, dataset, batch_sz=4):
+        dl = DataLoader(dataset, batch_sz)
+        for x, y in dl:
+            break
+        return x, y
 
     @abstractmethod
     def plot_xyz(self, axs, x: Tensor, y, z=None):
