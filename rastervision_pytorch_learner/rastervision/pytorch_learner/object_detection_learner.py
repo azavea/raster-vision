@@ -8,10 +8,11 @@ import numpy as np
 import torch
 
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.utils.utils import (plot_channel_groups,
-                                                      channel_groups_to_imgs)
 from rastervision.pytorch_learner.object_detection_utils import (
-    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, draw_boxes)
+    BoxList, TorchVisionODAdapter, compute_coco_eval)
+from rastervision.pytorch_learner.visualizer import (
+    ObjectDetectionVisualizer)
+
 
 if TYPE_CHECKING:
     from torch import nn
@@ -22,6 +23,9 @@ log = logging.getLogger(__name__)
 
 
 class ObjectDetectionLearner(Learner):
+    def get_visualizer_class(self):
+        return ObjectDetectionVisualizer
+
     def build_model(self, model_def_path: Optional[str] = None) -> 'nn.Module':
         """Override to pass img_sz."""
         cfg = self.cfg

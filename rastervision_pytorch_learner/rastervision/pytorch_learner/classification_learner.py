@@ -7,8 +7,9 @@ import torch
 
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.utils import (
-    compute_conf_mat_metrics, compute_conf_mat, plot_channel_groups,
-    channel_groups_to_imgs)
+    compute_conf_mat_metrics, compute_conf_mat)
+from rastervision.pytorch_learner.visualizer import (
+    ClassificationVisualizer)
 
 warnings.filterwarnings('ignore')
 
@@ -16,6 +17,9 @@ log = logging.getLogger(__name__)
 
 
 class ClassificationLearner(Learner):
+    def get_visualizer_class(self):
+        return ClassificationVisualizer
+
     def train_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))

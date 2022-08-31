@@ -32,7 +32,9 @@ from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
                                           save_pipeline_config)
 from rastervision.pytorch_learner.utils import (
-    get_hubconf_dir_from_cfg, deserialize_albumentation_transform)
+    get_hubconf_dir_from_cfg)
+from rastervision.pytorch_learner.visualizer import Visualizer
+
 
 if TYPE_CHECKING:
     from torch.optim import Optimizer
@@ -211,6 +213,11 @@ class Learner(ABC):
             self.model.train()
         else:
             self.model.eval()
+
+        self.visualizer = self.get_visualizer_class()(
+            cfg.data.class_names, cfg.data.class_colors,
+            cfg.plot_options.transform,
+            cfg.plot_options.channel_display_groups)
 
     def main(self):
         """Main training sequence.
@@ -474,6 +481,10 @@ class Learner(ABC):
                 '{}_recall'.format(label)
             ])
         return metric_names
+
+    @abstractmethod
+    def get_visualizer_class(self):
+        pass
 
     @abstractmethod
     def train_step(self, batch: Any, batch_ind: int) -> MetricDict:
@@ -837,7 +848,7 @@ class Learner(ABC):
         preds = self.predict_dataloader(
             dl, return_format='xyz', batched_output=True, raw_out=True)
         x, y, z = next(preds)
-        self.plot_batch(
+        self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
 
     def plot_dataloader(self,
@@ -847,7 +858,7 @@ class Learner(ABC):
                         show: bool = False):
         """Plot images and ground truth labels for a DataLoader."""
         x, y = next(iter(dl))
-        self.plot_batch(x, y, output_path, batch_limit=batch_limit, show=show)
+        self.visualizer.plot_batch(x, y, output_path, batch_limit=batch_limit, show=show)
 
     def plot_dataloaders(self,
                          batch_limit: Optional[int] = None,

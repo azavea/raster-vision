@@ -1,4 +1,4 @@
-from typing import (Sequence, Optional, List, Dict, Union, Tuple, NonNegInt)
+from typing import (Sequence, Optional, List, Dict, Union, Tuple)
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -9,21 +9,22 @@ import matplotlib.pyplot as plt
 from rastervision.pipeline.file_system import make_dir
 from rastervision.pytorch_learner.utils import (
     deserialize_albumentation_transform)
+from rastervision.pytorch_learner.learner_config import NonNegInt
 
 RGBTuple = Tuple[int, int, int]
 
 
 class Visualizer():
-    def __init__(self, 
-                 class_names: Optional[List[str]] = None, 
+    def __init__(self,
+                 class_names: Optional[List[str]] = None,
                  class_colors: Optional[List[Union[str, RGBTuple]]] = None,
-                 transform: Optional[Dict] = None, 
+                 transform: Optional[Dict] = None,
                  channel_display_groups: Optional[Union[
-                    Dict[str, Sequence[NonNegInt]], 
+                    Dict[str, Sequence[NonNegInt]],
                     Sequence[Sequence[NonNegInt]]]] = None):
         # TODO add docs from Config classes
         # TODO validate input using functionality in Config classes
-        # TODO set defaults 
+        # TODO set defaults
         self.class_names = class_names
         self.class_colors = class_colors
         self.transform = transform
