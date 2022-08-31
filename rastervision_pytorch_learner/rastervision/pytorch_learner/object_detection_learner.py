@@ -107,21 +107,5 @@ class ObjectDetectionLearner(Learner):
         else:
             return [boxlist_to_numpy(boxlist) for boxlist in out]
 
-    def plot_xyz(self,
-                 axs: Sequence,
-                 x: torch.Tensor,
-                 y: BoxList,
-                 z: Optional[BoxList] = None) -> None:
-
-        y = y if z is None else z
-        channel_groups = self.cfg.data.plot_options.channel_display_groups
-
-        class_names = self.cfg.data.class_names
-        class_colors = self.cfg.data.class_colors
-
-        imgs = channel_groups_to_imgs(x, channel_groups)
-        imgs = [draw_boxes(img, y, class_names, class_colors) for img in imgs]
-        plot_channel_groups(axs, imgs, channel_groups)
-
     def prob_to_pred(self, x):
         return x
