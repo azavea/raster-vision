@@ -22,28 +22,23 @@ class MultiRasterSource(ActivateMixin, RasterSource):
 
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
-                 raw_channel_order: Optional[Sequence[conint(ge=0)]] = None,
+                 primary_source_idx: conint(ge=0) = 0,
                  force_same_dtype: bool = False,
                  channel_order: Optional[Sequence[conint(ge=0)]] = None,
-                 primary_source_idx: conint(ge=0) = 0,
                  raster_transformers: Sequence = [],
                  extent_crop: Optional[CropOffsets] = None):
         """Constructor.
 
         Args:
             raster_sources (Sequence[RasterSource]): Sequence of RasterSources.
-            raw_channel_order (Optional[Sequence[conint(ge=0)]]): Channel
-                ordering that will always be applied before channel_order.
-                If None, no reordering will be applied to the channels
-                extracted from the raster sources. Defaults to None.
+            primary_source_idx (0 <= int < len(raster_sources)): Index of the
+                raster source whose CRS, dtype, and other attributes will
+                override those of the other raster sources.
             force_same_dtype (bool): If true, force all sub-chips to have the
                 same dtype as the primary_source_idx-th sub-chip. No careful
                 conversion is done, just a quick cast. Use with caution.
             channel_order (Sequence[conint(ge=0)], optional): Channel ordering
                 that will be used by .get_chip(). Defaults to None.
-            primary_source_idx (0 <= int < len(raster_sources)): Index of the
-                raster source whose CRS, dtype, and other attributes will
-                override those of the other raster sources.
             raster_transformers (Sequence, optional): Sequence of transformers.
                 Defaults to [].
             extent_crop (CropOffsets, optional): Relative
@@ -51,13 +46,8 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                 Useful for using splitting a scene into different datasets.
                 Defaults to None i.e. no cropping.
         """
-        if not raw_channel_order:
-            raw_num_channels = sum(rs.num_channels for rs in raster_sources)
-            raw_channel_order = list(range(raw_num_channels))
-        else:
-            raw_num_channels = len(raw_channel_order)
         if not channel_order:
-            num_channels = raw_num_channels
+            num_channels = sum(rs.num_channels for rs in raster_sources)
             channel_order = list(range(num_channels))
         else:
             num_channels = len(channel_order)
@@ -71,7 +61,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
 
         self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
-        self.raw_channel_order = list(raw_channel_order)
         self.primary_source_idx = primary_source_idx
         self.extent_crop = extent_crop
 
@@ -86,7 +75,8 @@ class MultiRasterSource(ActivateMixin, RasterSource):
             raise MultiRasterSourceError(
                 'dtypes of all sub raster sources must be the same. '
                 f'Got: {dtypes} '
-                '(carefully consider using force_same_dtype)')
+                '(Use force_same_dtype to cast all to the dtype of the '
+                'primary source)')
         if not self.all_extents_equal:
             all_rasterio_sources = all(
                 isinstance(rs, RasterioSource) for rs in self.raster_sources)
@@ -95,8 +85,7 @@ class MultiRasterSource(ActivateMixin, RasterSource):
                     'Non-identical extents are only supported '
                     'for RasterioSource raster sources.')
 
-        sub_num_channels = sum(
-            len(rs.channel_order) for rs in self.raster_sources)
+        sub_num_channels = sum(rs.num_channels for rs in self.raster_sources)
         if sub_num_channels != self.num_channels:
             raise MultiRasterSourceError(
                 f'num_channels ({self.num_channels}) != sum of num_channels '
@@ -186,8 +175,7 @@ class MultiRasterSource(ActivateMixin, RasterSource):
     def _get_chip(self, window: Box) -> np.ndarray:
         """Return the raw chip located in the window.
 
-        Get raw chips from sub raster sources, concatenate them and
-        apply raw_channel_order.
+        Get raw chips from sub raster sources and concatenate them.
 
         Args:
             window: Box
@@ -197,16 +185,14 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         """
         sub_chips = self._get_sub_chips(window, raw=True)
         chip = np.concatenate(sub_chips, axis=-1)
-        chip = chip[..., self.raw_channel_order]
         return chip
 
     def get_chip(self, window: Box) -> np.ndarray:
         """Return the transformed chip in the window.
 
         Get processed chips from sub raster sources (with their respective
-        channel orders and transformations applied), concatenate them,
-        apply raw_channel_order, followed by channel_order, followed
-        by transformations.
+        channel orders and transformations applied), concatenate them along the
+        channel dimension, apply channel_order, followed by transformations.
 
         Args:
             window: Box
@@ -216,7 +202,6 @@ class MultiRasterSource(ActivateMixin, RasterSource):
         """
         sub_chips = self._get_sub_chips(window, raw=False)
         chip = np.concatenate(sub_chips, axis=-1)
-        chip = chip[..., self.raw_channel_order]
         chip = chip[..., self.channel_order]
 
         for transformer in self.raster_transformers:

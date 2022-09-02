@@ -5,8 +5,8 @@ import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.data import (
-    RasterioSourceConfig, MultiRasterSourceConfig, SubRasterSourceConfig,
-    CropOffsets, ReclassTransformerConfig, CastTransformerConfig)
+    RasterioSourceConfig, MultiRasterSourceConfig, CropOffsets,
+    ReclassTransformerConfig, CastTransformerConfig)
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path
@@ -20,12 +20,7 @@ def make_cfg(img_path: str = 'small-rgb-tile.tif',
     b_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
 
     cfg = MultiRasterSourceConfig(
-        raster_sources=[
-            SubRasterSourceConfig(raster_source=r_source, target_channels=[0]),
-            SubRasterSourceConfig(raster_source=g_source, target_channels=[1]),
-            SubRasterSourceConfig(raster_source=b_source, target_channels=[2])
-        ],
-        **kwargs)
+        raster_sources=[r_source, g_source, b_source], **kwargs)
     return cfg
 
 
@@ -47,12 +42,7 @@ def make_cfg_diverse(diff_dtypes: bool = False,
         RasterioSourceConfig(uris=[path], channel_order=[0], transformers=tfs)
         for path, tfs in zip(img_paths, transformers)
     ]
-    cfg = MultiRasterSourceConfig(
-        raster_sources=[
-            SubRasterSourceConfig(raster_source=rs_cfg, target_channels=[i])
-            for i, rs_cfg in enumerate(rs_cfgs)
-        ],
-        **kwargs)
+    cfg = MultiRasterSourceConfig(raster_sources=rs_cfgs, **kwargs)
     return cfg
 
 
@@ -164,14 +154,7 @@ class TestMultiRasterSource(unittest.TestCase):
             transformers=[ReclassTransformerConfig(mapping={100: 250})])
 
         cfg = MultiRasterSourceConfig(
-            raster_sources=[
-                SubRasterSourceConfig(
-                    raster_source=source_1, target_channels=[0]),
-                SubRasterSourceConfig(
-                    raster_source=source_2, target_channels=[1]),
-                SubRasterSourceConfig(
-                    raster_source=source_3, target_channels=[2])
-            ],
+            raster_sources=[source_1, source_2, source_3],
             channel_order=[2, 1, 0],
             transformers=[
                 ReclassTransformerConfig(mapping={

@@ -7,7 +7,7 @@ from rastervision.core.rv_pipeline import (
 
 from rastervision.core.data import (
     ClassConfig, RasterioSourceConfig, MultiRasterSourceConfig,
-    SubRasterSourceConfig, SemanticSegmentationLabelSourceConfig,
+    SemanticSegmentationLabelSourceConfig,
     SemanticSegmentationLabelStoreConfig, PolygonVectorOutputConfig,
     RGBClassTransformerConfig)
 
@@ -255,12 +255,8 @@ def make_multi_raster_source(
     elevation_source = RasterioSourceConfig(
         uris=[elevation_raster_uri], channel_order=[0])
 
-    raster_source = MultiRasterSourceConfig(raster_sources=[
-        SubRasterSourceConfig(
-            raster_source=rgbir_source, target_channels=[0, 1, 2, 3]),
-        SubRasterSourceConfig(
-            raster_source=elevation_source, target_channels=[4])
-    ])
+    raster_source = MultiRasterSourceConfig(
+        raster_sources=[rgbir_source, elevation_source])
 
     return raster_source
 
