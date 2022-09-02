@@ -11,20 +11,12 @@ from rastervision.pytorch_learner.utils import (
 
 
 class SemanticSegmentationVisualizer(Visualizer):
-    def get_plot_ncols(self, **kwargs) -> int:
-        ncols = len(self.channel_display_groups) + 1
-        z = kwargs.get('z')
-        if z is not None:
-            ncols += 1
-        return ncols
-
     def plot_xyz(self,
                  axs: Sequence,
                  x: torch.Tensor,
                  y: Union[torch.Tensor, np.ndarray],
                  z: Optional[torch.Tensor] = None) -> None:
-
-        channel_groups = self.channel_display_groups
+        channel_groups = self.get_channel_display_groups(x.shape[1])
 
         img_axes = axs[:len(channel_groups)]
         label_ax = axs[len(channel_groups)]
@@ -72,3 +64,12 @@ class SemanticSegmentationVisualizer(Visualizer):
             handles=legend_items,
             loc='center right',
             bbox_to_anchor=(1.8, 0.5))
+
+    def _get_plot_ncols(self, **kwargs) -> int:
+        x = kwargs['x']
+        nb_img_channels = x.shape[1]
+        ncols = len(self.get_channel_display_groups(nb_img_channels)) + 1
+        z = kwargs.get('z')
+        if z is not None:
+            ncols += 1
+        return ncols

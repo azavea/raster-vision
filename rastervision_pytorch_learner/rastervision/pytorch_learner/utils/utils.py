@@ -77,6 +77,53 @@ def compute_conf_mat_metrics(conf_mat, label_names, eps=1e-6):
     return metrics
 
 
+def ensure_class_colors(class_names, class_colors=None):
+    if class_colors is not None:
+        if len(class_names) != len(class_colors):
+            raise ConfigError(f'len(class_names) ({len(class_names)}) != '
+                                f'len(class_colors) ({len(class_colors)})\n'
+                                f'class_names: {class_names}\n'
+                                f'class_colors: {class_colors}')
+    elif len(class_names) > 0:
+        class_colors = [color_to_triple() for _ in class_names]
+    else:
+        class_colors = []
+    return class_colors
+
+
+def validate_channel_display_groups(groups):
+    if groups is None:
+        return None
+    elif len(groups) == 0:
+        raise ConfigError(
+            f'channel_display_groups cannot be empty. Set to None instead.'
+        )
+    elif not isinstance(groups, dict):
+        # if in list/tuple form, convert to dict s.t.
+        # [(0, 1, 2), (4, 3, 5)] --> {
+        #   "Channels [0, 1, 2]": [0, 1, 2],
+        #   "Channels [4, 3, 5]": [4, 3, 5]
+        # }
+        groups = {f'Channels: {[*chs]}': list(chs) for chs in groups}
+    else:
+        groups = {k: list(v) for k, v in groups.items()}
+
+    if isinstance(groups, dict):
+        for k, _v in groups.items():
+            if not (0 < len(_v) <= 3):
+                raise ConfigError(f'channel_display_groups[{k}]: '
+                                    'len(group) must be 1, 2, or 3')
+    return groups
+
+
+def get_default_channel_display_groups(nb_img_channels):
+    # by default, display first 3 channels as RGB
+    num_display_channels = min(3, nb_img_channels)
+    return {
+        'Input': list(range(num_display_channels))
+    }
+
+
 def validate_albumentation_transform(tf_dict: Optional[dict]) -> dict:
     """ Validate a serialized albumentation transform by attempting to
     deserialize it.

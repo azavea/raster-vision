@@ -15,9 +15,8 @@ class ObjectDetectionVisualizer(Visualizer):
                  x: torch.Tensor,
                  y: BoxList,
                  z: Optional[BoxList] = None) -> None:
-
         y = y if z is None else z
-        channel_groups = self.channel_display_groups
+        channel_groups = self.get_channel_display_groups(x.shape[1])
 
         class_names = self.class_names
         class_colors = self.class_colors

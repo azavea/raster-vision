@@ -9,17 +9,12 @@ from rastervision.pytorch_learner.utils import (
 
 
 class ClassificationVisualizer(Visualizer):
-    def get_plot_ncols(self, **kwargs) -> int:
-        ncols = len(self.channel_display_groups) + 1
-        return ncols
-
     def plot_xyz(self,
                  axs: Sequence,
                  x: torch.Tensor,
                  y: int,
                  z: Optional[int] = None) -> None:
-
-        channel_groups = self.channel_display_groups
+        channel_groups = self.get_channel_display_groups(x.shape[1])
 
         img_axes = axs[:-1]
         label_ax = axs[-1]
@@ -70,3 +65,7 @@ class ClassificationVisualizer(Visualizer):
             label_ax.xaxis.grid(linestyle='--', alpha=1)
             label_ax.set_xlabel('Probability')
             label_ax.set_title('Prediction')
+
+    def _get_plot_ncols(self, **kwargs) -> int:
+        ncols = len(self.channel_display_groups) + 1
+        return ncols

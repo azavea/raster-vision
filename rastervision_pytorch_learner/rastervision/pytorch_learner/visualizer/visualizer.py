@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 
 from rastervision.pipeline.file_system import make_dir
 from rastervision.pytorch_learner.utils import (
-    deserialize_albumentation_transform)
-from rastervision.pytorch_learner.learner_config import NonNegInt
-
-RGBTuple = Tuple[int, int, int]
+    deserialize_albumentation_transform, validate_albumentation_transform,
+    ensure_class_colors, validate_channel_display_groups,
+    get_default_channel_display_groups)
+from rastervision.pytorch_learner.learner_config import (
+    RGBTuple, ChannelInds)
 
 
 class Visualizer():
@@ -21,15 +22,40 @@ class Visualizer():
                  class_colors: Optional[List[Union[str, RGBTuple]]] = None,
                  transform: Optional[Dict] = None,
                  channel_display_groups: Optional[Union[
-                    Dict[str, Sequence[NonNegInt]],
-                    Sequence[Sequence[NonNegInt]]]] = None):
-        # TODO add docs from Config classes
-        # TODO validate input using functionality in Config classes
-        # TODO set defaults
-        self.class_names = class_names
-        self.class_colors = class_colors
-        self.transform = transform
-        self.channel_display_groups = channel_display_groups
+                    Dict[str, ChannelInds], Sequence[ChannelInds]]] = None):
+        """Constructor.
+
+        Args:
+            class_names: names of classes
+            class_colors: Colors used to display classes. Can be color 3-tuples
+                in list form.
+            transform: An Albumentations transform serialized as a dict that
+                will be applied to each image before it is plotted. Mainly useful
+                for undoing any data transformation that you do not want included in
+                the plot, such as normalization. The default value will shift and scale
+                the image so the values range from 0.0 to 1.0 which is the expected range
+                for the plotting function. This default is useful for cases where the
+                values after normalization are close to zero which makes the plot
+                difficult to see.
+            channel_display_groups: Groups of image channels to display together as a
+                subplot when plotting the data and predictions.
+                Can be a list or tuple of groups (e.g. [(0, 1, 2), (3,)]) or a
+                dict containing title-to-group mappings
+                (e.g. {"RGB": [0, 1, 2], "IR": [3]}),
+                where each group is a list or tuple of channel indices and
+                title is a string that will be used as the title of the subplot
+                for that group.
+        """
+        self.class_names = class_names or []
+        self.class_colors = ensure_class_colors(self.class_names, class_colors)
+        self.transform = validate_albumentation_transform(transform)
+        self._channel_display_groups = validate_channel_display_groups(
+            channel_display_groups)
+
+    def get_channel_display_groups(self, nb_img_channels=None):
+        if self._channel_display_groups is not None:
+            return self._channel_display_groups
+        return get_default_channel_display_groups(nb_img_channels)
 
     def get_batch(self, dataset, batch_sz=4):
         dl = DataLoader(dataset, batch_sz)
@@ -49,33 +75,6 @@ class Visualizer():
         """
         pass
 
-    def get_plot_nrows(self, **kwargs) -> int:
-        x = kwargs['x']
-        batch_limit = kwargs.get('batch_limit')
-        batch_sz, c, h, w = x.shape
-        nrows = min(batch_sz,
-                    batch_limit) if batch_limit is not None else batch_sz
-        return nrows
-
-    def get_plot_ncols(self, **kwargs) -> int:
-        ncols = len(self.channel_display_groups)
-        return ncols
-
-    def get_plot_params(self, **kwargs) -> dict:
-        nrows = self.get_plot_nrows(**kwargs)
-        ncols = self.get_plot_ncols(**kwargs)
-        params = {
-            'fig_args': {
-                'nrows': nrows,
-                'ncols': ncols,
-                'constrained_layout': True,
-                'figsize': (3 * ncols, 3 * nrows),
-                'squeeze': False
-            },
-            'plot_xyz_args': {}
-        }
-        return params
-
     def plot_batch(self,
                    x: Tensor,
                    y: Sequence,
@@ -92,7 +91,7 @@ class Visualizer():
             z: optional predicted labels
             batch_limit: optional limit on (rendered) batch size
         """
-        params = self.get_plot_params(
+        params = self._get_plot_params(
             x=x, y=y, z=z, output_path=output_path, batch_limit=batch_limit)
         if params['fig_args']['nrows'] == 0:
             return
@@ -122,3 +121,32 @@ class Visualizer():
             plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
 
         plt.close(fig)
+
+    def _get_plot_nrows(self, **kwargs) -> int:
+        x = kwargs['x']
+        batch_limit = kwargs.get('batch_limit')
+        batch_sz = x.shape[0]
+        nrows = min(batch_sz,
+                    batch_limit) if batch_limit is not None else batch_sz
+        return nrows
+
+    def _get_plot_ncols(self, **kwargs) -> int:
+        x = kwargs['x']
+        nb_img_channels = x.shape[1]
+        ncols = len(self.get_channel_display_groups(nb_img_channels))
+        return ncols
+
+    def _get_plot_params(self, **kwargs) -> dict:
+        nrows = self._get_plot_nrows(**kwargs)
+        ncols = self._get_plot_ncols(**kwargs)
+        params = {
+            'fig_args': {
+                'nrows': nrows,
+                'ncols': ncols,
+                'constrained_layout': True,
+                'figsize': (3 * ncols, 3 * nrows),
+                'squeeze': False
+            },
+            'plot_xyz_args': {}
+        }
+        return params
