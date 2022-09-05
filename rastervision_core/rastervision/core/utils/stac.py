@@ -1,6 +1,7 @@
 from typing import List, Optional
 from urllib.parse import urlparse
 import logging
+from itertools import islice
 
 import boto3
 from pystac import StacIO, Catalog, Item
@@ -62,7 +63,7 @@ def get_linked_image_item(label_item: Item) -> Optional[Item]:
     return image_item
 
 
-def parse_stac(stac_uri: str) -> List[dict]:
+def parse_stac(stac_uri: str, item_limit: Optional[int] = None) -> List[dict]:
     """Parse a STAC catalog JSON file to extract label URIs, images URIs,
     and AOIs.
 
@@ -88,7 +89,8 @@ def parse_stac(stac_uri: str) -> List[dict]:
 
     cat.make_all_asset_hrefs_absolute()
 
-    label_items = [item for item in cat.get_all_items() if is_label_item(item)]
+    label_items = list(
+        islice(filter(is_label_item, cat.get_all_items()), item_limit))
     image_items = [get_linked_image_item(item) for item in label_items]
 
     if len(label_items) == 0:
@@ -122,3 +124,45 @@ def parse_stac(stac_uri: str) -> List[dict]:
             'aoi_geometry': aoi_geometry
         })
     return out
+
+
+def read_stac(uri: str, extract_dir: Optional[str] = None,
+              **kwargs) -> List[dict]:
+    """Parse the contents of a STAC catalog (downloading it first, if
+    remote). If the uri is a zip file, unzip it, find catalog.json inside it
+    and parse that.
+
+    Args:
+        uri (str): Either a URI to a STAC catalog JSON file or a URI to a zip
+            file containing a STAC catalog JSON file.
+
+    Raises:
+        FileNotFoundError: If catalog.json is not found inside the zip file.
+        Exception: If multiple catalog.json's are found inside the zip file.
+
+    Returns:
+        List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
+            "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
+            Each dict corresponds to one label item and its associated image
+            assets in the STAC catalog.
+    """
+    from pathlib import Path
+    from rastervision.pipeline.file_system.utils import (download_if_needed,
+                                                         is_archive, extract)
+
+    catalog_path = download_if_needed(uri)
+    if catalog_path.lower().endswith('.json'):
+        return parse_stac(catalog_path, **kwargs)
+
+    if not is_archive(catalog_path):
+        raise ValueError(f'Unsupported file format: ("{uri}"). '
+                         'URIS must be a JSON file or compressed archive.')
+
+    extract_dir = extract(catalog_path, extract_dir)
+    catalog_paths = list(Path(extract_dir).glob('**/catalog.json'))
+    if len(catalog_paths) == 0:
+        raise FileNotFoundError(f'Unable to find "catalog.json" in {uri}.')
+    elif len(catalog_paths) > 1:
+        raise Exception(f'More than one "catalog.json" found in ' f'{uri}.')
+    catalog_path = str(catalog_paths[0])
+    return parse_stac(catalog_path, **kwargs)
