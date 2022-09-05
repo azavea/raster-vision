@@ -1,8 +1,6 @@
-from typing import List, Optional
 import csv
 from io import StringIO
 import os
-from pathlib import Path
 
 import rasterio
 from shapely.strtree import STRtree
@@ -14,10 +12,9 @@ from rastervision.core import Box
 from rastervision.core.data import (RasterioCRSTransformer,
                                     GeoJSONVectorSourceConfig,
                                     ClassInferenceTransformerConfig)
-from rastervision.core.utils.stac import parse_stac
-from rastervision.pipeline.file_system import (
-    file_to_str, file_exists, get_local_path, upload_or_copy, make_dir,
-    json_to_file, download_if_needed, unzip)
+from rastervision.pipeline.file_system import (file_to_str, file_exists,
+                                               get_local_path, upload_or_copy,
+                                               make_dir, json_to_file)
 from rastervision.aws_s3 import S3FileSystem
 
 
@@ -147,42 +144,3 @@ def save_image_crop(image_uri,
         finally:
             os.environ.clear()
             os.environ.update(old_environ)
-
-
-def read_stac(uri: str, unzip_dir: Optional[str] = None) -> List[dict]:
-    """Parse the contents of a STAC catalog (downloading it first, if
-    remote). If the uri is a zip file, unzip it, find catalog.json inside it
-    and parse that.
-
-    Args:
-        uri (str): Either a URI to a STAC catalog JSON file or a URI to a zip
-            file containing a STAC catalog JSON file.
-
-    Raises:
-        FileNotFoundError: If catalog.json is not found inside the zip file.
-        Exception: If multiple catalog.json's are found inside the zip file.
-
-    Returns:
-        List[dict]: A lsit of dicts with keys: "label_uri", "image_uris",
-            "label_bbox", "image_bbox", "bboxes_intersect", and "aoi_geometry".
-            Each dict corresponds to one label item and its associated image
-            assets in the STAC catalog.
-    """
-    uri_path = Path(uri)
-    is_zip = uri_path.suffix.lower() == '.zip'
-
-    catalog_path = download_if_needed(uri)
-    if not is_zip:
-        return parse_stac(catalog_path)
-    if unzip_dir is None:
-        raise ValueError(
-            f'uri ("{uri}") is a zip file, but no unzip_dir provided.')
-    zip_path = catalog_path
-    unzip(zip_path, target_dir=unzip_dir)
-    catalog_paths = list(Path(unzip_dir).glob('**/catalog.json'))
-    if len(catalog_paths) == 0:
-        raise FileNotFoundError(f'Unable to find "catalog.json" in {uri}.')
-    elif len(catalog_paths) > 1:
-        raise Exception(f'More than one "catalog.json" found in ' f'{uri}.')
-    catalog_path = str(catalog_paths[0])
-    return parse_stac(catalog_path)
