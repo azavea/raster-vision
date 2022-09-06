@@ -56,14 +56,15 @@ class SemanticSegmentationVisualizer(Visualizer):
 
         # add a legend to the rightmost subplot
         class_names = self.class_names
-        legend_items = [
-            mpatches.Patch(facecolor=col, edgecolor='black', label=name)
-            for col, name in zip(colors, class_names)
-        ]
-        axs[-1].legend(
-            handles=legend_items,
-            loc='center right',
-            bbox_to_anchor=(1.8, 0.5))
+        if class_names:
+            legend_items = [
+                mpatches.Patch(facecolor=col, edgecolor='black', label=name)
+                for col, name in zip(colors, class_names)
+            ]
+            axs[-1].legend(
+                handles=legend_items,
+                loc='center right',
+                bbox_to_anchor=(1.8, 0.5))
 
     def _get_plot_ncols(self, **kwargs) -> int:
         x = kwargs['x']

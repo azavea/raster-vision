@@ -86,8 +86,6 @@ def ensure_class_colors(class_names, class_colors=None):
                                 f'class_colors: {class_colors}')
     elif len(class_names) > 0:
         class_colors = [color_to_triple() for _ in class_names]
-    else:
-        class_colors = []
     return class_colors
 
 

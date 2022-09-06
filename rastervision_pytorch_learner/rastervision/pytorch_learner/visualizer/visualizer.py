@@ -2,8 +2,9 @@ from typing import (Sequence, Optional, List, Dict, Union, Tuple)
 from abc import ABC, abstractmethod
 
 import numpy as np
-from torch import Tensor
 import torch
+from torch import Tensor
+import albumentations as A
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
@@ -11,16 +12,16 @@ from rastervision.pipeline.file_system import make_dir
 from rastervision.pytorch_learner.utils import (
     deserialize_albumentation_transform, validate_albumentation_transform,
     ensure_class_colors, validate_channel_display_groups,
-    get_default_channel_display_groups)
+    get_default_channel_display_groups, MinMaxNormalize)
 from rastervision.pytorch_learner.learner_config import (
     RGBTuple, ChannelInds)
 
 
 class Visualizer():
     def __init__(self,
-                 class_names: Optional[List[str]] = None,
+                 class_names: List[str],
                  class_colors: Optional[List[Union[str, RGBTuple]]] = None,
-                 transform: Optional[Dict] = None,
+                 transform: Optional[Dict] = A.to_dict(MinMaxNormalize()),
                  channel_display_groups: Optional[Union[
                     Dict[str, ChannelInds], Sequence[ChannelInds]]] = None):
         """Constructor.
@@ -46,7 +47,7 @@ class Visualizer():
                 title is a string that will be used as the title of the subplot
                 for that group.
         """
-        self.class_names = class_names or []
+        self.class_names = class_names
         self.class_colors = ensure_class_colors(self.class_names, class_colors)
         self.transform = validate_albumentation_transform(transform)
         self._channel_display_groups = validate_channel_display_groups(
