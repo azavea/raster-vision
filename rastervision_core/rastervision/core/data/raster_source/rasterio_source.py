@@ -141,10 +141,10 @@ class RasterioSource(RasterSource):
     def __init__(self,
                  uris: Union[str, List[str]],
                  raster_transformers: List['RasterTransformer'] = [],
-                 tmp_dir: Optional[str] = None,
                  allow_streaming: bool = False,
                  channel_order: Optional[Sequence[int]] = None,
-                 extent_crop: Optional[CropOffsets] = None):
+                 extent_crop: Optional[CropOffsets] = None,
+                 tmp_dir: Optional[str] = None):
         """Constructor.
 
         Args:
@@ -152,9 +152,6 @@ class RasterioSource(RasterSource):
                 than one, the images will be mosaiced together using GDAL.
             raster_transformers (List['RasterTransformer']): RasterTransformers
                 to use to trasnform chips after they are read.
-            tmp_dir (Optional[str]): Directory to use for downloading data
-                and/or store VRT. If None, will be auto-generated. Defaults to
-                None.
             allow_streaming (bool): If True, read data without downloading the
                 entire file first. Defaults to False.
             channel_order (Optional[Sequence[int]]): List of indices of
@@ -165,6 +162,9 @@ class RasterioSource(RasterSource):
                 offsets (top, left, bottom, right) for cropping the extent.
                 Useful for using splitting a scene into different datasets.
                 Defaults to None i.e. no cropping.
+            tmp_dir (Optional[str]): Directory to use for storing the VRT
+                (needed if multiple uris or allow_streaming=True). If None,
+                will be auto-generated. Defaults to None.
         """
         self.uris = listify_uris(uris)
         self.tmp_dir = rv_config.get_tmp_dir() if tmp_dir is None else tmp_dir
@@ -194,11 +194,6 @@ class RasterioSource(RasterSource):
         super().__init__(channel_order, num_channels_raw, raster_transformers)
 
     @property
-    def shape(self) -> Tuple[int, int, int]:
-        ymin, xmin, ymax, xmax = self.get_extent()
-        return ymax - ymin, xmax - xmin, self.num_channels
-
-    @property
     def dtype(self) -> Tuple[int, int, int]:
         if self._dtype is None:
             # Read 1x1 chip to determine dtype
@@ -215,7 +210,7 @@ class RasterioSource(RasterSource):
             if stream:
                 return self.uris[0]
             else:
-                return download_if_needed(self.uris[0], download_dir=tmp_dir)
+                return download_if_needed(self.uris[0])
         else:
             return download_and_build_vrt(self.uris, tmp_dir, stream=stream)
 

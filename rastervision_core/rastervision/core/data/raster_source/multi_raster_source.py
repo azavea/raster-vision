@@ -89,9 +89,16 @@ class MultiRasterSource(RasterSource):
                 f'num_channels ({self.num_channels}) != sum of num_channels '
                 f'of sub raster sources ({sub_num_channels})')
 
+    @property
+    def primary_source(self) -> RasterSource:
+        return self.raster_sources[self.primary_source_idx]
+
+    @property
+    def dtype(self) -> np.dtype:
+        return self.primary_source.dtype
+
     def get_extent(self) -> Box:
-        rs = self.raster_sources[self.primary_source_idx]
-        extent = rs.get_extent()
+        extent = self.primary_source.get_extent()
         if self.extent_crop is not None:
             h, w = extent.get_height(), extent.get_width()
             skip_top, skip_left, skip_bottom, skip_right = self.extent_crop
@@ -100,14 +107,8 @@ class MultiRasterSource(RasterSource):
             return Box(ymin, xmin, ymax, xmax)
         return extent
 
-    @property
-    def dtype(self) -> np.dtype:
-        rs = self.raster_sources[self.primary_source_idx]
-        return rs.dtype
-
     def get_crs_transformer(self) -> CRSTransformer:
-        rs = self.raster_sources[self.primary_source_idx]
-        return rs.get_crs_transformer()
+        return self.primary_source.get_crs_transformer()
 
     def _get_sub_chips(self, window: Box,
                        raw: bool = False) -> List[np.ndarray]:
@@ -144,7 +145,7 @@ class MultiRasterSource(RasterSource):
         if self.all_extents_equal:
             sub_chips = [get_chip(rs, window) for rs in self.raster_sources]
         else:
-            primary_rs = self.raster_sources[self.primary_source_idx]
+            primary_rs = self.primary_source
             other_rses = [rs for rs in self.raster_sources if rs != primary_rs]
 
             primary_sub_chip = get_chip(primary_rs, window)

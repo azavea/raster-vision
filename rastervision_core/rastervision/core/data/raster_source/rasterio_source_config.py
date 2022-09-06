@@ -38,9 +38,9 @@ class RasterioSourceConfig(RasterSourceConfig):
                                if use_transformers else [])
 
         return RasterioSource(
-            self.uris,
-            raster_transformers,
-            tmp_dir,
+            uris=self.uris,
+            raster_transformers=raster_transformers,
+            tmp_dir=tmp_dir,
             allow_streaming=self.allow_streaming,
             channel_order=self.channel_order,
             extent_crop=self.extent_crop)

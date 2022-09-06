@@ -57,10 +57,10 @@ class RasterSource(ABC):
     def num_channels(self) -> int:
         return len(self.channel_order)
 
-    @abstractproperty
-    def shape(self) -> Tuple[int, ...]:
-        """Return the shape of this scene"""
-        pass
+    @property
+    def shape(self) -> Tuple[int, int, int]:
+        ymin, xmin, ymax, xmax = self.get_extent()
+        return ymax - ymin, xmax - xmin, self.num_channels
 
     @abstractproperty
     def dtype(self) -> 'np.dtype':
