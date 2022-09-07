@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple, Union
 
 from rastervision.pipeline.config import (Config, register_config, ConfigError,
                                           Field, validator)
-from rastervision.core.data.utils import color_to_triple
+from rastervision.core.data.utils import color_to_triple, normalize_color
 
 DEFAULT_NULL_CLASS_NAME = 'null'
 DEFAULT_NULL_CLASS_COLOR = 'black'
@@ -116,3 +116,8 @@ class ClassConfig(Config):
 
     def __len__(self) -> int:
         return len(self.names)
+
+    @property
+    def color_triples(self) -> List[Tuple[float, float, float]]:
+        color_triples = [normalize_color(c) for c in self.colors]
+        return color_triples
