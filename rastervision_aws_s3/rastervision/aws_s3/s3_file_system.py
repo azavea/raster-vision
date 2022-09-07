@@ -6,7 +6,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 from everett.manager import ConfigurationMissingError
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                NotWritableError)

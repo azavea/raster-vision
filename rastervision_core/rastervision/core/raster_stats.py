@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Iterator, Optional, Sequence
 import json
 
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from rastervision.pipeline.file_system import str_to_file, file_to_str
 

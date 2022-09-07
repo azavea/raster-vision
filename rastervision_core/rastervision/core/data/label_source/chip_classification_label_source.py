@@ -2,7 +2,7 @@ import numpy as np
 from shapely.strtree import STRtree
 from shapely.geometry import shape
 from typing import TYPE_CHECKING, Iterable, Optional
-import click
+from tqdm.auto import tqdm
 
 from rastervision.core.data.label import ChipClassificationLabels
 from rastervision.core.data.label_source.label_source import LabelSource
@@ -97,7 +97,7 @@ def infer_labels(cells, str_tree, ioa_thresh, use_intersection_over_cell,
     """
     labels = ChipClassificationLabels()
 
-    with click.progressbar(cells, label='Inferring labels') as bar:
+    with tqdm(cells, desc='Inferring labels') as bar:
         for cell in bar:
             class_id = infer_cell(cell, str_tree, ioa_thresh,
                                   use_intersection_over_cell,

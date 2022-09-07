@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import click
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from rastervision.pipeline.pipeline import Pipeline
 from rastervision.core.box import Box

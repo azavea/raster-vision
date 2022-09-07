@@ -9,7 +9,7 @@ import requests
 from datetime import datetime
 from functools import partial
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                NotWritableError)

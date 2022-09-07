@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 from os.path import join
 import logging
-import click
+from tqdm.auto import tqdm
 
 import numpy as np
 import rasterio as rio
@@ -243,7 +243,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         log.info('Writing smooth labels to disk.')
         with rio.open(scores_path, 'w', **out_profile) as dataset:
-            with click.progressbar(windows) as bar:
+            with tqdm(windows, desc='Writing windows to GeoTiff') as bar:
                 for window in bar:
                     window, _ = self._clip_to_extent(self.extent, window)
                     score_arr = labels.get_score_arr(window)
@@ -267,7 +267,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         log.info('Writing labels to disk.')
         with rio.open(path, 'w', **out_profile) as dataset:
-            with click.progressbar(windows) as bar:
+            with tqdm(windows, desc='Writing windows to GeoTiff') as bar:
                 for window in bar:
                     label_arr = labels.get_label_arr(window).astype(dtype)
                     window, label_arr = self._clip_to_extent(
@@ -316,7 +316,8 @@ class SemanticSegmentationLabelStore(LabelStore):
         log.info('Writing vector output to disk.')
 
         label_arr = self._labels_to_full_label_arr(labels)
-        with click.progressbar(self.vector_outputs) as bar:
+        with tqdm(
+                self.vector_outputs, desc='Processing vector outputs') as bar:
             for i, vo in enumerate(bar):
                 if vo.uri is None:
                     log.info(f'Skipping VectorOutputConfig at index {i} '
