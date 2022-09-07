@@ -1,10 +1,11 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from PIL import ImageColor
 
 
-def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
+def color_to_triple(
+        color: Optional[Union[str, Sequence]] = None) -> Tuple[int, int, int]:
     """Given a PIL ImageColor string, return a triple of integers
     representing the red, green, and blue values.
 
@@ -18,12 +19,14 @@ def color_to_triple(color: Optional[str] = None) -> Tuple[int, int, int]:
 
     """
     if color is None:
-        r = np.random.randint(0, 0x100)
-        g = np.random.randint(0, 0x100)
-        b = np.random.randint(0, 0x100)
-        return (r, g, b)
-    else:
+        r, g, b = np.random.randint(0, 256, size=3).tolist()
+        return r, g, b
+    elif isinstance(color, str):
         return ImageColor.getrgb(color)
+    elif isinstance(color, (tuple, list)):
+        return color
+    else:
+        raise TypeError(f'Unsupported type: {type(color)}')
 
 
 def color_to_integer(color: str) -> int:
@@ -42,6 +45,25 @@ def color_to_integer(color: str) -> int:
     b = triple[2] * (1 << 0)
     integer = r + g + b
     return integer
+
+
+def normalize_color(
+        color: Union[str, tuple, list]) -> Tuple[float, float, float]:
+    """Convert color representation to a float 3-tuple with values in [0-1]."""
+    if isinstance(color, str):
+        color = color_to_triple(color)
+
+    if isinstance(color, (tuple, list)):
+        if all(isinstance(c, int) for c in color):
+            return tuple(c / 255. for c in color)
+        elif all(isinstance(c, float) for c in color):
+            return tuple(color)
+        else:
+            raise ValueError('RGB values must be either all ints (0-255) '
+                             'or all floats (0.0-1.0)')
+
+    raise TypeError('Expected color to be a string or tuple or list, '
+                    f'but found {type(color)}.')
 
 
 def rgb_to_int_array(rgb_array):
