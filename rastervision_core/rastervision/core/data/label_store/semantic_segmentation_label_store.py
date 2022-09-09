@@ -7,9 +7,8 @@ import numpy as np
 import rasterio as rio
 
 from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import (get_local_path, make_dir,
-                                               sync_to_dir, file_exists,
-                                               str_to_file, upload_or_copy)
+from rastervision.pipeline.file_system import (
+    get_local_path, json_to_file, make_dir, sync_to_dir, file_exists)
 from rastervision.core.box import Box
 from rastervision.core.data import (CRSTransformer, ClassConfig)
 from rastervision.core.data.label import SemanticSegmentationLabels
@@ -310,45 +309,46 @@ class SemanticSegmentationLabelStore(LabelStore):
 
     def write_vector_outputs(self, labels: SemanticSegmentationLabels) -> None:
         """Write vectorized outputs for all configs in self.vector_outputs."""
-        import mask_to_polygons.vectorification as vectorification
-        import mask_to_polygons.processing.denoise as denoise
+        from rastervision.core.data.utils import (denoise, geoms_to_geojson,
+                                                  mask_to_building_polygons,
+                                                  mask_to_polygons)
 
         log.info('Writing vector output to disk.')
 
         label_arr = self._labels_to_full_label_arr(labels)
-        with tqdm(
-                self.vector_outputs, desc='Processing vector outputs') as bar:
+        with tqdm(self.vector_outputs, desc='Vectorizing predictions') as bar:
             for i, vo in enumerate(bar):
+                bar.set_postfix(
+                    dict(
+                        class_id=vo.class_id,
+                        mode=vo.get_mode(),
+                        denoise_radius=vo.denoise))
+
                 if vo.uri is None:
                     log.info(f'Skipping VectorOutputConfig at index {i} '
                              'due to missing uri.')
                     continue
-                uri = get_local_path(vo.uri, self.tmp_dir)
-                denoise_radius = vo.denoise
-                mode = vo.get_mode()
+
                 class_mask = (label_arr == vo.class_id).astype(np.uint8)
 
-                def transform(x, y):
-                    return self.crs_transformer.pixel_to_map((x, y))
+                if vo.denoise > 0:
+                    class_mask = denoise(class_mask, radius=vo.denoise)
 
-                if denoise_radius > 0:
-                    class_mask = denoise.denoise(class_mask, denoise_radius)
-
-                if mode == 'buildings':
-                    geojson = vectorification.geojson_from_mask(
+                mode = vo.get_mode()
+                if mode == 'polygons':
+                    polys = mask_to_polygons(class_mask)
+                elif mode == 'buildings':
+                    polys = mask_to_building_polygons(
                         mask=class_mask,
-                        transform=transform,
-                        mode=mode,
-                        min_aspect_ratio=vo.min_aspect_ratio,
                         min_area=vo.min_area,
                         width_factor=vo.element_width_factor,
                         thickness=vo.element_thickness)
-                elif mode == 'polygons':
-                    geojson = vectorification.geojson_from_mask(
-                        mask=class_mask, transform=transform, mode=mode)
+                else:
+                    raise NotImplementedError()
 
-                str_to_file(geojson, uri)
-                upload_or_copy(uri, vo.uri)
+                polys = [self.crs_transformer.pixel_to_map(p) for p in polys]
+                geojson = geoms_to_geojson(polys)
+                json_to_file(geojson, vo.uri)
 
     def empty_labels(self, **kwargs) -> SemanticSegmentationLabels:
         """Returns an empty SemanticSegmentationLabels object."""

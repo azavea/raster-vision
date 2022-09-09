@@ -35,8 +35,6 @@ def replace_images(readme):
     return re.sub(r, rep, readme)
 
 
-# Uncomment this line if we are using a commit of mask-to-polygons
-# (as opposed to released version) to avoid error.
 # del extras_require['feature-extraction']
 
 setup(

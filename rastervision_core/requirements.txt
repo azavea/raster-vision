@@ -12,7 +12,6 @@ pyproj==2.6.*
 rasterio==1.0.7
 imageio==2.16.*
 pystac==1.0.*
-mask-to-polygons==0.0.2
 scikit-learn==0.24.*
 scipy>=0.19.1
 joblib>=0.11

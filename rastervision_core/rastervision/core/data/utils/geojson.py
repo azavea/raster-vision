@@ -66,6 +66,13 @@ def geojson_to_geoms(geojson: dict) -> Iterator['BaseGeometry']:
     return geoms
 
 
+def geoms_to_geojson(geoms: Iterable['BaseGeometry']) -> dict:
+    """Serialize shapely geometries to GeoJSON."""
+    geometries = [mapping(g) for g in geoms]
+    geojson = geometries_to_geojson(geometries)
+    return geojson
+
+
 def filter_features(func: Callable, geojson: dict) -> dict:
     """Filter GeoJSON features. Returns a new GeoJSON dict."""
     features_in = geojson['features']

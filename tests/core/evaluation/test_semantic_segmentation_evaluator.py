@@ -10,8 +10,7 @@ from rastervision.core.data import (
     Scene, IdentityCRSTransformer, SemanticSegmentationLabelSource,
     RasterizedSourceConfig, RasterizerConfig, GeoJSONVectorSourceConfig,
     PolygonVectorOutputConfig, ClassInferenceTransformerConfig)
-from rastervision.core.evaluation import (SemanticSegmentationEvaluator,
-                                          SemanticSegmentationEvaluatorConfig)
+from rastervision.core.evaluation import SemanticSegmentationEvaluator
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import file_to_json
 
@@ -21,26 +20,6 @@ from tests import data_file_path
 
 class MockRVPipelineConfig:
     eval_uri = '/abc/def/eval'
-
-
-class TestSemanticSegmentationEvaluatorConfig(unittest.TestCase):
-    def test_update(self):
-        cfg = SemanticSegmentationEvaluatorConfig(output_uri=None)
-        pipeline_cfg = MockRVPipelineConfig()
-        cfg.update(pipeline_cfg)
-        self.assertEqual(cfg.get_vector_output_uri(),
-                         f'{pipeline_cfg.eval_uri}/vector-eval.json')
-        self.assertEqual(
-            cfg.get_vector_output_uri('group1'),
-            f'{pipeline_cfg.eval_uri}/group1/vector-eval.json')
-
-    def test_get_vector_output_uri(self):
-        cfg = SemanticSegmentationEvaluatorConfig(output_uri='/abc/def')
-        self.assertEqual(cfg.get_vector_output_uri(),
-                         '/abc/def/vector-eval.json')
-        self.assertEqual(
-            cfg.get_vector_output_uri('group1'),
-            '/abc/def/group1/vector-eval.json')
 
 
 class TestSemanticSegmentationEvaluator(unittest.TestCase):
@@ -86,7 +65,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         scenes[1].label_store.vector_outputs = None
 
         evaluator = SemanticSegmentationEvaluator(self.class_config,
-                                                  output_uri, None)
+                                                  output_uri)
         evaluator.process(scenes, self.tmp_dir.name)
         eval_json = file_to_json(output_uri)
         exp_eval_json = file_to_json(data_file_path('expected-eval.json'))
@@ -134,40 +113,6 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
             return Scene(scene_id, rs, gt_ls, pred_ls, aoi_polygons)
 
         return Scene(scene_id, rs, gt_ls, pred_ls)
-
-    def test_vector_evaluator(self):
-        output_uri = join(self.tmp_dir.name, 'raster-out.json')
-        vector_output_uri = join(self.tmp_dir.name, 'vector-out.json')
-        scenes = [self.get_vector_scene(0), self.get_vector_scene(1)]
-        evaluator = SemanticSegmentationEvaluator(
-            self.class_config, output_uri, vector_output_uri)
-        evaluator.process(scenes, self.tmp_dir.name)
-        vector_eval_json = file_to_json(vector_output_uri)
-        exp_vector_eval_json = file_to_json(
-            data_file_path('expected-vector-eval.json'))
-
-        # NOTE:  The precision  and recall  values found  in the  file
-        # `expected-vector-eval.json`  are equal to fractions of  the
-        # form (n-1)/n for  n <= 7 which  can be seen to  be (and have
-        # been manually verified to be) correct.
-        self.assertDictEqual(vector_eval_json, exp_vector_eval_json)
-
-    def test_vector_evaluator_with_aoi(self):
-        output_uri = join(self.tmp_dir.name, 'raster-out.json')
-        vector_output_uri = join(self.tmp_dir.name, 'vector-out.json')
-        scenes = [self.get_vector_scene(0, use_aoi=True)]
-        evaluator = SemanticSegmentationEvaluator(
-            self.class_config, output_uri, vector_output_uri)
-        evaluator.process(scenes, self.tmp_dir.name)
-        vector_eval_json = file_to_json(vector_output_uri)
-        exp_vector_eval_json = file_to_json(
-            data_file_path('expected-vector-eval-with-aoi.json'))
-
-        # NOTE:  The precision  and recall  values found  in the  file
-        # `expected-vector-eval.json`  are equal to fractions of  the
-        # form (n-1)/n for  n <= 7 which  can be seen to  be (and have
-        # been manually verified to be) correct.
-        self.assertDictEqual(vector_eval_json, exp_vector_eval_json)
 
 
 if __name__ == '__main__':
