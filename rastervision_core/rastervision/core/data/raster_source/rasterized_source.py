@@ -3,9 +3,7 @@ import logging
 
 from rasterio.features import rasterize
 import numpy as np
-from shapely.geometry import shape
-from shapely.strtree import STRtree
-from shapely.ops import transform
+import geopandas as gpd
 
 from rastervision.core.data.raster_source import RasterSource
 
@@ -16,36 +14,31 @@ if TYPE_CHECKING:
     from rastervision.core.data import VectorSource, RasterTransformer
 
 
-def geoms_to_raster(str_tree: STRtree, window: 'Box', background_class_id: int,
-                    all_touched: bool, extent: 'Box') -> np.ndarray:
-    # Crop shapes against window, remove empty shapes, and put in window frame
-    # of reference.
-    log.debug('Cropping shapes to window...')
+def geoms_to_raster(df: gpd.GeoDataFrame, window: 'Box',
+                    background_class_id: int, all_touched: bool,
+                    extent: 'Box') -> np.ndarray:
+    """Rasterize geometries that intersect with the window."""
+    if len(df) == 0:
+        return np.full(window.size, background_class_id, dtype=np.uint8)
+
     window_geom = window.to_shapely()
-    shapes = str_tree.query(window_geom)
-    shapes = [(s, s.class_id) for s in shapes]
-    shapes = [(s.intersection(window_geom), c) for s, c in shapes]
-    shapes = [(s, c) for s, c in shapes if not s.is_empty]
 
-    def to_window_frame(x, y, z=None):
-        return (x - window.xmin, y - window.ymin)
+    # subset to shapes that intersect window
+    df_int = df[df.intersects(window_geom)]
+    # transform to window frame of reference
+    shapes = df_int.translate(xoff=-window.xmin, yoff=-window.ymin)
+    # class IDs of each shape
+    class_ids = df_int['class_id']
 
-    shapes = [(transform(to_window_frame, s), c) for s, c in shapes]
-    log.debug('# of shapes in window: {}'.format(len(shapes)))
-
-    out_shape = (window.get_height(), window.get_width())
-
-    # rasterize needs to be passed >= 1 shapes.
-    if shapes:
-        log.debug('rasterio.rasterize()...')
+    if len(shapes) > 0:
         raster = rasterize(
-            shapes,
-            out_shape=out_shape,
+            shapes=list(zip(shapes, class_ids)),
+            out_shape=window.size,
             fill=background_class_id,
             dtype=np.uint8,
             all_touched=all_touched)
     else:
-        raster = np.full(out_shape, background_class_id, dtype=np.uint8)
+        raster = np.full(window.size, background_class_id, dtype=np.uint8)
 
     return raster
 
@@ -77,7 +70,9 @@ class RasterizedSource(RasterSource):
         self.background_class_id = background_class_id
         self.extent = extent
         self.all_touched = all_touched
-        self.str_tree = self.make_str_tree()
+
+        self.df = self.vector_source.get_dataframe()
+        self.validate_labels(self.df)
 
         super().__init__(
             channel_order=[0],
@@ -117,7 +112,7 @@ class RasterizedSource(RasterSource):
         """
         log.debug(f'Rasterizing window: {window}')
         chip = geoms_to_raster(
-            self.str_tree,
+            self.df,
             window,
             background_class_id=self.background_class_id,
             extent=self.get_extent(),
@@ -125,26 +120,13 @@ class RasterizedSource(RasterSource):
         # Add third singleton dim since rasters must have >=1 channel.
         return np.expand_dims(chip, 2)
 
-    def make_str_tree(self) -> STRtree:
-        geojson = self.vector_source.get_geojson()
-        self.validate_geojson(geojson)
-        geoms = []
-        for f in geojson['features']:
-            geom = shape(f['geometry'])
-            geom.class_id = f['properties']['class_id']
-            geoms.append(geom)
-        str_tree = STRtree(geoms)
-        return str_tree
+    def validate_labels(self, df: gpd.GeoDataFrame) -> None:
+        geom_types = set(df.geom_type)
+        if 'Point' in geom_types or 'LineString' in geom_types:
+            raise ValueError(
+                'LineStrings and Points are not supported '
+                'in ChipClassificationLabelSource. Use BufferTransformer '
+                'to buffer them into Polygons.')
 
-    def validate_geojson(self, geojson: dict) -> None:
-        for f in geojson['features']:
-            geom_type = f.get('geometry', {}).get('type', '')
-            if 'Point' in geom_type or 'LineString' in geom_type:
-                raise ValueError(
-                    'LineStrings and Points are not supported '
-                    'in RasterizedSource. Use BufferTransformer to '
-                    'buffer them into Polygons.')
-        for f in geojson['features']:
-            if f.get('properties', {}).get('class_id') is None:
-                raise ValueError('All GeoJSON features must have a class_id '
-                                 'field in their properties.')
+        if len(df) > 0 and 'class_id' not in df.columns:
+            raise ValueError('All label polygons must have a class_id.')
