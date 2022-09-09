@@ -1,10 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
 import logging
-import math
 import os
-from pyproj import Transformer
 import subprocess
-from decimal import Decimal
 from tempfile import mkdtemp
 
 import numpy as np
@@ -21,8 +18,6 @@ if TYPE_CHECKING:
     from rasterio.io import DatasetReader
 
 log = logging.getLogger(__name__)
-wgs84 = 'epsg:4326'
-meters_per_degree = 111319.5
 
 
 def build_vrt(vrt_path, image_paths):
@@ -127,8 +122,6 @@ class RasterioSource(ActivateMixin, RasterSource):
                  tmp_dir: Optional[str] = None,
                  allow_streaming=False,
                  channel_order=None,
-                 x_shift=0.0,
-                 y_shift=0.0,
                  extent_crop: Optional[CropOffsets] = None):
         """Constructor.
 
@@ -149,9 +142,6 @@ class RasterioSource(ActivateMixin, RasterSource):
         self.uris = uris
         self.tmp_dir = mkdtemp() if tmp_dir is None else tmp_dir
         self.image_dataset = None
-        self.x_shift = x_shift
-        self.y_shift = y_shift
-        self.do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
         self.allow_streaming = allow_streaming
         self.extent_crop = extent_crop
 
@@ -228,7 +218,6 @@ class RasterioSource(ActivateMixin, RasterSource):
                   bands: Optional[Sequence[int]] = None) -> np.ndarray:
         if self.image_dataset is None:
             raise ActivationError('RasterSource must be activated before use')
-        shifted_window = self._get_shifted_window(window)
         chip = load_window(
             self.image_dataset,
             bands=bands,
@@ -248,65 +237,16 @@ class RasterioSource(ActivateMixin, RasterSource):
 
         return chip
 
+    def _set_crs_transformer(self):
+        self.crs_transformer = RasterioCRSTransformer.from_dataset(
+            self.image_dataset)
+
     def _activate(self):
         self.imagery_path = self._download_data(self.tmp_dir)
         self.image_dataset = rasterio.open(self.imagery_path)
         self._set_crs_transformer()
 
-    def _set_crs_transformer(self):
-        self.crs_transformer = RasterioCRSTransformer.from_dataset(
-            self.image_dataset)
-        crs = self.image_dataset.crs
-        self.to_wgs84 = None
-        self.from_wgs84 = None
-        if crs and self.do_shift:
-            self.to_wgs84 = Transformer.from_crs(
-                crs.wkt, wgs84, always_xy=True)
-            self.from_wgs84 = Transformer.from_crs(
-                wgs84, crs.wkt, always_xy=True)
-
     def _deactivate(self):
         if self.image_dataset is not None:
             self.image_dataset.close()
             self.image_dataset = None
-
-    def _get_shifted_window(self, window):
-        do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
-        if do_shift:
-            ymin, xmin, ymax, xmax = window.tuple_format()
-            width = window.get_width()
-            height = window.get_height()
-
-            # Transform image coordinates into world coordinates
-            transform = self.image_dataset.transform
-            xmin2, ymin2 = transform * (xmin, ymin)
-
-            # Transform from world coordinates to WGS84
-            if self.to_wgs84:
-                lon, lat = self.to_wgs84.transform(xmin2, ymin2)
-            else:
-                lon, lat = xmin2, ymin2
-
-            # Shift.  This is performed by computing the shifts in
-            # meters to shifts in degrees.  Those shifts are then
-            # applied to the WGS84 coordinate.
-            #
-            # Courtesy of https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters  # noqa
-            lat_radians = math.pi * lat / 180.0
-            dlon = Decimal(self.x_shift) / Decimal(
-                meters_per_degree * math.cos(lat_radians))
-            dlat = Decimal(self.y_shift) / Decimal(meters_per_degree)
-            lon = float(Decimal(lon) + dlon)
-            lat = float(Decimal(lat) + dlat)
-
-            # Transform from WGS84 to world coordinates
-            if self.from_wgs84:
-                xmin3, ymin3 = self.from_wgs84.transform(lon, lat)
-            else:
-                xmin3, ymin3 = lon, lat
-
-            # Trasnform from world coordinates back into image coordinates
-            xmin4, ymin4 = ~transform * (xmin3, ymin3)
-
-            window = Box(ymin4, xmin4, ymin4 + height, xmin4 + width)
-        return window

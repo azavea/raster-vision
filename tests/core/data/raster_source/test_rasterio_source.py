@@ -97,46 +97,6 @@ class TestRasterioSource(unittest.TestCase):
             out_chip = source.get_raw_image_array()
             self.assertEqual(out_chip.shape[2], 3)
 
-    def test_shift_x(self):
-        # Specially-engineered image w/ one meter per pixel resolution
-        # in the x direction.
-        img_path = data_file_path('ones.tif')
-        channel_order = [0]
-
-        config = RasterioSourceConfig(
-            uris=[img_path],
-            channel_order=channel_order,
-            x_shift=1.0,
-            y_shift=0.0)
-        source = config.build(tmp_dir=self.tmp_dir)
-
-        with source.activate():
-            extent = source.get_extent()
-            data = source.get_chip(extent)
-            self.assertEqual(data.sum(), 2**16 - 256)
-            column = data[:, 255, 0]
-            self.assertEqual(column.sum(), 0)
-
-    def test_shift_y(self):
-        # Specially-engineered image w/ one meter per pixel resolution
-        # in the y direction.
-        img_path = data_file_path('ones.tif')
-        channel_order = [0]
-
-        config = RasterioSourceConfig(
-            uris=[img_path],
-            channel_order=channel_order,
-            x_shift=0.0,
-            y_shift=1.0)
-        source = config.build(tmp_dir=self.tmp_dir)
-
-        with source.activate():
-            extent = source.get_extent()
-            data = source.get_chip(extent)
-            self.assertEqual(data.sum(), 2**16 - 256)
-            row = data[0, :, 0]
-            self.assertEqual(row.sum(), 0)
-
     def test_gets_raw_chip_from_uint16_transformed_proto(self):
         img_path = data_file_path('small-uint16-tile.tif')
         channel_order = [0, 1]

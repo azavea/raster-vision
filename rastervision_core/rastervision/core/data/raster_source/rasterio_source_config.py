@@ -1,10 +1,26 @@
 from typing import List
 
 from rastervision.core.data.raster_source import RasterSourceConfig, RasterioSource
-from rastervision.pipeline.config import register_config, Field
+from rastervision.pipeline.config import ConfigError, Field, register_config
 
 
-@register_config('rasterio_source')
+def rasterio_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 5:
+        # removed in version 6
+        x_shift = cfg_dict.get('x_shift', 0)
+        y_shift = cfg_dict.get('y_shift', 0)
+        if x_shift != 0 or y_shift != 0:
+            raise ConfigError('x_shift and y_shift are deprecated. '
+                              'Use the ShiftTrasnformer instead.')
+        try:
+            del cfg_dict['x_shift']
+            del cfg_dict['y_shift']
+        except KeyError:
+            pass
+    return cfg_dict
+
+
+@register_config('rasterio_source', upgrader=rasterio_source_config_upgrader)
 class RasterioSourceConfig(RasterSourceConfig):
     uris: List[str] = Field(
         ...,
@@ -16,16 +32,6 @@ class RasterioSourceConfig(RasterSourceConfig):
         False,
         description=(
             'Allow streaming of assets rather than always downloading.'))
-    x_shift: float = Field(
-        0.0,
-        descriptions=
-        ('A number of meters to shift along the x-axis. A positive shift moves the '
-         '"camera" to the right.'))
-    y_shift: float = Field(
-        0.0,
-        descriptions=
-        ('A number of meters to shift along the y-axis. A positive shift moves the '
-         '"camera" down.'))
 
     def build(self, tmp_dir, use_transformers=True):
         raster_transformers = ([rt.build() for rt in self.transformers]
@@ -37,6 +43,4 @@ class RasterioSourceConfig(RasterSourceConfig):
             tmp_dir,
             allow_streaming=self.allow_streaming,
             channel_order=self.channel_order,
-            x_shift=self.x_shift,
-            y_shift=self.y_shift,
             extent_crop=self.extent_crop)

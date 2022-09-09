@@ -46,7 +46,7 @@ class VectorSource(ABC):
             geojson, self.crs_transformer, to_map_coords=to_map_coords)
 
         for tf in self.vector_transformers:
-            geojson = tf(geojson)
+            geojson = tf(geojson, crs_transformer=self.crs_transformer)
 
         return geojson
 

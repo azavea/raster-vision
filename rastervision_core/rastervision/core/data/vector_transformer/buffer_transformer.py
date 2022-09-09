@@ -1,7 +1,10 @@
-from typing import Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional
 
 from rastervision.core.data.utils.geojson import buffer_geoms
 from rastervision.core.data.vector_transformer import VectorTransformer
+
+if TYPE_CHECKING:
+    from rastervision.core.data import CRSTransformer
 
 
 class BufferTransformer(VectorTransformer):
@@ -32,7 +35,9 @@ class BufferTransformer(VectorTransformer):
         self.class_bufs = class_bufs
         self.default_buf = default_buf
 
-    def transform(self, geojson: dict) -> dict:
+    def transform(self,
+                  geojson: dict,
+                  crs_transformer: Optional['CRSTransformer'] = None) -> dict:
         return buffer_geoms(
             geojson,
             self.geom_type,

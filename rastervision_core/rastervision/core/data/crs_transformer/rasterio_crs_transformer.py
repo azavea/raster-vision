@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 from pyproj import Transformer
 
 import rasterio as rio
@@ -12,14 +12,20 @@ from rastervision.core.data.crs_transformer import (CRSTransformer,
 class RasterioCRSTransformer(CRSTransformer):
     """Transformer for a RasterioRasterSource."""
 
-    def __init__(self, transform, image_crs, map_crs='epsg:4326'):
+    def __init__(self,
+                 transform: Affine,
+                 image_crs: Any,
+                 map_crs: Any = 'epsg:4326',
+                 round_pixels: bool = True):
         """Constructor.
 
         Args:
-            transform: Rasterio affine transform
-            image_crs: CRS of image in format that PyProj can handle eg. wkt or init
-                string
-            map_crs: CRS of the labels
+            transform (Affine): Rasterio affine transform.
+            image_crs (Any): CRS of image in format that PyProj can handle
+                eg. wkt or init string.
+            map_crs (Any): CRS of the labels. Defaults to "epsg:4326".
+            round_pixels (bool): If True, round outputs of map_to_pixel and
+                inputs of pixel_to_map to integers. Defaults to False.
         """
 
         if (image_crs is None) or (image_crs == map_crs):
@@ -30,6 +36,8 @@ class RasterioCRSTransformer(CRSTransformer):
                 map_crs, image_crs, always_xy=True).transform
             self.image2map = Transformer.from_crs(
                 image_crs, map_crs, always_xy=True).transform
+
+        self.round_pixels = round_pixels
 
         super().__init__(transform, image_crs, map_crs)
 
@@ -49,6 +57,7 @@ class RasterioCRSTransformer(CRSTransformer):
         out = f"""{cls_name}(
             image_crs="{image_crs_str}",
             map_crs="{map_crs_str}",
+            round_pixels="{self.round_pixels}",
             transform={transform_str})
         """
         return out
@@ -63,8 +72,12 @@ class RasterioCRSTransformer(CRSTransformer):
             (x, y) tuple in pixel coordinates
         """
         image_point = self.map2image(*map_point)
-        pixel_point = rowcol(self.transform, image_point[0], image_point[1])
-        pixel_point = (pixel_point[1], pixel_point[0])
+        x, y = image_point
+        if self.round_pixels:
+            row, col = rowcol(self.transform, x, y)
+        else:
+            row, col = rowcol(self.transform, x, y, op=lambda x: x)
+        pixel_point = (col, row)
         return pixel_point
 
     def _pixel_to_map(self, pixel_point):
@@ -76,14 +89,18 @@ class RasterioCRSTransformer(CRSTransformer):
         Returns:
             (x, y) tuple in map coordinates
         """
-        image_point = xy(self.transform, int(pixel_point[1]),
-                         int(pixel_point[0]))
+        col, row = pixel_point
+        if self.round_pixels:
+            col, row = int(col), int(row)
+        image_point = xy(self.transform, row, col, offset='center')
         map_point = self.image2map(*image_point)
         return map_point
 
     @classmethod
-    def from_dataset(cls, dataset, map_crs: Optional[str] = 'epsg:4326'
-                     ) -> 'RasterioCRSTransformer':
+    def from_dataset(cls,
+                     dataset,
+                     map_crs: Optional[str] = 'epsg:4326',
+                     **kwargs) -> 'RasterioCRSTransformer':
         transform = dataset.transform
         image_crs = None if dataset.crs is None else dataset.crs.wkt
         map_crs = image_crs if map_crs is None else map_crs
@@ -96,10 +113,10 @@ class RasterioCRSTransformer(CRSTransformer):
         if transform is None:
             transform = Affine.identity()
 
-        return cls(transform, image_crs, map_crs)
+        return cls(transform, image_crs, map_crs, **kwargs)
 
     @classmethod
-    def from_uri(cls, uri: str, map_crs: Optional[str] = 'epsg:4326'
-                 ) -> 'RasterioCRSTransformer':
+    def from_uri(cls, uri: str, map_crs: Optional[str] = 'epsg:4326',
+                 **kwargs) -> 'RasterioCRSTransformer':
         with rio.open(uri) as ds:
-            return cls.from_dataset(ds, map_crs=map_crs)
+            return cls.from_dataset(ds, map_crs=map_crs, **kwargs)

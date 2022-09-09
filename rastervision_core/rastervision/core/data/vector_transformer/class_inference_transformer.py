@@ -7,7 +7,7 @@ from rastervision.core.data.vector_transformer.label_maker.filter import (
 from rastervision.core.data.utils.geojson import features_to_geojson
 
 if TYPE_CHECKING:
-    from rastervision.core.data import ClassConfig
+    from rastervision.core.data import ClassConfig, CRSTransformer
 
 
 class ClassInferenceTransformer(VectorTransformer):
@@ -81,7 +81,9 @@ class ClassInferenceTransformer(VectorTransformer):
 
         return default_class_id
 
-    def transform(self, geojson: dict) -> dict:
+    def transform(self,
+                  geojson: dict,
+                  crs_transformer: Optional['CRSTransformer'] = None) -> dict:
         """Add class_id to feature properties and drop features with no class.
 
         For each feature in geojson, the class_id is inferred and is set into
