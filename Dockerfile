@@ -71,6 +71,8 @@ RUN pip install $(grep -ivE "^\s*$|^#|rastervision_*" requirements.txt)
 COPY ./docs/requirements.txt /opt/src/docs/requirements.txt
 RUN pip install -r docs/requirements.txt
 
+RUN python -m pip install --upgrade pyopenssl==22.0.0
+
 COPY scripts /opt/src/scripts/
 COPY scripts/rastervision /usr/local/bin/rastervision
 COPY tests /opt/src/tests/
