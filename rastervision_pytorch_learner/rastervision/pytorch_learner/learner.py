@@ -216,8 +216,8 @@ class Learner(ABC):
 
         self.visualizer = self.get_visualizer_class()(
             cfg.data.class_names, cfg.data.class_colors,
-            cfg.plot_options.transform,
-            cfg.plot_options.channel_display_groups)
+            cfg.data.plot_options.transform,
+            cfg.data.plot_options.channel_display_groups)
 
     def main(self):
         """Main training sequence.

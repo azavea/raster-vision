@@ -6,10 +6,13 @@ from rastervision.pytorch_learner.visualizer.visualizer import Visualizer  # NOQ
 from rastervision.pytorch_learner.utils import (
     plot_channel_groups, channel_groups_to_imgs)
 from rastervision.pytorch_learner.object_detection_utils import (
-    BoxList, draw_boxes)
+    BoxList, draw_boxes, collate_fn)
 
 
 class ObjectDetectionVisualizer(Visualizer):
+    def get_collate_fn(self):
+        return collate_fn
+
     def plot_xyz(self,
                  axs: Sequence,
                  x: torch.Tensor,

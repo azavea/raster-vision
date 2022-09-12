@@ -9,7 +9,7 @@ import torch
 
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.object_detection_utils import (
-    BoxList, TorchVisionODAdapter, compute_coco_eval)
+    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn)
 from rastervision.pytorch_learner.visualizer import (
     ObjectDetectionVisualizer)
 

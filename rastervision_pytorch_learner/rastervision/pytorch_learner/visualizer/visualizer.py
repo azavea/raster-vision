@@ -58,8 +58,12 @@ class Visualizer():
             return self._channel_display_groups
         return get_default_channel_display_groups(nb_img_channels)
 
-    def get_batch(self, dataset, batch_sz=4):
-        dl = DataLoader(dataset, batch_sz)
+    def get_collate_fn(self):
+        return None
+
+    def get_batch(self, dataset, batch_sz=4, **kwargs):
+        collate_fn = self.get_collate_fn()
+        dl = DataLoader(dataset, batch_sz, collate_fn=collate_fn, **kwargs)
         for x, y in dl:
             break
         return x, y

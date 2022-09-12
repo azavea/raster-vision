@@ -33,7 +33,7 @@ def get_config(runner,
     Args:
         runner (Runner): Runner for the pipeline. Will be provided by RV.
         raw_uri (str): Directory where the raw data resides
-        processed_uri (str): Directory for storing processed data. 
+        processed_uri (str): Directory for storing processed data.
                              E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
         nochip (bool, optional): If True, read directly from the TIFF during
@@ -59,8 +59,8 @@ def get_config(runner,
     val_ids = VAL_IDS
 
     if test:
-        train_ids = train_ids[:2]
-        val_ids = val_ids[:2]
+        train_ids = train_ids[:1]
+        val_ids = val_ids[:1]
 
     if multiband:
         channel_order = [0, 1, 2, 3]
@@ -107,7 +107,7 @@ def get_config(runner,
     chip_sz = 300
     img_sz = chip_sz
 
-    chip_options = ObjectDetectionChipOptions(neg_ratio=5.0, ioa_thresh=0.9)
+    chip_options = ObjectDetectionChipOptions(neg_ratio=0.5, ioa_thresh=0.9)
     if nochip:
         window_opts = ObjectDetectionGeoDataWindowConfig(
             method=GeoDataWindowMethod.random,
