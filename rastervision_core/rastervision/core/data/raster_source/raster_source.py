@@ -4,8 +4,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from rastervision.core.box import Box
 
 if TYPE_CHECKING:
-    from rastervision.core.data.raster_transformer import RasterTransformer
-    from rastervision.core.data.crs_transformer import CRSTransformer
+    from rastervision.core.data import (CRSTransformer, RasterTransformer)
     import numpy as np
 
 
@@ -35,7 +34,8 @@ class RasterSource(ABC):
     def __init__(self,
                  channel_order: Optional[List[int]],
                  num_channels_raw: int,
-                 raster_transformers: List['RasterTransformer'] = []):
+                 raster_transformers: List['RasterTransformer'] = [],
+                 extent: Optional[Box] = None):
         """Construct a new RasterSource.
 
         Args:
@@ -45,6 +45,8 @@ class RasterSource(ABC):
                 channel_order.
             raster_transformers: RasterTransformers used to transform chips
                 whenever they are retrieved.
+            extent (Optional[Box], optional): Use-specified extent. If None,
+                the full extent of the raster source is used.
         """
         if channel_order is None:
             channel_order = list(range(num_channels_raw))
@@ -52,6 +54,7 @@ class RasterSource(ABC):
         self.channel_order = channel_order
         self.num_channels_raw = num_channels_raw
         self.raster_transformers = raster_transformers
+        self._extent = extent
 
     @property
     def num_channels(self) -> int:
@@ -59,7 +62,7 @@ class RasterSource(ABC):
 
     @property
     def shape(self) -> Tuple[int, int, int]:
-        ymin, xmin, ymax, xmax = self.get_extent()
+        ymin, xmin, ymax, xmax = self.extent
         return ymax - ymin, xmax - xmin, self.num_channels
 
     @abstractproperty
@@ -67,14 +70,19 @@ class RasterSource(ABC):
         """Return the numpy.dtype of this scene"""
         pass
 
-    @abstractmethod
-    def get_extent(self) -> 'Box':
+    @property
+    def extent(self) -> 'Box':
         """Return the extent of the RasterSource.
 
         Returns:
             Box in pixel coordinates with extent
         """
-        pass
+        return self._extent
+
+    def map_window_to_extent(self, window: 'Box') -> 'Box':
+        """Map (0, 0) to (extent.xmin, extent.ymin)."""
+        extent = self.extent
+        return window.translate(dy=extent.ymin, dx=extent.xmin)
 
     @abstractmethod
     def get_crs_transformer(self) -> 'CRSTransformer':
@@ -118,7 +126,7 @@ class RasterSource(ABC):
                for x in [h.start, h.stop, w.start, w.stop]):
             raise NotImplementedError()
 
-        ymin, xmin, ymax, xmax = self.get_extent()
+        ymin, xmin, ymax, xmax = self.extent
         _ymin = ymin if h.start is None else h.start + ymin
         _xmin = xmin if w.start is None else w.start + xmin
         _ymax = ymax if h.stop is None else min(h.stop + ymin, ymax)
@@ -167,11 +175,11 @@ class RasterSource(ABC):
 
         Not safe to call on very large RasterSources.
         """
-        return self.get_chip(self.get_extent())
+        return self.get_chip(self.extent)
 
     def get_raw_image_array(self) -> 'np.ndarray':
         """Return entire raw image without using channel_order or applying transforms.
 
         Not safe to call on very large RasterSources.
         """
-        return self.get_raw_chip(self.get_extent())
+        return self.get_raw_chip(self.extent)

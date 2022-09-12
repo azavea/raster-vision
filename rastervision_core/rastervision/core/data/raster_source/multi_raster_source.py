@@ -4,7 +4,7 @@ from pydantic import conint
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
+from rastervision.core.data.raster_source import RasterSource
 from rastervision.core.data.crs_transformer import CRSTransformer
 from rastervision.core.data.raster_source.rasterio_source import RasterioSource
 from rastervision.core.data.utils import all_equal
@@ -25,7 +25,7 @@ class MultiRasterSource(RasterSource):
                  force_same_dtype: bool = False,
                  channel_order: Optional[Sequence[conint(ge=0)]] = None,
                  raster_transformers: Sequence = [],
-                 extent_crop: Optional[CropOffsets] = None):
+                 extent: Optional[Box] = None):
         """Constructor.
 
         Args:
@@ -40,10 +40,6 @@ class MultiRasterSource(RasterSource):
                 that will be used by .get_chip(). Defaults to None.
             raster_transformers (Sequence, optional): Sequence of transformers.
                 Defaults to [].
-            extent_crop (CropOffsets, optional): Relative
-                offsets (top, left, bottom, right) for cropping the extent.
-                Useful for using splitting a scene into different datasets.
-                Defaults to None i.e. no cropping.
         """
         num_channels_raw = sum(rs.num_channels_raw for rs in raster_sources)
         if not channel_order:
@@ -55,14 +51,20 @@ class MultiRasterSource(RasterSource):
             raise IndexError('primary_source_idx must be in range '
                              '[0, len(raster_sources)].')
 
-        super().__init__(channel_order, num_channels_raw, raster_transformers)
+        if extent is None:
+            extent = raster_sources[primary_source_idx].extent
+
+        super().__init__(
+            channel_order,
+            num_channels_raw,
+            raster_transformers=raster_transformers,
+            extent=extent)
 
         self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
         self.primary_source_idx = primary_source_idx
-        self.extent_crop = extent_crop
 
-        self.extents = [rs.get_extent() for rs in self.raster_sources]
+        self.extents = [rs.extent for rs in self.raster_sources]
         self.all_extents_equal = all_equal(self.extents)
 
         self.validate_raster_sources()
@@ -96,16 +98,6 @@ class MultiRasterSource(RasterSource):
     @property
     def dtype(self) -> np.dtype:
         return self.primary_source.dtype
-
-    def get_extent(self) -> Box:
-        extent = self.primary_source.get_extent()
-        if self.extent_crop is not None:
-            h, w = extent.get_height(), extent.get_width()
-            skip_top, skip_left, skip_bottom, skip_right = self.extent_crop
-            ymin, xmin = int(h * skip_top), int(w * skip_left)
-            ymax, xmax = h - int(h * skip_bottom), w - int(w * skip_right)
-            return Box(ymin, xmin, ymax, xmax)
-        return extent
 
     def get_crs_transformer(self) -> CRSTransformer:
         return self.primary_source.get_crs_transformer()

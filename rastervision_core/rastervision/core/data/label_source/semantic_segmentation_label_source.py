@@ -70,7 +70,7 @@ class SemanticSegmentationLabelSource(LabelSource):
              SemanticSegmentationLabels
         """
         if window is None:
-            window = self.raster_source.get_extent()
+            window = self.extent
         labels = SemanticSegmentationLabels.make_empty()
         label_arr = self.get_label_arr(window)
         labels[window] = label_arr
@@ -86,16 +86,16 @@ class SemanticSegmentationLabelSource(LabelSource):
              np.ndarray
         """
         if window is None:
-            window = self.raster_source.get_extent()
+            window = self.extent
         label_arr = self.raster_source.get_chip(window)
         label_arr = np.squeeze(label_arr)
-        label_arr = fill_edge(label_arr, window,
-                              self.raster_source.get_extent(),
+        label_arr = fill_edge(label_arr, window, self.extent,
                               self.null_class_id)
         return label_arr
 
-    def get_extent(self) -> Box:
-        return self.raster_source.get_extent()
+    @property
+    def extent(self) -> Box:
+        return self.raster_source.extent
 
     def __getitem__(self, key: Any) -> Any:
         if isinstance(key, Box):

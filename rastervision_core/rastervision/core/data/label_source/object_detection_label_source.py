@@ -30,7 +30,7 @@ class ObjectDetectionLabelSource(LabelSource):
         self.validate_geojson(geojson)
         self.labels = ObjectDetectionLabels.from_geojson(
             geojson, extent=extent)
-        self.extent = extent
+        self._extent = extent
         self.ioa_thresh = ioa_thresh if ioa_thresh is not None else 1e-6
         self.clip = clip
 
@@ -101,7 +101,7 @@ class ObjectDetectionLabelSource(LabelSource):
                for x in [h.start, h.stop, w.start, w.stop]):
             raise NotImplementedError()
 
-        ymin, xmin, ymax, xmax = self.get_extent()
+        ymin, xmin, ymax, xmax = self.extent
         _ymin = ymin if h.start is None else h.start + ymin
         _xmin = xmin if w.start is None else w.start + xmin
         _ymax = ymax if h.stop is None else min(h.stop + ymin, ymax)
@@ -133,5 +133,6 @@ class ObjectDetectionLabelSource(LabelSource):
                 raise ValueError('All GeoJSON features must have a class_id '
                                  'field in their properties.')
 
-    def get_extent(self) -> Box:
-        return self.extent
+    @property
+    def extent(self) -> Box:
+        return self._extent

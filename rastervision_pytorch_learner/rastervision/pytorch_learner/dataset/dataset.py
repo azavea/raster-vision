@@ -169,7 +169,7 @@ class SlidingWindowGeoDataset(GeoDataset):
 
     def init_windows(self) -> None:
         """Pre-compute windows."""
-        windows = self.scene.raster_source.get_extent().get_windows(
+        windows = self.scene.raster_source.extent.get_windows(
             self.size, stride=self.stride, padding=self.padding)
         if len(self.scene.aoi_polygons) > 0:
             windows = Box.filter_by_aoi(windows, self.scene.aoi_polygons)
@@ -290,7 +290,7 @@ class RandomWindowGeoDataset(GeoDataset):
         self.max_sample_attempts = max_sample_attempts
 
         # include padding in the extent
-        ymin, xmin, ymax, xmax = scene.raster_source.get_extent()
+        ymin, xmin, ymax, xmax = scene.raster_source.extent
         h_padding, w_padding = self.padding
         self.extent = (ymin, xmin, ymax + h_padding, xmax + w_padding)
 

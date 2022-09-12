@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 from typing import Any
+from abc import ABC, abstractmethod, abstractproperty
 
 from rastervision.core.box import Box
 
@@ -26,8 +26,8 @@ class LabelSource(ABC):
         """
         pass
 
-    @abstractmethod
-    def get_extent(self) -> Box:
+    @abstractproperty
+    def extent(self) -> Box:
         pass
 
     def __getitem__(self, key: Any) -> Any:
@@ -54,7 +54,7 @@ class LabelSource(ABC):
                for x in [h.start, h.stop, w.start, w.stop]):
             raise NotImplementedError()
 
-        ymin, xmin, ymax, xmax = self.get_extent()
+        ymin, xmin, ymax, xmax = self.extent
         _ymin = ymin if h.start is None else h.start + ymin
         _xmin = xmin if w.start is None else w.start + xmin
         _ymax = ymax if h.stop is None else min(h.stop + ymin, ymax)

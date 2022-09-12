@@ -84,7 +84,7 @@ class TestRasterizedSource(unittest.TestCase):
         }
 
         source = self.build_source(geojson)
-        self.assertEqual(source.get_extent(), self.extent)
+        self.assertEqual(source.extent, self.extent)
         chip = source.get_image_array()
         self.assertEqual(chip.shape, (10, 10, 1))
 
@@ -99,7 +99,7 @@ class TestRasterizedSource(unittest.TestCase):
         source = self.build_source(geojson)
         # Get chip that partially overlaps extent. Expect that chip has zeros
         # outside of extent, and background_class_id otherwise.
-        self.assertEqual(source.get_extent(), self.extent)
+        self.assertEqual(source.extent, self.extent)
         chip = source.get_chip(Box.make_square(5, 5, 10))
         self.assertEqual(chip.shape, (10, 10, 1))
 

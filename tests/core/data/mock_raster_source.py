@@ -14,13 +14,12 @@ class MockRasterSource(RasterSource):
 
     def set_return_vals(self, raster=None):
         self._dtype = np.uint8
-        self.mock.get_extent.return_value = Box.make_square(0, 0, 2)
+        self._extent = Box.make_square(0, 0, 2)
         self.mock.get_crs_transformer.return_value = IdentityCRSTransformer()
         self.mock._get_chip.return_value = np.random.rand(1, 2, 2, 3)
 
         if raster is not None:
-            self.mock.get_extent.return_value = Box(0, 0, raster.shape[0],
-                                                    raster.shape[1])
+            self._extent = Box(0, 0, raster.shape[0], raster.shape[1])
             self._dtype = raster.dtype
 
             def get_chip(window):
@@ -28,9 +27,6 @@ class MockRasterSource(RasterSource):
                               window.xmax, :]
 
             self.mock._get_chip.side_effect = get_chip
-
-    def get_extent(self):
-        return self.mock.get_extent()
 
     @property
     def dtype(self):

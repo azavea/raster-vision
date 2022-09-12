@@ -75,7 +75,7 @@ def make_neg_windows(raster_source,
                      max_attempts,
                      filter_windows,
                      chip_nodata_threshold=1.):
-    extent = raster_source.get_extent()
+    extent = raster_source.extent
     neg_windows = []
     for _ in range(max_attempts):
         for _ in range(max_attempts):
@@ -111,12 +111,12 @@ def get_train_windows(scene, chip_opts, chip_size, chip_nodata_threshold=1.):
     if window_method == ObjectDetectionWindowMethod.sliding:
         stride = chip_size
         return list(
-            filter_windows((raster_source.get_extent().get_windows(
+            filter_windows((raster_source.extent.get_windows(
                 chip_size, stride))))
 
     # Make positive windows which contain labels.
     pos_windows = filter_windows(
-        make_pos_windows(raster_source.get_extent(), label_store, chip_size,
+        make_pos_windows(raster_source.extent, label_store, chip_size,
                          chip_opts.window_method, chip_opts.label_buffer))
     nb_pos_windows = len(pos_windows)
 

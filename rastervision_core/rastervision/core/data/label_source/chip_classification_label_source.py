@@ -153,7 +153,7 @@ class ChipClassificationLabelSource(LabelSource):
                 initialization. Defaults to False.
         """
         self.cfg = label_source_config
-        self.extent = extent
+        self._extent = extent
         self.labels_df = vector_source.get_dataframe()
         self.validate_labels(self.labels_df)
 
@@ -235,5 +235,6 @@ class ChipClassificationLabelSource(LabelSource):
         if 'class_id' not in df.columns:
             raise ValueError('All label polygons must have a class_id.')
 
-    def get_extent(self) -> Box:
-        return self.extent
+    @property
+    def extent(self) -> Box:
+        return self._extent

@@ -55,8 +55,7 @@ class TestStatsAnalyzer(unittest.TestCase):
         np.testing.assert_array_almost_equal(stats.stds, exp_stds, decimal=3)
         if is_random:
             for rs in raster_sources:
-                width = rs.get_extent().get_width()
-                height = rs.get_extent().get_height()
+                height, width = rs.extent.size
                 exp_num_chips = round(
                     ((width * height) / (chip_sz**2)) * sample_prob)
                 self.assertEqual(rs.mock._get_chip.call_count, exp_num_chips)

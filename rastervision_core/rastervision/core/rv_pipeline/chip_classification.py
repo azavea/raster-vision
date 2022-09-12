@@ -13,7 +13,7 @@ def get_train_windows(scene: Scene,
                       chip_size: int,
                       chip_nodata_threshold: float = 1.) -> List[Box]:
     train_windows = []
-    extent = scene.raster_source.get_extent()
+    extent = scene.raster_source.extent
     stride = chip_size
     windows = extent.get_windows(chip_size, stride)
 

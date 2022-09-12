@@ -55,7 +55,7 @@ class MultiRasterSourceConfig(RasterSourceConfig):
             force_same_dtype=self.force_same_dtype,
             channel_order=self.channel_order,
             raster_transformers=raster_transformers,
-            extent_crop=self.extent_crop)
+            extent=self.extent)
         return multi_raster_source
 
     def update(self, pipeline=None, scene=None):
