@@ -79,11 +79,6 @@ class RasterSource(ABC):
         """
         return self._extent
 
-    def map_window_to_extent(self, window: 'Box') -> 'Box':
-        """Map (0, 0) to (extent.xmin, extent.ymin)."""
-        extent = self.extent
-        return window.translate(dy=extent.ymin, dx=extent.xmin)
-
     @abstractmethod
     def get_crs_transformer(self) -> 'CRSTransformer':
         """Return the associated CRSTransformer."""
@@ -127,10 +122,10 @@ class RasterSource(ABC):
             raise NotImplementedError()
 
         ymin, xmin, ymax, xmax = self.extent
-        _ymin = ymin if h.start is None else h.start + ymin
-        _xmin = xmin if w.start is None else w.start + xmin
-        _ymax = ymax if h.stop is None else min(h.stop + ymin, ymax)
-        _xmax = xmax if w.stop is None else min(w.stop + xmin, xmax)
+        _ymin = 0 if h.start is None else h.start
+        _xmin = 0 if w.start is None else w.start
+        _ymax = ymax if h.stop is None else h.stop
+        _xmax = xmax if w.stop is None else w.stop
         window = Box(_ymin, _xmin, _ymax, _xmax)
 
         chip = self.get_chip(window)

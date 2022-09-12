@@ -224,7 +224,7 @@ class RasterioSource(RasterSource):
                   window: Box,
                   bands: Optional[Sequence[int]] = None,
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
-        window = self.map_window_to_extent(window)
+        window = window.to_extent_coords(self.extent)
         chip = load_window(
             self.image_dataset,
             bands=bands,
@@ -291,22 +291,19 @@ class RasterioSource(RasterSource):
             raise NotImplementedError()
 
         ymin, xmin, ymax, xmax = self.extent
-        _ymin = ymin if h.start is None else h.start + ymin
-        _xmin = xmin if w.start is None else w.start + xmin
-        _ymax = ymax if h.stop is None else min(h.stop + ymin, ymax)
-        _xmax = xmax if w.stop is None else min(w.stop + xmin, xmax)
+        _ymin = 0 if h.start is None else h.start
+        _xmin = 0 if w.start is None else w.start
+        _ymax = ymax if h.stop is None else h.stop
+        _xmax = xmax if w.stop is None else w.stop
         window = Box(_ymin, _xmin, _ymax, _xmax)
 
         out_shape = None
         if h.step is not None or w.step is not None:
+            out_h, out_w = window.size
             if h.step is not None:
-                out_h = (ymax - ymin) // h.step
-            else:
-                out_h = ymax - ymin
+                out_h //= h.step
             if w.step is not None:
-                out_w = (xmax - xmin) // w.step
-            else:
-                out_w = xmax - xmin
+                out_w //= w.step
             out_shape = (int(out_h), int(out_w))
 
         chip = self.get_chip(window, bands=c, out_shape=out_shape)

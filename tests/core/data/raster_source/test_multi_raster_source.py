@@ -106,11 +106,6 @@ class TestMultiRasterSource(unittest.TestCase):
         # test extent box
         self.assertEqual(rs_crop.extent, Box(64, 64, 192, 192))
 
-        # test window mapping
-        window_in = Box(0, 0, 10, 10)
-        window_out = rs_crop.map_window_to_extent(window_in)
-        self.assertEqual(window_out, Box(64, 64, 74, 74))
-
     def test_get_chip(self):
         # create a 3-channel raster from a 1-channel raster
         # using a ReclassTransformer to give each channel a different value
