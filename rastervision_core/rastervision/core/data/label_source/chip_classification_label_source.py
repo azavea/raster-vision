@@ -113,9 +113,13 @@ def read_labels(labels_df: gpd.GeoDataFrame,
     if extent is not None:
         extent_polygon = extent.to_shapely()
         labels_df = labels_df[labels_df.intersects(extent_polygon)]
-
-    boxes = np.array(
-        [Box.from_shapely(c).to_int() for c in labels_df.geometry])
+        boxes = np.array([
+            Box.from_shapely(c).to_int().to_extent_coords(extent)
+            for c in labels_df.geometry
+        ])
+    else:
+        boxes = np.array(
+            [Box.from_shapely(c).to_int() for c in labels_df.geometry])
     class_ids = labels_df['class_id'].astype(int)
     cells_to_class_id = {
         cell: (class_id, None)
@@ -189,6 +193,8 @@ class ChipClassificationLabelSource(LabelSource):
             if cfg.cell_sz is None:
                 raise ValueError('cell_sz is not set.')
             cells = self.extent.get_windows(cfg.cell_sz, cfg.cell_sz)
+        else:
+            cells = [cell.to_extent_coords(self.extent) for cell in cells]
 
         known_cells = [c for c in cells if c in self.labels]
         unknown_cells = [c for c in cells if c not in self.labels]
@@ -211,6 +217,7 @@ class ChipClassificationLabelSource(LabelSource):
                    window: Optional[Box] = None) -> ChipClassificationLabels:
         if window is None:
             return self.labels
+        window = window.to_extent_coords(self.extent)
         return self.labels.get_singleton_labels(window)
 
     def __getitem__(self, key: Any) -> int:

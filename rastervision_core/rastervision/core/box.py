@@ -252,6 +252,10 @@ class Box():
         ymin, xmin, ymax, xmax = self
         return Box(ymin + dy, xmin + dx, ymax + dy, xmax + dx)
 
+    def to_extent_coords(self, extent: 'Box') -> 'Box':
+        """Shift origin of window coords to (extent.xmin, extent.ymin)."""
+        return self.translate(dy=extent.ymin, dx=extent.xmin)
+
     def reproject(self, transform_fn: Callable) -> 'Box':
         """Reprojects this box based on a transform function.
 

@@ -55,9 +55,9 @@ class LabelSource(ABC):
             raise NotImplementedError()
 
         ymin, xmin, ymax, xmax = self.extent
-        _ymin = ymin if h.start is None else h.start + ymin
-        _xmin = xmin if w.start is None else w.start + xmin
-        _ymax = ymax if h.stop is None else min(h.stop + ymin, ymax)
-        _xmax = xmax if w.stop is None else min(w.stop + xmin, xmax)
+        _ymin = 0 if h.start is None else h.start
+        _xmin = 0 if w.start is None else w.start
+        _ymax = ymax if h.stop is None else h.stop
+        _xmax = xmax if w.stop is None else w.stop
         window = Box(_ymin, _xmin, _ymax, _xmax)
         return self[window]

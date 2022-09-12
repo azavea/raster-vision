@@ -233,11 +233,6 @@ class TestRasterioSource(unittest.TestCase):
         # test extent box
         self.assertEqual(rs_crop.extent, Box(64, 64, 192, 192))
 
-        # test window mapping
-        window_in = Box(0, 0, 10, 10)
-        window_out = rs_crop.map_window_to_extent(window_in)
-        self.assertEqual(window_out, Box(64, 64, 74, 74))
-
         # test validators
         rs_cfg = RasterioSourceConfig(uris=[img_path], extent=(0, 0, 1, 1))
         self.assertIsInstance(rs_cfg.extent, Box)
