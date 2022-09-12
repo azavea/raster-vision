@@ -238,7 +238,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         if chip_sz is None:
             windows = [self.extent]
         else:
-            windows = labels.get_windows(chip_sz=chip_sz)
+            windows = labels.get_windows(chip_sz)
 
         log.info('Writing smooth labels to disk.')
         with rio.open(scores_path, 'w', **out_profile) as dataset:

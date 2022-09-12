@@ -58,9 +58,9 @@ class TestBox(unittest.TestCase):
         width = self.xmax - self.xmin
         self.assertEqual(self.box.get_width(), width)
 
-    def test_get_area(self):
+    def test_area(self):
         area = self.box.get_height() * self.box.get_width()
-        self.assertEqual(self.box.get_area(), area)
+        self.assertEqual(self.box.area, area)
 
     def test_rasterio_format(self):
         rasterio_box = ((self.ymin, self.ymax), (self.xmin, self.xmax))
@@ -138,25 +138,25 @@ class TestBox(unittest.TestCase):
         max_extent = Box.make_square(0, 0, 10)
         box = Box(1, 1, 3, 4)
         buffer_size = erosion_size = 1
-        eroded_box = box.make_buffer(buffer_size, max_extent) \
+        eroded_box = box.buffer(buffer_size, max_extent) \
                         .make_eroded(erosion_size)
         self.assertEqual(eroded_box, box)
 
-    def test_make_buffer(self):
+    def test_buffer(self):
         buffer_size = 1
         max_extent = Box.make_square(0, 0, 3)
         buffer_box = Box(0, 0, 3, 3)
-        output_buffer_box = self.box.make_buffer(buffer_size, max_extent)
+        output_buffer_box = self.box.buffer(buffer_size, max_extent)
         self.assertEqual(output_buffer_box, buffer_box)
 
         buffer_size = 0.5
         max_extent = Box.make_square(0, 0, 5)
         buffer_box = Box(0, 0, 3, 5)
-        output_buffer_box = self.box.make_buffer(buffer_size, max_extent)
+        output_buffer_box = self.box.buffer(buffer_size, max_extent)
         self.assertEqual(output_buffer_box, buffer_box)
 
-    def test_make_copy(self):
-        copy_box = self.box.make_copy()
+    def test_copy(self):
+        copy_box = self.box.copy()
         self.assertIsNot(copy_box, self.box)
         self.assertEqual(copy_box, self.box)
 
