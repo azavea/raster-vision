@@ -46,17 +46,17 @@ class VectorSource(ABC):
         Returns:
             dict in GeoJSON format
         """
-        if self._geojson is None:
-            geojson = self._get_geojson()
-        else:
-            geojson = self._geojson
+        if self._geojson is not None:
+            return self._geojson
 
+        geojson = self._get_geojson()
         geojson = sanitize_geojson(
             geojson, self.crs_transformer, to_map_coords=to_map_coords)
 
         for tf in self.vector_transformers:
             geojson = tf(geojson, crs_transformer=self.crs_transformer)
 
+        self._geojson = geojson
         return geojson
 
     def get_geoms(self, to_map_coords: bool = False) -> List['BaseGeometry']:
@@ -79,7 +79,8 @@ class VectorSource(ABC):
     def get_dataframe(self, to_map_coords: bool = False) -> gpd.GeoDataFrame:
         geojson = self.get_geojson(to_map_coords=to_map_coords)
         df = gpd.GeoDataFrame.from_features(geojson)
-        df.loc[:, 'class_id'] = df['class_id'].astype(int)
+        if len(df) == 0 and 'geometry' not in df.columns:
+            df.loc[:, 'geometry'] = []
         return df
 
     def get_extent(self) -> Box:
@@ -97,7 +98,7 @@ def sanitize_geojson(geojson: dict,
     The following transformations are applied:
     1. Removal of features without geometries.
     2. Coordinate transformation to pixel coordinates.
-    3. Splitting of composite geometries e.g. MultiPolygon --> Polygons.
+    3. Splitting of multi-part geometries e.g. MultiPolygon --> Polygons.
     4. (Optional) If to_map_coords=true, transformation back to map
     coordinates.
 

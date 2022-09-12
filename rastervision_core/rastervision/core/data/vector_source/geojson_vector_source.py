@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 
 from rastervision.core.data.vector_source.vector_source import VectorSource
-from rastervision.pipeline.file_system import file_to_json
+from rastervision.pipeline.file_system import download_if_needed, file_to_json
 
 if TYPE_CHECKING:
     from rastervision.core.data import CRSTransformer, VectorTransformer
@@ -19,7 +19,8 @@ class GeoJSONVectorSource(VectorSource):
             crs_transformer, vector_transformers=vector_transformers)
 
     def _get_geojson(self):
-        geojson = file_to_json(self.uri)
+        # download first so that it gets cached
+        geojson = file_to_json(download_if_needed(self.uri))
         if not self.ignore_crs_field and 'crs' in geojson:
             raise Exception(
                 f'The GeoJSON file at {self.uri} contains a CRS field which '

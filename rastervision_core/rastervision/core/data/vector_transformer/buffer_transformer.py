@@ -12,7 +12,7 @@ class BufferTransformer(VectorTransformer):
 
     def __init__(self,
                  geom_type: str,
-                 class_bufs: Dict[int, Optional[float]] = {},
+                 class_bufs: Optional[Dict[int, Optional[float]]] = None,
                  default_buf: Optional[float] = None):
         """Constructor.
 
@@ -32,7 +32,7 @@ class BufferTransformer(VectorTransformer):
                 None.
         """
         self.geom_type = geom_type
-        self.class_bufs = class_bufs
+        self.class_bufs = class_bufs if class_bufs is not None else {}
         self.default_buf = default_buf
 
     def transform(self,
