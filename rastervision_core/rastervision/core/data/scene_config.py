@@ -42,7 +42,7 @@ class SceneConfig(Config):
         raster_source = self.raster_source.build(
             tmp_dir, use_transformers=use_transformers)
         crs_transformer = raster_source.get_crs_transformer()
-        extent = raster_source.get_extent()
+        extent = raster_source.extent
 
         label_source = (self.label_source.build(class_config, crs_transformer,
                                                 extent, tmp_dir)

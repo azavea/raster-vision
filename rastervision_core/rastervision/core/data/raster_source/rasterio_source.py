@@ -11,7 +11,7 @@ from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import download_if_needed
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
-from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
+from rastervision.core.data.raster_source import RasterSource
 from rastervision.core.data.utils import listify_uris
 
 if TYPE_CHECKING:
@@ -143,7 +143,7 @@ class RasterioSource(RasterSource):
                  raster_transformers: List['RasterTransformer'] = [],
                  allow_streaming: bool = False,
                  channel_order: Optional[Sequence[int]] = None,
-                 extent_crop: Optional[CropOffsets] = None,
+                 extent: Optional[Box] = None,
                  tmp_dir: Optional[str] = None):
         """Constructor.
 
@@ -158,10 +158,8 @@ class RasterioSource(RasterSource):
                 channels to extract from raw imagery. Can be a subset of the
                 available channels. If None, all channels available in the
                 image will be read. Defaults to None.
-            extent_crop (Optional[CropOffsets], optional): Relative
-                offsets (top, left, bottom, right) for cropping the extent.
-                Useful for using splitting a scene into different datasets.
-                Defaults to None i.e. no cropping.
+            extent (Optional[Box], optional): Use-specified extent. If None,
+                the full extent of the raster source is used.
             tmp_dir (Optional[str]): Directory to use for storing the VRT
                 (needed if multiple uris or allow_streaming=True). If None,
                 will be auto-generated. Defaults to None.
@@ -170,7 +168,6 @@ class RasterioSource(RasterSource):
         self.tmp_dir = rv_config.get_tmp_dir() if tmp_dir is None else tmp_dir
         self.image_dataset = None
         self.allow_streaming = allow_streaming
-        self.extent_crop = extent_crop
 
         self.imagery_path = self.download_data(
             self.tmp_dir, stream=self.allow_streaming)
@@ -178,9 +175,6 @@ class RasterioSource(RasterSource):
         self.crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
         self._dtype = None
-
-        self.height = self.image_dataset.height
-        self.width = self.image_dataset.width
 
         num_channels_raw = self.image_dataset.count
         if channel_order is None:
@@ -191,7 +185,16 @@ class RasterioSource(RasterSource):
         self.is_masked = any(
             [m for m in mask_flags if m != MaskFlags.all_valid])
 
-        super().__init__(channel_order, num_channels_raw, raster_transformers)
+        if extent is None:
+            height = self.image_dataset.height
+            width = self.image_dataset.width
+            extent = Box(0, 0, height, width)
+
+        super().__init__(
+            channel_order,
+            num_channels_raw,
+            raster_transformers=raster_transformers,
+            extent=extent)
 
     @property
     def dtype(self) -> Tuple[int, int, int]:
@@ -217,27 +220,18 @@ class RasterioSource(RasterSource):
     def get_crs_transformer(self) -> RasterioCRSTransformer:
         return self.crs_transformer
 
-    def get_extent(self) -> Box:
-        h, w = self.height, self.width
-        if self.extent_crop is not None:
-            skip_top, skip_left, skip_bottom, skip_right = self.extent_crop
-            ymin, xmin = int(h * skip_top), int(w * skip_left)
-            ymax, xmax = h - int(h * skip_bottom), w - int(w * skip_right)
-            return Box(ymin, xmin, ymax, xmax)
-        return Box(0, 0, h, w)
-
     def _get_chip(self,
                   window: Box,
                   bands: Optional[Sequence[int]] = None,
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
+        window = self.map_window_to_extent(window)
         chip = load_window(
             self.image_dataset,
             bands=bands,
             window=window.rasterio_format(),
             is_masked=self.is_masked,
             out_shape=out_shape)
-        if self.extent_crop is not None:
-            chip = fill_overflow(self.get_extent(), window, chip)
+        chip = fill_overflow(self.extent, window, chip)
         return chip
 
     def get_chip(self,
@@ -296,7 +290,7 @@ class RasterioSource(RasterSource):
                for x in [h.start, h.stop, w.start, w.stop]):
             raise NotImplementedError()
 
-        ymin, xmin, ymax, xmax = self.get_extent()
+        ymin, xmin, ymax, xmax = self.extent
         _ymin = ymin if h.start is None else h.start + ymin
         _xmin = xmin if w.start is None else w.start + xmin
         _ymax = ymax if h.stop is None else min(h.stop + ymin, ymax)

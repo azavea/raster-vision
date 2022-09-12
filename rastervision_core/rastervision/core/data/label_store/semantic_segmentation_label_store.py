@@ -102,7 +102,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             if file_exists(self.score_uri):
                 cfg = RasterioSourceConfig(uris=[self.score_uri])
                 raster_source = cfg.build(tmp_dir)
-                extents_equal = raster_source.get_extent() == self.extent
+                extents_equal = raster_source.extent == self.extent
                 bands_equal = raster_source.num_channels == len(class_config)
                 self_dtype = np.uint8 if self.smooth_as_uint8 else np.float32
                 dtypes_equal = raster_source.dtype == self_dtype
@@ -134,7 +134,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             raise FileNotFoundError(
                 f'Raster source at {self.label_uri} does not exist.')
 
-        extent = self.label_raster_source.get_extent()
+        extent = self.label_raster_source.extent
         raw_labels = self.label_raster_source.get_chip(extent)
         if self.class_transformer is None:
             label_arr = np.squeeze(raw_labels)
@@ -156,7 +156,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                 f'Raster source at {self.score_uri} does not exist '
                 'or is not consistent with the current params.')
 
-        extent = self.score_raster_source.get_extent()
+        extent = self.score_raster_source.extent
         score_arr = self.score_raster_source.get_chip(extent)
         # (H, W, C) --> (C, H, W)
         score_arr = score_arr.transpose(2, 0, 1)

@@ -83,7 +83,8 @@ class VectorSource(ABC):
             df.loc[:, 'geometry'] = []
         return df
 
-    def get_extent(self) -> Box:
+    @property
+    def extent(self) -> Box:
         if self._extent is None:
             envelope = unary_union(self.get_geoms()).envelope
             self._extent = Box.from_shapely(envelope).to_int()

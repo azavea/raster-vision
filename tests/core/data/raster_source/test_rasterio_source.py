@@ -1,6 +1,5 @@
 import unittest
 from os.path import join
-from pydantic import ValidationError
 from tempfile import NamedTemporaryFile
 
 import numpy as np
@@ -10,9 +9,9 @@ from rasterio.enums import ColorInterp
 from rastervision.core import (RasterStats)
 from rastervision.core.box import Box
 from rastervision.core.utils.misc import save_img
-from rastervision.core.data import (ChannelOrderError, RasterioSourceConfig,
-                                    StatsTransformerConfig, CropOffsets,
-                                    fill_overflow)
+from rastervision.core.data import (ChannelOrderError, RasterioSource,
+                                    RasterioSourceConfig,
+                                    StatsTransformerConfig, fill_overflow)
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path
@@ -211,7 +210,7 @@ class TestRasterioSource(unittest.TestCase):
         img_path = data_file_path('small-rgb-tile.tif')
         cfg = RasterioSourceConfig(uris=[img_path])
         rs = cfg.build(tmp_dir=self.tmp_dir)
-        extent = rs.get_extent()
+        extent = rs.extent
         h, w = extent.get_height(), extent.get_width()
         ymin, xmin, ymax, xmax = extent
         self.assertEqual(h, 256)
@@ -221,58 +220,27 @@ class TestRasterioSource(unittest.TestCase):
         self.assertEqual(ymax, 256)
         self.assertEqual(xmax, 256)
 
-    def test_extent_crop(self):
-        f = 1 / 4
+    def test_user_specified_extent(self):
         img_path = data_file_path('small-rgb-tile.tif')
 
-        cfg_crop = RasterioSourceConfig(
-            uris=[img_path], extent_crop=(f, f, f, f))
-        rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
+        # /wo user specified extent
+        rs = RasterioSource(uris=img_path)
+        self.assertEqual(rs.extent, Box(0, 0, 256, 256))
+
+        # /w user specified extent
+        rs_crop = RasterioSource(uris=img_path, extent=Box(64, 64, 192, 192))
 
         # test extent box
-        extent_crop = rs_crop.get_extent()
-        self.assertEqual(extent_crop.ymin, 64)
-        self.assertEqual(extent_crop.xmin, 64)
-        self.assertEqual(extent_crop.ymax, 192)
-        self.assertEqual(extent_crop.xmax, 192)
+        self.assertEqual(rs_crop.extent, Box(64, 64, 192, 192))
 
-        # test windows
-        windows = extent_crop.get_windows(64, 64)
-        self.assertEqual(windows[0].ymin, 64)
-        self.assertEqual(windows[0].xmin, 64)
-        self.assertEqual(windows[-1].ymax, 192)
-        self.assertEqual(windows[-1].xmax, 192)
+        # test window mapping
+        window_in = Box(0, 0, 10, 10)
+        window_out = rs_crop.map_window_to_extent(window_in)
+        self.assertEqual(window_out, Box(64, 64, 74, 74))
 
-        # test CropOffsets class
-        cfg_crop = RasterioSourceConfig(
-            uris=[img_path],
-            extent_crop=CropOffsets(skip_top=.5, skip_right=.5))
-        rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
-        extent_crop = rs_crop.get_extent()
-
-        self.assertEqual(extent_crop.ymin, 128)
-        self.assertEqual(extent_crop.xmin, 0)
-        self.assertEqual(extent_crop.ymax, 256)
-        self.assertEqual(extent_crop.xmax, 128)
-
-        # test validation
-        extent_crop = CropOffsets(skip_top=.5, skip_bottom=.5)
-        self.assertRaises(
-            ValidationError,
-            lambda: RasterioSourceConfig(uris=[img_path],
-                                            extent_crop=extent_crop))
-
-        extent_crop = CropOffsets(skip_left=.5, skip_right=.5)
-        self.assertRaises(
-            ValidationError,
-            lambda: RasterioSourceConfig(uris=[img_path],
-                                            extent_crop=extent_crop))
-
-        # test extent_crop=None
-        try:
-            _ = RasterioSourceConfig(uris=[img_path], extent_crop=None)  # noqa
-        except Exception:
-            self.fail('extent_crop=None caused an error.')
+        # test validators
+        rs_cfg = RasterioSourceConfig(uris=[img_path], extent=(0, 0, 1, 1))
+        self.assertIsInstance(rs_cfg.extent, Box)
 
     def test_fill_overflow(self):
         extent = Box(10, 10, 90, 90)
@@ -292,11 +260,8 @@ class TestRasterioSource(unittest.TestCase):
         self.assertTrue(np.all(out[mask] == 1))
         self.assertTrue(np.all(out[~mask] == 0))
 
-    def test_extent_crop_overflow(self):
-        f = 1 / 10
+    def test_extent_overflow(self):
         arr = np.ones((100, 100), dtype=np.uint8)
-        mask = np.zeros_like(arr).astype(bool)
-        mask[10:90, 10:90] = 1
         with NamedTemporaryFile('wb') as fp:
             uri = fp.name
             with rasterio.open(
@@ -308,10 +273,11 @@ class TestRasterioSource(unittest.TestCase):
                     count=1,
                     dtype=np.uint8) as ds:
                 ds.write_band(1, arr)
-            cfg = RasterioSourceConfig(uris=[uri], extent_crop=(f, f, f, f))
-            rs = cfg.build(tmp_dir=self.tmp_dir)
+            rs = RasterioSource(uris=uri, extent=Box(10, 10, 90, 90))
             out = rs.get_chip(Box(0, 0, 100, 100))[..., 0]
 
+        mask = np.zeros((100, 100), dtype=bool)
+        mask[:80, :80] = 1
         self.assertTrue(np.all(out[mask] == 1))
         self.assertTrue(np.all(out[~mask] == 0))
 

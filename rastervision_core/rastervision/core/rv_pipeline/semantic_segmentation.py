@@ -32,7 +32,7 @@ def get_train_windows(scene: 'Scene',
     """
     co = chip_options
     raster_source = scene.raster_source
-    extent = raster_source.get_extent()
+    extent = raster_source.extent
     label_source = scene.label_source
 
     def filter_windows(windows: Sequence[Box]) -> List[Box]:

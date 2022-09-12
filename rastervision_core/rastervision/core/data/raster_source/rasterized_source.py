@@ -68,7 +68,6 @@ class RasterizedSource(RasterSource):
         """
         self.vector_source = vector_source
         self.background_class_id = background_class_id
-        self.extent = extent
         self.all_touched = all_touched
 
         self.df = self.vector_source.get_dataframe()
@@ -77,15 +76,8 @@ class RasterizedSource(RasterSource):
         super().__init__(
             channel_order=[0],
             num_channels_raw=1,
-            raster_transformers=raster_transformers)
-
-    def get_extent(self):
-        """Return the extent of the RasterSource.
-
-        Returns:
-            Box in pixel coordinates with extent
-        """
-        return self.extent
+            raster_transformers=raster_transformers,
+            extent=extent)
 
     @property
     def dtype(self) -> np.dtype:
@@ -115,7 +107,7 @@ class RasterizedSource(RasterSource):
             self.df,
             window,
             background_class_id=self.background_class_id,
-            extent=self.get_extent(),
+            extent=self.extent,
             all_touched=self.all_touched)
         # Add third singleton dim since rasters must have >=1 channel.
         return np.expand_dims(chip, 2)

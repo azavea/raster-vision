@@ -1,12 +1,11 @@
 import unittest
-from pydantic import ValidationError
 
 import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.data import (
-    RasterioSourceConfig, MultiRasterSourceConfig, CropOffsets,
-    ReclassTransformerConfig, CastTransformerConfig)
+    RasterioSourceConfig, MultiRasterSourceConfig, ReclassTransformerConfig,
+    CastTransformerConfig)
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path
@@ -57,11 +56,11 @@ class TestMultiRasterSource(unittest.TestCase):
     def test_extent(self):
         cfg = make_cfg('small-rgb-tile.tif')
         rs = cfg.build(tmp_dir=self.tmp_dir)
-        extent = rs.get_extent()
-        h, w = extent.get_height(), extent.get_width()
-        ymin, xmin, ymax, xmax = extent
+        extent = rs.extent
+        h, w = extent.size
         self.assertEqual(h, 256)
         self.assertEqual(w, 256)
+        ymin, xmin, ymax, xmax = extent
         self.assertEqual(ymin, 0)
         self.assertEqual(xmin, 0)
         self.assertEqual(ymax, 256)
@@ -79,8 +78,8 @@ class TestMultiRasterSource(unittest.TestCase):
         primary_rs = rs.raster_sources[primary_source_idx]
         non_primary_rs = rs.raster_sources[non_primary_source_idx]
 
-        self.assertEqual(rs.get_extent(), primary_rs.get_extent())
-        self.assertNotEqual(rs.get_extent(), non_primary_rs.get_extent())
+        self.assertEqual(rs.extent, primary_rs.extent)
+        self.assertNotEqual(rs.extent, non_primary_rs.extent)
 
         self.assertEqual(rs.dtype, primary_rs.dtype)
         self.assertNotEqual(rs.dtype, non_primary_rs.dtype)
@@ -90,53 +89,27 @@ class TestMultiRasterSource(unittest.TestCase):
         self.assertNotEqual(rs.get_crs_transformer(),
                             non_primary_rs.get_crs_transformer())
 
-    def test_extent_crop(self):
-        f = 1 / 4
-        cfg_crop = make_cfg('small-rgb-tile.tif', extent_crop=(f, f, f, f))
+    def test_user_specified_extent(self):
+        # /wo user specified extent
+        cfg = make_cfg('small-rgb-tile.tif')
+        rs = cfg.build(tmp_dir=self.tmp_dir)
+        self.assertEqual(rs.extent, Box(0, 0, 256, 256))
+
+        # test validators
+        cfg = make_cfg('small-rgb-tile.tif', extent=(64, 64, 192, 192))
+        self.assertIsInstance(cfg.extent, Box)
+
+        # /w user specified extent
+        cfg_crop = make_cfg('small-rgb-tile.tif', extent=(64, 64, 192, 192))
         rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
 
         # test extent box
-        extent_crop = rs_crop.get_extent()
-        self.assertEqual(extent_crop.ymin, 64)
-        self.assertEqual(extent_crop.xmin, 64)
-        self.assertEqual(extent_crop.ymax, 192)
-        self.assertEqual(extent_crop.xmax, 192)
+        self.assertEqual(rs_crop.extent, Box(64, 64, 192, 192))
 
-        # test windows
-        windows = extent_crop.get_windows(64, 64)
-        self.assertEqual(windows[0].ymin, 64)
-        self.assertEqual(windows[0].xmin, 64)
-        self.assertEqual(windows[-1].ymax, 192)
-        self.assertEqual(windows[-1].xmax, 192)
-
-        # test CropOffsets class
-        cfg_crop = make_cfg(
-            'small-rgb-tile.tif',
-            extent_crop=CropOffsets(skip_top=.5, skip_right=.5))
-        rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
-        extent_crop = rs_crop.get_extent()
-
-        self.assertEqual(extent_crop.ymin, 128)
-        self.assertEqual(extent_crop.xmin, 0)
-        self.assertEqual(extent_crop.ymax, 256)
-        self.assertEqual(extent_crop.xmax, 128)
-
-        # test validation
-        extent_crop = CropOffsets(skip_top=.5, skip_bottom=.5)
-        self.assertRaises(
-            ValidationError,
-            lambda: make_cfg('small-rgb-tile.tif', extent_crop=extent_crop))
-
-        extent_crop = CropOffsets(skip_left=.5, skip_right=.5)
-        self.assertRaises(
-            ValidationError,
-            lambda: make_cfg('small-rgb-tile.tif', extent_crop=extent_crop))
-
-        # test extent_crop=None
-        try:
-            _ = make_cfg('small-rgb-tile.tif', extent_crop=None)  # noqa
-        except Exception:
-            self.fail('extent_crop=None caused an error.')
+        # test window mapping
+        window_in = Box(0, 0, 10, 10)
+        window_out = rs_crop.map_window_to_extent(window_in)
+        self.assertEqual(window_out, Box(64, 64, 74, 74))
 
     def test_get_chip(self):
         # create a 3-channel raster from a 1-channel raster
