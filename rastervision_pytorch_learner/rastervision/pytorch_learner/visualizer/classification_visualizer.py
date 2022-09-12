@@ -67,5 +67,7 @@ class ClassificationVisualizer(Visualizer):
             label_ax.set_title('Prediction')
 
     def _get_plot_ncols(self, **kwargs) -> int:
-        ncols = len(self.channel_display_groups) + 1
+        x = kwargs['x']
+        nb_img_channels = x.shape[1]
+        ncols = len(self.get_channel_display_groups(nb_img_channels)) + 1
         return ncols

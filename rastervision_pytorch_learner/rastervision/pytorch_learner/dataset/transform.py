@@ -9,6 +9,8 @@ import torch
 
 from rastervision.pytorch_learner.object_detection_utils import BoxList
 
+ObjDetBoxTuple = Tuple[np.ndarray, np.ndarray, str]
+
 
 class TransformType(Enum):
     noop = 'noop'
@@ -103,8 +105,19 @@ def albu_to_yxyx(xyxy: np.ndarray,
     return yxyx
 
 
+def object_detection_tuple_to_boxlist(inp: ObjDetBoxTuple) -> BoxList:
+    boxes, class_ids, box_format = inp
+    boxes = torch.from_numpy(boxes).float()
+    class_ids = torch.from_numpy(class_ids).long()
+
+    if len(boxes) == 0:
+        boxes = torch.empty((0, 4)).float()
+
+    return BoxList(boxes, format=box_format, class_ids=class_ids)
+
+
 def object_detection_transformer(
-        inp: Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]],
+        inp: Tuple[np.ndarray, ObjDetBoxTuple],
         transform: Optional[A.BasicTransform] = None
 ) -> Tuple[torch.Tensor, Optional[BoxList]]:
     """Apply transform to image, bounding boxes, and labels. Also perform
