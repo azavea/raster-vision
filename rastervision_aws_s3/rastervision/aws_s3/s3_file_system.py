@@ -79,7 +79,8 @@ def progressbar(total_size: int, desc: str):
         unit='B',
         unit_scale=True,
         unit_divisor=1024,
-        mininterval=0.5)
+        mininterval=0.5,
+        delay=5)
 
 
 class S3FileSystem(FileSystem):
