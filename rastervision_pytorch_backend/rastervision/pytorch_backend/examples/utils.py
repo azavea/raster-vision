@@ -35,7 +35,7 @@ def get_scene_info(csv_uri):
     return list(reader)
 
 
-def crop_image(image_uri, window, crop_uri):
+def crop_image(image_uri: str, window: Box, crop_uri: str):
     im_dataset = rasterio.open(image_uri)
     rasterio_window = window.rasterio_format()
     im = im_dataset.read(window=rasterio_window)
@@ -45,7 +45,7 @@ def crop_image(image_uri, window, crop_uri):
         make_dir(crop_path, use_dirname=True)
 
         meta = im_dataset.meta
-        meta['width'], meta['height'] = window.get_width(), window.get_height()
+        meta['height'], meta['width'] = window.size
         meta['transform'] = rasterio.windows.transform(rasterio_window,
                                                        im_dataset.transform)
 

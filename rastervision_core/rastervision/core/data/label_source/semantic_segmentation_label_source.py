@@ -8,12 +8,13 @@ from rastervision.core.data.label_source.label_source import LabelSource
 from rastervision.core.data.raster_source import RasterSource
 
 
-def fill_edge(label_arr, window, extent, fill_value):
+def fill_edge(label_arr: np.ndarray, window: Box, extent: Box,
+              fill_value: int) -> np.ndarray:
     """If window goes over the edge of the extent, buffer with fill_value."""
     if window.ymax <= extent.ymax and window.xmax <= extent.xmax:
         return label_arr
 
-    x = np.full((window.get_height(), window.get_width()), fill_value)
+    x = np.full(window.size, fill_value)
     ylim = extent.ymax - window.ymin
     xlim = extent.xmax - window.xmin
     x[0:ylim, 0:xlim] = label_arr[0:ylim, 0:xlim]

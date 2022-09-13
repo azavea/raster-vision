@@ -49,22 +49,24 @@ class Box():
         """Return true if other has different coordinates."""
         return self.tuple_format() != other.tuple_format()
 
-    def get_height(self) -> int:
+    @property
+    def height(self) -> int:
         """Return height of Box."""
         return self.ymax - self.ymin
 
-    def get_width(self) -> int:
+    @property
+    def width(self) -> int:
         """Return width of Box."""
         return self.xmax - self.xmin
 
     @property
     def size(self) -> Tuple[int, int]:
-        return self.get_height(), self.get_width()
+        return self.height, self.width
 
     @property
     def area(self) -> int:
         """Return area of Box."""
-        return self.get_height() * self.get_width()
+        return self.height * self.width
 
     def rasterio_format(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """Return Box in Rasterio format: ((ymin, ymax), (xmin, xmax))."""
@@ -131,17 +133,17 @@ class Box():
             size: the width and height of the new Box
 
         """
-        if size < self.get_width():
+        if size < self.width:
             raise BoxSizeError('size of random container cannot be < width')
 
-        if size < self.get_height():  # pragma: no cover
+        if size < self.height:  # pragma: no cover
             raise BoxSizeError('size of random container cannot be < height')
 
-        lb = self.ymin - (size - self.get_height())
+        lb = self.ymin - (size - self.height)
         ub = self.ymin
         rand_y = random.randint(int(lb), int(ub))
 
-        lb = self.xmin - (size - self.get_width())
+        lb = self.xmin - (size - self.width)
         ub = self.xmin
         rand_x = random.randint(int(lb), int(ub))
 
@@ -178,10 +180,10 @@ class Box():
             size: the height and width of the new Box
 
         """
-        if size >= self.get_width():
+        if size >= self.width:
             raise BoxSizeError('size of random square cannot be >= width')
 
-        if size >= self.get_height():  # pragma: no cover
+        if size >= self.height:  # pragma: no cover
             raise BoxSizeError('size of random square cannot be >= height')
 
         lb = self.ymin
@@ -226,7 +228,7 @@ class Box():
         return Box(ymin, xmin, ymax, xmax)
 
     def to_xywh(self) -> Tuple[int, int, int, int]:
-        return (self.xmin, self.ymin, self.get_width(), self.get_height())
+        return (self.xmin, self.ymin, self.width, self.height)
 
     def to_xyxy(self) -> Tuple[int, int, int, int]:
         return (self.xmin, self.ymin, self.xmax, self.ymax)
@@ -289,17 +291,17 @@ class Box():
         """
         buffer_sz = max(0., buffer_sz)
         if buffer_sz < 1.:
-            delta_width = int(round(buffer_sz * self.get_width()))
-            delta_height = int(round(buffer_sz * self.get_height()))
+            delta_width = int(round(buffer_sz * self.width))
+            delta_height = int(round(buffer_sz * self.height))
         else:
             delta_height = delta_width = int(round(buffer_sz))
 
         return Box(
             max(0, math.floor(self.ymin - delta_height)),
             max(0, math.floor(self.xmin - delta_width)),
-            min(max_extent.get_height(),
+            min(max_extent.height,
                 int(self.ymax) + delta_height),
-            min(max_extent.get_width(),
+            min(max_extent.width,
                 int(self.xmax) + delta_width))
 
     def copy(self) -> 'Box':
