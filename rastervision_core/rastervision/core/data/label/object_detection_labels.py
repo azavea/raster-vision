@@ -207,8 +207,7 @@ class ObjectDetectionLabels(Labels):
         The local coordinates are row/col within the window frame of reference.
         Normalized coordinates range from 0 to 1 on each (height/width) axis.
         """
-        height = window.get_height()
-        width = window.get_width()
+        height, width = window.size
         return npboxes / np.array([[height, width, height, width]])
 
     @staticmethod
@@ -218,8 +217,7 @@ class ObjectDetectionLabels(Labels):
         Normalized coordinates range from 0 to 1 on each (height/width) axis.
         The local coordinates are row/col within the window frame of reference.
         """
-        height = window.get_height()
-        width = window.get_width()
+        height, width = window.size
         return npboxes * np.array([[height, width, height, width]])
 
     @staticmethod

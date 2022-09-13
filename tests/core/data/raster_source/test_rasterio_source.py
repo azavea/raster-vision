@@ -211,10 +211,10 @@ class TestRasterioSource(unittest.TestCase):
         cfg = RasterioSourceConfig(uris=[img_path])
         rs = cfg.build(tmp_dir=self.tmp_dir)
         extent = rs.extent
-        h, w = extent.get_height(), extent.get_width()
-        ymin, xmin, ymax, xmax = extent
+        h, w = extent.size
         self.assertEqual(h, 256)
         self.assertEqual(w, 256)
+        ymin, xmin, ymax, xmax = extent
         self.assertEqual(ymin, 0)
         self.assertEqual(xmin, 0)
         self.assertEqual(ymax, 256)

@@ -50,16 +50,16 @@ class TestBox(unittest.TestCase):
             float(self.xmax))
         self.assertTrue(other.to_int() == self.box)
 
-    def test_get_height(self):
+    def test_height(self):
         height = self.ymax - self.ymin
-        self.assertEqual(self.box.get_height(), height)
+        self.assertEqual(self.box.height, height)
 
-    def test_get_width(self):
+    def test_width(self):
         width = self.xmax - self.xmin
-        self.assertEqual(self.box.get_width(), width)
+        self.assertEqual(self.box.width, width)
 
     def test_area(self):
-        area = self.box.get_height() * self.box.get_width()
+        area = self.box.height * self.box.width
         self.assertEqual(self.box.area, area)
 
     def test_rasterio_format(self):
@@ -93,8 +93,8 @@ class TestBox(unittest.TestCase):
         nb_tests = 100
         for _ in range(nb_tests):
             container = self.box.make_random_square_container(size)
-            self.assertEqual(container.get_width(), container.get_height())
-            self.assertEqual(container.get_width(), size)
+            self.assertEqual(container.width, container.height)
+            self.assertEqual(container.width, size)
             self.assertTrue(container.to_shapely().contains(
                 self.box.to_shapely()))
 
@@ -109,8 +109,8 @@ class TestBox(unittest.TestCase):
         nb_tests = 100
         for _ in range(nb_tests):
             box = window.make_random_square(size)
-            self.assertEqual(box.get_width(), box.get_height())
-            self.assertEqual(box.get_width(), size)
+            self.assertEqual(box.width, box.height)
+            self.assertEqual(box.width, size)
             self.assertTrue(window.to_shapely().contains(box.to_shapely()))
 
     def test_from_npbox(self):
@@ -123,6 +123,54 @@ class TestBox(unittest.TestCase):
         output_box = Box.from_shapely(shape)
         self.assertEqual(output_box, self.box)
 
+    def test_to_xywh(self):
+        x, y, w, h = np.random.randint(100, size=4)
+        box = Box(y, x, y + h, x + w)
+        self.assertEqual(box.to_xywh(), (x, y, w, h))
+
+    def test_to_xyxy(self):
+        box = Box(*np.random.randint(100, size=4))
+        self.assertEqual(box.to_xyxy(),
+                         (box.xmin, box.ymin, box.xmax, box.ymax))
+
+    def test_to_points(self):
+        box = Box(0, 0, 1, 2)
+        points = box.to_points()
+        points = set(tuple(p) for p in points.tolist())
+        self.assertIn((0, 0), points)
+        self.assertIn((2, 0), points)
+        self.assertIn((2, 1), points)
+        self.assertIn((0, 1), points)
+
+    def test_to_slices(self):
+        box = Box(*np.random.randint(100, size=4))
+        hslice, wslice = box.to_slices()
+        self.assertEqual(hslice, slice(box.ymin, box.ymax))
+        self.assertEqual(wslice, slice(box.xmin, box.xmax))
+
+    def test_to_rasterio(self):
+        x, y, w, h = np.random.randint(100, size=4)
+        box = Box(y, x, y + h, x + w)
+        rio_w = box.to_rasterio()
+        self.assertEqual(
+            (rio_w.col_off, rio_w.row_off, rio_w.width, rio_w.height),
+            (x, y, w, h))
+
+    def test_translate(self):
+        box = Box(*np.random.randint(100, size=4))
+        dy, dx = np.random.randint(100, size=2)
+        self.assertEqual(
+            box.translate(dy, dx),
+            Box(box.ymin + dy, box.xmin + dx, box.ymax + dy, box.xmax + dx))
+
+    def test_to_extent_coords(self):
+        box = Box(0, 0, 10, 10)
+        extent = Box(5, 5, 8, 8)
+        self.assertEqual(
+            box.to_extent_coords(extent),
+            Box(box.ymin + extent.ymin, box.xmin + extent.xmin,
+                box.ymax + extent.ymin, box.xmax + extent.xmin))
+
     def test_to_shapely(self):
         bounds = self.box.to_shapely().bounds
         self.assertEqual((bounds[1], bounds[0], bounds[3], bounds[2]),
@@ -132,7 +180,7 @@ class TestBox(unittest.TestCase):
         square = Box(0, 0, 10, 10)
         output_square = Box.make_square(0, 0, 10)
         self.assertEqual(output_square, square)
-        self.assertEqual(output_square.get_width(), output_square.get_height())
+        self.assertEqual(output_square.width, output_square.height)
 
     def test_make_eroded(self):
         max_extent = Box.make_square(0, 0, 10)

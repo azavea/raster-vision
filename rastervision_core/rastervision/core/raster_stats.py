@@ -109,7 +109,7 @@ class RasterStats():
             """Get random stream of chips."""
             for raster_source in raster_sources:
                 extent = raster_source.extent
-                num_pixels = extent.get_width() * extent.get_height()
+                num_pixels = extent.area
                 num_chips = round(sample_prob * (num_pixels / (chip_sz**2)))
                 num_chips = max(1, num_chips)
                 for _ in range(num_chips):
