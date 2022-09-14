@@ -32,7 +32,7 @@ class SemanticSegmentationLabelSource(LabelSource):
                 channel raster with class_ids as values.
             null_class_id (int): the null class id used as fill values for when
                 windows go over the edge of the label array. This can be
-                retrieved using class_config.get_null_class_id().
+                retrieved using class_config.null_class_id.
         """
         self.raster_source = raster_source
         self.null_class_id = null_class_id

@@ -79,8 +79,8 @@ class RasterSource(ABC):
         """
         return self._extent
 
-    @abstractmethod
-    def get_crs_transformer(self) -> 'CRSTransformer':
+    @abstractproperty
+    def crs_transformer(self) -> 'CRSTransformer':
         """Return the associated CRSTransformer."""
         pass
 

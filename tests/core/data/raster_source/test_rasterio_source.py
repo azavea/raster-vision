@@ -173,10 +173,10 @@ class TestRasterioSource(unittest.TestCase):
         np.testing.assert_equal(out_chip, chip)
 
         p = (3, 4)
-        out_p = source.get_crs_transformer().map_to_pixel(p)
+        out_p = source.crs_transformer.map_to_pixel(p)
         np.testing.assert_equal(out_p, p)
 
-        out_p = source.get_crs_transformer().pixel_to_map(p)
+        out_p = source.crs_transformer.pixel_to_map(p)
         np.testing.assert_equal(out_p, p)
 
     def test_no_epsg(self):

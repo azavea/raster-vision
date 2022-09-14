@@ -15,7 +15,7 @@ class MockRasterSource(RasterSource):
     def set_return_vals(self, raster=None):
         self._dtype = np.uint8
         self._extent = Box.make_square(0, 0, 2)
-        self.mock.get_crs_transformer.return_value = IdentityCRSTransformer()
+        self._crs_transformer = IdentityCRSTransformer()
         self.mock._get_chip.return_value = np.random.rand(1, 2, 2, 3)
 
         if raster is not None:
@@ -32,8 +32,9 @@ class MockRasterSource(RasterSource):
     def dtype(self):
         return self._dtype
 
-    def get_crs_transformer(self):
-        return self.mock.get_crs_transformer()
+    @property
+    def crs_transformer(self):
+        return self._crs_transformer
 
     def _get_chip(self, window):
         return self.mock._get_chip(window)

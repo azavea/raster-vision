@@ -158,12 +158,3 @@ class CRSTransformer(ABC):
             (x, y) tuple in map coordinates (eg. lon/lat)
         """
         pass
-
-    def get_image_crs(self) -> str:
-        return self.image_crs
-
-    def get_map_crs(self) -> str:
-        return self.map_crs
-
-    def get_affine_transform(self) -> Any:
-        return self.transform

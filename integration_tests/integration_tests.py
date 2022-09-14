@@ -191,7 +191,7 @@ def test_model_bundle_results(pipeline, test_id: str, test_cfg: dict,
         predictor.predict([image_uri], predictor_label_store_uri)
 
         extent = scene.raster_source.extent
-        crs_transformer = scene.raster_source.get_crs_transformer()
+        crs_transformer = scene.raster_source.crs_transformer
         predictor_label_store = scene_cfg.label_store.copy()
         predictor_label_store.uri = predictor_label_store_uri
         predictor_label_store = predictor_label_store.build(

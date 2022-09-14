@@ -195,8 +195,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             'driver': 'GTiff',
             'height': height,
             'width': width,
-            'transform': self.crs_transformer.get_affine_transform(),
-            'crs': self.crs_transformer.get_image_crs(),
+            'transform': self.crs_transformer.transform,
+            'crs': self.crs_transformer.image_crs,
             'blockxsize': min(self.rasterio_block_size, width),
             'blockysize': min(self.rasterio_block_size, height)
         }
@@ -291,7 +291,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         # value for pixels not convered by any windows
         try:
-            default_class_id = self.class_config.get_null_class_id()
+            default_class_id = self.class_config.null_class_id
         except ValueError:
             # Set it to a high value so that it doesn't match any class's id.
             # assumption: num_classes < 256

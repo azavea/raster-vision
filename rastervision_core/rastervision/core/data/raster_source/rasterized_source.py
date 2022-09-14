@@ -84,8 +84,8 @@ class RasterizedSource(RasterSource):
         """Return the numpy.dtype of this scene"""
         return np.uint8
 
-    def get_crs_transformer(self):
-        """Return the associated CRSTransformer."""
+    @property
+    def crs_transformer(self):
         return self.vector_source.crs_transformer
 
     def _get_chip(self, window):

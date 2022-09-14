@@ -18,7 +18,7 @@ class SemanticSegmentationEvaluator(ClassificationEvaluator):
 
     def evaluate_scene(self, scene: 'Scene') -> SemanticSegmentationEvaluation:
         """Override to pass null_class_id to filter_by_aoi()."""
-        null_class_id = self.class_config.get_null_class_id()
+        null_class_id = self.class_config.null_class_id
         ground_truth = scene.label_source.get_labels()
         predictions = scene.label_store.get_labels()
 

@@ -55,8 +55,8 @@ class ShiftTransformer(VectorTransformer):
 
     def make_wgs84_transformer(self, crs_transformer: 'CRSTransformer'):
         wgs84_transformer = RasterioCRSTransformer(
-            transform=crs_transformer.get_affine_transform(),
-            image_crs=crs_transformer.get_image_crs(),
+            transform=crs_transformer.transform,
+            image_crs=crs_transformer.image_crs,
             map_crs='epsg:4326',
             round_pixels=self.round_pixels)
         return wgs84_transformer
