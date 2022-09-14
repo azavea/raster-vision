@@ -153,14 +153,12 @@ def object_detection_transformer(
             if len(boxes) > 0:
                 boxes = albu_to_yxyx(boxes, img_size)
 
-            # convert to pytorch
-            boxes = torch.from_numpy(boxes).float()
-            class_ids = torch.from_numpy(class_ids).long()
-
-            if len(boxes) == 0:
-                boxes = torch.empty((0, 4)).float()
-
-            y = BoxList(boxes, format='yxyx', class_ids=class_ids)
+    if y is not None:
+        boxes = torch.from_numpy(boxes).float()
+        class_ids = torch.from_numpy(class_ids).long()
+        if len(boxes) == 0:
+            boxes = torch.empty((0, 4)).float()
+        y = BoxList(boxes, format='yxyx', class_ids=class_ids)
 
     # normalize x
     if np.issubdtype(x.dtype, np.unsignedinteger):
