@@ -43,6 +43,8 @@ augmentors = [
 Proportion = confloat(ge=0, le=1)
 NonEmptyStr = constr(strip_whitespace=True, min_length=1)
 NonNegInt = conint(ge=0)
+RGBTuple = Tuple[int, int, int]
+ChannelInds = Sequence[NonNegInt]
 
 
 class Backbone(Enum):
@@ -458,6 +460,49 @@ class SolverConfig(Config):
         return scheduler
 
 
+def get_default_channel_display_groups(
+        nb_img_channels: int) -> Dict[str, ChannelInds]:
+    """Returns the default channel_display_groups object.
+
+    See PlotOptions.channel_display_groups.
+    Displays at most the first 3 channels as RGB.
+
+    Args:
+        nb_img_channels: number of channels in the image that this is for
+    """
+    num_display_channels = min(3, nb_img_channels)
+    return {'Input': list(range(num_display_channels))}
+
+
+def validate_channel_display_groups(groups: Optional[Union[Dict[
+        str, ChannelInds], Sequence[ChannelInds]]]):
+    """Validate channel display groups object.
+
+    See PlotOptions.channel_display_groups.
+    """
+    if groups is None:
+        return None
+    elif len(groups) == 0:
+        raise ConfigError(
+            f'channel_display_groups cannot be empty. Set to None instead.')
+    elif not isinstance(groups, dict):
+        # if in list/tuple form, convert to dict s.t.
+        # [(0, 1, 2), (4, 3, 5)] --> {
+        #   "Channels [0, 1, 2]": [0, 1, 2],
+        #   "Channels [4, 3, 5]": [4, 3, 5]
+        # }
+        groups = {f'Channels: {[*chs]}': list(chs) for chs in groups}
+    else:
+        groups = {k: list(v) for k, v in groups.items()}
+
+    if isinstance(groups, dict):
+        for k, _v in groups.items():
+            if not (0 < len(_v) <= 3):
+                raise ConfigError(f'channel_display_groups[{k}]: '
+                                  'len(group) must be 1, 2, or 3')
+    return groups
+
+
 @register_config('plot_options')
 class PlotOptions(Config):
     """Config related to plotting."""
@@ -471,8 +516,8 @@ class PlotOptions(Config):
         'the plotting function. This default is useful for cases where the values after '
         'normalization are close to zero which makes the plot difficult to see.'
     )
-    channel_display_groups: Optional[Union[Dict[str, Sequence[
-        NonNegInt]], Sequence[Sequence[NonNegInt]]]] = Field(
+    channel_display_groups: Optional[Union[Dict[str, ChannelInds], Sequence[
+        ChannelInds]]] = Field(
             None,
             description=
             ('Groups of image channels to display together as a subplot '
@@ -492,42 +537,37 @@ class PlotOptions(Config):
         super().update()
         img_channels: Optional[int] = kwargs.get('img_channels')
         if self.channel_display_groups is None and img_channels is not None:
-            # by default, display first 3 channels as RGB
-            num_display_channels = min(3, img_channels)
-            self.channel_display_groups = {
-                'Input': list(range(num_display_channels))
-            }
+            self.channel_display_groups = get_default_channel_display_groups(
+                img_channels)
 
     @validator('channel_display_groups')
     def validate_channel_display_groups(
             cls, v: Optional[Union[Dict[str, Sequence[NonNegInt]], Sequence[
                 Sequence[NonNegInt]]]]
     ) -> Optional[Dict[str, List[NonNegInt]]]:
+        return validate_channel_display_groups(v)
 
-        groups = v
-        if groups is None:
-            return None
 
-        elif len(groups) == 0:
-            raise ConfigError(
-                f'channel_display_groups cannot be empty. Set to None instead.'
-            )
-        elif not isinstance(groups, dict):
-            # if in list/tuple form, convert to dict s.t.
-            # [(0, 1, 2), (4, 3, 5)] --> {
-            #   "Channels [0, 1, 2]": [0, 1, 2],
-            #   "Channels [4, 3, 5]": [4, 3, 5]
-            # }
-            groups = {f'Channels: {[*chs]}': list(chs) for chs in groups}
-        else:
-            groups = {k: list(v) for k, v in groups.items()}
+def ensure_class_colors(
+        class_names: List[str],
+        class_colors: Optional[List[Union[str, RGBTuple]]] = None):
+    """Ensure that class_colors is valid.
 
-        if isinstance(groups, dict):
-            for k, _v in groups.items():
-                if not (0 < len(_v) <= 3):
-                    raise ConfigError(f'channel_display_groups[{k}]: '
-                                      'len(group) must be 1, 2, or 3')
-        return groups
+    If class_names is empty, fill with random colors.
+
+    Args:
+        class_names: see DataConfig.class_names
+        class_colors: see DataConfig.class_colors
+    """
+    if class_colors is not None:
+        if len(class_names) != len(class_colors):
+            raise ConfigError(f'len(class_names) ({len(class_names)}) != '
+                              f'len(class_colors) ({len(class_colors)})\n'
+                              f'class_names: {class_names}\n'
+                              f'class_colors: {class_colors}')
+    elif len(class_names) > 0:
+        class_colors = [color_to_triple() for _ in class_names]
+    return class_colors
 
 
 def data_config_upgrader(cfg_dict: dict, version: int) -> dict:
@@ -542,7 +582,7 @@ def data_config_upgrader(cfg_dict: dict, version: int) -> dict:
 class DataConfig(Config):
     """Config related to dataset for training and testing."""
     class_names: List[str] = Field([], description='Names of classes.')
-    class_colors: Optional[List[Union[str, Tuple[int, int, int]]]] = Field(
+    class_colors: Optional[List[Union[str, RGBTuple]]] = Field(
         None,
         description=('Colors used to display classes. '
                      'Can be color 3-tuples in list form.'))
@@ -603,14 +643,7 @@ class DataConfig(Config):
     def ensure_class_colors(cls, values: dict) -> dict:
         class_names = values.get('class_names')
         class_colors = values.get('class_colors')
-        if class_colors is not None:
-            if len(class_names) != len(class_colors):
-                raise ConfigError(f'len(class_names) ({len(class_names)}) != '
-                                  f'len(class_colors) ({len(class_colors)})\n'
-                                  f'class_names: {class_names}\n'
-                                  f'class_colors: {class_colors}')
-        elif len(class_names) > 0:
-            values['class_colors'] = [color_to_triple() for _ in class_names]
+        values['class_colors'] = ensure_class_colors(class_names, class_colors)
         return values
 
     @validator('augmentors', each_item=True)
