@@ -181,6 +181,11 @@ class RasterioSource(RasterSource):
             channel_order = get_channel_order_from_dataset(self.image_dataset)
         self.bands_to_read = np.array(channel_order, dtype=int) + 1
 
+        # number of output channels
+        self._num_channels = None
+        if len(raster_transformers) == 0:
+            self._num_channels = len(self.bands_to_read)
+
         mask_flags = self.image_dataset.mask_flag_enums
         self.is_masked = any(
             [m for m in mask_flags if m != MaskFlags.all_valid])
@@ -197,12 +202,28 @@ class RasterioSource(RasterSource):
             extent=extent)
 
     @property
+    def num_channels(self) -> int:
+        """Needed since transformers can change output channels.
+
+        Unlike the parent class, RasterioSource applies channel_order (via
+        bands_to_read) before raster_transformers. So the number of output
+        channels is not guaranteed to be equal to len(channel_order).
+        """
+        if self._num_channels is None:
+            self._set_info_from_chip()
+        return self._num_channels
+
+    @property
     def dtype(self) -> Tuple[int, int, int]:
         if self._dtype is None:
-            # Read 1x1 chip to determine dtype
-            test_chip = self.get_chip(Box.make_square(0, 0, 1))
-            self._dtype = test_chip.dtype
+            self._set_info_from_chip()
         return self._dtype
+
+    def _set_info_from_chip(self):
+        """Read 1x1 chip to get info not statically inferrable."""
+        test_chip = self.get_chip(Box(0, 0, 1, 1))
+        self._dtype = test_chip.dtype
+        self._num_channels = test_chip.shape[-1]
 
     def download_data(self, tmp_dir: str, stream: bool = False) -> str:
         """Download any data needed for this Raster Source.
