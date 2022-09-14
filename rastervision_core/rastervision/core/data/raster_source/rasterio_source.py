@@ -172,7 +172,7 @@ class RasterioSource(RasterSource):
         self.imagery_path = self.download_data(
             self.tmp_dir, stream=self.allow_streaming)
         self.image_dataset = rasterio.open(self.imagery_path)
-        self.crs_transformer = RasterioCRSTransformer.from_dataset(
+        self._crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
         self._dtype = None
 
@@ -219,6 +219,10 @@ class RasterioSource(RasterSource):
             self._set_info_from_chip()
         return self._dtype
 
+    @property
+    def crs_transformer(self) -> RasterioCRSTransformer:
+        return self._crs_transformer
+
     def _set_info_from_chip(self):
         """Read 1x1 chip to get info not statically inferrable."""
         test_chip = self.get_chip(Box(0, 0, 1, 1))
@@ -237,9 +241,6 @@ class RasterioSource(RasterSource):
                 return download_if_needed(self.uris[0])
         else:
             return download_and_build_vrt(self.uris, tmp_dir, stream=stream)
-
-    def get_crs_transformer(self) -> RasterioCRSTransformer:
-        return self.crs_transformer
 
     def _get_chip(self,
                   window: Box,

@@ -29,7 +29,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         self.class_config = ClassConfig(names=['one', 'two'])
         self.class_config.update()
         self.class_config.ensure_null_class()
-        self.null_class_id = self.class_config.get_null_class_id()
+        self.null_class_id = self.class_config.null_class_id
 
     def tearDown(self):
         self.tmp_dir.cleanup()

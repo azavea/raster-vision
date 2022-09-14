@@ -54,7 +54,7 @@ def get_train_windows(scene: 'Scene',
                 chip, chip_nodata_threshold, nodata_val=0)
 
             label_arr = label_source.get_labels(w).get_label_arr(w)
-            null_labels = label_arr == class_config.get_null_class_id()
+            null_labels = label_arr == class_config.null_class_id
 
             if not np.all(null_labels) and nodata_below_thresh:
                 filt_windows.append(w)
@@ -129,13 +129,13 @@ class SemanticSegmentation(RVPipeline):
         # Use null label for each pixel with NODATA.
         img = sample.chip
         label_arr = sample.labels.get_label_arr(sample.window)
-        null_class_id = self.config.dataset.class_config.get_null_class_id()
+        null_class_id = self.config.dataset.class_config.null_class_id
         sample.chip = fill_no_data(img, label_arr, null_class_id)
         return sample
 
     def post_process_batch(self, windows, chips, labels):
         # Fill in null class for any NODATA pixels.
-        null_class_id = self.config.dataset.class_config.get_null_class_id()
+        null_class_id = self.config.dataset.class_config.null_class_id
         for window, chip in zip(windows, chips):
             nodata_mask = np.sum(chip, axis=2) == 0
             labels.mask_fill(window, nodata_mask, fill_value=null_class_id)

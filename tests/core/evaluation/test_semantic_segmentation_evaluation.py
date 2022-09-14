@@ -13,7 +13,7 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         class_config = ClassConfig(names=['one', 'two'])
         class_config.update()
         class_config.ensure_null_class()
-        null_class_id = class_config.get_null_class_id()
+        null_class_id = class_config.null_class_id
 
         gt_array = np.zeros((4, 4, 1), dtype=np.uint8)
         gt_array[2, 2, 0] = 1

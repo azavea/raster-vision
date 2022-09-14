@@ -84,10 +84,9 @@ class TestMultiRasterSource(unittest.TestCase):
         self.assertEqual(rs.dtype, primary_rs.dtype)
         self.assertNotEqual(rs.dtype, non_primary_rs.dtype)
 
-        self.assertEqual(rs.get_crs_transformer().transform,
-                         primary_rs.get_crs_transformer().transform)
-        self.assertNotEqual(rs.get_crs_transformer(),
-                            non_primary_rs.get_crs_transformer())
+        self.assertEqual(rs.crs_transformer.transform,
+                         primary_rs.crs_transformer.transform)
+        self.assertNotEqual(rs.crs_transformer, non_primary_rs.crs_transformer)
 
     def test_user_specified_extent(self):
         # /wo user specified extent

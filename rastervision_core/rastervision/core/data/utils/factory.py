@@ -74,9 +74,9 @@ def make_ss_scene(class_config: 'ClassConfig',
     image_uri = listify_uris(image_uri)
     raster_source = RasterioSource(uris=image_uri, **image_raster_source_kw)
 
-    crs_transformer = raster_source.get_crs_transformer()
+    crs_transformer = raster_source.crs_transformer
     extent = raster_source.extent
-    null_class_id = class_config.get_null_class_id()
+    null_class_id = class_config.null_class_id
 
     label_raster_source = None
     if label_raster_uri is not None:
@@ -172,7 +172,7 @@ def make_cc_scene(class_config: 'ClassConfig',
     image_uri = listify_uris(image_uri)
     raster_source = RasterioSource(image_uri, **image_raster_source_kw)
 
-    crs_transformer = raster_source.get_crs_transformer()
+    crs_transformer = raster_source.crs_transformer
     extent = raster_source.extent
 
     label_source = None
@@ -261,7 +261,7 @@ def make_od_scene(class_config: 'ClassConfig',
     image_uri = listify_uris(image_uri)
     raster_source = RasterioSource(image_uri, **image_raster_source_kw)
 
-    crs_transformer = raster_source.get_crs_transformer()
+    crs_transformer = raster_source.crs_transformer
     extent = raster_source.extent
 
     label_source = None

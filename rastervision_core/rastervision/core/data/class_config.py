@@ -74,7 +74,8 @@ class ClassConfig(Config):
     def get_name(self, id: int) -> str:
         return self.names[id]
 
-    def get_null_class_id(self) -> int:
+    @property
+    def null_class_id(self) -> int:
         if self.null_class is None:
             raise ValueError('null_class is not set')
         return self.get_class_id(self.null_class)

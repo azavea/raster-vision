@@ -15,7 +15,7 @@ class RGBClassTransformer(RasterTransformer):
 
     def __init__(self, class_config: 'ClassConfig'):
         class_config.ensure_null_class()
-        null_class_id = class_config.get_null_class_id()
+        null_class_id = class_config.null_class_id
         color_to_class = class_config.get_color_to_class_id()
         color_int_to_class = {
             color_to_integer(col): class_id

@@ -99,8 +99,9 @@ class MultiRasterSource(RasterSource):
     def dtype(self) -> np.dtype:
         return self.primary_source.dtype
 
-    def get_crs_transformer(self) -> CRSTransformer:
-        return self.primary_source.get_crs_transformer()
+    @property
+    def crs_transformer(self) -> CRSTransformer:
+        return self.primary_source.crs_transformer
 
     def _get_sub_chips(self, window: Box,
                        raw: bool = False) -> List[np.ndarray]:
@@ -142,10 +143,9 @@ class MultiRasterSource(RasterSource):
 
             primary_sub_chip = get_chip(primary_rs, window)
             out_shape = primary_sub_chip.shape[:2]
-            world_window = primary_rs.get_crs_transformer().pixel_to_map(
-                window)
+            world_window = primary_rs.crs_transformer.pixel_to_map(window)
             pixel_windows = [
-                rs.get_crs_transformer().map_to_pixel(world_window)
+                rs.crs_transformer.map_to_pixel(world_window)
                 for rs in other_rses
             ]
             sub_chips = [

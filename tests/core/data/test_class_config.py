@@ -81,7 +81,7 @@ class TestClassConfig(unittest.TestCase):
         self.assertEqual(cfg.get_name(1), 'b')
         self.assertRaises(IndexError, lambda: cfg.get_name(2))
 
-        self.assertEqual(cfg.get_null_class_id(), 0)
+        self.assertEqual(cfg.null_class_id, 0)
 
         color_to_class_id = cfg.get_color_to_class_id()
         self.assertEqual(len(color_to_class_id), 2)
