@@ -45,7 +45,7 @@ def make_scene(num_channels: int, num_classes: int,
     return scene_cfg
 
 
-class TestClassificationLearner(unittest.TestCase):
+class TestRegressionLearner(unittest.TestCase):
     def assertNoError(self, fn: Callable, msg: str = ''):
         try:
             fn()
@@ -100,8 +100,8 @@ class TestClassificationLearner(unittest.TestCase):
             x = torch.rand((4, num_channels, 100, 100))
             y = torch.rand((4, num_classes))
             z = torch.rand((4, num_classes))
-            learner.plot_batch(x, y, join(tmp_dir, '1.png'))
-            learner.plot_batch(x, y, join(tmp_dir, '2.png'), z=z)
+            learner.visualizer.plot_batch(x, y, join(tmp_dir, '1.png'))
+            learner.visualizer.plot_batch(x, y, join(tmp_dir, '2.png'), z=z)
 
 
 if __name__ == '__main__':
