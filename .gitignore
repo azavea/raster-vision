@@ -112,6 +112,8 @@ deployment/ansible/*.retry
 *.aux.xml
 
 /data/
-/notebooks/
 /.vscode/
 /.history/
+
+/notebooks/*
+!/notebooks/**/*.ipynb
