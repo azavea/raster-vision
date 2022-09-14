@@ -1,14 +1,13 @@
 import unittest
 import os
 
-from shapely.geometry import shape
-from shapely.strtree import STRtree
+import geopandas as gpd
 
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.box import Box
 from rastervision.core.data import (
-    ClassConfig, infer_cell, ChipClassificationLabelSourceConfig,
+    ClassConfig, infer_cells, ChipClassificationLabelSourceConfig,
     GeoJSONVectorSourceConfig, ClassInferenceTransformerConfig,
     BufferTransformerConfig)
 
@@ -72,12 +71,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         self.class_id2 = 1
         self.background_class_id = 2
 
-        geoms = []
-        for f in self.geojson['features']:
-            g = shape(f['geometry'])
-            g.class_id = f['properties']['class_id']
-            geoms.append(g)
-        self.str_tree = STRtree(geoms)
+        self.labels_df = gpd.GeoDataFrame.from_features(self.geojson)
 
         self.file_name = 'labels.json'
         self.tmp_dir = rv_config.get_tmp_dir()
@@ -92,12 +86,17 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         cell = Box.make_square(0, 0, 3)
         ioa_thresh = 0.5
         use_intersection_over_cell = False
-        background_class_id = None
+        background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
+        labels = infer_cells(
+            [cell],
+            self.labels_df,
+            ioa_thresh=ioa_thresh,
+            use_intersection_over_cell=use_intersection_over_cell,
+            background_class_id=background_class_id,
+            pick_min_class_id=pick_min_class_id)
+        class_id = labels.get_cell_class_id(cell)
         self.assertEqual(class_id, self.class_id1)
 
     def test_infer_cell2(self):
@@ -105,12 +104,17 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         cell = Box.make_square(1, 1, 3)
         ioa_thresh = 0.5
         use_intersection_over_cell = False
-        background_class_id = None
+        background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
+        labels = infer_cells(
+            [cell],
+            self.labels_df,
+            ioa_thresh=ioa_thresh,
+            use_intersection_over_cell=use_intersection_over_cell,
+            background_class_id=background_class_id,
+            pick_min_class_id=pick_min_class_id)
+        class_id = labels.get_cell_class_id(cell)
         self.assertEqual(class_id, self.class_id2)
 
     def test_infer_cell3(self):
@@ -118,13 +122,18 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         cell = Box.make_square(3, 3, 3)
         ioa_thresh = 0.5
         use_intersection_over_cell = False
-        background_class_id = None
+        background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
-        self.assertEqual(class_id, None)
+        labels = infer_cells(
+            [cell],
+            self.labels_df,
+            ioa_thresh=ioa_thresh,
+            use_intersection_over_cell=use_intersection_over_cell,
+            background_class_id=background_class_id,
+            pick_min_class_id=pick_min_class_id)
+        class_id = labels.get_cell_class_id(cell)
+        self.assertEqual(class_id, background_class_id)
 
     def test_infer_cell4(self):
         # Both boxes inside cell, but using intersection_over_cell,
@@ -132,13 +141,18 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         cell = Box.make_square(0, 0, 10)
         ioa_thresh = 0.5
         use_intersection_over_cell = True
-        background_class_id = None
+        background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
-        self.assertEqual(class_id, None)
+        labels = infer_cells(
+            [cell],
+            self.labels_df,
+            ioa_thresh=ioa_thresh,
+            use_intersection_over_cell=use_intersection_over_cell,
+            background_class_id=background_class_id,
+            pick_min_class_id=pick_min_class_id)
+        class_id = labels.get_cell_class_id(cell)
+        self.assertEqual(class_id, background_class_id)
 
     def test_infer_cell5(self):
         # More of box1 in cell, using intersection_over_cell with the
@@ -146,12 +160,17 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         cell = Box.make_square(0, 0, 3)
         ioa_thresh = 0.4
         use_intersection_over_cell = True
-        background_class_id = None
+        background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
+        labels = infer_cells(
+            [cell],
+            self.labels_df,
+            ioa_thresh=ioa_thresh,
+            use_intersection_over_cell=use_intersection_over_cell,
+            background_class_id=background_class_id,
+            pick_min_class_id=pick_min_class_id)
+        class_id = labels.get_cell_class_id(cell)
         self.assertEqual(class_id, self.class_id1)
 
     def test_infer_cell6(self):
@@ -162,9 +181,14 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
+        labels = infer_cells(
+            [cell],
+            self.labels_df,
+            ioa_thresh=ioa_thresh,
+            use_intersection_over_cell=use_intersection_over_cell,
+            background_class_id=background_class_id,
+            pick_min_class_id=pick_min_class_id)
+        class_id = labels.get_cell_class_id(cell)
         self.assertEqual(class_id, self.background_class_id)
 
     def test_infer_cell7(self):
@@ -172,13 +196,18 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         cell = Box.make_square(10, 10, 1)
         ioa_thresh = 0.5
         use_intersection_over_cell = True
-        background_class_id = None
+        background_class_id = self.background_class_id
         pick_min_class_id = False
 
-        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
-        self.assertEqual(class_id, None)
+        labels = infer_cells(
+            [cell],
+            self.labels_df,
+            ioa_thresh=ioa_thresh,
+            use_intersection_over_cell=use_intersection_over_cell,
+            background_class_id=background_class_id,
+            pick_min_class_id=pick_min_class_id)
+        class_id = labels.get_cell_class_id(cell)
+        self.assertEqual(class_id, background_class_id)
 
     def test_infer_cell8(self):
         # box2 overlaps more than box1, but using pick_min_class_id, so
@@ -186,12 +215,17 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         cell = Box.make_square(1, 1, 3)
         ioa_thresh = 0.5
         use_intersection_over_cell = False
-        background_class_id = None
+        background_class_id = self.background_class_id
         pick_min_class_id = True
 
-        class_id = infer_cell(cell, self.str_tree, ioa_thresh,
-                              use_intersection_over_cell, background_class_id,
-                              pick_min_class_id)
+        labels = infer_cells(
+            [cell],
+            self.labels_df,
+            ioa_thresh=ioa_thresh,
+            use_intersection_over_cell=use_intersection_over_cell,
+            background_class_id=background_class_id,
+            pick_min_class_id=pick_min_class_id)
+        class_id = labels.get_cell_class_id(cell)
         self.assertEqual(class_id, self.class_id2)
 
     def test_get_labels_inferred(self):

@@ -3,13 +3,14 @@ from typing import Optional
 from rastervision.core.data.vector_source import (VectorSourceConfig)
 from rastervision.core.data.label_source import (LabelSourceConfig,
                                                  ChipClassificationLabelSource)
-from rastervision.pipeline.config import register_config, Field, validator
+from rastervision.pipeline.config import (ConfigError, register_config, Field,
+                                          validator, root_validator)
 from rastervision.core.data.vector_transformer import (
     ClassInferenceTransformerConfig, BufferTransformerConfig)
 
 
 def cc_label_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
-    if version < 5:
+    if version == 4:
         # made non-optional in version 5
         cfg_dict['ioa_thresh'] = cfg_dict.get('ioa_thresh', 0.5)
     return cfg_dict
@@ -24,7 +25,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
     This can be provided explicitly as a grid of cells, or a grid of cells can be
     inferred from arbitrary polygons.
     """
-    vector_source: VectorSourceConfig
+    vector_source: Optional[VectorSourceConfig] = None
     ioa_thresh: float = Field(
         0.5,
         description=
@@ -45,8 +46,8 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         None,
         description=
         ('If not None, class_id to use as the background class; ie. the one that is used '
-         'when a window contains no boxes. If not set, empty windows have None set as '
-         'their class_id which is considered a null value.'))
+         'when a window contains no boxes. Cannot be None if infer_cells=True.'
+         ))
     infer_cells: bool = Field(
         False,
         description='If True, infers a grid of cells based on the cell_sz.')
@@ -83,7 +84,21 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
 
         return v
 
+    @root_validator(skip_on_failure=True)
+    def ensure_bg_class_id_if_inferring(cls, values: dict) -> dict:
+        infer_cells = values.get('infer_cells')
+        has_bg_class_id = values.get('background_class_id') is not None
+        if infer_cells and not has_bg_class_id:
+            raise ConfigError(
+                'background_class_id is required if infer_cells=True.')
+        return values
+
     def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
+        if self.vector_source is None:
+            raise ValueError('Cannot build with a None vector_source.')
+        if self.infer_cells and self.cell_sz is None and not self.lazy:
+            raise ValueError('Cannot build with infer_cells=True, '
+                             'cell_sz=None and lazy=True.')
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
             self, vector_source, extent=extent, lazy=self.lazy)
@@ -92,4 +107,5 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
         super().update(pipeline, scene)
         if self.cell_sz is None and pipeline is not None:
             self.cell_sz = pipeline.train_chip_sz
-        self.vector_source.update(pipeline, scene)
+        if self.vector_source is not None:
+            self.vector_source.update(pipeline, scene)

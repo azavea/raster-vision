@@ -7,7 +7,7 @@ unify==0.5
 sphinx==4.0.*
 sphinx-autobuild==2021.3.*
 ptvsd==4.3.*
-shapely==1.6.*
+shapely==1.8.4
 scipy>=0.19.1
 seaborn==0.11.*
 jupyter==1.*

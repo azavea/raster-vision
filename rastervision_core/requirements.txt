@@ -1,6 +1,12 @@
 rastervision_pipeline==0.13.1
 numpy<1.22
-shapely==1.6.*
+
+# These 3 should be updated together to ensure compatibility. Incompatibility
+# results in a warning about pygeos versions.
+pygeos==0.13
+shapely==1.8.4
+geopandas==0.10.2
+
 pillow==8.4.*
 pyproj==2.6.*
 rasterio==1.0.7

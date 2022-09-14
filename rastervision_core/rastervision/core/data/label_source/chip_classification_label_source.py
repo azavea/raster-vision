@@ -1,36 +1,34 @@
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional
+
 import numpy as np
-from shapely.strtree import STRtree
-from shapely.geometry import shape
-from typing import TYPE_CHECKING, Iterable, Optional
-from tqdm.auto import tqdm
+import geopandas as gpd
 
 from rastervision.core.data.label import ChipClassificationLabels
 from rastervision.core.data.label_source.label_source import LabelSource
 from rastervision.core.box import Box
 
 if TYPE_CHECKING:
-    from rastervision.core.data.vector_source import VectorSource  # noqa
-    from rastervision.core.data.class_config import ClassConfig  # noqa
-    from rastervision.core.data.crs_transformer import CRSTransformer  # noqa
-    from rastervision.core.data.label_source.chip_classification_label_source_config import (  # noqa
-        ChipClassificationLabelSourceConfig)  # noqa
+    from rastervision.core.data import (ChipClassificationLabelSourceConfig,
+                                        VectorSource)
 
 
-def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
-               background_class_id, pick_min_class_id) -> int:
-    """Infer the class_id of a cell given a set of polygons.
+def infer_cells(cells: List[Box], labels_df: gpd.GeoDataFrame,
+                ioa_thresh: float, use_intersection_over_cell: bool,
+                pick_min_class_id: bool,
+                background_class_id: int) -> ChipClassificationLabels:
+    """Infer ChipClassificationLabels grid from GeoJSON containing polygons.
 
-    Given a cell and a set of polygons, the problem is to infer the class_id
-    that best captures the content of the cell. This is non-trivial since there
-    can be multiple polygons of differing classes overlapping with the cell.
-    Any polygons that sufficiently overlaps with the cell are in the running for
-    setting the class_id. If there are none in the running, the cell is either
-    considered null or background. See args for more details.
+    Given GeoJSON with polygons associated with class_ids, infer a grid of
+    cells and class_ids that best captures the contents of each cell.
+
+    For each cell, the problem is to infer the class_id that best captures the
+    content of the cell. This is non-trivial since there can be multiple
+    polygons of differing classes overlapping with the cell. Any polygons that
+    sufficiently overlaps with the cell are in the running for setting the
+    class_id. If there are none in the running, the cell is either
+    considered null or background.
 
     Args:
-        cell: Box
-        str_tree: (STRtree) collection of geoms in scene used for geometric queries.
-            The geoms need to have class_id monkey-patched onto them.
         ioa_thresh: (float) the minimum IOA of a polygon and cell for that
             polygon to be a candidate for setting the class_id
         use_intersection_over_cell: (bool) If true, then use the area of the
@@ -38,81 +36,72 @@ def infer_cell(cell, str_tree, ioa_thresh, use_intersection_over_cell,
             polygon.
         background_class_id: (None or int) If not None, class_id to use as the
             background class; ie. the one that is used when a window contains
-            no boxes. If not set, empty windows have None set as their class_id
-            which is considered a null value.
+            no boxes.
         pick_min_class_id: If true, the class_id for a cell is the minimum
             class_id of the boxes in that cell. Otherwise, pick the class_id of
             the box covering the greatest area.
-    """
-    cell_geom = cell.to_shapely()
-    inter_polys = str_tree.query(cell_geom)
-
-    inter_over_cells = []
-    inter_over_polys = []
-    class_ids = []
-
-    # Find polygons whose intersection with the cell is big enough.
-    for poly in inter_polys:
-        inter = poly.intersection(cell_geom)
-        inter_over_cell = inter.area / cell_geom.area
-        inter_over_poly = inter.area / poly.area
-
-        if use_intersection_over_cell:
-            enough_inter = inter_over_cell >= ioa_thresh
-        else:
-            enough_inter = inter_over_poly >= ioa_thresh
-
-        if enough_inter:
-            inter_over_cells.append(inter_over_cell)
-            inter_over_polys.append(inter_over_poly)
-            class_ids.append(poly.class_id)
-
-    # Infer class id for cell.
-    if len(class_ids) == 0:
-        class_id = background_class_id
-    elif pick_min_class_id:
-        class_id = min(class_ids)
-    else:
-        # Pick class_id of the polygon with the biggest intersection over
-        # cell. If there is a tie, pick the first.
-        class_id = class_ids[np.argmax(inter_over_cells)]
-
-    return class_id
-
-
-def infer_labels(cells, str_tree, ioa_thresh, use_intersection_over_cell,
-                 pick_min_class_id,
-                 background_class_id) -> ChipClassificationLabels:
-    """Infer ChipClassificationLabels grid from GeoJSON containing polygons.
-
-    Given GeoJSON with polygons associated with class_ids, infer a grid of
-    cells and class_ids that best captures the contents of each cell. See infer_cell for
-    info on the args.
-
-    Args:
-        geojson: dict in normalized GeoJSON format (see VectorSource)
 
     Returns:
         ChipClassificationLabels
     """
-    labels = ChipClassificationLabels()
+    cells_df = gpd.GeoDataFrame(
+        data={'cell_id': range(len(cells))},
+        geometry=[c.to_shapely() for c in cells])
 
-    with tqdm(cells, desc='Inferring labels') as bar:
-        for cell in bar:
-            class_id = infer_cell(cell, str_tree, ioa_thresh,
-                                  use_intersection_over_cell,
-                                  background_class_id, pick_min_class_id)
-            labels.set_cell(cell, class_id)
+    # duplicate geometry columns so that they are retained after the join
+    cells_df.loc[:, 'geometry_cell'] = cells_df.geometry
+    labels_df.loc[:, 'geometry_label'] = labels_df.geometry
+
+    # Left-join cells to label polygons based on intersection. The result is a
+    # table with each cell matched to all polygons that intersect it; i.e.,
+    # there will be a row for each unique (cell, polygon) combination. Cells
+    # that didn't match any labels will have missing values as their class_ids.
+    df: gpd.GeoDataFrame = cells_df.sjoin(
+        labels_df, how='left', predicate='intersects')
+    df.loc[:, 'geometry_intersection'] = df['geometry_cell'].intersection(
+        df['geometry_label'])
+
+    if use_intersection_over_cell:
+        ioa = (df['geometry_intersection'].area / df['geometry_cell'].area)
+    else:
+        # intersection over label-polygon
+        ioa = (df['geometry_intersection'].area / df['geometry_label'].area)
+    df.loc[:, 'ioa'] = ioa.fillna(-1)
+
+    # labels with IOA below threshold cannot contribute their class_id
+    df.loc[df['ioa'] < ioa_thresh, 'class_id'] = None
+
+    # Assign background_class_id to cells /wo a class_id. This includes both
+    # unmatched cells and ones whose ioa fell below the ioa_thresh.
+    df.loc[df['class_id'].isna(), 'class_id'] = background_class_id
+
+    # break ties (i.e. one cell matched to multiple label polygons)
+    if pick_min_class_id:
+        df = df.sort_values('class_id').drop_duplicates(
+            ['cell_id'], keep='first')
+    else:
+        # largest IOA
+        df = df.sort_values('ioa').drop_duplicates(['cell_id'], keep='last')
+
+    boxes = [Box.from_shapely(c).to_int() for c in df['geometry_cell']]
+    class_ids = df['class_id'].astype(int)
+    cells_to_class_id = {
+        cell: (class_id, None)
+        for cell, class_id in zip(boxes, class_ids)
+    }
+    labels = ChipClassificationLabels(cells_to_class_id)
     return labels
 
 
-def read_labels(geojson, extent=None) -> ChipClassificationLabels:
-    """Convert GeoJSON to ChipClassificationLabels.
+def read_labels(labels_df: gpd.GeoDataFrame,
+                extent: Optional[Box] = None) -> ChipClassificationLabels:
+    """Convert GeoDataFrame to ChipClassificationLabels.
 
-    If the GeoJSON already contains a grid of cells, then it can be constructed
-    in a straightforward manner without having to infer the class of cells.
+    If the GeoDataFrame already contains a grid of cells, then
+    ChipClassificationLabels can be constructed in a straightforward manner
+    without having to infer the class of cells.
 
-    If extent is given, only labels that intersect with the extent are returned.
+    If extent is given, only labels that intersect with it are returned.
 
     Args:
         geojson: dict in normalized GeoJSON format (see VectorSource)
@@ -121,35 +110,19 @@ def read_labels(geojson, extent=None) -> ChipClassificationLabels:
     Returns:
        ChipClassificationLabels
     """
-    labels = ChipClassificationLabels()
+    if extent is not None:
+        extent_polygon = extent.to_shapely()
+        labels_df = labels_df[labels_df.intersects(extent_polygon)]
 
-    for f in geojson['features']:
-        geom = shape(f['geometry'])
-        (xmin, ymin, xmax, ymax) = geom.bounds
-        cell = Box(ymin, xmin, ymax, xmax)
-        if extent is not None and not cell.to_shapely().intersects(
-                extent.to_shapely()):
-            continue
-
-        props = f['properties']
-        class_id = props['class_id']
-        scores = props.get('scores')
-        labels.set_cell(cell, class_id, scores)
-
+    boxes = np.array(
+        [Box.from_shapely(c).to_int() for c in labels_df.geometry])
+    class_ids = labels_df['class_id'].astype(int)
+    cells_to_class_id = {
+        cell: (class_id, None)
+        for cell, class_id in zip(boxes, class_ids)
+    }
+    labels = ChipClassificationLabels(cells_to_class_id)
     return labels
-
-
-def make_str_tree(geojson):
-    # We need to associate class_id with each geom. Monkey-patching it onto the geom
-    # seems like a bad idea, but it's the only straightforward way of doing this
-    # that I've been able to find.
-    geoms = []
-    for f in geojson['features']:
-        g = shape(f['geometry'])
-        g.class_id = f['properties']['class_id']
-        geoms.append(g)
-    str_tree = STRtree(geoms)
-    return str_tree
 
 
 class ChipClassificationLabelSource(LabelSource):
@@ -171,18 +144,20 @@ class ChipClassificationLabelSource(LabelSource):
         """Constructs a LabelSource for chip classification.
 
         Args:
+            label_source_config (ChipClassificationLabelSourceConfig): Config
+                for class inference.
+            vector_source (VectorSource): Source of vector labels.
             extent (Box): Box used to filter the labels by extent or
                 compute grid.
             lazy (bool, optional): If True, labels are not populated during
                 initialization. Defaults to False.
         """
         self.cfg = label_source_config
-        self.geojson = vector_source.get_geojson()
-        self.validate_geojson(self.geojson)
         self.extent = extent
-        self.str_tree = None
+        self.labels_df = vector_source.get_dataframe()
+        self.validate_labels(self.labels_df)
 
-        self.labels = ChipClassificationLabels()
+        self.labels = ChipClassificationLabels.make_empty()
         if not lazy:
             self.populate_labels()
 
@@ -195,7 +170,7 @@ class ChipClassificationLabelSource(LabelSource):
         if self.cfg.infer_cells or cells is not None:
             self.labels = self.infer_cells(cells=cells)
         else:
-            self.labels = read_labels(self.geojson, extent=self.extent)
+            self.labels = read_labels(self.labels_df, extent=self.extent)
 
     def infer_cells(self, cells: Optional[Iterable[Box]] = None
                     ) -> ChipClassificationLabels:
@@ -211,17 +186,16 @@ class ChipClassificationLabelSource(LabelSource):
         """
         cfg = self.cfg
         if cells is None:
+            if cfg.cell_sz is None:
+                raise ValueError('cell_sz is not set.')
             cells = self.extent.get_windows(cfg.cell_sz, cfg.cell_sz)
 
         known_cells = [c for c in cells if c in self.labels]
         unknown_cells = [c for c in cells if c not in self.labels]
 
-        if self.str_tree is None:
-            self.str_tree = make_str_tree(self.geojson)
-
-        labels = infer_labels(
+        labels = infer_cells(
             cells=unknown_cells,
-            str_tree=self.str_tree,
+            labels_df=self.labels_df,
             ioa_thresh=cfg.ioa_thresh,
             use_intersection_over_cell=cfg.use_intersection_over_cell,
             pick_min_class_id=cfg.pick_min_class_id,
@@ -233,49 +207,33 @@ class ChipClassificationLabelSource(LabelSource):
 
         return labels
 
-    def infer_cell(self, cell: Optional[Box] = None) -> int:
-        """Infer and return the label for a single cell."""
-        cfg = self.cfg
-
-        if self.str_tree is None:
-            self.str_tree = make_str_tree(self.geojson)
-
-        label = infer_cell(
-            cell=cell,
-            str_tree=self.str_tree,
-            ioa_thresh=cfg.ioa_thresh,
-            use_intersection_over_cell=cfg.use_intersection_over_cell,
-            pick_min_class_id=cfg.pick_min_class_id,
-            background_class_id=cfg.background_class_id)
-        return label
-
     def get_labels(self,
                    window: Optional[Box] = None) -> ChipClassificationLabels:
         if window is None:
             return self.labels
         return self.labels.get_singleton_labels(window)
 
-    def __getitem__(self, window: Box) -> int:
+    def __getitem__(self, key: Any) -> int:
         """Return label for a window, inferring it if it is not already known.
         """
-        if window in self.labels:
-            return self.labels.get_cell_class_id(window)
-        label = self.infer_cell(cell=window)
-        self.labels.set_cell(window, label)
-        return label
+        if isinstance(key, Box):
+            window = key
+            if window not in self.labels:
+                self.labels += self.infer_cells(cells=[window])
+            return self.labels[window].class_id
+        else:
+            return super().__getitem__(key)
 
-    def validate_geojson(self, geojson: dict) -> None:
-        for f in geojson['features']:
-            geom_type = f.get('geometry', {}).get('type', '')
-            if 'Point' in geom_type or 'LineString' in geom_type:
-                raise ValueError(
-                    'LineStrings and Points are not supported '
-                    'in ChipClassificationLabelSource. Use BufferTransformer '
-                    'to buffer them into Polygons.')
-        for f in geojson['features']:
-            if f.get('properties', {}).get('class_id') is None:
-                raise ValueError('All GeoJSON features must have a class_id '
-                                 'field in their properties.')
+    def validate_labels(self, df: gpd.GeoDataFrame) -> None:
+        geom_types = set(df.geom_type)
+        if 'Point' in geom_types or 'LineString' in geom_types:
+            raise ValueError(
+                'LineStrings and Points are not supported '
+                'in ChipClassificationLabelSource. Use BufferTransformer '
+                'to buffer them into Polygons.')
+
+        if 'class_id' not in df.columns:
+            raise ValueError('All label polygons must have a class_id.')
 
     def get_extent(self) -> Box:
         return self.extent

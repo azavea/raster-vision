@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import logging
 
 from shapely.ops import unary_union
+import geopandas as gpd
 
 from rastervision.core.box import Box
 from rastervision.core.data.utils import (
@@ -24,6 +25,7 @@ class VectorSource(ABC):
                  vector_transformers: List['VectorTransformer'] = []):
         self.crs_transformer = crs_transformer
         self.vector_transformers = vector_transformers
+        self._geojson = None
         self._extent = None
 
     def get_geojson(self, to_map_coords: bool = False) -> dict:
@@ -44,7 +46,10 @@ class VectorSource(ABC):
         Returns:
             dict in GeoJSON format
         """
-        geojson = self._get_geojson()
+        if self._geojson is None:
+            geojson = self._get_geojson()
+        else:
+            geojson = self._geojson
 
         geojson = sanitize_geojson(
             geojson, self.crs_transformer, to_map_coords=to_map_coords)
@@ -70,6 +75,12 @@ class VectorSource(ABC):
     def _get_geojson(self) -> dict:
         """Return raw GeoJSON."""
         pass
+
+    def get_dataframe(self, to_map_coords: bool = False) -> gpd.GeoDataFrame:
+        geojson = self.get_geojson(to_map_coords=to_map_coords)
+        df = gpd.GeoDataFrame.from_features(geojson)
+        df.loc[:, 'class_id'] = df['class_id'].astype(int)
+        return df
 
     def get_extent(self) -> Box:
         if self._extent is None:
