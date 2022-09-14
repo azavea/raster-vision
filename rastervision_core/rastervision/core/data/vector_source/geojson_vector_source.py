@@ -1,16 +1,22 @@
+from typing import TYPE_CHECKING, List
+
 from rastervision.core.data.vector_source.vector_source import VectorSource
 from rastervision.pipeline.file_system import file_to_json
+
+if TYPE_CHECKING:
+    from rastervision.core.data import CRSTransformer, VectorTransformer
 
 
 class GeoJSONVectorSource(VectorSource):
     def __init__(self,
                  uri: str,
-                 *args,
-                 ignore_crs_field: bool = False,
-                 **kwargs):
+                 crs_transformer: 'CRSTransformer',
+                 vector_transformers: List['VectorTransformer'] = [],
+                 ignore_crs_field: bool = False):
         self.uri = uri
         self.ignore_crs_field = ignore_crs_field
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            crs_transformer, vector_transformers=vector_transformers)
 
     def _get_geojson(self):
         geojson = file_to_json(self.uri)

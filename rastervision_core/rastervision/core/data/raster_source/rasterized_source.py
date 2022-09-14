@@ -92,7 +92,8 @@ class RasterizedSource(RasterSource):
         """
         return self.extent
 
-    def get_dtype(self):
+    @property
+    def dtype(self) -> np.dtype:
         """Return the numpy.dtype of this scene"""
         return np.uint8
 

@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, List, Optional
-from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from abc import ABC, abstractmethod, abstractproperty
+
+from rastervision.core.box import Box
 
 if TYPE_CHECKING:
-    from rastervision.core.box import Box
     from rastervision.core.data.raster_transformer import RasterTransformer
     from rastervision.core.data.crs_transformer import CRSTransformer
     import numpy as np
@@ -56,6 +57,16 @@ class RasterSource(ABC):
     def num_channels(self) -> int:
         return len(self.channel_order)
 
+    @abstractproperty
+    def shape(self) -> Tuple[int, ...]:
+        """Return the shape of this scene"""
+        pass
+
+    @abstractproperty
+    def dtype(self) -> 'np.dtype':
+        """Return the numpy.dtype of this scene"""
+        pass
+
     @abstractmethod
     def get_extent(self) -> 'Box':
         """Return the extent of the RasterSource.
@@ -63,11 +74,6 @@ class RasterSource(ABC):
         Returns:
             Box in pixel coordinates with extent
         """
-        pass
-
-    @abstractmethod
-    def get_dtype(self) -> 'np.dtype':
-        """Return the numpy.dtype of this scene"""
         pass
 
     @abstractmethod
@@ -87,8 +93,42 @@ class RasterSource(ABC):
         """
         pass
 
-    def __getitem__(self, window: 'Box') -> 'np.ndarray':
-        return self.get_chip(window)
+    def __getitem__(self, key: Any) -> 'np.ndarray':
+        if isinstance(key, Box):
+            return self.get_chip(key)
+        elif isinstance(key, slice):
+            key = [key]
+        elif isinstance(key, tuple):
+            pass
+        else:
+            raise TypeError('Unsupported key type.')
+        slices = list(key)
+
+        assert 1 <= len(slices) <= 2
+        assert all(s is not None for s in slices)
+        assert isinstance(slices[0], slice)
+        if len(slices) == 1:
+            h, = slices
+            w = slice(None, None)
+        else:
+            assert isinstance(slices[1], slice)
+            h, w = slices
+
+        if any(x is not None and x < 0
+               for x in [h.start, h.stop, w.start, w.stop]):
+            raise NotImplementedError()
+
+        ymin, xmin, ymax, xmax = self.get_extent()
+        _ymin = ymin if h.start is None else h.start + ymin
+        _xmin = xmin if w.start is None else w.start + xmin
+        _ymax = ymax if h.stop is None else min(h.stop + ymin, ymax)
+        _xmax = xmax if w.stop is None else min(w.stop + xmin, xmax)
+        window = Box(_ymin, _xmin, _ymax, _xmax)
+
+        chip = self.get_chip(window)
+        if h.step is not None or w.step is not None:
+            chip = chip[::h.step, ::w.step]
+        return chip
 
     def get_chip(self, window: 'Box') -> 'np.ndarray':
         """Return the transformed chip in the window.

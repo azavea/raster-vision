@@ -2,6 +2,9 @@ from typing import TYPE_CHECKING, List
 from abc import ABC, abstractmethod
 import logging
 
+from shapely.ops import unary_union
+
+from rastervision.core.box import Box
 from rastervision.core.data.utils import (
     remove_empty_features, split_multi_geometries, map_to_pixel_coords,
     pixel_to_map_coords, simplify_polygons, all_geoms_valid, geojson_to_geoms)
@@ -21,6 +24,7 @@ class VectorSource(ABC):
                  vector_transformers: List['VectorTransformer'] = []):
         self.crs_transformer = crs_transformer
         self.vector_transformers = vector_transformers
+        self._extent = None
 
     def get_geojson(self, to_map_coords: bool = False) -> dict:
         """Return transformed GeoJSON.
@@ -66,6 +70,12 @@ class VectorSource(ABC):
     def _get_geojson(self) -> dict:
         """Return raw GeoJSON."""
         pass
+
+    def get_extent(self) -> Box:
+        if self._extent is None:
+            envelope = unary_union(self.get_geoms()).envelope
+            self._extent = Box.from_shapely(envelope).to_int()
+        return self._extent
 
 
 def sanitize_geojson(geojson: dict,

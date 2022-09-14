@@ -1,4 +1,4 @@
-from typing import (List, Optional)
+from typing import (Any, List, Optional)
 
 import numpy as np
 
@@ -27,12 +27,11 @@ class SemanticSegmentationLabelSource(LabelSource):
         """Constructor.
 
         Args:
-            raster_source: (RasterSource) A raster source that returns a single channel
-                raster with class_ids as values, or a 3 channel raster with
-                RGB values that are mapped to class_ids using the rgb_class_map
-            null_class_id: (int) the null class id used as fill values for when windows
-                go over the edge of the label array. This can be retrieved using
-                class_config.get_null_class_id().
+            raster_source (RasterSource): A raster source that returns a single
+                channel raster with class_ids as values.
+            null_class_id (int): the null class id used as fill values for when
+                windows go over the edge of the label array. This can be
+                retrieved using class_config.get_null_class_id().
         """
         self.raster_source = raster_source
         self.null_class_id = null_class_id
@@ -52,14 +51,11 @@ class SemanticSegmentationLabelSource(LabelSource):
         Returns:
              True (the window does contain interesting pixels) or False.
         """
-        raw_labels = self.raster_source.get_chip(window)
-        labels = np.squeeze(raw_labels)
-        labels = fill_edge(labels, window, self.raster_source.get_extent(),
-                           self.null_class_id)
+        label_arr = self.get_label_arr(window)
 
         target_count = 0
         for class_id in target_classes:
-            target_count = target_count + (labels == class_id).sum()
+            target_count = target_count + (label_arr == class_id).sum()
 
         return target_count >= target_count_threshold
 
@@ -73,15 +69,36 @@ class SemanticSegmentationLabelSource(LabelSource):
         Returns:
              SemanticSegmentationLabels
         """
+        if window is None:
+            window = self.raster_source.get_extent()
         labels = SemanticSegmentationLabels.make_empty()
-        window = window or self.raster_source.get_extent()
-        raw_labels = self.raster_source.get_chip(window)
-        label_arr = np.squeeze(raw_labels)
-        label_arr = fill_edge(label_arr, window,
-                              self.raster_source.get_extent(),
-                              self.null_class_id)
+        label_arr = self.get_label_arr(window)
         labels[window] = label_arr
         return labels
 
-    def __getitem__(self, window: Box) -> np.ndarray:
-        return self.get_labels(window)[window]
+    def get_label_arr(self, window: Optional[Box] = None) -> np.ndarray:
+        """Get labels for a window.
+
+        Args:
+             window: Either None or a window given as a Box object. Uses full
+                extent of scene if window is not provided.
+        Returns:
+             np.ndarray
+        """
+        if window is None:
+            window = self.raster_source.get_extent()
+        label_arr = self.raster_source.get_chip(window)
+        label_arr = np.squeeze(label_arr)
+        label_arr = fill_edge(label_arr, window,
+                              self.raster_source.get_extent(),
+                              self.null_class_id)
+        return label_arr
+
+    def get_extent(self) -> Box:
+        return self.raster_source.get_extent()
+
+    def __getitem__(self, key: Any) -> Any:
+        if isinstance(key, Box):
+            return self.get_label_arr(key)
+        else:
+            return super().__getitem__(key)

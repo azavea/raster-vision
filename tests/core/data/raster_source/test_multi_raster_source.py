@@ -82,8 +82,8 @@ class TestMultiRasterSource(unittest.TestCase):
         self.assertEqual(rs.get_extent(), primary_rs.get_extent())
         self.assertNotEqual(rs.get_extent(), non_primary_rs.get_extent())
 
-        self.assertEqual(rs.get_dtype(), primary_rs.get_dtype())
-        self.assertNotEqual(rs.get_dtype(), non_primary_rs.get_dtype())
+        self.assertEqual(rs.dtype, primary_rs.dtype)
+        self.assertNotEqual(rs.dtype, non_primary_rs.dtype)
 
         self.assertEqual(rs.get_crs_transformer().transform,
                          primary_rs.get_crs_transformer().transform)

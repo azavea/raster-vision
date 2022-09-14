@@ -78,11 +78,11 @@ class TestRasterioSource(unittest.TestCase):
         expected_out_chip = np.zeros((height, width, nb_channels))
         np.testing.assert_equal(out_chip, expected_out_chip)
 
-    def test_get_dtype(self):
+    def test_dtype(self):
         img_path = data_file_path('small-rgb-tile.tif')
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        self.assertEqual(source.get_dtype(), np.uint8)
+        self.assertEqual(source.dtype, np.uint8)
 
     def test_gets_raw_chip(self):
         img_path = data_file_path('small-rgb-tile.tif')

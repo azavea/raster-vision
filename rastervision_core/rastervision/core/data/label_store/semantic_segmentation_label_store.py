@@ -106,7 +106,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                 extents_equal = raster_source.get_extent() == self.extent
                 bands_equal = raster_source.num_channels == len(class_config)
                 self_dtype = np.uint8 if self.smooth_as_uint8 else np.float32
-                dtypes_equal = raster_source.get_dtype() == self_dtype
+                dtypes_equal = raster_source.dtype == self_dtype
 
                 if extents_equal and bands_equal and dtypes_equal:
                     self.score_raster_source = raster_source

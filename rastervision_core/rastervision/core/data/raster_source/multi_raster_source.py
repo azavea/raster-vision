@@ -68,7 +68,7 @@ class MultiRasterSource(RasterSource):
         self.validate_raster_sources()
 
     def validate_raster_sources(self) -> None:
-        dtypes = [rs.get_dtype() for rs in self.raster_sources]
+        dtypes = [rs.dtype for rs in self.raster_sources]
         if not self.force_same_dtype and not all_equal(dtypes):
             raise MultiRasterSourceError(
                 'dtypes of all sub raster sources must be the same. '
@@ -100,10 +100,10 @@ class MultiRasterSource(RasterSource):
             return Box(ymin, xmin, ymax, xmax)
         return extent
 
-    def get_dtype(self) -> np.dtype:
+    @property
+    def dtype(self) -> np.dtype:
         rs = self.raster_sources[self.primary_source_idx]
-        dtype = rs.get_dtype()
-        return dtype
+        return rs.dtype
 
     def get_crs_transformer(self) -> CRSTransformer:
         rs = self.raster_sources[self.primary_source_idx]

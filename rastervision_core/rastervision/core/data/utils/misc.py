@@ -57,6 +57,7 @@ def all_equal(it: list):
 
 
 def listify_uris(uris: Union[str, List[str]]) -> List[str]:
+    """Convert to URI to list if needed."""
     if isinstance(uris, (list, tuple)):
         pass
     elif isinstance(uris, str):

@@ -166,15 +166,13 @@ class ChipClassificationLabelSource(LabelSource):
     def __init__(self,
                  label_source_config: 'ChipClassificationLabelSourceConfig',
                  vector_source: 'VectorSource',
-                 extent: Optional[Box] = None,
+                 extent: Box = None,
                  lazy: bool = False):
         """Constructs a LabelSource for chip classification.
 
         Args:
-            extent (box, optional): Box used to filter the labels by extent or
-                compute grid. This is only needed if infer_cells is True or if
-                it is False and you want to filter cells by extent. Defaults to
-                None.
+            extent (Box): Box used to filter the labels by extent or
+                compute grid.
             lazy (bool, optional): If True, labels are not populated during
                 initialization. Defaults to False.
         """
@@ -278,3 +276,6 @@ class ChipClassificationLabelSource(LabelSource):
             if f.get('properties', {}).get('class_id') is None:
                 raise ValueError('All GeoJSON features must have a class_id '
                                  'field in their properties.')
+
+    def get_extent(self) -> Box:
+        return self.extent

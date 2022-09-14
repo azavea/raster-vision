@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
-from rastervision.core.box import Box
-
 if TYPE_CHECKING:
     from rastervision.core.data import (RasterSource, LabelSource, LabelStore)
 
@@ -33,10 +31,10 @@ class Scene:
         else:
             self.aoi_polygons = aoi_polygons
 
-    def __getitem__(self, window: Box) -> Tuple[Any, Any]:
-        x = self.raster_source[window]
+    def __getitem__(self, key: Any) -> Tuple[Any, Any]:
+        x = self.raster_source[key]
         if self.label_source is not None:
-            y = self.label_source[window]
+            y = self.label_source[key]
         else:
             y = None
         return x, y
