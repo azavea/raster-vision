@@ -103,6 +103,17 @@ def albu_to_yxyx(xyxy: np.ndarray,
     return yxyx
 
 
+def object_detection_tuple_to_boxlist(inp: Tuple[np.ndarray, np.ndarray, str]) -> BoxList:
+    boxes, class_ids, box_format = inp
+    boxes = torch.from_numpy(boxes).float()
+    class_ids = torch.from_numpy(class_ids).long()
+
+    if len(boxes) == 0:
+        boxes = torch.empty((0, 4)).float()
+
+    return BoxList(boxes, format=box_format, class_ids=class_ids)
+
+
 def object_detection_transformer(
         inp: Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]],
         transform: Optional[A.BasicTransform] = None
@@ -153,14 +164,12 @@ def object_detection_transformer(
             if len(boxes) > 0:
                 boxes = albu_to_yxyx(boxes, img_size)
 
-            # convert to pytorch
-            boxes = torch.from_numpy(boxes).float()
-            class_ids = torch.from_numpy(class_ids).long()
-
-            if len(boxes) == 0:
-                boxes = torch.empty((0, 4)).float()
-
-            y = BoxList(boxes, format='yxyx', class_ids=class_ids)
+    if y is not None:
+        boxes = torch.from_numpy(boxes).float()
+        class_ids = torch.from_numpy(class_ids).long()
+        if len(boxes) == 0:
+            boxes = torch.empty((0, 4)).float()
+        y = BoxList(boxes, format='yxyx', class_ids=class_ids)
 
     # normalize x
     if np.issubdtype(x.dtype, np.unsignedinteger):

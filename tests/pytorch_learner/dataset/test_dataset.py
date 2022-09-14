@@ -124,11 +124,14 @@ class TestGeoDatasetFromURIs(unittest.TestCase):
             size=20,
             stride=20)
         x, y = ds[0]
-        bboxes, class_ids, _ = y
+        bboxes = y.get_field('boxes')
+        class_ids = y.get_field('class_ids')
         np.testing.assert_allclose(bboxes, np.array([[0., 0., 10., 10.]]))
         np.testing.assert_allclose(class_ids, np.array([1]))
+
         x, y = ds[1]
-        bboxes, class_ids, _ = y
+        bboxes = y.get_field('boxes')
+        class_ids = y.get_field('class_ids')
         self.assertTupleEqual(bboxes.shape, (0, 4))
         self.assertTupleEqual(class_ids.shape, (0, ))
 

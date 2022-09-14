@@ -8,10 +8,11 @@ import numpy as np
 import torch
 
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.utils.utils import (plot_channel_groups,
-                                                      channel_groups_to_imgs)
 from rastervision.pytorch_learner.object_detection_utils import (
-    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn, draw_boxes)
+    BoxList, TorchVisionODAdapter, compute_coco_eval, collate_fn)
+from rastervision.pytorch_learner.visualizer import (
+    ObjectDetectionVisualizer)
+
 
 if TYPE_CHECKING:
     from torch import nn
@@ -22,6 +23,9 @@ log = logging.getLogger(__name__)
 
 
 class ObjectDetectionLearner(Learner):
+    def get_visualizer_class(self):
+        return ObjectDetectionVisualizer
+
     def build_model(self, model_def_path: Optional[str] = None) -> 'nn.Module':
         """Override to pass img_sz."""
         cfg = self.cfg
@@ -106,22 +110,6 @@ class ObjectDetectionLearner(Learner):
             return boxlist_to_numpy(out)
         else:
             return [boxlist_to_numpy(boxlist) for boxlist in out]
-
-    def plot_xyz(self,
-                 axs: Sequence,
-                 x: torch.Tensor,
-                 y: BoxList,
-                 z: Optional[BoxList] = None) -> None:
-
-        y = y if z is None else z
-        channel_groups = self.cfg.data.plot_options.channel_display_groups
-
-        class_names = self.cfg.data.class_names
-        class_colors = self.cfg.data.class_colors
-
-        imgs = channel_groups_to_imgs(x, channel_groups)
-        imgs = [draw_boxes(img, y, class_names, class_colors) for img in imgs]
-        plot_channel_groups(axs, imgs, channel_groups)
 
     def prob_to_pred(self, x):
         return x
