@@ -165,9 +165,10 @@ class MultiRasterSource(ActivateMixin, RasterSource):
 
             primary_sub_chip = get_chip(primary_rs, window)
             out_shape = primary_sub_chip.shape[:2]
-            world_window = primary_rs.get_transformed_window(window)
+            world_window = primary_rs.get_crs_transformer().pixel_to_map(
+                window)
             pixel_windows = [
-                rs.get_transformed_window(world_window, inverse=True)
+                rs.get_crs_transformer().map_to_pixel(world_window)
                 for rs in other_rses
             ]
             sub_chips = [

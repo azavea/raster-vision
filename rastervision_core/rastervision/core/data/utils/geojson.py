@@ -2,7 +2,6 @@ from typing import (TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List,
                     Optional, Union)
 
 from shapely.geometry import shape, mapping
-from shapely.ops import transform
 
 from rastervision.core.data.utils.misc import listify_uris
 
@@ -146,21 +145,13 @@ def split_multi_geometries(geojson: dict) -> dict:
 def map_to_pixel_coords(geojson: dict,
                         crs_transformer: 'CRSTransformer') -> dict:
     """Convert a GeoJSON dict from map to pixel coordinates."""
-
-    def map2pix(x, y, z=None):
-        return crs_transformer.map_to_pixel((x, y))
-
-    return map_geoms(lambda g, **kw: transform(map2pix, g), geojson)
+    return map_geoms(lambda g, **kw: crs_transformer.map_to_pixel(g), geojson)
 
 
 def pixel_to_map_coords(geojson: dict,
                         crs_transformer: 'CRSTransformer') -> dict:
     """Convert a GeoJSON dict from pixel to map coordinates."""
-
-    def pix2map(x, y, z=None):
-        return crs_transformer.pixel_to_map((x, y))
-
-    return map_geoms(lambda g, **kw: transform(pix2map, g), geojson)
+    return map_geoms(lambda g, **kw: crs_transformer.pixel_to_map(g), geojson)
 
 
 def simplify_polygons(geojson: dict) -> dict:

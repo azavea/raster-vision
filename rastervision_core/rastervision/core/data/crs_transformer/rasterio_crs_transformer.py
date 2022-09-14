@@ -53,7 +53,7 @@ class RasterioCRSTransformer(CRSTransformer):
         """
         return out
 
-    def map_to_pixel(self, map_point):
+    def _map_to_pixel(self, map_point):
         """Transform point from map to pixel-based coordinates.
 
         Args:
@@ -67,7 +67,7 @@ class RasterioCRSTransformer(CRSTransformer):
         pixel_point = (pixel_point[1], pixel_point[0])
         return pixel_point
 
-    def pixel_to_map(self, pixel_point):
+    def _pixel_to_map(self, pixel_point):
         """Transform point from pixel to map-based coordinates.
 
         Args:
