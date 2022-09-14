@@ -1,5 +1,5 @@
 from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterator, List,
-                    Optional, Sequence, Tuple, Union)
+                    Optional, Tuple, Union, Type)
 from typing_extensions import Literal
 from abc import ABC, abstractmethod
 from os.path import join, isfile, basename, isdir
@@ -15,7 +15,6 @@ from pprint import pformat
 
 import numpy as np
 from tqdm.auto import tqdm
-import matplotlib.pyplot as plt
 
 import torch
 from torch import Tensor
@@ -32,8 +31,8 @@ from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
                                           save_pipeline_config)
-from rastervision.pytorch_learner.utils import (
-    get_hubconf_dir_from_cfg, deserialize_albumentation_transform)
+from rastervision.pytorch_learner.utils import (get_hubconf_dir_from_cfg)
+from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
     from torch.optim import Optimizer
@@ -212,6 +211,11 @@ class Learner(ABC):
             self.model.train()
         else:
             self.model.eval()
+
+        self.visualizer = self.get_visualizer_class()(
+            cfg.data.class_names, cfg.data.class_colors,
+            cfg.data.plot_options.transform,
+            cfg.data.plot_options.channel_display_groups)
 
     def main(self):
         """Main training sequence.
@@ -475,6 +479,11 @@ class Learner(ABC):
                 '{}_recall'.format(label)
             ])
         return metric_names
+
+    @abstractmethod
+    def get_visualizer_class(self) -> Type[Visualizer]:
+        """Returns a Visualizer class object for plotting data samples."""
+        pass
 
     @abstractmethod
     def train_step(self, batch: Any, batch_ind: int) -> MetricDict:
@@ -820,93 +829,6 @@ class Learner(ABC):
         else:
             raise ValueError('{} is not a valid split'.format(split))
 
-    @abstractmethod
-    def plot_xyz(self, axs, x: Tensor, y, z=None):
-        """Plot image, ground truth labels, and predicted labels.
-
-        Args:
-            axs: matplotlib axes on which to plot
-            x: image
-            y: ground truth labels
-            z: optional predicted labels
-        """
-        pass
-
-    def plot_batch(self,
-                   x: Tensor,
-                   y: Sequence,
-                   output_path: Optional[str] = None,
-                   z: Optional[Sequence] = None,
-                   batch_limit: Optional[int] = None,
-                   show: bool = False):
-        """Plot a whole batch in a grid using plot_xyz.
-
-        Args:
-            x: batch of images
-            y: ground truth labels
-            output_path: local path where to save plot image
-            z: optional predicted labels
-            batch_limit: optional limit on (rendered) batch size
-        """
-        params = self.get_plot_params(
-            x=x, y=y, z=z, output_path=output_path, batch_limit=batch_limit)
-        if params['fig_args']['nrows'] == 0:
-            return
-
-        fig, axs = plt.subplots(**params['fig_args'])
-
-        # (N, c, h, w) --> (N, h, w, c)
-        x = x.permute(0, 2, 3, 1)
-
-        # apply transform, if given
-        if self.cfg.data.plot_options.transform is not None:
-            tf = deserialize_albumentation_transform(
-                self.cfg.data.plot_options.transform)
-            imgs = [tf(image=img)['image'] for img in x.numpy()]
-            x = torch.from_numpy(np.stack(imgs))
-
-        plot_xyz_args = params['plot_xyz_args']
-        for i, row_axs in enumerate(axs):
-            if z is None:
-                self.plot_xyz(row_axs, x[i], y[i], **plot_xyz_args)
-            else:
-                self.plot_xyz(row_axs, x[i], y[i], z=z[i], **plot_xyz_args)
-
-        if show:
-            plt.show()
-        if output_path is not None:
-            make_dir(output_path, use_dirname=True)
-            plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
-
-        plt.close(fig)
-
-    def get_plot_nrows(self, **kwargs) -> int:
-        x = kwargs['x']
-        batch_limit = kwargs.get('batch_limit')
-        batch_sz, c, h, w = x.shape
-        nrows = min(batch_sz,
-                    batch_limit) if batch_limit is not None else batch_sz
-        return nrows
-
-    def get_plot_ncols(self, **kwargs) -> int:
-        ncols = len(self.cfg.data.plot_options.channel_display_groups)
-        return ncols
-
-    def get_plot_params(self, **kwargs) -> dict:
-        nrows = self.get_plot_nrows(**kwargs)
-        ncols = self.get_plot_ncols(**kwargs)
-        params = {
-            'fig_args': {
-                'nrows': nrows,
-                'ncols': ncols,
-                'constrained_layout': True,
-                'figsize': (3 * ncols, 3 * nrows),
-                'squeeze': False
-            },
-            'plot_xyz_args': {}
-        }
-        return params
-
     def plot_predictions(self,
                          split: str,
                          batch_limit: Optional[int] = None,
@@ -925,7 +847,7 @@ class Learner(ABC):
         preds = self.predict_dataloader(
             dl, return_format='xyz', batched_output=True, raw_out=True)
         x, y, z = next(preds)
-        self.plot_batch(
+        self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
 
     def plot_dataloader(self,
@@ -935,7 +857,8 @@ class Learner(ABC):
                         show: bool = False):
         """Plot images and ground truth labels for a DataLoader."""
         x, y = next(iter(dl))
-        self.plot_batch(x, y, output_path, batch_limit=batch_limit, show=show)
+        self.visualizer.plot_batch(
+            x, y, output_path, batch_limit=batch_limit, show=show)
 
     def plot_dataloaders(self,
                          batch_limit: Optional[int] = None,

@@ -1,19 +1,16 @@
-from typing import Sequence, Union, Optional, Tuple
+from typing import Optional, Tuple
 import warnings
 
 import logging
-
-import numpy as np
-import matplotlib.patches as mpatches
-import matplotlib.colors as mcolors
 
 import torch
 from torch.nn import functional as F
 
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.utils import (
-    compute_conf_mat_metrics, compute_conf_mat, color_to_triple,
-    plot_channel_groups, channel_groups_to_imgs)
+from rastervision.pytorch_learner.utils import (compute_conf_mat_metrics,
+                                                compute_conf_mat)
+from rastervision.pytorch_learner.dataset.visualizer import (
+    SemanticSegmentationVisualizer)
 
 warnings.filterwarnings('ignore')
 
@@ -21,6 +18,9 @@ log = logging.getLogger(__name__)
 
 
 class SemanticSegmentationLearner(Learner):
+    def get_visualizer_class(self):
+        return SemanticSegmentationVisualizer
+
     def train_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
@@ -83,65 +83,3 @@ class SemanticSegmentationLearner(Learner):
 
     def prob_to_pred(self, x):
         return x.argmax(1)
-
-    def get_plot_ncols(self, **kwargs) -> int:
-        ncols = len(self.cfg.data.plot_options.channel_display_groups) + 1
-        z = kwargs.get('z')
-        if z is not None:
-            ncols += 1
-        return ncols
-
-    def plot_xyz(self,
-                 axs: Sequence,
-                 x: torch.Tensor,
-                 y: Union[torch.Tensor, np.ndarray],
-                 z: Optional[torch.Tensor] = None) -> None:
-
-        channel_groups = self.cfg.data.plot_options.channel_display_groups
-
-        img_axes = axs[:len(channel_groups)]
-        label_ax = axs[len(channel_groups)]
-
-        # plot image
-        imgs = channel_groups_to_imgs(x, channel_groups)
-        plot_channel_groups(img_axes, imgs, channel_groups)
-
-        # plot labels
-        class_colors = self.cfg.data.class_colors
-        colors = [
-            color_to_triple(c) if isinstance(c, str) else c
-            for c in class_colors
-        ]
-        colors = np.array(colors) / 255.
-        cmap = mcolors.ListedColormap(colors)
-
-        label_ax.imshow(
-            y, vmin=0, vmax=len(colors), cmap=cmap, interpolation='none')
-        label_ax.set_title(f'Ground truth')
-        label_ax.set_xticks([])
-        label_ax.set_yticks([])
-
-        # plot predictions
-        if z is not None:
-            pred_ax = axs[-1]
-            preds = z.argmax(dim=0)
-            pred_ax.imshow(
-                preds,
-                vmin=0,
-                vmax=len(colors),
-                cmap=cmap,
-                interpolation='none')
-            pred_ax.set_title(f'Predicted labels')
-            pred_ax.set_xticks([])
-            pred_ax.set_yticks([])
-
-        # add a legend to the rightmost subplot
-        class_names = self.cfg.data.class_names
-        legend_items = [
-            mpatches.Patch(facecolor=col, edgecolor='black', label=name)
-            for col, name in zip(colors, class_names)
-        ]
-        axs[-1].legend(
-            handles=legend_items,
-            loc='center right',
-            bbox_to_anchor=(1.8, 0.5))
