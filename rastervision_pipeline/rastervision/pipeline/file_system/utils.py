@@ -10,7 +10,8 @@ from typing import Optional, List
 
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import FileSystem
-from rastervision.pipeline.file_system.local_file_system import make_dir
+from rastervision.pipeline.file_system.local_file_system import (
+    LocalFileSystem, make_dir)
 
 log = logging.getLogger(__name__)
 
@@ -322,3 +323,7 @@ def unzip(zip_path: str, target_dir: str):
     make_dir(target_dir)
     with zipfile.ZipFile(zip_path, 'r') as zipf:
         zipf.extractall(target_dir)
+
+
+def is_local(uri: str) -> bool:
+    return FileSystem.get_file_system(uri) == LocalFileSystem

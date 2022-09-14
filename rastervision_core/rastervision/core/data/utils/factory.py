@@ -150,12 +150,12 @@ def make_cc_scene(class_config: 'ClassConfig',
             to the RasterioSource used for image data. See docs for
             RasterioSource for more details. Defaults to {}.
         label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSourceConfig used for label data, if 
-            label_vector_uri is used. See docs for GeoJSONVectorSourceConfig
+            to the GeoJSONVectorSourceConfig used for label data, if
+            label_vector_uri is set. See docs for GeoJSONVectorSourceConfig
             for more details. Defaults to {}.
         label_source_kw (dict, optional): Additional arguments to pass
             to the ChipClassificationLabelSourceConfig used for label data, if
-            label_vector_uri is used. See docs for
+            label_vector_uri is set. See docs for
             ChipClassificationLabelSourceConfig for more details.
             Defaults to {}.
         **kwargs: All other keyword args are passed to the default constructor
@@ -188,6 +188,7 @@ def make_cc_scene(class_config: 'ClassConfig',
             uri=label_vector_uri,
             ignore_crs_field=True,
             **label_vector_source_kw)
+        # use config to ensure required transformers are auto added
         label_source_cfg = ChipClassificationLabelSourceConfig(
             vector_source=geojson_cfg, **label_source_kw)
         label_source = label_source_cfg.build(
@@ -238,13 +239,13 @@ def make_od_scene(class_config: 'ClassConfig',
             to the RasterioSource used for image data. See docs for
             RasterioSource for more details. Defaults to {}.
         label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSourceConfig used for label data, if 
-            label_vector_uri is used. See docs for GeoJSONVectorSourceConfig
+            to the GeoJSONVectorSourceConfig used for label data, if
+            label_vector_uri is set. See docs for GeoJSONVectorSourceConfig
             for more details. Defaults to {}.
         label_source_kw (dict, optional): Additional arguments to pass
-            to the ChipClassificationLabelSourceConfig used for label data, if
-            label_vector_uri is used. See docs for
-            ChipClassificationLabelSourceConfig for more details.
+            to the ObjectDetectionLabelSourceConfig used for label data, if
+            label_vector_uri is set. See docs for
+            ObjectDetectionLabelSourceConfig for more details.
             Defaults to {}.
         **kwargs: All other keyword args are passed to the default constructor
             for this class.
@@ -276,6 +277,7 @@ def make_od_scene(class_config: 'ClassConfig',
             uri=label_vector_uri,
             ignore_crs_field=True,
             **label_vector_source_kw)
+        # use config to ensure required transformers are auto added
         label_source_cfg = ObjectDetectionLabelSourceConfig(
             vector_source=geojson_cfg, **label_source_kw)
         label_source = label_source_cfg.build(
