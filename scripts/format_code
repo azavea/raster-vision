@@ -38,5 +38,6 @@ else
         -e "**/conf.py" \
         -e "**/setup.py" \
         -e "*.history*" \
-        -e "data/*"
+        -e "data/*" \
+        -e "**/*.ipynb"
 fi

@@ -39,6 +39,7 @@ else
         -e "**/setup.py" \
         -e "*.history*" \
         -e "data/*" \
+        -e "**/*.ipynb" \
         "$SRC_DIR" > /dev/null); then
         echo "Code has not been formatted by yapf. Need to run ./scripts/format_code."
         exit 1
