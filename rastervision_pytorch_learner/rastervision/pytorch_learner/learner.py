@@ -11,6 +11,7 @@ import shutil
 import logging
 from subprocess import Popen
 import numbers
+from pprint import pformat
 
 import numpy as np
 from tqdm.auto import tqdm
@@ -26,7 +27,7 @@ from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, download_or_copy, sync_from_dir, get_local_path, unzip,
-    str_to_file, FileSystem, LocalFileSystem)
+    str_to_file, is_local)
 from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
@@ -190,7 +191,7 @@ class Learner(ABC):
         self.step_scheduler = step_scheduler
 
         output_dir = cfg.output_uri
-        if FileSystem.get_file_system(output_dir) == LocalFileSystem:
+        if is_local(output_dir):
             self.output_dir = output_dir
             make_dir(self.output_dir)
         else:
@@ -1138,7 +1139,10 @@ class Learner(ABC):
         else:
             return x.to(device)
 
-    def train_epoch(self) -> MetricDict:
+    def train_epoch(
+            self,
+            optimizer: 'Optimizer',
+            step_scheduler: Optional['_LRScheduler'] = None) -> MetricDict:
         """Train for a single epoch."""
         start = time.time()
         self.model.train()
@@ -1149,16 +1153,16 @@ class Learner(ABC):
                 x = self.to_device(x, self.device)
                 y = self.to_device(y, self.device)
                 batch = (x, y)
-                self.opt.zero_grad()
+                optimizer.zero_grad()
                 output = self.train_step(batch, batch_ind)
                 output['train_loss'].backward()
-                self.opt.step()
+                optimizer.step()
                 # detach tensors in the output, if any, to avoid memory leaks
                 for k, v in output.items():
                     output[k] = v.detach() if isinstance(v, Tensor) else v
                 outputs.append(output)
-                if self.step_scheduler:
-                    self.step_scheduler.step()
+                if step_scheduler is not None:
+                    step_scheduler.step()
                 num_samples += x.shape[0]
         metrics = self.train_end(outputs, num_samples)
         end = time.time()
@@ -1210,22 +1214,28 @@ class Learner(ABC):
 
         torch.save(self.model.state_dict(), self.last_model_weights_path)
 
-    def train(self):
+    def train(self, epochs: Optional[int] = None):
         """Training loop that will attempt to resume training if appropriate."""
+        if epochs is not None:
+            # ignore self.start_epoch and self.cfg.solver.num_epochs and just
+            # train for the number of additional epochs specified by `epochs`.
+            start_epoch = 0
+        else:
+            start_epoch = self.start_epoch
+            epochs = self.cfg.solver.num_epochs
+            if (start_epoch > 0 and start_epoch < epochs):
+                log.info(f'Resuming training from epoch {start_epoch}')
+
         self.on_train_start()
-
-        if self.start_epoch > 0 and self.start_epoch <= self.cfg.solver.num_epochs:
-            log.info('Resuming training from epoch {}'.format(
-                self.start_epoch))
-
-        for epoch in range(self.start_epoch, self.cfg.solver.num_epochs):
-            log.info('epoch: {}'.format(epoch))
-            train_metrics = self.train_epoch()
+        for epoch in range(start_epoch, epochs):
+            log.info(f'epoch: {epoch}')
+            train_metrics = self.train_epoch(
+                optimizer=self.opt, step_scheduler=self.step_scheduler)
             if self.epoch_scheduler:
                 self.epoch_scheduler.step()
             valid_metrics = self.validate_epoch(self.valid_dl)
             metrics = dict(epoch=epoch, **train_metrics, **valid_metrics)
-            log.info('metrics: {}'.format(metrics))
+            log.info(f'metrics:\n{pformat(metrics)}')
 
             self.on_epoch_end(epoch, metrics)
 
