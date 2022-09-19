@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 from uuid import uuid4
 
-from rastervision.pipeline import rv_config
 from rastervision.core.data.utils import listify_uris, get_polygons_from_uris
 
 if TYPE_CHECKING:
@@ -192,10 +191,7 @@ def make_cc_scene(class_config: 'ClassConfig',
         label_source_cfg = ChipClassificationLabelSourceConfig(
             vector_source=geojson_cfg, **label_source_kw)
         label_source = label_source_cfg.build(
-            class_config,
-            crs_transformer,
-            extent=extent,
-            tmp_dir=rv_config.get_tmp_dir())
+            class_config, crs_transformer, extent=extent)
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(
@@ -281,10 +277,7 @@ def make_od_scene(class_config: 'ClassConfig',
         label_source_cfg = ObjectDetectionLabelSourceConfig(
             vector_source=geojson_cfg, **label_source_kw)
         label_source = label_source_cfg.build(
-            class_config,
-            crs_transformer,
-            extent=extent,
-            tmp_dir=rv_config.get_tmp_dir())
+            class_config, crs_transformer, extent=extent)
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(

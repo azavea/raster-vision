@@ -165,9 +165,12 @@ class RasterioSource(RasterSource):
                 will be auto-generated. Defaults to None.
         """
         self.uris = listify_uris(uris)
-        self.tmp_dir = rv_config.get_tmp_dir() if tmp_dir is None else tmp_dir
-        self.image_dataset = None
         self.allow_streaming = allow_streaming
+
+        self.tmp_dir = tmp_dir
+        if self.tmp_dir is None:
+            self._tmp_dir = rv_config.get_tmp_dir()
+            self.tmp_dir = self._tmp_dir.name
 
         self.imagery_path = self.download_data(
             self.tmp_dir, stream=self.allow_streaming)
