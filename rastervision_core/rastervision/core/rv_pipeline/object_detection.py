@@ -49,7 +49,7 @@ def _make_chip_pos_windows(image_extent, label_store, chip_size):
 def _make_label_pos_windows(image_extent, label_store, label_buffer):
     pos_windows = []
     for box in label_store.get_labels().get_boxes():
-        window = box.make_buffer(label_buffer, image_extent)
+        window = box.buffer(label_buffer, image_extent)
         pos_windows.append(window)
 
     return pos_windows
@@ -62,7 +62,7 @@ def make_pos_windows(image_extent, label_store, chip_size, window_method,
     if window_method == ObjectDetectionWindowMethod.label:
         return _make_label_pos_windows(image_extent, label_store, label_buffer)
     elif window_method == ObjectDetectionWindowMethod.image:
-        return [image_extent.make_copy()]
+        return [image_extent.copy()]
     else:
         raise Exception(
             'Window method: {} is cannot be handled.'.format(window_method))

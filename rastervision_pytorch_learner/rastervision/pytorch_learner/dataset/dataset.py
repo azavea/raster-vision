@@ -170,7 +170,7 @@ class SlidingWindowGeoDataset(GeoDataset):
     def init_windows(self) -> None:
         """Pre-compute windows."""
         windows = self.scene.raster_source.get_extent().get_windows(
-            chip_sz=self.size, stride=self.stride, padding=self.padding)
+            self.size, stride=self.stride, padding=self.padding)
         if len(self.scene.aoi_polygons) > 0:
             windows = Box.filter_by_aoi(windows, self.scene.aoi_polygons)
         self.windows = windows
