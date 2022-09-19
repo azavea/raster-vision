@@ -35,17 +35,6 @@ class TestGeoJSONVectorSource(unittest.TestCase):
             crs_transformer = IdentityCRSTransformer()
         class_config = ClassConfig(names=['building'])
         json_to_file(geojson, self.uri)
-        buf_tfs = []
-        if line_bufs is not None:
-            tf = BufferTransformerConfig(
-                geom_type='LineString', class_bufs=line_bufs)
-            buf_tfs.append(tf)
-        if point_bufs is not None:
-            tf = BufferTransformerConfig(
-                geom_type='Point', class_bufs=point_bufs)
-            buf_tfs.append(tf)
-        vector_transformers = (
-            [ClassInferenceTransformerConfig(default_class_id=0)] + buf_tfs)
         cfg = GeoJSONVectorSourceConfig(
             uri=self.uri,
             transformers=[
