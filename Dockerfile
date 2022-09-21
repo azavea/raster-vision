@@ -1,13 +1,12 @@
 ARG CUDA_VERSION
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn7-devel-ubuntu16.04
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu20.04
 
-RUN apt-get update && apt-get install -y software-properties-common python-software-properties
+RUN apt-get update && apt-get install -y software-properties-common
 
 RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get update && \
-    apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
-                       jq=1.5* \
-                       build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
+    apt-get install -y wget=1.* git=1:2.* python3-tk=3.* \
+                       build-essential libsqlite3-dev=3.31.* zlib1g-dev=1:1.2.* \
                        unzip curl && \
     apt-get autoremove && apt-get autoclean && apt-get clean
 
@@ -15,18 +14,20 @@ RUN add-apt-repository ppa:ubuntugis/ppa && \
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 # Install Python 3.7
-RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh && \
+# xxx keeping python version so we can keep using opencv version, but may want to revisit this
+RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-aarch64.sh && \
      chmod +x ~/miniconda.sh && \
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
-RUN conda install -y python=3.7
+RUN conda install -y python=3.9
 RUN python -m pip install --upgrade pip
-RUN conda install -y -c conda-forge gdal=3.0.4
+# xxx needed to upgrade gdal for arm64 support
+RUN conda install -y -c conda-forge gdal=3.5.1
 
 # Setup GDAL_DATA directory, rasterio needs it.
-ENV GDAL_DATA=/opt/conda/lib/python3.7/site-packages/rasterio/gdal_data/
+ENV GDAL_DATA=/opt/conda/lib/python3.9/site-packages/rasterio/gdal_data/
 
 WORKDIR /opt/src/
 
