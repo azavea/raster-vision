@@ -1,15 +1,14 @@
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple
 from os.path import join
 import logging
-import click
+from tqdm.auto import tqdm
 
 import numpy as np
 import rasterio as rio
 
 from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import (get_local_path, make_dir,
-                                               sync_to_dir, file_exists,
-                                               str_to_file, upload_or_copy)
+from rastervision.pipeline.file_system import (
+    get_local_path, json_to_file, make_dir, sync_to_dir, file_exists)
 from rastervision.core.box import Box
 from rastervision.core.data import (CRSTransformer, ClassConfig)
 from rastervision.core.data.label import SemanticSegmentationLabels
@@ -103,24 +102,16 @@ class SemanticSegmentationLabelStore(LabelStore):
             if file_exists(self.score_uri):
                 cfg = RasterioSourceConfig(uris=[self.score_uri])
                 raster_source = cfg.build(tmp_dir)
-                extents_equal = raster_source.get_extent() == self.extent
+                extents_equal = raster_source.extent == self.extent
                 bands_equal = raster_source.num_channels == len(class_config)
                 self_dtype = np.uint8 if self.smooth_as_uint8 else np.float32
-                dtypes_equal = raster_source.get_dtype() == self_dtype
+                dtypes_equal = raster_source.dtype == self_dtype
 
                 if extents_equal and bands_equal and dtypes_equal:
                     self.score_raster_source = raster_source
                 else:
                     raise FileExistsError(f'{self.score_uri} already exists '
                                           'and is incompatible.')
-
-    def _subcomponents_to_activate(self):
-        components = []
-        if self.label_raster_source is not None:
-            components.append(self.label_raster_source)
-        if self.score_raster_source is not None:
-            components.append(self.score_raster_source)
-        return components
 
     def get_labels(self) -> SemanticSegmentationLabels:
         """Get all labels.
@@ -143,8 +134,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             raise FileNotFoundError(
                 f'Raster source at {self.label_uri} does not exist.')
 
-        extent = self.label_raster_source.get_extent()
-        raw_labels = self.label_raster_source.get_raw_chip(extent)
+        extent = self.label_raster_source.extent
+        raw_labels = self.label_raster_source.get_chip(extent)
         if self.class_transformer is None:
             label_arr = np.squeeze(raw_labels)
         else:
@@ -165,9 +156,8 @@ class SemanticSegmentationLabelStore(LabelStore):
                 f'Raster source at {self.score_uri} does not exist '
                 'or is not consistent with the current params.')
 
-        extent = self.score_raster_source.get_extent()
-        with self.score_raster_source.activate():
-            score_arr = self.score_raster_source.get_chip(extent)
+        extent = self.score_raster_source.extent
+        score_arr = self.score_raster_source.get_chip(extent)
         # (H, W, C) --> (C, H, W)
         score_arr = score_arr.transpose(2, 0, 1)
         try:
@@ -205,8 +195,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             'driver': 'GTiff',
             'height': height,
             'width': width,
-            'transform': self.crs_transformer.get_affine_transform(),
-            'crs': self.crs_transformer.get_image_crs(),
+            'transform': self.crs_transformer.transform,
+            'crs': self.crs_transformer.image_crs,
             'blockxsize': min(self.rasterio_block_size, width),
             'blockysize': min(self.rasterio_block_size, height)
         }
@@ -248,11 +238,11 @@ class SemanticSegmentationLabelStore(LabelStore):
         if chip_sz is None:
             windows = [self.extent]
         else:
-            windows = labels.get_windows(chip_sz=chip_sz)
+            windows = labels.get_windows()
 
         log.info('Writing smooth labels to disk.')
         with rio.open(scores_path, 'w', **out_profile) as dataset:
-            with click.progressbar(windows) as bar:
+            with tqdm(windows, desc='Writing windows to GeoTiff') as bar:
                 for window in bar:
                     window, _ = self._clip_to_extent(self.extent, window)
                     score_arr = labels.get_score_arr(window)
@@ -276,7 +266,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         log.info('Writing labels to disk.')
         with rio.open(path, 'w', **out_profile) as dataset:
-            with click.progressbar(windows) as bar:
+            with tqdm(windows, desc='Writing windows to GeoTiff') as bar:
                 for window in bar:
                     label_arr = labels.get_label_arr(window).astype(dtype)
                     window, label_arr = self._clip_to_extent(
@@ -301,7 +291,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         # value for pixels not convered by any windows
         try:
-            default_class_id = self.class_config.get_null_class_id()
+            default_class_id = self.class_config.null_class_id
         except ValueError:
             # Set it to a high value so that it doesn't match any class's id.
             # assumption: num_classes < 256
@@ -319,44 +309,46 @@ class SemanticSegmentationLabelStore(LabelStore):
 
     def write_vector_outputs(self, labels: SemanticSegmentationLabels) -> None:
         """Write vectorized outputs for all configs in self.vector_outputs."""
-        import mask_to_polygons.vectorification as vectorification
-        import mask_to_polygons.processing.denoise as denoise
+        from rastervision.core.data.utils import (denoise, geoms_to_geojson,
+                                                  mask_to_building_polygons,
+                                                  mask_to_polygons)
 
         log.info('Writing vector output to disk.')
 
         label_arr = self._labels_to_full_label_arr(labels)
-        with click.progressbar(self.vector_outputs) as bar:
+        with tqdm(self.vector_outputs, desc='Vectorizing predictions') as bar:
             for i, vo in enumerate(bar):
+                bar.set_postfix(
+                    dict(
+                        class_id=vo.class_id,
+                        mode=vo.get_mode(),
+                        denoise_radius=vo.denoise))
+
                 if vo.uri is None:
                     log.info(f'Skipping VectorOutputConfig at index {i} '
                              'due to missing uri.')
                     continue
-                uri = get_local_path(vo.uri, self.tmp_dir)
-                denoise_radius = vo.denoise
-                mode = vo.get_mode()
+
                 class_mask = (label_arr == vo.class_id).astype(np.uint8)
 
-                def transform(x, y):
-                    return self.crs_transformer.pixel_to_map((x, y))
+                if vo.denoise > 0:
+                    class_mask = denoise(class_mask, radius=vo.denoise)
 
-                if denoise_radius > 0:
-                    class_mask = denoise.denoise(class_mask, denoise_radius)
-
-                if mode == 'buildings':
-                    geojson = vectorification.geojson_from_mask(
+                mode = vo.get_mode()
+                if mode == 'polygons':
+                    polys = mask_to_polygons(class_mask)
+                elif mode == 'buildings':
+                    polys = mask_to_building_polygons(
                         mask=class_mask,
-                        transform=transform,
-                        mode=mode,
-                        min_aspect_ratio=vo.min_aspect_ratio,
                         min_area=vo.min_area,
                         width_factor=vo.element_width_factor,
                         thickness=vo.element_thickness)
-                elif mode == 'polygons':
-                    geojson = vectorification.geojson_from_mask(
-                        mask=class_mask, transform=transform, mode=mode)
+                else:
+                    raise NotImplementedError()
 
-                str_to_file(geojson, uri)
-                upload_or_copy(uri, vo.uri)
+                polys = [self.crs_transformer.pixel_to_map(p) for p in polys]
+                geojson = geoms_to_geojson(polys)
+                json_to_file(geojson, vo.uri)
 
     def empty_labels(self, **kwargs) -> SemanticSegmentationLabels:
         """Returns an empty SemanticSegmentationLabels object."""

@@ -1,39 +1,38 @@
-from typing import (List, Optional)
+from typing import (Any, List, Optional)
 
 import numpy as np
 
 from rastervision.core.box import Box
-from rastervision.core.data import ActivateMixin
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_source.label_source import LabelSource
 from rastervision.core.data.raster_source import RasterSource
 
 
-def fill_edge(label_arr, window, extent, fill_value):
+def fill_edge(label_arr: np.ndarray, window: Box, extent: Box,
+              fill_value: int) -> np.ndarray:
     """If window goes over the edge of the extent, buffer with fill_value."""
     if window.ymax <= extent.ymax and window.xmax <= extent.xmax:
         return label_arr
 
-    x = np.full((window.get_height(), window.get_width()), fill_value)
+    x = np.full(window.size, fill_value)
     ylim = extent.ymax - window.ymin
     xlim = extent.xmax - window.xmin
     x[0:ylim, 0:xlim] = label_arr[0:ylim, 0:xlim]
     return x
 
 
-class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
+class SemanticSegmentationLabelSource(LabelSource):
     """A read-only label source for semantic segmentation."""
 
     def __init__(self, raster_source: RasterSource, null_class_id: int):
         """Constructor.
 
         Args:
-            raster_source: (RasterSource) A raster source that returns a single channel
-                raster with class_ids as values, or a 3 channel raster with
-                RGB values that are mapped to class_ids using the rgb_class_map
-            null_class_id: (int) the null class id used as fill values for when windows
-                go over the edge of the label array. This can be retrieved using
-                class_config.get_null_class_id().
+            raster_source (RasterSource): A raster source that returns a single
+                channel raster with class_ids as values.
+            null_class_id (int): the null class id used as fill values for when
+                windows go over the edge of the label array. This can be
+                retrieved using class_config.null_class_id.
         """
         self.raster_source = raster_source
         self.null_class_id = null_class_id
@@ -53,14 +52,11 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         Returns:
              True (the window does contain interesting pixels) or False.
         """
-        raw_labels = self.raster_source.get_raw_chip(window)
-        labels = np.squeeze(raw_labels)
-        labels = fill_edge(labels, window, self.raster_source.get_extent(),
-                           self.null_class_id)
+        label_arr = self.get_label_arr(window)
 
         target_count = 0
         for class_id in target_classes:
-            target_count = target_count + (labels == class_id).sum()
+            target_count = target_count + (label_arr == class_id).sum()
 
         return target_count >= target_count_threshold
 
@@ -74,24 +70,42 @@ class SemanticSegmentationLabelSource(ActivateMixin, LabelSource):
         Returns:
              SemanticSegmentationLabels
         """
+        if window is None:
+            window = self.extent
+        else:
+            window = window.to_extent_coords(self.extent)
+
         labels = SemanticSegmentationLabels.make_empty()
-        window = window or self.raster_source.get_extent()
-        raw_labels = self.raster_source.get_chip(window)
-        label_arr = np.squeeze(raw_labels)
-        label_arr = fill_edge(label_arr, window,
-                              self.raster_source.get_extent(),
-                              self.null_class_id)
+        label_arr = self.get_label_arr(window)
         labels[window] = label_arr
         return labels
 
-    def _subcomponents_to_activate(self):
-        return [self.raster_source]
+    def get_label_arr(self, window: Optional[Box] = None) -> np.ndarray:
+        """Get labels for a window.
 
-    def _activate(self):
-        pass
+        Args:
+             window: Either None or a window given as a Box object. Uses full
+                extent of scene if window is not provided.
+        Returns:
+             np.ndarray
+        """
+        if window is None:
+            window = self.extent
+        else:
+            window = window.to_extent_coords(self.extent)
 
-    def _deactivate(self):
-        pass
+        label_arr = self.raster_source.get_chip(window)
+        label_arr = np.squeeze(label_arr)
+        label_arr = fill_edge(label_arr, window, self.extent,
+                              self.null_class_id)
+        return label_arr
 
-    def __getitem__(self, window: Box) -> np.ndarray:
-        return self.get_labels(window)[window]
+    @property
+    def extent(self) -> Box:
+        return self.raster_source.extent
+
+    def __getitem__(self, key: Any) -> Any:
+        if isinstance(key, Box):
+            return self.get_label_arr(key)
+        else:
+            return super().__getitem__(key)

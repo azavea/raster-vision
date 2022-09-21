@@ -10,8 +10,7 @@ from rastervision.core.data import (
     Scene, IdentityCRSTransformer, SemanticSegmentationLabelSource,
     RasterizedSourceConfig, RasterizerConfig, GeoJSONVectorSourceConfig,
     PolygonVectorOutputConfig, ClassInferenceTransformerConfig)
-from rastervision.core.evaluation import (SemanticSegmentationEvaluator,
-                                          SemanticSegmentationEvaluatorConfig)
+from rastervision.core.evaluation import SemanticSegmentationEvaluator
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import file_to_json
 
@@ -23,26 +22,6 @@ class MockRVPipelineConfig:
     eval_uri = '/abc/def/eval'
 
 
-class TestSemanticSegmentationEvaluatorConfig(unittest.TestCase):
-    def test_update(self):
-        cfg = SemanticSegmentationEvaluatorConfig(output_uri=None)
-        pipeline_cfg = MockRVPipelineConfig()
-        cfg.update(pipeline_cfg)
-        self.assertEqual(cfg.get_vector_output_uri(),
-                         f'{pipeline_cfg.eval_uri}/vector-eval.json')
-        self.assertEqual(
-            cfg.get_vector_output_uri('group1'),
-            f'{pipeline_cfg.eval_uri}/group1/vector-eval.json')
-
-    def test_get_vector_output_uri(self):
-        cfg = SemanticSegmentationEvaluatorConfig(output_uri='/abc/def')
-        self.assertEqual(cfg.get_vector_output_uri(),
-                         '/abc/def/vector-eval.json')
-        self.assertEqual(
-            cfg.get_vector_output_uri('group1'),
-            '/abc/def/group1/vector-eval.json')
-
-
 class TestSemanticSegmentationEvaluator(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = rv_config.get_tmp_dir()
@@ -50,7 +29,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         self.class_config = ClassConfig(names=['one', 'two'])
         self.class_config.update()
         self.class_config.ensure_null_class()
-        self.null_class_id = self.class_config.get_null_class_id()
+        self.null_class_id = self.class_config.null_class_id
 
     def tearDown(self):
         self.tmp_dir.cleanup()
@@ -59,15 +38,15 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         # Make scene where ground truth is all set to class_id
         # and predictions are set to half 0's and half 1's
         scene_id = str(class_id)
-        rs = MockRasterSource(channel_order=[0, 1, 2], num_channels=3)
+        rs = MockRasterSource(channel_order=[0, 1, 2], num_channels_raw=3)
         rs.set_raster(np.zeros((10, 10, 3)))
 
-        gt_rs = MockRasterSource(channel_order=[0], num_channels=1)
+        gt_rs = MockRasterSource(channel_order=[0], num_channels_raw=1)
         gt_arr = np.full((10, 10, 1), class_id)
         gt_rs.set_raster(gt_arr)
         gt_ls = SemanticSegmentationLabelSource(gt_rs, self.null_class_id)
 
-        pred_rs = MockRasterSource(channel_order=[0], num_channels=1)
+        pred_rs = MockRasterSource(channel_order=[0], num_channels_raw=1)
         pred_arr = np.zeros((10, 10, 1))
         pred_arr[5:10, :, :] = 1
         pred_rs.set_raster(pred_arr)
@@ -86,7 +65,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         scenes[1].label_store.vector_outputs = None
 
         evaluator = SemanticSegmentationEvaluator(self.class_config,
-                                                  output_uri, None)
+                                                  output_uri)
         evaluator.process(scenes, self.tmp_dir.name)
         eval_json = file_to_json(output_uri)
         exp_eval_json = file_to_json(data_file_path('expected-eval.json'))
@@ -97,7 +76,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         pred_uri = data_file_path('{}-pred-polygons.geojson'.format(class_id))
 
         scene_id = str(class_id)
-        rs = MockRasterSource(channel_order=[0, 1, 3], num_channels=3)
+        rs = MockRasterSource(channel_order=[0, 1, 2], num_channels_raw=3)
         rs.set_raster(np.zeros((10, 10, 3)))
 
         crs_transformer = IdentityCRSTransformer()
@@ -134,40 +113,6 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
             return Scene(scene_id, rs, gt_ls, pred_ls, aoi_polygons)
 
         return Scene(scene_id, rs, gt_ls, pred_ls)
-
-    def test_vector_evaluator(self):
-        output_uri = join(self.tmp_dir.name, 'raster-out.json')
-        vector_output_uri = join(self.tmp_dir.name, 'vector-out.json')
-        scenes = [self.get_vector_scene(0), self.get_vector_scene(1)]
-        evaluator = SemanticSegmentationEvaluator(
-            self.class_config, output_uri, vector_output_uri)
-        evaluator.process(scenes, self.tmp_dir.name)
-        vector_eval_json = file_to_json(vector_output_uri)
-        exp_vector_eval_json = file_to_json(
-            data_file_path('expected-vector-eval.json'))
-
-        # NOTE:  The precision  and recall  values found  in the  file
-        # `expected-vector-eval.json`  are equal to fractions of  the
-        # form (n-1)/n for  n <= 7 which  can be seen to  be (and have
-        # been manually verified to be) correct.
-        self.assertDictEqual(vector_eval_json, exp_vector_eval_json)
-
-    def test_vector_evaluator_with_aoi(self):
-        output_uri = join(self.tmp_dir.name, 'raster-out.json')
-        vector_output_uri = join(self.tmp_dir.name, 'vector-out.json')
-        scenes = [self.get_vector_scene(0, use_aoi=True)]
-        evaluator = SemanticSegmentationEvaluator(
-            self.class_config, output_uri, vector_output_uri)
-        evaluator.process(scenes, self.tmp_dir.name)
-        vector_eval_json = file_to_json(vector_output_uri)
-        exp_vector_eval_json = file_to_json(
-            data_file_path('expected-vector-eval-with-aoi.json'))
-
-        # NOTE:  The precision  and recall  values found  in the  file
-        # `expected-vector-eval.json`  are equal to fractions of  the
-        # form (n-1)/n for  n <= 7 which  can be seen to  be (and have
-        # been manually verified to be) correct.
-        self.assertDictEqual(vector_eval_json, exp_vector_eval_json)
 
 
 if __name__ == '__main__':

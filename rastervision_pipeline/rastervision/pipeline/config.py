@@ -131,6 +131,15 @@ class Config(BaseModel):
                 raise ConfigError('{} is not a valid option for {}'.format(
                     val, field))
 
+    def __repr_args__(self):
+        """Override to delete 'type_hint' field."""
+        args = dict(super().__repr_args__())
+        try:
+            del args['type_hint']
+        except KeyError:
+            pass
+        return args.items()
+
 
 def save_pipeline_config(cfg: 'PipelineConfig', output_uri: str):
     """Save a PipelineConfig to JSON file.

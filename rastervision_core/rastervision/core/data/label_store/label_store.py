@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 
-from rastervision.core.data import ActivateMixin
 
-
-class LabelStore(ABC, ActivateMixin):
+class LabelStore(ABC):
     """This defines how to store prediction labels are stored for a scene.
     """
 
@@ -25,10 +23,4 @@ class LabelStore(ABC, ActivateMixin):
     @abstractmethod
     def empty_labels(self):
         """Produces an empty Labels"""
-        pass
-
-    def _activate(self):
-        pass
-
-    def _deactivate(self):
         pass

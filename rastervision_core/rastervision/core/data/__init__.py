@@ -1,6 +1,5 @@
 # flake8: noqa
 
-from rastervision.core.data.activate_mixin import *
 from rastervision.core.data.class_config import *
 from rastervision.core.data.raster_source import *
 from rastervision.core.data.crs_transformer import *

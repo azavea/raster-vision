@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def stats_transformer_config_upgrader(cfg_dict: dict, version: int) -> dict:
-    if version < 3:
+    if version == 2:
         # field added in version 3
         # since `scene_group` cannot be None, set it to a special value so that
         # `update_root()`, which is called by the predictor, knows to set
@@ -42,7 +42,8 @@ class StatsTransformerConfig(RasterTransformerConfig):
                                   self.scene_group, 'stats.json')
 
     def build(self):
-        return StatsTransformer(RasterStats.load(self.stats_uri))
+        stats = RasterStats.load(self.stats_uri)
+        return StatsTransformer(means=stats.means, stds=stats.stds)
 
     def update_root(self, root_dir: str) -> None:
         if self.scene_group == '__N/A__':

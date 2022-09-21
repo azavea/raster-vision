@@ -41,8 +41,8 @@ class SceneConfig(Config):
     def build(self, class_config, tmp_dir, use_transformers=True) -> Scene:
         raster_source = self.raster_source.build(
             tmp_dir, use_transformers=use_transformers)
-        crs_transformer = raster_source.get_crs_transformer()
-        extent = raster_source.get_extent()
+        crs_transformer = raster_source.crs_transformer
+        extent = raster_source.extent
 
         label_source = (self.label_source.build(class_config, crs_transformer,
                                                 extent, tmp_dir)

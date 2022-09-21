@@ -367,8 +367,7 @@ class TestGeoDataConfig(unittest.TestCase):
         import numpy as np
         from rastervision.core.data import (
             ClassConfig, DatasetConfig, RasterioSourceConfig,
-            MultiRasterSourceConfig, SubRasterSourceConfig,
-            ReclassTransformerConfig, SceneConfig,
+            MultiRasterSourceConfig, ReclassTransformerConfig, SceneConfig,
             SemanticSegmentationLabelSourceConfig)
         from tests import data_file_path
 
@@ -385,11 +384,7 @@ class TestGeoDataConfig(unittest.TestCase):
                     ])
                 rs_cfgs_img.append(rs_cfg)
             rs_cfg_img = MultiRasterSourceConfig(
-                raster_sources=[
-                    SubRasterSourceConfig(
-                        raster_source=rs_cfg, target_channels=[i])
-                    for i, rs_cfg in enumerate(rs_cfgs_img)
-                ],
+                raster_sources=rs_cfgs_img,
                 channel_order=list(range(num_channels)))
             rs_cfg_label = RasterioSourceConfig(
                 uris=[path],

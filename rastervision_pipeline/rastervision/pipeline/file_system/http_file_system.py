@@ -9,7 +9,7 @@ import requests
 from datetime import datetime
 from functools import partial
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                NotWritableError)
@@ -48,7 +48,8 @@ def get_file_obj(uri: str, with_progress: bool = True) -> ContextManager:
         total=file_size,
         desc=desc,
         bytes=True,
-        mininterval=0.5)
+        mininterval=0.5,
+        delay=5)
     return file_obj_wrapped
 
 

@@ -15,17 +15,18 @@ class VectorOutputConfig(Config):
     """Config for vectorized semantic segmentation predictions."""
     uri: Optional[str] = Field(
         None,
-        description=
-        ('URI of vector output. If None, and this Config is part of a SceneConfig and '
-         'RVPipeline, this field will be auto-generated.'))
+        description='URI of vector output. If None, and this Config is part '
+        'of a SceneConfig and RVPipeline, this field will be auto-generated.')
     class_id: int = Field(
         ...,
         description='The prediction class that is to turned into vectors.')
     denoise: int = Field(
-        0,
-        description=
-        ('Radius of the structural element used to remove high-frequency signals from '
-         'the image.'))
+        8,
+        description='Radius of the structural element used to remove '
+        'high-frequency signals from the image. Smaller values will reduce '
+        'less noise and make vectorization slower (especially for large '
+        'images). Larger values will remove more noise and make vectorization '
+        'faster but might also remove legitimate detections.')
 
     def update(self,
                pipeline: Optional['RVPipelineConfig'] = None,
@@ -41,7 +42,7 @@ class VectorOutputConfig(Config):
                 self.uri = join(pipeline.predict_uri, scene.id,
                                 'vector_output', filename)
 
-    def get_mode(self):
+    def get_mode(self) -> str:
         raise NotImplementedError()
 
 
@@ -49,39 +50,42 @@ class VectorOutputConfig(Config):
 class PolygonVectorOutputConfig(VectorOutputConfig):
     """Config for vectorized semantic segmentation predictions."""
 
-    def get_mode(self):
+    def get_mode(self) -> str:
         return 'polygons'
 
 
-@register_config('building_vector_output')
+def building_vo_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 6:
+        try:
+            # removed in version 7
+            del cfg_dict['min_aspect_ratio']
+        except KeyError:
+            pass
+    return cfg_dict
+
+
+@register_config(
+    'building_vector_output', upgrader=building_vo_config_upgrader)
 class BuildingVectorOutputConfig(VectorOutputConfig):
     """Config for vectorized semantic segmentation predictions.
 
     Intended to break up clusters of buildings.
     """
-    min_aspect_ratio: float = Field(
-        1.618,
-        description=
-        ('Ratio between length and height (or height and length) of anything that can '
-         'be considered to be a cluster of buildings. The goal is to distinguish between '
-         'rows of buildings and (say) a single building.'))
     min_area: float = Field(
         0.0,
-        description=
-        ('Minimum area of anything that can be considered to be a cluster of buildings. '
-         'The goal is to distinguish between buildings and artifacts.'))
+        description='Minimum area (in pixels^2) of anything that can be '
+        'considered to be a building or a cluster of buildings. The goal is '
+        'to distinguish between buildings and artifacts.')
     element_width_factor: float = Field(
         0.5,
-        description=
-        ('Width of the structural element used to break building clusters as a fraction '
-         'of the width of the cluster.'))
+        description='Width of the structural element used to break building '
+        'clusters as a fraction of the width of the cluster.')
     element_thickness: float = Field(
         0.001,
-        description=
-        ('Thickness of the structural element that is used to break building clusters.'
-         ))
+        description='Thickness of the structural element that is used to '
+        'break building clusters.')
 
-    def get_mode(self):
+    def get_mode(self) -> str:
         return 'buildings'
 
 

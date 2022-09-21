@@ -6,7 +6,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 from everett.manager import ConfigurationMissingError
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError,
                                                NotWritableError)
@@ -79,7 +79,8 @@ def progressbar(total_size: int, desc: str):
         unit='B',
         unit_scale=True,
         unit_divisor=1024,
-        mininterval=0.5)
+        mininterval=0.5,
+        delay=5)
 
 
 class S3FileSystem(FileSystem):

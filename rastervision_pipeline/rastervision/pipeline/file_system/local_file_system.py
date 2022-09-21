@@ -1,7 +1,10 @@
 import os
+import io
 import shutil
 from datetime import datetime, timezone
 import glob
+
+from tqdm.auto import tqdm
 
 from rastervision.pipeline.file_system import (FileSystem, NotReadableError)
 
@@ -35,6 +38,17 @@ def make_dir(path, check_empty=False, force_empty=False, use_dirname=False):
                     f'{directory} needs to be an empty directory!')
 
 
+def progressbar(file_obj, method: str, size: int, desc: str):
+    return tqdm.wrapattr(
+        file_obj,
+        method,
+        total=size,
+        desc=desc,
+        bytes=True,
+        mininterval=0.5,
+        delay=5)
+
+
 class LocalFileSystem(FileSystem):
     """A FileSystem for interacting with the local file system."""
 
@@ -49,16 +63,26 @@ class LocalFileSystem(FileSystem):
     @staticmethod
     def read_str(file_uri: str) -> str:
         if not os.path.isfile(file_uri):
-            raise NotReadableError('Could not read {}'.format(file_uri))
-        with open(file_uri, 'r') as file_buffer:
-            return file_buffer.read()
+            raise NotReadableError(f'Could not read {file_uri}')
+
+        file_size = os.path.getsize(file_uri)
+        with open(file_uri, 'r') as in_file, io.StringIO() as str_buffer:
+            with progressbar(
+                    in_file, 'read', file_size, desc='Reading file') as bar:
+                shutil.copyfileobj(bar, str_buffer)
+            return str_buffer.getvalue()
 
     @staticmethod
     def read_bytes(file_uri: str) -> bytes:
         if not os.path.isfile(file_uri):
-            raise NotReadableError('Could not read {}'.format(file_uri))
-        with open(file_uri, 'rb') as file_buffer:
-            return file_buffer.read()
+            raise NotReadableError(f'Could not read {file_uri}')
+
+        file_size = os.path.getsize(file_uri)
+        with open(file_uri, 'rb') as in_file, io.BytesIO() as byte_buffer:
+            with progressbar(
+                    in_file, 'read', file_size, desc='Reading file') as bar:
+                shutil.copyfileobj(bar, byte_buffer)
+            return byte_buffer.getvalue()
 
     @staticmethod
     def write_str(file_uri: str, data: str) -> None:

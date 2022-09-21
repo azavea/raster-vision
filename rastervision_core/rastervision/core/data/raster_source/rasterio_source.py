@@ -1,52 +1,47 @@
+from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple, Union
 import logging
-import math
 import os
-from pyproj import Transformer
 import subprocess
-from decimal import Decimal
-from tempfile import mkdtemp
-from typing import Optional, Tuple
 
 import numpy as np
 import rasterio
 from rasterio.enums import (ColorInterp, MaskFlags, Resampling)
 
+from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import download_if_needed
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
-from rastervision.core.data.raster_source import (RasterSource, CropOffsets)
-from rastervision.core.data import (ActivateMixin, ActivationError)
+from rastervision.core.data.raster_source import RasterSource
+from rastervision.core.data.utils import listify_uris
+
+if TYPE_CHECKING:
+    from rasterio.io import DatasetReader
+    from rastervision.core.data import RasterTransformer
 
 log = logging.getLogger(__name__)
-wgs84 = 'epsg:4326'
-meters_per_degree = 111319.5
 
 
-def build_vrt(vrt_path, image_paths):
+def build_vrt(vrt_path: str, image_paths: List[str]) -> None:
     """Build a VRT for a set of TIFF files."""
+    log.info('Building VRT...')
     cmd = ['gdalbuildvrt', vrt_path]
     cmd.extend(image_paths)
     subprocess.run(cmd)
 
 
-def download_and_build_vrt(image_uris, tmp_dir):
-    log.info('Building VRT...')
-    image_paths = [download_if_needed(uri) for uri in image_uris]
-    image_path = os.path.join(tmp_dir, 'index.vrt')
-    build_vrt(image_path, image_paths)
-    return image_path
-
-
-def stream_and_build_vrt(images_uris, tmp_dir):
-    log.info('Building VRT...')
-    image_paths = images_uris
-    image_path = os.path.join(tmp_dir, 'index.vrt')
-    build_vrt(image_path, image_paths)
-    return image_path
+def download_and_build_vrt(image_uris: List[str],
+                           vrt_dir: str,
+                           stream: bool = False) -> str:
+    if not stream:
+        image_uris = [download_if_needed(uri) for uri in image_uris]
+    vrt_path = os.path.join(vrt_dir, 'index.vrt')
+    build_vrt(vrt_path, image_uris)
+    return vrt_path
 
 
 def load_window(
-        image_dataset,
+        image_dataset: 'DatasetReader',
+        bands: Optional[Union[int, Sequence[int]]] = None,
         window: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         is_masked: bool = False,
         out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
@@ -54,6 +49,8 @@ def load_window(
 
     Args:
         image_dataset: a Rasterio dataset.
+        bands (Optional[Union[int, Sequence[int]]]): Band index or indices to
+            read. Must be 1-indexed.
         window (Optional[Tuple[Tuple[int, int], Tuple[int, int]]]):
             ((row_start, row_stop), (col_start, col_stop)) or
             ((y_min, y_max), (x_min, x_max)). If None, reads the entire raster.
@@ -67,25 +64,30 @@ def load_window(
         np.ndarray of shape (height, width, channels) where channels is the
             number of channels in the image_dataset.
     """
+    if bands is not None:
+        bands = tuple(bands)
+    im = image_dataset.read(
+        indexes=bands,
+        window=window,
+        boundless=True,
+        masked=is_masked,
+        out_shape=out_shape,
+        resampling=Resampling.bilinear)
+
     if is_masked:
-        im = image_dataset.read(
-            window=window,
-            boundless=True,
-            masked=True,
-            out_shape=out_shape,
-            resampling=Resampling.bilinear)
         im = np.ma.filled(im, fill_value=0)
-    else:
-        im = image_dataset.read(
-            window=window,
-            boundless=True,
-            out_shape=out_shape,
-            resampling=Resampling.bilinear)
 
     # Handle non-zero NODATA values by setting the data to 0.
-    for channel, nodata in enumerate(image_dataset.nodatavals):
-        if nodata is not None and nodata != 0:
-            im[channel, im[channel] == nodata] = 0
+    if bands is None:
+        for channel, nodataval in enumerate(image_dataset.nodatavals):
+            if nodataval is not None and nodataval != 0:
+                im[channel, im[channel] == nodataval] = 0
+    else:
+        for channel, src_band in enumerate(bands):
+            src_band_0_indexed = src_band - 1
+            nodataval = image_dataset.nodatavals[src_band_0_indexed]
+            if nodataval is not None and nodataval != 0:
+                im[channel, im[channel] == nodataval] = 0
 
     im = np.transpose(im, axes=[1, 2, 0])
     return im
@@ -111,213 +113,223 @@ def fill_overflow(extent: Box,
     return arr
 
 
-class RasterioSource(ActivateMixin, RasterSource):
+def get_channel_order_from_dataset(
+        image_dataset: 'DatasetReader') -> List[int]:
+    colorinterp = image_dataset.colorinterp
+    if colorinterp:
+        channel_order = [
+            i for i, color_interp in enumerate(colorinterp)
+            if color_interp != ColorInterp.alpha
+        ]
+    else:
+        channel_order = list(range(0, image_dataset.count))
+    return channel_order
+
+
+class RasterioSource(RasterSource):
+    """A rasterio-based RasterSource.
+
+    This RasterSource can read any file that can be opened by Rasterio/GDAL
+    including georeferenced formats such as GeoTIFF and non-georeferenced
+    formats such as JPG. See https://www.gdal.org/formats_list.html for more
+    details.
+
+    If channel_order is None, then use non-alpha channels. This also sets any
+    masked or NODATA pixel values to be zeros.
+    """
+
     def __init__(self,
-                 uris,
-                 raster_transformers=[],
-                 tmp_dir: Optional[str] = None,
-                 allow_streaming=False,
-                 channel_order=None,
-                 x_shift=0.0,
-                 y_shift=0.0,
-                 extent_crop: Optional[CropOffsets] = None):
+                 uris: Union[str, List[str]],
+                 raster_transformers: List['RasterTransformer'] = [],
+                 allow_streaming: bool = False,
+                 channel_order: Optional[Sequence[int]] = None,
+                 extent: Optional[Box] = None,
+                 tmp_dir: Optional[str] = None):
         """Constructor.
 
-        This RasterSource can read any file that can be opened by Rasterio/GDAL
-        including georeferenced formats such as GeoTIFF and non-georeferenced formats
-        such as JPG. See https://www.gdal.org/formats_list.html for more details.
-
-        If channel_order is None, then use non-alpha channels. This also sets any
-        masked or NODATA pixel values to be zeros.
-
         Args:
-            channel_order: list of indices of channels to extract from raw imagery
-            extent_crop (CropOffsets, optional): Relative
-                offsets (top, left, bottom, right) for cropping the extent.
-                Useful for using splitting a scene into different datasets.
-                Defaults to None i.e. no cropping.
+            uris (Union[str, List[str]]): One or more URIs of images. If more
+                than one, the images will be mosaiced together using GDAL.
+            raster_transformers (List['RasterTransformer']): RasterTransformers
+                to use to trasnform chips after they are read.
+            allow_streaming (bool): If True, read data without downloading the
+                entire file first. Defaults to False.
+            channel_order (Optional[Sequence[int]]): List of indices of
+                channels to extract from raw imagery. Can be a subset of the
+                available channels. If None, all channels available in the
+                image will be read. Defaults to None.
+            extent (Optional[Box], optional): Use-specified extent. If None,
+                the full extent of the raster source is used.
+            tmp_dir (Optional[str]): Directory to use for storing the VRT
+                (needed if multiple uris or allow_streaming=True). If None,
+                will be auto-generated. Defaults to None.
         """
-        self.uris = uris
-        self.tmp_dir = mkdtemp() if tmp_dir is None else tmp_dir
-        self.image_dataset = None
-        self.x_shift = x_shift
-        self.y_shift = y_shift
-        self.do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
+        self.uris = listify_uris(uris)
         self.allow_streaming = allow_streaming
-        self.extent_crop = extent_crop
 
-        num_channels = None
+        self.tmp_dir = tmp_dir
+        if self.tmp_dir is None:
+            self._tmp_dir = rv_config.get_tmp_dir()
+            self.tmp_dir = self._tmp_dir.name
 
-        # Activate in order to get information out of the raster
-        with self.activate():
-            num_channels = self.image_dataset.count
-            if channel_order is None:
-                colorinterp = self.image_dataset.colorinterp
-                if colorinterp:
-                    channel_order = [
-                        i for i, color_interp in enumerate(colorinterp)
-                        if color_interp != ColorInterp.alpha
-                    ]
-                else:
-                    channel_order = list(range(0, num_channels))
-            self.validate_channel_order(channel_order, num_channels)
+        self.imagery_path = self.download_data(
+            self.tmp_dir, stream=self.allow_streaming)
+        self.image_dataset = rasterio.open(self.imagery_path)
+        self._crs_transformer = RasterioCRSTransformer.from_dataset(
+            self.image_dataset)
+        self._dtype = None
 
-            mask_flags = self.image_dataset.mask_flag_enums
-            self.is_masked = any(
-                [m for m in mask_flags if m != MaskFlags.all_valid])
+        num_channels_raw = self.image_dataset.count
+        if channel_order is None:
+            channel_order = get_channel_order_from_dataset(self.image_dataset)
+        self.bands_to_read = np.array(channel_order, dtype=int) + 1
 
-            self.height = self.image_dataset.height
-            self.width = self.image_dataset.width
+        # number of output channels
+        self._num_channels = None
+        if len(raster_transformers) == 0:
+            self._num_channels = len(self.bands_to_read)
 
-            # Get 1x1 chip and apply raster transformers to test dtype.
-            test_chip = self.get_raw_chip(Box.make_square(0, 0, 1))
-            test_chip = test_chip[:, :, channel_order]
-            for transformer in raster_transformers:
-                test_chip = transformer.transform(test_chip, channel_order)
-            self.dtype = test_chip.dtype
+        mask_flags = self.image_dataset.mask_flag_enums
+        self.is_masked = any(
+            [m for m in mask_flags if m != MaskFlags.all_valid])
 
-            self._set_crs_transformer()
+        if extent is None:
+            height = self.image_dataset.height
+            width = self.image_dataset.width
+            extent = Box(0, 0, height, width)
 
-        super().__init__(channel_order, num_channels, raster_transformers)
+        super().__init__(
+            channel_order,
+            num_channels_raw,
+            raster_transformers=raster_transformers,
+            extent=extent)
 
-    def _download_data(self, tmp_dir):
+    @property
+    def num_channels(self) -> int:
+        """Needed since transformers can change output channels.
+
+        Unlike the parent class, RasterioSource applies channel_order (via
+        bands_to_read) before raster_transformers. So the number of output
+        channels is not guaranteed to be equal to len(channel_order).
+        """
+        if self._num_channels is None:
+            self._set_info_from_chip()
+        return self._num_channels
+
+    @property
+    def dtype(self) -> Tuple[int, int, int]:
+        if self._dtype is None:
+            self._set_info_from_chip()
+        return self._dtype
+
+    @property
+    def crs_transformer(self) -> RasterioCRSTransformer:
+        return self._crs_transformer
+
+    def _set_info_from_chip(self):
+        """Read 1x1 chip to get info not statically inferrable."""
+        test_chip = self.get_chip(Box(0, 0, 1, 1))
+        self._dtype = test_chip.dtype
+        self._num_channels = test_chip.shape[-1]
+
+    def download_data(self, tmp_dir: str, stream: bool = False) -> str:
         """Download any data needed for this Raster Source.
 
         Return a single local path representing the image or a VRT of the data.
         """
         if len(self.uris) == 1:
-            if self.allow_streaming:
+            if stream:
                 return self.uris[0]
             else:
                 return download_if_needed(self.uris[0])
         else:
-            if self.allow_streaming:
-                return stream_and_build_vrt(self.uris, tmp_dir)
-            else:
-                return download_and_build_vrt(self.uris, tmp_dir)
-
-    def get_crs_transformer(self):
-        return self.crs_transformer
-
-    def get_extent(self):
-        h, w = self.height, self.width
-        if self.extent_crop is not None:
-            skip_top, skip_left, skip_bottom, skip_right = self.extent_crop
-            ymin, xmin = int(h * skip_top), int(w * skip_left)
-            ymax, xmax = h - int(h * skip_bottom), w - int(w * skip_right)
-            return Box(ymin, xmin, ymax, xmax)
-        return Box(0, 0, h, w)
-
-    def get_dtype(self):
-        """Return the numpy.dtype of this scene"""
-        return self.dtype
+            return download_and_build_vrt(self.uris, tmp_dir, stream=stream)
 
     def _get_chip(self,
                   window: Box,
+                  bands: Optional[Sequence[int]] = None,
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
-        if self.image_dataset is None:
-            raise ActivationError('RasterSource must be activated before use')
-        shifted_window = self._get_shifted_window(window)
+        window = window.to_extent_coords(self.extent)
         chip = load_window(
             self.image_dataset,
-            window=shifted_window.rasterio_format(),
+            bands=bands,
+            window=window.rasterio_format(),
             is_masked=self.is_masked,
             out_shape=out_shape)
-        if self.extent_crop is not None:
-            chip = fill_overflow(self.get_extent(), window, chip)
+        chip = fill_overflow(self.extent, window, chip)
         return chip
 
-    def get_chip(self, window,
+    def get_chip(self,
+                 window: Box,
+                 bands: Optional[Union[Sequence[int], slice]] = None,
                  out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
-        chip = self._get_chip(window, out_shape=out_shape)
-
-        if self.channel_order:
-            chip = chip[:, :, self.channel_order]
-
-        for transformer in self.raster_transformers:
-            chip = transformer.transform(chip, self.channel_order)
-
-        return chip
-
-    def _activate(self):
-        self.imagery_path = self._download_data(self.tmp_dir)
-        self.image_dataset = rasterio.open(self.imagery_path)
-        self._set_crs_transformer()
-
-    def _set_crs_transformer(self):
-        self.crs_transformer = RasterioCRSTransformer.from_dataset(
-            self.image_dataset)
-        crs = self.image_dataset.crs
-        self.to_wgs84 = None
-        self.from_wgs84 = None
-        if crs and self.do_shift:
-            self.to_wgs84 = Transformer.from_crs(
-                crs.wkt, wgs84, always_xy=True)
-            self.from_wgs84 = Transformer.from_crs(
-                wgs84, crs.wkt, always_xy=True)
-
-    def _deactivate(self):
-        if self.image_dataset is not None:
-            self.image_dataset.close()
-            self.image_dataset = None
-
-    def _get_shifted_window(self, window):
-        do_shift = self.x_shift != 0.0 or self.y_shift != 0.0
-        if do_shift:
-            ymin, xmin, ymax, xmax = window.tuple_format()
-            width = window.get_width()
-            height = window.get_height()
-
-            # Transform image coordinates into world coordinates
-            transform = self.image_dataset.transform
-            xmin2, ymin2 = transform * (xmin, ymin)
-
-            # Transform from world coordinates to WGS84
-            if self.to_wgs84:
-                lon, lat = self.to_wgs84.transform(xmin2, ymin2)
-            else:
-                lon, lat = xmin2, ymin2
-
-            # Shift.  This is performed by computing the shifts in
-            # meters to shifts in degrees.  Those shifts are then
-            # applied to the WGS84 coordinate.
-            #
-            # Courtesy of https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters  # noqa
-            lat_radians = math.pi * lat / 180.0
-            dlon = Decimal(self.x_shift) / Decimal(
-                meters_per_degree * math.cos(lat_radians))
-            dlat = Decimal(self.y_shift) / Decimal(meters_per_degree)
-            lon = float(Decimal(lon) + dlon)
-            lat = float(Decimal(lat) + dlat)
-
-            # Transform from WGS84 to world coordinates
-            if self.from_wgs84:
-                xmin3, ymin3 = self.from_wgs84.transform(lon, lat)
-            else:
-                xmin3, ymin3 = lon, lat
-
-            # Trasnform from world coordinates back into image coordinates
-            xmin4, ymin4 = ~transform * (xmin3, ymin3)
-
-            window = Box(ymin4, xmin4, ymin4 + height, xmin4 + width)
-        return window
-
-    def get_transformed_window(self, window: Box,
-                               inverse: bool = False) -> Box:
-        """Apply the CRS transform to the window.
+        """Read a chip specified by a window from the file.
 
         Args:
-            window (Box): A window in pixel coordinates.
+            window (Box): Bounding box of chip in pixel coordinates.
+            bands (Optional[Union[Sequence[int], slice]], optional): Subset of
+                bands to read. Note that this will be applied on top of the
+                channel_order (if specified). So if this is an RGB image and
+                channel_order=[2, 1, 0], then using bands=[0] will return the
+                B-channel. Defaults to None.
+            out_shape (Optional[Tuple[int, ...]], optional): (hieght, width) of
+            the output chip. If None, no resizing is done. Defaults to None.
 
         Returns:
-            Box: A window in world coordinates.
+            np.ndarray: A chip of shape (height, width, channels).
         """
-        if inverse:
-            tf = self.crs_transformer.map_to_pixel
+        bands_to_read = self.bands_to_read
+        if bands is not None:
+            bands_to_read = bands_to_read[bands]
+        chip = self._get_chip(window, out_shape=out_shape, bands=bands_to_read)
+        for transformer in self.raster_transformers:
+            chip = transformer.transform(chip, self.channel_order)
+        return chip
+
+    def __getitem__(self, key: Any) -> 'np.ndarray':
+        if isinstance(key, Box):
+            return self.get_chip(key)
+        elif isinstance(key, slice):
+            key = [key]
+        elif isinstance(key, tuple):
+            pass
         else:
-            tf = self.crs_transformer.pixel_to_map
-        ymin, xmin, ymax, xmax = window
-        xmin, ymin = tf((xmin, ymin))
-        xmax, ymax = tf((xmax, ymax))
-        window = Box(ymin, xmin, ymax, xmax)
-        return window
+            raise TypeError('Unsupported key type.')
+
+        slices = list(key)
+        assert 1 <= len(slices) <= 3
+        assert all(s is not None for s in slices)
+        assert isinstance(slices[0], slice)
+        if len(slices) == 1:
+            h, = slices
+            w = slice(None, None)
+            c = None
+        elif len(slices) == 2:
+            assert isinstance(slices[1], slice)
+            h, w = slices
+            c = None
+        else:
+            h, w, c = slices
+
+        if any(x is not None and x < 0
+               for x in [h.start, h.stop, w.start, w.stop]):
+            raise NotImplementedError()
+
+        ymin, xmin, ymax, xmax = self.extent
+        _ymin = 0 if h.start is None else h.start
+        _xmin = 0 if w.start is None else w.start
+        _ymax = ymax if h.stop is None else h.stop
+        _xmax = xmax if w.stop is None else w.stop
+        window = Box(_ymin, _xmin, _ymax, _xmax)
+
+        out_shape = None
+        if h.step is not None or w.step is not None:
+            out_h, out_w = window.size
+            if h.step is not None:
+                out_h //= h.step
+            if w.step is not None:
+                out_w //= w.step
+            out_shape = (int(out_h), int(out_w))
+
+        chip = self.get_chip(window, bands=c, out_shape=out_shape)
+        return chip

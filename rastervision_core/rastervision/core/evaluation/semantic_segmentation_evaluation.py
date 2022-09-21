@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING, Any, Iterable, List, Union
+from typing import TYPE_CHECKING
 import logging
-import json
 
 from sklearn.metrics import confusion_matrix
 import numpy as np
@@ -9,22 +8,10 @@ from rastervision.core.evaluation import ClassEvaluationItem
 from rastervision.core.evaluation import ClassificationEvaluation
 
 if TYPE_CHECKING:
-    from rastervision.core.data import (
-        ClassConfig, SemanticSegmentationLabels, VectorOutputConfig)
+    from rastervision.core.data import (ClassConfig,
+                                        SemanticSegmentationLabels)
 
 log = logging.getLogger(__name__)
-
-
-def is_geojson(data: Any) -> bool:
-    if isinstance(data, dict):
-        return True
-    else:
-        try:
-            json.loads(data)
-            retval = True
-        except ValueError:
-            retval = False
-        return retval
 
 
 class SemanticSegmentationEvaluation(ClassificationEvaluation):
@@ -53,62 +40,6 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
                 conf_mat=self.conf_mat,
                 class_id=class_id,
                 class_name=class_name)
-            self.class_to_eval_item[class_id] = eval_item
-
-        self.compute_avg()
-
-    def compute_vector(self, gt: Union[str, dict],
-                       preds: Iterable[Union[str, dict]],
-                       vector_outputs: Iterable['VectorOutputConfig']) -> None:
-        """Compute evaluation over vector predictions.
-
-        Args:
-            gt (Union[str, dict]): Ground-truth GeoJSON. Either a string
-                (containing unparsed GeoJSON or a file name), or a dictionary
-                containing parsed GeoJSON.
-            preds (Iterable[Union[str, dict]]): Prediction GeoJSONs. Either a
-                string (containing unparsed GeoJSON or a file name), or a
-                dictionary containing parsed GeoJSON.
-            vector_outputs (Iterable[VectorOutputConfig]): VectorOutputConfig's
-                corresponding to each prediction in preds.
-        """
-        import mask_to_polygons.vectorification as vectorification
-        import mask_to_polygons.processing.score as score
-
-        # Ground truth as list of geometries
-        def get_geoms(x) -> List[dict]:
-            if is_geojson(x):
-                _x = x
-                if 'features' in _x.keys():
-                    _x = _x['features']
-                geoms = []
-                for feature in _x:
-                    if 'geometry' in feature.keys():
-                        geoms.append(feature['geometry'])
-                    else:
-                        geoms.append(feature)
-            else:
-                geoms = vectorification.geometries_from_geojson(x)
-
-            return geoms
-
-        gt = get_geoms(gt)
-        if len(gt) == 0:
-            return
-
-        for pred, vo in zip(preds, vector_outputs):
-            pred = get_geoms(pred)
-            if len(pred) == 0:
-                continue
-            class_id = vo.class_id
-            results = score.spacenet(pred, gt)
-            eval_item = ClassEvaluationItem(
-                class_id=class_id,
-                class_name=self.class_config.names[class_id],
-                tp=results['tp'],
-                fp=results['fp'],
-                fn=results['fn'],
-                mode=vo.get_mode())
             self.class_to_eval_item[class_id] = eval_item
 
         self.compute_avg()

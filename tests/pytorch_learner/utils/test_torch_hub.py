@@ -4,26 +4,21 @@ from tempfile import TemporaryDirectory
 from os.path import join, exists
 from os import makedirs
 
-import torch
 from torch import nn
 
 from rastervision.pytorch_learner.utils.torch_hub import (
     _remove_dir, _repo_name_to_dir_name, _uri_to_dir_name,
     get_hubconf_dir_from_cfg, torch_hub_load_github, torch_hub_load_local,
-    torch_hub_load_uri, patch_torch_hub)
+    torch_hub_load_uri)
 from rastervision.pytorch_learner import ExternalModuleConfig
 
 
 class TestTorchHubUtils(unittest.TestCase):
-    def assertNoError(self, fn: Callable, msg=''):
+    def assertNoError(self, fn: Callable, msg: str = ''):
         try:
             fn()
         except Exception:
             self.fail(msg)
-
-    def test_patch(self):
-        patch_torch_hub()
-        self.assertNoError(torch.hub._validate_not_a_forked_repo)
 
     def test_remove_dir(self):
         with TemporaryDirectory(dir='/opt/data/tmp') as tmp_dir:
@@ -33,9 +28,9 @@ class TestTorchHubUtils(unittest.TestCase):
             self.assertFalse(exists(dir_to_be_removed))
 
     def test_repo_name_to_dir_name(self):
-        repo_name = 'AdeelH/pytorch-fpn:0.2'
+        repo_name = 'AdeelH/pytorch-fpn:0.3'
         dir_name = _repo_name_to_dir_name(repo_name)
-        self.assertEqual(dir_name, 'AdeelH_pytorch-fpn_0.2')
+        self.assertEqual(dir_name, 'AdeelH_pytorch-fpn_0.3')
 
     def test_uri_to_dir_name(self):
         uri = 's3://some/path/to/repo.zip'
@@ -45,7 +40,7 @@ class TestTorchHubUtils(unittest.TestCase):
     def test_get_hubconf_dir_from_cfg(self):
         # config using a github repo, with a name
         cfg_repo_w_name = ExternalModuleConfig(
-            github_repo='AdeelH/pytorch-fpn:0.2',
+            github_repo='AdeelH/pytorch-fpn:0.3',
             name='fpn',
             entrypoint='make_fpn_resnet')
         dir_name = get_hubconf_dir_from_cfg(cfg_repo_w_name)
@@ -53,9 +48,9 @@ class TestTorchHubUtils(unittest.TestCase):
 
         # config using a uri, without a name
         cfg_repo_wo_name = ExternalModuleConfig(
-            github_repo='AdeelH/pytorch-fpn:0.2', entrypoint='make_fpn_resnet')
+            github_repo='AdeelH/pytorch-fpn:0.3', entrypoint='make_fpn_resnet')
         dir_name = get_hubconf_dir_from_cfg(cfg_repo_wo_name)
-        self.assertEqual(dir_name, 'AdeelH_pytorch-fpn_0.2')
+        self.assertEqual(dir_name, 'AdeelH_pytorch-fpn_0.3')
 
         # config using a github repo, with a name
         cfg_uri_w_name = ExternalModuleConfig(

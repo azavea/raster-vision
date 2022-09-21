@@ -190,23 +190,21 @@ def test_model_bundle_results(pipeline, test_id: str, test_cfg: dict,
         image_uri = scenes_to_uris[scene_cfg.id]
         predictor.predict([image_uri], predictor_label_store_uri)
 
-        extent = scene.raster_source.get_extent()
-        crs_transformer = scene.raster_source.get_crs_transformer()
+        extent = scene.raster_source.extent
+        crs_transformer = scene.raster_source.crs_transformer
         predictor_label_store = scene_cfg.label_store.copy()
         predictor_label_store.uri = predictor_label_store_uri
         predictor_label_store = predictor_label_store.build(
             pipeline.dataset.class_config, crs_transformer, extent, tmp_dir)
 
-        from rastervision.core.data import ActivateMixin
-        with ActivateMixin.compose(scene, predictor_label_store):
-            bundle_labels = predictor_label_store.get_labels()
-            predict_stage_labels = scene.label_store.get_labels()
-            if bundle_labels != predict_stage_labels:
-                e = TestError(test_id,
-                              ('Predictor did not produce the same labels '
-                               'as the Predict command'),
-                              'for scene {}'.format(scene_cfg.id))
-                errors.append(e)
+        bundle_labels = predictor_label_store.get_labels()
+        predict_stage_labels = scene.label_store.get_labels()
+        if bundle_labels != predict_stage_labels:
+            e = TestError(test_id,
+                          ('Predictor did not produce the same labels '
+                           'as the Predict command'),
+                          f'for scene {scene_cfg.id}')
+            errors.append(e)
 
     return errors
 

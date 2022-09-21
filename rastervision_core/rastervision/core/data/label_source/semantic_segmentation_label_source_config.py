@@ -31,5 +31,4 @@ class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
                                           extent)
         else:
             rs = self.raster_source.build(tmp_dir)
-        return SemanticSegmentationLabelSource(
-            rs, class_config.get_null_class_id())
+        return SemanticSegmentationLabelSource(rs, class_config.null_class_id)

@@ -1,12 +1,11 @@
 import unittest
-from pydantic import ValidationError
 
 import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.data import (
-    RasterioSourceConfig, MultiRasterSourceConfig, SubRasterSourceConfig,
-    CropOffsets, ReclassTransformerConfig, CastTransformerConfig)
+    RasterioSourceConfig, MultiRasterSourceConfig, ReclassTransformerConfig,
+    CastTransformerConfig)
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path
@@ -15,17 +14,12 @@ from tests import data_file_path
 def make_cfg(img_path: str = 'small-rgb-tile.tif',
              **kwargs) -> MultiRasterSourceConfig:
     img_path = data_file_path(img_path)
-    r_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
-    g_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
-    b_source = RasterioSourceConfig(uris=[img_path], channel_order=[0])
+    r_source = RasterioSourceConfig(uris=[img_path])
+    g_source = RasterioSourceConfig(uris=[img_path])
+    b_source = RasterioSourceConfig(uris=[img_path])
 
     cfg = MultiRasterSourceConfig(
-        raster_sources=[
-            SubRasterSourceConfig(raster_source=r_source, target_channels=[0]),
-            SubRasterSourceConfig(raster_source=g_source, target_channels=[1]),
-            SubRasterSourceConfig(raster_source=b_source, target_channels=[2])
-        ],
-        **kwargs)
+        raster_sources=[r_source, g_source, b_source], **kwargs)
     return cfg
 
 
@@ -44,15 +38,10 @@ def make_cfg_diverse(diff_dtypes: bool = False,
             [CastTransformerConfig(to_dtype='int')],
         ]
     rs_cfgs = [
-        RasterioSourceConfig(uris=[path], channel_order=[0], transformers=tfs)
+        RasterioSourceConfig(uris=[path], transformers=tfs)
         for path, tfs in zip(img_paths, transformers)
     ]
-    cfg = MultiRasterSourceConfig(
-        raster_sources=[
-            SubRasterSourceConfig(raster_source=rs_cfg, target_channels=[i])
-            for i, rs_cfg in enumerate(rs_cfgs)
-        ],
-        **kwargs)
+    cfg = MultiRasterSourceConfig(raster_sources=rs_cfgs, **kwargs)
     return cfg
 
 
@@ -67,11 +56,11 @@ class TestMultiRasterSource(unittest.TestCase):
     def test_extent(self):
         cfg = make_cfg('small-rgb-tile.tif')
         rs = cfg.build(tmp_dir=self.tmp_dir)
-        extent = rs.get_extent()
-        h, w = extent.get_height(), extent.get_width()
-        ymin, xmin, ymax, xmax = extent
+        extent = rs.extent
+        h, w = extent.size
         self.assertEqual(h, 256)
         self.assertEqual(w, 256)
+        ymin, xmin, ymax, xmax = extent
         self.assertEqual(ymin, 0)
         self.assertEqual(xmin, 0)
         self.assertEqual(ymax, 256)
@@ -89,64 +78,32 @@ class TestMultiRasterSource(unittest.TestCase):
         primary_rs = rs.raster_sources[primary_source_idx]
         non_primary_rs = rs.raster_sources[non_primary_source_idx]
 
-        self.assertEqual(rs.get_extent(), primary_rs.get_extent())
-        self.assertNotEqual(rs.get_extent(), non_primary_rs.get_extent())
+        self.assertEqual(rs.extent, primary_rs.extent)
+        self.assertNotEqual(rs.extent, non_primary_rs.extent)
 
-        self.assertEqual(rs.get_dtype(), primary_rs.get_dtype())
-        self.assertNotEqual(rs.get_dtype(), non_primary_rs.get_dtype())
+        self.assertEqual(rs.dtype, primary_rs.dtype)
+        self.assertNotEqual(rs.dtype, non_primary_rs.dtype)
 
-        self.assertEqual(rs.get_crs_transformer().transform,
-                         primary_rs.get_crs_transformer().transform)
-        self.assertNotEqual(rs.get_crs_transformer(),
-                            non_primary_rs.get_crs_transformer())
+        self.assertEqual(rs.crs_transformer.transform,
+                         primary_rs.crs_transformer.transform)
+        self.assertNotEqual(rs.crs_transformer, non_primary_rs.crs_transformer)
 
-    def test_extent_crop(self):
-        f = 1 / 4
-        cfg_crop = make_cfg('small-rgb-tile.tif', extent_crop=(f, f, f, f))
+    def test_user_specified_extent(self):
+        # /wo user specified extent
+        cfg = make_cfg('small-rgb-tile.tif')
+        rs = cfg.build(tmp_dir=self.tmp_dir)
+        self.assertEqual(rs.extent, Box(0, 0, 256, 256))
+
+        # test validators
+        cfg = make_cfg('small-rgb-tile.tif', extent=(64, 64, 192, 192))
+        self.assertIsInstance(cfg.extent, Box)
+
+        # /w user specified extent
+        cfg_crop = make_cfg('small-rgb-tile.tif', extent=(64, 64, 192, 192))
         rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
 
         # test extent box
-        extent_crop = rs_crop.get_extent()
-        self.assertEqual(extent_crop.ymin, 64)
-        self.assertEqual(extent_crop.xmin, 64)
-        self.assertEqual(extent_crop.ymax, 192)
-        self.assertEqual(extent_crop.xmax, 192)
-
-        # test windows
-        windows = extent_crop.get_windows(64, 64)
-        self.assertEqual(windows[0].ymin, 64)
-        self.assertEqual(windows[0].xmin, 64)
-        self.assertEqual(windows[-1].ymax, 192)
-        self.assertEqual(windows[-1].xmax, 192)
-
-        # test CropOffsets class
-        cfg_crop = make_cfg(
-            'small-rgb-tile.tif',
-            extent_crop=CropOffsets(skip_top=.5, skip_right=.5))
-        rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
-        extent_crop = rs_crop.get_extent()
-
-        self.assertEqual(extent_crop.ymin, 128)
-        self.assertEqual(extent_crop.xmin, 0)
-        self.assertEqual(extent_crop.ymax, 256)
-        self.assertEqual(extent_crop.xmax, 128)
-
-        # test validation
-        extent_crop = CropOffsets(skip_top=.5, skip_bottom=.5)
-        self.assertRaises(
-            ValidationError,
-            lambda: make_cfg('small-rgb-tile.tif', extent_crop=extent_crop))
-
-        extent_crop = CropOffsets(skip_left=.5, skip_right=.5)
-        self.assertRaises(
-            ValidationError,
-            lambda: make_cfg('small-rgb-tile.tif', extent_crop=extent_crop))
-
-        # test extent_crop=None
-        try:
-            _ = make_cfg('small-rgb-tile.tif', extent_crop=None)  # noqa
-        except Exception:
-            self.fail('extent_crop=None caused an error.')
+        self.assertEqual(rs_crop.extent, Box(64, 64, 192, 192))
 
     def test_get_chip(self):
         # create a 3-channel raster from a 1-channel raster
@@ -164,14 +121,7 @@ class TestMultiRasterSource(unittest.TestCase):
             transformers=[ReclassTransformerConfig(mapping={100: 250})])
 
         cfg = MultiRasterSourceConfig(
-            raster_sources=[
-                SubRasterSourceConfig(
-                    raster_source=source_1, target_channels=[0]),
-                SubRasterSourceConfig(
-                    raster_source=source_2, target_channels=[1]),
-                SubRasterSourceConfig(
-                    raster_source=source_3, target_channels=[2])
-            ],
+            raster_sources=[source_1, source_2, source_3],
             channel_order=[2, 1, 0],
             transformers=[
                 ReclassTransformerConfig(mapping={
@@ -182,44 +132,39 @@ class TestMultiRasterSource(unittest.TestCase):
             ])
         rs = cfg.build(tmp_dir=self.tmp_dir)
 
-        with rs.activate():
-            window = Box(0, 0, 100, 100)
+        window = Box(0, 0, 100, 100)
 
-            # sub transformers and channel_order applied
-            sub_chips = rs._get_sub_chips(window, raw=False)
-            self.assertEqual(
-                tuple(c.mean() for c in sub_chips), (100, 175, 250))
-            # sub transformers, channel_order, and transformer applied
-            chip = rs.get_chip(window)
-            self.assertEqual(
-                tuple(chip.reshape(-1, 3).mean(axis=0)), (25, 17, 10))
+        # sub transformers and channel_order applied
+        sub_chips = rs._get_sub_chips(window, raw=False)
+        self.assertEqual(tuple(c.mean() for c in sub_chips), (100, 175, 250))
+        # sub transformers, channel_order, and transformer applied
+        chip = rs.get_chip(window)
+        self.assertEqual(tuple(chip.reshape(-1, 3).mean(axis=0)), (25, 17, 10))
 
-            # none of sub transformers, channel_order, and transformer applied
-            sub_chips = rs._get_sub_chips(window, raw=True)
-            self.assertEqual(
-                tuple(c.mean() for c in sub_chips), (100, 100, 100))
-            chip = rs._get_chip(window)
-            self.assertEqual(
-                tuple(chip.reshape(-1, 3).mean(axis=0)), (100, 100, 100))
+        # none of sub transformers, channel_order, and transformer applied
+        sub_chips = rs._get_sub_chips(window, raw=True)
+        self.assertEqual(tuple(c.mean() for c in sub_chips), (100, 100, 100))
+        chip = rs._get_chip(window)
+        self.assertEqual(
+            tuple(chip.reshape(-1, 3).mean(axis=0)), (100, 100, 100))
 
     def test_nonidentical_extents_and_resolutions(self):
         cfg = make_cfg_diverse(diff_dtypes=False)
         rs = cfg.build(tmp_dir=self.tmp_dir)
-        with rs.activate():
-            for get_chip_fn in [rs._get_chip, rs.get_chip]:
-                ch_1_only = get_chip_fn(Box(0, 0, 10, 10))
-                self.assertEqual(
-                    tuple(ch_1_only.reshape(-1, 3).mean(axis=0)), (100, 0, 0))
-                ch_2_only = get_chip_fn(Box(0, 600, 10, 600 + 10))
-                self.assertEqual(
-                    tuple(ch_2_only.reshape(-1, 3).mean(axis=0)), (0, 175, 0))
-                ch_3_only = get_chip_fn(Box(600, 0, 600 + 10, 10))
-                self.assertEqual(
-                    tuple(ch_3_only.reshape(-1, 3).mean(axis=0)), (0, 0, 250))
-                full_img = get_chip_fn(Box(0, 0, 600, 600))
-                self.assertEqual(set(np.unique(full_img[..., 0])), {100})
-                self.assertEqual(set(np.unique(full_img[..., 1])), {0, 175})
-                self.assertEqual(set(np.unique(full_img[..., 2])), {0, 250})
+        for get_chip_fn in [rs._get_chip, rs.get_chip]:
+            ch_1_only = get_chip_fn(Box(0, 0, 10, 10))
+            self.assertEqual(
+                tuple(ch_1_only.reshape(-1, 3).mean(axis=0)), (100, 0, 0))
+            ch_2_only = get_chip_fn(Box(0, 600, 10, 600 + 10))
+            self.assertEqual(
+                tuple(ch_2_only.reshape(-1, 3).mean(axis=0)), (0, 175, 0))
+            ch_3_only = get_chip_fn(Box(600, 0, 600 + 10, 10))
+            self.assertEqual(
+                tuple(ch_3_only.reshape(-1, 3).mean(axis=0)), (0, 0, 250))
+            full_img = get_chip_fn(Box(0, 0, 600, 600))
+            self.assertEqual(set(np.unique(full_img[..., 0])), {100})
+            self.assertEqual(set(np.unique(full_img[..., 1])), {0, 175})
+            self.assertEqual(set(np.unique(full_img[..., 2])), {0, 250})
 
 
 if __name__ == '__main__':

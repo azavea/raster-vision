@@ -160,7 +160,7 @@ After running an experiment, a **model bundle** is saved into ``$root_uri/bundle
 Semantic Segmentation: SpaceNet Vegas
 --------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/spacenet_vegas.py>`_ contains an example of doing semantic segmentation using the SpaceNet Vegas dataset which has labels in vector form. It allows for training a model to predict buildings or roads.  Note that for buildings, polygon output in the form of GeoJSON files will be saved to the ``predict`` directory alongside the GeoTIFF files. In addition, a vector evaluation file using SpaceNet metrics will be saved to the ``eval`` directory.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/spacenet_vegas.py>`_ contains an example of doing semantic segmentation using the SpaceNet Vegas dataset which has labels in vector form. It allows for training a model to predict buildings or roads.  Note that for buildings, polygon output in the form of GeoJSON files will be saved to the ``predict`` directory alongside the GeoTIFF files.
 
 Arguments:
 

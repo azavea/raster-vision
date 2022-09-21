@@ -1,96 +1,46 @@
-from typing import Sequence
-from pydantic import conint
+from pydantic import conint, conlist
 
-from rastervision.pipeline.config import (Config, register_config, Field,
-                                          ConfigError, validator)
+from rastervision.pipeline.config import (Field, register_config, validator)
 from rastervision.core.data.raster_source import (RasterSourceConfig,
                                                   MultiRasterSource)
 
 
-@register_config('sub_raster_source')
-class SubRasterSourceConfig(Config):
-    raster_source: RasterSourceConfig = Field(
-        ...,
-        description=
-        'A RasterSourceConfig that will provide a subset of the channels.')
-    target_channels: Sequence[conint(ge=0)] = Field(
-        ...,
-        description='Channel indices to send each of the channels in this '
-        'raster source to.')
-
-    @validator('target_channels')
-    def non_empty_target_channels(cls, v):
-        if len(v) == 0:
-            raise ConfigError('target_channels should be non-empty.')
-        return list(v)
-
-    def build(self, tmp_dir, use_transformers=True):
-        rs = self.raster_source.build(tmp_dir, use_transformers)
-        return rs
-
-
-def multi_raster_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
-    if version < 1:
-        cfg_dict['allow_different_extents'] = True
-    if version < 2:
+def multi_rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 1:
         # field renamed in version 2
-        cfg_dict['primary_source_idx'] = cfg_dict['crs_source']
-        del cfg_dict['crs_source']
+        cfg_dict['primary_source_idx'] = cfg_dict.get('crs_source', 0)
+        try:
+            del cfg_dict['crs_source']
+        except KeyError:
+            pass
     return cfg_dict
 
 
-@register_config(
-    'multi_raster_source', upgrader=multi_raster_source_config_upgrader)
+@register_config('multi_raster_source', upgrader=multi_rs_config_upgrader)
 class MultiRasterSourceConfig(RasterSourceConfig):
-    raster_sources: Sequence[SubRasterSourceConfig] = Field(
-        ..., description='List of SubRasterSourceConfigs to combine.')
-    force_same_dtype: bool = Field(
-        False,
-        description=
-        'Force all subchips to be of the same dtype as the first subchip.')
+    raster_sources: conlist(
+        RasterSourceConfig, min_items=1) = Field(
+            ..., description='List of RasterSourceConfig to combine.')
     primary_source_idx: conint(ge=0) = Field(
         0,
         description=
         'Index of the raster source whose CRS, dtype, and other attributes '
-        'will override those of the other raster sources.')
+        'will override those of the other raster sources. Defaults to 0.')
+    force_same_dtype: bool = Field(
+        False,
+        description='Force all subchips to be of the same dtype as the '
+        'primary_source_idx-th subchip.')
 
-    def get_raw_channel_order(self):
-        # concatenate all target_channels
-        channel_mappings = sum(
-            (rs.target_channels for rs in self.raster_sources), [])
-
-        # this will be used to index the channel dim of the
-        # concatenated array to achieve the channel mappings
-        raw_channel_order = [0] * len(channel_mappings)
-        for from_idx, to_idx in enumerate(channel_mappings):
-            raw_channel_order[to_idx] = from_idx
-
-        self.validate_channel_mappings(channel_mappings, raw_channel_order)
-
-        return raw_channel_order
-
-    def validate_channel_mappings(self, channel_mappings: Sequence[int],
-                                  raw_channel_order: Sequence[int]):
-        # validate completeness of mappings
-        src_inds = set(range(len(channel_mappings)))
-        tgt_inds = set(channel_mappings)
-        if src_inds != tgt_inds:
-            raise ConfigError('Missing mappings for some channels.')
-
-        # check compatibility with channel_order, if given
-        if self.channel_order:
-            if len(self.channel_order) != len(raw_channel_order):
-                raise ConfigError(
-                    f'Channel mappings ({raw_channel_order}) and '
-                    f'channel_order ({self.channel_order}) are incompatible.')
-
-    @validator('raster_sources')
-    def validate_raster_sources(cls, v):
-        if len(v) == 0:
-            raise ConfigError('raster_sources should be non-empty.')
+    @validator('primary_source_idx')
+    def validate_primary_source_idx(cls, v: int, values: dict):
+        raster_sources = values.get('raster_sources', [])
+        if not (0 <= v < len(raster_sources)):
+            raise IndexError('primary_source_idx must be in range '
+                             '[0, len(raster_sources)].')
         return v
 
-    def build(self, tmp_dir, use_transformers=True):
+    def build(self, tmp_dir: str,
+              use_transformers: bool = True) -> MultiRasterSource:
         if use_transformers:
             raster_transformers = [t.build() for t in self.transformers]
         else:
@@ -101,12 +51,11 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         ]
         multi_raster_source = MultiRasterSource(
             raster_sources=built_raster_sources,
-            raw_channel_order=self.get_raw_channel_order(),
+            primary_source_idx=self.primary_source_idx,
             force_same_dtype=self.force_same_dtype,
             channel_order=self.channel_order,
-            primary_source_idx=self.primary_source_idx,
             raster_transformers=raster_transformers,
-            extent_crop=self.extent_crop)
+            extent=self.extent)
         return multi_raster_source
 
     def update(self, pipeline=None, scene=None):

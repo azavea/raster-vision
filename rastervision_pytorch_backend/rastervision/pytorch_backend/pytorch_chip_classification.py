@@ -10,7 +10,7 @@ from rastervision.pytorch_learner.dataset import (
 from rastervision.core.data import ChipClassificationLabels
 
 if TYPE_CHECKING:
-    from torch import Tensor
+    import numpy as np
     from rastervision.core.data import Scene
     from rastervision.core.data_sample import DataSample
 
@@ -69,7 +69,7 @@ class PyTorchChipClassification(PyTorchLearnerBackend):
         ds = ClassificationSlidingWindowGeoDataset(
             scene, size=chip_sz, stride=stride, transform=base_tf)
 
-        predictions: Iterator[Tensor] = self.learner.predict_dataset(
+        predictions: Iterator['np.array'] = self.learner.predict_dataset(
             ds,
             raw_out=True,
             numpy_out=True,

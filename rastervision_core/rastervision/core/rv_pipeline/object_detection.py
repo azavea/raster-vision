@@ -27,9 +27,9 @@ def _make_chip_pos_windows(image_extent, label_store, chip_size):
         if box.tuple_format() not in done_boxes:
             # If this  object is bigger than the chip,
             # don't use this box.
-            if chip_size < box.get_width() or chip_size < box.get_height():
-                log.warning('Label is larger than chip size: {} '
-                            'Skipping this label'.format(box.tuple_format()))
+            if chip_size < box.width or chip_size < box.height:
+                log.warning(f'Label is larger than chip size: {box} '
+                            'Skipping this label.')
                 continue
 
             window = box.make_random_square_container(chip_size)
@@ -49,7 +49,7 @@ def _make_chip_pos_windows(image_extent, label_store, chip_size):
 def _make_label_pos_windows(image_extent, label_store, label_buffer):
     pos_windows = []
     for box in label_store.get_labels().get_boxes():
-        window = box.make_buffer(label_buffer, image_extent)
+        window = box.buffer(label_buffer, image_extent)
         pos_windows.append(window)
 
     return pos_windows
@@ -62,7 +62,7 @@ def make_pos_windows(image_extent, label_store, chip_size, window_method,
     if window_method == ObjectDetectionWindowMethod.label:
         return _make_label_pos_windows(image_extent, label_store, label_buffer)
     elif window_method == ObjectDetectionWindowMethod.image:
-        return [image_extent.make_copy()]
+        return [image_extent.copy()]
     else:
         raise Exception(
             'Window method: {} is cannot be handled.'.format(window_method))
@@ -75,7 +75,7 @@ def make_neg_windows(raster_source,
                      max_attempts,
                      filter_windows,
                      chip_nodata_threshold=1.):
-    extent = raster_source.get_extent()
+    extent = raster_source.extent
     neg_windows = []
     for _ in range(max_attempts):
         for _ in range(max_attempts):
@@ -111,12 +111,12 @@ def get_train_windows(scene, chip_opts, chip_size, chip_nodata_threshold=1.):
     if window_method == ObjectDetectionWindowMethod.sliding:
         stride = chip_size
         return list(
-            filter_windows((raster_source.get_extent().get_windows(
+            filter_windows((raster_source.extent.get_windows(
                 chip_size, stride))))
 
     # Make positive windows which contain labels.
     pos_windows = filter_windows(
-        make_pos_windows(raster_source.get_extent(), label_store, chip_size,
+        make_pos_windows(raster_source.extent, label_store, chip_size,
                          chip_opts.window_method, chip_opts.label_buffer))
     nb_pos_windows = len(pos_windows)
 

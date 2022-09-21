@@ -10,7 +10,8 @@ from typing import Optional, List
 
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import FileSystem
-from rastervision.pipeline.file_system.local_file_system import make_dir
+from rastervision.pipeline.file_system.local_file_system import (
+    LocalFileSystem, make_dir)
 
 log = logging.getLogger(__name__)
 
@@ -322,3 +323,25 @@ def unzip(zip_path: str, target_dir: str):
     make_dir(target_dir)
     with zipfile.ZipFile(zip_path, 'r') as zipf:
         zipf.extractall(target_dir)
+
+
+def is_local(uri: str) -> bool:
+    return FileSystem.get_file_system(uri) == LocalFileSystem
+
+
+def is_archive(uri: str) -> bool:
+    """Check if the URI's extension represents an archived file."""
+    formats = sum((fmts for _, fmts, _ in shutil.get_unpack_formats()), [])
+    return any(uri.endswith(fmt) for fmt in formats)
+
+
+def extract(uri: str,
+            target_dir: Optional[str] = None,
+            download_dir: Optional[str] = None) -> str:
+    """Extract a compressed file."""
+    if target_dir is None:
+        target_dir = rv_config.get_cache_dir()
+    make_dir(target_dir)
+    local_path = download_if_needed(uri, download_dir)
+    shutil.unpack_archive(local_path, target_dir)
+    return target_dir

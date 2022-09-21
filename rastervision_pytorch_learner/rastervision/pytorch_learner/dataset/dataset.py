@@ -105,16 +105,6 @@ class GeoDataset(AlbumentationsDataset):
                 pytorch tensors. Defaults to True.
         """
         self.scene = scene
-        # Scene requires its raster and label sources to be activated before
-        # they can be used. However, activating and deactivating for every read
-        # could have a large overhead.
-        #
-        # Instead, we would like the source to stay activated for the entire
-        # lifespan of this dataset. To achieve this, we set stay_activated=True
-        # when activating the scene, so that once the sources are activated,
-        # they will stay activated even when the context manager exits.
-        with self.scene.activate(stay_activated=True):
-            pass
 
         super().__init__(
             orig_dataset=scene,
@@ -179,8 +169,8 @@ class SlidingWindowGeoDataset(GeoDataset):
 
     def init_windows(self) -> None:
         """Pre-compute windows."""
-        windows = self.scene.raster_source.get_extent().get_windows(
-            chip_sz=self.size, stride=self.stride, padding=self.padding)
+        windows = self.scene.raster_source.extent.get_windows(
+            self.size, stride=self.stride, padding=self.padding)
         if len(self.scene.aoi_polygons) > 0:
             windows = Box.filter_by_aoi(windows, self.scene.aoi_polygons)
         self.windows = windows
@@ -300,7 +290,7 @@ class RandomWindowGeoDataset(GeoDataset):
         self.max_sample_attempts = max_sample_attempts
 
         # include padding in the extent
-        ymin, xmin, ymax, xmax = scene.raster_source.get_extent()
+        ymin, xmin, ymax, xmax = scene.raster_source.extent
         h_padding, w_padding = self.padding
         self.extent = (ymin, xmin, ymax + h_padding, xmax + w_padding)
 

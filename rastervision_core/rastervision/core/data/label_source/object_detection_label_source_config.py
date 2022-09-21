@@ -37,6 +37,7 @@ class ObjectDetectionLabelSourceConfig(LabelSourceConfig):
         super().update(pipeline, scene)
         self.vector_source.update(pipeline, scene)
 
-    def build(self, class_config, crs_transformer, extent, tmp_dir):
+    def build(self, class_config, crs_transformer, extent,
+              tmp_dir=None) -> ObjectDetectionLabelSource:
         vs = self.vector_source.build(class_config, crs_transformer)
         return ObjectDetectionLabelSource(vs, extent)

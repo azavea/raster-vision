@@ -10,8 +10,7 @@ import torch
 from rastervision.pipeline import rv_config
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
-    SubRasterSourceConfig, ReclassTransformerConfig, SceneConfig,
-    LabelSourceConfig)
+    ReclassTransformerConfig, SceneConfig, LabelSourceConfig)
 from rastervision.pytorch_learner import (
     RegressionModelConfig, SolverConfig, RegressionGeoDataConfig,
     GeoDataWindowConfig, RegressionLearnerConfig, RegressionPlotOptions)
@@ -37,11 +36,7 @@ def make_scene(num_channels: int, num_classes: int,
             ])
         rs_cfgs_img.append(rs_cfg)
     rs_cfg_img = MultiRasterSourceConfig(
-        raster_sources=[
-            SubRasterSourceConfig(raster_source=rs_cfg, target_channels=[i])
-            for i, rs_cfg in enumerate(rs_cfgs_img)
-        ],
-        channel_order=list(range(num_channels)))
+        raster_sources=rs_cfgs_img, channel_order=list(range(num_channels)))
 
     scene_cfg = SceneConfig(
         id=str(uuid4()),

@@ -55,11 +55,11 @@ def make_cc_geodataset(cls,
             RasterioSource for more details. Defaults to {}.
         label_vector_source_kw (dict, optional): Additional arguments to pass
             to the GeoJSONVectorSourceConfig used for label data, if
-            label_vector_uri is used. See docs for GeoJSONVectorSourceConfig
+            label_vector_uri is set. See docs for GeoJSONVectorSourceConfig
             for more details. Defaults to {}.
         label_source_kw (dict, optional): Additional arguments to pass
             to the ChipClassificationLabelSourceConfig used for label data, if
-            label_vector_uri is used. See docs for
+            label_vector_uri is set. See docs for
             ChipClassificationLabelSourceConfig for more details.
             Defaults to {}.
         **kwargs: All other keyword args are passed to the default constructor

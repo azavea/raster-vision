@@ -58,7 +58,7 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ['pyproj', 'h5py', 'osgeo', 'mask_to_polygons']
+MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools']

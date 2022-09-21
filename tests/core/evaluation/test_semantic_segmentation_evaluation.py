@@ -2,11 +2,10 @@ import unittest
 
 import numpy as np
 
-from rastervision.core.data import (
-    ClassConfig, SemanticSegmentationLabelSource, PolygonVectorOutputConfig)
+from rastervision.core.data import (ClassConfig,
+                                    SemanticSegmentationLabelSource)
 from rastervision.core.evaluation import SemanticSegmentationEvaluation
 from tests.core.data.mock_raster_source import MockRasterSource
-from tests import data_file_path
 
 
 class TestSemanticSegmentationEvaluation(unittest.TestCase):
@@ -14,7 +13,7 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         class_config = ClassConfig(names=['one', 'two'])
         class_config.update()
         class_config.ensure_null_class()
-        null_class_id = class_config.get_null_class_id()
+        null_class_id = class_config.null_class_id
 
         gt_array = np.zeros((4, 4, 1), dtype=np.uint8)
         gt_array[2, 2, 0] = 1
@@ -68,33 +67,6 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         np.testing.assert_array_equal(avg_conf_mat,
                                       np.array(eval.avg_item['conf_mat']))
         self.assertEqual(avg_recall, eval.avg_item['metrics']['recall'])
-
-    def test_vector_compute(self):
-        class_config = ClassConfig(names=['one', 'two'])
-        class_config.update()
-        class_config.ensure_null_class()
-
-        gt_uri = data_file_path('2-gt-polygons.geojson')
-        pred_uri = data_file_path('2-pred-polygons.geojson')
-
-        vo_cfg = PolygonVectorOutputConfig(class_id=0)
-
-        eval = SemanticSegmentationEvaluation(class_config)
-        eval.compute_vector(gt_uri, [pred_uri], vector_outputs=[vo_cfg])
-
-        # NOTE: The  two geojson files referenced  above contain three
-        # unique geometries total, each  file contains two geometries,
-        # and there is one geometry shared between the two.
-        tp = 1.0
-        fp = 1.0
-        fn = 1.0
-        precision = float(tp) / (tp + fp)
-        recall = float(tp) / (tp + fn)
-
-        eval_item = eval.class_to_eval_item[0]
-        self.assertAlmostEqual(precision, eval_item.precision)
-        self.assertAlmostEqual(recall, eval_item.recall)
-        self.assertEqual(eval_item.to_json()['mode'], 'polygons')
 
 
 if __name__ == '__main__':

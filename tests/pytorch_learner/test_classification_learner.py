@@ -11,9 +11,8 @@ from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
-    SubRasterSourceConfig, ReclassTransformerConfig, SceneConfig,
-    ChipClassificationLabelSourceConfig, GeoJSONVectorSourceConfig,
-    ClassInferenceTransformerConfig)
+    ReclassTransformerConfig, SceneConfig, ChipClassificationLabelSourceConfig,
+    GeoJSONVectorSourceConfig, ClassInferenceTransformerConfig)
 from rastervision.core.rv_pipeline import ChipClassificationConfig
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
 from rastervision.pytorch_learner import (
@@ -36,11 +35,7 @@ def make_scene(num_channels: int, num_classes: int,
             ])
         rs_cfgs_img.append(rs_cfg)
     rs_cfg_img = MultiRasterSourceConfig(
-        raster_sources=[
-            SubRasterSourceConfig(raster_source=rs_cfg, target_channels=[i])
-            for i, rs_cfg in enumerate(rs_cfgs_img)
-        ],
-        channel_order=list(range(num_channels)))
+        raster_sources=rs_cfgs_img, channel_order=list(range(num_channels)))
 
     geojson = {
         'type':

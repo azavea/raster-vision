@@ -28,6 +28,9 @@ from rastervision.pytorch_learner.utils import (
     deserialize_albumentation_transform, get_hubconf_dir_from_cfg,
     torch_hub_load_local, torch_hub_load_github, torch_hub_load_uri)
 
+if TYPE_CHECKING:
+    from rastervision.pytorch_learner.learner import Learner
+
 log = logging.getLogger(__name__)
 
 default_augmentors = ['RandomRotate90', 'HorizontalFlip', 'VerticalFlip']
@@ -35,9 +38,6 @@ augmentors = [
     'Blur', 'RandomRotate90', 'HorizontalFlip', 'VerticalFlip', 'GaussianBlur',
     'GaussNoise', 'RGBShift', 'ToGray'
 ]
-
-if TYPE_CHECKING:
-    from rastervision.pytorch_learner.learner import Learner  # noqa
 
 # types
 Proportion = confloat(ge=0, le=1)
@@ -1103,8 +1103,10 @@ class GeoDataWindowConfig(Config):
 
 @register_config('geo_data')
 class GeoDataConfig(DataConfig):
-    scene_dataset: SceneDatasetConfig
-    window_opts: Union[GeoDataWindowConfig, Dict[str, GeoDataWindowConfig]]
+    scene_dataset: Optional['SceneDatasetConfig'] = Field(None, description='')
+    window_opts: Union[GeoDataWindowConfig, Dict[str,
+                                                 GeoDataWindowConfig]] = Field(
+                                                     {}, description='')
 
     def __repr_args__(self):  # pragma: no cover
         ds = self.scene_dataset
@@ -1121,7 +1123,13 @@ class GeoDataConfig(DataConfig):
             values: dict
     ) -> Union[GeoDataWindowConfig, Dict[str, GeoDataWindowConfig]]:
         if isinstance(v, dict):
-            scene_dataset: SceneDatasetConfig = values.get('scene_dataset')
+            if len(v) == 0:
+                return v
+            scene_dataset: Optional['SceneDatasetConfig'] = values.get(
+                'scene_dataset')
+            if scene_dataset is None:
+                raise ConfigError('window_opts is a non-empty dict but '
+                                  'scene_dataset is None.')
             for s in scene_dataset.all_scenes:
                 if s.id not in v:
                     raise ConfigError(
@@ -1130,7 +1138,9 @@ class GeoDataConfig(DataConfig):
 
     @root_validator(skip_on_failure=True)
     def get_class_info_from_class_config_if_needed(cls, values: dict) -> dict:
-        if len(values['class_names']) == 0:
+        no_classes = len(values['class_names']) == 0
+        has_scene_dataset = values.get('scene_dataset') is not None
+        if no_classes and has_scene_dataset:
             class_config: ClassConfig = values['scene_dataset'].class_config
             class_config.update()
             values['class_names'] = class_config.names
@@ -1139,6 +1149,10 @@ class GeoDataConfig(DataConfig):
 
     def build_scenes(self, tmp_dir: str
                      ) -> Tuple[List[Scene], List[Scene], List[Scene]]:
+        """Build training, validation, and test scenes."""
+        if self.scene_dataset is None:
+            raise ValueError('Cannot build scenes if scene_dataset is None.')
+
         class_cfg = self.scene_dataset.class_config
         train_scenes = [
             s.build(class_cfg, tmp_dir, use_transformers=True)

@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional, Union
 from uuid import uuid4
 
-from rastervision.pipeline import rv_config
 from rastervision.core.data.utils import listify_uris, get_polygons_from_uris
 
 if TYPE_CHECKING:
@@ -74,9 +73,9 @@ def make_ss_scene(class_config: 'ClassConfig',
     image_uri = listify_uris(image_uri)
     raster_source = RasterioSource(uris=image_uri, **image_raster_source_kw)
 
-    crs_transformer = raster_source.get_crs_transformer()
-    extent = raster_source.get_extent()
-    null_class_id = class_config.get_null_class_id()
+    crs_transformer = raster_source.crs_transformer
+    extent = raster_source.extent
+    null_class_id = class_config.null_class_id
 
     label_raster_source = None
     if label_raster_uri is not None:
@@ -150,12 +149,12 @@ def make_cc_scene(class_config: 'ClassConfig',
             to the RasterioSource used for image data. See docs for
             RasterioSource for more details. Defaults to {}.
         label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSourceConfig used for label data, if 
-            label_vector_uri is used. See docs for GeoJSONVectorSourceConfig
+            to the GeoJSONVectorSourceConfig used for label data, if
+            label_vector_uri is set. See docs for GeoJSONVectorSourceConfig
             for more details. Defaults to {}.
         label_source_kw (dict, optional): Additional arguments to pass
             to the ChipClassificationLabelSourceConfig used for label data, if
-            label_vector_uri is used. See docs for
+            label_vector_uri is set. See docs for
             ChipClassificationLabelSourceConfig for more details.
             Defaults to {}.
         **kwargs: All other keyword args are passed to the default constructor
@@ -172,8 +171,8 @@ def make_cc_scene(class_config: 'ClassConfig',
     image_uri = listify_uris(image_uri)
     raster_source = RasterioSource(image_uri, **image_raster_source_kw)
 
-    crs_transformer = raster_source.get_crs_transformer()
-    extent = raster_source.get_extent()
+    crs_transformer = raster_source.crs_transformer
+    extent = raster_source.extent
 
     label_source = None
     if label_vector_uri is not None:
@@ -188,13 +187,11 @@ def make_cc_scene(class_config: 'ClassConfig',
             uri=label_vector_uri,
             ignore_crs_field=True,
             **label_vector_source_kw)
+        # use config to ensure required transformers are auto added
         label_source_cfg = ChipClassificationLabelSourceConfig(
             vector_source=geojson_cfg, **label_source_kw)
         label_source = label_source_cfg.build(
-            class_config,
-            crs_transformer,
-            extent=extent,
-            tmp_dir=rv_config.get_tmp_dir())
+            class_config, crs_transformer, extent=extent)
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(
@@ -238,13 +235,13 @@ def make_od_scene(class_config: 'ClassConfig',
             to the RasterioSource used for image data. See docs for
             RasterioSource for more details. Defaults to {}.
         label_vector_source_kw (dict, optional): Additional arguments to pass
-            to the GeoJSONVectorSourceConfig used for label data, if 
-            label_vector_uri is used. See docs for GeoJSONVectorSourceConfig
+            to the GeoJSONVectorSourceConfig used for label data, if
+            label_vector_uri is set. See docs for GeoJSONVectorSourceConfig
             for more details. Defaults to {}.
         label_source_kw (dict, optional): Additional arguments to pass
-            to the ChipClassificationLabelSourceConfig used for label data, if
-            label_vector_uri is used. See docs for
-            ChipClassificationLabelSourceConfig for more details.
+            to the ObjectDetectionLabelSourceConfig used for label data, if
+            label_vector_uri is set. See docs for
+            ObjectDetectionLabelSourceConfig for more details.
             Defaults to {}.
         **kwargs: All other keyword args are passed to the default constructor
             for this class.
@@ -260,8 +257,8 @@ def make_od_scene(class_config: 'ClassConfig',
     image_uri = listify_uris(image_uri)
     raster_source = RasterioSource(image_uri, **image_raster_source_kw)
 
-    crs_transformer = raster_source.get_crs_transformer()
-    extent = raster_source.get_extent()
+    crs_transformer = raster_source.crs_transformer
+    extent = raster_source.extent
 
     label_source = None
     if label_vector_uri is not None:
@@ -276,13 +273,11 @@ def make_od_scene(class_config: 'ClassConfig',
             uri=label_vector_uri,
             ignore_crs_field=True,
             **label_vector_source_kw)
+        # use config to ensure required transformers are auto added
         label_source_cfg = ObjectDetectionLabelSourceConfig(
             vector_source=geojson_cfg, **label_source_kw)
         label_source = label_source_cfg.build(
-            class_config,
-            crs_transformer,
-            extent=extent,
-            tmp_dir=rv_config.get_tmp_dir())
+            class_config, crs_transformer, extent=extent)
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(

@@ -2,6 +2,10 @@ from typing import TYPE_CHECKING, List
 from abc import ABC, abstractmethod
 import logging
 
+from shapely.ops import unary_union
+import geopandas as gpd
+
+from rastervision.core.box import Box
 from rastervision.core.data.utils import (
     remove_empty_features, split_multi_geometries, map_to_pixel_coords,
     pixel_to_map_coords, simplify_polygons, all_geoms_valid, geojson_to_geoms)
@@ -21,6 +25,8 @@ class VectorSource(ABC):
                  vector_transformers: List['VectorTransformer'] = []):
         self.crs_transformer = crs_transformer
         self.vector_transformers = vector_transformers
+        self._geojson = None
+        self._extent = None
 
     def get_geojson(self, to_map_coords: bool = False) -> dict:
         """Return transformed GeoJSON.
@@ -40,14 +46,17 @@ class VectorSource(ABC):
         Returns:
             dict in GeoJSON format
         """
-        geojson = self._get_geojson()
+        if self._geojson is not None:
+            return self._geojson
 
+        geojson = self._get_geojson()
         geojson = sanitize_geojson(
             geojson, self.crs_transformer, to_map_coords=to_map_coords)
 
         for tf in self.vector_transformers:
-            geojson = tf(geojson)
+            geojson = tf(geojson, crs_transformer=self.crs_transformer)
 
+        self._geojson = geojson
         return geojson
 
     def get_geoms(self, to_map_coords: bool = False) -> List['BaseGeometry']:
@@ -67,6 +76,20 @@ class VectorSource(ABC):
         """Return raw GeoJSON."""
         pass
 
+    def get_dataframe(self, to_map_coords: bool = False) -> gpd.GeoDataFrame:
+        geojson = self.get_geojson(to_map_coords=to_map_coords)
+        df = gpd.GeoDataFrame.from_features(geojson)
+        if len(df) == 0 and 'geometry' not in df.columns:
+            df.loc[:, 'geometry'] = []
+        return df
+
+    @property
+    def extent(self) -> Box:
+        if self._extent is None:
+            envelope = unary_union(self.get_geoms()).envelope
+            self._extent = Box.from_shapely(envelope).to_int()
+        return self._extent
+
 
 def sanitize_geojson(geojson: dict,
                      crs_transformer: 'CRSTransformer',
@@ -76,7 +99,7 @@ def sanitize_geojson(geojson: dict,
     The following transformations are applied:
     1. Removal of features without geometries.
     2. Coordinate transformation to pixel coordinates.
-    3. Splitting of composite geometries e.g. MultiPolygon --> Polygons.
+    3. Splitting of multi-part geometries e.g. MultiPolygon --> Polygons.
     4. (Optional) If to_map_coords=true, transformation back to map
     coordinates.
 
