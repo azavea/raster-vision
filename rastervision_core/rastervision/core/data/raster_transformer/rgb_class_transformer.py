@@ -2,7 +2,8 @@ from typing import TYPE_CHECKING, List, Optional
 
 import numpy as np
 
-from rastervision.core.data.raster_transformer import RasterTransformer
+from rastervision.core.data.raster_transformer import (RasterTransformer,
+                                                       ReclassTransformer)
 from rastervision.core.data.utils import (color_to_triple, color_to_integer,
                                           rgb_to_int_array)
 
@@ -15,12 +16,15 @@ class RGBClassTransformer(RasterTransformer):
 
     def __init__(self, class_config: 'ClassConfig'):
         class_config.ensure_null_class()
-        null_class_id = class_config.null_class_id
+        self.null_class_id = class_config.null_class_id
         color_to_class = class_config.get_color_to_class_id()
-        color_int_to_class = {
+
+        self.rgb_int_to_class = {
             color_to_integer(col): class_id
             for col, class_id in color_to_class.items()
         }
+        self.rgb_int_to_class_tf = ReclassTransformer(self.rgb_int_to_class)
+
         class_to_color_triple = {
             class_id: color_to_triple(col)
             for col, class_id in color_to_class.items()
@@ -32,13 +36,6 @@ class RGBClassTransformer(RasterTransformer):
                 for c in sorted(class_to_color_triple.keys())
             ],
             dtype=np.uint8)
-
-        def color_int_to_class_fn(color: int) -> int:
-            # Convert unspecified colors to null class
-            return color_int_to_class.get(color, null_class_id)
-
-        self.transform_color_int_to_class = np.vectorize(
-            color_int_to_class_fn, otypes=[np.uint8])
 
     def transform(self,
                   chip: np.ndarray,
@@ -56,10 +53,10 @@ class RGBClassTransformer(RasterTransformer):
         """
         return self.rgb_to_class(chip)
 
-    def rgb_to_class(self, rgb_labels: np.ndarray) -> np.ndarray:
-        color_int_labels = rgb_to_int_array(rgb_labels)
-        class_labels = self.transform_color_int_to_class(color_int_labels)
-        return class_labels.astype(np.uint8)
+    def rgb_to_class(self, array_rgb: np.ndarray) -> np.ndarray:
+        array_int = rgb_to_int_array(array_rgb)
+        array_class_id = self.rgb_int_to_class_tf.transform(array_int)
+        return array_class_id.astype(np.uint8)
 
     def class_to_rgb(self, class_labels: np.ndarray) -> np.ndarray:
         return self.class_to_rgb_arr[class_labels]
