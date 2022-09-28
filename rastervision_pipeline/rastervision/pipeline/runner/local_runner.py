@@ -2,7 +2,7 @@ import sys
 from os.path import dirname, join
 from subprocess import Popen
 
-from rastervision.pipeline.file_system import str_to_file
+from rastervision.pipeline.file_system import str_to_file, download_if_needed
 from rastervision.pipeline.runner.runner import Runner
 from rastervision.pipeline.utils import terminate_at_exit
 
@@ -68,7 +68,8 @@ class LocalRunner(Runner):
 
         makefile_path = join(dirname(cfg_json_uri), 'Makefile')
         str_to_file(makefile, makefile_path)
-        process = Popen(['make', '-j', '-f', makefile_path])
+        makefile_path_local = download_if_needed(makefile_path)
+        process = Popen(['make', '-j', '-f', makefile_path_local])
         terminate_at_exit(process)
         exitcode = process.wait()
         if exitcode != 0:
