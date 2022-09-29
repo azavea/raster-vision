@@ -72,8 +72,6 @@ class SemanticSegmentationLabelSource(LabelSource):
         """
         if window is None:
             window = self.extent
-        else:
-            window = window.to_extent_coords(self.extent)
 
         labels = SemanticSegmentationLabels.make_empty()
         label_arr = self.get_label_arr(window)
@@ -91,8 +89,6 @@ class SemanticSegmentationLabelSource(LabelSource):
         """
         if window is None:
             window = self.extent
-        else:
-            window = window.to_extent_coords(self.extent)
 
         label_arr = self.raster_source.get_chip(window)
         label_arr = np.squeeze(label_arr)
