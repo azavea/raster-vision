@@ -12,7 +12,8 @@ from rastervision.core.rv_pipeline.semantic_segmentation_config import (
 
 if TYPE_CHECKING:
     from rastervision.core.backend.backend import Backend
-    from rastervision.core.data import ClassConfig, Labels, Scene
+    from rastervision.core.data import (ClassConfig, Labels, Scene,
+                                        SemanticSegmentationLabelSource)
 
 log = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def get_train_windows(scene: 'Scene',
     co = chip_options
     raster_source = scene.raster_source
     extent = raster_source.extent
-    label_source = scene.label_source
+    label_source: 'SemanticSegmentationLabelSource' = scene.label_source
 
     def filter_windows(windows: Sequence[Box]) -> List[Box]:
         """Filter out chips that
@@ -68,10 +69,10 @@ def get_train_windows(scene: 'Scene',
         if co.negative_survival_prob >= 1.0:
             return True
         else:
-            target_class_ids = co.target_class_ids or list(
-                range(len(class_config)))
-            is_positive = label_source.enough_target_pixels(
-                window, co.target_count_threshold, target_class_ids)
+            is_positive = False
+            if co.target_class_ids is not None:
+                is_positive = label_source.enough_target_pixels(
+                    window, co.target_count_threshold, co.target_class_ids)
             if is_positive:
                 return True
             keep_negative = np.random.sample() < co.negative_survival_prob

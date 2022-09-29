@@ -40,8 +40,7 @@ class SemanticSegmentationLabelSource(LabelSource):
 
     def enough_target_pixels(self, window: Box, target_count_threshold: int,
                              target_classes: List[int]) -> bool:
-        """Given a window, answer whether the window contains enough pixels in
-        the target classes.
+        """Check if window contains enough pixels of the given target classes.
 
         Args:
              window: The larger window from-which the sub-window will
@@ -57,7 +56,7 @@ class SemanticSegmentationLabelSource(LabelSource):
 
         target_count = 0
         for class_id in target_classes:
-            target_count = target_count + (label_arr == class_id).sum()
+            target_count += (label_arr == class_id).sum()
 
         return target_count >= target_count_threshold
 
