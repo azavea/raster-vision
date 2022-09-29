@@ -3,6 +3,7 @@ from typing import (Any, List, Optional)
 import numpy as np
 
 from rastervision.core.box import Box
+from rastervision.core.data import ClassConfig
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_source.label_source import LabelSource
 from rastervision.core.data.raster_source import RasterSource
@@ -24,7 +25,7 @@ def fill_edge(label_arr: np.ndarray, window: Box, extent: Box,
 class SemanticSegmentationLabelSource(LabelSource):
     """A read-only label source for semantic segmentation."""
 
-    def __init__(self, raster_source: RasterSource, null_class_id: int):
+    def __init__(self, raster_source: RasterSource, class_config: ClassConfig):
         """Constructor.
 
         Args:
@@ -35,7 +36,7 @@ class SemanticSegmentationLabelSource(LabelSource):
                 retrieved using class_config.null_class_id.
         """
         self.raster_source = raster_source
-        self.null_class_id = null_class_id
+        self.class_config = class_config
 
     def enough_target_pixels(self, window: Box, target_count_threshold: int,
                              target_classes: List[int]) -> bool:
@@ -81,19 +82,25 @@ class SemanticSegmentationLabelSource(LabelSource):
     def get_label_arr(self, window: Optional[Box] = None) -> np.ndarray:
         """Get labels for a window.
 
+        The returned array will be the same size as the input window. If window
+        overflows the extent, the overflowing region will be filled with the ID
+        of the null class as defined by the class_config.
+
         Args:
-             window: Either None or a window given as a Box object. Uses full
-                extent of scene if window is not provided.
+            window (Optional[Box], optional): Window to get labels for. If
+            None, returns a label array covering the full extent of the scene.
+
         Returns:
-             np.ndarray
+            (np.ndarray): Label array.
         """
         if window is None:
             window = self.extent
 
         label_arr = self.raster_source.get_chip(window)
-        label_arr = np.squeeze(label_arr)
+        if label_arr.ndim == 3:
+            label_arr = np.squeeze(label_arr, axis=2)
         label_arr = fill_edge(label_arr, window, self.extent,
-                              self.null_class_id)
+                              self.class_config.null_class_id)
         return label_arr
 
     @property

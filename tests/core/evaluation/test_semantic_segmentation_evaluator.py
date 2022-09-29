@@ -29,7 +29,6 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         self.class_config = ClassConfig(names=['one', 'two'])
         self.class_config.update()
         self.class_config.ensure_null_class()
-        self.null_class_id = self.class_config.null_class_id
 
     def tearDown(self):
         self.tmp_dir.cleanup()
@@ -44,13 +43,13 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
         gt_rs = MockRasterSource(channel_order=[0], num_channels_raw=1)
         gt_arr = np.full((10, 10, 1), class_id)
         gt_rs.set_raster(gt_arr)
-        gt_ls = SemanticSegmentationLabelSource(gt_rs, self.null_class_id)
+        gt_ls = SemanticSegmentationLabelSource(gt_rs, self.class_config)
 
         pred_rs = MockRasterSource(channel_order=[0], num_channels_raw=1)
         pred_arr = np.zeros((10, 10, 1))
         pred_arr[5:10, :, :] = 1
         pred_rs.set_raster(pred_arr)
-        pred_ls = SemanticSegmentationLabelSource(pred_rs, self.null_class_id)
+        pred_ls = SemanticSegmentationLabelSource(pred_rs, self.class_config)
 
         return Scene(scene_id, rs, gt_ls, pred_ls)
 
@@ -90,7 +89,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
                 ]),
             rasterizer_config=RasterizerConfig(background_class_id=1))
         gt_rs = config.build(self.class_config, crs_transformer, extent)
-        gt_ls = SemanticSegmentationLabelSource(gt_rs, self.null_class_id)
+        gt_ls = SemanticSegmentationLabelSource(gt_rs, self.class_config)
 
         config = RasterizedSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
@@ -100,7 +99,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
                 ]),
             rasterizer_config=RasterizerConfig(background_class_id=1))
         pred_rs = config.build(self.class_config, crs_transformer, extent)
-        pred_ls = SemanticSegmentationLabelSource(pred_rs, self.null_class_id)
+        pred_ls = SemanticSegmentationLabelSource(pred_rs, self.class_config)
         pred_ls.vector_outputs = [
             PolygonVectorOutputConfig(
                 uri=pred_uri, denoise=0, class_id=class_id)
