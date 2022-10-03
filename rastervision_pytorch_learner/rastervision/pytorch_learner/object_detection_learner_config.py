@@ -71,14 +71,14 @@ class ObjectDetectionGeoDataWindowConfig(GeoDataWindowConfig):
         False,
         description='Clip bounding boxes to window limits when retrieving '
         'labels for a window.')
-    neg_ratio: float = Field(
-        1.0,
+    neg_ratio: Optional[float] = Field(
+        None,
         description='The ratio of negative chips (those containing no '
         'bounding boxes) to positive chips. This can be useful if the '
         'statistics of the background is different in positive chips. For '
         'example, in car detection, the positive chips will always contain '
         'roads, but no examples of rooftops since cars tend to not be near '
-        'rooftops. Defaults to 1.0.')
+        'rooftops. Defaults to None.')
     neg_ioa_thresh: float = Field(
         0.2,
         description='A window will be considered negative if its max IoA with '
