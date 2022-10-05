@@ -1,2 +1,2 @@
-Sphinx~=3.5.0
+sphinx==5.2.*
 Pallets-Sphinx-Themes~=2.0.0
