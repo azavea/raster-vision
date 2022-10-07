@@ -262,7 +262,7 @@ class RasterioSource(RasterSource):
                   window: Box,
                   bands: Optional[Sequence[int]] = None,
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
-        window = window.to_extent_coords(self.extent)
+        window = window.shift_origin(self.extent)
         chip = load_window(
             self.image_dataset,
             bands=bands,

@@ -268,9 +268,13 @@ class Box():
         ymin, xmin, ymax, xmax = self
         return Box(ymin + dy, xmin + dx, ymax + dy, xmax + dx)
 
-    def to_extent_coords(self, extent: 'Box') -> 'Box':
+    def shift_origin(self, extent: 'Box') -> 'Box':
         """Shift origin of window coords to (extent.xmin, extent.ymin)."""
         return self.translate(dy=extent.ymin, dx=extent.xmin)
+
+    def to_offsets(self, container: 'Box') -> 'Box':
+        """Convert coords to offsets from (container.xmin, container.ymin)."""
+        return self.translate(dy=-container.ymin, dx=-container.xmin)
 
     def reproject(self, transform_fn: Callable) -> 'Box':
         """Reprojects this box based on a transform function.
@@ -290,10 +294,17 @@ class Box():
         """Return new square Box."""
         return Box(ymin, xmin, ymin + size, xmin + size)
 
-    def make_eroded(self, erosion_sz) -> 'Box':
+    def center_crop(self, edge_offset_y: int, edge_offset_x: int) -> 'Box':
+        """Return Box whose sides are eroded by the given offsets.
+
+        Box(0, 0, 10, 10).center_crop(2, 4) ==  Box(2, 4, 8, 6)
+        """
+        return Box(self.ymin + edge_offset_y, self.xmin + edge_offset_x,
+                   self.ymax - edge_offset_y, self.xmax - edge_offset_x)
+
+    def erode(self, erosion_sz) -> 'Box':
         """Return new Box whose sides are eroded by erosion_sz."""
-        return Box(self.ymin + erosion_sz, self.xmin + erosion_sz,
-                   self.ymax - erosion_sz, self.xmax - erosion_sz)
+        return self.center_crop(erosion_sz, erosion_sz)
 
     def buffer(self, buffer_sz: float, max_extent: 'Box') -> 'Box':
         """Return new Box whose sides are buffered by buffer_sz.
@@ -353,20 +364,21 @@ class Box():
             stride = (stride, stride)
 
         if padding is None:
-            padding = size
-        elif not isinstance(padding, tuple):
+            padding = (size[0] // 2, size[1] // 2)
+
+        if not isinstance(padding, tuple):
             padding = (padding, padding)
 
         h_padding, w_padding = padding
         height, width = size
         h_stride, w_stride = stride
 
-        ymax = self.ymax - height + h_padding
-        xmax = self.xmax - width + w_padding
+        y_start_max = self.ymax - height + h_padding
+        x_start_max = self.xmax - width + w_padding
 
         result = []
-        for row in range(self.ymin, ymax, h_stride):
-            for col in range(self.xmin, xmax, w_stride):
+        for row in range(self.ymin, y_start_max + 1, h_stride):
+            for col in range(self.xmin, x_start_max + 1, w_stride):
                 window = Box(row, col, row + height, col + width)
                 result.append(window)
         return result

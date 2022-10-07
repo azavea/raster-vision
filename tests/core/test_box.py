@@ -176,13 +176,15 @@ class TestBox(unittest.TestCase):
             box.translate(dy, dx),
             Box(box.ymin + dy, box.xmin + dx, box.ymax + dy, box.xmax + dx))
 
-    def test_to_extent_coords(self):
-        box = Box(0, 0, 10, 10)
+    def test_shift_origin(self):
         extent = Box(5, 5, 8, 8)
-        self.assertEqual(
-            box.to_extent_coords(extent),
-            Box(box.ymin + extent.ymin, box.xmin + extent.xmin,
-                box.ymax + extent.ymin, box.xmax + extent.xmin))
+        box = Box(0, 0, 10, 10)
+        self.assertEqual(box.shift_origin(extent), Box(5, 5, 15, 15))
+
+    def test_to_offsets(self):
+        outer = Box(10, 10, 20, 20)
+        inner = Box(15, 15, 18, 18)
+        self.assertEqual(inner.to_offsets(outer), Box(5, 5, 8, 8))
 
     def test_to_shapely(self):
         bounds = self.box.to_shapely().bounds
@@ -195,13 +197,17 @@ class TestBox(unittest.TestCase):
         self.assertEqual(output_square, square)
         self.assertEqual(output_square.width, output_square.height)
 
-    def test_make_eroded(self):
+    def test_erode(self):
         max_extent = Box.make_square(0, 0, 10)
         box = Box(1, 1, 3, 4)
         buffer_size = erosion_size = 1
-        eroded_box = box.buffer(buffer_size, max_extent) \
-                        .make_eroded(erosion_size)
+        eroded_box = box.buffer(buffer_size, max_extent).erode(erosion_size)
         self.assertEqual(eroded_box, box)
+
+    def test_center_crop(self):
+        box_in = Box(0, 0, 10, 10)
+        box_out = box_in.center_crop(2, 4)
+        self.assertEqual(box_out, Box(2, 4, 8, 6))
 
     def test_buffer(self):
         buffer_size = 1
