@@ -1,5 +1,6 @@
+from typing import (TYPE_CHECKING, Any, Iterable, List, Optional, Sequence,
+                    Tuple, Union)
 from abc import abstractmethod
-from typing import Any, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 from rasterio.features import rasterize
@@ -7,6 +8,10 @@ from shapely.ops import transform
 
 from rastervision.core.box import Box
 from rastervision.core.data.label import Labels
+
+if TYPE_CHECKING:
+    from rastervision.core.data import (ClassConfig, CRSTransformer,
+                                        VectorOutputConfig)
 
 
 class SemanticSegmentationLabels(Labels):
@@ -307,6 +312,59 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
 
+    def save(self,
+             uri: str,
+             crs_transformer: 'CRSTransformer',
+             class_config: 'ClassConfig',
+             tmp_dir: Optional[str] = None,
+             save_as_rgb: bool = False,
+             raster_output: bool = True,
+             rasterio_block_size: int = 512,
+             vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
+             profile_overrides: Optional[dict] = None) -> None:
+        """Save labels as a raster and/or vectors.
+
+        If URI is remote, all files will be first written locally and then
+        uploaded to the URI.
+
+        Args:
+            uri (str): URI of directory in which to save all output files.
+            crs_transformer (CRSTransformer): CRSTransformer to configure CRS
+                and affine transform of the output GeoTiff.
+            class_config (ClassConfig): The ClassConfig.
+            tmp_dir (Optional[str], optional): Temporary directory to use. If
+                None, will be auto-generated. Defaults to None.
+            save_as_rgb (bool, optional): If True, Saves labels as an RGB
+                image, using the class-color mapping in the class_config.
+                Defaults to False.
+            raster_output (bool, optional): If True, saves labels as a raster
+                of class IDs (one band). Defaults to True.
+            rasterio_block_size (int, optional): Value to set blockxsize and
+                blockysize to. Defaults to 512.
+            vector_outputs (Optional[Sequence[VectorOutputConfig]], optional):
+                List of VectorOutputConfig's containing vectorization
+                configuration information. Only classes for which a
+                VectorOutputConfig is specified will be saved as vectors.
+                If None, no vector outputs will be produced. Defaults to None.
+            profile_overrides (Optional[dict], optional): This can be used to
+                arbitrarily override properties in the profile used to create
+                the output GeoTiff. Defaults to None.
+        """
+        from rastervision.core.data import SemanticSegmentationLabelStore
+
+        label_store = SemanticSegmentationLabelStore(
+            uri=uri,
+            extent=self.extent,
+            crs_transformer=crs_transformer,
+            class_config=class_config,
+            tmp_dir=tmp_dir,
+            save_as_rgb=save_as_rgb,
+            discrete_output=raster_output,
+            smooth_output=False,
+            rasterio_block_size=rasterio_block_size,
+            vector_outputs=vector_outputs)
+        label_store.save(self, profile=profile_overrides)
+
 
 class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
     """Membership-scores for each pixel for each class.
@@ -407,3 +465,65 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
                    num_classes: int) -> 'SemanticSegmentationSmoothLabels':
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
+
+    def save(self,
+             uri: str,
+             crs_transformer: 'CRSTransformer',
+             class_config: 'ClassConfig',
+             tmp_dir: Optional[str] = None,
+             save_as_rgb: bool = False,
+             discrete_output: bool = True,
+             smooth_output: bool = True,
+             smooth_as_uint8: bool = False,
+             rasterio_block_size: int = 512,
+             vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
+             profile_overrides: Optional[dict] = None) -> None:
+        """Save labels as rasters and/or vectors.
+
+        If URI is remote, all files will be first written locally and then
+        uploaded to the URI.
+
+        Args:
+            uri (str): URI of directory in which to save all output files.
+            crs_transformer (CRSTransformer): CRSTransformer to configure CRS
+                and affine transform of the output GeoTiff(s).
+            class_config (ClassConfig): The ClassConfig.
+            tmp_dir (Optional[str], optional): Temporary directory to use. If
+                None, will be auto-generated. Defaults to None.
+            save_as_rgb (bool, optional): If True, saves labels as an RGB
+                image, using the class-color mapping in the class_config.
+                Defaults to False.
+            discrete_output (bool, optional): If True, saves labels as a raster
+                of class IDs (one band). Defaults to True.
+            smooth_output (bool, optional): If True, saves labels as a raster
+                of class scores (one band for each class). Defaults to True.
+            smooth_as_uint8 (bool, optional): If True, stores smooth class
+                scores as np.uint8 (0-255) values rather than as np.float32
+                discrete labels, to help save memory/disk space.
+                Defaults to False.
+            rasterio_block_size (int, optional): Value to set blockxsize and
+                blockysize to. Defaults to 512.
+            vector_outputs (Optional[Sequence[VectorOutputConfig]], optional):
+                List of VectorOutputConfig's containing vectorization
+                configuration information. Only classes for which a
+                VectorOutputConfig is specified will be saved as vectors.
+                If None, no vector outputs will be produced. Defaults to None.
+            profile_overrides (Optional[dict], optional): This can be used to
+                arbitrarily override properties in the profile used to create
+                the output GeoTiff(s). Defaults to None.
+        """
+        from rastervision.core.data import SemanticSegmentationLabelStore
+
+        label_store = SemanticSegmentationLabelStore(
+            uri=uri,
+            extent=self.extent,
+            crs_transformer=crs_transformer,
+            class_config=class_config,
+            tmp_dir=tmp_dir,
+            save_as_rgb=save_as_rgb,
+            discrete_output=discrete_output,
+            smooth_output=smooth_output,
+            smooth_as_uint8=smooth_as_uint8,
+            rasterio_block_size=rasterio_block_size,
+            vector_outputs=vector_outputs)
+        label_store.save(self, profile=profile_overrides)

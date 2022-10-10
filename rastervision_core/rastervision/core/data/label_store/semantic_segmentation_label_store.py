@@ -8,7 +8,8 @@ from tqdm.auto import tqdm
 
 from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import (
-    get_local_path, json_to_file, make_dir, sync_to_dir, file_exists)
+    get_local_path, json_to_file, make_dir, sync_to_dir, file_exists,
+    download_if_needed, NotReadableError)
 from rastervision.core.box import Box
 from rastervision.core.data import (CRSTransformer, ClassConfig)
 from rastervision.core.data.label import (SemanticSegmentationLabels,
@@ -41,9 +42,10 @@ class SemanticSegmentationLabelStore(LabelStore):
             tmp_dir: Optional[str] = None,
             vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
             save_as_rgb: bool = False,
+            discrete_output: bool = True,
             smooth_output: bool = False,
             smooth_as_uint8: bool = False,
-            rasterio_block_size: int = 256):
+            rasterio_block_size: int = 512):
         """Constructor.
 
         Args:
@@ -56,19 +58,25 @@ class SemanticSegmentationLabelStore(LabelStore):
                 mapping from pixel coords to map coords.
             tmp_dir (Optional[str], optional): Temporary directory to use. If
                 None, will be auto-generated. Defaults to None.
-            vector_outputs (Optional[Sequence[VectorOutputConfig]], optional): containing
-                vectorifiction configuration information. Defaults to None.
+            vector_outputs (Optional[Sequence[VectorOutputConfig]], optional):
+                List of VectorOutputConfig's containing vectorization
+                configuration information. Only classes for which a
+                VectorOutputConfig is specified will be saved as vectors.
+                If None, no vector outputs will be produced. Defaults to None.
             class_config (ClassConfig): Class config.
-            save_as_rgb (bool, optional): If True, Saves labels as an RGB
+            save_as_rgb (bool, optional): If True, saves labels as an RGB
                 image, using the class-color mapping in the class_config.
                 Defaults to False.
-            smooth_output (bool, optional): If True, expects labels to be
-                class scores and stores both scores and discrete labels.
-                Defaults to False.
+            discrete_output (bool, optional): If True, saves labels as a raster
+                of class IDs (one band). Defaults to False.
+            smooth_output (bool, optional): If True, saves labels as a raster
+                of class scores (one band for each class). Defaults to False.
             smooth_as_uint8 (bool, optional): If True, stores smooth class
                 scores as np.uint8 (0-255) values rather than as np.float32
                 discrete labels, to help save memory/disk space.
                 Defaults to False.
+            rasterio_block_size (int, optional): Value to set blockxsize and
+                blockysize to. Defaults to 512.
         """
         self.root_uri = uri
         self.label_uri = join(uri, 'labels.tif')
@@ -84,6 +92,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         self.extent = extent
         self.crs_transformer = crs_transformer
         self.class_config = class_config
+        self.discrete_output = discrete_output
         self.smooth_output = smooth_output
         self.smooth_as_uint8 = smooth_as_uint8
         self.rasterio_block_size = rasterio_block_size
@@ -157,8 +166,9 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         extent = self.score_source.extent
         try:
-            hits_arr = np.load(self.hits_uri)
-        except FileNotFoundError:
+            hits_uri_local = download_if_needed(self.hits_uri)
+            hits_arr = np.load(hits_uri_local)
+        except NotReadableError:
             log.warn(f'Pixel hits array not found at {self.hits_uri}.'
                      'Setting all pixels hits to 1.')
             hits_arr = np.ones(extent.size, dtype=np.uint8)
@@ -210,15 +220,17 @@ class SemanticSegmentationLabelStore(LabelStore):
             old_labels = self.get_scores()
             labels += old_labels
 
-        self.write_discrete_raster_output(
-            out_profile, get_local_path(self.label_uri, self.tmp_dir), labels)
+        if self.discrete_output:
+            labels_path = get_local_path(self.label_uri, self.tmp_dir)
+            self.write_discrete_raster_output(out_profile, labels_path, labels)
 
         if self.smooth_output:
-            self.write_smooth_raster_output(
-                out_profile, get_local_path(self.score_uri, self.tmp_dir),
-                get_local_path(self.hits_uri, self.tmp_dir), labels)
+            scores_path = get_local_path(self.score_uri, self.tmp_dir)
+            hits_path = get_local_path(self.hits_uri, self.tmp_dir)
+            self.write_smooth_raster_output(out_profile, scores_path,
+                                            hits_path, labels)
 
-        if self.vector_outputs:
+        if self.vector_outputs is not None:
             self.write_vector_outputs(labels)
 
         sync_to_dir(local_root, self.root_uri)

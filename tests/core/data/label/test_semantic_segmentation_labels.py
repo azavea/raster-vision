@@ -1,12 +1,14 @@
 import unittest
+from os.path import join
 
 import numpy as np
+import rasterio as rio
 
+from rastervision.pipeline import rv_config
 from rastervision.core.box import Box
-from rastervision.core.data import ClassConfig
-from rastervision.core.data.label import (SemanticSegmentationLabels,
-                                          SemanticSegmentationDiscreteLabels,
-                                          SemanticSegmentationSmoothLabels)
+from rastervision.core.data import (
+    ClassConfig, IdentityCRSTransformer, SemanticSegmentationLabels,
+    SemanticSegmentationDiscreteLabels, SemanticSegmentationSmoothLabels)
 
 
 class TestSemanticSegmentationLabels(unittest.TestCase):
@@ -132,6 +134,23 @@ class TestSemanticSegmentationDiscreteLabels(unittest.TestCase):
         np.testing.assert_array_equal(scores[0], np.full((3, 3), 0.25))
         np.testing.assert_array_equal(scores[1], np.full((3, 3), 0.75))
 
+    def test_save(self):
+        class_config = ClassConfig(names=['bg', 'fg'], null_class='bg')
+        extent = Box(0, 0, 3, 3)
+        labels = SemanticSegmentationDiscreteLabels(extent, 2)
+        labels[extent] = np.eye(3)
+        exp_arr = labels.get_label_arr(extent)
+
+        with rv_config.get_tmp_dir() as tmp_dir:
+            uri = join(tmp_dir, 'test')
+            labels.save(
+                uri=uri,
+                crs_transformer=IdentityCRSTransformer(),
+                class_config=class_config)
+            with rio.open(join(uri, 'labels.tif'), 'r') as ds:
+                arr = ds.read(1)
+                np.testing.assert_array_equal(arr, exp_arr)
+
 
 def make_random_scores(num_classes, h, w):
     arr = np.random.normal(size=(num_classes, h, w))
@@ -194,7 +213,7 @@ class TestSemanticSegmentationSmoothLabels(unittest.TestCase):
         np.testing.assert_array_equal(label_arr, np.full((3, 3), -1))
 
         window = Box(0, 0, 2, 2)
-        labels[window] = np.random.randint(0, 2, size=(2, 2))
+        labels[window] = np.random.random(size=(2, 2))
         label_arr = labels.get_label_arr(extent)
         np.testing.assert_array_equal(label_arr[:, 2], np.array([-1, -1, -1]))
         np.testing.assert_array_equal(label_arr[2, :], np.array([-1, -1, -1]))
@@ -246,6 +265,33 @@ class TestSemanticSegmentationSmoothLabels(unittest.TestCase):
         box_out_expected = (100, 100, 100, 100)
         box_out_actual = labels._to_local_coords(box_in)
         self.assertTupleEqual(box_out_actual, box_out_expected)
+
+    def test_save(self):
+        class_config = ClassConfig(names=['bg', 'fg'], null_class='bg')
+        extent = Box(0, 0, 3, 3)
+        labels = SemanticSegmentationSmoothLabels(extent, 2)
+        labels[extent] = np.random.random(extent.size)
+        exp_label_arr = labels.get_label_arr(extent, null_class_id=0)
+        exp_score_arr = labels.get_score_arr(extent)
+        exp_hits_arr = labels.pixel_hits
+
+        with rv_config.get_tmp_dir() as tmp_dir:
+            uri = join(tmp_dir, 'test')
+            labels.save(
+                uri=uri,
+                crs_transformer=IdentityCRSTransformer(),
+                class_config=class_config)
+
+            with rio.open(join(uri, 'labels.tif'), 'r') as ds:
+                arr = ds.read(1)
+                np.testing.assert_array_equal(arr, exp_label_arr)
+
+            with rio.open(join(uri, 'scores.tif'), 'r') as ds:
+                arr = ds.read()
+                np.testing.assert_array_equal(arr, exp_score_arr)
+
+            hits_arr = np.load(join(uri, 'pixel_hits.npy'))
+            np.testing.assert_array_equal(hits_arr, exp_hits_arr)
 
 
 if __name__ == '__main__':

@@ -10,6 +10,7 @@ from rastervision.core.data.label.tfod_utils.np_box_list_ops import (
     non_max_suppression)
 
 if TYPE_CHECKING:
+    from rastervision.core.data import (ClassConfig, CRSTransformer)
     from shapely.geometry import Polygon
 
 
@@ -288,3 +289,21 @@ class ObjectDetectionLabels(Labels):
             iou_threshold=merge_thresh,
             score_threshold=score_thresh)
         return ObjectDetectionLabels.from_boxlist(pruned_boxlist)
+
+    def save(self, uri: str, class_config: 'ClassConfig',
+             crs_transformer: 'CRSTransformer') -> None:
+        """Save labels as a GeoJSON file.
+
+        Args:
+            uri (str): URI of the output file.
+            class_config (ClassConfig): ClassConfig to map class IDs to names.
+            crs_transformer (CRSTransformer): CRSTransformer to convert from
+                pixel-coords to map-coords before saving.
+        """
+        from rastervision.core.data import ObjectDetectionGeoJSONStore
+
+        label_store = ObjectDetectionGeoJSONStore(
+            uri=uri,
+            class_config=class_config,
+            crs_transformer=crs_transformer)
+        label_store.save(self)
