@@ -12,7 +12,6 @@ from rastervision.pytorch_learner.dataset import (
 from rastervision.core.data import SemanticSegmentationLabels
 
 if TYPE_CHECKING:
-    from torch import Tensor
     from rastervision.core.data_sample import DataSample
     from rastervision.core.data import (Scene, SemanticSegmentationLabelStore)
 
@@ -55,11 +54,17 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
         return PyTorchSemanticSegmentationSampleWriter(
             output_uri, self.pipeline_cfg.dataset.class_config, self.tmp_dir)
 
-    def predict_scene(self,
-                      scene: 'Scene',
-                      chip_sz: int,
-                      stride: Optional[int] = None
-                      ) -> 'SemanticSegmentationLabels':
+    def predict_scene(
+            self,
+            scene: 'Scene',
+            chip_sz: int,
+            stride: Optional[int] = None,
+            crop_sz: Optional[int] = None) -> 'SemanticSegmentationLabels':
+
+        if scene.label_store is None:
+            raise ValueError(
+                f'Scene.label_store is not set for scene {scene.id}')
+
         if stride is None:
             stride = chip_sz
 
@@ -76,7 +81,7 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
         ds = SemanticSegmentationSlidingWindowGeoDataset(
             scene, size=chip_sz, stride=stride, transform=base_tf)
 
-        predictions: Iterator[Tensor] = self.learner.predict_dataset(
+        predictions: Iterator[np.ndarray] = self.learner.predict_dataset(
             ds,
             raw_out=raw_out,
             numpy_out=True,
@@ -89,6 +94,7 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
             predictions,
             smooth=raw_out,
             extent=label_store.extent,
-            num_classes=len(label_store.class_config))
+            num_classes=len(label_store.class_config),
+            crop_sz=crop_sz)
 
         return labels

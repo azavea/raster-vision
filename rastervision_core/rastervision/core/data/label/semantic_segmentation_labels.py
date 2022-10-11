@@ -8,6 +8,7 @@ from shapely.ops import transform
 
 from rastervision.core.box import Box
 from rastervision.core.data.label import Labels
+from rastervision.core.data.label.utils import discard_prediction_edges
 
 if TYPE_CHECKING:
     from rastervision.core.data import (ClassConfig, CRSTransformer,
@@ -185,9 +186,10 @@ class SemanticSegmentationLabels(Labels):
     def from_predictions(cls,
                          windows: Iterable['Box'],
                          predictions: Iterable[Any],
-                         extent: Optional[Box] = None,
-                         num_classes: Optional[int] = None,
-                         smooth: bool = False
+                         extent: Box,
+                         num_classes: int,
+                         smooth: bool = False,
+                         crop_sz: Optional[int] = None
                          ) -> Union['SemanticSegmentationDiscreteLabels',
                                     'SemanticSegmentationSmoothLabels']:
         """Instantiate from windows and their corresponding predictions.
@@ -200,12 +202,24 @@ class SemanticSegmentationLabels(Labels):
             extent (Box): The extent of the region to which the labels belong,
                 in global coordinates.
             num_classes (int): Number of classes.
+            crop_sz (Optional[int]): Number of rows/columns of pixels from the
+                edge of prediction windows to discard. This is useful because
+                predictions near edges tend to be lower quality and can result
+                in very visible artifacts near the edges of chips. This should
+                only be used if the given windows represent a sliding-window
+                grid over the scene extent with overlap between adjacent
+                windows. Defaults to None.
 
         Returns:
-            SemanticSegmentationSmoothLabels: A
-                SemanticSegmentationSmoothLabels instance populated with the
-                given predictions.
+            Union[SemanticSegmentationDiscreteLabels,
+            SemanticSegmentationSmoothLabels]: If smooth=True, returns a
+                SemanticSegmentationSmoothLabels. Otherwise, a
+                SemanticSegmentationDiscreteLabels.
         """
+        if crop_sz is not None:
+            windows, predictions = discard_prediction_edges(
+                windows, predictions, crop_sz)
+
         labels = cls.make_empty(extent, num_classes, smooth=smooth)
         # If predictions is tqdm-wrapped, it needs to be the first arg to zip()
         # or the progress bar won't terminate with the correct count.
