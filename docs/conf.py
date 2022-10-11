@@ -56,6 +56,8 @@ extensions = [
     'pallets_sphinx_themes',
     # better rendering of pydantic Configs
     'sphinxcontrib.autodoc_pydantic',
+    # for linking to source files from docs
+    'sphinx.ext.viewcode',
 ]
 autosummary_generate = True
 # If true, the current module name will be prepended to all description
