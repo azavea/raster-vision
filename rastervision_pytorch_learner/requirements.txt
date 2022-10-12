@@ -1,13 +1,12 @@
 rastervision_pipeline==0.13.1
 rastervision_core==0.13.1
 
-future==0.18.*
 psutil==5.9.*
 triangle==20200424
-tqdm==4.64.0
+tqdm==4.64.1
 
-torch==1.11.0
-torchvision==0.12.0
+torch==1.12.1
+torchvision==0.13.1
 tensorboard==2.10.1
 numpy==1.23.3
 pillow==9.2.0

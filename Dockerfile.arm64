@@ -21,7 +21,7 @@ RUN conda install -y python=3.9
 RUN python -m pip install --upgrade pip
 
 # Needed for Rasterio
-RUN conda install -y -c conda-forge gdal=3.5.1
+RUN conda install -y -c conda-forge gdal=3.5.2
 ENV GDAL_DATA=/opt/conda/lib/python3.9/site-packages/rasterio/gdal_data/
 
 # This is to prevent the following error when starting the container.
