@@ -177,7 +177,8 @@ class Learner(ABC):
             self._tmp_dir = rv_config.get_tmp_dir()
             tmp_dir = self._tmp_dir.name
         self.tmp_dir = tmp_dir
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = torch.device('cuda'
+                                   if torch.cuda.is_available() else 'cpu')
 
         self.train_ds = train_ds
         self.valid_ds = valid_ds
@@ -319,12 +320,11 @@ class Learner(ABC):
             available when loading from a bundle. Defaults to None.
         """
         if self.model is not None:
-            self.model.to(self.device)
+            self.model.to(device=self.device)
             return
 
         self.model = self.build_model(model_def_path=model_def_path)
-
-        self.model.to(self.device)
+        self.model.to(device=self.device)
         self.load_init_weights(model_weights_path=model_weights_path)
 
     def build_model(self, model_def_path: Optional[str] = None) -> nn.Module:

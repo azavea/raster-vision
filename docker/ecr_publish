@@ -21,11 +21,13 @@ then
         exit
     fi
 
-    IMAGE_NAME="raster-vision-pytorch:latest"
+    IMAGE_NAME="raster-vision-pytorch-amd64:latest"
     ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
     AWS_REGION="us-east-1"
 
-    aws ecr get-login --no-include-email --region ${AWS_REGION} | bash;
+    aws ecr get-login-password --region ${AWS_REGION} | docker login \
+        --username AWS \
+        --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com;
     docker tag ${IMAGE_NAME} \
         ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${RV_ECR_IMAGE}
     docker push \

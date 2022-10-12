@@ -45,7 +45,7 @@ All arguments after above options are passed to 'docker run'.
 "
 }
 
-IMAGE="raster-vision-pytorch"
+IMAGE="raster-vision-pytorch-arm64"
 RASTER_VISION_DATA_DIR="${RASTER_VISION_DATA_DIR:-${REPO_ROOT}/data}"
 RASTER_VISION_NOTEBOOK_DIR="${RASTER_VISION_NOTEBOOK_DIR:-${REPO_ROOT}/notebooks}"
 
