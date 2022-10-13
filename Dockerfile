@@ -6,33 +6,35 @@ RUN apt-get update && apt-get install -y software-properties-common python-softw
 RUN add-apt-repository ppa:ubuntugis/ppa && \
     apt-get update && \
     apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
-                       jq=1.5* \
-                       build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
-                       unzip curl && \
+    jq=1.5* \
+    build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
+    unzip curl && \
     apt-get autoremove && apt-get autoclean && apt-get clean
 
 # See https://github.com/mapbox/rasterio/issues/1289
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
-# Install Python 3.7
-RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh && \
-     chmod +x ~/miniconda.sh && \
-     ~/miniconda.sh -b -p /opt/conda && \
-     rm ~/miniconda.sh
+# Install Python 3.8
+RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh && \
+    chmod +x ~/miniconda.sh && \
+    ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
-RUN conda install -y python=3.7
+RUN conda install -y python=3.8
 RUN python -m pip install --upgrade pip
-RUN conda install -y -c conda-forge gdal=3.0.4
+
+# install GDAL
+RUN conda install -y -c conda-forge gdal=3.2.2
 
 # Setup GDAL_DATA directory, rasterio needs it.
-ENV GDAL_DATA=/opt/conda/lib/python3.7/site-packages/rasterio/gdal_data/
-
-WORKDIR /opt/src/
+ENV GDAL_DATA=/opt/conda/lib/python3.8/site-packages/rasterio/gdal_data/
 
 # needed for jupyter lab extensions
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs
+
+WORKDIR /opt/src/
 
 COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
 RUN pip install -r requirements-dev.txt
