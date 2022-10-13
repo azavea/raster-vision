@@ -12,3 +12,19 @@ from rastervision.core.rv_pipeline.semantic_segmentation_config import *
 from rastervision.core.rv_pipeline.object_detection import *
 from rastervision.core.rv_pipeline.object_detection_config import *
 from rastervision.core.rv_pipeline.utils import *
+
+__all__ = [
+    RVPipeline.__name__,
+    RVPipelineConfig.__name__,
+    ChipClassification.__name__,
+    ChipClassificationConfig.__name__,
+    SemanticSegmentation.__name__,
+    SemanticSegmentationConfig.__name__,
+    SemanticSegmentationChipOptions.__name__,
+    SemanticSegmentationPredictOptions.__name__,
+    SemanticSegmentationWindowMethod.__name__,
+    ObjectDetection.__name__,
+    ObjectDetectionChipOptions.__name__,
+    ObjectDetectionChipOptions.__name__,
+    ObjectDetectionPredictOptions.__name__,
+]

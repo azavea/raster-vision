@@ -13,9 +13,9 @@ class StatsTransformer(RasterTransformer):
 
     This works as follows:
     - Convert pixel values to z-scores using channel means and standard
-        deviations.
+    deviations.
     - Clip z-scores to the specified number of standard deviations (default 3)
-        on each side.
+    on each side.
     - Scale values to 0-255 and cast to uint8.
 
     This transformation is not applied to NODATA pixels (assumed to be pixels

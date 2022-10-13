@@ -7,9 +7,11 @@ from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.box import Box
 from rastervision.core.data import (
-    ClassConfig, infer_cells, ChipClassificationLabelSourceConfig,
+    ClassConfig, ChipClassificationLabelSourceConfig,
     GeoJSONVectorSourceConfig, ClassInferenceTransformerConfig,
     BufferTransformerConfig)
+from rastervision.core.data.label_source.chip_classification_label_source \
+    import infer_cells
 
 from tests import data_file_path
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
