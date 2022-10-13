@@ -69,9 +69,18 @@ RUN pip install $(grep -ivE "^\s*$|^#|rastervision_*" requirements.txt)
 # COPY ./rastervision_pytorch_backend/requirements.txt /opt/src/requirements.txt
 # RUN pip install $(grep -ivE "^\s*$|^#|rastervision_*" requirements.txt)
 
+#########################
+# Docs
+#########################
 # Install docs/requirements.txt
 COPY ./docs/requirements.txt /opt/src/docs/requirements.txt
 RUN pip install -r docs/requirements.txt
+
+# Install pandoc, needed for rendering notebooks
+# Get latest release link from here: https://github.com/jgm/pandoc/releases
+RUN wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-amd64.deb
+RUN dpkg -i pandoc-2.19.2-1-amd64.deb && rm pandoc-2.19.2-1-amd64.deb
+#########################
 
 RUN python -m pip install --upgrade pyopenssl==22.0.0
 

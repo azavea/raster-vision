@@ -54,6 +54,10 @@ extensions = [
     'sphinx.ext.viewcode',
     # for rendering examples in docstrings
     'sphinx.ext.doctest',
+    # jupyter notebooks
+    'nbsphinx',
+    # jupyter notebooks in a gallery
+    'sphinx_gallery.load_style',
 ]
 
 #########################
@@ -65,18 +69,33 @@ extensions = [
 # unit titles (such as .. function::).
 add_module_names = False
 
-# autosummary options:
-# See https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
 autosummary_generate = True
 autosummary_ignore_module_all = False
 
-# autodoc options:
-# See https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
-# Don't show class signature with the class' name.
 autodoc_typehints = 'both'
 autodoc_class_signature = 'separated'
 autodoc_member_order = 'groupwise'
 autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools', 'geopandas']
+#########################
+
+#########################
+# nbsphinx options
+#########################
+nbsphinx_execute = 'never'
+sphinx_gallery_conf = {
+    'line_numbers': True,
+}
+nbsphinx_prolog = r"""
+{% set docpath = env.doc2path(env.docname, base=False) %}
+{% set docname = docpath.split('/')|last %}
+
+.. only:: html
+
+    .. role:: raw-html(raw)
+        :format: html
+
+    .. note:: This page was generated from `{{ docname }} <https://github.com/azavea/raster-vision/blob/master/docs/{{ docpath }}>`__.
+"""
 #########################
 
 # -- General configuration ---------------------------------------------------
@@ -162,6 +181,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'README.md']
 # HTML -----------------------------------------------------------------
 
 html_theme = 'furo'
+# https://pradyunsg.me/furo/customisation/
 html_theme_options = {
     'sidebar_hide_name': True,
     'top_of_page_button': None,

@@ -80,6 +80,7 @@ usage patterns.
    CONTRIBUTING
    release
    API Reference <api_reference/api>
+   tutorials/index
 
 
 CHANGELOG

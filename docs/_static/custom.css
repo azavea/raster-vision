@@ -1,1 +1,4 @@
-
+/* to make captions in the notebook gallery larger */
+article p.caption {
+	font-size: inherit;
+}

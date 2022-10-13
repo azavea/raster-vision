@@ -3,3 +3,8 @@ furo==2022.9.29
 myst-parser==0.18.*
 autodoc-pydantic==1.7.*
 pallets-sphinx-themes==2.0.*
+nbsphinx==0.8.*
+
+# update when this is resolved:
+# https://github.com/sphinx-gallery/sphinx-gallery/issues/992#issuecomment-1277270671
+sphinx_gallery>=0.10,<0.11
