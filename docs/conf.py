@@ -99,7 +99,37 @@ class Mock(MagicMock):
 MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
+# connect docs in other projects
+intersphinx_mapping = {
+    "python": (
+        "https://docs.python.org/3",
+        "https://docs.python.org/3/objects.inv",
+    ),
+    "rasterio": (
+        "https://rasterio.readthedocs.io/en/stable/",
+        "https://rasterio.readthedocs.io/en/stable/objects.inv",
+    ),
+    "shapely": (
+        "https://shapely.readthedocs.io/en/stable/",
+        "https://shapely.readthedocs.io/en/stable/objects.inv",
+    ),
+    "matplotlib": (
+        "https://matplotlib.org/stable/",
+        "https://matplotlib.org/stable/objects.inv",
+    ),
+    "geopandas": (
+        "https://geopandas.org/en/stable/",
+        "https://geopandas.org/en/stable/objects.inv",
+    ),
+    "numpy": (
+        "https://numpy.org/doc/stable/",
+        "https://numpy.org/doc/stable/objects.inv",
+    ),
+    "pytorch": (
+        "https://pytorch.org/docs/stable/",
+        "https://pytorch.org/docs/stable/objects.inv",
+    ),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
