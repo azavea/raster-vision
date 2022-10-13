@@ -44,11 +44,24 @@ release = '0.13.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    # https://www.sphinx-doc.org/en/master/tutorial/automatic-doc-generation.html
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    # support Google-style docstrings
+    # https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
+    'sphinx.ext.napoleon',
+    # mardown support
+    'myst_parser',
     'sphinx.ext.intersphinx',
     'pallets_sphinx_themes',
-    'sphinx.ext.napoleon',
+    # better rendering of pydantic Configs
+    'sphinxcontrib.autodoc_pydantic',
 ]
+autosummary_generate = True
+# If true, the current module name will be prepended to all description
+# unit titles (such as .. function::).
+add_module_names = False
+autosummary_ignore_module_all = False
 
 # https://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
 import sys

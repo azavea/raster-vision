@@ -65,7 +65,6 @@ This part of the documentation guides you through all of the library's
 usage patterns.
 
 .. toctree::
-   :maxdepth: 2
 
    why
    quickstart
@@ -80,16 +79,8 @@ usage patterns.
    misc
    CONTRIBUTING
    release
+   API Reference <api_reference/api>
 
-.. _api:
-
-Configuration API
-==================
-
-.. toctree::
-   :maxdepth: 3
-
-   api
 
 CHANGELOG
 ===========
