@@ -3,7 +3,7 @@
 Pipelines and Commands
 ========================
 
-In addition to providing abstract :ref:`pipeline <pipelines>` functionality, Raster Vision provides a set of concrete pipelines for deep learning on remote sensing imagery including ``ChipClassification``, ``SemanticSegmentation``, and ``ObjectDetection``. These pipelines all derive from ``RVPipeline``, and are provided by the ``rastervision.core`` package. It's possible to customize these pipelines as well as create new ones from scratch, which is discussed in :ref:`customizing rv`.
+In addition to providing abstract :ref:`pipeline <rv pipelines>` functionality, Raster Vision provides a set of concrete pipelines for deep learning on remote sensing imagery including ``ChipClassification``, ``SemanticSegmentation``, and ``ObjectDetection``. These pipelines all derive from ``RVPipeline``, and are provided by the ``rastervision.core`` package. It's possible to customize these pipelines as well as create new ones from scratch, which is discussed in :ref:`customizing rv`.
 
 .. image:: img/cv-tasks.png
     :align: center

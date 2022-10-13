@@ -235,12 +235,14 @@ def pixel_to_map_coords(geojson: dict,
 
 
 def simplify_polygons(geojson: dict) -> dict:
-    """Simplify polygon geometries by applying .buffer(0).
+    """Simplify polygon geometries by applying ``.buffer(0)``.
 
-    For Polygon geomtries, .buffer(0) can do the following:
-    1. *Sometimes* break up a polygon with "bowties" into multiple polygons.
+    For Polygon geomtries, ``.buffer(0)`` can do the following:
+
+    1.  *Sometimes* break up a polygon with "bowties" into multiple polygons.
         (See https://github.com/shapely/shapely/issues/599.)
-    2. *Sometimes* "simplify" polygons. See shapely documentation for buffer().
+    2.  *Sometimes* "simplify" polygons. See shapely documentation for
+        :function:``buffer``.
 
     Args:
         geojson (dict): A GeoJSON-like mapping of a FeatureCollection.

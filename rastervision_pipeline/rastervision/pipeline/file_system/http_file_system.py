@@ -21,10 +21,11 @@ def get_file_obj(uri: str, with_progress: bool = True) -> ContextManager:
     a function that updates a tqdm progress bar.
 
     Usage:
-    ```
-    with get_file_obj(uri) as f:
-        ...
-    ```
+
+    .. code-block:: python
+
+        with get_file_obj(uri) as f:
+            ...
 
     Adapted from https://stackoverflow.com/a/63831344/5908685.
     """

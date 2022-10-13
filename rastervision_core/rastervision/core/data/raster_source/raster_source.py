@@ -140,10 +140,10 @@ class RasterSource(ABC):
         transformations.
 
         Args:
-            window: Box
+            window (Box): The window for which to get the chip.
 
         Returns:
-            np.ndarray with shape [height, width, channels]
+            (np.ndarray): Array of shape (height, width, channels).
         """
         chip = self._get_chip(window)
 
@@ -158,10 +158,10 @@ class RasterSource(ABC):
         """Return raw chip without using channel_order or applying transforms.
 
         Args:
-            window: (Box) the window for which to get the chip
+            window (Box): The window for which to get the chip.
 
         Returns:
-            np.ndarray with shape [height, width, channels]
+            (np.ndarray): Array of shape (height, width, channels).
         """
         return self._get_chip(window)
 
@@ -169,12 +169,18 @@ class RasterSource(ABC):
         """Return entire transformed image array.
 
         Not safe to call on very large RasterSources.
+
+        Returns:
+            (np.ndarray): Array of shape (height, width, channels).
         """
         return self.get_chip(self.extent)
 
     def get_raw_image_array(self) -> 'np.ndarray':
-        """Return entire raw image without using channel_order or applying transforms.
+        """Return raw image for the full extent.
 
         Not safe to call on very large RasterSources.
+
+        Returns:
+            (np.ndarray): Array of shape (height, width, channels).
         """
         return self.get_raw_chip(self.extent)
