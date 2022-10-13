@@ -82,7 +82,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -94,8 +94,12 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'README.md']
 
 # HTML -----------------------------------------------------------------
 
-html_theme = 'click'
-html_theme_options = {'index_sidebar_logo': False}
+html_theme = 'furo'
+html_theme_options = {
+    'sidebar_hide_name': True,
+    'top_of_page_button': None,
+    'navigation_with_keys': True,
+}
 html_context = {
     'project_links': [
         ProjectLink('Quickstart', 'quickstart.html'),
@@ -112,23 +116,10 @@ html_context = {
                     'https://github.com/azavea/raster-vision/issues/'),
         ProjectLink('CHANGELOG', 'changelog.html'),
         ProjectLink('Azavea', 'https://www.azavea.com/'),
-    ],
-    'css_files': [
-        '_static/rastervision.css',
-        'https://media.readthedocs.org/css/badge_only.css'
     ]
 }
-html_sidebars = {
-    'index': ['project.html', 'versions.html', 'searchbox.html'],
-    '**': [
-        'project.html', 'localtoc.html', 'relations.html', 'versions.html',
-        'searchbox.html'
-    ],
-}
-singlehtml_sidebars = {
-    'index': ['project.html', 'versions.html', 'localtoc.html']
-}
 html_static_path = ['_static']
+html_css_files = ['custom.css']
 html_favicon = 'img/raster-vision-icon.png'
 html_logo = 'img/raster-vision-logo.png'
 html_title = 'Raster Vision Documentation ({})'.format(version)

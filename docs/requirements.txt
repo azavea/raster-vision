@@ -1,2 +1,5 @@
 sphinx==5.2.*
-Pallets-Sphinx-Themes~=2.0.0
+furo==2022.9.29
+myst-parser==0.18.*
+autodoc-pydantic==1.7.*
+pallets-sphinx-themes==2.0.*
