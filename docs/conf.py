@@ -2,9 +2,6 @@
 
 from pallets_sphinx_themes import ProjectLink, get_version
 
-# this is to avoid import errors during build
-import geopandas
-
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -34,16 +31,13 @@ version = '0.13'
 # The full version, including alpha/beta/rc tags
 release = '0.13.1'
 
-# -- General configuration ---------------------------------------------------
-
-# If your documentation needs a minimal Sphinx version, state it here.
-#
-# needs_sphinx = '1.0'
+# -- Extension configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'pallets_sphinx_themes',
     # https://www.sphinx-doc.org/en/master/tutorial/automatic-doc-generation.html
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
@@ -52,18 +46,44 @@ extensions = [
     'sphinx.ext.napoleon',
     # mardown support
     'myst_parser',
+    # allow linking to python docs; see intersphinx_mapping below
     'sphinx.ext.intersphinx',
-    'pallets_sphinx_themes',
     # better rendering of pydantic Configs
     'sphinxcontrib.autodoc_pydantic',
     # for linking to source files from docs
     'sphinx.ext.viewcode',
+    # for rendering examples in docstrings
+    'sphinx.ext.doctest',
 ]
-autosummary_generate = True
+
+#########################
+# autodoc, autosummary
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+# https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
+#########################
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
 add_module_names = False
+
+# autosummary options:
+# See https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
+autosummary_generate = True
 autosummary_ignore_module_all = False
+
+# autodoc options:
+# See https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
+# Don't show class signature with the class' name.
+autodoc_typehints = 'both'
+autodoc_class_signature = 'separated'
+autodoc_member_order = 'groupwise'
+autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools', 'geopandas']
+#########################
+
+# -- General configuration ---------------------------------------------------
+
+# If your documentation needs a minimal Sphinx version, state it here.
+#
+# needs_sphinx = '1.0'
 
 # https://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
 import sys
@@ -78,8 +98,6 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
-autodoc_mock_imports = ['torch', 'torchvision', 'pycocotools']
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
 
@@ -124,7 +142,6 @@ html_context = {
         ProjectLink('Quickstart', 'quickstart.html'),
         ProjectLink('Documentation TOC', 'index.html#documentation'),
         ProjectLink('Examples', 'examples.html'),
-        ProjectLink('Config API Reference', 'index.html#api'),
         ProjectLink('AWS Batch Setup', 'cloudformation.html'),
         ProjectLink('Project Website', 'https://rastervision.io/'),
         ProjectLink('PyPI releases', 'https://pypi.org/project/rastervision/'),
@@ -141,7 +158,7 @@ html_static_path = ['_static']
 html_css_files = ['custom.css']
 html_favicon = 'img/raster-vision-icon.png'
 html_logo = 'img/raster-vision-logo.png'
-html_title = 'Raster Vision Documentation ({})'.format(version)
+html_title = f'Raster Vision Documentation ({version})'
 html_show_sourcelink = False
 html_domain_indices = False
 html_experimental_html5_writer = True

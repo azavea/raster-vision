@@ -2,11 +2,7 @@ API Reference
 =============
 
 
-rastervision
-------------
-
-
-.. rubric:: Plugins
+.. rubric:: Raster Vision Plugins
 
 .. autosummary::
    :toctree: _generated

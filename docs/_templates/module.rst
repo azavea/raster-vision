@@ -49,16 +49,20 @@
    {% endblock %}
 
    {% block functions %}
-   {% if functions %}
+   {% set function_to_show = [] %}
+   {% for f in functions %}
+      {% if not f.endswith('config_upgrader') %}
+         {% set _ = function_to_show.append(f) %}
+      {% endif %}
+   {%- endfor %}
+   {% if function_to_show %}
    .. rubric:: {{ _('Functions') }}
 
    .. autosummary::
       :toctree:
       :template: function.rst
-   {% for function in functions %}
-   {% if not function.endswith('config_upgrader') %}
+   {% for function in function_to_show %}
       {{ function }}
-   {% endif %}
    {%- endfor %}
    {% endif %}
    {% endblock %}

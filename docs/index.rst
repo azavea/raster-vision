@@ -59,7 +59,7 @@ See the :ref:`quickstart` for a more complete description of using this example.
 .. _documentation:
 
 Documentation
-==================
+=============
 
 This part of the documentation guides you through all of the library's
 usage patterns.
@@ -83,7 +83,7 @@ usage patterns.
 
 
 CHANGELOG
-===========
+=========
 
 .. toctree::
    :maxdepth: 2
