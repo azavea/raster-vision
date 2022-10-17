@@ -79,7 +79,7 @@ usage patterns.
    misc
    CONTRIBUTING
    release
-   API Reference <api_reference/api>
+   api_reference/index
    tutorials/index
 
 
