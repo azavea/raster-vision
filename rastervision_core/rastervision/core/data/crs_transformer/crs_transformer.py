@@ -142,7 +142,7 @@ class CRSTransformer(ABC):
             can be single values or array-like.
 
         Returns:
-            (x, y) tuple in pixel coordinates
+            Tuple[int, int]: (x, y) tuple in pixel coordinates.
         """
         pass
 
@@ -155,6 +155,6 @@ class CRSTransformer(ABC):
             single values or array-like.
 
         Returns:
-            (x, y) tuple in map coordinates (eg. lon/lat)
+            Tuple[float, float]: (x, y) tuple in map coordinates (eg. lon/lat).
         """
         pass

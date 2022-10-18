@@ -39,8 +39,8 @@ def convert_bool_args(args: dict) -> dict:
     return new_args
 
 
-def get_configs(cfg_module_path: str, runner: str, args: Dict[str, any]
-                ) -> List['rastervision.pipeline.PipelineConfig']:  # noqa
+def get_configs(cfg_module_path: str, runner: str,
+                args: Dict[str, any]) -> List[PipelineConfig]:
     """Get PipelineConfigs from a module.
 
     Calls a get_config(s) function with some arguments from the CLI
