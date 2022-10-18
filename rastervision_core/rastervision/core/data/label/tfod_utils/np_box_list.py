@@ -91,7 +91,7 @@ class BoxList(object):
             name (str): Field name.
 
         Returns:
-            (np.ndarray): The data associated with the field.
+            np.ndarray: The data associated with the field.
 
         Raises:
             ValueError: if invalid field.
@@ -106,7 +106,7 @@ class BoxList(object):
         """Get corner coordinates of boxes.
 
         Returns:
-            (Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]): a 4-tuple
+            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: a 4-tuple
                 of 1-d numpy arrays [y_min, x_min, y_max, x_max].
         """
         boxes = self.get_field('boxes')
@@ -119,7 +119,7 @@ class BoxList(object):
             data (np.ndarray): Box coords as a [N, 4] numpy array.
 
         Returns:
-            (bool): Whether ymin <= ymax and xmin <= xmax.
+            bool: Whether ymin <= ymax and xmin <= xmax.
         """
         ymin, xmin, ymax, xmax = data.T
         return (ymin <= ymax).all() and (xmin <= xmax).all()

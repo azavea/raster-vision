@@ -39,7 +39,7 @@ def area(boxlist: BoxList) -> np.ndarray:
         boxlist (BoxList): BoxList holding N boxes.
 
     Returns:
-        (np.ndarray): A numpy array with shape [N*1] representing box areas.
+        np.ndarray: A numpy array with shape [N*1] representing box areas.
     """
     y_min, x_min, y_max, x_max = boxlist.get_coordinates()
     return (y_max - y_min) * (x_max - x_min)
@@ -53,7 +53,7 @@ def intersection(boxlist1: BoxList, boxlist2: BoxList) -> np.ndarray:
         boxlist2 (BoxList): BoxList holding M boxes.
 
     Returns:
-        (np.ndarray): A numpy array with shape [N*M] representing pairwise
+        np.ndarray: A numpy array with shape [N*M] representing pairwise
             intersection area.
     """
     return np_box_ops.intersection(boxlist1.get(), boxlist2.get())
@@ -67,7 +67,7 @@ def iou(boxlist1: BoxList, boxlist2: BoxList) -> np.ndarray:
         boxlist2 (BoxList): BoxList holding M boxes.
 
     Returns:
-        (np.ndarray): A numpy array with shape [N, M] representing pairwise iou scores.
+        np.ndarray: A numpy array with shape [N, M] representing pairwise iou scores.
     """
     return np_box_ops.iou(boxlist1.get(), boxlist2.get())
 
@@ -84,7 +84,7 @@ def ioa(boxlist1: BoxList, boxlist2: BoxList) -> np.ndarray:
         boxlist2 (BoxList): BoxList holding M boxes.
 
     Returns:
-        (np.ndarray): A numpy array with shape [N, M] representing pairwise ioa
+        np.ndarray: A numpy array with shape [N, M] representing pairwise ioa
             scores.
     """
     return np_box_ops.ioa(boxlist1.get(), boxlist2.get())
@@ -108,8 +108,8 @@ def gather(boxlist: BoxList,
             only gather the box coordinates. Defaults to None.
 
     Returns:
-        subboxlist: a BoxList corresponding to the subset of the input BoxList
-        specified by indices
+        BoxList: a BoxList corresponding to the subset of the input BoxList
+            specified by indices
 
     Raises:
         ValueError: If specified field is not contained in boxlist or if the
@@ -139,7 +139,7 @@ def sort_by_field(boxlist: BoxList,
         order (SortOrder, optional): 'descend' or 'ascend'. Default is descend.
 
     Returns:
-        (BoxList): A sorted BoxList with the field in the specified order.
+        BoxList: A sorted BoxList with the field in the specified order.
 
     Raises:
         ValueError: If specified field does not exist or is not of single
@@ -184,7 +184,7 @@ def non_max_suppression(boxlist: BoxList,
             sets a different score threshold. Defaults to -10.0.
 
     Returns:
-        (BoxList): A BoxList holding M boxes. where M <= max_output_size.
+        BoxList: A BoxList holding M boxes. where M <= max_output_size.
 
     Raises:
         ValueError: If 'scores' field does not exist.
@@ -265,7 +265,7 @@ def multi_class_non_max_suppression(boxlist: BoxList, score_thresh: float,
         max_output_size (int): maximum number of retained boxes per class.
 
     Returns:
-        (BoxList): BoxList with M boxes with a rank-1 scores field representing
+        BoxList: BoxList with M boxes with a rank-1 scores field representing
             corresponding scores for each box with scores sorted in decreasing
             order and a rank-1 classes field representing a class label for
             each box.
@@ -327,7 +327,7 @@ def scale(boxlist: BoxList, y_scale: float, x_scale: float) -> BoxList:
         x_scale (float):
 
     Returns:
-        (BoxList): A BoxList holding N boxes.
+        BoxList: A BoxList holding N boxes.
     """
     y_min, x_min, y_max, x_max = np.array_split(boxlist.get(), 4, axis=1)
     y_min = y_scale * y_min
@@ -358,7 +358,7 @@ def clip_to_window(boxlist: BoxList, window: np.ndarray) -> BoxList:
             should clip boxes.
 
     Returns:
-        (BoxList): A BoxList holding M_out boxes where M_out <= M_in
+        BoxList: A BoxList holding M_out boxes where M_out <= M_in
     """
     y_min, x_min, y_max, x_max = np.array_split(boxlist.get(), 4, axis=1)
     win_y_min = window[0]
@@ -382,7 +382,9 @@ def clip_to_window(boxlist: BoxList, window: np.ndarray) -> BoxList:
 def prune_non_overlapping_boxes(boxlist1: BoxList,
                                 boxlist2: BoxList,
                                 minoverlap: float = 0.0) -> BoxList:
-    """Prunes the boxes in boxlist1 that overlap less than thresh with boxlist2.
+    """Prunes boxes with insufficient overlap b/w boxlists.
+
+    Prunes the boxes in boxlist1 that overlap less than thresh with boxlist2.
     For each box in boxlist1, we want its IOA to be more than minoverlap with
     at least one of the boxes in boxlist2. If it does not, we remove it.
 
@@ -393,7 +395,7 @@ def prune_non_overlapping_boxes(boxlist1: BoxList,
             them as overlapping. Defaults to 0.0.
 
     Returns:
-        (BoxList): A pruned boxlist with size [N', 4].
+        BoxList: A pruned boxlist with size [N', 4].
     """
     intersection_over_area = ioa(boxlist2, boxlist1)  # [M, N] tensor
     intersection_over_area = np.amax(
@@ -456,7 +458,7 @@ def concatenate(boxlists: List[BoxList],
             list are included in the concatenation. Defaults to None.
 
     Returns:
-        (BoxList): A BoxList with number of boxes equal to 
+        BoxList: A BoxList with number of boxes equal to 
             sum([boxlist.num_boxes() for boxlist in BoxList])
 
     Raises:
@@ -505,7 +507,7 @@ def filter_scores_greater_than(boxlist: BoxList, thresh: float) -> BoxList:
         thresh (float): scalar threshold
 
     Returns:
-        (BoxList): A BoxList holding M boxes. where M <= N
+        BoxList: A BoxList holding M boxes. where M <= N
 
     Raises:
         ValueError: If boxlist not a BoxList object or if it does not have a
@@ -542,7 +544,7 @@ def change_coordinate_frame(boxlist: BoxList, window: np.ndarray) -> BoxList:
         window: a size 4 1-D numpy array.
 
     Returns:
-        (BoxList): Returns a BoxList object with N boxes.
+        BoxList: Returns a BoxList object with N boxes.
     """
     win_height = window[2] - window[0]
     win_width = window[3] - window[1]
@@ -563,7 +565,7 @@ def _copy_extra_fields(boxlist_to_copy_to: BoxList,
         boxlist_to_copy_from (BoxList): BoxList from which fields are copied.
 
     Returns:
-        (BoxList): boxlist_to_copy_to with extra fields.
+        BoxList: boxlist_to_copy_to with extra fields.
     """
     for field in boxlist_to_copy_from.get_extra_fields():
         boxlist_to_copy_to.add_field(field,

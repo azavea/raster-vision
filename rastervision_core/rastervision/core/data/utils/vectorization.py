@@ -26,7 +26,7 @@ def mask_to_polygons(mask: np.ndarray, transform: Optional[rio.Affine] = None
             polygonization. Deafults to None (i.e. identity transform).
 
     Returns:
-        (Iterator[BaseGeometry]): Generator of shapely polygons.
+        Iterator[BaseGeometry]: Generator of shapely polygons.
     """
     if transform is None:
         transform = rio.Affine.identity()
@@ -72,7 +72,7 @@ def mask_to_building_polygons(
             break building clusters. Defaults to 0.001.
 
     Returns:
-        (Iterator[BaseGeometry]): Generator of shapely polygons.
+        Iterator[BaseGeometry]: Generator of shapely polygons.
     """
     n, components = cv2.connectedComponents(mask)
 
@@ -153,11 +153,11 @@ def denoise(mask: np.ndarray, radius: int) -> np.ndarray:
     """Apply morphological opening /w circular kernel to remove hi-freq noise.
 
     Args:
-      mask (np.ndarray): the binary mask to remove noise from.
-      radius (int): size in pixels of kernel for morphological op.
+        mask (np.ndarray): the binary mask to remove noise from.
+        radius (int): size in pixels of kernel for morphological op.
 
     Returns:
-      (np.ndarray): The mask after applying denoising.
+        np.ndarray: The mask after applying denoising.
     """
     kernel = cv2.getStructuringElement(
         shape=cv2.MORPH_ELLIPSE, ksize=(radius, radius))
