@@ -16,7 +16,7 @@ RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py3
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
-ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
+# ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 RUN conda install -y python=3.9
 RUN python -m pip install --upgrade pip
 
@@ -90,7 +90,7 @@ ENV PROJ_LIB /opt/conda/share/proj/
 # Needed to avoid the following error
 # OSError: /opt/conda/lib/python3.9/site-packages/torch/lib/libgomp-d22c30c5.so.1: cannot allocate memory in static TLS block
 # See https://raspberrypi.stackexchange.com/questions/132089/getting-oserror-lib-aarch64-linux-gnu-libgomp-so-1-cannot-allocate-memory-in
-ENV LD_PRELOAD /opt/conda/lib/python3.9/site-packages/torch/lib/libgomp-d22c30c5.so.1
+# ENV LD_PRELOAD /opt/conda/lib/python3.9/site-packages/torch/lib/libgomp-d22c30c5.so.1
 
 # Copy code for each package.
 ENV PYTHONPATH=/opt/src:$PYTHONPATH
