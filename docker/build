@@ -21,9 +21,6 @@ then
         exit
     fi
 
-    #DOCKER_BUILDKIT=1 docker build --platform linux/amd64 -t raster-vision-pytorch -f Dockerfile.pytorch.amd64 .
     #DOCKER_BUILDKIT=1 docker build --platform linux/amd64 --build-arg CUDA_VERSION="11.3.1" -t raster-vision-pytorch -f Dockerfile.amd64 .
     DOCKER_BUILDKIT=1 docker build --platform linux/arm64 --build-arg CUDA_VERSION="11.3.1" -t raster-vision-pytorch -f Dockerfile.arm64 .
-    #DOCKER_BUILDKIT=1 docker build --platform linux/arm64 -t raster-vision-pytorch -f Dockerfile.cpu.arm64 .
-    #DOCKER_BUILDKIT=1 docker build -t raster-vision-pytorch -f Dockerfile.rasterio .
 fi
