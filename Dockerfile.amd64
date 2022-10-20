@@ -16,11 +16,12 @@ RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py3
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
-# ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 RUN conda install -y python=3.9
 RUN python -m pip install --upgrade pip
 
 # Needed for Rasterio
+RUN conda install -y -c conda-forge gdal=3.5.2
 ENV GDAL_DATA=/opt/conda/lib/python3.9/site-packages/rasterio/gdal_data/
 
 # This is to prevent the following error when starting the container.
@@ -32,8 +33,8 @@ RUN rm /opt/conda/lib/libtinfo.so.6 && \
 WORKDIR /opt/src/
 
 # needed for jupyter lab extensions
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get install -y nodejs
+# RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+#    apt-get install -y nodejs
 
 COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
 RUN pip install -r requirements-dev.txt
