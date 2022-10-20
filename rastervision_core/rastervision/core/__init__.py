@@ -1,16 +1,5 @@
 # flake8: noqa
 
-# torch needs to be imported before anything else in RV or we will get a
-# segmentation fault when calling model.to('cuda'). This is very weird, and not
-# a great solution, but the show must go on.
-try:
-    # This is in a try block in case RV is being used without the torch backend
-    # plugin and torch is not installed
-    import torch
-except:
-    pass
-
-
 def register_plugin(registry):
     registry.set_plugin_version('rastervision.core', 7)
     registry.set_plugin_aliases('rastervision.core', ['rastervision2.core'])

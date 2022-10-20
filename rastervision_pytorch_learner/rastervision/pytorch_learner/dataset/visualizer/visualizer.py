@@ -119,7 +119,6 @@ class Visualizer(ABC):
         if output_path is not None:
             make_dir(output_path, use_dirname=True)
             plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
-
         plt.close(fig)
 
     def get_channel_display_groups(

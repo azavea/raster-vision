@@ -224,6 +224,32 @@ class Learner(ABC):
         This plots the dataset, runs a training and validation loop (which will resume if
         interrupted), logs stats, plots predictions, and syncs results to the cloud.
         """
+        split = 'valid'
+        batch_limit = self.cfg.data.preview_batch_limit
+        show = False
+
+        # need all of the following 3 lines to cause runtime error
+        dl = self.get_dataloader(split)
+        metrics = self.validate_epoch(dl)
+
+        self.plot_predictions(split, self.cfg.data.preview_batch_limit)
+
+        # Inlining the code in plot_predictions does not cause runtime error
+        if False:
+            # plot_predictions
+            log.info('Plotting predictions...')
+            dl = self.get_dataloader(split)
+            output_path = join(self.output_dir, f'{split}_preds.png')
+            preds = self.predict_dataloader(
+                dl, return_format='xyz', batched_output=True, raw_out=True)
+            x, y, z = next(preds)
+            self.visualizer.plot_batch(
+                x, y, output_path, z=z, batch_limit=batch_limit, show=show)
+
+        from torchvision.models import resnet18
+        m = resnet18()
+        exit()
+
         log_system_details()
         log.info(self.cfg)
         log.info(f'Using device: {self.device}')
@@ -240,12 +266,20 @@ class Learner(ABC):
                 if cfg.save_model_bundle:
                     self.save_model_bundle()
 
+        # good
         self.load_checkpoint()
+        # good
         if cfg.eval_train:
             self.eval_model('train')
+
+        # good
         self.eval_model('valid')
+
+        # bad
         self.sync_to_cloud()
         self.stop_tensorboard()
+
+        # bad
 
     def setup_training(self, loss_def_path: Optional[str] = None) -> None:
         cfg = self.cfg
@@ -842,11 +876,24 @@ class Learner(ABC):
             batch_limit: optional limit on (rendered) batch size
         """
         log.info('Plotting predictions...')
+
         dl = self.get_dataloader(split)
         output_path = join(self.output_dir, f'{split}_preds.png')
+
         preds = self.predict_dataloader(
             dl, return_format='xyz', batched_output=True, raw_out=True)
+
+        print('before next')
+        print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
+        # breakpoint()
+
+        # this is where inference mode was turned on
         x, y, z = next(preds)
+
+        print('after next')
+        print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
+        # breakpoint()
+
         self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
 
@@ -1207,10 +1254,23 @@ class Learner(ABC):
         Args:
             split: the dataset split to use: train, valid, or test.
         """
+        # good
         log.info('Evaluating on {} set...'.format(split))
         dl = self.get_dataloader(split)
         metrics = self.validate_epoch(dl)
         log.info('metrics: {}'.format(metrics))
+
+        # good
         json_to_file(metrics,
                      join(self.output_dir, '{}_metrics.json'.format(split)))
+
+        # good
         self.plot_predictions(split, self.cfg.data.preview_batch_limit)
+
+        # note: if you put this block in at the end of self.plot_predictions there is no problem.
+        # bad
+        # xxx
+        print('a')
+        from torchvision.models import resnet18
+        m = resnet18()
+        print('b')

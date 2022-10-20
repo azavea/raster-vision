@@ -36,8 +36,9 @@ WORKDIR /opt/src/
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs
 
-COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
-RUN pip install -r requirements-dev.txt
+# xxx
+# COPY ./requirements-dev.txt /opt/src/requirements-dev.txt
+# RUN pip install -r requirements-dev.txt
 
 # Ideally we'd just pip install each package, but if we do that, then a lot of the image
 # will have to be re-built each time we make a change to source code. So, we split the
