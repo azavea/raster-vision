@@ -232,7 +232,13 @@ class Learner(ABC):
         dl = self.get_dataloader(split)
         metrics = self.validate_epoch(dl)
 
+        print('before plot_predictions()')
+        print(torch.is_inference_mode_enabled())
+
         self.plot_predictions(split, self.cfg.data.preview_batch_limit)
+
+        print('after plot_predictions()')
+        print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
 
         # Inlining the code in plot_predictions does not cause runtime error
         if False:
@@ -885,14 +891,11 @@ class Learner(ABC):
 
         print('before next')
         print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
-        # breakpoint()
 
-        # this is where inference mode was turned on
         x, y, z = next(preds)
 
         print('after next')
         print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
-        # breakpoint()
 
         self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
