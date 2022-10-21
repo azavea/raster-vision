@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 if TYPE_CHECKING:
+    from rastervision.core.box import Box
     from rastervision.core.data import (RasterSource, LabelSource, LabelStore)
 
 
@@ -30,6 +31,11 @@ class Scene:
             self.aoi_polygons = []
         else:
             self.aoi_polygons = aoi_polygons
+
+    @property
+    def extent(self) -> 'Box':
+        """Extent of the associated RasterSource."""
+        return self.raster_source.extent
 
     def __getitem__(self, key: Any) -> Tuple[Any, Any]:
         x = self.raster_source[key]
