@@ -9,8 +9,8 @@ API Reference
    :template: plugin.rst
    :recursive:
 
-   rastervision.core
    rastervision.pipeline
+   rastervision.core
    rastervision.pytorch_learner
    rastervision.pytorch_backend
    rastervision.aws_s3
