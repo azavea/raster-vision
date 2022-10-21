@@ -11,5 +11,6 @@ The following tutorials highlight many of the things you can do with Raster Visi
     reading_vector_data
     reading_labels
     sampling_training_data
+    scenes_and_aois
     visualize_data_samples
     misc
