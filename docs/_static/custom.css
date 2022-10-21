@@ -2,3 +2,9 @@
 article p.caption {
 	font-size: inherit;
 }
+
+/* nbsphinx: removes the input and output prompts from code cells */
+.nbinput .prompt,
+.nboutput .prompt {
+	display: none;
+}
