@@ -238,6 +238,7 @@ class Learner(ABC):
         self.plot_predictions(split, self.cfg.data.preview_batch_limit)
 
         print('after plot_predictions()')
+        # should be false here after exiting the context
         print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
 
         # Inlining the code in plot_predictions does not cause runtime error
@@ -896,6 +897,12 @@ class Learner(ABC):
 
         print('after next')
         print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
+
+        '''
+        preds = None
+        print('after preds=None')
+        print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
+        '''
 
         self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
