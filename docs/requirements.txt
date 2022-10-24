@@ -8,3 +8,7 @@ nbsphinx==0.8.*
 # update when this is resolved:
 # https://github.com/sphinx-gallery/sphinx-gallery/issues/992#issuecomment-1277270671
 sphinx_gallery>=0.10,<0.11
+
+# Needed to make syntax highlighting work correctly on readthedocs.
+# See https://github.com/spatialaudio/nbsphinx/issues/24.
+ipython==8.5.*
