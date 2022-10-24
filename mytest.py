@@ -1,3 +1,5 @@
+# context manager's exit method is called when the reference to
+# the generator is lost, either by setting it to None or moving out of scope
 
 class MyContextManager():
     def __enter__(self):
@@ -14,10 +16,12 @@ def get_generator():
 def foo():
     print('start of foo')
     gen = get_generator()
-    next(gen)
-    gen = None
+    x = next(gen)
     print('end of foo')
+    return x
 
 print('before foo')
-foo()
+y = foo()
 print('after foo')
+y += 1
+print('after incrementing y')

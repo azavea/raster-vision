@@ -237,6 +237,10 @@ class Learner(ABC):
 
         self.plot_predictions(split, self.cfg.data.preview_batch_limit)
 
+        # calling gc.collect() will also finalize the preds generator
+        # import gc
+        # gc.collect()
+
         print('after plot_predictions()')
         # should be false here after exiting the context
         print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
@@ -638,10 +642,14 @@ class Learner(ABC):
         """
         x = self.to_batch(x).float()
         x = self.to_device(x, self.device)
+
+        print('in predict()')
         with torch.inference_mode():
+            print('before self.model()')
             out = self.model(x)
             if not raw_out:
                 out = self.prob_to_pred(self.post_forward(out))
+        print('after block')
         out = self.to_device(out, 'cpu')
         return out
 
@@ -852,7 +860,6 @@ class Learner(ABC):
                 else:
                     for _x, _y, _z in zip(x, y, z):
                         yield _x, _y, _z
-
         self.model.train(model_train_state)
 
     def get_dataloader(self, split: str) -> DataLoader:
@@ -898,14 +905,16 @@ class Learner(ABC):
         print('after next')
         print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
 
-        '''
-        preds = None
-        print('after preds=None')
-        print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
-        '''
-
         self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
+
+        print('after plot_batch')
+        # this is needed to get the exit method of the inference_mode context manager
+        # to get called. but it should get called when exiting this function.
+        # preds = None or preds.close() will work
+
+        print('after preds=None')
+        print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
 
     def plot_dataloader(self,
                         dl: DataLoader,
