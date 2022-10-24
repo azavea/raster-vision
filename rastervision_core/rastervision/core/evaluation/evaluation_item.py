@@ -1,4 +1,5 @@
 from abc import (ABC, abstractmethod)
+from pprint import pformat
 
 
 class EvaluationItem(ABC):
@@ -12,8 +13,8 @@ class EvaluationItem(ABC):
         pass
 
     @abstractmethod
-    def to_json(self):
+    def to_json(self) -> dict:
         return self.__dict__
 
     def __repr__(self):
-        return str(self.to_json())
+        return pformat(self.to_json())

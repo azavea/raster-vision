@@ -21,6 +21,9 @@ from rastervision.pytorch_learner.object_detection_learner import *
 from rastervision.pytorch_learner.dataset import *
 
 __all__ = [
+    # LearnerPipeline
+    LearnerPipeline.__name__,
+    LearnerPipelineConfig.__name__,
     # Learner
     Learner.__name__,
     SemanticSegmentationLearner.__name__,

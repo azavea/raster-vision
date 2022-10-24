@@ -38,7 +38,8 @@ if TYPE_CHECKING:
     from torch.optim.lr_scheduler import _LRScheduler
     from torch.utils.data import Dataset, Sampler
 
-    from rastervision.pytorch_learner.learner_config import LearnerConfig
+    from rastervision.pytorch_learner import (LearnerConfig,
+                                              LearnerPipelineConfig)
 
 warnings.filterwarnings('ignore')
 
@@ -881,12 +882,43 @@ class Learner(ABC):
                 batch_limit=batch_limit,
                 show=show)
 
-    @staticmethod
-    def from_model_bundle(model_bundle_uri: str,
-                          tmp_dir: str,
+    @classmethod
+    def from_model_bundle(cls: Type,
+                          model_bundle_uri: str,
+                          tmp_dir: Optional[str] = None,
                           cfg: Optional['LearnerConfig'] = None,
-                          training: bool = False):
-        """Create a Learner from a model bundle."""
+                          training: bool = False) -> 'Learner':
+        """Create a Learner from a model bundle.
+
+        .. note::
+
+            This is the bundle saved in ``train/model-bundle.zip`` and not
+            ``bundle/model-bundle.zip``.
+
+        Args:
+            model_bundle_uri (str): URI of the model bundle.
+            tmp_dir (Optional[str], optional): Optional temporary directory.
+                Will be used for unzipping bundle and also passed to the
+                default constructor. If None, will be auto-generated.
+                Defaults to None.
+            cfg (Optional[LearnerConfig], optional): If None, will be read from
+                the bundle. Defaults to None.
+            training (bool, optional): If False, the training apparatus (loss,
+                optimizer, scheduler, logging, etc.) will not be set up and the
+                model will be put into eval mode. If True, the training
+                apparatus will be set up and the model will be put into
+                training mode. Defaults to True.
+
+        Raises:
+            FileNotFoundError: If using custom Albumentations transforms and
+                definition file is not found in bundle.
+
+        Returns:
+            Learner: Object of the Learner subclass on which this was called.
+        """
+        if tmp_dir is None:
+            _tmp_dir = get_tmp_dir()
+            tmp_dir = _tmp_dir.name
         model_bundle_path = download_if_needed(model_bundle_uri)
         model_bundle_dir = join(tmp_dir, 'model-bundle')
         unzip(model_bundle_path, model_bundle_dir)
@@ -899,8 +931,9 @@ class Learner(ABC):
             config_dict = file_to_json(config_path)
             config_dict = upgrade_config(config_dict)
 
-            cfg = build_config(config_dict)
-            cfg = cfg.learner
+            learner_pipeline_cfg: 'LearnerPipelineConfig' = build_config(
+                config_dict)
+            cfg = learner_pipeline_cfg.learner
 
         hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
         model_def_path = None
@@ -933,12 +966,16 @@ class Learner(ABC):
             # config has been altered, so re-validate
             cfg = build_config(cfg.dict())
 
-        return cfg.build(
+        # we have trained weights, so avoid wasteful download
+        cfg.model.pretrained = False
+
+        learner: cls = cfg.build(
             tmp_dir=tmp_dir,
             model_weights_path=model_weights_path,
             model_def_path=model_def_path,
             loss_def_path=loss_def_path,
             training=training)
+        return learner
 
     def save_model_bundle(self):
         """Save a model bundle.
