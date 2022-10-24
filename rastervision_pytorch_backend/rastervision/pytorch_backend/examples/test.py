@@ -3,16 +3,16 @@ import os
 from typing import List, Optional, Union
 from pprint import pformat
 import subprocess
-from os.path import basename, isdir, isfile, join, normpath, relpath, splitext
+from os.path import (basename, isdir, isfile, join, normpath, relpath,
+                     splitext, split)
 from tempfile import TemporaryDirectory
 import shutil
 
 import click
 
-from rastervision.pipeline.file_system import (file_to_json, sync_from_dir,
-                                               upload_or_copy)
-from rastervision.pipeline.file_system.utils import (download_or_copy,
-                                                     sync_to_dir)
+from rastervision.pipeline.file_system import (
+    file_to_json, sync_from_dir, upload_or_copy, download_or_copy, file_exists,
+    sync_to_dir)
 
 EXAMPLES_MODULE_ROOT = 'rastervision.pytorch_backend.examples'
 EXAMPLES_PATH_ROOT = ('/opt/src/rastervision_pytorch_backend/'
@@ -195,9 +195,9 @@ def run(keys=[], test=True, remote=False, commands=None, overrides=[]):
 @click.option('--collect_dir', default=LOCAL_COLLECT_ROOT)
 @click.option('--remote', is_flag=True)
 @click.option(
-    '--commands',
-    '-c',
-    help='Space-separated string with RV commansd to run.',
+    '--paths',
+    '-p',
+    help='Space-separated string with URIs to files or dirs to collect.',
     default=None)
 @click.option(
     '--overrides',
@@ -207,15 +207,15 @@ def run(keys=[], test=True, remote=False, commands=None, overrides=[]):
     metavar='KEY VALUE',
     default=[],
     help='Override experiment config.')
-def collect(keys, collect_dir, remote, commands, overrides=[]):
-    """Download outputs of commands for each example. By default, only
+def collect(keys, collect_dir, remote, paths, overrides=[]):
+    """Download outputs of paths for each example. By default, only
     downloads eval and bundle.
     """
     overrides = dict(overrides)
-    if commands is None:
-        commands = ['eval', 'bundle']
+    if paths is None:
+        paths = ['train/model-bundle.zip', 'eval', 'bundle']
     else:
-        commands = commands.split(' ')
+        paths = paths.split(' ')
 
     run_all = len(keys) == 0
     validate_keys(keys)
@@ -229,9 +229,22 @@ def collect(keys, collect_dir, remote, commands, overrides=[]):
             dirs[key] = {}
             uris = exp_cfg['remote'] if remote else exp_cfg['local']
             root_uri = uris['root_uri']
-            for cmd in commands:
-                dirs[key][cmd] = fetch_cmd_dir(root_uri, cmd,
-                                               join(collect_dir, key))
+            for path in paths:
+                src_uri = join(root_uri, path)
+                console_info(f'{key}: Fetching {path}')
+                if file_exists(src_uri, include_dir=False):
+                    # is a single file
+                    dst_dir = join(collect_dir, key, split(path)[0])
+                    dst_dir = split(to_local_uri(src_uri, dst_dir))[0]
+                    download_or_copy(src_uri, dst_dir)
+                elif file_exists(src_uri, include_dir=True):
+                    # is a directory
+                    dst_dir = join(collect_dir, key, path)
+                    sync_from_dir(src_uri, dst_dir)
+                else:
+                    # does not exist
+                    console_failure(f'File or dir not found: {src_uri}.')
+                dirs[key][path] = dst_dir
     console_info(pformat(dirs))
 
 
@@ -396,10 +409,12 @@ def _upload_to_zoo(exp_cfg: dict, collect_dir: str, upload_dir: str) -> None:
     src_uris = {}
     dst_uris = {}
 
+    src_uris['learner_bundle'] = join(collect_dir, 'train', 'model-bundle.zip')
     src_uris['eval'] = join(collect_dir, 'eval', 'eval.json')
     src_uris['bundle'] = join(collect_dir, 'bundle', 'model-bundle.zip')
     src_uris['sample_predictions'] = join(collect_dir, 'sample-predictions')
 
+    dst_uris['learner_bundle'] = join(upload_dir, 'train', 'model-bundle.zip')
     dst_uris['eval'] = join(upload_dir, 'eval.json')
     dst_uris['bundle'] = join(upload_dir, 'model-bundle.zip')
     dst_uris['sample_predictions'] = join(upload_dir, 'sample-predictions')

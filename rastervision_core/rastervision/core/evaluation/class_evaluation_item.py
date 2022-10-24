@@ -1,4 +1,7 @@
+"""Defines ``ClassEvaluationItem``."""
+
 from typing import Optional
+
 import numpy as np
 
 from rastervision.core.evaluation import EvaluationItem
@@ -8,13 +11,20 @@ class ClassEvaluationItem(EvaluationItem):
     """A wrapper around a binary (2x2) confusion matrix of the form
 
     .. line-block::
-       [TN FP]
-       [FN TP]
+       [``TN`` ``FP``]
+       [``FN`` ``TP``]
 
-    where TN need not necessarily be available.
+    where ``TN`` need not necessarily be available.
 
     Exposes evaluation metrics computed from the confusion matrix as
     properties.
+
+    Attributes:
+        class_id (int): Class ID.
+        class_name (str): Class name.
+        conf_mat (np.ndarray): Confusion matrix: ``[[TN, FP], [FN, TP]]``.
+        extra_info (dict): Arbitrary extra key-value pairs that will be
+            included in the dict returned by ``to_json()``.
     """
 
     def __init__(self,
@@ -36,7 +46,7 @@ class ClassEvaluationItem(EvaluationItem):
             tn (Optional[int], optional): True negative count.
                 Defaults to None.
             **kwargs: Additional data can be provided as keyword arguments.
-                These will be included in the dict returned by to_json().
+                These will be included in the dict returned by ``to_json()``.
         """
         self.class_id = class_id
         self.class_name = class_name
@@ -49,6 +59,16 @@ class ClassEvaluationItem(EvaluationItem):
     def from_multiclass_conf_mat(cls, conf_mat: np.ndarray, class_id: int,
                                  class_name: str,
                                  **kwargs) -> 'ClassEvaluationItem':
+        """Construct from a multi-class confusion matrix and a target class ID.
+
+        Args:
+            conf_mat (np.ndarray): A multi-class confusion matrix.
+            class_id (int): The ID of the target class.
+            class_name (str): The name of the target class.
+
+        Returns:
+            ClassEvaluationItem: ClassEvaluationItem for target class.
+        """
         tp = conf_mat[class_id, class_id]
         fp = conf_mat[:, class_id].sum() - tp
         fn = conf_mat[class_id, :].sum() - tp
@@ -64,6 +84,10 @@ class ClassEvaluationItem(EvaluationItem):
         return item
 
     def merge(self, other: 'ClassEvaluationItem') -> None:
+        """Merge with another ``ClassEvaluationItem``.
+
+        This is accomplished by summing the confusion matrices.        
+        """
         if self.class_id != other.class_id:
             raise ValueError(
                 'Cannot merge evaluation items for different classes.')
@@ -71,18 +95,26 @@ class ClassEvaluationItem(EvaluationItem):
 
     @property
     def gt_count(self) -> int:
+        """Positive ground-truth count."""
         return self.conf_mat[1, :].sum()
 
     @property
     def pred_count(self) -> int:
+        """Positive prediction count."""
         return self.conf_mat[:, 1].sum()
 
     @property
     def true_pos(self) -> int:
+        """True positive count."""
         return self.conf_mat[1, 1]
 
     @property
     def true_neg(self) -> Optional[int]:
+        """True negative count.
+
+        Returns:
+            Optional[int]: Count as int if available. Otherwise, None.
+        """
         tn = self.conf_mat[0, 0]
         if tn < 0:
             return None
@@ -90,24 +122,29 @@ class ClassEvaluationItem(EvaluationItem):
 
     @property
     def false_pos(self) -> int:
+        """False positive count."""
         return self.conf_mat[0, 1]
 
     @property
     def false_neg(self) -> int:
+        """False negative count."""
         return self.conf_mat[1, 0]
 
     @property
     def recall(self) -> float:
+        """``TP / (TP + FN)``"""
         tp = self.true_pos
         fn = self.false_neg
         return float(tp) / (tp + fn)
 
     @property
     def sensitivity(self) -> float:
+        """Equivalent to ``recall``."""
         return self.recall
 
     @property
     def specificity(self) -> Optional[float]:
+        """``TN / (TN + FP)``"""
         if self.true_neg is None:
             return None
         tn = self.true_neg
@@ -116,17 +153,20 @@ class ClassEvaluationItem(EvaluationItem):
 
     @property
     def precision(self) -> float:
+        """``TP / (TP + FP)``"""
         tp = self.true_pos
         fp = self.false_pos
         return float(tp) / (tp + fp)
 
     @property
     def f1(self) -> float:
+        """F1 score = ``2 * (precision * recall) / (precision + recall)``"""
         precision = self.precision
         recall = self.recall
         return 2 * (precision * recall) / (precision + recall)
 
     def to_json(self) -> dict:
+        """Serialize to a dict."""
         out = {
             'class_id': self.class_id,
             'class_name': self.class_name,
@@ -148,10 +188,14 @@ class ClassEvaluationItem(EvaluationItem):
             out['false_pos'] = self.false_pos
             out['false_neg'] = self.false_neg
         else:
-            out['conf_mat'] = self.conf_mat.tolist()
+            cm = self.conf_mat
+            cm_frac = cm / cm.sum()
+            out['conf_mat'] = cm.tolist()
+            out['conf_mat_frac'] = cm_frac.tolist()
+            [[TN, FP], [FN, TP]] = cm
+            out['conf_mat_dict'] = dict(TN=TN, FP=FP, FN=FN, TP=TP)
+            [[TN, FP], [FN, TP]] = cm_frac
+            out['conf_mat_frac_dict'] = dict(TN=TN, FP=FP, FN=FN, TP=TP)
 
         out.update(self.extra_info)
         return out
-
-    def __repr__(self):
-        return str(self.to_json())

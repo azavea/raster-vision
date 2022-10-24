@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional
+"""Defines abstract base evaluation class for all tasks."""
+
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 from abc import (ABC, abstractmethod)
 import copy
 import json
@@ -15,50 +17,54 @@ class ClassificationEvaluation(ABC):
     """Base class for evaluating predictions for pipelines that have classes.
 
     Evaluations can be keyed, for instance, if evaluations happen per class.
+
+    Attributes:
+        class_to_eval_item (Dict[int, ClassEvaluationItem]): Mapping from class
+            IDs to ``ClassEvaluationItem``s.
+        scene_to_eval (Dict[str, ClassificationEvaluation]): Mapping from scene
+            IDs to ``ClassificationEvaluation``s.
+        avg_item (Optional[Dict[str, Any]]): Averaged evaluation over all
+            classes.
+        conf_mat (Optional[np.ndarray]): Confusion matrix.
     """
 
     def __init__(self):
+        self.class_to_eval_item: Dict[int, 'ClassEvaluationItem']
+        self.scene_to_eval: Dict[str, 'ClassificationEvaluation']
+        self.avg_item: Optional[Dict[str, Any]]
+        self.conf_mat: Optional[np.ndarray]
         self.reset()
 
     def reset(self):
         """Reset the Evaluation."""
-        self.class_to_eval_item: Dict[int, 'ClassEvaluationItem'] = {}
-        self.scene_to_eval: Dict[str, 'ClassificationEvaluation'] = {}
-        self.avg_item: Optional[Dict[str, Any]] = None
-        self.conf_mat: Optional[np.ndarray] = None
-        self._is_empty = True
+        self.class_to_eval_item = {}
+        self.scene_to_eval = {}
+        self.avg_item = None
+        self.conf_mat = None
 
-    def is_empty(self):
-        return self._is_empty
+    def to_json(self) -> Union[dict, list]:
+        """Serialize to a dict or list.
 
-    def set_class_to_eval_item(self, class_to_eval_item):
-        self.class_to_eval_item = class_to_eval_item
-
-    def get_by_id(self, key):
-        """Gets the evaluation for a particular EvaluationItem key"""
-        return self.class_to_eval_item[key]
-
-    def has_id(self, key):
-        """Answers whether or not the EvaluationItem key is represented"""
-        return key in self.class_to_eval_item
-
-    def to_json(self):
-        json_rep = []
-        for eval_item in self.class_to_eval_item.values():
-            json_rep.append(eval_item.to_json())
+        Returns:
+            Union[dict, list]: Class-wise and (if available) scene-wise
+                evaluations.
+        """
+        out = [item.to_json() for item in self.class_to_eval_item.values()]
         if self.avg_item:
-            json_rep.append(self.avg_item)
+            out.append(self.avg_item)
 
-        if self.scene_to_eval:
-            json_rep = {'overall': json_rep}
-            scene_to_eval_json = {}
-            for scene_id, eval in self.scene_to_eval.items():
-                scene_to_eval_json[scene_id] = eval.to_json()
-            json_rep['per_scene'] = scene_to_eval_json
+        if len(self.scene_to_eval) > 0:
+            # append per scene evals
+            out = {'overall': out}
+            per_scene_evals = {
+                scene_id: eval.to_json()
+                for scene_id, eval in self.scene_to_eval.items()
+            }
+            out['per_scene'] = per_scene_evals
 
-        return json_rep
+        return out
 
-    def save(self, output_uri):
+    def save(self, output_uri: str) -> None:
         """Save this Evaluation to a file.
 
         Args:
@@ -68,14 +74,19 @@ class ClassificationEvaluation(ABC):
             ensure_json_serializable(self.to_json()), indent=4)
         str_to_file(json_str, output_uri)
 
-    def merge(self, other: 'ClassificationEvaluation', scene_id=None) -> None:
+    def merge(self,
+              other: 'ClassificationEvaluation',
+              scene_id: Optional[str] = None) -> None:
         """Merge Evaluation for another Scene into this one.
 
         This is useful for computing the average metrics of a set of scenes.
         The results of the averaging are stored in this Evaluation.
 
         Args:
-            other: Evaluation to merge into this one
+            other (ClassificationEvaluation): Evaluation to merge into this one
+            scene_id (Optional[str], optional): ID of scene. If specified,
+                (a copy of) ``other`` will be saved and be availabel in
+                ``to_json()``'s output. Defaults to None.
         """
         if self.conf_mat is None:
             self.conf_mat = other.conf_mat
@@ -85,20 +96,19 @@ class ClassificationEvaluation(ABC):
         if len(self.class_to_eval_item) == 0:
             self.class_to_eval_item = other.class_to_eval_item
         else:
-            for key, other_eval_item in other.class_to_eval_item.items():
-                if self.has_id(key):
-                    self.get_by_id(key).merge(other_eval_item)
+            for class_id, other_eval_item in other.class_to_eval_item.items():
+                if class_id in self.class_to_eval_item:
+                    self.class_to_eval_item[class_id].merge(other_eval_item)
                 else:
-                    self.class_to_eval_item[key] = other_eval_item
+                    self.class_to_eval_item[class_id] = other_eval_item
 
-        self._is_empty = False
         self.compute_avg()
 
         if scene_id is not None:
             self.scene_to_eval[scene_id] = copy.deepcopy(other)
 
-    def compute_avg(self):
-        """Compute average metrics over all keys."""
+    def compute_avg(self) -> None:
+        """Compute average metrics over all classes."""
         if len(self.class_to_eval_item) == 0:
             return
         class_evals = [
@@ -128,7 +138,9 @@ class ClassificationEvaluation(ABC):
             'count_error': count_error
         }
         if self.conf_mat is not None:
-            self.avg_item['conf_mat'] = self.conf_mat.tolist()
+            cm = self.conf_mat
+            self.avg_item['conf_mat'] = cm.tolist()
+            self.avg_item['conf_mat_frac'] = (cm / cm.sum()).tolist()
 
     @abstractmethod
     def compute(self, ground_truth_labels, prediction_labels):
@@ -142,6 +154,7 @@ class ClassificationEvaluation(ABC):
 
 
 def ensure_json_serializable(obj: Any) -> dict:
+    """Convert numpy types to JSON serializable equivalents."""
     if obj is None or isinstance(obj, (str, int, bool)):
         return obj
     if isinstance(obj, dict):
