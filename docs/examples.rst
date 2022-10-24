@@ -191,11 +191,11 @@ After training a model, the road F1 score was 0.83. More evaluation details can 
 Semantic Segmentation: ISPRS Potsdam
 -------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`__ performs semantic segmentation on the `ISPRS Potsdam dataset <http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html>`__. The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our `blog post <https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/>`__.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`__ performs semantic segmentation on the `ISPRS Potsdam dataset <https://www.isprs.org/education/benchmarks/UrbanSemLab/2d-sem-label-potsdam.aspx>`__. The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our `blog post <https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/>`__.
 
 Data:
 
-* The dataset can only be downloaded after filling in this `request form <http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html>`__. After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip ``4_Ortho_RGBIR.zip``, and ``5_Labels_for_participants.zip`` into a directory, and then upload to S3 if desired.
+* The dataset can be `downloaded from here <https://www.isprs.org/education/benchmarks/UrbanSemLab/>`__. After downloading, unzip ``4_Ortho_RGBIR.zip`` and ``5_Labels_for_participants.zip`` into a directory, and then upload to S3 if desired.
 
 Arguments:
 
@@ -215,7 +215,7 @@ This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision
 
 Data:
 
-* The imagery can only be downloaded after filling in this `request form <http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html>`__. After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip ``4_Ortho_RGBIR.zip`` into a directory, and then upload to S3 if desired. (This step uses the same imagery as :ref:`potsdam semantic segmentation`.)
+* The dataset can be `downloaded from here <https://www.isprs.org/education/benchmarks/UrbanSemLab/>`__. After downloading, unzip ``4_Ortho_RGBIR.zip`` into a directory, and then upload to S3 if desired. (This example uses the same imagery as :ref:`potsdam semantic segmentation`.)
 * Download the `processed labels <https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip>`__ and unzip. These files were generated from the `COWC car detection dataset <https://gdo152.llnl.gov/cowc/>`__ using `some scripts <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/object_detection/cowc_potsdam_data_prep/>`__. TODO: Get these scripts into runnable shape.
 
 Arguments:
