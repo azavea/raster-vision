@@ -191,6 +191,15 @@ class Learner(ABC):
         self.epoch_scheduler = epoch_scheduler
         self.step_scheduler = step_scheduler
 
+        # ---------------------------
+        # Set URIs
+        # ---------------------------
+        if output_dir is None and cfg.output_uri is None:
+            raise ValueError('output_dir or LearnerConfig.output_uri must '
+                             'be specified.')
+        if output_dir is not None and cfg.output_uri is not None:
+            log.warn('Both output_dir and LearnerConfig.output_uri specified. '
+                     'LearnerConfig.output_uri will be ignored.')
         if output_dir is None:
             assert cfg.output_uri is not None
             self.output_dir = cfg.output_uri
@@ -200,10 +209,10 @@ class Learner(ABC):
             self.model_bundle_uri = join(self.output_dir, 'model-bundle.zip')
 
         if is_local(self.output_dir):
-            self.output_dir_local = output_dir
+            self.output_dir_local = self.output_dir
             make_dir(self.output_dir_local)
         else:
-            self.output_dir_local = get_local_path(output_dir, tmp_dir)
+            self.output_dir_local = get_local_path(self.output_dir, tmp_dir)
             make_dir(self.output_dir_local, force_empty=True)
             if training and not cfg.overfit_mode:
                 self.sync_from_cloud()
@@ -211,6 +220,7 @@ class Learner(ABC):
             log.info(f'Remote output dir: {self.output_dir}')
 
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
+        # ---------------------------
 
         self.setup_model(
             model_weights_path=model_weights_path,
@@ -924,6 +934,7 @@ class Learner(ABC):
         Returns:
             Learner: Object of the Learner subclass on which this was called.
         """
+        log.info(f'Loading learner from bundle {model_bundle_uri}.')
         if tmp_dir is None:
             _tmp_dir = get_tmp_dir()
             tmp_dir = _tmp_dir.name
@@ -1011,7 +1022,8 @@ class Learner(ABC):
         zipdir(model_bundle_dir, zip_path)
 
     def _bundle_model(self, model_bundle_dir: str) -> None:
-        """Copy last saved model weights into bundle."""
+        """Save model weights and copy them to bundle dir.."""
+        torch.save(self.model.state_dict(), self.last_model_weights_path)
         shutil.copyfile(self.last_model_weights_path,
                         join(model_bundle_dir, 'model.pth'))
 
