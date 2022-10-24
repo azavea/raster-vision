@@ -1,33 +1,15 @@
-'''
-from osgeo import gdal
-import shapely
-import geopandas
-import numpy
-import PIL
-import pyproj
-import sklearn
-import scipy
-import cv2
-import imageio
-import tensorboard
-import albumentations
-import cython
-import pycocotools
-import matplotlib
-import numpy
-'''
+import torch
 
-import numpy
-from rastervision.core.data import RasterioSource
-from torchvision.models import resnet50
+def get_generator():
+    with torch.inference_mode():
+        for i in range(10):
+            yield i
 
-model = resnet50(pretrained=True)
-model.to('cuda')
+def foo():
+    gen = get_generator()
+    next(gen)
+    print(torch.is_inference_mode_enabled())
 
-# segfaults:
-# import rv, torch
-# import [shapely | numpy | PIL | scipy | imageio | tensorboard | cython | pycocotools | numpy], rv, torch
-
-# no segfault:
-# import torch
-# import [gdal | geopandas | pyproj | sklearn | cv2 | albumentations | matplotlib], rv, torch
+print(torch.is_inference_mode_enabled())
+foo()
+print(torch.is_inference_mode_enabled())
