@@ -8,7 +8,7 @@ shapely==1.8.4
 geopandas==0.10.2
 
 pillow==8.4.*
-pyproj==2.6.*
+pyproj==3.4.*
 rasterio==1.2.*
 imageio==2.22.*
 pystac==1.0.*
