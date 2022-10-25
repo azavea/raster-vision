@@ -79,8 +79,8 @@ usage patterns.
    misc
    CONTRIBUTING
    release
-   api_reference/index
    tutorials/index
+   api_reference/index
 
 
 CHANGELOG
