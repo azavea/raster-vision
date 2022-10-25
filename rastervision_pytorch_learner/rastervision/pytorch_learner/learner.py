@@ -816,7 +816,8 @@ class Learner(ABC):
         elif return_format == 'z':
             preds = (z for _, _, z in preds)
 
-        return preds
+        from contextlib import closing
+        return closing(preds)
 
     def _predict_dataloader(
             self,
@@ -848,19 +849,21 @@ class Learner(ABC):
         model_train_state = self.model.training
         self.model.eval()
 
-        with torch.inference_mode():
-            for x, y in dl:
-                x = self.to_device(x, self.device)
-                z = self.predict(x, raw_out=raw_out, **predict_kw)
-                x = self.to_device(x, 'cpu')
-                y = self.to_device(y, 'cpu') if y is not None else y
-                z = self.to_device(z, 'cpu')
-                if batched_output:
-                    yield x, y, z
-                else:
-                    for _x, _y, _z in zip(x, y, z):
-                        yield _x, _y, _z
-        self.model.train(model_train_state)
+        try:
+            with torch.inference_mode():
+                for x, y in dl:
+                    x = self.to_device(x, self.device)
+                    z = self.predict(x, raw_out=raw_out, **predict_kw)
+                    x = self.to_device(x, 'cpu')
+                    y = self.to_device(y, 'cpu') if y is not None else y
+                    z = self.to_device(z, 'cpu')
+                    if batched_output:
+                        yield x, y, z
+                    else:
+                        for _x, _y, _z in zip(x, y, z):
+                            yield _x, _y, _z
+        finally:
+            self.model.train(model_train_state)
 
     def get_dataloader(self, split: str) -> DataLoader:
         """Get the DataLoader for a split.
@@ -894,16 +897,15 @@ class Learner(ABC):
         dl = self.get_dataloader(split)
         output_path = join(self.output_dir, f'{split}_preds.png')
 
-        preds = self.predict_dataloader(
-            dl, return_format='xyz', batched_output=True, raw_out=True)
+        with self.predict_dataloader(
+                dl, return_format='xyz', batched_output=True, raw_out=True) as preds:
+            print('before next')
+            print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
 
-        print('before next')
-        print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
+            x, y, z = next(preds)
 
-        x, y, z = next(preds)
-
-        print('after next')
-        print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
+            print('after next')
+            print('torch.is_inference_mode_enabled()', torch.is_inference_mode_enabled())
 
         self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
