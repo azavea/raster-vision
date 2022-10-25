@@ -4,10 +4,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
+from torchvision.datasets.folder import DatasetFolder
 
 from rastervision.pipeline import rv_config
-from rastervision.pytorch_learner.dataset import (
-    discover_images, load_image, make_image_folder_dataset, DatasetFolder)
+from rastervision.pytorch_learner.dataset import (discover_images, load_image,
+                                                  make_image_folder_dataset)
 from rastervision.pytorch_backend.pytorch_learner_backend import write_chip
 
 

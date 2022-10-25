@@ -16,3 +16,9 @@ def register_plugin(registry):
 
 import rastervision.pipeline
 from rastervision.aws_batch.aws_batch_runner import *
+
+__all__ = [
+    'AWS_BATCH',
+    AWSBatchRunner.__name__,
+    submit_job.__name__,
+]

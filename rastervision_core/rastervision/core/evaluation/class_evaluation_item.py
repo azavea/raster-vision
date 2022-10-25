@@ -6,8 +6,11 @@ from rastervision.core.evaluation import EvaluationItem
 
 class ClassEvaluationItem(EvaluationItem):
     """A wrapper around a binary (2x2) confusion matrix of the form
-        [TN FP]
-        [FN TP]
+
+    .. line-block::
+       [TN FP]
+       [FN TP]
+
     where TN need not necessarily be available.
 
     Exposes evaluation metrics computed from the confusion matrix as

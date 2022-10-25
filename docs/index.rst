@@ -59,13 +59,12 @@ See the :ref:`quickstart` for a more complete description of using this example.
 .. _documentation:
 
 Documentation
-==================
+=============
 
 This part of the documentation guides you through all of the library's
 usage patterns.
 
 .. toctree::
-   :maxdepth: 2
 
    why
    quickstart
@@ -80,19 +79,12 @@ usage patterns.
    misc
    CONTRIBUTING
    release
+   tutorials/index
+   api_reference/index
 
-.. _api:
-
-Configuration API
-==================
-
-.. toctree::
-   :maxdepth: 3
-
-   api
 
 CHANGELOG
-===========
+=========
 
 .. toctree::
    :maxdepth: 2

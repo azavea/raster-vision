@@ -43,17 +43,20 @@ def mask_to_building_polygons(
         thickness: float = 0.001) -> Iterator['BaseGeometry']:
     """Try to break up building clusters and then convert to polygons.
 
-    Does the following:
-        (1) Identify connected components in mask.
-        (2) For each connected component, if >= min_area:
-            (i) Generate a kernel based on its dimensions and orientation and
-                the width_factor and thickness params.
-            (ii) Use the kernel to apply morphological erosion to component-
-                mask.
-            (iii) Identify connected sub-components in component-mask.
-            (iv) For each connected sub-component, if >= min_area:
-                (a) Apply morphological dilation using the kernel from above.
-                (b) Polygonize using mask_to_polygons().
+    Perofrms the following steps:
+
+    1.  Identify connected components in ``mask``.
+    2.  For each connected component, if >= ``min_area``:
+
+        a.  Generate a kernel based on its dimensions and orientation and
+            the ``width_factor`` and ``thickness`` params.
+        b.  Use the kernel to apply morphological erosion to component-
+            mask.
+        c.  Identify connected sub-components in component-mask.
+        d.  For each connected sub-component, if >= ``min_area``:
+
+            1. Apply morphological dilation using the kernel from above.
+            2. Polygonize using ``mask_to_polygons()``.
 
     Args:
         mask (np.ndarray): The mask containing buildings to polygonize.

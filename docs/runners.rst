@@ -5,7 +5,8 @@ Running Pipelines
 
 Running pipelines in Raster Vision is done using the ``rastervision`` :ref:`run cli command` command. This generates a pipeline configuration, serializes it, and then uses a runner to actually execute the commands, locally or remotely.
 
-.. seealso:: :ref:`pipeline package` explains more of the details of how ``Pipelines`` are implemented.
+.. seealso::
+   :ref:`rv pipelines` explains more of the details of how ``Pipelines`` are implemented.
 
 Running locally
 ---------------

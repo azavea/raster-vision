@@ -1,5 +1,3 @@
-.. _release:
-
 Release Process
 ===============
 
@@ -18,13 +16,13 @@ Minor or Major Version Release
 #. Test out :ref:`setup` and :ref:`quickstart` instructions and make sure they work.
 #. Test examples from :ref:`pipelines plugins`, :ref:`bootstrap`, and :ref:`cloudformation setup`.
 
-    .. code-block:: terminal
+    .. code-block:: console
 
         rastervision run inprocess rastervision.pipeline_example_plugin1.config1 -a root_uri /opt/data/pipeline-example/1/ -s 2
         rastervision run inprocess rastervision.pipeline_example_plugin1.config2 -a root_uri /opt/data/pipeline-example/2/ -s 2
         rastervision run inprocess rastervision.pipeline_example_plugin2.config3 -a root_uri /opt/data/pipeline-example/3/ -s 2
 
-    .. code-block:: terminal
+    .. code-block:: console
 
         cookiecutter /Users/lfishgold/projects/raster-vision/cookiecutter_template
 
@@ -37,7 +35,7 @@ Minor or Major Version Release
 #. Ensure that the docs are building correctly for the new version branch on `readthedocs <https://readthedocs.org/projects/raster-vision/>`_. You will need to have admin access on your RTD account. Once the branch is building successfully, Under Versions -> Activate a Version, you can activate the version to add it to the sidebar of the docs for the latest version. (This might require manually triggering a rebuild of the docs.) Then, under Admin -> Advanced Settings, change the default version to the new version.
 #. GitHub Actions is supposed to publish an image whenever there is a push to a branch with a version number as the name. If this doesn't work or you want to publish it immediately, then you can manually make a Docker image for the new version and push to Quay. For this you will need an account on Quay.io under the Azavea organization.
 
-    .. code-block:: terminal
+    .. code-block:: console
 
         ./docker/build
         docker login quay.io
@@ -47,14 +45,14 @@ Minor or Major Version Release
 #. Make a Github `tag <https://github.com/azavea/raster-vision/tags>`_ and `release <https://github.com/azavea/raster-vision/releases>`_ using the previous release as a template.
 #. Publish all packages to PyPI. This step requires ``twine`` which you can install with ``pip install twine``. To store settings for PyPI you can setup a ``~/.pypirc`` file containing:
 
-    .. code-block:: terminal
+    .. code-block:: console
 
         [pypi]
         username = azavea
 
     Once packages are published they cannot be changed so be careful. (It's possible to practice using testpypi.) Navigate to the ``raster-vision`` repo on your local filesystem. With the version branch checked out, run something like the following to publish each plugin, and then the top-level package.
 
-    .. code-block:: terminal
+    .. code-block:: console
 
         export RV="/Users/lfishgold/projects/raster-vision"
 

@@ -10,7 +10,7 @@ build:
   # ubuntu-20.04 is the minimum available option
   os: ubuntu-20.04
   tools:
-    python: "3.7"
+    python: "3.8"
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:

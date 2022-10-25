@@ -6,9 +6,10 @@ from rastervision.pipeline import rv_config
 from rastervision.pipeline.config import (build_config, upgrade_config)
 from rastervision.pipeline.file_system.utils import (download_if_needed,
                                                      file_to_json, unzip)
-from rastervision.core.data import (
-    ChannelOrderError, SemanticSegmentationLabelStoreConfig,
-    PolygonVectorOutputConfig, StatsTransformerConfig)
+from rastervision.core.data.raster_source import ChannelOrderError
+from rastervision.core.data import (SemanticSegmentationLabelStoreConfig,
+                                    PolygonVectorOutputConfig,
+                                    StatsTransformerConfig)
 from rastervision.core.analyzer import StatsAnalyzerConfig
 
 if TYPE_CHECKING:

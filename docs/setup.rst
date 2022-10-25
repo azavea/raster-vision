@@ -12,7 +12,7 @@ Using the Docker images published for Raster Vision makes it easy to use a fully
 
 The images we publish include plugins and dependencies for using Raster Vision with PyTorch, and AWS S3 and Batch. These are published to `quay.io/azavea/raster-vision <https://quay.io/repository/azavea/raster-vision>`_.  To run the container for the latest release, run:
 
-.. code-block:: terminal
+.. code-block:: console
 
    > docker run --rm -it quay.io/azavea/raster-vision:pytorch-0.13 /bin/bash
 
@@ -27,19 +27,19 @@ There are several scripts under `docker/ <https://github.com/azavea/raster-visio
 
 After cloning the repo, you can build the Docker image using:
 
-.. code-block:: terminal
+.. code-block:: console
 
     > docker/build
 
 Before running the container, set an environment variable to a local directory in which to store data.
 
-.. code-block:: terminal
+.. code-block:: console
 
     > export RASTER_VISION_DATA_DIR="/path/to/data"
 
 To run a Bash console in the PyTorch Docker container use:
 
-.. code-block:: terminal
+.. code-block:: console
 
     > docker/run
 
@@ -53,7 +53,7 @@ This will mount the ``$RASTER_VISION_DATA_DIR`` local directory to to ``/opt/dat
 
 This script also has options for forwarding AWS credentials, and running Jupyter notebooks which can be seen below.
 
-.. code-block:: terminal
+.. code-block:: console
 
     > docker/run --help
 
@@ -87,11 +87,11 @@ Installing via pip
 
 Rather than running Raster Vision from inside a Docker container, you can directly install the library using ``pip``. However, we recommend using the Docker images since it can be difficult to install some of the dependencies.
 
-.. code-block:: terminal
+.. code-block:: console
 
    > pip install rastervision==0.13
 
-.. note:: Raster Vision requires Python 3.7 or later. Use ``pip3 install rastervision==0.13.0`` if you have more than one version of Python installed.
+.. note:: Raster Vision requires Python 3.8 or later. Use ``pip3 install rastervision==0.13.0`` if you have more than one version of Python installed.
 
 You will also need various dependencies that are not pip-installable. For an example of setting these up, see the `Dockerfile <https://github.com/azavea/raster-vision/blob/0.13/Dockerfile>`_.
 
@@ -100,13 +100,13 @@ Install individual pip packages
 
 Raster Vision is comprised of a required ``rastervision.pipeline`` package, and a number of optional plugin packages, as described in :ref:`codebase overview`. Each of these packages have their own dependencies, and can be installed individually. Running the following command:
 
-.. code-block:: terminal
+.. code-block:: console
 
     > pip install rastervision==0.13
 
 is equivalent to running the following sequence of commands:
 
-.. code-block:: terminal
+.. code-block:: console
 
     > pip install rastervision_pipeline==0.13
     > pip install rastervision_aws_s3==0.13
@@ -121,9 +121,9 @@ Troubleshooting macOS Installation
 
 If you encounter problems running ``pip install rastervision==0.13`` on macOS, you may have to manually install Cython and pyproj.
 
-To circumvent a problem installing pyproj with Python 3.7, you may also have to install that library using ``git+https``:
+To circumvent a problem installing pyproj with Python 3.8, you may also have to install that library using ``git+https``:
 
-.. code-block:: terminal
+.. code-block:: console
 
   > pip install cython
   > pip install git+https://github.com/jswhit/pyproj.git@e56e879438f0a1688b89b33228ebda0f0d885c19
@@ -150,7 +150,7 @@ to determine which settings to use. The configuration file used will be named th
 profile: if you had two profiles (the ``default`` and one named ``myprofile``), your
 ``${HOME}/.rastervision`` would look like this:
 
-.. code-block:: terminal
+.. code-block:: console
 
    > ls ~/.rastervision
    default    myprofile
@@ -209,7 +209,7 @@ Use the nvidia-docker runtime
 
 When running your Docker container, be sure to include the ``--runtime=nvidia`` option, e.g.
 
-.. code-block:: terminal
+.. code-block:: console
 
    > docker run --runtime=nvidia --rm -it quay.io/azavea/raster-vision:pytorch-0.13 /bin/bash
 
@@ -222,7 +222,7 @@ We recommend you ensure that the GPUs are actually enabled. If you don't, you ma
 
 One way to check this is to make sure PyTorch can see the GPU(s). To do this, open up a ``python`` console and run the following:
 
-.. code-block:: terminal
+.. code-block:: console
 
     import torch
     torch.cuda.is_available()
@@ -230,14 +230,14 @@ One way to check this is to make sure PyTorch can see the GPU(s). To do this, op
 
 This should print out something like:
 
-.. code-block:: terminal
+.. code-block:: console
 
     True
     Tesla K80
 
 If you have `nvidia-smi <https://developer.nvidia.com/nvidia-system-management-interface>`_  installed, you can also use this command to inspect GPU utilization while the training job is running:
 
-.. code-block:: terminal
+.. code-block:: console
 
     > watch -d -n 0.5 nvidia-smi
 

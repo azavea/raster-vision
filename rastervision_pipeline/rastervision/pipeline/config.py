@@ -39,22 +39,6 @@ class Config(BaseModel):
         extra = 'forbid'
         validate_assignment = True
 
-    @classmethod
-    def get_field_summary(cls: type) -> str:
-        """Returns class attributes PyDoc summarizing all Config fields."""
-        summary = 'Attributes:\n'
-        for _, field in cls.__fields__.items():
-            if field.name != 'type_hint':
-                desc = field.field_info.description or ''
-                summary += '\t{} ({}): {}'.format(field.name,
-                                                  field._type_display(), desc)
-                if not field.required:
-                    summary += '{} Defaults to {}.'.format(
-                        '.' if desc and not desc.endswith('.') else '',
-                        repr(field.default))
-                summary += '\n'
-        return summary
-
     def update(self, *args, **kwargs):
         """Update any fields before validation.
 
@@ -300,13 +284,16 @@ def register_config(type_hint: str,
     def _register_config(cls):
         new_cls = create_model(
             cls.__name__,
-            type_hint=(Literal[type_hint], type_hint),
-            __base__=cls)
+            __base__=cls,
+            __module__=cls.__module__,
+            # add a new field called "type_hint" with type Literal[type_hint]
+            # and default value type_hint to the config
+            type_hint=(Literal[type_hint], type_hint),  # type: ignore
+        )
         _plugin = plugin or get_plugin(cls)
         registry.add_config(type_hint, new_cls, _plugin, upgrader)
-
-        new_cls.__doc__ = (cls.__doc__
-                           or '') + '\n\n' + cls.get_field_summary()
+        # retain docstring after wrapping
+        new_cls.__doc__ = cls.__doc__
         return new_cls
 
     return _register_config

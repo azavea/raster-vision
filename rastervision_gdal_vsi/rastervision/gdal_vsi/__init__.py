@@ -2,6 +2,7 @@
 
 
 def register_plugin(registry):
+    from rastervision.gdal_vsi.vsi_file_system import VsiFileSystem
     registry.set_plugin_version('rastervision.gdal_vsi', 0)
     registry.set_plugin_aliases('rastervision.gdal_vsi',
                                 ['rastervision2.gdal_vsi'])
@@ -10,3 +11,7 @@ def register_plugin(registry):
 
 import rastervision.pipeline
 from rastervision.gdal_vsi.vsi_file_system import VsiFileSystem
+
+__all__ = [
+    VsiFileSystem.__name__,
+]

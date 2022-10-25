@@ -2,6 +2,7 @@
 
 
 def register_plugin(registry):
+    from rastervision.aws_s3.s3_file_system import (AWS_S3, S3FileSystem)
     registry.set_plugin_version('rastervision.aws_s3', 0)
     registry.set_plugin_aliases('rastervision.aws_s3',
                                 ['rastervision2.aws_s3'])
@@ -10,4 +11,9 @@ def register_plugin(registry):
 
 
 import rastervision.pipeline
-from rastervision.aws_s3.s3_file_system import (AWS_S3, S3FileSystem)
+from rastervision.aws_s3.s3_file_system import *
+
+__all__ = [
+    'AWS_S3',
+    S3FileSystem.__name__,
+]

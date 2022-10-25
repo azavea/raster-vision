@@ -15,7 +15,7 @@ as it has an environment with all necessary dependencies already installed.
 You'll need to choose two directories, one for keeping your configuration source file and another for
 holding experiment output. Make sure these directories exist:
 
-.. code-block:: terminal
+.. code-block:: console
 
    > export RV_QUICKSTART_CODE_DIR=`pwd`/code
    > export RV_QUICKSTART_OUT_DIR=`pwd`/output
@@ -23,7 +23,7 @@ holding experiment output. Make sure these directories exist:
 
 Now we can run a console in the the Docker container by doing
 
-.. code-block:: terminal
+.. code-block:: console
 
    > docker run --rm -it \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
@@ -55,7 +55,7 @@ Running the pipeline
 
 We can now run the pipeline by invoking the following command inside the container.
 
-.. code-block:: terminal
+.. code-block:: console
 
    > rastervision run local code/tiny_spacenet.py
 
@@ -66,7 +66,7 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
 
 .. note:: This uses the ``tree`` command which you may need to install first.
 
-.. code-block:: terminal
+.. code-block:: console
 
    > tree -L 3
     .
@@ -106,7 +106,7 @@ To immediately use Raster Vision with a fully trained model, one can make use of
 
 For example, to use a DeepLab/Resnet50 model that has been trained to do building segmentation on Las Vegas, one can type:
 
-.. code-block:: terminal
+.. code-block:: console
 
    > rastervision predict https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/model-bundle.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-0.13/spacenet-vegas-buildings-ss/sample-predictions/sample-img-spacenet-vegas-buildings-ss.tif prediction
 

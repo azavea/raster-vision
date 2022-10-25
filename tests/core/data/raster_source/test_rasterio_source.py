@@ -6,12 +6,11 @@ import numpy as np
 import rasterio
 from rasterio.enums import ColorInterp
 
-from rastervision.core import (RasterStats)
-from rastervision.core.box import Box
+from rastervision.core import (Box, RasterStats)
 from rastervision.core.utils.misc import save_img
-from rastervision.core.data import (ChannelOrderError, RasterioSource,
-                                    RasterioSourceConfig,
-                                    StatsTransformerConfig, fill_overflow)
+from rastervision.core.data.raster_source import (
+    ChannelOrderError, RasterioSource, RasterioSourceConfig, fill_overflow)
+from rastervision.core.data.raster_transformer import StatsTransformerConfig
 from rastervision.pipeline import rv_config
 
 from tests import data_file_path

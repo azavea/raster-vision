@@ -3,7 +3,8 @@ import os
 
 import numpy as np
 
-from rastervision.core.data import RasterStats, StatsTransformerConfig
+from rastervision.core.raster_stats import RasterStats
+from rastervision.core.data import StatsTransformerConfig
 from rastervision.pipeline import rv_config
 
 

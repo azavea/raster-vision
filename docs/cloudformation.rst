@@ -21,7 +21,7 @@ AWS Credentials
 
 Using the AWS CLI, create an AWS profile for the target AWS environment. An example, naming the profile ``raster-vision``:
 
-.. code-block:: terminal
+.. code-block:: console
 
     $ aws --profile raster-vision configure
     AWS Access Key ID [****************F2DQ]:

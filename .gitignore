@@ -62,6 +62,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/**/_generated/
 
 # PyBuilder
 target/
@@ -117,3 +118,9 @@ deployment/ansible/*.retry
 
 /notebooks/*
 !/notebooks/**/*.ipynb
+
+docs/tutorials/*
+!docs/tutorials/**/*.ipynb
+!docs/tutorials/**/*.py
+!docs/tutorials/**/*.rst
+!docs/tutorials/**/*.md

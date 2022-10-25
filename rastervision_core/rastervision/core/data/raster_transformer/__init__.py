@@ -14,3 +14,20 @@ from rastervision.core.data.raster_transformer.min_max_transformer import *
 from rastervision.core.data.raster_transformer.min_max_transformer_config import *
 from rastervision.core.data.raster_transformer.rgb_class_transformer import *
 from rastervision.core.data.raster_transformer.rgb_class_tansformer_config import *
+
+__all__ = [
+    RasterTransformer.__name__,
+    RasterTransformerConfig.__name__,
+    StatsTransformer.__name__,
+    StatsTransformerConfig.__name__,
+    NanTransformer.__name__,
+    NanTransformerConfig.__name__,
+    CastTransformer.__name__,
+    CastTransformerConfig.__name__,
+    ReclassTransformer.__name__,
+    ReclassTransformerConfig.__name__,
+    MinMaxTransformer.__name__,
+    MinMaxTransformerConfig.__name__,
+    RGBClassTransformer.__name__,
+    RGBClassTransformerConfig.__name__,
+]
