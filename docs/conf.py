@@ -85,6 +85,12 @@ nbsphinx_execute = 'never'
 sphinx_gallery_conf = {
     'line_numbers': True,
 }
+# external thumnails
+nbsphinx_thumbnails = {
+    # The _images dir is under build/html. This looks brittle but using the
+    # more natural img/tensorboard.png path does not work.
+    'tutorials/train': '_images/tensorboard.png',
+}
 nbsphinx_prolog = r"""
 {% set docpath = env.doc2path(env.docname, base=False) %}
 {% set docname = docpath.split('/')|last %}

@@ -15,6 +15,7 @@ The following tutorials highlight many of the things you can do with Raster Visi
     sampling_training_data
     scenes_and_aois
     visualize_data_samples
+    train
     pred_and_eval_ss
     misc
 
