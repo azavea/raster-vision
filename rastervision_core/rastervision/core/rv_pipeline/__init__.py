@@ -24,6 +24,7 @@ __all__ = [
     SemanticSegmentationPredictOptions.__name__,
     SemanticSegmentationWindowMethod.__name__,
     ObjectDetection.__name__,
+    ObjectDetectionConfig.__name__,
     ObjectDetectionChipOptions.__name__,
     ObjectDetectionChipOptions.__name__,
     ObjectDetectionPredictOptions.__name__,

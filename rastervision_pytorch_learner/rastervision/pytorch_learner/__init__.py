@@ -51,6 +51,7 @@ __all__ = [
     ObjectDetectionDataConfig.__name__,
     ObjectDetectionGeoDataConfig.__name__,
     ObjectDetectionImageDataConfig.__name__,
+    ObjectDetectionGeoDataWindowConfig.__name__,
     RegressionDataConfig.__name__,
     RegressionGeoDataConfig.__name__,
     RegressionImageDataConfig.__name__,
