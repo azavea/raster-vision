@@ -114,7 +114,7 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
         # Important to use self.learner.cfg.data instead of
         # self.learner_cfg.data because of the updates
         # Learner.from_model_bundle() makes to the custom transforms.
-        base_tf, _ = self.learner_cfg.data.get_data_transforms()
+        base_tf, _ = self.learner.cfg.data.get_data_transforms()
         ds = ObjectDetectionSlidingWindowGeoDataset(
             scene, size=chip_sz, stride=stride, transform=base_tf)
 
