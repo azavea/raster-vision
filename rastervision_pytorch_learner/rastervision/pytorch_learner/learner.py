@@ -315,8 +315,11 @@ class Learner(ABC):
         """Setup self.model.
 
         Args:
-            model_def_path (str, optional): Model definition path. Will be
-            available when loading from a bundle. Defaults to None.
+            model_weights_path (Optional[str], optional): Path to model
+                weights. Will be available when loading from a bundle.
+                Defaults to None.
+            model_def_path (Optional[str], optional): Path to model definition.
+                Will be available when loading from a bundle. Defaults to None.
         """
         if self.model is not None:
             self.model.to(self.device)

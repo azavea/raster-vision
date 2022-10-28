@@ -54,7 +54,7 @@ class ObjectDetectionLearner(Learner):
                 model, ignored_output_inds=[0, num_classes + 1])
 
         self.model.to(self.device)
-        self.load_init_weights()
+        self.load_init_weights(model_weights_path)
 
     def build_metric_names(self):
         metric_names = [

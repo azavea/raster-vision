@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable, Iterator, Optional
+from typing import TYPE_CHECKING, Dict, Iterator, Optional
 from os.path import join, basename
 import uuid
 
@@ -10,9 +10,9 @@ from rastervision.pytorch_learner.dataset import (
     ObjectDetectionSlidingWindowGeoDataset)
 
 if TYPE_CHECKING:
+    import numpy as np
     from rastervision.core.data import Scene
     from rastervision.core.data_sample import DataSample
-    from rastervision.pytorch_learner.object_detection_utils import BoxList
 
 
 class PyTorchObjectDetectionSampleWriter(PyTorchLearnerSampleWriter):
@@ -114,11 +114,11 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
         # Important to use self.learner.cfg.data instead of
         # self.learner_cfg.data because of the updates
         # Learner.from_model_bundle() makes to the custom transforms.
-        base_tf, _ = self.learner_cfg.data.get_data_transforms()
+        base_tf, _ = self.learner.cfg.data.get_data_transforms()
         ds = ObjectDetectionSlidingWindowGeoDataset(
             scene, size=chip_sz, stride=stride, transform=base_tf)
 
-        predictions: Iterator[Iterable[BoxList]] = (
+        predictions: Iterator[Dict[str, 'np.ndarray']] = (
             self.learner.predict_dataset(
                 ds,
                 raw_out=True,
