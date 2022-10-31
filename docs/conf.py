@@ -6,8 +6,12 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/stable/config
 
+from typing import TYPE_CHECKING, List
 import sys
 from unittest.mock import MagicMock
+
+if TYPE_CHECKING:
+    from sphinx.application import Sphinx
 
 
 # https://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
@@ -19,6 +23,33 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+# -- Allow Jinja templates is non-template .rst files -------------------------
+
+
+def rstjinja(app: 'Sphinx', docname: str, source: List[str]) -> None:
+    """Allow use of jinja templating in all doc pages.
+
+    Adapted from:
+    https://www.ericholscher.com/blog/2016/jul/25/integrating-jinja-rst-sphinx/
+    """
+    # Make sure we're outputting HTML
+    if app.builder.format != 'html':
+        return
+
+    src = source[0]
+    rendered = app.builder.templates.render_string(src,
+                                                   app.config.html_context)
+    source[0] = rendered
+
+
+def setup(app: 'Sphinx') -> None:
+    """Register event handler for ``source-read`` event.
+
+    See: https://www.sphinx-doc.org/en/master/extdev/appapi.html
+    """
+    app.connect('source-read', rstjinja)
+
 
 # -- Path setup ---------------------------------------------------------------
 
@@ -270,7 +301,13 @@ html_theme_options = {
 # pages. Single values can also be put in this dictionary using the -A
 # command-line option of sphinx-build.
 #
-# html_context = {}
+# yapf: disable
+html_context = dict(
+    version=version,
+    release=release,
+    s3_model_zoo=f'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-{version}', # noqa
+)
+# yapf: enable
 
 # Add any paths that contain custom themes here, relative to this directory.
 #
