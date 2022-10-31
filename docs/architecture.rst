@@ -23,7 +23,8 @@ Each of these packages is contained in a separate ``setuptools``/``pip`` package
 The figure below shows the packages, the dependencies between them, and important base classes within each package.
 
 .. image:: img/rv-packages.png
-  :alt: The dependencies between Python packages in Raster Vision
+    :align: center
+    :alt: The dependencies between Python packages in Raster Vision
 
 .. _pipelines plugins:
 

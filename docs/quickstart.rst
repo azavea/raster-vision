@@ -17,15 +17,15 @@ holding experiment output. Make sure these directories exist:
 
 .. code-block:: console
 
-   > export RV_QUICKSTART_CODE_DIR=`pwd`/code
-   > export RV_QUICKSTART_OUT_DIR=`pwd`/output
-   > mkdir -p ${RV_QUICKSTART_CODE_DIR} ${RV_QUICKSTART_OUT_DIR}
+    > export RV_QUICKSTART_CODE_DIR=`pwd`/code
+    > export RV_QUICKSTART_OUT_DIR=`pwd`/output
+    > mkdir -p ${RV_QUICKSTART_CODE_DIR} ${RV_QUICKSTART_OUT_DIR}
 
 Now we can run a console in the the Docker container by doing
 
 .. code-block:: console
 
-   > docker run --rm -it \
+    > docker run --rm -it \
         -v ${RV_QUICKSTART_CODE_DIR}:/opt/src/code  \
         -v ${RV_QUICKSTART_OUT_DIR}:/opt/data/output \
         quay.io/azavea/raster-vision:pytorch-{{ version }} /bin/bash
@@ -37,9 +37,9 @@ The Data
 
 .. raw:: html
 
-         <div style="position: relative; padding-bottom: 56.25%; overflow: hidden; max-width: 100%;">
-             <iframe src="_static/tiny-spacenet-map.html" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
-         </div>
+    <div style="position: relative; padding-bottom: 56.25%; overflow: hidden; max-width: 100%;">
+        <iframe src="_static/tiny-spacenet-map.html" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
 
 Configuring a semantic segmentation pipeline
 ----------------------------------------------
@@ -57,7 +57,7 @@ We can now run the pipeline by invoking the following command inside the contain
 
 .. code-block:: console
 
-   > rastervision run local code/tiny_spacenet.py
+    > rastervision run local code/tiny_spacenet.py
 
 Seeing Results
 ---------------
@@ -68,7 +68,7 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
 
 .. code-block:: console
 
-   > tree -L 3
+    > tree -L 3
     .
     ├── Makefile
     ├── bundle
@@ -117,12 +117,10 @@ This will make predictions on the image ``1929.tif`` using the provided model bu
 The input image (false color) and predictions are reproduced below.
 
 .. image:: img/vegas/1929.png
-  :width: 333
-  :alt: The input image
+    :alt: The input image
 
 .. image:: img/vegas/predictions.png
-  :width: 333
-  :alt: The predictions
+    :alt: The predictions
 
 .. seealso:: You can read more about the :ref:`model bundle <model bundle>` concept and the :ref:`predict cli command` CLI command in the documentation.
 
