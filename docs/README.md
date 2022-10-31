@@ -38,6 +38,7 @@ To run a live local server that updates with changes, run:
 - The API reference is automatically generated and uses the `.rst` templates in [`_templates/`](./_templates/) to present different views for different kinds of objects (plugins, modules, classes, configs, functions).
 - Documentation pages can be in either `.rst` or `.md` files.
 - IPython notebooks are automatically rendered to HTML via the `nbsphinx` extension and can be linked to from other pages like any other `.rst` or `.md` page.
+- You can use jinja templates in `.rst` files. By default Sphinx only allows their use in templates, but the `rstjinja()` hook defined in [`conf.py`](./conf.py) allows us to use it in any `.rst` file.
 
 ### Notes
 

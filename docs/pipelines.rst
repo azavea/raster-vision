@@ -1,3 +1,5 @@
+{% set tiny_spacenet = '`tiny_spacenet.py <https://github.com/azavea/raster-vision/tree/' ~ version ~ '/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py>`__' %}
+
 .. _rv pipelines:
 
 Pipelines and Commands
@@ -33,7 +35,7 @@ Each :class:`~rastervision.core.rv_pipeline.rv_pipeline_config.RVPipelineConfig`
 .. image:: img/rvpipeline-diagram.png
     :align: center
 
-In the `tiny_spacenet.py <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py>`__ example, the :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationConfig` is the last thing constructed and returned from the ``get_config`` function.
+In the {{ tiny_spacenet }} example, the :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationConfig` is the last thing constructed and returned from the ``get_config`` function.
 
 .. code-block:: python
 
@@ -119,7 +121,7 @@ Here are the PyTorch backends:
 * The :class:`~rastervision.pytorch_backend.pytorch_object_detection.PyTorchObjectDetection` backend trains the Faster-RCNN model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 * The :class:`~rastervision.pytorch_backend.pytorch_semantic_segmentation.PyTorchSemanticSegmentation` backend trains the DeepLabV3 model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 
-In our `tiny_spacenet.py <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py>`__ example, we configured the PyTorch semantic segmentation backend using:
+In our {{ tiny_spacenet }} example, we configured the PyTorch semantic segmentation backend using:
 
 .. code-block:: python
 
@@ -143,7 +145,7 @@ Dataset
 
 A :class:`Dataset <rastervision.core.data.dataset_config.DatasetConfig>` contains the `training, validation, and test splits <https://en.wikipedia.org/wiki/Training,_test,_and_validation_sets>`_ needed to train and evaluate a model. Each dataset split is a list of :class:`Scenes <rastervision.core.data.scene_config.SceneConfig>`.
 
-In our `tiny_spacenet.py <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py>`__ example, we configured the dataset with single scenes, though more often in real use cases you would use multiple scenes per split:
+In our {{ tiny_spacenet }} example, we configured the dataset with single scenes, though more often in real use cases you would use multiple scenes per split:
 
 .. code-block:: python
 
@@ -171,7 +173,7 @@ A scene is composed of the following elements:
 .. image:: img/scene-diagram.png
     :align: center
 
-In our `tiny_spacenet.py <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py>`__ example, we configured the one training scene with a GeoTIFF URI and a GeoJSON URI.
+In our {{ tiny_spacenet }} example, we configured the one training scene with a GeoTIFF URI and a GeoJSON URI.
 
 .. code-block:: python
 
@@ -275,8 +277,8 @@ LabelStore
 
 A :class:`~rastervision.core.data.label_store.label_store.LabelStore` supports reading and writing predicted labels for a scene. There are subclasses for different tasks and data formats. They are used for saving predictions and then loading them during evaluation.
 
-In the {{ tiny_spacenet }} example, there is no explicit :class:`~rastervision.core.data.label_store.label_store.LabelStore` configured on the validation scene, because it can be inferred from the type of :class:`~rastervision.core.rv_pipeline.rv_pipeline_config.RVPipelineConfig` it is part of.
-In the ISPRS Potsdam example, the following code is used to explicitly create a :class:`~rastervision.core.data.label_store.label_store.LabelStore` that writes out the predictions in "RGB" format, where the color of each pixel represents the class, and predictions of class 0 (ie. car) are also written out as polygons.
+In the {{ tiny_spacenet }} example, there is no explicit :class:`~rastervision.core.data.label_store.LabelStore` configured on the validation scene, because it can be inferred from the type of :class:`~rastervision.core.rv_pipeline.rv_pipeline_config.RVPipelineConfig` it is part of.
+In the ISPRS Potsdam example, the following code is used to explicitly create a :class:`~rastervision.core.data.label_store.LabelStore` that writes out the predictions in "RGB" format, where the color of each pixel represents the class, and predictions of class 0 (ie. car) are also written out as polygons.
 
 .. code-block:: python
 
