@@ -458,7 +458,7 @@ def concatenate(boxlists: List[BoxList],
             list are included in the concatenation. Defaults to None.
 
     Returns:
-        BoxList: A BoxList with number of boxes equal to 
+        BoxList: A BoxList with number of boxes equal to
             sum([boxlist.num_boxes() for boxlist in BoxList])
 
     Raises:

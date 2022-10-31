@@ -172,8 +172,7 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
     in the registry.
 
     Args:
-        x: serialized Config(s) which are potentially of a 
-            non-current version
+        x: serialized Config(s) which are potentially of a non-current version
         plugin_versions: dict mapping from plugin module name to the latest version
 
     Returns:

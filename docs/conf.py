@@ -1,7 +1,3 @@
-# flake8: noqa
-
-from pallets_sphinx_themes import ProjectLink, get_version
-
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -10,7 +6,21 @@ from pallets_sphinx_themes import ProjectLink, get_version
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/stable/config
 
-# -- Path setup --------------------------------------------------------------
+import sys
+from unittest.mock import MagicMock
+
+
+# https://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+# -- Path setup ---------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -20,24 +30,30 @@ from pallets_sphinx_themes import ProjectLink, get_version
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-# -- Project information -----------------------------------------------------
+# -- Project information ------------------------------------------------------
 
-project = 'Raster Vision'
-copyright = '2018, Azavea'
-author = 'Azavea'
+project = u'Raster Vision'
+copyright = u'2018, Azavea'
+author = u'Azavea'
 
-# The short X.Y version
-version = '0.13'
+# The version info for the project you're documenting, acts as replacement for
+# |version| and |release|, also used in various other places throughout the
+# built documents.
+#
+# The short X.Y version.
+version = u'0.13'
 # The full version, including alpha/beta/rc tags
-release = '0.13.1'
+release = u'0.13.1'
 
-# -- Extension configuration ---------------------------------------------------
+# -- Extension configuration --------------------------------------------------
+
+# If your documentation needs a minimal Sphinx version, state it here.
+needs_sphinx = '4'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'pallets_sphinx_themes',
     # https://www.sphinx-doc.org/en/master/tutorial/automatic-doc-generation.html
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
@@ -58,6 +74,8 @@ extensions = [
     'nbsphinx',
     # jupyter notebooks in a gallery
     'sphinx_gallery.load_style',
+    # add a copy button to code blocks
+    'sphinx_copybutton',
 ]
 
 #########################
@@ -101,60 +119,60 @@ nbsphinx_prolog = r"""
         :format: html
 
     .. note:: This page was generated from `{{ docname }} <https://github.com/azavea/raster-vision/blob/master/docs/{{ docpath }}>`__.
-"""
+""" # noqa
 #########################
 
-# -- General configuration ---------------------------------------------------
-
-# If your documentation needs a minimal Sphinx version, state it here.
-#
-# needs_sphinx = '1.0'
-
-# https://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
-import sys
-from unittest.mock import MagicMock
-
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-
-MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+#########################
+# intersphinx
+#########################
 
 # connect docs in other projects
 intersphinx_mapping = {
-    "python": (
-        "https://docs.python.org/3",
-        "https://docs.python.org/3/objects.inv",
+    'python': (
+        'https://docs.python.org/3',
+        'https://docs.python.org/3/objects.inv',
     ),
-    "rasterio": (
-        "https://rasterio.readthedocs.io/en/stable/",
-        "https://rasterio.readthedocs.io/en/stable/objects.inv",
+    'rasterio': (
+        'https://rasterio.readthedocs.io/en/stable/',
+        'https://rasterio.readthedocs.io/en/stable/objects.inv',
     ),
-    "shapely": (
-        "https://shapely.readthedocs.io/en/stable/",
-        "https://shapely.readthedocs.io/en/stable/objects.inv",
+    'shapely': (
+        'https://shapely.readthedocs.io/en/stable/',
+        'https://shapely.readthedocs.io/en/stable/objects.inv',
     ),
-    "matplotlib": (
-        "https://matplotlib.org/stable/",
-        "https://matplotlib.org/stable/objects.inv",
+    'matplotlib': (
+        'https://matplotlib.org/stable/',
+        'https://matplotlib.org/stable/objects.inv',
     ),
-    "geopandas": (
-        "https://geopandas.org/en/stable/",
-        "https://geopandas.org/en/stable/objects.inv",
+    'geopandas': (
+        'https://geopandas.org/en/stable/',
+        'https://geopandas.org/en/stable/objects.inv',
     ),
-    "numpy": (
-        "https://numpy.org/doc/stable/",
-        "https://numpy.org/doc/stable/objects.inv",
+    'numpy': (
+        'https://numpy.org/doc/stable/',
+        'https://numpy.org/doc/stable/objects.inv',
     ),
-    "pytorch": (
-        "https://pytorch.org/docs/stable/",
-        "https://pytorch.org/docs/stable/objects.inv",
+    'pytorch': (
+        'https://pytorch.org/docs/stable/',
+        'https://pytorch.org/docs/stable/objects.inv',
     ),
 }
+
+#########################
+
+#########################
+# sphinx_copybutton
+# https://sphinx-copybutton.readthedocs.io/en/latest/index.html
+#########################
+
+copybutton_prompt_text = r'>>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: |> '
+copybutton_prompt_is_regexp = True
+copybutton_only_copy_prompt_lines = True
+copybutton_line_continuation_character = '\\'
+
+#########################
+
+# -- General configuration ----------------------------------------------------
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -166,8 +184,12 @@ source_suffix = {
     '.md': 'markdown',
 }
 
+# The encoding of source files.
+#
+# source_encoding = 'utf-8-sig'
+
 # The master toctree document.
-master_doc = 'index'
+root_doc = 'index'
 
 # The language for content autogenerated by Sphinx. Refer to documentation
 # for a list of supported languages.
@@ -176,57 +198,188 @@ master_doc = 'index'
 # Usually you set "language" from the command line for these cases.
 language = 'en'
 
+# There are two options for replacing |today|: either, you set today to some
+# non-false value, then it is used:
+#
+# today = ''
+#
+# Else, today_fmt is used as the format for a strftime call.
+#
+# today_fmt = '%B %d, %Y'
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path .
+# These patterns also affect html_static_path and html_extra_path
 exclude_patterns = [
     '_build', 'Thumbs.db', '.DS_Store', 'README.md', '**.ipynb_checkpoints'
 ]
 
+# The reST default role (used for this markup: `text`) to use for all
+# documents.
+#
+# default_role = None
+
+# If true, '()' will be appended to :func: etc. cross-reference text.
+#
+# add_function_parentheses = True
+
+# If true, the current module name will be prepended to all description
+# unit titles (such as .. function::).
+#
+# add_module_names = True
+
+# If true, sectionauthor and moduleauthor directives will be shown in the
+# output. They are ignored by default.
+#
+# show_authors = False
+
 # The name of the Pygments (syntax highlighting) style to use.
+#
+# To see all availabel values:
+# >>> from pygments.styles import get_all_styles
+# >>> styles = list(get_all_styles())
+#
 # pygments_style = 'sphinx'
 
-# HTML -----------------------------------------------------------------
+# A list of ignored prefixes for module index sorting.
+# modindex_common_prefix = []
 
+# If true, keep warnings as "system message" paragraphs in the built documents.
+# keep_warnings = False
+
+# If true, `todo` and `todoList` produce output, else they produce nothing.
+todo_include_todos = False
+
+# -- Options for HTML output --------------------------------------------------
+
+# The theme to use for HTML and HTML Help pages.
 html_theme = 'furo'
-# https://pradyunsg.me/furo/customisation/
+# html_theme = 'pydata_sphinx_theme'
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+# Furo theme options: https://pradyunsg.me/furo/customisation/
 html_theme_options = {
     'sidebar_hide_name': True,
     'top_of_page_button': None,
     'navigation_with_keys': True,
 }
-html_context = {
-    'project_links': [
-        ProjectLink('Quickstart', 'quickstart.html'),
-        ProjectLink('Documentation TOC', 'index.html#documentation'),
-        ProjectLink('Examples', 'examples.html'),
-        ProjectLink('AWS Batch Setup', 'cloudformation.html'),
-        ProjectLink('Project Website', 'https://rastervision.io/'),
-        ProjectLink('PyPI releases', 'https://pypi.org/project/rastervision/'),
-        ProjectLink('GitHub Repo', 'https://github.com/azavea/raster-vision'),
-        ProjectLink('Discussion Forum',
-                    'https://github.com/azavea/raster-vision/discussions'),
-        ProjectLink('Issue Tracker',
-                    'https://github.com/azavea/raster-vision/issues/'),
-        ProjectLink('CHANGELOG', 'changelog.html'),
-        ProjectLink('Azavea', 'https://www.azavea.com/'),
-    ]
-}
-html_static_path = ['_static']
-html_css_files = ['custom.css']
-html_favicon = 'img/raster-vision-icon.png'
-html_logo = 'img/raster-vision-logo.png'
-html_title = f'Raster Vision Documentation ({version})'
-html_show_sourcelink = False
-html_domain_indices = False
-html_experimental_html5_writer = True
 
-# -- Options for HTMLHelp output ---------------------------------------------
+# A dictionary of values to pass into the template engine’s context for all
+# pages. Single values can also be put in this dictionary using the -A
+# command-line option of sphinx-build.
+#
+# html_context = {}
+
+# Add any paths that contain custom themes here, relative to this directory.
+#
+# html_theme_path = []
+
+# The name for this set of Sphinx documents.
+# "<project> v<release> documentation" by default.
+html_title = f'{project} v{release} documentation'
+
+# A shorter title for the navigation bar.  Default is the same as html_title.
+#
+# html_short_title = None
+
+# The name of an image file (relative to this directory) to place at the top
+# of the sidebar.
+html_logo = 'img/raster-vision-logo.png'
+
+# The name of an image file (relative to this directory) to use as a favicon of
+# the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# pixels large.
+html_favicon = 'img/raster-vision-icon.png'
+
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+html_static_path = ['_static']
+
+# A list of CSS files. The entry must be a filename string or a tuple
+# containing the filename string and the attributes dictionary. The filename
+# must be relative to the html_static_path, or a full URI with scheme like
+# https://example.org/style.css. The attributes is used for attributes of
+# <link> tag. It defaults to an empty list.
+html_css_files = ['custom.css']
+
+# Add any extra paths that contain custom files (such as robots.txt or
+# .htaccess) here, relative to this directory. These files are copied
+# directly to the root of the documentation.
+#
+# html_extra_path = []
+
+# If not None, a 'Last updated on:' timestamp is inserted at every page
+# bottom, using the given strftime format.
+# The empty string is equivalent to '%b %d, %Y'.
+#
+# html_last_updated_fmt = None
+
+# Custom sidebar templates, maps document names to template names.
+#
+# html_sidebars = {}
+
+# Additional templates that should be rendered to pages, maps page names to
+# template names.
+#
+# html_additional_pages = {}
+
+# If false, no module index is generated.
+#
+# html_domain_indices = True
+
+# If false, no index is generated.
+#
+# html_use_index = True
+
+# If true, the index is split into individual pages for each letter.
+#
+# html_split_index = False
+
+# If true, links to the reST sources are added to the pages.
+html_show_sourcelink = True
+
+# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+#
+# html_show_sphinx = True
+
+# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
+#
+# html_show_copyright = True
+
+# If true, an OpenSearch description file will be output, and all pages will
+# contain a <link> tag referring to it.  The value of this option must be the
+# base URL from which the finished HTML is served.
+#
+# html_use_opensearch = ''
+
+# This is the file name suffix for HTML files (e.g. ".xhtml").
+# html_file_suffix = None
+
+# Language to be used for generating the HTML full-text search index.
+# Sphinx supports the following languages:
+#   'da', 'de', 'en', 'es', 'fi', 'fr', 'hu', 'it', 'ja'
+#   'nl', 'no', 'pt', 'ro', 'ru', 'sv', 'tr', 'zh'
+#
+# html_search_language = 'en'
+
+# A dictionary with options for the search language support, empty by default.
+# 'ja' uses this config value.
+# 'zh' user can custom change `jieba` dictionary path.
+#
+# html_search_options = {'type': 'default'}
+
+# The name of a javascript file (relative to the configuration directory) that
+# implements a search results scorer. If empty, the default will be used.
+#
+# html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'RasterVisiondoc'
 
-# -- Options for LaTeX output ------------------------------------------------
+# -- Options for LaTeX output -------------------------------------------------
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -250,32 +403,22 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'RasterVision.tex', 'Raster Vision Documentation', 'Azavea',
+    (root_doc, 'RasterVision.tex', 'Raster Vision Documentation', 'Azavea',
      'manual'),
 ]
 
-# -- Options for manual page output ------------------------------------------
+# -- Options for manual page output -------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, 'RasterVisoin-{}.tex', html_title, [author],
-              'manual')]
+man_pages = [(root_doc, 'RasterVisoin-{}.tex', html_title, [author], 'manual')]
 
-# -- Options for Texinfo output ----------------------------------------------
+# -- Options for Texinfo output -----------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'RasterVision', 'Raster Vision Documentation', author,
+    (root_doc, 'RasterVision', 'Raster Vision Documentation', author,
      'RasterVision', 'One line description of project.', 'Miscellaneous'),
 ]
-
-# -- Extension configuration -------------------------------------------------
-
-programoutput_prompt_template = '> {command}\n{output}'
-
-# -- Options for todo extension ----------------------------------------------
-
-# If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True

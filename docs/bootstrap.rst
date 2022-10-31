@@ -25,18 +25,18 @@ When using Raster Vision on a new project, the best practice is to create a new 
     ├── Dockerfile
     ├── README.md
     ├── docker
-    │   ├── build
-    │   ├── ecr_publish
-    │   └── run
+    │   ├── build
+    │   ├── ecr_publish
+    │   └── run
     └── rastervision_my_project
         ├── rastervision
-        │   └── my_project
-        │       ├── __init__.py
-        │       ├── configs
-        │       │   ├── __init__.py
-        │       │   └── test.py
-        │       ├── test_pipeline.py
-        │       └── test_pipeline_config.py
+        │   └── my_project
+        │       ├── __init__.py
+        │       ├── configs
+        │       │   ├── __init__.py
+        │       │   └── test.py
+        │       ├── test_pipeline.py
+        │       └── test_pipeline_config.py
         ├── requirements.txt
         └── setup.py
 

@@ -86,7 +86,7 @@ class ClassEvaluationItem(EvaluationItem):
     def merge(self, other: 'ClassEvaluationItem') -> None:
         """Merge with another ``ClassEvaluationItem``.
 
-        This is accomplished by summing the confusion matrices.        
+        This is accomplished by summing the confusion matrices.
         """
         if self.class_id != other.class_id:
             raise ValueError(

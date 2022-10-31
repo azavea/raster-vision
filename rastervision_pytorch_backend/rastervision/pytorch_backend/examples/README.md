@@ -8,7 +8,7 @@ It supports the following commands:
 - `predict` - download the model bundle produced by a run of an example and use it to make predictions on a sample image
 - `upload` - upload model bundle, eval, sample image, sample predictions, and training logs to the model zoo
 
-Details such as the URI's of inputs and outputs to the examples are hard-coded into the script, but can be overridden by supplying the `-o` option to any of the commands (only works when running one example at a time currently). For example: 
+Details such as the URI's of inputs and outputs to the examples are hard-coded into the script, but can be overridden by supplying the `-o` option to any of the commands (only works when running one example at a time currently). For example:
 ```bash
 python \
 "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/test.py" \

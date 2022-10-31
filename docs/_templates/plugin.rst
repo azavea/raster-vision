@@ -15,7 +15,7 @@
 {% for module in modules %}
 {% if not module.endswith('examples') %}
 {% set module_short_name = module.split('.')|last %}
-   {{ module_short_name }}  
+   {{ module_short_name }}
 {% endif %}
 {%- endfor %}
 {% endif %}
