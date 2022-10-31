@@ -149,7 +149,27 @@ nbsphinx_prolog = r"""
     .. role:: raw-html(raw)
         :format: html
 
-    .. note:: This page was generated from `{{ docname }} <https://github.com/azavea/raster-vision/blob/master/docs/{{ docpath }}>`__.
+    .. note:: This page was generated from `{{ docname }} <https://github.com/azavea/raster-vision/blob/master/docs/{{ docpath }}>`__. |ColabLink|_
+
+.. |ColabLink| image:: https://colab.research.google.com/assets/colab-badge.svg
+.. _ColabLink: https://githubtocolab.com/azavea/raster-vision/blob/master/docs/{{ docpath }}
+
+If running on Colab:
+
+1.  :ref:`Install Raster Vision <install raster vision>`:
+
+    .. code-block:: shell
+
+        pip install rastervision
+2.  Restart the notebook kernel.
+3.  Set the ``GDAL_DATA`` environment variable required by ``rasterio``:
+
+    .. code-block:: shell
+
+        export GDAL_DATA=$(pip show rasterio | grep Location | awk '{print $NF"/rasterio/gdal_data/"}')
+
+----
+
 """ # noqa
 #########################
 
