@@ -40,3 +40,9 @@ python:
       path: rastervision_pytorch_learner/
     - method: pip
       path: rastervision_pytorch_backend/
+
+# https://docs.readthedocs.io/en/stable/config-file/v2.html#search
+search:
+  ranking:
+    # down-rank source code pages
+    '*/_modules/*': -10
