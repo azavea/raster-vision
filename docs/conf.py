@@ -107,6 +107,8 @@ extensions = [
     'sphinx_gallery.load_style',
     # add a copy button to code blocks
     'sphinx_copybutton',
+    # search-as-you-type
+    'sphinx_search.extension',
 ]
 
 #########################
