@@ -115,10 +115,9 @@ class RasterizedSource(RasterSource):
     def validate_labels(self, df: gpd.GeoDataFrame) -> None:
         geom_types = set(df.geom_type)
         if 'Point' in geom_types or 'LineString' in geom_types:
-            raise ValueError(
-                'LineStrings and Points are not supported '
-                'in ChipClassificationLabelSource. Use BufferTransformer '
-                'to buffer them into Polygons.')
+            raise ValueError('LineStrings and Points are not supported '
+                             'in RasterizedSource. Use BufferTransformer '
+                             'to buffer them into Polygons.')
 
         if len(df) > 0 and 'class_id' not in df.columns:
             raise ValueError('All label polygons must have a class_id.')
