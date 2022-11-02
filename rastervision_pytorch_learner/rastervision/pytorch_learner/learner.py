@@ -799,23 +799,19 @@ class Learner(ABC):
                 might or might not be batched depending on the batched_output
                 argument.
         """
-        model_train_state = self.model.training
         self.model.eval()
 
-        with torch.inference_mode():
-            for x, y in dl:
-                x = self.to_device(x, self.device)
-                z = self.predict(x, raw_out=raw_out, **predict_kw)
-                x = self.to_device(x, 'cpu')
-                y = self.to_device(y, 'cpu') if y is not None else y
-                z = self.to_device(z, 'cpu')
-                if batched_output:
-                    yield x, y, z
-                else:
-                    for _x, _y, _z in zip(x, y, z):
-                        yield _x, _y, _z
-
-        self.model.train(model_train_state)
+        for x, y in dl:
+            x = self.to_device(x, self.device)
+            z = self.predict(x, raw_out=raw_out, **predict_kw)
+            x = self.to_device(x, 'cpu')
+            y = self.to_device(y, 'cpu') if y is not None else y
+            z = self.to_device(z, 'cpu')
+            if batched_output:
+                yield x, y, z
+            else:
+                for _x, _y, _z in zip(x, y, z):
+                    yield _x, _y, _z
 
     def get_dataloader(self, split: str) -> DataLoader:
         """Get the DataLoader for a split.
