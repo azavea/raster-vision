@@ -9,7 +9,9 @@ try:
     # segmentation fault when calling model.to('cuda'). This was determined empirically,
     # and it's not known why this works.
     # sklearn and cv2 are imported here in order to avoid errors that
-    # only comes up when importing rastervision inside of a Jupyter notebook cell.
+    # only come up when importing rastervision inside of a Jupyter notebook cell.
+    # Doing these imports first only appears to fixes the problem if it's in this
+    # package, and not the `pytorch_learner` or `pytorch_core`.
     # Without sklearn:
     # ImportError: /opt/conda/lib/python3.9/site-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0: cannot allocate memory in static TLS block
     # Without cv2:
