@@ -34,7 +34,7 @@ RUN rm /opt/conda/lib/libtinfo.so.6 && \
 
 # needed for jupyter lab extensions
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-   apt-get install -y nodejs
+    apt-get install -y nodejs
 
 WORKDIR /opt/src/
 
