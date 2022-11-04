@@ -17,16 +17,16 @@ from rastervision.pipeline.file_system import (
 EXAMPLES_MODULE_ROOT = 'rastervision.pytorch_backend.examples'
 EXAMPLES_PATH_ROOT = ('/opt/src/rastervision_pytorch_backend/'
                       'rastervision/pytorch_backend/examples')
-REMOTE_PROCESSED_ROOT = 's3://raster-vision/examples/0.13/processed-data'
-REMOTE_OUTPUT_ROOT = 's3://raster-vision/examples/0.13/output'
+REMOTE_PROCESSED_ROOT = 's3://raster-vision/examples/0.20/processed-data'
+REMOTE_OUTPUT_ROOT = 's3://raster-vision/examples/0.20/output'
 LOCAL_RAW_ROOT = '/opt/data/raw-data'
 LOCAL_PROCESSED_ROOT = '/opt/data/examples/processed-data'
 LOCAL_OUTPUT_ROOT = '/opt/data/examples/output'
 LOCAL_COLLECT_ROOT = '/opt/data/examples/collect'
 ZOO_UPLOAD_ROOT = (
-    's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.13')
+    's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.20')
 SAMPLE_IMG_ROOT = (
-    's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.13')
+    's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.20')
 
 ######################
 # Default configuration for the examples.
