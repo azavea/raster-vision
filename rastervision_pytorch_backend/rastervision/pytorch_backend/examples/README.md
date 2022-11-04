@@ -13,8 +13,8 @@ Details such as the URI's of inputs and outputs to the examples are hard-coded i
 python \
 "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/test.py" \
 run "spacenet-rio-cc" \
--o "remote.processed_uri" "s3://raster-vision-ahassan/rv/0.13/examples/processed/spacenet/rio" \
--o "remote.root_uri" "s3://raster-vision-ahassan/rv/0.13/examples/output/cc/spacenet-rio/" \
+-o "remote.processed_uri" "s3://raster-vision-ahassan/rv/0.20/examples/processed/spacenet/rio" \
+-o "remote.root_uri" "s3://raster-vision-ahassan/rv/0.20/examples/output/cc/spacenet-rio/" \
 ```
 
 ## Usage
@@ -37,8 +37,8 @@ This currently only compares the respective `eval.json`'s, but can be extended i
 ```bash
 python "rastervision_pytorch_backend/rastervision/pytorch_backend/examples/test.py" \
 compare \
-"s3://raster-vision-lf-dev/examples/0.12/spacenet-rio-cc/output_6_27c/" \
-"s3://raster-vision/examples/0.13/output/spacenet-rio-cc/"
+"s3://raster-vision/examples/0.13/output/spacenet-rio-cc/" \
+"s3://raster-vision/examples/0.20/output/spacenet-rio-cc/"
 ```
 
 ### Collect

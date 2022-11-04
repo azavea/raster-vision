@@ -27,7 +27,7 @@ There are several ways to setup Raster Vision:
     - We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:pytorch-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
 * Raster Vision can be installed directly using `pip install rastervision`. However, some of its dependencies will have to be installed manually.
 
-For more detailed instructions, see the [Setup docs](https://docs.rastervision.io/en/0.13/setup.html).
+For more detailed instructions, see the [Setup docs](https://docs.rastervision.io/en/0.20-dev/setup.html).
 
 ### Example
 
@@ -121,7 +121,7 @@ Raster Vision uses a unittest-like method for executing experiments. For instanc
 > rastervision run local tiny_spacenet.py
 ```
 
-See the [Quickstart](https://docs.rastervision.io/en/0.13/quickstart.html) for a more complete description of running this example.
+See the [Quickstart](https://docs.rastervision.io/en/0.20-dev/quickstart.html) for a more complete description of running this example.
 
 ### Resources
 
