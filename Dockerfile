@@ -8,8 +8,8 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION}
 # ImportError: libGL.so.1: cannot open shared object file: No such file or directory
 # See https://stackoverflow.com/questions/55313610/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directo
 RUN apt-get update && \
-   apt-get install -y wget=1.* build-essential libgl1 && \
-   apt-get autoremove && apt-get autoclean && apt-get clean
+    apt-get install -y wget=1.* build-essential libgl1 && \
+    apt-get autoremove && apt-get autoclean && apt-get clean
 
 ARG PYTHON_VERSION=3.9
 ARG TARGETPLATFORM
@@ -21,9 +21,9 @@ RUN case ${TARGETPLATFORM} in \
 
 # Install Python and conda
 RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(cat /root/linux_arch).sh && \
-     chmod +x ~/miniconda.sh && \
-     ~/miniconda.sh -b -p /opt/conda && \
-     rm ~/miniconda.sh
+    chmod +x ~/miniconda.sh && \
+    ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
 RUN conda install -y python=${PYTHON_VERSION}
@@ -38,7 +38,7 @@ ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal
 # bash: /opt/conda/lib/libtinfo.so.6: no version information available (required by bash)
 # See https://askubuntu.com/questions/1354890/what-am-i-doing-wrong-in-conda
 RUN rm /opt/conda/lib/libtinfo.so.6 && \
-   ln -s /lib/$(cat /root/linux_arch)-linux-gnu/libtinfo.so.6 /opt/conda/lib/libtinfo.so.6
+    ln -s /lib/$(cat /root/linux_arch)-linux-gnu/libtinfo.so.6 /opt/conda/lib/libtinfo.so.6
 
 # needed for jupyter lab extensions
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
