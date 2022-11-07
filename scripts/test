@@ -21,17 +21,17 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
             # Execute test suites
             docker run \
                 --rm -t \
-                "raster-vision-${IMAGE_TYPE}" \
+                "raster-vision-${IMAGE_TYPE}-${PLATFORM}" \
                 /opt/src/scripts/style_tests
             docker run \
                 -w "/opt/src" \
                 -v "$(pwd):/opt/src" \
                 --rm -t \
-                "raster-vision-${IMAGE_TYPE}" \
+                "raster-vision-${IMAGE_TYPE}-${PLATFORM}" \
                 /opt/src/scripts/unit_tests
             docker run \
                 --rm -t \
-                "raster-vision-${IMAGE_TYPE}" \
+                "raster-vision-${IMAGE_TYPE}-${PLATFORM}" \
                 /opt/src/scripts/integration_tests
 
             # Create new coverage reports
@@ -39,7 +39,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
                 -w "/opt/src" \
                 -v "$(pwd):/opt/src" \
                 --rm -t \
-                "raster-vision-${IMAGE_TYPE}" \
+                "raster-vision-${IMAGE_TYPE}-${PLATFORM}" \
                 coverage xml
         else
             # Local test suite runs against pytorch image by default
