@@ -1,5 +1,6 @@
+ARG UBUNTU_VERSION=20.04
 ARG CUDA_VERSION
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu20.04
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION}
 
 # wget: needed below to install conda
 # build-essential: installs gcc which is needed to install some deps like rasterio
@@ -10,27 +11,34 @@ RUN apt-get update && \
    apt-get install -y wget=1.* build-essential libgl1 && \
    apt-get autoremove && apt-get autoclean && apt-get clean
 
+ARG PYTHON_VERSION=3.9
+ARG TARGETPLATFORM
+
+RUN case ${TARGETPLATFORM} in \
+         "linux/arm64")  LINUX_ARCH=aarch64  ;; \
+         *)              LINUX_ARCH=x86_64   ;; \
+    esac && echo ${LINUX_ARCH} > /root/linux_arch
+
 # Install Python and conda
-# Using Python 3.9 since that is the highest version supported by miniconda.
-RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh && \
+RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(cat /root/linux_arch).sh && \
      chmod +x ~/miniconda.sh && \
      ~/miniconda.sh -b -p /opt/conda && \
      rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
-RUN conda install -y python=3.9
+RUN conda install -y python=${PYTHON_VERSION}
 RUN python -m pip install --upgrade pip
 
 # We need to install GDAL first to install Rasterio on non-AMD64 architectures.
 # The Rasterio wheels contain GDAL in them, but they are only built for AMD64 now.
 RUN conda install -y -c conda-forge gdal=3.5.2
-ENV GDAL_DATA=/opt/conda/lib/python3.9/site-packages/rasterio/gdal_data/
+ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal_data/
 
 # This is to prevent the following error when starting the container.
 # bash: /opt/conda/lib/libtinfo.so.6: no version information available (required by bash)
 # See https://askubuntu.com/questions/1354890/what-am-i-doing-wrong-in-conda
 RUN rm /opt/conda/lib/libtinfo.so.6 && \
-   ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /opt/conda/lib/libtinfo.so.6
+   ln -s /lib/$(cat /root/linux_arch)-linux-gnu/libtinfo.so.6 /opt/conda/lib/libtinfo.so.6
 
 # needed for jupyter lab extensions
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
@@ -80,8 +88,9 @@ RUN pip install -r docs/requirements.txt
 
 # Install pandoc, needed for rendering notebooks
 # Get latest release link from here: https://github.com/jgm/pandoc/releases
-RUN wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-amd64.deb
-RUN dpkg -i pandoc-2.19.2-1-amd64.deb && rm pandoc-2.19.2-1-amd64.deb
+ARG TARGETARCH
+RUN wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-${TARGETARCH}.deb && \
+    dpkg -i pandoc-2.19.2-1-${TARGETARCH}.deb && rm pandoc-2.19.2-1-${TARGETARCH}.deb
 #########################
 
 # Fix CI problem by pinning pyopenssl version
@@ -118,5 +127,12 @@ COPY ./rastervision_core/ /opt/src/rastervision_core/
 COPY ./rastervision_pytorch_learner/ /opt/src/rastervision_pytorch_learner/
 COPY ./rastervision_pytorch_backend/ /opt/src/rastervision_pytorch_backend/
 COPY ./rastervision_gdal_vsi/ /opt/src/rastervision_gdal_vsi/
+
+# This gets rid of the following error when importing cv2 on arm64.
+# We cannot use the ENV directive since it cannot be used conditionally.
+# See https://github.com/opencv/opencv/issues/14884
+# ImportError: /lib/aarch64-linux-gnu/libGLdispatch.so.0: cannot allocate memory in static TLS block
+RUN if [${TARGETARCH} == "arm64"]; \
+    then echo "export LD_PRELOAD=/lib/$(cat /root/linux_arch)-linux-gnu/libGLdispatch.so.0:$LD_PRELOAD" >> /root/.bashrc; fi
 
 CMD ["bash"]
