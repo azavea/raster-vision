@@ -177,7 +177,8 @@ class Learner(ABC):
             self._tmp_dir = rv_config.get_tmp_dir()
             tmp_dir = self._tmp_dir.name
         self.tmp_dir = tmp_dir
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = torch.device('cuda'
+                                   if torch.cuda.is_available() else 'cpu')
 
         self.train_ds = train_ds
         self.valid_ds = valid_ds
@@ -322,12 +323,11 @@ class Learner(ABC):
                 Will be available when loading from a bundle. Defaults to None.
         """
         if self.model is not None:
-            self.model.to(self.device)
+            self.model.to(device=self.device)
             return
 
         self.model = self.build_model(model_def_path=model_def_path)
-
-        self.model.to(self.device)
+        self.model.to(device=self.device)
         self.load_init_weights(model_weights_path=model_weights_path)
 
     def build_model(self, model_def_path: Optional[str] = None) -> nn.Module:
@@ -799,23 +799,19 @@ class Learner(ABC):
                 might or might not be batched depending on the batched_output
                 argument.
         """
-        model_train_state = self.model.training
         self.model.eval()
 
-        with torch.inference_mode():
-            for x, y in dl:
-                x = self.to_device(x, self.device)
-                z = self.predict(x, raw_out=raw_out, **predict_kw)
-                x = self.to_device(x, 'cpu')
-                y = self.to_device(y, 'cpu') if y is not None else y
-                z = self.to_device(z, 'cpu')
-                if batched_output:
-                    yield x, y, z
-                else:
-                    for _x, _y, _z in zip(x, y, z):
-                        yield _x, _y, _z
-
-        self.model.train(model_train_state)
+        for x, y in dl:
+            x = self.to_device(x, self.device)
+            z = self.predict(x, raw_out=raw_out, **predict_kw)
+            x = self.to_device(x, 'cpu')
+            y = self.to_device(y, 'cpu') if y is not None else y
+            z = self.to_device(z, 'cpu')
+            if batched_output:
+                yield x, y, z
+            else:
+                for _x, _y, _z in zip(x, y, z):
+                    yield _x, _y, _z
 
     def get_dataloader(self, split: str) -> DataLoader:
         """Get the DataLoader for a split.

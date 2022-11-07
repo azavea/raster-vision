@@ -4,7 +4,7 @@ import logging
 
 import torch
 from torch import nn
-from torch.hub import import_module
+from torch.hub import _import_module
 import numpy as np
 from PIL import ImageColor
 import albumentations as A
@@ -166,7 +166,7 @@ def deserialize_albumentation_transform(tf_dict: dict) -> A.BasicTransform:
             lambda_transforms_path = download_if_needed(
                 lambda_transforms_path, tmp_dir)
             # import it as a module
-            lambda_transforms_module = import_module(
+            lambda_transforms_module = _import_module(
                 name=filename, path=lambda_transforms_path)
             # retrieve the lambda_transforms dict from the module
             lambda_transforms: dict = getattr(lambda_transforms_module,

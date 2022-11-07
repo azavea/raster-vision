@@ -1,34 +1,36 @@
 ARG CUDA_VERSION
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn7-devel-ubuntu16.04
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu20.04
 
-RUN apt-get update && apt-get install -y software-properties-common python-software-properties
+# wget: needed below to install conda
+# build-essential: installs gcc which is needed to install some deps like rasterio
+# libGL1: needed to avoid following error when using cv2
+# ImportError: libGL.so.1: cannot open shared object file: No such file or directory
+# See https://stackoverflow.com/questions/55313610/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directo
+RUN apt-get update && \
+   apt-get install -y wget=1.* build-essential libgl1 && \
+   apt-get autoremove && apt-get autoclean && apt-get clean
 
-RUN add-apt-repository ppa:ubuntugis/ppa && \
-    apt-get update && \
-    apt-get install -y wget=1.* git=1:2.* python-protobuf=2.* python3-tk=3.* \
-    jq=1.5* \
-    build-essential libsqlite3-dev=3.11.* zlib1g-dev=1:1.2.* \
-    unzip curl && \
-    apt-get autoremove && apt-get autoclean && apt-get clean
-
-# See https://github.com/mapbox/rasterio/issues/1289
-ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-
-# Install Python 3.8
-RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh && \
-    chmod +x ~/miniconda.sh && \
-    ~/miniconda.sh -b -p /opt/conda && \
-    rm ~/miniconda.sh
+# Install Python and conda
+# Using Python 3.9 since that is the highest version supported by miniconda.
+RUN wget -q -O ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh && \
+     chmod +x ~/miniconda.sh && \
+     ~/miniconda.sh -b -p /opt/conda && \
+     rm ~/miniconda.sh
 ENV PATH /opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH /opt/conda/lib/:$LD_LIBRARY_PATH
-RUN conda install -y python=3.8
+RUN conda install -y python=3.9
 RUN python -m pip install --upgrade pip
 
-# install GDAL
-RUN conda install -y -c conda-forge gdal=3.2.2
+# We need to install GDAL first to install Rasterio on non-AMD64 architectures.
+# The Rasterio wheels contain GDAL in them, but they are only built for AMD64 now.
+RUN conda install -y -c conda-forge gdal=3.5.2
+ENV GDAL_DATA=/opt/conda/lib/python3.9/site-packages/rasterio/gdal_data/
 
-# Setup GDAL_DATA directory, rasterio needs it.
-ENV GDAL_DATA=/opt/conda/lib/python3.8/site-packages/rasterio/gdal_data/
+# This is to prevent the following error when starting the container.
+# bash: /opt/conda/lib/libtinfo.so.6: no version information available (required by bash)
+# See https://askubuntu.com/questions/1354890/what-am-i-doing-wrong-in-conda
+RUN rm /opt/conda/lib/libtinfo.so.6 && \
+   ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /opt/conda/lib/libtinfo.so.6
 
 # needed for jupyter lab extensions
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
@@ -82,6 +84,8 @@ RUN wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-
 RUN dpkg -i pandoc-2.19.2-1-amd64.deb && rm pandoc-2.19.2-1-amd64.deb
 #########################
 
+# Fix CI problem by pinning pyopenssl version
+# See https://askubuntu.com/questions/1428181/module-lib-has-no-attribute-x509-v-flag-cb-issuer-check
 RUN python -m pip install --upgrade pyopenssl==22.0.0
 
 COPY scripts /opt/src/scripts/
@@ -94,6 +98,7 @@ COPY .coveragerc /opt/src/.coveragerc
 # Needed for click to work
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
+# Needed for GDAL 3.0
 ENV PROJ_LIB /opt/conda/share/proj/
 
 # Copy code for each package.
