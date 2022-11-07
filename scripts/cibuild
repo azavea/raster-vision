@@ -17,11 +17,18 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     if [[ "${1:-}" == "--help" ]]; then
         usage
     else
-        docker build \
-            --platform linux/amd64 --build-arg CUDA_VERSION="11.3.1" \
-            -t "raster-vision-${IMAGE_TYPE}" \
-            -f Dockerfile .
-
-        ./scripts/test
+        if [[ "${PLATFORM}" == "arm64" ]]; then
+            docker build \
+                --platform linux/arm64 --build-arg CUDA_VERSION="11.3.1" \
+                -t "raster-vision-${IMAGE_TYPE}-arm64" \
+                -f Dockerfile .
+            ./scripts/test
+        else
+            docker build \
+                --platform linux/amd64 --build-arg CUDA_VERSION="11.3.1" \
+                -t "raster-vision-${IMAGE_TYPE}-amd64" \
+                -f Dockerfile .
+            ./scripts/test
+        fi
     fi
 fi

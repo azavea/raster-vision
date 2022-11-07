@@ -17,9 +17,11 @@ jobs:
     strategy:
       matrix:
         image_type: [pytorch]
+        platform: [amd64, arm64]
     env:
       DOCKER_BUILDKIT: 1
       IMAGE_TYPE: ${{ matrix.image_type }}
+      PLATFORM: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v2
 

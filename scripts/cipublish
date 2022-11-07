@@ -33,18 +33,18 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
 
         if [[ "${GITHUB_REF}" == "refs/heads/master" ]]; then
             # On master, use the current SHA and latest
-            docker tag "raster-vision-${IMAGE_TYPE}" \
-                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${GITHUB_SHA}"
-            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${GITHUB_SHA}"
+            docker tag "raster-vision-${IMAGE_TYPE}-${PLATFORM}" \
+                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${PLATFORM}-${GITHUB_SHA}"
+            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${PLATFORM}-${GITHUB_SHA}"
 
-            docker tag "raster-vision-${IMAGE_TYPE}" \
-                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-latest"
-            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-latest"
+            docker tag "raster-vision-${IMAGE_TYPE}-${PLATFORM}" \
+                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${PLATFORM}-latest"
+            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${PLATFORM}-latest"
         else
             # For everything else, use the branch or tag name
-            docker tag "raster-vision-${IMAGE_TYPE}" \
-                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${GITHUB_REF##*/}"
-            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${GITHUB_REF##*/}"
+            docker tag "raster-vision-${IMAGE_TYPE}-${PLATFORM}" \
+                "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${PLATFORM}-${GITHUB_REF##*/}"
+            docker push "quay.io/azavea/raster-vision:${IMAGE_TYPE}-${PLATFORM}-${GITHUB_REF##*/}"
         fi
     fi
 fi
