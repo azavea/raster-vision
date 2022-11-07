@@ -104,6 +104,10 @@ class Learner(ABC):
     If instantiated with training=False, the training apparatus (loss,
     optimizer, scheduler, logging, etc.) will not be set up and the model will
     be put into eval mode.
+
+    Note that various training and prediction methods have the side effect of
+    putting Learner.model into training or eval mode. No attempt is made to put the
+    model back into the mode it was previously in.
     """
 
     def __init__(self,
