@@ -6,7 +6,7 @@ import logging
 import numpy as np
 import torch
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     ReclassTransformerConfig, SceneConfig,
@@ -71,7 +71,7 @@ class TestSemanticSegmentationLearner(unittest.TestCase):
         produce plots."""
         logging.disable(logging.CRITICAL)
 
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             class_config = ClassConfig(
                 names=[f'class_{i}' for i in range(num_classes)])
             class_config.update()

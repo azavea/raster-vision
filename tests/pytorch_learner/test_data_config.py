@@ -1,7 +1,8 @@
 from typing import Callable
 import unittest
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import get_tmp_dir
+from rastervision.pipeline.config import (ValidationError, build_config)
 from rastervision.pytorch_learner import (
     DataConfig, ImageDataConfig, SemanticSegmentationDataConfig,
     SemanticSegmentationImageDataConfig, SemanticSegmentationGeoDataConfig,
@@ -12,7 +13,6 @@ from rastervision.pytorch_learner import (
     reg_data_config_upgrader, objdet_data_config_upgrader, GeoDataWindowConfig,
     GeoDataWindowMethod, GeoDataConfig, PlotOptions,
     ss_image_data_config_upgrader)
-from rastervision.pipeline.config import (ValidationError, build_config)
 from rastervision.core.data import DatasetConfig, ClassConfig
 
 
@@ -185,7 +185,7 @@ class TestImageDataConfig(unittest.TestCase):
         img_sz = 200
         nchannels = 3
         nchips = 5
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             # prepare data
             data_dir = join(tmp_dir, 'data')
             for split in ['train', 'valid']:
@@ -258,7 +258,7 @@ class TestImageDataConfig(unittest.TestCase):
         img_sz = 200
         nchannels = 3
         nchips = 5
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             # prepare data
             data_dir = join(tmp_dir, 'data')
             for split in ['train', 'valid']:
@@ -422,7 +422,7 @@ class TestGeoDataConfig(unittest.TestCase):
             class_colors=class_config.colors,
             img_sz=img_sz,
             num_workers=0)
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             train_ds, val_ds, test_ds = data_cfg.build(tmp_dir)
             self.assertEqual(len(train_ds), 4 * (600 // chip_sz)**2)
             self.assertEqual(len(val_ds), 2 * (600 // chip_sz)**2)

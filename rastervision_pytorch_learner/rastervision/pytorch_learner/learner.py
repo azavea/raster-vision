@@ -22,11 +22,10 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
-from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, download_or_copy, sync_from_dir, get_local_path, unzip,
-    str_to_file, is_local)
+    str_to_file, is_local, get_tmp_dir)
 from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
@@ -174,7 +173,7 @@ class Learner(ABC):
                 'cfg.model can only be None if a custom model is specified.')
 
         if tmp_dir is None:
-            self._tmp_dir = rv_config.get_tmp_dir()
+            self._tmp_dir = get_tmp_dir()
             tmp_dir = self._tmp_dir.name
         self.tmp_dir = tmp_dir
         self.device = torch.device('cuda'

@@ -4,6 +4,7 @@ from os.path import join
 import numpy as np
 from shapely.geometry import shape
 
+from rastervision.pipeline.file_system import file_to_json, get_tmp_dir
 from rastervision.core.data import ClassConfig
 from rastervision.core import Box
 from rastervision.core.data import (
@@ -11,8 +12,6 @@ from rastervision.core.data import (
     RasterizedSourceConfig, RasterizerConfig, GeoJSONVectorSourceConfig,
     PolygonVectorOutputConfig, ClassInferenceTransformerConfig)
 from rastervision.core.evaluation import SemanticSegmentationEvaluator
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import file_to_json
 
 from tests.core.data.mock_raster_source import (MockRasterSource)
 from tests import data_file_path
@@ -24,7 +23,7 @@ class MockRVPipelineConfig:
 
 class TestSemanticSegmentationEvaluator(unittest.TestCase):
     def setUp(self):
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
 
         self.class_config = ClassConfig(names=['one', 'two'])
         self.class_config.update()

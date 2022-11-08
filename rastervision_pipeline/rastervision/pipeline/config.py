@@ -7,9 +7,9 @@ from pydantic import (  # noqa
 
 from typing_extensions import Literal
 
-from rastervision.pipeline import registry
+from rastervision.pipeline import (registry_ as registry, rv_config_ as
+                                   rv_config)
 from rastervision.pipeline.file_system import str_to_file
-from rastervision.pipeline import rv_config
 
 if TYPE_CHECKING:
     from rastervision.pipeline.pipeline_config import PipelineConfig

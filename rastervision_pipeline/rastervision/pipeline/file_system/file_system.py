@@ -2,7 +2,7 @@ from abc import (ABC, abstractmethod)
 from datetime import datetime
 from typing import Optional, List
 
-from rastervision.pipeline import registry
+from rastervision.pipeline import registry_ as registry
 
 
 class NotReadableError(Exception):

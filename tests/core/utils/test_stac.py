@@ -4,7 +4,7 @@ import unittest
 
 from shapely.geometry import Polygon
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.utils.stac import setup_stac_io, read_stac
 
 from tests import data_file_path
@@ -31,7 +31,7 @@ class TestStac(unittest.TestCase):
             'aoi_geometry': (type(None), dict)
         }
 
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             out = read_stac(zip_path, tmp_dir)
 
             # check for correctness of format

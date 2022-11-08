@@ -35,7 +35,7 @@ formatter = logging.Formatter(
 sh.setFormatter(formatter)
 root_logger.addHandler(sh)
 
-rv_config = RVConfig()
-registry = Registry()
-registry.load_plugins()
-registry.load_builtins()
+rv_config_ = RVConfig()
+registry_ = Registry()
+registry_.load_plugins()
+registry_.load_builtins()

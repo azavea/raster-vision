@@ -7,8 +7,7 @@ import logging
 import numpy as np
 import torch
 
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import json_to_file
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     ReclassTransformerConfig, SceneConfig, ChipClassificationLabelSourceConfig,
@@ -86,7 +85,7 @@ class TestClassificationLearner(unittest.TestCase):
         produce plots."""
         logging.disable(logging.CRITICAL)
 
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             class_config = ClassConfig(
                 names=[f'class_{i}' for i in range(num_classes)])
             dataset_cfg = DatasetConfig(

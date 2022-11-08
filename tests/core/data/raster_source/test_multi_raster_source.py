@@ -2,11 +2,11 @@ import unittest
 
 import numpy as np
 
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data import (
     RasterioSourceConfig, MultiRasterSourceConfig, ReclassTransformerConfig,
     CastTransformerConfig)
-from rastervision.pipeline import rv_config
 
 from tests import data_file_path
 
@@ -47,7 +47,7 @@ def make_cfg_diverse(diff_dtypes: bool = False,
 
 class TestMultiRasterSource(unittest.TestCase):
     def setUp(self):
-        self.tmp_dir_obj = rv_config.get_tmp_dir()
+        self.tmp_dir_obj = get_tmp_dir()
         self.tmp_dir = self.tmp_dir_obj.name
 
     def tearDown(self):

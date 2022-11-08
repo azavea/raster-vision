@@ -6,7 +6,7 @@ from pydantic.error_wrappers import ValidationError
 from rastervision.pipeline.config import (Config, register_config,
                                           build_config, upgrade_config)
 from rastervision.pipeline.pipeline_config import (PipelineConfig)
-from rastervision.pipeline import registry
+from rastervision.pipeline import registry_ as registry
 
 
 def a_upgrader(cfg_dict, version):
