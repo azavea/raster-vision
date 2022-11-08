@@ -1,8 +1,8 @@
 from typing import Optional, List
 import logging
 
-from rastervision.pipeline import rv_config
 from rastervision.pipeline.config import (register_config, Field)
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.backend import BackendConfig
 from rastervision.core.rv_pipeline import RVPipelineConfig
 from rastervision.pytorch_learner.learner_config import (
@@ -75,7 +75,7 @@ class PyTorchLearnerBackendConfig(BackendConfig):
             'DataConfig.img_channels or RasterSourceConfig.channel_order. '
             'Building first scene to figure it out. This might take some '
             'time. To avoid this, specify one of the above.')
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             scene = all_scenes[0].build(
                 pipeline_cfg.dataset.class_config,
                 tmp_dir,

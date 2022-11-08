@@ -31,7 +31,7 @@
    {% if not modules %}
    {% set configs = [] %}
    {% for m in members %}
-      {% if m.endswith('Config') or m.endswith('Options') %}
+      {% if (m.endswith('Config') and m != 'RVConfig') or m.endswith('Options') %}
          {% set _ = configs.append(m) %}
       {% endif %}
    {%- endfor %}

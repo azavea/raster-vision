@@ -6,8 +6,7 @@ from shapely.geometry import shape
 from rastervision.core.data import (
     GeoJSONVectorSourceConfig, ClassConfig, IdentityCRSTransformer,
     ClassInferenceTransformerConfig, BufferTransformerConfig)
-from rastervision.pipeline.file_system import json_to_file
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
 
@@ -16,7 +15,7 @@ class TestGeoJSONVectorSource(unittest.TestCase):
     """This also indirectly tests the ClassInference class."""
 
     def setUp(self):
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
         self.uri = os.path.join(self.tmp_dir.name, 'vectors.json')
 
     def tearDown(self):

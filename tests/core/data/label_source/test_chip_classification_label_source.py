@@ -3,8 +3,7 @@ import os
 
 import geopandas as gpd
 
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import json_to_file
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data import (
     ClassConfig, ChipClassificationLabelSourceConfig,
@@ -76,7 +75,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         self.labels_df = gpd.GeoDataFrame.from_features(self.geojson)
 
         self.file_name = 'labels.json'
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
         self.uri = os.path.join(self.tmp_dir.name, self.file_name)
         json_to_file(self.geojson, self.uri)
 

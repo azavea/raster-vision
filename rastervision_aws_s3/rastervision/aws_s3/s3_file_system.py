@@ -97,7 +97,7 @@ class S3FileSystem(FileSystem):
     @staticmethod
     def get_request_payer():
         # Import here to avoid circular reference.
-        from rastervision.pipeline import rv_config
+        from rastervision.pipeline import rv_config_ as rv_config
         try:
             s3_config = rv_config.get_namespace_config(AWS_S3)
             # 'None' needs the quotes because boto3 cannot handle None.

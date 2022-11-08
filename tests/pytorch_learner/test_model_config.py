@@ -4,11 +4,11 @@ import unittest
 import torch
 from torch import nn
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.config import ValidationError
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.pytorch_learner import (
     Backbone, ExternalModuleConfig, SemanticSegmentationModelConfig,
     ClassificationModelConfig, ObjectDetectionModelConfig)
-from rastervision.pipeline.config import ValidationError
 
 
 class TestExternalModuleConfig(unittest.TestCase):
@@ -33,7 +33,7 @@ class TestExternalModuleConfig(unittest.TestCase):
                           lambda: ExternalModuleConfig(**args))
 
     def test_build(self):
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             cfg = ExternalModuleConfig(
                 github_repo='AdeelH/pytorch-multi-class-focal-loss:1.1',
                 entrypoint='focal_loss',

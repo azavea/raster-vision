@@ -6,12 +6,15 @@ import time
 import logging
 import json
 import zipfile
-from typing import Optional, List
+from typing import TYPE_CHECKING, Optional, List
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.file_system import FileSystem
 from rastervision.pipeline.file_system.local_file_system import (
     LocalFileSystem, make_dir)
+
+if TYPE_CHECKING:
+    from tempfile import TemporaryDirectory
 
 log = logging.getLogger(__name__)
 
@@ -345,3 +348,12 @@ def extract(uri: str,
     local_path = download_if_needed(uri, download_dir)
     shutil.unpack_archive(local_path, target_dir)
     return target_dir
+
+
+def get_tmp_dir() -> 'TemporaryDirectory':
+    """Return temporary directory given by the RVConfig.
+
+    Returns:
+        TemporaryDirectory: A context manager.
+    """
+    return rv_config.get_tmp_dir()
