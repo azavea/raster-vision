@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING, Callable, Dict, Union, Tuple, Optional, List
+from typing_extensions import Literal
 from pydantic import PositiveInt as PosInt, conint
 import math
 import random
 
 import numpy as np
 from shapely.geometry import Polygon
-import rasterio.windows
+from rasterio.windows import Window as RioWindow
 
 NonNegInt = conint(ge=0)
 
@@ -206,11 +207,20 @@ class Box():
              The intersection of this box and the other one.
 
         """
+        if not self.intersects(other):
+            return Box(0, 0, 0, 0)
         xmin = max(self.xmin, other.xmin)
         ymin = max(self.ymin, other.ymin)
         xmax = min(self.xmax, other.xmax)
         ymax = min(self.ymax, other.ymax)
         return Box(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
+
+    def intersects(self, other: 'Box') -> bool:
+        if self.ymax <= other.ymin or self.ymin >= other.ymax:
+            return False
+        if self.xmax <= other.xmin or self.xmin >= other.xmax:
+            return False
+        return True
 
     @staticmethod
     def from_npbox(npbox):
@@ -227,6 +237,11 @@ class Box():
         xmin, ymin, xmax, ymax = shape.bounds
         return Box(ymin, xmin, ymax, xmax)
 
+    @classmethod
+    def from_rasterio(self, rio_window: RioWindow) -> 'Box':
+        yslice, xslice = rio_window.toslices()
+        return Box(yslice.start, xslice.start, yslice.stop, xslice.stop)
+
     def to_xywh(self) -> Tuple[int, int, int, int]:
         return (self.xmin, self.ymin, self.width, self.height)
 
@@ -241,9 +256,9 @@ class Box():
         """Convert to shapely Polygon."""
         return Polygon.from_bounds(*(self.shapely_format()))
 
-    def to_rasterio(self) -> rasterio.windows.Window:
+    def to_rasterio(self) -> RioWindow:
         """Convert to a Rasterio Window."""
-        return rasterio.windows.Window.from_slices(*self.to_slices())
+        return RioWindow.from_slices(*self.to_slices())
 
     def to_slices(self) -> Tuple[slice, slice]:
         """Convert to slices: ymin:ymax, xmin:xmax"""
@@ -254,9 +269,13 @@ class Box():
         ymin, xmin, ymax, xmax = self
         return Box(ymin + dy, xmin + dx, ymax + dy, xmax + dx)
 
-    def to_extent_coords(self, extent: 'Box') -> 'Box':
+    def shift_origin(self, extent: 'Box') -> 'Box':
         """Shift origin of window coords to (extent.xmin, extent.ymin)."""
         return self.translate(dy=extent.ymin, dx=extent.xmin)
+
+    def to_offsets(self, container: 'Box') -> 'Box':
+        """Convert coords to offsets from (container.xmin, container.ymin)."""
+        return self.translate(dy=-container.ymin, dx=-container.xmin)
 
     def reproject(self, transform_fn: Callable) -> 'Box':
         """Reprojects this box based on a transform function.
@@ -276,10 +295,17 @@ class Box():
         """Return new square Box."""
         return Box(ymin, xmin, ymin + size, xmin + size)
 
-    def make_eroded(self, erosion_sz) -> 'Box':
+    def center_crop(self, edge_offset_y: int, edge_offset_x: int) -> 'Box':
+        """Return Box whose sides are eroded by the given offsets.
+
+        Box(0, 0, 10, 10).center_crop(2, 4) ==  Box(2, 4, 8, 6)
+        """
+        return Box(self.ymin + edge_offset_y, self.xmin + edge_offset_x,
+                   self.ymax - edge_offset_y, self.xmax - edge_offset_x)
+
+    def erode(self, erosion_sz) -> 'Box':
         """Return new Box whose sides are eroded by erosion_sz."""
-        return Box(self.ymin + erosion_sz, self.xmin + erosion_sz,
-                   self.ymax - erosion_sz, self.xmax - erosion_sz)
+        return self.center_crop(erosion_sz, erosion_sz)
 
     def buffer(self, buffer_sz: float, max_extent: 'Box') -> 'Box':
         """Return new Box whose sides are buffered by buffer_sz.
@@ -304,6 +330,14 @@ class Box():
             min(max_extent.width,
                 int(self.xmax) + delta_width))
 
+    def pad(self, ymin: int, xmin: int, ymax: int, xmax: int) -> 'Box':
+        """Pad sides by the given amount."""
+        return Box(
+            ymin=self.ymin - ymin,
+            xmin=self.xmin - xmin,
+            ymax=self.ymax + ymax,
+            xmax=self.xmax + xmax)
+
     def copy(self) -> 'Box':
         return Box(*self)
 
@@ -311,7 +345,9 @@ class Box():
                     size: Union[PosInt, Tuple[PosInt, PosInt]],
                     stride: Union[PosInt, Tuple[PosInt, PosInt]],
                     padding: Optional[Union[NonNegInt, Tuple[
-                        NonNegInt, NonNegInt]]] = None) -> List['Box']:
+                        NonNegInt, NonNegInt]]] = None,
+                    pad_direction: Literal['both', 'start', 'end'] = 'end'
+                    ) -> List['Box']:
         """Returns a list of boxes representing windows generated using a
         sliding window traversal with the specified size, stride, and
         padding.
@@ -324,13 +360,20 @@ class Box():
         Args:
             size (Union[PosInt, Tuple[PosInt, PosInt]]): Size (h, w) of the
                 windows.
-            stride (Union[PosInt, Tuple[PosInt, PosInt]]): Distance between
-                windows.
+            stride (Union[PosInt, Tuple[PosInt, PosInt]]): Step size between
+                windows. Can be 2-tuple (h_step, w_step) or positive int.
             padding (Optional[Union[PosInt, Tuple[PosInt, PosInt]]], optional):
-                Padding for the right and bottom edges. Defaults to None.
+                Optional padding to accomodate windows that overflow the
+                extent. Can be 2-tuple (h_pad, w_pad) or non-negative int.
+                If None, will be set to (size[0]//2, size[1]//2).
+                Defaults to None.
+            pad_direction (Literal['both', 'start', 'end']): If 'end', only pad
+                ymax and xmax (bottom and right). If 'start', only pad ymin and
+                xmin (top and left). If 'both', pad all sides. Has no effect if
+                paddiong is zero. Defaults to 'end'.
 
         Returns:
-            List[Box]: list of Box objects
+            List[Box]: List of Box objects.
         """
         if not isinstance(size, tuple):
             size = (size, size)
@@ -338,24 +381,47 @@ class Box():
         if not isinstance(stride, tuple):
             stride = (stride, stride)
 
+        if size[0] <= 0 or size[1] <= 0 or stride[0] <= 0 or stride[1] <= 0:
+            raise ValueError('size and stride must be positive.')
+
         if padding is None:
-            padding = size
-        elif not isinstance(padding, tuple):
+            padding = (size[0] // 2, size[1] // 2)
+
+        if not isinstance(padding, tuple):
             padding = (padding, padding)
 
-        h_padding, w_padding = padding
-        height, width = size
-        h_stride, w_stride = stride
+        if padding[0] < 0 or padding[1] < 0:
+            raise ValueError('padding must be non-negative.')
 
-        ymax = self.ymax - height + h_padding
-        xmax = self.xmax - width + w_padding
+        if padding != (0, 0):
+            h_pad, w_pad = padding
+            if pad_direction == 'both':
+                padded_box = self.pad(
+                    ymin=h_pad, xmin=w_pad, ymax=h_pad, xmax=w_pad)
+            elif pad_direction == 'end':
+                padded_box = self.pad(ymin=0, xmin=0, ymax=h_pad, xmax=w_pad)
+            elif pad_direction == 'start':
+                padded_box = self.pad(ymin=h_pad, xmin=w_pad, ymax=0, xmax=0)
+            else:
+                raise ValueError('pad_directions must be one of: '
+                                 '"both", "start", "end".')
+            return padded_box.get_windows(
+                size=size, stride=stride, padding=(0, 0))
 
-        result = []
-        for row in range(self.ymin, ymax, h_stride):
-            for col in range(self.xmin, xmax, w_stride):
-                window = Box(row, col, row + height, col + width)
-                result.append(window)
-        return result
+        # padding is necessarily (0, 0) at this point, so we ignore it
+        h, w = size
+        h_step, w_step = stride
+        # lb = lower bound, ub = upper bound
+        ymin_lb = self.ymin
+        xmin_lb = self.xmin
+        ymin_ub = self.ymax - h
+        xmin_ub = self.xmax - w
+
+        windows = []
+        for ymin in range(ymin_lb, ymin_ub + 1, h_step):
+            for xmin in range(xmin_lb, xmin_ub + 1, w_step):
+                windows.append(Box(ymin, xmin, ymin + h, xmin + w))
+        return windows
 
     def to_dict(self) -> Dict[str, int]:
         return {

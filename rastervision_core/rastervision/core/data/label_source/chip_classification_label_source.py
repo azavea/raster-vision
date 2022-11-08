@@ -114,7 +114,7 @@ def read_labels(labels_df: gpd.GeoDataFrame,
         extent_polygon = extent.to_shapely()
         labels_df = labels_df[labels_df.intersects(extent_polygon)]
         boxes = np.array([
-            Box.from_shapely(c).to_int().to_extent_coords(extent)
+            Box.from_shapely(c).to_int().shift_origin(extent)
             for c in labels_df.geometry
         ])
     else:
@@ -194,7 +194,7 @@ class ChipClassificationLabelSource(LabelSource):
                 raise ValueError('cell_sz is not set.')
             cells = self.extent.get_windows(cfg.cell_sz, cfg.cell_sz)
         else:
-            cells = [cell.to_extent_coords(self.extent) for cell in cells]
+            cells = [cell.shift_origin(self.extent) for cell in cells]
 
         known_cells = [c for c in cells if c in self.labels]
         unknown_cells = [c for c in cells if c not in self.labels]
@@ -217,7 +217,7 @@ class ChipClassificationLabelSource(LabelSource):
                    window: Optional[Box] = None) -> ChipClassificationLabels:
         if window is None:
             return self.labels
-        window = window.to_extent_coords(self.extent)
+        window = window.shift_origin(self.extent)
         return self.labels.get_singleton_labels(window)
 
     def __getitem__(self, key: Any) -> int:

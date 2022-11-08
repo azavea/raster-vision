@@ -8,11 +8,18 @@ from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
 from rastervision.core.rv_pipeline.utils import (fill_no_data,
                                                  nodata_below_threshold)
 from rastervision.core.rv_pipeline.semantic_segmentation_config import (
-    SemanticSegmentationWindowMethod, SemanticSegmentationChipOptions)
+    SemanticSegmentationWindowMethod)
 
 if TYPE_CHECKING:
     from rastervision.core.backend.backend import Backend
-    from rastervision.core.data import ClassConfig, Labels, Scene
+    from rastervision.core.data import (
+        ClassConfig,
+        Labels,
+        Scene,
+        SemanticSegmentationLabelSource,
+    )
+    from rastervision.core.rv_pipeline.semantic_segmentation_config import (
+        SemanticSegmentationConfig, SemanticSegmentationChipOptions)
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +27,7 @@ log = logging.getLogger(__name__)
 def get_train_windows(scene: 'Scene',
                       class_config: 'ClassConfig',
                       chip_size: int,
-                      chip_options: SemanticSegmentationChipOptions,
+                      chip_options: 'SemanticSegmentationChipOptions',
                       chip_nodata_threshold: float = 1.) -> List[Box]:
     """Get training windows covering a scene.
 
@@ -33,7 +40,7 @@ def get_train_windows(scene: 'Scene',
     co = chip_options
     raster_source = scene.raster_source
     extent = raster_source.extent
-    label_source = scene.label_source
+    label_source: 'SemanticSegmentationLabelSource' = scene.label_source
 
     def filter_windows(windows: Sequence[Box]) -> List[Box]:
         """Filter out chips that
@@ -68,10 +75,10 @@ def get_train_windows(scene: 'Scene',
         if co.negative_survival_prob >= 1.0:
             return True
         else:
-            target_class_ids = co.target_class_ids or list(
-                range(len(class_config)))
-            is_positive = label_source.enough_target_pixels(
-                window, co.target_count_threshold, target_class_ids)
+            is_positive = False
+            if co.target_class_ids is not None:
+                is_positive = label_source.enough_target_pixels(
+                    window, co.target_count_threshold, co.target_class_ids)
             if is_positive:
                 return True
             keep_negative = np.random.sample() < co.negative_survival_prob
@@ -143,8 +150,22 @@ class SemanticSegmentation(RVPipeline):
         return labels
 
     def predict_scene(self, scene: 'Scene', backend: 'Backend') -> 'Labels':
-        chip_sz = self.config.predict_chip_sz
-        stride = self.config.predict_options.stride
+        cfg: 'SemanticSegmentationConfig' = self.config
+        chip_sz = cfg.predict_chip_sz
+        stride = cfg.predict_options.stride
+        crop_sz = cfg.predict_options.crop_sz
+
         if stride is None:
             stride = chip_sz
-        return backend.predict_scene(scene, chip_sz=chip_sz, stride=stride)
+
+        if crop_sz == 'auto':
+            overlap_sz = chip_sz - stride
+            if overlap_sz % 2 == 1:
+                log.warn(
+                    'Using crop_sz="auto" but overlap size (chip_sz minus '
+                    'stride) is odd. This means that one pixel row/col will '
+                    'still overlap after cropping.')
+            crop_sz = overlap_sz // 2
+
+        return backend.predict_scene(
+            scene, chip_sz=chip_sz, stride=stride, crop_sz=crop_sz)

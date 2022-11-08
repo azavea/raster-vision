@@ -72,3 +72,8 @@ class Labels(ABC):
         for prediction, window in zip(predictions, windows):
             labels[window] = prediction
         return labels
+
+    @abstractmethod
+    def save(self, uri: str) -> None:
+        """Save to file."""
+        pass

@@ -5,6 +5,7 @@ from rastervision.pipeline.config import register_config, Config, Field
 
 if TYPE_CHECKING:
     from rastervision.core.data import ClassConfig
+    from rastervision.core.evaluation import Evaluator
     from rastervision.core.rv_pipeline import RVPipelineConfig
 
 
@@ -20,7 +21,7 @@ class EvaluatorConfig(Config):
     def build(self,
               class_config: 'ClassConfig',
               scene_group: Optional[Tuple[str, Iterable[str]]] = None
-              ) -> 'EvaluatorConfig':
+              ) -> 'Evaluator':
         pass
 
     def get_output_uri(self, scene_group_name: Optional[str] = None) -> str:

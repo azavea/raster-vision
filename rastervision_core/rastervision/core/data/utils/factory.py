@@ -105,7 +105,7 @@ def make_ss_scene(class_config: 'ClassConfig',
     label_source = None
     if label_raster_source is not None:
         label_source = SemanticSegmentationLabelSource(
-            raster_source=label_raster_source, null_class_id=null_class_id)
+            raster_source=label_raster_source, class_config=class_config)
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(

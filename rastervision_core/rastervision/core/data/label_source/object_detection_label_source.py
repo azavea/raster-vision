@@ -50,7 +50,7 @@ class ObjectDetectionLabelSource(LabelSource):
         """
         if window is None:
             return self.labels
-        window = window.to_extent_coords(self.extent)
+        window = window.shift_origin(self.extent)
         return ObjectDetectionLabels.get_overlapping(
             self.labels, window, ioa_thresh=ioa_thresh, clip=clip)
 

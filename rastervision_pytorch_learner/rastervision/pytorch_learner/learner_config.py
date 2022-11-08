@@ -6,6 +6,7 @@ import logging
 
 from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
                     Optional, Sequence, Tuple, Union)
+from typing_extensions import Literal
 from pydantic import (PositiveFloat, PositiveInt as PosInt, constr, confloat,
                       conint)
 from pydantic.utils import sequence_like
@@ -1072,6 +1073,11 @@ class GeoDataWindowConfig(Config):
         None,
         description='How many pixels are windows allowed to overflow '
         'the edges of the raster source.')
+    pad_direction: Literal['both', 'start', 'end'] = Field(
+        'end',
+        description='If "end", only pad ymax and xmax (bottom and right). '
+        'If "start", only pad ymin and xmin (top and left). If "both", '
+        'pad all sides. Has no effect if paddiong is zero. Defaults to "end".')
     size_lims: Optional[Tuple[PosInt, PosInt]] = Field(
         None,
         description='[min, max) interval from which window sizes will be '

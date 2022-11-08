@@ -13,7 +13,6 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         class_config = ClassConfig(names=['one', 'two'])
         class_config.update()
         class_config.ensure_null_class()
-        null_class_id = class_config.null_class_id
 
         gt_array = np.zeros((4, 4, 1), dtype=np.uint8)
         gt_array[2, 2, 0] = 1
@@ -21,14 +20,14 @@ class TestSemanticSegmentationEvaluation(unittest.TestCase):
         gt_raster = MockRasterSource([0], 1)
         gt_raster.set_raster(gt_array)
         gt_label_source = SemanticSegmentationLabelSource(
-            gt_raster, null_class_id)
+            gt_raster, class_config)
 
         p_array = np.zeros((4, 4, 1), dtype=np.uint8)
         p_array[1, 1, 0] = 1
         p_raster = MockRasterSource([0], 1)
         p_raster.set_raster(p_array)
         p_label_source = SemanticSegmentationLabelSource(
-            p_raster, null_class_id)
+            p_raster, class_config)
 
         eval = SemanticSegmentationEvaluation(class_config)
         eval.compute(gt_label_source.get_labels(), p_label_source.get_labels())

@@ -166,6 +166,8 @@ class RasterioSource(RasterSource):
         """
         self.uris = listify_uris(uris)
         self.allow_streaming = allow_streaming
+        self._num_channels = None
+        self._dtype = None
 
         self.tmp_dir = tmp_dir
         if self.tmp_dir is None:
@@ -175,9 +177,22 @@ class RasterioSource(RasterSource):
         self.imagery_path = self.download_data(
             self.tmp_dir, stream=self.allow_streaming)
         self.image_dataset = rasterio.open(self.imagery_path)
+
+        block_shapes = set(self.image_dataset.block_shapes)
+        if len(block_shapes) > 1:
+            log.warn('Raster bands have non-identical block shapes: '
+                     f'{block_shapes}. This can slow down reading. '
+                     'Consider re-tiling using GDAL.')
+
+        for h, w in block_shapes:
+            # the choice of 4 here is arbitrary
+            if max(h, w) / min(h, w) > 4:
+                log.warn(f'Raster block size {(h, w)} is too non-square. '
+                         'This can slow down reading. '
+                         'Consider re-tiling using GDAL.')
+
         self._crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
-        self._dtype = None
 
         num_channels_raw = self.image_dataset.count
         if channel_order is None:
@@ -185,13 +200,11 @@ class RasterioSource(RasterSource):
         self.bands_to_read = np.array(channel_order, dtype=int) + 1
 
         # number of output channels
-        self._num_channels = None
         if len(raster_transformers) == 0:
             self._num_channels = len(self.bands_to_read)
 
         mask_flags = self.image_dataset.mask_flag_enums
-        self.is_masked = any(
-            [m for m in mask_flags if m != MaskFlags.all_valid])
+        self.is_masked = any(m for m in mask_flags if m != MaskFlags.all_valid)
 
         if extent is None:
             height = self.image_dataset.height
@@ -249,7 +262,7 @@ class RasterioSource(RasterSource):
                   window: Box,
                   bands: Optional[Sequence[int]] = None,
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
-        window = window.to_extent_coords(self.extent)
+        window = window.shift_origin(self.extent)
         chip = load_window(
             self.image_dataset,
             bands=bands,

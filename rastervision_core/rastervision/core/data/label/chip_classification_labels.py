@@ -1,10 +1,15 @@
-from typing import (Any, Dict, Iterable, List, Optional, Sequence, Tuple)
+from typing import (TYPE_CHECKING, Any, Dict, Iterable, List, Optional,
+                    Sequence, Tuple)
 from dataclasses import dataclass
 
 import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.data.label import Labels
+
+if TYPE_CHECKING:
+    from rastervision.core.data import (ClassConfig, CRSTransformer)
+    from shapely.geometry import Polygon
 
 
 @dataclass
@@ -66,7 +71,7 @@ class ChipClassificationLabels(Labels):
     def make_empty(cls) -> 'ChipClassificationLabels':
         return ChipClassificationLabels()
 
-    def filter_by_aoi(self, aoi_polygons):
+    def filter_by_aoi(self, aoi_polygons: Iterable['Polygon']):
         result = ChipClassificationLabels()
         for cell in self.cell_to_label:
             cell_box = Box(*cell)
@@ -149,3 +154,21 @@ class ChipClassificationLabels(Labels):
         """
         for cell in labels.get_cells():
             self.set_cell(cell, *labels[cell])
+
+    def save(self, uri: str, class_config: 'ClassConfig',
+             crs_transformer: 'CRSTransformer') -> None:
+        """Save labels as a GeoJSON file.
+
+        Args:
+            uri (str): URI of the output file.
+            class_config (ClassConfig): ClassConfig to map class IDs to names.
+            crs_transformer (CRSTransformer): CRSTransformer to convert from
+                pixel-coords to map-coords before saving.
+        """
+        from rastervision.core.data import ChipClassificationGeoJSONStore
+
+        label_store = ChipClassificationGeoJSONStore(
+            uri=uri,
+            class_config=class_config,
+            crs_transformer=crs_transformer)
+        label_store.save(self)

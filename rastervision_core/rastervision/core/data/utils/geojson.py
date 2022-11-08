@@ -103,11 +103,23 @@ def geojson_to_geoms(geojson: dict) -> Iterator['BaseGeometry']:
     return geoms
 
 
-def geoms_to_geojson(geoms: Iterable['BaseGeometry']) -> dict:
+def geoms_to_geojson(geoms: Iterable['BaseGeometry'],
+                     properties: Optional[Iterable[dict]] = None) -> dict:
     """Serialize shapely geometries to GeoJSON."""
-    geometries = [mapping(g) for g in geoms]
-    geojson = geometries_to_geojson(geometries)
+    if properties is None:
+        features = [geom_to_feature(g) for g in geoms]
+    else:
+        features = [geom_to_feature(g, p) for g, p in zip(geoms, properties)]
+    geojson = features_to_geojson(features)
     return geojson
+
+
+def geom_to_feature(geom: 'BaseGeometry',
+                    properties: Optional[dict] = None) -> dict:
+    """Serialize a single shapely geomety to a GeoJSON Feature."""
+    geomety = mapping(geom)
+    feature = geometry_to_feature(geomety, properties=properties)
+    return feature
 
 
 def filter_features(func: Callable,

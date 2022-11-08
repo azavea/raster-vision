@@ -127,12 +127,12 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
         class_config.ensure_null_class()
 
         label_store = SemanticSegmentationLabelStore(
-            self.uri,
-            extent,
-            crs_transformer,
-            tmp_dir,
-            vector_outputs=self.vector_output,
+            uri=self.uri,
+            extent=extent,
+            crs_transformer=crs_transformer,
             class_config=class_config,
+            tmp_dir=tmp_dir,
+            vector_outputs=self.vector_output,
             save_as_rgb=self.rgb,
             smooth_output=self.smooth_output,
             smooth_as_uint8=self.smooth_as_uint8,

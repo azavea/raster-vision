@@ -1,7 +1,10 @@
-from typing import (List, Optional)
+from typing import (List, Optional, Union)
+from typing_extensions import Literal
+from pydantic import conint
 from enum import Enum
 
-from rastervision.pipeline.config import (register_config, Field, Config)
+from rastervision.pipeline.config import (ConfigError, register_config, Field,
+                                          Config, validator)
 from rastervision.core.rv_pipeline.rv_pipeline_config import (RVPipelineConfig,
                                                               PredictOptions)
 from rastervision.core.data import SemanticSegmentationLabelStoreConfig
@@ -75,8 +78,28 @@ class SemanticSegmentationPredictOptions(PredictOptions):
         None,
         description=
         'Stride of windows across image. Allows aggregating multiple '
-        'predictions for each pixel if less than the chip size and outputting '
-        'smooth labels. Defaults to predict_chip_sz.')
+        'predictions for each pixel if less than the chip size. '
+        'Defaults to predict_chip_sz.')
+    crop_sz: Optional[Union[conint(gt=0), Literal['auto']]] = Field(
+        None,
+        description=
+        'Number of rows/columns of pixels from the edge of prediction '
+        'windows to discard. This is useful because predictions near edges '
+        'tend to be lower quality and can result in very visible artifacts '
+        'near the edges of chips. If "auto", will be set to half the stride '
+        'if stride is less than chip_sz. Defaults to None.')
+
+    @validator('crop_sz')
+    def validate_crop_sz(cls,
+                         v: Optional[Union[conint(gt=0), Literal['auto']]],
+                         values: dict) -> dict:
+        stride: Optional[int] = values.get('stride')
+        crop_sz = v
+
+        if stride is None and crop_sz is not None:
+            raise ConfigError('Cannot use crop_sz if stride is None.')
+
+        return crop_sz
 
 
 @register_config('semantic_segmentation', upgrader=ss_config_upgrader)

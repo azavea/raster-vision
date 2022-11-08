@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
 import numpy as np
 from shapely.geometry import shape
 
@@ -9,6 +9,10 @@ from rastervision.core.data.label.tfod_utils.np_box_list_ops import (
     prune_non_overlapping_boxes, clip_to_window, concatenate,
     non_max_suppression)
 
+if TYPE_CHECKING:
+    from rastervision.core.data import (ClassConfig, CRSTransformer)
+    from shapely.geometry import Polygon
+
 
 class ObjectDetectionLabels(Labels):
     """A set of boxes and associated class_ids and scores.
@@ -16,7 +20,10 @@ class ObjectDetectionLabels(Labels):
     Implemented using the Tensorflow Object Detection API's BoxList class.
     """
 
-    def __init__(self, npboxes, class_ids, scores=None):
+    def __init__(self,
+                 npboxes: np.array,
+                 class_ids: np.array,
+                 scores: np.array = None):
         """Construct a set of object detection labels.
 
         Args:
@@ -36,10 +43,11 @@ class ObjectDetectionLabels(Labels):
             scores = np.ones(class_ids.shape)
         self.boxlist.add_field('scores', scores)
 
-    def __add__(self, other):
+    def __add__(self,
+                other: 'ObjectDetectionLabels') -> 'ObjectDetectionLabels':
         return ObjectDetectionLabels.concatenate(self, other)
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'ObjectDetectionLabels') -> bool:
         return (isinstance(other, ObjectDetectionLabels)
                 and self.to_dict() == other.to_dict())
 
@@ -53,7 +61,7 @@ class ObjectDetectionLabels(Labels):
         concatenated_labels = self + new_labels
         self.boxlist = concatenated_labels.boxlist
 
-    def assert_equal(self, expected_labels):
+    def assert_equal(self, expected_labels: 'ObjectDetectionLabels'):
         np.testing.assert_array_equal(self.get_npboxes(),
                                       expected_labels.get_npboxes())
         np.testing.assert_array_equal(self.get_class_ids(),
@@ -61,7 +69,7 @@ class ObjectDetectionLabels(Labels):
         np.testing.assert_array_equal(self.get_scores(),
                                       expected_labels.get_scores())
 
-    def filter_by_aoi(self, aoi_polygons):
+    def filter_by_aoi(self, aoi_polygons: Iterable['Polygon']):
         boxes = self.get_boxes()
         class_ids = self.get_class_ids()
         scores = self.get_scores()
@@ -92,7 +100,7 @@ class ObjectDetectionLabels(Labels):
         return cls(npboxes, class_ids, scores)
 
     @staticmethod
-    def from_boxlist(boxlist):
+    def from_boxlist(boxlist: BoxList):
         """Make ObjectDetectionLabels from BoxList object."""
         scores = (boxlist.get_field('scores')
                   if boxlist.has_field('scores') else None)
@@ -100,7 +108,8 @@ class ObjectDetectionLabels(Labels):
             boxlist.get(), boxlist.get_field('classes'), scores=scores)
 
     @staticmethod
-    def from_geojson(geojson, extent=None):
+    def from_geojson(geojson: dict,
+                     extent: Optional[Box] = None) -> 'ObjectDetectionLabels':
         """Convert GeoJSON to ObjectDetectionLabels object.
 
         If extent is provided, filter out the boxes that lie "more than a little
@@ -140,31 +149,31 @@ class ObjectDetectionLabels(Labels):
                 labels, extent, ioa_thresh=0.8, clip=True)
         return labels
 
-    def get_boxes(self):
+    def get_boxes(self) -> List[Box]:
         """Return list of Boxes."""
         return [Box.from_npbox(npbox) for npbox in self.boxlist.get()]
 
-    def get_npboxes(self):
+    def get_npboxes(self) -> np.ndarray:
         return self.boxlist.get()
 
-    def get_scores(self):
+    def get_scores(self) -> np.ndarray:
         if self.boxlist.has_field('scores'):
             return self.boxlist.get_field('scores')
         return None
 
-    def get_class_ids(self):
+    def get_class_ids(self) -> np.ndarray:
         return self.boxlist.get_field('classes')
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.boxlist.get().shape[0]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.boxlist.get())
 
-    def to_boxlist(self):
+    def to_boxlist(self) -> BoxList:
         return self.boxlist
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Returns a dict version of these labels.
 
         The Dict has a Box as a key, and a tuple of (class_id, score)
@@ -179,7 +188,7 @@ class ObjectDetectionLabels(Labels):
         return d
 
     @staticmethod
-    def local_to_global(npboxes, window):
+    def local_to_global(npboxes: np.ndarray, window: Box):
         """Convert from local to global coordinates.
 
         The local coordinates are row/col within the window frame of reference.
@@ -190,7 +199,7 @@ class ObjectDetectionLabels(Labels):
         return npboxes + np.array([[ymin, xmin, ymin, xmin]])
 
     @staticmethod
-    def global_to_local(npboxes, window):
+    def global_to_local(npboxes: np.ndarray, window: Box):
         """Convert from global to local coordinates.
 
         The global coordinates are row/col within the extent of a RasterSource.
@@ -201,7 +210,7 @@ class ObjectDetectionLabels(Labels):
         return npboxes - np.array([[ymin, xmin, ymin, xmin]])
 
     @staticmethod
-    def local_to_normalized(npboxes, window):
+    def local_to_normalized(npboxes: np.ndarray, window: Box):
         """Convert from local to normalized coordinates.
 
         The local coordinates are row/col within the window frame of reference.
@@ -211,7 +220,7 @@ class ObjectDetectionLabels(Labels):
         return npboxes / np.array([[height, width, height, width]])
 
     @staticmethod
-    def normalized_to_local(npboxes, window):
+    def normalized_to_local(npboxes: np.ndarray, window: Box):
         """Convert from normalized to local coordinates.
 
         Normalized coordinates range from 0 to 1 on each (height/width) axis.
@@ -221,7 +230,10 @@ class ObjectDetectionLabels(Labels):
         return npboxes * np.array([[height, width, height, width]])
 
     @staticmethod
-    def get_overlapping(labels, window, ioa_thresh=0.000001, clip=False):
+    def get_overlapping(labels: 'ObjectDetectionLabels',
+                        window: Box,
+                        ioa_thresh: float = 0.000001,
+                        clip: bool = False) -> 'ObjectDetectionLabels':
         """Return subset of labels that overlap with window.
 
         Args:
@@ -241,7 +253,9 @@ class ObjectDetectionLabels(Labels):
         return ObjectDetectionLabels.from_boxlist(boxlist)
 
     @staticmethod
-    def concatenate(labels1, labels2):
+    def concatenate(
+            labels1: 'ObjectDetectionLabels',
+            labels2: 'ObjectDetectionLabels') -> 'ObjectDetectionLabels':
         """Return concatenation of labels.
 
         Args:
@@ -252,7 +266,8 @@ class ObjectDetectionLabels(Labels):
         return ObjectDetectionLabels.from_boxlist(new_boxlist)
 
     @staticmethod
-    def prune_duplicates(labels, score_thresh, merge_thresh):
+    def prune_duplicates(labels: 'ObjectDetectionLabels', score_thresh: float,
+                         merge_thresh: float) -> 'ObjectDetectionLabels':
         """Remove duplicate boxes.
 
         Runs non-maximum suppression to remove duplicate boxes that result from
@@ -274,3 +289,21 @@ class ObjectDetectionLabels(Labels):
             iou_threshold=merge_thresh,
             score_threshold=score_thresh)
         return ObjectDetectionLabels.from_boxlist(pruned_boxlist)
+
+    def save(self, uri: str, class_config: 'ClassConfig',
+             crs_transformer: 'CRSTransformer') -> None:
+        """Save labels as a GeoJSON file.
+
+        Args:
+            uri (str): URI of the output file.
+            class_config (ClassConfig): ClassConfig to map class IDs to names.
+            crs_transformer (CRSTransformer): CRSTransformer to convert from
+                pixel-coords to map-coords before saving.
+        """
+        from rastervision.core.data import ObjectDetectionGeoJSONStore
+
+        label_store = ObjectDetectionGeoJSONStore(
+            uri=uri,
+            class_config=class_config,
+            crs_transformer=crs_transformer)
+        label_store.save(self)
