@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     name: build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, github-runner-1]
     strategy:
       matrix:
         image_type: [pytorch]
