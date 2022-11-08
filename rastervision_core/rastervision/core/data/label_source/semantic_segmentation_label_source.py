@@ -66,17 +66,22 @@ class SemanticSegmentationLabelSource(LabelSource):
         """Get labels for a window.
 
         Args:
-             window: Either None or a window given as a Box object. Uses full extent of
-                scene if window is not provided.
+            window (Optional[Box], optional): Window to get labels for. If
+            None, returns labels covering the full extent of the scene.
+
         Returns:
-             SemanticSegmentationLabels
+            SemanticSegmentationLabels: The labels.
         """
         if window is None:
             window = self.extent
 
-        labels = SemanticSegmentationLabels.make_empty()
         label_arr = self.get_label_arr(window)
+        labels = SemanticSegmentationLabels.make_empty(
+            extent=self.extent,
+            num_classes=len(self.class_config),
+            smooth=False)
         labels[window] = label_arr
+
         return labels
 
     def get_label_arr(self, window: Optional[Box] = None) -> np.ndarray:
@@ -91,7 +96,7 @@ class SemanticSegmentationLabelSource(LabelSource):
             None, returns a label array covering the full extent of the scene.
 
         Returns:
-            (np.ndarray): Label array.
+            np.ndarray: Label array.
         """
         if window is None:
             window = self.extent

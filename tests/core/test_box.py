@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from shapely.geometry import box as ShapelyBox
 
-from rastervision.core.box import Box, BoxSizeError
+from rastervision.core.box import Box, BoxSizeError, RioWindow
 
 np.random.seed(1)
 
@@ -155,6 +155,19 @@ class TestBox(unittest.TestCase):
         self.assertEqual(
             (rio_w.col_off, rio_w.row_off, rio_w.width, rio_w.height),
             (x, y, w, h))
+
+    def test_from_rasterio(self):
+        rio_w = RioWindow.from_slices((10, 20), (1, 2))
+        box = Box.from_rasterio(rio_w)
+        self.assertEqual(box, Box(10, 1, 20, 2))
+
+    def test_intersects(self):
+        box = Box(0, 0, 10, 10)
+        self.assertTrue(box.intersects(Box(0, 5, 10, 15)))
+        self.assertTrue(box.intersects(Box(-5, 0, 5, 10)))
+        self.assertFalse(box.intersects(Box(20, 20, 30, 30)))
+        self.assertFalse(box.intersects(Box(0, 10, 10, 20)))
+        self.assertFalse(box.intersects(Box(10, 0, 20, 10)))
 
     def test_translate(self):
         box = Box(*np.random.randint(100, size=4))

@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 from shapely.geometry import Polygon
-import rasterio.windows
+from rasterio.windows import Window as RioWindow
 
 NonNegInt = conint(ge=0)
 
@@ -206,11 +206,20 @@ class Box():
              The intersection of this box and the other one.
 
         """
+        if not self.intersects(other):
+            return Box(0, 0, 0, 0)
         xmin = max(self.xmin, other.xmin)
         ymin = max(self.ymin, other.ymin)
         xmax = min(self.xmax, other.xmax)
         ymax = min(self.ymax, other.ymax)
         return Box(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
+
+    def intersects(self, other: 'Box') -> bool:
+        if self.ymax <= other.ymin or self.ymin >= other.ymax:
+            return False
+        if self.xmax <= other.xmin or self.xmin >= other.xmax:
+            return False
+        return True
 
     @staticmethod
     def from_npbox(npbox):
@@ -227,6 +236,11 @@ class Box():
         xmin, ymin, xmax, ymax = shape.bounds
         return Box(ymin, xmin, ymax, xmax)
 
+    @classmethod
+    def from_rasterio(self, rio_window: RioWindow) -> 'Box':
+        yslice, xslice = rio_window.toslices()
+        return Box(yslice.start, xslice.start, yslice.stop, xslice.stop)
+
     def to_xywh(self) -> Tuple[int, int, int, int]:
         return (self.xmin, self.ymin, self.width, self.height)
 
@@ -241,9 +255,9 @@ class Box():
         """Convert to shapely Polygon."""
         return Polygon.from_bounds(*(self.shapely_format()))
 
-    def to_rasterio(self) -> rasterio.windows.Window:
+    def to_rasterio(self) -> RioWindow:
         """Convert to a Rasterio Window."""
-        return rasterio.windows.Window.from_slices(*self.to_slices())
+        return RioWindow.from_slices(*self.to_slices())
 
     def to_slices(self) -> Tuple[slice, slice]:
         """Convert to slices: ymin:ymax, xmin:xmax"""

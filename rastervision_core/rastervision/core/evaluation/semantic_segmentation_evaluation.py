@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 import logging
 
-from sklearn.metrics import confusion_matrix
 import numpy as np
+from sklearn.metrics import confusion_matrix
+from tqdm.auto import tqdm
 
 from rastervision.core.evaluation import ClassEvaluationItem
 from rastervision.core.evaluation import ClassificationEvaluation
@@ -26,14 +27,17 @@ class SemanticSegmentationEvaluation(ClassificationEvaluation):
         self.reset()
 
         # compute confusion matrix
+        null_class_id = self.class_config.null_class_id
         num_classes = len(self.class_config)
         labels = np.arange(num_classes)
         self.conf_mat = np.zeros((num_classes, num_classes))
-        for window in pred_labels.get_windows():
-            log.debug(f'Evaluating window: {window}')
-            gt_arr = gt_labels.get_label_arr(window).ravel()
-            pred_arr = pred_labels.get_label_arr(window).ravel()
-            self.conf_mat += confusion_matrix(gt_arr, pred_arr, labels=labels)
+        windows = pred_labels.get_windows()
+        with tqdm(windows, delay=5, desc='Computing metrics') as bar:
+            for window in bar:
+                gt_arr = gt_labels.get_label_arr(window, null_class_id)
+                pred_arr = pred_labels.get_label_arr(window, null_class_id)
+                self.conf_mat += confusion_matrix(
+                    gt_arr.ravel(), pred_arr.ravel(), labels=labels)
 
         for class_id, class_name in enumerate(self.class_config.names):
             eval_item = ClassEvaluationItem.from_multiclass_conf_mat(
