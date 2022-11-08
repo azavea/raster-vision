@@ -1,53 +1,51 @@
-def boxes_to_geojson(  # noqa
-        boxes,  # noqa
-        class_ids,
-        crs_transformer,
-        class_config,
-        scores=None):
+from typing import TYPE_CHECKING, Optional, Sequence, Union
+
+from rastervision.core.data.utils.geojson import geoms_to_geojson
+
+if TYPE_CHECKING:
+    from rastervision.core.box import Box
+    from rastervision.core.data import ClassConfig, CRSTransformer
+
+
+def boxes_to_geojson(
+        boxes: Sequence['Box'],
+        class_ids: Sequence[int],
+        crs_transformer: 'CRSTransformer',
+        class_config: 'ClassConfig',
+        scores: Optional[Sequence[Union[float, Sequence[float]]]] = None
+) -> dict:
     """Convert boxes and associated data into a GeoJSON dict.
 
     Args:
-        boxes: list of Box in pixel row/col format.
-        class_ids: list of int (one for each box)
-        crs_transformer: CRSTransformer used to convert pixel coords to map
-            coords in the GeoJSON
-        class_config: ClassConfig
-        scores: optional list of score or scores.
-                If floats (one for each box), property name will be "score".
-                If lists of floats, property name will be "scores".
+        boxes (Sequence[Box]): List of Box in pixel row/col format.
+        class_ids (Sequence[int]): List of int (one for each box)
+        crs_transformer (CRSTransformer): CRSTransformer used to convert pixel
+            coords to map coords in the GeoJSON.
+        class_config (ClassConfig): ClassConfig
+        scores (Optional[Sequence[Union[float, Sequence[float]]]], optional):
+            Optional list of score or scores. If floats (one for each box),
+            property name will be "score". If lists of floats, property name
+            will be "scores". Defaults to None.
 
     Returns:
-        dict in GeoJSON format
+        dict: Serialized GeoJSON.
     """
-    features = []
-    for box_ind, box in enumerate(boxes):
-        polygon = box.geojson_coordinates()
-        polygon = [list(crs_transformer.pixel_to_map(p)) for p in polygon]
+    if len(boxes) != len(class_ids):
+        raise ValueError(f'len(boxes) ({len(boxes)}) != '
+                         f'len(class_ids) ({len(class_ids)})')
+    if scores is not None and len(boxes) != len(scores):
+        raise ValueError(f'len(boxes) ({len(boxes)}) != '
+                         f'len(scores) ({len(scores)})')
 
-        class_id = int(class_ids[box_ind])
-        class_name = class_config.get_name(class_id)
+    geoms = [crs_transformer.pixel_to_map(box.to_shapely()) for box in boxes]
+    properties = [
+        dict(class_id=id, class_name=class_config.get_name(id))
+        for id in class_ids
+    ]
+    if scores is not None:
+        for prop, box_score in zip(properties, scores):
+            key = 'score' if isinstance(box_score, float) else 'scores'
+            prop[key] = box_score
 
-        feature = {
-            'type': 'Feature',
-            'geometry': {
-                'type': 'Polygon',
-                'coordinates': [polygon]
-            },
-            'properties': {
-                'class_id': class_id,
-                'class_name': class_name
-            }
-        }
-
-        if scores is not None:
-            box_scores = scores[box_ind]
-
-            if box_scores is not None:
-                if type(box_scores) is list:
-                    feature['properties']['scores'] = box_scores
-                else:
-                    feature['properties']['score'] = box_scores
-
-        features.append(feature)
-
-    return {'type': 'FeatureCollection', 'features': features}
+    geojson = geoms_to_geojson(geoms, properties)
+    return geojson
