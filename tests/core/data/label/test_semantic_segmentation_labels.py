@@ -303,21 +303,21 @@ class TestSemanticSegmentationSmoothLabels(unittest.TestCase):
 
         # normal window
         box_in = (120, 150, 170, 200)
-        box_out_expected = (20, 50, 70, 100)
+        box_out_expected = Box(20, 50, 70, 100)
         box_out_actual = labels._to_local_coords(box_in)
-        self.assertTupleEqual(box_out_actual, box_out_expected)
+        self.assertEqual(box_out_actual, box_out_expected)
 
         # window completely outside the extent
         box_in = (0, 0, 100, 100)
-        box_out_expected = (0, 0, 0, 0)
+        box_out_expected = Box(0, 0, 0, 0)
         box_out_actual = labels._to_local_coords(box_in)
-        self.assertTupleEqual(box_out_actual, box_out_expected)
+        self.assertEqual(box_out_actual, box_out_expected)
 
         # window completely outside the extent
         box_in = (200, 200, 300, 300)
-        box_out_expected = (100, 100, 100, 100)
+        box_out_expected = Box(100, 100, 100, 100)
         box_out_actual = labels._to_local_coords(box_in)
-        self.assertTupleEqual(box_out_actual, box_out_expected)
+        self.assertEqual(box_out_actual, box_out_expected)
 
     def test_save(self):
         class_config = ClassConfig(names=['bg', 'fg'], null_class='bg')

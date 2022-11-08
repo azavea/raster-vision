@@ -78,8 +78,13 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
         # self.learner_cfg.data because of the updates
         # Learner.from_model_bundle() makes to the custom transforms.
         base_tf, _ = self.learner.cfg.data.get_data_transforms()
+        pad_direction = 'end' if crop_sz is None else 'both'
         ds = SemanticSegmentationSlidingWindowGeoDataset(
-            scene, size=chip_sz, stride=stride, transform=base_tf)
+            scene,
+            size=chip_sz,
+            stride=stride,
+            pad_direction=pad_direction,
+            transform=base_tf)
 
         predictions: Iterator[np.ndarray] = self.learner.predict_dataset(
             ds,

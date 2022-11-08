@@ -227,40 +227,130 @@ class TestBox(unittest.TestCase):
         self.assertIsNot(copy_box, self.box)
         self.assertEqual(copy_box, self.box)
 
+    def test_pad(self):
+        box_in = Box(10, 10, 20, 20)
+        box_out = box_in.pad(ymin=20, xmin=20, ymax=20, xmax=20)
+        self.assertEqual(box_out, Box(-10, -10, 40, 40))
+
+        box_in = Box(10, 10, 20, 20)
+        box_out = box_in.pad(ymin=20, xmin=0, ymax=0, xmax=20)
+        self.assertEqual(box_out, Box(-10, 10, 20, 40))
+
     def test_get_windows(self):
-        extent = Box(0, 0, 100, 100)
-        windows = list(extent.get_windows(10, 10))
-        self.assertEqual(len(windows), 100)
+        box = Box(0, 0, 10, 10)
+        self.assertRaises(ValueError, lambda: box.get_windows(-1, 1))
+        self.assertRaises(ValueError, lambda: box.get_windows(1, -1))
+        self.assertRaises(ValueError, lambda: box.get_windows(0, 1))
+        self.assertRaises(ValueError, lambda: box.get_windows(1, 0))
+        self.assertRaises(ValueError,
+                          lambda: box.get_windows(1, 1, padding=-1))
 
         extent = Box(0, 0, 100, 100)
-        windows = list(extent.get_windows(10, 5))
-        self.assertEqual(len(windows), 400)
+        windows = extent.get_windows(size=10, stride=10)
+        self.assertEqual(len(windows), 10 * 10)
+
+        extent = Box(0, 0, 100, 100)
+        windows = extent.get_windows(size=10, stride=5)
+        self.assertEqual(len(windows), 20 * 20)
 
         extent = Box(0, 0, 20, 20)
-        windows = set(
-            [window.tuple_format() for window in extent.get_windows(10, 10)])
-        expected_windows = [
+        windows = set(extent.get_windows(size=10, stride=10))
+        expected_windows = set([
             Box.make_square(0, 0, 10),
-            Box.make_square(10, 0, 10),
             Box.make_square(0, 10, 10),
+            Box.make_square(10, 0, 10),
             Box.make_square(10, 10, 10)
-        ]
-        expected_windows = set(
-            [window.tuple_format() for window in expected_windows])
+        ])
         self.assertSetEqual(windows, expected_windows)
 
         extent = Box(10, 10, 20, 20)
-        windows = set(
-            [window.tuple_format() for window in extent.get_windows(6, 6)])
-        expected_windows = [
+        windows = set(extent.get_windows(size=6, stride=6))
+        expected_windows = set([
             Box.make_square(10, 10, 6),
             Box.make_square(10, 16, 6),
             Box.make_square(16, 10, 6),
             Box.make_square(16, 16, 6)
-        ]
-        expected_windows = set(
-            [window.tuple_format() for window in expected_windows])
+        ])
         self.assertSetEqual(windows, expected_windows)
+
+        extent = Box(0, 0, 10, 10)
+        args = dict(size=5, stride=3, padding=1, pad_direction='end')
+        windows = set(extent.get_windows(**args))
+        expected_windows = set([
+            Box(0, 0, 5, 5),
+            Box(0, 3, 5, 8),
+            Box(0, 6, 5, 11),
+            Box(3, 0, 8, 5),
+            Box(3, 3, 8, 8),
+            Box(3, 6, 8, 11),
+            Box(6, 0, 11, 5),
+            Box(6, 3, 11, 8),
+            Box(6, 6, 11, 11),
+        ])
+        arg_str = ', '.join(f'{k}={v!r}' for k, v in args.items())
+        msg = f'{extent!r}.get_windows({arg_str})'
+        self.assertSetEqual(windows, expected_windows, msg=msg)
+
+        extent = Box(0, 0, 10, 10)
+        args = dict(size=5, stride=3, padding=1, pad_direction='start')
+        windows = set(extent.get_windows(**args))
+        expected_windows = set([
+            Box(-1, -1, 4, 4),
+            Box(-1, 2, 4, 7),
+            Box(-1, 5, 4, 10),
+            Box(2, -1, 7, 4),
+            Box(2, 2, 7, 7),
+            Box(2, 5, 7, 10),
+            Box(5, -1, 10, 4),
+            Box(5, 2, 10, 7),
+            Box(5, 5, 10, 10),
+        ])
+        arg_str = ', '.join(f'{k}={v!r}' for k, v in args.items())
+        msg = f'{extent!r}.get_windows({arg_str})'
+        self.assertSetEqual(windows, expected_windows, msg=msg)
+
+        extent = Box(0, 0, 10, 10)
+        args = dict(size=5, stride=3, padding=1, pad_direction='both')
+        windows = set(extent.get_windows(**args))
+        expected_windows = set([
+            Box(-1, -1, 4, 4),
+            Box(-1, 2, 4, 7),
+            Box(-1, 5, 4, 10),
+            Box(2, -1, 7, 4),
+            Box(2, 2, 7, 7),
+            Box(2, 5, 7, 10),
+            Box(5, -1, 10, 4),
+            Box(5, 2, 10, 7),
+            Box(5, 5, 10, 10),
+        ])
+        arg_str = ', '.join(f'{k}={v!r}' for k, v in args.items())
+        msg = f'{extent!r}.get_windows({arg_str})'
+        self.assertSetEqual(windows, expected_windows, msg=msg)
+
+        extent = Box(0, 0, 10, 10)
+        args = dict(size=5, stride=3, padding=2, pad_direction='both')
+        windows = set(extent.get_windows(**args))
+        expected_windows = set([
+            Box(-2, -2, 3, 3),
+            Box(-2, 1, 3, 6),
+            Box(-2, 4, 3, 9),
+            Box(-2, 7, 3, 12),
+            Box(1, -2, 6, 3),
+            Box(1, 1, 6, 6),
+            Box(1, 4, 6, 9),
+            Box(1, 7, 6, 12),
+            Box(4, -2, 9, 3),
+            Box(4, 1, 9, 6),
+            Box(4, 4, 9, 9),
+            Box(4, 7, 9, 12),
+            Box(7, -2, 12, 3),
+            Box(7, 1, 12, 6),
+            Box(7, 4, 12, 9),
+            Box(7, 7, 12, 12),
+        ])
+        arg_str = ', '.join(f'{k}={v!r}' for k, v in args.items())
+        msg = f'{extent!r}.get_windows({arg_str})'
+        self.assertSetEqual(windows, expected_windows, msg=msg)
 
     def test_unpacking(self):
         box = Box(1, 2, 3, 4)

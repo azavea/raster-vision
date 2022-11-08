@@ -1,8 +1,8 @@
 from typing import Union, Optional, Tuple, Any, TypeVar
+from typing_extensions import Literal
 
 import numpy as np
 import albumentations as A
-from shapely.geometry.polygon import Polygon
 
 import torch
 from torch.utils.data import Dataset
@@ -143,6 +143,7 @@ class SlidingWindowGeoDataset(GeoDataset):
                  stride: Union[PosInt, Tuple[PosInt, PosInt]],
                  padding: Optional[Union[NonNegInt, Tuple[NonNegInt,
                                                           NonNegInt]]] = None,
+                 pad_direction: Literal['both', 'start', 'end'] = 'end',
                  transform: Optional[A.BasicTransform] = None,
                  transform_type: Optional[TransformType] = None):
         """Constructor.
@@ -154,8 +155,12 @@ class SlidingWindowGeoDataset(GeoDataset):
                 windows.
             padding (Optional[Union[NonNegInt, Tuple[NonNegInt, NonNegInt]]]):
                 How many pixels the windows are allowed to overflow the sides
-                of the raster source. If None, padding = size.
+                of the raster source. If None, padding is set to size // 2.
                 Defaults to None.
+            pad_direction (Literal['both', 'start', 'end']): If 'end', only pad
+                ymax and xmax (bottom and right). If 'start', only pad ymin and
+                xmin (top and left). If 'both', pad all sides. Has no effect if
+                paddiong is zero. Defaults to 'end'.
             transform (Optional[A.BasicTransform], optional): Albumentations
                 transform to apply to the windows. Defaults to None.
             transform_type (Optional[TransformType], optional): Type of
@@ -165,12 +170,16 @@ class SlidingWindowGeoDataset(GeoDataset):
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride)
         self.padding = padding
+        self.pad_direction = pad_direction
         self.init_windows()
 
     def init_windows(self) -> None:
         """Pre-compute windows."""
         windows = self.scene.raster_source.extent.get_windows(
-            self.size, stride=self.stride, padding=self.padding)
+            self.size,
+            stride=self.stride,
+            padding=self.padding,
+            pad_direction=self.pad_direction)
         if len(self.scene.aoi_polygons) > 0:
             windows = Box.filter_by_aoi(windows, self.scene.aoi_polygons)
         self.windows = windows
@@ -272,10 +281,10 @@ class RandomWindowGeoDataset(GeoDataset):
         if padding is None:
             if size_lims is not None:
                 max_size = size_lims[1]
-                padding = (max_size, max_size)
+                padding = (max_size // 2, max_size // 2)
             else:
                 max_h, max_w = h_lims[1], w_lims[1]
-                padding = (max_h, max_w)
+                padding = (max_h // 2, max_w // 2)
         padding = _to_tuple(padding)
 
         if max_windows is None:
@@ -292,13 +301,13 @@ class RandomWindowGeoDataset(GeoDataset):
         # include padding in the extent
         ymin, xmin, ymax, xmax = scene.raster_source.extent
         h_padding, w_padding = self.padding
-        self.extent = (ymin, xmin, ymax + h_padding, xmax + w_padding)
+        self.extent = Box(ymin - h_padding, xmin - w_padding, ymax + h_padding,
+                          xmax + w_padding)
 
         self.aoi_sampler = None
         if self.scene.aoi_polygons and efficient_aoi_sampling:
             # clip aoi polygons to the extent
-            ymin, xmin, ymax, xmax = self.extent
-            extent_polygon = Polygon.from_bounds(xmin, ymin, xmax, ymax)
+            extent_polygon = self.extent.to_shapely()
             self.scene.aoi_polygons = [
                 p.intersection(extent_polygon) for p in self.scene.aoi_polygons
             ]

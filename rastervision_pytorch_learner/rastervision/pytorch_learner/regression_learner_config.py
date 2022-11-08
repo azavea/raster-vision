@@ -80,6 +80,7 @@ class RegressionGeoDataConfig(RegressionDataConfig, GeoDataConfig):
                 size=opts.size,
                 stride=opts.stride,
                 padding=opts.padding,
+                pad_direction=opts.pad_direction,
                 transform=transform)
         elif opts.method == GeoDataWindowMethod.random:
             ds = RegressionRandomWindowGeoDataset(

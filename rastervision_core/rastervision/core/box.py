@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Callable, Dict, Union, Tuple, Optional, List
+from typing_extensions import Literal
 from pydantic import PositiveInt as PosInt, conint
 import math
 import random
@@ -329,6 +330,14 @@ class Box():
             min(max_extent.width,
                 int(self.xmax) + delta_width))
 
+    def pad(self, ymin: int, xmin: int, ymax: int, xmax: int) -> 'Box':
+        """Pad sides by the given amount."""
+        return Box(
+            ymin=self.ymin - ymin,
+            xmin=self.xmin - xmin,
+            ymax=self.ymax + ymax,
+            xmax=self.xmax + xmax)
+
     def copy(self) -> 'Box':
         return Box(*self)
 
@@ -336,7 +345,9 @@ class Box():
                     size: Union[PosInt, Tuple[PosInt, PosInt]],
                     stride: Union[PosInt, Tuple[PosInt, PosInt]],
                     padding: Optional[Union[NonNegInt, Tuple[
-                        NonNegInt, NonNegInt]]] = None) -> List['Box']:
+                        NonNegInt, NonNegInt]]] = None,
+                    pad_direction: Literal['both', 'start', 'end'] = 'end'
+                    ) -> List['Box']:
         """Returns a list of boxes representing windows generated using a
         sliding window traversal with the specified size, stride, and
         padding.
@@ -349,13 +360,20 @@ class Box():
         Args:
             size (Union[PosInt, Tuple[PosInt, PosInt]]): Size (h, w) of the
                 windows.
-            stride (Union[PosInt, Tuple[PosInt, PosInt]]): Distance between
-                windows.
+            stride (Union[PosInt, Tuple[PosInt, PosInt]]): Step size between
+                windows. Can be 2-tuple (h_step, w_step) or positive int.
             padding (Optional[Union[PosInt, Tuple[PosInt, PosInt]]], optional):
-                Padding for the right and bottom edges. Defaults to None.
+                Optional padding to accomodate windows that overflow the
+                extent. Can be 2-tuple (h_pad, w_pad) or non-negative int.
+                If None, will be set to (size[0]//2, size[1]//2).
+                Defaults to None.
+            pad_direction (Literal['both', 'start', 'end']): If 'end', only pad
+                ymax and xmax (bottom and right). If 'start', only pad ymin and
+                xmin (top and left). If 'both', pad all sides. Has no effect if
+                paddiong is zero. Defaults to 'end'.
 
         Returns:
-            List[Box]: list of Box objects
+            List[Box]: List of Box objects.
         """
         if not isinstance(size, tuple):
             size = (size, size)
@@ -363,25 +381,47 @@ class Box():
         if not isinstance(stride, tuple):
             stride = (stride, stride)
 
+        if size[0] <= 0 or size[1] <= 0 or stride[0] <= 0 or stride[1] <= 0:
+            raise ValueError('size and stride must be positive.')
+
         if padding is None:
             padding = (size[0] // 2, size[1] // 2)
 
         if not isinstance(padding, tuple):
             padding = (padding, padding)
 
-        h_padding, w_padding = padding
-        height, width = size
-        h_stride, w_stride = stride
+        if padding[0] < 0 or padding[1] < 0:
+            raise ValueError('padding must be non-negative.')
 
-        y_start_max = self.ymax - height + h_padding
-        x_start_max = self.xmax - width + w_padding
+        if padding != (0, 0):
+            h_pad, w_pad = padding
+            if pad_direction == 'both':
+                padded_box = self.pad(
+                    ymin=h_pad, xmin=w_pad, ymax=h_pad, xmax=w_pad)
+            elif pad_direction == 'end':
+                padded_box = self.pad(ymin=0, xmin=0, ymax=h_pad, xmax=w_pad)
+            elif pad_direction == 'start':
+                padded_box = self.pad(ymin=h_pad, xmin=w_pad, ymax=0, xmax=0)
+            else:
+                raise ValueError('pad_directions must be one of: '
+                                 '"both", "start", "end".')
+            return padded_box.get_windows(
+                size=size, stride=stride, padding=(0, 0))
 
-        result = []
-        for row in range(self.ymin, y_start_max + 1, h_stride):
-            for col in range(self.xmin, x_start_max + 1, w_stride):
-                window = Box(row, col, row + height, col + width)
-                result.append(window)
-        return result
+        # padding is necessarily (0, 0) at this point, so we ignore it
+        h, w = size
+        h_step, w_step = stride
+        # lb = lower bound, ub = upper bound
+        ymin_lb = self.ymin
+        xmin_lb = self.xmin
+        ymin_ub = self.ymax - h
+        xmin_ub = self.xmax - w
+
+        windows = []
+        for ymin in range(ymin_lb, ymin_ub + 1, h_step):
+            for xmin in range(xmin_lb, xmin_ub + 1, w_step):
+                windows.append(Box(ymin, xmin, ymin + h, xmin + w))
+        return windows
 
     def to_dict(self) -> Dict[str, int]:
         return {

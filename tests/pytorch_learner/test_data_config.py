@@ -416,7 +416,8 @@ class TestGeoDataConfig(unittest.TestCase):
             test_scenes=[make_scene(nchannels, nclasses) for _ in range(0)])
         data_cfg = SemanticSegmentationGeoDataConfig(
             scene_dataset=dataset_cfg,
-            window_opts=GeoDataWindowConfig(size=chip_sz, stride=chip_sz),
+            window_opts=GeoDataWindowConfig(
+                size=chip_sz, stride=chip_sz, padding=0),
             class_names=class_config.names,
             class_colors=class_config.colors,
             img_sz=img_sz,

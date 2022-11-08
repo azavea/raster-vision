@@ -31,8 +31,8 @@ class SemanticSegmentationLabels(Labels):
         self.ymin, self.xmin, self.width, self.height = extent.to_xywh()
         self.dtype = dtype
 
-    def _to_local_coords(self, window: Union[Box, Tuple[int, int, int, int]]
-                         ) -> Tuple[int, int, int, int]:
+    def _to_local_coords(self,
+                         window: Union[Box, Tuple[int, int, int, int]]) -> Box:
         """Convert window to extent coordinates.
 
         Args:
@@ -40,7 +40,7 @@ class SemanticSegmentationLabels(Labels):
                 Box or a 4-tuple of (ymin, xmin, ymax, xmax).
 
         Returns:
-            Tuple[int, int, int, int]: a 4-tuple of (ymin, xmin, ymax, xmax).
+            Box: Window in local coords.
         """
         ymin, xmin, ymax, xmax = window
         # convert to extent coords
@@ -52,7 +52,7 @@ class SemanticSegmentationLabels(Labels):
         # clip max values to array bounds
         ymax_local = min(self.height, ymax_local)
         xmax_local = min(self.width, xmax_local)
-        return ymin_local, xmin_local, ymax_local, xmax_local
+        return Box(ymin_local, xmin_local, ymax_local, xmax_local)
 
     @abstractmethod
     def __add__(self, other) -> 'SemanticSegmentationLabels':
@@ -283,14 +283,16 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         return self.get_label_arr(window)
 
     def add_window(self, window: Box, pixel_class_ids: np.ndarray) -> None:
-        y0, x0, y1, x1 = self._to_local_coords(window)
-        h, w = y1 - y0, x1 - x0
+        window_local = self._to_local_coords(window)
+        dst_yslice, dst_xslice = window_local.to_slices()
+        src_yslice, src_xslice = window_local.to_offsets(window).to_slices()
+
         pixel_class_ids = pixel_class_ids.astype(self.dtype)
-        pixel_class_ids = pixel_class_ids[..., :h, :w]
-        window_pixel_counts = self.pixel_counts[:, y0:y1, x0:x1]
+        pixel_class_ids = pixel_class_ids[..., src_yslice, src_xslice]
+        window_pixel_counts = self.pixel_counts[:, dst_yslice, dst_xslice]
         for ch_class_id, ch in enumerate(window_pixel_counts):
             ch[pixel_class_ids == ch_class_id] += 1
-        self.hit_mask[y0:y1, x0:x1] = True
+        self.hit_mask[dst_yslice, dst_xslice] = True
 
     def get_label_arr(self, window: Box,
                       null_class_id: int = -1) -> np.ndarray:
@@ -438,11 +440,14 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         return self.get_score_arr(window)
 
     def add_window(self, window: Box, pixel_class_scores: np.ndarray) -> None:
-        y0, x0, y1, x1 = self._to_local_coords(window)
-        h, w = y1 - y0, x1 - x0
+        window_local = self._to_local_coords(window)
+        dst_yslice, dst_xslice = window_local.to_slices()
+        src_yslice, src_xslice = window_local.to_offsets(window).to_slices()
+
         pixel_class_scores = pixel_class_scores.astype(self.dtype)
-        self.pixel_scores[..., y0:y1, x0:x1] += pixel_class_scores[..., :h, :w]
-        self.pixel_hits[y0:y1, x0:x1] += 1
+        pixel_class_scores = pixel_class_scores[..., src_yslice, src_xslice]
+        self.pixel_scores[..., dst_yslice, dst_xslice] += pixel_class_scores
+        self.pixel_hits[dst_yslice, dst_xslice] += 1
 
     def get_score_arr(self, window: Box) -> np.ndarray:
         """Get array of pixel scores."""
