@@ -40,6 +40,7 @@ Options:
 --docs runs the docs server and forwards port 8000
 --debug forwards port 3000 for use with remote debugger
 --gpu use nvidia runtime
+--arm64 uses image built for arm64 architecture
 
 All arguments after above options are passed to 'docker run'.
 "
@@ -63,6 +64,10 @@ do
         ;;
         --aws)
         AWS="-e AWS_PROFILE=${AWS_PROFILE:-default} -v ${HOME}/.aws:/root/.aws:ro"
+        shift # past argument
+        ;;
+        --arm64)
+        IMAGE=${IMAGE}-arm64
         shift # past argument
         ;;
         --tensorboard)
