@@ -187,6 +187,27 @@ class TestSemanticSegmentationDiscreteLabels(unittest.TestCase):
         np.testing.assert_array_equal(scores[0], np.full((3, 3), 0.25))
         np.testing.assert_array_equal(scores[1], np.full((3, 3), 0.75))
 
+    def test_from_predictions_discrete(self):
+        def make_pred_chip_labels() -> np.ndarray:
+            chip = np.full((40, 40), 1)
+            chip[10:-10, 10:-10] = 0
+            return chip
+
+        extent = Box(0, 0, 80, 80)
+        windows = extent.get_windows(40, stride=20, padding=0)
+
+        exp_label_arr = np.full(extent.size, -1)
+        exp_label_arr[10:-10, 10:-10] = 0
+
+        predictions = [make_pred_chip_labels() for _ in windows]
+        labels = SemanticSegmentationDiscreteLabels.from_predictions(
+            windows, predictions, extent=extent, num_classes=2, crop_sz=10)
+        label_arr = labels.get_label_arr(extent)
+
+        exp_label_arr = np.full(extent.size, -1)
+        exp_label_arr[10:-10, 10:-10] = 0
+        np.testing.assert_array_equal(label_arr, exp_label_arr)
+
     def test_save(self):
         class_config = ClassConfig(names=['bg', 'fg'], null_class='bg')
         extent = Box(0, 0, 3, 3)
@@ -318,6 +339,28 @@ class TestSemanticSegmentationSmoothLabels(unittest.TestCase):
         box_out_expected = Box(100, 100, 100, 100)
         box_out_actual = labels._to_local_coords(box_in)
         self.assertEqual(box_out_actual, box_out_expected)
+
+    def test_from_predictions(self):
+        def make_pred_chip() -> np.ndarray:
+            chip = np.concatenate([
+                np.random.uniform(0.001, 0.5, size=(1, 40, 40)),
+                np.random.uniform(0.5, 1, size=(1, 40, 40))
+            ])
+            chip[1, 10:-10, 10:-10] = 0
+            chip /= chip.sum(axis=0)
+            return chip
+
+        extent = Box(0, 0, 80, 80)
+        windows = extent.get_windows(40, stride=20, padding=0)
+
+        predictions = [make_pred_chip() for _ in windows]
+        labels = SemanticSegmentationSmoothLabels.from_predictions(
+            windows, predictions, extent=extent, num_classes=2, crop_sz=10)
+        label_arr = labels.get_label_arr(extent)
+
+        exp_label_arr = np.full(extent.size, -1)
+        exp_label_arr[10:-10, 10:-10] = 0
+        np.testing.assert_array_equal(label_arr, exp_label_arr)
 
     def test_save(self):
         class_config = ClassConfig(names=['bg', 'fg'], null_class='bg')

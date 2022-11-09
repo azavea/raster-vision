@@ -216,16 +216,36 @@ class SemanticSegmentationLabels(Labels):
                 SemanticSegmentationSmoothLabels. Otherwise, a
                 SemanticSegmentationDiscreteLabels.
         """
+        labels = cls.make_empty(extent, num_classes, smooth=smooth)
+        labels.add_predictions(windows, predictions, crop_sz=crop_sz)
+        return labels
+
+    def add_predictions(self,
+                        windows: Iterable['Box'],
+                        predictions: Iterable[Any],
+                        crop_sz: Optional[int] = None) -> None:
+        """Populate predictions.
+
+        Args:
+            windows (Iterable[Box]): Boxes in pixel coords, specifying chips
+                in the raster.
+            predictions (Iterable[Any]): The model predictions for each chip
+                specified by the windows.
+            crop_sz (Optional[int]): Number of rows/columns of pixels from the
+                edge of prediction windows to discard. This is useful because
+                predictions near edges tend to be lower quality and can result
+                in very visible artifacts near the edges of chips. This should
+                only be used if the given windows represent a sliding-window
+                grid over the scene extent with overlap between adjacent
+                windows. Defaults to None.
+        """
         if crop_sz is not None:
             windows, predictions = discard_prediction_edges(
                 windows, predictions, crop_sz)
-
-        labels = cls.make_empty(extent, num_classes, smooth=smooth)
         # If predictions is tqdm-wrapped, it needs to be the first arg to zip()
         # or the progress bar won't terminate with the correct count.
         for prediction, window in zip(predictions, windows):
-            labels[window] = prediction
-        return labels
+            self[window] = prediction
 
 
 class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
@@ -327,6 +347,19 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
                    num_classes: int) -> 'SemanticSegmentationDiscreteLabels':
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
+
+    @classmethod
+    def from_predictions(cls,
+                         windows: Iterable['Box'],
+                         predictions: Iterable[Any],
+                         extent: Box,
+                         num_classes: int,
+                         crop_sz: Optional[int] = None
+                         ) -> Union['SemanticSegmentationDiscreteLabels',
+                                    'SemanticSegmentationSmoothLabels']:
+        labels = cls.make_empty(extent, num_classes)
+        labels.add_predictions(windows, predictions, crop_sz=crop_sz)
+        return labels
 
     def save(self,
              uri: str,
@@ -484,6 +517,19 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
                    num_classes: int) -> 'SemanticSegmentationSmoothLabels':
         """Instantiate an empty instance."""
         return cls(extent=extent, num_classes=num_classes)
+
+    @classmethod
+    def from_predictions(cls,
+                         windows: Iterable['Box'],
+                         predictions: Iterable[Any],
+                         extent: Box,
+                         num_classes: int,
+                         crop_sz: Optional[int] = None
+                         ) -> Union['SemanticSegmentationDiscreteLabels',
+                                    'SemanticSegmentationSmoothLabels']:
+        labels = cls.make_empty(extent, num_classes)
+        labels.add_predictions(windows, predictions, crop_sz=crop_sz)
+        return labels
 
     def save(self,
              uri: str,
