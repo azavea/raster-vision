@@ -31,6 +31,8 @@ After cloning the repo, you can build the Docker image using:
 
     > docker/build
 
+To build an image that can run natively on an ARM64 chip, pass the ``--arm64`` flag. This won't be necessary for most users, but if you have an ARM64 chip, like in a recent Macbook, this will speed things up greatly.
+
 Before running the container, set an environment variable to a local directory in which to store data.
 
 .. code-block:: console
@@ -50,6 +52,10 @@ This will mount the ``$RASTER_VISION_DATA_DIR`` local directory to to ``/opt/dat
     Users running under WSL2 in Windows will need to unset the ``NAME`` environment variable. For example, instead of
     ``docker/run``, you would run ``NAME='' docker/run``. By default, WSL2 sets a ``NAME`` variable that matches the network
     name of your computer. This environment variable collides with a variable in the ``docker/run`` script.
+
+.. warning::
+
+    If you have built an ARM64 image, you should pass the ``--arm64`` flag to ``docker/run``.
 
 This script also has options for forwarding AWS credentials, and running Jupyter notebooks which can be seen below.
 
@@ -75,6 +81,7 @@ This script also has options for forwarding AWS credentials, and running Jupyter
     --docs runs the docs server and forwards port 8000
     --debug forwards port 3000 for use with remote debugger
     --gpu use nvidia runtime
+    --arm64 uses image built for arm64 architecture
 
     All arguments after above options are passed to 'docker run'.
 

@@ -10,6 +10,8 @@ function usage() {
     echo -n \
          "Usage: $(basename "$0")
 Build Docker images.
+
+--arm64 will build image for arm64 architecture
 "
 }
 
@@ -21,5 +23,15 @@ then
         exit
     fi
 
-    DOCKER_BUILDKIT=1 docker build --platform linux/amd64 --build-arg CUDA_VERSION="11.3.1" -t raster-vision-pytorch -f Dockerfile .
+    PLATFORM="amd64"
+    IMAGE_EXT=""
+    if [ "${1:-}" = "--arm64" ]
+    then
+        PLATFORM="arm64"
+        IMAGE_EXT="-arm64"
+    fi
+
+    DOCKER_BUILDKIT=1 docker build \
+        --platform linux/${PLATFORM} --build-arg CUDA_VERSION="11.3.1" \
+        -t raster-vision-pytorch${IMAGE_EXT} -f Dockerfile .
 fi
