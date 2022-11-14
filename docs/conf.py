@@ -24,7 +24,7 @@ class Mock(MagicMock):
 MOCK_MODULES = ['pyproj', 'h5py', 'osgeo']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-# -- Allow Jinja templates is non-template .rst files -------------------------
+# -- Allow Jinja templates in non-template .rst files -------------------------
 
 
 def rstjinja(app: 'Sphinx', docname: str, source: List[str]) -> None:
