@@ -7,8 +7,7 @@ import numpy as np
 import rasterio
 from rasterio.enums import (ColorInterp, MaskFlags, Resampling)
 
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import download_if_needed
+from rastervision.pipeline.file_system import download_if_needed, get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
 from rastervision.core.data.raster_source import RasterSource
@@ -171,7 +170,7 @@ class RasterioSource(RasterSource):
 
         self.tmp_dir = tmp_dir
         if self.tmp_dir is None:
-            self._tmp_dir = rv_config.get_tmp_dir()
+            self._tmp_dir = get_tmp_dir()
             self.tmp_dir = self._tmp_dir.name
 
         self.imagery_path = self.download_data(

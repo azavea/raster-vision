@@ -31,7 +31,7 @@
    {% if not modules %}
    {% set configs = [] %}
    {% for m in members %}
-      {% if m.endswith('Config') or m.endswith('Options') %}
+      {% if (m.endswith('Config') and m != 'RVConfig') or m.endswith('Options') %}
          {% set _ = configs.append(m) %}
       {% endif %}
    {%- endfor %}
@@ -91,7 +91,7 @@
 {% for module in modules %}
 {% if not module.endswith('examples') %}
 {% set module_short_name = module.split('.')|last %}
-   {{ module_short_name }}  
+   {{ module_short_name }}
 {% endif %}
 {%- endfor %}
 {% endif %}

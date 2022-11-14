@@ -1,7 +1,6 @@
 import unittest
 
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import file_to_json
+from rastervision.pipeline.file_system import file_to_json, get_tmp_dir
 from rastervision.core.data import (
     ClassConfig, ChipClassificationLabelSourceConfig,
     GeoJSONVectorSourceConfig, ChipClassificationGeoJSONStoreConfig,
@@ -34,7 +33,7 @@ class TestChipClassificationEvaluator(unittest.TestCase):
             label_store=label_store_cfg,
             aoi_uris=[aoi_uri])
 
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             scene = s.build(class_config, tmp_dir)
 
             evaluator_cfg = ChipClassificationEvaluatorConfig(

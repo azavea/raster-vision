@@ -10,8 +10,8 @@ from pprint import pformat
 import click
 import numpy as np
 
-from rastervision.pipeline import rv_config, Verbosity
-from rastervision.pipeline.file_system import file_to_json
+from rastervision.pipeline import rv_config_ as rv_config, Verbosity
+from rastervision.pipeline.file_system import file_to_json, get_tmp_dir
 from rastervision.pipeline.runner import InProcessRunner
 from rastervision.pipeline.cli import _run_pipeline
 from rastervision.core import Predictor
@@ -325,7 +325,7 @@ def main(tests, root_uri, verbose):
     console_info('The following tests will be run:')
     console_info(pformat(tests, compact=False))
 
-    with rv_config.get_tmp_dir() as tmp_dir:
+    with get_tmp_dir() as tmp_dir:
         if root_uri:
             tmp_dir = root_uri
 

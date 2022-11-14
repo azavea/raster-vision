@@ -8,8 +8,7 @@ from rastervision.core.data import (
     ObjectDetectionLabels, ClassConfig, ClassInferenceTransformerConfig,
     BufferTransformerConfig)
 from rastervision.core import Box
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import json_to_file
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 
 from tests import data_file_path
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
@@ -31,7 +30,7 @@ class TestObjectDetectionLabelSourceConfig(unittest.TestCase):
 class TestObjectDetectionLabelSource(unittest.TestCase):
     def setUp(self):
         self.file_name = 'labels.json'
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
         self.file_path = os.path.join(self.tmp_dir.name, self.file_name)
 
         self.crs_transformer = DoubleCRSTransformer()

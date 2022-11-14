@@ -33,7 +33,7 @@ def get_config(runner,
     Args:
         runner (Runner): Runner for the pipeline. Will be provided by RV.
         raw_uri (str): Directory where the raw data resides
-        processed_uri (str): Directory for storing processed data. 
+        processed_uri (str): Directory for storing processed data.
                              E.g. crops for testing.
         root_uri (str): Directory where all the output will be written.
         nochip (bool, optional): If True, read directly from the TIFF during

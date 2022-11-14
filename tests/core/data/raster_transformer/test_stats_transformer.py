@@ -3,9 +3,9 @@ import os
 
 import numpy as np
 
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.raster_stats import RasterStats
 from rastervision.core.data import StatsTransformerConfig
-from rastervision.pipeline import rv_config
 
 
 class MockRVPipelineConfig:
@@ -40,7 +40,7 @@ class TestStatsTransformer(unittest.TestCase):
         raster_stats.means = list(np.ones((4, )))
         raster_stats.stds = list(np.ones((4, )) * 2)
 
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             stats_uri = os.path.join(tmp_dir, 'stats.json')
             raster_stats.save(stats_uri)
 

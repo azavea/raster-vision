@@ -15,8 +15,7 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import numpy as np
 
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import json_to_file
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 
 
 def get_coco_gt(targets: Iterable['BoxList'],
@@ -90,7 +89,7 @@ def compute_coco_eval(outputs, targets, num_class_ids):
             {'boxes': <tensor with shape (n, 4)>,
              'class_ids': <tensor with shape (n,)>}
     """
-    with rv_config.get_tmp_dir() as tmp_dir:
+    with get_tmp_dir() as tmp_dir:
         preds = get_coco_preds(outputs)
         # ap is undefined when there are no predicted boxes
         if len(preds) == 0:

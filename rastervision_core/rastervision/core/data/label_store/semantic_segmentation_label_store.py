@@ -6,10 +6,9 @@ import numpy as np
 import rasterio as rio
 from tqdm.auto import tqdm
 
-from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import (
     get_local_path, json_to_file, make_dir, sync_to_dir, file_exists,
-    download_if_needed, NotReadableError)
+    download_if_needed, NotReadableError, get_tmp_dir)
 from rastervision.core.box import Box
 from rastervision.core.data import (CRSTransformer, ClassConfig)
 from rastervision.core.data.label import (SemanticSegmentationLabels,
@@ -85,7 +84,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         self.tmp_dir = tmp_dir
         if self.tmp_dir is None:
-            self._tmp_dir = rv_config.get_tmp_dir()
+            self._tmp_dir = get_tmp_dir()
             self.tmp_dir = self._tmp_dir.name
 
         self.vector_outputs = vector_outputs

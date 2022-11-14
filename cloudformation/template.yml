@@ -323,7 +323,7 @@ Resources:
         Tags:
           Name: !Join ["", [!Ref Prefix, "RasterVisionGpuComputeEnvironment"]]
           ComputeEnvironment: Raster Vision
-  
+
   EC2GpuComputeEnvironment:
     Type: AWS::Batch::ComputeEnvironment
     Properties:

@@ -7,7 +7,7 @@ from shapely.strtree import STRtree
 from shapely.geometry import shape, mapping
 from shapely.ops import transform
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core import Box
 from rastervision.core.data import (RasterioCRSTransformer,
                                     GeoJSONVectorSourceConfig,
@@ -40,7 +40,7 @@ def crop_image(image_uri: str, window: Box, crop_uri: str):
     rasterio_window = window.rasterio_format()
     im = im_dataset.read(window=rasterio_window)
 
-    with rv_config.get_tmp_dir() as tmp_dir:
+    with get_tmp_dir() as tmp_dir:
         crop_path = get_local_path(crop_uri, tmp_dir)
         make_dir(crop_path, use_dirname=True)
 

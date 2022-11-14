@@ -1,17 +1,18 @@
-from typing import List, Union, Optional, Callable, Dict, TYPE_CHECKING
+from typing import List, Type, Union, Optional, Callable, Dict, TYPE_CHECKING
 import inspect
 
-from pydantic import (BaseModel, create_model, Field, validator)  # noqa
-from pydantic import (ValidationError, root_validator, validate_model)  # noqa
+from pydantic import (  # noqa
+    BaseModel, create_model, Field, root_validator, validate_model,
+    ValidationError, validator)
 
 from typing_extensions import Literal
 
-from rastervision.pipeline import registry
+from rastervision.pipeline import (registry_ as registry, rv_config_ as
+                                   rv_config)
 from rastervision.pipeline.file_system import str_to_file
-from rastervision.pipeline import rv_config
 
 if TYPE_CHECKING:
-    from rastervision.pipeline.pipeline_config import PipelineConfig  # noqa
+    from rastervision.pipeline.pipeline_config import PipelineConfig
 
 
 class ConfigError(ValueError):
@@ -98,22 +99,20 @@ class Config(BaseModel):
         """Validate a list field.
 
         Args:
-            field: name of field to validate
-            valid_options: values that field is allowed to take
+            field (str): name of field to validate
+            valid_options (List[str]): values that field is allowed to take
 
         Raises:
-            ConfigError if field is invalid
+            ConfigError: if field is invalid
         """
         val = getattr(self, field)
         if isinstance(val, list):
             for v in val:
                 if v not in valid_options:
-                    raise ConfigError('{} is not a valid option for {}'.format(
-                        v, field))
+                    raise ConfigError(f'{v} is not a valid option for {field}')
         else:
             if val not in valid_options:
-                raise ConfigError('{} is not a valid option for {}'.format(
-                    val, field))
+                raise ConfigError(f'{val} is not a valid option for {field}')
 
     def __repr_args__(self):
         """Override to delete 'type_hint' field."""
@@ -125,7 +124,7 @@ class Config(BaseModel):
         return args.items()
 
 
-def save_pipeline_config(cfg: 'PipelineConfig', output_uri: str):
+def save_pipeline_config(cfg: 'PipelineConfig', output_uri: str) -> None:
     """Save a PipelineConfig to JSON file.
 
     Inject rv_config and plugin_versions before saving.
@@ -137,7 +136,7 @@ def save_pipeline_config(cfg: 'PipelineConfig', output_uri: str):
 
 
 def build_config(x: Union[dict, List[Union[dict, Config]], Config]
-                 ) -> Union[Config, List[Config]]:  # noqa
+                 ) -> Union[Config, List[Config]]:
     """Build a Config from various types of input.
 
     This is useful for deserializing from JSON. It implements polymorphic
@@ -148,7 +147,7 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
         x: some representation of Config(s)
 
     Returns:
-        the corresponding Config(s)
+        Config: the corresponding Config(s)
     """
     if isinstance(x, dict):
         new_x = {}
@@ -166,15 +165,14 @@ def build_config(x: Union[dict, List[Union[dict, Config]], Config]
 
 
 def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
-                    ) -> Union[dict, List[dict]]:  # noqa
+                    ) -> Union[dict, List[dict]]:
     """Upgrade serialized Config(s) to the latest version.
 
     Used to implement backward compatibility of Configs using upgraders stored
     in the registry.
 
     Args:
-        x: serialized Config(s) which are potentially of a
-            non-current version
+        x: serialized Config(s) which are potentially of a non-current version
         plugin_versions: dict mapping from plugin module name to the latest version
 
     Returns:
@@ -206,11 +204,12 @@ def _upgrade_config(x: Union[dict, List[dict]], plugin_versions: Dict[str, int]
 def upgrade_plugin_versions(plugin_versions: Dict[str, int]) -> Dict[str, int]:
     """Update the names of the plugins using the plugin aliases in the registry.
 
+    This allows changing the names of plugins over time and maintaining backward
+    compatibility of serialized PipelineConfigs.
+
     Args:
         plugin_version: maps from plugin name to version
 
-    This allows changing the names of plugins over time and maintaining backward
-    compatibility of serialized PipelineConfigs.
     """
     new_plugin_versions = {}
     for alias, version in plugin_versions.items():
@@ -220,7 +219,7 @@ def upgrade_plugin_versions(plugin_versions: Dict[str, int]) -> Dict[str, int]:
         else:
             raise ConfigError(
                 'The plugin_versions field contains an unrecognized '
-                'plugin name: {}.'.format(alias))
+                f'plugin name: {alias}.')
     return new_plugin_versions
 
 
@@ -248,7 +247,7 @@ def upgrade_config(
     return _upgrade_config(config_dict, plugin_versions)
 
 
-def get_plugin(config_cls) -> str:
+def get_plugin(config_cls: Type) -> str:
     """Infer the module path of the plugin where a Config class is defined.
 
     This only works correctly if the plugin is in a module under rastervision.
@@ -259,29 +258,36 @@ def get_plugin(config_cls) -> str:
 
 def register_config(type_hint: str,
                     plugin: Optional[str] = None,
-                    upgrader: Optional[Callable] = None):
+                    upgrader: Optional[Callable] = None) -> Callable:
     """Class decorator used to register Config classes with registry.
 
     All Configs must be registered! Registering a Config does the following:
-    1) associates Config classes with type_hint, plugin, and upgrader, which is
-    necessary for polymorphic deserialization. See build_config() for more
-    details.
-    2) adds a constant `type_hint` field to the Config which is set to
-    type_hint
-    3) generates PyDocs based on Pydantic fields
+
+    1.  Associates Config classes with type_hint, plugin, and upgrader, which
+        is necessary for polymorphic deserialization. See build_config() for
+        more details.
+    2.  Adds a constant `type_hint` field to the Config which is set to
+        type_hint.
 
     Args:
-        type_hint: a type hint used to deserialize Configs. Needs to be unique
-            across all registered Configs.
-        plugin: the module path of the plugin where the Config is defined. This
-            will be inferred if omitted.
-        upgrader: a function of the form upgrade(config_dict, version) which returns the
-            corresponding config dict of version = version + 1. This can be useful
-            for maintaining backward compatibility by allowing old configs using an
+        type_hint (str): a type hint used to deserialize Configs. Must be
+            unique across all registered Configs.
+        plugin (Optional[str], optional): the module path of the plugin where
+            the Config is defined. If None, will be inferred.
+            Defauilts to None.
+        upgrader (Optional[Callable], optional): a function of the form
+            upgrade(config_dict, version) which returns the corresponding
+            config dict of version = version + 1. This can be useful for
+            maintaining backward compatibility by allowing old configs using an
             outdated schema to be upgraded to the current schema.
+            Defaults to None.
+
+    Returns:
+        Callable: A function that returns a new class that is identical to the
+            input Config with an additional ``type_hint`` field.
     """
 
-    def _register_config(cls):
+    def _register_config(cls: Type):
         new_cls = create_model(
             cls.__name__,
             __base__=cls,
@@ -290,10 +296,13 @@ def register_config(type_hint: str,
             # and default value type_hint to the config
             type_hint=(Literal[type_hint], type_hint),  # type: ignore
         )
+
         _plugin = plugin or get_plugin(cls)
         registry.add_config(type_hint, new_cls, _plugin, upgrader)
+
         # retain docstring after wrapping
         new_cls.__doc__ = cls.__doc__
+
         return new_cls
 
     return _register_config

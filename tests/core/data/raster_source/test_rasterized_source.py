@@ -8,8 +8,7 @@ from rastervision.core.data import (
     IdentityCRSTransformer, RasterizedSourceConfig, RasterizerConfig,
     GeoJSONVectorSourceConfig, ClassConfig, ClassInferenceTransformerConfig,
     BufferTransformerConfig)
-from rastervision.pipeline.file_system import json_to_file
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 
 from tests import data_file_path
 
@@ -32,7 +31,7 @@ class TestRasterizedSource(unittest.TestCase):
     def setUp(self):
         self.crs_transformer = IdentityCRSTransformer()
         self.extent = Box.make_square(0, 0, 10)
-        self.tmp_dir_obj = rv_config.get_tmp_dir()
+        self.tmp_dir_obj = get_tmp_dir()
         self.tmp_dir = self.tmp_dir_obj.name
         self.class_id = 0
         self.background_class_id = 1

@@ -90,9 +90,8 @@ class Registry():
             runner: the Runner class
         """
         if runner_name in self.runners:
-            raise RegistryError(
-                'There is already a {} runner in the registry.'.format(
-                    runner_name))
+            raise RegistryError(f'There is already a {runner_name} runner in '
+                                'the registry.')
 
         self.runners[runner_name] = runner
 
@@ -102,8 +101,7 @@ class Registry():
         if runner:
             return runner
         else:
-            raise RegistryError(
-                '{} is not a registered runner.'.format(runner_name))
+            raise RegistryError(f'{runner_name} is not a registered runner.')
 
     def add_file_system(self, file_system: 'FileSystem'):
         """Add a FileSystem.
@@ -129,10 +127,10 @@ class Registry():
                 return fs
         if mode == 'w':
             raise RegistryError('No matching file_system to handle '
-                                'writing to uri {}'.format(uri))
+                                f'writing to uri {uri}')
         else:
             raise RegistryError('No matching file_system to handle '
-                                'reading from uri {}'.format(uri))
+                                f'reading from uri {uri}')
 
     def add_config(self,
                    type_hint: str,
@@ -147,14 +145,15 @@ class Registry():
             config: Config class
         """
         if type_hint in self.configs:
-            raise RegistryError(
-                'There is already a config registered for type_hint {}'.format(
-                    type_hint))
+            raise RegistryError('There is already a config registered for '
+                                f'type_hint "{type_hint}".')
 
         self.configs[type_hint] = config
         self.type_hint_to_plugin[type_hint] = plugin
         if upgrader:
             self.type_hint_to_upgrader[type_hint] = upgrader
+
+        self.update_config_info()
 
     def get_config(self, type_hint: str) -> Type['Config']:
         """Get a Config class associated with a type_hint."""
@@ -162,11 +161,11 @@ class Registry():
         if config:
             return config
         else:
-            raise RegistryError((
-                '{} is not a registered config type hint.'
-                'This may be because you forgot to use the register_config decorator, '
-                'or forgot to import the module in the top-level __init__.py file for '
-                'the plugin.').format(type_hint))
+            raise RegistryError(
+                f'{type_hint} is not a registered config type hint. This may '
+                'be because you forgot to use the register_config decorator, '
+                'or forgot to import the module in the top-level __init__.py '
+                'file for the plugin.')
 
     def add_rv_config_schema(self, config_section: str,
                              config_fields: List[str]):
@@ -198,8 +197,6 @@ class Registry():
         # TODO can we get rid of this now?
         import rastervision.pipeline.pipeline_config  # noqa
         self.set_plugin_version('rastervision.pipeline', 0)
-        self.set_plugin_aliases('rastervision.pipeline',
-                                ['rastervision2.pipeline'])
 
     def update_config_info(self):
         config_class_to_type_hint = {}

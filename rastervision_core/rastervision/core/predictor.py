@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, List, Optional
 from os.path import join
 import logging
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.config import (build_config, upgrade_config)
 from rastervision.pipeline.file_system.utils import (download_if_needed,
                                                      file_to_json, unzip)

@@ -3,7 +3,7 @@ contact_links:
     url: https://github.com/azavea/raster-vision/discussions
     about: |
       Please post to our forum for usage questions, technical support if you're not sure it's a bug, and anything else that doesn't fit into the other categories.
-      
+
       **Please check our [documentation](https://docs.rastervision.io/en/latest/index.html) first.**
 
       For technical support, we may be able to assist more quickly if you include the Raster Vision version, full stack trace, and/or a minimal self-contained example.

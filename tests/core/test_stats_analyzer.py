@@ -3,8 +3,7 @@ from os.path import join
 
 import numpy as np
 
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system.utils import file_exists
+from rastervision.pipeline.file_system.utils import file_exists, get_tmp_dir
 from rastervision.core.raster_stats import RasterStats, chip_sz
 from rastervision.core.data import Scene
 from rastervision.core.analyzer import StatsAnalyzerConfig
@@ -26,7 +25,7 @@ def make_scene(i: int, is_random: bool = False) -> Scene:
 
 class TestStatsAnalyzer(unittest.TestCase):
     def setUp(self):
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
 
     def tearDown(self):
         self.tmp_dir.cleanup()

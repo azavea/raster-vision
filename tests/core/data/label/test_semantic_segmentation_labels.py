@@ -4,7 +4,7 @@ from os.path import join
 import numpy as np
 import rasterio as rio
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data import (
     ClassConfig, IdentityCRSTransformer, SemanticSegmentationLabels,
@@ -215,7 +215,7 @@ class TestSemanticSegmentationDiscreteLabels(unittest.TestCase):
         labels[extent] = np.eye(3)
         exp_arr = labels.get_label_arr(extent)
 
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             uri = join(tmp_dir, 'test')
             labels.save(
                 uri=uri,
@@ -371,7 +371,7 @@ class TestSemanticSegmentationSmoothLabels(unittest.TestCase):
         exp_score_arr = labels.get_score_arr(extent)
         exp_hits_arr = labels.pixel_hits
 
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             uri = join(tmp_dir, 'test')
             labels.save(
                 uri=uri,

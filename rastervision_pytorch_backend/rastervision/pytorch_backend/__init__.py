@@ -3,8 +3,6 @@
 
 def register_plugin(registry):
     registry.set_plugin_version('rastervision.pytorch_backend', 1)
-    registry.set_plugin_aliases('rastervision.pytorch_backend',
-                                ['rastervision2.pytorch_backend'])
 
 
 import rastervision.pipeline

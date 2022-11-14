@@ -1,3 +1,5 @@
+"""Defines the abstract Labels class."""
+
 from typing import TYPE_CHECKING, Any, Iterable
 from abc import (ABC, abstractclassmethod, abstractmethod)
 
@@ -6,10 +8,10 @@ if TYPE_CHECKING:
 
 
 class Labels(ABC):
-    """A set of spatially referenced labels.
+    """A source-agnostic, in-memory representation of labels in a scene.
 
-    A set of labels predicted by a model or provided by human labelers for the
-    sake of training.
+    This class can represent labels obtained via a ``LabelSource``, a
+    ``LabelStore``, or directly from model predictions.
     """
 
     @abstractmethod

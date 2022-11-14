@@ -2,13 +2,10 @@ from typing import Any, Callable
 import unittest
 from os.path import join
 from uuid import uuid4
-import logging
 
 import numpy as np
-import torch
 
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import json_to_file
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 from rastervision.core.data import (
     ClassConfig, DatasetConfig, RasterioSourceConfig, MultiRasterSourceConfig,
     ReclassTransformerConfig, SceneConfig, ChipClassificationLabelSourceConfig,
@@ -17,7 +14,7 @@ from rastervision.core.rv_pipeline import ChipClassificationConfig
 from rastervision.pytorch_backend import PyTorchChipClassificationConfig
 from rastervision.pytorch_learner import (
     ClassificationModelConfig, SolverConfig, ClassificationGeoDataConfig,
-    PlotOptions, GeoDataWindowConfig)
+    PlotOptions, GeoDataWindowConfig, GeoDataWindowMethod)
 from tests import data_file_path
 
 
@@ -73,20 +70,22 @@ class TestClassificationLearner(unittest.TestCase):
         except Exception:
             self.fail(msg)
 
-    def test_learner(self):
-        self.assertNoError(lambda: self._test_learner(3, None))
-        self.assertNoError(
-            lambda: self._test_learner(6, [(0, 1, 2), (3, 4, 5)]))
+    def test_learner_rgb(self):
+        args = dict(num_channels=3, channel_display_groups=None)
+        self.assertNoError(lambda: self._test_learner(**args))
+
+    def test_learner_multiband(self):
+        args = dict(
+            num_channels=6, channel_display_groups=[(0, 1, 2), (3, 4, 5)])
+        self.assertNoError(lambda: self._test_learner(**args))
 
     def _test_learner(self,
                       num_channels: int,
                       channel_display_groups: Any,
                       num_classes: int = 5):
-        """Tests whether the learner can be instantiated correctly and
-        produce plots."""
-        logging.disable(logging.CRITICAL)
+        """Tests learner init, plots, bundle, train and pred."""
 
-        with rv_config.get_tmp_dir() as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             class_config = ClassConfig(
                 names=[f'class_{i}' for i in range(num_classes)])
             dataset_cfg = DatasetConfig(
@@ -102,7 +101,8 @@ class TestClassificationLearner(unittest.TestCase):
                 test_scenes=[])
             data_cfg = ClassificationGeoDataConfig(
                 scene_dataset=dataset_cfg,
-                window_opts=GeoDataWindowConfig(size=20, stride=20),
+                window_opts=GeoDataWindowConfig(
+                    method=GeoDataWindowMethod.random, size=20, max_windows=8),
                 class_names=class_config.names,
                 class_colors=class_config.colors,
                 plot_options=PlotOptions(
@@ -111,19 +111,22 @@ class TestClassificationLearner(unittest.TestCase):
             backend_cfg = PyTorchChipClassificationConfig(
                 data=data_cfg,
                 model=ClassificationModelConfig(pretrained=False),
-                solver=SolverConfig(),
+                solver=SolverConfig(batch_sz=4, num_epochs=1),
                 log_tensorboard=False)
             pipeline_cfg = ChipClassificationConfig(
                 root_uri=tmp_dir, dataset=dataset_cfg, backend=backend_cfg)
             pipeline_cfg.update()
             backend = backend_cfg.build(pipeline_cfg, tmp_dir)
             learner = backend.learner_cfg.build(tmp_dir, training=True)
-            learner.plot_dataloaders()
-            learner.plot_predictions(split='valid')
 
-            torch.save(learner.model.state_dict(),
-                       learner.last_model_weights_path)
+            learner.plot_dataloaders()
+            learner.train()
+            learner.plot_predictions(split='valid')
             learner.save_model_bundle()
+
+            learner = None
+            backend.learner = None
+            backend.load_model()
 
             pred_scene = dataset_cfg.validation_scenes[0].build(
                 class_config, tmp_dir)

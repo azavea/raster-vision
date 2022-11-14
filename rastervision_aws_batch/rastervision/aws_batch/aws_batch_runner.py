@@ -3,7 +3,7 @@ import os
 import uuid
 from typing import List, Optional
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline import rv_config_ as rv_config
 from rastervision.pipeline.runner import Runner
 
 log = logging.getLogger(__name__)

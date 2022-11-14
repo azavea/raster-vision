@@ -37,7 +37,7 @@ Deploying Batch resources
 To deploy AWS Batch resources using AWS CloudFormation, start by logging into your AWS console. Then, follow the steps below:
 
 - Navigate to ``CloudFormation > Create Stack``
-- In the ``Choose a template field``, select ``Upload a template to Amazon S3`` and upload the template in `cloudformation/template.yml <https://github.com/azavea/raster-vision/tree/0.13/cloudformation/template.yml>`_. **Warning:** Some versions of Chrome fail at this step without an explanation. As a workaround, try a different version of Chrome, or Firefox. See `this thread <https://forums.aws.amazon.com/thread.jspa?messageID=946331&tstart=0>`_ for more details.
+- In the ``Choose a template field``, select ``Upload a template to Amazon S3`` and upload the template in `cloudformation/template.yml <https://github.com/azavea/raster-vision/tree/{{ version }}/cloudformation/template.yml>`_. **Warning:** Some versions of Chrome fail at this step without an explanation. As a workaround, try a different version of Chrome, or Firefox. See `this thread <https://forums.aws.amazon.com/thread.jspa?messageID=946331&tstart=0>`_ for more details.
 - ``Prefix``: If you are setting up multiple RV stacks within an AWS account, you need to set a prefix for namespacing resources. Otherwise, there will be name collisions with any resources that were created as part of another stack.
 - Specify the following required parameters:
     - ``Stack Name``: The name of your CloudFormation stack
@@ -45,7 +45,7 @@ To deploy AWS Batch resources using AWS CloudFormation, start by logging into yo
     - ``Subnets``: The ID of any subnets that you want to deploy your resources into. Your account should have at least two by default; make sure that the subnets you select are in the VPC that you chose by using the AWS VPC console, or else CloudFormation will throw an error. (Subnets are tied to availability zones, and so affect spot prices.) In addition, you need to choose subnets that are available for the instance type you have chosen. To find which subnets are available, go to Spot Pricing History in the EC2 console and select the instance type. Then look up the availability zones that are present in the VPC console to find the corresponding subnets. Your spot requests will be more likely to be successful and your savings will be greater if you have subnets in more availability zones.
 
     .. image:: img/spot-azs.png
-        :width: 500
+        :align: center
         :alt: Spot availability zones for P3 instances
 
     - ``SSH Key Name``: The name of the SSH key pair you want to be able to use to shell into your Batch instances. If you've created an EC2 instance before, you should already have one you can use; otherwise, you can create one in the EC2 console. *Note: If you decide to create a new one, you will need to log out and then back in to the console before creating a Cloudformation stack using this key.*
@@ -74,4 +74,4 @@ Finally, make sure to update your :ref:`aws batch setup` with the Batch resource
 Deploy new job definitions
 -----------------------------
 
-When a user starts working on a new RV-based project (or a new user starts working on an existing RV-based project), they will often want to publish a custom Docker image to ECR and use it when running on Batch. To facilitate this, there is a separate `cloudformation/job_def_template.yml <https://github.com/azavea/raster-vision/tree/0.13/cloudformation/job_def_template.yml>`_. The idea is that for each user/project pair which is identified by a ``Namespace`` string, a CPU and GPU job definition is created which point to a specified ECR repo using that ``Namespace`` as the tag. After creating these new resources, the image should be published to ``<repo>:<namespace>`` on ECR, and the new job definitions should be placed in a project-specific RV profile file.
+When a user starts working on a new RV-based project (or a new user starts working on an existing RV-based project), they will often want to publish a custom Docker image to ECR and use it when running on Batch. To facilitate this, there is a separate `cloudformation/job_def_template.yml <https://github.com/azavea/raster-vision/tree/{{ version }}/cloudformation/job_def_template.yml>`_. The idea is that for each user/project pair which is identified by a ``Namespace`` string, a CPU and GPU job definition is created which point to a specified ECR repo using that ``Namespace`` as the tag. After creating these new resources, the image should be published to ``<repo>:<namespace>`` on ECR, and the new job definitions should be placed in a project-specific RV profile file.

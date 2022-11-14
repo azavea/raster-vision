@@ -97,11 +97,12 @@ def sanitize_geojson(geojson: dict,
     """Apply some basic transformations (listed below) to a GeoJSON.
 
     The following transformations are applied:
-    1. Removal of features without geometries.
-    2. Coordinate transformation to pixel coordinates.
-    3. Splitting of multi-part geometries e.g. MultiPolygon --> Polygons.
-    4. (Optional) If to_map_coords=true, transformation back to map
-    coordinates.
+
+    1.  Removal of features without geometries.
+    2.  Coordinate transformation to pixel coordinates.
+    3.  Splitting of multi-part geometries e.g. MultiPolygon --> Polygons.
+    4.  (Optional) If to_map_coords=true, transformation back to map
+        coordinates.
 
     Args:
         geojson (dict): A GeoJSON-like mapping of a FeatureCollection.

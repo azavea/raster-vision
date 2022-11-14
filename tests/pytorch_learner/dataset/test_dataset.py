@@ -5,8 +5,7 @@ import torch
 import numpy as np
 from shapely.geometry import Polygon, mapping
 
-from rastervision.pipeline import rv_config
-from rastervision.pipeline.file_system import json_to_file
+from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 from rastervision.core.data import ClassConfig, RasterioCRSTransformer
 from rastervision.core.data.utils.geojson import (geometry_to_feature,
                                                   features_to_geojson)
@@ -32,7 +31,7 @@ def make_overlapping_geojson(uri: str) -> str:
 class TestGeoDatasetFromURIs(unittest.TestCase):
     def setUp(self) -> None:
         self.image_uri = data_file_path('ones.tif')
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
         geojson = make_overlapping_geojson(self.image_uri)
         self.label_vector_uri = join(self.tmp_dir.name, 'geojson.json')
         json_to_file(geojson, self.label_vector_uri)

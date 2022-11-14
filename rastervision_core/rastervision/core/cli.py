@@ -1,7 +1,7 @@
 from typing import List, Optional
 import click
 
-from rastervision.pipeline import rv_config
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.predictor import Predictor
 
 
@@ -76,7 +76,7 @@ def predict(model_bundle: str,
     if channel_order is not None:
         channel_order: List[int] = [int(i) for i in channel_order]
 
-    with rv_config.get_tmp_dir() as tmp_dir:
+    with get_tmp_dir() as tmp_dir:
         predictor = Predictor(model_bundle, tmp_dir, update_stats,
                               channel_order, scene_group)
         predictor.predict([image_uri], label_uri)

@@ -7,8 +7,9 @@ from typing import List, Dict, Optional, Tuple
 
 import click
 
-from rastervision.pipeline import (registry, rv_config)
-from rastervision.pipeline.file_system import (file_to_json)
+from rastervision.pipeline import (registry_ as registry, rv_config_ as
+                                   rv_config)
+from rastervision.pipeline.file_system import (file_to_json, get_tmp_dir)
 from rastervision.pipeline.config import build_config, save_pipeline_config
 from rastervision.pipeline.pipeline_config import PipelineConfig
 
@@ -39,8 +40,8 @@ def convert_bool_args(args: dict) -> dict:
     return new_args
 
 
-def get_configs(cfg_module_path: str, runner: str, args: Dict[str, any]
-                ) -> List['rastervision.pipeline.PipelineConfig']:  # noqa
+def get_configs(cfg_module_path: str, runner: str,
+                args: Dict[str, any]) -> List[PipelineConfig]:
     """Get PipelineConfigs from a module.
 
     Calls a get_config(s) function with some arguments from the CLI
@@ -162,7 +163,7 @@ def run(runner: str, cfg_module: str, commands: List[str],
     which to run them is based on the Pipeline.commands attribute. If this is omitted,
     all commands will be run.
     """
-    tmp_dir_obj = rv_config.get_tmp_dir()
+    tmp_dir_obj = get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
 
     args = dict(arg)
@@ -194,7 +195,7 @@ def _run_command(cfg_json_uri: str,
     rv_config.set_everett_config(
         profile=rv_config.profile, config_overrides=rv_config_dict)
 
-    tmp_dir_obj = rv_config.get_tmp_dir()
+    tmp_dir_obj = get_tmp_dir()
     tmp_dir = tmp_dir_obj.name
 
     cfg = build_config(pipeline_cfg_dict)

@@ -43,8 +43,8 @@ The pipelines include running the following commands:
 Pipelines are configured using a compositional, programmatic approach that makes configuration easy to read, reuse, and maintain. Below, we show the ``tiny_spacenet`` example.
 
 .. literalinclude:: ../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
-   :language: python
-   :caption: tiny_spacenet.py
+    :language: python
+    :caption: tiny_spacenet.py
 
 Raster Vision uses a ``unittest``-like method for executing pipelines. For instance, if the
 above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment
@@ -52,41 +52,35 @@ on AWS Batch by running:
 
 .. code:: shell
 
-   > rastervision run batch tiny_spacenet.py
+    > rastervision run batch tiny_spacenet.py
 
 See the :ref:`quickstart` for a more complete description of using this example.
 
-.. _documentation:
-
-Documentation
-=============
-
-This part of the documentation guides you through all of the library's
-usage patterns.
-
 .. toctree::
+    :hidden:
 
-   why
-   quickstart
-   setup
-   cli
-   pipelines
-   architecture
-   examples
-   bootstrap
-   cloudformation
-   runners
-   misc
-   CONTRIBUTING
-   release
-   tutorials/index
-   api_reference/index
+    why
+    quickstart
+    setup
+    cli
+    pipelines
+    architecture
+    examples
+    bootstrap
+    cloudformation
+    runners
+    misc
+    CONTRIBUTING
+    release
+    tutorials/index
+    api_reference/index
+
 
 
 CHANGELOG
 =========
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   changelog
+    changelog

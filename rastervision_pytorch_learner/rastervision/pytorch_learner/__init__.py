@@ -3,8 +3,6 @@
 
 def register_plugin(registry):
     registry.set_plugin_version('rastervision.pytorch_learner', 4)
-    registry.set_plugin_aliases('rastervision.pytorch_learner',
-                                ['rastervision2.pytorch_learner'])
 
 
 import rastervision.pipeline
@@ -23,6 +21,9 @@ from rastervision.pytorch_learner.object_detection_learner import *
 from rastervision.pytorch_learner.dataset import *
 
 __all__ = [
+    # LearnerPipeline
+    LearnerPipeline.__name__,
+    LearnerPipelineConfig.__name__,
     # Learner
     Learner.__name__,
     SemanticSegmentationLearner.__name__,

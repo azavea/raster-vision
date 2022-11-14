@@ -6,19 +6,19 @@ import numpy as np
 import rasterio
 from rasterio.enums import ColorInterp
 
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core import (Box, RasterStats)
 from rastervision.core.utils.misc import save_img
 from rastervision.core.data.raster_source import (
     ChannelOrderError, RasterioSource, RasterioSourceConfig, fill_overflow)
 from rastervision.core.data.raster_transformer import StatsTransformerConfig
-from rastervision.pipeline import rv_config
 
 from tests import data_file_path
 
 
 class TestRasterioSource(unittest.TestCase):
     def setUp(self):
-        self.tmp_dir_obj = rv_config.get_tmp_dir()
+        self.tmp_dir_obj = get_tmp_dir()
         self.tmp_dir = self.tmp_dir_obj.name
 
     def tearDown(self):

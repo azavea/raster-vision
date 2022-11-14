@@ -8,8 +8,7 @@ from moto import mock_s3
 from rastervision.pipeline.file_system import (
     file_to_str, str_to_file, download_if_needed, upload_or_copy, make_dir,
     get_local_path, file_exists, sync_from_dir, sync_to_dir, list_paths,
-    NotReadableError, NotWritableError, FileSystem)
-from rastervision.pipeline import rv_config
+    get_tmp_dir, NotReadableError, NotWritableError, FileSystem)
 
 LOREM = """ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
         eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
@@ -32,7 +31,7 @@ class TestMakeDir(unittest.TestCase):
         self.s3.create_bucket(Bucket=self.bucket_name)
 
         # temporary directory
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
 
     def tearDown(self):
         self.tmp_dir.cleanup()
@@ -140,7 +139,7 @@ class TestFileToStr(unittest.TestCase):
         self.file_name = 'hello.txt'
         self.s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
 
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
         self.local_path = os.path.join(self.tmp_dir.name, self.file_name)
 
     def tearDown(self):
@@ -183,7 +182,7 @@ class TestDownloadIfNeeded(unittest.TestCase):
         self.file_name = 'hello.txt'
         self.s3_path = 's3://{}/{}'.format(self.bucket_name, self.file_name)
 
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
         self.local_path = os.path.join(self.tmp_dir.name, self.file_name)
 
     def tearDown(self):
@@ -233,7 +232,7 @@ class TestS3Misc(unittest.TestCase):
         self.s3.create_bucket(Bucket=self.bucket_name)
 
         # temporary directory
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
 
     def tearDown(self):
         self.tmp_dir.cleanup()
@@ -292,7 +291,7 @@ class TestS3Misc(unittest.TestCase):
 class TestLocalMisc(unittest.TestCase):
     def setUp(self):
         self.lorem = LOREM
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
 
     def tearDown(self):
         self.tmp_dir.cleanup()
@@ -396,7 +395,7 @@ class TestLocalMisc(unittest.TestCase):
 class TestHttpMisc(unittest.TestCase):
     def setUp(self):
         self.lorem = LOREM
-        self.tmp_dir = rv_config.get_tmp_dir()
+        self.tmp_dir = get_tmp_dir()
 
     def tearDown(self):
         self.tmp_dir.cleanup()

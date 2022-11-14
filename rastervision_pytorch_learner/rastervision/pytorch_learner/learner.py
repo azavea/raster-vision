@@ -22,11 +22,10 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
-from rastervision.pipeline import rv_config
 from rastervision.pipeline.file_system import (
     sync_to_dir, json_to_file, file_to_json, make_dir, zipdir,
     download_if_needed, download_or_copy, sync_from_dir, get_local_path, unzip,
-    str_to_file, is_local)
+    str_to_file, is_local, get_tmp_dir)
 from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
@@ -39,7 +38,8 @@ if TYPE_CHECKING:
     from torch.optim.lr_scheduler import _LRScheduler
     from torch.utils.data import Dataset, Sampler
 
-    from rastervision.pytorch_learner.learner_config import LearnerConfig
+    from rastervision.pytorch_learner import (LearnerConfig,
+                                              LearnerPipelineConfig)
 
 warnings.filterwarnings('ignore')
 
@@ -112,6 +112,7 @@ class Learner(ABC):
 
     def __init__(self,
                  cfg: 'LearnerConfig',
+                 output_dir: Optional[str] = None,
                  train_ds: Optional['Dataset'] = None,
                  valid_ds: Optional['Dataset'] = None,
                  test_ds: Optional['Dataset'] = None,
@@ -178,7 +179,7 @@ class Learner(ABC):
                 'cfg.model can only be None if a custom model is specified.')
 
         if tmp_dir is None:
-            self._tmp_dir = rv_config.get_tmp_dir()
+            self._tmp_dir = get_tmp_dir()
             tmp_dir = self._tmp_dir.name
         self.tmp_dir = tmp_dir
         self.device = torch.device('cuda'
@@ -194,18 +195,36 @@ class Learner(ABC):
         self.epoch_scheduler = epoch_scheduler
         self.step_scheduler = step_scheduler
 
-        output_dir = cfg.output_uri
-        if is_local(output_dir):
-            self.output_dir = output_dir
-            make_dir(self.output_dir)
+        # ---------------------------
+        # Set URIs
+        # ---------------------------
+        if output_dir is None and cfg.output_uri is None:
+            raise ValueError('output_dir or LearnerConfig.output_uri must '
+                             'be specified.')
+        if output_dir is not None and cfg.output_uri is not None:
+            log.warn('Both output_dir and LearnerConfig.output_uri specified. '
+                     'LearnerConfig.output_uri will be ignored.')
+        if output_dir is None:
+            assert cfg.output_uri is not None
+            self.output_dir = cfg.output_uri
+            self.model_bundle_uri = cfg.get_model_bundle_uri()
         else:
-            self.output_dir = get_local_path(output_dir, tmp_dir)
-            make_dir(self.output_dir, force_empty=True)
+            self.output_dir = output_dir
+            self.model_bundle_uri = join(self.output_dir, 'model-bundle.zip')
 
+        if is_local(self.output_dir):
+            self.output_dir_local = self.output_dir
+            make_dir(self.output_dir_local)
+        else:
+            self.output_dir_local = get_local_path(self.output_dir, tmp_dir)
+            make_dir(self.output_dir_local, force_empty=True)
             if training and not cfg.overfit_mode:
                 self.sync_from_cloud()
+            log.info(f'Local output dir: {self.output_dir_local}')
+            log.info(f'Remote output dir: {self.output_dir}')
 
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
+        # ---------------------------
 
         self.setup_model(
             model_weights_path=model_weights_path,
@@ -243,13 +262,14 @@ class Learner(ABC):
                 self.train()
                 if cfg.save_model_bundle:
                     self.save_model_bundle()
+        else:
+            self.load_checkpoint()
 
-        self.load_checkpoint()
+        self.stop_tensorboard()
         if cfg.eval_train:
             self.eval_model('train')
         self.eval_model('valid')
         self.sync_to_cloud()
-        self.stop_tensorboard()
 
     def setup_training(self, loss_def_path: Optional[str] = None) -> None:
         cfg = self.cfg
@@ -264,30 +284,28 @@ class Learner(ABC):
         self.setup_data()
 
         # model
-        model_bundle_fname = basename(cfg.get_model_bundle_uri())
-        self.model_bundle_path = join(self.output_dir, model_bundle_fname)
         self.last_model_weights_path = join(self.output_dir, 'last-model.pth')
         self.load_checkpoint()
 
         # optimization
-        self.start_epoch = self.get_start_epoch()
+        start_epoch = self.get_start_epoch()
         self.setup_loss(loss_def_path=loss_def_path)
         if self.opt is None:
             self.opt = self.build_optimizer()
         if self.step_scheduler is None:
-            self.step_scheduler = self.build_step_scheduler()
+            self.step_scheduler = self.build_step_scheduler(start_epoch)
         if self.epoch_scheduler is None:
-            self.epoch_scheduler = self.build_epoch_scheduler()
+            self.epoch_scheduler = self.build_epoch_scheduler(start_epoch)
 
         self.setup_tensorboard()
 
     def sync_to_cloud(self):
         """Sync any output to the cloud at output_uri."""
-        sync_to_dir(self.output_dir, self.cfg.output_uri)
+        sync_to_dir(self.output_dir_local, self.output_dir)
 
     def sync_from_cloud(self):
         """Sync any previous output in the cloud to output_dir."""
-        sync_from_dir(self.cfg.output_uri, self.output_dir)
+        sync_from_dir(self.output_dir, self.output_dir_local)
 
     def setup_tensorboard(self):
         """Setup for logging stats to TB."""
@@ -388,7 +406,7 @@ class Learner(ABC):
     def setup_data(self):
         """Set datasets and dataLoaders for train, validation, and test sets.
         """
-        if not all([self.train_ds, self.valid_ds, self.test_ds]):
+        if self.train_ds is None or self.valid_ds is None:
             train_ds, valid_ds, test_ds = self.build_datasets()
             if self.train_ds is None:
                 self.train_ds = train_ds
@@ -450,28 +468,28 @@ class Learner(ABC):
 
     def log_data_stats(self):
         """Log stats about each DataSet."""
-        if self.train_ds:
-            log.info('train_ds: {} items'.format(len(self.train_ds)))
-        if self.valid_ds:
-            log.info('valid_ds: {} items'.format(len(self.valid_ds)))
-        if self.test_ds:
-            log.info('test_ds: {} items'.format(len(self.test_ds)))
+        if self.train_ds is not None:
+            log.info(f'train_ds: {len(self.train_ds)} items')
+        if self.valid_ds is not None:
+            log.info(f'valid_ds: {len(self.valid_ds)} items')
+        if self.test_ds is not None:
+            log.info(f'test_ds: {len(self.test_ds)} items')
 
     def build_optimizer(self) -> 'Optimizer':
         """Returns optimizer."""
         return self.cfg.solver.build_optimizer(self.model)
 
-    def build_step_scheduler(self) -> '_LRScheduler':
+    def build_step_scheduler(self, start_epoch: int = 0) -> '_LRScheduler':
         """Returns an LR scheduler that changes the LR each step."""
         return self.cfg.solver.build_step_scheduler(
             optimizer=self.opt,
             train_ds_sz=len(self.train_ds),
-            last_epoch=(self.start_epoch - 1))
+            last_epoch=(start_epoch - 1))
 
-    def build_epoch_scheduler(self) -> '_LRScheduler':
+    def build_epoch_scheduler(self, start_epoch: int = 0) -> '_LRScheduler':
         """Returns an LR scheduler that changes the LR each epoch."""
         return self.cfg.solver.build_epoch_scheduler(
-            optimizer=self.opt, last_epoch=(self.start_epoch - 1))
+            optimizer=self.opt, last_epoch=(start_epoch - 1))
 
     def build_metric_names(self) -> List[str]:
         """Returns names of metrics used to validate model at each epoch."""
@@ -886,12 +904,44 @@ class Learner(ABC):
                 batch_limit=batch_limit,
                 show=show)
 
-    @staticmethod
-    def from_model_bundle(model_bundle_uri: str,
-                          tmp_dir: str,
+    @classmethod
+    def from_model_bundle(cls: Type,
+                          model_bundle_uri: str,
+                          tmp_dir: Optional[str] = None,
                           cfg: Optional['LearnerConfig'] = None,
-                          training: bool = False):
-        """Create a Learner from a model bundle."""
+                          training: bool = False) -> 'Learner':
+        """Create a Learner from a model bundle.
+
+        .. note::
+
+            This is the bundle saved in ``train/model-bundle.zip`` and not
+            ``bundle/model-bundle.zip``.
+
+        Args:
+            model_bundle_uri (str): URI of the model bundle.
+            tmp_dir (Optional[str], optional): Optional temporary directory.
+                Will be used for unzipping bundle and also passed to the
+                default constructor. If None, will be auto-generated.
+                Defaults to None.
+            cfg (Optional[LearnerConfig], optional): If None, will be read from
+                the bundle. Defaults to None.
+            training (bool, optional): If False, the training apparatus (loss,
+                optimizer, scheduler, logging, etc.) will not be set up and the
+                model will be put into eval mode. If True, the training
+                apparatus will be set up and the model will be put into
+                training mode. Defaults to True.
+
+        Raises:
+            FileNotFoundError: If using custom Albumentations transforms and
+                definition file is not found in bundle.
+
+        Returns:
+            Learner: Object of the Learner subclass on which this was called.
+        """
+        log.info(f'Loading learner from bundle {model_bundle_uri}.')
+        if tmp_dir is None:
+            _tmp_dir = get_tmp_dir()
+            tmp_dir = _tmp_dir.name
         model_bundle_path = download_if_needed(model_bundle_uri)
         model_bundle_dir = join(tmp_dir, 'model-bundle')
         unzip(model_bundle_path, model_bundle_dir)
@@ -904,8 +954,9 @@ class Learner(ABC):
             config_dict = file_to_json(config_path)
             config_dict = upgrade_config(config_dict)
 
-            cfg = build_config(config_dict)
-            cfg = cfg.learner
+            learner_pipeline_cfg: 'LearnerPipelineConfig' = build_config(
+                config_dict)
+            cfg = learner_pipeline_cfg.learner
 
         hub_dir = join(model_bundle_dir, MODULES_DIRNAME)
         model_def_path = None
@@ -938,12 +989,16 @@ class Learner(ABC):
             # config has been altered, so re-validate
             cfg = build_config(cfg.dict())
 
-        return cfg.build(
+        # we have trained weights, so avoid wasteful download
+        cfg.model.pretrained = False
+
+        learner: cls = cfg.build(
             tmp_dir=tmp_dir,
             model_weights_path=model_weights_path,
             model_def_path=model_def_path,
             loss_def_path=loss_def_path,
             training=training)
+        return learner
 
     def save_model_bundle(self):
         """Save a model bundle.
@@ -965,10 +1020,14 @@ class Learner(ABC):
         pipeline_cfg = LearnerPipelineConfig(learner=self.cfg)
         save_pipeline_config(pipeline_cfg,
                              join(model_bundle_dir, 'pipeline-config.json'))
-        zipdir(model_bundle_dir, self.model_bundle_path)
+
+        zip_path = join(self.output_dir_local, basename(self.model_bundle_uri))
+        log.info(f'Saving bundle to {zip_path}.')
+        zipdir(model_bundle_dir, zip_path)
 
     def _bundle_model(self, model_bundle_dir: str) -> None:
-        """Copy last saved model weights into bundle."""
+        """Save model weights and copy them to bundle dir.."""
+        torch.save(self.model.state_dict(), self.last_model_weights_path)
         shutil.copyfile(self.last_model_weights_path,
                         join(model_bundle_dir, 'model.pth'))
 
@@ -1142,18 +1201,16 @@ class Learner(ABC):
 
     def train(self, epochs: Optional[int] = None):
         """Training loop that will attempt to resume training if appropriate."""
-        if epochs is not None:
-            # ignore self.start_epoch and self.cfg.solver.num_epochs and just
-            # train for the number of additional epochs specified by `epochs`.
-            start_epoch = 0
-        else:
-            start_epoch = self.start_epoch
+        start_epoch = self.get_start_epoch()
+
+        if epochs is None:
             epochs = self.cfg.solver.num_epochs
-            if (start_epoch > 0 and start_epoch < epochs):
-                log.info(f'Resuming training from epoch {start_epoch}')
+
+        if (start_epoch > 0 and start_epoch < epochs):
+            log.info(f'Resuming training from epoch {start_epoch}')
 
         self.on_train_start()
-        for epoch in range(start_epoch, epochs):
+        for epoch in range(start_epoch, start_epoch + epochs):
             log.info(f'epoch: {epoch}')
             train_metrics = self.train_epoch(
                 optimizer=self.opt, step_scheduler=self.step_scheduler)
@@ -1193,8 +1250,6 @@ class Learner(ABC):
             for key, val in metrics.items():
                 if isinstance(val, numbers.Number):
                     self.tb_writer.add_scalar(key, val, curr_epoch)
-            for name, param in self.model.named_parameters():
-                self.tb_writer.add_histogram(name, param, curr_epoch)
             self.tb_writer.flush()
 
         torch.save(self.model.state_dict(), self.last_model_weights_path)
