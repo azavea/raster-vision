@@ -4,7 +4,6 @@ myst-parser==0.18.1
 autodoc-pydantic==1.8.0
 nbsphinx==0.8.9
 sphinx-copybutton==0.5.*
-readthedocs-sphinx-search==0.1.*
 
 # update when this is resolved: https://github.com/spatialaudio/nbsphinx/issues/655
 sphinx-gallery>=0.10,<0.11
