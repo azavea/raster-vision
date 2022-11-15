@@ -45,4 +45,4 @@ python:
 search:
   ranking:
     # down-rank source code pages
-    '*/_modules/*': -10
+    _modules/*: -10
