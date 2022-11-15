@@ -10,12 +10,3 @@ def nodata_below_threshold(chip: np.ndarray,
         chip = chip.sum(axis=-1)
     nodata_prop = (chip == 0).mean()
     return nodata_prop < threshold
-
-
-def fill_no_data(img: np.ndarray, label_arr: np.ndarray,
-                 null_class_id: int) -> None:
-    """ If chip has null labels, fill in those pixels with nodata. """
-    mask = label_arr == null_class_id
-    if np.any(mask):
-        img[mask, :] = 0
-    return img
