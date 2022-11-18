@@ -36,7 +36,8 @@ Options:
 --aws forwards AWS credentials (sets AWS_PROFILE env var and mounts ~/.aws to /root/.aws)
 --tensorboard maps port 6006
 --name sets the name of the running container
---jupyter forwards port 8888, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
+--jupyter forwards a port, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
+--jupyter-lab forwards a port, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter Lab
 --docs runs the docs server and forwards port 8000
 --debug forwards port 3000 for use with remote debugger
 --gpu use nvidia runtime
@@ -137,10 +138,16 @@ fi
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    docker run ${RUNTIME} ${NAME} --rm --ipc=host -it \
+    docker run \
+        ${RUNTIME} ${NAME} --rm --ipc=host -it \
         -v "${HOME}"/.rastervision:/root/.rastervision \
         -v ${REPO_ROOT}/:/opt/src/ \
         -v ${RASTER_VISION_DATA_DIR}:/opt/data \
-        ${TENSORBOARD} ${AWS} ${JUPYTER} ${DOCS} ${DEBUG} \
-        ${IMAGE} "${CMD[@]}"
+        ${TENSORBOARD} \
+        ${AWS} \
+        ${JUPYTER} \
+        ${DOCS} \
+        ${DEBUG} \
+        ${IMAGE} \
+        "${CMD[@]}"
 fi
