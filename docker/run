@@ -46,6 +46,19 @@ All arguments after above options are passed to 'docker run'.
 "
 }
 
+# finds an unused port in a given range and assigns it to the FREE_PORT global
+# variable. Adapted from answers in:
+# https://unix.stackexchange.com/questions/55913/whats-the-easiest-way-to-find-an-unused-local-port
+function find_free_port_in_range() {
+    LOWER=$1
+    UPPER=$2
+    for (( PORT = $LOWER ; PORT <= $UPPER ; PORT++ ))
+    do
+        ss -lpn | grep -q ":$PORT " || break
+    done
+    FREE_PORT="$PORT"
+}
+
 IMAGE="raster-vision-pytorch"
 RASTER_VISION_DATA_DIR="${RASTER_VISION_DATA_DIR:-${REPO_ROOT}/data}"
 RASTER_VISION_NOTEBOOK_DIR="${RASTER_VISION_NOTEBOOK_DIR:-${REPO_ROOT}/notebooks}"
@@ -84,14 +97,18 @@ do
         shift
         ;;
         --jupyter)
-        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -p 8888:8888"
-        CMD=(jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root --notebook-dir=/opt/notebooks)
+        find_free_port_in_range 8888 9999
+        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -p $FREE_PORT:$FREE_PORT"
+        CMD=(jupyter notebook --ip 0.0.0.0 --port $FREE_PORT --no-browser --allow-root --notebook-dir=/opt/notebooks)
+        echo "Jupyter server will be started at 0.0.0.0:$FREE_PORT. This may take a few seconds."
         shift
         ;;
         --jupyter-lab)
-        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -v ${HOME}/.jupyter:/root/.jupyter:ro -p 8888:8888"
+        find_free_port_in_range 8888 9999
+        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -v ${HOME}/.jupyter:/root/.jupyter:ro -p $FREE_PORT:$FREE_PORT"
         # run jupyter lab in the background
-        CMD=(/bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root /opt/ & bash")
+        CMD=(/bin/bash -c "jupyter lab --ip 0.0.0.0 --port $FREE_PORT --no-browser --allow-root /opt/ & bash")
+        echo "Jupyter Lab server will be started at 0.0.0.0:$FREE_PORT. This may take a few seconds."
         shift
         ;;
         --docs)
