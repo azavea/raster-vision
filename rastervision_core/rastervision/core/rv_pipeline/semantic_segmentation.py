@@ -5,8 +5,7 @@ import numpy as np
 
 from rastervision.core.box import Box
 from rastervision.core.rv_pipeline.rv_pipeline import RVPipeline
-from rastervision.core.rv_pipeline.utils import (fill_no_data,
-                                                 nodata_below_threshold)
+from rastervision.core.rv_pipeline.utils import nodata_below_threshold
 from rastervision.core.rv_pipeline.semantic_segmentation_config import (
     SemanticSegmentationWindowMethod)
 
@@ -131,14 +130,6 @@ class SemanticSegmentation(RVPipeline):
 
     def get_train_labels(self, window, scene):
         return scene.label_source.get_labels(window=window)
-
-    def post_process_sample(self, sample):
-        # Use null label for each pixel with NODATA.
-        img = sample.chip
-        label_arr = sample.labels.get_label_arr(sample.window)
-        null_class_id = self.config.dataset.class_config.null_class_id
-        sample.chip = fill_no_data(img, label_arr, null_class_id)
-        return sample
 
     def post_process_batch(self, windows, chips, labels):
         # Fill in null class for any NODATA pixels.
