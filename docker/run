@@ -84,7 +84,8 @@ do
         shift # past argument
         ;;
         --tensorboard)
-        TENSORBOARD="-p 6006:6006"
+        find_free_port_in_range 6006 7007
+        TENSORBOARD="-p $FREE_PORT:$FREE_PORT"
         shift # past argument
         ;;
         --gpu)
@@ -112,7 +113,8 @@ do
         shift
         ;;
         --docs)
-        DOCS="-p 8000:8000"
+        find_free_port_in_range 8000 8100
+        DOCS="-p $FREE_PORT:$FREE_PORT"
         CMD=(/bin/bash -c "cd docs && make livehtml")
         shift
         ;;
