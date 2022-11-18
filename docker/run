@@ -36,7 +36,8 @@ Options:
 --aws forwards AWS credentials (sets AWS_PROFILE env var and mounts ~/.aws to /root/.aws)
 --tensorboard maps port 6006
 --name sets the name of the running container
---jupyter forwards port 8888, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
+--jupyter forwards a port, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter
+--jupyter-lab forwards a port, mounts RASTER_VISION_NOTEBOOK_DIR to /opt/notebooks, and runs Jupyter Lab
 --docs runs the docs server and forwards port 8000
 --debug forwards port 3000 for use with remote debugger
 --gpu use nvidia runtime
@@ -44,6 +45,19 @@ Options:
 
 All arguments after above options are passed to 'docker run'.
 "
+}
+
+# finds an unused port in a given range and assigns it to the FREE_PORT global
+# variable. Adapted from answers in:
+# https://unix.stackexchange.com/questions/55913/whats-the-easiest-way-to-find-an-unused-local-port
+function find_free_port_in_range() {
+    LOWER=$1
+    UPPER=$2
+    for (( PORT = $LOWER ; PORT <= $UPPER ; PORT++ ))
+    do
+        ss -lpn | grep -q ":$PORT " || break
+    done
+    FREE_PORT="$PORT"
 }
 
 IMAGE="raster-vision-pytorch"
@@ -71,7 +85,8 @@ do
         shift # past argument
         ;;
         --tensorboard)
-        TENSORBOARD="-p 6006:6006"
+        find_free_port_in_range 6006 7007
+        TENSORBOARD="-p $FREE_PORT:$FREE_PORT"
         shift # past argument
         ;;
         --gpu)
@@ -84,18 +99,23 @@ do
         shift
         ;;
         --jupyter)
-        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -p 8888:8888"
-        CMD=(jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root --notebook-dir=/opt/notebooks)
+        find_free_port_in_range 8888 9999
+        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -p $FREE_PORT:$FREE_PORT"
+        CMD=(jupyter notebook --ip 0.0.0.0 --port $FREE_PORT --no-browser --allow-root --notebook-dir=/opt/notebooks)
+        echo "Jupyter server will be started at 0.0.0.0:$FREE_PORT. This may take a few seconds."
         shift
         ;;
         --jupyter-lab)
-        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -v ${HOME}/.jupyter:/root/.jupyter:ro -p 8888:8888"
+        find_free_port_in_range 8888 9999
+        JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -v ${HOME}/.jupyter:/root/.jupyter:ro -p $FREE_PORT:$FREE_PORT"
         # run jupyter lab in the background
-        CMD=(/bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root /opt/ & bash")
+        CMD=(/bin/bash -c "jupyter lab --ip 0.0.0.0 --port $FREE_PORT --no-browser --allow-root /opt/ & bash")
+        echo "Jupyter Lab server will be started at 0.0.0.0:$FREE_PORT. This may take a few seconds."
         shift
         ;;
         --docs)
-        DOCS="-p 8000:8000"
+        find_free_port_in_range 8000 8100
+        DOCS="-p $FREE_PORT:$FREE_PORT"
         CMD=(/bin/bash -c "cd docs && make livehtml")
         shift
         ;;
@@ -118,10 +138,16 @@ fi
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
-    docker run ${RUNTIME} ${NAME} --rm --ipc=host -it \
+    docker run \
+        ${RUNTIME} ${NAME} --rm --ipc=host -it \
         -v "${HOME}"/.rastervision:/root/.rastervision \
         -v ${REPO_ROOT}/:/opt/src/ \
         -v ${RASTER_VISION_DATA_DIR}:/opt/data \
-        ${TENSORBOARD} ${AWS} ${JUPYTER} ${DOCS} ${DEBUG} \
-        ${IMAGE} "${CMD[@]}"
+        ${TENSORBOARD} \
+        ${AWS} \
+        ${JUPYTER} \
+        ${DOCS} \
+        ${DEBUG} \
+        ${IMAGE} \
+        "${CMD[@]}"
 fi
