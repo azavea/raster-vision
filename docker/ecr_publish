@@ -20,8 +20,7 @@ then
         usage
         exit
     fi
-
-    IMAGE_NAME="raster-vision-pytorch-amd64:latest"
+    IMAGE_NAME="raster-vision-pytorch:latest"
     ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
     AWS_REGION="us-east-1"
 
