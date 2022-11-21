@@ -8,9 +8,13 @@ fi
 
 function usage() {
     echo -n \
-         "Usage: $(basename "$0")
-Publishes raster-vision-pytorch image to ECR. Expects RV_ECR_IMAGE env var to be set to <ecr_repo_name>:<tag_name>
+         "Usage: $(basename "$0") [<options>]
 
+Publishes raster-vision-pytorch image to ECR.
+
+Expects the RV_ECR_IMAGE env var to be set to <ecr_repo_name>:<tag_name>
+
+Options:
 --arm64 will publish the ARM64 image
 "
 }

@@ -22,7 +22,7 @@ fi
 
 function usage() {
     echo -n \
-         "Usage: $(basename "$0") <options> <command>
+         "Usage: $(basename "$0") [<options>] [<additional docker run args>]
 
 Run a console in a Raster Vision Docker image locally.
 By default, the raster-vision-pytorch image is used in the CPU runtime.

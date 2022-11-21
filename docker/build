@@ -8,9 +8,11 @@ fi
 
 function usage() {
     echo -n \
-         "Usage: $(basename "$0")
+         "Usage: $(basename "$0") [<options>]
+
 Build Docker images.
 
+Options:
 --arm64 will build image for arm64 architecture
 "
 }
