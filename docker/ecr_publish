@@ -10,6 +10,8 @@ function usage() {
     echo -n \
          "Usage: $(basename "$0")
 Publishes raster-vision-pytorch image to ECR. Expects RV_ECR_IMAGE env var to be set to <ecr_repo_name>:<tag_name>
+
+--arm64 will publish the ARM64 image
 "
 }
 
@@ -21,6 +23,10 @@ then
         exit
     fi
     IMAGE_NAME="raster-vision-pytorch:latest"
+    if [ "${1:-}" = "--arm64" ]
+    then
+        IMAGE_NAME="raster-vision-pytorch-arm64:latest"
+    fi
     ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
     AWS_REGION="us-east-1"
 
