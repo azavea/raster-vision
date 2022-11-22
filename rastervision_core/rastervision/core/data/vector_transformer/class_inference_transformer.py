@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Dict, Optional
 from copy import deepcopy
+import logging
 
 from rastervision.core.data.vector_transformer import VectorTransformer
 from rastervision.core.data.vector_transformer.label_maker.filter import (
@@ -8,6 +9,8 @@ from rastervision.core.data.utils.geojson import features_to_geojson
 
 if TYPE_CHECKING:
     from rastervision.core.data import ClassConfig, CRSTransformer
+
+log = logging.getLogger(__name__)
 
 
 class ClassInferenceTransformer(VectorTransformer):
@@ -91,6 +94,7 @@ class ClassInferenceTransformer(VectorTransformer):
         rules apply and the default_class_id is None), the feature is dropped.
         """
         new_features = []
+        warned = False
         for feature in geojson['features']:
             class_id = self.infer_feature_class_id(
                 feature,
@@ -103,5 +107,13 @@ class ClassInferenceTransformer(VectorTransformer):
                 properties['class_id'] = class_id
                 feature['properties'] = properties
                 new_features.append(feature)
+            elif not warned:
+                log.warning(
+                    'ClassInferenceTransformer is dropping vector features because '
+                    'class_id cannot be inferred. To avoid this behavior, '
+                    'set default_class_id to a non-None value in '
+                    'ClassInferenceTransformer.')
+                warned = True
+
         new_geojson = features_to_geojson(new_features)
         return new_geojson
