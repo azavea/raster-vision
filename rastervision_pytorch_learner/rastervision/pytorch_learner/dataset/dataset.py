@@ -1,5 +1,6 @@
 from typing import Union, Optional, Tuple, Any, TypeVar
 from typing_extensions import Literal
+import logging
 
 import numpy as np
 import albumentations as A
@@ -13,6 +14,8 @@ from rastervision.pytorch_learner.learner_config import PosInt, NonNegInt
 from rastervision.pytorch_learner.dataset.transform import (TransformType,
                                                             TF_TYPE_TO_TF_FUNC)
 from rastervision.pytorch_learner.dataset.utils import AoiSampler
+
+log = logging.getLogger(__name__)
 
 
 class AlbumentationsDataset(Dataset):
@@ -51,7 +54,15 @@ class AlbumentationsDataset(Dataset):
 
     def __getitem__(self, key) -> Tuple[torch.Tensor, torch.Tensor]:
         val = self.orig_dataset[key]
-        x, y = self.transform(val)
+
+        try:
+            x, y = self.transform(val)
+        except Exception as exc:
+            log.warn(
+                'Many albumentations transforms require uint8 input. Therefore, we '
+                'recommend passing a MinMaxTransformer or StatsTransformer to the '
+                'RasterSource so the input will be converted to uint8.')
+            raise exc
 
         if self.normalize and np.issubdtype(x.dtype, np.unsignedinteger):
             max_val = np.iinfo(x.dtype).max
