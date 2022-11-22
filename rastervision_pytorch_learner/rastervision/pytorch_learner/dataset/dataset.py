@@ -31,8 +31,15 @@ class AlbumentationsDataset(Dataset):
 
         Args:
             orig_dataset (Any): An object with a __getitem__ and __len__.
-            transform (A.BasicTransform, optional): An Albumentations
-                transform. Defaults to None.
+            transform (A.BasicTransform, optional): Albumentations
+                transform to apply to the windows. Defaults to None.
+                Each transform in Albumentations takes images of type uint8, and
+                sometimes other data types. The data type requirements can be
+                seen at https://albumentations.ai/docs/api_reference/augmentations/transforms/ # noqa
+                If there is a mismatch between the data type of imagery and the
+                transform requirements, a RasterTransformer should be set
+                on the RasterSource that converts to uint8, such as
+                MinMaxTransformer or StatsTransformer.
             transform_type (TransformType): The type of transform so that its
                 inputs and outputs can be handled correctly. Defaults to
                 TransformType.noop.
@@ -108,6 +115,13 @@ class GeoDataset(AlbumentationsDataset):
             scene (Scene): A Scene object.
             transform (Optional[A.BasicTransform], optional): Albumentations
                 transform to apply to the windows. Defaults to None.
+                Each transform in Albumentations takes images of type uint8, and
+                sometimes other data types. The data type requirements can be
+                seen at https://albumentations.ai/docs/api_reference/augmentations/transforms/ # noqa
+                If there is a mismatch between the data type of imagery and the
+                transform requirements, a RasterTransformer should be set
+                on the RasterSource that converts to uint8, such as
+                MinMaxTransformer or StatsTransformer.
             transform_type (Optional[TransformType], optional): Type of
                 transform. Defaults to None.
             normalize (bool, optional): If True, x is normalized to [0, 1]
@@ -174,6 +188,13 @@ class SlidingWindowGeoDataset(GeoDataset):
                 paddiong is zero. Defaults to 'end'.
             transform (Optional[A.BasicTransform], optional): Albumentations
                 transform to apply to the windows. Defaults to None.
+                Each transform in Albumentations takes images of type uint8, and
+                sometimes other data types. The data type requirements can be
+                seen at https://albumentations.ai/docs/api_reference/augmentations/transforms/ # noqa
+                If there is a mismatch between the data type of imagery and the
+                transform requirements, a RasterTransformer should be set
+                on the RasterSource that converts to uint8, such as
+                MinMaxTransformer or StatsTransformer.
             transform_type (Optional[TransformType], optional): Type of
                 transform. Defaults to None.
         """
@@ -252,6 +273,13 @@ class RandomWindowGeoDataset(GeoDataset):
                 np.inf. Defaults to None.
             transform (Optional[A.BasicTransform], optional): Albumentations
                 transform to apply to the windows. Defaults to None.
+                Each transform in Albumentations takes images of type uint8, and
+                sometimes other data types. The data type requirements can be
+                seen at https://albumentations.ai/docs/api_reference/augmentations/transforms/ # noqa
+                If there is a mismatch between the data type of imagery and the
+                transform requirements, a RasterTransformer should be set
+                on the RasterSource that converts to uint8, such as
+                MinMaxTransformer or StatsTransformer.
             transform_type (Optional[TransformType], optional): Type of
                 transform. Defaults to None.
             max_sample_attempts (NonNegInt, optional): Max attempts when trying
