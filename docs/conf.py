@@ -139,6 +139,7 @@ nbsphinx_thumbnails = {
     # The _images dir is under build/html. This looks brittle but using the
     # more natural img/tensorboard.png path does not work.
     'tutorials/train': '_images/tensorboard.png',
+    'tutorials/lightning_workflow': '_images/lightning-logo.png',
 }
 nbsphinx_prolog = r"""
 {% set docpath = env.doc2path(env.docname, base=False) %}
@@ -333,7 +334,7 @@ html_favicon = 'img/raster-vision-icon.png'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['_static', 'img']
 
 # A list of CSS files. The entry must be a filename string or a tuple
 # containing the filename string and the attributes dictionary. The filename
