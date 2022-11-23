@@ -22,7 +22,7 @@ Each of these packages is contained in a separate ``setuptools``/``pip`` package
 
 The figure below shows the packages, the dependencies between them, and important base classes within each package.
 
-.. image:: img/rv-packages.png
+.. image:: /img/rv-packages.png
     :align: center
     :alt: The dependencies between Python packages in Raster Vision
 
@@ -42,19 +42,19 @@ Example 1: a simple pipeline
 
 A ``Pipeline`` in RV is a class which represents a sequence of commands with a shared configuration in the form of a ``PipelineConfig``. Here is a toy example of these two classes that saves a set of messages to disk, and then prints them all out.
 
-.. literalinclude:: ../rastervision_pipeline/rastervision/pipeline_example_plugin1/sample_pipeline.py
+.. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin1/sample_pipeline.py
     :language: python
     :caption: rastervision.pipeline_example_plugin1.sample_pipeline
 
 In order to run this, we need a separate Python file with a ``get_config()`` function which provides an instantiation of the ``SamplePipelineConfig``.
 
-.. literalinclude:: ../rastervision_pipeline/rastervision/pipeline_example_plugin1/config1.py
+.. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin1/config1.py
     :language: python
     :caption: rastervision.pipeline_example_plugin1.config1
 
 Finally, in order to package this code as a plugin, and make it usable within the Raster Vision framework, it needs to be in a package directly under the ``rastervision`` `namespace package <https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages>`_, and have a top-level ``__init__.py`` file with a certain structure.
 
-.. literalinclude:: ../rastervision_pipeline/rastervision/pipeline_example_plugin1/__init__.py
+.. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin1/__init__.py
     :language: python
     :caption: rastervision.pipeline_example_plugin1.__init__
 
@@ -83,13 +83,13 @@ Example 2: hierarchical config
 
 This example makes some small changes to the previous example, and shows how configurations can be built up hierarchically. However, the main purpose here is to lay the foundation for :ref:`example 3` which shows how to customize the configuration schema and behavior of this pipeline using a plugin. The changes to the previous example are highlighted with comments, but the overall effect  is to delegate making messages to a ``MessageMaker`` class with its own ``MessageMakerConfig`` including a ``greeting`` field.
 
-.. literalinclude:: ../rastervision_pipeline/rastervision/pipeline_example_plugin1/sample_pipeline2.py
+.. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin1/sample_pipeline2.py
     :language: python
     :caption: rastervision.pipeline_example_plugin1.sample_pipeline2
 
 We can configure the pipeline using:
 
-.. literalinclude:: ../rastervision_pipeline/rastervision/pipeline_example_plugin1/config2.py
+.. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin1/config2.py
     :language: python
     :caption: rastervision.pipeline_example_plugin1.config2
 
@@ -120,11 +120,11 @@ By writing a plugin (ie. a plugin to the existing plugin that was developed in t
 
 The code to implement the new configuration and behavior, and a sample configuration are below. (We omit the ``__init__.py`` file since it is similar to the one in the previous plugin.) Note that the new ``DeluxeMessageMakerConfig`` uses inheritance to extend the configuration schema.
 
-.. literalinclude:: ../rastervision_pipeline/rastervision/pipeline_example_plugin2/deluxe_message_maker.py
+.. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin2/deluxe_message_maker.py
     :language: python
     :caption: rastervision.pipeline_example_plugin2.deluxe_message_maker
 
-.. literalinclude:: ../rastervision_pipeline/rastervision/pipeline_example_plugin2/config3.py
+.. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin2/config3.py
     :language: python
     :caption: rastervision.pipeline_example_plugin2.config3
 

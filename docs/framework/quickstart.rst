@@ -39,7 +39,7 @@ The Data
 
     <div style="position: relative; padding-bottom: 56.25%; overflow: hidden; max-width: 100%;">
         <iframe 
-            src="_static/tiny-spacenet-map.html" 
+            src="../_static/tiny-spacenet-map.html" 
             frameborder="0" 
             allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
         </iframe>
@@ -50,7 +50,7 @@ Configuring a semantic segmentation pipeline
 
 Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to write a function called ``get_config`` that returns a ``SemanticSegmentationConfig`` object. This object's type is a subclass of ``PipelineConfig``, and configures a semantic segmentation pipeline which analyzes the imagery, creates training chips, trains a model, makes predictions on validation scenes, evaluates the predictions, and saves a model bundle.
 
-.. literalinclude:: ../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
+.. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
    :language: python
    :caption: tiny_spacenet.py
 
@@ -120,10 +120,10 @@ For example, to use a DeepLab/Resnet50 model that has been trained to do buildin
 This will make predictions on the image ``1929.tif`` using the provided model bundle, and will produce a file called ``predictions.tif``. These files are in GeoTiff format, and you will need a GIS viewer such as `QGIS <https://qgis.org/en/site/>`_ to open them correctly on your device. Notice that the prediction package and the input raster are transparently downloaded via HTTP.
 The input image (false color) and predictions are reproduced below.
 
-.. image:: img/vegas/1929.png
+.. image:: /img/vegas/1929.png
     :alt: The input image
 
-.. image:: img/vegas/predictions.png
+.. image:: /img/vegas/predictions.png
     :alt: The predictions
 
 .. seealso:: You can read more about the :ref:`model bundle <model bundle>` concept and the :ref:`predict cli command` CLI command in the documentation.

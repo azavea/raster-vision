@@ -7,7 +7,7 @@ Pipelines and Commands
 
 In addition to providing abstract :ref:`pipeline <rv pipelines>` functionality, Raster Vision provides a set of concrete pipelines for deep learning on remote sensing imagery including :class:`~rastervision.core.rv_pipeline.chip_classification.ChipClassification`, :class:`~rastervision.core.rv_pipeline.semantic_segmentation.SemanticSegmentation`, and :class:`~rastervision.core.rv_pipeline.object_detection.ObjectDetection`. These pipelines all derive from :class:`~rastervision.core.rv_pipeline.rv_pipeline.RVPipeline`, and are provided by the :mod:`rastervision.core` package. It's possible to customize these pipelines as well as create new ones from scratch, which is discussed in :ref:`customizing rv`.
 
-.. image:: img/cv-tasks.png
+.. image:: /img/cv-tasks.png
     :align: center
 
 Chip Classification
@@ -32,7 +32,7 @@ Each (subclass of) :class:`~rastervision.core.rv_pipeline.rv_pipeline.RVPipeline
 
 Each :class:`~rastervision.core.rv_pipeline.rv_pipeline_config.RVPipelineConfig` object specifies the details about how the commands within the pipeline will execute (ie. which files, what methods, what hyperparameters, etc.). In contrast, the :ref:`pipeline runner <runners>`, which actually executes the commands in the pipeline, is specified as an argument to the :ref:`cli`. The following diagram shows the hierarchy of the high level components comprising an :class:`~rastervision.core.rv_pipeline.rv_pipeline.RVPipeline`:
 
-.. image:: img/rvpipeline-diagram.png
+.. image:: /img/rvpipeline-diagram.png
     :align: center
 
 In the {{ tiny_spacenet }} example, the :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationConfig` is the last thing constructed and returned from the ``get_config`` function.
@@ -66,7 +66,7 @@ Commands
 
 The :class:`RVPipelines <rastervision.core.rv_pipeline.rv_pipeline.RVPipeline>` provide a sequence of commands, which are described below.
 
-.. image:: img/rv-pipeline-overview.png
+.. image:: /img/rv-pipeline-overview.png
     :align: center
 
 ANALYZE
@@ -170,7 +170,7 @@ A scene is composed of the following elements:
 * *Predicted labels*: a :class:`~rastervision.core.data.label_store.label_store.LabelStore` determines how to store and retrieve the predictions from a scene.
 * *AOIs* (Optional): An optional list of areas of interest that describes which sections of the scene imagery are exhaustively labeled. It is important to only create training chips from parts of the scenes that have been exhaustively labeled -- in other words, that have no missing labels.
 
-.. image:: img/scene-diagram.png
+.. image:: /img/scene-diagram.png
     :align: center
 
 In our {{ tiny_spacenet }} example, we configured the one training scene with a GeoTIFF URI and a GeoJSON URI.
