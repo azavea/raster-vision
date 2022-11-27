@@ -62,10 +62,15 @@ def log_system_details():
     # memory usage
     mem_stats = psutil.virtual_memory()._asdict()
     log.info(f'Total memory: {mem_stats["total"] / 2**30: .2f} GB')
+
     # disk usage
-    disk_stats = psutil.disk_usage('/opt/data')._asdict()
-    log.info(
-        f'Size of /opt/data volume: {disk_stats["total"] / 2**30: .2f} GB')
+    if os.path.isdir('/opt/data/'):
+        disk_stats = psutil.disk_usage('/opt/data')._asdict()
+        log.info(
+            f'Size of /opt/data volume: {disk_stats["total"] / 2**30: .2f} GB')
+    disk_stats = psutil.disk_usage('/')._asdict()
+    log.info(f'Size of / volume: {disk_stats["total"] / 2**30: .2f} GB')
+
     # python
     log.info(f'Python version: {sys.version}')
     # nvidia GPU

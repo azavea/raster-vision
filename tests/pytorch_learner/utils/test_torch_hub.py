@@ -1,6 +1,5 @@
 from typing import Callable
 import unittest
-from tempfile import TemporaryDirectory
 from os.path import join, exists
 from os import makedirs
 
@@ -10,6 +9,7 @@ from rastervision.pytorch_learner.utils.torch_hub import (
     _remove_dir, _repo_name_to_dir_name, _uri_to_dir_name,
     get_hubconf_dir_from_cfg, torch_hub_load_github, torch_hub_load_local,
     torch_hub_load_uri)
+from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.pytorch_learner import ExternalModuleConfig
 
 
@@ -21,7 +21,7 @@ class TestTorchHubUtils(unittest.TestCase):
             self.fail(msg)
 
     def test_remove_dir(self):
-        with TemporaryDirectory(dir='/opt/data/tmp') as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             dir_to_be_removed = join(tmp_dir, 'dir_to_be_removed')
             makedirs(dir_to_be_removed, exist_ok=True)
             _remove_dir(dir_to_be_removed)
@@ -67,7 +67,7 @@ class TestTorchHubUtils(unittest.TestCase):
         self.assertEqual(dir_name, 'repo')
 
     def test_torch_hub_load(self):
-        with TemporaryDirectory(dir='/opt/data/tmp') as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             # github
             hubconf_dir = join(tmp_dir, 'focal_loss')
             loss = torch_hub_load_github(
@@ -105,7 +105,7 @@ class TestTorchHubUtils(unittest.TestCase):
             del loss
 
         # torch_hub_load_uri, zip
-        with TemporaryDirectory(dir='/opt/data/tmp') as tmp_dir:
+        with get_tmp_dir() as tmp_dir:
             hubconf_dir = join(tmp_dir, 'focal_loss')
             loss = torch_hub_load_uri(
                 uri=
