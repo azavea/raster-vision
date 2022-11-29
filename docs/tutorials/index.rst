@@ -7,7 +7,6 @@ The following tutorials highlight many of the things you can do with Raster Visi
 
 .. nbgallery::
     :name: nbshpinx-gallery
-    :glob:
 
     reading_raster_data
     reading_vector_data

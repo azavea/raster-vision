@@ -8,3 +8,17 @@ article p.caption {
 .nboutput .prompt {
 	display: none;
 }
+
+/* restrict code-block height and add scroll-bars */
+pre {
+	max-height: 400px;
+	overflow: scroll;
+}
+
+/* make scrollbars thicker */
+.sidebar-scroll::-webkit-scrollbar,
+.toc-scroll::-webkit-scrollbar,
+article[role=main] ::-webkit-scrollbar {
+	height: 0.75rem !important;
+	width: 0.75rem !important;
+}
