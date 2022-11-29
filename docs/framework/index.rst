@@ -1,8 +1,5 @@
-Raster Vision as a framework
-============================
-
 The Raster Vision Pipeline
---------------------------
+==========================
 
 .. currentmodule:: rastervision
 
@@ -27,6 +24,7 @@ Pipelines are configured using a compositional, programmatic approach that makes
 .. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
     :language: python
     :caption: tiny_spacenet.py
+    :lines: 3-
 
 Raster Vision uses a ``unittest``-like method for executing pipelines. For instance, if the above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment on AWS Batch by running:
 

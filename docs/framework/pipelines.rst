@@ -37,27 +37,10 @@ Each :class:`~rastervision.core.rv_pipeline.rv_pipeline_config.RVPipelineConfig`
 
 In the {{ tiny_spacenet }} example, the :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationConfig` is the last thing constructed and returned from the ``get_config`` function.
 
-.. code-block:: python
-
-    chip_sz = 300
-
-    backend = PyTorchSemanticSegmentationConfig(
-        data=SemanticSegmentationGeoDataConfig(
-            scene_dataset=scene_dataset,
-            window_opts=GeoDataWindowConfig(
-                method=GeoDataWindowMethod.random,
-                size=chip_sz,
-                size_lims=(chip_sz, chip_sz + 1),
-                max_windows=10)),
-        model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
-        solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
-
-    return SemanticSegmentationConfig(
-        root_uri=root_uri,
-        dataset=scene_dataset,
-        backend=backend,
-        train_chip_sz=chip_sz,
-        predict_chip_sz=chip_sz)
+.. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
+    :language: python
+    :lines: 60-78
+    :dedent:
 
 .. seealso:: The :class:`~rastervision.core.rv_pipeline.chip_classification_config.ChipClassificationConfig`, :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationConfig`, and :class:`~rastervision.core.rv_pipeline.object_detection_config.ObjectDetectionConfig` API docs have more information on configuring pipelines.
 
@@ -123,18 +106,10 @@ Here are the PyTorch backends:
 
 In our {{ tiny_spacenet }} example, we configured the PyTorch semantic segmentation backend using:
 
-.. code-block:: python
-
-    backend = PyTorchSemanticSegmentationConfig(
-        data=SemanticSegmentationGeoDataConfig(
-            scene_dataset=scene_dataset,
-            window_opts=GeoDataWindowConfig(
-                method=GeoDataWindowMethod.random,
-                size=chip_sz,
-                size_lims=(chip_sz, chip_sz + 1),
-                max_windows=10)),
-        model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
-        solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
+.. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
+    :language: python
+    :lines: 62-71
+    :dedent:
 
 .. seealso:: The :mod:`rastervision.pytorch_backend` and :mod:`rastervision.pytorch_learner` API docs have more information on configuring backends.
 
@@ -147,16 +122,10 @@ A :class:`Dataset <rastervision.core.data.dataset_config.DatasetConfig>` contain
 
 In our {{ tiny_spacenet }} example, we configured the dataset with single scenes, though more often in real use cases you would use multiple scenes per split:
 
-.. code-block:: python
-
-    scene_dataset = DatasetConfig(
-        class_config=class_config,
-        train_scenes=[
-            make_scene('scene_205', train_image_uri, train_label_uri)
-        ],
-        validation_scenes=[
-            make_scene('scene_25', val_image_uri, val_label_uri)
-        ])
+.. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
+    :language: python
+    :lines: 50-57
+    :dedent:
 
 .. _scene:
 
@@ -175,34 +144,10 @@ A scene is composed of the following elements:
 
 In our {{ tiny_spacenet }} example, we configured the one training scene with a GeoTIFF URI and a GeoJSON URI.
 
-.. code-block:: python
-
-    def make_scene(scene_id: str, image_uri: str,
-                   label_uri: str) -> SceneConfig:
-        """
-        - The GeoJSON does not have a class_id property for each geom,
-          so it is inferred as 0 (ie. building) because the default_class_id
-          is set to 0.
-        - The labels are in the form of GeoJSON which needs to be rasterized
-          to use as label for semantic segmentation, so we use a RasterizedSource.
-        - The rasterizer set the background (as opposed to foreground) pixels
-          to 1 because background_class_id is set to 1.
-        """
-        raster_source = RasterioSourceConfig(
-            uris=[image_uri], channel_order=channel_order)
-        vector_source = GeoJSONVectorSourceConfig(
-            uri=label_uri,
-            ignore_crs_field=True,
-            transformers=[ClassInferenceTransformerConfig(default_class_id=0)])
-        label_source = SemanticSegmentationLabelSourceConfig(
-            raster_source=RasterizedSourceConfig(
-                vector_source=vector_source,
-                rasterizer_config=RasterizerConfig(background_class_id=1)))
-        return SceneConfig(
-            id=scene_id,
-            raster_source=raster_source,
-            label_source=label_source)
-
+.. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
+    :language: python
+    :lines: 24-48
+    :dedent:
 
 .. seealso:: The :class:`~rastervision.core.data.scene_config.SceneConfig` API docs.
 
