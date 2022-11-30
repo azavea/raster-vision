@@ -77,6 +77,8 @@ A :class:`~label_source.label_source.LabelSource` interprets the data read by ra
     - :class:`~label_source.semantic_segmentation_label_source.SemanticSegmentationLabelSource`
     - :class:`~label_source.object_detection_label_source.ObjectDetectionLabelSource`
 
+.. _usage_scene:
+
 Scene
 ~~~~~
 
@@ -193,6 +195,8 @@ The :class:`~label.labels.Labels` class is an in-memory representation of labels
 
       - :class:`~label.semantic_segmentation_labels.SemanticSegmentationDiscreteLabels`
       - :class:`~label.semantic_segmentation_labels.SemanticSegmentationSmoothLabels`
+
+.. _usage_label_store:
 
 LabelStore
 ~~~~~~~~~~

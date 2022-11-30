@@ -1,4 +1,5 @@
 {% set tiny_spacenet = '`tiny_spacenet.py <https://github.com/azavea/raster-vision/tree/' ~ version ~ '/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py>`__' %}
+{% set isprs_potsdam = '`isprs_potsdam.py <https://github.com/azavea/raster-vision/tree/' ~ version ~ '/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`__' %}
 
 .. _rv pipelines:
 
@@ -90,21 +91,150 @@ BUNDLE
 
 The BUNDLE command generates a model bundle from the output of the previous commands which contains a model file plus associated configuration data. A model bundle can be used to make predictions on new imagery using the :ref:`predict cli command` command.
 
+
+Pipeline components
+-------------------
+
+Below we describe some components of the pipeline that you might directly or indirectly configure.
+
+A lot of these will be familiar from :doc:`../usage/basics`, but note that when configuring a pipeline, instead of dealing with the classes directly, you will instead be configuring their ``Config`` counterparts.
+
+The following table shows the corresponding ``Configs`` for various commonly used classes.
+
+.. currentmodule:: rastervision.core
+
+.. list-table::
+   :header-rows: 1
+
+   * -  Class
+     -  Config
+     -  Notes
+   * -  :class:`~data.scene.Scene`
+     -  :class:`~data.scene_config.SceneConfig`
+     -  :ref:`notes <scene>`
+   * -  :class:`~data.raster_source.raster_source.RasterSource`
+
+
+        - :class:`~data.raster_source.rasterio_source.RasterioSource`
+        - :class:`~data.raster_source.multi_raster_source.MultiRasterSource`
+        - :class:`~data.raster_source.rasterized_source.RasterizedSource`
+
+     -  :class:`~data.raster_source.raster_source_config.RasterSourceConfig`
+
+        - :class:`~data.raster_source.rasterio_source_config.RasterioSourceConfig`
+        - :class:`~data.raster_source.multi_raster_source_config.MultiRasterSourceConfig`
+        - :class:`~data.raster_source.rasterized_source_config.RasterizedSourceConfig`
+
+     -  
+   * -  :class:`~data.raster_transformer.raster_transformer.RasterTransformer`
+
+        - :class:`~data.raster_transformer.cast_transformer.CastTransformer`
+        - :class:`~data.raster_transformer.min_max_transformer.MinMaxTransformer`
+        - :class:`~data.raster_transformer.nan_transformer.NanTransformer`
+        - :class:`~data.raster_transformer.reclass_transformer.ReclassTransformer`
+        - :class:`~data.raster_transformer.rgb_class_transformer.RGBClassTransformer`
+        - :class:`~data.raster_transformer.stats_transformer.StatsTransformer`
+
+     -  :class:`~data.raster_transformer.raster_transformer_config.RasterTransformerConfig`
+
+        - :class:`~data.raster_transformer.cast_transformer_config.CastTransformerConfig`
+        - :class:`~data.raster_transformer.min_max_transformer_config.MinMaxTransformerConfig`
+        - :class:`~data.raster_transformer.nan_transformer_config.NanTransformerConfig`
+        - :class:`~data.raster_transformer.reclass_transformer_config.ReclassTransformerConfig`
+        - :class:`~data.raster_transformer.rgb_class_transformer_config.RGBClassTransformerConfig`
+        - :class:`~data.raster_transformer.stats_transformer_config.StatsTransformerConfig`
+
+     -  
+   * -  :class:`~data.vector_source.vector_source.VectorSource`
+
+        - :class:`~data.vector_source.geojson_vector_source.GeoJSONVectorSource`
+
+     -  :class:`~data.vector_source.vector_source_config.VectorSourceConfig`
+
+        - :class:`~data.vector_source.geojson_vector_source_config.GeoJSONVectorSourceConfig`
+
+     -  
+   * -  :class:`~data.vector_transformer.vector_transformer.VectorTransformer`
+
+        - :class:`~data.vector_transformer.buffer_transformer.BufferTransformer`
+        - :class:`~data.vector_transformer.class_inference_transformer.ClassInferenceTransformer`
+        - :class:`~data.vector_transformer.shift_transformer.ShiftTransformer`
+
+     -  :class:`~data.vector_transformer.vector_transformer_config.VectorTransformerConfig`
+
+        - :class:`~data.vector_transformer.buffer_transformer_config.BufferTransformerConfig`
+        - :class:`~data.vector_transformer.class_inference_transformer_config.ClassInferenceTransformerConfig`
+        - :class:`~data.vector_transformer.shift_transformer_config.ShiftTransformerConfig`
+
+     -  
+   * -  :class:`~data.label_source.label_source.LabelSource`
+
+        - :class:`~data.label_source.chip_classification_label_source.ChipClassificationLabelSource`
+        - :class:`~data.label_source.semantic_segmentation_label_source.SemanticSegmentationLabelSource`
+        - :class:`~data.label_source.object_detection_label_source.ObjectDetectionLabelSource`
+
+     -  :class:`~data.label_source.label_source_config.LabelSourceConfig`
+
+        - :class:`~data.label_source.chip_classification_label_source_config.ChipClassificationLabelSourceConfig`
+        - :class:`~data.label_source.semantic_segmentation_label_source_config.SemanticSegmentationLabelSourceConfig`
+        - :class:`~data.label_source.object_detection_label_source_config.ObjectDetectionLabelSourceConfig`
+
+     -  
+   * -  :class:`~data.label_store.label_store.LabelStore`
+
+        - :class:`~data.label_store.chip_classification_geojson_store.ChipClassificationGeoJSONStore`
+        - :class:`~data.label_store.object_detection_geojson_store.ObjectDetectionGeoJSONStore`
+        - :class:`~data.label_store.semantic_segmentation_label_store.SemanticSegmentationLabelStore`
+
+     -  :class:`~data.label_store.label_store_config.LabelStoreConfig`
+
+        - :class:`~data.label_store.chip_classification_geojson_store_config.ChipClassificationGeoJSONStoreConfig`
+        - :class:`~data.label_store.object_detection_geojson_store_config.ObjectDetectionGeoJSONStoreConfig`
+        - :class:`~data.label_store.semantic_segmentation_label_store_config.SemanticSegmentationLabelStoreConfig`
+
+     -  :ref:`notes <label store>`
+   * -  :class:`~analyzer.analyzer.Analyzer`
+
+        - :class:`~analyzer.stats_analyzer.StatsAnalyzer`
+
+     -  :class:`~analyzer.analyzer_config.AnalyzerConfig`
+
+        - :class:`~analyzer.stats_analyzer_config.StatsAnalyzerConfig`
+
+     -  :ref:`notes <analyzer>`
+   * -  :class:`~evaluation.evaluator.Evaluator`
+
+        - :class:`~evaluation.chip_classification_evaluator.ChipClassificationEvaluator`
+        - :class:`~evaluation.semantic_segmentation_evaluator.SemanticSegmentationEvaluator`
+        - :class:`~evaluation.object_detection_evaluator.ObjectDetectionEvaluator`
+
+     -  :class:`~evaluation.evaluator_config.EvaluatorConfig`
+
+        - :class:`~evaluation.chip_classification_evaluator_config.ChipClassificationEvaluatorConfig`
+        - :class:`~evaluation.semantic_segmentation_evaluator_config.SemanticSegmentationEvaluatorConfig`
+        - :class:`~evaluation.object_detection_evaluator_config.ObjectDetectionEvaluatorConfig`
+
+     -  :ref:`notes <evaluator>`
+
 .. _backend:
 
 Backend
--------
+^^^^^^^
 
-The collection of :class:`RVPipelines <rastervision.core.rv_pipeline.rv_pipeline.RVPipeline>` use a "backend" abstraction inspired by `Keras <https://keras.io/backend/>`_, which makes it easier to customize the code for building and training models (including using Raster Vision with arbitrary deep learning libraries).
-Each backend is a subclass of :class:`~rastervision.core.backend.backend.Backend` and has methods for saving training chips, training models, and making predictions, and is configured with a :class:`Backend <rastervision.core.backend.backend_config.BackendConfig>`.
+.. currentmodule:: rastervision.core
+
+:class:`RVPipelines <rv_pipeline.rv_pipeline.RVPipeline>` use a "backend" abstraction inspired by `Keras <https://keras.io/backend/>`_, which makes it easier to customize the code for building and training models (including using Raster Vision with arbitrary deep learning libraries).
+Each backend is a subclass of :class:`~backend.backend.Backend` and has methods for saving training chips, training models, and making predictions, and is configured with a :class:`~Backend <backend.backend_config.BackendConfig>`.
 
 The :mod:`rastervision.pytorch_backend` plugin provides backends that are thin wrappers around the :mod:`rastervision.pytorch_learner` package, which does most of the heavy lifting of building and training models using `torch <https://pytorch.org/docs/stable/>`_ and `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_. (Note that :mod:`rastervision.pytorch_learner` is decoupled from :mod:`rastervision.pytorch_backend` so that it can be used in conjunction with :mod:`rastervision.pipeline` to write arbitrary computer vision pipelines that have nothing to do with remote sensing.)
 
 Here are the PyTorch backends:
 
-* The :class:`~rastervision.pytorch_backend.pytorch_chip_classification.PyTorchChipClassification` backend trains classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
-* The :class:`~rastervision.pytorch_backend.pytorch_object_detection.PyTorchObjectDetection` backend trains the Faster-RCNN model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
-* The :class:`~rastervision.pytorch_backend.pytorch_semantic_segmentation.PyTorchSemanticSegmentation` backend trains the DeepLabV3 model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+.. currentmodule:: rastervision.pytorch_backend
+
+* The :class:`~pytorch_chip_classification.PyTorchChipClassification` backend trains classification models from `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+* The :class:`~pytorch_object_detection.PyTorchObjectDetection` backend trains the Faster-RCNN model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
+* The :class:`~pytorch_semantic_segmentation.PyTorchSemanticSegmentation` backend trains the DeepLabV3 model in `torchvision <https://pytorch.org/docs/stable/torchvision/index.html>`_.
 
 In our {{ tiny_spacenet }} example, we configured the PyTorch semantic segmentation backend using:
 
@@ -117,10 +247,12 @@ In our {{ tiny_spacenet }} example, we configured the PyTorch semantic segmentat
 
 .. _dataset:
 
-Dataset
--------
+DatasetConfig
+^^^^^^^^^^^^^
 
-A :class:`Dataset <rastervision.core.data.dataset_config.DatasetConfig>` contains the `training, validation, and test splits <https://en.wikipedia.org/wiki/Training,_test,_and_validation_sets>`_ needed to train and evaluate a model. Each dataset split is a list of :class:`Scenes <rastervision.core.data.scene_config.SceneConfig>`.
+.. currentmodule:: rastervision.core.data
+
+A :class:`~dataset_config.DatasetConfig` defines the `training, validation, and test splits <https://en.wikipedia.org/wiki/Training,_test,_and_validation_sets>`_ needed to train and evaluate a model. Each dataset split is a list of `SceneConfigs <SceneConfig>`_.
 
 In our {{ tiny_spacenet }} example, we configured the dataset with single scenes, though more often in real use cases you would use multiple scenes per split:
 
@@ -132,17 +264,16 @@ In our {{ tiny_spacenet }} example, we configured the dataset with single scenes
 .. _scene:
 
 Scene
------
+^^^^^
 
-A scene is composed of the following elements:
+.. currentmodule:: rastervision.core.data
 
-* *Imagery*: a :class:`~rastervision.core.data.raster_source.raster_source.RasterSource` represents a large scene image, which can be made up of multiple sub-images or a single file.
-* *Ground truth labels*: a :class:`~rastervision.core.data.label_source.label_source.LabelSource` represents ground-truth task-specific labels.
-* *Predicted labels*: a :class:`~rastervision.core.data.label_store.label_store.LabelStore` determines how to store and retrieve the predictions from a scene.
+A :ref:`usage_scene` is configured via a :class:`~scene_config.SceneConfig` which is composed of the following elements:
+
+* *Imagery*: a :class:`~raster_source.raster_source_config.RasterSourceConfig` represents a large scene image, which can be made up of multiple sub-images or a single file.
+* *Ground truth labels*: a :class:`~label_source.label_source_config.LabelSourceConfig` represents ground-truth task-specific labels.
+* *Predicted labels* (Optional): a :class:`~label_store.label_store_config.LabelStoreConfig` specifies how to store and retrieve the predictions from a scene.
 * *AOIs* (Optional): An optional list of areas of interest that describes which sections of the scene imagery are exhaustively labeled. It is important to only create training chips from parts of the scenes that have been exhaustively labeled -- in other words, that have no missing labels.
-
-.. image:: /img/scene-diagram.png
-    :align: center
 
 In our {{ tiny_spacenet }} example, we configured the one training scene with a GeoTIFF URI and a GeoJSON URI.
 
@@ -151,81 +282,17 @@ In our {{ tiny_spacenet }} example, we configured the one training scene with a 
     :lines: 24-48
     :dedent:
 
-.. seealso:: The :class:`~rastervision.core.data.scene_config.SceneConfig` API docs.
-
-.. _raster source:
-
-RasterSource
-------------
-
-A :class:`~rastervision.core.data.raster_source.raster_source.RasterSource` represents a source of raster data for a scene, and has subclasses for various data sources. They are used to retrieve small windows of raster data from larger scenes. You can also set a subset of channels (i.e. bands) that you want to use and their order. For example, satellite imagery often contains more than three channels, but pretrained models trained on datasets like Imagenet only support three (RGB) input channels. In order to cope with this situation, we can select three of the channels to utilize.
-
-RasterioSource
-^^^^^^^^^^^^^^
-
-Any images that can be read by `GDAL/Rasterio <https://www.gdal.org/formats_list.html>`_ can be handled by the :class:`~rastervision.core.data.raster_source.rasterio_source.RasterioSource`. This includes georeferenced imagery such as GeoTIFFs. If there are multiple image files that cover a single scene, you can pass the corresponding list of URIs, and read from the :class:`~rastervision.core.data.raster_source.raster_source.RasterSource` as if it were a single stitched-together image.
-
-The :class:`~rastervision.core.data.raster_source.raster_source.RasterSource` can also read non-georeferenced images such as ``.tif``, ``.png``, and ``.jpg`` files. This is useful for oblique drone imagery, biomedical imagery, and any other (potentially massive!) non-georeferenced images.
-
-RasterizedSource
-^^^^^^^^^^^^^^^^
-
-Semantic segmentation labels stored as polygons in a :class:`~rastervision.core.data.vector_source.vector_source.VectorSource` can be rasterized and read using a :class:`~rastervision.core.data.raster_source.rasterized_source.RasterizedSource`. This is a slightly unusual use of a :class:`~rastervision.core.data.raster_source.raster_source.RasterSource` as we're using it to read labels, and not images to use as input to a model.
-
-.. seealso:: The :class:`~rastervision.core.data.raster_source.rasterio_source_config.RasterioSourceConfig` and :class:`~rastervision.core.data.raster_source.rasterized_source_config.RasterizedSourceConfig` API docs.
-
-MultiRasterSource
-^^^^^^^^^^^^^^^^^
-
-A :class:`~rastervision.core.data.raster_source.raster_source.RasterSource` that combines multiple sub-:class:`RasterSources <rastervision.core.data.raster_source.raster_source.RasterSource>` by concatenating their outputs along the channel dimension (assumed to be the last dimension). This may be used, for example, to get RGB channels of a scene from one file and the elevation map of the same scene from another file, and then concatenate them together.
-
-.. seealso:: The :class:`~rastervision.core.data.raster_source.multi_raster_source_config.MultiRasterSourceConfig` API docs.
-
-.. _raster transformer:
-
-RasterTransformer
------------------
-
-A :class:`RasterTransformers <rastervision.core.data.raster_transformer.raster_transformer.RasterTransformer>` is a mechanism for transforming raw raster data into a form that is more suitable for being fed into a model.
-
-StatsTransformer
-^^^^^^^^^^^^^^^^
-
-This transformer is used to convert non-uint8 values to uint8 using statistics computed by the :ref:`stats analyzer`.
-
-.. seealso:: The :class:`~rastervision.core.data.raster_transformer.stats_transformer_config.StatsTransformerConfig` API docs.
-
-VectorSource
-------------
-
-A :class:`~rastervision.core.data.vector_source.vector_source.VectorSource` supports reading vector data like polygons and lines from various places. It is used by :class:`~rastervision.core.data.label_source.object_detection_label_source.ObjectDetectionLabelSource` and :class:`~rastervision.core.data.label_source.chip_classification_label_source.ChipClassificationLabelSource`, as well as the :class:`~rastervision.core.data.raster_source.rasterized_source.RasterizedSource` (a type of :class:`~rastervision.core.data.raster_source.raster_source.RasterSource`).
-
-GeoJSONVectorSource
-^^^^^^^^^^^^^^^^^^^
-
-This vector source reads GeoJSON files.
-
-.. seealso:: The :class:`~rastervision.core.data.vector_source.geojson_vector_source_config.GeoJSONVectorSourceConfig` API docs.
-
-.. _label source:
-
-LabelSource
------------
-
-A :class:`~rastervision.core.data.label_source.label_source.LabelSource` supports reading ground truth labels for a scene in the form of vectors or rasters.
-There are subclasses for different tasks and data formats. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes.
-
-.. seealso:: The :class:`~rastervision.core.data.label_source.chip_classification_label_source_config.ChipClassificationLabelSourceConfig`, :class:`~rastervision.core.data.label_source.semantic_segmentation_label_source_config.SemanticSegmentationLabelSourceConfig`, and :class:`~rastervision.core.data.label_source.object_detection_label_source_config.ObjectDetectionLabelSourceConfig` API docs.
-
 .. _label store:
 
 LabelStore
 ^^^^^^^^^^
 
-A :class:`~rastervision.core.data.label_store.label_store.LabelStore` supports reading and writing predicted labels for a scene. There are subclasses for different tasks and data formats. They are used for saving predictions and then loading them during evaluation.
+.. currentmodule:: rastervision.core.data.label_store
 
-In the {{ tiny_spacenet }} example, there is no explicit :class:`~rastervision.core.data.label_store.LabelStore` configured on the validation scene, because it can be inferred from the type of :class:`~rastervision.core.rv_pipeline.rv_pipeline_config.RVPipelineConfig` it is part of.
-In the ISPRS Potsdam example, the following code is used to explicitly create a :class:`~rastervision.core.data.label_store.LabelStore` that writes out the predictions in "RGB" format, where the color of each pixel represents the class, and predictions of class 0 (ie. car) are also written out as polygons.
+A :ref:`usage_label_store` is configured via a :class:`~label_store_config.LabelStoreConfig`.
+
+In the {{ tiny_spacenet }} example, there is no explicit :class:`~label_store.LabelStore` configured on the validation scene, because it can be inferred from the type of :class:`~rastervision.core.rv_pipeline.rv_pipeline_config.RVPipelineConfig` it is part of.
+In the {{ isprs_potsdam }} example, the following code is used to explicitly create a :class:`~label_store_config.LabelStoreConfig` that, in turn, will be used to create a :class:`~label_store.LabelStore` that writes out the predictions in "RGB" format, where the color of each pixel represents the class, and predictions of class 0 (ie. car) are also written out as polygons.
 
 .. code-block:: python
 
@@ -238,25 +305,20 @@ In the ISPRS Potsdam example, the following code is used to explicitly create a 
         label_source=label_source,
         label_store=label_store)
 
-.. seealso:: The :class:`~rastervision.core.data.label_store.chip_classification_geojson_store_config.ChipClassificationGeoJSONStoreConfig`, :class:`~rastervision.core.data.label_store.semantic_segmentation_label_store_config.SemanticSegmentationLabelStoreConfig`, and :class:`~rastervision.core.data.label_store.object_detection_geojson_store_config.ObjectDetectionGeoJSONStoreConfig` API docs.
-
 .. _analyzer:
 
-Analyzers
----------
+Analyzer
+^^^^^^^^
 
-Analyzers are used to gather dataset-level statistics and metrics for use in downstream processes. Typically, you won't need to explicitly configure any.
+.. currentmodule:: rastervision.core.analyzer
 
-.. _stats analyzer:
-
-StatsAnalyzer
-^^^^^^^^^^^^^
-
-Currently the only analyzer available is the :class:`~rastervision.core.analyzer.stats_analyzer.StatsAnalyzer`, which determines the distribution of values over the imagery in order to normalize values to ``uint8`` values in a :class:`~rastervision.core.data.raster_transformer.stats_transformer.StatsTransformer`.
+:class:`Analyzers <analyzer.Analyzer>`, configured via :class:`AnalyzerConfigs <analyzer_config.AnalyzerConfig>`, are used to gather dataset-level statistics and metrics for use in downstream processes. Typically, you won't need to explicitly configure any.
 
 .. _evaluator:
 
-Evaluators
-----------
+Evaluator
+^^^^^^^^^
 
-For each computer vision task, there is an evaluator that computes metrics for a trained model. It does this by measuring the discrepancy between ground truth and predicted labels for a set of validation scenes. Typically, you won't need to explicitly configure any.
+.. currentmodule:: rastervision.core.evaluation
+
+For each computer vision task, there is an :class:`~evaluator.Evaluator` (configured via the corresponding :class:`~evaluator_config.EvaluatorConfig`) that computes metrics for a trained model. It does this by measuring the discrepancy between ground truth and predicted labels for a set of validation scenes. Typically, you won't need to explicitly configure any.
