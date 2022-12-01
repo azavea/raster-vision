@@ -22,7 +22,7 @@
     Getting started <setup>
     Usage <usage/index>
     framework/index
-    documentation
+    api_reference/index
     Contributing <CONTRIBUTING>
 
 

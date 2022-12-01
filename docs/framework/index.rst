@@ -1,7 +1,19 @@
 The Raster Vision Pipeline
 ==========================
 
-.. currentmodule:: rastervision
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+
+    quickstart
+    cli
+    pipelines
+    examples
+    runners
+    architecture
+    bootstrap
+    cloudformation
+    misc
 
 Raster Vision allows engineers to quickly and repeatably configure **pipelines** that go through core components of a machine learning workflow: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
 
@@ -33,15 +45,3 @@ Raster Vision uses a ``unittest``-like method for executing pipelines. For insta
     > rastervision run batch tiny_spacenet.py
 
 See the :ref:`quickstart` for a more complete description of using this example.
-
-.. toctree::
-    :maxdepth: 2
-    :hidden:
-
-    quickstart
-    cli
-    pipelines
-    examples
-    runners
-    architecture
-    bootstrap
