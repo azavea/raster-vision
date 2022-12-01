@@ -41,7 +41,7 @@ An alternative approach for running Raster Vision is to use the provided :ref:`d
 Install individual pip packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Raster Vision is comprised of a required :mod:`rastervision.pipeline` package, and a number of optional plugin packages, as described in :ref:`codebase overview`. Each of these packages have their own dependencies, and can be installed individually. Running the following command:
+Raster Vision comprises a required :mod:`rastervision.pipeline` package, plus a number of optional plugin packages, as described in :ref:`codebase overview`. Each of these packages have their own dependencies, and can be installed individually. Running the following command:
 
 .. code-block:: console
 
