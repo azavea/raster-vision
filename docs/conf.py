@@ -138,8 +138,8 @@ sphinx_gallery_conf = {
 nbsphinx_thumbnails = {
     # The _images dir is under build/html. This looks brittle but using the
     # more natural img/tensorboard.png path does not work.
-    'tutorials/train': '_images/tensorboard.png',
-    'tutorials/lightning_workflow': '_images/lightning-logo.png',
+    'usage/tutorials/train': '_images/tensorboard.png',
+    'usage/tutorials/lightning_workflow': '_images/lightning-logo.png',
 }
 nbsphinx_prolog = r"""
 {% set docpath = env.doc2path(env.docname, base=False) %}

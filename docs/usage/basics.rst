@@ -24,6 +24,8 @@ When using Raster Vision :ref:`as a library <usage_library>`, users generally do
 
 Below, we briefly describe each of the components shown in the diagram above.
 
+.. _usage_raster_source:
+
 RasterSource
 ~~~~~~~~~~~~
 

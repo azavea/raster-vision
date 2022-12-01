@@ -14,6 +14,8 @@ Users can use Raster Vision in a couple of different ways depending on their nee
 * :ref:`As a library <_usage_library>` of utilities for handling geospatial data and training deep learning models that you can incorporate into your own code.
 * :ref:`As a low-code framework <_usage_framework>` in the form of the :doc:`Raster Vision Pipeline <../framework/index>` that internally handles all aspects of the training workflow for you and only requires you to configure a few parameters.
 
+.. _usage_library:
+
 As a library
 ------------
 
@@ -30,6 +32,7 @@ This allows you to pick and choose which parts of Raster Vision to use. For exam
         size=200,
         stride=100)
 
+.. _usage_framework:
 
 As a framework
 --------------
