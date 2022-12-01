@@ -9,7 +9,7 @@ geopandas==0.12.0
 numpy==1.23.3
 pillow==9.3.0
 pyproj==3.4.0
-rasterio==1.3.2
+rasterio==1.3.4
 imageio==2.22.1
 pystac==1.6.1
 scikit-learn==1.1.2
