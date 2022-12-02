@@ -20,6 +20,7 @@
 
     why
     Getting started <setup>
+    Usage <usage/index>
     framework/index
     documentation
     Contributing <CONTRIBUTING>

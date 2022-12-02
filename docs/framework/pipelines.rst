@@ -25,6 +25,8 @@ Semantic Segmentation
 
 In semantic segmentation, the goal is to predict the class of each pixel in a scene. This task requires the highest labeling effort, but also provides the most spatially precise predictions. Like object detection, these models take longer to train than chip classification models.
 
+.. _configuring rvpipelines:
+
 Configuring RVPipelines
 -----------------------
 
