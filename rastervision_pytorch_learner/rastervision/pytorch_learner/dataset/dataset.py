@@ -142,7 +142,7 @@ class GeoDataset(AlbumentationsDataset):
         raise NotImplementedError()
 
     @classmethod
-    def from_uris(cls, *args, **kwargs):
+    def from_uris(cls, *args, **kwargs) -> 'GeoDataset':
         raise NotImplementedError()
 
 

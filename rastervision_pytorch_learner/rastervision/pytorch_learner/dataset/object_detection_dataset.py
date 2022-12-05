@@ -63,9 +63,9 @@ class ObjectDetectionImageDataset(ImageDataset):
 
 
 def make_od_geodataset(cls,
-                       class_config: 'ClassConfig',
                        image_uri: Union[str, List[str]],
                        label_vector_uri: Optional[str] = None,
+                       class_config: Optional['ClassConfig'] = None,
                        aoi_uri: Union[str, List[str]] = [],
                        label_vector_default_class_id: Optional[int] = None,
                        image_raster_source_kw: dict = {},
@@ -78,11 +78,12 @@ def make_od_geodataset(cls,
     recommended to use the default constructor.
 
     Args:
-        class_config (ClassConfig): The ClassConfig.
         image_uri (Union[str, List[str]]): URI or list of URIs of GeoTIFFs to
             use as the source of image data.
         label_vector_uri (Optional[str], optional):  URI of GeoJSON file to use
             as the source of segmentation label data. Defaults to None.
+        class_config (Optional['ClassConfig']): The ClassConfig. Can be None if
+            not using any labels.
         aoi_uri (Union[str, List[str]], optional): URI or list of URIs of
             GeoJSONs that specify the area-of-interest. If provided, the
             dataset will only access data from this area. Defaults to [].
@@ -111,9 +112,9 @@ def make_od_geodataset(cls,
         An instance of this GeoDataset subclass.
     """
     scene = make_od_scene(
-        class_config=class_config,
         image_uri=image_uri,
         label_vector_uri=label_vector_uri,
+        class_config=class_config,
         aoi_uri=aoi_uri,
         label_vector_default_class_id=label_vector_default_class_id,
         image_raster_source_kw=image_raster_source_kw,

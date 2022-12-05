@@ -77,10 +77,10 @@ class SemanticSegmentationImageDataset(ImageDataset):
 
 def make_ss_geodataset(
         cls,
-        class_config: 'ClassConfig',
         image_uri: Union[str, List[str]],
         label_raster_uri: Optional[Union[str, List[str]]] = None,
         label_vector_uri: Optional[str] = None,
+        class_config: Optional['ClassConfig'] = None,
         aoi_uri: Union[str, List[str]] = [],
         label_vector_default_class_id: Optional[int] = None,
         image_raster_source_kw: dict = {},
@@ -93,7 +93,6 @@ def make_ss_geodataset(
     recommended to use the default constructor.
 
     Args:
-        class_config (ClassConfig): The ClassConfig.
         image_uri (Union[str, List[str]]): URI or list of URIs of GeoTIFFs to
             use as the source of image data.
         label_raster_uri (Optional[Union[str, List[str]]], optional): URI or
@@ -103,6 +102,8 @@ def make_ss_geodataset(
         label_vector_uri (Optional[str], optional):  URI of GeoJSON file to use
             as the source of segmentation label data. If the labels are in the
             form of GeoTIFFs, use label_raster_uri instead. Defaults to None.
+        class_config (Optional['ClassConfig']): The ClassConfig. Can be None if
+            not using any labels.
         aoi_uri (Union[str, List[str]], optional): URI or list of URIs of
             GeoJSONs that specify the area-of-interest. If provided, the
             dataset will only access data from this area. Defaults to [].
@@ -133,10 +134,10 @@ def make_ss_geodataset(
         An instance of this GeoDataset subclass.
     """
     scene = make_ss_scene(
-        class_config=class_config,
         image_uri=image_uri,
         label_raster_uri=label_raster_uri,
         label_vector_uri=label_vector_uri,
+        class_config=class_config,
         aoi_uri=aoi_uri,
         label_vector_default_class_id=label_vector_default_class_id,
         image_raster_source_kw=image_raster_source_kw,
