@@ -244,10 +244,10 @@ class RandomWindowGeoDataset(GeoDataset):
 
     def __init__(self,
                  scene: Scene,
+                 out_size: Optional[Union[PosInt, Tuple[PosInt, PosInt]]],
                  size_lims: Optional[Tuple[PosInt, PosInt]] = None,
                  h_lims: Optional[Tuple[PosInt, PosInt]] = None,
                  w_lims: Optional[Tuple[PosInt, PosInt]] = None,
-                 out_size: Union[PosInt, Tuple[PosInt, PosInt]] = None,
                  padding: Optional[Union[NonNegInt, Tuple[NonNegInt,
                                                           NonNegInt]]] = None,
                  max_windows: Optional[NonNegInt] = None,
@@ -266,18 +266,17 @@ class RandomWindowGeoDataset(GeoDataset):
 
         Args:
             scene (Scene): A Scene object.
+            out_size (Optional[Union[PosInt, Tuple[PosInt, PosInt]]]]): Resize
+                windows to this size before returning. This is to aid in
+                collating the windows into a batch. If None, windows are
+                returned without being normalized or converted to pytorch, and
+                will be of different sizes in successive reads.
             size_lims (Optional[Tuple[PosInt, PosInt]]): Interval from which to
                 sample window size.
             h_lims (Optional[Tuple[PosInt, PosInt]]): Interval from which to
                 sample window height.
             w_lims (Optional[Tuple[PosInt, PosInt]]): Interval from which to
                 sample window width.
-            out_size (Union[PosInt, Tuple[PosInt, PosInt]], optional): Resize
-                windows to this size before returning. This is to aid in
-                collating the windows into a batch. If None, windows are
-                returned without being normalized or converted to pytorch, and
-                will be of different sizes in successive reads.
-                Defaults to None.
             padding (Optional[Union[NonNegInt, Tuple[NonNegInt, NonNegInt]]]):
                 How many pixels the windows are allowed to overflow the sides
                 of the raster source. If None, padding = size.
@@ -289,7 +288,7 @@ class RandomWindowGeoDataset(GeoDataset):
                 transform to apply to the windows. Defaults to None.
                 Each transform in Albumentations takes images of type uint8, and
                 sometimes other data types. The data type requirements can be
-                seen at https://albumentations.ai/docs/api_reference/augmentations/transforms/ # noqa
+                seen at https://albumentations.ai/docs/api_reference/augmentations/transforms/
                 If there is a mismatch between the data type of imagery and the
                 transform requirements, a RasterTransformer should be set
                 on the RasterSource that converts to uint8, such as
@@ -316,7 +315,7 @@ class RandomWindowGeoDataset(GeoDataset):
                 based on its data type. Defaults to True.
             to_pytorch (bool, optional): If True, x and y are converted to
                 pytorch tensors. Defaults to True.
-        """
+        """ # noqa
         has_size_lims = size_lims is not None
         has_h_lims = h_lims is not None
         has_w_lims = w_lims is not None
