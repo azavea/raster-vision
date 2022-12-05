@@ -1,5 +1,5 @@
-{% set tiny_spacenet = '`tiny_spacenet.py <https://github.com/azavea/raster-vision/tree/' ~ version ~ '/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py>`__' %}
-{% set isprs_potsdam = '`isprs_potsdam.py <https://github.com/azavea/raster-vision/tree/' ~ version ~ '/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`__' %}
+{% set tiny_spacenet = '`tiny_spacenet.py <' ~ repo_examples ~ '/tiny_spacenet.py>`__' %}
+{% set isprs_potsdam = '`isprs_potsdam.py <' ~ repo_examples ~ '/semantic_segmentation/isprs_potsdam.py>`__' %}
 
 .. _rv pipelines:
 

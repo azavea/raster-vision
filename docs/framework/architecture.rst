@@ -39,7 +39,7 @@ Writing pipelines and plugins
 
 In this section, we explain the most important aspects of the ``rastervision.pipeline`` package through a series of examples which incrementally build on one another. These examples show how to write custom pipelines and configuration schemas, how to customize an existing pipeline, and how to package the code as a plugin.
 
-The full source code for Examples 1 and 2 is in `rastervision.pipeline_example_plugin1 <https://github.com/azavea/raster-vision/tree/{{ version }}/rastervision_pipeline/rastervision/pipeline_example_plugin1>`_ and Example 3 is in `rastervision.pipeline_example_plugin2 <https://github.com/azavea/raster-vision/tree/{{ version }}/rastervision_pipeline/rastervision/pipeline_example_plugin2>`_ and they can be run from inside the RV Docker image. However, **note that new plugins are typically created in a separate repo and Docker image**, and :ref:`bootstrap` shows how to do this.
+The full source code for Examples 1 and 2 is in `rastervision.pipeline_example_plugin1 <{{ repo }}/rastervision_pipeline/rastervision/pipeline_example_plugin1>`_ and Example 3 is in `rastervision.pipeline_example_plugin2 <{{ repo }}/rastervision_pipeline/rastervision/pipeline_example_plugin2>`_ and they can be run from inside the RV Docker image. However, **note that new plugins are typically created in a separate repo and Docker image**, and :ref:`bootstrap` shows how to do this.
 
 .. _example 1:
 

@@ -301,11 +301,16 @@ html_theme_options = {
 # A dictionary of values to pass into the template engine’s context for all
 # pages. Single values can also be put in this dictionary using the -A
 # command-line option of sphinx-build.
-#
+
 # yapf: disable
 html_context = dict(
     version=version,
     release=release,
+    # yes, strictly speaking, we should have both a tree/ URL for directories
+    # and a blob/ URL for files, but GitHub doesn't seem to mind if they are
+    # interchanged.
+    repo=f'https://github.com/azavea/raster-vision/tree/{version}',
+    repo_examples=f'https://github.com/azavea/raster-vision/tree/{version}/rastervision_pytorch_backend/rastervision/pytorch_backend/examples', # noqa
     s3_model_zoo=f'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-{version}', # noqa
 )
 # yapf: enable
