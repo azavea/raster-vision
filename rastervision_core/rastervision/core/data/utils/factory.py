@@ -15,7 +15,8 @@ def make_ss_scene(image_uri: Union[str, List[str]],
                   label_vector_default_class_id: Optional[int] = None,
                   image_raster_source_kw: dict = {},
                   label_raster_source_kw: dict = {},
-                  label_vector_source_kw: dict = {}) -> 'Scene':
+                  label_vector_source_kw: dict = {},
+                  scene_id: Optional[str] = None) -> 'Scene':
     """Create a semantic segmentation scene from image and label URIs.
 
     This is a convenience method. For more fine-grained control, it is
@@ -53,6 +54,8 @@ def make_ss_scene(image_uri: Union[str, List[str]],
             to the GeoJSONVectorSource used for label data, if label_vector_uri
             is used. See docs for GeoJSONVectorSource for more details.
             Defaults to {}.
+        scene_id (Optional[str]): Optional scene ID. If None, will be randomly
+            generated. Defaults to None.
 
     Raises:
         ValueError: If both label_raster_uri and label_vector_uri are
@@ -113,7 +116,7 @@ def make_ss_scene(image_uri: Union[str, List[str]],
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(
-        id=uuid4(),
+        id=uuid4() if scene_id is None else scene_id,
         raster_source=raster_source,
         label_source=label_source,
         aoi_polygons=aoi_polygons)
@@ -128,7 +131,8 @@ def make_cc_scene(image_uri: Union[str, List[str]],
                   label_vector_default_class_id: Optional[int] = None,
                   image_raster_source_kw: dict = {},
                   label_vector_source_kw: dict = {},
-                  label_source_kw: dict = {}) -> 'Scene':
+                  label_source_kw: dict = {},
+                  scene_id: Optional[str] = None) -> 'Scene':
     """Create a chip classification scene from image and label URIs.
 
     This is a convenience method. For more fine-grained control, it is
@@ -165,6 +169,8 @@ def make_cc_scene(image_uri: Union[str, List[str]],
             Defaults to {}.
         **kwargs: All other keyword args are passed to the default constructor
             for this class.
+        scene_id (Optional[str]): Optional scene ID. If None, will be randomly
+            generated. Defaults to None.
 
     Returns:
         Scene: A chip classification scene.
@@ -203,7 +209,7 @@ def make_cc_scene(image_uri: Union[str, List[str]],
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(
-        id=uuid4(),
+        id=uuid4() if scene_id is None else scene_id,
         raster_source=raster_source,
         label_source=label_source,
         aoi_polygons=aoi_polygons)
@@ -218,7 +224,8 @@ def make_od_scene(image_uri: Union[str, List[str]],
                   label_vector_default_class_id: Optional[int] = None,
                   image_raster_source_kw: dict = {},
                   label_vector_source_kw: dict = {},
-                  label_source_kw: dict = {}) -> 'Scene':
+                  label_source_kw: dict = {},
+                  scene_id: Optional[str] = None) -> 'Scene':
     """Create an object detection scene from image and label URIs.
 
     This is a convenience method. For more fine-grained control, it is
@@ -255,6 +262,8 @@ def make_od_scene(image_uri: Union[str, List[str]],
             Defaults to {}.
         **kwargs: All other keyword args are passed to the default constructor
             for this class.
+        scene_id (Optional[str]): Optional scene ID. If None, will be randomly
+            generated. Defaults to None.
 
     Returns:
         Scene: An object detection scene.
@@ -293,7 +302,7 @@ def make_od_scene(image_uri: Union[str, List[str]],
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(
-        id=uuid4(),
+        id=uuid4() if scene_id is None else scene_id,
         raster_source=raster_source,
         label_source=label_source,
         aoi_polygons=aoi_polygons)
