@@ -51,6 +51,7 @@ class AlbumentationsDataset(Dataset):
         self.orig_dataset = orig_dataset
         self.normalize = normalize
         self.to_pytorch = to_pytorch
+        self.transform_type = transform_type
 
         tf_func = TF_TYPE_TO_TF_FUNC[transform_type]
         self.transform = lambda inp: tf_func(inp, transform)
@@ -170,7 +171,9 @@ class SlidingWindowGeoDataset(GeoDataset):
                                                           NonNegInt]]] = None,
                  pad_direction: Literal['both', 'start', 'end'] = 'end',
                  transform: Optional[A.BasicTransform] = None,
-                 transform_type: Optional[TransformType] = None):
+                 transform_type: Optional[TransformType] = None,
+                 normalize: bool = True,
+                 to_pytorch: bool = True):
         """Constructor.
 
         Args:
@@ -197,8 +200,17 @@ class SlidingWindowGeoDataset(GeoDataset):
                 MinMaxTransformer or StatsTransformer.
             transform_type (Optional[TransformType], optional): Type of
                 transform. Defaults to None.
+            normalize (bool, optional): If True, x is normalized to [0, 1]
+                based on its data type. Defaults to True.
+            to_pytorch (bool, optional): If True, x and y are converted to
+                pytorch tensors. Defaults to True.
         """
-        super().__init__(scene, transform, transform_type)
+        super().__init__(
+            scene=scene,
+            transform=transform,
+            transform_type=transform_type,
+            normalize=normalize,
+            to_pytorch=to_pytorch)
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride)
         self.padding = padding
@@ -239,11 +251,13 @@ class RandomWindowGeoDataset(GeoDataset):
                  padding: Optional[Union[NonNegInt, Tuple[NonNegInt,
                                                           NonNegInt]]] = None,
                  max_windows: Optional[NonNegInt] = None,
-                 transform: Optional[A.BasicTransform] = None,
-                 transform_type: Optional[TransformType] = None,
                  max_sample_attempts: PosInt = 100,
                  return_window: bool = False,
-                 efficient_aoi_sampling: bool = True):
+                 efficient_aoi_sampling: bool = True,
+                 transform: Optional[A.BasicTransform] = None,
+                 transform_type: Optional[TransformType] = None,
+                 normalize: bool = True,
+                 to_pytorch: bool = True):
         """Constructor.
 
         Will sample square windows if size_lims is specified. Otherwise, will
@@ -294,6 +308,14 @@ class RandomWindowGeoDataset(GeoDataset):
                 inefficient. This flag enables the use of an alternate
                 algorithm that only samples window locations inside the AOIs.
                 Defaults to True.
+            transform (Optional[A.BasicTransform], optional): Albumentations
+                transform to apply to the windows. Defaults to None.
+            transform_type (Optional[TransformType], optional): Type of
+                transform. Defaults to None.
+            normalize (bool, optional): If True, x is normalized to [0, 1]
+                based on its data type. Defaults to True.
+            to_pytorch (bool, optional): If True, x and y are converted to
+                pytorch tensors. Defaults to True.
         """
         has_size_lims = size_lims is not None
         has_h_lims = h_lims is not None
@@ -304,16 +326,17 @@ class RandomWindowGeoDataset(GeoDataset):
             raise ValueError('h_lims and w_lims must both be specified')
 
         if out_size is not None:
-            normalize, to_pytorch = True, True
             out_size = _to_tuple(out_size)
             transform = self.get_resize_transform(transform, out_size)
         else:
+            log.warning(f'out_size is None, chips will not be normalized or '
+                        'converted to PyTorch Tensors.')
             normalize, to_pytorch = False, False
 
         super().__init__(
-            scene,
-            transform,
-            transform_type,
+            scene=scene,
+            transform=transform,
+            transform_type=transform_type,
             normalize=normalize,
             to_pytorch=to_pytorch)
 
