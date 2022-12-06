@@ -1,7 +1,7 @@
-Basic concepts
+Basic Concepts
 ==============
 
-At a high-level, a typical machine learning workflow on geospatial data involves the following steps:
+At a high-level, a typical machine learning workflow for geospatial data involves the following steps:
 
 - Read geospatial data
 - Train a model
@@ -15,7 +15,7 @@ Reading geospatial data
 
 .. currentmodule:: rastervision.core.data
 
-Raster Vision internally uses the following pipeline for reading geo-referenced data and coaxing it into a form usable for training computer vision models.
+Raster Vision internally uses the following pipeline for reading geo-referenced data and coaxing it into a form suitable for training computer vision models.
 
 When using Raster Vision :ref:`as a library <usage_library>`, users generally do not need to deal with all the individual components to arrive at a working `GeoDataset`_ (see the tutorial on :doc:`tutorials/sampling_training_data`), but certainly can if needed.
 
@@ -31,7 +31,7 @@ RasterSource
 
     Tutorial: :doc:`tutorials/reading_raster_data`
 
-A :class:`~raster_source.raster_source.RasterSource` represents a source of raster data for a scene. It is used to retrieve small windows of raster data (or *chips*) from larger scenes. It can also be used of to subset image channels (i.e. bands) as well as do more complex transformations using :mod:`RasterTransformers <rastervision.core.data.raster_transformer>`. You can even combine bands from multiple sources using a :class:`~raster_source.multi_raster_source.MultiRasterSource`.
+A :class:`~raster_source.raster_source.RasterSource` represents a source of raster data for a scene. It is used to retrieve small windows of raster data (or *chips*) from larger scenes. It can also be used to subset image channels (i.e. bands) as well as do more complex transformations using :mod:`RasterTransformers <rastervision.core.data.raster_transformer>`. You can even combine bands from multiple sources using a :class:`~raster_source.multi_raster_source.MultiRasterSource`.
 
 .. seealso::
 
@@ -69,7 +69,7 @@ LabelSource
 
     Tutorial: :doc:`tutorials/reading_labels`
 
-A :class:`~label_source.label_source.LabelSource` interprets the data read by raster or vector sources into a form suitable for machine learning. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against validation scenes. There are different implementations available for :class:`chip classification <label_source.chip_classification_label_source.ChipClassificationLabelSource>`, :class:`semantic segmentation <label_source.semantic_segmentation_label_source.SemanticSegmentationLabelSource>`, and :class:`object detection <label_source.object_detection_label_source.ObjectDetectionLabelSource>`.
+A :class:`~label_source.label_source.LabelSource` interprets the data read by raster or vector sources into a form suitable for machine learning. They can be queried for the labels that lie within a window and are used for creating training chips, as well as providing ground truth labels for evaluation against model predictions. There are different implementations available for :class:`chip classification <label_source.chip_classification_label_source.ChipClassificationLabelSource>`, :class:`semantic segmentation <label_source.semantic_segmentation_label_source.SemanticSegmentationLabelSource>`, and :class:`object detection <label_source.object_detection_label_source.ObjectDetectionLabelSource>`.
 
 .. seealso::
 
@@ -102,7 +102,7 @@ GeoDataset
 
 .. currentmodule:: rastervision.pytorch_learner
 
-A :class:`~dataset.dataset.GeoDataset` (provided by Raster Vision's :mod:`~rastervision.pytorch_learner` plugin) is a `PyTorch-compatible dataset <https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset>`__ that can readily be wrapped into a `DataLoader <https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader>`__ and used by any PyTorch training code. Raster Vision provides a :class:`~learner.Learner` class for training models, but you can also use GeoDatasets with either your own custom training code, or with a 3rd party library like `PyTorch Lightning <https://www.pytorchlightning.ai/>`__.
+A :class:`~dataset.dataset.GeoDataset` (provided by Raster Vision's :mod:`~rastervision.pytorch_learner` plugin) is a `PyTorch-compatible dataset <https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset>`__ that can readily be wrapped into a `DataLoader <https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader>`__ and used by any PyTorch training code. Raster Vision provides a :class:`~learner.Learner` class for training models, but you can also use GeoDatasets with either your own custom training code, or with a 3rd party library like :doc:`PyTorch Lightning <tutorials/lightning_workflow>`.
 
 .. seealso::
 
@@ -139,7 +139,13 @@ Learner
 
 Raster Vision's :mod:`~rastervision.pytorch_learner` plugin provides a :class:`~learner.Learner` class that encapsulates the entire training process. It is highly configurable. You can either fill out a :class:`~learner_config.LearnerConfig` and have the :class:`~learner.Learner` set everything up (datasets, model, loss, optimizers, etc.) for you, or you can pass in your own models, datasets, etc. and have the :class:`~learner.Learner` use them instead.
 
-The main output of the :class:`~learner.Learner` is a trained model. This is available as a ``last-model.pth`` file which is a serialized dictionary of model weights that can be loaded into a model via ``model.load_state_dict(torch.load('last-model.pth'))``. You can also make the :class:`~learner.Learner` output a "model-bundle" (via :meth:`~learner.Learner.save_model_bundle`), which outputs a zip file containing the model weights as well as a config file that can be used to re-create the :class:`~learner.Learner` via :meth:`~learner.Learner.from_model_bundle`.
+The main output of the :class:`~learner.Learner` is a trained model. This is available as a ``last-model.pth`` file which is a serialized dictionary of model weights that can be loaded into a model via
+
+.. code-block:: python
+
+    model.load_state_dict(torch.load('last-model.pth'))
+
+You can also make the :class:`~learner.Learner` output a "model-bundle" (via :meth:`~learner.Learner.save_model_bundle`), which outputs a zip file containing the model weights as well as a config file that can be used to re-create the :class:`~learner.Learner` via :meth:`~learner.Learner.from_model_bundle`.
 
 There are Learner subclasses for :class:`chip classification <classification_learner.ClassificationLearner>`, :class:`semantic segmentation <semantic_segmentation_learner.SemanticSegmentationLearner>`, :class:`object detection <object_detection_learner.ObjectDetectionLearner>`, and :class:`regression <regression_learner.RegressionLearner>`.
 
@@ -178,14 +184,14 @@ Having trained a model, you would naturally want to use it to make predictions o
 4. Convert predictions into the appropriate `Labels`_ subclass e.g. :class:`~rastervision.core.data.label.semantic_segmentation_labels.SemanticSegmentationLabels` (via :meth:`~rastervision.core.data.label.semantic_segmentation_labels.SemanticSegmentationLabels.from_predictions`)
 5. Save the `Labels`_ to file (via :meth:`~rastervision.core.data.label.semantic_segmentation_labels.SemanticSegmentationLabels.save`)
 
-   - Alternatively, you can Instantiate an appropriate `LabelStore`_ subclass and pass the :class:`~rastervision.core.data.label.label.Labels` to :meth:`LabelStore.save() <rastervision.core.data.label_store.label_store.LabelStore.save>`
+   - Alternatively, you can Instantiate an appropriate `LabelStore`_ subclass and pass the :class:`~rastervision.core.data.label.labels.Labels` to :meth:`LabelStore.save() <rastervision.core.data.label_store.label_store.LabelStore.save>`
 
 Labels
 ~~~~~~
 
 .. currentmodule:: rastervision.core.data
 
-The :class:`~label.labels.Labels` class is an in-memory representation of labels. It can represent both ground truth labels or model predictions.
+The :class:`~label.labels.Labels` class is an in-memory representation of labels. It can represent both ground truth labels and model predictions.
 
 .. seealso::
 
@@ -203,7 +209,7 @@ LabelStore
 
 .. currentmodule:: rastervision.core.data
 
-A :class:`~label_store.label_store.LabelStore` abstracts away the writing of :class:`~label.labels.Labels` to file. It can also be used to read previously written predictions back as :class:`~label.labels.Labels`; this is useful for evaluating predictions.
+A :class:`~label_store.label_store.LabelStore` abstracts away the writing of :class:`~label.labels.Labels` to file. It can also be used to read previously written predictions back as :class:`~label.labels.Labels` which is useful for evaluating predictions.
 
 .. seealso::
 

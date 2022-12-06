@@ -1,4 +1,4 @@
-Usage overview
+Usage Overview
 ==============
 
 .. toctree::
@@ -11,8 +11,8 @@ Usage overview
 
 Users can use Raster Vision in a couple of different ways depending on their needs and level of experience:
 
-* :ref:`As a library <_usage_library>` of utilities for handling geospatial data and training deep learning models that you can incorporate into your own code.
-* :ref:`As a low-code framework <_usage_framework>` in the form of the :doc:`Raster Vision Pipeline <../framework/index>` that internally handles all aspects of the training workflow for you and only requires you to configure a few parameters.
+* :ref:`As a library <usage_library>` of utilities for handling geospatial data and training deep learning models that you can incorporate into your own code.
+* :ref:`As a low-code framework <usage_framework>` in the form of the :doc:`Raster Vision Pipeline <../framework/index>` that internally handles all aspects of the training workflow for you and only requires you to configure a few parameters.
 
 .. _usage_library:
 

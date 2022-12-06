@@ -243,7 +243,7 @@ In our {{ tiny_spacenet }} example, we configured the PyTorch semantic segmentat
     :lines: 62-71
     :dedent:
 
-.. seealso:: The :mod:`rastervision.pytorch_backend` and :mod:`rastervision.pytorch_learner` API docs have more information on configuring backends.
+.. seealso:: :mod:`rastervision.pytorch_backend` and :mod:`rastervision.pytorch_learner` API docs for more information on configuring backends.
 
 .. _dataset:
 
