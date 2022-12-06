@@ -1,14 +1,6 @@
 Usage Overview
 ==============
 
-.. toctree::
-    :maxdepth: 2
-    :hidden:
-
-    Overview <self>
-    basics
-    tutorials/index
-
 Users can use Raster Vision in a couple of different ways depending on their needs and level of experience:
 
 * :ref:`As a library <usage_library>` of utilities for handling geospatial data and training deep learning models that you can incorporate into your own code.

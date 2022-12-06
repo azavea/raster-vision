@@ -20,7 +20,9 @@
 
     why
     Setup <setup/index>
-    Usage <usage/index>
+    usage/overview
+    usage/basics
+    usage/tutorials/index
     framework/index
     api_reference/index
     Contributing <CONTRIBUTING>
