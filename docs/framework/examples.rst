@@ -59,6 +59,12 @@ The ``--aws`` option is only needed if pulling data from S3. In Jupyter inside t
 .. image:: /img/examples/jupyter.png
     :align: center
     :alt: Jupyter Notebook
+    :class: only-light
+
+.. image:: /img/examples/jupyter.png
+    :align: center
+    :alt: Jupyter Notebook
+    :class: only-dark
 
 Step 3: Do a test run locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

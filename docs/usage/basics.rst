@@ -21,6 +21,11 @@ When using Raster Vision :ref:`as a library <usage_library>`, users generally do
 
 .. image:: /img/usage-input.png
     :align: center
+    :class: only-light
+
+.. image:: /img/usage-input.png
+    :align: center
+    :class: only-dark
 
 Below, we briefly describe each of the components shown in the diagram above.
 
@@ -129,6 +134,11 @@ Training a model
 
 .. image:: /img/usage-train.png
     :align: center
+    :class: only-light
+
+.. image:: /img/usage-train.png
+    :align: center
+    :class: only-dark
 
 Learner
 ~~~~~~~
@@ -175,6 +185,11 @@ Making predictions and saving them
 
 .. image:: /img/usage-pred.png
     :align: center
+    :class: only-light
+
+.. image:: /img/usage-pred.png
+    :align: center
+    :class: only-dark
 
 Having trained a model, you would naturally want to use it to make predictions on new scenes. The usual workflow for this is:
 

@@ -19,6 +19,11 @@ Raster Vision allows engineers to quickly and repeatably configure **pipelines**
 
 .. image:: /img/rv-pipeline-overview.png
     :align: center
+    :class: only-light
+
+.. image:: /img/rv-pipeline-overview.png
+    :align: center
+    :class: only-dark
 
 The input to a Raster Vision pipeline is a set of images and training data, optionally with Areas of Interest (AOIs) that describe where the images are labeled. The output of a Raster Vision pipeline is a model bundle that allows you to easily utilize models in various deployment scenarios.
 

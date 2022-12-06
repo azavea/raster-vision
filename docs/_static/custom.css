@@ -22,3 +22,14 @@ article[role=main] ::-webkit-scrollbar {
 	height: 0.75rem !important;
 	width: 0.75rem !important;
 }
+
+/*
+The furo theme allows specifying different versions of the same image for
+light and dark modes by using the ":class: only-light" and ":class: only-dark"
+options with the image directive. Instead of specifying different images, we
+specify the same image for both and use the color-inversion below for dark
+mode. This saves us the trouble of creating dark versions for each image.
+*/
+img.only-dark {
+	filter: invert(85%) hue-rotate(180deg);
+}

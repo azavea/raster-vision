@@ -48,6 +48,12 @@ To deploy AWS Batch resources using AWS CloudFormation, start by logging into yo
   .. image:: /img/spot-azs.png
     :align: center
     :alt: Spot availability zones for P3 instances
+    :class: only-light
+
+  .. image:: /img/spot-azs.png
+    :align: center
+    :alt: Spot availability zones for P3 instances
+    :class: only-dark
 
   - ``SSH Key Name``: The name of the SSH key pair you want to be able to use to shell into your Batch instances. If you've created an EC2 instance before, you should already have one you can use; otherwise, you can create one in the EC2 console. *Note: If you decide to create a new one, you will need to log out and then back in to the console before creating a Cloudformation stack using this key.*
   - ``Instance Types``: Provide the instance types you would like to use. (For GPUs, ``p3.2xlarge`` is approximately 4 times the speed for 4 times the price.)

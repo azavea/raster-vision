@@ -54,6 +54,11 @@ The :class:`RVPipelines <rastervision.core.rv_pipeline.rv_pipeline.RVPipeline>` 
 
 .. image:: /img/rv-pipeline-overview.png
     :align: center
+    :class: only-light
+
+.. image:: /img/rv-pipeline-overview.png
+    :align: center
+    :class: only-dark
 
 ANALYZE
 ^^^^^^^

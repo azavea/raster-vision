@@ -25,6 +25,12 @@ The figure below shows the packages, the dependencies between them, and importan
 .. image:: /img/rv-packages.png
     :align: center
     :alt: The dependencies between Python packages in Raster Vision
+    :class: only-light
+
+.. image:: /img/rv-packages.png
+    :align: center
+    :alt: The dependencies between Python packages in Raster Vision
+    :class: only-dark
 
 .. _pipelines plugins:
 
