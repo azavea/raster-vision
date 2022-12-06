@@ -12,7 +12,11 @@ Raster Vision is an open source Python framework for building computer vision mo
 * It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
 ![Overview of Raster Vision workflow](docs/img/rv-pipeline-overview.png)
 * There is built-in support for chip classification, object detection, and semantic segmentation with backends using PyTorch.
-![Examples of chip classification, object detection and semantic segmentation](docs/img/cv-tasks.png)
+
+    <div align="center">
+        <img src="docs/img/cv-tasks.png" alt="Examples of chip classification, object detection and semantic segmentation" width="75%">
+    </div>
+
 * Experiments can be executed on CPUs and GPUs with built-in support for running in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
 * The framework is extensible to new data sources, tasks (eg. instance segmentation), backends (eg. Detectron2), and cloud providers.
 
