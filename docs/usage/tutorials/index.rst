@@ -6,8 +6,6 @@ The following tutorials highlight many of the things you can do with Raster Visi
 .. rubric:: Building blocks
 
 .. nbgallery::
-    :name: nbshpinx-gallery
-    :glob:
 
     reading_raster_data
     reading_vector_data
@@ -16,10 +14,11 @@ The following tutorials highlight many of the things you can do with Raster Visi
     scenes_and_aois
     visualize_data_samples
     train
-    lightning_workflow
     pred_and_eval_ss
     misc
 
-.. rubric:: Full examples
+.. rubric:: Advanced
 
-*Comming soon!*
+.. nbgallery::
+
+    lightning_workflow

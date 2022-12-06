@@ -56,9 +56,15 @@ You'll need to do some data preprocessing, which we can do in the Jupyter notebo
 
 The ``--aws`` option is only needed if pulling data from S3. In Jupyter inside the browser, navigate to the `rastervision/examples/chip_classification/spacenet_rio_data_prep.ipynb <{{ github_examples }}/chip_classification/spacenet_rio_data_prep.ipynb>`__ notebook. Set the URIs in the first cell and then run the rest of the notebook. Set the ``processed_uri`` to a local or S3 URI depending on where you want to run the experiment.
 
-.. image:: img/examples/jupyter.png
+.. image:: /img/examples/jupyter.png
     :align: center
     :alt: Jupyter Notebook
+    :class: only-light
+
+.. image:: /img/examples/jupyter.png
+    :align: center
+    :alt: Jupyter Notebook
+    :class: only-dark
 
 Step 3: Do a test run locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,7 +119,7 @@ Step 5: Inspect results
 
 After everything completes, which should take about 1.5 hours if you're running on AWS using a ``p3.2xlarge`` instance for training and 8 splits, you should be able to find the predictions over the validation scenes in ``$root_uri/predict/``. The imagery and predictions are best viewed in QGIS, an example of which can be seen below. Cells that are predicted to contain buildings are red, and background are green.
 
-.. image:: img/examples/spacenet-rio-cc.png
+.. image:: /img/examples/spacenet-rio-cc.png
     :align: center
     :alt: SpaceNet Vegas Buildings in QGIS
 
@@ -176,7 +182,7 @@ Buildings
 
 After training a model, the building F1 score is 0.91. More evaluation details can be found `here <{{ s3_model_zoo }}/spacenet-vegas-buildings-ss/eval.json>`__.
 
-.. image:: img/examples/spacenet-vegas-buildings.png
+.. image:: /img/examples/spacenet-vegas-buildings.png
     :align: center
     :alt: SpaceNet Vegas Buildings in QGIS
 
@@ -185,7 +191,7 @@ Roads
 
 After training a model, the road F1 score was 0.83. More evaluation details can be found `here <{{ s3_model_zoo }}/spacenet-vegas-roads-ss/eval.json>`__.
 
-.. image:: img/examples/spacenet-vegas-roads-qgis.png
+.. image:: /img/examples/spacenet-vegas-roads-qgis.png
     :align: center
     :alt: SpaceNet Vegas Roads in QGIS
 
@@ -207,7 +213,7 @@ Arguments:
 
 After training a model, the average F1 score was 0.89. More evaluation details can be found `here <{{ s3_model_zoo }}/isprs-potsdam-ss/eval.json>`__.
 
-.. image:: img/examples/potsdam-seg-predictions.png
+.. image:: /img/examples/potsdam-seg-predictions.png
     :align: center
     :alt: Potsdam segmentation predictions
 
@@ -228,7 +234,7 @@ Arguments:
 
 After training a model, the car F1 score was 0.95. More evaluation details can be found `here <{{ s3_model_zoo }}/cowc-potsdam-od/eval.json>`__.
 
-.. image:: img/examples/cowc-potsdam.png
+.. image:: /img/examples/cowc-potsdam.png
     :align: center
     :alt: COWC Potsdam predictions
 
@@ -249,7 +255,7 @@ Arguments:
 
 After training a model, the vehicle F1 score was 0.61. More evaluation details can be found `here <{{ s3_model_zoo }}/xview-od/eval.json>`__.
 
-.. image:: img/examples/xview.png
+.. image:: /img/examples/xview.png
     :align: center
     :alt: xView predictions
 

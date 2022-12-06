@@ -128,10 +128,16 @@ def get_channel_order_from_dataset(
 class RasterioSource(RasterSource):
     """A rasterio-based RasterSource.
 
-    This RasterSource can read any file that can be opened by Rasterio/GDAL
-    including georeferenced formats such as GeoTIFF and non-georeferenced
-    formats such as JPG. See https://www.gdal.org/formats_list.html for more
-    details.
+    This RasterSource can read any file that can be opened by
+    `Rasterio/GDAL <https://www.gdal.org/formats_list.html>`_.
+    
+    If there are multiple image files that cover a single scene, you can pass
+    the corresponding list of URIs, and read them as if it were a single
+    stitched-together image.
+
+    It can also read non-georeferenced images such as ``.tif``, ``.png``, and
+    ``.jpg`` files. This is useful for oblique drone imagery, biomedical
+    imagery, and any other (potentially massive!) non-georeferenced images.
 
     If channel_order is None, then use non-alpha channels. This also sets any
     masked or NODATA pixel values to be zeros.

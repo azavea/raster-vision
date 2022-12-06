@@ -13,7 +13,7 @@ from rastervision.core.data.raster_transformer.reclass_transformer_config import
 from rastervision.core.data.raster_transformer.min_max_transformer import *
 from rastervision.core.data.raster_transformer.min_max_transformer_config import *
 from rastervision.core.data.raster_transformer.rgb_class_transformer import *
-from rastervision.core.data.raster_transformer.rgb_class_tansformer_config import *
+from rastervision.core.data.raster_transformer.rgb_class_transformer_config import *
 
 __all__ = [
     RasterTransformer.__name__,
