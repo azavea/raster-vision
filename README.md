@@ -53,14 +53,15 @@ You can also build a Docker image from scratch yourself. After cloning this repo
 For **developers** and those looking to dive deeper or combine Raster Vision with their own code, the best starting point is [*Usage Overview*](https://docs.rastervision.io/en/stable/usage/overview.html), followed by [*Basic Concepts*](https://docs.rastervision.io/en/stable/usage/basics.html) and [*Tutorials*](https://docs.rastervision.io/en/stable/usage/tutorials.html).
 
 
-
-### Contact and Support
+## Contact and Support
 
 You can ask questions and talk to developers (let us know what you're working on!) at:
 * [Discussion Forum](https://github.com/azavea/raster-vision/discussions)
 * [Mailing List](https://groups.google.com/forum/#!forum/raster-vision)
 
-### Contributing
+## Contributing
+
+*For more information, see the [Contribution page](https://docs.rastervision.io/en/stable/setup/).*
 
 We are happy to take contributions! It is best to get in touch with the maintainers
 about larger features or design changes *before* starting the work,
