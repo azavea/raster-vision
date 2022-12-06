@@ -19,7 +19,7 @@
     :hidden:
 
     why
-    Getting started <setup/index>
+    Setup <setup/index>
     Usage <usage/index>
     framework/index
     api_reference/index
