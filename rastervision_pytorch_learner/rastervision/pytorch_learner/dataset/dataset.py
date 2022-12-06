@@ -51,6 +51,7 @@ class AlbumentationsDataset(Dataset):
         self.orig_dataset = orig_dataset
         self.normalize = normalize
         self.to_pytorch = to_pytorch
+        self.transform_type = transform_type
 
         tf_func = TF_TYPE_TO_TF_FUNC[transform_type]
         self.transform = lambda inp: tf_func(inp, transform)
@@ -142,7 +143,7 @@ class GeoDataset(AlbumentationsDataset):
         raise NotImplementedError()
 
     @classmethod
-    def from_uris(cls, *args, **kwargs):
+    def from_uris(cls, *args, **kwargs) -> 'GeoDataset':
         raise NotImplementedError()
 
 
@@ -170,7 +171,9 @@ class SlidingWindowGeoDataset(GeoDataset):
                                                           NonNegInt]]] = None,
                  pad_direction: Literal['both', 'start', 'end'] = 'end',
                  transform: Optional[A.BasicTransform] = None,
-                 transform_type: Optional[TransformType] = None):
+                 transform_type: Optional[TransformType] = None,
+                 normalize: bool = True,
+                 to_pytorch: bool = True):
         """Constructor.
 
         Args:
@@ -197,8 +200,17 @@ class SlidingWindowGeoDataset(GeoDataset):
                 MinMaxTransformer or StatsTransformer.
             transform_type (Optional[TransformType], optional): Type of
                 transform. Defaults to None.
+            normalize (bool, optional): If True, x is normalized to [0, 1]
+                based on its data type. Defaults to True.
+            to_pytorch (bool, optional): If True, x and y are converted to
+                pytorch tensors. Defaults to True.
         """
-        super().__init__(scene, transform, transform_type)
+        super().__init__(
+            scene=scene,
+            transform=transform,
+            transform_type=transform_type,
+            normalize=normalize,
+            to_pytorch=to_pytorch)
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride)
         self.padding = padding
@@ -232,18 +244,20 @@ class RandomWindowGeoDataset(GeoDataset):
 
     def __init__(self,
                  scene: Scene,
+                 out_size: Optional[Union[PosInt, Tuple[PosInt, PosInt]]],
                  size_lims: Optional[Tuple[PosInt, PosInt]] = None,
                  h_lims: Optional[Tuple[PosInt, PosInt]] = None,
                  w_lims: Optional[Tuple[PosInt, PosInt]] = None,
-                 out_size: Union[PosInt, Tuple[PosInt, PosInt]] = None,
                  padding: Optional[Union[NonNegInt, Tuple[NonNegInt,
                                                           NonNegInt]]] = None,
                  max_windows: Optional[NonNegInt] = None,
-                 transform: Optional[A.BasicTransform] = None,
-                 transform_type: Optional[TransformType] = None,
                  max_sample_attempts: PosInt = 100,
                  return_window: bool = False,
-                 efficient_aoi_sampling: bool = True):
+                 efficient_aoi_sampling: bool = True,
+                 transform: Optional[A.BasicTransform] = None,
+                 transform_type: Optional[TransformType] = None,
+                 normalize: bool = True,
+                 to_pytorch: bool = True):
         """Constructor.
 
         Will sample square windows if size_lims is specified. Otherwise, will
@@ -252,18 +266,17 @@ class RandomWindowGeoDataset(GeoDataset):
 
         Args:
             scene (Scene): A Scene object.
+            out_size (Optional[Union[PosInt, Tuple[PosInt, PosInt]]]]): Resize
+                windows to this size before returning. This is to aid in
+                collating the windows into a batch. If None, windows are
+                returned without being normalized or converted to pytorch, and
+                will be of different sizes in successive reads.
             size_lims (Optional[Tuple[PosInt, PosInt]]): Interval from which to
                 sample window size.
             h_lims (Optional[Tuple[PosInt, PosInt]]): Interval from which to
                 sample window height.
             w_lims (Optional[Tuple[PosInt, PosInt]]): Interval from which to
                 sample window width.
-            out_size (Union[PosInt, Tuple[PosInt, PosInt]], optional): Resize
-                windows to this size before returning. This is to aid in
-                collating the windows into a batch. If None, windows are
-                returned without being normalized or converted to pytorch, and
-                will be of different sizes in successive reads.
-                Defaults to None.
             padding (Optional[Union[NonNegInt, Tuple[NonNegInt, NonNegInt]]]):
                 How many pixels the windows are allowed to overflow the sides
                 of the raster source. If None, padding = size.
@@ -275,7 +288,7 @@ class RandomWindowGeoDataset(GeoDataset):
                 transform to apply to the windows. Defaults to None.
                 Each transform in Albumentations takes images of type uint8, and
                 sometimes other data types. The data type requirements can be
-                seen at https://albumentations.ai/docs/api_reference/augmentations/transforms/ # noqa
+                seen at https://albumentations.ai/docs/api_reference/augmentations/transforms/
                 If there is a mismatch between the data type of imagery and the
                 transform requirements, a RasterTransformer should be set
                 on the RasterSource that converts to uint8, such as
@@ -294,7 +307,15 @@ class RandomWindowGeoDataset(GeoDataset):
                 inefficient. This flag enables the use of an alternate
                 algorithm that only samples window locations inside the AOIs.
                 Defaults to True.
-        """
+            transform (Optional[A.BasicTransform], optional): Albumentations
+                transform to apply to the windows. Defaults to None.
+            transform_type (Optional[TransformType], optional): Type of
+                transform. Defaults to None.
+            normalize (bool, optional): If True, x is normalized to [0, 1]
+                based on its data type. Defaults to True.
+            to_pytorch (bool, optional): If True, x and y are converted to
+                pytorch tensors. Defaults to True.
+        """ # noqa
         has_size_lims = size_lims is not None
         has_h_lims = h_lims is not None
         has_w_lims = w_lims is not None
@@ -304,16 +325,17 @@ class RandomWindowGeoDataset(GeoDataset):
             raise ValueError('h_lims and w_lims must both be specified')
 
         if out_size is not None:
-            normalize, to_pytorch = True, True
             out_size = _to_tuple(out_size)
             transform = self.get_resize_transform(transform, out_size)
         else:
+            log.warning(f'out_size is None, chips will not be normalized or '
+                        'converted to PyTorch Tensors.')
             normalize, to_pytorch = False, False
 
         super().__init__(
-            scene,
-            transform,
-            transform_type,
+            scene=scene,
+            transform=transform,
+            transform_type=transform_type,
             normalize=normalize,
             to_pytorch=to_pytorch)
 
