@@ -9,6 +9,7 @@ Pipelines and Commands
 In addition to providing abstract :ref:`pipeline <rv pipelines>` functionality, Raster Vision provides a set of concrete pipelines for deep learning on remote sensing imagery including :class:`~rastervision.core.rv_pipeline.chip_classification.ChipClassification`, :class:`~rastervision.core.rv_pipeline.semantic_segmentation.SemanticSegmentation`, and :class:`~rastervision.core.rv_pipeline.object_detection.ObjectDetection`. These pipelines all derive from :class:`~rastervision.core.rv_pipeline.rv_pipeline.RVPipeline`, and are provided by the :mod:`rastervision.core` package. It's possible to customize these pipelines as well as create new ones from scratch, which is discussed in :ref:`customizing rv`.
 
 .. image:: /img/cv-tasks.png
+    :width: 75%
     :align: center
 
 Chip Classification
