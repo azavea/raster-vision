@@ -18,19 +18,27 @@ Raster Vision is an open source Python framework for building computer vision mo
 
 * Experiments can be executed on CPUs and GPUs with built-in support for running in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
 * The framework is extensible to new data sources, tasks (eg. instance segmentation), backends (eg. Detectron2), and cloud providers.
+## Installation
 
-See the [documentation](https://docs.rastervision.io) for more details.
+*For more details, see the [Setup documentation](https://docs.rastervision.io/en/stable/setup/)*.
 
-### Setup
+### Install via `pip`
 
-There are several ways to setup Raster Vision:
-* To build Docker images from scratch, after cloning this repo, run `docker/build`, and run the container using `docker/run`.
-* Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision). The tag for the `raster-vision` image determines what type of image it is:
-    - The `pytorch-*` tags are for running the PyTorch containers.
-    - We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:pytorch-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
-* Raster Vision can be installed directly using `pip install rastervision`. However, some of its dependencies will have to be installed manually.
+You can install Raster Vision directly via `pip`.
 
-For more detailed instructions, see the [Setup docs](https://docs.rastervision.io/en/0.20-dev/setup.html).
+```sh
+pip install rastervision
+```
+
+### Use Pre-built Docker Image
+
+Alternatively, you may use a Docker image. Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision) (see the *tags* tab).
+
+We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:pytorch-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
+
+### Build Docker Image
+
+You can also build a Docker image from scratch yourself. After cloning this repo, run `docker/build`, and run then the container using `docker/run`.
 
 ### Example
 
