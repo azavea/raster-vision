@@ -120,5 +120,6 @@ class ClassConfig(Config):
 
     @property
     def color_triples(self) -> List[Tuple[float, float, float]]:
+        """Class colors in a normalized form."""
         color_triples = [normalize_color(c) for c in self.colors]
         return color_triples

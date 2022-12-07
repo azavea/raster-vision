@@ -46,6 +46,7 @@ To run a live local server that updates with changes, run:
 - You can specify a thumbnail for a notebook (which is shown in the gallery) in the following ways:
 	- To use the output of a cell in that notebook, add a `nbsphinx-thumbnail` tag to that cell's metadata. If the cell has multiple image outputs, [see instructions here](https://nbsphinx.readthedocs.io/en/latest/gallery/multiple-outputs.html). **Note:** this ONLY works with outputs of *code* cells.
 	- To use an arbitrary image, add it to the [`img/`](./img/) directory and then add its path to the `nbsphinx_thumbnails` `dict` in [`conf.py`](./conf.py).
+- *Do* use cross-references and other Sphinx-styling in notebooks. You can do so by [using raw `reST` cells](https://nbsphinx.readthedocs.io/en/0.8.10/raw-cells.html#reST). See existing notebooks for examples.
 - The furo theme [allows specifying different versions of the same image for light and dark modes](https://pradyunsg.me/furo/reference/images/#different-images-for-dark-light-mode) by using the `:class: only-light` and `:class: only-dark` options with the `.. image::` directive. Instead of specifying different images, we specify the same image for both and use CSS-based color-inversion for dark mode. This saves us the trouble of creating dark versions for each image.
 	- This should only be applied to images where it makes sense to invert in dark mode.
 	- Where it makes sense to invert in dark mode but inversion does not produce a good result, it is recommended to manually create a better looking dark-mode version of the image.
