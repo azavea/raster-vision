@@ -7,17 +7,23 @@
 [![Build Status](https://github.com/azavea/raster-vision/actions/workflows/release.yml/badge.svg)](https://github.com/azavea/raster-vision/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/azavea/raster-vision/branch/master/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
 
-Raster Vision is an open source Python framework for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
-* It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
+Raster Vision is an open source Python **library** and **framework** for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
+
+It has built-in support for chip classification, object detection, and semantic segmentation with backends using PyTorch.
+
+<div align="center">
+    <img src="docs/img/cv-tasks.png" alt="Examples of chip classification, object detection and semantic segmentation" width="75%">
+</div>
+
+**As a library**, Raster Vision provides a full suite of utilities for dealing with all aspects of a geospatial deep learning workflow: reading geo-referenced data, training models, making predicitons, and writing out predictions in geo-referenced formats.
+
+**As a low-code framework**, Raster Vision allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
 ![Overview of Raster Vision workflow](docs/img/rv-pipeline-overview.png)
-* There is built-in support for chip classification, object detection, and semantic segmentation with backends using PyTorch.
 
-    <div align="center">
-        <img src="docs/img/cv-tasks.png" alt="Examples of chip classification, object detection and semantic segmentation" width="75%">
-    </div>
+Raster Vision also has built-in support for running experiments in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
 
-* Experiments can be executed on CPUs and GPUs with built-in support for running in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
-* The framework is extensible to new data sources, tasks (eg. instance segmentation), backends (eg. Detectron2), and cloud providers.
+See the [documentation](https://docs.rastervision.io/en/stable/) for more details.
+
 ## Installation
 
 *For more details, see the [Setup documentation](https://docs.rastervision.io/en/stable/setup/)*.
