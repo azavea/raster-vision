@@ -62,7 +62,7 @@ function find_free_port_in_range() {
 
 IMAGE="raster-vision-pytorch"
 RASTER_VISION_DATA_DIR="${RASTER_VISION_DATA_DIR:-${REPO_ROOT}/data}"
-RASTER_VISION_NOTEBOOK_DIR="${RASTER_VISION_NOTEBOOK_DIR:-${REPO_ROOT}/notebooks}"
+RASTER_VISION_NOTEBOOK_DIR="${RASTER_VISION_NOTEBOOK_DIR:-${REPO_ROOT}/docs/usage/tutorials}"
 
 # Parse options using scheme in
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
