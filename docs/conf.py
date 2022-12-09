@@ -151,6 +151,21 @@ nbsphinx_prolog = r"""
         :format: html
 
     .. note:: This page was generated from `{{ docname }} <https://github.com/azavea/raster-vision/blob/master/docs/{{ docpath }}>`__.
+
+    .. note::
+
+        If running outside of the Docker image, you might need to set a couple of environment variables manually. You can do it like so:
+
+        .. code-block:: python
+
+            import os
+            from subprocess import check_output
+
+            os.environ['GDAL_DATA'] = check_output('pip show rasterio | grep Location | awk \'{print $NF"/rasterio/gdal_data/"}\'', shell=True).decode().strip()
+            os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'
+        
+        See this `Colab notebook <https://colab.research.google.com/drive/1qUl_6McbLJr9KjrhHnx_SWbSYkLPL2uW>`__ for an example.
+
 """ # noqa
 #########################
 
