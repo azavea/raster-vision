@@ -33,3 +33,9 @@ mode. This saves us the trouble of creating dark versions for each image.
 img.only-dark {
 	filter: invert(85%) hue-rotate(180deg);
 }
+
+/* dark mode styling for notebook gallery items */
+body[data-theme=dark] div.sphx-glr-thumbcontainer {
+	background-color: #222;
+	border-color: #333;
+}
