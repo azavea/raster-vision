@@ -867,7 +867,8 @@ class Learner(ABC):
             split: dataset split. Can be train, valid, or test.
             batch_limit: optional limit on (rendered) batch size
         """
-        log.info('Plotting predictions...')
+        log.info(
+            f'Making and plotting sample predictions on the {split} set...')
         dl = self.get_dataloader(split)
         output_path = join(self.output_dir, f'{split}_preds.png')
         preds = self.predict_dataloader(
@@ -875,6 +876,7 @@ class Learner(ABC):
         x, y, z = next(preds)
         self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
+        log.info(f'Sample predictions written to {output_path}.')
 
     def plot_dataloader(self,
                         dl: DataLoader,
@@ -891,18 +893,21 @@ class Learner(ABC):
                          show: bool = False):
         """Plot images and ground truth labels for all DataLoaders."""
         if self.train_dl:
+            log.info('Plotting sample training batch.')
             self.plot_dataloader(
                 self.train_dl,
                 output_path=join(self.output_dir, 'dataloaders/train.png'),
                 batch_limit=batch_limit,
                 show=show)
         if self.valid_dl:
+            log.info('Plotting sample validation batch.')
             self.plot_dataloader(
                 self.valid_dl,
                 output_path=join(self.output_dir, 'dataloaders/valid.png'),
                 batch_limit=batch_limit,
                 show=show)
         if self.test_dl:
+            log.info('Plotting sample test batch.')
             self.plot_dataloader(
                 self.test_dl,
                 output_path=join(self.output_dir, 'dataloaders/test.png'),
