@@ -1214,13 +1214,15 @@ class Learner(ABC):
         start_epoch = self.get_start_epoch()
 
         if epochs is None:
-            epochs = self.cfg.solver.num_epochs
+            end_epoch = self.cfg.solver.num_epochs
+        else:
+            end_epoch = start_epoch + epochs
 
-        if (start_epoch > 0 and start_epoch < epochs):
+        if (start_epoch > 0 and start_epoch < end_epoch):
             log.info(f'Resuming training from epoch {start_epoch}')
 
         self.on_train_start()
-        for epoch in range(start_epoch, start_epoch + epochs):
+        for epoch in range(start_epoch, end_epoch):
             log.info(f'epoch: {epoch}')
             train_metrics = self.train_epoch(
                 optimizer=self.opt, step_scheduler=self.step_scheduler)
