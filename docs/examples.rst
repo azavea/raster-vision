@@ -191,11 +191,11 @@ After training a model, the road F1 score was 0.83. More evaluation details can 
 Semantic Segmentation: ISPRS Potsdam
 -------------------------------------
 
-This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`_ performs semantic segmentation on the `ISPRS Potsdam dataset <http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html>`_. The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our `blog post <https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/>`_.
+This `experiment <https://github.com/azavea/raster-vision/tree/0.13/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`_ performs semantic segmentation on the `ISPRS Potsdam dataset <https://www.isprs.org/education/benchmarks/UrbanSemLab/2d-sem-label-potsdam.aspx>`_. The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our `blog post <https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/>`_.
 
 Data:
 
-* The dataset can only be downloaded after filling in this `request form <http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html>`_. After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip ``4_Ortho_RGBIR.zip``, and ``5_Labels_for_participants.zip`` into a directory, and then upload to S3 if desired.
+* The dataset can  be downloaded from links provided  `here <https://www.isprs.org/education/benchmarks/UrbanSemLab/default.aspx>`_. The password to download the files is provided on the same site. Download and unzip ``4_Ortho_RGBIR.zip``, and ``5_Labels_for_participants.zip`` into a directory, and then upload to S3 if desired.
 
 Arguments:
 
