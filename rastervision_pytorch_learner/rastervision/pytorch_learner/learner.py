@@ -1083,7 +1083,11 @@ class Learner(ABC):
         start_epoch = 0
         if isfile(self.log_path):
             with open(self.log_path) as log_file:
-                last_line = log_file.readlines()[-1]
+                lines = log_file.readlines()
+                # if empty or containing only the header row
+                if len(lines) <= 1:
+                    return 0
+                last_line = lines[-1]
             last_epoch = int(last_line.split(',')[0].strip())
             start_epoch = last_epoch + 1
         return start_epoch
