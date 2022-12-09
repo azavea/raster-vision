@@ -107,7 +107,8 @@ def build_scene(spacenet_cfg: SpacenetConfig,
         transformers=[
             ClassInferenceTransformerConfig(default_class_id=0),
             BufferTransformerConfig(
-                geom_type='LineString', class_bufs={0: 15})
+                geom_type='LineString', class_bufs={0: 15}),
+            BufferTransformerConfig(geom_type='Point'),
         ])
     label_source = SemanticSegmentationLabelSourceConfig(
         raster_source=RasterizedSourceConfig(
