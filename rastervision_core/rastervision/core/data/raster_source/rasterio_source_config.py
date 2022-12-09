@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from rastervision.core.data.raster_source import RasterSourceConfig, RasterioSource
 from rastervision.pipeline.config import ConfigError, Field, register_config
@@ -22,16 +22,15 @@ def rasterio_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
 
 @register_config('rasterio_source', upgrader=rasterio_source_config_upgrader)
 class RasterioSourceConfig(RasterSourceConfig):
-    uris: List[str] = Field(
+    uris: Union[str, List[str]] = Field(
         ...,
-        description=
-        ('List of image URIs that comprise imagery for a scene. The format of each file '
-         'can be any that can be read by Rasterio/GDAL. If > 1 URI is provided, a VRT '
-         'will be created to mosaic together the individual images.'))
+        description='One or more image URIs that comprise the imagery for a '
+        'scene. The format of each file can be any that can be read by '
+        'Rasterio/GDAL. If > 1 URI is provided, a VRT will be created to '
+        'mosaic together the individual images.')
     allow_streaming: bool = Field(
         False,
-        description=(
-            'Allow streaming of assets rather than always downloading.'))
+        description='Stream assets as needed rather than downloading them.')
 
     def build(self, tmp_dir, use_transformers=True):
         raster_transformers = ([rt.build() for rt in self.transformers]
