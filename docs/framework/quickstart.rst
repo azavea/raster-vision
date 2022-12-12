@@ -74,19 +74,18 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
 .. code-block:: console
 
     > tree -L 3
-    .
     ├── Makefile
     ├── bundle
     │   └── model-bundle.zip
     ├── eval
-    │   └── eval.json
+    │   └── validation_scenes
+    │       └── eval.json
     ├── pipeline-config.json
     ├── predict
     │   └── scene_25
     │       └── labels.tif
     └── train
         ├── dataloaders
-        │   ├── test.png
         │   ├── train.png
         │   └── valid.png
         ├── last-model.pth
@@ -94,9 +93,12 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
         ├── log.csv
         ├── model-bundle.zip
         ├── tb-logs
-        │   └── events.out.tfevents.1585513048.086fdd4c5530.214.0
-        ├── test_metrics.json
-        └── test_preds.png
+        │   ├── events.out.tfevents.1670510483.c5c1c7621fb7.1830.0
+        │   ├── events.out.tfevents.1670511197.c5c1c7621fb7.2706.0
+        │   └── events.out.tfevents.1670595249.986730ccbe70.7507.0
+        ├── valid_metrics.json
+        └── valid_preds.png
+
 
 .. note:: The numbers in your ``events.out.tfevents`` filename will not necessarily match the ones above.
 
