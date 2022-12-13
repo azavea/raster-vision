@@ -1,6 +1,89 @@
 CHANGELOG
 =========
 
+Raster Vision 0.20.0
+--------------------
+
+This release brings major improvements to Raster Vision's **usability** as well as its **usefulness**.
+
+Whereas previously Raster Vision was a **framework** where users could configure a *pipeline* and then let it run, it is now *also* a **library** from which users can pick individual components and use them to build new things.
+
+We have also significantly improved the documentation. Most notably, it now contains detailed :doc:`tutorial notebooks <usage/tutorials/index>` as well a full :doc:`API reference <api_reference/index>`. The documentation for the Raster Vision pipeline, which used to make up most of the documentation in previous versions, is now located in the :doc:`framework/index` section.
+
+In terms of features, some highlights are:
+
+- Support for multiband imagery, introduced in v0.13 for semantic segmentation, is now also available in chip classification and object detection. (`#1345 <https://github.com/azavea/raster-vision/pull/1345>`__)
+- Improved data fusion: the :class:`~rastervision.core.data.raster_source.multi_raster_source.MultiRasterSource` can now combine :class:`RasterSources <rastervision.core.data.raster_source.raster_source.RasterSource>` with varying extents and resolutions. (`#1308 <https://github.com/azavea/raster-vision/pull/1308>`__)
+- You can now discard edges of predicted chips in semantic segmentation in order to reduce boundary artifacts (`#1486 <https://github.com/azavea/raster-vision/pull/1486>`__). This can be used *in addition* to the `previously introduced <https://github.com/azavea/raster-vision/pull/1057>`__ ability to average overlapping regions in adjacent chips.
+- Progress-bars will now be shown for all downloads and uploads as well as other time-consuming operations that take longer than 5 seconds.
+- Improved caching of downloads: Raster Vision can now cache downloads. Also a bug that caused Raster Vision to download the same image multiple times has been fixed, resulting in significant speedups.
+
+.. warning:: This release breaks backward-compatibility with previous versions.
+
+Features
+~~~~~~~~
+
+- Extend multiband support to all tasks (`#1345 <https://github.com/azavea/raster-vision/pull/1345>`__)
+- Add support for external models for object detection (`#1337 <https://github.com/azavea/raster-vision/pull/1337>`__)
+- Allow ``MultiRasterSource`` to read from sub raster sources with non-identical extents and resolutions (`#1308 <https://github.com/azavea/raster-vision/pull/1308>`__)
+- Allow discarding edges of predicted chips in semantic segmentation (`#1486 <https://github.com/azavea/raster-vision/pull/1486>`__)
+- Add numpy-like array indexing and slicing to ``RasterSource`` and ``LabelSource`` (`#1470 <https://github.com/azavea/raster-vision/pull/1470>`__)
+- Make ``RandomWindowGeoDataset`` more efficient when sampling chips from scenes with AOIs (`#1225 <https://github.com/azavea/raster-vision/pull/1225>`__)
+- Add support for Albumentations' lambda transforms (`#1368 <https://github.com/azavea/raster-vision/pull/1368>`__)
+- Provide grouping mechanism for scenes and use it in the ``analyze`` and ``eval`` stages (`#1375 <https://github.com/azavea/raster-vision/pull/1375>`__)
+- Update STAC-reading functionality to make it compatible with STAC v1.0.* (`#1243 <https://github.com/azavea/raster-vision/pull/1243>`__)
+- Add progress bars for downloads and uploads (`#1343 <https://github.com/azavea/raster-vision/pull/1343>`__)
+- Allow caching downloads (`#1450 <https://github.com/azavea/raster-vision/pull/1450>`__)
+
+Refactoring
+~~~~~~~~~~~
+
+- Refactor ``Learner`` and related configs to be more flexible and easier to use in a notebook (`#1413 <https://github.com/azavea/raster-vision/pull/1413>`__)
+- Refactor to make it easier to programmatically make predictions on new scenes (`#1434 <https://github.com/azavea/raster-vision/pull/1434>`__)
+- Refactor: make ``Evaluator`` easier to use independently (`#1438 <https://github.com/azavea/raster-vision/pull/1438>`__)
+- Refactor vector data handling (`#1437 <https://github.com/azavea/raster-vision/pull/1437>`__, `#1461 <https://github.com/azavea/raster-vision/pull/1461>`__)
+- Add ``GeoDataset.from_uris()`` for convenient initialization of ``GeoDatasets`` (`#1462 <https://github.com/azavea/raster-vision/pull/1462>`__, `#1588 <https://github.com/azavea/raster-vision/pull/1588>`__)
+- Add ``Labels.save()`` convenience method (`#1486 <https://github.com/azavea/raster-vision/pull/1486>`__)
+- Factor out dataset visualization into a ``Visualizer`` class (`#1476 <https://github.com/azavea/raster-vision/pull/1476>`__)
+- Replace ``STRTree`` with GeoPandas ``GeoDataFrame``-based spatial joins in ``ChipClassificaitonLabelSource`` and ``RasterizedSource`` (`#1470 <https://github.com/azavea/raster-vision/pull/1470>`__)
+- Remove ``ActivateMixin`` entirely (`#1470 <https://github.com/azavea/raster-vision/pull/1470>`__)
+- Remove the ``mask-to-polygons`` dependency (`#1470 <https://github.com/azavea/raster-vision/pull/1470>`__)
+
+Documentation
+~~~~~~~~~~~~~
+
+- Update documentation site (`#1501 <https://github.com/azavea/raster-vision/pull/1501>`__, `#1589 <https://github.com/azavea/raster-vision/pull/1589>`__)
+- Refactor documentation (`#1561 <https://github.com/azavea/raster-vision/pull/1561>`__)
+- Add tutorial notebooks (`#1470 <https://github.com/azavea/raster-vision/pull/1470>`__, `#1506 <https://github.com/azavea/raster-vision/pull/1506>`__, `#1586 <https://github.com/azavea/raster-vision/pull/1586>`__, `#1546 <https://github.com/azavea/raster-vision/pull/1546>`__)
+- Add code of conduct (`#1160 <https://github.com/azavea/raster-vision/pull/1160>`__)
+
+Fixes
+~~~~~
+
+- Speed up ``RGBClassTransformer`` by an order of magnitude (`#1485 <https://github.com/azavea/raster-vision/pull/1485>`__)
+- Fix ``rastervision_pipeline`` entry point to ensure commands from other plugins are available (`#1250 <https://github.com/azavea/raster-vision/pull/1250>`__)
+- Make the semantic segmentation integration test more deterministic (`#1261 <https://github.com/azavea/raster-vision/pull/1261>`__)
+- Misc. fixes (`#1260 <https://github.com/azavea/raster-vision/pull/1260>`__, `#1281 <https://github.com/azavea/raster-vision/pull/1281>`__, `#1453 <https://github.com/azavea/raster-vision/pull/1453>`__)
+- Fix incorrect F1 scores when aggregating evals for scenes in the eval stage (`#1386 <https://github.com/azavea/raster-vision/pull/1386>`__)
+- Fix bug in semantic segmentation prediction output paths (`#1354 <https://github.com/azavea/raster-vision/pull/1354>`__)
+- Do not zero out null class pixels when creating semantic segmentation training chips (`#1556 <https://github.com/azavea/raster-vision/pull/1556>`__)
+- Fix a bug in ``DataConfig`` validation and refactor ``ClassConfig`` (`#1436 <https://github.com/azavea/raster-vision/pull/1436>`__)
+- Fix `#1052 <https://github.com/azavea/raster-vision/pull/1052>`__ (`#1451 <https://github.com/azavea/raster-vision/pull/1451>`__)
+- Fix `#991 <https://github.com/azavea/raster-vision/pull/991>`__ and `#1452 <https://github.com/azavea/raster-vision/pull/1452>`__ (`#1484 <https://github.com/azavea/raster-vision/pull/1484>`__)
+- Fix `#1430 <https://github.com/azavea/raster-vision/pull/1430>`__ (`#1495 <https://github.com/azavea/raster-vision/pull/1495>`__)
+
+Development/maintenance
+~~~~~~~~~~~~~~~~~~~~~~~
+
+- Migrate from Travis to GitHub Actions (`#1218 <https://github.com/azavea/raster-vision/pull/1218>`__)
+- Add Github issue templates (`#1242 <https://github.com/azavea/raster-vision/pull/1242>`__, `#1288 <https://github.com/azavea/raster-vision/pull/1288>`__, `#1420 <https://github.com/azavea/raster-vision/pull/1420>`__)
+- Switch from Gitter to Github Discussions (`#1464 <https://github.com/azavea/raster-vision/pull/1464>`__, `#1465 <https://github.com/azavea/raster-vision/pull/1465>`__)
+- Update cloudformation template to allow use of on-demand GPU instances (`#1482 <https://github.com/azavea/raster-vision/pull/1482>`__)
+- Add option to build ARM64 Docker image (`#1545 <https://github.com/azavea/raster-vision/pull/1545>`__, `#1559 <https://github.com/azavea/raster-vision/pull/1559>`__)
+- Make ``docker/run`` automatically find a free port for Jupyter server if the default port is already taken (`#1558 <https://github.com/azavea/raster-vision/pull/1558>`__)
+- Set tutorial-notebooks path as the default jupyter path in ``docker/run`` (`#1595 <https://github.com/azavea/raster-vision/pull/1595>`__)
+
+
 Raster Vision 0.13.1
 --------------------
 
