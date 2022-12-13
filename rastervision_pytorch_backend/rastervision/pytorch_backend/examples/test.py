@@ -1,32 +1,28 @@
+from typing import Any, Dict, List, Optional, Union
 from genericpath import exists
-import os
-from typing import List, Optional, Union
 from pprint import pformat
 import subprocess
-from os.path import (basename, isdir, isfile, join, normpath, relpath,
-                     splitext, split)
+from os.path import (basename, isdir, isfile, join, relpath, split)
 from tempfile import TemporaryDirectory
-import shutil
 
 import click
 
 from rastervision.pipeline.file_system import (
     file_to_json, sync_from_dir, upload_or_copy, download_or_copy, file_exists,
-    sync_to_dir)
+    sync_to_dir, NotReadableError, download_if_needed)
 
+OLD_VERSION = '0.13'
+NEW_VERSION = '0.20'
 EXAMPLES_MODULE_ROOT = 'rastervision.pytorch_backend.examples'
-EXAMPLES_PATH_ROOT = ('/opt/src/rastervision_pytorch_backend/'
-                      'rastervision/pytorch_backend/examples')
-REMOTE_PROCESSED_ROOT = 's3://raster-vision/examples/0.20/processed-data'
-REMOTE_OUTPUT_ROOT = 's3://raster-vision/examples/0.20/output'
+EXAMPLES_PATH_ROOT = '/opt/src/rastervision_pytorch_backend/rastervision/pytorch_backend/examples'  # noqa
+REMOTE_PROCESSED_ROOT = f's3://raster-vision/examples/{NEW_VERSION}/processed-data'
+REMOTE_OUTPUT_ROOT = f's3://raster-vision/examples/{NEW_VERSION}/output'
 LOCAL_RAW_ROOT = '/opt/data/raw-data'
 LOCAL_PROCESSED_ROOT = '/opt/data/examples/processed-data'
 LOCAL_OUTPUT_ROOT = '/opt/data/examples/output'
 LOCAL_COLLECT_ROOT = '/opt/data/examples/collect'
-ZOO_UPLOAD_ROOT = (
-    's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.20')
-SAMPLE_IMG_ROOT = (
-    's3://azavea-research-public-data/raster-vision/examples/model-zoo-0.20')
+ZOO_UPLOAD_ROOT = f's3://azavea-research-public-data/raster-vision/examples/model-zoo-{NEW_VERSION}'  # noqa
+SAMPLE_IMG_DIR = f's3://azavea-research-public-data/raster-vision/examples/sample_images'  # noqa
 
 ######################
 # Default configuration for the examples.
@@ -48,8 +44,6 @@ cfg = [
             'processed_uri': f'{REMOTE_PROCESSED_ROOT}/spacenet-rio-cc',
             'root_uri': f'{REMOTE_OUTPUT_ROOT}/spacenet-rio-cc'
         },
-        'sample_img':
-        f'{SAMPLE_IMG_ROOT}/spacenet-rio-cc/013022223130_sample.tif'
     },
     {
         'key': 'isprs-potsdam-ss',
@@ -67,7 +61,6 @@ cfg = [
             'processed_uri': f'{REMOTE_PROCESSED_ROOT}/isprs-potsdam-ss',
             'root_uri': f'{REMOTE_OUTPUT_ROOT}/isprs-potsdam-ss'
         },
-        'sample_img': f'{SAMPLE_IMG_ROOT}/isprs-potsdam-ss/3_12_sample.tif'
     },
     {
         'key': 'spacenet-vegas-buildings-ss',
@@ -84,7 +77,6 @@ cfg = [
             'root_uri': f'{REMOTE_OUTPUT_ROOT}/spacenet-vegas-buildings-ss'
         },
         'extra_args': [['target', 'buildings']],
-        'sample_img': f'{SAMPLE_IMG_ROOT}/spacenet-vegas-buildings-ss/1929.tif'
     },
     {
         'key': 'spacenet-vegas-roads-ss',
@@ -101,7 +93,6 @@ cfg = [
             'root_uri': f'{REMOTE_OUTPUT_ROOT}/spacenet-vegas-roads-ss'
         },
         'extra_args': [['target', 'roads']],
-        'sample_img': f'{SAMPLE_IMG_ROOT}/spacenet-vegas-roads-ss/524.tif'
     },
     {
         'key': 'cowc-potsdam-od',
@@ -118,7 +109,6 @@ cfg = [
             'processed_uri': f'{REMOTE_PROCESSED_ROOT}/cowc-potsdam-od',
             'root_uri': f'{REMOTE_OUTPUT_ROOT}/cowc-potsdam-od'
         },
-        'sample_img': f'{SAMPLE_IMG_ROOT}/cowc-potsdam-od/3_10_sample.tif'
     },
     {
         'key': 'xview-od',
@@ -135,7 +125,6 @@ cfg = [
             'processed_uri': f'{REMOTE_PROCESSED_ROOT}/xview-od',
             'root_uri': f'{REMOTE_OUTPUT_ROOT}/xview-od'
         },
-        'sample_img': f'{SAMPLE_IMG_ROOT}/xview-od/1124-sample.tif'
     },
 ]
 
@@ -167,7 +156,7 @@ def test():
     metavar='KEY VALUE',
     default=[],
     help='Override experiment config.')
-def run(keys=[], test=True, remote=False, commands=None, overrides=[]):
+def run(keys=[], test=False, remote=False, commands=None, overrides=[]):
     """Run RV on a set of examples.
 
     Args:
@@ -208,12 +197,18 @@ def run(keys=[], test=True, remote=False, commands=None, overrides=[]):
     default=[],
     help='Override experiment config.')
 def collect(keys, collect_dir, remote, paths, overrides=[]):
-    """Download outputs of paths for each example. By default, only
-    downloads eval and bundle.
+    """Download outputs of paths for each example.
+
+    By default, only downloads eval and bundle.
     """
     overrides = dict(overrides)
     if paths is None:
-        paths = ['train/model-bundle.zip', 'eval', 'bundle']
+        paths = [
+            'train/model-bundle.zip',
+            'train/last-model.pth',
+            'eval',
+            'bundle',
+        ]
     else:
         paths = paths.split(' ')
 
@@ -264,7 +259,8 @@ def collect(keys, collect_dir, remote, paths, overrides=[]):
     default=[],
     help='Override experiment config.')
 def predict(keys, collect_dir, remote, overrides=[]):
-    """Test model bundles using predict command using output of collect command."""
+    """Test model bundles using predict command on output of collect command.
+    """
     overrides = dict(overrides)
 
     run_all = len(keys) == 0
@@ -286,11 +282,32 @@ def predict(keys, collect_dir, remote, overrides=[]):
 # compare
 # --------------------
 @test.command()
-@click.argument('root_uri_old')
-@click.argument('root_uri_new')
-@click.option('--download_dir', '-d', default=None)
-def compare(root_uri_old: str, root_uri_new: str,
-            download_dir: Optional[str]) -> None:
+@click.option('--root_uri_old', default=None)
+@click.option('--root_uri_new', default=None)
+@click.option('--examples_root_old', default=None)
+@click.option('--examples_root_new', default=None)
+@click.option('--download_dir', '-d', default=LOCAL_COLLECT_ROOT)
+def compare(root_uri_old: Optional[str],
+            root_uri_new: Optional[str],
+            examples_root_old: Optional[str] = None,
+            examples_root_new: Optional[str] = None,
+            download_dir: Optional[str] = LOCAL_COLLECT_ROOT) -> None:
+    """Compare different runs of the same example."""
+    if root_uri_old is None and root_uri_new is None:
+        assert examples_root_old is not None and examples_root_new is not None
+        for exp_cfg in cfg:
+            key = exp_cfg['key']
+            root_uri_old = join(examples_root_old, key)
+            root_uri_new = join(examples_root_new, key)
+            console_info(f'Comparing\n- {root_uri_old}\n- {root_uri_new}')
+            _compare(root_uri_old, root_uri_new, download_dir)
+        return
+    return _compare(root_uri_old, root_uri_new, download_dir)
+
+
+def _compare(root_uri_old: Optional[str],
+             root_uri_new: Optional[str],
+             download_dir: Optional[str] = None) -> None:
     """Compare different runs of the same example."""
     if root_uri_old != '/':
         root_uri_old = root_uri_old.rstrip('/')
@@ -339,7 +356,7 @@ def upload(keys, collect_dir, upload_dir, overrides=[]):
 # utils
 ######################
 def _run(exp_cfg: dict,
-         test: bool = True,
+         test: bool = False,
          remote: bool = False,
          commands: List[str] = None) -> None:
     """Builds a command from the params in exp_cfg and other arguments and
@@ -381,26 +398,15 @@ def _predict(exp_cfg: dict, collect_dir: str) -> None:
         exit(1)
 
     pred_dir = join(collect_dir, 'sample-predictions')
-    sample_uri = exp_cfg['sample_img']
-    _, sample_ext = splitext(basename(sample_uri))
-    sample_final_uri = join(pred_dir, f'sample-img-{key}{sample_ext}')
-    if not exists(sample_final_uri):
-        # downloads to <pred_dir>/[s3|http]/.../<sample> and returns that path
-        sample_downloaded_uri = download_or_copy(sample_uri, pred_dir)
-        # ... also copies <sample> to <pred_dir>/<sample>
-        sample_copied_uri = join(pred_dir, basename(sample_uri))
-        # delete  <pred_dir>/[s3|http]/
-        dl_dir = normpath(relpath(sample_downloaded_uri,
-                                  pred_dir)).split(os.sep)[0]
-        shutil.rmtree(join(pred_dir, dl_dir))
-        # rename <sample>
-        if sample_copied_uri != sample_final_uri:
-            os.rename(sample_copied_uri, sample_final_uri)
+    sample_filename = f'sample-img-{key}.tif'
+    sample_uri_src = join(SAMPLE_IMG_DIR, sample_filename)
+    download_or_copy(sample_uri_src, pred_dir, delete_tmp=True)
+    sample_uri_dst = join(pred_dir, sample_filename)
 
     pred_ext = exp_cfg['pred_ext']
     out_uri = join(pred_dir, f'sample-pred-{key}{pred_ext}')
     cmd = [
-        'rastervision', 'predict', model_bundle_uri, sample_final_uri, out_uri
+        'rastervision', 'predict', model_bundle_uri, sample_uri_dst, out_uri
     ]
     run_command(cmd)
 
@@ -409,15 +415,18 @@ def _upload_to_zoo(exp_cfg: dict, collect_dir: str, upload_dir: str) -> None:
     src_uris = {}
     dst_uris = {}
 
-    src_uris['learner_bundle'] = join(collect_dir, 'train', 'model-bundle.zip')
-    src_uris['eval'] = join(collect_dir, 'eval', 'eval.json')
+    src_uris['eval'] = join(collect_dir, 'eval', 'validation_scenes',
+                            'eval.json')
     src_uris['bundle'] = join(collect_dir, 'bundle', 'model-bundle.zip')
     src_uris['sample_predictions'] = join(collect_dir, 'sample-predictions')
+    src_uris['learner_bundle'] = join(collect_dir, 'train', 'model-bundle.zip')
+    src_uris['learner_model'] = join(collect_dir, 'train', 'last-model.pth')
 
-    dst_uris['learner_bundle'] = join(upload_dir, 'train', 'model-bundle.zip')
-    dst_uris['eval'] = join(upload_dir, 'eval.json')
+    dst_uris['eval'] = join(upload_dir, 'validation_scenes', 'eval.json')
     dst_uris['bundle'] = join(upload_dir, 'model-bundle.zip')
     dst_uris['sample_predictions'] = join(upload_dir, 'sample-predictions')
+    dst_uris['learner_bundle'] = join(upload_dir, 'train', 'model-bundle.zip')
+    dst_uris['learner_model'] = join(upload_dir, 'model.pth')
 
     assert len(src_uris) == len(dst_uris)
 
@@ -425,6 +434,7 @@ def _upload_to_zoo(exp_cfg: dict, collect_dir: str, upload_dir: str) -> None:
         dst = dst_uris[k]
         if not exists(src):
             console_failure(f'{k}: {src} not found.')
+            exit(1)
         if isfile(src):
             console_info(f'Uploading {k} file: {src} to {dst}.')
             upload_or_copy(src, dst)
@@ -432,7 +442,7 @@ def _upload_to_zoo(exp_cfg: dict, collect_dir: str, upload_dir: str) -> None:
             console_info(f'Syncing {k} dir: {src} to {dst}.')
             sync_to_dir(src, dst)
         else:
-            raise ValueError()
+            raise ValueError(src)
 
 
 def _compare_runs(root_uri_old: str,
@@ -445,8 +455,8 @@ def _compare_runs(root_uri_old: str,
     for cmd in commands:
         key_old = basename(root_uri_old)
         key_new = basename(root_uri_new)
-        cmd_root_uri_old_local = fetch_cmd_dir(root_uri_old, cmd,
-                                               join(download_dir, key_old))
+        cmd_root_uri_old_local = fetch_cmd_dir(
+            root_uri_old, cmd, join(download_dir, 'old', key_old))
         cmd_root_uri_new_local = fetch_cmd_dir(root_uri_new, cmd,
                                                join(download_dir, key_new))
         if cmd == 'eval':
@@ -460,10 +470,14 @@ def _compare_evals(
         exclude_keys: list = ['conf_mat', 'count_error', 'per_scene']) -> None:
     """Compare outputs of the eval command for two runs of an example."""
     console_heading('Comparing keys and values in eval.json files...')
-    eval_json_old = join(root_uri_old, 'eval.json')
-    eval_json_new = join(root_uri_new, 'eval.json')
-    eval_old = file_to_json(eval_json_old)
-    eval_new = file_to_json(eval_json_new)
+    try:
+        eval_json_old = join(root_uri_old, 'validation_scenes', 'eval.json')
+        eval_old = file_to_json(download_if_needed(eval_json_old))
+    except NotReadableError:
+        eval_json_old = join(root_uri_old, 'eval.json')
+        eval_old = file_to_json(download_if_needed(eval_json_old))
+    eval_json_new = join(root_uri_new, 'validation_scenes', 'eval.json')
+    eval_new = file_to_json(download_if_needed(eval_json_new))
     _compare_dicts(
         eval_old, eval_new, float_tol=float_tol, exclude_keys=exclude_keys)
 
@@ -575,7 +589,9 @@ def _compare_dicts(dict_old: dict,
             comparing values. Defaults to [].
     """
     dict_old = flatten_dict(dict_old)
-    dict_new = flatten_dict(dict_new)
+    dict_new: Dict[str, Any] = flatten_dict(dict_new)
+    # TODO this hack is specific to 0.13 vs 0.20 comparison
+    dict_new = {k.replace('.metrics', ''): v for k, v in dict_new.items()}
     keys_old, keys_new = set(dict_old.keys()), set(dict_new.keys())
     diff1, diff2 = keys_new - keys_old, keys_old - keys_new
     if len(diff1) > 0:
@@ -596,17 +612,22 @@ def _compare_dicts(dict_old: dict,
         if any(_k in k for _k in exclude_keys):
             continue
         v_old, v_new = dict_old[k], dict_new[k]
-        if isinstance(v_new, float):
-            if abs(v_new - v_old) > float_tol:
+        if isinstance(v_new, float) and isinstance(v_old, float):
+            if v_new - v_old > float_tol:
                 diff_count += 1
-                console_failure(
-                    f'diff: {k}: '
-                    f'{v_new:.6f} - {v_old:.6f}  = {v_new - v_old:.6f}')
-        elif isinstance(v_new, int):
+                _diff = v_new - v_old
+                console_success(f'diff: {k}: '
+                                f'{v_new:.6f} - {v_old:.6f}  = {_diff:.6f}')
+            elif v_old - v_new > float_tol:
+                diff_count += 1
+                _diff = v_new - v_old
+                console_failure(f'diff: {k}: '
+                                f'{v_new:.6f} - {v_old:.6f}  = {_diff:.6f}')
+        elif isinstance(v_new, int) and isinstance(v_old, int):
             if v_old != v_new:
                 diff_count += 1
-                console_failure(
-                    f'diff: {k}: {v_new} - {v_old}  = {v_new - v_old}')
+                _diff = v_new - v_old
+                console_failure(f'diff: {k}: {v_new} - {v_old}  = {_diff}')
         else:
             if v_old != v_new:
                 diff_count += 1
