@@ -117,7 +117,7 @@ class Predictor():
             # create vector outputs for each class without specifying URIs
             self.scene.label_store.vector_output = [
                 PolygonVectorOutputConfig(class_id=i)
-                for i, _ in enumerate(self.config.dataset.class_config)
+                for i, _ in enumerate(self.config.dataset.class_config.names)
             ]
             # set URIs
             self.scene.label_store.uri = label_uri
