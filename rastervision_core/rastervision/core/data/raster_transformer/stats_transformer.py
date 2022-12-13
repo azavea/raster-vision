@@ -109,7 +109,7 @@ class StatsTransformer(RasterTransformer):
         Returns:
             StatsTransformer: A StatsTransformer.
         """
-        from rastervision.core.data import RasterStats
+        from rastervision.core.raster_stats import RasterStats
         stats = RasterStats()
         stats.compute(raster_sources=raster_sources, sample_prob=sample_prob)
         stats_transformer = StatsTransformer(
