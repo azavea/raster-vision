@@ -9,16 +9,16 @@ Codebase Overview
 -----------------
 
 The Raster Vision codebase is designed with modularity and flexibility in mind.
-There is a main, required package, ``rastervision.pipeline``, which contains functionality for defining and configuring computational pipelines, running them in different environments using parallelism and GPUs, reading and writing to different file systems, and adding and customizing pipelines via a plugin mechanism. In contrast, the "domain logic" of geospatial deep learning using PyTorch, and running on AWS is contained in a set of optional plugin packages. All plugin packages must be under the ``rastervision`` `native namespace package <https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages>`_.
+There is a main, required package, :mod:`rastervision.pipeline`, which contains functionality for defining and configuring computational pipelines, running them in different environments using parallelism and GPUs, reading and writing to different file systems, and adding and customizing pipelines via a plugin mechanism. In contrast, the "domain logic" of geospatial deep learning using PyTorch, and running on AWS is contained in a set of optional plugin packages. All plugin packages must be under the ``rastervision`` `native namespace package <https://packaging.python.org/guides/packaging-namespace-packages/#native-namespace-packages>`_.
 
 Each of these packages is contained in a separate ``setuptools``/``pip`` package with its own dependencies, including dependencies on other Raster Vision packages. This means that it's possible to install and use subsets of the functionality in Raster Vision. A short summary of the packages is as follows:
 
-* ``rastervision.pipeline``: define and run pipelines
-* ``rastervision.aws_s3``: read and write files on S3
-* ``rastervision.aws_batch``: run pipelines on Batch
-* ``rastervision.core``: chip classification, object detection, and semantic segmentation pipelines that work on geospatial data along with abstractions for running with different :ref:`backends <backend>` and data formats
-* ``rastervision.pytorch_learner``: model building and training code using ``torch`` and ``torchvision``, which can be used independently of ``rastervision.core``.
-* ``rastervision.pytorch_backend``: adds backends for the pipelines in ``rastervision.core`` using ``rastervision.pytorch_learner`` to do the heavy lifting
+* :mod:`rastervision.pipeline`: define and run pipelines
+* :mod:`rastervision.aws_s3`: read and write files on S3
+* :mod:`rastervision.aws_batch`: run pipelines on Batch
+* :mod:`rastervision.core`: chip classification, object detection, and semantic segmentation pipelines that work on geospatial data along with abstractions for running with different :ref:`backends <backend>` and data formats
+* :mod:`rastervision.pytorch_learner`: model building and training code using ``torch`` and ``torchvision``, which can be used independently of :mod:`rastervision.core`.
+* :mod:`rastervision.pytorch_backend`: adds backends for the pipelines in :mod:`rastervision.core` using :mod:`rastervision.pytorch_learner` to do the heavy lifting
 
 The figure below shows the packages, the dependencies between them, and important base classes within each package.
 
@@ -37,16 +37,18 @@ The figure below shows the packages, the dependencies between them, and importan
 Writing pipelines and plugins
 -------------------------------------
 
-In this section, we explain the most important aspects of the ``rastervision.pipeline`` package through a series of examples which incrementally build on one another. These examples show how to write custom pipelines and configuration schemas, how to customize an existing pipeline, and how to package the code as a plugin.
+In this section, we explain the most important aspects of the :mod:`rastervision.pipeline` package through a series of examples which incrementally build on one another. These examples show how to write custom pipelines and configuration schemas, how to customize an existing pipeline, and how to package the code as a plugin.
 
-The full source code for Examples 1 and 2 is in `rastervision.pipeline_example_plugin1 <{{ repo }}/rastervision_pipeline/rastervision/pipeline_example_plugin1>`_ and Example 3 is in `rastervision.pipeline_example_plugin2 <{{ repo }}/rastervision_pipeline/rastervision/pipeline_example_plugin2>`_ and they can be run from inside the RV Docker image. However, **note that new plugins are typically created in a separate repo and Docker image**, and :ref:`bootstrap` shows how to do this.
+The full source code for Examples 1 and 2 is in `rastervision.pipeline_example_plugin1 <{{ repo }}/rastervision_pipeline/rastervision/pipeline_example_plugin1>`_ and Example 3 is in `rastervision.pipeline_example_plugin2 <{{ repo }}/rastervision_pipeline/rastervision/pipeline_example_plugin2>`_ and they can be run from inside the Raster Vision Docker image. However, **note that new plugins are typically created in a separate repo and Docker image**, and :ref:`bootstrap` shows how to do this.
 
 .. _example 1:
 
 Example 1: a simple pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ``Pipeline`` in RV is a class which represents a sequence of commands with a shared configuration in the form of a ``PipelineConfig``. Here is a toy example of these two classes that saves a set of messages to disk, and then prints them all out.
+.. currentmodule:: rastervision.pipeline
+
+A :class:`~pipeline.Pipeline` in Raster Vision is a class which represents a sequence of commands with a shared configuration in the form of a :class:`~pipeline_config.PipelineConfig`. Here is a toy example of these two classes that saves a set of messages to disk, and then prints them all out.
 
 .. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin1/sample_pipeline.py
     :language: python
@@ -150,7 +152,7 @@ We can run the pipeline as follows:
     hola bob!!!
     hola susan!!!
 
-The output in ``/opt/data/sample-pipeline`` contains a ``pipeline-config.json`` file which is the serialized version of the ``SamplePipeline2Config`` created in ``config3.py``. The serialized configuration is used to transmit the configuration when running a pipeline remotely. It also is a programming language-independent record of the fully-instantiated configuration that was generated by the ``run`` command in conjunction with any command line arguments. Below is the partial contents of this file. The interesting thing to note here is the ``type_hint`` field that appears twice. This is what allows the JSON to be deserialized back into the Python classes that were originally used.(Recall that the ``register_config`` decorator is what tells the ``Registry`` the type hint for each ``Config`` class.)
+The output in ``/opt/data/sample-pipeline`` contains a ``pipeline-config.json`` file which is the serialized version of the ``SamplePipeline2Config`` created in ``config3.py``. The serialized configuration is used to transmit the configuration when running a pipeline remotely. It also is a programming language-independent record of the fully-instantiated configuration that was generated by the ``run`` command in conjunction with any command line arguments. Below is the partial contents of this file. The interesting thing to note here is the ``type_hint`` field that appears twice. This is what allows the JSON to be deserialized back into the Python classes that were originally used.(Recall that the ``register_config`` decorator is what tells the ``Registry`` the type hint for each :class:`~config.Config` class.)
 
 .. code-block:: json
 
@@ -181,15 +183,17 @@ We now have a plugin that customizes an existing pipeline! Being a toy example, 
 Customizing Raster Vision
 --------------------------
 
-When approaching a new problem or dataset with Raster Vision, you may get lucky and be able to apply RV "off-the-shelf". In other cases, Raster Vision can be used after writing scripts to convert data into the appropriate format.
+When approaching a new problem or dataset with Raster Vision, you may get lucky and be able to apply Raster Vision "off-the-shelf". In other cases, Raster Vision can be used after writing scripts to convert data into the appropriate format.
 
-However, sometimes you will need to modify the functionality of RV to suit your problem. In this case, you could modify the RV source code (ie. any of the code in the :ref:`packages <codebase overview>` in the main RV repo). In some cases, this may be necessary, as the right extension points don't exist. In other cases, the functionality may be very widely-applicable, and you would like to :ref:`contribute <contributing>` it to the main repo. Most of the time, however, the functionality will be problem-specific, or is in an embryonic stage of development, and should be implemented in a plugin that resides outside the main repo.
+However, sometimes you will need to modify the functionality of Raster Vision to suit your problem. In this case, you could modify the Raster Vision source code (ie. any of the code in the :ref:`packages <codebase overview>` in the main Raster Vision repo). In some cases, this may be necessary, as the right extension points don't exist. In other cases, the functionality may be very widely-applicable, and you would like to :doc:`contributing <../CONTRIBUTING>` it to the main repo. Most of the time, however, the functionality will be problem-specific, or is in an embryonic stage of development, and should be implemented in a plugin that resides outside the main repo.
 
 General information about plugins can be found in :ref:`bootstrap` and :ref:`pipelines plugins`. The following are some brief pointers on how to write plugins for different scenarios. In the future, we would like to enhance this section.
 
-* To add commands to an existing ``Pipeline``: write a plugin with subclasses of the ``Pipeline`` and its corresponding ``PipelineConfig`` class. The new ``Pipeline`` should add a method for the new command, and modify the list of ``commands``. Any new configuration should be added to the subclass of the ``PipelineConfig``. Example: running some data pre- or post-processing code in a pipeline.
-* To modify commands of an existing ``Pipeline``: same as above except you will override command methods. If a new configuration field is required, you can subclass the ``Config`` class that field resides within. Example: custom chipping functionality for semantic segmentation. You will need to create subclasses of ``SemanticSegmentationChipOptions``, ``SemanticSegmentation``, and ``SemanticSegmentationConfig``.
-* To create a substantially new ``Pipeline``: write a new plugin that adds a new ``Pipeline``. See the ``rastervision.core`` plugin, in particular, the contents of the ``rastervision.core.rv_pipeline`` package. If you want to add a new geospatial deep learning pipeline (eg. for chip regression), you may want to override the ``RVPipeline`` class. In other cases that deviate more from ``RVPipeline``, you may want to write a new ``Pipeline`` class with arbitrary commands and logic, but that uses the core model building and training functionality in the ``rastervision.pytorch_learner`` plugin.
-* To add the ability to use new file systems or run in new cloud environments: write a plugin that adds a new ``FileSystem`` or ``Runner``. See the ``rastervision.aws_s3`` and ``rastervision.aws_batch`` plugins for examples.
-* To use an existing ``RVPipeline`` with a new ``Backend``: write a plugin that adds a subclass of ``Backend`` and ``BackendConfig``. See the ``rastervision.pytorch_backend`` plugin for an example.
-* To override model building or training routines in an existing ``PyTorchLearnerBackend``: write a plugin that adds a subclass of ``Learner`` (and ``LearnerConfig``) that overrides ``build_model`` and ``train_step``, and  a subclass of ``PyTorchLearnerBackend`` (and ``PyTorchLearnerBackendConfig``) that overrides the backend so it uses the ``Learner`` subclass.
+.. currentmodule:: rastervision.pipeline
+
+* To add commands to an existing :class:`~pipeline.Pipeline`: write a plugin with subclasses of the :class:`~pipeline.Pipeline` and its corresponding :class:`~pipeline_config.PipelineConfig` class. The new :class:`~pipeline.Pipeline` should add a method for the new command, and modify the list of ``commands``. Any new configuration should be added to the subclass of the :class:`~pipeline_config.PipelineConfig`. Example: running some data pre- or post-processing code in a pipeline.
+* To modify commands of an existing :class:`~pipeline.Pipeline`: same as above except you will override command methods. If a new configuration field is required, you can subclass the :class:`~config.Config` class that field resides within. Example: custom chipping functionality for semantic segmentation. You will need to create subclasses of :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationChipOptions`, :class:`~rastervision.core.rv_pipeline.semantic_segmentation.SemanticSegmentation`, and :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationConfig`.
+* To create a substantially new :class:`~pipeline.Pipeline`: write a new plugin that adds a new :class:`~pipeline.Pipeline`. See the :mod:`rastervision.core` plugin, in particular, the contents of the :mod:`rastervision.core.rv_pipeline` package. If you want to add a new geospatial deep learning pipeline (eg. for chip regression), you may want to override the :mod:`rastervision.core.rv_pipeline` class. In other cases that deviate more from :class:`~rastervision.core.rv_pipeline.Raster VisionPipeline`, you may want to write a new :class:`~pipeline.Pipeline` class with arbitrary commands and logic, but that uses the core model building and training functionality in the :mod:`rastervision.pytorch_learner` plugin.
+* To add the ability to use new file systems or run in new cloud environments: write a plugin that adds a new :class:`~file_system.file_system.FileSystem` or :class:`~runner.runner.Runner`. See the :mod:`rastervision.aws_s3` and :mod:`rastervision.aws_batch` plugins for examples.
+* To use an existing :mod:`rastervision.core.rv_pipeline` with a new :class:`~rastervision.core.backend.backend.Backend`: write a plugin that adds a subclass of :class:`~rastervision.core.backend.backend.Backend` and :class:`~rastervision.core.backend.backend_config.BackendConfig`. See the :mod:`rastervision.pytorch_backend` plugin for an example.
+* To override model building or training routines in an existing :class:`~rastervision.pytorch_backend.pytorch_learner_backend.PyTorchLearnerBackend`: write a plugin that adds a subclass of :class:`~rastervision.pytorch_learner.learner.Learner` (and :class:`~rastervision.pytorch_learner.learner_config.LearnerConfig`) that overrides :meth:`~rastervision.pytorch_learner.learner.Learner.build_model` and :meth:`~rastervision.pytorch_learner.learner.Learner.train_step`, and  a subclass of :class:`~rastervision.pytorch_backend.pytorch_learner_backend.PyTorchLearnerBackend` (and :class:`~rastervision.pytorch_backend.pytorch_learner_backend_config.PyTorchLearnerBackendConfig`) that overrides the backend so it uses the :class:`~rastervision.pytorch_learner.learner.Learner` subclass.

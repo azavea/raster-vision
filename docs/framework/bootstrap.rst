@@ -1,7 +1,7 @@
 .. _bootstrap:
 
 Bootstrap new projects with a template
-=======================================
+======================================
 
 When using Raster Vision on a new project, the best practice is to create a new repo with its own Docker image based on the Raster Vision image. This involves a fair amount of boilerplate code which has a few things that vary between projects. To facilitate bootstrapping new projects, there is a `cookiecutter <https://cookiecutter.readthedocs.io/>`_ `template <{{ repo }}/cookiecutter_template>`_. Assuming that you cloned the Raster Vision repo and ran ``pip install cookiecutter==1.7.0``, you can instantiate the template as follows (after adjusting paths appropriately for your particular setup).
 
