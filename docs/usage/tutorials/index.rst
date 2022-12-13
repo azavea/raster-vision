@@ -15,7 +15,6 @@ The following tutorials highlight many of the things you can do with Raster Visi
     visualize_data_samples
     train
     pred_and_eval_ss
-    misc
 
 .. rubric:: Advanced
 
