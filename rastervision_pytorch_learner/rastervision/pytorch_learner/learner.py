@@ -282,14 +282,15 @@ class Learner(ABC):
         self.config_path = join(self.output_dir, 'learner-config.json')
         str_to_file(cfg.json(), self.config_path)
 
-        self.log_path = join(self.output_dir, 'log.csv')
+        self.log_path = join(self.output_dir_local, 'log.csv')
         self.metric_names = self.build_metric_names()
 
         # data
         self.setup_data()
 
         # model
-        self.last_model_weights_path = join(self.output_dir, 'last-model.pth')
+        self.last_model_weights_path = join(self.output_dir_local,
+                                            'last-model.pth')
         self.load_checkpoint()
 
         # optimization
@@ -316,7 +317,7 @@ class Learner(ABC):
         """Setup for logging stats to TB."""
         self.tb_writer = None
         if self.cfg.log_tensorboard:
-            self.tb_log_dir = join(self.output_dir, 'tb-logs')
+            self.tb_log_dir = join(self.output_dir_local, 'tb-logs')
             make_dir(self.tb_log_dir)
             self.tb_writer = SummaryWriter(log_dir=self.tb_log_dir)
 
@@ -870,7 +871,7 @@ class Learner(ABC):
         log.info(
             f'Making and plotting sample predictions on the {split} set...')
         dl = self.get_dataloader(split)
-        output_path = join(self.output_dir, f'{split}_preds.png')
+        output_path = join(self.output_dir_local, f'{split}_preds.png')
         preds = self.predict_dataloader(
             dl, return_format='xyz', batched_output=True, raw_out=True)
         x, y, z = next(preds)
@@ -896,21 +897,24 @@ class Learner(ABC):
             log.info('Plotting sample training batch.')
             self.plot_dataloader(
                 self.train_dl,
-                output_path=join(self.output_dir, 'dataloaders/train.png'),
+                output_path=join(self.output_dir_local,
+                                 'dataloaders/train.png'),
                 batch_limit=batch_limit,
                 show=show)
         if self.valid_dl:
             log.info('Plotting sample validation batch.')
             self.plot_dataloader(
                 self.valid_dl,
-                output_path=join(self.output_dir, 'dataloaders/valid.png'),
+                output_path=join(self.output_dir_local,
+                                 'dataloaders/valid.png'),
                 batch_limit=batch_limit,
                 show=show)
         if self.test_dl:
             log.info('Plotting sample test batch.')
             self.plot_dataloader(
                 self.test_dl,
-                output_path=join(self.output_dir, 'dataloaders/test.png'),
+                output_path=join(self.output_dir_local,
+                                 'dataloaders/test.png'),
                 batch_limit=batch_limit,
                 show=show)
 
@@ -1281,10 +1285,10 @@ class Learner(ABC):
         Args:
             split: the dataset split to use: train, valid, or test.
         """
-        log.info('Evaluating on {} set...'.format(split))
+        log.info(f'Evaluating on {split} set...')
         dl = self.get_dataloader(split)
         metrics = self.validate_epoch(dl)
-        log.info('metrics: {}'.format(metrics))
+        log.info(f'metrics: {metrics}')
         json_to_file(metrics,
-                     join(self.output_dir, '{}_metrics.json'.format(split)))
+                     join(self.output_dir_local, f'{split}_metrics.json'))
         self.plot_predictions(split, self.cfg.data.preview_batch_limit)
