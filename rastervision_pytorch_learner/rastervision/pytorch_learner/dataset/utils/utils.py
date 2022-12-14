@@ -24,9 +24,11 @@ class GeoDatasetError(DatasetError):
 
 
 def discover_images(dir: PathLike,
-                    exts: Iterable[str] = IMG_EXTENSIONS) -> List[Path]:
+                    extensions: Iterable[str] = IMG_EXTENSIONS) -> List[Path]:
+    """Find all images with the given ``extensions`` in ``dir``."""
     dir = Path(dir)
-    img_paths = chain.from_iterable((dir.glob(f'*{ext}') for ext in exts))
+    img_paths = chain.from_iterable(
+        (dir.glob(f'*{ext}') for ext in extensions))
     return list(img_paths)
 
 
@@ -48,10 +50,10 @@ def load_image(path: PathLike) -> np.ndarray:
 def make_image_folder_dataset(data_dir: str,
                               classes: Optional[Iterable[str]] = None
                               ) -> DatasetFolder:
-    """
-    Initializes and returns an ImageFolder. If classes is specified,
-    ImageFolder's default class-to-index mapping behavior is overriden to use
-    the indices of classes instead.
+    """Initializes and returns an ImageFolder.
+
+    If classes is specified, ImageFolder's default class-to-index mapping
+    behavior is overriden to use the indices of classes instead.
     """
     if classes is None:
         return DatasetFolder(

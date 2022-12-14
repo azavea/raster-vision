@@ -167,8 +167,6 @@ def make_cc_scene(image_uri: Union[str, List[str]],
             label_vector_uri is set. See docs for
             ChipClassificationLabelSourceConfig for more details.
             Defaults to {}.
-        **kwargs: All other keyword args are passed to the default constructor
-            for this class.
         scene_id (Optional[str]): Optional scene ID. If None, will be randomly
             generated. Defaults to None.
 
@@ -260,8 +258,6 @@ def make_od_scene(image_uri: Union[str, List[str]],
             label_vector_uri is set. See docs for
             ObjectDetectionLabelSourceConfig for more details.
             Defaults to {}.
-        **kwargs: All other keyword args are passed to the default constructor
-            for this class.
         scene_id (Optional[str]): Optional scene ID. If None, will be randomly
             generated. Defaults to None.
 

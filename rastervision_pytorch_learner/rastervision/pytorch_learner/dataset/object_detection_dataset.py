@@ -21,7 +21,17 @@ log = logging.getLogger(__name__)
 
 
 class CocoDataset(Dataset):
+    """Read Object Detection data in the COCO format."""
+
     def __init__(self, img_dir: str, annotation_uri: str):
+        """Constructor.
+
+        Args:
+            img_dir (str): Directory containing the images. Image filenames
+                must match the image IDs in the annotations file.
+            annotation_uri (str): URI to a JSON file containing annotations in
+                the COCO format.
+        """
         self.annotation_uri = annotation_uri
         ann_json = file_to_json(annotation_uri)
 
@@ -56,7 +66,21 @@ class CocoDataset(Dataset):
 
 
 class ObjectDetectionImageDataset(ImageDataset):
+    """Read Object Detection data in the COCO format."""
+
     def __init__(self, img_dir: str, annotation_uri: str, *args, **kwargs):
+        """Constructor.
+
+        .. currentmodule:: rastervision.pytorch_learner.dataset.dataset
+
+        Args:
+            img_dir (str): Directory containing the images. Image filenames
+                must match the image IDs in the annotations file.
+            annotation_uri (str): URI to a JSON file containing annotations in
+                the COCO format.
+            *args: See :meth:`ImageDataset.__init__`.
+            **kwargs: See :meth:`ImageDataset.__init__`.
+        """
         ds = CocoDataset(img_dir, annotation_uri)
         super().__init__(
             ds, *args, **kwargs, transform_type=TransformType.object_detection)
@@ -138,6 +162,11 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
     def __init__(self, *args, **kwargs):
         """Constructor.
 
+        .. currentmodule:: rastervision.pytorch_learner.dataset.dataset
+
+        Args:
+            *args: See :meth:`RandomWindowGeoDataset.__init__`.
+
         Keyword Args:
             bbox_params (Optional[A.BboxParams], optional): Optional
                 bbox_params to use when resizing windows. Defaults to None.
@@ -156,6 +185,7 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
             neg_ioa_thresh (float, optional): A window will be considered
                 negative if its max IoA with any bounding box is less than this
                 threshold. Defaults to 0.2.
+            **kwargs: See :meth:`RandomWindowGeoDataset.__init__`.
         """
         self.bbox_params: Optional[A.BboxParams] = kwargs.pop(
             'bbox_params', None)

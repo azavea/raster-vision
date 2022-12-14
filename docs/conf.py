@@ -151,6 +151,21 @@ nbsphinx_prolog = r"""
         :format: html
 
     .. note:: This page was generated from `{{ docname }} <https://github.com/azavea/raster-vision/blob/master/docs/{{ docpath }}>`__.
+
+    .. note::
+
+        If running outside of the Docker image, you might need to set a couple of environment variables manually. You can do it like so:
+
+        .. code-block:: python
+
+            import os
+            from subprocess import check_output
+
+            os.environ['GDAL_DATA'] = check_output('pip show rasterio | grep Location | awk \'{print $NF"/rasterio/gdal_data/"}\'', shell=True).decode().strip()
+            os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'
+        
+        See this `Colab notebook <https://colab.research.google.com/drive/1qUl_6McbLJr9KjrhHnx_SWbSYkLPL2uW>`__ for an example.
+
 """ # noqa
 #########################
 
@@ -301,11 +316,16 @@ html_theme_options = {
 # A dictionary of values to pass into the template engine’s context for all
 # pages. Single values can also be put in this dictionary using the -A
 # command-line option of sphinx-build.
-#
+
 # yapf: disable
 html_context = dict(
     version=version,
     release=release,
+    # yes, strictly speaking, we should have both a tree/ URL for directories
+    # and a blob/ URL for files, but GitHub doesn't seem to mind if they are
+    # interchanged.
+    repo=f'https://github.com/azavea/raster-vision/tree/{version}',
+    repo_examples=f'https://github.com/azavea/raster-vision/tree/{version}/rastervision_pytorch_backend/rastervision/pytorch_backend/examples', # noqa
     s3_model_zoo=f'https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo-{version}', # noqa
 )
 # yapf: enable

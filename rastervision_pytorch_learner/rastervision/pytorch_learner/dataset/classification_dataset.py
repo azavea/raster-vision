@@ -7,14 +7,32 @@ from rastervision.pytorch_learner.dataset import (
 from rastervision.core.data.utils import make_cc_scene
 
 if TYPE_CHECKING:
-    from rastervision.core.data import ClassConfig
+    from rastervision.core.data import ClassConfig, ChipClassificationLabelSource
 
 log = logging.getLogger(__name__)
 
 
 class ClassificationImageDataset(ImageDataset):
+    """Read images and class labels from images stored in class folders.
+
+    I.e., all images for a class "A" are stored in directory ``A/``, all images
+    for a class "B" are stored in directory ``B/``, and so on. And all class
+    directories are located in the same parent directory.
+    """
+
     def __init__(self, data_dir: str, class_names: Iterable[str], *args,
                  **kwargs):
+        """Constructor.
+
+        .. currentmodule:: rastervision.pytorch_learner.dataset.dataset
+
+        Args:
+            data_dir (str): Root directory containing class dirs.
+            class_names (Iterable[str]): Class names. Should match class dir
+                names.
+            *args: See :meth:`ImageDataset.__init__`.
+            **kwargs: See :meth:`ImageDataset.__init__`.
+        """
         ds = make_image_folder_dataset(data_dir, classes=class_names)
         super().__init__(
             ds, *args, **kwargs, transform_type=TransformType.classification)
@@ -93,7 +111,8 @@ class ClassificationSlidingWindowGeoDataset(SlidingWindowGeoDataset):
     def init_windows(self):
         super().init_windows()
         if self.scene.label_source is not None:
-            self.scene.label_source.populate_labels(cells=self.windows)
+            ls: 'ChipClassificationLabelSource' = self.scene.label_source
+            ls.populate_labels(cells=self.windows)
 
 
 class ClassificationRandomWindowGeoDataset(RandomWindowGeoDataset):

@@ -48,7 +48,7 @@ The Data
 Configuring a semantic segmentation pipeline
 ----------------------------------------------
 
-Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to write a function called ``get_config`` that returns a ``SemanticSegmentationConfig`` object. This object's type is a subclass of ``PipelineConfig``, and configures a semantic segmentation pipeline which analyzes the imagery, creates training chips, trains a model, makes predictions on validation scenes, evaluates the predictions, and saves a model bundle.
+Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to write a function called ``get_config`` that returns a ``SemanticSegmentationConfig`` object. This object's type is a subclass of ``PipelineConfig``, and configures a semantic segmentation pipeline which (optionally) analyzes the imagery, (optionally) creates training chips, trains a model, makes predictions on validation scenes, evaluates the predictions, and saves a model bundle.
 
 .. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
     :language: python
@@ -74,19 +74,18 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
 .. code-block:: console
 
     > tree -L 3
-    .
     ├── Makefile
     ├── bundle
     │   └── model-bundle.zip
     ├── eval
-    │   └── eval.json
+    │   └── validation_scenes
+    │       └── eval.json
     ├── pipeline-config.json
     ├── predict
     │   └── scene_25
     │       └── labels.tif
     └── train
         ├── dataloaders
-        │   ├── test.png
         │   ├── train.png
         │   └── valid.png
         ├── last-model.pth
@@ -94,9 +93,12 @@ If you go to ``${RV_QUICKSTART_OUT_DIR}`` you should see a directory structure l
         ├── log.csv
         ├── model-bundle.zip
         ├── tb-logs
-        │   └── events.out.tfevents.1585513048.086fdd4c5530.214.0
-        ├── test_metrics.json
-        └── test_preds.png
+        │   ├── events.out.tfevents.1670510483.c5c1c7621fb7.1830.0
+        │   ├── events.out.tfevents.1670511197.c5c1c7621fb7.2706.0
+        │   └── events.out.tfevents.1670595249.986730ccbe70.7507.0
+        ├── valid_metrics.json
+        └── valid_preds.png
+
 
 .. note:: The numbers in your ``events.out.tfevents`` filename will not necessarily match the ones above.
 
@@ -118,16 +120,19 @@ For example, to use a DeepLab/Resnet50 model that has been trained to do buildin
         {{ s3_model_zoo }}/spacenet-vegas-buildings-ss/sample-predictions/sample-img-spacenet-vegas-buildings-ss.tif \
         prediction
 
-This will make predictions on the image ``1929.tif`` using the provided model bundle, and will produce a file called ``predictions.tif``. These files are in GeoTiff format, and you will need a GIS viewer such as `QGIS <https://qgis.org/en/site/>`_ to open them correctly on your device. Notice that the prediction package and the input raster are transparently downloaded via HTTP.
+This will make predictions on the image ``sample-img-spacenet-vegas-buildings-ss.tif`` using the provided model bundle. The predictions will be stored in the ``prediction/`` directory and will comprise a raster of predicted labels (``prediction/labels.tif``) and vectorized labels as GeoJSON files for each class (in ``prediction/vector_outputs/``). These raster predictions are in the GeoTiff format, and you will need a GIS viewer such as `QGIS <https://qgis.org/en/site/>`_ to open them correctly on your device. Notice that the prediction package and the input raster are transparently downloaded via HTTP.
+
 The input image (false color) and predictions are reproduced below.
 
-.. image:: /img/vegas/1929.png
+.. image:: /img/vegas/input.png
     :alt: The input image
+    :width: 49%
 
-.. image:: /img/vegas/predictions.png
+.. image:: /img/vegas/pred.png
     :alt: The predictions
+    :width: 49%
 
-.. seealso:: You can read more about the :ref:`model bundle <model bundle>` concept and the :ref:`predict cli command` CLI command in the documentation.
+.. seealso:: You can read more about the :ref:`model bundles <model bundle>` and the :ref:`predict cli command` CLI command in the documentation.
 
 
 Next Steps

@@ -1,5 +1,5 @@
 import os
-from os.path import join
+from os.path import join, normpath, relpath
 import shutil
 from threading import Timer
 import time
@@ -175,22 +175,32 @@ def download_if_needed(uri: str,
     return local_path
 
 
-def download_or_copy(uri, target_dir, fs=None) -> str:
+def download_or_copy(uri: str,
+                     target_dir: str,
+                     delete_tmp: bool = False,
+                     fs: Optional[FileSystem] = None) -> str:
     """Downloads or copies a file to a directory.
 
     Downloads or copies URI into target_dir.
 
     Args:
-        uri: URI of file
-        target_dir: local directory to download or copy file to
-        fs: if supplied, use fs instead of automatically chosen FileSystem for
-            uri
+        uri: URI of file.
+        target_dir: Local directory to download or copy file to.
+        delete_tmp: Delete temporary download dir after copying file.
+        fs: If supplied, use fs instead of automatically chosen FileSystem for
+            uri.
 
     Returns:
         the local path of file
     """
+    target_dir = normpath(target_dir)
     local_path = download_if_needed(uri, target_dir, fs=fs)
     shutil.copy(local_path, target_dir)
+
+    if delete_tmp and not is_local(uri):
+        dl_dirname = normpath(relpath(local_path, target_dir)).split(os.sep)[0]
+        dl_dir = join(target_dir, dl_dirname)
+        shutil.rmtree(dl_dir)
     return local_path
 
 

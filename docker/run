@@ -102,15 +102,15 @@ do
         find_free_port_in_range 8888 9999
         JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -p $FREE_PORT:$FREE_PORT"
         CMD=(jupyter notebook --ip 0.0.0.0 --port $FREE_PORT --no-browser --allow-root --notebook-dir=/opt/notebooks)
-        echo "Jupyter server will be started at 0.0.0.0:$FREE_PORT. This may take a few seconds."
+        echo "Starting Jupyter server at 0.0.0.0:$FREE_PORT. This may take a few seconds."
         shift
         ;;
         --jupyter-lab)
         find_free_port_in_range 8888 9999
         JUPYTER="-v ${RASTER_VISION_NOTEBOOK_DIR}:/opt/notebooks -v ${HOME}/.jupyter:/root/.jupyter:ro -p $FREE_PORT:$FREE_PORT"
         # run jupyter lab in the background
-        CMD=(/bin/bash -c "jupyter lab --ip 0.0.0.0 --port $FREE_PORT --no-browser --allow-root /opt/ & bash")
-        echo "Jupyter Lab server will be started at 0.0.0.0:$FREE_PORT. This may take a few seconds."
+        CMD=(/bin/bash -c "jupyter lab --ip 0.0.0.0 --port $FREE_PORT --no-browser --allow-root --notebook-dir=/opt/notebooks & bash")
+        echo "Starting Jupyter Lab server at 0.0.0.0:$FREE_PORT. This may take a few seconds."
         shift
         ;;
         --docs)

@@ -72,14 +72,14 @@ The images we publish include plugins and dependencies for using Raster Vision w
 
    > docker run --rm -it quay.io/azavea/raster-vision:pytorch-{{ version }} /bin/bash
 
-There are also images with the `-latest` suffix for the latest commits on the ``master`` branch. You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <https://github.com/azavea/raster-vision/blob/{{ version }}/docker/run>`_ script for an example usage.
+There are also images with the `-latest` suffix for the latest commits on the ``master`` branch. You'll likely need to mount volumes and expose ports to make this container fully useful; see the `docker/run <{{ repo }}/docker/run>`_ script for an example usage.
 
 You can also base your own Dockerfiles off the Raster Vision image to use with your own codebase. See :ref:`bootstrap` for more information.
 
 Docker Scripts
 ~~~~~~~~~~~~~~
 
-There are several scripts under `docker/ <https://github.com/azavea/raster-vision/tree/{{ version }}/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code, or writing :ref:`plugins <pipelines plugins>`.
+There are several scripts under `docker/ <{{ repo }}/docker>`_ in the Raster Vision repo that make it easier to build the Docker images from scratch, and run the container in various ways. These are useful if you are experimenting with changes to the Raster Vision source code, or writing :ref:`plugins <pipelines plugins>`.
 
 After cloning the repo, you can build the Docker image using:
 

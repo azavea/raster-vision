@@ -1,5 +1,5 @@
-{% set tiny_spacenet = '`tiny_spacenet.py <https://github.com/azavea/raster-vision/tree/' ~ version ~ '/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py>`__' %}
-{% set isprs_potsdam = '`isprs_potsdam.py <https://github.com/azavea/raster-vision/tree/' ~ version ~ '/rastervision_pytorch_backend/rastervision/pytorch_backend/examples/semantic_segmentation/isprs_potsdam.py>`__' %}
+{% set tiny_spacenet = '`tiny_spacenet.py <' ~ repo_examples ~ '/tiny_spacenet.py>`__' %}
+{% set isprs_potsdam = '`isprs_potsdam.py <' ~ repo_examples ~ '/semantic_segmentation/isprs_potsdam.py>`__' %}
 
 .. _rv pipelines:
 
@@ -43,7 +43,7 @@ In the {{ tiny_spacenet }} example, the :class:`~rastervision.core.rv_pipeline.s
 
 .. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
     :language: python
-    :lines: 60-78
+    :lines: 48-53
     :dedent:
 
 .. seealso:: The :class:`~rastervision.core.rv_pipeline.chip_classification_config.ChipClassificationConfig`, :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationConfig`, and :class:`~rastervision.core.rv_pipeline.object_detection_config.ObjectDetectionConfig` API docs have more information on configuring pipelines.
@@ -246,7 +246,7 @@ In our {{ tiny_spacenet }} example, we configured the PyTorch semantic segmentat
 
 .. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
     :language: python
-    :lines: 62-71
+    :lines: 32-46
     :dedent:
 
 .. seealso:: :mod:`rastervision.pytorch_backend` and :mod:`rastervision.pytorch_learner` API docs for more information on configuring backends.
@@ -264,7 +264,7 @@ In our {{ tiny_spacenet }} example, we configured the dataset with single scenes
 
 .. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
     :language: python
-    :lines: 50-57
+    :lines: 23-30
     :dedent:
 
 .. _scene:
@@ -285,7 +285,7 @@ In our {{ tiny_spacenet }} example, we configured the one training scene with a 
 
 .. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
     :language: python
-    :lines: 24-48
+    :pyobject: make_scene
     :dedent:
 
 .. _label store:

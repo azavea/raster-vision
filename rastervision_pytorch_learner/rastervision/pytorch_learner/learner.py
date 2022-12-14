@@ -282,14 +282,15 @@ class Learner(ABC):
         self.config_path = join(self.output_dir, 'learner-config.json')
         str_to_file(cfg.json(), self.config_path)
 
-        self.log_path = join(self.output_dir, 'log.csv')
+        self.log_path = join(self.output_dir_local, 'log.csv')
         self.metric_names = self.build_metric_names()
 
         # data
         self.setup_data()
 
         # model
-        self.last_model_weights_path = join(self.output_dir, 'last-model.pth')
+        self.last_model_weights_path = join(self.output_dir_local,
+                                            'last-model.pth')
         self.load_checkpoint()
 
         # optimization
@@ -316,7 +317,7 @@ class Learner(ABC):
         """Setup for logging stats to TB."""
         self.tb_writer = None
         if self.cfg.log_tensorboard:
-            self.tb_log_dir = join(self.output_dir, 'tb-logs')
+            self.tb_log_dir = join(self.output_dir_local, 'tb-logs')
             make_dir(self.tb_log_dir)
             self.tb_writer = SummaryWriter(log_dir=self.tb_log_dir)
 
@@ -867,14 +868,16 @@ class Learner(ABC):
             split: dataset split. Can be train, valid, or test.
             batch_limit: optional limit on (rendered) batch size
         """
-        log.info('Plotting predictions...')
+        log.info(
+            f'Making and plotting sample predictions on the {split} set...')
         dl = self.get_dataloader(split)
-        output_path = join(self.output_dir, f'{split}_preds.png')
+        output_path = join(self.output_dir_local, f'{split}_preds.png')
         preds = self.predict_dataloader(
             dl, return_format='xyz', batched_output=True, raw_out=True)
         x, y, z = next(preds)
         self.visualizer.plot_batch(
             x, y, output_path, z=z, batch_limit=batch_limit, show=show)
+        log.info(f'Sample predictions written to {output_path}.')
 
     def plot_dataloader(self,
                         dl: DataLoader,
@@ -891,21 +894,27 @@ class Learner(ABC):
                          show: bool = False):
         """Plot images and ground truth labels for all DataLoaders."""
         if self.train_dl:
+            log.info('Plotting sample training batch.')
             self.plot_dataloader(
                 self.train_dl,
-                output_path=join(self.output_dir, 'dataloaders/train.png'),
+                output_path=join(self.output_dir_local,
+                                 'dataloaders/train.png'),
                 batch_limit=batch_limit,
                 show=show)
         if self.valid_dl:
+            log.info('Plotting sample validation batch.')
             self.plot_dataloader(
                 self.valid_dl,
-                output_path=join(self.output_dir, 'dataloaders/valid.png'),
+                output_path=join(self.output_dir_local,
+                                 'dataloaders/valid.png'),
                 batch_limit=batch_limit,
                 show=show)
         if self.test_dl:
+            log.info('Plotting sample test batch.')
             self.plot_dataloader(
                 self.test_dl,
-                output_path=join(self.output_dir, 'dataloaders/test.png'),
+                output_path=join(self.output_dir_local,
+                                 'dataloaders/test.png'),
                 batch_limit=batch_limit,
                 show=show)
 
@@ -1078,7 +1087,11 @@ class Learner(ABC):
         start_epoch = 0
         if isfile(self.log_path):
             with open(self.log_path) as log_file:
-                last_line = log_file.readlines()[-1]
+                lines = log_file.readlines()
+                # if empty or containing only the header row
+                if len(lines) <= 1:
+                    return 0
+                last_line = lines[-1]
             last_epoch = int(last_line.split(',')[0].strip())
             start_epoch = last_epoch + 1
         return start_epoch
@@ -1209,13 +1222,15 @@ class Learner(ABC):
         start_epoch = self.get_start_epoch()
 
         if epochs is None:
-            epochs = self.cfg.solver.num_epochs
+            end_epoch = self.cfg.solver.num_epochs
+        else:
+            end_epoch = start_epoch + epochs
 
-        if (start_epoch > 0 and start_epoch < epochs):
+        if (start_epoch > 0 and start_epoch < end_epoch):
             log.info(f'Resuming training from epoch {start_epoch}')
 
         self.on_train_start()
-        for epoch in range(start_epoch, start_epoch + epochs):
+        for epoch in range(start_epoch, end_epoch):
             log.info(f'epoch: {epoch}')
             train_metrics = self.train_epoch(
                 optimizer=self.opt, step_scheduler=self.step_scheduler)
@@ -1270,10 +1285,10 @@ class Learner(ABC):
         Args:
             split: the dataset split to use: train, valid, or test.
         """
-        log.info('Evaluating on {} set...'.format(split))
+        log.info(f'Evaluating on {split} set...')
         dl = self.get_dataloader(split)
         metrics = self.validate_epoch(dl)
-        log.info('metrics: {}'.format(metrics))
+        log.info(f'metrics: {metrics}')
         json_to_file(metrics,
-                     join(self.output_dir, '{}_metrics.json'.format(split)))
+                     join(self.output_dir_local, f'{split}_metrics.json'))
         self.plot_predictions(split, self.cfg.data.preview_batch_limit)
