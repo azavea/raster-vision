@@ -18,7 +18,7 @@ class TransformType(Enum):
     semantic_segmentation = 'semantic_segmentation'
 
 
-def classification_transformer(inp: Tuple[Any, Any],
+def classification_transformer(inp: Tuple[np.ndarray, Optional[int]],
                                transform=Optional[A.BasicTransform]
                                ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image only."""
@@ -32,7 +32,7 @@ def classification_transformer(inp: Tuple[Any, Any],
     return x, y
 
 
-def regression_transformer(inp: Tuple[Any, Any],
+def regression_transformer(inp: Tuple[np.ndarray, Optional[Any]],
                            transform=Optional[A.BasicTransform]
                            ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image only."""
@@ -104,7 +104,7 @@ def albu_to_yxyx(xyxy: np.ndarray,
 
 
 def object_detection_transformer(
-        inp: Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]],
+        inp: Tuple[np.ndarray, Optional[Tuple[np.ndarray, np.ndarray, str]]],
         transform: Optional[A.BasicTransform] = None
 ) -> Tuple[torch.Tensor, Optional[BoxList]]:
     """Apply transform to image, bounding boxes, and labels. Also perform
@@ -114,9 +114,9 @@ def object_detection_transformer(
     'albumentations' (i.e. normalized [ymin, xmin, ymax, xmax]).
 
     Args:
-        inp (Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]]): Tuple of
-            the form: (image, (boxes, class_ids, box_format)). box_format must
-            be 'yxyx' or 'xywh'.
+        inp (Tuple[np.ndarray, Optional[Tuple[np.ndarray, np.ndarray, str]]]):
+            Tuple of the form: (image, (boxes, class_ids, box_format)).
+            box_format must be 'yxyx' or 'xywh'.
         transform (Optional[A.BasicTransform], optional): A transform.
             Defaults to None.
 
@@ -175,7 +175,8 @@ def object_detection_transformer(
 
 
 def semantic_segmentation_transformer(
-        inp: Tuple[Any, Any], transform=Optional[A.BasicTransform]
+        inp: Tuple[np.ndarray, Optional[np.ndarray]],
+        transform=Optional[A.BasicTransform]
 ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image and mask."""
     x, y = inp
