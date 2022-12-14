@@ -115,8 +115,9 @@ def compute_coco_eval(outputs, targets, num_class_ids):
 class BoxList():
     def __init__(self, boxes: torch.Tensor, format: str = 'xyxy',
                  **extras) -> None:
-        """Representation of a list of bounding boxes and other associated
-        data. Internally, boxes are always stored in the xyxy format.
+        """Representation of a list of bounding boxes and associated data.
+
+        Internally, boxes are always stored in the xyxy format.
 
         Args:
             boxes: tensor<n, 4>
