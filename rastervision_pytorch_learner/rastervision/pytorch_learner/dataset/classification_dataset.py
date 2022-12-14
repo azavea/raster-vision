@@ -20,16 +20,16 @@ class ClassificationImageDataset(ImageDataset):
     directories are located in the same parent directory.
     """
 
-    def __init__(self, data_dir: str, class_names: Iterable[str], *args,
-                 **kwargs):
+    def __init__(self, data_dir: str, class_names: Optional[Iterable[str]],
+                 *args, **kwargs):
         """Constructor.
 
         .. currentmodule:: rastervision.pytorch_learner.dataset.dataset
 
         Args:
             data_dir (str): Root directory containing class dirs.
-            class_names (Iterable[str]): Class names. Should match class dir
-                names.
+            class_names (Optional[Iterable[str]]): Class names. Should match
+                class dir names.
             *args: See :meth:`ImageDataset.__init__`.
             **kwargs: See :meth:`ImageDataset.__init__`.
         """

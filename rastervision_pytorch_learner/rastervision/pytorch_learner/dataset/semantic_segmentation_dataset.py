@@ -19,18 +19,15 @@ log = logging.getLogger(__name__)
 class SemanticSegmentationDataReader(Dataset):
     """Reads semantic segmentatioin images and labels from files."""
 
-    def __init__(self, data_dir: str):
+    def __init__(self, img_dir: str, label_dir: str):
         """Constructor.
 
-        data_dir is assumed to have an 'img' subfolder that contains image
-        files and a 'labels' subfolder that contains label files.
-
         Args:
-            data_dir (str): Root directory that contains image and label files.
+            img_dir (str): Directory containing images.
+            label_dir (str): Directory containing segmentation masks.
         """
-        self.data_dir = Path(data_dir)
-        img_dir = self.data_dir / 'img'
-        label_dir = self.data_dir / 'labels'
+        self.img_dir = Path(img_dir)
+        self.label_dir = Path(label_dir)
 
         # collect image and label paths, match them based on filename
         img_paths = discover_images(img_dir)
@@ -65,23 +62,26 @@ class SemanticSegmentationDataReader(Dataset):
 
 
 class SemanticSegmentationImageDataset(ImageDataset):
-    """Reads semantic segmentatioin images and labels from files."""
+    """Reads semantic segmentatioin images and labels from files.
 
-    def __init__(self, data_dir: str, *args, **kwargs):
+    .. currentmodule:: rastervision.pytorch_learner.dataset.semantic_segmentation_dataset
+
+    Uses :class:`SemanticSegmentationDataReader` to read the data.
+    """
+
+    def __init__(self, img_dir: str, label_dir: str, *args, **kwargs):
         """Constructor.
-
-        data_dir is assumed to have an 'img' subfolder that contains image
-        files and a 'labels' subfolder that contains label files.
 
         .. currentmodule:: rastervision.pytorch_learner.dataset.dataset
 
         Args:
-            data_dir (str): Root directory that contains image and label files.
+            img_dir (str): Directory containing images.
+            label_dir (str): Directory containing segmentation masks.
             *args: See :meth:`ImageDataset.__init__`.
             **kwargs: See :meth:`ImageDataset.__init__`.
         """
 
-        ds = SemanticSegmentationDataReader(data_dir)
+        ds = SemanticSegmentationDataReader(img_dir, label_dir)
         super().__init__(
             ds,
             *args,
