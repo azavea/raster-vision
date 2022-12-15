@@ -350,11 +350,8 @@ class Learner(ABC):
             model_def_path (Optional[str], optional): Path to model definition.
                 Will be available when loading from a bundle. Defaults to None.
         """
-        if self.model is not None:
-            self.model.to(device=self.device)
-            return
-
-        self.model = self.build_model(model_def_path=model_def_path)
+        if self.model is None:
+            self.model = self.build_model(model_def_path=model_def_path)
         self.model.to(device=self.device)
         self.load_init_weights(model_weights_path=model_weights_path)
 
@@ -1100,16 +1097,21 @@ class Learner(ABC):
                           model_weights_path: Optional[str] = None) -> None:
         """Load the weights to initialize model."""
         cfg = self.cfg
-        uri = cfg.model.init_weights
+        uri = None
+        args = {}
+
+        if cfg.model is not None:
+            uri = cfg.model.init_weights
+            args['strict'] = cfg.model.load_strict
+
         if model_weights_path is not None:
             uri = model_weights_path
 
-        if uri is not None:
-            log.info(f'Loading model weights from: {uri}')
-            args = {}
-            if self.cfg.model is not None:
-                args['strict'] = self.cfg.model.load_strict
-            self.load_weights(uri=uri, **args)
+        if uri is None:
+            return
+
+        log.info(f'Loading model weights from: {uri}')
+        self.load_weights(uri=uri, **args)
 
     def load_weights(self, uri: str, **kwargs) -> None:
         """Load model weights from a file."""
