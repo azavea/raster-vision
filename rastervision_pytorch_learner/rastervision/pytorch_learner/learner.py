@@ -920,13 +920,16 @@ class Learner(ABC):
                           model_bundle_uri: str,
                           tmp_dir: Optional[str] = None,
                           cfg: Optional['LearnerConfig'] = None,
-                          training: bool = False) -> 'Learner':
+                          training: bool = False,
+                          **kwargs) -> 'Learner':
         """Create a Learner from a model bundle.
 
         .. note::
 
             This is the bundle saved in ``train/model-bundle.zip`` and not
             ``bundle/model-bundle.zip``.
+
+        .. currentmodule:: rastervision.pytorch_learner.learner
 
         Args:
             model_bundle_uri (str): URI of the model bundle.
@@ -941,6 +944,7 @@ class Learner(ABC):
                 model will be put into eval mode. If True, the training
                 apparatus will be set up and the model will be put into
                 training mode. Defaults to True.
+            **kwargs: See :meth:`Learner.__init__`.
 
         Raises:
             FileNotFoundError: If using custom Albumentations transforms and
@@ -955,6 +959,7 @@ class Learner(ABC):
             tmp_dir = _tmp_dir.name
         model_bundle_path = download_if_needed(model_bundle_uri)
         model_bundle_dir = join(tmp_dir, 'model-bundle')
+        log.info(f'Unzipping model-bundle to {model_bundle_dir}')
         unzip(model_bundle_path, model_bundle_dir)
 
         model_weights_path = join(model_bundle_dir, 'model.pth')
@@ -1000,15 +1005,35 @@ class Learner(ABC):
             # config has been altered, so re-validate
             cfg = build_config(cfg.dict())
 
-        # we have trained weights, so avoid wasteful download
-        cfg.model.pretrained = False
+        if cfg.model is not None:
+            # we have trained weights, so avoid wasteful download
+            cfg.model.pretrained = False
+        else:
+            if kwargs.get('model') is None:
+                raise ValueError(
+                    'Model definition is not saved in the model-bundle. '
+                    'Please specify the model explicitly.')
 
-        learner: cls = cfg.build(
-            tmp_dir=tmp_dir,
-            model_weights_path=model_weights_path,
-            model_def_path=model_def_path,
-            loss_def_path=loss_def_path,
-            training=training)
+        if cls == Learner:
+            if len(kwargs) > 0:
+                raise ValueError('kwargs are only supported if calling '
+                                 '.from_model_bundle() on a Learner subclass '
+                                 '-- not Learner itself.')
+            learner: cls = cfg.build(
+                tmp_dir=tmp_dir,
+                model_weights_path=model_weights_path,
+                model_def_path=model_def_path,
+                loss_def_path=loss_def_path,
+                training=training)
+        else:
+            learner = cls(
+                cfg=cfg,
+                tmp_dir=tmp_dir,
+                model_weights_path=model_weights_path,
+                model_def_path=model_def_path,
+                loss_def_path=loss_def_path,
+                training=training,
+                **kwargs)
         return learner
 
     def save_model_bundle(self):
