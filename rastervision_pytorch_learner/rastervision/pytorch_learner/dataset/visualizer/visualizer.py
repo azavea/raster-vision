@@ -28,6 +28,8 @@ if TYPE_CHECKING:
 class Visualizer(ABC):
     """Base class for plotting samples from computer vision PyTorch Datasets."""
 
+    scale: float = 3.
+
     def __init__(self,
                  class_names: List[str],
                  class_colors: Optional[List[Union[str, RGBTuple]]] = None,
@@ -177,7 +179,7 @@ class Visualizer(ABC):
                 'nrows': nrows,
                 'ncols': ncols,
                 'constrained_layout': True,
-                'figsize': (3 * ncols, 3 * nrows),
+                'figsize': (self.scale * ncols, self.scale * nrows),
                 'squeeze': False
             },
             'plot_xyz_args': {}

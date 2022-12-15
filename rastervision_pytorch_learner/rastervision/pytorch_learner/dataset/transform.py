@@ -18,7 +18,7 @@ class TransformType(Enum):
     semantic_segmentation = 'semantic_segmentation'
 
 
-def classification_transformer(inp: Tuple[Any, Any],
+def classification_transformer(inp: Tuple[np.ndarray, Optional[int]],
                                transform=Optional[A.BasicTransform]
                                ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image only."""
@@ -32,7 +32,7 @@ def classification_transformer(inp: Tuple[Any, Any],
     return x, y
 
 
-def regression_transformer(inp: Tuple[Any, Any],
+def regression_transformer(inp: Tuple[np.ndarray, Optional[Any]],
                            transform=Optional[A.BasicTransform]
                            ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image only."""
@@ -104,7 +104,7 @@ def albu_to_yxyx(xyxy: np.ndarray,
 
 
 def object_detection_transformer(
-        inp: Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]],
+        inp: Tuple[np.ndarray, Optional[Tuple[np.ndarray, np.ndarray, str]]],
         transform: Optional[A.BasicTransform] = None
 ) -> Tuple[torch.Tensor, Optional[BoxList]]:
     """Apply transform to image, bounding boxes, and labels. Also perform
@@ -114,9 +114,9 @@ def object_detection_transformer(
     'albumentations' (i.e. normalized [ymin, xmin, ymax, xmax]).
 
     Args:
-        inp (Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, str]]): Tuple of
-            the form: (image, (boxes, class_ids, box_format)). box_format must
-            be 'yxyx' or 'xywh'.
+        inp (Tuple[np.ndarray, Optional[Tuple[np.ndarray, np.ndarray, str]]]):
+            Tuple of the form: (image, (boxes, class_ids, box_format)).
+            box_format must be 'yxyx' or 'xywh'.
         transform (Optional[A.BasicTransform], optional): A transform.
             Defaults to None.
 
@@ -151,14 +151,17 @@ def object_detection_transformer(
             boxes = np.array(out['bboxes']).reshape((-1, 4))
             class_ids = np.array(out['category_id'])
             if len(boxes) > 0:
-                boxes = albu_to_yxyx(boxes, img_size)
+                boxes = albu_to_yxyx(boxes, x.shape[:2])
+            new_box_format = 'yxyx'
+    elif y is not None:
+        new_box_format = box_format
 
     if y is not None:
         boxes = torch.from_numpy(boxes).float()
         class_ids = torch.from_numpy(class_ids).long()
         if len(boxes) == 0:
             boxes = torch.empty((0, 4)).float()
-        y = BoxList(boxes, format='yxyx', class_ids=class_ids)
+        y = BoxList(boxes, format=new_box_format, class_ids=class_ids)
 
     # normalize x
     if np.issubdtype(x.dtype, np.unsignedinteger):
@@ -172,7 +175,8 @@ def object_detection_transformer(
 
 
 def semantic_segmentation_transformer(
-        inp: Tuple[Any, Any], transform=Optional[A.BasicTransform]
+        inp: Tuple[np.ndarray, Optional[np.ndarray]],
+        transform=Optional[A.BasicTransform]
 ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Apply transform to image and mask."""
     x, y = inp

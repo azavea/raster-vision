@@ -66,7 +66,12 @@ class CocoDataset(Dataset):
 
 
 class ObjectDetectionImageDataset(ImageDataset):
-    """Read Object Detection data in the COCO format."""
+    """Read Object Detection data in the COCO format.
+
+    .. currentmodule:: rastervision.pytorch_learner.dataset.object_detection_dataset
+
+    Uses :class:`CocoDataset` to read the data.
+    """
 
     def __init__(self, img_dir: str, annotation_uri: str, *args, **kwargs):
         """Constructor.

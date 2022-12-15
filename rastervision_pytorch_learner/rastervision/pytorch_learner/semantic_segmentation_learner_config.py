@@ -1,4 +1,5 @@
 from typing import Callable, Optional, Union
+from os.path import join
 from enum import Enum
 import logging
 
@@ -60,6 +61,28 @@ class SemanticSegmentationDataConfig(Config):
     'semantic_segmentation_image_data', upgrader=ss_image_data_config_upgrader)
 class SemanticSegmentationImageDataConfig(SemanticSegmentationDataConfig,
                                           ImageDataConfig):
+    """Configure reading of a semnatic segmentation image dataset.
+
+    .. currentmodule:: rastervision.pytorch_learner.dataset.semantic_segmentation_dataset
+
+    This is used to instantiate a :class:`SemanticSegmentationImageDataset`
+    and assumes the following file structure:
+
+    .. code-block:: txt
+
+        <data_dir>/
+            img/
+                <img 1>.<extension>
+                <img 2>.<extension>
+                ...
+                <img N>.<extension>
+            labels/
+                <img 1>.<extension>
+                <img 2>.<extension>
+                ...
+                <img N>.<extension>
+
+    """
     data_format: SemanticSegmentationDataFormat = (
         SemanticSegmentationDataFormat.default)
 
@@ -69,8 +92,12 @@ class SemanticSegmentationImageDataConfig(SemanticSegmentationDataConfig,
 
     def dir_to_dataset(self, data_dir: str,
                        transform: A.BasicTransform) -> Dataset:
+        if self.data_format != SemanticSegmentationDataFormat.default:
+            raise NotImplementedError()
+        img_dir = join(data_dir, 'img')
+        label_dir = join(data_dir, 'labels')
         ds = SemanticSegmentationImageDataset(
-            data_dir=data_dir, transform=transform)
+            img_dir=img_dir, label_dir=label_dir, transform=transform)
         return ds
 
 
