@@ -1020,6 +1020,13 @@ class Learner(ABC):
         from rastervision.pytorch_learner.learner_pipeline_config import (
             LearnerPipelineConfig)
 
+        if self.cfg.model is None:
+            log.warning(
+                'Model was not configured via ModelConfig, and therefore, '
+                'will not be reconstructable form the model-bundle. You will '
+                'need to initialize the model yourself and pass it to '
+                'from_model_bundle().')
+
         log.info('Creating bundle.')
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
         make_dir(model_bundle_dir, force_empty=True)
