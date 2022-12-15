@@ -68,7 +68,7 @@ class SemanticSegmentationImageDataConfig(SemanticSegmentationDataConfig,
     This is used to instantiate a :class:`SemanticSegmentationImageDataset`
     and assumes the following file structure:
 
-    .. code-block::
+    .. code-block:: txt
 
         <data_dir>/
             img/
