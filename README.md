@@ -48,9 +48,9 @@ You can also build a Docker image from scratch yourself. After cloning this repo
 
 ## Usage Examples and Tutorials
 
-**Non-developers** may find it easiest to use Raster Vision as a low-code framework where Raster Vision handles all the complexities and the user only has to configure a few parameters. The [*Quickstart guide*](https://docs.rastervision.io/en/stable/quickstart.html) is a good entry-point into this. More advanced examples can be found on the [*Examples*](https://docs.rastervision.io/en/stable/quickstart.html) page.
+**Non-developers** may find it easiest to use Raster Vision as a low-code framework where Raster Vision handles all the complexities and the user only has to configure a few parameters. The [*Quickstart guide*](https://docs.rastervision.io/en/stable/framework/quickstart.html) is a good entry-point into this. More advanced examples can be found on the [*Examples*](https://docs.rastervision.io/en/stable/framework/examples.html) page.
 
-For **developers** and those looking to dive deeper or combine Raster Vision with their own code, the best starting point is [*Usage Overview*](https://docs.rastervision.io/en/stable/usage/overview.html), followed by [*Basic Concepts*](https://docs.rastervision.io/en/stable/usage/basics.html) and [*Tutorials*](https://docs.rastervision.io/en/stable/usage/tutorials.html).
+For **developers** and those looking to dive deeper or combine Raster Vision with their own code, the best starting point is [*Usage Overview*](https://docs.rastervision.io/en/stable/usage/overview.html), followed by [*Basic Concepts*](https://docs.rastervision.io/en/stable/usage/basics.html) and [*Tutorials*](https://docs.rastervision.io/en/stable/usage/tutorials/index.html).
 
 
 ## Contact and Support
@@ -61,7 +61,7 @@ You can ask questions and talk to developers (let us know what you're working on
 
 ## Contributing
 
-*For more information, see the [Contribution page](https://docs.rastervision.io/en/stable/setup/).*
+*For more information, see the [Contribution page](https://docs.rastervision.io/en/stable/CONTRIBUTING.html).*
 
 We are happy to take contributions! It is best to get in touch with the maintainers
 about larger features or design changes *before* starting the work,
