@@ -1,4 +1,4 @@
-rastervision_pipeline==0.20-dev
-rastervision_core==0.20-dev
-rastervision_pytorch_learner==0.20-dev
-rastervision_aws_s3==0.20-dev
+rastervision_pipeline==0.20
+rastervision_core==0.20
+rastervision_pytorch_learner==0.20
+rastervision_aws_s3==0.20
