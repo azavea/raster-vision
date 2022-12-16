@@ -2,142 +2,66 @@
 &nbsp;
 
 [![Pypi](https://img.shields.io/pypi/v/rastervision.svg)](https://pypi.org/project/rastervision/)
-[![Docker Repository on Quay](https://quay.io/repository/azavea/raster-vision/status "Docker Repository on Quay")](https://quay.io/repository/azavea/raster-vision)
+[![Documentation Status](https://readthedocs.org/projects/raster-vision/badge/?version=latest)](https://docs.rastervision.io/en/stable/?badge=stable)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://github.com/azavea/raster-vision/actions/workflows/release.yml/badge.svg)](https://github.com/azavea/raster-vision/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/azavea/raster-vision/branch/master/graph/badge.svg)](https://codecov.io/gh/azavea/raster-vision)
-[![Documentation Status](https://readthedocs.org/projects/raster-vision/badge/?version=latest)](https://docs.rastervision.io/en/latest/?badge=latest)
 
-Raster Vision is an open source Python framework for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
-* It allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
+Raster Vision is an open source Python **library** and **framework** for building computer vision models on satellite, aerial, and other large imagery sets (including oblique drone imagery).
+
+It has built-in support for chip classification, object detection, and semantic segmentation with backends using PyTorch.
+
+<div align="center">
+    <img src="docs/img/cv-tasks.png" alt="Examples of chip classification, object detection and semantic segmentation" width="75%">
+</div>
+
+**As a library**, Raster Vision provides a full suite of utilities for dealing with all aspects of a geospatial deep learning workflow: reading geo-referenced data, training models, making predicitons, and writing out predictions in geo-referenced formats.
+
+**As a low-code framework**, Raster Vision allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
 ![Overview of Raster Vision workflow](docs/img/rv-pipeline-overview.png)
-* There is built-in support for chip classification, object detection, and semantic segmentation with backends using PyTorch.
 
-    <div align="center">
-        <img src="docs/img/cv-tasks.png" alt="Examples of chip classification, object detection and semantic segmentation" width="75%">
-    </div>
+Raster Vision also has built-in support for running experiments in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
 
-* Experiments can be executed on CPUs and GPUs with built-in support for running in the cloud using [AWS Batch](https://github.com/azavea/raster-vision-aws).
-* The framework is extensible to new data sources, tasks (eg. instance segmentation), backends (eg. Detectron2), and cloud providers.
+See the [documentation](https://docs.rastervision.io/en/stable/) for more details.
 
-See the [documentation](https://docs.rastervision.io) for more details.
+## Installation
 
-### Setup
+*For more details, see the [Setup documentation](https://docs.rastervision.io/en/stable/setup/)*.
 
-There are several ways to setup Raster Vision:
-* To build Docker images from scratch, after cloning this repo, run `docker/build`, and run the container using `docker/run`.
-* Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision). The tag for the `raster-vision` image determines what type of image it is:
-    - The `pytorch-*` tags are for running the PyTorch containers.
-    - We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:pytorch-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
-* Raster Vision can be installed directly using `pip install rastervision`. However, some of its dependencies will have to be installed manually.
+### Install via `pip`
 
-For more detailed instructions, see the [Setup docs](https://docs.rastervision.io/en/0.20-dev/setup.html).
+You can install Raster Vision directly via `pip`.
 
-### Example
-
-The best way to get a feel for what Raster Vision enables is to look at an example of how to configure and run an experiment. Experiments are configured using a fluent builder pattern that makes configuration easy to read, reuse and maintain.
-
-```python
-# tiny_spacenet.py
-
-from rastervision.core.rv_pipeline import *
-from rastervision.core.backend import *
-from rastervision.core.data import *
-from rastervision.pytorch_backend import *
-from rastervision.pytorch_learner import *
-
-
-def get_config(runner) -> SemanticSegmentationConfig:
-    root_uri = '/opt/data/output/'
-    base_uri = ('https://s3.amazonaws.com/azavea-research-public-data/'
-                'raster-vision/examples/spacenet')
-
-    train_image_uri = f'{base_uri}/RGB-PanSharpen_AOI_2_Vegas_img205.tif'
-    train_label_uri = f'{base_uri}/buildings_AOI_2_Vegas_img205.geojson'
-    val_image_uri = f'{base_uri}/RGB-PanSharpen_AOI_2_Vegas_img25.tif'
-    val_label_uri = f'{base_uri}/buildings_AOI_2_Vegas_img25.geojson'
-
-    channel_order = [0, 1, 2]
-    class_config = ClassConfig(
-        names=['building', 'background'], colors=['red', 'black'])
-
-    def make_scene(scene_id: str, image_uri: str,
-                   label_uri: str) -> SceneConfig:
-        """
-        - The GeoJSON does not have a class_id property for each geom,
-          so it is inferred as 0 (ie. building) because the default_class_id
-          is set to 0.
-        - The labels are in the form of GeoJSON which needs to be rasterized
-          to use as label for semantic segmentation, so we use a RasterizedSource.
-        - The rasterizer set the background (as opposed to foreground) pixels
-          to 1 because background_class_id is set to 1.
-        """
-        raster_source = RasterioSourceConfig(
-            uris=[image_uri], channel_order=channel_order)
-        vector_source = GeoJSONVectorSourceConfig(
-            uri=label_uri,
-            ignore_crs_field=True,
-            transformers=[ClassInferenceTransformerConfig(default_class_id=0)])
-        label_source = SemanticSegmentationLabelSourceConfig(
-            raster_source=RasterizedSourceConfig(
-                vector_source=vector_source,
-                rasterizer_config=RasterizerConfig(background_class_id=1)))
-        return SceneConfig(
-            id=scene_id,
-            raster_source=raster_source,
-            label_source=label_source)
-
-    scene_dataset = DatasetConfig(
-        class_config=class_config,
-        train_scenes=[
-            make_scene('scene_205', train_image_uri, train_label_uri)
-        ],
-        validation_scenes=[
-            make_scene('scene_25', val_image_uri, val_label_uri)
-        ])
-
-    # Use the PyTorch backend for the SemanticSegmentation pipeline.
-    chip_sz = 300
-
-    backend = PyTorchSemanticSegmentationConfig(
-        data=SemanticSegmentationGeoDataConfig(
-            scene_dataset=scene_dataset,
-            window_opts=GeoDataWindowConfig(
-                method=GeoDataWindowMethod.random,
-                size=chip_sz,
-                size_lims=(chip_sz, chip_sz + 1),
-                max_windows=10)),
-        model=SemanticSegmentationModelConfig(backbone=Backbone.resnet50),
-        solver=SolverConfig(lr=1e-4, num_epochs=1, batch_sz=2))
-
-    return SemanticSegmentationConfig(
-        root_uri=root_uri,
-        dataset=scene_dataset,
-        backend=backend,
-        train_chip_sz=chip_sz,
-        predict_chip_sz=chip_sz)
-
+```sh
+pip install rastervision
 ```
 
-Raster Vision uses a unittest-like method for executing experiments. For instance, if the above was defined in `tiny_spacenet.py`, with the proper setup you could run the experiment using:
+### Use Pre-built Docker Image
 
-```bash
-> rastervision run local tiny_spacenet.py
-```
+Alternatively, you may use a Docker image. Docker images are published to [quay.io](https://quay.io/repository/azavea/raster-vision) (see the *tags* tab).
 
-See the [Quickstart](https://docs.rastervision.io/en/0.20-dev/quickstart.html) for a more complete description of running this example.
+We publish a new tag per merge into `master`, which is tagged with the first 7 characters of the commit hash. To use the latest version, pull the `latest` suffix, e.g. `raster-vision:pytorch-latest`. Git tags are also published, with the Github tag name as the Docker tag suffix.
 
-### Resources
+### Build Docker Image
 
-* [Raster Vision Documentation](https://docs.rastervision.io)
+You can also build a Docker image from scratch yourself. After cloning this repo, run `docker/build`, and run then the container using `docker/run`.
 
-### Contact and Support
+## Usage Examples and Tutorials
+
+**Non-developers** may find it easiest to use Raster Vision as a low-code framework where Raster Vision handles all the complexities and the user only has to configure a few parameters. The [*Quickstart guide*](https://docs.rastervision.io/en/stable/quickstart.html) is a good entry-point into this. More advanced examples can be found on the [*Examples*](https://docs.rastervision.io/en/stable/quickstart.html) page.
+
+For **developers** and those looking to dive deeper or combine Raster Vision with their own code, the best starting point is [*Usage Overview*](https://docs.rastervision.io/en/stable/usage/overview.html), followed by [*Basic Concepts*](https://docs.rastervision.io/en/stable/usage/basics.html) and [*Tutorials*](https://docs.rastervision.io/en/stable/usage/tutorials.html).
+
+
+## Contact and Support
 
 You can ask questions and talk to developers (let us know what you're working on!) at:
 * [Discussion Forum](https://github.com/azavea/raster-vision/discussions)
 * [Mailing List](https://groups.google.com/forum/#!forum/raster-vision)
 
-### Contributing
+## Contributing
+
+*For more information, see the [Contribution page](https://docs.rastervision.io/en/stable/setup/).*
 
 We are happy to take contributions! It is best to get in touch with the maintainers
 about larger features or design changes *before* starting the work,
