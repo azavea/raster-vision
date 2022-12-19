@@ -24,6 +24,16 @@ You can directly install the library using ``pip`` (or ``pip3`` if you also have
 
    > pip install rastervision=={{ version }}
 
+.. note::
+
+    You will also need to set a couple of environment variables required by ``rasterio``. You can do it like so:
+
+    .. code-block:: console
+
+        > export GDAL_DATA=$(pip show rasterio | grep Location | awk '{print $NF"/rasterio/gdal_data/"}')
+        > export AWS_NO_SIGN_REQUEST=YES
+
+
 This has been shown to work in the following environment. Variations on this environment may or may not work.
 
 * Ubuntu Linux 20.04
