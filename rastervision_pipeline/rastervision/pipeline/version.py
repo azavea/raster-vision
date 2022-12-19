@@ -1,2 +1,2 @@
 """Library verison"""
-__version__ = '0.20-dev'
+__version__ = '0.20.1-dev'
