@@ -202,7 +202,7 @@ This `experiment <{{ repo_examples }}/semantic_segmentation/isprs_potsdam.py>`__
 
 Data:
 
-* The dataset can be `downloaded from here <https://www.isprs.org/education/benchmarks/UrbanSemLab/>`__. After downloading, unzip ``4_Ortho_RGBIR.zip`` and ``5_Labels_for_participants.zip`` into a directory, and then upload to S3 if desired.
+* The dataset can be `downloaded from here <https://www.isprs.org/education/benchmarks/UrbanSemLab/>`__. Access to files is password protected, but the password is provided on the same site. After downloading, unzip ``4_Ortho_RGBIR.zip`` and ``5_Labels_for_participants.zip`` into a directory, and then upload to S3 if desired.
 
 Arguments:
 
