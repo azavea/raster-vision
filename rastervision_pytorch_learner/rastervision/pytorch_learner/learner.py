@@ -1005,14 +1005,10 @@ class Learner(ABC):
             # config has been altered, so re-validate
             cfg = build_config(cfg.dict())
 
-        if cfg.model is not None:
-            # we have trained weights, so avoid wasteful download
-            cfg.model.pretrained = False
-        else:
-            if kwargs.get('model') is None:
-                raise ValueError(
-                    'Model definition is not saved in the model-bundle. '
-                    'Please specify the model explicitly.')
+        if cfg.model is None and kwargs.get('model') is None:
+            raise ValueError(
+                'Model definition is not saved in the model-bundle. '
+                'Please specify the model explicitly.')
 
         if cls == Learner:
             if len(kwargs) > 0:
