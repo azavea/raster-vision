@@ -24,13 +24,23 @@ You can directly install the library using ``pip`` (or ``pip3`` if you also have
 
    > pip install rastervision=={{ version }}
 
+.. note::
+
+    You will also need to set a couple of environment variables required by ``rasterio``. You can do it like so:
+
+    .. code-block:: console
+
+        > export GDAL_DATA=$(pip show rasterio | grep Location | awk '{print $NF"/rasterio/gdal_data/"}')
+        > export AWS_NO_SIGN_REQUEST=YES
+
+
 This has been shown to work in the following environment. Variations on this environment may or may not work.
 
 * Ubuntu Linux 20.04
 * Python 3.9
 * CUDA 11.6 and NVIDIA Driver 510.47.03 (for GPU support)
 
-Raster Vision also runs on macOS version 12.1, except that the ``num_workers`` for the :class:`~torch.utils.data.DataLoader` will need to be set to 0 due to an issue with mulitprocessing on Macs with Python >= 3.8. It will also be necessary to install GDAL 3.5.2 prior to installing Raster Vision, which isn't necessary on Linux.
+Raster Vision also runs on macOS version 12.1, except that the ``num_workers`` for the :class:`~torch.utils.data.DataLoader` will need to be set to 0 due to an issue with mulitprocessing on Macs with Python >= 3.8. It will also be necessary to install GDAL (check `here <{{ repo }}/rastervision_gdal_vsi/requirements.txt>`__ for the exact version) prior to installing Raster Vision, which isn't necessary on Linux.
 
 .. warning::
 
@@ -57,7 +67,18 @@ is equivalent to running the following sequence of commands:
     > pip install rastervision_core=={{ version }}
     > pip install rastervision_pytorch_learner=={{ version }}
     > pip install rastervision_pytorch_backend=={{ version }}
+
+Another optional plugin that is available, but not installed by default,  is :mod:`rastervision.gdal_vsi`.
+
+.. code-block:: console
+
     > pip install rastervision_gdal_vsi=={{ version }}
+
+The command above will attempt to install GDAL via ``pip``. If that fails, you can instead try installing via ``conda`` as shown below. Replace ``<version>`` with the version listed `here <{{ repo }}/rastervision_gdal_vsi/requirements.txt>`__.
+
+.. code-block:: console
+
+    > conda install -c conda-forge gdal==<version>
 
 .. _docker images:
 
