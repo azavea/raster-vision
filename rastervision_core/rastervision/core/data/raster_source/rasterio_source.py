@@ -164,7 +164,7 @@ class RasterioSource(RasterSource):
 
     This RasterSource can read any file that can be opened by
     `Rasterio/GDAL <https://www.gdal.org/formats_list.html>`_.
-    
+
     If there are multiple image files that cover a single scene, you can pass
     the corresponding list of URIs, and read them as if it were a single
     stitched-together image.
