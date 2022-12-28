@@ -7,7 +7,7 @@ import numpy as np
 
 
 class CastTransformer(RasterTransformer):
-    """ Casts chips to the specified dtype. """
+    """Casts chips to the specified dtype."""
 
     def __init__(self, to_dtype: str):
         """Constructor.

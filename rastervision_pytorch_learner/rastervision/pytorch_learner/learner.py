@@ -929,8 +929,6 @@ class Learner(ABC):
             This is the bundle saved in ``train/model-bundle.zip`` and not
             ``bundle/model-bundle.zip``.
 
-        .. currentmodule:: rastervision.pytorch_learner.learner
-
         Args:
             model_bundle_uri (str): URI of the model bundle.
             tmp_dir (Optional[str], optional): Optional temporary directory.
@@ -944,7 +942,7 @@ class Learner(ABC):
                 model will be put into eval mode. If True, the training
                 apparatus will be set up and the model will be put into
                 training mode. Defaults to True.
-            **kwargs: See :meth:`Learner.__init__`.
+            **kwargs: See :meth:`.Learner.__init__`.
 
         Raises:
             FileNotFoundError: If using custom Albumentations transforms and

@@ -16,7 +16,7 @@ class RasterizerConfig(Config):
         False,
         description='If True, all pixels touched by geometries will be burned '
         'in. If false, only pixels whose center is within the polygon or that '
-        'are selected by Bresenham’s line algorithm will be burned in. '
+        'are selected by Bresenham\'s line algorithm will be burned in. '
         '(See rasterio.features.rasterize for more details).')
 
 

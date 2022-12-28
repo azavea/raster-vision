@@ -64,21 +64,17 @@ class SemanticSegmentationDataReader(Dataset):
 class SemanticSegmentationImageDataset(ImageDataset):
     """Reads semantic segmentatioin images and labels from files.
 
-    .. currentmodule:: rastervision.pytorch_learner.dataset.semantic_segmentation_dataset
-
-    Uses :class:`SemanticSegmentationDataReader` to read the data.
+    Uses :class:`.SemanticSegmentationDataReader` to read the data.
     """
 
     def __init__(self, img_dir: str, label_dir: str, *args, **kwargs):
         """Constructor.
 
-        .. currentmodule:: rastervision.pytorch_learner.dataset.dataset
-
         Args:
             img_dir (str): Directory containing images.
             label_dir (str): Directory containing segmentation masks.
-            *args: See :meth:`ImageDataset.__init__`.
-            **kwargs: See :meth:`ImageDataset.__init__`.
+            *args: See :meth:`.ImageDataset.__init__`.
+            **kwargs: See :meth:`.ImageDataset.__init__`.
         """
 
         ds = SemanticSegmentationDataReader(img_dir, label_dir)

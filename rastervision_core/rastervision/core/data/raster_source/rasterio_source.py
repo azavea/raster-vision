@@ -20,17 +20,33 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-def build_vrt(vrt_path: str, image_paths: List[str]) -> None:
-    """Build a VRT for a set of TIFF files."""
+def build_vrt(vrt_path: str, image_uris: List[str]) -> None:
+    """Build a VRT for a set of TIFF files.
+
+    Args:
+        vrt_path (str): Local path for the VRT to be created.
+        image_uris (List[str]): Image URIs.
+    """
     log.info('Building VRT...')
     cmd = ['gdalbuildvrt', vrt_path]
-    cmd.extend(image_paths)
+    cmd.extend(image_uris)
     subprocess.run(cmd)
 
 
 def download_and_build_vrt(image_uris: List[str],
                            vrt_dir: str,
                            stream: bool = False) -> str:
+    """Download images (if needed) and build a VRT for a set of TIFF files.
+
+    Args:
+        image_uris (List[str]): Image URIs.
+        vrt_dir (str): Dir where the VRT will be created.
+        stream (bool, optional): If true, do not download images.
+            Defaults to False.
+
+    Returns:
+        str: The path to the created VRT file.
+    """
     if not stream:
         image_uris = [download_if_needed(uri) for uri in image_uris]
     vrt_path = os.path.join(vrt_dir, 'index.vrt')
@@ -60,8 +76,7 @@ def load_window(
             chip. If None, no resizing is done. Defaults to None.
 
     Returns:
-        np.ndarray of shape (height, width, channels) where channels is the
-            number of channels in the image_dataset.
+        np.ndarray: array of shape (height, width, channels).
     """
     if bands is not None:
         bands = tuple(bands)
@@ -94,26 +109,45 @@ def load_window(
 
 def fill_overflow(extent: Box,
                   window: Box,
-                  arr: np.ndarray,
+                  chip: np.ndarray,
                   fill_value: int = 0) -> np.ndarray:
-    """Given a window and corresponding array of values, if the window
-    overflows the extent, fill the overflowing regions with fill_value.
+    """Where ``chip``'s ``window`` overflows extent, fill with ``fill_value``.
+
+    Args:
+        extent (Box): Extent.
+        window (Box): Window from which ``chip`` was read.
+        chip (np.ndarray): (H, W, C) array.
+        fill_value (int, optional): Value to set oveflowing pixels to.
+            Defaults to 0.
+
+    Returns:
+        np.ndarray: Chip with overflowing regions filled with ``fill_value``.
     """
     top_overflow = max(0, extent.ymin - window.ymin)
     bottom_overflow = max(0, window.ymax - extent.ymax)
     left_overflow = max(0, extent.xmin - window.xmin)
     right_overflow = max(0, window.xmax - extent.xmax)
 
-    h, w = arr.shape[:2]
-    arr[:top_overflow] = fill_value
-    arr[h - bottom_overflow:] = fill_value
-    arr[:, :left_overflow] = fill_value
-    arr[:, w - right_overflow:] = fill_value
-    return arr
+    h, w = chip.shape[:2]
+    chip[:top_overflow] = fill_value
+    chip[h - bottom_overflow:] = fill_value
+    chip[:, :left_overflow] = fill_value
+    chip[:, w - right_overflow:] = fill_value
+    return chip
 
 
 def get_channel_order_from_dataset(
         image_dataset: 'DatasetReader') -> List[int]:
+    """Get channel order from rasterio image dataset.
+
+    Accounts for dataset's ``colorinterp`` if defined.
+
+    Args:
+        image_dataset (DatasetReader): Rasterio image dataset.
+
+    Returns:
+        List[int]: List of channel indices.
+    """
     colorinterp = image_dataset.colorinterp
     if colorinterp:
         channel_order = [
@@ -126,7 +160,7 @@ def get_channel_order_from_dataset(
 
 
 class RasterioSource(RasterSource):
-    """A rasterio-based RasterSource.
+    """A rasterio-based :class:`.RasterSource`.
 
     This RasterSource can read any file that can be opened by
     `Rasterio/GDAL <https://www.gdal.org/formats_list.html>`_.
@@ -224,11 +258,14 @@ class RasterioSource(RasterSource):
 
     @property
     def num_channels(self) -> int:
-        """Needed since transformers can change output channels.
+        """Number of channels in the chips read from this source.
 
-        Unlike the parent class, RasterioSource applies channel_order (via
-        bands_to_read) before raster_transformers. So the number of output
-        channels is not guaranteed to be equal to len(channel_order).
+        .. note::
+
+            Unlike the parent class, ``RasterioSource`` applies channel_order
+            (via ``bands_to_read``) before ``raster_transformers``. So the
+            number of output channels is not guaranteed to be equal to
+            ``len(channel_order)``.
         """
         if self._num_channels is None:
             self._set_info_from_chip()
@@ -250,8 +287,10 @@ class RasterioSource(RasterSource):
         self._dtype = test_chip.dtype
         self._num_channels = test_chip.shape[-1]
 
-    def download_data(self, tmp_dir: str, stream: bool = False) -> str:
-        """Download any data needed for this Raster Source.
+    def download_data(self,
+                      vrt_dir: Optional[str] = None,
+                      stream: bool = False) -> str:
+        """Download any data needed for this raster source.
 
         Return a single local path representing the image or a VRT of the data.
         """
@@ -261,7 +300,9 @@ class RasterioSource(RasterSource):
             else:
                 return download_if_needed(self.uris[0])
         else:
-            return download_and_build_vrt(self.uris, tmp_dir, stream=stream)
+            if vrt_dir is None:
+                raise ValueError('vrt_dir is required if using >1 image URIs.')
+            return download_and_build_vrt(self.uris, vrt_dir, stream=stream)
 
     def _get_chip(self,
                   window: Box,

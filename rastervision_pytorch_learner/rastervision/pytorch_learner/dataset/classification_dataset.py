@@ -24,14 +24,12 @@ class ClassificationImageDataset(ImageDataset):
                  *args, **kwargs):
         """Constructor.
 
-        .. currentmodule:: rastervision.pytorch_learner.dataset.dataset
-
         Args:
             data_dir (str): Root directory containing class dirs.
             class_names (Optional[Iterable[str]]): Class names. Should match
                 class dir names.
-            *args: See :meth:`ImageDataset.__init__`.
-            **kwargs: See :meth:`ImageDataset.__init__`.
+            *args: See :meth:`.ImageDataset.__init__`.
+            **kwargs: See :meth:`.ImageDataset.__init__`.
         """
         ds = make_image_folder_dataset(data_dir, classes=class_names)
         super().__init__(
