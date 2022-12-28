@@ -19,7 +19,7 @@ class BoxSizeError(ValueError):
 
 
 class Box():
-    """A multi-purpose box (ie. rectangle)."""
+    """A multi-purpose box (ie. rectangle) representation ."""
 
     def __init__(self, ymin, xmin, ymax, xmax):
         """Construct a bounding box.

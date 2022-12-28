@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class LabelStore(ABC):
-    """This defines how to store prediction labels are stored for a scene.
-    """
+    """This defines how to store prediction labels for a scene."""
 
     @abstractmethod
     def save(self, labels):

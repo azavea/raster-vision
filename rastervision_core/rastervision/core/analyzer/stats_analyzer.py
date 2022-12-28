@@ -6,7 +6,7 @@ from rastervision.core.data import Scene
 
 
 class StatsAnalyzer(Analyzer):
-    """Computes RasterStats against the entire scene set."""
+    """Compute imagery statistics of scenes."""
 
     def __init__(self,
                  stats_uri: Optional[str] = None,

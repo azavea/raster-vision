@@ -254,7 +254,7 @@ def simplify_polygons(geojson: dict) -> dict:
     1.  *Sometimes* break up a polygon with "bowties" into multiple polygons.
         (See https://github.com/shapely/shapely/issues/599.)
     2.  *Sometimes* "simplify" polygons. See shapely documentation for
-        :function:``buffer``.
+        :meth:`.BaseGeometry.buffer`.
 
     Args:
         geojson (dict): A GeoJSON-like mapping of a FeatureCollection.
