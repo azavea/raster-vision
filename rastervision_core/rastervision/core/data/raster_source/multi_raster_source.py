@@ -10,14 +10,8 @@ from rastervision.core.data.raster_source.rasterio_source import RasterioSource
 from rastervision.core.data.utils import all_equal
 
 
-class MultiRasterSourceError(Exception):
-    pass
-
-
 class MultiRasterSource(RasterSource):
-    """A RasterSource that combines multiple RasterSources by concatenting
-    their output along the channel dimension (assumed to be the last dimension).
-    """
+    """Merge multiple ``RasterSources`` by concatenating along channel dim."""
 
     def __init__(self,
                  raster_sources: Sequence[RasterSource],
@@ -70,9 +64,18 @@ class MultiRasterSource(RasterSource):
         self.validate_raster_sources()
 
     def validate_raster_sources(self) -> None:
+        """Validate sub-``RasterSources``.
+
+        Checks if:
+
+        - dtypes are same or ``force_same_dtype`` is True.
+        - each sub-``RasterSource`` is a :class:`.RasterioSource` if extents
+          not identical.
+
+        """
         dtypes = [rs.dtype for rs in self.raster_sources]
         if not self.force_same_dtype and not all_equal(dtypes):
-            raise MultiRasterSourceError(
+            raise ValueError(
                 'dtypes of all sub raster sources must be the same. '
                 f'Got: {dtypes} '
                 '(Use force_same_dtype to cast all to the dtype of the '
@@ -81,18 +84,13 @@ class MultiRasterSource(RasterSource):
             all_rasterio_sources = all(
                 isinstance(rs, RasterioSource) for rs in self.raster_sources)
             if not all_rasterio_sources:
-                raise MultiRasterSourceError(
-                    'Non-identical extents are only supported '
-                    'for RasterioSource raster sources.')
-
-        sub_num_channels = sum(rs.num_channels for rs in self.raster_sources)
-        if sub_num_channels != self.num_channels:
-            raise MultiRasterSourceError(
-                f'num_channels ({self.num_channels}) != sum of num_channels '
-                f'of sub raster sources ({sub_num_channels})')
+                raise NotImplementedError(
+                    'Non-identical extents are only '
+                    'supported for RasterioSource raster sources.')
 
     @property
     def primary_source(self) -> RasterSource:
+        """Primary sub-``RasterSource``"""
         return self.raster_sources[self.primary_source_idx]
 
     @property

@@ -104,6 +104,8 @@ class SemanticSegmentationPredictOptions(PredictOptions):
 
 @register_config('semantic_segmentation', upgrader=ss_config_upgrader)
 class SemanticSegmentationConfig(RVPipelineConfig):
+    """Configure a :class:`.SemanticSegmentation` pipeline."""
+
     chip_options: SemanticSegmentationChipOptions = \
         SemanticSegmentationChipOptions()
     predict_options: SemanticSegmentationPredictOptions = \

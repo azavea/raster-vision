@@ -20,10 +20,10 @@ def cc_label_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
     'chip_classification_label_source',
     upgrader=cc_label_source_config_upgrader)
 class ChipClassificationLabelSourceConfig(LabelSourceConfig):
-    """Config for a source of labels for chip classification.
+    """Configure a :class:`.ChipClassificationLabelSource`.
 
-    This can be provided explicitly as a grid of cells, or a grid of cells can be
-    inferred from arbitrary polygons.
+    This can be provided explicitly as a grid of cells, or a grid of cells can
+    be inferred from arbitrary polygons.
     """
     vector_source: Optional[VectorSourceConfig] = None
     ioa_thresh: float = Field(

@@ -35,6 +35,8 @@ class ClassificationDataConfig(Config):
 
 @register_config('classification_image_data')
 class ClassificationImageDataConfig(ClassificationDataConfig, ImageDataConfig):
+    """Configure :class:`ClassificationImageDatasets <.ClassificationImageDataset>`."""
+
     data_format: ClassificationDataFormat = ClassificationDataFormat.image_folder
 
     def dir_to_dataset(self, data_dir: str, transform: A.BasicTransform
@@ -46,6 +48,11 @@ class ClassificationImageDataConfig(ClassificationDataConfig, ImageDataConfig):
 
 @register_config('classification_geo_data')
 class ClassificationGeoDataConfig(ClassificationDataConfig, GeoDataConfig):
+    """Configure classification :class:`GeoDatasets <.GeoDataset>`.
+
+    See :mod:`rastervision.pytorch_learner.dataset.classification_dataset`.
+    """
+
     def build_scenes(self, tmp_dir: str):
         for s in self.scene_dataset.all_scenes:
             if s.label_source is not None:
@@ -89,6 +96,8 @@ class ClassificationGeoDataConfig(ClassificationDataConfig, GeoDataConfig):
 
 @register_config('classification_model')
 class ClassificationModelConfig(ModelConfig):
+    """Configure a classification model."""
+
     def build_default_model(self, num_classes: int,
                             in_channels: int) -> nn.Module:
         from torchvision import models
@@ -125,6 +134,8 @@ class ClassificationModelConfig(ModelConfig):
 
 @register_config('classification_learner')
 class ClassificationLearnerConfig(LearnerConfig):
+    """Configure a :class:`.ClassificationLearner`."""
+
     data: Union[ClassificationImageDataConfig, ClassificationGeoDataConfig]
     model: Optional[ClassificationModelConfig]
 

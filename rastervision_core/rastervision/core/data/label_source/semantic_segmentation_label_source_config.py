@@ -21,7 +21,8 @@ def ss_label_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
     'semantic_segmentation_label_source',
     upgrader=ss_label_source_config_upgrader)
 class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
-    """Config for a read-only label source for semantic segmentation."""
+    """Configure a :class:`.SemanticSegmentationLabelSource`."""
+
     raster_source: Union[RasterSourceConfig, RasterizedSourceConfig] = Field(
         ..., description='The labels in the form of rasters.')
 

@@ -8,6 +8,8 @@ from rastervision.pipeline.config import (register_config, Config, Field,
 
 @register_config('rasterizer')
 class RasterizerConfig(Config):
+    """Configure rasterization params for a :class:`.RasterizedSource`."""
+
     background_class_id: int = Field(
         ...,
         description='The class_id to use for any background pixels, i.e. '
@@ -16,12 +18,14 @@ class RasterizerConfig(Config):
         False,
         description='If True, all pixels touched by geometries will be burned '
         'in. If false, only pixels whose center is within the polygon or that '
-        'are selected by Bresenham’s line algorithm will be burned in. '
+        'are selected by Bresenham\'s line algorithm will be burned in. '
         '(See rasterio.features.rasterize for more details).')
 
 
 @register_config('rasterized_source')
 class RasterizedSourceConfig(Config):
+    """Configure a :class:`.RasterizedSource`."""
+
     vector_source: VectorSourceConfig
     rasterizer_config: RasterizerConfig
 

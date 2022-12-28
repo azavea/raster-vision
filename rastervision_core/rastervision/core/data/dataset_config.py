@@ -19,7 +19,7 @@ def dataset_config_upgrader(cfg_dict: dict, version: int) -> dict:
 
 @register_config('dataset', upgrader=dataset_config_upgrader)
 class DatasetConfig(Config):
-    """Config for a Dataset comprising the scenes for train, valid, and test splits."""
+    """Configure train, validation, and test splits for a dataset."""
     class_config: ClassConfig
     train_scenes: List[SceneConfig]
     validation_scenes: List[SceneConfig]

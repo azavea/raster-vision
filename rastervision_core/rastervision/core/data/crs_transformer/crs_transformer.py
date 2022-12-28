@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class CRSTransformer(ABC):
     """Transforms map points in some CRS into pixel coordinates.
 
-    Each transformer is associated with a particular RasterSource.
+    Each transformer is associated with a particular :class:`.RasterSource`.
     """
 
     def __init__(self,

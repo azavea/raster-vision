@@ -47,6 +47,8 @@ class ObjectDetectionDataConfig(Config):
 @register_config('object_detection_image_data')
 class ObjectDetectionImageDataConfig(ObjectDetectionDataConfig,
                                      ImageDataConfig):
+    """Configure :class:`ObjectDetectionImageDatasets <.ObjectDetectionImageDataset>`."""
+
     data_format: ObjectDetectionDataFormat = ObjectDetectionDataFormat.coco
 
     def dir_to_dataset(self, data_dir: str, transform: A.BasicTransform
@@ -60,6 +62,10 @@ class ObjectDetectionImageDataConfig(ObjectDetectionDataConfig,
 
 @register_config('object_detection_geo_data_window')
 class ObjectDetectionGeoDataWindowConfig(GeoDataWindowConfig):
+    """Configure an object detection :class:`.GeoDataset`.
+
+    See :mod:`rastervision.pytorch_learner.dataset.object_detection_dataset`.
+    """
     ioa_thresh: float = Field(
         0.8,
         description='When a box is partially outside of a training chip, it '
@@ -87,6 +93,11 @@ class ObjectDetectionGeoDataWindowConfig(GeoDataWindowConfig):
 
 @register_config('object_detection_geo_data')
 class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
+    """Configure object detection :class:`GeoDatasets <.GeoDataset>`.
+
+    See :mod:`rastervision.pytorch_learner.dataset.object_detection_dataset`.
+    """
+
     def scene_to_dataset(
             self,
             scene: Scene,
@@ -131,6 +142,8 @@ class ObjectDetectionGeoDataConfig(ObjectDetectionDataConfig, GeoDataConfig):
 
 @register_config('object_detection_model')
 class ObjectDetectionModelConfig(ModelConfig):
+    """Configure an object detection model."""
+
     backbone: Backbone = Field(
         Backbone.resnet50,
         description=
@@ -203,6 +216,8 @@ class ObjectDetectionModelConfig(ModelConfig):
 
 @register_config('object_detection_learner')
 class ObjectDetectionLearnerConfig(LearnerConfig):
+    """Configure an :class:`.ObjectDetectionLearner`."""
+
     data: Union[ObjectDetectionImageDataConfig, ObjectDetectionGeoDataConfig]
     model: Optional[ObjectDetectionModelConfig]
 

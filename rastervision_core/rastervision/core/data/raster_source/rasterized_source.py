@@ -15,9 +15,23 @@ if TYPE_CHECKING:
 
 
 def geoms_to_raster(df: gpd.GeoDataFrame, window: 'Box',
-                    background_class_id: int, all_touched: bool,
-                    extent: 'Box') -> np.ndarray:
-    """Rasterize geometries that intersect with the window."""
+                    background_class_id: int, all_touched: bool) -> np.ndarray:
+    """Rasterize geometries that intersect with the window.
+
+    Args:
+        df (gpd.GeoDataFrame): All label geometries in the scene.
+        window (Box): The part of the scene to rasterize.
+        background_class_id (int): Class ID to use for pixels that don't
+            fall under any label geometry.
+        all_touched (bool): If True, all pixels touched by geometries will be
+            burned in. If false, only pixels whose center is within the
+            polygon or that are selected by Bresenham's line algorithm will be
+            burned in. (See :func:`.rasterize` for more details).
+            Defaults to False.
+
+    Returns:
+        np.ndarray: A raster.
+    """
     if len(df) == 0:
         return np.full(window.size, background_class_id, dtype=np.uint8)
 
@@ -44,7 +58,7 @@ def geoms_to_raster(df: gpd.GeoDataFrame, window: 'Box',
 
 
 class RasterizedSource(RasterSource):
-    """A RasterSource based on the rasterization of a VectorSource."""
+    """A :class:`.RasterSource` based on the rasterization of a VectorSource."""
 
     def __init__(self,
                  vector_source: 'VectorSource',
@@ -63,8 +77,8 @@ class RasterizedSource(RasterSource):
                 geometries will be burned in. If false, only pixels whose
                 center is within the polygon or that are selected by
                 Bresenham's line algorithm will be burned in.
-                (See rasterio.features.rasterize for more details). Defaults
-                to False.
+                (See :func:`~rasterio.features.rasterize` for more details).
+                Defaults to False.
         """
         self.vector_source = vector_source
         self.background_class_id = background_class_id
@@ -81,38 +95,44 @@ class RasterizedSource(RasterSource):
 
     @property
     def dtype(self) -> np.dtype:
-        """Return the numpy.dtype of this scene"""
         return np.uint8
 
     @property
     def crs_transformer(self):
         return self.vector_source.crs_transformer
 
-    def _get_chip(self, window):
+    def _get_chip(self, window: 'Box') -> np.ndarray:
         """Return the chip located in the window.
 
-        Polygons falling within the window are rasterized using the class_id, and
-        the background is filled with background_class_id. Also, any pixels in the
-        window outside the extent are zero, which is the don't-care class for
-        segmentation.
+        Polygons falling within the window are rasterized using their
+        ``class_id`` property and the background is filled with
+        ``background_class_id``.
 
         Args:
-            window: Box
+            window (Box): Window to read.
 
         Returns:
-            [height, width, channels] numpy array
+            np.ndarray: [height, width, channels] numpy array
         """
         log.debug(f'Rasterizing window: {window}')
         chip = geoms_to_raster(
             self.df,
             window,
             background_class_id=self.background_class_id,
-            extent=self.extent,
             all_touched=self.all_touched)
         # Add third singleton dim since rasters must have >=1 channel.
         return np.expand_dims(chip, 2)
 
     def validate_labels(self, df: gpd.GeoDataFrame) -> None:
+        """Validate label geometries.
+
+        Args:
+            df (gpd.GeoDataFrame): Label geometries.
+
+        Raises:
+            ValueError: If ``Point`` or ``LineString`` geometries found.
+            ValueError: If geometries are missing class IDs.
+        """
         geom_types = set(df.geom_type)
         if 'Point' in geom_types or 'LineString' in geom_types:
             raise ValueError('LineStrings and Points are not supported '

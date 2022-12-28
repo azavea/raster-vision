@@ -28,8 +28,8 @@ log = logging.getLogger(__name__)
 class SemanticSegmentationLabelStore(LabelStore):
     """Storage for semantic segmentation predictions.
 
-    Stores class raster as GeoTIFF, and can optionally vectorizes predictions and stores
-    them in GeoJSON files.
+    Can store predicted class ID raster and class scores raster as GeoTIFFs,
+    and can optionally vectorize predictions and store them as GeoJSON files.
     """
 
     def __init__(

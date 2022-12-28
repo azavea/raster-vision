@@ -131,7 +131,7 @@ The following table shows the corresponding ``Configs`` for various commonly use
         - :class:`~data.raster_source.multi_raster_source_config.MultiRasterSourceConfig`
         - :class:`~data.raster_source.rasterized_source_config.RasterizedSourceConfig`
 
-     -  
+     -
    * -  :class:`~data.raster_transformer.raster_transformer.RasterTransformer`
 
         - :class:`~data.raster_transformer.cast_transformer.CastTransformer`
@@ -150,7 +150,7 @@ The following table shows the corresponding ``Configs`` for various commonly use
         - :class:`~data.raster_transformer.rgb_class_transformer_config.RGBClassTransformerConfig`
         - :class:`~data.raster_transformer.stats_transformer_config.StatsTransformerConfig`
 
-     -  
+     -
    * -  :class:`~data.vector_source.vector_source.VectorSource`
 
         - :class:`~data.vector_source.geojson_vector_source.GeoJSONVectorSource`
@@ -159,7 +159,7 @@ The following table shows the corresponding ``Configs`` for various commonly use
 
         - :class:`~data.vector_source.geojson_vector_source_config.GeoJSONVectorSourceConfig`
 
-     -  
+     -
    * -  :class:`~data.vector_transformer.vector_transformer.VectorTransformer`
 
         - :class:`~data.vector_transformer.buffer_transformer.BufferTransformer`
@@ -172,7 +172,7 @@ The following table shows the corresponding ``Configs`` for various commonly use
         - :class:`~data.vector_transformer.class_inference_transformer_config.ClassInferenceTransformerConfig`
         - :class:`~data.vector_transformer.shift_transformer_config.ShiftTransformerConfig`
 
-     -  
+     -
    * -  :class:`~data.label_source.label_source.LabelSource`
 
         - :class:`~data.label_source.chip_classification_label_source.ChipClassificationLabelSource`
@@ -185,7 +185,7 @@ The following table shows the corresponding ``Configs`` for various commonly use
         - :class:`~data.label_source.semantic_segmentation_label_source_config.SemanticSegmentationLabelSourceConfig`
         - :class:`~data.label_source.object_detection_label_source_config.ObjectDetectionLabelSourceConfig`
 
-     -  
+     -
    * -  :class:`~data.label_store.label_store.LabelStore`
 
         - :class:`~data.label_store.chip_classification_geojson_store.ChipClassificationGeoJSONStore`

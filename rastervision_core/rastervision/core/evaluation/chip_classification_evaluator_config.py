@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 @register_config('chip_classification_evaluator')
 class ChipClassificationEvaluatorConfig(ClassificationEvaluatorConfig):
+    """Configure a :class:`.ChipClassificationEvaluator`."""
+
     def build(self,
               class_config: 'ClassConfig',
               scene_group: Optional[Tuple[str, Iterable[str]]] = None

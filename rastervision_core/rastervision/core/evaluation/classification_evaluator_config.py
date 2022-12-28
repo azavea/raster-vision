@@ -4,4 +4,6 @@ from rastervision.core.evaluation.evaluator_config import EvaluatorConfig
 
 @register_config('classification_evaluator')
 class ClassificationEvaluatorConfig(EvaluatorConfig):
+    """Configure a :class:`.ClassificationEvaluator`."""
+
     pass

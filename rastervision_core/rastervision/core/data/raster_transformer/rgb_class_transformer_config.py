@@ -6,6 +6,8 @@ from rastervision.core.data.raster_transformer import (RasterTransformerConfig,
 
 @register_config('rgb_class_transformer')
 class RGBClassTransformerConfig(RasterTransformerConfig):
+    """Configure a :class:`.RGBClassTransformer`."""
+
     class_config: ClassConfig = Field(
         ...,
         description=('The class config defining the mapping between '

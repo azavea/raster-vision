@@ -34,7 +34,7 @@ class Scene:
 
     @property
     def extent(self) -> 'Box':
-        """Extent of the associated RasterSource."""
+        """Extent of the associated :class:`.RasterSource`."""
         return self.raster_source.extent
 
     def __getitem__(self, key: Any) -> Tuple[Any, Any]:
