@@ -23,6 +23,8 @@ def ss_evaluator_config_upgrader(cfg_dict: dict, version: int) -> dict:
 @register_config(
     'semantic_segmentation_evaluator', upgrader=ss_evaluator_config_upgrader)
 class SemanticSegmentationEvaluatorConfig(ClassificationEvaluatorConfig):
+    """Configure a :class:`.SemanticSegmentationEvaluator`."""
+
     def build(self,
               class_config: 'ClassConfig',
               scene_group: Optional[Tuple[str, Iterable[str]]] = None

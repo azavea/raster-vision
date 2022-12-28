@@ -24,6 +24,8 @@ def stats_transformer_config_upgrader(cfg_dict: dict, version: int) -> dict:
 @register_config(
     'stats_transformer', upgrader=stats_transformer_config_upgrader)
 class StatsTransformerConfig(RasterTransformerConfig):
+    """Configure a :class:`.StatsTransformer`."""
+
     stats_uri: Optional[str] = Field(
         None,
         description='The URI of the output of the StatsAnalyzer. '

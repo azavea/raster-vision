@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 @register_config('evaluator')
 class EvaluatorConfig(Config):
+    """Configure an :class:`.Evaluator`."""
+
     output_uri: Optional[str] = Field(
         None,
         description='URI of directory where evaluator output will be saved. '

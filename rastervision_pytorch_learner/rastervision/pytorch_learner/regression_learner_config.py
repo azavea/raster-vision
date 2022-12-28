@@ -48,6 +48,8 @@ class RegressionDataConfig(Config):
 
 @register_config('regression_image_data')
 class RegressionImageDataConfig(RegressionDataConfig, ImageDataConfig):
+    """Configure :class:`RegressionImageDatasets <.RegressionImageDataset>`."""
+
     data_format: RegressionDataFormat = RegressionDataFormat.csv
     plot_options: Optional[RegressionPlotOptions] = Field(
         RegressionPlotOptions(), description='Options to control plotting.')
@@ -61,6 +63,11 @@ class RegressionImageDataConfig(RegressionDataConfig, ImageDataConfig):
 
 @register_config('regression_geo_data')
 class RegressionGeoDataConfig(RegressionDataConfig, GeoDataConfig):
+    """Configure regression :class:`GeoDatasets <.GeoDataset>`.
+
+    See :mod:`rastervision.pytorch_learner.dataset.regression_dataset`.
+    """
+
     plot_options: Optional[RegressionPlotOptions] = Field(
         RegressionPlotOptions(), description='Options to control plotting.')
 
@@ -126,6 +133,8 @@ class RegressionModel(nn.Module):
 
 @register_config('regression_model')
 class RegressionModelConfig(ModelConfig):
+    """Configure a regression model."""
+
     output_multiplier: List[float] = None
 
     def update(self, learner=None):
@@ -185,6 +194,8 @@ class RegressionModelConfig(ModelConfig):
 
 @register_config('regression_learner')
 class RegressionLearnerConfig(LearnerConfig):
+    """Configure a :class:`.RegressionLearner`."""
+
     model: Optional[RegressionModelConfig]
     data: Union[RegressionImageDataConfig, RegressionGeoDataConfig]
 

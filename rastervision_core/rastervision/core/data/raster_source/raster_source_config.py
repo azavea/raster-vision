@@ -20,6 +20,8 @@ def rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
 
 @register_config('raster_source', upgrader=rs_config_upgrader)
 class RasterSourceConfig(Config):
+    """Configure a :class:`.RasterSource`."""
+
     channel_order: Optional[List[int]] = Field(
         None,
         description=

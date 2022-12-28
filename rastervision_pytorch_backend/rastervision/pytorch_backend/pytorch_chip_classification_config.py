@@ -41,6 +41,8 @@ def clf_learner_backend_config_upgrader(cfg_dict, version):
     'pytorch_chip_classification_backend',
     upgrader=clf_learner_backend_config_upgrader)
 class PyTorchChipClassificationConfig(PyTorchLearnerBackendConfig):
+    """Configure a :class:`.PyTorchChipClassification` backend."""
+
     model: ClassificationModelConfig
 
     def get_learner_config(self, pipeline):

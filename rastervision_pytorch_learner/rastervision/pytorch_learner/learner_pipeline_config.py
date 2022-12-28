@@ -5,6 +5,8 @@ from rastervision.pytorch_learner import LearnerConfig
 
 @register_config('learner_pipeline')
 class LearnerPipelineConfig(PipelineConfig):
+    """Configure a :class:`.LearnerPipeline`."""
+
     learner: LearnerConfig
 
     def update(self):

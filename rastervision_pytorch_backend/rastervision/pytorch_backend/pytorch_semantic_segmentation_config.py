@@ -41,6 +41,8 @@ def ss_learner_backend_config_upgrader(cfg_dict, version):
     'pytorch_semantic_segmentation_backend',
     upgrader=ss_learner_backend_config_upgrader)
 class PyTorchSemanticSegmentationConfig(PyTorchLearnerBackendConfig):
+    """Configure a :class:`.PyTorchSemanticSegmentation` backend."""
+
     model: SemanticSegmentationModelConfig
 
     def get_learner_config(self, pipeline):

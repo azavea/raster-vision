@@ -13,6 +13,8 @@ log = logging.getLogger(__name__)
 
 @register_config('pytorch_learner_backend')
 class PyTorchLearnerBackendConfig(BackendConfig):
+    """Configure a :class:`.PyTorchLearnerBackend`."""
+
     model: ModelConfig
     solver: SolverConfig
     data: DataConfig

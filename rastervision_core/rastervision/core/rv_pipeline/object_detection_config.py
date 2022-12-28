@@ -59,6 +59,8 @@ class ObjectDetectionPredictOptions(PredictOptions):
 
 @register_config('object_detection')
 class ObjectDetectionConfig(RVPipelineConfig):
+    """Configure an :class:`.ObjectDetection` pipeline."""
+
     chip_options: ObjectDetectionChipOptions = ObjectDetectionChipOptions()
     predict_options: ObjectDetectionPredictOptions = ObjectDetectionPredictOptions(
     )

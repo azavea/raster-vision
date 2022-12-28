@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 @register_config('class_inference_transformer')
 class ClassInferenceTransformerConfig(VectorTransformerConfig):
+    """Configure a :class:`.ClassInferenceTransformer`."""
+
     default_class_id: Optional[int] = Field(
         None,
         description='The default class_id to use if class cannot be inferred '

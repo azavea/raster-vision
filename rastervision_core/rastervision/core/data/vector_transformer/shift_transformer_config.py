@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 @register_config('shift_transformer')
 class ShiftTransformerConfig(VectorTransformerConfig):
-    """Shift geometries by some distance specified in meters."""
+    """Configure a :class:`.ShiftTransformer`."""
 
     x_shift: float = Field(
         0.0,
