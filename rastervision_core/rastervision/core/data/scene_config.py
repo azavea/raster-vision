@@ -26,7 +26,9 @@ def scene_config_upgrader(cfg_dict: dict, version: int) -> dict:
 
 @register_config('scene', upgrader=scene_config_upgrader)
 class SceneConfig(Config):
-    """Config for Scene which comprises raster data and labels for an AOI."""
+    """Configure a :class:`.Scene` comprising raster data & labels for an AOI.
+    """
+
     id: str
     raster_source: RasterSourceConfig
     label_source: Optional[LabelSourceConfig] = None

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 @register_config('pipeline')
 class PipelineConfig(Config):
-    """Base class for configuring Pipelines.
+    """Base class for configuring :class:`Pipelines <.Pipeline>`.
 
     This should be subclassed to configure new Pipelines.
     """

@@ -91,7 +91,7 @@ class BuildingVectorOutputConfig(VectorOutputConfig):
 
 @register_config('semantic_segmentation_label_store')
 class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
-    """Config for storage for semantic segmentation predictions.
+    """Configure a :class:`.SemanticSegmentationLabelStore`.
 
     Stores class raster as GeoTIFF, and can optionally vectorizes predictions and stores
     them in GeoJSON files.

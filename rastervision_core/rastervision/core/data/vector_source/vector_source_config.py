@@ -44,6 +44,8 @@ def vector_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
 
 @register_config('vector_source', upgrader=vector_source_config_upgrader)
 class VectorSourceConfig(Config):
+    """Configure a :class:`.VectorSource`."""
+
     transformers: List[VectorTransformerConfig] = Field(
         [], description='List of VectorTransformers.')
 

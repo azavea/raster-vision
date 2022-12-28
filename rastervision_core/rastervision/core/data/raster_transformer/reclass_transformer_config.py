@@ -7,6 +7,8 @@ from rastervision.core.data.raster_transformer import (RasterTransformerConfig,
 
 @register_config('reclass_transformer')
 class ReclassTransformerConfig(RasterTransformerConfig):
+    """Configure a :class:`.ReclassTransformer`."""
+
     mapping: Dict[int, int] = Field(
         ..., description=('The reclassification mapping.'))
 

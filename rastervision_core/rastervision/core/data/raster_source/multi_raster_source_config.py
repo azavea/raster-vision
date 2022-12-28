@@ -18,6 +18,8 @@ def multi_rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
 
 @register_config('multi_raster_source', upgrader=multi_rs_config_upgrader)
 class MultiRasterSourceConfig(RasterSourceConfig):
+    """Configure a :class:`.MultiRasterSource`."""
+
     raster_sources: conlist(
         RasterSourceConfig, min_items=1) = Field(
             ..., description='List of RasterSourceConfig to combine.')

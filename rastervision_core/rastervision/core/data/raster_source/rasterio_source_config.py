@@ -22,6 +22,8 @@ def rasterio_source_config_upgrader(cfg_dict: dict, version: int) -> dict:
 
 @register_config('rasterio_source', upgrader=rasterio_source_config_upgrader)
 class RasterioSourceConfig(RasterSourceConfig):
+    """Configure a :class:`.RasterioSource`."""
+
     uris: Union[str, List[str]] = Field(
         ...,
         description='One or more image URIs that comprise the imagery for a '

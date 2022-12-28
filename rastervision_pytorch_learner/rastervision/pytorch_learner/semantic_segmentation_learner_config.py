@@ -61,14 +61,11 @@ class SemanticSegmentationDataConfig(Config):
     'semantic_segmentation_image_data', upgrader=ss_image_data_config_upgrader)
 class SemanticSegmentationImageDataConfig(SemanticSegmentationDataConfig,
                                           ImageDataConfig):
-    """Configure reading of a semnatic segmentation image dataset.
+    """Configure :class:`SemanticSegmentationImageDatasets <.SemanticSegmentationImageDataset>`.
 
-    .. currentmodule:: rastervision.pytorch_learner.dataset.semantic_segmentation_dataset
+    This assumes the following file structure:
 
-    This is used to instantiate a :class:`SemanticSegmentationImageDataset`
-    and assumes the following file structure:
-
-    .. code-block:: txt
+    .. code-block:: text
 
         <data_dir>/
             img/
@@ -82,7 +79,7 @@ class SemanticSegmentationImageDataConfig(SemanticSegmentationDataConfig,
                 ...
                 <img N>.<extension>
 
-    """
+    """ # noqa
     data_format: SemanticSegmentationDataFormat = (
         SemanticSegmentationDataFormat.default)
 
@@ -104,6 +101,12 @@ class SemanticSegmentationImageDataConfig(SemanticSegmentationDataConfig,
 @register_config('semantic_segmentation_geo_data')
 class SemanticSegmentationGeoDataConfig(SemanticSegmentationDataConfig,
                                         GeoDataConfig):
+    """Configure semantic segmentation :class:`GeoDatasets <.GeoDataset>`.
+
+    See
+    :mod:`rastervision.pytorch_learner.dataset.semantic_segmentation_dataset`.
+    """
+
     def update(self, *args, **kwargs):
         SemanticSegmentationDataConfig.update(self)
         GeoDataConfig.update(self, *args, **kwargs)
@@ -144,6 +147,8 @@ class SemanticSegmentationGeoDataConfig(SemanticSegmentationDataConfig,
 
 @register_config('semantic_segmentation_model')
 class SemanticSegmentationModelConfig(ModelConfig):
+    """Configure a semantic segmentation model."""
+
     backbone: Backbone = Field(
         Backbone.resnet50,
         description=(
@@ -193,6 +198,8 @@ class SemanticSegmentationModelConfig(ModelConfig):
 
 @register_config('semantic_segmentation_learner')
 class SemanticSegmentationLearnerConfig(LearnerConfig):
+    """Configure a :class:`.SemanticSegmentationLearner`."""
+
     data: Union[SemanticSegmentationImageDataConfig,
                 SemanticSegmentationGeoDataConfig]
     model: Optional[SemanticSegmentationModelConfig]

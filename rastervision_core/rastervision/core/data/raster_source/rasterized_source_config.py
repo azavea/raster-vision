@@ -8,6 +8,8 @@ from rastervision.pipeline.config import (register_config, Config, Field,
 
 @register_config('rasterizer')
 class RasterizerConfig(Config):
+    """Configure rasterization params for a :class:`.RasterizedSource`."""
+
     background_class_id: int = Field(
         ...,
         description='The class_id to use for any background pixels, i.e. '
@@ -22,6 +24,8 @@ class RasterizerConfig(Config):
 
 @register_config('rasterized_source')
 class RasterizedSourceConfig(Config):
+    """Configure a :class:`.RasterizedSource`."""
+
     vector_source: VectorSourceConfig
     rasterizer_config: RasterizerConfig
 

@@ -41,6 +41,8 @@ def objdet_learner_backend_config_upgrader(cfg_dict, version):
     'pytorch_object_detection_backend',
     upgrader=objdet_learner_backend_config_upgrader)
 class PyTorchObjectDetectionConfig(PyTorchLearnerBackendConfig):
+    """Configure a :class:`.PyTorchObjectDetection` backend."""
+
     model: ObjectDetectionModelConfig
 
     def get_learner_config(self, pipeline):

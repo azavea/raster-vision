@@ -1057,6 +1057,11 @@ class GeoDataWindowMethod(Enum):
 
 @register_config('geo_data_window')
 class GeoDataWindowConfig(Config):
+    """Configure a :class:`.GeoDataset`.
+
+    See :mod:`rastervision.pytorch_learner.dataset.dataset`.
+    """
+
     method: GeoDataWindowMethod = Field(
         GeoDataWindowMethod.sliding, description='')
     size: Union[PosInt, Tuple[PosInt, PosInt]] = Field(
@@ -1142,6 +1147,11 @@ class GeoDataWindowConfig(Config):
 
 @register_config('geo_data')
 class GeoDataConfig(DataConfig):
+    """Configure :class:`GeoDatasets <.GeoDataset>`.
+
+    See :mod:`rastervision.pytorch_learner.dataset.dataset`.
+    """
+
     scene_dataset: Optional['SceneDatasetConfig'] = Field(None, description='')
     window_opts: Union[GeoDataWindowConfig, Dict[str,
                                                  GeoDataWindowConfig]] = Field(

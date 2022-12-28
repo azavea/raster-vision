@@ -23,7 +23,8 @@ class PredictOptions(Config):
 
 @register_config('rv_pipeline')
 class RVPipelineConfig(PipelineConfig):
-    """Config for RVPipeline."""
+    """Configure an :class:`.RVPipeline`."""
+
     dataset: DatasetConfig = Field(
         ...,
         description=

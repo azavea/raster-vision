@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 @register_config('buffer_transformer')
 class BufferTransformerConfig(VectorTransformerConfig):
-    """Configure the conversion of non-polygon geometries into polygons.
+    """Configure a :class:`.BufferTransformer`.
 
     This is useful, for example, for buffering lines representing roads so that
     their width roughly matches the width of roads in the imagery.
