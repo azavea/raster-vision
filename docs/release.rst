@@ -11,7 +11,7 @@ Minor or Major Version Release
 #.  It's a good idea to update any major dependencies before the release.
 #.  Update the docs if needed. See the `docs README <{{ repo }}/docs/README.md>`__ for instructions.
 #.  Checkout the ``master`` branch, re-build the docker image (``docker/build``), and push it to ECR (``docker/ecr_publish``).
-#.  Execute all notebooks in the `tutorial notebooks <{{ repo }}/docs/usage/tutorials/>` and make sure they work correctly. Do not commit output changes unless code behavior has changed.
+#.  Execute all `tutorial notebooks <{{ repo }}/docs/usage/tutorials/>`__ and make sure they work correctly. Do not commit output changes unless code behavior has changed.
 #.  Run all :ref:`rv examples` and check that evaluation metrics are close to the scores from the last release. (For each example, there should be a link to a JSON file with the evaluation metrics from the last release.) This stage often uncovers bugs, and is the most time consuming part of the release process. There is a `script <{{ repo_examples }}/test.py>`__ to help run the examples and collect their outputs. See the associated `README <{{ repo_examples }}/README.md>`__ for details.
 #.  Collect all model bundles, and check that they work with the ``predict`` command and sanity check output in QGIS.
 #.  Update the :ref:`model zoo` by uploading model bundles and sample images to the right place on S3. If you use the ``collect`` command (`described here <{{ repo_examples }}/README.md>`__), you should be able to sync the ``collect_dir`` to ``s3://azavea-research-public-data/raster-vision/examples/model-zoo-<version>``.
@@ -116,6 +116,7 @@ Minor or Major Version Release
         twine upload dist/*
 
 #.  Announce new release in our `forum <https://github.com/azavea/raster-vision/discussions>`_, and with blog post if it's a big release.
+#.  Make a PR to the master branch that updates the version number to the next development version. For example, if the last release was ``0.20.1``, update the version
 
 Bug Fix Release
 -----------------
