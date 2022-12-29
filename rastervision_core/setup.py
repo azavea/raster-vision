@@ -10,7 +10,7 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 
 name = 'rastervision_core'
-version = '0.20'
+version = '0.20.1'
 description = 'A rastervision plugin that adds geospatial machine learning pipelines'
 
 setup(
