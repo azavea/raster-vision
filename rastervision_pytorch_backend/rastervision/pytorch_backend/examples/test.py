@@ -11,8 +11,10 @@ from rastervision.pipeline.file_system import (
     file_to_json, sync_from_dir, upload_or_copy, download_or_copy, file_exists,
     sync_to_dir, NotReadableError, download_if_needed)
 
-OLD_VERSION = '0.13'
-NEW_VERSION = '0.20'
+OLD_VERSION = '0.20'
+NEW_VERSION = '0.20.1'
+NEW_VERSION_MAJOR_MINOR = '0.20'
+
 EXAMPLES_MODULE_ROOT = 'rastervision.pytorch_backend.examples'
 EXAMPLES_PATH_ROOT = '/opt/src/rastervision_pytorch_backend/rastervision/pytorch_backend/examples'  # noqa
 REMOTE_PROCESSED_ROOT = f's3://raster-vision/examples/{NEW_VERSION}/processed-data'
@@ -21,7 +23,7 @@ LOCAL_RAW_ROOT = '/opt/data/raw-data'
 LOCAL_PROCESSED_ROOT = '/opt/data/examples/processed-data'
 LOCAL_OUTPUT_ROOT = '/opt/data/examples/output'
 LOCAL_COLLECT_ROOT = '/opt/data/examples/collect'
-ZOO_UPLOAD_ROOT = f's3://azavea-research-public-data/raster-vision/examples/model-zoo-{NEW_VERSION}'  # noqa
+ZOO_UPLOAD_ROOT = f's3://azavea-research-public-data/raster-vision/examples/model-zoo-{NEW_VERSION_MAJOR_MINOR}'  # noqa
 SAMPLE_IMG_DIR = f's3://azavea-research-public-data/raster-vision/examples/sample_images'  # noqa
 
 ######################
@@ -463,11 +465,11 @@ def _compare_runs(root_uri_old: str,
             _compare_evals(cmd_root_uri_old_local, cmd_root_uri_new_local)
 
 
-def _compare_evals(
-        root_uri_old: str,
-        root_uri_new: str,
-        float_tol: float = 1e-3,
-        exclude_keys: list = ['conf_mat', 'count_error', 'per_scene']) -> None:
+def _compare_evals(root_uri_old: str,
+                   root_uri_new: str,
+                   float_tol: float = 1e-3,
+                   exclude_keys: list = ['conf_mat', 'count',
+                                         'per_scene']) -> None:
     """Compare outputs of the eval command for two runs of an example."""
     console_heading('Comparing keys and values in eval.json files...')
     try:
@@ -590,8 +592,6 @@ def _compare_dicts(dict_old: dict,
     """
     dict_old = flatten_dict(dict_old)
     dict_new: Dict[str, Any] = flatten_dict(dict_new)
-    # TODO this hack is specific to 0.13 vs 0.20 comparison
-    dict_new = {k.replace('.metrics', ''): v for k, v in dict_new.items()}
     keys_old, keys_new = set(dict_old.keys()), set(dict_new.keys())
     diff1, diff2 = keys_new - keys_old, keys_old - keys_new
     if len(diff1) > 0:
