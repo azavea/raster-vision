@@ -1,4 +1,4 @@
-rastervision_pipeline==0.20
+rastervision_pipeline==0.20.1
 
 # These 3 should be updated together to ensure compatibility. Incompatibility
 # results in a warning about pygeos versions.
