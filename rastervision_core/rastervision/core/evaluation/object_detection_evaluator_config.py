@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 
 @register_config('object_detection_evaluator')
 class ObjectDetectionEvaluatorConfig(ClassificationEvaluatorConfig):
+    """Configure an :class:`.ObjectDetectionEvaluator`."""
+
     def build(self,
               class_config: 'ClassConfig',
               scene_group: Optional[Tuple[str, Iterable[str]]] = None

@@ -163,7 +163,7 @@ nbsphinx_prolog = r"""
 
             os.environ['GDAL_DATA'] = check_output('pip show rasterio | grep Location | awk \'{print $NF"/rasterio/gdal_data/"}\'', shell=True).decode().strip()
             os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'
-        
+
         See this `Colab notebook <https://colab.research.google.com/drive/1qUl_6McbLJr9KjrhHnx_SWbSYkLPL2uW>`__ for an example.
 
 """ # noqa

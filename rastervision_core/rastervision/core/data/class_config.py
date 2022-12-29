@@ -10,7 +10,8 @@ DEFAULT_NULL_CLASS_COLOR = 'black'
 
 @register_config('class_config')
 class ClassConfig(Config):
-    """Configures the class names that are being predicted."""
+    """Configure class information for a machine learning task."""
+
     names: List[str] = Field(
         ...,
         description='Names of classes. The i-th class in this list will have '

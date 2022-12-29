@@ -8,7 +8,8 @@ from rastervision.pipeline.config import register_config, validator
 
 @register_config('object_detection_label_source')
 class ObjectDetectionLabelSourceConfig(LabelSourceConfig):
-    """Config for a read-only label source for object detection."""
+    """Configure an :class:`.ObjectDetectionLabelSource`."""
+
     vector_source: VectorSourceConfig
 
     @validator('vector_source')

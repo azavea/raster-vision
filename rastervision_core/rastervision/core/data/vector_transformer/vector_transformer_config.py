@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 @register_config('vector_transformer')
 class VectorTransformerConfig(Config):
+    """Configure a :class:`.VectorTransformer`."""
+
     def update(self,
                pipeline: Optional['RVPipelineConfig'] = None,
                scene: Optional['SceneConfig'] = None) -> None:

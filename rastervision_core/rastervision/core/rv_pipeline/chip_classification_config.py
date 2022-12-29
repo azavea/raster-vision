@@ -7,6 +7,8 @@ from rastervision.core.evaluation import ChipClassificationEvaluatorConfig
 
 @register_config('chip_classification')
 class ChipClassificationConfig(RVPipelineConfig):
+    """Configure a :class:`.ChipClassification` pipeline."""
+
     def build(self, tmp_dir):
         from rastervision.core.rv_pipeline.chip_classification import ChipClassification
         return ChipClassification(self, tmp_dir)

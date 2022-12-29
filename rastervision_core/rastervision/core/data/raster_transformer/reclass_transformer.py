@@ -6,8 +6,7 @@ if TYPE_CHECKING:
 
 
 class ReclassTransformer(RasterTransformer):
-    """Reclassifies label raster
-    """
+    """Maps class IDs in a label raster to other values."""
 
     def __init__(self, mapping: Dict[int, int]):
         """Construct a new ReclassTransformer.

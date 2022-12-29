@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 @register_config('geojson_vector_source')
 class GeoJSONVectorSourceConfig(VectorSourceConfig):
+    """Configure a :class:`.GeoJSONVectorSource`."""
+
     uri: str = Field(..., description='The URI of a GeoJSON file.')
     ignore_crs_field: bool = False
 

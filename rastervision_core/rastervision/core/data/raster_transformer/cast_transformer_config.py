@@ -7,6 +7,8 @@ from rastervision.core.data.raster_transformer.cast_transformer import (  # noqa
 
 @register_config('cast_transformer')
 class CastTransformerConfig(RasterTransformerConfig):
+    """Configure a :class:`.CastTransformer`."""
+
     to_dtype: str = Field(
         ...,
         description='dtype to cast raster to. Must be a valid Numpy dtype '

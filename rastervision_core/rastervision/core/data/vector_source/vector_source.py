@@ -23,6 +23,15 @@ class VectorSource(ABC):
     def __init__(self,
                  crs_transformer: 'CRSTransformer',
                  vector_transformers: List['VectorTransformer'] = []):
+        """Constructor.
+
+        Args:
+            crs_transformer: A ``CRSTransformer`` to convert
+                between map and pixel coords. Normally this is obtained from a
+                :class:`.RasterSource`.
+            vector_transformers: ``VectorTransformers`` for transforming
+                geometries. Defaults to ``[]``.
+        """
         self.crs_transformer = crs_transformer
         self.vector_transformers = vector_transformers
         self._geojson = None
@@ -32,6 +41,7 @@ class VectorSource(ABC):
         """Return transformed GeoJSON.
 
         This makes the following transformations to the raw geojson:
+
         - converts to pixels coords (by default)
         - removes empty features
         - splits apart multi-geoms and geom collections into single geometries
@@ -77,6 +87,7 @@ class VectorSource(ABC):
         pass
 
     def get_dataframe(self, to_map_coords: bool = False) -> gpd.GeoDataFrame:
+        """Return geometries as a :class:`~geopandas.GeoDataFrame`."""
         geojson = self.get_geojson(to_map_coords=to_map_coords)
         df = gpd.GeoDataFrame.from_features(geojson)
         if len(df) == 0 and 'geometry' not in df.columns:
@@ -85,6 +96,7 @@ class VectorSource(ABC):
 
     @property
     def extent(self) -> Box:
+        """Envelope of union of all geoms."""
         if self._extent is None:
             envelope = unary_union(self.get_geoms()).envelope
             self._extent = Box.from_shapely(envelope).to_int()

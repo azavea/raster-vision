@@ -9,19 +9,12 @@ if TYPE_CHECKING:
 
 
 class ChannelOrderError(Exception):
-    def __init__(self, channel_order: List[int], num_channels: int):
+    def __init__(self, channel_order: List[int], num_channels_raw: int):
         self.channel_order = channel_order
-        self.num_channels = num_channels
-        msg = (f'The channel_order={str(channel_order)} contains a '
-               f'channel index >= num_channels={num_channels}')
+        self.num_channels_raw = num_channels_raw
+        msg = (f'The channel_order ({channel_order}) contains an'
+               f'index >= num_channels_raw ({num_channels_raw}).')
         super().__init__(msg)
-
-
-def validate_channel_order(channel_order: List[int],
-                           num_channels: int) -> None:
-    for c in channel_order:
-        if c >= num_channels:
-            raise ChannelOrderError(channel_order, num_channels)
 
 
 class RasterSource(ABC):
@@ -36,21 +29,24 @@ class RasterSource(ABC):
                  num_channels_raw: int,
                  raster_transformers: List['RasterTransformer'] = [],
                  extent: Optional[Box] = None):
-        """Construct a new RasterSource.
+        """Constructor.
 
         Args:
-            channel_order: list of channel indices to use when extracting chip from
-                raw imagery.
-            num_channels_raw: Number of channels in the raw imagery before applying
-                channel_order.
-            raster_transformers: RasterTransformers used to transform chips
-                whenever they are retrieved.
-            extent (Optional[Box], optional): Use-specified extent. If None,
-                the full extent of the raster source is used.
+            channel_order: list of channel indices to use when extracting chip
+                from raw imagery.
+            num_channels_raw: Number of channels in the raw imagery before
+                applying channel_order.
+            raster_transformers: ``RasterTransformers`` for transforming chips
+                whenever they are retrieved. Defaults to ``[]``.
+            extent: Use-specified extent. If None, the full extent of the
+                raster source is used.
         """
         if channel_order is None:
             channel_order = list(range(num_channels_raw))
-        validate_channel_order(channel_order, num_channels_raw)
+
+        if any(c >= num_channels_raw for c in channel_order):
+            raise ChannelOrderError(channel_order, num_channels_raw)
+
         self.channel_order = channel_order
         self.num_channels_raw = num_channels_raw
         self.raster_transformers = raster_transformers
@@ -58,35 +54,33 @@ class RasterSource(ABC):
 
     @property
     def num_channels(self) -> int:
+        """Number of channels in the chips read from this source."""
         return len(self.channel_order)
 
     @property
     def shape(self) -> Tuple[int, int, int]:
+        """Shape of the raster as a (height, width, num_channels) tuple."""
         ymin, xmin, ymax, xmax = self.extent
         return ymax - ymin, xmax - xmin, self.num_channels
 
     @abstractproperty
     def dtype(self) -> 'np.dtype':
-        """Return the numpy.dtype of this scene"""
+        """``numpy.dtype`` of the chips read from this source."""
         pass
 
     @property
     def extent(self) -> 'Box':
-        """Return the extent of the RasterSource.
-
-        Returns:
-            Box in pixel coordinates with extent
-        """
+        """Extent of the RasterSource."""
         return self._extent
 
     @abstractproperty
     def crs_transformer(self) -> 'CRSTransformer':
-        """Return the associated CRSTransformer."""
+        """Associated :class:`.CRSTransformer`."""
         pass
 
     @abstractmethod
     def _get_chip(self, window: 'Box') -> 'np.ndarray':
-        """Return the raw chip located in the window.
+        """Return raw chip without applying channel_order or transforms.
 
         Args:
             window: Box
@@ -155,7 +149,7 @@ class RasterSource(ABC):
         return chip
 
     def get_raw_chip(self, window: 'Box') -> 'np.ndarray':
-        """Return raw chip without using channel_order or applying transforms.
+        """Return raw chip without applying channel_order or transforms.
 
         Args:
             window (Box): The window for which to get the chip.
@@ -168,7 +162,7 @@ class RasterSource(ABC):
     def get_image_array(self) -> 'np.ndarray':
         """Return entire transformed image array.
 
-        Not safe to call on very large RasterSources.
+        .. warning:: Not safe to call on very large RasterSources.
 
         Returns:
             np.ndarray: Array of shape (height, width, channels).
@@ -178,7 +172,7 @@ class RasterSource(ABC):
     def get_raw_image_array(self) -> 'np.ndarray':
         """Return raw image for the full extent.
 
-        Not safe to call on very large RasterSources.
+        .. warning:: Not safe to call on very large RasterSources.
 
         Returns:
             np.ndarray: Array of shape (height, width, channels).

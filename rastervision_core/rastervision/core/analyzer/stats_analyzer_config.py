@@ -10,7 +10,11 @@ if TYPE_CHECKING:
 
 @register_config('stats_analyzer')
 class StatsAnalyzerConfig(AnalyzerConfig):
-    """Config for an Analyzer that computes imagery statistics of scenes."""
+    """Configure a :class:`.StatsAnalyzer`.
+
+    A :class:`.StatsAnalyzer` computes imagery statistics of scenes which can
+    be used to normalize chips read from them.
+    """
 
     output_uri: Optional[str] = Field(
         None,

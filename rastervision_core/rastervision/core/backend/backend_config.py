@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 @register_config('backend')
 class BackendConfig(Config):
-    """Configuration for Backend."""
+    """Configure a :class:`.Backend`."""
 
     def build(self, pipeline: 'RVPipeline', tmp_dir: str) -> 'Backend':
         raise NotImplementedError()

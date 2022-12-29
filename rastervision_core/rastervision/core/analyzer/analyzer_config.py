@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
 @register_config('analyzer')
 class AnalyzerConfig(Config):
+    """Configure an :class:`.Analyzer`."""
+
     def build(self, scene_group: Optional[Tuple[str, Iterable[str]]] = None
               ) -> 'Analyzer':
         pass
