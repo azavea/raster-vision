@@ -1,8 +1,29 @@
 CHANGELOG
 =========
 
-Raster Vision 0.20.0
+Raster Vision 0.20.1
 --------------------
+
+Fixes
+~~~~~
+
+* Do not install ``rastervision_gdal_vsi`` by default (`#1622 <https://github.com/azavea/raster-vision/pull/1622>`__)
+* Do not set ``cfg.model.pretrained=False`` in ``Learner.from_model_bundle()`` (`#1626 <https://github.com/azavea/raster-vision/pull/1626>`__)
+* Fix docker build errors (`#1629 <https://github.com/azavea/raster-vision/pull/1629>`__)
+* Documentation:
+
+  * Improve docstrings for most commonly used classes and configs (`#1630 <https://github.com/azavea/raster-vision/pull/1630>`__)
+  * Minor textual fixes for the pre-chipped datasets tutorial (`#1623 <https://github.com/azavea/raster-vision/pull/1623>`__)
+  * Add comment about password for the ISPRS Potsdam dataset (`#1627 <https://github.com/azavea/raster-vision/pull/1627>`__)
+
+* README:
+
+  * fix broken links (`#1608 <https://github.com/azavea/raster-vision/pull/1608>`__)
+  * make CV-tasks image slightly smaller (`#1624 <https://github.com/azavea/raster-vision/pull/1624>`__)
+
+
+Raster Vision 0.20
+------------------
 
 This release brings major improvements to Raster Vision's **usability** as well as its **usefulness**.
 
@@ -12,7 +33,7 @@ We have also significantly improved the documentation. Most notably, it now cont
 
 In terms of features, some highlights are:
 
-- Support for multiband imagery, introduced in v0.13 for semantic segmentation, is now also available in chip classification and object detection. (`#1345 <https://github.com/azavea/raster-vision/pull/1345>`__)
+- Support for multiband imagery, introduced in v0.13 for semantic segmentation, is now also available for chip classification and object detection. (`#1345 <https://github.com/azavea/raster-vision/pull/1345>`__)
 - Improved data fusion: the :class:`~rastervision.core.data.raster_source.multi_raster_source.MultiRasterSource` can now combine :class:`RasterSources <rastervision.core.data.raster_source.raster_source.RasterSource>` with varying extents and resolutions. (`#1308 <https://github.com/azavea/raster-vision/pull/1308>`__)
 - You can now discard edges of predicted chips in semantic segmentation in order to reduce boundary artifacts (`#1486 <https://github.com/azavea/raster-vision/pull/1486>`__). This can be used *in addition* to the `previously introduced <https://github.com/azavea/raster-vision/pull/1057>`__ ability to average overlapping regions in adjacent chips.
 - Progress-bars will now be shown for all downloads and uploads as well as other time-consuming operations that take longer than 5 seconds.
@@ -28,7 +49,7 @@ Features
 - Allow ``MultiRasterSource`` to read from sub raster sources with non-identical extents and resolutions (`#1308 <https://github.com/azavea/raster-vision/pull/1308>`__)
 - Allow discarding edges of predicted chips in semantic segmentation (`#1486 <https://github.com/azavea/raster-vision/pull/1486>`__)
 - Add numpy-like array indexing and slicing to ``RasterSource`` and ``LabelSource`` (`#1470 <https://github.com/azavea/raster-vision/pull/1470>`__)
-- Make ``RandomWindowGeoDataset`` more efficient when sampling chips from scenes with AOIs (`#1225 <https://github.com/azavea/raster-vision/pull/1225>`__)
+- Make ``RandomWindowGeoDataset`` more efficient when sampling chips from scenes with sparse AOIs (`#1225 <https://github.com/azavea/raster-vision/pull/1225>`__)
 - Add support for Albumentations' lambda transforms (`#1368 <https://github.com/azavea/raster-vision/pull/1368>`__)
 - Provide grouping mechanism for scenes and use it in the ``analyze`` and ``eval`` stages (`#1375 <https://github.com/azavea/raster-vision/pull/1375>`__)
 - Update STAC-reading functionality to make it compatible with STAC v1.0.* (`#1243 <https://github.com/azavea/raster-vision/pull/1243>`__)
@@ -62,8 +83,6 @@ Fixes
 
 - Speed up ``RGBClassTransformer`` by an order of magnitude (`#1485 <https://github.com/azavea/raster-vision/pull/1485>`__)
 - Fix ``rastervision_pipeline`` entry point to ensure commands from other plugins are available (`#1250 <https://github.com/azavea/raster-vision/pull/1250>`__)
-- Make the semantic segmentation integration test more deterministic (`#1261 <https://github.com/azavea/raster-vision/pull/1261>`__)
-- Misc. fixes (`#1260 <https://github.com/azavea/raster-vision/pull/1260>`__, `#1281 <https://github.com/azavea/raster-vision/pull/1281>`__, `#1453 <https://github.com/azavea/raster-vision/pull/1453>`__)
 - Fix incorrect F1 scores when aggregating evals for scenes in the eval stage (`#1386 <https://github.com/azavea/raster-vision/pull/1386>`__)
 - Fix bug in semantic segmentation prediction output paths (`#1354 <https://github.com/azavea/raster-vision/pull/1354>`__)
 - Do not zero out null class pixels when creating semantic segmentation training chips (`#1556 <https://github.com/azavea/raster-vision/pull/1556>`__)
@@ -71,10 +90,12 @@ Fixes
 - Fix `#1052 <https://github.com/azavea/raster-vision/pull/1052>`__ (`#1451 <https://github.com/azavea/raster-vision/pull/1451>`__)
 - Fix `#991 <https://github.com/azavea/raster-vision/pull/991>`__ and `#1452 <https://github.com/azavea/raster-vision/pull/1452>`__ (`#1484 <https://github.com/azavea/raster-vision/pull/1484>`__)
 - Fix `#1430 <https://github.com/azavea/raster-vision/pull/1430>`__ (`#1495 <https://github.com/azavea/raster-vision/pull/1495>`__)
+- Misc. fixes (`#1260 <https://github.com/azavea/raster-vision/pull/1260>`__, `#1281 <https://github.com/azavea/raster-vision/pull/1281>`__, `#1453 <https://github.com/azavea/raster-vision/pull/1453>`__)
 
 Development/maintenance
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+- Make the semantic segmentation integration test more deterministic (`#1261 <https://github.com/azavea/raster-vision/pull/1261>`__)
 - Migrate from Travis to GitHub Actions (`#1218 <https://github.com/azavea/raster-vision/pull/1218>`__)
 - Add Github issue templates (`#1242 <https://github.com/azavea/raster-vision/pull/1242>`__, `#1288 <https://github.com/azavea/raster-vision/pull/1288>`__, `#1420 <https://github.com/azavea/raster-vision/pull/1420>`__)
 - Switch from Gitter to Github Discussions (`#1464 <https://github.com/azavea/raster-vision/pull/1464>`__, `#1465 <https://github.com/azavea/raster-vision/pull/1465>`__)
