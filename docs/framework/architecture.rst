@@ -65,6 +65,7 @@ Finally, in order to package this code as a plugin, and make it usable within th
 .. literalinclude:: /../rastervision_pipeline/rastervision/pipeline_example_plugin1/__init__.py
     :language: python
     :caption: rastervision.pipeline_example_plugin1.__init__
+    :lines: 3-
 
 We can invoke the Raster Vision CLI to run the pipeline using:
 
