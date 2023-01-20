@@ -1195,6 +1195,8 @@ class Learner(ABC):
                 if step_scheduler is not None:
                     step_scheduler.step()
                 num_samples += x.shape[0]
+        if len(outputs) == 0:
+            raise ValueError('Training dataset did not return any batches')
         metrics = self.train_end(outputs, num_samples)
         end = time.time()
         train_time = datetime.timedelta(seconds=end - start)
