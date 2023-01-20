@@ -153,8 +153,11 @@ class Visualizer(ABC):
         """
         collate_fn = self.get_collate_fn()
         dl = DataLoader(dataset, batch_sz, collate_fn=collate_fn, **kwargs)
-        for x, y in dl:
-            break
+        try:
+            x, y = next(iter(dl))
+        except StopIteration:
+            raise ValueError('dataset did not return a batch')
+
         return x, y
 
     def get_plot_nrows(self, **kwargs) -> int:
