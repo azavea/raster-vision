@@ -1124,7 +1124,10 @@ class GeoDataWindowConfig(Config):
         method = values.get('method')
         size = values.get('size')
         if method == GeoDataWindowMethod.sliding:
-            values['stride'] = size
+            has_stride = values.get('stride') is not None
+
+            if not has_stride:
+                values['stride'] = size
         elif method == GeoDataWindowMethod.random:
             size_lims = values.get('size_lims')
             h_lims = values.get('h_lims')
