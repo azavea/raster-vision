@@ -49,12 +49,7 @@ class SemanticSegmentationChipOptions(Config):
          'target_count_threshold and negative_survival_probability options. Applies '
          'to the random_sample window method.'))
     negative_survival_prob: float = Field(
-        1.0,
-        description=
-        ('List of class ids considered as targets (ie. those to prioritize when creating '
-         'chips) which is only used in conjunction with the target_count_threshold and '
-         'negative_survival_probability options. Applies to the random_sample window '
-         'method.'))
+        1.0, description='Probability of keeping a negative chip.')
     chips_per_scene: int = Field(
         1000,
         description=
