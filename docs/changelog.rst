@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+Raster Vision 0.20.2
+--------------------
+
+* Bump ``triangle`` from version ``20200424`` to ``20220202`` in ``rastervision_pytorch_learner`` (`#1580 <https://github.com/azavea/raster-vision/pull/1580>`__)
+* Update example plugin ``__init__.py`` files to include ``registry.set_plugin_version()`` calls (`#1665 <https://github.com/azavea/raster-vision/pull/1665>`__)
+* Add error handling for empty ``DataLoader`` in ``Visualizer.get_batch()`` (`#1672 <https://github.com/azavea/raster-vision/pull/1672>`__)
+* Only set default stride if stride value is missing in ``GeoDataWindowConfig`` (`#1674 <https://github.com/azavea/raster-vision/pull/1674>`__)
+* Minor doc and type-hint fixes and refactoring for OD (`#1675 <https://github.com/azavea/raster-vision/pull/1675>`__, `#1676 <https://github.com/azavea/raster-vision/pull/1676>`__)
+
 Raster Vision 0.20.1
 --------------------
 
