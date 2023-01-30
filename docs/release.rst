@@ -116,7 +116,7 @@ Minor or Major Version Release
         twine upload dist/*
 
 #.  Announce new release in our `forum <https://github.com/azavea/raster-vision/discussions>`_, and with blog post if it's a big release.
-#.  Make a PR to the master branch that updates the version number to the next development version. For example, if the last release was ``0.20.1``, update the version
+#.  Make a PR to the master branch that updates the version number to the next development version. For example, if the last release was ``0.20.1``, update the version to ``0.20.2-dev``.
 
 Bug Fix Release
 -----------------
