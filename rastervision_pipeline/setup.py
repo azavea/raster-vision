@@ -10,7 +10,7 @@ with io.open(op.join(here, 'requirements.txt'), encoding='utf-8') as f:
 install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 
 name = 'rastervision_pipeline'
-version = '0.20.2-dev'
+version = '0.20.3-dev'
 description = 'The main rastervision package for configuring, defining, and running pipelines'
 
 setup(
