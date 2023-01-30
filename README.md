@@ -15,7 +15,7 @@ It has built-in support for chip classification, object detection, and semantic 
     <img src="docs/img/cv-tasks.png" alt="Examples of chip classification, object detection and semantic segmentation" width="60%">
 </div>
 
-**As a library**, Raster Vision provides a full suite of utilities for dealing with all aspects of a geospatial deep learning workflow: reading geo-referenced data, training models, making predicitons, and writing out predictions in geo-referenced formats.
+**As a library**, Raster Vision provides a full suite of utilities for dealing with all aspects of a geospatial deep learning workflow: reading geo-referenced data, training models, making predictions, and writing out predictions in geo-referenced formats.
 
 **As a low-code framework**, Raster Vision allows users (who don't need to be experts in deep learning!) to quickly and repeatably configure experiments that execute a machine learning pipeline including: analyzing training data, creating training chips, training models, creating predictions, evaluating models, and bundling the model files and configuration for easy deployment.
 ![Overview of Raster Vision workflow](docs/img/rv-pipeline-overview.png)

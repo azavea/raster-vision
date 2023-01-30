@@ -16,7 +16,7 @@ from rastervision.pytorch_learner.dataset import (
 from rastervision.core.data.utils import make_od_scene
 
 if TYPE_CHECKING:
-    from rastervision.core.data import ClassConfig
+    from rastervision.core.data import ClassConfig, ObjectDetectionLabelSource
 log = logging.getLogger(__name__)
 
 
@@ -196,17 +196,23 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
         super().__init__(
             *args, **kwargs, transform_type=TransformType.object_detection)
 
-        self.scene.label_source.ioa_thresh = ioa_thresh
-        self.scene.label_source.clip = clip
+        label_source: Optional[
+            'ObjectDetectionLabelSource'] = self.scene.label_source
+        if label_source is not None:
+            label_source.ioa_thresh = ioa_thresh
+            label_source.clip = clip
 
         if neg_ratio is not None:
+            if label_source is None:
+                raise ValueError(
+                    'Scene must have a LabelSource if neg_ratio is set.')
             self.neg_probability = neg_ratio / (neg_ratio + 1)
             self.neg_ioa_thresh: float = neg_ioa_thresh
 
             # Get labels for the entire scene.
             # clip=True here to ensure that any window we draw around a box
             # will always lie inside the scene.
-            self.labels = self.scene.label_source.get_labels(
+            self.labels: ObjectDetectionLabels = label_source.get_labels(
                 ioa_thresh=ioa_thresh, clip=True)
             self.bboxes = self.labels.get_boxes()
             if len(self.bboxes) == 0:
@@ -215,7 +221,8 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
         else:
             self.neg_probability = None
 
-    def get_resize_transform(self, transform, out_size):
+    def get_resize_transform(self, transform: A.BasicTransform,
+                             out_size: Tuple[int, int]) -> A.BasicTransform:
         resize_tf = A.Resize(*out_size, always_apply=True)
         if transform is None:
             transform = resize_tf
@@ -225,11 +232,12 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
         return transform
 
     def _sample_pos_window(self) -> Box:
-        """Sample a window that contains at least one bounding box.
+        """Sample a window containing at least one bounding box.
+
         This is done by randomly sampling one of the bounding boxes in the
         scene and drawing a random window around it.
         """
-        bbox = np.random.choice(self.bboxes)
+        bbox: Box = np.random.choice(self.bboxes)
         box_h, box_w = bbox.size
 
         # check if it is possible to sample a containing widnow
@@ -252,8 +260,8 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
         return window
 
     def _sample_neg_window(self) -> Box:
-        """Attempt to sample, within self.max_sample_attempts, a window
-        containing no bounding boxes.
+        """Attempt to sample a window containing no bounding boxes.
+
         If not found within self.max_sample_attempts, just return the last
         sampled window.
         """
@@ -269,9 +277,10 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
         return window
 
     def _sample_window(self) -> Box:
-        """If self.neg_probability is specified, sample a negative or positive window
-        based on that probability. Otherwise, just use RandomWindowGeoDataset's
-        default window sampling behavior.
+        """Sample negative or positive window based on neg_probability, if set.
+
+        If neg_probability is not set, use
+        :meth:`.RandomWindowGeoDataset._sample_window`.
         """
         if self.neg_probability is None:
             return super()._sample_window()
