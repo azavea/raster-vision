@@ -9,8 +9,7 @@ from rastervision.core.data import *
 from rastervision.core.analyzer import *
 from rastervision.pytorch_backend import *
 from rastervision.pytorch_learner import *
-from rastervision.pytorch_backend.examples.utils import (get_scene_info,
-                                                         save_image_crop)
+from rastervision.pytorch_backend.examples.utils import save_image_crop
 
 TRAIN_IDS = [
     '2_10', '2_11', '2_12', '2_14', '3_11', '3_13', '4_10', '5_10', '6_7',
