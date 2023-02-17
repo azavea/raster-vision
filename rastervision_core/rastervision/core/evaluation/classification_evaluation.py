@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class ClassificationEvaluation(ABC):
-    """Base class for evaluating predictions for pipelines that have classes.
+    """Base class for representing prediction evaluations.
 
     Evaluations can be keyed, for instance, if evaluations happen per class.
 
