@@ -209,15 +209,27 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
             self.neg_probability = neg_ratio / (neg_ratio + 1)
             self.neg_ioa_thresh: float = neg_ioa_thresh
 
-            # Get labels for the entire scene.
-            # clip=True here to ensure that any window we draw around a box
-            # will always lie inside the scene.
-            self.labels: ObjectDetectionLabels = label_source.get_labels(
+            # Get labels for the AOI. clip=True here to ensure that it is
+            # possible to draw a window (that lies within the extent) around
+            # each bbox.
+            self.labels = label_source.get_labels(
                 ioa_thresh=ioa_thresh, clip=True)
-            self.bboxes = self.labels.get_boxes()
-            if len(self.bboxes) == 0:
+            num_bboxes_in_scene = len(self.labels)
+            if num_bboxes_in_scene == 0:
                 raise ValueError(
                     'neg_ratio specified, but no bboxes found in scene.')
+
+            aoi_polygons = self.scene.aoi_polygons
+            if len(aoi_polygons) > 0:
+                self.labels = self.labels.filter_by_aoi(aoi_polygons)
+                num_bboxes_in_aoi = len(self.labels)
+                if num_bboxes_in_aoi == 0:
+                    raise ValueError(
+                        'neg_ratio specified, but no bboxes found in AOI. '
+                        'Total bboxes in scene (ignoring AOI):'
+                        f'{num_bboxes_in_scene}.')
+
+            self.bboxes = self.labels.get_boxes()
         else:
             self.neg_probability = None
 
