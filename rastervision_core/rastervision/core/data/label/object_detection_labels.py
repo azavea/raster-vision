@@ -61,6 +61,9 @@ class ObjectDetectionLabels(Labels):
         concatenated_labels = self + new_labels
         self.boxlist = concatenated_labels.boxlist
 
+    def __getitem__(self, window: Box) -> 'ObjectDetectionLabels':
+        return ObjectDetectionLabels.get_overlapping(self, window)
+
     def assert_equal(self, expected_labels: 'ObjectDetectionLabels'):
         np.testing.assert_array_equal(self.get_npboxes(),
                                       expected_labels.get_npboxes())
