@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+import logging
 
 from rastervision.core.data.label import ObjectDetectionLabels
 from rastervision.core.data.label_store import LabelStore
@@ -8,6 +9,8 @@ from rastervision.pipeline.file_system import json_to_file
 
 if TYPE_CHECKING:
     from rastervision.core.data import ClassConfig, CRSTransformer
+
+log = logging.getLogger(__name__)
 
 
 class ObjectDetectionGeoJSONStore(LabelStore):
@@ -30,6 +33,7 @@ class ObjectDetectionGeoJSONStore(LabelStore):
 
     def save(self, labels: ObjectDetectionLabels) -> None:
         """Save labels to URI."""
+        log.info(f'Saving {len(labels)} boxes as GeoJSON.')
         boxes = labels.get_boxes()
         class_ids = [int(id) for id in labels.get_class_ids()]
         scores = labels.get_scores()
