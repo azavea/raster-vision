@@ -9,7 +9,7 @@ from rastervision.core.data.label.object_detection_labels import (
 from rastervision.core.data.label.tfod_utils.np_box_list import BoxList
 
 
-class ObjectDetectionLabelsTest(unittest.TestCase):
+class TestObjectDetectionLabels(unittest.TestCase):
     def setUp(self):
         self.class_config = ClassConfig(names=['car', 'house'])
         self.npboxes = np.array([
@@ -103,7 +103,8 @@ class ObjectDetectionLabelsTest(unittest.TestCase):
 
     def test_get_overlapping(self):
         window = Box.make_square(0, 0, 2.01)
-        labels = ObjectDetectionLabels.get_overlapping(self.labels, window)
+        labels = ObjectDetectionLabels.get_overlapping(
+            self.labels, window, ioa_thresh=1e-6)
         labels.assert_equal(self.labels)
 
         window = Box.make_square(0, 0, 3)
