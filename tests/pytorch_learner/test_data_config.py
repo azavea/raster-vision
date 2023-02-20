@@ -19,47 +19,47 @@ from rastervision.core.data import DatasetConfig, ClassConfig
 class TestDataConfigToImageDataConfigUpgrade(unittest.TestCase):
     """Version 1 DataConfig should get upgraded to ImageDataConfigs."""
 
-    def _test_config_upgrader(self, OldCfgType, NewCfgType, upgrader,
-                              curr_version):
-        old_cfg = OldCfgType()
+    def _test_config_upgrader(self, old_cfg_type: type, new_cfg_type: type,
+                              upgrader: Callable, curr_version: int):
+        old_cfg = old_cfg_type()
         old_cfg_dict = old_cfg.dict()
         for i in range(curr_version):
             old_cfg_dict = upgrader(old_cfg_dict, version=i)
         new_cfg = build_config(old_cfg_dict)
-        self.assertTrue(isinstance(new_cfg, NewCfgType))
+        self.assertTrue(isinstance(new_cfg, new_cfg_type))
 
     def test_data_config_upgrader(self):
         self._test_config_upgrader(
-            OldCfgType=DataConfig,
-            NewCfgType=ImageDataConfig,
+            old_cfg_type=DataConfig,
+            new_cfg_type=ImageDataConfig,
             upgrader=data_config_upgrader,
             curr_version=3)
 
     def test_ss_data_config_upgrader(self):
         self._test_config_upgrader(
-            OldCfgType=SemanticSegmentationDataConfig,
-            NewCfgType=SemanticSegmentationImageDataConfig,
+            old_cfg_type=SemanticSegmentationDataConfig,
+            new_cfg_type=SemanticSegmentationImageDataConfig,
             upgrader=ss_data_config_upgrader,
             curr_version=3)
 
     def test_clf_data_config_upgrader(self):
         self._test_config_upgrader(
-            OldCfgType=ClassificationDataConfig,
-            NewCfgType=ClassificationImageDataConfig,
+            old_cfg_type=ClassificationDataConfig,
+            new_cfg_type=ClassificationImageDataConfig,
             upgrader=clf_data_config_upgrader,
             curr_version=3)
 
     def test_reg_data_config_upgrader(self):
         self._test_config_upgrader(
-            OldCfgType=RegressionDataConfig,
-            NewCfgType=RegressionImageDataConfig,
+            old_cfg_type=RegressionDataConfig,
+            new_cfg_type=RegressionImageDataConfig,
             upgrader=reg_data_config_upgrader,
             curr_version=3)
 
     def test_objdet_data_config_upgrader(self):
         self._test_config_upgrader(
-            OldCfgType=ObjectDetectionDataConfig,
-            NewCfgType=ObjectDetectionImageDataConfig,
+            old_cfg_type=ObjectDetectionDataConfig,
+            new_cfg_type=ObjectDetectionImageDataConfig,
             upgrader=objdet_data_config_upgrader,
             curr_version=3)
 

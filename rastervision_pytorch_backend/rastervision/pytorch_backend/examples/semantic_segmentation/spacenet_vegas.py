@@ -102,7 +102,7 @@ def build_scene(spacenet_cfg: SpacenetConfig,
 
     # Set a line buffer to convert line strings to polygons.
     vector_source = GeoJSONVectorSourceConfig(
-        uri=label_uri,
+        uris=label_uri,
         ignore_crs_field=True,
         transformers=[
             ClassInferenceTransformerConfig(default_class_id=0),

@@ -98,7 +98,7 @@ def make_ss_scene(image_uri: Union[str, List[str]],
             label_vector_source_kw['vector_transformers'] = (
                 [class_inf_tf] + vector_tfs)
         vector_source = GeoJSONVectorSource(
-            uri=label_vector_uri,
+            uris=label_vector_uri,
             ignore_crs_field=True,
             crs_transformer=crs_transformer,
             **label_vector_source_kw)
@@ -196,7 +196,7 @@ def make_cc_scene(image_uri: Union[str, List[str]],
             label_vector_source_kw['transformers'] = (
                 [class_inf_tf] + vector_tfs)
         geojson_cfg = GeoJSONVectorSourceConfig(
-            uri=label_vector_uri,
+            uris=label_vector_uri,
             ignore_crs_field=True,
             **label_vector_source_kw)
         # use config to ensure required transformers are auto added
@@ -287,7 +287,7 @@ def make_od_scene(image_uri: Union[str, List[str]],
             label_vector_source_kw['transformers'] = (
                 [class_inf_tf] + vector_tfs)
         geojson_cfg = GeoJSONVectorSourceConfig(
-            uri=label_vector_uri,
+            uris=label_vector_uri,
             ignore_crs_field=True,
             **label_vector_source_kw)
         # use config to ensure required transformers are auto added

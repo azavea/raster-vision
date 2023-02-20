@@ -18,7 +18,7 @@ class TestObjectDetectionLabelSourceConfig(unittest.TestCase):
     def test_ensure_required_transformers(self):
         uri = data_file_path('bboxes.geojson')
         cfg = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=uri))
+            vector_source=GeoJSONVectorSourceConfig(uris=uri))
         tfs = cfg.vector_source.transformers
         has_inf_tf = any(
             isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
@@ -73,7 +73,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
 
     def test_read_without_extent(self):
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
+            vector_source=GeoJSONVectorSourceConfig(uris=self.file_path))
         extent = None
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
@@ -90,7 +90,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         # Extent only includes the first box.
         extent = Box.make_square(0, 0, 3)
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
+            vector_source=GeoJSONVectorSourceConfig(uris=self.file_path))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -105,7 +105,7 @@ class TestObjectDetectionLabelSource(unittest.TestCase):
         # Extent includes both boxes, but clips the second.
         extent = Box.make_square(0, 0, 3.9)
         config = ObjectDetectionLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.file_path))
+            vector_source=GeoJSONVectorSourceConfig(uris=self.file_path))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()

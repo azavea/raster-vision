@@ -82,7 +82,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
 
         config = RasterizedSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=gt_uri,
+                uris=gt_uri,
                 transformers=[
                     ClassInferenceTransformerConfig(default_class_id=0)
                 ]),
@@ -92,7 +92,7 @@ class TestSemanticSegmentationEvaluator(unittest.TestCase):
 
         config = RasterizedSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=pred_uri,
+                uris=pred_uri,
                 transformers=[
                     ClassInferenceTransformerConfig(default_class_id=0)
                 ]),

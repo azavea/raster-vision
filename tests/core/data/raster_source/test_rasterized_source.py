@@ -17,7 +17,7 @@ class TestRasterizedSourceConfig(unittest.TestCase):
     def test_ensure_required_transformers(self):
         uri = data_file_path('bboxes.geojson')
         cfg = RasterizedSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=uri),
+            vector_source=GeoJSONVectorSourceConfig(uris=uri),
             rasterizer_config=RasterizerConfig(background_class_id=0))
         tfs = cfg.vector_source.transformers
         has_inf_tf = any(
@@ -46,7 +46,7 @@ class TestRasterizedSource(unittest.TestCase):
         json_to_file(geojson, self.uri)
 
         config = RasterizedSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.uri),
+            vector_source=GeoJSONVectorSourceConfig(uris=self.uri),
             rasterizer_config=RasterizerConfig(
                 background_class_id=self.background_class_id,
                 all_touched=all_touched))

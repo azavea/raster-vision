@@ -97,7 +97,7 @@ def get_config(runner,
             channel_order=[0, 1, 2], uris=[raster_uri])
         label_source = ChipClassificationLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=label_uri,
+                uris=label_uri,
                 ignore_crs_field=True,
                 transformers=[
                     ClassInferenceTransformerConfig(default_class_id=1)

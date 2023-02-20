@@ -46,7 +46,7 @@ class ObjectDetectionGeoJSONStore(LabelStore):
         json_to_file(geojson, self.uri)
 
     def get_labels(self) -> ObjectDetectionLabels:
-        vector_source = GeoJSONVectorSourceConfig(uri=self.uri).build(
+        vector_source = GeoJSONVectorSourceConfig(uris=self.uri).build(
             self.class_config, self.crs_transformer)
         return ObjectDetectionLabels.from_geojson(vector_source.get_geojson())
 

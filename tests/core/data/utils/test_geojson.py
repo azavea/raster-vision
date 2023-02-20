@@ -7,7 +7,8 @@ from shapely.geometry import (Polygon, MultiPolygon, Point, MultiPoint,
 from rastervision.core.data.utils import (
     geometry_to_feature, geometries_to_geojson, is_empty_feature,
     remove_empty_features, split_multi_geometries, map_to_pixel_coords,
-    pixel_to_map_coords, buffer_geoms, all_geoms_valid)
+    pixel_to_map_coords, buffer_geoms, all_geoms_valid, geoms_to_geojson,
+    merge_geojsons, geojson_to_geoms)
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
 
 
@@ -88,7 +89,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_in = geometries_to_geojson([feat])
         geojson_out = map_to_pixel_coords(geojson_in, crs_transformer)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        coords_out = np.array(geom_out)
+        coords_out = np.array(geom_out.coords).squeeze()
         np.testing.assert_array_almost_equal(coords_out, coords_in * 2)
 
     def test_pixel_to_map_coords(self):
@@ -98,7 +99,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_in = geometries_to_geojson([feat])
         geojson_out = pixel_to_map_coords(geojson_in, crs_transformer)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        coords_out = np.array(geom_out)
+        coords_out = np.array(geom_out.coords).squeeze()
         np.testing.assert_array_almost_equal(coords_out, coords_in / 2)
 
     def test_simplify_polygons(self):
@@ -128,7 +129,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_out = buffer_geoms(
             geojson_in, geom_type='Polygon', class_bufs=class_bufs)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        self.assertTrue(geom_out.equals(geom_in.buffer(5)))
+        self.assertEqual(geom_out, geom_in.buffer(5))
 
         # points
         geom_in = Point(0, 0)
@@ -137,7 +138,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_out = buffer_geoms(
             geojson_in, geom_type='Point', class_bufs=class_bufs)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        self.assertTrue(geom_out.equals(geom_in.buffer(5)))
+        self.assertEqual(geom_out, geom_in.buffer(5))
 
         # linestrings
         geom_in = LineString([(0, 0), (1, 1), (2, 2)])
@@ -146,7 +147,27 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_out = buffer_geoms(
             geojson_in, geom_type='LineString', class_bufs=class_bufs)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        self.assertTrue(geom_out.equals(geom_in.buffer(5)))
+        self.assertEqual(geom_out, geom_in.buffer(5))
+
+    def test_geoms_to_geojson_and_geojson_to_geoms(self):
+        geoms_in = [
+            Polygon.from_bounds(0, 0, 10, 10),
+            Polygon.from_bounds(10, 10, 100, 100),
+        ]
+        geojson = geoms_to_geojson(geoms_in)
+        geoms_out = list(geojson_to_geoms(geojson))
+        self.assertListEqual(geoms_out, geoms_in)
+
+    def test_merge_geojsons(self):
+        geom_in_1 = Polygon.from_bounds(0, 0, 10, 10)
+        geom_in_2 = Polygon.from_bounds(10, 10, 100, 100)
+        geojson_1 = geoms_to_geojson([geom_in_1])
+        geojson_2 = geoms_to_geojson([geom_in_2])
+        geojson_merged = merge_geojsons([geojson_1, geojson_2])
+        geom_out_1 = shape(geojson_merged['features'][0]['geometry'])
+        geom_out_2 = shape(geojson_merged['features'][1]['geometry'])
+        self.assertEqual(geom_out_1, geom_in_1)
+        self.assertEqual(geom_out_2, geom_in_2)
 
 
 if __name__ == '__main__':

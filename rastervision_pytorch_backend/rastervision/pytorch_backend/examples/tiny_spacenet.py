@@ -65,7 +65,7 @@ def make_scene(scene_id: str, image_uri: str, label_uri: str,
 
     # configure GeoJSON reading
     vector_source = GeoJSONVectorSourceConfig(
-        uri=label_uri,
+        uris=label_uri,
         # This assumes the CRS is WGS-84 and ignores whatever the CRS specified
         # in the file is.
         ignore_crs_field=True,
