@@ -210,7 +210,9 @@ class ObjectDetectionModelConfig(ModelConfig):
             min_size=img_sz,
             max_size=img_sz,
             image_mean=image_mean,
-            image_std=image_std)
+            image_std=image_std,
+            **self.extra_args,
+        )
         return model
 
 

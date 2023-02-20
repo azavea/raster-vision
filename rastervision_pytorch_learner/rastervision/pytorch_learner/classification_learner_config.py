@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Callable, Optional, Union
 from enum import Enum
 import logging
 
@@ -104,8 +104,8 @@ class ClassificationModelConfig(ModelConfig):
 
         pretrained = self.pretrained
         backbone_name = self.get_backbone_str()
-
-        model = getattr(models, backbone_name)(pretrained=pretrained)
+        model_factory_func: Callable = getattr(models, backbone_name)
+        model = model_factory_func(pretrained=pretrained, **self.extra_args)
 
         if in_channels != 3:
             if not backbone_name.startswith('resnet'):

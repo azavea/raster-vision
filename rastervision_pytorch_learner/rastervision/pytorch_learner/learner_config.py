@@ -239,6 +239,11 @@ class ModelConfig(Config):
         None,
         description='If specified, the model will be built from the '
         'definition from this external source, using Torch Hub.')
+    extra_args: dict = Field(
+        {},
+        description='Other implementation-specific args that might be useful '
+        'for constructing the default model. This is ignored if using an '
+        'external model.')
 
     def get_backbone_str(self):
         return self.backbone.name

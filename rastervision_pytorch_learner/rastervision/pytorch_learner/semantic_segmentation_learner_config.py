@@ -173,7 +173,8 @@ class SemanticSegmentationModelConfig(ModelConfig):
         model = model_factory_func(
             num_classes=num_classes,
             pretrained_backbone=pretrained,
-            aux_loss=False)
+            aux_loss=False,
+            **self.extra_args)
 
         if in_channels != 3:
             if not backbone_name.startswith('resnet'):
