@@ -35,7 +35,7 @@ class TestGeoJSONVectorSource(unittest.TestCase):
         class_config = ClassConfig(names=['building'])
         json_to_file(geojson, self.uri)
         cfg = GeoJSONVectorSourceConfig(
-            uri=self.uri,
+            uris=self.uri,
             transformers=[
                 ClassInferenceTransformerConfig(default_class_id=0),
                 BufferTransformerConfig(

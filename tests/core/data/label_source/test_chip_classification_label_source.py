@@ -20,7 +20,7 @@ class TestChipClassificationLabelSourceConfig(unittest.TestCase):
     def test_ensure_required_transformers(self):
         uri = data_file_path('bboxes.geojson')
         cfg = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=uri))
+            vector_source=GeoJSONVectorSourceConfig(uris=uri))
         tfs = cfg.vector_source.transformers
         has_inf_tf = any(
             isinstance(tf, ClassInferenceTransformerConfig) for tf in tfs)
@@ -233,7 +233,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.uri),
+            vector_source=GeoJSONVectorSourceConfig(uris=self.uri),
             ioa_thresh=0.5,
             use_intersection_over_cell=False,
             pick_min_class_id=False,
@@ -260,7 +260,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 2)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
+            vector_source=GeoJSONVectorSourceConfig(uris=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -277,7 +277,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
+            vector_source=GeoJSONVectorSourceConfig(uris=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()
@@ -294,7 +294,7 @@ class TestChipClassificationLabelSource(unittest.TestCase):
         extent = Box.make_square(0, 0, 8)
 
         config = ChipClassificationLabelSourceConfig(
-            vector_source=GeoJSONVectorSourceConfig(uri=self.uri))
+            vector_source=GeoJSONVectorSourceConfig(uris=self.uri))
         source = config.build(self.class_config, self.crs_transformer, extent,
                               self.tmp_dir.name)
         labels = source.get_labels()

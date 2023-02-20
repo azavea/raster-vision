@@ -5,8 +5,6 @@ from copy import deepcopy
 from shapely.geometry import shape, mapping
 from tqdm.auto import tqdm
 
-from rastervision.core.data.utils.misc import listify_uris
-
 if TYPE_CHECKING:
     from rastervision.core.data.crs_transformer import CRSTransformer
     from shapely.geometry.base import BaseGeometry
@@ -339,12 +337,9 @@ def get_polygons_from_uris(
     # use local imports to avoid circular import problems
     from rastervision.core.data import GeoJSONVectorSource
 
-    polygons = []
-    uris = listify_uris(uris)
-    for uri in uris:
-        source = GeoJSONVectorSource(
-            uri=uri, ignore_crs_field=True, crs_transformer=crs_transformer)
-        polygons += source.get_geoms()
+    source = GeoJSONVectorSource(
+        uris=uris, ignore_crs_field=True, crs_transformer=crs_transformer)
+    polygons = source.get_geoms()
     return polygons
 
 

@@ -52,7 +52,7 @@ def make_scene(num_channels: int, num_classes: int,
     json_to_file(geojson, uri)
     label_source_cfg = ChipClassificationLabelSourceConfig(
         vector_source=GeoJSONVectorSourceConfig(
-            uri=uri,
+            uris=uri,
             transformers=[ClassInferenceTransformerConfig(default_class_id=0)
                           ]),
         background_class_id=0)

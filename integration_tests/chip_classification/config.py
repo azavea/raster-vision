@@ -28,7 +28,7 @@ def get_config(runner, root_uri, data_uri=None, full_train=False,
         id = basename(img_path)
         label_source = ChipClassificationLabelSourceConfig(
             vector_source=GeoJSONVectorSourceConfig(
-                uri=label_path, ignore_crs_field=True),
+                uris=label_path, ignore_crs_field=True),
             ioa_thresh=0.5,
             use_intersection_over_cell=False,
             pick_min_class_id=True,

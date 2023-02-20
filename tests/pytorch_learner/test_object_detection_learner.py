@@ -36,7 +36,7 @@ def make_scene(num_channels: int, num_classes: int,
 
     label_source_cfg = ObjectDetectionLabelSourceConfig(
         vector_source=GeoJSONVectorSourceConfig(
-            uri=data_file_path('bboxes.geojson'),
+            uris=data_file_path('bboxes.geojson'),
             transformers=[ClassInferenceTransformerConfig(
                 default_class_id=0)]))
     scene_cfg = SceneConfig(
