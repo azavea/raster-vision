@@ -89,7 +89,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_in = geometries_to_geojson([feat])
         geojson_out = map_to_pixel_coords(geojson_in, crs_transformer)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        coords_out = np.array(geom_out)
+        coords_out = np.array(geom_out.coords).squeeze()
         np.testing.assert_array_almost_equal(coords_out, coords_in * 2)
 
     def test_pixel_to_map_coords(self):
@@ -99,7 +99,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_in = geometries_to_geojson([feat])
         geojson_out = pixel_to_map_coords(geojson_in, crs_transformer)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        coords_out = np.array(geom_out)
+        coords_out = np.array(geom_out.coords).squeeze()
         np.testing.assert_array_almost_equal(coords_out, coords_in / 2)
 
     def test_simplify_polygons(self):
@@ -129,7 +129,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_out = buffer_geoms(
             geojson_in, geom_type='Polygon', class_bufs=class_bufs)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        self.assertTrue(geom_out.equals(geom_in.buffer(5)))
+        self.assertEqual(geom_out, geom_in.buffer(5))
 
         # points
         geom_in = Point(0, 0)
@@ -138,7 +138,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_out = buffer_geoms(
             geojson_in, geom_type='Point', class_bufs=class_bufs)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        self.assertTrue(geom_out.equals(geom_in.buffer(5)))
+        self.assertEqual(geom_out, geom_in.buffer(5))
 
         # linestrings
         geom_in = LineString([(0, 0), (1, 1), (2, 2)])
@@ -147,7 +147,7 @@ class TestGeojsonUtils(unittest.TestCase):
         geojson_out = buffer_geoms(
             geojson_in, geom_type='LineString', class_bufs=class_bufs)
         geom_out = shape(geojson_out['features'][0]['geometry'])
-        self.assertTrue(geom_out.equals(geom_in.buffer(5)))
+        self.assertEqual(geom_out, geom_in.buffer(5))
 
     def test_geoms_to_geojson_and_geojson_to_geoms(self):
         geoms_in = [
