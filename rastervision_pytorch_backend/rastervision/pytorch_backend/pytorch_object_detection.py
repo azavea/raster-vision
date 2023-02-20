@@ -123,6 +123,7 @@ class PyTorchObjectDetection(PyTorchLearnerBackend):
                 ds,
                 raw_out=True,
                 numpy_out=True,
+                predict_kw=dict(out_shape=(chip_sz, chip_sz)),
                 progress_bar=True,
                 progress_bar_kw=dict(desc=f'Making predictions on {scene.id}'))
         )

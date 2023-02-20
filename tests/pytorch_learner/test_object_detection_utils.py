@@ -153,6 +153,34 @@ class TestBoxList(unittest.TestCase):
         self.assertEqual(x.shape, (4, 3, 100, 100))
         self.assertTrue(all(b1 == b2 for b1, b2 in zip(boxlists, y)))
 
+    def test_scale(self):
+        boxes = torch.tensor([
+            [0, 0, 1, 1],
+            [0, 10, 10, 20],
+        ])
+        dtype = boxes.dtype
+
+        boxlist = BoxList(boxes.clone())
+        yscale, xscale = 1, 1
+        boxlist.scale(yscale, xscale)
+        torch.testing.assert_close(boxlist.boxes, boxes)
+
+        boxlist = BoxList(boxes.clone())
+        yscale, xscale = 5, 3
+        boxlist.scale(yscale, xscale)
+        x_expected = (boxes[:, [0, 2]] * xscale).to(dtype=dtype)
+        y_expected = (boxes[:, [1, 3]] * yscale).to(dtype=dtype)
+        torch.testing.assert_close(boxlist.boxes[:, [0, 2]], x_expected)
+        torch.testing.assert_close(boxlist.boxes[:, [1, 3]], y_expected)
+
+        boxlist = BoxList(boxes.clone())
+        yscale, xscale = 0.5, 0.3
+        boxlist.scale(yscale, xscale)
+        x_expected = (boxes[:, [0, 2]] * xscale).to(dtype=dtype)
+        y_expected = (boxes[:, [1, 3]] * yscale).to(dtype=dtype)
+        torch.testing.assert_close(boxlist.boxes[:, [0, 2]], x_expected)
+        torch.testing.assert_close(boxlist.boxes[:, [1, 3]], y_expected)
+
 
 if __name__ == '__main__':
     unittest.main()

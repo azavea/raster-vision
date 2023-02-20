@@ -1,9 +1,11 @@
-from typing import (TYPE_CHECKING, Dict, Iterable, List, Optional, Union)
+from typing import (TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple,
+                    Union)
 import warnings
 
 import logging
 
 import numpy as np
+import torch
 
 from rastervision.pytorch_learner.learner import Learner
 from rastervision.pytorch_learner.object_detection_utils import (
@@ -12,7 +14,7 @@ from rastervision.pytorch_learner.dataset.visualizer import (
     ObjectDetectionVisualizer)
 
 if TYPE_CHECKING:
-    from torch import nn
+    from torch import nn, Tensor
 
 warnings.filterwarnings('ignore')
 
@@ -92,6 +94,37 @@ class ObjectDetectionLearner(Learner):
             coco_metrics = coco_eval.stats
             metrics = {'map': coco_metrics[0], 'map50': coco_metrics[1]}
         return metrics
+
+    def predict(self,
+                x: 'Tensor',
+                raw_out: bool = False,
+                out_shape: Optional[Tuple[int, int]] = None) -> BoxList:
+        """Make prediction for an image or batch of images.
+
+        Args:
+            x (Tensor): Image or batch of images as a float Tensor with pixel
+                values normalized to [0, 1].
+            raw_out (bool, optional): If True, return prediction probabilities.
+                Defaults to False.
+            out_shape (Optional[Tuple[int, int]], optional): If provided,
+                boxes are resized such that they reference pixel coordinates in
+                an image of this shape. Defaults to None.
+
+        Returns:
+            BoxList: Predicted boxes.
+        """
+        out_batch: List[BoxList] = super().predict(x, raw_out=raw_out)
+        if out_shape is None:
+            return out_batch
+
+        h_in, w_in = x.shape[-2:]
+        h_out, w_out = out_shape
+        yscale, xscale = (h_out / h_in), (w_out / w_in)
+        with torch.inference_mode():
+            for out in out_batch:
+                out.scale(yscale, xscale)
+
+        return out_batch
 
     def output_to_numpy(
             self, out: Iterable[BoxList]
