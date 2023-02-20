@@ -26,7 +26,8 @@ class ObjectDetectionLabelSource(LabelSource):
             clip (bool, optional): Clip bounding boxes to window limits when
                 retrieving labels for a window. Defaults to False.
         """
-        geojson = vector_source.get_geojson()
+        self.vector_source = vector_source
+        geojson = self.vector_source.get_geojson()
         self.validate_geojson(geojson)
         self.labels = ObjectDetectionLabels.from_geojson(
             geojson, extent=extent)

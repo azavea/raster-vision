@@ -61,6 +61,9 @@ class ObjectDetectionLabels(Labels):
         concatenated_labels = self + new_labels
         self.boxlist = concatenated_labels.boxlist
 
+    def __getitem__(self, window: Box) -> 'ObjectDetectionLabels':
+        return ObjectDetectionLabels.get_overlapping(self, window)
+
     def assert_equal(self, expected_labels: 'ObjectDetectionLabels'):
         np.testing.assert_array_equal(self.get_npboxes(),
                                       expected_labels.get_npboxes())
@@ -232,16 +235,18 @@ class ObjectDetectionLabels(Labels):
     @staticmethod
     def get_overlapping(labels: 'ObjectDetectionLabels',
                         window: Box,
-                        ioa_thresh: float = 0.000001,
+                        ioa_thresh: float = 0.5,
                         clip: bool = False) -> 'ObjectDetectionLabels':
         """Return subset of labels that overlap with window.
 
         Args:
             labels: ObjectDetectionLabels
             window: Box
-            ioa_thresh: the minimum IOA for a box to be considered as
-                overlapping
-            clip: if True, clip label boxes to the window
+            ioa_thresh: The minimum intersection-over-area (IOA) for a box to
+                be considered as overlapping. For each box, IOA is defined as
+                the area of the intersection of the box with the window over
+                the area of the box.
+            clip: If True, clip label boxes to the window.
         """
         window_npbox = window.npbox_format()
         window_boxlist = BoxList(np.expand_dims(window_npbox, axis=0))
@@ -266,23 +271,26 @@ class ObjectDetectionLabels(Labels):
         return ObjectDetectionLabels.from_boxlist(new_boxlist)
 
     @staticmethod
-    def prune_duplicates(labels: 'ObjectDetectionLabels', score_thresh: float,
-                         merge_thresh: float) -> 'ObjectDetectionLabels':
-        """Remove duplicate boxes.
-
-        Runs non-maximum suppression to remove duplicate boxes that result from
-        sliding window prediction algorithm.
+    def prune_duplicates(
+            labels: 'ObjectDetectionLabels',
+            score_thresh: float,
+            merge_thresh: float,
+            max_output_size: Optional[int] = None) -> 'ObjectDetectionLabels':
+        """Remove duplicate boxes via non-maximum suppression.
 
         Args:
-            labels: ObjectDetectionLabels
-            score_thresh: the minimum allowed score of boxes
-            merge_thresh: the minimum IOA allowed when merging two boxes
-                together
+            labels: Labels whose boxes are to be pruned.
+            score_thresh: Prune boxes with score less than this threshold.
+            merge_thresh: Prune boxes with intersection-over-union (IOU)
+                greater than this threshold.
+            max_output_size (int): Maximum number of retained boxes.
+                If None, this is set to ``len(abels)``. Defaults to None.
 
         Returns:
-            ObjectDetectionLabels
+            ObjectDetectionLabels: Pruned labels.
         """
-        max_output_size = 1000000
+        if max_output_size is None:
+            max_output_size = len(labels)
         pruned_boxlist = non_max_suppression(
             labels.boxlist,
             max_output_size=max_output_size,

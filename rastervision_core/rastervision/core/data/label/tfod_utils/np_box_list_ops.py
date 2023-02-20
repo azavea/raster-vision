@@ -15,6 +15,7 @@
 """Bounding Box List operations for Numpy BoxLists."""
 from typing import List, Optional, Tuple
 
+from tqdm.auto import trange
 import numpy as np
 
 from rastervision.core.data.label.tfod_utils.np_box_list import BoxList
@@ -196,7 +197,7 @@ def non_max_suppression(boxlist: BoxList,
     if iou_threshold < 0. or iou_threshold > 1.0:
         raise ValueError('IOU threshold must be in [0, 1]')
     if max_output_size < 0:
-        raise ValueError('max_output_size must be bigger than 0.')
+        raise ValueError('max_output_size must be >= 0.')
 
     boxlist = filter_scores_greater_than(boxlist, score_threshold)
     if boxlist.num_boxes() == 0:
@@ -218,7 +219,7 @@ def non_max_suppression(boxlist: BoxList,
     is_index_valid = np.full(num_boxes, 1, dtype=bool)
     selected_indices = []
     num_output = 0
-    for i in range(num_boxes):
+    for i in trange(num_boxes, desc='Pruning boxes', delay=5):
         if num_output < max_output_size:
             if is_index_valid[i]:
                 num_output += 1

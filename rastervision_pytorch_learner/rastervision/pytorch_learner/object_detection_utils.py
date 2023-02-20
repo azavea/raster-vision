@@ -231,9 +231,13 @@ class BoxList():
         return self.ind_filter(good_inds)
 
     def scale(self, yscale: float, xscale: float) -> 'BoxList':
-        boxes = self.boxes * torch.tensor(
-            [[yscale, xscale, yscale, xscale]], device=self.boxes.device)
-        return BoxList(boxes, **self.extras)
+        """Scale box coords by the given scaling factors."""
+        dtype = self.boxes.dtype
+        boxes = self.boxes.float()
+        boxes[:, [0, 2]] *= xscale
+        boxes[:, [1, 3]] *= yscale
+        self.boxes = boxes.to(dtype=dtype)
+        return self
 
     def pin_memory(self) -> 'BoxList':
         self.boxes = self.boxes.pin_memory()

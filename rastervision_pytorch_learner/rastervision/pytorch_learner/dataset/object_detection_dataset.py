@@ -186,8 +186,9 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
                 threshold. Defaults to 0.2.
             **kwargs: See :meth:`.RandomWindowGeoDataset.__init__`.
         """
+        from rastervision.pytorch_learner import DEFAULT_BBOX_PARAMS
         self.bbox_params: Optional[A.BboxParams] = kwargs.pop(
-            'bbox_params', None)
+            'bbox_params', DEFAULT_BBOX_PARAMS)
         ioa_thresh: float = kwargs.pop('ioa_thresh', 0.9)
         clip: bool = kwargs.pop('clip', False)
         neg_ratio: Optional[float] = kwargs.pop('neg_ratio', None)

@@ -3,7 +3,7 @@ import unittest
 from rastervision.pytorch_learner.dataset.visualizer import SemanticSegmentationVisualizer
 
 
-class TestAoiSampler(unittest.TestCase):
+class TestVisualizer(unittest.TestCase):
     def test_get_batch_from_empty_dataset(self):
         viz = SemanticSegmentationVisualizer(
             class_names=['background', 'building'],
