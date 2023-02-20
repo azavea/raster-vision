@@ -3,12 +3,28 @@ import os
 
 from shapely.geometry import shape
 
-from rastervision.core.data import (
-    GeoJSONVectorSourceConfig, ClassConfig, IdentityCRSTransformer,
-    ClassInferenceTransformerConfig, BufferTransformerConfig)
+from rastervision.core.data.vector_source.geojson_vector_source_config import (
+    GeoJSONVectorSourceConfig, geojson_vector_source_config_upgrader)
+from rastervision.core.data import (ClassConfig, IdentityCRSTransformer,
+                                    ClassInferenceTransformerConfig,
+                                    BufferTransformerConfig)
 from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
 
+from tests import test_config_upgrader
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
+
+
+class TestGeoJSONVectorSourceConfig(unittest.TestCase):
+    def test_upgrader(self):
+        cfg = GeoJSONVectorSourceConfig(uris=['a', 'b'])
+        old_cfg_dict = cfg.dict()
+        old_cfg_dict['uri'] = old_cfg_dict['uris']
+        del old_cfg_dict['uris']
+        test_config_upgrader(
+            cfg_class=GeoJSONVectorSourceConfig,
+            old_cfg_dict=old_cfg_dict,
+            upgrader=geojson_vector_source_config_upgrader,
+            curr_version=8)
 
 
 class TestGeoJSONVectorSource(unittest.TestCase):
