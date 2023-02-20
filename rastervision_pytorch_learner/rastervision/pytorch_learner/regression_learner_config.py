@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Sequence, Union
 from enum import Enum
 import logging
 
@@ -16,6 +16,9 @@ from rastervision.pytorch_learner.dataset import (
     RegressionImageDataset, RegressionSlidingWindowGeoDataset,
     RegressionRandomWindowGeoDataset)
 from rastervision.pytorch_learner.utils import adjust_conv_channels
+
+if TYPE_CHECKING:
+    import torch
 
 log = logging.getLogger(__name__)
 
@@ -108,20 +111,23 @@ class RegressionGeoDataConfig(RegressionDataConfig, GeoDataConfig):
 
 class RegressionModel(nn.Module):
     def __init__(self,
-                 backbone_arch,
-                 out_features,
-                 pretrained=True,
-                 pos_out_inds=None,
-                 prob_out_inds=None):
+                 backbone_arch: str,
+                 out_features: int,
+                 pretrained: bool = True,
+                 pos_out_inds: Optional[Sequence[int]] = None,
+                 prob_out_inds: Optional[Sequence[int]] = None,
+                 **kwargs):
         super().__init__()
-        self.backbone = getattr(models, backbone_arch)(pretrained=pretrained)
+        model_factory_func: Callable = getattr(models, backbone_arch)
+        self.backbone: nn.Module = model_factory_func(
+            pretrained=pretrained, **kwargs)
         in_features = self.backbone.fc.in_features
         self.backbone.fc = nn.Linear(in_features, out_features)
         self.pos_out_inds = pos_out_inds
         self.prob_out_inds = prob_out_inds
 
-    def forward(self, x):
-        out = self.backbone(x)
+    def forward(self, x: 'torch.Tensor') -> 'torch.Tensor':
+        out: 'torch.Tensor' = self.backbone(x)
         if self.pos_out_inds:
             for ind in self.pos_out_inds:
                 out[:, ind] = out[:, ind].exp()
@@ -168,7 +174,8 @@ class RegressionModelConfig(ModelConfig):
             out_features,
             pretrained=pretrained,
             pos_out_inds=pos_out_inds,
-            prob_out_inds=prob_out_inds)
+            prob_out_inds=prob_out_inds,
+            **self.extra_args)
 
         if in_channels != 3:
             if not backbone_name.startswith('resnet'):
