@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Union
 from rastervision.core.data.vector_source import (VectorSourceConfig,
                                                   GeoJSONVectorSource)
 from rastervision.pipeline.config import register_config, Field
@@ -7,11 +7,21 @@ if TYPE_CHECKING:
     from rastervision.core.data import (ClassConfig, CRSTransformer)
 
 
-@register_config('geojson_vector_source')
+def geojson_vector_source_config_upgrader(cfg_dict: dict,
+                                          version: int) -> dict:
+    if version == 7:
+        cfg_dict['uris'] = cfg_dict['uri']
+        del cfg_dict['uri']
+    return cfg_dict
+
+
+@register_config(
+    'geojson_vector_source', upgrader=geojson_vector_source_config_upgrader)
 class GeoJSONVectorSourceConfig(VectorSourceConfig):
     """Configure a :class:`.GeoJSONVectorSource`."""
 
-    uri: str = Field(..., description='The URI of a GeoJSON file.')
+    uris: Union[str, List[str]] = Field(
+        ..., description='URI(s) of GeoJSON file(s).')
     ignore_crs_field: bool = False
 
     def build(self,
@@ -26,7 +36,7 @@ class GeoJSONVectorSourceConfig(VectorSourceConfig):
             transformers = []
 
         return GeoJSONVectorSource(
-            uri=self.uri,
+            uris=self.uris,
             ignore_crs_field=self.ignore_crs_field,
             crs_transformer=crs_transformer,
             vector_transformers=transformers)

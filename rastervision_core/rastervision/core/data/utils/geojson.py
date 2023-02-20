@@ -346,3 +346,10 @@ def get_polygons_from_uris(
             uri=uri, ignore_crs_field=True, crs_transformer=crs_transformer)
         polygons += source.get_geoms()
     return polygons
+
+
+def merge_geojsons(geojsons: Iterable[dict]) -> dict:
+    """Merge features from all given GeoJSONs into one GeoJSON."""
+    features = sum([g.get('features', []) for g in geojsons], [])
+    geojson_merged = features_to_geojson(features)
+    return geojson_merged
