@@ -21,8 +21,9 @@ sphinx:
 #  configuration: mkdocs.yml
 
 # Optionally build your docs in additional formats such as PDF
-formats:
-  - pdf
+# Disabled due to: https://github.com/readthedocs/readthedocs.org/issues/10015
+# formats:
+#   - pdf
 
 # Optionally set the version of Python and requirements required to build your docs
 python:
