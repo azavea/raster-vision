@@ -74,7 +74,7 @@ class ObjectDetectionLearner(Learner):
 
         return {'ys': ys, 'outs': outs}
 
-    def validate_end(self, outputs, num_samples):
+    def validate_end(self, outputs):
         outs = []
         ys = []
         for o in outputs:

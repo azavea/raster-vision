@@ -29,8 +29,8 @@ from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
                                           save_pipeline_config)
-from rastervision.pytorch_learner.utils import (get_hubconf_dir_from_cfg,
-                                                log_metrics_to_csv)
+from rastervision.pytorch_learner.utils import (
+    get_hubconf_dir_from_cfg, aggregate_metrics, log_metrics_to_csv)
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
@@ -524,33 +524,23 @@ class Learner(ABC):
         """
         pass
 
-    def train_end(self, outputs: List[MetricDict],
-                  num_samples: int) -> MetricDict:
+    def train_end(self, outputs: List[Dict[str, Union[float, Tensor]]]
+                  ) -> MetricDict:
         """Aggregate the ouput of train_step at the end of the epoch.
 
         Args:
             outputs: a list of outputs of train_step
-            num_samples: total number of training samples processed in epoch
         """
-        metrics = {}
-        for k in outputs[0].keys():
-            metrics[k] = torch.stack([o[k] for o in outputs
-                                      ]).sum().item() / num_samples
-        return metrics
+        return aggregate_metrics(outputs)
 
-    def validate_end(self, outputs: List[MetricDict],
-                     num_samples: int) -> MetricDict:
+    def validate_end(self, outputs: List[Dict[str, Union[float, Tensor]]]
+                     ) -> MetricDict:
         """Aggregate the ouput of validate_step at the end of the epoch.
 
         Args:
             outputs: a list of outputs of validate_step
-            num_samples: total number of validation samples processed in epoch
         """
-        metrics = {}
-        for k in outputs[0].keys():
-            metrics[k] = torch.stack([o[k] for o in outputs
-                                      ]).sum().item() / num_samples
-        return metrics
+        return aggregate_metrics(outputs)
 
     def post_forward(self, x: Any) -> Any:
         """Post process output of call to model().
@@ -1162,7 +1152,6 @@ class Learner(ABC):
         """Train for a single epoch."""
         start = time.time()
         self.model.train()
-        num_samples = 0
         outputs = []
         with tqdm(self.train_dl, desc='Training') as bar:
             for batch_ind, (x, y) in enumerate(bar):
@@ -1179,10 +1168,9 @@ class Learner(ABC):
                 outputs.append(output)
                 if step_scheduler is not None:
                     step_scheduler.step()
-                num_samples += x.shape[0]
         if len(outputs) == 0:
             raise ValueError('Training dataset did not return any batches')
-        metrics = self.train_end(outputs, num_samples)
+        metrics = self.train_end(outputs)
         end = time.time()
         train_time = datetime.timedelta(seconds=end - start)
         metrics['train_time'] = str(train_time)
@@ -1192,7 +1180,6 @@ class Learner(ABC):
         """Validate for a single epoch."""
         start = time.time()
         self.model.eval()
-        num_samples = 0
         outputs = []
         with torch.inference_mode():
             with tqdm(dl, desc='Validating') as bar:
@@ -1202,11 +1189,10 @@ class Learner(ABC):
                     batch = (x, y)
                     output = self.validate_step(batch, batch_ind)
                     outputs.append(output)
-                    num_samples += x.shape[0]
         end = time.time()
         validate_time = datetime.timedelta(seconds=end - start)
 
-        metrics = self.validate_end(outputs, num_samples)
+        metrics = self.validate_end(outputs)
         metrics['valid_time'] = str(validate_time)
         return metrics
 
@@ -1253,7 +1239,7 @@ class Learner(ABC):
                 self.epoch_scheduler.step()
             valid_metrics = self.validate_epoch(self.valid_dl)
             metrics = dict(epoch=epoch, **train_metrics, **valid_metrics)
-            log.info(f'metrics:\n{pformat(metrics)}')
+            log.info(f'metrics:\n{pformat(metrics, sort_dicts=False)}')
 
             self.on_epoch_end(epoch, metrics)
 

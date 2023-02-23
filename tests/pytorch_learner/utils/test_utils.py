@@ -17,7 +17,7 @@ from rastervision.pytorch_learner.utils import (
     validate_albumentation_transform, A, color_to_triple,
     channel_groups_to_imgs, plot_channel_groups,
     serialize_albumentation_transform, deserialize_albumentation_transform,
-    log_metrics_to_csv)
+    aggregate_metrics, log_metrics_to_csv)
 from tests.data_files.lambda_transforms import lambda_transforms
 from tests import data_file_path
 
@@ -225,6 +225,49 @@ class TestAdjustConvChannels(unittest.TestCase):
         out_2 = new_conv_2(torch.empty(1, 8, 100, 100))
         self.assertEqual(out_1.shape, out_2.shape)
         self._test_attribs_equal(old_conv, new_conv_2[1][1])
+
+
+class TestAggregateMetrics(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
+
+    def test_scalars(self):
+        outputs = [
+            dict(train_loss=0.),
+            dict(train_loss=1.),
+        ]
+        metrics = aggregate_metrics(outputs)
+        self.assertIn('train_loss', metrics)
+        self.assertEqual(metrics['train_loss'], 0.5)
+
+    def test_tensors_zero_dim(self):
+        outputs = [
+            dict(key=torch.tensor(0)),
+            dict(key=torch.tensor(1)),
+        ]
+        metrics = aggregate_metrics(outputs)
+        self.assertIn('key', metrics)
+        self.assertEqual(metrics['key'], 0.5)
+
+    def test_tensors(self):
+        outputs = [
+            dict(key=torch.zeros(8)),
+            dict(key=torch.ones(8)),
+        ]
+        metrics = aggregate_metrics(outputs)
+        self.assertIn('key', metrics)
+        self.assertEqual(metrics['key'], 0.5)
+
+    def test_exclude(self):
+        outputs = [
+            dict(conf_mat=torch.randint(0, 100, (2, 2))),
+            dict(conf_mat=torch.randint(0, 100, (2, 2))),
+        ]
+        metrics = aggregate_metrics(outputs, exclude_keys={'conf_mat'})
+        self.assertNotIn('conf_mat', metrics)
 
 
 class TestOtherUtils(unittest.TestCase):

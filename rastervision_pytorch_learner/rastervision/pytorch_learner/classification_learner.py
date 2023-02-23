@@ -1,11 +1,9 @@
 import warnings
 import logging
 
-import torch
-
 from rastervision.pytorch_learner.learner import Learner
-from rastervision.pytorch_learner.utils import (compute_conf_mat_metrics,
-                                                compute_conf_mat)
+from rastervision.pytorch_learner.utils import (
+    compute_conf_mat_metrics, compute_conf_mat, aggregate_metrics)
 from rastervision.pytorch_learner.dataset.visualizer import (
     ClassificationVisualizer)
 
@@ -34,16 +32,12 @@ class ClassificationLearner(Learner):
 
         return {'val_loss': val_loss, 'conf_mat': conf_mat}
 
-    def validate_end(self, outputs, num_samples):
+    def validate_end(self, outputs):
+        metrics = aggregate_metrics(outputs, exclude_keys={'conf_mat'})
         conf_mat = sum([o['conf_mat'] for o in outputs])
-        val_loss = torch.stack([o['val_loss']
-                                for o in outputs]).sum() / num_samples
         conf_mat_metrics = compute_conf_mat_metrics(conf_mat,
                                                     self.cfg.data.class_names)
-
-        metrics = {'val_loss': val_loss.item()}
         metrics.update(conf_mat_metrics)
-
         return metrics
 
     def prob_to_pred(self, x):
