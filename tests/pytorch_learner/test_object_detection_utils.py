@@ -47,7 +47,6 @@ class TestTorchVisionODAdapter(unittest.TestCase):
         self.assertRaises(Exception, lambda: model(x))
         out = model(x, y)
         self.assertIsInstance(out, dict)
-        self.assertIn('total_loss', out)
 
     def test_eval_output_with_bogus_class(self):
         true_num_classes = 3

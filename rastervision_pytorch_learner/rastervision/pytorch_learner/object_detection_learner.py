@@ -64,7 +64,8 @@ class ObjectDetectionLearner(Learner):
     def train_step(self, batch, batch_ind):
         x, y = batch
         loss_dict = self.model(x, y)
-        return {'train_loss': loss_dict['total_loss']}
+        loss_dict['train_loss'] = sum(loss_dict.values())
+        return loss_dict
 
     def validate_step(self, batch, batch_ind):
         x, y = batch
@@ -83,10 +84,10 @@ class ObjectDetectionLearner(Learner):
         num_class_ids = len(self.cfg.data.class_names)
         coco_eval = compute_coco_eval(outs, ys, num_class_ids)
 
-        metrics = {'map': 0.0, 'map50': 0.0}
+        metrics = {'mAP': 0.0, 'mAP50': 0.0}
         if coco_eval is not None:
             coco_metrics = coco_eval.stats
-            metrics = {'map': coco_metrics[0], 'map50': coco_metrics[1]}
+            metrics = {'mAP': coco_metrics[0], 'mAP50': coco_metrics[1]}
         return metrics
 
     def predict(self,

@@ -66,10 +66,9 @@ class RegressionLearner(Learner):
             torch.abs(out - y) / self.target_medians).sum(dim=0)
 
         metrics = {'val_loss': val_loss}
-        for ind, label in enumerate(self.cfg.data.class_names):
-            metrics['{}_abs_error'.format(label)] = abs_error[ind]
-            metrics['{}_scaled_abs_error'.format(label)] = scaled_abs_error[
-                ind]
+        for i, label in enumerate(self.cfg.data.class_names):
+            metrics[f'{label}_abs_error'] = abs_error[i]
+            metrics[f'{label}_scaled_abs_error'] = scaled_abs_error[i]
 
         return metrics
 

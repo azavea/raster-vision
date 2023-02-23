@@ -6,6 +6,7 @@ import logging
 import albumentations as A
 
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+from torchvision.models.detection.faster_rcnn import FasterRCNN
 
 from rastervision.core.data import Scene
 from rastervision.pipeline.config import (Config, register_config, Field,
@@ -17,7 +18,6 @@ from rastervision.pytorch_learner.dataset import (
     ObjectDetectionImageDataset, ObjectDetectionSlidingWindowGeoDataset,
     ObjectDetectionRandomWindowGeoDataset)
 from rastervision.pytorch_learner.utils import adjust_conv_channels
-from torchvision.models.detection.faster_rcnn import FasterRCNN
 
 if TYPE_CHECKING:
     from rastervision.pytorch_learner.learner_config import SolverConfig
