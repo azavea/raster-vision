@@ -3,7 +3,6 @@ from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterator, List,
 from typing_extensions import Literal
 from abc import ABC, abstractmethod
 from os.path import join, isfile, basename, isdir
-import csv
 import warnings
 import time
 import datetime
@@ -30,7 +29,8 @@ from rastervision.pipeline.file_system.utils import file_exists
 from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
                                           save_pipeline_config)
-from rastervision.pytorch_learner.utils import (get_hubconf_dir_from_cfg)
+from rastervision.pytorch_learner.utils import (get_hubconf_dir_from_cfg,
+                                                log_metrics_to_csv)
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
@@ -283,7 +283,6 @@ class Learner(ABC):
         str_to_file(cfg.json(), self.config_path)
 
         self.log_path = join(self.output_dir_local, 'log.csv')
-        self.metric_names = self.build_metric_names()
 
         # data
         self.setup_data()
@@ -493,20 +492,6 @@ class Learner(ABC):
         """Returns an LR scheduler that changes the LR each epoch."""
         return self.cfg.solver.build_epoch_scheduler(
             optimizer=self.opt, last_epoch=(start_epoch - 1))
-
-    def build_metric_names(self) -> List[str]:
-        """Returns names of metrics used to validate model at each epoch."""
-        metric_names = [
-            'epoch', 'train_time', 'valid_time', 'train_loss', 'val_loss',
-            'avg_f1', 'avg_precision', 'avg_recall'
-        ]
-
-        for label in self.cfg.data.class_names:
-            metric_names.extend([
-                '{}_f1'.format(label), '{}_precision'.format(label),
-                '{}_recall'.format(label)
-            ])
-        return metric_names
 
     @abstractmethod
     def get_visualizer_class(self) -> Type[Visualizer]:
@@ -1280,21 +1265,12 @@ class Learner(ABC):
         """Hook that is called at start of train routine."""
         pass
 
-    def on_epoch_end(self, curr_epoch, metrics):
+    def on_epoch_end(self, curr_epoch: int, metrics: MetricDict) -> None:
         """Hook that is called at end of epoch.
 
-        Writes metrics to CSV and TB, and saves model.
+        Writes metrics to CSV and TensorBoard, and saves model.
         """
-        if not isfile(self.log_path):
-            with open(self.log_path, 'w') as log_file:
-                log_writer = csv.writer(log_file)
-                row = self.metric_names
-                log_writer.writerow(row)
-
-        with open(self.log_path, 'a') as log_file:
-            log_writer = csv.writer(log_file)
-            row = [metrics[k] for k in self.metric_names]
-            log_writer.writerow(row)
+        log_metrics_to_csv(self.log_path, metrics)
 
         if self.cfg.log_tensorboard:
             for key, val in metrics.items():

@@ -1,5 +1,6 @@
 from typing import Callable
 import unittest
+from os.path import join
 
 import torch
 from torch import nn
@@ -7,13 +8,16 @@ import numpy as np
 from matplotlib import pyplot as plt
 import boto3
 from moto import mock_s3
+import pandas as pd
 
+from rastervision.pipeline.file_system.utils import get_tmp_dir
 from rastervision.pytorch_learner.utils import (
     compute_conf_mat, compute_conf_mat_metrics, MinMaxNormalize,
     adjust_conv_channels, Parallel, SplitTensor, AddTensors,
     validate_albumentation_transform, A, color_to_triple,
     channel_groups_to_imgs, plot_channel_groups,
-    serialize_albumentation_transform, deserialize_albumentation_transform)
+    serialize_albumentation_transform, deserialize_albumentation_transform,
+    log_metrics_to_csv)
 from tests.data_files.lambda_transforms import lambda_transforms
 from tests import data_file_path
 
@@ -312,6 +316,27 @@ class TestOtherUtils(unittest.TestCase):
         self.assertNoError(
             lambda: plot_channel_groups(axs[0], imgs, channel_groups))
         plt.close('all')
+
+    def test_log_metrics_to_csv(self):
+        epoch_metrics = [
+            dict(epoch=0, val1=0., val2=0.),
+            dict(epoch=1, val1=-1., val2=1.),
+            dict(epoch=2, val1=-2., val2=2.),
+        ]
+
+        with get_tmp_dir() as tmp_dir:
+            csv_path = join(tmp_dir, 'log.csv')
+            for m in epoch_metrics:
+                log_metrics_to_csv(csv_path, m)
+            df = pd.read_csv(csv_path)
+
+        self.assertEqual(len(df), 3)
+        self.assertIn('epoch', df.columns)
+        self.assertIn('val1', df.columns)
+        self.assertIn('val2', df.columns)
+        self.assertListEqual(df.epoch.tolist(), [0, 1, 2])
+        self.assertListEqual(df.val1.tolist(), [0., -1., -2.])
+        self.assertListEqual(df.val2.tolist(), [0., 1., 2.])
 
 
 if __name__ == '__main__':

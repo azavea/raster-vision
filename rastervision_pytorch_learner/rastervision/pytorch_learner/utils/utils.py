@@ -1,5 +1,5 @@
-from typing import Dict, Sequence, Tuple, Optional, Union, List, Iterable
-from os.path import basename, join
+from typing import Any, Dict, Sequence, Tuple, Optional, Union, List, Iterable
+from os.path import basename, join, isfile
 import logging
 
 import torch
@@ -10,6 +10,7 @@ from PIL import ImageColor
 import albumentations as A
 from albumentations.core.transforms_interface import ImageOnlyTransform
 import cv2
+import pandas as pd
 
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.pipeline.config import ConfigError
@@ -348,3 +349,13 @@ def channel_groups_to_imgs(
             img = x[..., ch_inds[:3]]
         imgs.append(img)
     return imgs
+
+
+def log_metrics_to_csv(csv_path: str, metrics: Dict[str, Any]):
+    """Append epoch metrics to CSV file."""
+    # dict --> single-row DataFrame
+    metrics_df = pd.DataFrame.from_records([metrics])
+    # if file already exist, append row
+    log_file_exists = isfile(csv_path)
+    metrics_df.to_csv(
+        csv_path, mode='a', header=(not log_file_exists), index=False)

@@ -58,12 +58,6 @@ class ObjectDetectionLearner(Learner):
         self.model.to(self.device)
         self.load_init_weights(model_weights_path)
 
-    def build_metric_names(self):
-        metric_names = [
-            'epoch', 'train_time', 'valid_time', 'train_loss', 'map', 'map50'
-        ]
-        return metric_names
-
     def get_collate_fn(self):
         return collate_fn
 
