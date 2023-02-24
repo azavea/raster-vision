@@ -317,7 +317,7 @@ class TorchVisionODAdapter(nn.Module):
     def forward(self,
                 input: torch.Tensor,
                 targets: Optional[Iterable[BoxList]] = None
-                ) -> Union[dict, List[BoxList]]:
+                ) -> Union[Dict[str, Any], List[BoxList]]:
         """Forward pass.
 
         Args:
@@ -340,10 +340,7 @@ class TorchVisionODAdapter(nn.Module):
             # models: a dict with keys, 'boxes' and 'labels'.
             # Note: labels (class IDs) must start at 1.
             _targets = [self.boxlist_to_model_input_dict(bl) for bl in targets]
-
             loss_dict = self.model(input, _targets)
-            loss_dict['total_loss'] = sum(list(loss_dict.values()))
-
             return loss_dict
 
         outs = self.model(input)
@@ -353,8 +350,9 @@ class TorchVisionODAdapter(nn.Module):
         return boxlists
 
     def boxlist_to_model_input_dict(self, boxlist: BoxList) -> dict:
-        """Convert BoxList to a dict compatible with torchvision detection
-        models. Also, make class labels 1-indexed.
+        """Convert BoxList to dict compatible w/ torchvision detection models.
+
+        Also, make class labels 1-indexed.
 
         Args:
             boxlist (BoxList): A BoxList with a "class_ids" field.
@@ -369,8 +367,9 @@ class TorchVisionODAdapter(nn.Module):
         }
 
     def model_output_dict_to_boxlist(self, out: dict) -> BoxList:
-        """Convert torchvision detection dict to BoxList. Also, exclude any
-        null classes and make class labels 0-indexed.
+        """Convert model output dict to BoxList.
+
+        Also, exclude any null classes and make class labels 0-indexed.
 
         Args:
             out (dict): A dict output by a torchvision detection model in eval

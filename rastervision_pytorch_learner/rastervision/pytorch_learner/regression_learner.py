@@ -52,17 +52,6 @@ class RegressionLearner(Learner):
         y = torch.cat(ys, dim=0)
         self.target_medians = y.median(dim=0).values.to(self.device)
 
-    def build_metric_names(self):
-        metric_names = [
-            'epoch', 'train_time', 'valid_time', 'train_loss', 'val_loss'
-        ]
-        for label in self.cfg.data.class_names:
-            metric_names.extend([
-                '{}_abs_error'.format(label),
-                '{}_scaled_abs_error'.format(label)
-            ])
-        return metric_names
-
     def train_step(self, batch, batch_ind):
         x, y = batch
         out = self.post_forward(self.model(x))
@@ -77,10 +66,9 @@ class RegressionLearner(Learner):
             torch.abs(out - y) / self.target_medians).sum(dim=0)
 
         metrics = {'val_loss': val_loss}
-        for ind, label in enumerate(self.cfg.data.class_names):
-            metrics['{}_abs_error'.format(label)] = abs_error[ind]
-            metrics['{}_scaled_abs_error'.format(label)] = scaled_abs_error[
-                ind]
+        for i, label in enumerate(self.cfg.data.class_names):
+            metrics[f'{label}_abs_error'] = abs_error[i]
+            metrics[f'{label}_scaled_abs_error'] = scaled_abs_error[i]
 
         return metrics
 

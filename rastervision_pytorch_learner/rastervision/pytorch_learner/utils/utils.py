@@ -1,5 +1,6 @@
-from typing import Dict, Sequence, Tuple, Optional, Union, List, Iterable
-from os.path import basename, join
+from typing import (Any, Dict, Sequence, Tuple, Optional, Union, List,
+                    Iterable, Container)
+from os.path import basename, join, isfile
 import logging
 
 import torch
@@ -10,6 +11,7 @@ from PIL import ImageColor
 import albumentations as A
 from albumentations.core.transforms_interface import ImageOnlyTransform
 import cv2
+import pandas as pd
 
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.pipeline.config import ConfigError
@@ -348,3 +350,45 @@ def channel_groups_to_imgs(
             img = x[..., ch_inds[:3]]
         imgs.append(img)
     return imgs
+
+
+def log_metrics_to_csv(csv_path: str, metrics: Dict[str, Any]):
+    """Append epoch metrics to CSV file."""
+    # dict --> single-row DataFrame
+    metrics_df = pd.DataFrame.from_records([metrics])
+    # if file already exist, append row
+    log_file_exists = isfile(csv_path)
+    metrics_df.to_csv(
+        csv_path, mode='a', header=(not log_file_exists), index=False)
+
+
+def aggregate_metrics(
+        outputs: List[Dict[str, Union[float, torch.Tensor]]],
+        exclude_keys: Container[str] = set('conf_mat')) -> Dict[str, float]:
+    """Aggregate the ouput of validate_step at the end of the epoch.
+
+    Args:
+        outputs: A list of outputs of Learner.validate_step().
+        exclude_keys: Keys to ignore. These will not be aggregated and will not
+            be included in the output. Defaults to {'conf_mat'}.
+
+    Returns:
+        Dict[str, float]: Dict with aggregated values.
+    """
+    metrics = {}
+    metric_names = outputs[0].keys()
+    for metric_name in metric_names:
+        if metric_name in exclude_keys:
+            continue
+        metric_vals = [out[metric_name] for out in outputs]
+        elem = metric_vals[0]
+        if isinstance(elem, torch.Tensor):
+            if elem.ndim == 0:
+                metric_vals = torch.stack(metric_vals)
+            else:
+                metric_vals = torch.cat(metric_vals)
+            metric_avg = metric_vals.float().mean().item()
+        else:
+            metric_avg = sum(metric_vals) / len(metric_vals)
+        metrics[metric_name] = metric_avg
+    return metrics
