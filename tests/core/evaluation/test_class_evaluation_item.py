@@ -79,6 +79,10 @@ class TestClassEvaluationItem(unittest.TestCase):
         item1.merge(item2)
         np.testing.assert_array_equal(item1.conf_mat, conf_mat1 + conf_mat2)
 
+        item3 = ClassEvaluationItem(
+            class_id=1, class_name='def', tp=tp, fp=fp, fn=fn, tn=tn)
+        self.assertRaises(ValueError, lambda: item1.merge(item3))
+
     def test_extra_info(self):
         conf_mat = np.random.randint(100, size=(2, 2))
         [[tn, fp], [fn, tp]] = conf_mat

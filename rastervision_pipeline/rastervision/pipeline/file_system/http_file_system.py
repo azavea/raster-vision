@@ -128,5 +128,5 @@ class HttpFileSystem(FileSystem):
         return None
 
     @staticmethod
-    def list_paths(uri, suffix=None):  # pragma: no cover
+    def list_paths(uri, suffix=None):
         raise NotImplementedError()

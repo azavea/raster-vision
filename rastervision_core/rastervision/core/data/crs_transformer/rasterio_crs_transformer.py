@@ -1,6 +1,7 @@
 from typing import Any, Optional
 from pyproj import Transformer
 
+import numpy as np
 import rasterio as rio
 from rasterio.transform import (rowcol, xy)
 from rasterio import Affine
@@ -41,7 +42,7 @@ class RasterioCRSTransformer(CRSTransformer):
 
         super().__init__(transform, image_crs, map_crs)
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         cls_name = type(self).__name__
 
         image_crs_str = str(self.image_crs)
@@ -91,7 +92,8 @@ class RasterioCRSTransformer(CRSTransformer):
         """
         col, row = pixel_point
         if self.round_pixels:
-            col, row = int(col), int(row)
+            col = col.astype(int) if isinstance(col, np.ndarray) else int(col)
+            row = row.astype(int) if isinstance(row, np.ndarray) else int(row)
         image_point = xy(self.transform, row, col, offset='center')
         map_point = self.image2map(*image_point)
         return map_point

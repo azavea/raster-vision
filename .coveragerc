@@ -2,8 +2,25 @@
 source =
     rastervision
 omit =
-    */rastervision_core/rastervision/core/data/vector_source/label_maker/*.py
+    */rastervision_pipeline/rastervision/pipeline_example_plugin*/*
+    */rastervision_core/rastervision/core/data/vector_transformer/label_maker/*.py
     */rastervision_core/rastervision/core/data/label/tfod_utils/*.py
     */rastervision_core/rastervision/core/utils/cog.py
     */rastervision_core/rastervision/core/utils/filter_geojson.py
     */rastervision_core/rastervision/core/utils/misc.py
+
+[report]
+# From the docs: "If the matched line introduces a block, the entire block is
+# excluded from reporting. Matching a def line or decorator line will exclude
+# an entire function."
+exclude_lines =
+    pragma: no cover
+    if (?:typing\.)?TYPE_CHECKING:
+    def __repr__
+    def __repr_args__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    @(?:abc\.)?abstractmethod
+    @(?:abc\.)?abstractproperty
+    @overload
