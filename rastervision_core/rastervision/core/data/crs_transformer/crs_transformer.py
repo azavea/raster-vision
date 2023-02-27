@@ -39,6 +39,10 @@ class CRSTransformer(ABC):
         ...
 
     @overload
+    def map_to_pixel(self, inp: Window) -> Window:
+        ...
+
+    @overload
     def map_to_pixel(self, inp: BaseGeometry) -> BaseGeometry:
         ...
 
@@ -100,9 +104,8 @@ class CRSTransformer(ABC):
         """Transform input from pixel to map coords.
 
         Args:
-            inp: (x, y) tuple or Box or rasterio Window or shapely geometry in
-                pixel coordinates. If tuple, x and y can be single values or
-                array-like.
+            inp: (x, y) tuple or Box or shapely geometry in pixel coordinates.
+                If tuple, x and y can be single values or array-like.
 
         Returns:
             Coordinate-transformed input in the same format.
@@ -114,14 +117,6 @@ class CRSTransformer(ABC):
             xmax_tf, ymax_tf = self._pixel_to_map((xmax, ymax))
             box_out = Box(ymin_tf, xmin_tf, ymax_tf, xmax_tf)
             return box_out
-        elif isinstance(inp, Window):
-            window_in = inp
-            (ymin, ymax), (xmin, xmax) = window_in.toranges()
-            xmin_tf, ymin_tf = self._pixel_to_map((xmin, ymin))
-            xmax_tf, ymax_tf = self._pixel_to_map((xmax, ymax))
-            window_out = Window.from_slices(
-                slice(ymin_tf, ymax_tf), slice(xmin_tf, xmax_tf))
-            return window_out
         elif isinstance(inp, BaseGeometry):
             geom_in = inp
             geom_out = transform(
@@ -130,8 +125,8 @@ class CRSTransformer(ABC):
         elif len(inp) == 2:
             return self._pixel_to_map(inp)
         else:
-            raise TypeError('Input must be 2-tuple or Box or rasterio Window '
-                            'or shapely geometry.')
+            raise TypeError(
+                'Input must be 2-tuple or Box or shapely geometry.')
 
     @abstractmethod
     def _map_to_pixel(self, point: Tuple[float, float]) -> Tuple[int, int]:

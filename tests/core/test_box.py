@@ -33,12 +33,18 @@ class TestBox(unittest.TestCase):
         self.assertTrue(self.box == other)
 
     def test_bad_square(self):
-        self.assertRaises(BoxSizeError,
-                          lambda: self.box.make_random_square(10))
+        box = Box(0, 0, 5, 10)
+        self.assertRaises(BoxSizeError, lambda: box.make_random_square(5))
+        box = Box(0, 0, 10, 5)
+        self.assertRaises(BoxSizeError, lambda: box.make_random_square(5))
 
     def test_bad_conatiner(self):
+        box = Box(0, 0, 5, 10)
         self.assertRaises(BoxSizeError,
-                          lambda: self.box.make_random_square_container(1))
+                          lambda: box.make_random_square_container(9))
+        box = Box(0, 0, 10, 5)
+        self.assertRaises(BoxSizeError,
+                          lambda: box.make_random_square_container(9))
 
     def test_neq(self):
         other = Box(self.ymin + 1, self.xmin, self.ymax, self.xmax)
@@ -168,6 +174,13 @@ class TestBox(unittest.TestCase):
         self.assertFalse(box.intersects(Box(20, 20, 30, 30)))
         self.assertFalse(box.intersects(Box(0, 10, 10, 20)))
         self.assertFalse(box.intersects(Box(10, 0, 20, 10)))
+
+    def test_intersection(self):
+        box1 = Box(0, 0, 10, 10)
+        box2 = Box(5, 5, 20, 20)
+        box3 = Box(10, 10, 20, 20)
+        self.assertEqual(box1.intersection(box2), Box(5, 5, 10, 10))
+        self.assertEqual(box1.intersection(box3), Box(0, 0, 0, 0))
 
     def test_translate(self):
         box = Box(*np.random.randint(100, size=4))
@@ -352,6 +365,9 @@ class TestBox(unittest.TestCase):
         msg = f'{extent!r}.get_windows({arg_str})'
         self.assertSetEqual(windows, expected_windows, msg=msg)
 
+        args = dict(size=5, stride=3, padding=2, pad_direction='invalid')
+        self.assertRaises(ValueError, lambda: extent.get_windows(**args))
+
     def test_unpacking(self):
         box = Box(1, 2, 3, 4)
         ymin, xmin, ymax, xmax = box
@@ -378,6 +394,18 @@ class TestBox(unittest.TestCase):
 
         filt_windows = Box.filter_by_aoi(windows, aoi_polygons, within=True)
         self.assertListEqual(filt_windows, windows[0:1])
+
+    def test_within_aoi(self):
+        extent = Box(0, 0, 6, 6)
+        windows = extent.get_windows(3, 3, padding=0)
+        aoi_polygons = [
+            Box(0, 0, 6, 4).to_shapely(),
+            Box(0, 0, 4, 6).to_shapely(),
+        ]
+        self.assertTrue(Box.within_aoi(windows[0], aoi_polygons))
+        self.assertTrue(Box.within_aoi(windows[1], aoi_polygons))
+        self.assertTrue(Box.within_aoi(windows[2], aoi_polygons))
+        self.assertFalse(Box.within_aoi(windows[3], aoi_polygons))
 
 
 if __name__ == '__main__':

@@ -127,28 +127,14 @@ class Box():
         sw = [self.xmax, self.ymin]
         return [nw, ne, se, sw, nw]
 
-    def make_random_square_container(self, size):
+    def make_random_square_container(self, size: int) -> 'Box':
         """Return a new square Box that contains this Box.
 
         Args:
             size: the width and height of the new Box
 
         """
-        if size < self.width:
-            raise BoxSizeError('size of random container cannot be < width')
-
-        if size < self.height:
-            raise BoxSizeError('size of random container cannot be < height')
-
-        lb = self.ymin - (size - self.height)
-        ub = self.ymin
-        rand_y = random.randint(int(lb), int(ub))
-
-        lb = self.xmin - (size - self.width)
-        ub = self.xmin
-        rand_x = random.randint(int(lb), int(ub))
-
-        return Box.make_square(rand_y, rand_x, size)
+        return self.make_random_box_container(size, size)
 
     def make_random_box_container(self, out_h: int, out_w: int) -> 'Box':
         """Return a new rectangular Box that contains this Box.
