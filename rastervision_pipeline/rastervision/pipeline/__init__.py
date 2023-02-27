@@ -20,7 +20,7 @@ try:
     import torch
     import sklearn
     import cv2
-except:
+except:  # pragma: no cover
     pass
 
 from rastervision.pipeline.rv_config import RVConfig

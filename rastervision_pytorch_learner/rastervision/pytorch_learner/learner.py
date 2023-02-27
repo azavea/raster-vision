@@ -51,7 +51,7 @@ log = logging.getLogger(__name__)
 MetricDict = Dict[str, float]
 
 
-def log_system_details():
+def log_system_details():  # pragma: no cover
     """Log some system details."""
     import os
     import sys

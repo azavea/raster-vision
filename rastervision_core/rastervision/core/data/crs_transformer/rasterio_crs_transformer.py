@@ -41,7 +41,7 @@ class RasterioCRSTransformer(CRSTransformer):
 
         super().__init__(transform, image_crs, map_crs)
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         cls_name = type(self).__name__
 
         image_crs_str = str(self.image_crs)

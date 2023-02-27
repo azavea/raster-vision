@@ -1165,7 +1165,7 @@ class GeoDataConfig(DataConfig):
                                                  GeoDataWindowConfig]] = Field(
                                                      {}, description='')
 
-    def __repr_args__(self):  # pragma: no cover
+    def __repr_args__(self):
         ds = self.scene_dataset
         ds_repr = (f'<{len(ds.train_scenes)} train_scenes, '
                    f'{len(ds.validation_scenes)} validation_scenes, '

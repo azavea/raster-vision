@@ -137,7 +137,7 @@ class Box():
         if size < self.width:
             raise BoxSizeError('size of random container cannot be < width')
 
-        if size < self.height:  # pragma: no cover
+        if size < self.height:
             raise BoxSizeError('size of random container cannot be < height')
 
         lb = self.ymin - (size - self.height)
@@ -159,7 +159,7 @@ class Box():
         """
         self_h, self_w = self.size
 
-        if out_h < self_h:  # pragma: no cover
+        if out_h < self_h:
             raise BoxSizeError('size of random container cannot be < height')
         if out_w < self_w:
             raise BoxSizeError('size of random container cannot be < width')
@@ -184,7 +184,7 @@ class Box():
         if size >= self.width:
             raise BoxSizeError('size of random square cannot be >= width')
 
-        if size >= self.height:  # pragma: no cover
+        if size >= self.height:
             raise BoxSizeError('size of random square cannot be >= height')
 
         lb = self.ymin
