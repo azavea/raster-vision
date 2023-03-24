@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, overload, Tuple
 
-from rasterio.windows import Window
 from shapely.ops import transform
 from shapely.geometry.base import BaseGeometry
 
@@ -39,10 +38,6 @@ class CRSTransformer(ABC):
         ...
 
     @overload
-    def map_to_pixel(self, inp: Window) -> Window:
-        ...
-
-    @overload
     def map_to_pixel(self, inp: BaseGeometry) -> BaseGeometry:
         ...
 
@@ -50,9 +45,8 @@ class CRSTransformer(ABC):
         """Transform input from pixel to map coords.
 
         Args:
-            inp: (x, y) tuple or Box or rasterio Window or shapely geometry in
-                pixel coordinates. If tuple, x and y can be single values or
-                array-like.
+            inp: (x, y) tuple or Box or shapely geometry in map coordinates.
+                If tuple, x and y can be single values or array-like.
 
         Returns:
             Coordinate-transformed input in the same format.
@@ -64,14 +58,6 @@ class CRSTransformer(ABC):
             xmax_tf, ymax_tf = self._map_to_pixel((xmax, ymax))
             box_out = Box(ymin_tf, xmin_tf, ymax_tf, xmax_tf)
             return box_out
-        elif isinstance(inp, Window):
-            window_in = inp
-            (ymin, ymax), (xmin, xmax) = window_in.toranges()
-            xmin_tf, ymin_tf = self._map_to_pixel((xmin, ymin))
-            xmax_tf, ymax_tf = self._map_to_pixel((xmax, ymax))
-            window_out = Window.from_slices(
-                slice(ymin_tf, ymax_tf), slice(xmin_tf, xmax_tf))
-            return window_out
         elif isinstance(inp, BaseGeometry):
             geom_in = inp
             geom_out = transform(
@@ -80,8 +66,8 @@ class CRSTransformer(ABC):
         elif len(inp) == 2:
             return self._map_to_pixel(inp)
         else:
-            raise TypeError('Input must be 2-tuple or Box or rasterio Window '
-                            'or shapely geometry.')
+            raise TypeError(
+                'Input must be 2-tuple or Box or shapely geometry.')
 
     @overload
     def pixel_to_map(self, inp: Tuple[float, float]) -> Tuple[float, float]:
