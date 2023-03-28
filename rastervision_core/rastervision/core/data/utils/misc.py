@@ -1,7 +1,13 @@
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, Union
+import logging
 
 import numpy as np
 from PIL import ImageColor
+
+if TYPE_CHECKING:
+    from rastervision.core.data import (RasterSource, LabelSource, LabelStore)
+
+log = logging.getLogger(__name__)
 
 
 def color_to_triple(
@@ -87,3 +93,31 @@ def listify_uris(uris: Union[str, List[str]]) -> List[str]:
     else:
         raise TypeError(f'Expected str or List[str], but got {type(uris)}.')
     return uris
+
+
+def match_extents(raster_source: 'RasterSource',
+                  label_source: Union['LabelSource', 'LabelStore']) -> None:
+    """Set ``label_souce`` extent equal to ``raster_source`` extent.
+
+    Logs a warning if ``raster_source`` and ``label_source`` extents don't
+    intersect when converted to map coordinates.
+
+    Args:
+        raster_source (RasterSource): Source of imagery for a scene.
+        label_source (Union[LabelSource, LabelStore]): Source of labels for a
+            scene. Can be a ``LabelStore``.
+    """
+    crs_tf_img = raster_source.crs_transformer
+    crs_tf_label = label_source.crs_transformer
+    extent_img_map = crs_tf_img.pixel_to_map(raster_source.extent)
+    if label_source.extent is not None:
+        extent_label_map = crs_tf_label.pixel_to_map(label_source.extent)
+        if not extent_img_map.intersects(extent_label_map):
+            rs_cls = type(raster_source).__name__
+            ls_cls = type(label_source).__name__
+            log.warning(f'{rs_cls} extent ({extent_img_map}) does '
+                        f'not intersect with {ls_cls} extent '
+                        f'({extent_label_map}).')
+    # set LabelStore extent to RasterSource extent
+    extent_label_pixel = crs_tf_label.map_to_pixel(extent_img_map)
+    label_source.set_extent(extent_label_pixel)
