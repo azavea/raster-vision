@@ -33,7 +33,7 @@ class RasterSourceConfig(Config):
     transformers: List[RasterTransformerConfig] = []
     extent: Optional[Tuple[int, int, int, int]] = Field(
         None,
-        description='Use-specified extent in pixel coords in the form '
+        description='User-specified extent in pixel coords in the form '
         '(ymin, xmin, ymax, xmax). Useful for cropping the raster source so '
         'that only part of the raster is read from.')
 

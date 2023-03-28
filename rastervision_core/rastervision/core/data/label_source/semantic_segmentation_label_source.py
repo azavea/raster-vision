@@ -1,4 +1,4 @@
-from typing import (Any, List, Optional)
+from typing import TYPE_CHECKING, Any, List, Optional
 
 import numpy as np
 
@@ -7,6 +7,9 @@ from rastervision.core.data import ClassConfig
 from rastervision.core.data.label import SemanticSegmentationLabels
 from rastervision.core.data.label_source.label_source import LabelSource
 from rastervision.core.data.raster_source import RasterSource
+
+if TYPE_CHECKING:
+    from rastervision.core.data import CRSTransformer
 
 
 def fill_edge(label_arr: np.ndarray, window: Box, extent: Box,
@@ -25,7 +28,10 @@ def fill_edge(label_arr: np.ndarray, window: Box, extent: Box,
 class SemanticSegmentationLabelSource(LabelSource):
     """A read-only label source for semantic segmentation."""
 
-    def __init__(self, raster_source: RasterSource, class_config: ClassConfig):
+    def __init__(self,
+                 raster_source: RasterSource,
+                 class_config: ClassConfig,
+                 extent: Optional[Box] = None):
         """Constructor.
 
         Args:
@@ -34,9 +40,13 @@ class SemanticSegmentationLabelSource(LabelSource):
             null_class_id (int): the null class id used as fill values for when
                 windows go over the edge of the label array. This can be
                 retrieved using class_config.null_class_id.
+            extent (Optional[Box]): User-specified extent. If None, the full
+                extent of the vector source is used.
         """
         self.raster_source = raster_source
         self.class_config = class_config
+        if extent is not None:
+            self.set_extent(extent)
 
     def enough_target_pixels(self, window: Box, target_count_threshold: int,
                              target_classes: List[int]) -> bool:
@@ -110,6 +120,13 @@ class SemanticSegmentationLabelSource(LabelSource):
     @property
     def extent(self) -> Box:
         return self.raster_source.extent
+
+    @property
+    def crs_transformer(self) -> 'CRSTransformer':
+        return self.raster_source.crs_transformer
+
+    def set_extent(self, extent: 'Box') -> None:
+        self.raster_source.set_extent(extent)
 
     def __getitem__(self, key: Any) -> Any:
         if isinstance(key, Box):

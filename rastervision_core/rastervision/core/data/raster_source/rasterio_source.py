@@ -197,7 +197,7 @@ class RasterioSource(RasterSource):
                 channels to extract from raw imagery. Can be a subset of the
                 available channels. If None, all channels available in the
                 image will be read. Defaults to None.
-            extent (Optional[Box], optional): Use-specified extent. If None,
+            extent (Optional[Box], optional): User-specified extent. If None,
                 the full extent of the raster source is used.
             tmp_dir (Optional[str]): Directory to use for storing the VRT
                 (needed if multiple uris or allow_streaming=True). If None,
