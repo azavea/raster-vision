@@ -1,9 +1,13 @@
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from rastervision.core.box import Box
 from rastervision.pipeline.config import (Config, register_config, Field,
                                           validator, ConfigError)
 from rastervision.core.data.raster_transformer import RasterTransformerConfig
+
+if TYPE_CHECKING:
+    from rastervision.core.data import (RasterSource, SceneConfig)
+    from rastervision.core.rv_pipeline import RVPipelineConfig
 
 
 def rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
@@ -33,10 +37,14 @@ class RasterSourceConfig(Config):
         '(ymin, xmin, ymax, xmax). Useful for cropping the raster source so '
         'that only part of the raster is read from.')
 
-    def build(self, tmp_dir, use_transformers=True):
+    def build(self,
+              tmp_dir: Optional[str] = None,
+              use_transformers: bool = True) -> 'RasterSource':
         raise NotImplementedError()
 
-    def update(self, pipeline=None, scene=None):
+    def update(self,
+               pipeline: Optional['RVPipelineConfig'] = None,
+               scene: Optional['SceneConfig'] = None) -> None:
         for t in self.transformers:
             t.update(pipeline, scene)
 

@@ -26,7 +26,8 @@ class SemanticSegmentationLabelSourceConfig(LabelSourceConfig):
     raster_source: Union[RasterSourceConfig, RasterizedSourceConfig] = Field(
         ..., description='The labels in the form of rasters.')
 
-    def build(self, class_config, crs_transformer, extent, tmp_dir):
+    def build(self, class_config, crs_transformer, extent=None,
+              tmp_dir=None) -> SemanticSegmentationLabelSource:
         if isinstance(self.raster_source, RasterizedSourceConfig):
             rs = self.raster_source.build(class_config, crs_transformer,
                                           extent)

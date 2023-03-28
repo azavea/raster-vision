@@ -1,20 +1,21 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 from abc import ABC, abstractmethod, abstractproperty
 
-from rastervision.core.box import Box
+if TYPE_CHECKING:
+    from rastervision.core.box import Box
 
 
 class LabelSource(ABC):
     """An interface for storage of labels for a scene.
 
-    An LabelSource is a read source of labels for a scene
+    A LabelSource is a read-only source of labels for a scene
     that could be backed by a file, a database, an API, etc. The difference
     between LabelSources and Labels can be understood by analogy to the
     difference between a database and result sets queried from a database.
     """
 
     @abstractmethod
-    def get_labels(self, window=None):
+    def get_labels(self, window: Optional['Box'] = None) -> 'Labels':
         """Return labels overlapping with window.
 
         Args:
@@ -27,7 +28,7 @@ class LabelSource(ABC):
         pass
 
     @abstractproperty
-    def extent(self) -> Box:
+    def extent(self) -> 'Box':
         pass
 
     def __getitem__(self, key: Any) -> Any:

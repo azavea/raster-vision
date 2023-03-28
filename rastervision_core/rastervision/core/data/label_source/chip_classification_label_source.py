@@ -143,7 +143,7 @@ class ChipClassificationLabelSource(LabelSource):
     def __init__(self,
                  label_source_config: 'ChipClassificationLabelSourceConfig',
                  vector_source: 'VectorSource',
-                 extent: Box = None,
+                 extent: Optional[Box] = None,
                  lazy: bool = False):
         """Constructs a LabelSource for chip classification.
 
@@ -151,9 +151,9 @@ class ChipClassificationLabelSource(LabelSource):
             label_source_config (ChipClassificationLabelSourceConfig): Config
                 for class inference.
             vector_source (VectorSource): Source of vector labels.
-            extent (Box): Box used to filter the labels by extent or
-                compute grid.
-            lazy (bool, optional): If True, labels are not populated during
+            extent (Optional[Box]): Use-specified extent. If None, the full
+                extent of the vector source is used.
+            lazy (bool): If True, labels are not populated during
                 initialization. Defaults to False.
         """
         self.cfg = label_source_config

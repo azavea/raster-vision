@@ -13,7 +13,7 @@ class ObjectDetectionLabelSource(LabelSource):
 
     def __init__(self,
                  vector_source: VectorSource,
-                 extent: Box,
+                 extent: Optional[Box] = None,
                  ioa_thresh: Optional[float] = None,
                  clip: bool = False):
         """Constructor.
