@@ -245,10 +245,11 @@ class RasterioSource(RasterSource):
         mask_flags = self.image_dataset.mask_flag_enums
         self.is_masked = any(m for m in mask_flags if m != MaskFlags.all_valid)
 
+        height = self.image_dataset.height
+        width = self.image_dataset.width
+        self.extent_original = Box(0, 0, height, width)
         if extent is None:
-            height = self.image_dataset.height
-            width = self.image_dataset.width
-            extent = Box(0, 0, height, width)
+            extent = self.extent_original
 
         super().__init__(
             channel_order,

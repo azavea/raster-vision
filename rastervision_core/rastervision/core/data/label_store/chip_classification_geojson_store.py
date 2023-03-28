@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from rastervision.pipeline.file_system import json_to_file
 from rastervision.core.data.label import ChipClassificationLabels
@@ -9,14 +9,18 @@ from rastervision.core.data.label_source import (
 from rastervision.core.data.vector_source import (GeoJSONVectorSourceConfig)
 
 if TYPE_CHECKING:
+    from rastervision.core.box import Box
     from rastervision.core.data import ClassConfig, CRSTransformer
 
 
 class ChipClassificationGeoJSONStore(LabelStore):
     """Storage for chip classification predictions."""
 
-    def __init__(self, uri: str, class_config: 'ClassConfig',
-                 crs_transformer: 'CRSTransformer'):
+    def __init__(self,
+                 uri: str,
+                 class_config: 'ClassConfig',
+                 crs_transformer: 'CRSTransformer',
+                 extent: Optional['Box'] = None):
         """Constructor.
 
         Args:
@@ -24,10 +28,14 @@ class ChipClassificationGeoJSONStore(LabelStore):
             class_config: ClassConfig
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
+            extent (Optional[Box]): User-specified extent. If provided, only
+                labels falling inside it are returned by
+                :meth:`.ChipClassificationGeoJSONStore.get_labels`.
         """
         self.uri = uri
         self.class_config = class_config
-        self.crs_transformer = crs_transformer
+        self._crs_transformer = crs_transformer
+        self._extent = extent
 
     def save(self, labels: ChipClassificationLabels) -> None:
         """Save labels to URI if writable.
@@ -49,8 +57,21 @@ class ChipClassificationGeoJSONStore(LabelStore):
     def get_labels(self) -> ChipClassificationLabels:
         vs = GeoJSONVectorSourceConfig(uris=self.uri)
         ls = ChipClassificationLabelSourceConfig(vector_source=vs).build(
-            self.class_config, self.crs_transformer)
+            class_config=self.class_config,
+            crs_transformer=self.crs_transformer,
+            extent=self.extent)
         return ls.get_labels()
 
     def empty_labels(self) -> ChipClassificationLabels:
         return ChipClassificationLabels()
+
+    @property
+    def extent(self) -> Optional['Box']:
+        return self._extent
+
+    @property
+    def crs_transformer(self) -> 'CRSTransformer':
+        return self._crs_transformer
+
+    def set_extent(self, extent: 'Box') -> None:
+        self._extent = extent

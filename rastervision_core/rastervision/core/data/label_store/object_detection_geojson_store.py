@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 import logging
 
 from rastervision.core.data.label import ObjectDetectionLabels
@@ -8,6 +8,7 @@ from rastervision.core.data.vector_source import GeoJSONVectorSourceConfig
 from rastervision.pipeline.file_system import json_to_file
 
 if TYPE_CHECKING:
+    from rastervision.core.box import Box
     from rastervision.core.data import ClassConfig, CRSTransformer
 
 log = logging.getLogger(__name__)
@@ -16,8 +17,11 @@ log = logging.getLogger(__name__)
 class ObjectDetectionGeoJSONStore(LabelStore):
     """Storage for object detection predictions."""
 
-    def __init__(self, uri: str, class_config: 'ClassConfig',
-                 crs_transformer: 'CRSTransformer'):
+    def __init__(self,
+                 uri: str,
+                 class_config: 'ClassConfig',
+                 crs_transformer: 'CRSTransformer',
+                 extent: Optional['Box'] = None):
         """Constructor.
 
         Args:
@@ -26,10 +30,14 @@ class ObjectDetectionGeoJSONStore(LabelStore):
                 (or label) field
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
+            extent (Optional[Box]): User-specified extent. If provided, only
+                labels falling inside it are returned by
+                :meth:`.ObjectDetectionGeoJSONStore.get_labels`.
         """
         self.uri = uri
-        self.crs_transformer = crs_transformer
         self.class_config = class_config
+        self._crs_transformer = crs_transformer
+        self._extent = extent
 
     def save(self, labels: ObjectDetectionLabels) -> None:
         """Save labels to URI."""
@@ -47,8 +55,24 @@ class ObjectDetectionGeoJSONStore(LabelStore):
 
     def get_labels(self) -> ObjectDetectionLabels:
         vector_source = GeoJSONVectorSourceConfig(uris=self.uri).build(
-            self.class_config, self.crs_transformer)
-        return ObjectDetectionLabels.from_geojson(vector_source.get_geojson())
+            class_config=self.class_config,
+            crs_transformer=self.crs_transformer)
+        labels = ObjectDetectionLabels.from_geojson(
+            vector_source.get_geojson())
+        if self.extent is not None:
+            labels = ObjectDetectionLabels.get_overlapping(labels, self.extent)
+        return labels
 
     def empty_labels(self) -> ObjectDetectionLabels:
         return ObjectDetectionLabels.make_empty()
+
+    @property
+    def extent(self) -> 'Box':
+        return self._extent
+
+    @property
+    def crs_transformer(self) -> 'CRSTransformer':
+        return self._crs_transformer
+
+    def set_extent(self, extent: 'Box') -> None:
+        self._extent = extent
