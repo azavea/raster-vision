@@ -197,7 +197,7 @@ class RasterioSource(RasterSource):
                 channels to extract from raw imagery. Can be a subset of the
                 available channels. If None, all channels available in the
                 image will be read. Defaults to None.
-            extent (Optional[Box], optional): Use-specified extent. If None,
+            extent (Optional[Box], optional): User-specified extent. If None,
                 the full extent of the raster source is used.
             tmp_dir (Optional[str]): Directory to use for storing the VRT
                 (needed if multiple uris or allow_streaming=True). If None,
@@ -245,10 +245,11 @@ class RasterioSource(RasterSource):
         mask_flags = self.image_dataset.mask_flag_enums
         self.is_masked = any(m for m in mask_flags if m != MaskFlags.all_valid)
 
+        height = self.image_dataset.height
+        width = self.image_dataset.width
+        self.extent_original = Box(0, 0, height, width)
         if extent is None:
-            height = self.image_dataset.height
-            width = self.image_dataset.width
-            extent = Box(0, 0, height, width)
+            extent = self.extent_original
 
         super().__init__(
             channel_order,

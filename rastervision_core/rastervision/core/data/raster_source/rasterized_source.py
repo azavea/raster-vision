@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 import logging
 
 from rasterio.features import rasterize
@@ -63,7 +63,7 @@ class RasterizedSource(RasterSource):
     def __init__(self,
                  vector_source: 'VectorSource',
                  background_class_id: int,
-                 extent: 'Box',
+                 extent: Optional['Box'] = None,
                  all_touched: bool = False,
                  raster_transformers: List['RasterTransformer'] = []):
         """Constructor.
@@ -72,7 +72,8 @@ class RasterizedSource(RasterSource):
             vector_source (VectorSource): The VectorSource to rasterize.
             background_class_id (int): The class_id to use for any background
                 pixels, ie. pixels not covered by a polygon.
-            extent (Box): Extent of corresponding imagery RasterSource.
+            extent (Optional[Box], optional): User-specified extent. If None,
+                the full extent of the vector source is used.
             all_touched (bool, optional): If True, all pixels touched by
                 geometries will be burned in. If false, only pixels whose
                 center is within the polygon or that are selected by
@@ -86,6 +87,9 @@ class RasterizedSource(RasterSource):
 
         self.df = self.vector_source.get_dataframe()
         self.validate_labels(self.df)
+
+        if extent is None:
+            extent = self.vector_source.extent
 
         super().__init__(
             channel_order=[0],

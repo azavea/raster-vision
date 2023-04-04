@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 import numpy as np
 
@@ -7,20 +7,24 @@ from rastervision.core.data.label import ObjectDetectionLabels
 from rastervision.core.data.label_source import LabelSource
 from rastervision.core.data.vector_source import VectorSource
 
+if TYPE_CHECKING:
+    from rastervision.core.data import CRSTransformer
+
 
 class ObjectDetectionLabelSource(LabelSource):
     """A read-only label source for object detection."""
 
     def __init__(self,
                  vector_source: VectorSource,
-                 extent: Box,
+                 extent: Optional[Box] = None,
                  ioa_thresh: Optional[float] = None,
                  clip: bool = False):
         """Constructor.
 
         Args:
             vector_source (VectorSource): A VectorSource.
-            extent (Box): Box used to filter the labels by extent.
+            extent (Optional[Box]): User-specified extent. If None, the full
+                extent of the vector source is used.
             ioa_thresh (Optional[float], optional): IOA threshold to apply when
                 retieving labels for a window. Defaults to None.
             clip (bool, optional): Clip bounding boxes to window limits when
@@ -31,6 +35,8 @@ class ObjectDetectionLabelSource(LabelSource):
         self.validate_geojson(geojson)
         self.labels = ObjectDetectionLabels.from_geojson(
             geojson, extent=extent)
+        if extent is None:
+            extent = vector_source.extent
         self._extent = extent
         self.ioa_thresh = ioa_thresh if ioa_thresh is not None else 1e-6
         self.clip = clip
@@ -138,3 +144,10 @@ class ObjectDetectionLabelSource(LabelSource):
     @property
     def extent(self) -> Box:
         return self._extent
+
+    @property
+    def crs_transformer(self) -> 'CRSTransformer':
+        return self.vector_source.crs_transformer
+
+    def set_extent(self, extent: 'Box') -> None:
+        self._extent = extent

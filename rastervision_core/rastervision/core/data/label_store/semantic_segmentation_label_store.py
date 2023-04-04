@@ -88,8 +88,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             self.tmp_dir = self._tmp_dir.name
 
         self.vector_outputs = vector_outputs
-        self.extent = extent
-        self.crs_transformer = crs_transformer
+        self._extent = extent
+        self._crs_transformer = crs_transformer
         self.class_config = class_config
         self.discrete_output = discrete_output
         self.smooth_output = smooth_output
@@ -109,23 +109,24 @@ class SemanticSegmentationLabelStore(LabelStore):
             else:
                 tfs = []
             label_raster_source = RasterioSource(
-                self.label_uri, raster_transformers=tfs)
+                self.label_uri, raster_transformers=tfs, extent=extent)
             self.label_source = SemanticSegmentationLabelSource(
                 label_raster_source, class_config)
 
         if self.smooth_output:
             if file_exists(self.score_uri):
-                raster_source = RasterioSource(self.score_uri)
-                extents_equal = raster_source.extent == self.extent
-                bands_equal = raster_source.num_channels == len(class_config)
-                self_dtype = np.uint8 if self.smooth_as_uint8 else np.float32
-                dtypes_equal = raster_source.dtype == self_dtype
+                num_classes = len(class_config)
+                dtype = np.uint8 if self.smooth_as_uint8 else np.float32
+                score_raster_source = RasterioSource(
+                    self.score_uri, extent=extent)
 
-                if extents_equal and bands_equal and dtypes_equal:
-                    self.score_source = raster_source
-                else:
+                bands_equal = (score_raster_source.num_channels == num_classes)
+                dtypes_equal = (score_raster_source.dtype == dtype)
+                if not (bands_equal and dtypes_equal):
                     raise FileExistsError(f'{self.score_uri} already exists '
                                           'and is incompatible.')
+
+                self.score_source = score_raster_source
 
     def get_labels(self) -> SemanticSegmentationLabels:
         """Get all labels.
@@ -213,17 +214,25 @@ class SemanticSegmentationLabelStore(LabelStore):
         if profile is not None:
             out_profile.update(profile)
 
-        # if old scores exist, combine them with the new ones
-        if self.score_source is not None:
-            log.info('Old scores found. Merging with current scores.')
-            old_labels = self.get_scores()
-            labels += old_labels
-
         if self.discrete_output:
             labels_path = get_local_path(self.label_uri, self.tmp_dir)
             self.write_discrete_raster_output(out_profile, labels_path, labels)
 
         if self.smooth_output:
+            # if old scores exist, combine them with the new ones
+            if self.score_source is not None:
+                log.info('Old scores found. '
+                         'Attempting to merge with current scores.')
+                old_extent = self.score_source.extent_original
+                new_extent = self.extent
+                if old_extent != new_extent:
+                    raise ValueError('Cannot merge with old sores. '
+                                     'Non-identical extents:\n'
+                                     f'old extent: {old_extent}\n'
+                                     f'new extent: {new_extent}')
+                old_labels = self.get_scores()
+                labels += old_labels
+
             scores_path = get_local_path(self.score_uri, self.tmp_dir)
             hits_path = get_local_path(self.hits_uri, self.tmp_dir)
             self.write_smooth_raster_output(out_profile, scores_path,
@@ -362,3 +371,14 @@ class SemanticSegmentationLabelStore(LabelStore):
         score_arr = np.around(score_arr, out=score_arr)
         score_arr = score_arr.astype(np.uint8)
         return score_arr
+
+    @property
+    def extent(self) -> Box:
+        return self._extent
+
+    @property
+    def crs_transformer(self) -> 'CRSTransformer':
+        return self._crs_transformer
+
+    def set_extent(self, extent: 'Box') -> None:
+        self._extent = extent

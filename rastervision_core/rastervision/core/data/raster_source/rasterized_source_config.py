@@ -55,7 +55,7 @@ class RasterizedSourceConfig(Config):
         super().update(pipeline, scene)
         self.vector_source.update(pipeline, scene)
 
-    def build(self, class_config, crs_transformer, extent):
+    def build(self, class_config, crs_transformer, extent) -> RasterizedSource:
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return RasterizedSource(
             vector_source=vector_source,

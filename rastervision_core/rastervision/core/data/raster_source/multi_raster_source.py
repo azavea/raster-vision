@@ -34,6 +34,9 @@ class MultiRasterSource(RasterSource):
                 that will be used by .get_chip(). Defaults to None.
             raster_transformers (Sequence, optional): Sequence of transformers.
                 Defaults to [].
+            extent (Optional[Box], optional): User-specified extent. If given,
+                the primary raster source's extent is set to this. If None,
+                the full extent of the primary raster source is used.
         """
         num_channels_raw = sum(rs.num_channels_raw for rs in raster_sources)
         if not channel_order:
@@ -47,6 +50,8 @@ class MultiRasterSource(RasterSource):
 
         if extent is None:
             extent = raster_sources[primary_source_idx].extent
+        else:
+            raster_sources[primary_source_idx].set_extent(extent)
 
         super().__init__(
             channel_order,

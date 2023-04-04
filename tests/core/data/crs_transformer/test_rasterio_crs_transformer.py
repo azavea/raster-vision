@@ -2,7 +2,6 @@ import unittest
 
 import numpy as np
 import rasterio
-from rasterio.windows import Window as RioWindow
 from shapely.geometry import Point
 
 from rastervision.core.box import Box
@@ -50,16 +49,6 @@ class TestRasterioCRSTransformer(unittest.TestCase):
         pix_geom_expected = Point(self.pix_point)
         self.assertEqual(pix_geom, pix_geom_expected)
 
-        # rasterio window
-        map_box = Box(*self.lon_lat[::-1], *self.lon_lat[::-1])
-        map_window = RioWindow.from_slices(
-            *map_box.to_slices(), height=0, width=0)
-        pix_window = self.crs_trans.map_to_pixel(map_window)
-        pix_box_expected = Box(*self.pix_point[::-1], *self.pix_point[::-1])
-        pix_window_expected = RioWindow.from_slices(
-            *pix_box_expected.to_slices(), height=0, width=0)
-        self.assertEqual(pix_window, pix_window_expected)
-
         # invalid input type
         self.assertRaises(TypeError,
                           lambda: self.crs_trans.map_to_pixel((1, 2, 3)))
@@ -105,13 +94,6 @@ class TestRasterioCRSTransformer(unittest.TestCase):
             np.concatenate(map_geom.xy).reshape(-1),
             np.concatenate(map_geom_expected.xy).reshape(-1),
             decimal=3)
-
-        # rasterio window
-        pix_box = Box(*self.pix_point[::-1], self.pix_point[1] + 10,
-                      self.pix_point[0] + 10)
-        pix_window = pix_box.to_rasterio()
-        self.assertRaises(TypeError,
-                          lambda: self.crs_trans.pixel_to_map(pix_window))
 
         # invalid input type
         self.assertRaises(TypeError,

@@ -1,4 +1,9 @@
-from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Optional
+from abc import ABC, abstractmethod, abstractproperty
+
+if TYPE_CHECKING:
+    from rastervision.core.box import Box
+    from rastervision.core.data import CRSTransformer
 
 
 class LabelStore(ABC):
@@ -22,4 +27,23 @@ class LabelStore(ABC):
     @abstractmethod
     def empty_labels(self):
         """Produces an empty Labels"""
+        pass
+
+    @abstractproperty
+    def extent(self) -> Optional['Box']:
+        pass
+
+    @abstractproperty
+    def crs_transformer(self) -> 'CRSTransformer':
+        pass
+
+    @abstractmethod
+    def set_extent(self, extent: 'Box') -> None:
+        """Set self.extent to the given value.
+
+        .. note:: This method is idempotent.
+
+        Args:
+            extent (Box): User-specified extent in pixel coordinates.
+        """
         pass

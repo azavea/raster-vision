@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Any, Iterable, List, Optional
 
-import numpy as np
 import geopandas as gpd
 
 from rastervision.core.data.label import ChipClassificationLabels
@@ -9,7 +8,7 @@ from rastervision.core.box import Box
 
 if TYPE_CHECKING:
     from rastervision.core.data import (ChipClassificationLabelSourceConfig,
-                                        VectorSource)
+                                        CRSTransformer, VectorSource)
 
 
 def infer_cells(cells: List[Box], labels_df: gpd.GeoDataFrame,
@@ -110,16 +109,9 @@ def read_labels(labels_df: gpd.GeoDataFrame,
     Returns:
        ChipClassificationLabels
     """
+    boxes = [Box.from_shapely(g).to_int() for g in labels_df.geometry]
     if extent is not None:
-        extent_polygon = extent.to_shapely()
-        labels_df = labels_df[labels_df.intersects(extent_polygon)]
-        boxes = np.array([
-            Box.from_shapely(c).to_int().shift_origin(extent)
-            for c in labels_df.geometry
-        ])
-    else:
-        boxes = np.array(
-            [Box.from_shapely(c).to_int() for c in labels_df.geometry])
+        boxes = [b for b in boxes if b.intersects(extent)]
     class_ids = labels_df['class_id'].astype(int)
     cells_to_class_id = {
         cell: (class_id, None)
@@ -143,7 +135,7 @@ class ChipClassificationLabelSource(LabelSource):
     def __init__(self,
                  label_source_config: 'ChipClassificationLabelSourceConfig',
                  vector_source: 'VectorSource',
-                 extent: Box = None,
+                 extent: Optional[Box] = None,
                  lazy: bool = False):
         """Constructs a LabelSource for chip classification.
 
@@ -151,18 +143,22 @@ class ChipClassificationLabelSource(LabelSource):
             label_source_config (ChipClassificationLabelSourceConfig): Config
                 for class inference.
             vector_source (VectorSource): Source of vector labels.
-            extent (Box): Box used to filter the labels by extent or
-                compute grid.
-            lazy (bool, optional): If True, labels are not populated during
+            extent (Optional[Box]): User-specified extent. If None, the full
+                extent of the vector source is used.
+            lazy (bool): If True, labels are not populated during
                 initialization. Defaults to False.
         """
         self.cfg = label_source_config
+        self.vector_source = vector_source
+        if extent is None:
+            extent = vector_source.extent
         self._extent = extent
+        self.lazy = lazy
         self.labels_df = vector_source.get_dataframe()
         self.validate_labels(self.labels_df)
 
         self.labels = ChipClassificationLabels.make_empty()
-        if not lazy:
+        if not self.lazy:
             self.populate_labels()
 
     def populate_labels(self, cells: Optional[Iterable[Box]] = None) -> None:
@@ -245,3 +241,12 @@ class ChipClassificationLabelSource(LabelSource):
     @property
     def extent(self) -> Box:
         return self._extent
+
+    @property
+    def crs_transformer(self) -> 'CRSTransformer':
+        return self.vector_source.crs_transformer
+
+    def set_extent(self, extent: 'Box') -> None:
+        self._extent = extent
+        if not self.lazy:
+            self.populate_labels()

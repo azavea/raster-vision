@@ -38,7 +38,7 @@ class RasterSource(ABC):
                 applying channel_order.
             raster_transformers: ``RasterTransformers`` for transforming chips
                 whenever they are retrieved. Defaults to ``[]``.
-            extent: Use-specified extent. If None, the full extent of the
+            extent: User-specified extent. If None, the full extent of the
                 raster source is used.
         """
         if channel_order is None:
@@ -77,6 +77,16 @@ class RasterSource(ABC):
     def crs_transformer(self) -> 'CRSTransformer':
         """Associated :class:`.CRSTransformer`."""
         pass
+
+    def set_extent(self, extent: 'Box') -> None:
+        """Set self.extent to the given value.
+
+        .. note:: This method is idempotent.
+
+        Args:
+            extent (Box): User-specified extent in pixel coordinates.
+        """
+        self._extent = extent
 
     @abstractmethod
     def _get_chip(self, window: 'Box') -> 'np.ndarray':

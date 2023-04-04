@@ -407,6 +407,10 @@ class TestBox(unittest.TestCase):
         self.assertTrue(Box.within_aoi(windows[2], aoi_polygons))
         self.assertFalse(Box.within_aoi(windows[3], aoi_polygons))
 
+    def test_normalize(self):
+        self.assertEqual(Box(4, 3, 2, 1).normalize(), Box(2, 1, 4, 3))
+        self.assertEqual(Box(1, 2, 3, 4).normalize(), Box(1, 2, 3, 4))
+
 
 if __name__ == '__main__':
     unittest.main()

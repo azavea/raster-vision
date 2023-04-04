@@ -35,8 +35,6 @@ class Box():
             xmax: maximum x value
 
         """
-        ymin, ymax = sorted((ymin, ymax))
-        xmin, xmax = sorted((xmin, xmax))
         self.ymin = ymin
         self.xmin = xmin
         self.ymax = ymax
@@ -68,6 +66,12 @@ class Box():
     def area(self) -> int:
         """Return area of Box."""
         return self.height * self.width
+
+    def normalize(self) -> 'Box':
+        """Ensure ymin <= ymax and xmin <= xmax."""
+        ymin, ymax = sorted((self.ymin, self.ymax))
+        xmin, xmax = sorted((self.xmin, self.xmax))
+        return Box(ymin, xmin, ymax, xmax)
 
     def rasterio_format(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """Return Box in Rasterio format: ((ymin, ymax), (xmin, xmax))."""
@@ -150,15 +154,17 @@ class Box():
         if out_w < self_w:
             raise BoxSizeError('size of random container cannot be < width')
 
-        lb = self.ymin - (out_h - self_h)
-        ub = self.ymin
-        ymin = random.randint(int(lb), int(ub))
+        ymin, xmin, _, _ = self.normalize()
 
-        lb = self.xmin - (out_w - self_w)
-        ub = self.xmin
-        xmin = random.randint(int(lb), int(ub))
+        lb = ymin - (out_h - self_h)
+        ub = ymin
+        out_ymin = random.randint(int(lb), int(ub))
 
-        return Box(ymin, xmin, ymin + out_h, xmin + out_w)
+        lb = xmin - (out_w - self_w)
+        ub = xmin
+        out_xmin = random.randint(int(lb), int(ub))
+
+        return Box(out_ymin, out_xmin, out_ymin + out_h, out_xmin + out_w)
 
     def make_random_square(self, size: int) -> 'Box':
         """Return new randomly positioned square Box that lies inside this Box.
@@ -173,12 +179,14 @@ class Box():
         if size >= self.height:
             raise BoxSizeError('size of random square cannot be >= height')
 
-        lb = self.ymin
-        ub = self.ymax - size
+        ymin, xmin, ymax, xmax = self.normalize()
+
+        lb = ymin
+        ub = ymax - size
         rand_y = random.randint(int(lb), int(ub))
 
-        lb = self.xmin
-        ub = self.xmax - size
+        lb = xmin
+        ub = xmax - size
         rand_x = random.randint(int(lb), int(ub))
 
         return Box.make_square(rand_y, rand_x, size)
@@ -195,16 +203,22 @@ class Box():
         """
         if not self.intersects(other):
             return Box(0, 0, 0, 0)
-        xmin = max(self.xmin, other.xmin)
-        ymin = max(self.ymin, other.ymin)
-        xmax = min(self.xmax, other.xmax)
-        ymax = min(self.ymax, other.ymax)
+
+        box1 = self.normalize()
+        box2 = other.normalize()
+
+        xmin = max(box1.xmin, box2.xmin)
+        ymin = max(box1.ymin, box2.ymin)
+        xmax = min(box1.xmax, box2.xmax)
+        ymax = min(box1.ymax, box2.ymax)
         return Box(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax)
 
     def intersects(self, other: 'Box') -> bool:
-        if self.ymax <= other.ymin or self.ymin >= other.ymax:
+        box1 = self.normalize()
+        box2 = other.normalize()
+        if box1.ymax <= box2.ymin or box1.ymin >= box2.ymax:
             return False
-        if self.xmax <= other.xmin or self.xmin >= other.xmax:
+        if box1.xmax <= box2.xmin or box1.xmin >= box2.xmax:
             return False
         return True
 
@@ -240,11 +254,11 @@ class Box():
 
     def to_shapely(self) -> Polygon:
         """Convert to shapely Polygon."""
-        return Polygon.from_bounds(*(self.shapely_format()))
+        return Polygon.from_bounds(*self.shapely_format())
 
     def to_rasterio(self) -> RioWindow:
         """Convert to a Rasterio Window."""
-        return RioWindow.from_slices(*self.to_slices())
+        return RioWindow.from_slices(*self.normalize().to_slices())
 
     def to_slices(self) -> Tuple[slice, slice]:
         """Convert to slices: ymin:ymax, xmin:xmax"""

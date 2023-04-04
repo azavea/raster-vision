@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import TYPE_CHECKING, List, Optional
 
 from rastervision.pipeline.config import (Config, ConfigError, register_config,
                                           Field)
@@ -7,6 +7,10 @@ from rastervision.core.data.label_source import LabelSourceConfig
 from rastervision.core.data.label_store import LabelStoreConfig
 from rastervision.core.data.scene import Scene
 from rastervision.core.data.utils import get_polygons_from_uris
+
+if TYPE_CHECKING:
+    from rastervision.core.data import ClassConfig
+    from rastervision.core.rv_pipeline import RVPipelineConfig
 
 
 def scene_config_upgrader(cfg_dict: dict, version: int) -> dict:
@@ -40,18 +44,23 @@ class SceneConfig(Config):
         'that is assumed to be fully labeled and usable for training or '
         'validation. The AOIs are assumed to be in EPSG:4326 coordinates.')
 
-    def build(self, class_config, tmp_dir, use_transformers=True) -> Scene:
+    def build(self,
+              class_config: 'ClassConfig',
+              tmp_dir: Optional[str] = None,
+              use_transformers: bool = True) -> Scene:
         raster_source = self.raster_source.build(
             tmp_dir, use_transformers=use_transformers)
         crs_transformer = raster_source.crs_transformer
         extent = raster_source.extent
 
-        label_source = (self.label_source.build(class_config, crs_transformer,
-                                                extent, tmp_dir)
-                        if self.label_source is not None else None)
-        label_store = (self.label_store.build(class_config, crs_transformer,
-                                              extent, tmp_dir)
-                       if self.label_store is not None else None)
+        label_source = None
+        label_store = None
+        if self.label_source is not None:
+            label_source = self.label_source.build(
+                class_config, crs_transformer, extent, tmp_dir)
+        if self.label_store is not None:
+            label_store = self.label_store.build(class_config, crs_transformer,
+                                                 extent, tmp_dir)
 
         aoi_polygons = []
         if self.aoi_uris is not None:
@@ -65,7 +74,7 @@ class SceneConfig(Config):
             label_store=label_store,
             aoi_polygons=aoi_polygons)
 
-    def update(self, pipeline=None):
+    def update(self, pipeline: Optional['RVPipelineConfig'] = None) -> None:
         super().update()
 
         self.raster_source.update(pipeline=pipeline, scene=self)
