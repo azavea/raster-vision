@@ -35,7 +35,7 @@ RUN python -m pip install --upgrade pip
 
 # We need to install GDAL first to install Rasterio on non-AMD64 architectures.
 # The Rasterio wheels contain GDAL in them, but they are only built for AMD64 now.
-RUN conda install -y -c conda-forge gdal=3.5.2
+RUN conda update conda -y && conda install -y -c conda-forge gdal=3.5.2
 ENV GDAL_DATA=/opt/conda/lib/python${PYTHON_VERSION}/site-packages/rasterio/gdal_data/
 
 # This is to prevent the following error when starting the container.
