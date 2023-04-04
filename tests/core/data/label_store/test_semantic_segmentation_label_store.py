@@ -1,69 +1,60 @@
 import unittest
-from os.path import realpath
 
-from rastervision.core.data.label_store import (
-    PolygonVectorOutputConfig, BuildingVectorOutputConfig,
-    SemanticSegmentationLabelStoreConfig)
+import numpy as np
 
-
-class MockPipelineConfig():
-    predict_uri = '/abc/def'
+from rastervision.core.data import (BuildingVectorOutputConfig, ClassConfig,
+                                    PolygonVectorOutputConfig,
+                                    VectorOutputConfig)
 
 
-class MockSceneConfig():
-    id = 'scene-0'
+class TestVectorOutputConfig(unittest.TestCase):
+    def test_get_uri(self):
+        # w/o ClasConfig
+        cfg = VectorOutputConfig(class_id=0)
+        self.assertEqual(cfg.get_uri('abc/def'), 'abc/def/class-0.json')
+
+        # w/ ClasConfig
+        class_config = ClassConfig(names=['a', 'b'])
+        cfg = VectorOutputConfig(class_id=0)
+        self.assertEqual(
+            cfg.get_uri('abc/def', class_config), 'abc/def/class-0-a.json')
+        cfg = VectorOutputConfig(class_id=1)
+        self.assertEqual(
+            cfg.get_uri('abc/def', class_config), 'abc/def/class-1-b.json')
 
 
-class TestSemanticSegmentationLabelStoreConfig(unittest.TestCase):
-    def test_vector_output_config(self):
-        # uri not updated if no pipeline and scene
-        cfg = PolygonVectorOutputConfig(class_id=0)
-        cfg.update()
-        self.assertIsNone(cfg.uri)
+class TestPolygonVectorOutputConfig(unittest.TestCase):
+    def test_denoise(self):
+        mask = np.zeros((100, 100), dtype=np.uint8)
+        mask[10:20, 10:20] = 1
+        mask[60:65, 60:65] = 1
 
-        cfg = BuildingVectorOutputConfig(class_id=0)
-        cfg.update()
-        self.assertIsNone(cfg.uri)
+        # denoise = 0
+        cfg = PolygonVectorOutputConfig(class_id=0, denoise=0)
+        polys = list(cfg.vectorize(mask))
+        self.assertEqual(len(polys), 2)
 
-    def test_polygon_vector_output_config(self):
-        cfg = PolygonVectorOutputConfig(class_id=1)
-        cfg.update(pipeline=MockPipelineConfig(), scene=MockSceneConfig())
+        # denoise = 8
+        cfg = PolygonVectorOutputConfig(class_id=0, denoise=8)
+        polys = list(cfg.vectorize(mask))
+        self.assertEqual(len(polys), 1)
 
-        # correct mode
-        self.assertEqual(cfg.get_mode(), 'polygons')
-        # uri updated based on pipeline and scene
-        self.assertEqual(cfg.uri,
-                         '/abc/def/scene-0/vector_output/polygons-1.json')
 
-    def test_building_vector_output_config(self):
-        cfg = BuildingVectorOutputConfig(class_id=2)
-        cfg.update(pipeline=MockPipelineConfig(), scene=MockSceneConfig())
+class TestBuildingVectorOutputConfig(unittest.TestCase):
+    def test_denoise(self):
+        mask = np.zeros((100, 100), dtype=np.uint8)
+        mask[10:20, 10:20] = 1
+        mask[60:65, 60:65] = 1
 
-        # correct mode
-        self.assertEqual(cfg.get_mode(), 'buildings')
-        # uri updated based on pipeline and scene
-        self.assertEqual(cfg.uri,
-                         '/abc/def/scene-0/vector_output/buildings-2.json')
+        # denoise = 0
+        cfg = BuildingVectorOutputConfig(class_id=0, denoise=0)
+        polys = list(cfg.vectorize(mask))
+        self.assertEqual(len(polys), 2)
 
-    def test_semantic_segmentation_label_store_config(self):
-        # uri not updated if no pipeline and scene
-        cfg = SemanticSegmentationLabelStoreConfig()
-        cfg.update()
-        self.assertIsNone(cfg.uri)
-
-        cfg = SemanticSegmentationLabelStoreConfig(vector_output=[
-            PolygonVectorOutputConfig(class_id=1),
-            BuildingVectorOutputConfig(class_id=2)
-        ])
-        cfg.update(pipeline=MockPipelineConfig(), scene=MockSceneConfig())
-        # uri updated based on pipeline and scene
-        self.assertEqual(realpath(cfg.uri), '/abc/def/scene-0')
-
-        # vector outputs updated
-        self.assertEqual(cfg.vector_output[0].uri,
-                         '/abc/def/scene-0/vector_output/polygons-1.json')
-        self.assertEqual(cfg.vector_output[1].uri,
-                         '/abc/def/scene-0/vector_output/buildings-2.json')
+        # denoise = 8
+        cfg = BuildingVectorOutputConfig(class_id=0, denoise=8)
+        polys = list(cfg.vectorize(mask))
+        self.assertEqual(len(polys), 1)
 
 
 if __name__ == '__main__':

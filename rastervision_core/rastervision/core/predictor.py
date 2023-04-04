@@ -114,15 +114,11 @@ class Predictor():
 
         if isinstance(self.scene.label_store,
                       SemanticSegmentationLabelStoreConfig):
-            # create vector outputs for each class without specifying URIs
+            # create vector outputs for each class
             self.scene.label_store.vector_output = [
                 PolygonVectorOutputConfig(class_id=i)
                 for i, _ in enumerate(self.config.dataset.class_config.names)
             ]
-            # set URIs
-            self.scene.label_store.uri = label_uri
-            for vo in self.scene.label_store.vector_output:
-                vo.update(self.config, self.scene, uri_prefix=label_uri)
 
         try:
             if self.update_stats:

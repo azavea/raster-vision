@@ -293,47 +293,21 @@ class SemanticSegmentationLabelStore(LabelStore):
     def write_vector_outputs(self, labels: SemanticSegmentationLabels,
                              vector_output_dir: str) -> None:
         """Write vectorized outputs for all configs in self.vector_outputs."""
-        from rastervision.core.data.utils import (denoise, geoms_to_geojson,
-                                                  mask_to_building_polygons,
-                                                  mask_to_polygons)
+        from rastervision.core.data.utils import geoms_to_geojson
 
-        log.info('Writing vector output to disk.')
+        log.info('Writing vector outputs to disk.')
 
         label_arr = labels.get_label_arr(self.extent,
                                          self.class_config.null_class_id)
 
         with tqdm(self.vector_outputs, desc='Vectorizing predictions') as bar:
             for vo in bar:
-                bar.set_postfix(
-                    dict(
-                        class_id=vo.class_id,
-                        mode=vo.get_mode(),
-                        denoise_radius=vo.denoise))
-
+                bar.set_postfix(vo.dict())
                 class_mask = (label_arr == vo.class_id).astype(np.uint8)
-
-                if vo.denoise > 0:
-                    class_mask = denoise(class_mask, radius=vo.denoise)
-
-                mode = vo.get_mode()
-                if mode == 'polygons':
-                    polys = mask_to_polygons(class_mask)
-                elif mode == 'buildings':
-                    polys = mask_to_building_polygons(
-                        mask=class_mask,
-                        min_area=vo.min_area,
-                        width_factor=vo.element_width_factor,
-                        thickness=vo.element_thickness)
-                else:
-                    raise NotImplementedError()
-
+                polys = vo.vectorize(class_mask)
                 polys = [self.crs_transformer.pixel_to_map(p) for p in polys]
                 geojson = geoms_to_geojson(polys)
-
-                class_name = self.class_config.get_name(vo.class_id)
-                out_uri = join(vector_output_dir,
-                               f'class-{vo.class_id}-{class_name}.json')
-
+                out_uri = vo.get_uri(vector_output_dir, self.class_config)
                 json_to_file(geojson, out_uri)
 
     def empty_labels(self, **kwargs) -> SemanticSegmentationLabels:
