@@ -33,11 +33,12 @@ class VectorOutputConfig(Config):
         description='The prediction class that is to turned into vectors.')
     denoise: int = Field(
         8,
-        description='Radius of the structural element used to remove '
-        'high-frequency signals from the image. Smaller values will reduce '
-        'less noise and make vectorization slower (especially for large '
-        'images). Larger values will remove more noise and make vectorization '
-        'faster but might also remove legitimate detections.')
+        description='Diameter of the circular structural element used to '
+        'remove high-frequency signals from the image. Smaller values will '
+        'reduce less noise and make vectorization slower and more memory '
+        'intensive (especially for large images). Larger values will remove '
+        'more noise and make vectorization faster but might also remove '
+        'legitimate detections.')
 
     def vectorize(self, mask: 'np.ndarray') -> Iterator['BaseGeometry']:
         """Vectorize binary mask representing the target class into polygons.
