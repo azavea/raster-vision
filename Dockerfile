@@ -93,10 +93,6 @@ RUN wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-
     dpkg -i pandoc-2.19.2-1-${TARGETARCH}.deb && rm pandoc-2.19.2-1-${TARGETARCH}.deb
 #########################
 
-# Fix CI problem by pinning pyopenssl version
-# See https://askubuntu.com/questions/1428181/module-lib-has-no-attribute-x509-v-flag-cb-issuer-check
-RUN python -m pip install --upgrade pyopenssl==22.0.0
-
 COPY scripts /opt/src/scripts/
 COPY scripts/rastervision /usr/local/bin/rastervision
 COPY tests /opt/src/tests/
