@@ -10,13 +10,19 @@ if TYPE_CHECKING:
     from rastervision.core.rv_pipeline import RVPipelineConfig  # noqa
 
 
-@register_config('vector_output')
+def vo_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 8:
+        try:
+            # removed in version 9
+            del cfg_dict['uri']
+        except KeyError:
+            pass
+    return cfg_dict
+
+
+@register_config('vector_output', upgrader=vo_config_upgrader)
 class VectorOutputConfig(Config):
     """Config for vectorized semantic segmentation predictions."""
-    uri: Optional[str] = Field(
-        None,
-        description='URI of vector output. If None, and this Config is part '
-        'of a SceneConfig and RVPipeline, this field will be auto-generated.')
     class_id: int = Field(
         ...,
         description='The prediction class that is to turned into vectors.')
@@ -27,20 +33,6 @@ class VectorOutputConfig(Config):
         'less noise and make vectorization slower (especially for large '
         'images). Larger values will remove more noise and make vectorization '
         'faster but might also remove legitimate detections.')
-
-    def update(self,
-               pipeline: Optional['RVPipelineConfig'] = None,
-               scene: Optional['SceneConfig'] = None,
-               uri_prefix: Optional[str] = None):
-        if self.uri is None:
-            mode = self.get_mode()
-            class_id = self.class_id
-            filename = f'{mode}-{class_id}.json'
-            if uri_prefix is not None:
-                self.uri = join(uri_prefix, 'vector_output', filename)
-            elif pipeline and scene:
-                self.uri = join(pipeline.predict_uri, scene.id,
-                                'vector_output', filename)
 
     def get_mode(self) -> str:
         raise NotImplementedError()
@@ -146,6 +138,3 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
         if pipeline is not None and scene is not None:
             if self.uri is None:
                 self.uri = join(pipeline.predict_uri, f'{scene.id}')
-
-        for vo in self.vector_output:
-            vo.update(pipeline, scene)
