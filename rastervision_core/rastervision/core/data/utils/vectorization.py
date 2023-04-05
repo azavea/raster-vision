@@ -149,17 +149,18 @@ def get_kernel(rectangle: RotatedRectange,
 
 
 # Adapted from https://github.com/mapbox/robosat/blob/a8e0e3d676b454b61df03897e43e003867b6ef48/robosat/features/core.py#L65-L77  # noqa
-def denoise(mask: np.ndarray, radius: int) -> np.ndarray:
+def denoise(mask: np.ndarray, diameter: int) -> np.ndarray:
     """Apply morphological opening /w circular kernel to remove hi-freq noise.
 
     Args:
-        mask (np.ndarray): the binary mask to remove noise from.
-        radius (int): size in pixels of kernel for morphological op.
+        mask (np.ndarray): The binary mask to remove noise from.
+        diameter (int): Size in pixels of the diameter of the circular kernel
+            that will be used for the morphological op.
 
     Returns:
         np.ndarray: The mask after applying denoising.
     """
     kernel = cv2.getStructuringElement(
-        shape=cv2.MORPH_ELLIPSE, ksize=(radius, radius))
+        shape=cv2.MORPH_ELLIPSE, ksize=(diameter, diameter))
     out = cv2.morphologyEx(src=mask, op=cv2.MORPH_OPEN, kernel=kernel)
     return out

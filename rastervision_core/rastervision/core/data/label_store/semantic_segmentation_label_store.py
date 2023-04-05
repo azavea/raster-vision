@@ -81,6 +81,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         self.label_uri = join(uri, 'labels.tif')
         self.score_uri = join(uri, 'scores.tif')
         self.hits_uri = join(uri, 'pixel_hits.npy')
+        self.vector_output_uri = join(uri, 'vector_output')
 
         self.tmp_dir = tmp_dir
         if self.tmp_dir is None:
@@ -239,7 +240,9 @@ class SemanticSegmentationLabelStore(LabelStore):
                                             hits_path, labels)
 
         if self.vector_outputs is not None:
-            self.write_vector_outputs(labels)
+            vector_output_dir = get_local_path(self.vector_output_uri,
+                                               self.tmp_dir)
+            self.write_vector_outputs(labels, vector_output_dir)
 
         sync_to_dir(local_root, self.root_uri)
 
@@ -287,50 +290,25 @@ class SemanticSegmentationLabelStore(LabelStore):
                         label_arr = label_arr.transpose(2, 0, 1)
                     self._write_array(ds, window, label_arr)
 
-    def write_vector_outputs(self, labels: SemanticSegmentationLabels) -> None:
+    def write_vector_outputs(self, labels: SemanticSegmentationLabels,
+                             vector_output_dir: str) -> None:
         """Write vectorized outputs for all configs in self.vector_outputs."""
-        from rastervision.core.data.utils import (denoise, geoms_to_geojson,
-                                                  mask_to_building_polygons,
-                                                  mask_to_polygons)
+        from rastervision.core.data.utils import geoms_to_geojson
 
-        log.info('Writing vector output to disk.')
+        log.info('Writing vector outputs to disk.')
 
         label_arr = labels.get_label_arr(self.extent,
                                          self.class_config.null_class_id)
 
         with tqdm(self.vector_outputs, desc='Vectorizing predictions') as bar:
-            for i, vo in enumerate(bar):
-                bar.set_postfix(
-                    dict(
-                        class_id=vo.class_id,
-                        mode=vo.get_mode(),
-                        denoise_radius=vo.denoise))
-
-                if vo.uri is None:
-                    log.info(f'Skipping VectorOutputConfig at index {i} '
-                             'due to missing uri.')
-                    continue
-
+            for vo in bar:
+                bar.set_postfix(vo.dict())
                 class_mask = (label_arr == vo.class_id).astype(np.uint8)
-
-                if vo.denoise > 0:
-                    class_mask = denoise(class_mask, radius=vo.denoise)
-
-                mode = vo.get_mode()
-                if mode == 'polygons':
-                    polys = mask_to_polygons(class_mask)
-                elif mode == 'buildings':
-                    polys = mask_to_building_polygons(
-                        mask=class_mask,
-                        min_area=vo.min_area,
-                        width_factor=vo.element_width_factor,
-                        thickness=vo.element_thickness)
-                else:
-                    raise NotImplementedError()
-
+                polys = vo.vectorize(class_mask)
                 polys = [self.crs_transformer.pixel_to_map(p) for p in polys]
                 geojson = geoms_to_geojson(polys)
-                json_to_file(geojson, vo.uri)
+                out_uri = vo.get_uri(vector_output_dir, self.class_config)
+                json_to_file(geojson, out_uri)
 
     def empty_labels(self, **kwargs) -> SemanticSegmentationLabels:
         """Returns an empty SemanticSegmentationLabels object."""

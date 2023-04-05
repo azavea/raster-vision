@@ -1,57 +1,68 @@
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Iterator, List, Optional
 from os.path import join
 
+from rastervision.pipeline.config import register_config, Config, Field
 from rastervision.core.data.label_store import (LabelStoreConfig,
                                                 SemanticSegmentationLabelStore)
-from rastervision.pipeline.config import register_config, Config, Field
+from rastervision.core.data.utils import (denoise, mask_to_building_polygons,
+                                          mask_to_polygons)
 
 if TYPE_CHECKING:
-    from rastervision.core.data import SceneConfig  # noqa
-    from rastervision.core.rv_pipeline import RVPipelineConfig  # noqa
+    import numpy as np
+    from shapely.geometry.base import BaseGeometry
+
+    from rastervision.core.data import ClassConfig, SceneConfig
+    from rastervision.core.rv_pipeline import RVPipelineConfig
 
 
-@register_config('vector_output')
+def vo_config_upgrader(cfg_dict: dict, version: int) -> dict:
+    if version == 8:
+        try:
+            # removed in version 9
+            del cfg_dict['uri']
+        except KeyError:
+            pass
+    return cfg_dict
+
+
+@register_config('vector_output', upgrader=vo_config_upgrader)
 class VectorOutputConfig(Config):
     """Config for vectorized semantic segmentation predictions."""
-    uri: Optional[str] = Field(
-        None,
-        description='URI of vector output. If None, and this Config is part '
-        'of a SceneConfig and RVPipeline, this field will be auto-generated.')
     class_id: int = Field(
         ...,
         description='The prediction class that is to turned into vectors.')
     denoise: int = Field(
         8,
-        description='Radius of the structural element used to remove '
-        'high-frequency signals from the image. Smaller values will reduce '
-        'less noise and make vectorization slower (especially for large '
-        'images). Larger values will remove more noise and make vectorization '
-        'faster but might also remove legitimate detections.')
+        description='Diameter of the circular structural element used to '
+        'remove high-frequency signals from the image. Smaller values will '
+        'reduce less noise and make vectorization slower and more memory '
+        'intensive (especially for large images). Larger values will remove '
+        'more noise and make vectorization faster but might also remove '
+        'legitimate detections.')
 
-    def update(self,
-               pipeline: Optional['RVPipelineConfig'] = None,
-               scene: Optional['SceneConfig'] = None,
-               uri_prefix: Optional[str] = None):
-        if self.uri is None:
-            mode = self.get_mode()
-            class_id = self.class_id
-            filename = f'{mode}-{class_id}.json'
-            if uri_prefix is not None:
-                self.uri = join(uri_prefix, 'vector_output', filename)
-            elif pipeline and scene:
-                self.uri = join(pipeline.predict_uri, scene.id,
-                                'vector_output', filename)
-
-    def get_mode(self) -> str:
+    def vectorize(self, mask: 'np.ndarray') -> Iterator['BaseGeometry']:
+        """Vectorize binary mask representing the target class into polygons.
+        """
         raise NotImplementedError()
+
+    def get_uri(self, root: str,
+                class_config: Optional['ClassConfig'] = None) -> str:
+        if class_config is not None:
+            class_name = class_config.get_name(self.class_id)
+            uri = join(root, f'class-{self.class_id}-{class_name}.json')
+        else:
+            uri = join(root, f'class-{self.class_id}.json')
+        return uri
 
 
 @register_config('polygon_vector_output')
 class PolygonVectorOutputConfig(VectorOutputConfig):
     """Config for vectorized semantic segmentation predictions."""
 
-    def get_mode(self) -> str:
-        return 'polygons'
+    def vectorize(self, mask: 'np.ndarray') -> Iterator['BaseGeometry']:
+        if self.denoise > 0:
+            mask = denoise(mask, self.denoise)
+        return mask_to_polygons(mask)
 
 
 def building_vo_config_upgrader(cfg_dict: dict, version: int) -> dict:
@@ -85,8 +96,15 @@ class BuildingVectorOutputConfig(VectorOutputConfig):
         description='Thickness of the structural element that is used to '
         'break building clusters.')
 
-    def get_mode(self) -> str:
-        return 'buildings'
+    def vectorize(self, mask: 'np.ndarray') -> Iterator['BaseGeometry']:
+        if self.denoise > 0:
+            mask = denoise(mask, self.denoise)
+        polygons = mask_to_building_polygons(
+            mask=mask,
+            min_area=self.min_area,
+            width_factor=self.element_width_factor,
+            thickness=self.element_thickness)
+        return polygons
 
 
 @register_config('semantic_segmentation_label_store')
@@ -146,6 +164,3 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
         if pipeline is not None and scene is not None:
             if self.uri is None:
                 self.uri = join(pipeline.predict_uri, f'{scene.id}')
-
-        for vo in self.vector_output:
-            vo.update(pipeline, scene)
