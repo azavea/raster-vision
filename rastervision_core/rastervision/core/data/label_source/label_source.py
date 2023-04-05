@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING, Any, Optional
 from abc import ABC, abstractmethod, abstractproperty
 
+from rastervision.core.box import Box
 from rastervision.core.data.utils import parse_array_slices
 
 if TYPE_CHECKING:
-    from rastervision.core.box import Box
     from rastervision.core.data import CRSTransformer, Labels
 
 
