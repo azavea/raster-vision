@@ -260,9 +260,12 @@ class Box():
         """Convert to a Rasterio Window."""
         return RioWindow.from_slices(*self.normalize().to_slices())
 
-    def to_slices(self) -> Tuple[slice, slice]:
-        """Convert to slices: ymin:ymax, xmin:xmax"""
-        return slice(self.ymin, self.ymax), slice(self.xmin, self.xmax)
+    def to_slices(self,
+                  h_step: Optional[int] = None,
+                  w_step: Optional[int] = None) -> Tuple[slice, slice]:
+        """Convert to slices: ymin:ymax[:h_step], xmin:xmax[:w_step]"""
+        return slice(self.ymin, self.ymax, h_step), slice(
+            self.xmin, self.xmax, w_step)
 
     def translate(self, dy: int, dx: int) -> 'Box':
         """Translate window along y and x axes by the given distances."""
