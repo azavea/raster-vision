@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 from abc import ABC, abstractmethod, abstractproperty
 
 from rastervision.core.box import Box
+from rastervision.core.data.utils import parse_array_slices
 
 if TYPE_CHECKING:
     from rastervision.core.data import (CRSTransformer, RasterTransformer)
@@ -103,38 +104,13 @@ class RasterSource(ABC):
     def __getitem__(self, key: Any) -> 'np.ndarray':
         if isinstance(key, Box):
             return self.get_chip(key)
-        elif isinstance(key, slice):
-            key = [key]
-        elif isinstance(key, tuple):
-            pass
-        else:
-            raise TypeError('Unsupported key type.')
-        slices = list(key)
 
-        assert 1 <= len(slices) <= 2
-        assert all(s is not None for s in slices)
-        assert isinstance(slices[0], slice)
-        if len(slices) == 1:
-            h, = slices
-            w = slice(None, None)
-        else:
-            assert isinstance(slices[1], slice)
-            h, w = slices
-
-        if any(x is not None and x < 0
-               for x in [h.start, h.stop, w.start, w.stop]):
-            raise NotImplementedError()
-
-        ymin, xmin, ymax, xmax = self.extent
-        _ymin = 0 if h.start is None else h.start
-        _xmin = 0 if w.start is None else w.start
-        _ymax = ymax if h.stop is None else h.stop
-        _xmax = xmax if w.stop is None else w.stop
-        window = Box(_ymin, _xmin, _ymax, _xmax)
-
+        window, (h, w, c) = parse_array_slices(key, extent=self.extent, dims=3)
         chip = self.get_chip(window)
         if h.step is not None or w.step is not None:
             chip = chip[::h.step, ::w.step]
+        chip = chip[..., c]
+
         return chip
 
     def get_chip(self, window: 'Box') -> 'np.ndarray':

@@ -1,8 +1,10 @@
-from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple, Union
 import logging
 
 import numpy as np
 from PIL import ImageColor
+
+from rastervision.core.box import Box
 
 if TYPE_CHECKING:
     from rastervision.core.data import (RasterSource, LabelSource, LabelStore)
@@ -121,3 +123,86 @@ def match_extents(raster_source: 'RasterSource',
     # set LabelStore extent to RasterSource extent
     extent_label_pixel = crs_tf_label.map_to_pixel(extent_img_map)
     label_source.set_extent(extent_label_pixel)
+
+
+def parse_array_slices(key: Union[tuple, slice], extent: Box,
+                       dims: int = 2) -> Tuple[Box, List[Optional[Any]]]:
+    """Parse multi-dim array-indexing inputs into a Box and slices.
+
+    Args:
+        key (Union[tuple, slice]): Input to __getitem__.
+        extent (Box): Extent of the raster/label source being indexed.
+        dims (int, optional): Total available indexable dims. Defaults to 2.
+
+    Raises:
+        NotImplementedError: If not (1 <= dims <= 3).
+        TypeError: If key is not a slice or tuple.
+        IndexError: if not (1 <= len(key) <= dims).
+        TypeError: If the index for any of the dims is None.
+        ValueError: If more than one Ellipsis ("...") in the input.
+        ValueError: If h and w indices (first 2 dims) are not slices.
+        NotImplementedError: If input contains negative values.
+
+    Returns:
+        Tuple[Box, list]: A Box representing the h and w slices and a list
+            containing slices/index-values for all the dims.
+    """
+    if isinstance(key, slice):
+        key = [key]
+    elif isinstance(key, tuple):
+        pass
+    else:
+        raise TypeError('Unsupported key type.')
+
+    input_slices = list(key)
+
+    if not (1 <= len(input_slices) <= dims):
+        raise IndexError(f'Too many indices for {dims}-dimensional source.')
+    if any(s is None for s in input_slices):
+        raise TypeError('None is not a valid index.')
+
+    if Ellipsis in input_slices:
+        if input_slices.count(Ellipsis) > 1:
+            raise ValueError('Only one ellipsis is allowed.')
+        num_missing_dims = dims - (len(input_slices) - 1)
+        filler_slices = [None] * num_missing_dims
+        idx = input_slices.index(Ellipsis)
+        # at the start
+        if idx == 0:
+            dim_slices = filler_slices + input_slices[(idx + 1):]
+        # somewhere in the middle
+        elif idx < (len(input_slices) - 1):
+            dim_slices = (
+                input_slices[:idx] + filler_slices + input_slices[(idx + 1):])
+        # at the end
+        else:
+            dim_slices = input_slices[:idx] + filler_slices
+    else:
+        num_missing_dims = dims - len(input_slices)
+        filler_slices = [None] * num_missing_dims
+        dim_slices = input_slices + filler_slices
+
+    if dim_slices[0] is None:
+        dim_slices[0] = slice(None, None)
+    if dim_slices[1] is None:
+        dim_slices[1] = slice(None, None)
+    h, w = dim_slices[:2]
+    if not (isinstance(h, slice) and isinstance(w, slice)):
+        raise ValueError('h and w indices (first 2 dims) must be slices.')
+
+    if any(x is not None and x < 0
+           for x in [h.start, h.stop, h.step, w.start, w.stop, w.step]):
+        raise NotImplementedError(
+            'Negative indices are currently not supported.')
+
+    # slices with missing endpoints get expanded to the extent limits
+    H, W = extent.size
+    _ymin = 0 if h.start is None else h.start
+    _xmin = 0 if w.start is None else w.start
+    _ymax = H if h.stop is None else h.stop
+    _xmax = W if w.stop is None else w.stop
+    window = Box(_ymin, _xmin, _ymax, _xmax)
+
+    dim_slices = list(window.to_slices(h.step, w.step)) + dim_slices[2:]
+
+    return window, dim_slices

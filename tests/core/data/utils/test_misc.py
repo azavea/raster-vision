@@ -1,3 +1,4 @@
+from typing import Any, Tuple
 import unittest
 from os.path import join
 
@@ -10,7 +11,8 @@ from rastervision.core.data import (
     ObjectDetectionGeoJSONStore, SemanticSegmentationLabelSource,
     SemanticSegmentationLabelStore)
 from rastervision.core.data.utils.geojson import geoms_to_geojson
-from rastervision.core.data.utils.misc import (match_extents)
+from rastervision.core.data.utils.misc import (match_extents,
+                                               parse_array_slices)
 
 from tests import data_file_path
 
@@ -88,6 +90,118 @@ class TestMatchExtents(unittest.TestCase):
         self.assertEqual(label_store.extent, self.extent_ls)
         match_extents(self.raster_source, label_store)
         self.assertEqual(label_store.extent, self.raster_source.extent)
+
+
+class TestParseArraySlices(unittest.TestCase):
+    class MockSource:
+        def __init__(self, dims: int, extent: Box) -> None:
+            self.dims = dims
+            self.extent = extent
+
+        def __getitem__(self, key: Any) -> Tuple[Box, list]:
+            return parse_array_slices(key, self.extent, dims=self.dims)
+
+    def test_errors(self):
+        source = self.MockSource(dims=3, extent=Box(0, 0, 100, 100))
+        self.assertRaises(TypeError, lambda: source['a'])
+        self.assertRaises(IndexError, lambda: source[:10, :10, 0, 0])
+        self.assertRaises(TypeError, lambda: source[:10, :10, None])
+        self.assertRaises(ValueError, lambda: source[10, :10])
+        self.assertRaises(NotImplementedError, lambda: source[:-10, :10])
+        self.assertRaises(NotImplementedError, lambda: source[:10, :-10])
+        self.assertRaises(NotImplementedError, lambda: source[::-1])
+        self.assertRaises(NotImplementedError, lambda: source[:, ::-1])
+
+    def test_window(self):
+        source = self.MockSource(dims=2, extent=Box(0, 0, 100, 100))
+
+        window, _ = source[5:10, 15:20]
+        self.assertEqual(window, Box(5, 15, 10, 20))
+
+        window, _ = source[5:10, :]
+        self.assertEqual(window, Box(5, 0, 10, 100))
+
+        window, _ = source[:, 15:20]
+        self.assertEqual(window, Box(0, 15, 100, 20))
+
+        window, _ = source[5:10]
+        self.assertEqual(window, Box(5, 0, 10, 100))
+
+    def test_dim_slices(self):
+        source = self.MockSource(dims=3, extent=Box(0, 0, 100, 100))
+
+        _, dim_slices = source[5:10, 15:20]
+        self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20), None])
+
+        _, dim_slices = source[5:10, 15:20, 0]
+        self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20), 0])
+
+        _, dim_slices = source[5:10, 15:20, 1:4]
+        self.assertListEqual(
+            dim_slices,
+            [slice(5, 10), slice(15, 20),
+             slice(1, 4)])
+
+        _, dim_slices = source[5:10, 15:20, [3, 1]]
+        self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20), [3, 1]])
+
+        source = self.MockSource(dims=4, extent=Box(0, 0, 100, 100))
+        _, dim_slices = source[5:10, 15:20, 0]
+        self.assertListEqual(
+            dim_slices, [slice(5, 10), slice(15, 20), 0, None])
+
+    def test_ellipsis(self):
+        source = self.MockSource(dims=3, extent=Box(0, 0, 100, 100))
+
+        window, dim_slices = source[5:10, 15:20, ...]
+        self.assertEqual(window, Box(5, 15, 10, 20))
+        self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20), None])
+
+        window, dim_slices = source[5:10, ...]
+        self.assertEqual(window, Box(5, 0, 10, 100))
+        self.assertListEqual(dim_slices, [slice(5, 10), slice(0, 100), None])
+
+        window, dim_slices = source[5:10, ..., 0]
+        self.assertEqual(window, Box(5, 0, 10, 100))
+        self.assertListEqual(dim_slices, [slice(5, 10), slice(0, 100), 0])
+
+        window, dim_slices = source[..., 15:20, 0]
+        self.assertEqual(window, Box(0, 15, 100, 20))
+        self.assertListEqual(dim_slices, [slice(0, 100), slice(15, 20), 0])
+
+        window, dim_slices = source[..., 0]
+        self.assertEqual(window, Box(0, 0, 100, 100))
+        self.assertListEqual(dim_slices, [slice(0, 100), slice(0, 100), 0])
+
+    def test_cropped_extent(self):
+        source = self.MockSource(dims=2, extent=Box(20, 30, 80, 70))
+
+        window, dim_slices = source[5:10, 15:20]
+        self.assertEqual(window, Box(5, 15, 10, 20))
+        self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20)])
+
+        window, dim_slices = source[:, :]
+        self.assertEqual(window, Box(0, 0, 60, 40))
+        self.assertListEqual(dim_slices, [slice(0, 60), slice(0, 40)])
+
+        window, dim_slices = source[:]
+        self.assertEqual(window, Box(0, 0, 60, 40))
+        self.assertListEqual(dim_slices, [slice(0, 60), slice(0, 40)])
+
+        window, dim_slices = source[..., :]
+        self.assertEqual(window, Box(0, 0, 60, 40))
+        self.assertListEqual(dim_slices, [slice(0, 60), slice(0, 40)])
+
+    def test_step(self):
+        source = self.MockSource(dims=2, extent=Box(20, 30, 80, 70))
+
+        window, dim_slices = source[5:10:2, 15:20:3]
+        self.assertEqual(window, Box(5, 15, 10, 20))
+        self.assertListEqual(dim_slices, [slice(5, 10, 2), slice(15, 20, 3)])
+
+        window, dim_slices = source[::2, ::3]
+        self.assertEqual(window, Box(0, 0, 60, 40))
+        self.assertListEqual(dim_slices, [slice(0, 60, 2), slice(0, 40, 3)])
 
 
 if __name__ == '__main__':
