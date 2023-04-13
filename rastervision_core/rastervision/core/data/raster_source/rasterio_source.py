@@ -272,7 +272,7 @@ class RasterioSource(RasterSource):
         return self._num_channels
 
     @property
-    def dtype(self) -> Tuple[int, int, int]:
+    def dtype(self) -> np.dtype:
         if self._dtype is None:
             self._set_info_from_chip()
         return self._dtype
@@ -332,7 +332,8 @@ class RasterioSource(RasterSource):
                 channel_order=[2, 1, 0], then using bands=[0] will return the
                 B-channel. Defaults to None.
             out_shape (Optional[Tuple[int, ...]], optional): (hieght, width) of
-            the output chip. If None, no resizing is done. Defaults to None.
+                the output chip. If None, no resizing is done.
+                Defaults to None.
 
         Returns:
             np.ndarray: A chip of shape (height, width, channels).
