@@ -38,9 +38,20 @@ class TestRasterioCRSTransformer(unittest.TestCase):
         np.testing.assert_equal(pix_point[1], pix_point_expected[:, 1])
 
         # Box
-        map_box = Box(*self.lon_lat[::-1], *self.lon_lat[::-1])
+        map_x, map_y = self.lon_lat
+        map_box = Box(map_y, map_x, map_y, map_x)
         pix_box = self.crs_trans.map_to_pixel(map_box)
-        pix_box_expected = Box(*self.pix_point[::-1], *self.pix_point[::-1])
+        pix_x, pix_y = self.pix_point
+        pix_box_expected = Box(pix_y, pix_x, pix_y, pix_x)
+        self.assertEqual(pix_box, pix_box_expected)
+
+        # Box + bbox
+        bbox = Box(20, 20, 80, 80)
+        map_x, map_y = self.lon_lat
+        map_box = Box(map_y, map_x, map_y, map_x)
+        pix_box = self.crs_trans.map_to_pixel(map_box, bbox=bbox)
+        pix_x, pix_y = self.pix_point
+        pix_box_expected = Box(pix_y - 20, pix_x - 20, pix_y - 20, pix_x - 20)
         self.assertEqual(pix_box, pix_box_expected)
 
         # shapely
@@ -78,9 +89,23 @@ class TestRasterioCRSTransformer(unittest.TestCase):
             map_point[1], map_point_expected[:, 1], decimal=3)
 
         # Box
-        pix_box = Box(*self.pix_point[::-1], *self.pix_point[::-1])
+        pix_x, pix_y = self.pix_point
+        pix_box = Box(pix_y, pix_x, pix_y, pix_x)
         map_box = self.crs_trans.pixel_to_map(pix_box)
-        map_box_expected = Box(*self.lon_lat[::-1], *self.lon_lat[::-1])
+        map_x, map_y = self.lon_lat
+        map_box_expected = Box(map_y, map_x, map_y, map_x)
+        np.testing.assert_almost_equal(
+            np.array(map_box.tuple_format()),
+            np.array(map_box_expected.tuple_format()),
+            decimal=3)
+
+        # Box + bbox
+        bbox = Box(20, 20, 80, 80)
+        pix_x, pix_y = self.pix_point
+        pix_box = Box(pix_y - 20, pix_x - 20, pix_y - 20, pix_x - 20)
+        map_box = self.crs_trans.pixel_to_map(pix_box, bbox=bbox)
+        map_x, map_y = self.lon_lat
+        map_box_expected = Box(map_y, map_x, map_y, map_x)
         np.testing.assert_almost_equal(
             np.array(map_box.tuple_format()),
             np.array(map_box_expected.tuple_format()),

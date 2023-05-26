@@ -24,13 +24,8 @@ class LabelStore(ABC):
         """Loads Labels from this label store."""
         pass
 
-    @abstractmethod
-    def empty_labels(self):
-        """Produces an empty Labels"""
-        pass
-
     @abstractproperty
-    def extent(self) -> Optional['Box']:
+    def bbox(self) -> Optional['Box']:
         pass
 
     @abstractproperty
@@ -38,7 +33,7 @@ class LabelStore(ABC):
         pass
 
     @abstractmethod
-    def set_extent(self, extent: 'Box') -> None:
+    def set_bbox(self, extent: 'Box') -> None:
         """Set self.extent to the given value.
 
         .. note:: This method is idempotent.

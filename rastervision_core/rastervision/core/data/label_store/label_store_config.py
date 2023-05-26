@@ -16,7 +16,7 @@ class LabelStoreConfig(Config):
     def build(self,
               class_config: 'ClassConfig',
               crs_transformer: 'CRSTransformer',
-              extent: 'Box',
+              bbox: Optional['Box'] = None,
               tmp_dir: Optional[str] = None) -> 'LabelStore':
         raise NotImplementedError()
 

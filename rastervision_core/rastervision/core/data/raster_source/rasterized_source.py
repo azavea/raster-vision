@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple
 import logging
 
 from rasterio.features import rasterize
@@ -63,7 +63,7 @@ class RasterizedSource(RasterSource):
     def __init__(self,
                  vector_source: 'VectorSource',
                  background_class_id: int,
-                 extent: Optional['Box'] = None,
+                 bbox: Optional['Box'] = None,
                  all_touched: bool = False,
                  raster_transformers: List['RasterTransformer'] = []):
         """Constructor.
@@ -72,8 +72,8 @@ class RasterizedSource(RasterSource):
             vector_source (VectorSource): The VectorSource to rasterize.
             background_class_id (int): The class_id to use for any background
                 pixels, ie. pixels not covered by a polygon.
-            extent (Optional[Box], optional): User-specified extent. If None,
-                the full extent of the vector source is used.
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If None, the full extent available in the source file is used.
             all_touched (bool, optional): If True, all pixels touched by
                 geometries will be burned in. If false, only pixels whose
                 center is within the polygon or that are selected by
@@ -88,14 +88,14 @@ class RasterizedSource(RasterSource):
         self.df = self.vector_source.get_dataframe()
         self.validate_labels(self.df)
 
-        if extent is None:
-            extent = self.vector_source.extent
+        if bbox is None:
+            bbox = self.vector_source.extent
 
         super().__init__(
             channel_order=[0],
             num_channels_raw=1,
-            raster_transformers=raster_transformers,
-            extent=extent)
+            bbox=bbox,
+            raster_transformers=raster_transformers)
 
     @property
     def dtype(self) -> np.dtype:
@@ -105,7 +105,9 @@ class RasterizedSource(RasterSource):
     def crs_transformer(self):
         return self.vector_source.crs_transformer
 
-    def _get_chip(self, window: 'Box') -> np.ndarray:
+    def _get_chip(self,
+                  window: 'Box',
+                  out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
         """Return the chip located in the window.
 
         Polygons falling within the window are rasterized using their
@@ -118,12 +120,16 @@ class RasterizedSource(RasterSource):
         Returns:
             np.ndarray: [height, width, channels] numpy array
         """
-        log.debug(f'Rasterizing window: {window}')
+        window = window.to_global_coords(self.bbox)
         chip = geoms_to_raster(
             self.df,
             window,
             background_class_id=self.background_class_id,
             all_touched=self.all_touched)
+
+        if out_shape is not None:
+            chip = self.resize(chip, out_shape)
+
         # Add third singleton dim since rasters must have >=1 channel.
         return np.expand_dims(chip, 2)
 

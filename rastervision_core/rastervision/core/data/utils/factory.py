@@ -82,7 +82,7 @@ def make_ss_scene(image_uri: Union[str, List[str]],
     raster_source = RasterioSource(uris=image_uri, **image_raster_source_kw)
 
     crs_transformer = raster_source.crs_transformer
-    extent = raster_source.extent
+    bbox = raster_source.bbox
 
     label_raster_source = None
     if label_raster_uri is not None:
@@ -106,7 +106,7 @@ def make_ss_scene(image_uri: Union[str, List[str]],
             vector_source=vector_source,
             background_class_id=label_raster_source_kw.pop(
                 'background_class_id', class_config.null_class_id),
-            extent=extent,
+            bbox=bbox,
             **label_raster_source_kw)
 
     label_source = None
@@ -182,7 +182,7 @@ def make_cc_scene(image_uri: Union[str, List[str]],
     raster_source = RasterioSource(image_uri, **image_raster_source_kw)
 
     crs_transformer = raster_source.crs_transformer
-    extent = raster_source.extent
+    bbox = raster_source.bbox
 
     label_source = None
     if label_vector_uri is not None:
@@ -203,7 +203,7 @@ def make_cc_scene(image_uri: Union[str, List[str]],
         label_source_cfg = ChipClassificationLabelSourceConfig(
             vector_source=geojson_cfg, **label_source_kw)
         label_source = label_source_cfg.build(
-            class_config, crs_transformer, extent=extent)
+            class_config, crs_transformer, bbox=bbox)
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(
@@ -273,7 +273,7 @@ def make_od_scene(image_uri: Union[str, List[str]],
     raster_source = RasterioSource(image_uri, **image_raster_source_kw)
 
     crs_transformer = raster_source.crs_transformer
-    extent = raster_source.extent
+    bbox = raster_source.bbox
 
     label_source = None
     if label_vector_uri is not None:
@@ -294,7 +294,7 @@ def make_od_scene(image_uri: Union[str, List[str]],
         label_source_cfg = ObjectDetectionLabelSourceConfig(
             vector_source=geojson_cfg, **label_source_kw)
         label_source = label_source_cfg.build(
-            class_config, crs_transformer, extent=extent)
+            class_config, crs_transformer, bbox=bbox)
 
     aoi_polygons = get_polygons_from_uris(aoi_uri, crs_transformer)
     scene = Scene(

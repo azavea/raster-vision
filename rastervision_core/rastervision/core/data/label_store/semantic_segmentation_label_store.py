@@ -35,9 +35,9 @@ class SemanticSegmentationLabelStore(LabelStore):
     def __init__(
             self,
             uri: str,
-            extent: Box,
             crs_transformer: CRSTransformer,
             class_config: ClassConfig,
+            bbox: Optional[Box] = None,
             tmp_dir: Optional[str] = None,
             vector_outputs: Optional[Sequence['VectorOutputConfig']] = None,
             save_as_rgb: bool = False,
@@ -52,9 +52,12 @@ class SemanticSegmentationLabelStore(LabelStore):
                 stored. Smooth scores will be saved as "uri/scores.tif",
                 discrete labels will be stored as "uri/labels.tif", and vector
                 outputs will be saved in "uri/vector_outputs/".
-            extent (Box): The extent of the scene.
             crs_transformer (CRSTransformer): CRS transformer for correctly
                 mapping from pixel coords to map coords.
+            class_config (ClassConfig): Class config.
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If provided, only labels falling inside it are returned by
+                :meth:`.SemanticSegmentationLabelStore.get_labels`.
             tmp_dir (Optional[str], optional): Temporary directory to use. If
                 None, will be auto-generated. Defaults to None.
             vector_outputs (Optional[Sequence[VectorOutputConfig]], optional):
@@ -62,7 +65,6 @@ class SemanticSegmentationLabelStore(LabelStore):
                 configuration information. Only classes for which a
                 VectorOutputConfig is specified will be saved as vectors.
                 If None, no vector outputs will be produced. Defaults to None.
-            class_config (ClassConfig): Class config.
             save_as_rgb (bool, optional): If True, saves labels as an RGB
                 image, using the class-color mapping in the class_config.
                 Defaults to False.
@@ -89,7 +91,7 @@ class SemanticSegmentationLabelStore(LabelStore):
             self.tmp_dir = self._tmp_dir.name
 
         self.vector_outputs = vector_outputs
-        self._extent = extent
+        self._bbox = bbox
         self._crs_transformer = crs_transformer
         self.class_config = class_config
         self.discrete_output = discrete_output
@@ -110,24 +112,23 @@ class SemanticSegmentationLabelStore(LabelStore):
             else:
                 tfs = []
             label_raster_source = RasterioSource(
-                self.label_uri, raster_transformers=tfs, extent=extent)
+                self.label_uri, raster_transformers=tfs, bbox=self._bbox)
             self.label_source = SemanticSegmentationLabelSource(
                 label_raster_source, class_config)
 
-        if self.smooth_output:
-            if file_exists(self.score_uri):
-                num_classes = len(class_config)
-                dtype = np.uint8 if self.smooth_as_uint8 else np.float32
-                score_raster_source = RasterioSource(
-                    self.score_uri, extent=extent)
+        if self.smooth_output and file_exists(self.score_uri):
+            num_classes = len(class_config)
+            dtype = np.uint8 if self.smooth_as_uint8 else np.float32
+            score_raster_source = RasterioSource(
+                self.score_uri, bbox=self._bbox)
 
-                bands_equal = (score_raster_source.num_channels == num_classes)
-                dtypes_equal = (score_raster_source.dtype == dtype)
-                if not (bands_equal and dtypes_equal):
-                    raise FileExistsError(f'{self.score_uri} already exists '
-                                          'and is incompatible.')
+            bands_equal = (score_raster_source.num_channels == num_classes)
+            dtypes_equal = (score_raster_source.dtype == dtype)
+            if not (bands_equal and dtypes_equal):
+                raise FileExistsError(f'{self.score_uri} already exists '
+                                      'and is incompatible.')
 
-                self.score_source = score_raster_source
+            self.score_source = score_raster_source
 
     def get_labels(self) -> SemanticSegmentationLabels:
         """Get all labels.
@@ -182,8 +183,9 @@ class SemanticSegmentationLabelStore(LabelStore):
             score_arr = score_arr.astype(np.float16)
             score_arr /= 255
 
-        labels = self.empty_labels()
-        assert isinstance(labels, SemanticSegmentationSmoothLabels)
+        labels = SemanticSegmentationSmoothLabels(
+            extent=Box(0, 0, *score_arr.shape),
+            num_classes=len(self.class_config))
         labels.pixel_scores = score_arr * hits_arr
         labels.pixel_hits = hits_arr
         return labels
@@ -203,7 +205,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         local_root = get_local_path(self.root_uri, self.tmp_dir)
         make_dir(local_root)
 
-        height, width = self.extent.size
+        height, width = labels.extent.size
         out_profile = dict(
             driver='GTiff',
             height=height,
@@ -224,8 +226,8 @@ class SemanticSegmentationLabelStore(LabelStore):
             if self.score_source is not None:
                 log.info('Old scores found. '
                          'Attempting to merge with current scores.')
-                old_extent = self.score_source.extent_original
-                new_extent = self.extent
+                old_extent = self.score_source.extent
+                new_extent = labels.extent
                 if old_extent != new_extent:
                     raise ValueError('Cannot merge with old sores. '
                                      'Non-identical extents:\n'
@@ -253,11 +255,12 @@ class SemanticSegmentationLabelStore(LabelStore):
         dtype = np.uint8 if self.smooth_as_uint8 else np.float32
         out_profile.update(dict(count=num_bands, dtype=dtype))
 
+        extent = labels.extent
         with rio.open(scores_path, 'w', **out_profile) as ds:
             windows = [Box.from_rasterio(w) for _, w in ds.block_windows(1)]
             with tqdm(windows, desc='Saving pixel scores') as bar:
                 for window in bar:
-                    window, _ = self._clip_to_extent(self.extent, window)
+                    window, _ = self._clip_to_extent(extent, window)
                     score_arr = labels.get_score_arr(window)
                     if dtype == np.uint8:
                         score_arr = self._scores_to_uint8(score_arr)
@@ -275,6 +278,7 @@ class SemanticSegmentationLabelStore(LabelStore):
         dtype = np.uint8
         out_profile.update(dict(count=num_bands, dtype=dtype))
 
+        extent = labels.extent
         null_class_id = self.class_config.null_class_id
         with rio.open(path, 'w', **out_profile) as ds:
             windows = [Box.from_rasterio(w) for _, w in ds.block_windows(1)]
@@ -283,7 +287,7 @@ class SemanticSegmentationLabelStore(LabelStore):
                     label_arr = labels.get_label_arr(
                         window, null_class_id).astype(dtype)
                     window, label_arr = self._clip_to_extent(
-                        self.extent, window, label_arr)
+                        extent, window, label_arr)
                     if self.class_transformer is not None:
                         label_arr = self.class_transformer.class_to_rgb(
                             label_arr)
@@ -297,7 +301,7 @@ class SemanticSegmentationLabelStore(LabelStore):
 
         log.info('Writing vector outputs to disk.')
 
-        label_arr = labels.get_label_arr(self.extent,
+        label_arr = labels.get_label_arr(labels.extent,
                                          self.class_config.null_class_id)
 
         with tqdm(self.vector_outputs, desc='Vectorizing predictions') as bar:
@@ -309,16 +313,6 @@ class SemanticSegmentationLabelStore(LabelStore):
                 geojson = geoms_to_geojson(polys)
                 out_uri = vo.get_uri(vector_output_dir, self.class_config)
                 json_to_file(geojson, out_uri)
-
-    def empty_labels(self, **kwargs) -> SemanticSegmentationLabels:
-        """Returns an empty SemanticSegmentationLabels object."""
-        args = dict(
-            extent=self.extent,
-            num_classes=len(self.class_config),
-            smooth=self.smooth_output)
-        args.update(**kwargs)
-        labels = SemanticSegmentationLabels.make_empty(**args)
-        return labels
 
     def _write_array(self, dataset: rio.DatasetReader, window: Box,
                      arr: np.ndarray) -> None:
@@ -351,12 +345,12 @@ class SemanticSegmentationLabelStore(LabelStore):
         return score_arr
 
     @property
-    def extent(self) -> Box:
-        return self._extent
+    def bbox(self) -> 'Box':
+        return self._bbox
 
     @property
     def crs_transformer(self) -> 'CRSTransformer':
         return self._crs_transformer
 
-    def set_extent(self, extent: 'Box') -> None:
-        self._extent = extent
+    def set_bbox(self, bbox: 'Box') -> None:
+        self._bbox = bbox

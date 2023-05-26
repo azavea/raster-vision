@@ -189,15 +189,15 @@ class TestBox(unittest.TestCase):
             box.translate(dy, dx),
             Box(box.ymin + dy, box.xmin + dx, box.ymax + dy, box.xmax + dx))
 
-    def test_shift_origin(self):
+    def test_to_global_coords(self):
         extent = Box(5, 5, 8, 8)
         box = Box(0, 0, 10, 10)
-        self.assertEqual(box.shift_origin(extent), Box(5, 5, 15, 15))
+        self.assertEqual(box.to_global_coords(extent), Box(5, 5, 15, 15))
 
-    def test_to_offsets(self):
+    def test_to_local_coords(self):
         outer = Box(10, 10, 20, 20)
         inner = Box(15, 15, 18, 18)
-        self.assertEqual(inner.to_offsets(outer), Box(5, 5, 8, 8))
+        self.assertEqual(inner.to_local_coords(outer), Box(5, 5, 8, 8))
 
     def test_to_shapely(self):
         bounds = self.box.to_shapely().bounds
@@ -410,6 +410,10 @@ class TestBox(unittest.TestCase):
     def test_normalize(self):
         self.assertEqual(Box(4, 3, 2, 1).normalize(), Box(2, 1, 4, 3))
         self.assertEqual(Box(1, 2, 3, 4).normalize(), Box(1, 2, 3, 4))
+
+    def test_extent(self):
+        self.assertEqual(Box(2, 3, 5, 7).extent, Box(0, 0, 3, 4))
+        self.assertEqual(Box(0, 0, 5, 7).extent, Box(0, 0, 5, 7))
 
 
 if __name__ == '__main__':

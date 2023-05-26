@@ -11,7 +11,9 @@ if TYPE_CHECKING:
     import numpy as np
     from shapely.geometry.base import BaseGeometry
 
-    from rastervision.core.data import ClassConfig, SceneConfig
+    from rastervision.core.box import Box
+    from rastervision.core.data import (ClassConfig, CRSTransformer,
+                                        SceneConfig)
     from rastervision.core.rv_pipeline import RVPipelineConfig
 
 
@@ -141,14 +143,18 @@ class SemanticSegmentationLabelStoreConfig(LabelStoreConfig):
         description='blockxsize and blockysize params in rasterio.open() will '
         'be set to this.')
 
-    def build(self, class_config, crs_transformer, extent, tmp_dir):
+    def build(self,
+              class_config: 'ClassConfig',
+              crs_transformer: 'CRSTransformer',
+              bbox: 'Box',
+              tmp_dir: Optional[str] = None) -> SemanticSegmentationLabelStore:
         class_config.ensure_null_class()
 
         label_store = SemanticSegmentationLabelStore(
             uri=self.uri,
-            extent=extent,
             crs_transformer=crs_transformer,
             class_config=class_config,
+            bbox=bbox,
             tmp_dir=tmp_dir,
             vector_outputs=self.vector_output,
             save_as_rgb=self.rgb,

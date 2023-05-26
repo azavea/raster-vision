@@ -6,7 +6,6 @@ import numpy as np
 from rastervision.core.box import Box
 from rastervision.core.data.raster_source import RasterSource
 from rastervision.core.data.crs_transformer import CRSTransformer
-from rastervision.core.data.raster_source.rasterio_source import RasterioSource
 from rastervision.core.data.utils import all_equal
 
 
@@ -19,7 +18,7 @@ class MultiRasterSource(RasterSource):
                  force_same_dtype: bool = False,
                  channel_order: Optional[Sequence[conint(ge=0)]] = None,
                  raster_transformers: Sequence = [],
-                 extent: Optional[Box] = None):
+                 bbox: Optional[Box] = None):
         """Constructor.
 
         Args:
@@ -37,6 +36,10 @@ class MultiRasterSource(RasterSource):
             extent (Optional[Box], optional): User-specified extent. If given,
                 the primary raster source's extent is set to this. If None,
                 the full extent of the primary raster source is used.
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If given, the primary raster source's bbox is set to this. 
+                If None, the full extent available in the source file of the
+                primary raster source is used.
         """
         num_channels_raw = sum(rs.num_channels_raw for rs in raster_sources)
         if not channel_order:
@@ -48,23 +51,20 @@ class MultiRasterSource(RasterSource):
             raise IndexError('primary_source_idx must be in range '
                              '[0, len(raster_sources)].')
 
-        if extent is None:
-            extent = raster_sources[primary_source_idx].extent
+        if bbox is None:
+            bbox = raster_sources[primary_source_idx].bbox
         else:
-            raster_sources[primary_source_idx].set_extent(extent)
+            raster_sources[primary_source_idx].set_bbox(bbox)
 
         super().__init__(
             channel_order,
             num_channels_raw,
-            raster_transformers=raster_transformers,
-            extent=extent)
+            bbox=bbox,
+            raster_transformers=raster_transformers)
 
         self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
         self.primary_source_idx = primary_source_idx
-
-        self.extents = [rs.extent for rs in self.raster_sources]
-        self.all_extents_equal = all_equal(self.extents)
 
         self.validate_raster_sources()
 
@@ -74,8 +74,6 @@ class MultiRasterSource(RasterSource):
         Checks if:
 
         - dtypes are same or ``force_same_dtype`` is True.
-        - each sub-``RasterSource`` is a :class:`.RasterioSource` if extents
-          not identical.
 
         """
         dtypes = [rs.dtype for rs in self.raster_sources]
@@ -85,13 +83,6 @@ class MultiRasterSource(RasterSource):
                 f'Got: {dtypes} '
                 '(Use force_same_dtype to cast all to the dtype of the '
                 'primary source)')
-        if not self.all_extents_equal:
-            all_rasterio_sources = all(
-                isinstance(rs, RasterioSource) for rs in self.raster_sources)
-            if not all_rasterio_sources:
-                raise NotImplementedError(
-                    'Non-identical extents are only '
-                    'supported for RasterioSource raster sources.')
 
     @property
     def primary_source(self) -> RasterSource:
@@ -106,8 +97,11 @@ class MultiRasterSource(RasterSource):
     def crs_transformer(self) -> CRSTransformer:
         return self.primary_source.crs_transformer
 
-    def _get_sub_chips(self, window: Box,
-                       raw: bool = False) -> List[np.ndarray]:
+    def _get_sub_chips(
+            self,
+            window: Box,
+            raw: bool = False,
+            out_shape: Optional[Tuple[int, int]] = None) -> List[np.ndarray]:
         """If all extents are identical, simply retrieves chips from each sub
         raster source. Otherwise, follows the following algorithm
             - using pixel-coords window, get chip from the primary sub raster
@@ -138,24 +132,22 @@ class MultiRasterSource(RasterSource):
                 return rs._get_chip(window, out_shape=out_shape)
             return rs.get_chip(window, out_shape=out_shape)
 
-        if self.all_extents_equal:
-            sub_chips = [get_chip(rs, window) for rs in self.raster_sources]
-        else:
-            primary_rs = self.primary_source
-            other_rses = [rs for rs in self.raster_sources if rs != primary_rs]
+        primary_rs = self.primary_source
+        other_rses = [rs for rs in self.raster_sources if rs != primary_rs]
 
-            primary_sub_chip = get_chip(primary_rs, window)
-            out_shape = primary_sub_chip.shape[:2]
-            world_window = primary_rs.crs_transformer.pixel_to_map(window)
-            pixel_windows = [
-                rs.crs_transformer.map_to_pixel(world_window)
-                for rs in other_rses
-            ]
-            sub_chips = [
-                get_chip(rs, w, out_shape=out_shape)
-                for rs, w in zip(other_rses, pixel_windows)
-            ]
-            sub_chips.insert(self.primary_source_idx, primary_sub_chip)
+        primary_sub_chip = get_chip(primary_rs, window, out_shape=out_shape)
+        out_shape = primary_sub_chip.shape[:2]
+        world_window = primary_rs.crs_transformer.pixel_to_map(
+            window, bbox=primary_rs.bbox)
+        pixel_windows = [
+            rs.crs_transformer.map_to_pixel(world_window, bbox=rs.bbox)
+            for rs in other_rses
+        ]
+        sub_chips = [
+            get_chip(rs, w, out_shape=out_shape)
+            for rs, w in zip(other_rses, pixel_windows)
+        ]
+        sub_chips.insert(self.primary_source_idx, primary_sub_chip)
 
         if self.force_same_dtype:
             dtype = sub_chips[self.primary_source_idx].dtype
@@ -163,7 +155,9 @@ class MultiRasterSource(RasterSource):
 
         return sub_chips
 
-    def _get_chip(self, window: Box) -> np.ndarray:
+    def _get_chip(self,
+                  window: Box,
+                  out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
         """Return the raw chip located in the window.
 
         Get raw chips from sub raster sources and concatenate them.
@@ -174,11 +168,13 @@ class MultiRasterSource(RasterSource):
         Returns:
             [height, width, channels] numpy array
         """
-        sub_chips = self._get_sub_chips(window, raw=True)
+        sub_chips = self._get_sub_chips(window, raw=True, out_shape=out_shape)
         chip = np.concatenate(sub_chips, axis=-1)
         return chip
 
-    def get_chip(self, window: Box) -> np.ndarray:
+    def get_chip(self,
+                 window: Box,
+                 out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
         """Return the transformed chip in the window.
 
         Get processed chips from sub raster sources (with their respective
@@ -191,7 +187,7 @@ class MultiRasterSource(RasterSource):
         Returns:
             np.ndarray with shape [height, width, channels]
         """
-        sub_chips = self._get_sub_chips(window, raw=False)
+        sub_chips = self._get_sub_chips(window, raw=False, out_shape=out_shape)
         chip = np.concatenate(sub_chips, axis=-1)
         chip = chip[..., self.channel_order]
 

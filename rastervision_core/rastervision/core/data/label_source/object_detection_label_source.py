@@ -17,15 +17,15 @@ class ObjectDetectionLabelSource(LabelSource):
 
     def __init__(self,
                  vector_source: VectorSource,
-                 extent: Optional[Box] = None,
+                 bbox: Optional[Box] = None,
                  ioa_thresh: Optional[float] = None,
                  clip: bool = False):
         """Constructor.
 
         Args:
             vector_source (VectorSource): A VectorSource.
-            extent (Optional[Box]): User-specified extent. If None, the full
-                extent of the vector source is used.
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If None, the full extent available in the source file is used.
             ioa_thresh (Optional[float], optional): IOA threshold to apply when
                 retieving labels for a window. Defaults to None.
             clip (bool, optional): Clip bounding boxes to window limits when
@@ -34,11 +34,10 @@ class ObjectDetectionLabelSource(LabelSource):
         self.vector_source = vector_source
         geojson = self.vector_source.get_geojson()
         self.validate_geojson(geojson)
-        self.labels = ObjectDetectionLabels.from_geojson(
-            geojson, extent=extent)
-        if extent is None:
-            extent = vector_source.extent
-        self._extent = extent
+        self.labels = ObjectDetectionLabels.from_geojson(geojson, bbox=bbox)
+        if bbox is None:
+            bbox = vector_source.extent
+        self._bbox = bbox
         self.ioa_thresh = ioa_thresh if ioa_thresh is not None else 1e-6
         self.clip = clip
 
@@ -54,11 +53,11 @@ class ObjectDetectionLabelSource(LabelSource):
         Returns:
             ObjectDetectionLabels: Labels with sufficient overlap with the
                 window. The returned labels are in global coods
-                (i.e. coords wihtin the full extent).
+                (i.e. coords wihtin the full extent of the source).
         """
         if window is None:
             return self.labels
-        window = window.shift_origin(self.extent)
+        window = window.to_global_coords(self.bbox)
         return ObjectDetectionLabels.get_overlapping(
             self.labels, window, ioa_thresh=ioa_thresh, clip=clip)
 
@@ -87,7 +86,9 @@ class ObjectDetectionLabelSource(LabelSource):
                 window, ioa_thresh=self.ioa_thresh, clip=self.clip)
             class_ids = labels.get_class_ids()
             npboxes = labels.get_npboxes()
-            npboxes = ObjectDetectionLabels.global_to_local(npboxes, window)
+            window_global = window.to_global_coords(self.bbox)
+            npboxes = ObjectDetectionLabels.global_to_local(
+                npboxes, window_global)
             return npboxes, class_ids, 'yxyx'
 
         window, (h, w) = parse_array_slices(key, extent=self.extent, dims=2)
@@ -117,12 +118,12 @@ class ObjectDetectionLabelSource(LabelSource):
                                  'field in their properties.')
 
     @property
-    def extent(self) -> Box:
-        return self._extent
+    def bbox(self) -> Box:
+        return self._bbox
 
     @property
     def crs_transformer(self) -> 'CRSTransformer':
         return self.vector_source.crs_transformer
 
-    def set_extent(self, extent: 'Box') -> None:
-        self._extent = extent
+    def set_bbox(self, bbox: 'Box') -> None:
+        self._bbox = bbox

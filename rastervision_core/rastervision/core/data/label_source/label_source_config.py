@@ -16,7 +16,7 @@ class LabelSourceConfig(Config):
     def build(self,
               class_config: 'ClassConfig',
               crs_transformer: 'CRSTransformer',
-              extent: Optional['Box'] = None,
+              bbox: Optional['Box'] = None,
               tmp_dir: Optional[str] = None) -> 'LabelSource':
         raise NotImplementedError()
 

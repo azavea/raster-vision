@@ -98,7 +98,7 @@ class PyTorchSemanticSegmentation(PyTorchLearnerBackend):
             ds.windows,
             predictions,
             smooth=raw_out,
-            extent=label_store.extent,
+            extent=scene.extent,
             num_classes=len(label_store.class_config),
             crop_sz=crop_sz)
 

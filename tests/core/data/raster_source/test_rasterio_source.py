@@ -219,22 +219,24 @@ class TestRasterioSource(unittest.TestCase):
         self.assertEqual(ymax, 256)
         self.assertEqual(xmax, 256)
 
-    def test_user_specified_extent(self):
+    def test_bbox(self):
         img_path = data_file_path('small-rgb-tile.tif')
 
-        # /wo user specified extent
+        # /wo user specified bbox
         rs = RasterioSource(uris=img_path)
+        self.assertEqual(rs.bbox, Box(0, 0, 256, 256))
         self.assertEqual(rs.extent, Box(0, 0, 256, 256))
 
-        # /w user specified extent
-        rs_crop = RasterioSource(uris=img_path, extent=Box(64, 64, 192, 192))
+        # /w user specified bbox
+        rs_crop = RasterioSource(uris=img_path, bbox=Box(64, 64, 192, 192))
 
-        # test extent box
-        self.assertEqual(rs_crop.extent, Box(64, 64, 192, 192))
+        # test bbox box
+        self.assertEqual(rs_crop.bbox, Box(64, 64, 192, 192))
+        self.assertEqual(rs_crop.extent, Box(0, 0, 128, 128))
 
         # test validators
-        rs_cfg = RasterioSourceConfig(uris=[img_path], extent=(0, 0, 1, 1))
-        self.assertIsInstance(rs_cfg.extent, Box)
+        rs_cfg = RasterioSourceConfig(uris=[img_path], bbox=(0, 0, 1, 1))
+        self.assertIsInstance(rs_cfg.bbox, Box)
 
     def test_fill_overflow(self):
         extent = Box(10, 10, 90, 90)
@@ -267,7 +269,7 @@ class TestRasterioSource(unittest.TestCase):
                     count=1,
                     dtype=np.uint8) as ds:
                 ds.write_band(1, arr)
-            rs = RasterioSource(uris=uri, extent=Box(10, 10, 90, 90))
+            rs = RasterioSource(uris=uri, bbox=Box(10, 10, 90, 90))
             out = rs.get_chip(Box(0, 0, 100, 100))[..., 0]
 
         mask = np.zeros((100, 100), dtype=bool)

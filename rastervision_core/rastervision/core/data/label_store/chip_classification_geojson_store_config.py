@@ -17,9 +17,9 @@ class ChipClassificationGeoJSONStoreConfig(LabelStoreConfig):
          'a SceneConfig inside an RVPipelineConfig, it will be auto-generated.'
          ))
 
-    def build(self, class_config, crs_transformer, extent=None, tmp_dir=None):
-        return ChipClassificationGeoJSONStore(self.uri, class_config,
-                                              crs_transformer)
+    def build(self, class_config, crs_transformer, bbox=None, tmp_dir=None):
+        return ChipClassificationGeoJSONStore(
+            self.uri, class_config, crs_transformer, bbox=bbox)
 
     def update(self, pipeline=None, scene=None):
         if self.uri is None and pipeline is not None and scene is not None:

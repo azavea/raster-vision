@@ -182,7 +182,7 @@ class RasterioSource(RasterSource):
                  raster_transformers: List['RasterTransformer'] = [],
                  allow_streaming: bool = False,
                  channel_order: Optional[Sequence[int]] = None,
-                 extent: Optional[Box] = None,
+                 bbox: Optional[Box] = None,
                  tmp_dir: Optional[str] = None):
         """Constructor.
 
@@ -197,8 +197,8 @@ class RasterioSource(RasterSource):
                 channels to extract from raw imagery. Can be a subset of the
                 available channels. If None, all channels available in the
                 image will be read. Defaults to None.
-            extent (Optional[Box], optional): User-specified extent. If None,
-                the full extent of the raster source is used.
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If None, the full extent available in the source file is used.
             tmp_dir (Optional[str]): Directory to use for storing the VRT
                 (needed if multiple uris or allow_streaming=True). If None,
                 will be auto-generated. Defaults to None.
@@ -247,15 +247,14 @@ class RasterioSource(RasterSource):
 
         height = self.image_dataset.height
         width = self.image_dataset.width
-        self.extent_original = Box(0, 0, height, width)
-        if extent is None:
-            extent = self.extent_original
+        if bbox is None:
+            bbox = Box(0, 0, height, width)
 
         super().__init__(
             channel_order,
             num_channels_raw,
-            raster_transformers=raster_transformers,
-            extent=extent)
+            bbox=bbox,
+            raster_transformers=raster_transformers)
 
     @property
     def num_channels(self) -> int:
@@ -309,14 +308,14 @@ class RasterioSource(RasterSource):
                   window: Box,
                   bands: Optional[Sequence[int]] = None,
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
-        window = window.shift_origin(self.extent)
+        window = window.to_global_coords(self.bbox)
         chip = load_window(
             self.image_dataset,
             bands=bands,
             window=window.rasterio_format(),
             is_masked=self.is_masked,
             out_shape=out_shape)
-        chip = fill_overflow(self.extent, window, chip)
+        chip = fill_overflow(self.bbox, window, chip)
         return chip
 
     def get_chip(self,

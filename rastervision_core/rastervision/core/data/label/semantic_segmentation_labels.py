@@ -1,5 +1,5 @@
 from typing import (TYPE_CHECKING, Any, Iterable, List, Optional, Sequence,
-                    Tuple, Union)
+                    Union)
 from abc import abstractmethod
 
 import numpy as np
@@ -30,29 +30,6 @@ class SemanticSegmentationLabels(Labels):
         self.num_classes = num_classes
         self.ymin, self.xmin, self.width, self.height = extent.to_xywh()
         self.dtype = dtype
-
-    def _to_local_coords(self,
-                         window: Union[Box, Tuple[int, int, int, int]]) -> Box:
-        """Convert window to extent coordinates.
-
-        Args:
-            window (Union[Box, Tuple[int, int, int, int]]): A rastervision
-                Box or a 4-tuple of (ymin, xmin, ymax, xmax).
-
-        Returns:
-            Box: Window in local coords.
-        """
-        ymin, xmin, ymax, xmax = window
-        # convert to extent coords
-        ymin_local, xmin_local = ymin - self.ymin, xmin - self.xmin
-        ymax_local, xmax_local = ymax - self.ymin, xmax - self.xmin
-        # clip negative values to zero
-        ymin_local, xmin_local = max(0, ymin_local), max(0, xmin_local)
-        ymax_local, xmax_local = max(0, ymax_local), max(0, xmax_local)
-        # clip max values to array bounds
-        ymax_local = min(self.height, ymax_local)
-        xmax_local = min(self.width, xmax_local)
-        return Box(ymin_local, xmin_local, ymax_local, xmax_local)
 
     @abstractmethod
     def __add__(self, other) -> 'SemanticSegmentationLabels':
@@ -295,7 +272,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
 
     def __delitem__(self, window: Box) -> None:
         """Reset counts to zero for pixels in the window."""
-        y0, x0, y1, x1 = self._to_local_coords(window)
+        y0, x0, y1, x1 = window.intersection(self.extent)
         self.pixel_counts[..., y0:y1, x0:x1] = 0
         self.hit_mask[y0:y1, x0:x1] = False
 
@@ -303,9 +280,12 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
         return self.get_label_arr(window)
 
     def add_window(self, window: Box, pixel_class_ids: np.ndarray) -> None:
-        window_local = self._to_local_coords(window)
-        dst_yslice, dst_xslice = window_local.to_slices()
-        src_yslice, src_xslice = window_local.to_offsets(window).to_slices()
+        window_dst = window.intersection(self.extent)
+        dst_yslice, dst_xslice = window_dst.to_slices()
+        # pixel_class_scores coords
+        window_src = window_dst.to_global_coords(
+            self.extent).to_local_coords(window)
+        src_yslice, src_xslice = window_src.to_slices()
 
         pixel_class_ids = pixel_class_ids.astype(self.dtype)
         pixel_class_ids = pixel_class_ids[..., src_yslice, src_xslice]
@@ -320,14 +300,14 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
 
         Returns null_class_id for pixels for which there is no data.
         """
-        y0, x0, y1, x1 = self._to_local_coords(window)
+        y0, x0, y1, x1 = window.intersection(self.extent)
         label_arr = self.pixel_counts[..., y0:y1, x0:x1].argmax(axis=0)
         hit_mask = self.hit_mask[y0:y1, x0:x1]
         return np.where(hit_mask, label_arr, null_class_id)
 
     def get_score_arr(self, window: Box) -> np.ndarray:
         """Get array of pixel scores."""
-        y0, x0, y1, x1 = self._to_local_coords(window)
+        y0, x0, y1, x1 = window.intersection(self.extent)
         class_counts = self.pixel_counts[..., y0:y1, x0:x1]
         scores = class_counts / class_counts.sum(axis=0)
         return scores
@@ -336,7 +316,7 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
                   fill_value: Any) -> None:
         """Set fill_value'th class ID's count to 1 and all others to zero."""
         class_id = fill_value
-        y0, x0, y1, x1 = self._to_local_coords(window)
+        y0, x0, y1, x1 = window.intersection(self.extent)
         h, w = y1 - y0, x1 - x0
         mask = mask[:h, :w]
         self.pixel_counts[:, y0:y1, x0:x1][..., mask] = 0
@@ -403,7 +383,6 @@ class SemanticSegmentationDiscreteLabels(SemanticSegmentationLabels):
 
         label_store = SemanticSegmentationLabelStore(
             uri=uri,
-            extent=self.extent,
             crs_transformer=crs_transformer,
             class_config=class_config,
             tmp_dir=tmp_dir,
@@ -465,7 +444,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
 
     def __delitem__(self, window: Box) -> None:
         """Reset scores and hits to zero for pixels in the window."""
-        y0, x0, y1, x1 = self._to_local_coords(window)
+        y0, x0, y1, x1 = window.intersection(self.extent)
         self.pixel_scores[..., y0:y1, x0:x1] = 0
         self.pixel_hits[..., y0:y1, x0:x1] = 0
 
@@ -473,9 +452,13 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
         return self.get_score_arr(window)
 
     def add_window(self, window: Box, pixel_class_scores: np.ndarray) -> None:
-        window_local = self._to_local_coords(window)
-        dst_yslice, dst_xslice = window_local.to_slices()
-        src_yslice, src_xslice = window_local.to_offsets(window).to_slices()
+        # self.extent coords
+        window_dst = window.intersection(self.extent)
+        dst_yslice, dst_xslice = window_dst.to_slices()
+        # pixel_class_scores coords
+        window_src = window_dst.to_global_coords(
+            self.extent).to_local_coords(window)
+        src_yslice, src_xslice = window_src.to_slices()
 
         pixel_class_scores = pixel_class_scores.astype(self.dtype)
         pixel_class_scores = pixel_class_scores[..., src_yslice, src_xslice]
@@ -484,7 +467,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
 
     def get_score_arr(self, window: Box) -> np.ndarray:
         """Get array of pixel scores."""
-        y0, x0, y1, x1 = self._to_local_coords(window)
+        y0, x0, y1, x1 = window.intersection(self.extent)
         scores = self.pixel_scores[..., y0:y1, x0:x1]
         hits = self.pixel_hits[y0:y1, x0:x1]
         avg_scores = scores / hits
@@ -505,7 +488,7 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
                   fill_value: Any) -> None:
         """Set fill_value'th class ID's score to 1 and all others to zero."""
         class_id = fill_value
-        y0, x0, y1, x1 = self._to_local_coords(window)
+        y0, x0, y1, x1 = window.intersection(self.extent)
         h, w = y1 - y0, x1 - x0
         mask = mask[:h, :w]
         self.pixel_scores[..., y0:y1, x0:x1][..., mask] = 0
@@ -581,7 +564,6 @@ class SemanticSegmentationSmoothLabels(SemanticSegmentationLabels):
 
         label_store = SemanticSegmentationLabelStore(
             uri=uri,
-            extent=self.extent,
             crs_transformer=crs_transformer,
             class_config=class_config,
             tmp_dir=tmp_dir,

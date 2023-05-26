@@ -59,6 +59,11 @@ class Box():
         return self.xmax - self.xmin
 
     @property
+    def extent(self) -> 'Box':
+        """Return a (0, 0, h, w) Box representing the size of this Box."""
+        return Box(0, 0, self.height, self.width)
+
+    @property
     def size(self) -> Tuple[int, int]:
         return self.height, self.width
 
@@ -272,13 +277,25 @@ class Box():
         ymin, xmin, ymax, xmax = self
         return Box(ymin + dy, xmin + dx, ymax + dy, xmax + dx)
 
-    def shift_origin(self, extent: 'Box') -> 'Box':
-        """Shift origin of window coords to (extent.xmin, extent.ymin)."""
-        return self.translate(dy=extent.ymin, dx=extent.xmin)
+    def to_global_coords(self, bbox: 'Box') -> 'Box':
+        """Go from bbox coords to global coords.
 
-    def to_offsets(self, container: 'Box') -> 'Box':
-        """Convert coords to offsets from (container.xmin, container.ymin)."""
-        return self.translate(dy=-container.ymin, dx=-container.xmin)
+        E.g., Given a box Box(20, 20, 40, 40) and bbox Box(20, 20, 100, 100),
+        the box becomes Box(40, 40, 60, 60).
+
+        Inverse of Box.to_local_coords().
+        """
+        return self.translate(dy=bbox.ymin, dx=bbox.xmin)
+
+    def to_local_coords(self, bbox: 'Box') -> 'Box':
+        """Go from to global coords bbox coords.
+
+        E.g., Given a box Box(40, 40, 60, 60) and bbox Box(20, 20, 100, 100),
+        the box becomes Box(20, 20, 40, 40).
+
+        Inverse of Box.to_global_coords().
+        """
+        return self.translate(dy=-bbox.ymin, dx=-bbox.xmin)
 
     def reproject(self, transform_fn: Callable) -> 'Box':
         """Reprojects this box based on a transform function.
