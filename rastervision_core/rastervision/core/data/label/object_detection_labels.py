@@ -112,44 +112,37 @@ class ObjectDetectionLabels(Labels):
 
     @staticmethod
     def from_geojson(geojson: dict,
-                     extent: Optional[Box] = None) -> 'ObjectDetectionLabels':
+                     bbox: Optional[Box] = None,
+                     ioa_thresh: float = 0.8,
+                     clip: bool = True) -> 'ObjectDetectionLabels':
         """Convert GeoJSON to ObjectDetectionLabels object.
 
-        If extent is provided, filter out the boxes that lie "more than a little
-        bit" outside the extent.
+        If bbox is provided, filter out the boxes that lie "more than a little
+        bit" outside the bbox.
 
         Args:
             geojson: (dict) normalized GeoJSON (see VectorSource)
-            extent: (Box) in pixel coords
+            bbox: (Box) in pixel coords
 
         Returns:
             ObjectDetectionLabels
         """
-        boxes = []
-        class_ids = []
-        scores = []
+        features = geojson['features']
+        if len(features) == 0:
+            labels = ObjectDetectionLabels.make_empty()
+        else:
+            boxes = [Box.from_shapely(shape(f['geometry'])) for f in features]
+            class_ids = [f['properties']['class_id'] for f in features]
+            scores = [f['properties'].get('score', 1.0) for f in features]
 
-        for f in geojson['features']:
-            geom = shape(f['geometry'])
-            (xmin, ymin, xmax, ymax) = geom.bounds
-            boxes.append(Box(ymin, xmin, ymax, xmax))
-
-            props = f['properties']
-            class_ids.append(props['class_id'])
-            scores.append(props.get('score', 1.0))
-
-        if len(boxes):
-            boxes = np.array(
-                [box.npbox_format() for box in boxes], dtype=float)
+            boxes = np.array([b.npbox_format() for b in boxes], dtype=float)
             class_ids = np.array(class_ids)
             scores = np.array(scores)
             labels = ObjectDetectionLabels(boxes, class_ids, scores=scores)
-        else:
-            labels = ObjectDetectionLabels.make_empty()
 
-        if extent is not None:
+        if bbox is not None:
             labels = ObjectDetectionLabels.get_overlapping(
-                labels, extent, ioa_thresh=0.8, clip=True)
+                labels, bbox, ioa_thresh=ioa_thresh, clip=clip)
         return labels
 
     def get_boxes(self) -> List[Box]:

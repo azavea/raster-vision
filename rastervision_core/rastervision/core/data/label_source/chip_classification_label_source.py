@@ -93,25 +93,25 @@ def infer_cells(cells: List[Box], labels_df: gpd.GeoDataFrame,
 
 
 def read_labels(labels_df: gpd.GeoDataFrame,
-                extent: Optional[Box] = None) -> ChipClassificationLabels:
+                bbox: Optional[Box] = None) -> ChipClassificationLabels:
     """Convert GeoDataFrame to ChipClassificationLabels.
 
     If the GeoDataFrame already contains a grid of cells, then
     ChipClassificationLabels can be constructed in a straightforward manner
     without having to infer the class of cells.
 
-    If extent is given, only labels that intersect with it are returned.
+    If bbox is given, only labels that intersect with it are returned.
 
     Args:
         geojson: dict in normalized GeoJSON format (see VectorSource)
-        extent: Box in pixel coords
+        bbox: Box in pixel coords
 
     Returns:
        ChipClassificationLabels
     """
     boxes = [Box.from_shapely(g).to_int() for g in labels_df.geometry]
-    if extent is not None:
-        boxes = [b for b in boxes if b.intersects(extent)]
+    if bbox is not None:
+        boxes = [b for b in boxes if b.intersects(bbox)]
     class_ids = labels_df['class_id'].astype(int)
     cells_to_class_id = {
         cell: (class_id, None)
@@ -135,7 +135,7 @@ class ChipClassificationLabelSource(LabelSource):
     def __init__(self,
                  label_source_config: 'ChipClassificationLabelSourceConfig',
                  vector_source: 'VectorSource',
-                 extent: Optional[Box] = None,
+                 bbox: Optional[Box] = None,
                  lazy: bool = False):
         """Constructs a LabelSource for chip classification.
 
@@ -143,16 +143,16 @@ class ChipClassificationLabelSource(LabelSource):
             label_source_config (ChipClassificationLabelSourceConfig): Config
                 for class inference.
             vector_source (VectorSource): Source of vector labels.
-            extent (Optional[Box]): User-specified extent. If None, the full
-                extent of the vector source is used.
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If None, the full extent available in the source file is used.
             lazy (bool): If True, labels are not populated during
                 initialization. Defaults to False.
         """
         self.cfg = label_source_config
         self.vector_source = vector_source
-        if extent is None:
-            extent = vector_source.extent
-        self._extent = extent
+        if bbox is None:
+            bbox = vector_source.extent
+        self._bbox = bbox
         self.lazy = lazy
         self.labels_df = vector_source.get_dataframe()
         self.validate_labels(self.labels_df)
@@ -170,7 +170,7 @@ class ChipClassificationLabelSource(LabelSource):
         if self.cfg.infer_cells or cells is not None:
             self.labels = self.infer_cells(cells=cells)
         else:
-            self.labels = read_labels(self.labels_df, extent=self.extent)
+            self.labels = read_labels(self.labels_df, bbox=self.bbox)
 
     def infer_cells(self, cells: Optional[Iterable[Box]] = None
                     ) -> ChipClassificationLabels:
@@ -190,7 +190,7 @@ class ChipClassificationLabelSource(LabelSource):
                 raise ValueError('cell_sz is not set.')
             cells = self.extent.get_windows(cfg.cell_sz, cfg.cell_sz)
         else:
-            cells = [cell.shift_origin(self.extent) for cell in cells]
+            cells = [cell.to_global_coords(self.bbox) for cell in cells]
 
         known_cells = [c for c in cells if c in self.labels]
         unknown_cells = [c for c in cells if c not in self.labels]
@@ -213,7 +213,7 @@ class ChipClassificationLabelSource(LabelSource):
                    window: Optional[Box] = None) -> ChipClassificationLabels:
         if window is None:
             return self.labels
-        window = window.shift_origin(self.extent)
+        window = window.to_global_coords(self.bbox)
         return self.labels.get_singleton_labels(window)
 
     def __getitem__(self, key: Any) -> int:
@@ -239,14 +239,14 @@ class ChipClassificationLabelSource(LabelSource):
             raise ValueError('All label polygons must have a class_id.')
 
     @property
-    def extent(self) -> Box:
-        return self._extent
+    def bbox(self) -> Box:
+        return self._bbox
 
     @property
     def crs_transformer(self) -> 'CRSTransformer':
         return self.vector_source.crs_transformer
 
-    def set_extent(self, extent: 'Box') -> None:
-        self._extent = extent
+    def set_bbox(self, bbox: 'Box') -> None:
+        self._bbox = bbox
         if not self.lazy:
             self.populate_labels()

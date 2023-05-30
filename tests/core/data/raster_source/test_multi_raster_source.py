@@ -88,22 +88,24 @@ class TestMultiRasterSource(unittest.TestCase):
                          primary_rs.crs_transformer.transform)
         self.assertNotEqual(rs.crs_transformer, non_primary_rs.crs_transformer)
 
-    def test_user_specified_extent(self):
+    def test_bbox(self):
         # /wo user specified extent
         cfg = make_cfg('small-rgb-tile.tif')
         rs = cfg.build(tmp_dir=self.tmp_dir)
+        self.assertEqual(rs.bbox, Box(0, 0, 256, 256))
         self.assertEqual(rs.extent, Box(0, 0, 256, 256))
 
         # test validators
-        cfg = make_cfg('small-rgb-tile.tif', extent=(64, 64, 192, 192))
-        self.assertIsInstance(cfg.extent, Box)
+        cfg = make_cfg('small-rgb-tile.tif', bbox=(64, 64, 192, 192))
+        self.assertIsInstance(cfg.bbox, Box)
 
         # /w user specified extent
-        cfg_crop = make_cfg('small-rgb-tile.tif', extent=(64, 64, 192, 192))
+        cfg_crop = make_cfg('small-rgb-tile.tif', bbox=(64, 64, 192, 192))
         rs_crop = cfg_crop.build(tmp_dir=self.tmp_dir)
 
         # test extent box
-        self.assertEqual(rs_crop.extent, Box(64, 64, 192, 192))
+        self.assertEqual(rs_crop.bbox, Box(64, 64, 192, 192))
+        self.assertEqual(rs_crop.extent, Box(0, 0, 128, 128))
 
     def test_get_chip(self):
         # create a 3-channel raster from a 1-channel raster

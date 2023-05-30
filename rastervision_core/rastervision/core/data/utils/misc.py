@@ -97,9 +97,9 @@ def listify_uris(uris: Union[str, List[str]]) -> List[str]:
     return uris
 
 
-def match_extents(raster_source: 'RasterSource',
-                  label_source: Union['LabelSource', 'LabelStore']) -> None:
-    """Set ``label_souce`` extent equal to ``raster_source`` extent.
+def match_bboxes(raster_source: 'RasterSource',
+                 label_source: Union['LabelSource', 'LabelStore']) -> None:
+    """Set ``label_souce`` bbox equal to ``raster_source`` bbox.
 
     Logs a warning if ``raster_source`` and ``label_source`` extents don't
     intersect when converted to map coordinates.
@@ -111,18 +111,18 @@ def match_extents(raster_source: 'RasterSource',
     """
     crs_tf_img = raster_source.crs_transformer
     crs_tf_label = label_source.crs_transformer
-    extent_img_map = crs_tf_img.pixel_to_map(raster_source.extent)
-    if label_source.extent is not None:
-        extent_label_map = crs_tf_label.pixel_to_map(label_source.extent)
-        if not extent_img_map.intersects(extent_label_map):
+    bbox_img_map = crs_tf_img.pixel_to_map(raster_source.bbox)
+    if label_source.bbox is not None:
+        bbox_label_map = crs_tf_label.pixel_to_map(label_source.bbox)
+        if not bbox_img_map.intersects(bbox_label_map):
             rs_cls = type(raster_source).__name__
             ls_cls = type(label_source).__name__
-            log.warning(f'{rs_cls} extent ({extent_img_map}) does '
-                        f'not intersect with {ls_cls} extent '
-                        f'({extent_label_map}).')
-    # set LabelStore extent to RasterSource extent
-    extent_label_pixel = crs_tf_label.map_to_pixel(extent_img_map)
-    label_source.set_extent(extent_label_pixel)
+            log.warning(f'{rs_cls} bbox ({bbox_img_map}) does '
+                        f'not intersect with {ls_cls} bbox '
+                        f'({bbox_label_map}).')
+    # set LabelStore bbox to RasterSource bbox
+    bbox_label_pixel = crs_tf_label.map_to_pixel(bbox_img_map)
+    label_source.set_bbox(bbox_label_pixel)
 
 
 def parse_array_slices(key: Union[tuple, slice], extent: Box,

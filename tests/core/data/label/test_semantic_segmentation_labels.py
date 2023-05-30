@@ -32,59 +32,6 @@ class TestSemanticSegmentationLabels(unittest.TestCase):
         self.assertIsInstance(
             labels, SemanticSegmentationSmoothLabels, msg=msg)
 
-    def test_from_predictions_smooth(self):
-        def make_pred_chip() -> np.ndarray:
-            chip = np.concatenate([
-                np.random.uniform(0.001, 0.5, size=(1, 40, 40)),
-                np.random.uniform(0.5, 1, size=(1, 40, 40))
-            ])
-            chip[1, 10:-10, 10:-10] = 0
-            chip /= chip.sum(axis=0)
-            return chip
-
-        extent = Box(0, 0, 80, 80)
-        windows = extent.get_windows(40, stride=20, padding=0)
-
-        predictions = [make_pred_chip() for _ in windows]
-        labels = SemanticSegmentationLabels.from_predictions(
-            windows,
-            predictions,
-            extent=extent,
-            num_classes=2,
-            smooth=True,
-            crop_sz=10)
-        label_arr = labels.get_label_arr(extent)
-
-        exp_label_arr = np.full(extent.size, -1)
-        exp_label_arr[10:-10, 10:-10] = 0
-        np.testing.assert_array_equal(label_arr, exp_label_arr)
-
-    def test_from_predictions_discrete(self):
-        def make_pred_chip_labels() -> np.ndarray:
-            chip = np.full((40, 40), 1)
-            chip[10:-10, 10:-10] = 0
-            return chip
-
-        extent = Box(0, 0, 80, 80)
-        windows = extent.get_windows(40, stride=20, padding=0)
-
-        exp_label_arr = np.full(extent.size, -1)
-        exp_label_arr[10:-10, 10:-10] = 0
-
-        predictions = [make_pred_chip_labels() for _ in windows]
-        labels = SemanticSegmentationLabels.from_predictions(
-            windows,
-            predictions,
-            extent=extent,
-            num_classes=2,
-            smooth=False,
-            crop_sz=10)
-        label_arr = labels.get_label_arr(extent)
-
-        exp_label_arr = np.full(extent.size, -1)
-        exp_label_arr[10:-10, 10:-10] = 0
-        np.testing.assert_array_equal(label_arr, exp_label_arr)
-
 
 class TestSemanticSegmentationDiscreteLabels(unittest.TestCase):
     def setUp(self):
@@ -187,7 +134,7 @@ class TestSemanticSegmentationDiscreteLabels(unittest.TestCase):
         np.testing.assert_array_equal(scores[0], np.full((3, 3), 0.25))
         np.testing.assert_array_equal(scores[1], np.full((3, 3), 0.75))
 
-    def test_from_predictions_discrete(self):
+    def test_from_predictions(self):
         def make_pred_chip_labels() -> np.ndarray:
             chip = np.full((40, 40), 1)
             chip[10:-10, 10:-10] = 0
@@ -317,28 +264,6 @@ class TestSemanticSegmentationSmoothLabels(unittest.TestCase):
         labels = self.labels.filter_by_aoi(aoi_polygons, null_class_id)
         label_arr = labels.get_label_arr(self.windows[2])
         np.testing.assert_array_equal(label_arr, exp_label_arr)
-
-    def test_to_local_coords(self):
-        extent = Box(100, 100, 200, 200)
-        labels = SemanticSegmentationSmoothLabels(extent=extent, num_classes=2)
-
-        # normal window
-        box_in = (120, 150, 170, 200)
-        box_out_expected = Box(20, 50, 70, 100)
-        box_out_actual = labels._to_local_coords(box_in)
-        self.assertEqual(box_out_actual, box_out_expected)
-
-        # window completely outside the extent
-        box_in = (0, 0, 100, 100)
-        box_out_expected = Box(0, 0, 0, 0)
-        box_out_actual = labels._to_local_coords(box_in)
-        self.assertEqual(box_out_actual, box_out_expected)
-
-        # window completely outside the extent
-        box_in = (200, 200, 300, 300)
-        box_out_expected = Box(100, 100, 100, 100)
-        box_out_actual = labels._to_local_coords(box_in)
-        self.assertEqual(box_out_actual, box_out_expected)
 
     def test_from_predictions(self):
         def make_pred_chip() -> np.ndarray:

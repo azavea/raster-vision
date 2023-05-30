@@ -31,9 +31,9 @@ class RasterSourceConfig(Config):
         description=
         'The sequence of channel indices to use when reading imagery.')
     transformers: List[RasterTransformerConfig] = []
-    extent: Optional[Tuple[int, int, int, int]] = Field(
+    bbox: Optional[Tuple[int, int, int, int]] = Field(
         None,
-        description='User-specified extent in pixel coords in the form '
+        description='User-specified bbox in pixel coords in the form '
         '(ymin, xmin, ymax, xmax). Useful for cropping the raster source so '
         'that only part of the raster is read from.')
 
@@ -48,8 +48,8 @@ class RasterSourceConfig(Config):
         for t in self.transformers:
             t.update(pipeline, scene)
 
-    @validator('extent')
-    def validate_extent(cls, v):
+    @validator('bbox')
+    def validate_bbox(cls, v):
         if v is None:
             return None
         return Box(*v)

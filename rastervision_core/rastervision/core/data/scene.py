@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
-from rastervision.core.data.utils import match_extents
+from rastervision.core.data.utils import match_bboxes
 
 if TYPE_CHECKING:
     from rastervision.core.box import Box
@@ -30,10 +30,10 @@ class Scene:
             aoi: Optional list of AOI polygons in pixel coordinates.
         """
         if label_source is not None:
-            match_extents(raster_source, label_source)
+            match_bboxes(raster_source, label_source)
 
         if label_store is not None:
-            match_extents(raster_source, label_store)
+            match_bboxes(raster_source, label_store)
 
         self.id = id
         self.raster_source = raster_source

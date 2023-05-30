@@ -44,4 +44,4 @@ class RasterioSourceConfig(RasterSourceConfig):
             tmp_dir=tmp_dir,
             allow_streaming=self.allow_streaming,
             channel_order=self.channel_order,
-            extent=self.extent)
+            bbox=self.bbox)

@@ -51,16 +51,22 @@ class SceneConfig(Config):
         raster_source = self.raster_source.build(
             tmp_dir, use_transformers=use_transformers)
         crs_transformer = raster_source.crs_transformer
-        extent = raster_source.extent
+        bbox = raster_source.bbox
 
         label_source = None
         label_store = None
         if self.label_source is not None:
             label_source = self.label_source.build(
-                class_config, crs_transformer, extent, tmp_dir)
+                class_config=class_config,
+                crs_transformer=crs_transformer,
+                bbox=bbox,
+                tmp_dir=tmp_dir)
         if self.label_store is not None:
-            label_store = self.label_store.build(class_config, crs_transformer,
-                                                 extent, tmp_dir)
+            label_store = self.label_store.build(
+                class_config=class_config,
+                crs_transformer=crs_transformer,
+                bbox=bbox,
+                tmp_dir=tmp_dir)
 
         aoi_polygons = []
         if self.aoi_uris is not None:

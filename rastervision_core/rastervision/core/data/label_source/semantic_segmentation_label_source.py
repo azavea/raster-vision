@@ -31,7 +31,7 @@ class SemanticSegmentationLabelSource(LabelSource):
     def __init__(self,
                  raster_source: RasterSource,
                  class_config: ClassConfig,
-                 extent: Optional[Box] = None):
+                 bbox: Optional[Box] = None):
         """Constructor.
 
         Args:
@@ -40,13 +40,13 @@ class SemanticSegmentationLabelSource(LabelSource):
             null_class_id (int): the null class id used as fill values for when
                 windows go over the edge of the label array. This can be
                 retrieved using class_config.null_class_id.
-            extent (Optional[Box]): User-specified extent. If None, the full
-                extent of the vector source is used.
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If None, the full extent available in the source file is used.
         """
         self.raster_source = raster_source
         self.class_config = class_config
-        if extent is not None:
-            self.set_extent(extent)
+        if bbox is not None:
+            self.set_bbox(bbox)
 
     def enough_target_pixels(self, window: Box, target_count_threshold: int,
                              target_classes: List[int]) -> bool:
@@ -118,15 +118,15 @@ class SemanticSegmentationLabelSource(LabelSource):
         return label_arr
 
     @property
-    def extent(self) -> Box:
-        return self.raster_source.extent
+    def bbox(self) -> Box:
+        return self.raster_source.bbox
 
     @property
     def crs_transformer(self) -> 'CRSTransformer':
         return self.raster_source.crs_transformer
 
-    def set_extent(self, extent: 'Box') -> None:
-        self.raster_source.set_extent(extent)
+    def set_bbox(self, bbox: 'Box') -> None:
+        self.raster_source.set_bbox(bbox)
 
     def __getitem__(self, key: Any) -> Any:
         if isinstance(key, Box):

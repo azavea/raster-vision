@@ -20,7 +20,7 @@ class ChipClassificationGeoJSONStore(LabelStore):
                  uri: str,
                  class_config: 'ClassConfig',
                  crs_transformer: 'CRSTransformer',
-                 extent: Optional['Box'] = None):
+                 bbox: Optional['Box'] = None):
         """Constructor.
 
         Args:
@@ -28,14 +28,14 @@ class ChipClassificationGeoJSONStore(LabelStore):
             class_config: ClassConfig
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
-            extent (Optional[Box]): User-specified extent. If provided, only
-                labels falling inside it are returned by
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If provided, only labels falling inside it are returned by
                 :meth:`.ChipClassificationGeoJSONStore.get_labels`.
         """
         self.uri = uri
         self.class_config = class_config
         self._crs_transformer = crs_transformer
-        self._extent = extent
+        self._bbox = bbox
 
     def save(self, labels: ChipClassificationLabels) -> None:
         """Save labels to URI if writable.
@@ -59,19 +59,16 @@ class ChipClassificationGeoJSONStore(LabelStore):
         ls = ChipClassificationLabelSourceConfig(vector_source=vs).build(
             class_config=self.class_config,
             crs_transformer=self.crs_transformer,
-            extent=self.extent)
+            bbox=self.bbox)
         return ls.get_labels()
 
-    def empty_labels(self) -> ChipClassificationLabels:
-        return ChipClassificationLabels()
-
     @property
-    def extent(self) -> Optional['Box']:
-        return self._extent
+    def bbox(self) -> 'Box':
+        return self._bbox
 
     @property
     def crs_transformer(self) -> 'CRSTransformer':
         return self._crs_transformer
 
-    def set_extent(self, extent: 'Box') -> None:
-        self._extent = extent
+    def set_bbox(self, bbox: 'Box') -> None:
+        self._bbox = bbox

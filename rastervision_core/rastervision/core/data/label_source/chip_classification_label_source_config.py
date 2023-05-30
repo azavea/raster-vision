@@ -93,7 +93,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
                 'background_class_id is required if infer_cells=True.')
         return values
 
-    def build(self, class_config, crs_transformer, extent=None,
+    def build(self, class_config, crs_transformer, bbox=None,
               tmp_dir=None) -> ChipClassificationLabelSource:
         if self.vector_source is None:
             raise ValueError('Cannot build with a None vector_source.')
@@ -102,7 +102,7 @@ class ChipClassificationLabelSourceConfig(LabelSourceConfig):
                              'cell_sz=None and lazy=True.')
         vector_source = self.vector_source.build(class_config, crs_transformer)
         return ChipClassificationLabelSource(
-            self, vector_source, extent=extent, lazy=self.lazy)
+            self, vector_source, bbox=bbox, lazy=self.lazy)
 
     def update(self, pipeline=None, scene=None):
         super().update(pipeline, scene)

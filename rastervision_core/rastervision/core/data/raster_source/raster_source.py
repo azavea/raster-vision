@@ -1,12 +1,14 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 from abc import ABC, abstractmethod, abstractproperty
 
+import numpy as np
+from skimage.transform import resize
+
 from rastervision.core.box import Box
 from rastervision.core.data.utils import parse_array_slices
 
 if TYPE_CHECKING:
     from rastervision.core.data import (CRSTransformer, RasterTransformer)
-    import numpy as np
 
 
 class ChannelOrderError(Exception):
@@ -28,8 +30,8 @@ class RasterSource(ABC):
     def __init__(self,
                  channel_order: Optional[List[int]],
                  num_channels_raw: int,
-                 raster_transformers: List['RasterTransformer'] = [],
-                 extent: Optional[Box] = None):
+                 bbox: Box,
+                 raster_transformers: List['RasterTransformer'] = []):
         """Constructor.
 
         Args:
@@ -37,10 +39,9 @@ class RasterSource(ABC):
                 from raw imagery.
             num_channels_raw: Number of channels in the raw imagery before
                 applying channel_order.
+            bbox (Box): Extent or a crop of the extent.
             raster_transformers: ``RasterTransformers`` for transforming chips
                 whenever they are retrieved. Defaults to ``[]``.
-            extent: User-specified extent. If None, the full extent of the
-                raster source is used.
         """
         if channel_order is None:
             channel_order = list(range(num_channels_raw))
@@ -51,7 +52,7 @@ class RasterSource(ABC):
         self.channel_order = channel_order
         self.num_channels_raw = num_channels_raw
         self.raster_transformers = raster_transformers
-        self._extent = extent
+        self._bbox = bbox
 
     @property
     def num_channels(self) -> int:
@@ -61,8 +62,8 @@ class RasterSource(ABC):
     @property
     def shape(self) -> Tuple[int, int, int]:
         """Shape of the raster as a (height, width, num_channels) tuple."""
-        ymin, xmin, ymax, xmax = self.extent
-        return ymax - ymin, xmax - xmin, self.num_channels
+        H, W = self.bbox.size
+        return H, W, self.num_channels
 
     @abstractproperty
     def dtype(self) -> 'np.dtype':
@@ -70,27 +71,34 @@ class RasterSource(ABC):
         pass
 
     @property
+    def bbox(self) -> 'Box':
+        """Bounding box applied to the source imagery."""
+        return self._bbox
+
+    @property
     def extent(self) -> 'Box':
-        """Extent of the RasterSource."""
-        return self._extent
+        """Extent of the ``RasterSource``."""
+        return self.bbox.extent
 
     @abstractproperty
     def crs_transformer(self) -> 'CRSTransformer':
         """Associated :class:`.CRSTransformer`."""
         pass
 
-    def set_extent(self, extent: 'Box') -> None:
-        """Set self.extent to the given value.
+    def set_bbox(self, bbox: 'Box') -> None:
+        """Set self.bbox to the given value.
 
         .. note:: This method is idempotent.
 
         Args:
-            extent (Box): User-specified extent in pixel coordinates.
+            bbox (Box): User-specified bbox in pixel coordinates.
         """
-        self._extent = extent
+        self._bbox = bbox
 
     @abstractmethod
-    def _get_chip(self, window: 'Box') -> 'np.ndarray':
+    def _get_chip(self,
+                  window: 'Box',
+                  out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
         """Return raw chip without applying channel_order or transforms.
 
         Args:
@@ -113,7 +121,9 @@ class RasterSource(ABC):
 
         return chip
 
-    def get_chip(self, window: 'Box') -> 'np.ndarray':
+    def get_chip(self,
+                 window: 'Box',
+                 out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
         """Return the transformed chip in the window.
 
         Get a raw chip, extract subset of channels using channel_order, and then apply
@@ -125,8 +135,7 @@ class RasterSource(ABC):
         Returns:
             np.ndarray: Array of shape (height, width, channels).
         """
-        chip = self._get_chip(window)
-
+        chip = self._get_chip(window, out_shape=out_shape)
         chip = chip[:, :, self.channel_order]
 
         for transformer in self.raster_transformers:
@@ -134,7 +143,10 @@ class RasterSource(ABC):
 
         return chip
 
-    def get_raw_chip(self, window: 'Box') -> 'np.ndarray':
+    def get_raw_chip(self,
+                     window: 'Box',
+                     out_shape: Optional[Tuple[int, int]] = None
+                     ) -> 'np.ndarray':
         """Return raw chip without applying channel_order or transforms.
 
         Args:
@@ -143,9 +155,10 @@ class RasterSource(ABC):
         Returns:
             np.ndarray: Array of shape (height, width, channels).
         """
-        return self._get_chip(window)
+        return self._get_chip(window, out_shape=out_shape)
 
-    def get_image_array(self) -> 'np.ndarray':
+    def get_image_array(
+            self, out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
         """Return entire transformed image array.
 
         .. warning:: Not safe to call on very large RasterSources.
@@ -153,9 +166,10 @@ class RasterSource(ABC):
         Returns:
             np.ndarray: Array of shape (height, width, channels).
         """
-        return self.get_chip(self.extent)
+        return self.get_chip(self.extent, out_shape=out_shape)
 
-    def get_raw_image_array(self) -> 'np.ndarray':
+    def get_raw_image_array(
+            self, out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
         """Return raw image for the full extent.
 
         .. warning:: Not safe to call on very large RasterSources.
@@ -163,4 +177,11 @@ class RasterSource(ABC):
         Returns:
             np.ndarray: Array of shape (height, width, channels).
         """
-        return self.get_raw_chip(self.extent)
+        return self.get_raw_chip(self.extent, out_shape=out_shape)
+
+    def resize(self,
+               chip: 'np.ndarray',
+               out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+        out = resize(chip, out_shape, preserve_range=True)
+        out = out.astype(chip.dtype)
+        return out

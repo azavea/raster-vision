@@ -30,8 +30,14 @@ class LabelSource(ABC):
         """
         pass
 
-    @abstractproperty
+    @property
     def extent(self) -> 'Box':
+        """Extent of the ``LabelSource``."""
+        return self.bbox.extent
+
+    @abstractproperty
+    def bbox(self) -> 'Box':
+        """Bounding box applied to the source."""
         pass
 
     @abstractproperty
@@ -39,7 +45,7 @@ class LabelSource(ABC):
         pass
 
     @abstractmethod
-    def set_extent(self, extent: 'Box') -> None:
+    def set_bbox(self, extent: 'Box') -> None:
         """Set self.extent to the given value.
 
         .. note:: This method is idempotent.

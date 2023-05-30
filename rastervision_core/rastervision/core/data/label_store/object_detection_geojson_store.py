@@ -21,7 +21,7 @@ class ObjectDetectionGeoJSONStore(LabelStore):
                  uri: str,
                  class_config: 'ClassConfig',
                  crs_transformer: 'CRSTransformer',
-                 extent: Optional['Box'] = None):
+                 bbox: Optional['Box'] = None):
         """Constructor.
 
         Args:
@@ -30,14 +30,14 @@ class ObjectDetectionGeoJSONStore(LabelStore):
                 (or label) field
             crs_transformer: CRSTransformer to convert from map coords in label
                 in GeoJSON file to pixel coords.
-            extent (Optional[Box]): User-specified extent. If provided, only
-                labels falling inside it are returned by
+            bbox (Optional[Box], optional): User-specified crop of the extent.
+                If provided, only labels falling inside it are returned by
                 :meth:`.ObjectDetectionGeoJSONStore.get_labels`.
         """
         self.uri = uri
         self.class_config = class_config
         self._crs_transformer = crs_transformer
-        self._extent = extent
+        self._bbox = bbox
 
     def save(self, labels: ObjectDetectionLabels) -> None:
         """Save labels to URI."""
@@ -59,20 +59,17 @@ class ObjectDetectionGeoJSONStore(LabelStore):
             crs_transformer=self.crs_transformer)
         labels = ObjectDetectionLabels.from_geojson(
             vector_source.get_geojson())
-        if self.extent is not None:
-            labels = ObjectDetectionLabels.get_overlapping(labels, self.extent)
+        if self.bbox is not None:
+            labels = ObjectDetectionLabels.get_overlapping(labels, self.bbox)
         return labels
 
-    def empty_labels(self) -> ObjectDetectionLabels:
-        return ObjectDetectionLabels.make_empty()
-
     @property
-    def extent(self) -> 'Box':
-        return self._extent
+    def bbox(self) -> 'Box':
+        return self._bbox
 
     @property
     def crs_transformer(self) -> 'CRSTransformer':
         return self._crs_transformer
 
-    def set_extent(self, extent: 'Box') -> None:
-        self._extent = extent
+    def set_bbox(self, bbox: 'Box') -> None:
+        self._bbox = bbox
