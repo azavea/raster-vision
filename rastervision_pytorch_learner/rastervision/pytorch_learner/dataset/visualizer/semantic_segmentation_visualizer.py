@@ -65,8 +65,8 @@ class SemanticSegmentationVisualizer(Visualizer):
             ]
             axs[-1].legend(
                 handles=legend_items,
-                loc='center right',
-                bbox_to_anchor=(1.8, 0.5))
+                loc='center left',
+                bbox_to_anchor=(1., 0.5))
 
     def get_plot_ncols(self, **kwargs) -> int:
         x = kwargs['x']
