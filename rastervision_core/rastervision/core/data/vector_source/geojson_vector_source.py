@@ -1,6 +1,7 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from rastervision.pipeline.file_system import download_if_needed, file_to_json
+from rastervision.core.box import Box
 from rastervision.core.data.vector_source.vector_source import VectorSource
 from rastervision.core.data.utils import listify_uris, merge_geojsons
 
@@ -15,7 +16,8 @@ class GeoJSONVectorSource(VectorSource):
                  uris: Union[str, List[str]],
                  crs_transformer: 'CRSTransformer',
                  vector_transformers: List['VectorTransformer'] = [],
-                 ignore_crs_field: bool = False):
+                 ignore_crs_field: bool = False,
+                 bbox: Optional[Box] = None):
         """Constructor.
 
         Args:
@@ -29,11 +31,15 @@ class GeoJSONVectorSource(VectorSource):
                 assume WGS84 (EPSG:4326) coords. Only WGS84 is supported
                 currently. If False, and the file contains a CRS, will throw an
                 exception on read. Defaults to False.
+            bbox (Optional[Box]): User-specified crop of the extent. If None,
+                the full extent available in the source file is used.
         """
         self.uris = listify_uris(uris)
         self.ignore_crs_field = ignore_crs_field
         super().__init__(
-            crs_transformer, vector_transformers=vector_transformers)
+            crs_transformer,
+            vector_transformers=vector_transformers,
+            bbox=bbox)
 
     def _get_geojson(self) -> dict:
         geojsons = [self._get_geojson_single(uri) for uri in self.uris]
