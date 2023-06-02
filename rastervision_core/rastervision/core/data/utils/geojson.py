@@ -348,3 +348,9 @@ def merge_geojsons(geojsons: Iterable[dict]) -> dict:
     features = sum([g.get('features', []) for g in geojsons], [])
     geojson_merged = features_to_geojson(features)
     return geojson_merged
+
+def geoms_to_bbox_coords(geoms: Iterable['BaseGeometry'],
+                         bbox: Box) -> Iterator['BaseGeometry']:
+    xmin, ymin = bbox.xmin, bbox.ymin
+    out = (translate(p, xoff=-xmin, yoff=-ymin) for p in geoms)
+    return out
