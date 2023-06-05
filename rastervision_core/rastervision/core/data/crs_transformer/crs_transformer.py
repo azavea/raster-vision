@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Optional, overload, Tuple
+from typing import Any, Optional, overload, Tuple
 
+import numpy as np
 from shapely.ops import transform
 from shapely.geometry.base import BaseGeometry
+from shapely.affinity import translate
 
 from rastervision.core.box import Box
-
-if TYPE_CHECKING:
-    import numpy as np
 
 
 class CRSTransformer(ABC):
@@ -53,18 +52,13 @@ class CRSTransformer(ABC):
             inp: (x, y) tuple or Box or shapely geometry in map coordinates.
                 If tuple, x and y can be single values or array-like.
             bbox: If the extent of the associated RasterSource is constrained
-                via a bbox, it can be passed here to get an output Box that is
-                compatible with the RasterSource's get_chip(). In other words,
-                the output Box will be in coordinates of the bbox rather than
-                the full extent of the data source of the RasterSource. Only
-                supported if ``inp`` is a :class:`.Box`. Defaults to None.
+                via a bbox, it can be passed here to get an output that is in
+                coordinates of the bbox rather than the full extent of the data
+                source of the RasterSource. Defaults to None.
 
         Returns:
             Coordinate-transformed input in the same format.
         """
-        if bbox is not None and not isinstance(inp, Box):
-            raise NotImplementedError(
-                'bbox is only supported if inp is a Box.')
         if isinstance(inp, Box):
             box_in = inp
             ymin, xmin, ymax, xmax = box_in
@@ -78,9 +72,19 @@ class CRSTransformer(ABC):
             geom_in = inp
             geom_out = transform(
                 lambda x, y, z=None: self._map_to_pixel((x, y)), geom_in)
+            if bbox is not None:
+                xmin, ymin = bbox.xmin, bbox.ymin
+                geom_out = translate(geom_out, xoff=-xmin, yoff=-ymin)
             return geom_out
         elif len(inp) == 2:
-            return self._map_to_pixel(inp)
+            out = self._map_to_pixel(inp)
+            out_x, out_y = out
+            out = (np.array(out_x), np.array(out_y))
+            if bbox is not None:
+                xmin, ymin = bbox.xmin, bbox.ymin
+                out_x, out_y = out
+                out = (out_x - xmin, out_y - ymin)
+            return out
         else:
             raise TypeError(
                 'Input must be 2-tuple or Box or shapely geometry.')
@@ -114,17 +118,14 @@ class CRSTransformer(ABC):
             inp: (x, y) tuple or Box or shapely geometry in pixel coordinates.
                 If tuple, x and y can be single values or array-like.
             bbox: If the extent of the associated RasterSource is constrained
-                via a bbox, it can be passed here so that the box is
+                via a bbox, it can be passed here so that the input is
                 interpreted to be in coordinates of the bbox rather than the
-                full extent of the data source of the RasterSource. Only
-                supported if ``inp`` is a :class:`.Box`. Defaults to None.
+                full extent of the data source of the RasterSource.
+                Defaults to None.
 
         Returns:
             Coordinate-transformed input in the same format.
         """
-        if bbox is not None and not isinstance(inp, Box):
-            raise NotImplementedError(
-                'bbox is only supported if inp is a Box.')
         if isinstance(inp, Box):
             box_in = inp
             if bbox is not None:
@@ -136,11 +137,21 @@ class CRSTransformer(ABC):
             return box_out
         elif isinstance(inp, BaseGeometry):
             geom_in = inp
+            if bbox is not None:
+                xmin, ymin = bbox.xmin, bbox.ymin
+                geom_in = translate(geom_in, xoff=xmin, yoff=ymin)
             geom_out = transform(
                 lambda x, y, z=None: self._pixel_to_map((x, y)), geom_in)
             return geom_out
         elif len(inp) == 2:
-            return self._pixel_to_map(inp)
+            if bbox is not None:
+                xmin, ymin = bbox.xmin, bbox.ymin
+                inp_x, inp_y = inp
+                inp = (inp_x + xmin, inp_y + ymin)
+            out = self._pixel_to_map(inp)
+            out_x, out_y = out
+            out = (np.array(out_x), np.array(out_y))
+            return out
         else:
             raise TypeError(
                 'Input must be 2-tuple or Box or shapely geometry.')
