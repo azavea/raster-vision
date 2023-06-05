@@ -17,3 +17,4 @@ scipy==1.9.2
 opencv-python==4.6.0.66
 opencv-python-headless==4.6.0.66
 tqdm==4.64.1
+xarray==2023.2.0

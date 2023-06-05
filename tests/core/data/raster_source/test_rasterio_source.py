@@ -209,15 +209,7 @@ class TestRasterioSource(unittest.TestCase):
         img_path = data_file_path('small-rgb-tile.tif')
         cfg = RasterioSourceConfig(uris=[img_path])
         rs = cfg.build(tmp_dir=self.tmp_dir)
-        extent = rs.extent
-        h, w = extent.size
-        self.assertEqual(h, 256)
-        self.assertEqual(w, 256)
-        ymin, xmin, ymax, xmax = extent
-        self.assertEqual(ymin, 0)
-        self.assertEqual(xmin, 0)
-        self.assertEqual(ymax, 256)
-        self.assertEqual(xmax, 256)
+        self.assertEqual(rs.extent, Box(0, 0, 256, 256))
 
     def test_bbox(self):
         img_path = data_file_path('small-rgb-tile.tif')
