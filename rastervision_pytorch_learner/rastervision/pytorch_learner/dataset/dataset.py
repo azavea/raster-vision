@@ -4,7 +4,6 @@ import logging
 
 import numpy as np
 import albumentations as A
-
 import torch
 from torch.utils.data import Dataset
 
@@ -224,8 +223,9 @@ class SlidingWindowGeoDataset(GeoDataset):
             stride=self.stride,
             padding=self.padding,
             pad_direction=self.pad_direction)
-        if len(self.scene.aoi_polygons) > 0:
-            windows = Box.filter_by_aoi(windows, self.scene.aoi_polygons)
+        if len(self.scene.aoi_polygons_bbox_coords) > 0:
+            windows = Box.filter_by_aoi(windows,
+                                        self.scene.aoi_polygons_bbox_coords)
         self.windows = windows
 
     def __getitem__(self, idx: int):
@@ -366,13 +366,16 @@ class RandomWindowGeoDataset(GeoDataset):
                           xmax + w_padding)
 
         self.aoi_sampler = None
-        if self.scene.aoi_polygons and efficient_aoi_sampling:
-            # clip aoi polygons to the extent
+        self.aoi_polygons = self.scene.aoi_polygons_bbox_coords
+        self.has_aoi_polygons = len(self.aoi_polygons) > 0
+        if self.has_aoi_polygons:
+            # only sample from polygons that intersect w/ the extent
             extent_polygon = self.extent.to_shapely()
-            self.scene.aoi_polygons = [
-                p.intersection(extent_polygon) for p in self.scene.aoi_polygons
+            self.aoi_polygons = [
+                p.intersection(extent_polygon) for p in self.aoi_polygons
             ]
-            self.aoi_sampler = AoiSampler(self.scene.aoi_polygons)
+            if efficient_aoi_sampling:
+                self.aoi_sampler = AoiSampler(self.aoi_polygons)
 
     def get_resize_transform(
             self, transform: Optional[A.BasicTransform],
@@ -440,13 +443,13 @@ class RandomWindowGeoDataset(GeoDataset):
         Returns:
             Box: The sampled window.
         """
-        if not self.scene.aoi_polygons:
+        if not self.has_aoi_polygons:
             window = self._sample_window()
             return window
 
         for _ in range(self.max_sample_attempts):
             window = self._sample_window()
-            if Box.within_aoi(window, self.scene.aoi_polygons):
+            if Box.within_aoi(window, self.aoi_polygons):
                 return window
         raise StopIteration('Failed to find random window within scene AOI.')
 

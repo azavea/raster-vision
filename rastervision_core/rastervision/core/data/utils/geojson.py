@@ -3,7 +3,11 @@ from typing import (TYPE_CHECKING, Callable, Dict, Iterable, Iterator, List,
 from copy import deepcopy
 
 from shapely.geometry import shape, mapping
+from shapely.affinity import translate
 from tqdm.auto import tqdm
+import geopandas as gpd
+
+from rastervision.core.box import Box
 
 if TYPE_CHECKING:
     from rastervision.core.data.crs_transformer import CRSTransformer
@@ -329,17 +333,21 @@ def all_geoms_valid(geojson: dict):
     return all(g.is_valid for g in geoms)
 
 
-def get_polygons_from_uris(
-        uris: Union[str, List[str]],
-        crs_transformer: 'CRSTransformer') -> List['BaseGeometry']:
+def get_polygons_from_uris(uris: Union[str, List[str]],
+                           crs_transformer: 'CRSTransformer',
+                           bbox: Optional['Box'] = None,
+                           map_coords: bool = False) -> List['BaseGeometry']:
     """Load and return polygons (in pixel coords) from one or more URIs."""
 
     # use local imports to avoid circular import problems
     from rastervision.core.data import GeoJSONVectorSource
 
     source = GeoJSONVectorSource(
-        uris=uris, ignore_crs_field=True, crs_transformer=crs_transformer)
-    polygons = source.get_geoms()
+        uris=uris,
+        ignore_crs_field=True,
+        crs_transformer=crs_transformer,
+        bbox=bbox)
+    polygons = source.get_geoms(to_map_coords=map_coords)
     return polygons
 
 
@@ -348,3 +356,37 @@ def merge_geojsons(geojsons: Iterable[dict]) -> dict:
     features = sum([g.get('features', []) for g in geojsons], [])
     geojson_merged = features_to_geojson(features)
     return geojson_merged
+
+
+def geojson_to_geodataframe(geojson: dict) -> gpd.GeoDataFrame:
+    df = gpd.GeoDataFrame.from_features(geojson)
+    if len(df) == 0 and 'geometry' not in df.columns:
+        df.loc[:, 'geometry'] = []
+    return df
+
+
+def get_geodataframe_extent(gdf: gpd.GeoDataFrame) -> Box:
+    envelope = gdf.unary_union.envelope
+    extent = Box.from_shapely(envelope).to_int()
+    return extent
+
+
+def get_geojson_extent(geojson: dict) -> Box:
+    gdf = geojson_to_geodataframe(geojson)
+    extent = get_geodataframe_extent(gdf)
+    return extent
+
+
+def filter_geojson_to_window(geojson: dict, window: Box) -> dict:
+    gdf = geojson_to_geodataframe(geojson)
+    window_geom = window.to_shapely()
+    gdf: gpd.GeoDataFrame = gdf[gdf.intersects(window_geom)]
+    out_geojson = gdf._to_geo()
+    return out_geojson
+
+
+def geoms_to_bbox_coords(geoms: Iterable['BaseGeometry'],
+                         bbox: Box) -> Iterator['BaseGeometry']:
+    xmin, ymin = bbox.xmin, bbox.ymin
+    out = (translate(p, xoff=-xmin, yoff=-ymin) for p in geoms)
+    return out

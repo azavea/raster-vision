@@ -119,8 +119,9 @@ def get_train_windows(scene: 'Scene',
     label_source = scene.label_source
 
     def filter_windows(windows):
-        if scene.aoi_polygons:
-            windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
+        if scene.aoi_polygons_bbox_coords:
+            windows = Box.filter_by_aoi(windows,
+                                        scene.aoi_polygons_bbox_coords)
         return windows
 
     window_method = chip_opts.window_method

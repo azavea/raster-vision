@@ -15,7 +15,7 @@ class ChannelOrderError(Exception):
     def __init__(self, channel_order: List[int], num_channels_raw: int):
         self.channel_order = channel_order
         self.num_channels_raw = num_channels_raw
-        msg = (f'The channel_order ({channel_order}) contains an'
+        msg = (f'The channel_order ({channel_order}) contains an '
                f'index >= num_channels_raw ({num_channels_raw}).')
         super().__init__(msg)
 

@@ -220,9 +220,9 @@ class ObjectDetectionRandomWindowGeoDataset(RandomWindowGeoDataset):
                 raise ValueError(
                     'neg_ratio specified, but no bboxes found in scene.')
 
-            aoi_polygons = self.scene.aoi_polygons
-            if len(aoi_polygons) > 0:
-                self.labels = self.labels.filter_by_aoi(aoi_polygons)
+            if self.has_aoi_polygons:
+                self.labels = self.labels.filter_by_aoi(
+                    self.scene.aoi_polygons)
                 num_bboxes_in_aoi = len(self.labels)
                 if num_bboxes_in_aoi == 0:
                     raise ValueError(

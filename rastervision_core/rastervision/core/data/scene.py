@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, Any, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
-from rastervision.core.data.utils import match_bboxes
+from rastervision.core.data.utils import match_bboxes, geoms_to_bbox_coords
 
 if TYPE_CHECKING:
+    from shapely.geometry.base import BaseGeometry
     from rastervision.core.box import Box
     from rastervision.core.data import (RasterSource, LabelSource, LabelStore)
 
@@ -15,7 +16,7 @@ class Scene:
                  raster_source: 'RasterSource',
                  label_source: Optional['LabelSource'] = None,
                  label_store: Optional['LabelStore'] = None,
-                 aoi_polygons: Optional[list] = None):
+                 aoi_polygons: Optional[List['BaseGeometry']] = None):
         """Constructor.
 
         During initialization, ``Scene`` attempts to set the extents of the
@@ -42,13 +43,25 @@ class Scene:
 
         if aoi_polygons is None:
             self.aoi_polygons = []
+            self.aoi_polygons_bbox_coords = []
         else:
-            self.aoi_polygons = aoi_polygons
+            bbox = self.raster_source.bbox
+            bbox_geom = bbox.to_shapely()
+            self.aoi_polygons = [
+                p for p in aoi_polygons if p.intersects(bbox_geom)
+            ]
+            self.aoi_polygons_bbox_coords = list(
+                geoms_to_bbox_coords(self.aoi_polygons, bbox))
 
     @property
     def extent(self) -> 'Box':
         """Extent of the associated :class:`.RasterSource`."""
         return self.raster_source.extent
+
+    @property
+    def bbox(self) -> 'Box':
+        """Bounding box applied to the source data."""
+        return self.raster_source.bbox
 
     def __getitem__(self, key: Any) -> Tuple[Any, Any]:
         x = self.raster_source[key]

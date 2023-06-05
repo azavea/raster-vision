@@ -48,8 +48,9 @@ def get_train_windows(scene: 'Scene',
         (3) have NODATA proportion >= chip_nodata_threshold
         """
         total_windows = len(windows)
-        if scene.aoi_polygons:
-            windows = Box.filter_by_aoi(windows, scene.aoi_polygons)
+        if scene.aoi_polygons_bbox_coords:
+            windows = Box.filter_by_aoi(windows,
+                                        scene.aoi_polygons_bbox_coords)
             log.info(f'AOI filtering: {len(windows)}/{total_windows} '
                      'chips accepted')
 

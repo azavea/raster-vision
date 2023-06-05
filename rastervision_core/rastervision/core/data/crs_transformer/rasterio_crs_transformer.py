@@ -49,7 +49,7 @@ class RasterioCRSTransformer(CRSTransformer):
         if len(image_crs_str) > 70:
             image_crs_str = image_crs_str[:70] + '...'
 
-        map_crs_str = str(self.image_crs)
+        map_crs_str = str(self.map_crs)
         if len(map_crs_str) > 70:
             map_crs_str = map_crs_str[:70] + '...'
 

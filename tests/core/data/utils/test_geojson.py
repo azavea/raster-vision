@@ -3,12 +3,16 @@ import unittest
 import numpy as np
 from shapely.geometry import (Polygon, MultiPolygon, Point, MultiPoint,
                               LineString, MultiLineString, mapping, shape)
+import geopandas as gpd
 
+from rastervision.core.box import Box
 from rastervision.core.data.utils import (
     geometry_to_feature, geometries_to_geojson, is_empty_feature,
     remove_empty_features, split_multi_geometries, map_to_pixel_coords,
     pixel_to_map_coords, buffer_geoms, all_geoms_valid, geoms_to_geojson,
-    merge_geojsons, geojson_to_geoms)
+    merge_geojsons, geojson_to_geoms, geojson_to_geodataframe,
+    get_geodataframe_extent, get_geojson_extent, filter_geojson_to_window,
+    geoms_to_bbox_coords)
 from tests.core.data.mock_crs_transformer import DoubleCRSTransformer
 
 
@@ -168,6 +172,67 @@ class TestGeojsonUtils(unittest.TestCase):
         geom_out_2 = shape(geojson_merged['features'][1]['geometry'])
         self.assertEqual(geom_out_1, geom_in_1)
         self.assertEqual(geom_out_2, geom_in_2)
+
+    def test_geojson_to_geodataframe(self):
+        geom = Polygon.from_bounds(0, 0, 10, 10)
+        geojson = geoms_to_geojson([geom])
+        gdf = geojson_to_geodataframe(geojson)
+        self.assertIsInstance(gdf, gpd.GeoDataFrame)
+        self.assertListEqual(list(gdf.geometry), [geom])
+
+    def test_get_geodataframe_extent(self):
+        geoms = [
+            Polygon.from_bounds(0, 0, 10, 10),
+            Polygon.from_bounds(20, 20, 30, 30),
+        ]
+        geojson = geoms_to_geojson(geoms)
+        gdf = geojson_to_geodataframe(geojson)
+        extent = get_geodataframe_extent(gdf)
+        self.assertEqual(extent, Box(0, 0, 30, 30))
+
+    def test_get_geojson_extent(self):
+        geoms = [
+            Polygon.from_bounds(0, 0, 10, 10),
+            Polygon.from_bounds(20, 20, 30, 30),
+        ]
+        geojson = geoms_to_geojson(geoms)
+        extent = get_geojson_extent(geojson)
+        self.assertEqual(extent, Box(0, 0, 30, 30))
+
+    def test_filter_geojson_to_window(self):
+        geoms_in = [
+            Polygon.from_bounds(0, 0, 10, 10),
+            Polygon.from_bounds(20, 20, 30, 30),
+        ]
+        geojson_in = geoms_to_geojson(geoms_in)
+
+        window = Box(0, 0, 15, 15)
+        geojson_out = filter_geojson_to_window(geojson_in, window)
+        geoms_out = list(geojson_to_geoms(geojson_out))
+        self.assertListEqual(geoms_out, geoms_in[:1])
+
+        window = Box(15, 15, 30, 30)
+        geojson_out = filter_geojson_to_window(geojson_in, window)
+        geoms_out = list(geojson_to_geoms(geojson_out))
+        self.assertListEqual(geoms_out, geoms_in[1:])
+
+        window = Box(0, 0, 5, 5)
+        geojson_out = filter_geojson_to_window(geojson_in, window)
+        geoms_out = list(geojson_to_geoms(geojson_out))
+        self.assertListEqual(geoms_out, geoms_in[:1])
+
+    def test_geoms_to_bbox_coords(self):
+        geoms_in = [
+            Polygon.from_bounds(0, 0, 10, 10),
+            Polygon.from_bounds(20, 20, 30, 30),
+        ]
+        bbox = Box(10, 10, 20, 20)
+        geoms_out = list(geoms_to_bbox_coords(geoms_in, bbox))
+        geoms_out_expected = [
+            Polygon.from_bounds(-10, -10, 0, 0),
+            Polygon.from_bounds(10, 10, 20, 20),
+        ]
+        self.assertListEqual(geoms_out, geoms_out_expected)
 
 
 if __name__ == '__main__':
