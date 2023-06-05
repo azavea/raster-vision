@@ -22,3 +22,4 @@ The following tutorials highlight many of the things you can do with Raster Visi
 
     lightning_workflow
     prechipped_datasets
+    stac_plus_osm

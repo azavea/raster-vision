@@ -61,13 +61,18 @@ def _compile(filt):
     return 'True'
 
 
-def _compile_property_reference(prop):
+def _compile_property_reference(prop: str) -> str:
     """Find the correct reference on the input feature"""
     if prop == '$type':
         return 'f.get("geometry").get("type")'
     elif prop == '$id':
         return 'f.get("id")'
-    return 'p.get("{}")'.format(prop)
+    out = 'p'
+    key_crumbs = prop.split('.')
+    for k in key_crumbs[:-1]:
+        out += f'.get("{k}", dict())'
+    out += f'.get("{key_crumbs[-1]}")'
+    return out
 
 
 def _compile_comparison_op(prop, value, op):

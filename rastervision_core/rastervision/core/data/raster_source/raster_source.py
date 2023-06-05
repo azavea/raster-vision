@@ -182,6 +182,6 @@ class RasterSource(ABC):
     def resize(self,
                chip: 'np.ndarray',
                out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
-        out = resize(chip, out_shape, preserve_range=True)
+        out = resize(chip, out_shape, preserve_range=True, anti_aliasing=True)
         out = out.astype(chip.dtype)
         return out
