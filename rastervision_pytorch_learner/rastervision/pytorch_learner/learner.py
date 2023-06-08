@@ -30,7 +30,8 @@ from rastervision.pipeline.utils import terminate_at_exit
 from rastervision.pipeline.config import (build_config, upgrade_config,
                                           save_pipeline_config)
 from rastervision.pytorch_learner.utils import (
-    get_hubconf_dir_from_cfg, aggregate_metrics, log_metrics_to_csv)
+    get_hubconf_dir_from_cfg, aggregate_metrics, log_metrics_to_csv,
+    log_system_details)
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
@@ -49,53 +50,6 @@ TRANSFORMS_DIRNAME = 'custom_albumentations_transforms'
 log = logging.getLogger(__name__)
 
 MetricDict = Dict[str, float]
-
-
-def log_system_details():  # pragma: no cover
-    """Log some system details."""
-    import os
-    import sys
-    import psutil
-    # CPUs
-    log.info(f'Physical CPUs: {psutil.cpu_count(logical=False)}')
-    log.info(f'Logical CPUs: {psutil.cpu_count(logical=True)}')
-    # memory usage
-    mem_stats = psutil.virtual_memory()._asdict()
-    log.info(f'Total memory: {mem_stats["total"] / 2**30: .2f} GB')
-
-    # disk usage
-    if os.path.isdir('/opt/data/'):
-        disk_stats = psutil.disk_usage('/opt/data')._asdict()
-        log.info(
-            f'Size of /opt/data volume: {disk_stats["total"] / 2**30: .2f} GB')
-    disk_stats = psutil.disk_usage('/')._asdict()
-    log.info(f'Size of / volume: {disk_stats["total"] / 2**30: .2f} GB')
-
-    # python
-    log.info(f'Python version: {sys.version}')
-    # nvidia GPU
-    try:
-        with os.popen('nvcc --version') as f:
-            log.info(f.read())
-        with os.popen('nvidia-smi') as f:
-            log.info(f.read())
-        log.info('Devices:')
-        device_query = ' '.join([
-            'nvidia-smi', '--format=csv',
-            '--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free'
-        ])
-        with os.popen(device_query) as f:
-            log.info(f.read())
-    except FileNotFoundError:
-        pass
-    # pytorch and CUDA
-    log.info(f'PyTorch version: {torch.__version__}')
-    log.info(f'CUDA available: {torch.cuda.is_available()}')
-    log.info(f'CUDA version: {torch.version.cuda}')
-    log.info(f'CUDNN version: {torch.backends.cudnn.version()}')
-    log.info(f'Number of CUDA devices: {torch.cuda.device_count()}')
-    if torch.cuda.is_available():
-        log.info(f'Active CUDA Device: GPU {torch.cuda.current_device()}')
 
 
 class Learner(ABC):
