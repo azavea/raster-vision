@@ -392,3 +392,50 @@ def aggregate_metrics(
             metric_avg = sum(metric_vals) / len(metric_vals)
         metrics[metric_name] = metric_avg
     return metrics
+
+
+def log_system_details():
+    """Log some system details."""
+    import os
+    import sys
+    import psutil
+    # CPUs
+    log.info(f'Physical CPUs: {psutil.cpu_count(logical=False)}')
+    log.info(f'Logical CPUs: {psutil.cpu_count(logical=True)}')
+    # memory usage
+    mem_stats = psutil.virtual_memory()._asdict()
+    log.info(f'Total memory: {mem_stats["total"] / 2**30: .2f} GB')
+
+    # disk usage
+    if os.path.isdir('/opt/data/'):
+        disk_stats = psutil.disk_usage('/opt/data')._asdict()
+        log.info(
+            f'Size of /opt/data volume: {disk_stats["total"] / 2**30: .2f} GB')
+    disk_stats = psutil.disk_usage('/')._asdict()
+    log.info(f'Size of / volume: {disk_stats["total"] / 2**30: .2f} GB')
+
+    # python
+    log.info(f'Python version: {sys.version}')
+    # nvidia GPU
+    try:
+        with os.popen('nvcc --version') as f:
+            log.info(f.read())
+        with os.popen('nvidia-smi') as f:
+            log.info(f.read())
+        log.info('Devices:')
+        device_query = ' '.join([
+            'nvidia-smi', '--format=csv',
+            '--query-gpu=index,name,driver_version,memory.total,memory.used,memory.free'
+        ])
+        with os.popen(device_query) as f:
+            log.info(f.read())
+    except FileNotFoundError:
+        pass
+    # pytorch and CUDA
+    log.info(f'PyTorch version: {torch.__version__}')
+    log.info(f'CUDA available: {torch.cuda.is_available()}')
+    log.info(f'CUDA version: {torch.version.cuda}')
+    log.info(f'CUDNN version: {torch.backends.cudnn.version()}')
+    log.info(f'Number of CUDA devices: {torch.cuda.device_count()}')
+    if torch.cuda.is_available():
+        log.info(f'Active CUDA Device: GPU {torch.cuda.current_device()}')

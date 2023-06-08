@@ -17,7 +17,7 @@ from rastervision.pytorch_learner.utils import (
     validate_albumentation_transform, A, color_to_triple,
     channel_groups_to_imgs, plot_channel_groups,
     serialize_albumentation_transform, deserialize_albumentation_transform,
-    aggregate_metrics, log_metrics_to_csv)
+    aggregate_metrics, log_metrics_to_csv, log_system_details)
 from tests.data_files.lambda_transforms import lambda_transforms
 from tests import data_file_path
 
@@ -380,6 +380,9 @@ class TestOtherUtils(unittest.TestCase):
         self.assertListEqual(df.epoch.tolist(), [0, 1, 2])
         self.assertListEqual(df.val1.tolist(), [0., -1., -2.])
         self.assertListEqual(df.val2.tolist(), [0., 1., 2.])
+
+    def test_log_system_details(self):
+        self.assertNoError(log_system_details)
 
 
 if __name__ == '__main__':
