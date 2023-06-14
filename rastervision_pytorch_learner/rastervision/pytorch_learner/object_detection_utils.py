@@ -16,6 +16,7 @@ from pycocotools.cocoeval import COCOeval
 import numpy as np
 
 from rastervision.pipeline.file_system import json_to_file, get_tmp_dir
+from rastervision.pytorch_learner.utils.utils import ONNXRuntimeAdapter
 
 
 def get_coco_gt(targets: Iterable['BoxList'],
@@ -344,7 +345,6 @@ class TorchVisionODAdapter(nn.Module):
             return loss_dict
 
         outs = self.model(input)
-
         boxlists = [self.model_output_dict_to_boxlist(out) for out in outs]
 
         return boxlists
@@ -387,3 +387,20 @@ class TorchVisionODAdapter(nn.Module):
             class_ids=(out['labels'][mask] - 1),
             scores=out['scores'][mask])
         return boxlist
+
+
+class ONNXRuntimeAdapterForFasterRCNN(ONNXRuntimeAdapter):
+    """TorchVision Faster RCNN model exported as ONNX"""
+
+    def __call__(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+        N, *_ = x.shape
+        x = x.numpy()
+        outputs = self.ort_session.run(None, dict(x=x))
+        out_dicts = [None] * N
+        for i in range(N):
+            boxes, labels, scores = outputs[i * 3:i * 3 + 3]
+            boxes = torch.from_numpy(boxes)
+            labels = torch.from_numpy(labels)
+            scores = torch.from_numpy(scores)
+            out_dicts[i] = dict(boxes=boxes, labels=labels, scores=scores)
+        return out_dicts
