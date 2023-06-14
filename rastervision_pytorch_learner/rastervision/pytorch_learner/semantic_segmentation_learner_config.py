@@ -151,9 +151,8 @@ class SemanticSegmentationModelConfig(ModelConfig):
 
     backbone: Backbone = Field(
         Backbone.resnet50,
-        description=(
-            'The torchvision.models backbone to use. At the moment only '
-            'resnet50 or resnet101 will work.'))
+        description='The torchvision.models backbone to use. Currently, only '
+        'resnet50 and resnet101 are supported.')
 
     @validator('backbone')
     def only_valid_backbones(cls, v):
@@ -165,14 +164,14 @@ class SemanticSegmentationModelConfig(ModelConfig):
 
     def build_default_model(self, num_classes: int,
                             in_channels: int) -> nn.Module:
-        pretrained = self.pretrained
         backbone_name = self.get_backbone_str()
-
+        pretrained = self.pretrained
+        weights = 'DEFAULT' if pretrained else None
         model_factory_func: Callable = getattr(models.segmentation,
                                                f'deeplabv3_{backbone_name}')
         model = model_factory_func(
             num_classes=num_classes,
-            pretrained_backbone=pretrained,
+            weights_backbone=weights,
             aux_loss=False,
             **self.extra_args)
 
