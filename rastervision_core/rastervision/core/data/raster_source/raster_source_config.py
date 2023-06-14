@@ -19,6 +19,13 @@ def rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
             del cfg_dict['extent_crop']
         except KeyError:
             pass
+    elif version == 9:
+        # renamed in version 10
+        cfg_dict['bbox'] = cfg_dict.get('extent')
+        try:
+            del cfg_dict['extent']
+        except KeyError:
+            pass
     return cfg_dict
 
 
