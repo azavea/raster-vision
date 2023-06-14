@@ -173,9 +173,11 @@ class ObjectDetectionModelConfig(ModelConfig):
         Returns:
             FasterRCNN: a FasterRCNN model.
         """
-        pretrained = self.pretrained
         backbone_arch = self.get_backbone_str()
-        backbone = resnet_fpn_backbone(backbone_arch, pretrained)
+        pretrained = self.pretrained
+        weights = 'DEFAULT' if pretrained else None
+        backbone = resnet_fpn_backbone(
+            backbone_name=backbone_arch, weights=weights)
 
         # default values from FasterRCNN constructor
         image_mean = [0.485, 0.456, 0.406]

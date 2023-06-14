@@ -111,16 +111,13 @@ class RegressionGeoDataConfig(RegressionDataConfig, GeoDataConfig):
 
 class RegressionModel(nn.Module):
     def __init__(self,
-                 backbone_arch: str,
+                 backbone: nn.Module,
                  out_features: int,
-                 pretrained: bool = True,
                  pos_out_inds: Optional[Sequence[int]] = None,
                  prob_out_inds: Optional[Sequence[int]] = None,
                  **kwargs):
         super().__init__()
-        model_factory_func: Callable = getattr(models, backbone_arch)
-        self.backbone: nn.Module = model_factory_func(
-            pretrained=pretrained, **kwargs)
+        self.backbone = backbone
         in_features = self.backbone.fc.in_features
         self.backbone.fc = nn.Linear(in_features, out_features)
         self.pos_out_inds = pos_out_inds
@@ -154,8 +151,8 @@ class RegressionModelConfig(ModelConfig):
             class_names: Optional[Sequence[str]] = None,
             pos_class_names: Optional[Iterable[str]] = None,
             prob_class_names: Optional[Iterable[str]] = None) -> nn.Module:
-        pretrained = self.pretrained
         backbone_name = self.get_backbone_str()
+        pretrained = self.pretrained
         out_features = num_classes
 
         pos_out_inds = None
@@ -169,10 +166,14 @@ class RegressionModelConfig(ModelConfig):
                 class_names.index(class_name)
                 for class_name in prob_class_names
             ]
+
+        weights = 'DEFAULT' if pretrained else None
+        model_factory_func: Callable[..., nn.Module] = getattr(
+            models, backbone_name)
+        backbone = model_factory_func(weights=weights, **self.extra_args)
         model = RegressionModel(
-            backbone_name,
+            backbone,
             out_features,
-            pretrained=pretrained,
             pos_out_inds=pos_out_inds,
             prob_out_inds=prob_out_inds,
             **self.extra_args)

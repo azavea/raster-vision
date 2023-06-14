@@ -102,10 +102,12 @@ class ClassificationModelConfig(ModelConfig):
                             in_channels: int) -> nn.Module:
         from torchvision import models
 
-        pretrained = self.pretrained
         backbone_name = self.get_backbone_str()
-        model_factory_func: Callable = getattr(models, backbone_name)
-        model = model_factory_func(pretrained=pretrained, **self.extra_args)
+        pretrained = self.pretrained
+        weights = 'DEFAULT' if pretrained else None
+        model_factory_func: Callable[..., nn.Module] = getattr(
+            models, backbone_name)
+        model = model_factory_func(weights=weights, **self.extra_args)
 
         if in_channels != 3:
             if not backbone_name.startswith('resnet'):
