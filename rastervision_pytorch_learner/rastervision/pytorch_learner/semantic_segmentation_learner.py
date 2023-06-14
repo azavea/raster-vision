@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 import warnings
 
 import logging
@@ -11,6 +11,9 @@ from rastervision.pytorch_learner.utils import (
     compute_conf_mat_metrics, compute_conf_mat, aggregate_metrics)
 from rastervision.pytorch_learner.dataset.visualizer import (
     SemanticSegmentationVisualizer)
+
+if TYPE_CHECKING:
+    from torch import nn
 
 warnings.filterwarnings('ignore')
 
@@ -64,8 +67,29 @@ class SemanticSegmentationLearner(Learner):
         with torch.inference_mode():
             out = self.model(x)
             out = self.post_forward(out)
-            out = out.softmax(dim=1)
+        out = self.postprocess_model_output(
+            out, raw_out=raw_out, out_shape=out_shape)
+        return out
 
+    def predict_onnx(
+            self,
+            x: torch.Tensor,
+            raw_out: bool = False,
+            out_shape: Optional[Tuple[int, int]] = None) -> torch.Tensor:
+
+        if out_shape is None:
+            out_shape = x.shape[-2:]
+
+        x = self.to_batch(x).float()
+        out = self.model(x)
+        out = self.post_forward(out)
+        out = self.postprocess_model_output(
+            out, raw_out=raw_out, out_shape=out_shape)
+        return out
+
+    def postprocess_model_output(self, out: torch.Tensor, raw_out: bool,
+                                 out_shape: Tuple[int, int]):
+        out = out.softmax(dim=1)
         # ensure correct output shape
         if out.shape[-2:] != out_shape:
             out = F.interpolate(
@@ -79,3 +103,27 @@ class SemanticSegmentationLearner(Learner):
 
     def prob_to_pred(self, x):
         return x.argmax(1)
+
+    def export_to_onnx(self,
+                       path: str,
+                       model: Optional['nn.Module'] = None,
+                       sample_input: Optional[torch.Tensor] = None,
+                       **kwargs) -> None:
+        args = dict(
+            input_names=['x'],
+            output_names=['out'],
+            dynamic_axes={
+                'x': {
+                    0: 'batch_size',
+                    2: 'height',
+                    3: 'width',
+                },
+                'out': {
+                    0: 'batch_size',
+                    2: 'height',
+                    3: 'width',
+                },
+            },
+        )
+        args.update(kwargs)
+        return super().export_to_onnx(path, model, sample_input, **args)

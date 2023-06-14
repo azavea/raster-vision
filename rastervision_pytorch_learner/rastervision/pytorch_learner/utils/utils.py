@@ -12,6 +12,7 @@ import albumentations as A
 from albumentations.core.transforms_interface import ImageOnlyTransform
 import cv2
 import pandas as pd
+import onnxruntime as ort
 
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.pipeline.config import ConfigError
@@ -439,3 +440,48 @@ def log_system_details():
     log.info(f'Number of CUDA devices: {torch.cuda.device_count()}')
     if torch.cuda.is_available():
         log.info(f'Active CUDA Device: GPU {torch.cuda.current_device()}')
+
+
+class ONNXRuntimeAdapter:
+    """Wrapper around ONNX-runtime that behaves like a PyTorch nn.Module.
+
+    That is, it implements __call__() and accepts PyTorch Tensors as inputs and
+    also outputs PyTorch Tensors.
+    """
+
+    def __init__(self, ort_session: ort.InferenceSession) -> None:
+        """Constructor.
+
+        Args:
+            ort_session (ort.InferenceSession): ONNX-runtime InferenceSession.
+        """
+        self.ort_session = ort_session
+
+    @classmethod
+    def from_file(cls, path: str, providers: Optional[List[str]] = None
+                  ) -> 'ONNXRuntimeAdapter':
+        """Construct from file.
+
+        Args:
+            path (str): Path to a .onnx file.
+            providers (Optional[List[str]]): ONNX-runtime execution
+                providers. See onnxruntime documentation for more details.
+                Defaults to None.
+
+        Returns:
+            ONNXRuntimeAdapter: An ONNXRuntimeAdapter instance.
+        """
+        if providers is None:
+            providers = ort.get_available_providers()
+            log.info(f'Using ONNX execution providers: {providers}')
+        ort_session = ort.InferenceSession(path, providers=providers)
+        onnx_model = cls(ort_session)
+        return onnx_model
+
+    def __call__(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+        x = x.numpy()
+        outputs = self.ort_session.run(None, dict(x=x))
+        out = outputs[0]
+        if isinstance(out, np.ndarray):
+            out = torch.from_numpy(out)
+        return out

@@ -169,18 +169,21 @@ class ObjectDetectionLabels(Labels):
     def to_boxlist(self) -> BoxList:
         return self.boxlist
 
-    def to_dict(self) -> dict:
+    def to_dict(self, round_boxes: bool = True) -> dict:
         """Returns a dict version of these labels.
 
         The Dict has a Box as a key, and a tuple of (class_id, score)
         as the values.
         """
-        d = {}
-        boxes = list(map(Box.from_npbox, self.get_npboxes()))
-        classes = list(self.get_class_ids())
-        scores = list(self.get_scores())
-        for box, class_id, score in zip(boxes, classes, scores):
-            d[box.tuple_format()] = (class_id, score)
+        npboxes = self.get_npboxes()
+        if round_boxes and np.issubdtype(npboxes.dtype, np.floating):
+            npboxes = npboxes.round(2)
+        classes = self.get_class_ids()
+        scores = self.get_scores().round(6)
+        d = {
+            Box.from_npbox(box): (class_id, score)
+            for box, class_id, score in zip(npboxes, classes, scores)
+        }
         return d
 
     @staticmethod

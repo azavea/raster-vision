@@ -2,6 +2,7 @@ from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterator, List,
                     Optional, Tuple, Union, Type)
 from typing_extensions import Literal
 from abc import ABC, abstractmethod
+import os
 from os.path import join, isfile, basename, isdir
 import warnings
 import time
@@ -31,7 +32,7 @@ from rastervision.pipeline.config import (build_config, upgrade_config,
                                           save_pipeline_config)
 from rastervision.pytorch_learner.utils import (
     get_hubconf_dir_from_cfg, aggregate_metrics, log_metrics_to_csv,
-    log_system_details)
+    log_system_details, ONNXRuntimeAdapter)
 from rastervision.pytorch_learner.dataset.visualizer import Visualizer
 
 if TYPE_CHECKING:
@@ -46,6 +47,9 @@ warnings.filterwarnings('ignore')
 
 MODULES_DIRNAME = 'modules'
 TRANSFORMS_DIRNAME = 'custom_albumentations_transforms'
+BUNDLE_MODEL_WEIGHTS_FILENAME = 'model.pth'
+BUNDLE_MODEL_ONNX_FILENAME = 'model.onnx'
+USE_ONNX = os.getenv('RASTERVISION_USE_ONNX', 'false').lower() in ('true', '1')
 
 log = logging.getLogger(__name__)
 
@@ -184,7 +188,7 @@ class Learner(ABC):
 
         self.modules_dir = join(self.output_dir, MODULES_DIRNAME)
         # ---------------------------
-
+        self._onnx_mode = False
         self.setup_model(
             model_weights_path=model_weights_path,
             model_def_path=model_def_path)
@@ -193,7 +197,8 @@ class Learner(ABC):
             self.setup_training(loss_def_path=loss_def_path)
             self.model.train()
         else:
-            self.model.eval()
+            if not self.onnx_mode:
+                self.model.eval()
 
         self.visualizer = self.get_visualizer_class()(
             cfg.data.class_names, cfg.data.class_colors,
@@ -206,6 +211,7 @@ class Learner(ABC):
                           tmp_dir: Optional[str] = None,
                           cfg: Optional['LearnerConfig'] = None,
                           training: bool = False,
+                          use_onnx_model: bool = USE_ONNX,
                           **kwargs) -> 'Learner':
         """Create a Learner from a model bundle.
 
@@ -227,6 +233,11 @@ class Learner(ABC):
                 model will be put into eval mode. If True, the training
                 apparatus will be set up and the model will be put into
                 training mode. Defaults to True.
+            use_onnx_model (bool, optional): If True and training=False and a
+                model.onnx file is available in the bundle, use that for
+                inference rather than the PyTorch weights. Defaults to the
+                boolean environment variable RASTERVISION_USE_ONNX if set,
+                False otherwise.
             **kwargs: See :meth:`.Learner.__init__`.
 
         Raises:
@@ -244,8 +255,6 @@ class Learner(ABC):
         model_bundle_dir = join(tmp_dir, 'model-bundle')
         log.info(f'Unzipping model-bundle to {model_bundle_dir}')
         unzip(model_bundle_path, model_bundle_dir)
-
-        model_weights_path = join(model_bundle_dir, 'model.pth')
 
         if cfg is None:
             config_path = join(model_bundle_dir, 'pipeline-config.json')
@@ -288,10 +297,20 @@ class Learner(ABC):
             # config has been altered, so re-validate
             cfg = build_config(cfg.dict())
 
-        if cfg.model is None and kwargs.get('model') is None:
-            raise ValueError(
-                'Model definition is not saved in the model-bundle. '
-                'Please specify the model explicitly.')
+        onnx_mode = False
+        if not training and use_onnx_model:
+            onnx_path = join(model_bundle_dir, 'model.onnx')
+            if file_exists(onnx_path):
+                model_weights_path = onnx_path
+                onnx_mode = True
+
+        if not onnx_mode:
+            if cfg.model is None and kwargs.get('model') is None:
+                raise ValueError(
+                    'Model definition is not saved in the model-bundle. '
+                    'Please specify the model explicitly.')
+            model_weights_path = join(model_bundle_dir,
+                                      BUNDLE_MODEL_WEIGHTS_FILENAME)
 
         if cls == Learner:
             if len(kwargs) > 0:
@@ -557,6 +576,13 @@ class Learner(ABC):
         out = self.to_device(out, 'cpu')
         return out
 
+    def predict_onnx(self, x: Tensor, raw_out: bool = False) -> Tensor:
+        """Alternative to predict() for ONNX inference."""
+        out = self.model(x)
+        if not raw_out:
+            out = self.prob_to_pred(self.post_forward(out))
+        return out
+
     def predict_dataset(self,
                         dataset: 'Dataset',
                         return_format: Literal['xyz', 'yz', 'z'] = 'z',
@@ -714,14 +740,18 @@ class Learner(ABC):
                 might or might not be batched depending on the batched_output
                 argument.
         """
-        self.model.eval()
+
+        if self.onnx_mode:
+            log.info('Running inference with ONNX runtime.')
+        else:
+            self.model.eval()
 
         for x, y in dl:
-            x = self.to_device(x, self.device)
-            z = self.predict(x, raw_out=raw_out, **predict_kw)
-            x = self.to_device(x, 'cpu')
-            y = self.to_device(y, 'cpu') if y is not None else y
-            z = self.to_device(z, 'cpu')
+            if self.onnx_mode:
+                z = self.predict_onnx(x, raw_out=raw_out, **predict_kw)
+            else:
+                z = self.predict(x, raw_out=raw_out, **predict_kw)
+                x = self.to_device(x, 'cpu')
             if batched_output:
                 yield x, y, z
             else:
@@ -737,31 +767,6 @@ class Learner(ABC):
         Returns: the output of the model in numpy format
         """
         return out.numpy()
-
-    def numpy_predict(self, x: np.ndarray,
-                      raw_out: bool = False) -> np.ndarray:
-        """Make a prediction using an image or batch of images in numpy format.
-        If x.dtype is a subtype of np.unsignedinteger, it will be normalized
-        to [0, 1] using the max possible value of that dtype. Otherwise, x will
-        be assumed to be in [0, 1] already and will be cast to torch.float32
-        directly.
-
-        Args:
-            x: (ndarray) of shape [height, width, channels] or
-                [batch_sz, height, width, channels]
-            raw_out: if True, return prediction probabilities
-
-        Returns:
-            predictions using numpy arrays
-        """
-        transform, _ = self.cfg.data.get_data_transforms()
-        x = self.normalize_input(x)
-        x = self.to_batch(x)
-        x = np.stack([transform(image=img)['image'] for img in x])
-        x = torch.from_numpy(x)
-        x = x.permute((0, 3, 1, 2))
-        out = self.predict(x, raw_out=raw_out)
-        return self.output_to_numpy(out)
 
     def prob_to_pred(self, x: Tensor) -> Tensor:
         """Convert a Tensor with prediction probabilities to class ids.
@@ -830,6 +835,11 @@ class Learner(ABC):
             model_def_path (Optional[str], optional): Path to model definition.
                 Will be available when loading from a bundle. Defaults to None.
         """
+        self._onnx_mode = (model_weights_path is not None
+                           and model_weights_path.lower().endswith('.onnx'))
+        if self._onnx_mode:
+            self.model = self.load_onnx_model(model_weights_path)
+            return
         if self.model is None:
             self.model = self.build_model(model_def_path=model_def_path)
         self.model.to(device=self.device)
@@ -1038,7 +1048,7 @@ class Learner(ABC):
     #########
     # Bundle
     #########
-    def save_model_bundle(self):
+    def save_model_bundle(self, export_onnx: bool = True):
         """Save a model bundle.
 
         This is a zip file with the model weights in .pth format and a serialized
@@ -1058,7 +1068,7 @@ class Learner(ABC):
         model_bundle_dir = join(self.tmp_dir, 'model-bundle')
         make_dir(model_bundle_dir, force_empty=True)
 
-        self._bundle_model(model_bundle_dir)
+        self._bundle_model(model_bundle_dir, export_onnx=export_onnx)
         self._bundle_modules(model_bundle_dir)
         self._bundle_transforms(model_bundle_dir)
 
@@ -1070,11 +1080,90 @@ class Learner(ABC):
         log.info(f'Saving bundle to {zip_path}.')
         zipdir(model_bundle_dir, zip_path)
 
-    def _bundle_model(self, model_bundle_dir: str) -> None:
+    def _bundle_model(self, model_bundle_dir: str,
+                      export_onnx: bool = True) -> None:
         """Save model weights and copy them to bundle dir.."""
-        torch.save(self.model.state_dict(), self.last_model_weights_path)
-        shutil.copyfile(self.last_model_weights_path,
-                        join(model_bundle_dir, 'model.pth'))
+        # pytorch
+        path = join(model_bundle_dir, BUNDLE_MODEL_WEIGHTS_FILENAME)
+        if file_exists(self.last_model_weights_path):
+            shutil.copyfile(self.last_model_weights_path, path)
+        else:
+            torch.save(self.model.state_dict(), path)
+
+        # ONNX
+        if export_onnx:
+            path = join(model_bundle_dir, BUNDLE_MODEL_ONNX_FILENAME)
+            self.export_to_onnx(path)
+
+    def export_to_onnx(self,
+                       path: str,
+                       model: Optional['nn.Module'] = None,
+                       sample_input: Optional[Tensor] = None,
+                       validate_export: bool = True,
+                       **kwargs) -> None:
+        """Export model to ONNX format via torch.onnx.export.
+
+        Args:
+            path (str): File path to save to.
+            model (Optional[nn.Module]): The model to export. If None,
+                self.model will be used. Defaults to None.
+            sample_input (Optional[Tensor]): Sample input to the model. If
+                None, a single batch from any available DataLoader in this
+                Learner will be used. Defaults to None.
+            validate_export (bool): If True, use onnx.checker.check_model to
+                validate exported model. An exception is raised if the check
+                fails. Defaults to True.
+            **kwargs (dict): Keyword args to pass to torch.onnx.export. These
+                override the default values used in the function definition.
+
+        Raises:
+            ValueError: If sample_input is None and the Learner has no valid
+                DataLoaders.
+        """
+        if model is None:
+            model = self.model
+
+        training_state = model.training
+
+        model.eval()
+        if sample_input is None:
+            for split in ['train', 'valid', 'test']:
+                dl = self.get_dataloader(split)
+                if dl is not None:
+                    break
+            else:
+                raise ValueError('sample_input not provided and Learner does '
+                                 'not have a DataLoader to get sample input '
+                                 'from.')
+            sample_input, _ = next(iter(dl))
+        sample_input = self.to_device(sample_input, self.device)
+
+        args = dict(
+            input_names=['x'],
+            output_names=['out'],
+            dynamic_axes={
+                'x': {
+                    0: 'batch_size',
+                    2: 'height',
+                    3: 'width',
+                },
+                'out': {
+                    0: 'batch_size',
+                },
+            },
+            training=torch.onnx.TrainingMode.EVAL,
+            opset_version=15,
+        )
+        args.update(**kwargs)
+        log.info('Exporting to model to ONNX.')
+        torch.onnx.export(model, sample_input, path, **args)
+
+        model.train(training_state)
+
+        if validate_export:
+            import onnx
+            model_onnx = onnx.load(path)
+            onnx.checker.check_model(model_onnx)
 
     def _bundle_modules(self, model_bundle_dir: str) -> None:
         """Copy modules into bundle."""
@@ -1216,6 +1305,11 @@ class Learner(ABC):
                 args['strict'] = self.cfg.model.load_strict
             self.load_weights(uri=weights_path, **args)
 
+    def load_onnx_model(self, model_path: str) -> ONNXRuntimeAdapter:
+        log.info(f'Loading ONNX model from {model_path}')
+        onnx_model = ONNXRuntimeAdapter.from_file(model_path)
+        return onnx_model
+
     def log_data_stats(self):
         """Log stats about each DataSet."""
         if self.train_ds is not None:
@@ -1257,3 +1351,7 @@ class Learner(ABC):
             self.tb_writer.close()
             if self.cfg.run_tensorboard:
                 self.tb_process.terminate()
+
+    @property
+    def onnx_mode(self) -> bool:
+        return self._onnx_mode
