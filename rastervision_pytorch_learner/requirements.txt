@@ -3,7 +3,7 @@ rastervision_core==0.20.3-dev
 numpy==1.23.3
 pillow==9.3.0
 torch==1.12.1
-torchvision==0.13.1
+torchvision==0.15.2
 tensorboard==2.13.0
 albumentations==1.3.0
 cython==0.29.32
