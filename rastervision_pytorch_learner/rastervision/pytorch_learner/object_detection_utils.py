@@ -4,6 +4,7 @@ from collections import defaultdict
 from os.path import join
 from operator import iand
 from functools import reduce
+from pprint import pformat
 
 import torch
 import torch.nn as nn
@@ -246,6 +247,9 @@ class BoxList():
             if torch.is_tensor(v):
                 self.extras[k] = v.pin_memory()
         return self
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return pformat(dict(boxes=self.boxes, **self.extras))
 
 
 def collate_fn(data: Iterable[Sequence]) -> Tuple[torch.Tensor, List[BoxList]]:
