@@ -46,7 +46,7 @@ class TestRasterioSource(unittest.TestCase):
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        out_chip = source.get_image_array()
+        out_chip = source.get_chip(source.extent)
         expected_out_chip = np.zeros((height, width, nb_channels))
         np.testing.assert_equal(out_chip, expected_out_chip)
 
@@ -72,7 +72,7 @@ class TestRasterioSource(unittest.TestCase):
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        out_chip = source.get_image_array()
+        out_chip = source.get_chip(source.extent)
         expected_out_chip = np.zeros((height, width, nb_channels))
         np.testing.assert_equal(out_chip, expected_out_chip)
 
@@ -89,7 +89,7 @@ class TestRasterioSource(unittest.TestCase):
         config = RasterioSourceConfig(
             uris=[img_path], channel_order=channel_order)
         source = config.build(tmp_dir=self.tmp_dir)
-        out_chip = source.get_raw_image_array()
+        out_chip = source.get_raw_chip(source.extent)
         self.assertEqual(out_chip.shape[2], 3)
 
     def test_gets_raw_chip_from_uint16_transformed_proto(self):
@@ -110,7 +110,7 @@ class TestRasterioSource(unittest.TestCase):
             channel_order=channel_order,
             transformers=[transformer])
         rs = config.build(tmp_dir=self.tmp_dir)
-        out_chip = rs.get_raw_image_array()
+        out_chip = rs.get_raw_chip(rs.extent)
         self.assertEqual(out_chip.shape[2], 3)
 
     def test_uses_channel_order(self):
@@ -123,7 +123,7 @@ class TestRasterioSource(unittest.TestCase):
         config = RasterioSourceConfig(
             uris=[img_path], channel_order=channel_order)
         source = config.build(tmp_dir=self.tmp_dir)
-        out_chip = source.get_image_array()
+        out_chip = source.get_chip(source.extent)
         expected_out_chip = np.ones((2, 2, 3)).astype(np.uint8)
         expected_out_chip[:, :, :] *= np.array([0, 1, 2]).astype(np.uint8)
         np.testing.assert_equal(out_chip, expected_out_chip)
@@ -154,7 +154,7 @@ class TestRasterioSource(unittest.TestCase):
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        out_chip = source.get_image_array()
+        out_chip = source.get_chip(source.extent)
         expected_out_chip = np.ones((2, 2, 2)).astype(np.uint8)
         expected_out_chip[:, :, :] *= np.array([1, 2]).astype(np.uint8)
         np.testing.assert_equal(out_chip, expected_out_chip)
@@ -168,7 +168,7 @@ class TestRasterioSource(unittest.TestCase):
 
         config = RasterioSourceConfig(uris=[img_path])
         source = config.build(tmp_dir=self.tmp_dir)
-        out_chip = source.get_image_array()
+        out_chip = source.get_chip(source.extent)
         np.testing.assert_equal(out_chip, chip)
 
         p = (3, 4)

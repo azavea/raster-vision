@@ -177,28 +177,6 @@ class RasterSource(ABC):
         """
         return self._get_chip(window, out_shape=out_shape)
 
-    def get_image_array(
-            self, out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
-        """Return entire transformed image array.
-
-        .. warning:: Not safe to call on very large RasterSources.
-
-        Returns:
-            np.ndarray: Array of shape (height, width, channels).
-        """
-        return self.get_chip(self.extent, out_shape=out_shape)
-
-    def get_raw_image_array(
-            self, out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
-        """Return raw image for the full extent.
-
-        .. warning:: Not safe to call on very large RasterSources.
-
-        Returns:
-            np.ndarray: Array of shape (height, width, channels).
-        """
-        return self.get_raw_chip(self.extent, out_shape=out_shape)
-
     def resize(self,
                chip: 'np.ndarray',
                out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
