@@ -101,7 +101,7 @@ class TestRasterioSource(unittest.TestCase):
 
         stats_uri = join(self.tmp_dir, 'tmp.tif')
         stats = RasterStats()
-        stats.compute([raw_rs])
+        stats.compute([raw_rs], nodata_value=None)
         stats.save(stats_uri)
 
         transformer = StatsTransformerConfig(stats_uri=stats_uri)
