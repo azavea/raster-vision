@@ -36,8 +36,8 @@ class StatsTransformer(RasterTransformer):
                 distribution to on both sides. Defaults to 3.
         """
         # shape = (1, 1, num_channels)
-        self.means = np.array(means, dtype=float)[np.newaxis, np.newaxis, :]
-        self.stds = np.array(stds, dtype=float)[np.newaxis, np.newaxis, :]
+        self.means = np.array(means, dtype=float)
+        self.stds = np.array(stds, dtype=float)
         self.max_stds = max_stds
 
     def transform(self,
@@ -65,8 +65,8 @@ class StatsTransformer(RasterTransformer):
         stds = self.stds
         max_stds = self.max_stds
         if channel_order is not None:
-            means = means[..., channel_order]
-            stds = stds[..., channel_order]
+            means = means[channel_order]
+            stds = stds[channel_order]
 
         # Don't transform NODATA zero values.
         nodata_mask = chip == 0

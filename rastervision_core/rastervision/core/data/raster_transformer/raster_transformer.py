@@ -1,11 +1,16 @@
+from typing import TYPE_CHECKING
 from abc import (ABC, abstractmethod)
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class RasterTransformer(ABC):
     """Transforms raw chips to be input to a neural network."""
 
     @abstractmethod
-    def transform(self, chip, channel_order=None):
+    def transform(self, chip: 'np.ndarray',
+                  channel_order=None) -> 'np.ndarray':
         """Transform a chip of a raster source.
 
         Args:
@@ -16,6 +21,6 @@ class RasterTransformer(ABC):
                 raw imagery.
 
         Returns:
-            [height, width, channels] numpy array
+            (np.ndarray): Array of shape (..., H, W, C)
         """
         pass

@@ -75,9 +75,9 @@ def normalize_color(
 
 
 def rgb_to_int_array(rgb_array: np.ndarray) -> np.ndarray:
-    r = np.array(rgb_array[:, :, 0], dtype=np.uint32) * (1 << 16)
-    g = np.array(rgb_array[:, :, 1], dtype=np.uint32) * (1 << 8)
-    b = np.array(rgb_array[:, :, 2], dtype=np.uint32) * (1 << 0)
+    r = np.array(rgb_array[..., 0], dtype=np.uint32) * (1 << 16)
+    g = np.array(rgb_array[..., 1], dtype=np.uint32) * (1 << 8)
+    b = np.array(rgb_array[..., 2], dtype=np.uint32) * (1 << 0)
     return r + g + b
 
 
