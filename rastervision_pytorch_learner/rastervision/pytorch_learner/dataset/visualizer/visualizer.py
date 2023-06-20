@@ -23,6 +23,7 @@ from rastervision.pytorch_learner.learner_config import (
 
 if TYPE_CHECKING:
     from torch.utils.data import Dataset
+    from matplotlib.figure import Figure
 
 
 class Visualizer(ABC):
@@ -66,7 +67,12 @@ class Visualizer(ABC):
             channel_display_groups)
 
     @abstractmethod
-    def plot_xyz(self, axs, x: Tensor, y, z=None):
+    def plot_xyz(self,
+                 axs,
+                 x: Tensor,
+                 y: Sequence,
+                 z: Optional[Sequence] = None,
+                 plot_title: bool = True):
         """Plot image, ground truth labels, and predicted labels.
 
         Args:
@@ -95,11 +101,62 @@ class Visualizer(ABC):
         """
         params = self.get_plot_params(
             x=x, y=y, z=z, output_path=output_path, batch_limit=batch_limit)
-        if params['fig_args']['nrows'] == 0:
+        if params['subplot_args']['nrows'] == 0:
             return
 
-        fig, axs = plt.subplots(**params['fig_args'])
+        if x.ndim == 4:
+            fig, axs = plt.subplots(**params['fig_args'],
+                                    **params['subplot_args'])
+            plot_xyz_args = params['plot_xyz_args']
+            self._plot_batch(fig, axs, plot_xyz_args, x, y=y, z=z)
+        elif x.ndim == 5:
+            # If a temporal dimension is present, we divide the figure into
+            # multiple subfigures--one for each batch. Then, in each subfigure,
+            # we plot all timesteps as if they were a single batch. To
+            # delineate the boundary b/w batch items, we adopt the convention
+            # of only displaying subplot titles once per batch (above the first
+            # row in each batch).
+            batch_sz, T, *_ = x.shape
+            params['fig_args']['figsize'][1] *= T
+            fig = plt.figure(**params['fig_args'])
+            subfigs = fig.subfigures(nrows=batch_sz, ncols=1, hspace=0.0)
+            subfig_axs = [
+                subfig.subplots(
+                    nrows=T, ncols=params['subplot_args']['ncols'])
+                for subfig in subfigs.flat
+            ]
+            for i, axs in enumerate(subfig_axs):
+                plot_xyz_args = [
+                    dict(params['plot_xyz_args'][i]) for _ in range(T)
+                ]
+                plot_xyz_args[0]['plot_title'] = True
+                for args in plot_xyz_args[1:]:
+                    args['plot_title'] = False
+                _x = x[i]
+                _y = [y[i]] * T
+                _z = None if z is None else [z[i]] * T
+                self._plot_batch(fig, axs, plot_xyz_args, _x, y=_y, z=_z)
+        else:
+            raise ValueError('Expected x to have 4 or 5 dims, but found '
+                             f'x.shape: {x.shape}')
 
+        if show:
+            plt.show()
+        if output_path is not None:
+            make_dir(output_path, use_dirname=True)
+            plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
+
+        plt.close(fig)
+
+    def _plot_batch(
+            self,
+            fig: 'Figure',
+            axs: Sequence,
+            plot_xyz_args: List[dict],
+            x: Tensor,
+            y: Optional[Sequence] = None,
+            z: Optional[Sequence] = None,
+    ):
         # (N, c, h, w) --> (N, h, w, c)
         x = x.permute(0, 2, 3, 1)
 
@@ -109,20 +166,9 @@ class Visualizer(ABC):
             imgs = [tf(image=img)['image'] for img in x.numpy()]
             x = torch.from_numpy(np.stack(imgs))
 
-        plot_xyz_args = params['plot_xyz_args']
         for i, row_axs in enumerate(axs):
-            if z is None:
-                self.plot_xyz(row_axs, x[i], y[i], **plot_xyz_args)
-            else:
-                self.plot_xyz(row_axs, x[i], y[i], z=z[i], **plot_xyz_args)
-
-        if show:
-            plt.show()
-        if output_path is not None:
-            make_dir(output_path, use_dirname=True)
-            plt.savefig(output_path, bbox_inches='tight', pad_inches=0.2)
-
-        plt.close(fig)
+            _z = None if z is None else z[i]
+            self.plot_xyz(row_axs, x[i], y[i], z=_z, **plot_xyz_args[i])
 
     def get_channel_display_groups(
             self, nb_img_channels: int
@@ -179,12 +225,14 @@ class Visualizer(ABC):
         ncols = self.get_plot_ncols(**kwargs)
         params = {
             'fig_args': {
+                'constrained_layout': True,
+                'figsize': np.array((self.scale * ncols, self.scale * nrows)),
+            },
+            'subplot_args': {
                 'nrows': nrows,
                 'ncols': ncols,
-                'constrained_layout': True,
-                'figsize': (self.scale * ncols, self.scale * nrows),
                 'squeeze': False
             },
-            'plot_xyz_args': {}
+            'plot_xyz_args': [{} for _ in range(nrows)]
         }
         return params

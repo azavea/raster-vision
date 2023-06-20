@@ -15,7 +15,8 @@ class ClassificationVisualizer(Visualizer):
                  axs: Sequence,
                  x: torch.Tensor,
                  y: int,
-                 z: Optional[int] = None) -> None:
+                 z: Optional[int] = None,
+                 plot_title: bool = True) -> None:
         channel_groups = self.get_channel_display_groups(x.shape[1])
 
         img_axes = axs[:-1]
@@ -23,7 +24,8 @@ class ClassificationVisualizer(Visualizer):
 
         # plot image
         imgs = channel_groups_to_imgs(x, channel_groups)
-        plot_channel_groups(img_axes, imgs, channel_groups)
+        plot_channel_groups(
+            img_axes, imgs, channel_groups, plot_title=plot_title)
 
         # plot label
         class_names = self.class_names
@@ -66,7 +68,8 @@ class ClassificationVisualizer(Visualizer):
             label_ax.set_xlim((0, 1))
             label_ax.xaxis.grid(linestyle='--', alpha=1)
             label_ax.set_xlabel('Probability')
-            label_ax.set_title('Prediction')
+            if plot_title:
+                label_ax.set_title('Prediction')
 
     def get_plot_ncols(self, **kwargs) -> int:
         x = kwargs['x']
