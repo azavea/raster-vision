@@ -8,7 +8,7 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${UBUNTU_VERSION}
 # ImportError: libGL.so.1: cannot open shared object file: No such file or directory
 # See https://stackoverflow.com/questions/55313610/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directo
 RUN apt-get update && \
-    apt-get install -y wget=1.* build-essential libgl1 curl && \
+    apt-get install -y wget=1.* build-essential libgl1 curl git tree && \
     apt-get autoremove && apt-get autoclean && apt-get clean
 
 ARG PYTHON_VERSION=3.9
