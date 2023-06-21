@@ -2,9 +2,9 @@ rastervision_pipeline==0.20.3-dev
 
 # These 3 should be updated together to ensure compatibility. Incompatibility
 # results in a warning about pygeos versions.
-pygeos==0.13
-shapely==1.8.4
-geopandas==0.12.0
+pygeos==0.14
+shapely==2.0.1
+geopandas==0.13.2
 
 numpy==1.25.0
 pillow==9.3.0
