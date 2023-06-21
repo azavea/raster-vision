@@ -34,6 +34,6 @@ then
     fi
 
     DOCKER_BUILDKIT=1 docker build \
-        --platform linux/${PLATFORM} --build-arg CUDA_VERSION="11.3.1" \
+        --platform linux/${PLATFORM} --build-arg CUDA_VERSION="11.7.1" \
         -t raster-vision-pytorch${IMAGE_EXT} -f Dockerfile .
 fi
