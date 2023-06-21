@@ -4,4 +4,4 @@ typing_extensions==4.6.3
 everett==1.0.3
 everett[ini]==1.0.3
 six==1.16.*
-tqdm==4.64.1
+tqdm==4.65.0
