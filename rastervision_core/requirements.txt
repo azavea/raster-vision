@@ -6,15 +6,15 @@ pygeos==0.13
 shapely==1.8.4
 geopandas==0.12.0
 
-numpy==1.23.3
+numpy==1.25.0
 pillow==9.3.0
 pyproj==3.4.0
-rasterio==1.3.2
+rasterio==1.3.7
 imageio==2.22.1
 pystac==1.6.1
-scikit-learn==1.1.2
-scipy==1.9.2
+scikit-learn==1.2.2
+scipy==1.10.1
 opencv-python==4.6.0.66
 opencv-python-headless==4.6.0.66
-tqdm==4.64.1
+tqdm==4.65.0
 xarray==2023.2.0
