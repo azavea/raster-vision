@@ -11,7 +11,7 @@ RUN apt-get update && \
     apt-get install -y wget=1.* build-essential libgl1 curl git tree && \
     apt-get autoremove && apt-get autoclean && apt-get clean
 
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.10
 ARG TARGETPLATFORM
 
 RUN case ${TARGETPLATFORM} in \
