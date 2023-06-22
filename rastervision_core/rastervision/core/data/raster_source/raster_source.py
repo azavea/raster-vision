@@ -143,6 +143,26 @@ class RasterSource(ABC):
 
         return chip
 
+    def get_chip_by_map_window(
+            self,
+            window_map_coords: 'Box',
+            out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+        """Same as get_chip(), but input is a window in map coords. """
+        window_pixel_coords = self.crs_transformer.map_to_pixel(
+            window_map_coords, bbox=self.bbox)
+        chip = self.get_chip(window_pixel_coords, out_shape=out_shape)
+        return chip
+
+    def _get_chip_by_map_window(
+            self,
+            window_map_coords: 'Box',
+            out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+        """Same as _get_chip(), but input is a window in map coords. """
+        window_pixel_coords = self.crs_transformer.map_to_pixel(
+            window_map_coords, bbox=self.bbox)
+        chip = self._get_chip(window_pixel_coords, out_shape=out_shape)
+        return chip
+
     def get_raw_chip(self,
                      window: 'Box',
                      out_shape: Optional[Tuple[int, int]] = None

@@ -65,6 +65,10 @@ class MultiRasterSource(RasterSource):
         self.force_same_dtype = force_same_dtype
         self.raster_sources = raster_sources
         self.primary_source_idx = primary_source_idx
+        self.non_primary_sources = [
+            rs for i, rs in enumerate(raster_sources)
+            if i != primary_source_idx
+        ]
 
         self.validate_raster_sources()
 
@@ -127,25 +131,31 @@ class MultiRasterSource(RasterSource):
         def get_chip(
                 rs: RasterSource,
                 window: Box,
+                map: bool = False,
                 out_shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
             if raw:
-                return rs._get_chip(window, out_shape=out_shape)
-            return rs.get_chip(window, out_shape=out_shape)
+                if map:
+                    func = rs._get_chip_by_map_window
+                else:
+                    func = rs._get_chip
+            else:
+                if map:
+                    func = rs.get_chip_by_map_window
+                else:
+                    func = rs.get_chip
+            return func(window, out_shape=out_shape)
 
         primary_rs = self.primary_source
-        other_rses = [rs for rs in self.raster_sources if rs != primary_rs]
+        other_rses = self.non_primary_sources
 
         primary_sub_chip = get_chip(primary_rs, window, out_shape=out_shape)
-        out_shape = primary_sub_chip.shape[:2]
-        world_window = primary_rs.crs_transformer.pixel_to_map(
+        if out_shape is None:
+            out_shape = primary_sub_chip.shape[:2]
+        window_map_coords = primary_rs.crs_transformer.pixel_to_map(
             window, bbox=primary_rs.bbox)
-        pixel_windows = [
-            rs.crs_transformer.map_to_pixel(world_window, bbox=rs.bbox)
-            for rs in other_rses
-        ]
         sub_chips = [
-            get_chip(rs, w, out_shape=out_shape)
-            for rs, w in zip(other_rses, pixel_windows)
+            get_chip(rs, window_map_coords, map=True, out_shape=out_shape)
+            for rs in other_rses
         ]
         sub_chips.insert(self.primary_source_idx, primary_sub_chip)
 
