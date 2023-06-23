@@ -223,13 +223,6 @@ class RasterioSource(RasterSource):
                      f'{block_shapes}. This can slow down reading. '
                      'Consider re-tiling using GDAL.')
 
-        for h, w in block_shapes:
-            # the choice of 4 here is arbitrary
-            if max(h, w) / min(h, w) > 4:
-                log.warn(f'Raster block size {(h, w)} is too non-square. '
-                         'This can slow down reading. '
-                         'Consider re-tiling using GDAL.')
-
         self._crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
 
