@@ -48,7 +48,7 @@ The Data
 Configuring a semantic segmentation pipeline
 ----------------------------------------------
 
-Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to write a function called ``get_config`` that returns a :class:`~rastervision.core.rv_pipeline.semantic_segmentation_config.SemanticSegmentationConfig` object. This object's type is a subclass of :class:`~rastervision.pipeline.pipeline_config.PipelineConfig`, and configures a semantic segmentation pipeline which (optionally) analyzes the imagery, (optionally) creates training chips, trains a model, makes predictions on validation scenes, evaluates the predictions, and saves a model bundle.
+Create a Python file in the ``${RV_QUICKSTART_CODE_DIR}`` named ``tiny_spacenet.py``. Inside, you're going to write a function called ``get_config`` that returns a :class:`.SemanticSegmentationConfig` object. This object's type is a subclass of :class:`.PipelineConfig`, and configures a semantic segmentation pipeline which (optionally) analyzes the imagery, (optionally) creates training chips, trains a model, makes predictions on validation scenes, evaluates the predictions, and saves a model bundle.
 
 .. literalinclude:: /../rastervision_pytorch_backend/rastervision/pytorch_backend/examples/tiny_spacenet.py
     :language: python

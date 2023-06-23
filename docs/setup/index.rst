@@ -40,7 +40,7 @@ This has been shown to work in the following environment. Variations on this env
 * Python 3.9
 * CUDA 11.6 and NVIDIA Driver 510.47.03 (for GPU support)
 
-Raster Vision also runs on macOS version 12.1, except that the ``num_workers`` for the :class:`~torch.utils.data.DataLoader` will need to be set to 0 due to an issue with mulitprocessing on Macs with Python >= 3.8. It will also be necessary to install GDAL (check `here <{{ repo }}/rastervision_gdal_vsi/requirements.txt>`__ for the exact version) prior to installing Raster Vision, which isn't necessary on Linux.
+Raster Vision also runs on macOS version 12.1, except that the ``num_workers`` for the :class:`.DataLoader` will need to be set to 0 due to an issue with mulitprocessing on Macs with Python >= 3.8. It will also be necessary to install GDAL (check `here <{{ repo }}/rastervision_gdal_vsi/requirements.txt>`__ for the exact version) prior to installing Raster Vision, which isn't necessary on Linux.
 
 .. warning::
 
