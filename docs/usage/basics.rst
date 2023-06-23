@@ -36,14 +36,16 @@ RasterSource
 
     Tutorial: :doc:`tutorials/reading_raster_data`
 
-A :class:`~raster_source.raster_source.RasterSource` represents a source of raster data for a scene. It is used to retrieve small windows of raster data (or *chips*) from larger scenes. It can also be used to subset image channels (i.e. bands) as well as do more complex transformations using :mod:`RasterTransformers <rastervision.core.data.raster_transformer>`. You can even combine bands from multiple sources using a :class:`~raster_source.multi_raster_source.MultiRasterSource`.
+A :class:`~raster_source.raster_source.RasterSource` represents a source of raster data for a scene. It is used to retrieve small windows of raster data (or *chips*) from larger scenes. It can also be used to subset image channels (i.e. bands) as well as do more complex transformations using :mod:`RasterTransformers <rastervision.core.data.raster_transformer>`. You can even combine bands from multiple sources using a :class:`.MultiRasterSource` or stack images from sources in a time-series using a :class:`.TemporalMultiRasterSource`.
 
 .. seealso::
 
-    - :class:`~raster_source.rasterio_source.RasterioSource`
-    - :class:`~raster_source.multi_raster_source.MultiRasterSource`
-    - :class:`~raster_source.rasterized_source.RasterizedSource`
-    - :class:`~raster_transformer.raster_transformer.RasterTransformer`
+    - :class:`.RasterioSource`
+    - :class:`.XarraySource`
+    - :class:`.MultiRasterSource`
+    - :class:`.TemporalMultiRasterSource`
+    - :class:`.RasterizedSource`
+    - :class:`.RasterTransformer`
 
       - :class:`~raster_transformer.cast_transformer.CastTransformer`
       - :class:`~raster_transformer.min_max_transformer.MinMaxTransformer`

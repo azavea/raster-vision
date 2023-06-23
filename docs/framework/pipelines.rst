@@ -121,9 +121,11 @@ The following table shows the corresponding ``Configs`` for various commonly use
    * -  :class:`~data.raster_source.raster_source.RasterSource`
 
 
-        - :class:`~data.raster_source.rasterio_source.RasterioSource`
-        - :class:`~data.raster_source.multi_raster_source.MultiRasterSource`
-        - :class:`~data.raster_source.rasterized_source.RasterizedSource`
+        - :class:`.RasterioSource`
+        - :class:`.XarraySource`
+        - :class:`.MultiRasterSource`
+        - :class:`.TemporalMultiRasterSource`
+        - :class:`.RasterizedSource`
 
      -  :class:`~data.raster_source.raster_source_config.RasterSourceConfig`
 
