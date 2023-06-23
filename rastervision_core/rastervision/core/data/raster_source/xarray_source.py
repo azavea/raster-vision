@@ -8,7 +8,7 @@ from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
 from rastervision.core.data.raster_source import RasterSource
 from rastervision.core.data.raster_source.rasterio_source import fill_overflow
-from rastervision.core.data.utils import parse_array_slices
+from rastervision.core.data.utils import parse_array_slices_Nd
 
 if TYPE_CHECKING:
     from rastervision.core.data import RasterTransformer, CRSTransformer
@@ -28,7 +28,8 @@ class XarraySource(RasterSource):
                  raster_transformers: List['RasterTransformer'] = [],
                  channel_order: Optional[Sequence[int]] = None,
                  num_channels_raw: Optional[int] = None,
-                 bbox: Optional[Box] = None):
+                 bbox: Optional[Box] = None,
+                 temporal: bool = False):
         """Constructor.
 
         Args:
@@ -44,12 +45,23 @@ class XarraySource(RasterSource):
                 image will be read. Defaults to None.
             bbox (Optional[Box], optional): User-specified crop of the extent.
                 If None, the full extent available in the source file is used.
+            temporal (bool): If True, data_array is expected to have a "time"
+                dimension and the chips returned will be of shape (T, H, W, C).
         """
-        if set(data_array.dims) != {'x', 'y', 'band'}:
-            raise NotImplementedError('data_array must have 3 dimensions: '
-                                      '"x", "y", and "band" (in any order).')
+        self.temporal = temporal
+        if self.temporal:
+            if set(data_array.dims) != {'x', 'y', 'band', 'time'}:
+                raise ValueError(
+                    'If temporal=True, data_array must have 4 dimensions: '
+                    '"x", "y", "band", and "time" (in any order).')
+        else:
+            if set(data_array.dims) != {'x', 'y', 'band'}:
+                raise ValueError(
+                    'If temporal=False, data_array must have 3 dimensions: '
+                    '"x", "y", and "band" (in any order).')
 
-        self.data_array = data_array.transpose('y', 'x', 'band')
+        self.data_array = data_array.transpose(..., 'y', 'x', 'band')
+        self.ndim = data_array.ndim
         self._crs_transformer = crs_transformer
 
         if num_channels_raw is None:
@@ -74,6 +86,15 @@ class XarraySource(RasterSource):
             num_channels_raw,
             raster_transformers=raster_transformers,
             bbox=bbox)
+
+    @property
+    def shape(self) -> Tuple[int, int, int]:
+        """Shape of the raster as a (height, width, num_channels) tuple."""
+        H, W = self.bbox.size
+        if self.temporal:
+            T = len(self.data_array.time)
+            return T, H, W, self.num_channels
+        return H, W, self.num_channels
 
     @property
     def num_channels(self) -> int:
@@ -108,29 +129,36 @@ class XarraySource(RasterSource):
 
     def _get_chip(self,
                   window: Box,
-                  bands: slice = slice(None, None),
+                  bands: Union[int, Sequence[int], slice] = slice(None),
+                  time: Union[int, Sequence[int], slice] = slice(None),
                   out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
         window = window.to_global_coords(self.bbox)
 
         yslice, xsclice = window.to_slices()
-        chip = self.data_array.isel(x=xsclice, y=yslice, band=bands).to_numpy()
+        if self.temporal:
+            chip = self.data_array.isel(
+                x=xsclice, y=yslice, band=bands, time=time).to_numpy()
+        else:
+            chip = self.data_array.isel(
+                x=xsclice, y=yslice, band=bands).to_numpy()
 
-        if window.size != chip.shape[:2]:
+        *batch_dims, h, w, c = chip.shape
+        if window.size != (h, w):
             window_actual = window.intersection(self.full_extent)
             yslice, xsclice = window_actual.to_local_coords(window).to_slices()
-            tmp = np.zeros((*window.size, chip.shape[2]))
-            tmp[yslice, xsclice, :] = chip
+            tmp = np.zeros((*batch_dims, *window.size, c))
+            tmp[..., yslice, xsclice, :] = chip
             chip = tmp
 
         chip = fill_overflow(self.bbox, window, chip)
-
         if out_shape is not None:
             chip = self.resize(chip, out_shape)
         return chip
 
     def get_chip(self,
                  window: Box,
-                 bands: Optional[Union[Sequence[int], slice]] = None,
+                 bands: Optional[Union[int, Sequence[int], slice]] = None,
+                 time: Union[int, Sequence[int], slice] = slice(None),
                  out_shape: Optional[Tuple[int, ...]] = None) -> np.ndarray:
         """Read a chip specified by a window from the file.
 
@@ -148,11 +176,12 @@ class XarraySource(RasterSource):
         Returns:
             np.ndarray: A chip of shape (height, width, channels).
         """
-        if bands is None:
+        if bands is None or bands == slice(None):
             bands = self.channel_order
         else:
             bands = self.channel_order[bands]
-        chip = self._get_chip(window, bands=bands, out_shape=out_shape)
+        chip = self._get_chip(
+            window, bands=bands, time=time, out_shape=out_shape)
         for transformer in self.raster_transformers:
             chip = transformer.transform(chip, bands)
         return chip
@@ -161,7 +190,13 @@ class XarraySource(RasterSource):
         if isinstance(key, Box):
             return self.get_chip(key)
 
-        window, (h, w, c) = parse_array_slices(key, extent=self.extent, dims=3)
+        window, dim_slices = parse_array_slices_Nd(
+            key, extent=self.extent, dims=self.ndim)
+        if self.temporal:
+            t, h, w, c = dim_slices
+        else:
+            h, w, c = dim_slices
+            t = None
 
         out_shape = None
         if h.step is not None or w.step is not None:
@@ -172,5 +207,5 @@ class XarraySource(RasterSource):
                 out_w //= w.step
             out_shape = (int(out_h), int(out_w))
 
-        chip = self.get_chip(window, bands=c, out_shape=out_shape)
+        chip = self.get_chip(window, bands=c, time=t, out_shape=out_shape)
         return chip

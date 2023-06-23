@@ -10,6 +10,13 @@ from rastervision.core.data.raster_source import (ChannelOrderError,
 
 
 class TestXarraySource(unittest.TestCase):
+    def test_init_temporal(self):
+        arr = np.ones((2, 5, 5, 4), dtype=np.uint8)
+        da = DataArray(arr, dims=['time', 'x', 'y', 'band'])
+        with self.assertRaises(ValueError):
+            _ = XarraySource(
+                da, IdentityCRSTransformer(), channel_order=[2, 1, 0])
+
     def test_dtype(self):
         dtype = np.uint8
         arr = np.empty((5, 5, 3), dtype=dtype)
@@ -44,7 +51,7 @@ class TestXarraySource(unittest.TestCase):
 
     def test_get_raw_chip(self):
         arr = np.ones((5, 5, 4), dtype=np.uint8)
-        arr *= np.arange(4, dtype=np.uint8)[np.newaxis, np.newaxis]
+        arr *= np.arange(4, dtype=np.uint8)
         da = DataArray(arr, dims=['x', 'y', 'band'])
         rs = XarraySource(
             da, IdentityCRSTransformer(), channel_order=[2, 1, 0])
@@ -54,7 +61,7 @@ class TestXarraySource(unittest.TestCase):
 
     def test_get_chip(self):
         arr = np.ones((5, 5, 4), dtype=np.uint8)
-        arr *= np.arange(4, dtype=np.uint8)[np.newaxis, np.newaxis]
+        arr *= np.arange(4, dtype=np.uint8)
         da = DataArray(arr, dims=['x', 'y', 'band'])
         rs = XarraySource(
             da, IdentityCRSTransformer(), channel_order=[2, 1, 0])
@@ -70,9 +77,51 @@ class TestXarraySource(unittest.TestCase):
         chip_expected = np.array([[[2]]], dtype=arr.dtype)
         np.testing.assert_array_equal(chip, chip_expected)
 
+    def test_get_chip_temporal(self):
+        arr = np.ones((2, 5, 5, 4), dtype=np.uint8)
+        arr *= np.arange(4, dtype=np.uint8)
+        arr[1] *= 2
+        da = DataArray(arr, dims=['time', 'x', 'y', 'band'])
+        rs = XarraySource(
+            da,
+            IdentityCRSTransformer(),
+            channel_order=[2, 1, 0],
+            temporal=True)
+        chip = rs.get_chip(Box(0, 0, 1, 1))
+        chip_expected = np.array(
+            [
+                [[[2, 1, 0]]],
+                [[[4, 2, 0]]],
+            ], dtype=arr.dtype)
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs.get_chip(Box(0, 0, 1, 1), bands=[2])
+        chip_expected = np.array(
+            [
+                [[[0]]],
+                [[[0]]],
+            ], dtype=arr.dtype)
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs.get_chip(Box(0, 0, 2, 2), bands=[0], out_shape=(1, 1))
+        chip_expected = np.array(
+            [
+                [[[2]]],
+                [[[4]]],
+            ], dtype=arr.dtype)
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs.get_chip(
+            Box(0, 0, 2, 2), bands=[0], time=1, out_shape=(1, 1))
+        chip_expected = np.array(
+            [
+                [[4]],
+            ], dtype=arr.dtype)
+        np.testing.assert_array_equal(chip, chip_expected)
+
     def test_getitem(self):
         arr = np.ones((5, 5, 4), dtype=np.uint8)
-        arr *= np.arange(4, dtype=np.uint8)[np.newaxis, np.newaxis]
+        arr *= np.arange(4, dtype=np.uint8)
         da = DataArray(arr, dims=['x', 'y', 'band'])
         rs = XarraySource(
             da, IdentityCRSTransformer(), channel_order=[2, 1, 0])
@@ -88,9 +137,50 @@ class TestXarraySource(unittest.TestCase):
         chip_expected = np.array([[[2]]], dtype=arr.dtype)
         np.testing.assert_array_equal(chip, chip_expected)
 
+    def test_getitem_temporal(self):
+        arr = np.ones((2, 5, 5, 4), dtype=np.uint8)
+        arr *= np.arange(4, dtype=np.uint8)
+        arr[1] *= 2
+        da = DataArray(arr, dims=['time', 'x', 'y', 'band'])
+        rs = XarraySource(
+            da,
+            IdentityCRSTransformer(),
+            channel_order=[2, 1, 0],
+            temporal=True)
+        chip = rs[Box(0, 0, 1, 1)]
+        chip_expected = np.array(
+            [
+                [[[2, 1, 0]]],
+                [[[4, 2, 0]]],
+            ], dtype=arr.dtype)
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs[:, :1, :1, [2]]
+        chip_expected = np.array(
+            [
+                [[[0]]],
+                [[[0]]],
+            ], dtype=arr.dtype)
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs[:, :2:2, :2:2, [0]]
+        chip_expected = np.array(
+            [
+                [[[2]]],
+                [[[4]]],
+            ], dtype=arr.dtype)
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = rs[1, :2:2, :2:2, [0]]
+        chip_expected = np.array(
+            [
+                [[4]],
+            ], dtype=arr.dtype)
+        np.testing.assert_array_equal(chip, chip_expected)
+
     def test_resizing(self):
         arr = np.ones((5, 5, 3), dtype=np.uint8)
-        arr *= np.arange(3, dtype=np.uint8)[np.newaxis, np.newaxis]
+        arr *= np.arange(3, dtype=np.uint8)
         da = DataArray(arr, dims=['x', 'y', 'band'])
         rs = XarraySource(da, IdentityCRSTransformer())
         chip = rs.get_chip(Box(0, 0, 1, 1), out_shape=(5, 5))
@@ -98,7 +188,7 @@ class TestXarraySource(unittest.TestCase):
 
     def test_channel_order_error(self):
         arr = np.empty((5, 5, 4), dtype=np.uint8)
-        arr *= np.arange(4, dtype=np.uint8)[np.newaxis, np.newaxis]
+        arr *= np.arange(4, dtype=np.uint8)
         da = DataArray(arr, dims=['x', 'y', 'band'])
         with self.assertRaises(ChannelOrderError):
             _ = XarraySource(da, IdentityCRSTransformer(), channel_order=[10])

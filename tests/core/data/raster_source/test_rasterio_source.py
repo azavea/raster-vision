@@ -233,7 +233,7 @@ class TestRasterioSource(unittest.TestCase):
     def test_fill_overflow(self):
         extent = Box(10, 10, 90, 90)
         window = Box(0, 0, 100, 100)
-        arr = np.ones((100, 100), dtype=np.uint8)
+        arr = np.ones((100, 100, 1), dtype=np.uint8)
         out = fill_overflow(extent, window, arr)
         mask = np.zeros_like(arr).astype(bool)
         mask[10:90, 10:90] = 1
@@ -241,7 +241,7 @@ class TestRasterioSource(unittest.TestCase):
         self.assertTrue(np.all(out[~mask] == 0))
 
         window = Box(0, 0, 80, 100)
-        arr = np.ones((80, 100), dtype=np.uint8)
+        arr = np.ones((80, 100, 1), dtype=np.uint8)
         out = fill_overflow(extent, window, arr)
         mask = np.zeros((80, 100), dtype=bool)
         mask[10:90, 10:90] = 1

@@ -1,12 +1,15 @@
+from typing import Callable
 import unittest
 
 import numpy as np
+from xarray import DataArray
 
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data import (
-    RasterioSourceConfig, MultiRasterSourceConfig, ReclassTransformerConfig,
-    CastTransformerConfig)
+    RasterioSourceConfig, MultiRasterSource, MultiRasterSourceConfig,
+    ReclassTransformerConfig, CastTransformerConfig, XarraySource,
+    IdentityCRSTransformer, TemporalMultiRasterSource)
 
 from tests import data_file_path
 
@@ -43,6 +46,36 @@ def make_cfg_diverse(diff_dtypes: bool = False,
     ]
     cfg = MultiRasterSourceConfig(raster_sources=rs_cfgs, **kwargs)
     return cfg
+
+
+class TestMultiRasterSourceConfig(unittest.TestCase):
+    def assertNoError(self, fn: Callable, msg: str = ''):
+        try:
+            fn()
+        except Exception:
+            self.fail(msg)
+
+    def test_validate_primary_source_idx(self):
+        with self.assertRaises(IndexError):
+            _ = make_cfg(primary_source_idx=10)
+        self.assertNoError(lambda: make_cfg(primary_source_idx=0))
+        self.assertNoError(lambda: make_cfg(primary_source_idx=1))
+        self.assertNoError(lambda: make_cfg(primary_source_idx=2))
+
+    def test_validate_temporal(self):
+        with self.assertRaises(ValueError):
+            _ = make_cfg(temporal=True, channel_order=[0, 1, 2])
+        self.assertNoError(lambda: make_cfg(temporal=True))
+
+    def test_build(self):
+        cfg = make_cfg()
+        self.assertNoError(lambda: cfg.build(tmp_dir=get_tmp_dir()))
+
+    def test_build_temporal(self):
+        cfg = make_cfg(temporal=True)
+        rs = cfg.build(tmp_dir=get_tmp_dir())
+        self.assertIsInstance(rs, TemporalMultiRasterSource)
+        self.assertEqual(rs.shape, (3, 256, 256, 3))
 
 
 class TestMultiRasterSource(unittest.TestCase):
@@ -167,6 +200,27 @@ class TestMultiRasterSource(unittest.TestCase):
             self.assertEqual(set(np.unique(full_img[..., 0])), {100})
             self.assertEqual(set(np.unique(full_img[..., 1])), {0, 175})
             self.assertEqual(set(np.unique(full_img[..., 2])), {0, 250})
+
+    def test_temporal_sub_raster_sources(self):
+        dtype = np.uint8
+        arr = np.ones((2, 5, 5, 4), dtype=dtype)
+        arr *= np.arange(4, dtype=np.uint8)
+        da = DataArray(arr, dims=['time', 'x', 'y', 'band'])
+        rs = XarraySource(da, IdentityCRSTransformer(), temporal=True)
+        mrs = MultiRasterSource([rs, rs])
+        self.assertEqual(mrs.shape, (2, 5, 5, 8))
+
+        chip = mrs.get_chip(Box(0, 0, 2, 2))
+        chip_expected = np.ones((2, 2, 2, 8), dtype=dtype)
+        chip_expected[..., :4] *= np.arange(4, dtype=np.uint8)
+        chip_expected[..., 4:] *= np.arange(4, dtype=np.uint8)
+        np.testing.assert_array_equal(chip, chip_expected)
+
+        chip = mrs.get_chip(Box(0, 0, 2, 2), out_shape=(1, 1))
+        chip_expected = np.ones((2, 1, 1, 8), dtype=dtype)
+        chip_expected[..., :4] *= np.arange(4, dtype=np.uint8)
+        chip_expected[..., 4:] *= np.arange(4, dtype=np.uint8)
+        np.testing.assert_array_equal(chip, chip_expected)
 
 
 if __name__ == '__main__':

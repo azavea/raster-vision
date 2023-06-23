@@ -33,11 +33,8 @@ class MultiRasterSource(RasterSource):
                 that will be used by .get_chip(). Defaults to None.
             raster_transformers (Sequence, optional): Sequence of transformers.
                 Defaults to [].
-            extent (Optional[Box], optional): User-specified extent. If given,
-                the primary raster source's extent is set to this. If None,
-                the full extent of the primary raster source is used.
             bbox (Optional[Box], optional): User-specified crop of the extent.
-                If given, the primary raster source's bbox is set to this. 
+                If given, the primary raster source's bbox is set to this.
                 If None, the full extent available in the source file of the
                 primary raster source is used.
         """
@@ -94,6 +91,12 @@ class MultiRasterSource(RasterSource):
         return self.raster_sources[self.primary_source_idx]
 
     @property
+    def shape(self) -> Tuple[int, ...]:
+        """Shape of the raster as a (..., H, W, C) tuple."""
+        *shape, _ = self.primary_source.shape
+        return (*shape, self.num_channels)
+
+    @property
     def dtype(self) -> np.dtype:
         return self.primary_source.dtype
 
@@ -120,9 +123,12 @@ class MultiRasterSource(RasterSource):
                 reference chip from the primary sub raster source
 
         Args:
-            window (Box): window to read, in pixel coordinates.
+            window (Box): The window for which to get the chip, in pixel
+                coordinates.
             raw (bool, optional): If True, uses RasterSource._get_chip.
                 Otherwise, RasterSource.get_chip. Defaults to False.
+            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+                the chip to.
 
         Returns:
             List[np.ndarray]: List of chips from each sub raster source.
@@ -173,7 +179,10 @@ class MultiRasterSource(RasterSource):
         Get raw chips from sub raster sources and concatenate them.
 
         Args:
-            window: Box
+            window (Box): The window for which to get the chip, in pixel
+                coordinates.
+            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+                the chip to.
 
         Returns:
             [height, width, channels] numpy array
@@ -192,7 +201,10 @@ class MultiRasterSource(RasterSource):
         channel dimension, apply channel_order, followed by transformations.
 
         Args:
-            window: Box
+            window (Box): The window for which to get the chip, in pixel
+                coordinates.
+            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+                the chip to.
 
         Returns:
             np.ndarray with shape [height, width, channels]

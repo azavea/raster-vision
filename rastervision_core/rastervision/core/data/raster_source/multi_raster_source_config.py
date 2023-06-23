@@ -18,7 +18,10 @@ def multi_rs_config_upgrader(cfg_dict: dict, version: int) -> dict:
 
 @register_config('multi_raster_source', upgrader=multi_rs_config_upgrader)
 class MultiRasterSourceConfig(RasterSourceConfig):
-    """Configure a :class:`.MultiRasterSource`."""
+    """Configure a :class:`.MultiRasterSource`.
+
+    Or :class:`.TemporalMultiRasterSource`, if ``temporal=True``.
+    """
 
     raster_sources: conlist(
         RasterSourceConfig, min_items=1) = Field(
@@ -32,6 +35,10 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         False,
         description='Force all subchips to be of the same dtype as the '
         'primary_source_idx-th subchip.')
+    temporal: bool = Field(
+        False,
+        description='Stack images from sub raster sources into a time-series '
+        'of shape (T, H, W, C) instead of concatenating bands.')
 
     @validator('primary_source_idx')
     def validate_primary_source_idx(cls, v: int, values: dict):
@@ -39,6 +46,14 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         if not (0 <= v < len(raster_sources)):
             raise IndexError('primary_source_idx must be in range '
                              '[0, len(raster_sources)].')
+        return v
+
+    @validator('temporal')
+    def validate_temporal(cls, v: int, values: dict):
+        channel_order = values.get('channel_order')
+        if v and channel_order is not None:
+            raise ValueError(
+                'Setting channel_order is not allowed if temporal=True.')
         return v
 
     def build(self, tmp_dir: str,
@@ -51,13 +66,23 @@ class MultiRasterSourceConfig(RasterSourceConfig):
         built_raster_sources = [
             rs.build(tmp_dir, use_transformers) for rs in self.raster_sources
         ]
-        multi_raster_source = MultiRasterSource(
-            raster_sources=built_raster_sources,
-            primary_source_idx=self.primary_source_idx,
-            force_same_dtype=self.force_same_dtype,
-            channel_order=self.channel_order,
-            raster_transformers=raster_transformers,
-            bbox=self.bbox)
+        if self.temporal:
+            from rastervision.core.data.raster_source import (
+                TemporalMultiRasterSource)
+            multi_raster_source = TemporalMultiRasterSource(
+                raster_sources=built_raster_sources,
+                primary_source_idx=self.primary_source_idx,
+                force_same_dtype=self.force_same_dtype,
+                raster_transformers=raster_transformers,
+                bbox=self.bbox)
+        else:
+            multi_raster_source = MultiRasterSource(
+                raster_sources=built_raster_sources,
+                primary_source_idx=self.primary_source_idx,
+                force_same_dtype=self.force_same_dtype,
+                channel_order=self.channel_order,
+                raster_transformers=raster_transformers,
+                bbox=self.bbox)
         return multi_raster_source
 
     def update(self, pipeline=None, scene=None):

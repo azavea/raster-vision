@@ -6,7 +6,7 @@ from rastervision.core.box import Box
 from rastervision.core.data.label import ObjectDetectionLabels
 from rastervision.core.data.label_source import LabelSource
 from rastervision.core.data.vector_source import VectorSource
-from rastervision.core.data.utils import parse_array_slices
+from rastervision.core.data.utils import parse_array_slices_2d
 
 if TYPE_CHECKING:
     from rastervision.core.data import CRSTransformer
@@ -91,7 +91,7 @@ class ObjectDetectionLabelSource(LabelSource):
                 npboxes, window_global)
             return npboxes, class_ids, 'yxyx'
 
-        window, (h, w) = parse_array_slices(key, extent=self.extent, dims=2)
+        window, (h, w) = parse_array_slices_2d(key, extent=self.extent)
         npboxes, class_ids, fmt = self[window]
 
         # rescale if steps specified
