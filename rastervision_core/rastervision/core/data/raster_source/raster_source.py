@@ -5,7 +5,7 @@ import numpy as np
 from skimage.transform import resize
 
 from rastervision.core.box import Box
-from rastervision.core.data.utils import parse_array_slices
+from rastervision.core.data.utils import parse_array_slices_Nd
 
 if TYPE_CHECKING:
     from rastervision.core.data import (CRSTransformer, RasterTransformer)
@@ -102,7 +102,9 @@ class RasterSource(ABC):
         """Return raw chip without applying channel_order or transforms.
 
         Args:
-            window: Box
+            window (Box): The window for which to get the chip.
+            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+                the chip to.
 
         Returns:
             [height, width, channels] numpy array
@@ -113,7 +115,8 @@ class RasterSource(ABC):
         if isinstance(key, Box):
             return self.get_chip(key)
 
-        window, (h, w, c) = parse_array_slices(key, extent=self.extent, dims=3)
+        window, (h, w, c) = parse_array_slices_Nd(
+            key, extent=self.extent, dims=3)
         chip = self.get_chip(window)
         if h.step is not None or w.step is not None:
             chip = chip[::h.step, ::w.step]
@@ -131,16 +134,38 @@ class RasterSource(ABC):
 
         Args:
             window (Box): The window for which to get the chip.
+            out_shape (Optional[Tuple[int, int]]): (height, width) to resize
+                the chip to.
 
         Returns:
-            np.ndarray: Array of shape (height, width, channels).
+            np.ndarray: Array of shape (..., height, width, channels).
         """
         chip = self._get_chip(window, out_shape=out_shape)
-        chip = chip[:, :, self.channel_order]
+        chip = chip[..., self.channel_order]
 
         for transformer in self.raster_transformers:
             chip = transformer.transform(chip, self.channel_order)
 
+        return chip
+
+    def get_chip_by_map_window(
+            self,
+            window_map_coords: 'Box',
+            out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+        """Same as get_chip(), but input is a window in map coords. """
+        window_pixel_coords = self.crs_transformer.map_to_pixel(
+            window_map_coords, bbox=self.bbox)
+        chip = self.get_chip(window_pixel_coords, out_shape=out_shape)
+        return chip
+
+    def _get_chip_by_map_window(
+            self,
+            window_map_coords: 'Box',
+            out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+        """Same as _get_chip(), but input is a window in map coords. """
+        window_pixel_coords = self.crs_transformer.map_to_pixel(
+            window_map_coords, bbox=self.bbox)
+        chip = self._get_chip(window_pixel_coords, out_shape=out_shape)
         return chip
 
     def get_raw_chip(self,
@@ -153,35 +178,14 @@ class RasterSource(ABC):
             window (Box): The window for which to get the chip.
 
         Returns:
-            np.ndarray: Array of shape (height, width, channels).
+            np.ndarray: Array of shape (..., height, width, channels).
         """
         return self._get_chip(window, out_shape=out_shape)
-
-    def get_image_array(
-            self, out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
-        """Return entire transformed image array.
-
-        .. warning:: Not safe to call on very large RasterSources.
-
-        Returns:
-            np.ndarray: Array of shape (height, width, channels).
-        """
-        return self.get_chip(self.extent, out_shape=out_shape)
-
-    def get_raw_image_array(
-            self, out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
-        """Return raw image for the full extent.
-
-        .. warning:: Not safe to call on very large RasterSources.
-
-        Returns:
-            np.ndarray: Array of shape (height, width, channels).
-        """
-        return self.get_raw_chip(self.extent, out_shape=out_shape)
 
     def resize(self,
                chip: 'np.ndarray',
                out_shape: Optional[Tuple[int, int]] = None) -> 'np.ndarray':
+        out_shape = chip.shape[:-3] + out_shape
         out = resize(chip, out_shape, preserve_range=True, anti_aliasing=True)
-        out = out.astype(chip.dtype)
+        out = out.round(6).astype(chip.dtype)
         return out

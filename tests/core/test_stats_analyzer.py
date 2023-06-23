@@ -4,10 +4,12 @@ from os.path import join
 import numpy as np
 
 from rastervision.pipeline.file_system.utils import file_exists, get_tmp_dir
-from rastervision.core.raster_stats import RasterStats, chip_sz
+from rastervision.core.raster_stats import RasterStats
 from rastervision.core.data import Scene
 from rastervision.core.analyzer import StatsAnalyzerConfig
 from tests.core.data.mock_raster_source import MockRasterSource
+
+chip_sz = 300
 
 
 def make_scene(i: int, is_random: bool = False) -> Scene:

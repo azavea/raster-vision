@@ -84,7 +84,7 @@ class TestRasterizedSource(unittest.TestCase):
 
         source = self.build_source(geojson)
         self.assertEqual(source.extent, self.extent)
-        chip = source.get_image_array()
+        chip = source.get_chip(source.extent)
         self.assertEqual(chip.shape, (10, 10, 1))
 
         expected_chip = self.background_class_id * np.ones((10, 10, 1))
@@ -125,11 +125,11 @@ class TestRasterizedSource(unittest.TestCase):
 
         false_source = self.build_source(geojson, all_touched=False)
         true_source = self.build_source(geojson, all_touched=True)
-        chip = false_source.get_image_array()
+        chip = false_source.get_chip(false_source.extent)
         expected_chip = self.background_class_id * np.ones((10, 10, 1))
         np.testing.assert_array_equal(chip, expected_chip)
 
-        chip = true_source.get_image_array()
+        chip = true_source.get_chip(true_source.extent)
         expected_chip = self.background_class_id * np.ones((10, 10, 1))
         expected_chip[0:1, 0:1, 0] = self.class_id
         np.testing.assert_array_equal(chip, expected_chip)

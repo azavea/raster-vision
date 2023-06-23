@@ -17,7 +17,8 @@ class SemanticSegmentationVisualizer(Visualizer):
                  axs: Sequence,
                  x: torch.Tensor,
                  y: Union[torch.Tensor, np.ndarray],
-                 z: Optional[torch.Tensor] = None) -> None:
+                 z: Optional[torch.Tensor] = None,
+                 plot_title: bool = True) -> None:
         channel_groups = self.get_channel_display_groups(x.shape[1])
 
         img_axes = axs[:len(channel_groups)]
@@ -25,7 +26,8 @@ class SemanticSegmentationVisualizer(Visualizer):
 
         # plot image
         imgs = channel_groups_to_imgs(x, channel_groups)
-        plot_channel_groups(img_axes, imgs, channel_groups)
+        plot_channel_groups(
+            img_axes, imgs, channel_groups, plot_title=plot_title)
 
         # plot labels
         class_colors = self.class_colors
@@ -38,7 +40,8 @@ class SemanticSegmentationVisualizer(Visualizer):
 
         label_ax.imshow(
             y, vmin=0, vmax=len(colors), cmap=cmap, interpolation='none')
-        label_ax.set_title(f'Ground truth')
+        if plot_title:
+            label_ax.set_title(f'Ground truth')
         label_ax.set_xticks([])
         label_ax.set_yticks([])
 
@@ -52,7 +55,8 @@ class SemanticSegmentationVisualizer(Visualizer):
                 vmax=len(colors),
                 cmap=cmap,
                 interpolation='none')
-            pred_ax.set_title(f'Predicted labels')
+            if plot_title:
+                pred_ax.set_title(f'Predicted labels')
             pred_ax.set_xticks([])
             pred_ax.set_yticks([])
 

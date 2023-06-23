@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, Optional
 from abc import ABC, abstractmethod, abstractproperty
 
 from rastervision.core.box import Box
-from rastervision.core.data.utils import parse_array_slices
+from rastervision.core.data.utils import parse_array_slices_2d
 
 if TYPE_CHECKING:
     from rastervision.core.data import CRSTransformer, Labels
@@ -58,5 +58,5 @@ class LabelSource(ABC):
     def __getitem__(self, key: Any) -> Any:
         if isinstance(key, Box):
             raise NotImplementedError()
-        window, _ = parse_array_slices(key, extent=self.extent, dims=2)
+        window, _ = parse_array_slices_2d(key, extent=self.extent)
         return self[window]

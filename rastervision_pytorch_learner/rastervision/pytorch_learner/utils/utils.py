@@ -322,10 +322,12 @@ def adjust_conv_channels(old_conv: nn.Conv2d,
 
 def plot_channel_groups(axs: Iterable,
                         imgs: Iterable[Union[np.array, torch.Tensor]],
-                        channel_groups: dict) -> None:
+                        channel_groups: dict,
+                        plot_title: bool = True) -> None:
     for title, ax, img in zip(channel_groups.keys(), axs, imgs):
         ax.imshow(img)
-        ax.set_title(title)
+        if plot_title:
+            ax.set_title(title)
         ax.set_xticks([])
         ax.set_yticks([])
 

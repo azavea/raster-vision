@@ -17,7 +17,8 @@ class RegressionVisualizer(Visualizer):
                  axs: Sequence,
                  x: torch.Tensor,
                  y: int,
-                 z: Optional[int] = None) -> None:
+                 z: Optional[int] = None,
+                 plot_title: bool = True) -> None:
         channel_groups = self.get_channel_display_groups(x.shape[1])
 
         img_axes = axs[:-1]
@@ -25,7 +26,8 @@ class RegressionVisualizer(Visualizer):
 
         # plot image
         imgs = channel_groups_to_imgs(x, channel_groups)
-        plot_channel_groups(img_axes, imgs, channel_groups)
+        plot_channel_groups(
+            img_axes, imgs, channel_groups, plot_title=plot_title)
 
         # plot label
         class_names = self.class_names
@@ -36,8 +38,8 @@ class RegressionVisualizer(Visualizer):
                 y=class_names, width=y, color='lightgray', edgecolor='black')
             # show values on the end of bars
             label_ax.bar_label(bars_gt, fmt='%.3f', padding=3)
-
-            label_ax.set_title('Ground truth')
+            if plot_title:
+                label_ax.set_title('Ground truth')
         else:
             # display targets and predictions as a grouped horizontal bar plot
             bar_thickness = 0.35

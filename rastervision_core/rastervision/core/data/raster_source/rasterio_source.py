@@ -11,7 +11,7 @@ from rastervision.pipeline.file_system import download_if_needed, get_tmp_dir
 from rastervision.core.box import Box
 from rastervision.core.data.crs_transformer import RasterioCRSTransformer
 from rastervision.core.data.raster_source import RasterSource
-from rastervision.core.data.utils import listify_uris, parse_array_slices
+from rastervision.core.data.utils import listify_uris, parse_array_slices_Nd
 
 if TYPE_CHECKING:
     from rasterio.io import DatasetReader
@@ -128,11 +128,11 @@ def fill_overflow(extent: Box,
     left_overflow = max(0, extent.xmin - window.xmin)
     right_overflow = max(0, window.xmax - extent.xmax)
 
-    h, w = chip.shape[:2]
-    chip[:top_overflow] = fill_value
-    chip[h - bottom_overflow:] = fill_value
-    chip[:, :left_overflow] = fill_value
-    chip[:, w - right_overflow:] = fill_value
+    *_, h, w, _ = chip.shape
+    chip[..., :top_overflow, :, :] = fill_value
+    chip[..., h - bottom_overflow:, :, :] = fill_value
+    chip[..., :, :left_overflow, :] = fill_value
+    chip[..., :, w - right_overflow:, :] = fill_value
     return chip
 
 
@@ -222,13 +222,6 @@ class RasterioSource(RasterSource):
             log.warn('Raster bands have non-identical block shapes: '
                      f'{block_shapes}. This can slow down reading. '
                      'Consider re-tiling using GDAL.')
-
-        for h, w in block_shapes:
-            # the choice of 4 here is arbitrary
-            if max(h, w) / min(h, w) > 4:
-                log.warn(f'Raster block size {(h, w)} is too non-square. '
-                         'This can slow down reading. '
-                         'Consider re-tiling using GDAL.')
 
         self._crs_transformer = RasterioCRSTransformer.from_dataset(
             self.image_dataset)
@@ -338,10 +331,11 @@ class RasterioSource(RasterSource):
         Returns:
             np.ndarray: A chip of shape (height, width, channels).
         """
-        bands_to_read = self.bands_to_read
-        if bands is not None:
-            bands_to_read = bands_to_read[bands]
-        chip = self._get_chip(window, out_shape=out_shape, bands=bands_to_read)
+        if bands is None or bands == slice(None):
+            bands = self.bands_to_read
+        else:
+            bands = self.bands_to_read[bands]
+        chip = self._get_chip(window, out_shape=out_shape, bands=bands)
         for transformer in self.raster_transformers:
             chip = transformer.transform(chip, self.channel_order)
         return chip
@@ -350,7 +344,8 @@ class RasterioSource(RasterSource):
         if isinstance(key, Box):
             return self.get_chip(key)
 
-        window, (h, w, c) = parse_array_slices(key, extent=self.extent, dims=3)
+        window, (h, w, c) = parse_array_slices_Nd(
+            key, extent=self.extent, dims=3)
 
         out_shape = None
         if h.step is not None or w.step is not None:

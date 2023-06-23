@@ -75,9 +75,9 @@ def normalize_color(
 
 
 def rgb_to_int_array(rgb_array: np.ndarray) -> np.ndarray:
-    r = np.array(rgb_array[:, :, 0], dtype=np.uint32) * (1 << 16)
-    g = np.array(rgb_array[:, :, 1], dtype=np.uint32) * (1 << 8)
-    b = np.array(rgb_array[:, :, 2], dtype=np.uint32) * (1 << 0)
+    r = np.array(rgb_array[..., 0], dtype=np.uint32) * (1 << 16)
+    g = np.array(rgb_array[..., 1], dtype=np.uint32) * (1 << 8)
+    b = np.array(rgb_array[..., 2], dtype=np.uint32) * (1 << 0)
     return r + g + b
 
 
@@ -125,14 +125,25 @@ def match_bboxes(raster_source: 'RasterSource',
     label_source.set_bbox(bbox_label_pixel)
 
 
-def parse_array_slices(key: Union[tuple, slice], extent: Box,
-                       dims: int = 2) -> Tuple[Box, List[Optional[Any]]]:
+def parse_array_slices_2d(key: Union[tuple, slice],
+                          extent: Box) -> Tuple[Box, List[Optional[Any]]]:
+    """Parse 2D array-indexing inputs into a Box and slices."""
+    return parse_array_slices_Nd(key, extent, dims=2, h_dim=0, w_dim=1)
+
+
+def parse_array_slices_Nd(key: Union[tuple, slice],
+                          extent: Box,
+                          dims: int = 3,
+                          h_dim: int = -3,
+                          w_dim: int = -2) -> Tuple[Box, List[Optional[Any]]]:
     """Parse multi-dim array-indexing inputs into a Box and slices.
 
     Args:
         key (Union[tuple, slice]): Input to __getitem__.
         extent (Box): Extent of the raster/label source being indexed.
-        dims (int, optional): Total available indexable dims. Defaults to 2.
+        dims (int): Total available indexable dims. Defaults to 3.
+        h_dim (int): Index of height dim. Defaults to -3.
+        w_dim (int): Index of width dim. Defaults to -2.
 
     Raises:
         NotImplementedError: If not (1 <= dims <= 3).
@@ -165,7 +176,7 @@ def parse_array_slices(key: Union[tuple, slice], extent: Box,
         if input_slices.count(Ellipsis) > 1:
             raise ValueError('Only one ellipsis is allowed.')
         num_missing_dims = dims - (len(input_slices) - 1)
-        filler_slices = [None] * num_missing_dims
+        filler_slices = [slice(None)] * num_missing_dims
         idx = input_slices.index(Ellipsis)
         # at the start
         if idx == 0:
@@ -179,16 +190,16 @@ def parse_array_slices(key: Union[tuple, slice], extent: Box,
             dim_slices = input_slices[:idx] + filler_slices
     else:
         num_missing_dims = dims - len(input_slices)
-        filler_slices = [None] * num_missing_dims
+        filler_slices = [slice(None)] * num_missing_dims
         dim_slices = input_slices + filler_slices
 
-    if dim_slices[0] is None:
-        dim_slices[0] = slice(None, None)
-    if dim_slices[1] is None:
-        dim_slices[1] = slice(None, None)
-    h, w = dim_slices[:2]
+    if dim_slices[h_dim] is None:
+        dim_slices[h_dim] = slice(None)
+    if dim_slices[w_dim] is None:
+        dim_slices[w_dim] = slice(None)
+    h, w = dim_slices[h_dim], dim_slices[w_dim]
     if not (isinstance(h, slice) and isinstance(w, slice)):
-        raise ValueError('h and w indices (first 2 dims) must be slices.')
+        raise ValueError('h and w indices must be slices.')
 
     if any(x is not None and x < 0
            for x in [h.start, h.stop, h.step, w.start, w.stop, w.step]):
@@ -203,6 +214,8 @@ def parse_array_slices(key: Union[tuple, slice], extent: Box,
     _xmax = W if w.stop is None else w.stop
     window = Box(_ymin, _xmin, _ymax, _xmax)
 
-    dim_slices = list(window.to_slices(h.step, w.step)) + dim_slices[2:]
+    h_slice, w_slice = window.to_slices(h.step, w.step)
+    dim_slices[h_dim] = h_slice
+    dim_slices[w_dim] = w_slice
 
     return window, dim_slices

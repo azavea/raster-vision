@@ -11,8 +11,8 @@ from rastervision.core.data import (
     ObjectDetectionGeoJSONStore, SemanticSegmentationLabelSource,
     SemanticSegmentationLabelStore)
 from rastervision.core.data.utils.geojson import geoms_to_geojson
-from rastervision.core.data.utils.misc import (match_bboxes,
-                                               parse_array_slices)
+from rastervision.core.data.utils.misc import (
+    match_bboxes, parse_array_slices_2d, parse_array_slices_Nd)
 
 from tests import data_file_path
 
@@ -98,7 +98,9 @@ class TestParseArraySlices(unittest.TestCase):
             self.bbox = bbox
 
         def __getitem__(self, key: Any) -> Tuple[Box, list]:
-            return parse_array_slices(key, self.bbox.extent, dims=self.dims)
+            if self.dims == 2:
+                return parse_array_slices_2d(key, self.bbox.extent)
+            return parse_array_slices_Nd(key, self.bbox.extent, dims=self.dims)
 
     def test_errors(self):
         source = self.MockSource(dims=3, bbox=Box(0, 0, 100, 100))
@@ -130,7 +132,10 @@ class TestParseArraySlices(unittest.TestCase):
         source = self.MockSource(dims=3, bbox=Box(0, 0, 100, 100))
 
         _, dim_slices = source[5:10, 15:20]
-        self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20), None])
+        self.assertListEqual(
+            dim_slices,
+            [slice(5, 10), slice(15, 20),
+             slice(None)])
 
         _, dim_slices = source[5:10, 15:20, 0]
         self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20), 0])
@@ -145,20 +150,34 @@ class TestParseArraySlices(unittest.TestCase):
         self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20), [3, 1]])
 
         source = self.MockSource(dims=4, bbox=Box(0, 0, 100, 100))
-        _, dim_slices = source[5:10, 15:20, 0]
+        # check if raises error if w_dim is not a slice
+        with self.assertRaises(ValueError):
+            _, dim_slices = source[5:10, 15:20, 0]
+
+        _, dim_slices = source[5:10, 15:20]
         self.assertListEqual(
-            dim_slices, [slice(5, 10), slice(15, 20), 0, None])
+            dim_slices,
+            [slice(5, 10),
+             slice(15, 20),
+             slice(0, 100),
+             slice(None)])
 
     def test_ellipsis(self):
         source = self.MockSource(dims=3, bbox=Box(0, 0, 100, 100))
 
         window, dim_slices = source[5:10, 15:20, ...]
         self.assertEqual(window, Box(5, 15, 10, 20))
-        self.assertListEqual(dim_slices, [slice(5, 10), slice(15, 20), None])
+        self.assertListEqual(
+            dim_slices,
+            [slice(5, 10), slice(15, 20),
+             slice(None)])
 
         window, dim_slices = source[5:10, ...]
         self.assertEqual(window, Box(5, 0, 10, 100))
-        self.assertListEqual(dim_slices, [slice(5, 10), slice(0, 100), None])
+        self.assertListEqual(
+            dim_slices,
+            [slice(5, 10), slice(0, 100),
+             slice(None)])
 
         window, dim_slices = source[5:10, ..., 0]
         self.assertEqual(window, Box(5, 0, 10, 100))

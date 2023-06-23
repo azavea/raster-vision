@@ -27,6 +27,14 @@ class StatsAnalyzerConfig(AnalyzerConfig):
         description=(
             'The probability of using a random window for computing statistics. '
             'If None, will use a sliding window.'))
+    chip_sz: int = Field(
+        300,
+        description='Chip size to use when sampling chips to compute stats '
+        'from.')
+    nodata_value: Optional[float] = Field(
+        0,
+        description='NODATA value. If set, these pixels will be ignored when '
+        'computing stats.')
 
     def update(self, pipeline: Optional['RVPipelineConfig'] = None) -> None:
         if pipeline is not None and self.output_uri is None:
@@ -43,7 +51,11 @@ class StatsAnalyzerConfig(AnalyzerConfig):
         else:
             group_name, _ = scene_group
             output_uri = join(self.output_uri, group_name, f'stats.json')
-        return StatsAnalyzer(output_uri, sample_prob=self.sample_prob)
+        return StatsAnalyzer(
+            output_uri,
+            sample_prob=self.sample_prob,
+            chip_sz=self.chip_sz,
+            nodata_value=self.nodata_value)
 
     def get_bundle_filenames(self):
         return ['stats.json']

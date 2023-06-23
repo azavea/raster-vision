@@ -76,8 +76,9 @@ class AlbumentationsDataset(Dataset):
             x = x.astype(float) / max_val
 
         if self.to_pytorch:
-            # (H, W, C) --> (C, H, W)
-            x = torch.from_numpy(x).permute(2, 0, 1).float()
+            x = torch.from_numpy(x).float()
+            # (..., H, W, C) --> (..., C, H, W)
+            x = x.transpose_(-2, -1).transpose_(-3, -2)
             if y is not None:
                 y = torch.from_numpy(y)
 

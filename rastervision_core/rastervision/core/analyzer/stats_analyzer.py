@@ -10,14 +10,21 @@ class StatsAnalyzer(Analyzer):
 
     def __init__(self,
                  stats_uri: Optional[str] = None,
-                 sample_prob: float = 0.1):
+                 sample_prob: float = 0.1,
+                 chip_sz: int = 300,
+                 nodata_value: Optional[float] = 0):
         self.stats_uri = stats_uri
         self.sample_prob = sample_prob
+        self.chip_sz = chip_sz
+        self.nodata_value = nodata_value
 
     def compute_stats(self, scenes: Iterable[Scene]) -> RasterStats:
         stats = RasterStats()
         stats.compute(
-            [s.raster_source for s in scenes], sample_prob=self.sample_prob)
+            [s.raster_source for s in scenes],
+            sample_prob=self.sample_prob,
+            chip_sz=self.chip_sz,
+            nodata_value=self.nodata_value)
         return stats
 
     def process(self, scenes: Iterable[Scene], tmp_dir: str) -> None:
