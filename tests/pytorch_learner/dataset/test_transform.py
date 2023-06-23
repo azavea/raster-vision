@@ -1,12 +1,39 @@
 import unittest
 
 import numpy as np
+import albumentations as A
 
 from rastervision.pytorch_learner.dataset.transform import (
-    yxyx_to_albu, albu_to_yxyx, xywh_to_albu)
+    yxyx_to_albu, albu_to_yxyx, xywh_to_albu, apply_transform)
 
 
 class TestTransforms(unittest.TestCase):
+    def test_apply_transform_invalid_ndims(self):
+        tf = A.Resize(10, 10)
+        with self.assertRaises(NotImplementedError):
+            x = np.ones((1, 2, 5, 5, 3))  # 5 dims
+            apply_transform(tf, image=x)
+
+        with self.assertRaises(NotImplementedError):
+            x = np.ones((5, 5))  # 2 dims
+            apply_transform(tf, image=x)
+
+    def test_apply_transform_3d(self):
+        tf = A.Resize(10, 10)
+        x = np.ones((5, 5, 3))
+        y = np.ones((5, 5), dtype=int)
+        x_tf = apply_transform(tf, image=x, mask=y)
+        self.assertEqual(x_tf['image'].shape, (10, 10, 3))
+        self.assertEqual(x_tf['mask'].shape, (10, 10))
+
+    def test_apply_transform_4d(self):
+        tf = A.Resize(10, 10)
+        x = np.ones((2, 5, 5, 3))
+        y = np.ones((5, 5), dtype=int)
+        x_tf = apply_transform(tf, image=x, mask=y)
+        self.assertEqual(x_tf['image'].shape, (2, 10, 10, 3))
+        self.assertEqual(x_tf['mask'].shape, (10, 10))
+
     def test_box_format_conversions_yxyx(self):
         boxes = np.array(
             [

@@ -18,6 +18,36 @@ class TransformType(Enum):
     semantic_segmentation = 'semantic_segmentation'
 
 
+def apply_transform(transform: A.BasicTransform,
+                    **kwargs) -> Callable[..., dict]:
+    """Apply Albumentations transform to possibly batched images.
+
+    In case of batched images, the same transform is applied to all of them.
+    This is useful for when the images represent a time-series.
+    """
+    img = kwargs['image']
+    if img.ndim == 3:
+        return transform(**kwargs)
+
+    if img.ndim != 4:
+        raise NotImplementedError(
+            f'Image should have 3 or 4 dims. Found {img.ndim}.')
+
+    batch_size = len(img)
+
+    if len(transform._additional_targets) != (batch_size - 1):
+        additional_targets = {f'img{i}': 'image' for i in range(1, batch_size)}
+        transform.add_targets(additional_targets)
+
+    img = kwargs.pop('image')
+    img_keys = transform._additional_targets.keys()
+    img_args = dict(zip(img_keys, img[1:]))
+    out = transform(image=img[0], **kwargs, **img_args)
+    out['image'] = np.stack([out.pop('image')] + [out[k] for k in img_keys])
+
+    return out
+
+
 def classification_transformer(inp: Tuple[np.ndarray, Optional[int]],
                                transform=Optional[A.BasicTransform]
                                ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
@@ -25,7 +55,7 @@ def classification_transformer(inp: Tuple[np.ndarray, Optional[int]],
     x, y = inp
     x = np.array(x)
     if transform is not None:
-        out = transform(image=x)
+        out = apply_transform(transform, image=x)
         x = out['image']
     if y is not None:
         y = np.array(y, dtype=int)
@@ -39,7 +69,7 @@ def regression_transformer(inp: Tuple[np.ndarray, Optional[Any]],
     x, y = inp
     x = np.array(x)
     if transform is not None:
-        out = transform(image=x)
+        out = apply_transform(transform, image=x)
         x = out['image']
     if y is not None:
         y = np.array(y, dtype=float)
@@ -134,7 +164,8 @@ def object_detection_transformer(
 
     if transform is not None:
         if y is None:
-            x = transform(image=x, bboxes=[], category_id=[])['image']
+            x = apply_transform(
+                transform, image=x, bboxes=[], category_id=[])['image']
         else:
             # The albumentations transform expects the bboxes to be in the
             # Albumentations format i.e. [ymin, xmin, ymax, xmax], so we convert to
@@ -146,7 +177,8 @@ def object_detection_transformer(
             else:
                 raise NotImplementedError(f'Unknown box_format: {box_format}.')
 
-            out = transform(image=x, bboxes=boxes, category_id=class_ids)
+            out = apply_transform(
+                transform, image=x, bboxes=boxes, category_id=class_ids)
             x = out['image']
             boxes = np.array(out['bboxes']).reshape((-1, 4))
             class_ids = np.array(out['category_id'])
@@ -183,10 +215,10 @@ def semantic_segmentation_transformer(
     x = np.array(x)
     if transform is not None:
         if y is None:
-            x = transform(image=x)['image']
+            x = apply_transform(transform, image=x)['image']
         else:
             y = np.array(y)
-            out = transform(image=x, mask=y)
+            out = apply_transform(transform, image=x, mask=y)
             x, y = out['image'], out['mask']
             y = y.astype(int)
     return x, y
