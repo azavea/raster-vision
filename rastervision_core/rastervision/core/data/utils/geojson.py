@@ -192,7 +192,7 @@ def split_multi_geometries(geojson: dict) -> dict:
     def split_geom(geom: 'BaseGeometry') -> List['BaseGeometry']:
         # Split GeometryCollection into list of geoms.
         if geom.geom_type == 'GeometryCollection':
-            geoms = list(geom)
+            geoms = list(geom.geoms)
         else:
             geoms = [geom]
         # Split any MultiX to list of X.

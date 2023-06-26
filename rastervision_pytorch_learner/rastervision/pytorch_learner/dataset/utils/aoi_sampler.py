@@ -1,7 +1,7 @@
 from typing import Sequence, Tuple
 
 import numpy as np
-from shapely.geometry import Polygon, LinearRing, MultiPolygon
+from shapely.geometry import Polygon, MultiPolygon
 from shapely.ops import unary_union
 from triangle import triangulate
 
@@ -21,7 +21,9 @@ class AoiSampler():
         merged_polygons = unary_union(polygons)
         if isinstance(merged_polygons, Polygon):
             merged_polygons = [merged_polygons]
-        self.polygons = MultiPolygon(merged_polygons)
+        elif isinstance(merged_polygons, MultiPolygon):
+            merged_polygons = list(merged_polygons.geoms)
+        self.polygons = merged_polygons
         self.triangulate(self.polygons)
 
     def triangulate(self, polygons) -> dict:
@@ -65,7 +67,7 @@ class AoiSampler():
         """Extract vertices and edges from the polygon (and its holes, if any)
         and pass them to the Triangle library for triangulation.
         """
-        vertices, edges = self.polygon_to_graph(polygon.exterior)
+        vertices, edges = self.polygon_to_graph(polygon)
 
         holes = polygon.interiors
         if not holes:
@@ -107,17 +109,17 @@ class AoiSampler():
         return out
 
     def polygon_to_graph(self,
-                         polygon: LinearRing) -> Tuple[np.ndarray, np.ndarray]:
-        """Given the exterior of a polygon, return its graph representation.
+                         polygon: Polygon) -> Tuple[np.ndarray, np.ndarray]:
+        """Given a polygon, return its graph representation.
 
         Args:
-            polygon (LinearRing): The exterior of a polygon.
+            polygon (Polygon): A polygon.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: An (N, 2) array of vertices and
             an (N, 2) array of indices to vertices representing edges.
         """
-        vertices = np.array(polygon)
+        vertices = np.array(polygon.exterior.coords)
         # Discard the last vertex - it is a duplicate of the first vertex and
         # duplicates cause problems for the Triangle library.
         vertices = vertices[:-1]
