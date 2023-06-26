@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, Dict, Tuple
+
 import numpy as np
-from shapely.strtree import STRtree
+import geopandas as gpd
 
 from rastervision.core.evaluation import (ClassificationEvaluation,
                                           ClassEvaluationItem)
 
 if TYPE_CHECKING:
-    from shapely.geometry import Polygon
     from rastervision.core.data import ObjectDetectionLabels
     from rastervision.core.data.class_config import ClassConfig
 
@@ -16,41 +16,63 @@ def compute_metrics(
         pred_labels: 'ObjectDetectionLabels',
         num_classes: int,
         iou_thresh: float = 0.5) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Compute per-class true positves, false positives, and false negatives.
+
+    Does the following:
+
+    1.  Spatially join ground truth (GT) boxes with predicted boxes.
+    2.  Compute intersection-overo-union (IoU) for each matched box-pair.
+    3.  Filter matches by ``iou_thresh``.
+    4.  For each GT box >1 matches, keep only the max-IoU one.
+    5.  For each pred box >1 matches, keep only the max-IoU one.
+    6.  For each class, c, compute:
+
+        a.  True positives (TP) := #matches where GT class ID == c and
+            pred class ID == c
+        b.  False positives := #preds where (class ID == c) minus TP
+        c.  False negatives := #GT where (class ID == c) minus TP
+
+    """
     gt_geoms = [b.to_shapely() for b in gt_labels.get_boxes()]
     gt_classes = gt_labels.get_class_ids()
     pred_geoms = [b.to_shapely() for b in pred_labels.get_boxes()]
     pred_classes = pred_labels.get_class_ids()
 
-    for pred_geom, class_id in zip(pred_geoms, pred_classes):
-        pred_geom.class_id = class_id
-    pred_tree = STRtree(pred_geoms)
+    gt_df = gpd.GeoDataFrame(
+        dict(class_id=gt_classes, id=range(len(gt_geoms))), geometry=gt_geoms)
+    pred_df = gpd.GeoDataFrame(
+        dict(class_id=pred_classes, id=range(len(pred_geoms))),
+        geometry=pred_geoms)
 
-    def iou(a: 'Polygon', b: 'Polygon') -> float:
-        return a.intersection(b).area / a.union(b).area
+    gt_df.loc[:, '_geometry'] = gt_df.geometry
+    pred_df.loc[:, '_geometry'] = pred_df.geometry
 
-    def is_matched(geom) -> bool:
-        return hasattr(geom, 'iou_matched')
+    match_df: gpd.GeoDataFrame = gt_df.sjoin(
+        pred_df,
+        how='inner',
+        predicate='intersects',
+        lsuffix='gt',
+        rsuffix='pred')
+
+    intersection = match_df['_geometry_gt'].intersection(
+        match_df['_geometry_pred'])
+    union = match_df['_geometry_gt'].union(match_df['_geometry_pred'])
+    match_df.loc[:, 'iou'] = (intersection.area / union.area)
+    match_df = match_df.loc[match_df['iou'] > iou_thresh]
+    match_df = match_df.sort_values('iou').drop_duplicates(
+        ['id_gt'], keep='last')
+    match_df = match_df.sort_values('iou').drop_duplicates(
+        ['id_pred'], keep='last')
 
     tp = np.zeros((num_classes, ))
     fp = np.zeros((num_classes, ))
     fn = np.zeros((num_classes, ))
 
-    for gt_geom, gt_class in zip(gt_geoms, gt_classes):
-        matches = [
-            g for g in pred_tree.query(gt_geom)
-            if (not is_matched(g)) and (g.class_id == gt_class)
-        ]
-        ious = np.array([iou(m, gt_geom) for m in matches])
-        if (ious > iou_thresh).any():
-            max_ind = np.argmax(ious)
-            matches[max_ind].iou_matched = True
-            tp[gt_class] += 1
-        else:
-            fn[gt_class] += 1
-
     for class_id in range(num_classes):
-        pred_not_matched = np.array([not is_matched(g) for g in pred_geoms])
-        fp[class_id] = np.sum(pred_not_matched[pred_classes == class_id])
+        tp[class_id] = sum((match_df['class_id_gt'] == class_id)
+                           & (match_df['class_id_pred'] == class_id))
+        fp[class_id] = sum(pred_df['class_id'] == class_id) - tp[class_id]
+        fn[class_id] = sum(gt_df['class_id'] == class_id) - tp[class_id]
 
     return tp, fp, fn
 
