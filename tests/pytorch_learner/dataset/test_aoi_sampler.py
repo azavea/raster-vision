@@ -10,10 +10,9 @@ from rastervision.pytorch_learner.dataset.utils import AoiSampler
 
 class TestAoiSampler(unittest.TestCase):
     def test_sampler(self, nsamples: int = 200):
-        """This test attempts to check if the points are distributed uniformly
-        within the AOI.
+        """Attempt to check if points are distributed uniformly within an AOI.
 
-        To do this, it performs the following steps:
+        To do this, we perform the following steps:
         - Create an AOI in the form of a plus-sign shape centered in a 6x6
         grid.
         - Create an AoiSampler for this AOI.
@@ -33,8 +32,7 @@ class TestAoiSampler(unittest.TestCase):
         Args:
             nsamples (int, optional): Number of points to sample. It is
                 important for the sample size to not be too large or the test
-                will become over-powered.
-                Defaults to 200.
+                will become over-powered. Defaults to 200.
         """
         np.random.seed(0)
 
@@ -57,7 +55,7 @@ class TestAoiSampler(unittest.TestCase):
         points = MultiPoint(aoi_sampler.sample(n=nsamples))
         # number of points in each block
         counts = np.array(
-            [len(block.intersection(points)) for block in blocks])
+            [len(block.intersection(points).geoms) for block in blocks.geoms])
 
         p_value = chisquare(counts).pvalue
 
