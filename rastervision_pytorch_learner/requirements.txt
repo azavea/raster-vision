@@ -11,7 +11,7 @@ pycocotools==2.0.6
 psutil==5.9.3
 triangle==20220202
 opencv-python==4.6.0.66
-opencv-python-headless==4.6.0.66
+opencv-python-headless==4.8.0.74
 matplotlib==3.7.1
 tqdm==4.65.0
 onnx==1.14.0
