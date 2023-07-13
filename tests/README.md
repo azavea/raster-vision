@@ -15,9 +15,11 @@ Every directory in the path of the test file _must_ have an `__init__.py` file f
 ## Running tests
 
 ### Run all unit tests
+Run all unit tests and generate a coverage report (if the `coverage` package is installed):
 ```sh
 scripts/unit_tests
 ```
+
 Or (from the repo root):
 ```sh
 python -m unittest discover -t . tests -vf
