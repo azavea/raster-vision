@@ -1,3 +1,4 @@
+from typing import Tuple
 import unittest
 from os.path import join
 
@@ -12,7 +13,8 @@ from tests.core.data.mock_raster_source import MockRasterSource
 chip_sz = 300
 
 
-def make_scene(i: int, is_random: bool = False) -> Scene:
+def make_scene(i: int, is_random: bool = False
+               ) -> Tuple[Scene, MockRasterSource, np.ndarray]:
     rs = MockRasterSource([0, 1, 2], 3)
     img = np.zeros((600, 600, 3))
     img[:, :, 0] = 1 + i
@@ -34,20 +36,25 @@ class TestStatsAnalyzer(unittest.TestCase):
 
     def _test(self, is_random=False):
         sample_prob = 0.5
-        scenes, raster_sources, imgs = zip(*[make_scene(i) for i in range(3)])
 
-        channel_vals = list(map(lambda x: np.expand_dims(x, axis=0), imgs))
-        channel_vals = np.concatenate(channel_vals, axis=0)
-        channel_vals = np.transpose(channel_vals, [3, 0, 1, 2])
-        channel_vals = np.reshape(channel_vals, (3, -1))
-        exp_means = np.nanmean(channel_vals, axis=1)
-        exp_stds = np.nanstd(channel_vals, axis=1)
+        scenes, raster_sources, imgs = zip(
+            *[make_scene(i, is_random=is_random) for i in range(3)])
 
-        analyzer_cfg = StatsAnalyzerConfig(
-            output_uri=self.tmp_dir.name, sample_prob=None)
+        imgs: np.ndarray = np.stack(imgs)
+        pixels = imgs.reshape(-1, 3)
+        exp_means = np.nanmean(pixels, axis=0)
+        exp_stds = np.nanstd(pixels, axis=0)
+
         if is_random:
             analyzer_cfg = StatsAnalyzerConfig(
-                output_uri=self.tmp_dir.name, sample_prob=sample_prob)
+                output_uri=self.tmp_dir.name,
+                chip_sz=chip_sz,
+                sample_prob=sample_prob)
+        else:
+            analyzer_cfg = StatsAnalyzerConfig(
+                output_uri=self.tmp_dir.name,
+                chip_sz=chip_sz,
+                sample_prob=None)
         analyzer = analyzer_cfg.build()
         analyzer.process(scenes, self.tmp_dir.name)
 
@@ -56,9 +63,8 @@ class TestStatsAnalyzer(unittest.TestCase):
         np.testing.assert_array_almost_equal(stats.stds, exp_stds, decimal=3)
         if is_random:
             for rs in raster_sources:
-                height, width = rs.extent.size
-                exp_num_chips = round(
-                    ((width * height) / (chip_sz**2)) * sample_prob)
+                area = rs.extent.area
+                exp_num_chips = round((area / (chip_sz**2)) * sample_prob)
                 self.assertEqual(rs.mock._get_chip.call_count, exp_num_chips)
 
     def test_random(self):

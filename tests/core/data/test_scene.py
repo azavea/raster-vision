@@ -42,3 +42,7 @@ class TestScene(unittest.TestCase):
         self.assertListEqual(scene.aoi_polygons, aoi_polygons[:2])
         self.assertListEqual(scene.aoi_polygons_bbox_coords,
                              aoi_polygons_bbox_coords)
+
+
+if __name__ == '__main__':
+    unittest.main()

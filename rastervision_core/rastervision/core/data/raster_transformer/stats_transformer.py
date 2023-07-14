@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List, Optional, Sequence
 import numpy as np
 
 from rastervision.core.data.raster_transformer import RasterTransformer
+from rastervision.core.raster_stats import RasterStats
 
 if TYPE_CHECKING:
     from rastervision.core.data import RasterSource
@@ -94,7 +95,7 @@ class StatsTransformer(RasterTransformer):
     @classmethod
     def from_raster_sources(cls,
                             raster_sources: List['RasterSource'],
-                            sample_prob: float = 0.1,
+                            sample_prob: Optional[float] = 0.1,
                             max_stds: float = 3.) -> 'StatsTransformer':
         """Create a StatsTransformer with stats from the given raster sources.
 
@@ -110,9 +111,24 @@ class StatsTransformer(RasterTransformer):
         Returns:
             StatsTransformer: A StatsTransformer.
         """
-        from rastervision.core.raster_stats import RasterStats
         stats = RasterStats()
         stats.compute(raster_sources=raster_sources, sample_prob=sample_prob)
-        stats_transformer = StatsTransformer(
-            means=stats.means, stds=stats.stds, max_stds=max_stds)
+        stats_transformer = StatsTransformer.from_raster_stats(
+            stats, max_stds=max_stds)
         return stats_transformer
+
+    @classmethod
+    def from_stats_json(cls, uri: str, **kwargs) -> 'StatsTransformer':
+        stats = RasterStats.load(uri)
+        stats_transformer = StatsTransformer.from_raster_stats(stats, **kwargs)
+        return stats_transformer
+
+    @classmethod
+    def from_raster_stats(cls, stats: RasterStats,
+                          **kwargs) -> 'StatsTransformer':
+        stats_transformer = StatsTransformer(stats.means, stats.stds, **kwargs)
+        return stats_transformer
+
+    @property
+    def stats(self):
+        return RasterStats(self.means, self.stds)
