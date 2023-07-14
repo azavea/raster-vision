@@ -1,11 +1,11 @@
 import unittest
-import os
+from os.path import join
 
 import numpy as np
 
 from rastervision.pipeline.file_system import get_tmp_dir
 from rastervision.core.raster_stats import RasterStats
-from rastervision.core.data import StatsTransformerConfig
+from rastervision.core.data import StatsTransformer, StatsTransformerConfig
 
 
 class MockRVPipelineConfig:
@@ -33,24 +33,48 @@ class TestStatsTransformerConfig(unittest.TestCase):
         self.assertEqual(cfg.stats_uri,
                          '/path/to/bundle/analyze/stats/group1/stats.json')
 
-
-class TestStatsTransformer(unittest.TestCase):
-    def test_stats_transformer(self):
-        raster_stats = RasterStats()
-        raster_stats.means = list(np.ones((4, )))
-        raster_stats.stds = list(np.ones((4, )) * 2)
+    def test_build(self):
+        stats = RasterStats(np.array([1, 2]), np.array([3, 4]))
 
         with get_tmp_dir() as tmp_dir:
-            stats_uri = os.path.join(tmp_dir, 'stats.json')
-            raster_stats.save(stats_uri)
+            stats_uri = join(tmp_dir, 'stats.json')
+            stats.save(stats_uri)
+            tf = StatsTransformerConfig(stats_uri=stats_uri).build()
+            np.testing.assert_array_equal(tf.means, np.array([1, 2]))
+            np.testing.assert_array_equal(tf.stds, np.array([3, 4]))
 
-            # All values have z-score of 1, which translates to
-            # uint8 value of 170.
-            transformer = StatsTransformerConfig(stats_uri=stats_uri).build()
-            chip = np.ones((2, 2, 4)) * 3
-            out_chip = transformer.transform(chip)
-            expected_out_chip = np.ones((2, 2, 4)) * 170
-            np.testing.assert_equal(out_chip, expected_out_chip)
+
+class TestStatsTransformer(unittest.TestCase):
+    def test_transform(self):
+        # All values have z-score of 1, which translates to
+        # uint8 value of 170.
+        tf = StatsTransformer(np.ones((4, )), np.ones((4, )) * 2)
+        chip = np.ones((2, 2, 4)) * 3
+        out_chip = tf.transform(chip)
+        expected_out_chip = np.ones((2, 2, 4)) * 170
+        np.testing.assert_equal(out_chip, expected_out_chip)
+
+    def test_stats(self):
+        tf = StatsTransformer([1, 2], [3, 4])
+        stats = tf.stats
+        self.assertIsInstance(stats, RasterStats)
+        np.testing.assert_array_equal(stats.means, np.array([1, 2]))
+        np.testing.assert_array_equal(stats.stds, np.array([3, 4]))
+
+    def test_from_raster_stats(self):
+        stats = RasterStats(np.array([1, 2]), np.array([3, 4]))
+        tf = StatsTransformer.from_raster_stats(stats)
+        np.testing.assert_array_equal(tf.means, np.array([1, 2]))
+        np.testing.assert_array_equal(tf.stds, np.array([3, 4]))
+
+    def test_from_stats_json(self):
+        stats = RasterStats(np.array([1, 2]), np.array([3, 4]))
+        with get_tmp_dir() as tmp_dir:
+            stats_uri = join(tmp_dir, 'stats.json')
+            stats.save(stats_uri)
+            tf = StatsTransformer.from_stats_json(stats_uri)
+            np.testing.assert_array_equal(tf.means, np.array([1, 2]))
+            np.testing.assert_array_equal(tf.stds, np.array([3, 4]))
 
 
 if __name__ == '__main__':

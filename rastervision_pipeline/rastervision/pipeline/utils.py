@@ -1,3 +1,4 @@
+from typing import Any
 import atexit
 import logging
 from math import ceil
@@ -34,3 +35,11 @@ def split_into_groups(lst, num_groups):
     group_sz = max(int(ceil((len(lst)) / num_groups)), 1)
 
     return grouped(lst, group_sz)
+
+
+def repr_with_args(obj: Any, **kwargs) -> str:
+    """Builds a string of the form: <obj's class name>(k1=v1, k2=v2, ...)."""
+    cls = type(obj).__name__
+    arg_strs = [f'{k}={v!r}' for k, v in kwargs.items()]
+    arg_str = ', '.join(arg_strs)
+    return f'{cls}({arg_str})'

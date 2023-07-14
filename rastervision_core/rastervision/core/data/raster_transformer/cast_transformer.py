@@ -2,6 +2,7 @@ from typing import Optional
 
 from rastervision.core.data.raster_transformer.raster_transformer \
     import RasterTransformer
+from rastervision.pipeline.utils import repr_with_args
 
 import numpy as np
 
@@ -18,7 +19,7 @@ class CastTransformer(RasterTransformer):
         self.to_dtype = np.dtype(to_dtype)
 
     def __repr__(self):
-        return f'CastTransformer(to_dtype="{self.to_dtype}")'
+        return repr_with_args(self, to_dtype=str(self.to_dtype))
 
     def transform(self, chip: np.ndarray,
                   channel_order: Optional[list] = None) -> np.ndarray:

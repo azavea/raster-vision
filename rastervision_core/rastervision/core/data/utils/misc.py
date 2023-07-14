@@ -219,3 +219,24 @@ def parse_array_slices_Nd(key: Union[tuple, slice],
     dim_slices[w_dim] = w_slice
 
     return window, dim_slices
+
+
+def ensure_json_serializable(obj: Any) -> dict:
+    """Convert numpy types to JSON serializable equivalents."""
+    if obj is None or isinstance(obj, (str, int, bool)):
+        return obj
+    if isinstance(obj, dict):
+        return {k: ensure_json_serializable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [ensure_json_serializable(o) for o in obj]
+    if isinstance(obj, np.ndarray):
+        return ensure_json_serializable(obj.tolist())
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, (float, np.floating)):
+        if np.isnan(obj):
+            return None
+        return float(obj)
+    if isinstance(obj, Box):
+        return obj.to_dict()
+    return obj
