@@ -4,6 +4,7 @@ from typing import (TYPE_CHECKING, Iterable, Iterator, Optional, Sequence,
 import numpy as np
 from tqdm.auto import tqdm
 
+from rastervision.pipeline.utils import repr_with_args
 from rastervision.pipeline.file_system import file_to_json, json_to_file
 from rastervision.core.data.utils import ensure_json_serializable
 
@@ -150,6 +151,9 @@ class RasterStats:
         if self.stds is None:
             return None
         return self.stds**2
+
+    def __repr__(self) -> str:
+        return repr_with_args(self, **self.to_dict())
 
 
 def parallel_variance(mean_a, count_a, var_a, mean_b, count_b, var_b):

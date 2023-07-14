@@ -4,6 +4,7 @@ import numpy as np
 
 from rastervision.core.data.raster_transformer import RasterTransformer
 from rastervision.core.raster_stats import RasterStats
+from rastervision.pipeline.utils import repr_with_args
 
 if TYPE_CHECKING:
     from rastervision.core.data import RasterSource
@@ -132,3 +133,7 @@ class StatsTransformer(RasterTransformer):
     @property
     def stats(self):
         return RasterStats(self.means, self.stds)
+
+    def __repr__(self) -> str:
+        return repr_with_args(
+            self, means=self.means, std=self.stds, max_stds=self.max_stds)

@@ -1,6 +1,6 @@
 import unittest
 
-from rastervision.pipeline.utils import split_into_groups
+from rastervision.pipeline.utils import split_into_groups, repr_with_args
 
 
 class TestUtils(unittest.TestCase):
@@ -18,6 +18,13 @@ class TestUtils(unittest.TestCase):
 
         g4 = split_into_groups(lst, 3)
         self.assertEqual(g4, [[1, 2], [3, 4], [5, 6]])
+
+    def test_repr_with_args(self):
+        obj = 1
+        self.assertEqual(repr_with_args(obj), 'int()')
+
+        obj = dict(a=1, b='2')
+        self.assertEqual(repr_with_args(obj, **obj), "dict(a=1, b='2')")
 
 
 if __name__ == '__main__':

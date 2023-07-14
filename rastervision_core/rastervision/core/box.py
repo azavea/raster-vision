@@ -8,6 +8,8 @@ import numpy as np
 from shapely.geometry import Polygon
 from rasterio.windows import Window as RioWindow
 
+from rastervision.pipeline.utils import repr_with_args
+
 NonNegInt = conint(ge=0)
 
 if TYPE_CHECKING:
@@ -118,11 +120,7 @@ class Box():
         return self.tuple_format()[i]
 
     def __repr__(self) -> str:
-        arg_keys = ['ymin', 'xmin', 'ymax', 'xmax']
-        arg_vals = [getattr(self, k) for k in arg_keys]
-        arg_strs = [f'{k}={v}' for k, v in zip(arg_keys, arg_vals)]
-        arg_str = ', '.join(arg_strs)
-        return f'{type(self).__name__}({arg_str})'
+        return repr_with_args(self, **self.to_dict())
 
     def __hash__(self) -> int:
         return hash(self.tuple_format())
@@ -444,12 +442,12 @@ class Box():
         return windows
 
     def to_dict(self) -> Dict[str, int]:
-        """Convert to a dict with keys: xmin, ymin, xmax, ymax."""
+        """Convert to a dict with keys: ymin, xmin, ymax, xmax."""
         return {
-            'xmin': self.xmin,
             'ymin': self.ymin,
+            'xmin': self.xmin,
+            'ymax': self.ymax,
             'xmax': self.xmax,
-            'ymax': self.ymax
         }
 
     @classmethod
